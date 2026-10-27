@@ -28,6 +28,17 @@ window.configureReviewPublish = function(pr) {
     const bodyLabel=document.createElement('div');bodyLabel.className='review-description-field';const bodyHeading=document.createElement('p');bodyHeading.textContent='Description';bodyLabel.append(bodyHeading);const body=document.createElement('review-markdown-editor');body.value=saved.body ?? pr.body ?? '';bodyLabel.append(body);
     const draftLabel=document.createElement('label');const draft=document.createElement('input');draft.type='checkbox';draft.checked=!!saved.draft;draftLabel.append(draft,' Create as draft');
     const error=document.createElement('p');error.setAttribute('role','alert');
+    // Steps the project's review settings require before the PR is created or leaves draft.
+    const checklist=document.createElement('section');checklist.className='review-steps-checklist';checklist.hidden=true;
+    const drawSteps=result=>{
+      const required=(result?.items||[]).filter(i=>i.mode==='required');checklist.hidden=!required.length;checklist.replaceChildren();
+      if(!required.length){create.disabled=false;return;}
+      const heading=document.createElement('h4');heading.textContent=!result.missing.length?'Required review steps are done':pr.published?'Required before this PR leaves draft':'Required before this PR can be created';
+      const list=document.createElement('ul');
+      for(const item of required){const li=document.createElement('li');li.className=item.done?'done':'missing';li.dataset.step=item.step;const mark=document.createElement('span');mark.className='review-step-mark';mark.textContent=item.done?'✓':'○';const text=document.createElement('span');text.textContent=item.label;const detail=document.createElement('small');detail.textContent=item.detail;li.append(mark,text,detail);list.append(li);}
+      checklist.append(heading,list);if(!pr.published)create.disabled=result.missing.length>0;
+    };
+    window.cleanupReviewSteps?.();const onSteps=e=>drawSteps(e.detail);document.addEventListener('review-steps',onSteps);window.cleanupReviewSteps=()=>document.removeEventListener('review-steps',onSteps);
     window.cleanupPublishProgress?.();window.cleanupPublishProgress=window.api.onPublishProgress?.(text=>{error.textContent=text;});
     const remediate=document.createElement('button');remediate.textContent='Resolve uncommitted changes';remediate.hidden=true;
     remediate.onclick=async()=>{save();remediate.hidden=true;error.textContent='';remediate.disabled=true;try{window.reviewAgent?.open('recovery');const result=await window.api.demoAction({action:'remediate'});if(!result.ok)throw Error(result.error);}catch(e){remediate.hidden=false;error.textContent=e.message;window.setTheaterStage?.(8);}finally{remediate.disabled=false;}};
@@ -45,18 +56,18 @@ window.configureReviewPublish = function(pr) {
       try{
         if(aiDescription && !await aiDescription.ensureReady()){error.textContent='The description needs your review. Check the description and its status above, then click Create PR when ready.';return;}
         save();create.textContent='Creating PR…';error.textContent='Pushing branch commits and creating the PR…';
-        await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked});if(!result.ok){remediate.hidden=result.code!=='DIRTY_WORKTREE';throw new Error(result.error);}
+        await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked,viewedFiles:window.reviewViewedFiles||[]});if(!result.ok){remediate.hidden=result.code!=='DIRTY_WORKTREE';throw new Error(result.error);}
         remediate.hidden=true;Object.assign(pr,result.pr);await messaging?.send();
         const fresh=await window.api.refreshReviewPR();if(!fresh.ok)throw Error('PR created, but refresh failed: '+fresh.error);
         try{localStorage.removeItem(key);}catch{}
         if(window.openPRReviewTheater)await window.openPRReviewTheater(fresh.pr);else window.configureReviewPublish(fresh.pr);
         window.setTheaterStage?.(8);
-      }catch(e){error.textContent=e.message;}finally{create.disabled=false;create.textContent='Create PR';error.scrollIntoView({block:'nearest'});}
+      }catch(e){error.textContent=e.message;}finally{create.disabled=false;create.textContent='Create PR';window.refreshReviewSteps?.();error.scrollIntoView({block:'nearest'});}
     };
     const refresh=document.createElement('button');refresh.textContent='Reload PR';refresh.hidden=!pr.published;refresh.onclick=async()=>{refresh.disabled=true;try{const r=await window.api.refreshReviewPR();if(!r.ok)throw Error(r.error);if(window.openPRReviewTheater)await window.openPRReviewTheater(r.pr);else window.configureReviewPublish(r.pr);window.setTheaterStage?.(8);}catch(e){error.textContent=e.message;}finally{refresh.disabled=false;}};
     const update=document.createElement('button');update.textContent='Update PR';update.hidden=!editable;update.onclick=async()=>{update.disabled=true;error.textContent='Updating the PR…';try{const r=await window.api.updateReviewPR({title:title.value,body:body.value,expectedTitle:pr.title,expectedBody:pr.body});if(!r.ok)throw Error(r.error);Object.assign(pr,r.pr);title.value=pr.title;body.value=pr.body;const header=document.querySelector('#theater-pr-title a');if(header)header.textContent='#'+pr.number+' · '+pr.title;error.textContent='PR description updated on GitHub.';}catch(e){error.textContent=e.message;}finally{update.disabled=false;}};
     if(pr.isDraft && ready && !ready.hidden){const promote=document.createElement('button');promote.className='pr-ready-button';promote.textContent='Move PR to Ready';promote.onclick=()=>ready.click();dialog.append(promote);}
-    const actions=document.createElement('div');actions.className='review-publish-actions';actions.append(create,remediate,update,refresh,open);dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,actions);stage.append(dialog);
+    const actions=document.createElement('div');actions.className='review-publish-actions';actions.append(create,remediate,update,refresh,open);dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,checklist,error,actions);stage.append(dialog);window.refreshReviewSteps?.();
     const descriptionStage=document.getElementById('stage-9');
     if(descriptionStage){
       descriptionStage.replaceChildren();const descriptionTitle=document.createElement('h3');descriptionTitle.textContent='Description';
@@ -102,7 +113,7 @@ window.offerReadyNotification = function(pr,ready,notice) {
    await options?.ready;options?.validate();
    const selected=assign.checked?reviewers.value.split(/[\s,]+/).filter(Boolean):[];
    if(assign.checked&&!selected.length)throw Error(loadError||'Add a GitHub reviewer, or uncheck Request GitHub reviews to assign none.');
-   const result=await window.api.readyReviewPR(pr.headRefOid,pr.url,selected);if(!result.ok)throw Error(result.error);
+   const result=await window.api.readyReviewPR(pr.headRefOid,pr.url,selected,window.reviewViewedFiles||[]);if(!result.ok)throw Error(result.error);
    Object.assign(pr,result.pr);ready.hidden=true;promoted=true;dialog.close();
    if(window.openPRReviewTheater)await window.openPRReviewTheater(pr);else window.configureReviewPublish(pr);
    status.textContent=result.pr.reviewerError||'PR is ready for review.';

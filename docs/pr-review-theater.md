@@ -13,6 +13,9 @@ description: "PR Review Theater is the review window of the Agent Code Review Pl
 PR Review Theater is the review window of the Agent Code Review Platform app. It shows a branch's diff, the evidence that the change works and an agent-led walkthrough, then helps the author open a pull request or a reviewer approve one. Read this page to see what each tab does, which parts use real data, and how to open a review.
 {: .fs-6 }
 
+{: .note }
+The [Code Review guide](https://rowbose.com/code-review/) walks through the same window with screenshots of every tab, before-and-after evidence, the walkthrough beside the running app, and how to make review steps required, optional or hidden.
+
 <details open markdown="block">
   <summary>On this page</summary>
   {: .text-delta }
@@ -34,7 +37,7 @@ A review opens in one of two modes, and the mode decides which tabs you get.
 | Uses real data | All tabs | Description, Changes and Approve |
 
 {: .important }
-In reviewer mode, the Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content about a PetStore mTLS change. It is not generated from the pull request: the quiz has three fixed questions, the REST runner falls back to a canned response, and the breakpoint and live-proof logs are fixed text. Use Description, Changes and Approve there. With the default team policy, the Changes tab shows a "Code diffs locked" overlay and the Approve step shows a lock banner until the Overview quiz is passed (pass mark 80% by default). **Review settings** can turn each lock off: clear **Lock code diffs in Stage 3 until passed** for Changes, or make the quiz optional for Approve. Local reviews do not have this lock.
+In reviewer mode, the Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content about a PetStore mTLS change. It is not generated from the pull request: the quiz has three fixed questions, the REST runner falls back to a canned response, and the breakpoint and live-proof logs are fixed text. Use Description, Changes and Approve there. With the default team policy, the Changes tab shows a "Code diffs locked" overlay and the Approve step shows a lock banner until the Overview quiz is passed (pass mark 80% by default). **Review settings** can turn each lock off: clear **Lock code diffs in Stage 3 until passed** for Changes, or make the quiz optional for Approve. Turning the Overview stage off removes both locks. Local reviews do not have this lock.
 
 ## Open a review
 
@@ -65,9 +68,21 @@ The diff is `HEAD` against `baseRef`. **Review branch…** sets `baseRef` to the
 | Description | Editor for the PR title and description in WYSIWYG, Markdown or Markdown + Preview mode. **Edit with agent** drafts text from the diff and the available evidence, and **Restore previous description** undoes it. The text is saved locally as you type. For an existing PR, **Save description** writes it to GitHub if you are the author of an open PR. |
 | Pull Request | The label shows the state: Not Created, In Draft, In Review, Merged, Closed or Status Unavailable. See below. |
 
+### Required, optional and hidden steps
+
+Each repository can decide which of the Changes, Evidence and Walkthrough tabs an author sees, and which must be finished first. Set them in Git Projects, **PR review** tab, under **Review steps**, or for one review with a `reviewSteps` object in the manifest (for example `{"evidence": "required", "walkthrough": "hidden"}`).
+
+| Setting | Tab | Before **Create PR** and **Move PR to Ready** |
+|:---|:---|:---|
+| `required` | Shown, marked Required | Must be done: every changed file marked Viewed; the evidence bundle captured on the current commit with every scenario passed; the walkthrough at its last checkpoint |
+| `optional` (default) | Shown | Not checked |
+| `hidden` | Not shown | Not checked |
+
+The **Pull Request** tab lists the required steps that are not done yet and keeps **Create PR** disabled until they are. The main process checks evidence and the walkthrough again when the PR is created or moved to ready. The settings are stored with the other review defaults under `~/.robos/project-review-settings/`.
+
 ### Create the PR
 
-Open the **Pull Request** tab, check the title, and optionally tick **Create as draft**. **Create PR** pushes the branch head, then runs `gh pr create`. It refuses when the checkout has uncommitted changes (a **Resolve uncommitted changes** button asks the agent to deal with them), when the branch is `main`, or when `origin` does not match the review's `repo`. If an open PR already exists for the branch, RobOS reuses it. If a messaging provider is configured, an unchecked **Send PR review notification to …** option appears; set it up in Git Projects under **Team messaging** (the tab takes the provider's name when one is configured), and edit the description template under **PR template**.
+Open the **Pull Request** tab, check the title, and optionally tick **Create as draft**. **Create PR** pushes the branch head, then runs `gh pr create`. It refuses when the checkout has uncommitted changes (a **Resolve uncommitted changes** button asks the agent to deal with them), when the branch is `main`, or when `origin` does not match the review's `repo`. If an open PR already exists for the branch, RobOS reuses it. If a messaging provider is configured, an unchecked **Send PR review notification to …** option appears; set it up in Git Projects under **Team messaging** (the tab takes the provider's name when one is configured), and edit the description template under **PR review**.
 
 After creation the tab offers **Reload PR**, **Open pull request**, and, for the author of an open PR, **Update PR**. RobOS has no merge button. The author merges on GitHub.
 
@@ -126,6 +141,7 @@ The manifest is a JSON file on your workstation. It is the only place an agent c
 | `beforeWorkspace` | Optional prepared checkout for the before comparison: `workspace`, `ref`, `revision`. |
 | `evidenceBundlePath` | Path to a `robos:EvidenceBundle` file for the Evidence tab. |
 | `evidenceRoots`, `evidenceIndexes`, `evidence` | Extra screenshots, videos and reports offered to the description agent. |
+| `reviewSteps` | Optional `changes`, `evidence` and `walkthrough` modes (`required`, `optional` or `hidden`) for this review, over the repository's settings. |
 | `pullRequest` | Written by RobOS when it creates the PR. |
 | `runner` | Older mechanism: an absolute `command`, an `args` array, optional `cwd` and `timeoutMs` (default 120000). It prints a JSON line with `status` set to `HANDOFF_READY` once its browser is open. |
 

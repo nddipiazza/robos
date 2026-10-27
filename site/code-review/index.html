@@ -1,0 +1,248 @@
+---
+layout: default
+title: Code Review Theater
+permalink: /code-review/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "The RobOS Code Review Theater, tab by tab: read the diff, ask the agent for changes beside it, check before-and-after screenshot evidence, take a walkthrough while the agent drives the running app, and decide which review steps are required, optional or hidden."
+og_image: /assets/code-review/side-walk-app.jpg
+og_image_alt: "The RobOS Code Review Theater beside the running app: the agent has opened the app, chosen Cats and reports the result in the chat"
+og_type: article
+schema_type: TechArticle
+keywords: "AI code review, agent pull request review, Code Review Theater, PR Review Theater, before and after evidence, agent walkthrough, required review steps, RobOS"
+---
+{%- assign cr = '/assets/code-review/' | relative_url -%}
+{%- assign ba = '/assets/build-apps/shots/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">Guide · reviewing agent work</p>
+<h1>Code Review Theater</h1>
+<p class="lead">An agent wrote the code. Before anyone else spends time on it, you read the diff, look at evidence that it works, and watch the agent use the change in the running app. Then you open the pull request, or a teammate approves it.</p>
+</header>
+
+<p class="side-legend"><span>The app the agent opened</span><span>The review window and its agent chat</span></p>
+<figure class="guide-shot side"><a href="{{ cr }}side-walk-app.jpg"><img src="{{ cr }}side-walk-app.jpg" alt="Left: the Pawfinder search page with Cats chosen and two cats shown. Right: the Code Review Theater on the Walkthrough tab at step 2 of 2, with the agent's chat reporting that it chose Cats, that typing pep narrows it to one result, and that all 8 tests pass" width="2200" height="1238"></a><figcaption>Step 2 of the walkthrough. The agent started the app, chose <strong>Cats</strong> the way an adopter would, and reports what it saw in the chat. Everything you see on this page is the real review window.</figcaption></figure>
+
+<ul class="cr-nav">
+<li><a href="#modes"><b>Two ways to open it</b><span>Your branch, or a teammate's PR</span></a></li>
+<li><a href="#open"><b>Open a review</b><span>From Task Implementer, Dev Central or a command</span></a></li>
+<li><a href="#description"><b>Description</b><span>The PR text, drafted and saved as you go</span></a></li>
+<li><a href="#changes"><b>Changes</b><span>The diff, and an agent that edits it for you</span></a></li>
+<li><a href="#evidence"><b>Evidence</b><span>Before and after screenshots of the same action</span></a></li>
+<li><a href="#walkthrough"><b>Walkthrough</b><span>The agent drives the app, one checkpoint at a time</span></a></li>
+<li><a href="#customize"><b>Customize the steps</b><span>Required, optional or hidden, per repository</span></a></li>
+<li><a href="#publish"><b>Pull request and CI</b><span>Create as draft, get green, ask for review</span></a></li>
+<li><a href="#reviewer"><b>Reviewer mode</b><span>Team policy and approval</span></a></li>
+<li><a href="#reference"><b>Where things live</b><span>Files, settings, tests</span></a></li>
+</ul>
+
+<blockquote><p><strong>About the screenshots.</strong> They are the real RobOS apps, captured by <code>packages/robos-test/demos/code-review-guide-shots.js</code> on a sample project, <code>acme-corp/pawfinder-api</code>: a pet search site with a real git repository, real tests and a real dev server. Issue #42 asks for a species filter and better ranking. The before-and-after screenshots in the evidence are captured in a real browser from <code>main</code> and from the branch. The agents' replies, GitHub and CI results are scripted stand-ins, so the run is repeatable; the commands the agents run, the commits they make and the pages they open are real.</p></blockquote>
+
+<h2 id="modes">Two ways to open it</h2>
+<p>The same window serves the author of a change and the person reviewing it. Which one you get decides the tabs.</p>
+<table class="wide">
+<thead><tr><th></th><th>Your own branch (local review)</th><th>A teammate's pull request (reviewer mode)</th></tr></thead>
+<tbody>
+<tr><td>Who</td><td>The author, before and after creating the PR</td><td>A reviewer, on a PR that has no local review on their machine</td></tr>
+<tr><td>Opened from</td><td>Task Implementer (<strong>Review branch…</strong>), Dev Central (<strong>Open Code Review</strong>), or a manifest</td><td>Dev Central (<strong>Open code review</strong> on a PR), or a PR URL</td></tr>
+<tr><td>Tabs</td><td>Description, Changes, Evidence, Walkthrough, Pull Request</td><td>Description, Overview, Documentation, Changes, Open in IDE, Evidence, Walkthrough, Approve</td></tr>
+<tr><td>Agent chat</td><td>Yes, on every tab: it can edit the branch, regenerate evidence and drive the app</td><td>No</td></tr>
+<tr><td>Who decides which tabs</td><td>The repository's <a href="#customize">review steps</a> in Git Projects</td><td>The team's <a href="#team-policy">review policy</a></td></tr>
+</tbody>
+</table>
+<p>Most of this page is the author's review, because that is where the agent works with you. <a href="#reviewer">Reviewer mode</a> is at the end.</p>
+
+<h2 id="open">Open a review</h2>
+<p>The usual way in is Task Implementer. When its agent has finished a task (branch pushed, tests passing, no PR yet), click <strong>Review branch…</strong> and pick the checkout. RobOS writes a review manifest and opens the review window.</p>
+<figure class="guide-shot"><a href="{{ ba }}implementer-2-done.jpg"><img src="{{ ba }}implementer-2-done.jpg" alt="Task Implementer after the agent finished issue 42: the branch is pushed, 8 tests pass, and the Review branch button is next to Start Agent" loading="lazy" width="1600" height="1067"></a><figcaption>Task #42 is implemented on <code>codex/42</code>. <strong>Review branch…</strong> hands it to the Code Review Theater.</figcaption></figure>
+<p>You can also reopen a saved review from Dev Central (<strong>In code review</strong> › <strong>Open Code Review</strong>), or launch the window yourself:</p>
+<pre><code># your own branch, from a manifest that Review branch… wrote
+ROBOS_LOCAL_REVIEW=~/.robos/local-reviews/&lt;id&gt;/review.json ~/robos/scripts/dev-launch.sh pr-review
+
+# a teammate's pull request
+ROBOS_REVIEW_URL=https://github.com/OWNER/REPO/pull/NUMBER ~/robos/scripts/dev-launch.sh pr-review</code></pre>
+<p>With neither variable set, the window opens a task picker listing the reviews saved under <code>~/.robos/local-reviews/</code>. The diff is always <code>HEAD</code> against the manifest's <code>baseRef</code> (the default branch), so commit what you want reviewed.</p>
+
+<h3>The window at a glance</h3>
+<figure class="guide-shot"><a href="{{ cr }}tab-description.jpg"><img src="{{ cr }}tab-description.jpg" alt="The review window on the Description tab: the tab bar with Description, Changes, Evidence, Walkthrough and Pull Request (Not Created), the PR title and branch chips, and the description editor" loading="lazy" width="1600" height="1029"></a><figcaption>The header holds the title, branch, task link and CI state. The tabs below it are the review steps. <strong>Suggest changes</strong> (top right) opens the agent chat from any tab.</figcaption></figure>
+<ul>
+<li><strong>Header buttons</strong>: open the branch in the browser, IntelliJ or VS Code, copy the URL, title or description, and refresh CI.</li>
+<li><strong>Tabs</strong>: Description, Changes, Evidence, Walkthrough and Pull Request. A tick means the step is done (every file viewed, evidence fresh for this commit, walkthrough finished). A repository can mark them <span class="mode req">Required</span> or hide them; see <a href="#customize">Customize the steps</a>.</li>
+<li><strong>Agent chat</strong>: one conversation with the agent working in your checkout. It opens on the right; drag the divider to make it as wide as you like. The screenshots below give it about half the window.</li>
+</ul>
+
+<h2 id="description">Description</h2>
+<p>The PR title and body, in WYSIWYG, Markdown or Markdown + Preview. It starts from the task summary and the repository's PR template, and is saved locally as you type. <strong>Edit with agent</strong> drafts a description from the diff, the evidence and the walkthrough conversation; <strong>Restore previous description</strong> undoes it. Once the PR exists, <strong>Save description</strong> writes your edits to GitHub (author only).</p>
+
+<h2 id="changes">Changes: read the diff, ask for edits beside it</h2>
+<p>Every file the branch changes, in a tree, with the diff of the selected file. Nothing is summarized away: this is the pushed branch against <code>main</code>.</p>
+<figure class="guide-shot"><a href="{{ cr }}changes-unified.jpg"><img src="{{ cr }}changes-unified.jpg" alt="The Changes tab: a file tree with public/index.html, src/pets.js, src/server.js and test/pets.test.js, and the unified diff of src/pets.js" loading="lazy" width="1600" height="1029"></a><figcaption>Unified view of <code>src/pets.js</code>: the new <code>score</code> function, the species option and the error for unknown species. <em>0 of 4 viewed</em> under the tree.</figcaption></figure>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}changes-split.jpg"><img src="{{ cr }}changes-split.jpg" alt="The same diff in split view, main on the left and the branch on the right" loading="lazy" width="1600" height="1029"></a><figcaption><strong>Split</strong> puts <code>main</code> and the branch side by side. <strong>Wrap lines</strong> helps with long lines.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ cr }}changes-viewed.jpg"><img src="{{ cr }}changes-viewed.jpg" alt="Two files ticked as viewed in the tree, with a check mark in place of their M badge, and 2 of 4 viewed under the tree" loading="lazy" width="1600" height="1029"></a><figcaption>Tick <strong>Viewed</strong> as you go. <strong>Hide viewed</strong> leaves only what is left to read.</figcaption></figure>
+</div>
+<p>The toolbar has <strong>Refresh</strong>, <strong>Unified</strong>/<strong>Split</strong>, <strong>Wrap lines</strong> and <strong>Suggest changes</strong>; the file bar has previous/next, <strong>Copy path</strong> and <strong>Viewed</strong>. Use the filter box and the arrow keys in the tree on large branches. Viewed marks belong to one exact diff: when the branch gets a new commit, they reset, because what you read is no longer what will be merged.</p>
+
+<h3 id="suggest">Ask the agent for a change</h3>
+<p>If something should be different, say so in the chat instead of switching to an editor. The agent edits the checkout, runs the tests, commits, and the diff reloads by itself.</p>
+<p class="side-legend"><span>The diff</span><span>The agent chat</span></p>
+<figure class="guide-shot side"><a href="{{ cr }}side-changes-ask.jpg"><img src="{{ cr }}side-changes-ask.jpg" alt="The Changes tab on the left with the diff of src/pets.js, and the agent chat on the right with the request typed in: remove the comments in src/pets.js that just restate the code, keep the ones that explain why" loading="lazy" width="2200" height="1238"></a><figcaption>1. The request, in plain language: drop the comments in <code>src/pets.js</code> that only restate the code, keep the ones that explain why.</figcaption></figure>
+<figure class="guide-shot side"><a href="{{ cr }}side-changes-working.jpg"><img src="{{ cr }}side-changes-working.jpg" alt="The agent chat reporting progress: opening src/pets.js and finding six comments that restate the next line" loading="lazy" width="2200" height="1238"></a><figcaption>2. The agent reports as it works: it found six comments that repeat the next line, and is keeping the two that explain the ranking order and the typo guard.</figcaption></figure>
+<figure class="guide-shot side"><a href="{{ cr }}side-changes-done.jpg"><img src="{{ cr }}side-changes-done.jpg" alt="The refreshed diff without the six comments on the left, and the agent's reply on the right: removed 6 comments, tests 8 pass 0 fail, committed, and a note that the evidence must be regenerated" loading="lazy" width="2200" height="1238"></a><figcaption>3. Done: six comments removed, 8 of 8 tests passing, one new commit. The diff on the left has already refreshed. The agent also points out that the saved evidence now belongs to the previous commit.</figcaption></figure>
+<p>A message sent while the agent is working stops its current attempt and restarts with your instructions. The conversation is saved with the review, so closing the window loses nothing; <strong>Saved history</strong> pages back through it.</p>
+
+<h2 id="evidence">Evidence: before and after, the same action, real screens</h2>
+<p>A diff tells you what changed in the code. Evidence shows what changed for the person using it. For each acceptance scenario, the same action is done on <code>main</code> and on the branch, in a real browser, and both screens are kept side by side with what the browser saw.</p>
+<figure class="guide-shot"><a href="{{ cr }}evidence-species.jpg"><img src="{{ cr }}evidence-species.jpg" alt="The scenario Species filter returns only the requested species: on the left the Pawfinder page on main with no species control and six pets, on the right the page on the branch with Cats chosen and two cats; below, the browser checks listing what each side showed" loading="lazy" width="1600" height="1029"></a><figcaption><strong>Choose Cats.</strong> Before (<code>main</code>): there is no species control and all six pets stay. After (<code>codex/42</code>): Mochi and Pepper only. The text below each pair is what the browser read off the page, plus the same check in code.</figcaption></figure>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}evidence-ranking.jpg"><img src="{{ cr }}evidence-ranking.jpg" alt="The scenario Better matches rank first: typing b on main shows Biscuit, Juniper, Pepper, Scout; on the branch Biscuit, Juniper, Scout, Pepper" loading="lazy" width="1600" height="1029"></a><figcaption><strong>Type “b”.</strong> On the branch, prefix matches (Biscuit, Juniper, Scout) come before Pepper, which only matches inside “Tabby”.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ cr }}evidence-api.jpg"><img src="{{ cr }}evidence-api.jpg" alt="The scenario Unknown species is rejected: on main the API returns every pet as JSON, on the branch it returns an error listing cat, dog and rabbit" loading="lazy" width="1600" height="1029"></a><figcaption><strong>Ask the API for a dragon.</strong> <code>main</code> ignores the parameter and returns every pet; the branch answers 400 with the valid choices.</figcaption></figure>
+</div>
+<p>Each capture records the commit it was taken on, a checksum of the file, and where it came from (“Chromium 1040×600”). <strong>What remains unverified</strong> lists the limits honestly, here: sample pets, not production data.</p>
+
+<h3 id="stale">Evidence belongs to a commit</h3>
+<p>The agent's commit above changed <code>src/pets.js</code>, so the evidence captured before it no longer proves anything about the branch. The Evidence tab says so instead of showing old screens as current, and its tick disappears.</p>
+<p class="side-legend"><span>The Evidence tab</span><span>The agent chat</span></p>
+<figure class="guide-shot side"><a href="{{ cr }}side-evidence-stale.jpg"><img src="{{ cr }}side-evidence-stale.jpg" alt="The Evidence tab after the agent's commit: every scenario is blocked with the message Evidence belongs to an earlier revision. Run the checks again" loading="lazy" width="2200" height="1238"></a><figcaption>Every scenario is marked: <em>Evidence belongs to an earlier revision. Run the checks again.</em></figcaption></figure>
+<p>Ask the agent to regenerate it, and to add any case you think is missing. Each scenario appears as soon as it is captured.</p>
+<figure class="guide-shot side"><a href="{{ cr }}side-evidence-making.jpg"><img src="{{ cr }}side-evidence-making.jpg" alt="Mid-run: the first scenario's before and after screenshots already shown for the new commit on the left; on the right the agent's progress: choose Cats on main and on this branch, captured, request api/pets?species=dragon, captured, type b in the search box" loading="lazy" width="2200" height="1238"></a><figcaption>Halfway through: the species scenario is already back for the new commit, and the chat shows each action being done on <code>main</code> and on the branch.</figcaption></figure>
+<figure class="guide-shot side"><a href="{{ cr }}side-evidence-done.jpg"><img src="{{ cr }}side-evidence-done.jpg" alt="The new scenario Text search and species filter combine: on main typing a shows five pets, on the branch with Rabbits chosen only Waffles; on the right the agent's summary" loading="lazy" width="2200" height="1238"></a><figcaption>The case added on request: <strong>“a” within Rabbits</strong> leaves only Waffles; <code>main</code> ignores the species and shows five pets.</figcaption></figure>
+
+<h3 id="evidence-templates">What kind of evidence</h3>
+<p>Evidence follows a template chosen for the task. The template names the slots each scenario must fill; a scenario missing a required slot is marked blocked, not captured. The built-in templates:</p>
+<table>
+<thead><tr><th>Template</th><th>Use it for</th><th>Slots</th></tr></thead>
+<tbody>
+<tr><td>Product UI before and after</td><td>Anything a user sees (this page)</td><td>Before screenshot, after screenshot, browser checks</td></tr>
+<tr><td>Command and output</td><td>CLI and backend changes</td><td>Command, output before, output after</td></tr>
+<tr><td>MCP request and response</td><td>MCP and API behavior</td><td>Request, reply before, reply after</td></tr>
+<tr><td>Task checks and artifacts</td><td>Work without a useful before/after</td><td>The output of each acceptance check</td></tr>
+</tbody>
+</table>
+<p><code>packages/robos-lib/evidence-template-cli.js</code> (<code>list</code>, <code>select</code>, <code>collect</code>, <code>refresh</code>) binds an agent's captures to a template and writes the bundle the tab reads. <code>refresh</code> rechecks existing captures against the current commit without rerunning anything, which is how stale evidence is caught.</p>
+
+<h2 id="walkthrough">Walkthrough: the agent uses the change while you watch</h2>
+<p>The walkthrough is a short, project-defined demo. The agent works through it one checkpoint at a time and stops at each one, so you decide when to move on. Checkpoints that need the running app open it in its own window, next to the review.</p>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}walk-ready.jpg"><img src="{{ cr }}walk-ready.jpg" alt="The Walkthrough tab before starting: Ready, 2 steps, with a Start button" loading="lazy" width="1600" height="1029"></a><figcaption>Nothing runs until you click <strong>Start</strong>.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ cr }}walk-step-1.jpg"><img src="{{ cr }}walk-step-1.jpg" alt="Step 1 of 2, Understand the change, with the agent's summary of the diff in the chat and the Explain this step and Next step buttons" loading="lazy" width="1600" height="1029"></a><figcaption>Checkpoint 1, <em>Understand the change</em>: the agent reads the diff and says what to try next.</figcaption></figure>
+</div>
+<p>Checkpoint 2 is <em>Try the changed behavior</em>. The agent starts the dev server from your checkout and opens the app on the left.</p>
+<p class="side-legend"><span>The app the agent opened</span><span>The walkthrough and its chat</span></p>
+<figure class="guide-shot side"><a href="{{ cr }}side-walk-app.jpg"><img src="{{ cr }}side-walk-app.jpg" alt="Left: Pawfinder with Cats chosen, Mochi and Pepper shown. Right: step 2 of 2 and the agent's report: species Cats shows Mochi and Pepper, pep within cats shows Pepper, tests pass" loading="lazy" width="2200" height="1238"></a><figcaption>The agent chose <strong>Cats</strong> and typed “pep”, read the results off the page, and ran the tests. The app stays open for you to try yourself.</figcaption></figure>
+<p>While the app is open, ask for anything you would like different. The agent changes the code, commits, and the page reloads in place.</p>
+<figure class="guide-shot side"><a href="{{ cr }}side-walk-ask.jpg"><img src="{{ cr }}side-walk-ask.jpg" alt="The request typed into the walkthrough chat: show the species as clickable chips instead of a dropdown; the app on the left still shows the dropdown" loading="lazy" width="2200" height="1238"></a><figcaption>“Show the species as clickable chips instead of a dropdown.”</figcaption></figure>
+<figure class="guide-shot side"><a href="{{ cr }}side-walk-done.jpg"><img src="{{ cr }}side-walk-done.jpg" alt="The app on the left now has chips All, Dogs, Cats, Rabbits with Cats highlighted and two cats shown; the chat on the right confirms the change, the tests and the commit, and that the evidence was regenerated" loading="lazy" width="2200" height="1238"></a><figcaption>The dropdown is now a row of chips, already reloaded on the left. The agent clicked <strong>Cats</strong> to check it, ran the tests, committed, and regenerated the evidence for the new commit.</figcaption></figure>
+<ul>
+<li><strong>Explain this step</strong> asks about the current checkpoint without moving on. <strong>Next step</strong> moves on.</li>
+<li>A checkpoint the agent cannot verify does not advance. You get <strong>Retry</strong>, or <strong>Continue</strong>, which records it as unverified.</li>
+<li><strong>How it used to work</strong> (under <strong>More</strong>) runs optional “before” checkpoints in a separate checkout of <code>main</code>, without touching your branch. <strong>Show the change</strong> goes back.</li>
+<li>Reaching the last checkpoint shows <em>Walkthrough complete</em>. It does not approve or merge anything.</li>
+</ul>
+<h3 id="process">Change the walkthrough itself</h3>
+<p>The checkpoints are a JSON file per project, not a script. <strong>More › Process…</strong> edits it in place; saving starts the walkthrough over. A process for a UI change might look like this:</p>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}side-walk-more.jpg"><img src="{{ cr }}side-walk-more.jpg" alt="The More menu open on the Walkthrough tab: Start over, How it used to work, Show the change and Process" loading="lazy" width="2200" height="1238"></a><figcaption>The <strong>More</strong> menu.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ cr }}side-walk-process.jpg"><img src="{{ cr }}side-walk-process.jpg" alt="The process editor dialog showing the walkthrough JSON with instructions and two checkpoints" loading="lazy" width="2200" height="1238"></a><figcaption>The process editor: instructions plus checkpoints.</figcaption></figure>
+</div>
+<pre><code>{
+  "instructions": "Demonstrate the species filter in the running app. Use real observations and stop at each checkpoint.",
+  "checkpoints": [
+    { "title": "Understand the change", "given": "The branch is checked out.",
+      "when": "Inspect the diff against main and the acceptance criteria.",
+      "then": "The reviewer knows what changed and what to try." },
+    { "title": "Try the changed behavior", "given": "The app is running.",
+      "when": "Choose a species, then search within it.",
+      "then": "Each acceptance criterion is observed to hold." }
+  ],
+  "before": { "ref": "origin/main", "instructions": "Show the search as it works today.", "checkpoints": [ … ] }
+}</code></pre>
+<p>Up to 40 checkpoints, each with <code>title</code>, <code>given</code>, <code>when</code> and <code>then</code>. The agent that runs it is set in the launch manifest on your machine, never in the process file or the chat.</p>
+
+<h2 id="customize">Customize the steps: required, optional or hidden</h2>
+<p>Teams review differently. A UI-heavy repository may insist on evidence; a library may not have an app to walk through. Each repository sets every review step to one of three modes:</p>
+<table>
+<thead><tr><th>Mode</th><th>Tab</th><th>Before <strong>Create PR</strong> and <strong>Move PR to Ready</strong></th></tr></thead>
+<tbody>
+<tr><td><span class="mode req">Required</span></td><td>Shown, marked Required until done</td><td>Must be done (see below)</td></tr>
+<tr><td><span class="mode opt">Optional</span> (default)</td><td>Shown</td><td>Not checked</td></tr>
+<tr><td><span class="mode hid">Hidden</span></td><td>Not shown</td><td>Not checked</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Step</th><th>Done when</th></tr></thead>
+<tbody>
+<tr><td>Changes</td><td>Every changed file is marked <strong>Viewed</strong> on the current diff.</td></tr>
+<tr><td>Evidence</td><td>The evidence bundle was captured on the current commit and every scenario passed.</td></tr>
+<tr><td>Walkthrough</td><td>The walkthrough reached its last checkpoint.</td></tr>
+</tbody>
+</table>
+<p>Description and Pull Request are always shown.</p>
+
+<h3 id="steps-settings">Set them per repository</h3>
+<p>In <strong>RobOS Git Projects</strong>, select the repository, open <strong>PR review</strong>, choose a mode for each step under <strong>Review steps</strong>, and click <strong>Save PR settings</strong>. The same tab holds the default reviewers and the PR description template.</p>
+<figure class="guide-shot"><a href="{{ cr }}steps-settings.jpg"><img src="{{ cr }}steps-settings.jpg" alt="Git Projects, PR review tab for pawfinder-api: Review steps with Changes set to Required, Evidence to Required and Walkthrough to Optional, each with its done-when rule" loading="lazy" width="1600" height="1143"></a><figcaption>Pawfinder requires every file to be read and fresh evidence; the walkthrough stays optional.</figcaption></figure>
+<p>For a single review, a launch manifest can override them with <code>"reviewSteps": { "walkthrough": "required" }</code>.</p>
+
+<h3 id="steps-gate">What the author sees</h3>
+<p>With Changes, Evidence and Walkthrough all required, the tabs say so, and the <strong>Pull Request</strong> tab lists what is left. <strong>Create PR</strong> stays disabled until the list is done.</p>
+<figure class="guide-shot"><a href="{{ cr }}steps-blocked.jpg"><img src="{{ cr }}steps-blocked.jpg" alt="The Pull Request tab with a checklist titled Required before this PR can be created: mark every changed file as viewed, 0 of 4 files viewed; evidence captured for the latest commit, done; finish the walkthrough, not started. Create PR is disabled; the tabs Changes and Walkthrough carry Required badges" loading="lazy" width="1600" height="1029"></a><figcaption>Evidence is already fresh (ticked). No file has been viewed and the walkthrough has not started, so <strong>Create PR</strong> is disabled.</figcaption></figure>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}steps-changes-viewed.jpg"><img src="{{ cr }}steps-changes-viewed.jpg" alt="The Changes tab with every file ticked as viewed and the Changes tab now showing a check mark instead of Required" loading="lazy" width="1600" height="1029"></a><figcaption>Every file viewed: the Changes tab gets its tick.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ cr }}steps-ready.jpg"><img src="{{ cr }}steps-ready.jpg" alt="The Pull Request tab with the checklist Required review steps are done, all three ticked, and Create PR enabled with Create as draft ticked" loading="lazy" width="1600" height="1029"></a><figcaption>After the walkthrough: all three ticked, <strong>Create PR</strong> enabled.</figcaption></figure>
+</div>
+<p>The check is not only in the page. When the PR is created or moved out of draft, RobOS checks the evidence and the walkthrough again, so a stale bundle or an unfinished walkthrough is refused with the reason.</p>
+<p>A different mix: Changes optional, Evidence required, Walkthrough hidden. The Walkthrough tab is gone, and Changes no longer counts against the PR.</p>
+<figure class="guide-shot"><a href="{{ cr }}steps-hidden.jpg"><img src="{{ cr }}steps-hidden.jpg" alt="The review window with tabs Description, Changes marked Optional, Evidence with a check mark, and Pull Request; there is no Walkthrough tab" loading="lazy" width="1600" height="1029"></a><figcaption><em>Walkthrough: hidden.</em> Only the steps the repository asks for are on screen.</figcaption></figure>
+
+<h3 id="team-policy">The team policy for reviewer mode</h3>
+<p>Reviewers have their own, richer policy, stored on the team's node in the knowledge graph. Open it with <strong>Review settings</strong> in reviewer mode. Each stage has an enable box (off hides the tab) and a <strong>Required Gate</strong> box, plus options such as the quiz pass mark, the default diff mode and the preferred IDE. Presets set several at once: <em>Strict Anti-Rubber-Stamp</em>, <em>Fast Developer Flow</em>, <em>Frontend Focus</em> and <em>Full 7-Stage</em>.</p>
+<figure class="guide-shot"><a href="{{ cr }}policy-editor.jpg"><img src="{{ cr }}policy-editor.jpg" alt="The review policy editor: team selector, quick presets, global workflow policies, and stage cards each with an enable checkbox and a Required Gate checkbox" loading="lazy" width="1600" height="1029"></a><figcaption>The default policy: every stage on; Overview, Documentation, Changes and Evidence required.</figcaption></figure>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}policy-custom.jpg"><img src="{{ cr }}policy-custom.jpg" alt="The policy editor with Overview, Documentation and Open in IDE turned off; Changes and Evidence marked Required Gate; Walkthrough not required" loading="lazy" width="1600" height="1029"></a><figcaption>A lighter policy: no quiz, no docs or IDE stage; Changes and Evidence required; Walkthrough optional.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ cr }}policy-applied.jpg"><img src="{{ cr }}policy-applied.jpg" alt="Reviewer mode after saving: tabs Description, Changes Required, Evidence Required, Walkthrough Optional and Approve, with the diff unlocked" loading="lazy" width="1600" height="1029"></a><figcaption>Saved: three tabs gone, the badges follow the policy, and with the quiz off the diff is no longer locked behind it.</figcaption></figure>
+</div>
+
+<h2 id="publish">Pull request and CI</h2>
+<p>The <strong>Pull Request</strong> tab creates the PR from the reviewed branch. Tick <strong>Create as draft</strong> so nobody is asked to review before CI is green. <strong>Create PR</strong> pushes the branch head and runs <code>gh pr create</code>; it refuses with uncommitted changes (<strong>Resolve uncommitted changes</strong> asks the agent to deal with them), on <code>main</code>, or when <code>origin</code> is a different repository.</p>
+<figure class="guide-shot"><a href="{{ cr }}pr-draft.jpg"><img src="{{ cr }}pr-draft.jpg" alt="The Pull Request tab after creation: In Draft, with Reload PR, Update PR and Open pull request" loading="lazy" width="1600" height="1029"></a><figcaption>The draft PR exists. The tab label follows its state: Not Created, In Draft, In Review, Merged or Closed.</figcaption></figure>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ ba }}review-7-ci-passed.jpg"><img src="{{ ba }}review-7-ci-passed.jpg" alt="The draft PR with a green CI checks passed banner and the Move PR to Ready button" loading="lazy" width="1600" height="1029"></a><figcaption>The CI banner watches the checks. <strong>Get CI back to green</strong> appears when one fails.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ ba }}review-8-ready-dialog.jpg"><img src="{{ ba }}review-8-ready-dialog.jpg" alt="The Ready for review dialog with Request GitHub reviews ticked and priya-raman filled in" loading="lazy" width="1600" height="1029"></a><figcaption><strong>Move PR to Ready</strong>, with reviewers from the repository's defaults.</figcaption></figure>
+</div>
+<p>RobOS has no merge button: the author merges on GitHub once the PR is approved and green.</p>
+
+<h2 id="reviewer">Reviewer mode</h2>
+<p>A teammate opens the PR with <strong>Open code review</strong> in Dev Central, or <code>ROBOS_REVIEW_URL</code>. Description, Changes and Approve use the real pull request. <strong>Approve</strong> offers Approve, Request Changes or Comment Only and runs <code>gh pr review</code>; approving does not merge.</p>
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ cr }}reviewer-default.jpg"><img src="{{ cr }}reviewer-default.jpg" alt="Reviewer mode with the default policy: tabs Description, Overview, Documentation, Changes, Open in IDE, Evidence, Walkthrough and Approve, with Required and Optional badges" loading="lazy" width="1600" height="1029"></a><figcaption>Reviewer mode with the default policy.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ ba }}reviewer-3-approved.jpg"><img src="{{ ba }}reviewer-3-approved.jpg" alt="The Approve step with Approve selected, the reviewer's notes, and a confirmation that the PR was approved" loading="lazy" width="1600" height="1029"></a><figcaption>Approved. The author can now merge.</figcaption></figure>
+</div>
+<blockquote><p><strong>Know what reviewer mode shows today.</strong> The Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs in reviewer mode show built-in sample content, not content from the pull request. The evidence and walkthrough on this page are the author's, in a local review. Until reviewer mode reads them, link the evidence in the PR description (<strong>Edit with agent</strong> embeds the screenshots) and turn the sample stages off in the <a href="#team-policy">team policy</a>.</p></blockquote>
+
+<h2 id="reference">Where things live</h2>
+<table>
+<thead><tr><th>What</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>Review manifest written by <strong>Review branch…</strong></td><td><code>~/.robos/local-reviews/&lt;id&gt;/review.json</code>, with a starter <code>demo.json</code></td></tr>
+<tr><td>Review steps, default reviewers, PR template</td><td><code>~/.robos/project-review-settings/</code>, one file per repository (Git Projects › PR review)</td></tr>
+<tr><td>Agent conversation and walkthrough state</td><td><code>~/.robos/pr-reviews/&lt;repo&gt;-&lt;hash&gt;/</code></td></tr>
+<tr><td>Team policy for reviewer mode</td><td><code>robos:prReviewTheaterConfig</code> on the team's node in the knowledge graph</td></tr>
+<tr><td>The app</td><td><a href="https://github.com/nddipiazza/robos/tree/main/packages/pr-review"><code>packages/pr-review</code></a></td></tr>
+</tbody>
+</table>
+<p>The manifest keys, the demo process format and the IDE buttons are in the <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater reference</a>. The whole loop, from plan to merge, is in <a href="{{ '/build-apps/' | relative_url }}">Build apps</a>.</p>
+<h3>Run the tests, or make these screenshots yourself</h3>
+<pre><code>node --test packages/robos-test/tests/pr-review/review-steps.test.js \
+  packages/robos-test/tests/pr-review/local-review.test.js \
+  packages/robos-test/tests/pr-review/create-review-pr.test.js
+
+xvfb-run -a -s "-screen 0 2560x1440x24" \
+  node packages/robos-test/demos/code-review-guide-shots.js /tmp/cr
+node packages/robos-test/demos/code-review-guide-shots.js --publish /tmp/cr</code></pre>
+
+<div class="guide-pager"><a href="{{ '/build-apps/solo/' | relative_url }}"><small>Guide</small>← Build apps on your own</a><a class="next" href="{{ '/build-apps/teams/' | relative_url }}"><small>Guide</small>Build apps as a team →</a></div>
+</article>
+</div></section>

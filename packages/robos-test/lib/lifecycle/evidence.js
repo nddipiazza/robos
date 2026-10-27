@@ -1,8 +1,8 @@
 'use strict';
 /**
- * Builds a real task-evidence bundle for the review app: every captured
- * response is produced by actually calling searchPets on the base revision
- * (before) and on the implemented branch (after).
+ * Builds a real task-evidence bundle for the review app: each scenario does the
+ * same action in a real browser on the base revision (before) and on the
+ * implemented branch (after), and keeps both screenshots and what the page showed.
  */
 const fs = require('fs');
 const os = require('os');
@@ -10,36 +10,23 @@ const path = require('path');
 const { createHash } = require('crypto');
 const { execFileSync } = require('child_process');
 
-const TEMPLATE = {
-  '@id': 'urn:robos:evidence-template:api-response:v1',
-  '@type': 'robos:EvidenceTemplate',
-  'robos:package': 'testing',
-  'dcterms:title': 'API request and response',
-  'dcterms:description': 'Capture the exact call and the actual before and after results against the same data.',
-  'robos:version': 1,
-  'robos:webElement': 'robos-evidence-transcript',
-  'robos:collectionInstructions': 'Capture the exact call and the actual before and after results against the same data.',
-  'robos:artifactSlots': [
-    { id: 'request', name: 'Call', kind: 'text', required: true },
-    { id: 'before', name: 'Before (main)', kind: 'text', required: true },
-    { id: 'after', name: 'After (this change)', kind: 'text', required: true },
-  ],
-  'robos:refersFrom': 'https://schema.org/CreativeWork',
-};
+// The built-in "Product UI before and after" template: real screens of the same action on
+// main and on the branch, plus what the browser saw.
+const TEMPLATE = require('../../../robos-lib/evidence-templates/builtin.json').find(t => t['@id'] === 'urn:robos:evidence-template:product-ui:v1');
 
 const SCENARIOS = [
-  { id: 'species-filter', title: 'Species filter returns only the requested species',
-    call: "searchPets('', { species: 'cat' })", summary: 'Only the two cats are returned; main ignores the filter and returns all six pets.' },
-  { id: 'unknown-species', title: 'Unknown species is rejected with the valid choices',
-    call: "searchPets('', { species: 'dragon' })", summary: 'The call throws RangeError listing cat, dog, rabbit; main silently returns every pet.' },
-  { id: 'ranking', title: 'Better matches rank first',
+  { id: 'species-filter', title: 'Species filter returns only the requested species', action: 'Open the search page and choose Cats.', steps: { species: 'cat' },
+    call: "searchPets('', { species: 'cat' })", summary: 'Choosing Cats shows Mochi and Pepper only. Main has no species control and keeps showing all six pets.' },
+  { id: 'unknown-species', title: 'Unknown species is rejected with the valid choices', action: 'Request /api/pets?species=dragon.', steps: { url: '/api/pets?species=dragon' },
+    call: "searchPets('', { species: 'dragon' })", summary: 'The API answers with an error that lists cat, dog and rabbit. Main ignores the parameter and returns every pet.' },
+  { id: 'ranking', title: 'Better matches rank first', action: 'Type "b" in the search box.', steps: { q: 'b' },
     call: "searchPets('b')", summary: 'Name and breed prefix matches (Biscuit, Juniper, Scout) now come before the substring match (Pepper, "Tabby").' },
 ];
 
 /** Added later at the reviewer's request (see bin/codex). */
 const EXTRA_SCENARIOS = [
-  { id: 'combine', title: 'Text search and species filter combine',
-    call: "searchPets('a', { species: 'rabbit' })", summary: 'Only Waffles, the one rabbit matching "a"; main ignores the filter and returns five pets.' },
+  { id: 'combine', title: 'Text search and species filter combine', action: 'Type "a" and choose Rabbits.', steps: { q: 'a', species: 'rabbit' },
+    call: "searchPets('a', { species: 'rabbit' })", summary: 'Only Waffles, the one rabbit matching "a". Main ignores the species and shows five pets.' },
 ];
 
 const sha = (buf) => createHash('sha256').update(buf).digest('hex');
@@ -81,18 +68,17 @@ function buildEvidence({ workspace, baseRef = 'origin/main', outDir, scenarios: 
     fs.renameSync(bundlePath + '.tmp', bundlePath);
   };
   for (const sc of list) {
-    progress(`Running ${sc.call} on main and on this branch…`);
+    progress(`${sc.action} Doing it on main and on this branch…`);
     pause(pauseMs);
-    const files = {
-      request: `// ${sc.title}\n${sc.call}\n`,
-      before: `// main @ ${baseShort}\n` + runCall(baseDir, sc.call),
-      after: `// codex/42 @ ${head.slice(0, 7)}\n` + runCall(workspace, sc.call),
-    };
-    for (const [slot, text] of Object.entries(files)) {
-      const file = path.join(outDir, `${sc.id}-${slot}.txt`);
-      fs.writeFileSync(file, text);
+    const shots = JSON.parse(execFileSync('node', [path.join(__dirname, 'capture-web.js'), JSON.stringify({ baseDir, headDir: workspace, outDir, scenario: sc })], { encoding: 'utf8' }));
+    const checks = path.join(outDir, `${sc.id}-checks.txt`);
+    fs.writeFileSync(checks, [`// ${sc.action}`, `Before (main @ ${baseShort}): ${shots.before.shown}`, `After (codex/42 @ ${head.slice(0, 7)}): ${shots.after.shown}`, '',
+      `// The same check in code: ${sc.call}`, runCall(workspace, sc.call)].join('\n'));
+    const files = { before: shots.before.file, after: shots.after.file, checks };
+    const labels = { before: 'Before (main @ ' + baseShort + ')', after: 'After (codex/42 @ ' + head.slice(0, 7) + ')', checks: 'What the browser saw' };
+    for (const [slot, file] of Object.entries(files)) {
       const id = hex16(`${sc.id}:${slot}`);
-      artifacts.push({ id, scenarioId: sc.id, path: file, sha256: sha(fs.readFileSync(file)), label: { request: 'Call', before: 'Before (main)', after: 'After (this change)' }[slot], source: 'local run' });
+      artifacts.push({ id, scenarioId: sc.id, path: file, sha256: sha(fs.readFileSync(file)), label: labels[slot], source: slot === 'checks' ? 'Chromium, local dev server' : 'Chromium 1040×600, ' + (sc.steps.url || '/') });
       bindings.push({ scenarioId: sc.id, slotId: slot, artifactId: id });
     }
     scenarios.push({ id: sc.id, title: sc.title, status: 'passed', summary: sc.summary });

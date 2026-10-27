@@ -44,12 +44,14 @@ window.mountChanges=async function(root,raw,{identity='review',onRefresh=()=>{},
   if(f.isTooBig){const load=button('Load this large diff',()=>{const full=parse(raw).find(x=>name(x)===name(f));files[selected]=full;drawFile();});diff.prepend(load);}
   diff.scrollTop=0;
  }
- search.oninput=()=>{query=search.value.toLowerCase();drawTree();};hide.onchange=()=>{hideViewed=hide.checked;drawTree();};view.onchange=()=>{const path=name(files[selected]);view.checked?viewed.add(path):viewed.delete(path);try{localStorage.setItem(key,JSON.stringify([...viewed]));}catch{feedback.textContent='Viewed state could not be saved.';}drawTree();};
+ search.oninput=()=>{query=search.value.toLowerCase();drawTree();};hide.onchange=()=>{hideViewed=hide.checked;drawTree();};view.onchange=()=>{const path=name(files[selected]);view.checked?viewed.add(path):viewed.delete(path);try{localStorage.setItem(key,JSON.stringify([...viewed]));}catch{feedback.textContent='Viewed state could not be saved.';}drawTree();report();};
  tree.onkeydown=event=>{const row=event.target.closest('[data-tree-node]');if(!row)return;const rows=[...tree.querySelectorAll('[data-tree-node]')].filter(n=>!n.closest('[hidden]'));let target;const index=rows.indexOf(row);
   if(event.key==='ArrowDown')target=rows[index+1];if(event.key==='ArrowUp')target=rows[index-1];if(event.key==='Home')target=rows[0];if(event.key==='End')target=rows.at(-1);
   if(event.key==='ArrowRight'){if(row.dataset.folder&&row.getAttribute('aria-expanded')==='false')row.click();else target=rows[index+1];}
   if(event.key==='ArrowLeft'){if(row.dataset.folder&&row.getAttribute('aria-expanded')==='true')row.click();else target=row.parentElement.parentElement.closest('li')?.querySelector('[data-tree-node]');}
   if(target){rows.forEach(n=>n.tabIndex=-1);target.tabIndex=0;target.focus();}if(['ArrowDown','ArrowUp','Home','End','ArrowLeft','ArrowRight'].includes(event.key))event.preventDefault();};
  const resize=value=>sidebar.style.width=Math.max(160,Math.min(layout.clientWidth*.5,value))+'px';divider.onpointerdown=e=>{divider.setPointerCapture(e.pointerId);divider.onpointermove=move=>resize(move.clientX-layout.getBoundingClientRect().left);divider.onpointerup=()=>divider.onpointermove=null;};divider.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();resize(sidebar.getBoundingClientRect().width+(e.key==='ArrowLeft'?-20:20));}};
- drawTree();drawFile();
+ // Required review steps read which files of this exact diff are marked viewed.
+ function report(){window.reviewViewedFiles=files.map(name).filter(path=>viewed.has(path));document.dispatchEvent(new CustomEvent('review-viewed-change'));}
+ drawTree();drawFile();report();
 };

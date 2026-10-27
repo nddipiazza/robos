@@ -1029,7 +1029,7 @@ window.openPRReviewTheater = async function(pr) {
     if (fixTypeBar) fixTypeBar.style.display = 'none';
     document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
     document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
-    updateTheaterStepper(); window.setTheaterStage(res.initialStage === 5 ? 5 : 9);
+    updateTheaterStepper(); window.refreshReviewSteps(); window.setTheaterStage(res.initialStage === 5 ? 5 : 9);
     if (res.interactiveDemo) await window.mountWalkthrough();
     return;
   }
@@ -1062,6 +1062,10 @@ window.toggleTheaterFullscreen = function() {
   }
 };
 
+// The Overview knowledge check only locks Changes and Approve while its tab is shown.
+const quizRequired = cfg => cfg?.stage1_elearning?.enabled !== false && cfg?.stage1_elearning?.required !== false;
+const diffsLocked = cfg => cfg?.stage1_elearning?.enabled !== false && cfg?.stage1_elearning?.lockDiffsUntilPassed !== false;
+
 function updateTheaterStepper() {
   if (!theaterContext || !theaterContext.theaterConfig) return;
   const cfg = theaterContext.theaterConfig;
@@ -1076,6 +1080,18 @@ function updateTheaterStepper() {
     { num: 6, key: 'stage6_showTheFix', label: 'Walk Me Through It', done: gates.fixDemonstrated },
     { num: 7, key: 'stage7_signOff', label: 'Sign-Off & Merge', done: false }
   ];
+
+  // A local review's steps are done when their required work is: every file viewed, fresh evidence, a finished walkthrough.
+  if (theaterContext.local) {
+    const progress = Object.fromEntries((theaterContext.reviewSteps?.items || []).map(i => [i.step, i.done]));
+    for (const [num, step] of [[3, 'changes'], [5, 'evidence'], [6, 'walkthrough']]) stageDefs.find(s => s.num === num).done = !!progress[step];
+  }
+
+  // "Optional" only means something next to a required step.
+  const anyRequired = stageDefs.some(s => {
+    const c = cfg[s.key] || {};
+    return s.num !== 7 && c.enabled !== false && c.required !== false && !(theaterContext.local && c.required === undefined);
+  });
 
   stageDefs.forEach(s => {
     const btn = document.getElementById(`step-btn-${s.num}`);
@@ -1099,11 +1115,14 @@ function updateTheaterStepper() {
         statusSpan.className = 'step-status done';
         statusSpan.textContent = '✓';
       } else if (!required && s.num !== 7) {
-        statusSpan.className = 'step-status optional';
-        statusSpan.textContent = '⚑';
-      } else if (s.num === 3 && cfg.stage1_elearning?.lockDiffsUntilPassed && !gates.elearningPassed) {
+        statusSpan.className = anyRequired ? 'step-status optional' : 'step-status';
+        statusSpan.textContent = 'Optional';
+      } else if (s.num === 3 && diffsLocked(cfg) && !gates.elearningPassed) {
         statusSpan.className = 'step-status locked';
         statusSpan.textContent = '🔒';
+      } else if (s.num !== 7) {
+        statusSpan.className = 'step-status required';
+        statusSpan.textContent = 'Required';
       } else {
         statusSpan.className = 'step-status';
         statusSpan.textContent = '○';
@@ -1116,11 +1135,19 @@ function updateTheaterStepper() {
     if (currentTheaterStage === 8) publishStep.setAttribute('aria-current', 'step');
     else publishStep.removeAttribute('aria-current');
   }
-  const activeStatus = document.getElementById(`step-status-${currentTheaterStage}`);
-  if (activeStatus && !stageDefs.find(s => s.num === currentTheaterStage)?.done) {
-    activeStatus.textContent = '⏳';
-  }
 }
+
+// Re-reads the local review's step progress whenever it can change, so the tabs and the PR checklist stay current.
+window.refreshReviewSteps = async function() {
+  if (!theaterContext?.local || !window.api.reviewStepsStatus) return null;
+  const result = await window.api.reviewStepsStatus(window.reviewViewedFiles || []);
+  if (!result.ok || !theaterContext?.local) return result;
+  theaterContext.reviewSteps = result;
+  updateTheaterStepper();
+  document.dispatchEvent(new CustomEvent('review-steps', { detail: result }));
+  return result;
+};
+document.addEventListener('review-viewed-change', () => window.refreshReviewSteps());
 
 // Keep Changes and Evidence in step with the agent working in this review: evidence follows it
 // while it runs, and Changes reloads once it has committed.
@@ -1135,6 +1162,7 @@ function updateTheaterStepper() {
       window.renderTaskEvidence?.();
       renderTheaterDiffViewer();
     }
+    if (!running) window.refreshReviewSteps();
     previous = state.status;
   });
 })();
@@ -1186,7 +1214,7 @@ window.setTheaterStage = function(stageNum) {
   // Anti-Rubber-Stamp Lock for Stage 3 (Diffs)
   const diffLock = document.getElementById('diff-anti-rubber-stamp-lock');
   if (diffLock) {
-    const lockDiffs = theaterContext?.theaterConfig?.stage1_elearning?.lockDiffsUntilPassed !== false;
+    const lockDiffs = diffsLocked(theaterContext?.theaterConfig);
     if (stageNum === 3 && theaterContext && lockDiffs && !theaterContext.validationGates.elearningPassed) {
       diffLock.classList.remove('hidden');
     } else {
@@ -1197,7 +1225,7 @@ window.setTheaterStage = function(stageNum) {
   // Anti-Rubber-Stamp Lock for Stage 7 (Sign-Off)
   const signoffLock = document.getElementById('theater-signoff-lock-banner');
   if (signoffLock) {
-    const reqQuiz = theaterContext?.theaterConfig?.stage1_elearning?.required !== false;
+    const reqQuiz = quizRequired(theaterContext?.theaterConfig);
     if (stageNum === 7 && theaterContext && reqQuiz && !theaterContext.validationGates.elearningPassed) {
       signoffLock.classList.remove('hidden');
     } else {
@@ -1212,7 +1240,7 @@ window.setTheaterStage = function(stageNum) {
   // Mark gates based on progression
   if (theaterContext && theaterContext.validationGates) {
     if (stageNum === 2) theaterContext.validationGates.docsReviewed = true;
-    if (stageNum === 3 && (!theaterContext.theaterConfig?.stage1_elearning?.lockDiffsUntilPassed || theaterContext.validationGates.elearningPassed)) {
+    if (stageNum === 3 && (!diffsLocked(theaterContext.theaterConfig) || theaterContext.validationGates.elearningPassed)) {
       theaterContext.validationGates.diffsInspected = true;
     }
     if (stageNum === 4) theaterContext.validationGates.ideDiffLaunched = true;
@@ -1963,7 +1991,7 @@ function renderTheaterSignOff() {
   // Anti-Rubber-Stamp Lock Banner toggle in Stage 7
   const lockBanner = document.getElementById('theater-signoff-lock-banner');
   if (lockBanner) {
-    const quizReq = cfg.stage1_elearning?.required !== false;
+    const quizReq = quizRequired(cfg);
     if (quizReq && !gates.elearningPassed) lockBanner.classList.remove('hidden');
     else lockBanner.classList.add('hidden');
   }
@@ -2018,7 +2046,7 @@ function renderTheaterSignOff() {
   // Submit button enablement
   const submitBtn = document.getElementById('btn-theater-submit-review');
   if (submitBtn) {
-    const quizPass = cfg.stage1_elearning?.required === false || gates.elearningPassed;
+    const quizPass = !quizRequired(cfg) || gates.elearningPassed;
     const fixPass = !fixRequired || gates.fixDemonstrated;
 
     if (!quizPass || !fixPass) {
@@ -2048,7 +2076,7 @@ window.submitTheaterReviewAction = async function() {
 
   // Enforce Anti-Rubber-Stamp Gates
   if (action === 'approve') {
-    if (cfg.stage1_elearning?.required !== false && !theaterContext.validationGates.elearningPassed) {
+    if (quizRequired(cfg) && !theaterContext.validationGates.elearningPassed) {
       if (feedbackEl) {
         feedbackEl.className = 'quiz-feedback fail';
         feedbackEl.innerHTML = '🛡️ <strong>Anti-Rubber-Stamp Gate Active:</strong> You must pass the Stage 1 Knowledge Check before approving or merging this PR!';
