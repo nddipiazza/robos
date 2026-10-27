@@ -1737,6 +1737,24 @@ end sub
       ? `SLIDESHOW: ${ssSlideNum}/${ssTotal} (${ssInterval}s) - Next in ${ssRem}s`
       : `SINGLE DASHBOARD (Slideshow Off)`;
 
+    let initialCinemaLibActive = false;
+    let initialCinemaLibItems = [];
+    try {
+      const cfgFile = path.join(process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos'), 'tv-studio.json');
+      if (fs.existsSync(cfgFile)) {
+        const stDisk = JSON.parse(fs.readFileSync(cfgFile, 'utf8'));
+        if (Array.isArray(stDisk.moviePlayerLibrarySnapshot)) {
+          initialCinemaLibItems = stDisk.moviePlayerLibrarySnapshot;
+        }
+        if (
+          (stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.active !== false) ||
+          (stDisk.activeCinemaCast && stDisk.activeCinemaCast.active !== false)
+        ) {
+          initialCinemaLibActive = true;
+        }
+      }
+    } catch {}
+
     const mainSceneXml = `<?xml version="1.0" encoding="utf-8" ?>
 <component name="MainScene" extends="Scene">
   <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
@@ -1961,7 +1979,7 @@ ${voiceSlide2RowsXml}
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
     <!-- Interactive 10-Foot Movie Player Library Browser Overlay (D-Pad Remote Controlled) -->
-    <Group id="cinemaLibraryGroup" visible="false">
+    <Group id="cinemaLibraryGroup" visible="${initialCinemaLibActive ? 'true' : 'false'}">
       <Rectangle width="1920" height="1080" color="0x110E0BFF" />
       <Rectangle width="1920" height="86" color="0x1C1713FF" />
       <Rectangle translation="[0, 86]" width="1920" height="3" color="0xE8A33DFF" />
@@ -2055,7 +2073,11 @@ sub init()
     end if
     m.cinemaVideoActive = false
     m.lastCinemaLoadKey = ""
+    m.dismissedCinemaLoadKey = ""
     m.lastCinemaSeekKey = ""
+    if m.cinemaVideo <> invalid
+        m.cinemaVideo.observeField("state", "onCinemaVideoState")
+    end if
     m.clockTimer = m.top.findNode("clockTimer")
     m.tickCount = 0
     m.remainingSec = ${initialRemSec}
@@ -2097,6 +2119,17 @@ sub init()
     m.tileList.observeField("itemFocused", "onItemFocused")
     m.tileList.observeField("itemSelected", "onItemSelected")
     m.tileList.setFocus(true)
+
+    initLibRaw = ReadAsciiFile("pkg:/source/cinema-library.json")
+    if initLibRaw <> ""
+        initLibObj = ParseJson(initLibRaw)
+        if initLibObj <> invalid and initLibObj.items <> invalid
+            m.latestCinemaLibrary = initLibObj
+            if initLibObj.active = true
+                showCinemaLibrary(initLibObj)
+            end if
+        end if
+    end if
 
     m.dashTask = CreateObject("roSGNode", "DashboardTask")
     m.dashTask.apiUrl = "${portalUrl}/api/dashboard-cast"
@@ -2526,6 +2559,22 @@ sub onCinemaLibItemSelected()
     })
 end sub
 
+sub onCinemaVideoState()
+    if m.cinemaVideo = invalid or m.cinemaVideoActive <> true then return
+    st = m.cinemaVideo.state
+    if st = "finished" or st = "error"
+        m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
+        m.localVideoPlaying = false
+        stopCinemaVideo()
+        if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
+            showCinemaLibrary(m.latestCinemaLibrary)
+        end if
+        if m.cinemaLibList <> invalid
+            m.cinemaLibList.setFocus(true)
+        end if
+    end if
+end sub
+
 sub onPayloadUpdated()
     raw = m.dashTask.payloadJson
     if raw = "" then return
@@ -2534,24 +2583,26 @@ sub onPayloadUpdated()
     if json.cinemaLibrary <> invalid and json.cinemaLibrary.items <> invalid
         m.latestCinemaLibrary = json.cinemaLibrary
     end if
-    if json.cinemaCast <> invalid and json.cinemaCast.active = true and json.cinemaCast.mediaUrl <> invalid
-        hideAppCastFrames()
-        playCinemaVideo(json.cinemaCast)
-        return
-    end if
     if json.cinemaLibrary <> invalid and json.cinemaLibrary.active = true
         hideAppCastFrames()
         showCinemaLibrary(json.cinemaLibrary)
-        return
     end if
-    if m.cinemaLibraryActive = true and (json.cinemaLibrary = invalid or json.cinemaLibrary.active <> true)
-        ' Keep local remote-opened library visible if user opened it via tile #7
-        if m.localLibraryOpened <> true
-            hideCinemaLibrary()
+    if json.cinemaCast <> invalid and json.cinemaCast.active = true and json.cinemaCast.mediaUrl <> invalid
+        cKey = ""
+        if json.cinemaCast.loadKey <> invalid then cKey = json.cinemaCast.loadKey.ToStr() else cKey = json.cinemaCast.mediaUrl.ToStr()
+        if cKey <> "" and cKey <> m.dismissedCinemaLoadKey
+            hideAppCastFrames()
+            if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
+                showCinemaLibrary(m.latestCinemaLibrary)
+            end if
+            playCinemaVideo(json.cinemaCast)
+            return
         end if
-    end if
-    if m.cinemaVideoActive = true and m.localVideoPlaying <> true
+    else if m.cinemaVideoActive = true and m.localVideoPlaying <> true
         stopCinemaVideo()
+    end if
+    if m.cinemaLibraryActive = true
+        return
     end if
     if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
         showAppCastFrame(json.appCast.frameUrl)
@@ -2955,9 +3006,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     end if
     if press = true and key = "back"
         if m.cinemaVideoActive = true
+            m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
             m.localVideoPlaying = false
             stopCinemaVideo()
-            if m.cinemaLibraryActive = true and m.cinemaLibList <> invalid
+            if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
+                showCinemaLibrary(m.latestCinemaLibrary)
+            end if
+            if m.cinemaLibList <> invalid
                 m.cinemaLibList.setFocus(true)
             end if
             return true
@@ -2999,6 +3054,13 @@ end function
 
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
+    write(
+      'source/cinema-library.json',
+      JSON.stringify({
+        active: initialCinemaLibActive,
+        items: initialCinemaLibItems,
+      })
+    );
     write('components/DashboardTask.xml', dashboardTaskXml);
     write('components/DashboardTask.brs', dashboardTaskBrs);
     write('components/MainScene.xml', mainSceneXml);
@@ -3197,6 +3259,16 @@ function createTvEngine({
   function saveState() {
     try {
       fs.mkdirSync(resolvedConfigDir, { recursive: true });
+      if (fs.existsSync(stateFile)) {
+        try {
+          const onDisk = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+          for (const k of ['activeCinemaCast', 'activeCinemaLibrary', 'moviePlayerServer', 'moviePlayerLibrarySnapshot']) {
+            if (onDisk[k] !== undefined) {
+              state[k] = onDisk[k];
+            }
+          }
+        } catch {}
+      }
       fs.writeFileSync(stateFile, JSON.stringify(state, null, 2), 'utf8');
     } catch {}
   }
