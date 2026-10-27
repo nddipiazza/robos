@@ -1,13 +1,15 @@
 'use strict';
 const api = window.robosManager, $ = id => document.getElementById(id);
-let state = { installed: {}, busy: false }, selected = new Set(), installedOnly = false, previewToken = 0;
+let state = { installed: {}, busy: false }, selected = new Set(), view = 'all', previewToken = 0;
 const bytes = n => n < 1024 ** 2 ? `${Math.ceil(n / 1024)} KB` : `${(n / 1024 ** 2).toFixed(1)} MB`;
 const notice = message => { $('notice').textContent = message; };
 const attempt = async work => { try { return await work(); } catch (error) { notice(error.message.replace(/^Error invoking remote method '[^']+': Error: /, '')); } };
 const element = (tag, text, className) => { const el = document.createElement(tag); if (text) el.textContent = text; if (className) el.className = className; return el; };
 function visible() {
   const query = $('search').value.toLowerCase();
-  return (state.catalog?.components || Object.values(state.installed)).filter(item => item.kind === 'app' && (!installedOnly || state.installed[item.id]) && `${item.label} ${item.description || ''} ${item.group}`.toLowerCase().includes(query));
+  return (state.catalog?.components || Object.values(state.installed)).filter(item => item.kind === 'app' &&
+    (view !== 'installed' || state.installed[item.id]) && (view !== 'updates' || state.installed[item.id] && state.installed[item.id].sha256 !== item.sha256) &&
+    `${item.label} ${item.description || ''} ${item.group}`.toLowerCase().includes(query));
 }
 function checkbox(items) {
   const box = document.createElement('input'); box.type = 'checkbox'; box.disabled = state.busy || !state.catalog;
@@ -24,45 +26,53 @@ function render() {
     const items = apps.filter(item => item.group === group), details = element('details'); details.open = open.get(group) ?? true; details.dataset.group = group;
     const summary = element('summary'), label = element('label');
     label.onclick = event => event.stopPropagation(); label.append(checkbox(items), document.createTextNode(group));
-    summary.append(label, element('span', `${items.length} apps`, 'group-count')); details.append(summary);
+    summary.append(label, element('span', `(${items.length})`, 'group-count')); details.append(summary);
     for (const item of items) {
       const row = element('div', '', 'app'); row.dataset.id = item.id;
       const label = element('label'), box = checkbox([item]); box.setAttribute('aria-label', `Select ${item.label}`);
-      const copy = element('span', '', 'copy'); copy.append(element('strong', item.label), element('small', item.description || 'RobOS desktop application'));
-      label.append(box, element('span', '▦', 'app-icon'), copy); row.append(label);
+      const copy = element('span', '', 'copy'); copy.append(element('strong', item.label), element('small', item.description || 'RobOS desktop application')); copy.title = item.description || item.label;
+      const icon = element('span', '', 'app-icon');
+      if (typeof item.iconSvg === 'string' && item.iconSvg.length < 16000) { const image = element('img'); image.alt = ''; image.src = `data:image/svg+xml,${encodeURIComponent(item.iconSvg)}`; icon.append(image); }
+      else { const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 20 20'); const rect = document.createElementNS(svg.namespaceURI, 'rect'); for (const [key, value] of Object.entries({ x: 3, y: 3, width: 14, height: 14, rx: 3 })) rect.setAttribute(key, value); svg.append(rect); icon.append(svg); }
+      label.append(box, icon, copy); row.append(label);
       const actions = element('div', '', 'app-actions'), current = state.installed[item.id];
+      row.append(element('span', current?.version || '—', 'version'), element('span', item.version, `version${current && current.sha256 !== item.sha256 ? ' available' : ''}`), element('span', bytes(item.bytes), 'size'));
       if (current) {
-        actions.append(element('span', current.sha256 === item.sha256 ? 'Installed' : 'Update available', 'badge'));
         for (const [text, fn] of [['Open', () => api.launch(item.id)], ['Uninstall', () => api.uninstall(item.id)]]) {
           const button = element('button', text); button.disabled = state.busy;
+          if (text === 'Uninstall') button.className = 'remove';
           button.onclick = () => attempt(async () => { const result = await fn(); if (result?.installed) { state = result; selected.delete(item.id); render(); } else if (text === 'Open') notice(`Opened ${item.label}.`); }); actions.append(button);
         }
-      } else actions.append(element('span', bytes(item.bytes), 'size'));
+      }
       row.append(actions); details.append(row);
     }
     $('tree').append(details);
   }
   if (!apps.length) $('tree').append(element('p', state.catalog ? 'No apps match this view.' : 'The app catalog is unavailable. Use Refresh catalog to try again.', 'empty'));
   $('count').textContent = Object.values(state.installed).filter(item => item.kind === 'app').length;
+  $('update-count').textContent = (state.catalog?.components || []).filter(item => item.kind === 'app' && state.installed[item.id] && state.installed[item.id].sha256 !== item.sha256).length;
+  $('app-total').textContent = `${apps.length} applications`;
+  $('view-title').textContent = { all: 'All apps', installed: 'Installed apps', updates: 'Updates' }[view];
   $('platform').textContent = `${state.platform === 'win32' ? 'Windows' : 'Linux'} · v${state.version || ''}`;
-  $('browse').classList.toggle('active', !installedOnly); $('installed').classList.toggle('active', installedOnly);
+  $('browse').classList.toggle('active', view === 'all'); $('installed').classList.toggle('active', view === 'installed'); $('updates').classList.toggle('active', view === 'updates');
   $('select-all').checked = apps.length > 0 && apps.every(item => selected.has(item.id));
   $('select-all').indeterminate = apps.some(item => selected.has(item.id)) && !$('select-all').checked;
   for (const id of ['refresh', 'clear', 'select-all', 'remove-all']) $(id).disabled = state.busy;
   $('install').disabled = state.busy || !selected.size; $('progress-area').hidden = !state.busy;
   $('selection').textContent = selected.size ? `${selected.size} apps selected` : 'No apps selected';
-  $('estimate').textContent = 'Choose individual apps or a whole group.';
+  $('estimate').textContent = 'Select apps using the checkboxes.';
   const token = ++previewToken;
   if (selected.size && !state.busy) attempt(async () => {
     const preview = await api.preview([...selected]); if (token !== previewToken) return;
-    $('estimate').textContent = preview.items.length ? `${bytes(preview.bytes)} download · ${bytes(preview.unpackedBytes)} installed · includes needed shared components` : 'Your selected apps are already up to date.';
+    $('estimate').textContent = preview.items.length ? `${bytes(preview.bytes)} to download · ${bytes(preview.unpackedBytes)} on disk` : 'Selected apps are up to date.';
     $('install').disabled = !preview.items.length;
-    $('install').textContent = preview.items.some(item => state.installed[item.id]) ? 'Install / update selected' : 'Install selected apps';
+    $('install').textContent = preview.items.some(item => state.installed[item.id]) ? 'Apply updates' : 'Install selected';
   });
 }
 $('search').oninput = render;
-$('browse').onclick = () => { installedOnly = false; render(); };
-$('installed').onclick = () => { installedOnly = true; render(); };
+$('browse').onclick = () => { view = 'all'; render(); };
+$('installed').onclick = () => { view = 'installed'; render(); };
+$('updates').onclick = () => { view = 'updates'; render(); };
 $('select-all').onchange = () => { visible().forEach(item => $('select-all').checked ? selected.add(item.id) : selected.delete(item.id)); render(); };
 $('clear').onclick = () => { selected.clear(); render(); };
 $('refresh').onclick = () => attempt(async () => { notice('Refreshing app catalog…'); state = await api.refresh(); notice(''); render(); });

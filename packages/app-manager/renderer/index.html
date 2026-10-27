@@ -1,7 +1,39 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;"><title>RobOS App Manager</title><link rel="stylesheet" href="style.css"></head>
-<body><aside><div class="brand"><img src="../icon.svg" alt=""> <span>RobOS<small>APP MANAGER</small></span></div><p class="eyebrow">YOUR WORKSPACE</p><button id="browse" class="nav active">▦ &nbsp; Browse apps</button><button id="installed" class="nav">✓ &nbsp; Installed apps <span id="count">0</span></button><div class="aside-bottom"><p>One home for your apps.<br>Only install what you need.</p><span id="platform"></span><button id="remove-all" class="text-danger">Uninstall RobOS…</button></div></aside>
-<main><header><div><p class="eyebrow">MAKE IT YOURS</p><h1>Choose your RobOS apps</h1><p class="muted">Start small. Add what you need, whenever you need it.</p></div><button id="refresh">↻ Refresh catalog</button></header>
-<div class="toolbar"><input id="search" type="search" placeholder="Search apps…" aria-label="Search apps"><label class="select-all"><input id="select-all" type="checkbox"> Select visible apps</label></div>
-<div id="notice" role="status" aria-live="polite"></div><div id="tree" aria-label="RobOS app groups"><p class="empty">Loading the app catalog…</p></div>
-<footer><div><strong id="selection">No apps selected</strong><p id="estimate">Choose individual apps or a whole group.</p></div><div class="footer-actions"><button id="clear">Clear selection</button><button id="install" class="primary" disabled>Install selected apps</button></div><div id="progress-area" hidden><label id="progress-label" for="progress">Preparing…</label><progress id="progress" max="100"></progress><button id="cancel">Cancel download</button></div></footer></main><script src="app.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;">
+  <title>RobOS App Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside>
+    <div class="brand"><img src="../icon.svg" alt=""><span>RobOS<small>App Manager</small></span></div>
+    <nav aria-label="App library">
+      <button id="browse" class="nav active"><svg viewBox="0 0 20 20"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="12" y="3" width="5" height="5" rx="1"/><rect x="3" y="12" width="5" height="5" rx="1"/><rect x="12" y="12" width="5" height="5" rx="1"/></svg>All apps</button>
+      <button id="installed" class="nav"><svg viewBox="0 0 20 20"><path d="m4 10 4 4 8-9"/></svg>Installed<span id="count">0</span></button>
+      <button id="updates" class="nav"><svg viewBox="0 0 20 20"><path d="M16 8a6 6 0 1 0 0 5M16 3v5h-5"/></svg>Updates<span id="update-count">0</span></button>
+    </nav>
+    <div class="aside-bottom"><span id="platform"></span><button id="remove-all">Uninstall RobOS…</button></div>
+  </aside>
+  <main>
+    <header><h1 id="view-title">All apps</h1><span id="app-total"></span></header>
+    <div class="toolbar">
+      <div class="search-field"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><input id="search" type="search" placeholder="Search apps" aria-label="Search apps"></div>
+      <button id="refresh" title="Refresh app catalog"><svg viewBox="0 0 20 20"><path d="M16 8a6 6 0 1 0 0 5M16 3v5h-5"/></svg>Refresh</button>
+    </div>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <section class="app-list" aria-label="App catalog">
+      <div class="columns"><label class="app-column"><input id="select-all" type="checkbox" aria-label="Select visible apps"><span>Application</span></label><span>Installed</span><span>Available</span><span class="align-right">Download</span><span class="actions-column">Actions</span></div>
+      <div id="tree" aria-label="RobOS app groups"><p class="empty">Loading app catalog…</p></div>
+    </section>
+    <footer>
+      <div class="selection-summary"><strong id="selection">No apps selected</strong><span id="estimate">Select apps using the checkboxes.</span></div>
+      <div class="footer-actions"><button id="clear" class="subtle">Clear</button><button id="install" class="primary" disabled>Install selected</button></div>
+      <div id="progress-area" hidden><label id="progress-label" for="progress">Preparing…</label><progress id="progress" max="100"></progress><button id="cancel">Cancel</button></div>
+    </footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -45,7 +45,7 @@ async function main() {
     await narrate('Choose just one app. Other apps stay uninstalled.');
     await window.getByRole('checkbox', { name: 'Select Sample Notes', exact: true }).check();
     await window.locator('#install').click(); await window.getByText('Selected apps are ready to open.', { exact: true }).waitFor();
-    await window.getByText('Installed', { exact: true }).waitFor();
+    await window.getByRole('button', { name: 'Open', exact: true }).waitFor();
     const state = await window.evaluate(() => window.robosManager.state());
     if (Object.keys(state.installed).join() !== 'smoke-one') throw new Error('An unselected app was installed');
     await narrate('The selected app is installed and has a native menu entry.');
@@ -59,24 +59,29 @@ async function main() {
     await window.getByRole('button', { name: 'Uninstall', exact: true }).waitFor();
     // Close managed child processes so removal can proceed. Query the test process
     // tree on Windows; Linux pkill matches only this isolated owner's app argument.
-    await application.evaluate(() => {
-      const { execFileSync } = require('node:child_process');
-      if (process.platform === 'win32') execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
-        `Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq ${process.pid} -and $_.CommandLine -like '*--app=smoke-one*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`], { windowsHide: true });
-      else { try { execFileSync('pkill', ['-P', String(process.pid), '-f', '--', '--app=smoke-one']); } catch {} }
-    });
+    const { execFileSync } = require('node:child_process');
+    if (process.platform === 'win32') execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+      `Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq ${application.process().pid} -and $_.CommandLine -like '*--app=smoke-one*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`], { windowsHide: true });
+    else { try { execFileSync('pkill', ['-P', String(application.process().pid), '-f', '--', '--app=smoke-one']); } catch {} }
     await new Promise(resolve => setTimeout(resolve, 500));
     await narrate('Uninstall the app and remove its native menu entry.');
     await window.getByRole('button', { name: 'Uninstall', exact: true }).click();
-    await window.waitForFunction(async () => !Object.keys((await window.robosManager.state()).installed).length);
+    try { await window.getByRole('button', { name: 'Open', exact: true }).waitFor({ state: 'detached', timeout: 10000 }); }
+    catch (error) { throw new Error(`${error.message}\nUI status: ${await window.locator('#notice').innerText()}`); }
+    const removedState = await window.evaluate(() => window.robosManager.state());
+    if (Object.keys(removedState.installed).length) throw new Error('Uninstall left an installed component');
     if (fs.existsSync(shortcut)) throw new Error('Uninstall left a stale shortcut');
     await window.screenshot({ path: path.join(output, 'removed.png') });
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: true, platform: process.platform, steps }, null, 2));
     console.log('Packaged manager: selective download, installation, native shortcut, launch and removal passed.');
+  } catch (error) {
+    fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: false, error: error.stack, steps }, null, 2));
+    throw error;
   } finally {
     if (application) await application.close();
     await new Promise(resolve => server.close(resolve));
-    fs.rmSync(temporary, { recursive: true, force: true });
+    try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
+    catch { console.warn(`Temporary test profile could not be removed: ${temporary}`); }
   }
 }
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
