@@ -47,7 +47,7 @@ The grid uses 5-ft cells. Cell `(c, r)` covers feet `[5c, 5c+5) × [5r, 5r+5)`, 
 
 Each `robos:objectType` has default rules in `OBJECT_TYPES` in `model.py`. `wall`, `building` and `pillar` block movement and sight; a `door` does too unless `robos:open` is true. `tree`, `rock`, `crate`, `barrel`, `table`, `altar`, `bed`, `chest` and `fence` block movement and give half cover, `statue` gives three-quarters cover, and `pit` only blocks movement. `water`, `rubble` and `stairs` are difficult terrain, and `bush` is difficult with half cover. `road`, `bridge`, `rug`, `zone`, `passage`, `dais`, `item`, `pickup` and `weapon` have no effect on the grid. Any object can override its defaults with `robos:blocksMovement`, `robos:blocksSight`, `robos:difficultTerrain` or `robos:cover`. Doors are applied last, so an open door clears the wall cells under it and a closed door seals them.
 
-The image is drawn from the same object list at `--px-per-ft` pixels per foot over a terrain colour (`stone`, `grass`, `dirt`, `sand`, `wood`, `snow` or `cave`), with flat decor first, solid objects next and doors on top. `--debug-collision` outlines blocked cells in red and difficult cells in blue.
+The image is drawn from the same object list at `--px-per-ft` pixels per foot over a terrain colour (`stone`, `grass`, `dirt`, `sand`, `wood`, `snow` or `cave`), with flat decor first, solid objects next and doors on top. `--debug-collision` outlines blocked cells in red and difficult cells in blue, under any text labels so both stay visible. `render` always draws labels; `build` draws them only with `--labels`.
 
 ## Writing maps in Python
 
@@ -68,7 +68,6 @@ A scenario refers to a map with `"robos:map": {"@id": "urn:robos:crpg:battle-map
 
 ## Limitations
 
-- `render` always draws labels, and when labels are drawn the `--debug-collision` outlines are lost: they are painted on the image before the label layer replaces it. Use `build --debug-collision` (labels are off by default there) to see the collision overlay.
 - `build` replaces `robos:backgroundImage` with the blockout's own `res://` path, and the renderer does not resolve `res://` paths. A hand-set background image is therefore composited only on the first build; later builds draw the plain terrain colour.
 - `robos:sprite` (or `robos:icon`) on an object is read and saved but not drawn.
 - The default `--game-dir` is worked out from the package's location in the repository, so pass `--game-dir` when running an installed copy outside the checkout.
@@ -82,4 +81,4 @@ cd packages/robos-crpg-blockout
 python3 -m unittest discover -s tests
 ```
 
-They cover the cells each shape occupies, the per-type rules and overrides, doors in walls, validation, image size and wall placement, `build` and `check`, JSON-LD round trips, finding a map inside a scenario or `@graph`, and the CLI exit codes.
+They cover the cells each shape occupies, the per-type rules and overrides, doors in walls, validation, image size and wall placement, `render --debug-collision` with labels on, `build` and `check`, JSON-LD round trips, finding a map inside a scenario or `@graph`, and the CLI exit codes.
