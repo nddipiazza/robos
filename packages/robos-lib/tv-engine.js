@@ -1960,6 +1960,47 @@ ${voiceSlide2RowsXml}
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
+    <!-- Interactive 10-Foot Movie Player Library Browser Overlay (D-Pad Remote Controlled) -->
+    <Group id="cinemaLibraryGroup" visible="false">
+      <Rectangle width="1920" height="1080" color="0x110E0BFF" />
+      <Rectangle width="1920" height="86" color="0x1C1713FF" />
+      <Rectangle translation="[0, 86]" width="1920" height="3" color="0xE8A33DFF" />
+      <Label id="cinemaLibHeader" translation="[56, 26]" scale="[0.82, 0.82]" width="1300" height="44" numLines="1" color="0xF1E9DCFF" text="ROBOS MOVIE PLAYER - 10-FOOT SMART TV CINEMA LIBRARY" />
+      <Label id="cinemaLibSubHeader" translation="[1320, 30]" scale="[0.58, 0.58]" width="940" height="34" numLines="1" horizAlign="right" color="0xE8A33DFF" text="REMOTE: UP/DOWN BROWSE | OK PLAY MOVIE | BACK DASHBOARD" />
+
+      <!-- Left Pane: Scrollable Movie Library List -->
+      <Rectangle translation="[48, 112]" width="1090" height="850" color="0x181410FF" />
+      <Rectangle translation="[48, 112]" width="1090" height="4" color="0xE8A33DFF" />
+      <Label id="cinemaLibCountLabel" translation="[72, 128]" scale="[0.64, 0.64]" width="1400" height="34" numLines="1" color="0xE8A33DFF" text="YOUR SYNCED MOVIES (D-PAD UP / DOWN TO SELECT, PRESS OK TO WATCH):" />
+      <Rectangle translation="[72, 162]" width="1042" height="2" color="0x2B241DFF" />
+      <LabelList
+        id="cinemaLibList"
+        translation="[72, 176]"
+        scale="[0.72, 0.72]"
+        itemSize="[1420, 54]"
+        itemSpacing="[0, 8]"
+        numRows="13"
+        color="0xF1E9DCFF"
+        focusedColor="0x15120FFF" />
+
+      <!-- Right Pane: Focused Movie Poster & Details Card -->
+      <Rectangle translation="[1166, 112]" width="706" height="850" color="0x181410FF" />
+      <Rectangle translation="[1166, 112]" width="706" height="4" color="0x38BDF8FF" />
+      <Label translation="[1194, 128]" scale="[0.64, 0.64]" width="900" height="34" numLines="1" color="0x38BDF8FF" text="SELECTED FEATURE FILM DETAILS" />
+      <Rectangle translation="[1194, 162]" width="650" height="2" color="0x2B241DFF" />
+      <Rectangle translation="[1339, 184]" width="360" height="440" color="0x0E0C0AFF" />
+      <Poster id="cinemaLibPoster" translation="[1339, 184]" width="360" height="440" loadDisplayMode="scaleToFit" />
+      <Label id="cinemaLibDetailTitle" translation="[1194, 646]" scale="[0.86, 0.86]" width="740" height="44" numLines="1" color="0xF1E9DCFF" text="Select a Movie" />
+      <Label id="cinemaLibDetailMeta" translation="[1194, 692]" scale="[0.64, 0.64]" width="960" height="34" numLines="1" color="0xE8A33DFF" text="1080p WEBRip | RobOS Cinema" />
+      <Label id="cinemaLibDetailSub" translation="[1194, 730]" scale="[0.58, 0.58]" width="1040" height="34" numLines="1" color="0xA89F91FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
+
+      <Rectangle translation="[1194, 784]" width="650" height="72" color="0xE8A33DFF" />
+      <Label id="cinemaLibPlayPrompt" translation="[1218, 806]" scale="[0.70, 0.70]" width="860" height="36" numLines="1" color="0x15120FFF" text="PRESS [OK / SELECT] ON REMOTE TO PLAY FULL-SCREEN" />
+      <Label translation="[1194, 878]" scale="[0.55, 0.55]" width="1100" height="30" numLines="1" color="0xA89F91FF" text="During movie: Left/Right seeks, Play/Pause toggles, Back returns to Library." />
+
+      <Rectangle translation="[48, 980]" width="1824" height="68" color="0x181410FF" />
+      <Label id="cinemaLibFooter" translation="[72, 1002]" scale="[0.60, 0.60]" width="2600" height="34" numLines="1" color="0xF1E9DCFF" text="RobOS Movie Player TV Library Active | Use your Roku remote D-Pad to browse and play any movie" />
+    </Group>
     <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player Cast -->
     <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="true" />
     <Timer id="clockTimer" repeat="true" duration="1.0" />
@@ -1997,6 +2038,21 @@ sub init()
     m.secPulseDot = m.top.findNode("secPulseDot")
     m.keepAliveVideo = m.top.findNode("keepAliveVideo")
     m.cinemaVideo = m.top.findNode("cinemaVideo")
+    m.cinemaLibraryGroup = m.top.findNode("cinemaLibraryGroup")
+    m.cinemaLibList = m.top.findNode("cinemaLibList")
+    m.cinemaLibCountLabel = m.top.findNode("cinemaLibCountLabel")
+    m.cinemaLibPoster = m.top.findNode("cinemaLibPoster")
+    m.cinemaLibDetailTitle = m.top.findNode("cinemaLibDetailTitle")
+    m.cinemaLibDetailMeta = m.top.findNode("cinemaLibDetailMeta")
+    m.cinemaLibDetailSub = m.top.findNode("cinemaLibDetailSub")
+    m.cinemaLibFooter = m.top.findNode("cinemaLibFooter")
+    m.cinemaLibraryActive = false
+    m.cinemaLibItems = []
+    m.cinemaLibHash = ""
+    if m.cinemaLibList <> invalid
+        m.cinemaLibList.observeField("itemFocused", "onCinemaLibItemFocused")
+        m.cinemaLibList.observeField("itemSelected", "onCinemaLibItemSelected")
+    end if
     m.cinemaVideoActive = false
     m.lastCinemaLoadKey = ""
     m.lastCinemaSeekKey = ""
@@ -2027,8 +2083,9 @@ sub init()
         { id: "crpg-realm", title: "4. Realm of Heroes cRPG [Godot 4]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4." },
         { id: "quest-warrior-dragon", title: "5. Quest: Warrior Dragon [2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4." },
         { id: "tabletop-rpg", title: "6. RobOS Tabletop RPG [Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler." },
-        { id: "audio-jukebox", title: "7. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
-        { id: "home-intercom", title: "8. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." }
+        { id: "movie-player", title: "7. RobOS Movie Player [Cinema Library]", desc: "Browse & play your 100k movie library on TV with your remote." },
+        { id: "audio-jukebox", title: "8. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
+        { id: "home-intercom", title: "9. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." }
     ]
 
     content = CreateObject("roSGNode", "ContentNode")
@@ -2368,8 +2425,105 @@ sub stopCinemaVideo()
         m.cinemaVideo.control = "stop"
         m.cinemaVideo.visible = false
     end if
-    if m.tileList <> invalid then m.tileList.setFocus(true)
+    if m.cinemaLibraryActive = true and m.cinemaLibList <> invalid
+        m.cinemaLibList.setFocus(true)
+    else if m.tileList <> invalid
+        m.tileList.setFocus(true)
+    end if
     startKeepAliveVideo()
+end sub
+
+sub showCinemaLibrary(libObj as Object)
+    if m.cinemaLibraryGroup = invalid then m.cinemaLibraryGroup = m.top.findNode("cinemaLibraryGroup")
+    if m.cinemaLibraryGroup = invalid then return
+    wasActive = m.cinemaLibraryActive
+    m.cinemaLibraryActive = true
+    m.cinemaLibraryGroup.visible = true
+    if libObj <> invalid and libObj.items <> invalid and libObj.items.Count() > 0
+        newHash = libObj.items.Count().ToStr() + ":" + cleanAscii(libObj.items[0].id)
+        if m.cinemaLibHash <> newHash
+            m.cinemaLibHash = newHash
+            m.cinemaLibItems = libObj.items
+            if m.cinemaLibCountLabel <> invalid
+                m.cinemaLibCountLabel.text = "YOUR SYNCED MOVIES (" + libObj.items.Count().ToStr() + " TITLES - D-PAD UP/DOWN TO BROWSE, OK TO PLAY):"
+            end if
+            content = CreateObject("roSGNode", "ContentNode")
+            for i = 0 to libObj.items.Count() - 1
+                mv = libObj.items[i]
+                item = content.CreateChild("ContentNode")
+                yrStr = ""
+                if mv.year <> invalid then yrStr = " (" + mv.year.ToStr() + ")"
+                artStr = cleanAscii(mv.artist)
+                if artStr <> "" then artStr = "  [" + artStr + "]"
+                item.title = (i + 1).ToStr() + ". " + Left(cleanAscii(mv.title), 44) + yrStr + artStr
+            end for
+            if m.cinemaLibList <> invalid
+                m.cinemaLibList.content = content
+            end if
+            updateCinemaLibDetail(0)
+        end if
+    end if
+    if wasActive <> true and m.cinemaVideoActive <> true and m.cinemaLibList <> invalid
+        m.cinemaLibList.setFocus(true)
+    end if
+end sub
+
+sub hideCinemaLibrary()
+    if m.cinemaLibraryActive <> true then return
+    m.cinemaLibraryActive = false
+    if m.cinemaLibraryGroup <> invalid then m.cinemaLibraryGroup.visible = false
+    if m.cinemaVideoActive <> true and m.tileList <> invalid
+        m.tileList.setFocus(true)
+    end if
+end sub
+
+sub updateCinemaLibDetail(idx as Integer)
+    if m.cinemaLibItems = invalid or idx < 0 or idx >= m.cinemaLibItems.Count() then return
+    mv = m.cinemaLibItems[idx]
+    if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = Left(cleanAscii(mv.title), 38)
+    yrStr = "Feature Film"
+    if mv.year <> invalid then yrStr = mv.year.ToStr()
+    if m.cinemaLibDetailMeta <> invalid
+        m.cinemaLibDetailMeta.text = cleanAscii(mv.artist) + "  |  " + yrStr + "  |  " + cleanAscii(mv.genre)
+    end if
+    if m.cinemaLibDetailSub <> invalid
+        m.cinemaLibDetailSub.text = "Album/Collection: " + Left(cleanAscii(mv.album), 42)
+    end if
+    if m.cinemaLibPoster <> invalid
+        if mv.artUrl <> invalid and mv.artUrl <> ""
+            m.cinemaLibPoster.uri = mv.artUrl
+        else
+            m.cinemaLibPoster.uri = ""
+        end if
+    end if
+    if m.cinemaLibFooter <> invalid
+        m.cinemaLibFooter.text = "Selected #" + (idx + 1).ToStr() + " of " + m.cinemaLibItems.Count().ToStr() + ": " + cleanAscii(mv.title) + " - Press OK on remote to start streaming"
+    end if
+end sub
+
+sub onCinemaLibItemFocused()
+    if m.cinemaLibList = invalid then return
+    updateCinemaLibDetail(m.cinemaLibList.itemFocused)
+end sub
+
+sub onCinemaLibItemSelected()
+    if m.cinemaLibList = invalid or m.cinemaLibItems = invalid then return
+    idx = m.cinemaLibList.itemSelected
+    if idx < 0 or idx >= m.cinemaLibItems.Count() then return
+    mv = m.cinemaLibItems[idx]
+    if mv = invalid or mv.streamUrl = invalid or mv.streamUrl = "" then return
+    if m.cinemaLibFooter <> invalid
+        m.cinemaLibFooter.text = "Starting full-screen playback: " + cleanAscii(mv.title) + "..."
+    end if
+    m.localVideoPlaying = true
+    playCinemaVideo({
+        active: true,
+        loadKey: "remote-" + idx.ToStr() + "-" + m.tickCount.ToStr(),
+        mediaUrl: mv.streamUrl,
+        title: cleanAscii(mv.title),
+        startAt: 0,
+        paused: false
+    })
 end sub
 
 sub onPayloadUpdated()
@@ -2377,12 +2531,28 @@ sub onPayloadUpdated()
     if raw = "" then return
     json = ParseJson(raw)
     if json = invalid then return
+    if json.cinemaLibrary <> invalid and json.cinemaLibrary.items <> invalid
+        m.latestCinemaLibrary = json.cinemaLibrary
+    end if
     if json.cinemaCast <> invalid and json.cinemaCast.active = true and json.cinemaCast.mediaUrl <> invalid
         hideAppCastFrames()
         playCinemaVideo(json.cinemaCast)
         return
     end if
-    stopCinemaVideo()
+    if json.cinemaLibrary <> invalid and json.cinemaLibrary.active = true
+        hideAppCastFrames()
+        showCinemaLibrary(json.cinemaLibrary)
+        return
+    end if
+    if m.cinemaLibraryActive = true and (json.cinemaLibrary = invalid or json.cinemaLibrary.active <> true)
+        ' Keep local remote-opened library visible if user opened it via tile #7
+        if m.localLibraryOpened <> true
+            hideCinemaLibrary()
+        end if
+    end if
+    if m.cinemaVideoActive = true and m.localVideoPlaying <> true
+        stopCinemaVideo()
+    end if
     if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
         showAppCastFrame(json.appCast.frameUrl)
         if json.appCast.narration <> invalid then playAppCastAudio(json.appCast.narration)
@@ -2758,6 +2928,15 @@ sub onItemSelected()
     idx = m.tileList.itemSelected
     if idx >= 0 and idx < m.tiles.Count()
         t = m.tiles[idx]
+        if t.id = "movie-player"
+            m.localLibraryOpened = true
+            if m.latestCinemaLibrary <> invalid
+                showCinemaLibrary(m.latestCinemaLibrary)
+            else
+                showCinemaLibrary({ active: true, items: [] })
+            end if
+            return
+        end if
         if t.id = "daily-engineering-ops" or t.id = "github-ci-popularity" or t.id = "robos-voice-dictation"
             m.slideRemSec = m.slideIntervalSec
             if t.id = "daily-engineering-ops" then m.slideNumber = 1
@@ -2773,6 +2952,21 @@ end sub
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if key = "Lit_~" or Left(key, 4) = "Lit_"
         return true
+    end if
+    if press = true and key = "back"
+        if m.cinemaVideoActive = true
+            m.localVideoPlaying = false
+            stopCinemaVideo()
+            if m.cinemaLibraryActive = true and m.cinemaLibList <> invalid
+                m.cinemaLibList.setFocus(true)
+            end if
+            return true
+        end if
+        if m.cinemaLibraryActive = true
+            m.localLibraryOpened = false
+            hideCinemaLibrary()
+            return true
+        end if
     end if
     return false
 end function
@@ -3333,12 +3527,21 @@ function createTvEngine({
           const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
             ? { ...state.activeCinemaCast, active: true }
             : null;
+          const cinemaLibItems = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
+          const cinemaLibrary = {
+            active: Boolean(state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
+            tvIp: state.activeCinemaLibrary?.tvIp || null,
+            tvName: state.activeCinemaLibrary?.tvName || null,
+            server: state.moviePlayerServer || null,
+            items: cinemaLibItems,
+          };
           const bodyJson = JSON.stringify({
             ok: true,
             appCastActive: Boolean(rokuAppCast),
             appCast: rokuAppCast,
-            cinemaCastActive: Boolean(activeCinema),
+            cinemaCastActive: Boolean(activeCinema || cinemaLibrary.active),
             cinemaCast: activeCinema,
+            cinemaLibrary,
             cast: state.activeDashboardCast || null,
             slideshow: resolved.slideshow || ssState || null,
             dashboard: resolved.dashboard,
@@ -3385,6 +3588,130 @@ function createTvEngine({
           });
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(dashHtml);
+          return;
+        }
+
+        if (u.pathname === '/movie-player') {
+          const items = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
+          const itemsJson = JSON.stringify(items);
+          const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Movie Player — 10-Foot Smart TV Cinema Library</title>
+  <style>
+    :root { --bg: #110e0b; --surface: #181410; --border: #2b241d; --accent: #e8a33d; --cyan: #38bdf8; --text: #f1e9dc; --muted: #a89f91; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    header { height: 78px; background: #1c1713; border-bottom: 3px solid var(--accent); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+    header h1 { margin: 0; font-size: 24px; letter-spacing: 0.03em; }
+    header .sub { color: var(--accent); font-size: 14px; font-weight: 600; }
+    .layout { flex: 1; display: grid; grid-template-columns: 1.55fr 1fr; gap: 24px; padding: 24px 40px; overflow: hidden; }
+    .pane { background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
+    .pane.detail { border-top-color: var(--cyan); align-items: center; text-align: center; justify-content: flex-start; }
+    .pane-title { font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); width: 100%; text-align: left; }
+    .pane.detail .pane-title { color: var(--cyan); }
+    .movie-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 6px; }
+    .movie-row { padding: 12px 16px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid transparent; display: flex; align-items: center; justify-content: space-between; font-size: 18px; cursor: pointer; }
+    .movie-row.focused { background: var(--accent); color: #15120f; font-weight: 700; border-color: #fff; }
+    .movie-row .meta { font-size: 14px; opacity: 0.85; }
+    .poster-box { width: 260px; height: 340px; background: #0e0c0a; border-radius: 10px; border: 1px solid var(--border); margin: 12px 0 18px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .poster-box img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-title { font-size: 26px; font-weight: 700; margin: 0 0 8px; }
+    .detail-meta { font-size: 16px; color: var(--accent); margin: 0 0 18px; }
+    .play-cta { background: var(--accent); color: #15120f; font-weight: 800; padding: 14px 28px; border-radius: 8px; font-size: 16px; cursor: pointer; border: none; }
+    #video-overlay { position: fixed; inset: 0; background: #000; display: none; z-index: 100; }
+    #video-overlay.active { display: flex; flex-direction: column; }
+    #tv-video { width: 100%; height: 100%; background: #000; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎬 ROBOS MOVIE PLAYER — 10-FOOT SMART TV CINEMA LIBRARY</h1>
+    <div class="sub">REMOTE: ▲/▼ BROWSE · [OK / ENTER] PLAY FULL-SCREEN · [BACK / ESC] RETURN</div>
+  </header>
+  <div class="layout">
+    <div class="pane">
+      <div class="pane-title" id="list-header">YOUR SYNCED MOVIES (${items.length} TITLES)</div>
+      <div class="movie-list" id="movie-list"></div>
+    </div>
+    <div class="pane detail">
+      <div class="pane-title">SELECTED FEATURE FILM DETAILS</div>
+      <div class="poster-box" id="poster-box"><span>🎬</span></div>
+      <h2 class="detail-title" id="detail-title">Select a Movie</h2>
+      <div class="detail-meta" id="detail-meta">1080p WEBRip · RobOS Cinema</div>
+      <button class="play-cta" id="play-btn">PRESS [OK / ENTER] ON REMOTE TO PLAY</button>
+    </div>
+  </div>
+  <div id="video-overlay">
+    <video id="tv-video" controls autoplay></video>
+  </div>
+  <script>
+    const MOVIES = ${itemsJson};
+    let idx = 0;
+    const listEl = document.getElementById('movie-list');
+    const overlay = document.getElementById('video-overlay');
+    const videoEl = document.getElementById('tv-video');
+    function render() {
+      listEl.innerHTML = MOVIES.map((m, i) => \`
+        <div class="movie-row \${i === idx ? 'focused' : ''}" data-idx="\${i}">
+          <span>\${i + 1}. \${m.title}\${m.year ? ' (' + m.year + ')' : ''}</span>
+          <span class="meta">\${m.artist || 'Feature Film'}</span>
+        </div>
+      \`).join('');
+      const activeRow = listEl.querySelector('.movie-row.focused');
+      if (activeRow) activeRow.scrollIntoView({ block: 'nearest' });
+      const cur = MOVIES[idx];
+      if (cur) {
+        document.getElementById('detail-title').textContent = cur.title;
+        document.getElementById('detail-meta').textContent = (cur.artist || 'Feature Film') + (cur.year ? ' · ' + cur.year : '') + ' · ' + (cur.genre || 'Movies');
+        document.getElementById('poster-box').innerHTML = cur.artUrl ? '<img src="' + cur.artUrl + '" alt="" />' : '<span style="font-size:48px;">🎬</span>';
+      }
+      listEl.querySelectorAll('.movie-row').forEach(el => {
+        el.onclick = () => { idx = Number(el.dataset.idx); render(); playCurrent(); };
+      });
+    }
+    function playCurrent() {
+      const cur = MOVIES[idx];
+      if (!cur || !cur.streamUrl) return;
+      overlay.classList.add('active');
+      videoEl.src = cur.streamUrl;
+      videoEl.play().catch(() => {});
+    }
+    function stopVideo() {
+      videoEl.pause();
+      videoEl.removeAttribute('src');
+      overlay.classList.remove('active');
+    }
+    document.getElementById('play-btn').onclick = playCurrent;
+    document.addEventListener('keydown', (e) => {
+      if (overlay.classList.contains('active')) {
+        if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') {
+          stopVideo();
+          e.preventDefault();
+        } else if (e.key === 'ArrowRight') {
+          videoEl.currentTime = (videoEl.currentTime || 0) + 15;
+          e.preventDefault();
+        } else if (e.key === 'ArrowLeft') {
+          videoEl.currentTime = Math.max(0, (videoEl.currentTime || 0) - 15);
+          e.preventDefault();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          if (videoEl.paused) videoEl.play(); else videoEl.pause();
+          e.preventDefault();
+        }
+        return;
+      }
+      if (e.key === 'ArrowDown') { idx = (idx + 1) % Math.max(1, MOVIES.length); render(); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { idx = (idx - 1 + Math.max(1, MOVIES.length)) % Math.max(1, MOVIES.length); render(); e.preventDefault(); }
+      else if (e.key === 'Enter') { playCurrent(); e.preventDefault(); }
+    });
+    render();
+  </script>
+</body>
+</html>`;
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(html);
           return;
         }
 
