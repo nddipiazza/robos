@@ -108,8 +108,18 @@ function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarration
   }
 
   function push(client) {
+    // A view that fails to build is logged and skipped; dropping the client
+    // here would leave its screen frozen with an open connection that never
+    // reconnects.
+    let data;
     try {
-      client.res.write(`data: ${JSON.stringify(viewFor(client))}\n\n`);
+      data = JSON.stringify(viewFor(client));
+    } catch (err) {
+      log({ msg: 'view failed', kind: client.kind, screen: client.screen, err: err.stack || err.message });
+      return;
+    }
+    try {
+      client.res.write(`data: ${data}\n\n`);
     } catch {
       clients.delete(client);
     }

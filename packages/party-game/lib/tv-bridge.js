@@ -63,27 +63,47 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
   function startFrameStream(tvId, screen) {
     stopFrameStream(tvId);
     if (!BrowserWindow) return false;
+    // Offscreen rendering keeps painting even when no RobOS window is visible
+    // (a hidden normal window only paints its first frame, which froze the TV
+    // whenever the console was minimized).
     const win = new BrowserWindow({
       width: 1920,
       height: 1080,
       show: false,
       frame: false,
-      paintWhenInitiallyHidden: true,
       backgroundColor: '#070b12',
-      webPreferences: { contextIsolation: true, nodeIntegration: false, backgroundThrottling: false },
+      webPreferences: {
+        offscreen: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        backgroundThrottling: false,
+        // Its own session, so its live-update stream does not count against the
+        // six-connections-per-host limit shared by the console and its previews.
+        partition: `party-roku-${tvId}`,
+      },
     });
+    let latest = null;
+    let fresh = false;
+    win.webContents.on('paint', (_e, _dirty, image) => {
+      latest = image;
+      fresh = true;
+    });
+    win.webContents.setFrameRate(10);
     win.loadURL(`${tvPageUrl(screen, '127.0.0.1')}&capture=1`);
     win.webContents.setAudioMuted(true);
     let busy = false;
+    let lastPost = 0;
     const timer = setInterval(async () => {
-      if (busy || win.isDestroyed()) return;
+      if (busy || win.isDestroyed() || !latest) return;
+      // Re-send an unchanged frame every few seconds so the portal keeps it live.
+      if (!fresh && Date.now() - lastPost < 5000) return;
       busy = true;
+      fresh = false;
       try {
-        const img = await win.webContents.capturePage();
-        // HiDPI hosts capture at 2×; Roku posters only need 1080p.
-        const size = img.getSize();
-        const jpg = (size.width > 1920 ? img.resize({ width: 1920, height: 1080, quality: 'good' }) : img).toJPEG(80);
+        const size = latest.getSize();
+        const jpg = (size.width > 1920 ? latest.resize({ width: 1920, height: 1080, quality: 'good' }) : latest).toJPEG(80);
         if (jpg.length > 2000) await postFrame(getPortalPort(), tvId, jpg);
+        lastPost = Date.now();
       } catch (err) {
         log({ msg: 'frame capture failed', tvId, err: err.message });
       } finally {
