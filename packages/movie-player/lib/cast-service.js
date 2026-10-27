@@ -144,6 +144,71 @@ class CastService {
     this.streamServer = http.createServer((req, res) => {
       const parsedUrl = new URL(req.url, `http://${this.hostIp}:${this.streamPort}`);
 
+      if (parsedUrl.pathname === '/api/tv-library') {
+        const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
+        const items = tracks.slice(0, 250).map((t, idx) => {
+          let streamUrl = '';
+          if (t.cloud) {
+            streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.mp4`;
+          } else if (t.filePath && fs.existsSync(t.filePath)) {
+            streamUrl = this.registerFile(t.filePath);
+          } else {
+            streamUrl = t.src || '';
+          }
+          const artUrl = t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '';
+          return {
+            index: idx + 1,
+            id: t.id,
+            title: String(t.title || 'Untitled Movie').slice(0, 80),
+            artist: String(t.artist || 'Feature Film').slice(0, 50),
+            album: String(t.album || 'RobOS Cinema').slice(0, 60),
+            genre: String(t.genre || 'Movies').slice(0, 32),
+            year: t.year || null,
+            duration: Number(t.duration) || 0,
+            artUrl,
+            streamUrl,
+          };
+        });
+        const body = JSON.stringify({
+          ok: true,
+          hostIp: this.hostIp,
+          streamPort: this.streamPort,
+          totalCount: tracks.length,
+          items,
+        });
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-store',
+        });
+        res.end(body);
+        return;
+      }
+
+      if (parsedUrl.pathname === '/api/tv-play' && (req.method === 'POST' || req.method === 'GET')) {
+        const trackId = parsedUrl.searchParams.get('id') || '';
+        const tvIp = parsedUrl.searchParams.get('tvIp') || '';
+        const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
+        const track = tracks.find(t => t.id === trackId) || tracks[0];
+        if (!track) {
+          res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ ok: false, error: 'Movie not found' }));
+          return;
+        }
+        let streamUrl = '';
+        if (track.cloud) {
+          streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(track.id)}.mp4`;
+        } else if (track.filePath && fs.existsSync(track.filePath)) {
+          streamUrl = this.registerFile(track.filePath);
+        }
+        if (typeof this.onTvRemoteSelect === 'function') {
+          try { this.onTvRemoteSelect(track, tvIp); } catch {}
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, id: track.id, title: track.title, streamUrl }));
+        return;
+      }
+
       // Handle Album Art requests
       if (parsedUrl.pathname.startsWith('/art/')) {
         const artId = parsedUrl.pathname.replace(/^\/art\//, '').replace(/\.[^.]+$/, '');
@@ -261,7 +326,41 @@ class CastService {
       this.streamPort = this.streamServer.address().port;
       this.streamServer.unref();
       console.log(`[CastService] Audio stream server ready at http://${this.hostIp}:${this.streamPort}`);
+      this._saveStreamServerEndpoint();
     });
+  }
+
+  _saveStreamServerEndpoint() {
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      const dir = path.dirname(cfgPath);
+      fs.mkdirSync(dir, { recursive: true });
+      const raw = fs.existsSync(cfgPath) ? JSON.parse(fs.readFileSync(cfgPath, 'utf8')) : {};
+      raw.moviePlayerServer = {
+        hostIp: this.hostIp,
+        streamPort: this.streamPort,
+        libraryUrl: `http://${this.hostIp}:${this.streamPort}/api/tv-library`,
+        playUrl: `http://${this.hostIp}:${this.streamPort}/api/tv-play`,
+        updatedAt: new Date().toISOString(),
+      };
+      if (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) {
+        raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => ({
+          index: idx + 1,
+          id: t.id,
+          title: String(t.title || 'Untitled Movie').slice(0, 80),
+          artist: String(t.artist || 'Feature Film').slice(0, 50),
+          album: String(t.album || 'RobOS Cinema').slice(0, 60),
+          genre: String(t.genre || 'Movies').slice(0, 32),
+          year: t.year || null,
+          duration: Number(t.duration) || 0,
+          artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
+          streamUrl: t.cloud
+            ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.mp4`
+            : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
+        }));
+      }
+      fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+    } catch {}
   }
 
   // The real type matters: speakers may refuse a WAV (e.g. a DJ voice clip) sent as MP3.

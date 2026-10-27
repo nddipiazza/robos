@@ -22646,7 +22646,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Toggle Picture-in-Picture"
         },
         "PiP"
-      ), speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement(
+      ), speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement(import_react24.default.Fragment, null, /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           type: "button",
@@ -22671,6 +22671,24 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         "\u{1F4FA} Cast to ",
         outputTarget !== "local" ? getSpeakerName(outputTarget) : speakers[0].name
       ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          style: { borderColor: "#38bdf8", color: "#38bdf8" },
+          onClick: async () => {
+            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+            if (window.robosAudio?.launchTvLibrary) {
+              const res = await window.robosAudio.launchTvLibrary(target);
+              if (res && res.ok) {
+                showStatus(`\u{1F4FA} 10-Foot Movie Library opened on ${getSpeakerName(target)}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+              }
+            }
+          },
+          title: "Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
+        },
+        "\u{1F3AE} TV Library (Remote UI)"
+      )), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           type: "button",
@@ -23018,7 +23036,32 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               }
             },
             currentTrack ? `Display "${currentTrack.title.slice(0, 22)}${currentTrack.title.length > 22 ? "\u2026" : ""}" on TV` : "Display on TV"
-          ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop TV"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+          ), /* @__PURE__ */ import_react24.default.createElement(
+            "button",
+            {
+              className: "btn-secondary",
+              style: { borderColor: "#38bdf8", color: "#38bdf8" },
+              onClick: async () => {
+                showStatus(`Opening 10-Foot Movie Library UI on ${s.name} (${s.ip})...`);
+                try {
+                  const res = await window.robosAudio.launchTvLibrary(s.ip);
+                  if (res && res.ok) {
+                    showStatus(`\u{1F4FA} Movie Library (${res.totalMovies || library.tracks.length} movies) is now open on ${s.name}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+                  } else {
+                    showStatus(`Could not open TV Library: ${res?.error || "Unknown error"}`);
+                  }
+                } catch (err) {
+                  showStatus("Error opening TV Library: " + err.message);
+                }
+              },
+              title: "Open the interactive 10-foot Movie Library on this Smart TV to browse and play movies using your physical TV remote"
+            },
+            "\u{1F3AE} Open TV Library (Remote UI)"
+          ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: async () => {
+            if (window.robosAudio?.closeTvLibrary) await window.robosAudio.closeTvLibrary(s.ip).catch(() => {
+            });
+            handleStopCast(s.ip);
+          } }, "Stop TV"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
             showStatus(`Sending test signal to ${s.name} (${s.ip})...`);
             try {
               await window.robosAudio.playTestChime(s.ip);

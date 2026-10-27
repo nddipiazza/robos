@@ -1911,25 +1911,44 @@ export default function App() {
                         PiP
                       </button>
                       {speakers.length > 0 && (
-                        <button
-                          type="button"
-                          className="btn-chip"
-                          style={{ borderColor: '#e8a33d', color: '#e8a33d' }}
-                          onClick={() => {
-                            const target = outputTarget !== 'local' ? outputTarget : speakers[0].ip;
-                            setOutputTarget(target);
-                            const v = videoRef.current;
-                            const from = v ? v.currentTime : 0;
-                            if (v) { v.pause(); v.muted = true; }
-                            if (currentTrack) {
-                              castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
-                              setIsPlaying(true);
-                            }
-                          }}
-                          title={`Cast movie to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
-                        >
-                          📺 Cast to {outputTarget !== 'local' ? getSpeakerName(outputTarget) : speakers[0].name}
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            className="btn-chip"
+                            style={{ borderColor: '#e8a33d', color: '#e8a33d' }}
+                            onClick={() => {
+                              const target = outputTarget !== 'local' ? outputTarget : speakers[0].ip;
+                              setOutputTarget(target);
+                              const v = videoRef.current;
+                              const from = v ? v.currentTime : 0;
+                              if (v) { v.pause(); v.muted = true; }
+                              if (currentTrack) {
+                                castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
+                                setIsPlaying(true);
+                              }
+                            }}
+                            title={`Cast movie to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
+                          >
+                            📺 Cast to {outputTarget !== 'local' ? getSpeakerName(outputTarget) : speakers[0].name}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-chip"
+                            style={{ borderColor: '#38bdf8', color: '#38bdf8' }}
+                            onClick={async () => {
+                              const target = outputTarget !== 'local' ? outputTarget : speakers[0].ip;
+                              if (window.robosAudio?.launchTvLibrary) {
+                                const res = await window.robosAudio.launchTvLibrary(target);
+                                if (res && res.ok) {
+                                  showStatus(`📺 10-Foot Movie Library opened on ${getSpeakerName(target)}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+                                }
+                              }
+                            }}
+                            title="Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
+                          >
+                            🎮 TV Library (Remote UI)
+                          </button>
+                        </>
                       )}
                       <button
                         type="button"
@@ -2491,7 +2510,30 @@ export default function App() {
                       >
                         {currentTrack ? `Display "${currentTrack.title.slice(0, 22)}${currentTrack.title.length > 22 ? '…' : ''}" on TV` : 'Display on TV'}
                       </button>
-                      <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(s.ip)}>
+                      <button
+                        className="btn-secondary"
+                        style={{ borderColor: '#38bdf8', color: '#38bdf8' }}
+                        onClick={async () => {
+                          showStatus(`Opening 10-Foot Movie Library UI on ${s.name} (${s.ip})...`);
+                          try {
+                            const res = await window.robosAudio.launchTvLibrary(s.ip);
+                            if (res && res.ok) {
+                              showStatus(`📺 Movie Library (${res.totalMovies || library.tracks.length} movies) is now open on ${s.name}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+                            } else {
+                              showStatus(`Could not open TV Library: ${res?.error || 'Unknown error'}`);
+                            }
+                          } catch (err) {
+                            showStatus('Error opening TV Library: ' + err.message);
+                          }
+                        }}
+                        title="Open the interactive 10-foot Movie Library on this Smart TV to browse and play movies using your physical TV remote"
+                      >
+                        🎮 Open TV Library (Remote UI)
+                      </button>
+                      <button className="btn-chip btn-stop-cast" onClick={async () => {
+                        if (window.robosAudio?.closeTvLibrary) await window.robosAudio.closeTvLibrary(s.ip).catch(() => {});
+                        handleStopCast(s.ip);
+                      }}>
                         Stop TV
                       </button>
                       <button className="btn-secondary" onClick={async () => {
