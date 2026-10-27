@@ -64,5 +64,5 @@ body.game{background:#05060a;color:#f3efe6}
 .lb img{max-width:100%;max-height:88vh;border-radius:10px;box-shadow:0 20px 80px #000}.lb p{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#c9c2b2;margin:0}
 @media(max-width:860px){.hub.three{grid-template-columns:1fr}.legend{grid-template-columns:1fr}.faction{grid-template-columns:1fr;padding:20px}}
 .game .nav .links{gap:22px;flex-wrap:nowrap}.game .nav .links a{white-space:nowrap;font-size:.9rem}.game .brand span{white-space:nowrap}
-/* Docs links need extra room; each game page links its docs, so they show only on wide screens. */
-@media(max-width:1700px){.game .nav .links a[href$="/docs/"]{display:none}}
+/* Tighter on mid-size screens; the footer links back to RobOS home. */
+@media(max-width:1060px){.game .nav .links{gap:12px}.game .nav .links a{font-size:.84rem}.game .nav .nav-r{display:none}}

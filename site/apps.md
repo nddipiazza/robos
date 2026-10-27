@@ -96,7 +96,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         <div>
           <h3>{{ app.title }}</h3>
           <code class="app-pkg">{{ app.package }}</code>
-          <p>{{ app.summary }}</p>
+          <p>{{ app.summary | escape }}</p>
         </div>
       </a>
     {%- endfor %}
@@ -117,7 +117,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         <div>
           <h3>{{ app.title }}</h3>
           <code class="app-pkg">{{ app.package }}</code>
-          <p>{{ app.summary }}</p>
+          <p>{{ app.summary | escape }}</p>
         </div>
       </a>
     {%- endfor %}
