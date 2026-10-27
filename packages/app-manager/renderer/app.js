@@ -21,7 +21,8 @@ function checkbox(items) {
 function render() {
   const open = new Map(Array.from($('tree').querySelectorAll('details')).map(node => [node.dataset.group, node.open]));
   $('tree').replaceChildren();
-  const apps = visible(), groups = [...new Set(apps.map(item => item.group))].sort();
+  const order = ['Everyday & business', 'Developer tools', 'AI & agents', 'Games & game tools', 'System & security'];
+  const apps = visible(), groups = [...new Set(apps.map(item => item.group))].sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b)) || a.localeCompare(b));
   for (const group of groups) {
     const items = apps.filter(item => item.group === group), details = element('details'); details.open = open.get(group) ?? true; details.dataset.group = group;
     const summary = element('summary'), label = element('label');
