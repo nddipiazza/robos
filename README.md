@@ -34,7 +34,7 @@ Separately, AI-powered features inside the apps are optional extras you switch o
 
 ## Getting started
 
-On Windows, [download the app-suite setup](https://rowbose.com/download/#windows) to install the apps and a private runtime into `%USERPROFILE%\RobOS`, with a Start menu launcher. This is native Windows setup; Linux-specific integrations still need Linux. The separate USB flasher installs the optional Linux GNOME distro. To run from source instead, use Node.js 20+ and Git on Linux or macOS, or use WSL2 on Windows.
+The [RobOS App Manager](packages/app-manager) provides the same app selection and launcher on Windows and Ubuntu GNOME. Install its Windows EXE or open its Linux AppImage, choose apps in the grouped checkbox tree, and download only those apps and their shared components. Apps get individual Start menu or GNOME entries. The manager can add or remove apps later, and uninstalling RobOS removes its managed apps. See the [distribution build guide](scripts/app-manager/README.md). The separate USB flasher installs the optional Linux GNOME distro.
 
 ```sh
 git clone https://github.com/nddipiazza/robos.git

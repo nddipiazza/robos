@@ -1,0 +1,64 @@
+name: Modular RobOS apps
+on:
+  push:
+    tags: ['v*']
+    branches: ['codex/modular-app-manager']
+  pull_request:
+    paths: ['packages/app-manager/**', 'scripts/app-manager/**', '.github/workflows/app-manager.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read release version
+        id: version
+        shell: bash
+        run: echo "tag=v$(cat VERSION | tr -d '\r\n')" >> "$GITHUB_OUTPUT"
+      - name: Install manager build dependencies
+        run: npm install --prefix packages/app-manager --no-audit --no-fund
+      - name: Verify component lifecycle and installer boundaries
+        run: node --test packages/app-manager/test/*.test.cjs
+      - name: Build Windows installer or Linux AppImage
+        run: node scripts/app-manager/build.cjs
+      - name: Smoke test packaged manager
+        if: runner.os == 'Windows'
+        run: node scripts/app-manager/smoke.cjs
+      - name: Build individual app downloads
+        run: node scripts/app-manager/publish-catalog.cjs
+      - name: Upload manager and app downloads
+        uses: actions/upload-artifact@v4
+        with:
+          name: robos-app-manager-${{ runner.os }}
+          path: |
+            release/app-manager/*.exe
+            release/app-manager/*.AppImage
+            release/app-manager/*.tgz
+            release/app-manager/robos-catalog-*.json
+            run/app-manager-smoke/**
+      - name: Publish versioned downloads
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/modular-app-manager'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+          name: RobOS App Manager ${{ steps.version.outputs.tag }}
+          body: 'Lightweight RobOS App Manager for Windows and Ubuntu GNOME. Select apps in a grouped checkbox tree; only selected apps and shared components download. Each app gets a native menu entry. Uninstalling RobOS removes managed apps and shortcuts while retaining personal settings.'
+          files: |
+            release/app-manager/*.exe
+            release/app-manager/*.AppImage
+            release/app-manager/*.tgz
+            release/app-manager/robos-catalog-*.json
+          fail_on_unmatched_files: true

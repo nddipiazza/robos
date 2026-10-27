@@ -1,0 +1,23 @@
+{
+  "prompt": "Register the shared Windows and Ubuntu GNOME RobOS App Manager. Apply after reconciling the pre-existing modular/aggregate graph mismatch.",
+  "edits": [
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:desktop-app:app-manager",
+        "@type": ["robos:DesktopApp", "schema:SoftwareApplication", "oslc_am:Resource", "c4:Container"],
+        "dcterms:title": "RobOS App Manager",
+        "dcterms:description": "Shared cross-platform launcher and selective app installer with grouped checkboxes, independent verified downloads, native menu entries, and uninstall cleanup.",
+        "robos:package": "applications",
+        "robos:namespace": "robos.apps",
+        "robos:repository": "github.com/nddipiazza/robos",
+        "robos:localPath": "packages/app-manager",
+        "robos:technology": "Electron / Vanilla JavaScript / NSIS / AppImage",
+        "robos:desktopFramework": "Electron",
+        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+        "robos:domainStandard": "https://schema.org/SoftwareApplication",
+        "robos:apiPort": 19207
+      }
+    }
+  ]
+}
