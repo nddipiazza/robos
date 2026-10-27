@@ -631,6 +631,12 @@ const BUILTIN_APPS = [
     label: "Workspace Manager",
     category: "core-desktop",
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#00bcd4\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z\"/><path d=\"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12\"/><path d=\"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17\"/></svg>"
+  },
+  {
+    appId: 'movie-player',
+    label: 'RobOS Movie Player',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2.5" fill="#e8a33d" fill-opacity="0.12" stroke="#e8a33d"/><line x1="6.5" y1="3" x2="6.5" y2="21"/><line x1="17.5" y1="3" x2="17.5" y2="21"/><line x1="2" y1="8" x2="6.5" y2="8"/><line x1="2" y1="12" x2="6.5" y2="12"/><line x1="2" y1="16" x2="6.5" y2="16"/><line x1="17.5" y1="8" x2="22" y2="8"/><line x1="17.5" y1="12" x2="22" y2="12"/><line x1="17.5" y1="16" x2="22" y2="16"/><polygon points="10.2,9.2 10.2,14.8 15,12" fill="#e8a33d" stroke="#e8a33d" stroke-width="1.2"/></svg>'
   }
 ];
 
