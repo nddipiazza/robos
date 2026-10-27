@@ -394,7 +394,8 @@ function renderCircadianAndSchedules(overview) {
             <div>
               <strong>⏰ ${esc(s.time)} — ${esc(s.name)}</strong>
               <div class="light-meta">
-                Scene: ${esc(sc ? sc.name : s.sceneId)} · Fade: ${s.fadeMinutes}m · Scope: ${esc(s.roomScope)}
+                ${s.enabled === false ? 'Paused · ' : ''}${esc((s.days && s.days.length ? s.days : ['Every day']).join(' '))}
+                · Scene: ${esc(sc ? sc.name : s.sceneId)} · Fade: ${s.fadeMinutes}m · Scope: ${esc(s.roomScope)}
                 ${s.lastTriggeredAt ? ` · Last run: ${new Date(s.lastTriggeredAt).toLocaleTimeString()}` : ''}
               </div>
             </div>
@@ -412,7 +413,7 @@ function renderCircadianAndSchedules(overview) {
         const id = btn.getAttribute('data-run-sched');
         const res = await window.robos.triggerScheduleNow(id);
         if (res?.overview) renderAll(res.overview);
-        showBanner(`Triggered schedule "${res?.schedule?.name || id}" across LAN.`);
+        showBanner(`Ran schedule "${res?.schedule?.name || id}" now (scene applied immediately, without its fade).`);
       });
     });
 
@@ -594,9 +595,22 @@ function bindStaticEvents() {
   // Pair Hue Bridge
   document.getElementById('btn-pair-hue')?.addEventListener('click', async () => {
     const bridgeIp = document.getElementById('input-hue-bridge-ip')?.value?.trim() || '192.168.1.87';
+    showBanner(`Contacting Hue Bridge at ${bridgeIp}…`);
     const res = await window.robos.pairHueBridge({ bridgeIp });
     if (res?.overview) renderAll(res.overview);
-    showBanner(`Philips Hue Bridge (${bridgeIp}) paired with local key: ${res?.hueUsername}.`);
+    if (!res?.ok) {
+      showBanner(`Hue Bridge pairing failed: ${res?.error || 'no response from the bridge.'}`);
+      return;
+    }
+    if (res.simulated) {
+      showBanner(
+        `Simulated Hue pairing (test mode, no network traffic): ${res.updatedCount} Hue light(s) now use placeholder key ${res.hueUsername}.`
+      );
+      return;
+    }
+    showBanner(
+      `Paired with Philips Hue Bridge at ${res.bridgeIp}: ${res.updatedCount} Hue light(s) now use bridge username ${res.hueUsername}.`
+    );
   });
 
   // AI Mood Scene Designer

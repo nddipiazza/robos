@@ -482,6 +482,10 @@ const DEFAULT_SCHEDULES = [
   },
 ];
 
+const WEEKDAY_ABBREVIATIONS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const SCHEDULER_INTERVAL_MS = 60 * 1000;
+const SCHEDULE_GRACE_MINUTES = 5;
+
 const CI_STATUS_STATES = {
   passing: {
     id: 'passing',
@@ -1217,8 +1221,19 @@ function createSmartLightEngine(options = {}) {
       ? Boolean(options.skipLanNetwork)
       : process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1';
 
+  // Injectable clock and timers so the schedule runner can be tested without waiting.
+  const now = typeof options.now === 'function' ? options.now : () => new Date();
+  const timers = {
+    setInterval: options.timers?.setInterval || setInterval,
+    clearInterval: options.timers?.clearInterval || clearInterval,
+    setTimeout: options.timers?.setTimeout || setTimeout,
+    clearTimeout: options.timers?.clearTimeout || clearTimeout,
+  };
+
   let apiPort = Number(options.apiPort ?? DEFAULT_API_PORT);
   let apiServer = null;
+  let schedulerTimer = null;
+  const activeFades = new Set();
 
   function loadState() {
     try {
@@ -1361,7 +1376,14 @@ function createSmartLightEngine(options = {}) {
     };
   }
 
+  // Public entry point: a direct change to a light takes it out of any running
+  // schedule fade, so the next fade step does not overwrite what the user set.
   async function updateLight(lightId, patch = {}) {
+    releaseLightFromFades(lightId);
+    return setLightState(lightId, patch);
+  }
+
+  async function setLightState(lightId, patch = {}) {
     const idx = state.lights.findIndex((l) => l.id === lightId);
     if (idx === -1) {
       return { ok: false, error: `Light "${lightId}" not found.` };
@@ -1484,29 +1506,35 @@ function createSmartLightEngine(options = {}) {
     };
   }
 
-  async function applyScene(sceneId, roomScopeOverride = null) {
-    const allScenes = [...BUILTIN_SCENES, ...state.customScenes];
-    const scene = allScenes.find((s) => s.id === sceneId);
-    if (!scene) {
-      return { ok: false, error: `Scene "${sceneId}" not found.` };
-    }
+  function findScene(sceneId) {
+    return [...BUILTIN_SCENES, ...state.customScenes].find((s) => s.id === sceneId) || null;
+  }
+
+  /**
+   * Resolve a scene into the per-light patches it applies, without sending anything.
+   * Shared by applyScene (immediate) and the schedule fader (stepped).
+   */
+  function buildScenePatches(scene, roomScopeOverride = null) {
     const scope = roomScopeOverride || scene.roomScope || 'all';
     const preset = scene.preset || {};
-    state.activeSceneId = scene.id;
+    const patches = [];
 
     for (const light of state.lights) {
       if (scope !== 'all' && light.roomId !== scope) continue;
       if (preset.keepNightlightRoomId && !preset.on) {
         if (light.roomId === preset.keepNightlightRoomId) {
-          await updateLight(light.id, {
-            on: true,
-            brightness: preset.brightness || 10,
-            colorMode: 'kelvin',
-            kelvin: preset.kelvin || 2200,
-            effect: 'solid',
+          patches.push({
+            lightId: light.id,
+            patch: {
+              on: true,
+              brightness: preset.brightness || 10,
+              colorMode: 'kelvin',
+              kelvin: preset.kelvin || 2200,
+              effect: 'solid',
+            },
           });
         } else {
-          await updateLight(light.id, { on: false });
+          patches.push({ lightId: light.id, patch: { on: false } });
         }
         continue;
       }
@@ -1517,14 +1545,30 @@ function createSmartLightEngine(options = {}) {
       const targetMode =
         isStripOrBar && preset.stripColorHex ? 'rgb' : preset.colorMode || 'kelvin';
 
-      await updateLight(light.id, {
-        on: preset.on !== false,
-        brightness: preset.brightness ?? 80,
-        colorMode: targetMode,
-        kelvin: preset.kelvin ?? 4000,
-        colorHex: targetColorHex,
-        effect: isStripOrBar ? preset.effect || 'solid' : 'solid',
+      patches.push({
+        lightId: light.id,
+        patch: {
+          on: preset.on !== false,
+          brightness: preset.brightness ?? 80,
+          colorMode: targetMode,
+          kelvin: preset.kelvin ?? 4000,
+          colorHex: targetColorHex,
+          effect: isStripOrBar ? preset.effect || 'solid' : 'solid',
+        },
       });
+    }
+    return patches;
+  }
+
+  async function applyScene(sceneId, roomScopeOverride = null) {
+    const scene = findScene(sceneId);
+    if (!scene) {
+      return { ok: false, error: `Scene "${sceneId}" not found.` };
+    }
+    state.activeSceneId = scene.id;
+
+    for (const { lightId, patch } of buildScenePatches(scene, roomScopeOverride)) {
+      await updateLight(lightId, patch);
     }
 
     saveState();
@@ -1680,6 +1724,10 @@ function createSmartLightEngine(options = {}) {
     };
     const idx = state.schedules.findIndex((s) => s.id === id);
     if (idx >= 0) {
+      item.lastTriggeredAt = item.lastTriggeredAt || state.schedules[idx].lastTriggeredAt || null;
+      if (state.schedules[idx].lastAutoRunDate) item.lastAutoRunDate = state.schedules[idx].lastAutoRunDate;
+    }
+    if (idx >= 0) {
       state.schedules[idx] = item;
     } else {
       state.schedules.push(item);
@@ -1694,13 +1742,200 @@ function createSmartLightEngine(options = {}) {
     return { ok: true, overview: getOverview() };
   }
 
+  // "Test Now": applies the scene immediately (no fade) and does not count as
+  // the day's automatic run.
   async function triggerScheduleNow(scheduleId) {
     const sched = state.schedules.find((s) => s.id === scheduleId);
     if (!sched) return { ok: false, error: 'Schedule not found.' };
-    sched.lastTriggeredAt = new Date().toISOString();
+    sched.lastTriggeredAt = now().toISOString();
     await applyScene(sched.sceneId, sched.roomScope);
     saveState();
     return { ok: true, schedule: sched, overview: getOverview() };
+  }
+
+  // ── Schedule Runner ──────────────────────────────────────────────────────
+  // A once-a-minute check runs each enabled schedule whose day and time match,
+  // at most once per local calendar day. Scenes with fadeMinutes > 0 are reached
+  // by stepping brightness (and color temperature) over the fade window.
+
+  function releaseLightFromFades(lightId) {
+    for (const fade of activeFades) fade.targets.delete(lightId);
+  }
+
+  function cancelFade(fade) {
+    fade.cancelled = true;
+    if (fade.timer) timers.clearTimeout(fade.timer);
+    fade.timer = null;
+    if (fade.wake) fade.wake();
+    activeFades.delete(fade);
+  }
+
+  function fadeSleep(fade, ms) {
+    return new Promise((resolve) => {
+      fade.wake = resolve;
+      fade.timer = timers.setTimeout(() => {
+        fade.timer = null;
+        fade.wake = null;
+        resolve();
+      }, ms);
+    });
+  }
+
+  function lerp(from, to, t) {
+    return Math.round(from + (to - from) * t);
+  }
+
+  async function fadeToScene(sched, scene) {
+    const fadeMs = clamp(Number(sched.fadeMinutes) || 0, 0, 60) * 60 * 1000;
+    const patches = buildScenePatches(scene, sched.roomScope);
+    state.activeSceneId = scene.id;
+
+    // A newer schedule takes over any light an older fade is still moving.
+    for (const { lightId } of patches) releaseLightFromFades(lightId);
+
+    if (fadeMs <= 0) {
+      for (const { lightId, patch } of patches) await setLightState(lightId, patch);
+      saveState();
+      return;
+    }
+
+    const fade = { scheduleId: sched.id, targets: new Map(), cancelled: false, timer: null, wake: null };
+    for (const { lightId, patch } of patches) {
+      const light = state.lights.find((l) => l.id === lightId);
+      if (!light) continue;
+      const targetOn = patch.on !== false;
+      const startBri = light.on ? clamp(light.brightness, 1, 100) : 1;
+      const targetBri = targetOn ? clamp(patch.brightness ?? light.brightness, 1, 100) : 1;
+      const targetKelvinMode = targetOn && (patch.colorMode || light.colorMode) === 'kelvin';
+      const targetKelvin = clamp(patch.kelvin ?? light.kelvin ?? 4000, 2000, 6500);
+      // Lights that start off warm up from candle-light, like a sunrise.
+      const startKelvin =
+        light.on && light.colorMode === 'kelvin'
+          ? clamp(light.kelvin || 4000, 2000, 6500)
+          : Math.min(2200, targetKelvin);
+      fade.targets.set(lightId, {
+        finalPatch: patch,
+        startBri,
+        targetBri,
+        targetKelvinMode,
+        startKelvin,
+        targetKelvin,
+      });
+    }
+    activeFades.add(fade);
+
+    // Roughly one step every 30 s, capped so long fades do not flood the LAN.
+    const steps = clamp(Math.round(fadeMs / 30000), 1, 60);
+    const stepMs = fadeMs / steps;
+    try {
+      for (let step = 1; step <= steps; step += 1) {
+        if (fade.cancelled || fade.targets.size === 0) return;
+        const isLast = step === steps;
+        const t = step / steps;
+        for (const [lightId, f] of [...fade.targets]) {
+          if (isLast) {
+            await setLightState(lightId, f.finalPatch);
+            continue;
+          }
+          const p = f.finalPatch;
+          const stepPatch = { on: true, brightness: lerp(f.startBri, f.targetBri, t) };
+          // Fading out keeps the light's current color; fading in moves toward the scene's.
+          if (p.on !== false) {
+            stepPatch.effect = p.effect || 'solid';
+            if (f.targetKelvinMode) {
+              stepPatch.colorMode = 'kelvin';
+              stepPatch.kelvin = lerp(f.startKelvin, f.targetKelvin, t);
+            } else if (p.colorHex) {
+              stepPatch.colorMode = p.colorMode || 'rgb';
+              stepPatch.colorHex = p.colorHex;
+            }
+          }
+          await setLightState(lightId, stepPatch);
+        }
+        saveState();
+        if (!isLast) await fadeSleep(fade, stepMs);
+      }
+    } finally {
+      fade.timer = null;
+      activeFades.delete(fade);
+    }
+  }
+
+  function localDateKey(d) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function parseScheduleMinutes(time) {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(String(time || '').trim());
+    if (!m) return null;
+    const hh = Number(m[1]);
+    const mm = Number(m[2]);
+    if (hh > 23 || mm > 59) return null;
+    return hh * 60 + mm;
+  }
+
+  function scheduleRunsOnDay(sched, date) {
+    const days = Array.isArray(sched.days) ? sched.days : [];
+    if (days.length === 0) return true;
+    const today = WEEKDAY_ABBREVIATIONS[date.getDay()];
+    return days.some((d) => String(d).slice(0, 3).toLowerCase() === today.toLowerCase());
+  }
+
+  function isScheduleDue(sched, date) {
+    if (!sched || sched.enabled === false) return false;
+    const atMinutes = parseScheduleMinutes(sched.time);
+    if (atMinutes === null) return false;
+    if (!scheduleRunsOnDay(sched, date)) return false;
+    if (sched.lastAutoRunDate === localDateKey(date)) return false;
+    const nowMinutes = date.getHours() * 60 + date.getMinutes();
+    // Fire at the scheduled minute, or a few minutes late if a check was delayed
+    // (sleep, busy event loop, app opened just after the time).
+    return nowMinutes >= atMinutes && nowMinutes < atMinutes + SCHEDULE_GRACE_MINUTES;
+  }
+
+  /**
+   * Run every enabled schedule that is due right now. Called once a minute by
+   * startScheduler(); exposed so tests can drive it with an injected clock.
+   * Returns once due schedules have been started; fades continue in the background
+   * (their promises are in `fades`).
+   */
+  async function runDueSchedules() {
+    const date = now();
+    const fired = [];
+    const fades = [];
+    for (const sched of state.schedules) {
+      if (!isScheduleDue(sched, date)) continue;
+      const scene = findScene(sched.sceneId);
+      // Record the run before applying so a crash or restart cannot fire it twice today.
+      sched.lastAutoRunDate = localDateKey(date);
+      sched.lastTriggeredAt = date.toISOString();
+      saveState();
+      if (!scene) continue;
+      fired.push(sched.id);
+      const fadePromise = fadeToScene(sched, scene).catch(() => {});
+      if (!(Number(sched.fadeMinutes) > 0)) await fadePromise;
+      fades.push(fadePromise);
+    }
+    return { ok: true, checkedAt: date.toISOString(), fired, fades };
+  }
+
+  function startScheduler({ intervalMs = SCHEDULER_INTERVAL_MS } = {}) {
+    if (schedulerTimer) return { ok: true, running: true };
+    const tick = () => {
+      runDueSchedules().catch(() => {});
+    };
+    schedulerTimer = timers.setInterval(tick, intervalMs);
+    if (typeof schedulerTimer?.unref === 'function') schedulerTimer.unref();
+    tick();
+    return { ok: true, running: true };
+  }
+
+  function stopScheduler() {
+    if (schedulerTimer) timers.clearInterval(schedulerTimer);
+    schedulerTimer = null;
+    for (const fade of [...activeFades]) cancelFade(fade);
+    return { ok: true, running: false };
   }
 
   async function triggerCiStatusLight({ status = 'passing', targetLightId = null, enabled = null } = {}) {
@@ -1808,46 +2043,96 @@ function createSmartLightEngine(options = {}) {
     };
   }
 
-  async function pairHueBridge({ bridgeIp = '192.168.1.87' } = {}) {
-    let generatedKey = `robos-hue-${Math.random().toString(36).slice(2, 10)}`;
-    let livePaired = false;
-    if (!skipLanNetwork) {
+  /**
+   * Hue link-button pairing: `POST /api {devicetype}` to the bridge. Only a real
+   * `success.username` from the bridge is written into the Hue lights. Any failure
+   * (unreachable, link button not pressed, unexpected reply) leaves them untouched
+   * and returns ok:false with the reason. With LAN traffic disabled (ROBOS_TEST /
+   * skipLanNetwork) pairing is simulated and flagged `simulated: true`.
+   */
+  async function pairHueBridge({ bridgeIp = '192.168.1.87', bridgePort = 80, timeoutMs = 2500 } = {}) {
+    const ip = String(bridgeIp || '').trim();
+    const port = Number(bridgePort) || 80;
+    if (!ip) {
+      return { ok: false, livePaired: false, error: 'Enter the Hue Bridge IP address.', overview: getOverview() };
+    }
+    const fail = (error, extra = {}) => ({
+      ok: false,
+      bridgeIp: ip,
+      livePaired: false,
+      simulated: false,
+      error,
+      ...extra,
+      overview: getOverview(),
+    });
+
+    let username = null;
+    let simulated = false;
+    if (skipLanNetwork) {
+      username = `robos-hue-sim-${Math.random().toString(36).slice(2, 10)}`;
+      simulated = true;
+    } else {
+      const target = port === 80 ? ip : `${ip}:${port}`;
       const res = await sendHttpLightRequest(
         {
-          ip: bridgeIp,
-          port: 80,
+          ip,
+          port,
           path: '/api',
           method: 'POST',
           bodyObj: { devicetype: 'robos#smart-light' },
         },
-        500
+        timeoutMs
       );
-      if (res.ok && res.responseText) {
-        try {
-          const parsed = JSON.parse(res.responseText);
-          const username = parsed?.[0]?.success?.username;
-          if (username) {
-            generatedKey = username;
-            livePaired = true;
-          }
-        } catch {}
+      if (!res.statusCode) {
+        return fail(
+          `Could not reach a Hue Bridge at ${target} (${res.timeout ? `no answer within ${timeoutMs} ms` : res.error || 'connection failed'}). Check the IP address and that this computer is on the same network.`,
+          { reason: 'unreachable' }
+        );
+      }
+      let parsed = null;
+      try {
+        parsed = JSON.parse(res.responseText || '');
+      } catch {}
+      const first = Array.isArray(parsed) ? parsed[0] : parsed;
+      if (first?.success?.username) {
+        username = String(first.success.username);
+      } else if (first?.error) {
+        const description = String(first.error.description || 'unknown error');
+        const hint =
+          Number(first.error.type) === 101
+            ? ' Press the round link button on the bridge, then click Pair within 30 seconds.'
+            : '';
+        return fail(`Hue Bridge at ${target} refused pairing: ${description}.${hint}`, {
+          reason: Number(first.error.type) === 101 ? 'link-button-not-pressed' : 'bridge-error',
+          bridgeError: first.error,
+        });
+      } else {
+        return fail(
+          `The device at ${target} answered HTTP ${res.statusCode} without a Hue username. Is it a Philips Hue Bridge?`,
+          { reason: 'unexpected-response' }
+        );
       }
     }
 
-    // Update any Hue lights on that IP with the new bridge key
+    // Point every Hue light at this bridge and its new username.
+    let updatedCount = 0;
     for (const light of state.lights) {
       if (light.protocolId === 'hue-rest') {
         const idx = String(light.deviceKey || '1').split('|').pop() || '1';
-        light.ip = bridgeIp;
-        light.deviceKey = `${generatedKey}|${idx}`;
+        light.ip = ip;
+        light.port = port;
+        light.deviceKey = `${username}|${idx}`;
+        updatedCount += 1;
       }
     }
     saveState();
     return {
       ok: true,
-      bridgeIp,
-      hueUsername: generatedKey,
-      livePaired,
+      bridgeIp: ip,
+      hueUsername: username,
+      livePaired: !simulated,
+      simulated,
+      updatedCount,
       overview: getOverview(),
     };
   }
@@ -1946,6 +2231,9 @@ function createSmartLightEngine(options = {}) {
     addOrUpdateSchedule,
     removeSchedule,
     triggerScheduleNow,
+    runDueSchedules,
+    startScheduler,
+    stopScheduler,
     triggerCiStatusLight,
     scanLanForLights,
     pairHueBridge,
@@ -1962,6 +2250,8 @@ module.exports = {
   DEFAULT_LIGHTS,
   BUILTIN_SCENES,
   CI_STATUS_STATES,
+  SCHEDULER_INTERVAL_MS,
+  SCHEDULE_GRACE_MINUTES,
   hexToRgb,
   rgbToHex,
   rgbToHsv,
