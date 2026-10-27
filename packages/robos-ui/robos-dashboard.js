@@ -458,8 +458,8 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
     if (widgetType === 'smart-lights') {
       return `
         <div class="robos-w-meta">
-          <span>💡 ${esc(data.onlineCount ?? 4)}/${esc(data.bulbsCount ?? 6)} Smart Lights Active</span>
-          <span class="robos-w-pill">${esc(data.activeScene || 'Circadian Daylight')}</span>
+          <span>💡 ${esc(data.onlineCount ?? 0)}/${esc(data.bulbsCount ?? 0)} Smart Lights Active</span>
+          <span class="robos-w-pill">${esc(data.activeScene || 'No scene')}</span>
         </div>
         <div class="robos-cal-list">
           ${(data.bulbs || [])

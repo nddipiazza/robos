@@ -10,6 +10,7 @@ related:
   - /apps/audio-player/
   - /apps/home-speaker/
   - /apps/dev-central/
+  - /apps/robos-dashboards/
 ---
 
 RobOS Smart Light (`packages/smart-light`) is an Electron window over the shared engine `robos-lib/smart-light-engine.js`. The engine builds each vendor's local packet from a light's on/off, brightness, color temperature and RGB color, sends it over UDP, TCP or HTTP, and saves the state. Nothing goes through a vendor cloud.
@@ -41,7 +42,9 @@ The **Effect Mode** list is shown on every light, but only WLED uses it (as a WL
 
 **Scan LAN for Lights** broadcasts a WiZ `getPilot` probe to `255.255.255.255:38899` and a Kasa `get_sysinfo` probe to `:9999`, waits about 350 ms, and adds any WiZ or Kasa light that answers. The status banner says it also scans for WLED, LIFX and Govee; it does not. Add those by IP.
 
-**Pair Hue Bridge** sends `POST /api` with `devicetype: robos#smart-light` to the bridge IP after you press its link button. If the bridge returns a username, every Hue light in the list gets that key and the bridge IP. If the request fails, the app makes up a random `robos-hue-…` key, writes it to the Hue lights anyway and still reports the bridge as paired, so check that your Hue lights respond.
+**Pair Hue Bridge** sends `POST /api` with `devicetype: robos#smart-light` to the bridge IP after you press its link button. If the bridge returns a username, every Hue light in the list gets that key and the bridge IP, and the banner says how many lights were updated. If the bridge cannot be reached, answers with an error, or answers without a username, the Hue lights are left as they were and the banner shows the reason. The usual one is the bridge's own `link button not pressed`: press the button and click **Pair** again within 30 seconds.
+
+With `ROBOS_TEST=1` no request is sent. Pairing is simulated with a placeholder `robos-hue-sim-…` key, and the banner says so.
 
 ### Demo fixtures
 
@@ -69,7 +72,13 @@ The engine maps the hour of the day to a color temperature and brightness: warmi
 
 **Sync Lights to Current Solar Time** applies the target for the current time, and a slider applies any hour. Both change only lights that are already on. The sync button also sets a `circadianEnabled` flag, but nothing re-applies the curve as the day goes on.
 
-Schedules have a name, a time and a scene, and three examples are seeded (07:00 wake-up, 18:30 wind-down, 23:30 auto-off). No timer runs them. They only take effect when you click **Test Now**. The stored days and fade minutes are not used.
+Schedules have a name, a time, days of the week, a scene, a room scope and fade minutes. Three examples are seeded (07:00 weekday wake-up, 18:30 wind-down, 23:30 auto-off). The add form sets the name, time and scene; new schedules run Monday to Friday with a 15-minute fade.
+
+While the window is open, the engine checks once a minute and runs each enabled schedule whose day and time match. A schedule runs at most once a day. If a check comes a few minutes late (the computer was asleep, or the app opened just after the time), the schedule still runs; after five minutes it waits for its next day. Nothing runs while the app is closed.
+
+The fade moves each light in scope from its current brightness (or from off) to the scene, in steps about 30 seconds apart. Color temperature moves with it, starting from a warm 2200 K for lights that were off, so the wake-up schedule acts like a sunrise. RGB colors switch at the first step. A scene that turns lights off dims them first and turns them off at the end. Changing a light by hand, or applying another scene, takes that light out of a running fade.
+
+**Test Now** applies the schedule's scene at once, without the fade, and does not count as that day's run.
 
 ## CI status light
 
@@ -99,8 +108,10 @@ The **LAN Protocol Inspector** tab lists recent commands with an equivalent `nc`
 
 `ROBOS_CONFIG_DIR` moves both. With `ROBOS_TEST=1` the engine sends nothing on the network.
 
+The **Smart Lights** widget in [RobOS Dashboards]({{ '/apps/robos-dashboards/' | relative_url }}) reads this file: how many lights are on out of the total, the active scene and the first few lights. If Smart Light has never saved its state, the widget shows no lights.
+
 ## Run it
 
 Open **RobOS Smart Light** from the desktop or the [App Launcher]({{ '/apps/app-launcher/' | relative_url }}). From the repository, run `scripts/dev-launch.sh smart-light`. When the RobOS library is installed, the window runs a DOM-snapshot debug server on port `19209`.
 
-Source: [`packages/smart-light`](https://github.com/nddipiazza/robos/tree/main/packages/smart-light) and [`packages/robos-lib/smart-light-engine.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/smart-light-engine.js). The engine tests are in `smart-light-engine.test.cjs` next to it.
+Source: [`packages/smart-light`](https://github.com/nddipiazza/robos/tree/main/packages/smart-light) and [`packages/robos-lib/smart-light-engine.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/smart-light-engine.js). The engine tests are in `smart-light-engine.test.cjs` next to it, and the pairing, schedule and dashboard-widget tests are in `packages/robos-test/tests/smart-light/unit.test.js`.
