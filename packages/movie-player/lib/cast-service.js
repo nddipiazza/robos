@@ -322,12 +322,19 @@ class CastService {
       }
     });
 
-    this.streamServer.listen(0, '0.0.0.0', () => {
+    const preferredPort = (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) ? 0 : 19215;
+    const onStreamListen = () => {
       this.streamPort = this.streamServer.address().port;
       this.streamServer.unref();
       console.log(`[CastService] Audio stream server ready at http://${this.hostIp}:${this.streamPort}`);
       this._saveStreamServerEndpoint();
+    };
+    this.streamServer.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE' && preferredPort !== 0) {
+        this.streamServer.listen(0, '0.0.0.0', onStreamListen);
+      }
     });
+    this.streamServer.listen(preferredPort, '0.0.0.0', onStreamListen);
   }
 
   _saveStreamServerEndpoint() {
@@ -343,6 +350,12 @@ class CastService {
         playUrl: `http://${this.hostIp}:${this.streamPort}/api/tv-play`,
         updatedAt: new Date().toISOString(),
       };
+      if (raw.activeCinemaCast && raw.activeCinemaCast.mediaUrl && this.streamPort) {
+        raw.activeCinemaCast.mediaUrl = String(raw.activeCinemaCast.mediaUrl).replace(
+          new RegExp(`^http://${this.hostIp.replace(/\./g, '\\.')}:\\d+/`),
+          `http://${this.hostIp}:${this.streamPort}/`
+        );
+      }
       if (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) {
         raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => ({
           index: idx + 1,
@@ -527,6 +540,18 @@ class CastService {
       const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
       const next = mutator(raw.activeCinemaCast || {});
       raw.activeCinemaCast = next;
+      // Keep the 10-foot Movie Library active behind the video player so pressing Back
+      // or finishing a movie returns to the Movie Library instead of the RobOS Dashboard.
+      if (next && next.tvIp) {
+        raw.activeCinemaLibrary = {
+          ...(raw.activeCinemaLibrary || {}),
+          active: true,
+          tvIp: next.tvIp,
+          tvId: next.tvId || raw.activeCinemaLibrary?.tvId || `tv-${next.tvIp}`,
+          tvName: next.tvName || raw.activeCinemaLibrary?.tvName || next.tvIp,
+          platformId: next.platformId || raw.activeCinemaLibrary?.platformId || 'roku-os',
+        };
+      }
       fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
     } catch {}
   }
