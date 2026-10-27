@@ -1283,18 +1283,43 @@ function collectSupplementalWidgetData({ configDir, repoDir } = {}) {
     }
   } catch {}
 
-  let smartLights = { bulbsCount: 6, roomsCount: 5, activeScene: 'Circadian Daylight' };
+  // Smart Light: read the saved state through the engine's overview (`lights`, `on`,
+  // `activeSceneId`). If the app has never saved state, report no lights rather than
+  // letting the engine seed its demo fixtures from here.
+  let smartLights = { bulbsCount: 0, onlineCount: 0, roomsCount: 0, activeSceneId: null, activeScene: '', bulbs: [] };
   try {
-    const sl = require('./smart-light-engine');
-    const engine = sl.createSmartLightEngine({ configDir });
-    const ov = engine.getOverview();
-    smartLights = {
-      bulbsCount: (ov.bulbs || []).length,
-      onlineCount: (ov.bulbs || []).filter((b) => b.power).length,
-      roomsCount: (ov.rooms || []).length,
-      activeScene: 'Focus Studio (5000K)',
-      bulbs: (ov.bulbs || []).slice(0, 5),
-    };
+    const slConfigDir =
+      configDir || process.env.ROBOS_CONFIG_DIR || path.join(process.env.HOME || os.homedir(), '.config', 'robos');
+    if (fs.existsSync(path.join(slConfigDir, 'smart-lights.json'))) {
+      const sl = require('./smart-light-engine');
+      const engine = sl.createSmartLightEngine({ configDir: slConfigDir });
+      const ov = engine.getOverview();
+      const lights = Array.isArray(ov.lights) ? ov.lights : [];
+      const rooms = Array.isArray(ov.rooms) ? ov.rooms : [];
+      const roomNames = new Map(rooms.map((r) => [r.id, r.name]));
+      const protocolNames = new Map((ov.protocols || []).map((p) => [p.id, p.name]));
+      const scene = (ov.scenes || []).find((s) => s.id === ov.activeSceneId);
+      smartLights = {
+        bulbsCount: lights.length,
+        // Lights currently switched on (the widget's "Bulbs On" count).
+        onlineCount: lights.filter((l) => l.on).length,
+        roomsCount: rooms.length,
+        activeSceneId: ov.activeSceneId || null,
+        activeScene: scene ? scene.name : ov.activeSceneId || '',
+        circadianEnabled: Boolean(ov.circadianEnabled),
+        bulbs: lights.slice(0, 5).map((l) => ({
+          id: l.id,
+          name: l.name,
+          on: Boolean(l.on),
+          brightness: l.brightness,
+          kelvin: l.kelvin,
+          colorMode: l.colorMode,
+          displayHex: l.displayHex,
+          room: roomNames.get(l.roomId) || l.roomId,
+          protocol: protocolNames.get(l.protocolId) || l.protocolId,
+        })),
+      };
+    }
   } catch {}
 
   let smartTvs = {
@@ -3391,8 +3416,8 @@ function renderDashboardTvWallboardHtml({
     if (card.widgetType === 'smart-lights') {
       return `
         <div class="widget-meta-row">
-          <span>💡 ${esc(data.onlineCount ?? 4)}/${esc(data.bulbsCount ?? 6)} Bulbs On</span>
-          <span class="pill-mini">${esc(data.activeScene || 'Circadian Daylight')}</span>
+          <span>💡 ${esc(data.onlineCount ?? 0)}/${esc(data.bulbsCount ?? 0)} Bulbs On</span>
+          <span class="pill-mini">${esc(data.activeScene || 'No scene')}</span>
         </div>
         <div class="calendar-events-list">
           ${(data.bulbs || [])
@@ -3402,7 +3427,7 @@ function renderDashboardTvWallboardHtml({
               <div class="cal-body-col">
                 <div class="cal-title-row">
                   <strong class="cal-title">${esc(b.name)}</strong>
-                  <span class="cal-badge">${esc(b.brightness || 80)}% · ${esc(b.kelvin || 4000)}K</span>
+                  <span class="cal-badge">${b.on === false ? 'Off' : `${esc(b.brightness ?? 0)}%`} · ${b.colorMode === 'rgb' ? esc(b.displayHex || 'RGB') : `${esc(b.kelvin ?? 4000)}K`}</span>
                 </div>
                 <div class="cal-sub-row">${esc(b.room || 'Studio')} · ${esc(b.protocol || 'LAN')}</div>
               </div>

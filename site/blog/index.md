@@ -16,6 +16,8 @@ keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party gam
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#castable-smart-dashboards">Castable Smart Dashboards</a>
+    <a href="#robos-movie-player">RobOS Movie Player</a>
     <a href="#party-game">RobOS Party Game</a>
     <a href="#audio-player-ai-fix-metadata">Audio Player AI Fix Metadata</a>
     <a href="#vpn-sandbox-and-killswitch-proof">VPN Sandbox &amp; Kill-Switch Proof</a>
@@ -40,6 +42,157 @@ keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party gam
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="castable-smart-dashboards">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-27">Oct 27, 2026</time>
+      <span class="blog-tag">RobOS Dashboards (<code>packages/robos-dashboards</code>)</span>
+      <span class="blog-tag"><code>&lt;robos-dashboard&gt;</code> Web Component</span>
+      <span class="blog-tag">3-Slide Smart TV Wallboard</span>
+      <span class="blog-tag">RobOS Voice Dictation Stream</span>
+      <span class="blog-tag">Zero-Sleep Roku SceneGraph</span>
+    </div>
+    <h2><a href="#castable-smart-dashboards">Castable Smart Dashboards: KGraph Card Layouts, Live Voice Dictation &amp; Audio HUD Sync, and Zero-Sleep Roku Wallboards</a></h2>
+    <p class="blog-summary"><strong>RobOS Dashboards</strong> (<code>packages/robos-dashboards</code>) turns the RobOS Knowledge Graph (<code>.robos/kgraphs/dashboards/package.jsonld</code>) into composable desktop and 10-foot Smart TV wallboards where every card is a reusable <code>&lt;robos-widget-...&gt;</code> custom element (<code>packages/robos-ui/robos-dashboard.js</code>). Cast a synchronized 3-slide wallboard deck—<strong>Slide 1: Daily Engineering &amp; Agent Ops</strong>, <strong>Slide 2: GitHub CI Status &amp; App Popularity</strong>, and <strong>Slide 3: RobOS Voice Dictation — Most Recent Chats</strong>—to any LG webOS, Samsung Tizen, Google TV, or Roku OS television via <code>:19210/dashboard</code>, complete with live Howler.js audio verification (<code>:19196</code>), live RobOS Voice HUD dictation streaming (<code>:19188</code>), and a muted 160×90 H.264/AAC hardware <code>&lt;Video&gt;</code> keep-alive that prevents Roku TVs from entering standby without triggering remote-navigation click sounds.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/castable-smart-dashboards/castable-smart-dashboards-architecture.jpg' | relative_url }}" alt="RobOS Castable Smart Dashboards Architecture: KGraph and Live Local Sources, Dashboard Engine, Smart TV Portal (:19210), and Zero-Sleep Living Room Smart TVs" loading="lazy">
+        <figcaption><strong>RobOS Castable Smart Dashboards architecture:</strong> KGraph layouts (<code>.robos/kgraphs/dashboards/package.jsonld</code>) and live local services (RobOS Audio Player <code>:19196</code>, RobOS Voice HUD <code>:19188</code>, GitHub CLI &amp; local Git repos) feed 13 widget evaluators in <code>packages/robos-lib/dashboard-engine.js</code>, rendering identically in the desktop studio (<code>:19152</code>), the 10-foot HTML5 portal (<code>GET /dashboard</code> on <code>:19210</code>), and the native Roku SceneGraph channel (<code>GET /api/dashboard-cast</code> + <code>GET /keepalive.mp4</code>).</figcaption>
+      </figure>
+
+      <pre class="mermaid">
+flowchart LR
+  subgraph Sources["1. KGraph &amp; Live Local Sources"]
+    KG[".robos/kgraphs/dashboards/package.jsonld<br/>(robos:DashboardLayout 3-Slide Deck)"]
+    AUD["RobOS Audio Player (:19196/eval)<br/>Live Howler.js Track &amp; Progress"]
+    VOC["RobOS Voice HUD (:19188/eval)<br/>Live Dictation Dialogue Bubbles"]
+    GH["GitHub CLI &amp; Local Git Repos<br/>PRs, Commits, CI &amp; Stars"]
+  end
+
+  subgraph Engine["2. Dashboard &amp; Widget Engine"]
+    DE["packages/robos-lib/dashboard-engine.js<br/>13 Composable Widget Evaluators"]
+    WC["&lt;robos-dashboard&gt;<br/>(packages/robos-ui/robos-dashboard.js)"]
+    APP["RobOS Dashboards Studio (:19152)"]
+  end
+
+  subgraph Portal["3. RobOS Smart TV Portal (:19210)"]
+    HTML["GET /dashboard<br/>10-Foot Auto-Rotating HTML5 Wallboard"]
+    API["GET /api/dashboard-cast<br/>3-Slide JSON Feed + Live Chat History"]
+    MP4["GET /keepalive.mp4<br/>160x90 H.264 + Silent AAC Stream"]
+  end
+
+  subgraph TVs["4. Living Room Smart TVs (Zero-Sleep Wallboard)"]
+    ROKU["Roku OS SceneGraph Channel<br/>(slideGroup0, slideGroup1, slideGroup2 +<br/>Muted Hardware Video Keep-Alive)"]
+    WEBTV["LG webOS / Samsung Tizen / Google TV<br/>Full-Screen Ambient 1080p/4K Wallboards"]
+  end
+
+  KG --> DE
+  AUD --> DE
+  VOC --> DE
+  GH --> DE
+  DE --> WC
+  WC --> APP
+  WC --> HTML
+  DE --> API
+  Portal --> ROKU
+  Portal --> WEBTV
+      </pre>
+
+      <h3>A 3-Slide Wallboard Deck Built for the Living Room &amp; War Room</h3>
+      <p>Instead of cramming every engineering metric, CI pipeline, and voice transcript onto a single crowded screen, <strong>RobOS Dashboards</strong> organizes your wallboard into a synchronized 3-slide rotation deck (<code>DEFAULT_SLIDESHOW</code> in <code>packages/robos-lib/dashboard-engine.js</code>) that cycles automatically every 15–30 seconds or responds immediately to your TV remote's D-Pad:</p>
+
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/castable-smart-dashboards/roku-slide1-engineering-ops.jpg' | relative_url }}" alt="Slide 1 on a 65-inch TCL Roku TV: Daily Engineering & Agent Ops Dashboard showing My Open PRs, 30-Day Commits Graph, 7 Latest Commits, Live Music Now Playing, and Today's Schedule" loading="lazy">
+        <figcaption><strong>Slide 1 (<code>daily-engineering-ops</code>) captured live from a 65&quot; TCL Roku TV (<code>192.168.1.15</code>):</strong> Column 1 tracks open pull requests waiting on review and open issues; Column 2 renders the 30-day commit sparkline (<code>705</code> commits) and the 7 latest commit messages on <code>main</code>; Column 3 pairs live <strong>RobOS Audio Player</strong> playback with your dual Google Calendar + local agenda and next-meeting countdown.</figcaption>
+      </figure>
+
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/castable-smart-dashboards/roku-slide2-ci-popularity.jpg' | relative_url }}" alt="Slide 2 on a 65-inch TCL Roku TV: GitHub CI Status & App Popularity showing main branch GitHub Actions workflows, Stargazers, 14-day Git clones chart, and release installer downloads" loading="lazy">
+        <figcaption><strong>Slide 2 (<code>github-ci-popularity</code>) captured live from the Roku TV:</strong> Column 1 monitors <code>main</code> branch GitHub Actions workflows (<code>Deploy docs to GitHub Pages</code>, <code>Household lifecycle</code>, <code>Native Windows EXE release</code>, <code>Windows app suite</code>) and the latest release pipeline (<code>v0.0.8</code>); Column 2 highlights Stars, Forks, Watchers, Release Asset Downloads (<code>95</code>), and the chronological stargazer feed; Column 3 graphs 14-day Git clones (<code>2,637</code> total / <code>612</code> unique cloners), per-installer download counts (<code>.dmg</code>, <code>.exe</code>, <code>.AppImage</code>, <code>.deb</code>), and top discovery referrers.</figcaption>
+      </figure>
+
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/castable-smart-dashboards/roku-slide3-voice-dictation.jpg' | relative_url }}" alt="Slide 3 on a 65-inch TCL Roku TV: RobOS Voice Dictation — Most Recent Chats showing live speech-to-text dialogue bubbles from RobOS Voice" loading="lazy">
+        <figcaption><strong>Slide 3 (<code>robos-voice-dictation</code>) captured live from the Roku TV:</strong> A dedicated single-canvas wallboard view (<code>layout-single-canvas</code>) showing the most recent spoken prompts and voice-dictated chats from <strong>RobOS Voice</strong> in newest-first order, synced directly from the live RobOS Voice HUD on port <code>19188</code>.</figcaption>
+      </figure>
+
+      <h3>Under the Hood: Live HUD Sync &amp; Solving the Roku Standby / Menu-Click Problem</h3>
+      <ul>
+        <li><strong>Composable <code>&lt;robos-dashboard&gt;</code> &amp; 13 Widget Evaluators:</strong> Every dashboard card in <code>.robos/kgraphs/dashboards/package.jsonld</code> maps to a custom element in <code>packages/robos-ui/robos-dashboard.js</code> (<code>&lt;robos-widget-git-commits&gt;</code>, <code>&lt;robos-widget-github-prs-waiting&gt;</code>, <code>&lt;robos-widget-github-repo-activity&gt;</code>, <code>&lt;robos-widget-calendar-today&gt;</code>, <code>&lt;robos-widget-audio-now-playing&gt;</code>, <code>&lt;robos-widget-voice-dictation&gt;</code>, <code>&lt;robos-widget-agent-sessions&gt;</code>, <code>&lt;robos-widget-smart-tv&gt;</code>, <code>&lt;robos-widget-smart-lights&gt;</code>, <code>&lt;robos-widget-kgraph&gt;</code>, <code>&lt;robos-widget-sprint-radar&gt;</code>, <code>&lt;robos-widget-vpn-status&gt;</code>, and <code>&lt;robos-widget-custom&gt;</code>).</li>
+        <li><strong>Live RobOS Voice Dictation Streaming (<code>:19188/eval</code>):</strong> When you dictate with <strong>RobOS Voice</strong> (<code>Super+V</code>), the floating HUD appends <code>.dictation-bubble</code> nodes to <code>#chat-feed</code> in real time. <code>collectVoiceDictation()</code> in <code>packages/robos-lib/dashboard-engine.js</code> queries the running HUD's DOM snapshot/eval port (<code>http://127.0.0.1:19188/eval</code>), merges persisted entries from <code>~/.config/robos/voice-bubbles-live.json</code> and <code>~/.config/robos/voice-prompts.json</code>, and streams the newest chats directly onto Slide 3 (`robos-voice-dictation`).</li>
+        <li><strong>Verified Live Audio Player State (<code>:19196/eval</code>):</strong> If an Electron audio player exits or pauses while its last <code>state.json</code> on disk still says <code>playing: true</code>, naive dashboards falsely show music playing. <code>collectAudioNowPlaying()</code> probes the live <strong>RobOS Audio Player</strong> debug endpoint (<code>http://127.0.0.1:19196/eval</code>) to verify both <code>state.playing</code> and Howler.js <code>player.playing()</code> before reporting <code>PLAYING</code> on Slide 1—automatically falling back to <code>STOPPED</code> when the player process is closed.</li>
+        <li><strong>Zero-Sound Hardware <code>&lt;Video&gt;</code> Keep-Alive for Roku OS:</strong> Keeping a Roku TV wallboard awake 24/7 exposed two firmware quirks: sending standard ECP remote keys resets the sleep timer but plays Roku's audible menu-move sound effect on every tick, whereas sending silent <code>keypress/Lit_</code> characters produces no sound but is ignored by Roku OS's 20-minute <code>Idle</code> power-saving timer. RobOS solves both by serving a tiny 160×90 H.264 + silent AAC MP4 stream at <code>GET /keepalive.mp4</code> from <code>packages/robos-lib/tv-engine.js</code> and binding it to a <code>1×1</code> muted (<code>mute=&quot;true&quot;</code>, <code>loop=&quot;true&quot;</code>) SceneGraph <code>&lt;Video id=&quot;keepAliveVideo&quot;&gt;</code> node in <code>MainScene.xml</code> / <code>MainScene.brs</code>. Because the hardware media decoder sees active video playback, Roku OS suppresses screensaver and standby indefinitely with <strong>zero audio clicks</strong>.</li>
+      </ul>
+
+      <div class="blog-log"># Launch RobOS Dashboards Studio or cast the 3-slide wallboard to your Smart TV
+electron packages/robos-dashboards
+
+# Start the 10-Foot Smart TV Portal &amp; Roku cast feed on :19210
+node -e '
+const { createTvEngine } = require("./packages/robos-lib/tv-engine");
+createTvEngine({ portalPort: 19210, ownerApp: "robos-dashboards" }).startPortalServer(19210);
+'
+
+# Run the RobOS Dashboards &amp; Smart TV E2E test suites
+node --test tests/e2e/robos-dashboards.test.cjs
+node --test tests/e2e/robos-tv.test.cjs</div>
+    </div>
+
+    <div class="blog-links">
+      <a href="{{ '/v1/apps/robos-dashboards/' | relative_url }}">RobOS Dashboards docs →</a>
+      <a href="{{ '/tv/' | relative_url }}">RobOS Smart TV Studio guide →</a>
+      <a href="{{ '/v1/apps/voice-prompt/' | relative_url }}">RobOS Voice docs →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-dashboards">packages/robos-dashboards →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-ui/robos-dashboard.js">&lt;robos-dashboard&gt; component →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/dashboard-engine.js">dashboard-engine.js →</a>
+      <a href="https://github.com/nddipiazza/robos/commit/54ff0bcc">commit 54ff0bcc (Page 3 Voice Chats) →</a>
+      <a href="https://github.com/nddipiazza/robos/commit/bf82d42c">commit bf82d42c (Voice Dictation Widget) →</a>
+      <a href="https://github.com/nddipiazza/robos/commit/2be606d6">commit 2be606d6 (Roku H.264 Keep-Alive) →</a>
+      <a href="https://github.com/nddipiazza/robos/commit/29111ef7">commit 29111ef7 (Slide 2 CI &amp; Popularity) →</a>
+    </div>
+  </article>
+
+  <article class="blog-entry" id="robos-movie-player">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-27">Oct 27, 2026</time>
+      <span class="blog-tag">RobOS Movie Player</span>
+      <span class="blog-tag">Cinema &amp; Subtitles</span>
+      <span class="blog-tag">AI Watchlists &amp; Host</span>
+      <span class="blog-tag">RobOS Smart TVs</span>
+    </div>
+    <h2><a href="#robos-movie-player">RobOS Movie Player: A 100,000-Film Cinema Stage Sharing the Exact Warm Theme, AI Host, and RobOS Smart TV Casting</a></h2>
+    <p class="blog-summary"><strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) brings the exact warm dark theater theme (<code>#15120f</code>, <code>#1c1814</code>, <code>#26211b</code>, <code>#e8a33d</code>, <code>#f1e9dc</code>) and multi-pane architecture of <strong>RobOS Audio Player</strong> to movies, TV series, and video collections. Every audio player feature has a direct cinema counterpart: a 16:9 HTML5 <code>&lt;video&gt;</code> stage with synchronized transport controls, live on-screen <code>.srt</code> / <code>.vtt</code> closed captions and click-to-seek dialogue transcripts, a 100,000-movie virtualized library with scene-release filename cleaning, <strong>✦ AI Watchlists</strong>, a spoken <strong>Virtual Cinema Host</strong> powered by <strong>RobOS Voice</strong>, an open-source <code>ffprobe</code> / <code>ffmpeg</code> metadata &amp; video-frame poster fixer, metadata-only SFTP/cloud indexing with HTTP <code>206 Partial Content</code> streaming, and a dedicated <strong>Smart TVs</strong> tab &amp; <strong>Display Output</strong> selector that casts directly to paired <strong>RobOS Smart TVs</strong> (Roku OS, Google TV / Cast, LG webOS, Samsung Tizen).</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/movie-player/01-cinema-stage.png' | relative_url }}" alt="RobOS Movie Player Now Playing Cinema Stage screening Dune (2021) with Display Output selector and Cast to Smart TV button" loading="lazy">
+        <figcaption><strong>RobOS Movie Player</strong> on the <strong>Now Playing</strong> tab: the 16:9 Cinema Stage with the header <strong>Display Output</strong> selector (<code>Desktop (Local Cinema)</code> or any paired RobOS Smart TV), one-click <strong>Cast to Smart TV</strong> stage button, synchronized <code>.robos-rhap-theme</code> transport deck, and the collapsible <strong>Now Playing</strong> dock on the right.</figcaption>
+      </figure>
+      <p><strong>One warm theater design language across audio and cinema, plus native RobOS Smart TV casting.</strong> Rather than building a disconnected video player, <strong>RobOS Movie Player</strong> reuses the exact CSS custom properties, resizable split panes, virtualized table/grid primitives, and IPC bridge contract as <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a>. Instead of audio speakers, Movie Player integrates directly with your paired <strong>RobOS Smart TVs</strong> from <code>~/.config/robos/tv-studio.json</code> and LAN discovery: pick any TV in the header <strong>Display Output</strong> selector or open the <strong>Smart TVs</strong> tab to display movies on <strong>Roku OS</strong>, <strong>Google TV / Android TV</strong>, <strong>LG webOS</strong>, or <strong>Samsung Tizen</strong> displays.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/05-smart-tvs.png' | relative_url }}" alt="RobOS Movie Player Smart TVs tab showing paired Roku OS, Google TV, LG webOS, and Samsung Tizen Smart TVs" loading="lazy"><figcaption>The <strong>Smart TVs (4)</strong> tab: loads paired RobOS Smart TVs from <code>tv-studio.json</code> (Roku OS, Google TV / Android TV, LG webOS, Samsung Tizen) with one-click <strong>Display on TV</strong> casting.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/02-library-grid.png' | relative_url }}" alt="RobOS Movie Player 129-movie SFTP Library Browser showing generated cinema posters and scene-cleaned titles" loading="lazy"><figcaption>The virtualized <strong>Library (129)</strong> browser synced from an SFTP data source with scene-cleaned movie titles, years, resolution badges, and generated posters.</figcaption></figure>
+      </div>
+      <p><strong>Scene-release filename cleaning, AI Watchlists, a Virtual Cinema Host, and open-source poster extraction.</strong> Movie folders often arrive with noisy scene filenames like <code>Blade.Runner.2049.(2017).2160p.UHD.BluRay.x265.10bit.HDR-GROUP.mkv</code>. During background worker-thread scanning (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/track-metadata.js"><code>lib/track-metadata.js</code></a>), <code>cleanMovieFilename()</code> strips release tags while preserving the clean film title, 4-digit release year, <code>SxxExx</code> episode numbers, resolution badge (<code>4K</code>, <code>1080p</code>, <code>720p</code>), and video codec (<code>HEVC</code>, <code>AV1</code>, <code>H.264</code>). Clicking <strong>✦ AI Watchlist</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/AiPlaylist.jsx"><code>src/AiPlaylist.jsx</code></a>) lets you describe a marathon or mood and optionally enable the <strong>Virtual Cinema Host</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/useVirtualDj.js"><code>src/useVirtualDj.js</code></a>), which pre-generates short spoken cinema introductions between films using <strong>RobOS Voice</strong>. Clicking <strong>✦ AI Fix Metadata</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/ai-metadata.js"><code>lib/ai-metadata.js</code></a>) inspects <code>.nfo</code> sidecars, probes video/audio streams with <code>ffprobe</code>, extracts a real video frame thumbnail at 10% runtime via <code>ffmpeg</code> (or synthesizes a warm cinema SVG poster), and optionally runs your RobOS agent with <code>@skill(robos:fix-media-metadata)</code>.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/ai-watchlist-modal.png' | relative_url }}" alt="AI Watchlist and Virtual Cinema Host modal in RobOS Movie Player" loading="lazy"><figcaption><strong>✦ AI Watchlist &amp; Virtual Cinema Host</strong>: describe your movie marathon, choose a Cinema Host persona (<em>Classic Theater Host</em>, <em>Film Festival Curator</em>, <em>Late-Night Drive-In</em>), and screen immediately.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/ai-fix-metadata-modal.png' | relative_url }}" alt="Fix Movie Metadata and Poster Art modal in RobOS Movie Player" loading="lazy"><figcaption><strong>✦ Fix Movie Metadata &amp; Poster Art</strong>: scene filename cleaning, <code>.nfo</code> sidecar parsing, <code>ffprobe</code> stream inspection, and <code>ffmpeg</code> frame poster extraction.</figcaption></figure>
+      </div>
+      <div class="blog-log"># Build the renderer bundle and run the 10-test Movie Player verification suite
+cd packages/movie-player && npm run build && npm test
+
+# Launch RobOS Movie Player and inspect via DOM Snapshot server (port 19214)
+npx electron packages/movie-player --no-sandbox
+node packages/robos-lib/snapshot-cli.js movie-player --text
+node packages/robos-lib/snapshot-cli.js movie-player --screenshot /tmp/movie-player.png</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/v1/apps/movie-player/' | relative_url }}">RobOS Movie Player docs →</a>
+      <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player docs →</a>
+      <a href="https://github.com/nddipiazza/robos/tree/main/packages/movie-player">packages/movie-player source →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/movie-player.test.js">Unit tests →</a>
+      <span class="blog-commits">Commit: <a href="https://github.com/nddipiazza/robos/commit/caf8ed3e">caf8ed3e</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="party-game">
     <div class="blog-meta">

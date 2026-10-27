@@ -149,10 +149,11 @@ node --test tests/e2e/robos-tv.test.cjs
       </ul>
 
       <h3 id="apps-ecosystem">First-Class TV Apps Across the RobOS Ecosystem</h3>
-      <p>Adding <strong>RobOS Smart TV Studio</strong> ties together six existing RobOS suites on the big screen:</p>
+      <p>Adding <strong>RobOS Smart TV Studio</strong> ties together seven existing RobOS suites on the big screen:</p>
       <ol>
+        <li><strong>RobOS Castable Smart Dashboards (<a href="{{ '/v1/apps/robos-dashboards/' | relative_url }}"><code>packages/robos-dashboards</code></a>):</strong> Cast a 3-slide rotating engineering &amp; voice wallboard deck (<em>Slide 1: Daily Engineering &amp; Agent Ops</em>, <em>Slide 2: GitHub CI Status &amp; App Popularity</em>, <em>Slide 3: RobOS Voice Dictation — Most Recent Chats</em>) to any Smart TV via <code>:19210/dashboard</code> or the native Roku SceneGraph channel. On Roku TVs, a muted 160×90 H.264/AAC hardware <code>&lt;Video&gt;</code> keep-alive stream (<code>GET /keepalive.mp4</code>) keeps the wallboard awake 24/7 with zero menu-navigation click sounds.</li>
         <li><strong>Godot 4 Living-Room Games (<a href="{{ '/games/' | relative_url }}"><code>/games/</code></a>):</strong> Play <a href="{{ '/games/crpg/' | relative_url }}">Realm of Heroes cRPG</a>, <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}">Quest: Warrior Dragon</a> (2D JRPG playable with just a TV remote D-Pad!), <a href="{{ '/games/tabletop-rpg/' | relative_url }}">Tabletop RPG</a> for board-game nights, and <a href="{{ '/games/robos-rts/' | relative_url }}">Starfall Command RTS</a>.</li>
-        <li><strong>RobOS Audio Player &amp; Virtual DJ (<a href="{{ '/v1/apps/audio-player/' | relative_url }}"><code>packages/audio-player</code></a>):</strong> Turn your TV into a 100,000-song living-room jukebox with full-screen synchronized lyrics, AI Playlists, and Kokoro TTS Virtual DJ intros streamed over Google Cast.</li>
+        <li><strong>RobOS Audio Player &amp; Virtual DJ (<a href="{{ '/v1/apps/audio-player/' | relative_url }}"><code>packages/audio-player</code></a>) + RobOS Movie Player (<a href="{{ '/v1/apps/movie-player/' | relative_url }}"><code>packages/movie-player</code></a>):</strong> Turn your TV into a 100,000-song living-room jukebox or a 100,000-movie cinema stage with synchronized lyrics/subtitles (<code>.srt</code>/<code>.vtt</code>), AI Playlists &amp; Watchlists, and Kokoro TTS Virtual DJ / Virtual Cinema Host intros streamed over Google Cast.</li>
         <li><strong>RobOS Home Speaker (<a href="{{ '/v1/apps/home-speaker/' | relative_url }}"><code>packages/home-speaker</code></a>):</strong> Includes a dedicated <strong>📺 Smart TV Studio</strong> button in the header and streams neural TTS announcements, walkie-talkie voice notes, and ambient rain/focus soundscapes to any Cast-enabled TV (such as <code>Basement TV</code>).</li>
         <li><strong>PR Review Theater (<a href="{{ '/v1/pr-review-theater.html' | relative_url }}"><code>packages/pr-review</code></a>):</strong> Watch autonomous 1080p narrated agent proof-of-work walkthrough videos and semantic KGraph blast-radius diffs from the couch or in a team conference room.</li>
         <li><strong>Point of Sale Digital Menu &amp; Order Prep Board (<a href="{{ '/point-of-sale/' | relative_url }}"><code>packages/point-of-sale</code></a>):</strong> Mount any affordable Smart TV on a café, bar, or retail wall and sideload <strong>RobOS TV</strong> to display live barista/kitchen prep queues and digital menu boards.</li>
@@ -161,9 +162,12 @@ node --test tests/e2e/robos-tv.test.cjs
 
     <div class="blog-links">
       <a href="{{ '/v1/apps/robos-tv/' | relative_url }}">RobOS Smart TV Studio app page →</a>
+      <a href="{{ '/v1/apps/robos-dashboards/' | relative_url }}">RobOS Dashboards app page →</a>
       <a href="{{ '/v1/apps/home-speaker/' | relative_url }}">RobOS Home Speaker app page →</a>
       <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player app page →</a>
+      <a href="{{ '/v1/apps/movie-player/' | relative_url }}">RobOS Movie Player app page →</a>
       <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-tv">packages/robos-tv source →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-dashboards">packages/robos-dashboards source →</a>
       <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js">TV Engine source →</a>
     </div>
   </article>

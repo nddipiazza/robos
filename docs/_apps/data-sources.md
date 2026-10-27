@@ -3,30 +3,56 @@ title: "Data Sources Explorer"
 package: data-sources
 category: databases-streams
 icon: data-sources.svg
-summary: "A catalog of database, object-storage and Kafka entries stored in the knowledge graph; connection tests, schemas and query results are simulated."
-description: "Data Sources keeps a list of data source declarations (driver, host, port, bound services) and mirrors them into the SDLC knowledge graph. It does not open real connections."
+summary: "Connects to Google Drive, OneDrive, SFTP, FTP and local folders, and keeps a catalog of S3, Dropbox, WebDAV and database entries that do not connect yet."
+description: "Data Sources stores storage and database entries in ~/.config/robos/data-sources.json. Google Drive, OneDrive, SFTP and FTP entries open real connections for testing, browsing, uploads and downloads; S3, Dropbox, WebDAV and database entries only record the entry."
+related:
+  - /apps/cloud-accounts/
+  - /apps/audio-player/
 ---
 
-Data Sources Explorer is a registry of the data stores your services use. The useful part is the catalog and its link to the knowledge graph. The live-looking panels are placeholders.
+Data Sources Explorer (`packages/data-sources`) is where you register the storage and databases other RobOS apps use. Google Drive, OneDrive, SFTP and FTP entries are real connections: the app signs in, lists folders, and uploads and downloads files. The other entry types are a catalog only.
 
 {: .important }
-**Test Connection** waits about half a second and reports success. **Schema Inspector** returns a fixed sample schema (`pets`, `vaccination_certificates`, and so on), and **Execute Query** returns canned rows for any query that mentions `pets` or `vaccin`, or a one-row "SUCCESS" otherwise. Nothing connects to a database, bucket or broker.
+S3, Dropbox and WebDAV entries never contact the provider. They read and write the entry's local folder under `~/.robos/cloud-mounts/<id>/`, and the connection test reports "Connected" with the provider's API name whatever the credentials are. For PostgreSQL, MySQL / MariaDB, SQLite / DuckDB, MongoDB and Redis entries, **Test Database Handshake** waits about 150 ms and reports "Connected". Nothing connects to a database.
 
-## What you do in it
+## Storage drivers
 
-- Filter the catalog by category (All Data Sources, SQL / Relational, NoSQL & Document, Cloud & Object Storage, Streaming & Queues) or by bound microservice.
-- Click **New Data Source** and fill in the **Configure Data Source** form. Driver types are PostgreSQL, MySQL / MariaDB, Oracle, Microsoft SQL Server, SQLite / DuckDB, Snowflake, MongoDB, Redis, DynamoDB, Amazon S3 / MinIO, Google Drive / GCS and Apache Kafka. **Save Data Source** stores the entry.
-- Select an entry to see its bound services and use its tabs: **Schema Inspector**, **Interactive Query Console** (run with `Ctrl+Enter`, **Export CSV** for results) and **All Data Sources Catalog**.
+The client lives in `packages/data-sources/lib/remote-storage.js`. Other apps load it too, for example [Audio Player]({{ '/apps/audio-player/' | relative_url }}) for streaming music from a linked folder.
 
-![Data Sources showing a sample PostgreSQL entry bound to two services, with the Schema Inspector tab open]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+| Driver | How it connects |
+|---|---|
+| Google Drive | Drive REST API v3, with an OAuth access token (refreshed with the refresh token), a service account JSON key or an API key. A local GVFS or `rclone` mount can be used instead. |
+| Microsoft OneDrive | Microsoft Graph, with an OAuth token from the browser login. |
+| SFTP | `ssh2-sftp-client`, with a password or a private key file. |
+| FTP / FTPS | `basic-ftp`, with explicit TLS when enabled. |
+| Local / NAS Folder Mount | A folder on disk. |
+| Amazon S3 / R2 / MinIO, Dropbox, Nextcloud / WebDAV | Not connected; see the note above. |
 
-*A sample entry with its bound microservices and the Schema Inspector tab. The tables and row counts are fixed sample data.*
+For the connected drivers, **Run Connection Test** really connects (SFTP and FTP list the configured path, for example) and records the status and latency on the entry. A Google Drive or OneDrive entry without a token reports "Login Required", and saving one shows a sign-in toast.
+
+## Sign in to Google Drive or OneDrive
+
+**Log in with Browser** starts a small HTTP server on `127.0.0.1` and opens the provider's consent page in your browser. The tokens it receives are saved on the entry. If you don't supply your own OAuth client, the app uses its built-in client IDs. You can also paste an OAuth access token into the form.
+
+## Browse and move files
+
+Select a storage entry to browse its folders. You can create a folder, upload files, download a file into the entry's local folder under `~/.robos/cloud-mounts/<id>/`, and open that folder in the file manager.
+
+**Link Folder** writes a `.robos-cloud-manifest.json` index of up to 500 files into the local folder and adds the folder to `~/.config/robos/cloud-folders.json`. It does not download the files. A Google Drive entry can link several folders, and each one gets its own subfolder.
 
 ## Where the data lives
 
-- Entries are saved to `~/.config/robos/data-sources.json`. If that file is missing or empty, five sample entries (an Acme Petshop PostgreSQL database, an S3 vault, a Google Drive hub, an Oracle billing database and a Redis cache) are shown instead.
-- Each save also writes the entry into the SDLC knowledge graph through `SDLCKnowledgeGraphStore` in `packages/robos-graph` (default file `~/.robos/knowledge-graph.jsonld`). Databases become `createDatabase` nodes and other types become `robos:DataSource` nodes. The form's password field is discarded, and a new entry is marked "Connected" without any check.
-- Setting `ROBOS_GRAPH_ROOT` switches the app to a read-only view of the data-store nodes in that graph workspace. Saving, deleting and the demo panels are disabled in that mode.
+- Entries, including OAuth tokens and secrets, are saved as plain JSON in `~/.config/robos/data-sources.json` with file mode 0600.
+- After each save, the app asks [Cloud Accounts]({{ '/apps/cloud-accounts/' | relative_url }}) to import the entries, so a Google Drive sign-in here also shows up there.
+- A new install starts empty. The sample entries in `main.js` (an Acme Petshop PostgreSQL database, an S3 vault and so on) are loaded only by the test harness.
+- Setting `ROBOS_GRAPH_ROOT` switches the app to a read-only view of the data-store nodes (databases, message brokers, topics, tables) in that knowledge graph workspace. Saving, deleting and the live panels are disabled in that mode.
 
-Run it with `electron packages/data-sources`. Source: [`packages/data-sources`](https://github.com/nddipiazza/robos/tree/main/packages/data-sources).
+## Run it
+
+Launch **Data Sources** from the desktop or [App Launcher]({{ '/apps/app-launcher/' | relative_url }}), or run:
+
+```bash
+scripts/dev-launch.sh data-sources
+```
+
+Source: [`packages/data-sources`](https://github.com/nddipiazza/robos/tree/main/packages/data-sources).

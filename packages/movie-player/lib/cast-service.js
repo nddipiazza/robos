@@ -76,6 +76,44 @@ class CastService {
     this.hostIp = this._detectHostIp();
 
     this._initStreamServer();
+    this._loadRobosSmartTvs();
+  }
+
+  _loadRobosSmartTvs() {
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      if (!fs.existsSync(cfgPath)) return;
+      const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      const tvs = Array.isArray(raw?.tvs) ? raw.tvs : [];
+      for (const tv of tvs) {
+        if (!tv || !tv.ip) continue;
+        const existing = this.speakers.get(tv.ip) || {};
+        this.speakers.set(tv.ip, {
+          ...existing,
+          id: tv.id || `tv-${tv.ip}`,
+          ip: tv.ip,
+          name: tv.name || `RobOS Smart TV (${tv.ip})`,
+          model: tv.model || tv.platformName || 'RobOS Smart TV',
+          platformId: tv.platformId || 'smart-tv',
+          platformName: tv.platformName || 'Smart TV',
+          sideloadStatus: tv.sideloadStatus || 'READY',
+          devModeEnabled: tv.devModeEnabled !== false,
+          ports: tv.ports || {},
+          volume: existing.volume ?? 0.75,
+          muted: existing.muted ?? false,
+          online: tv.online !== false,
+          lastSeen: Date.now(),
+          robosTv: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[CastService] Could not load RobOS Smart TVs from tv-studio.json:', err.message);
+    }
+  }
+
+  getPairedSmartTvs() {
+    this._loadRobosSmartTvs();
+    return Array.from(this.speakers.values());
   }
 
   _detectHostIp() {
@@ -105,6 +143,71 @@ class CastService {
   _initStreamServer() {
     this.streamServer = http.createServer((req, res) => {
       const parsedUrl = new URL(req.url, `http://${this.hostIp}:${this.streamPort}`);
+
+      if (parsedUrl.pathname === '/api/tv-library') {
+        const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
+        const items = tracks.slice(0, 250).map((t, idx) => {
+          let streamUrl = '';
+          if (t.cloud) {
+            streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.mp4`;
+          } else if (t.filePath && fs.existsSync(t.filePath)) {
+            streamUrl = this.registerFile(t.filePath);
+          } else {
+            streamUrl = t.src || '';
+          }
+          const artUrl = t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '';
+          return {
+            index: idx + 1,
+            id: t.id,
+            title: String(t.title || 'Untitled Movie').slice(0, 80),
+            artist: String(t.artist || 'Feature Film').slice(0, 50),
+            album: String(t.album || 'RobOS Cinema').slice(0, 60),
+            genre: String(t.genre || 'Movies').slice(0, 32),
+            year: t.year || null,
+            duration: Number(t.duration) || 0,
+            artUrl,
+            streamUrl,
+          };
+        });
+        const body = JSON.stringify({
+          ok: true,
+          hostIp: this.hostIp,
+          streamPort: this.streamPort,
+          totalCount: tracks.length,
+          items,
+        });
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-store',
+        });
+        res.end(body);
+        return;
+      }
+
+      if (parsedUrl.pathname === '/api/tv-play' && (req.method === 'POST' || req.method === 'GET')) {
+        const trackId = parsedUrl.searchParams.get('id') || '';
+        const tvIp = parsedUrl.searchParams.get('tvIp') || '';
+        const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
+        const track = tracks.find(t => t.id === trackId) || tracks[0];
+        if (!track) {
+          res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ ok: false, error: 'Movie not found' }));
+          return;
+        }
+        let streamUrl = '';
+        if (track.cloud) {
+          streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(track.id)}.mp4`;
+        } else if (track.filePath && fs.existsSync(track.filePath)) {
+          streamUrl = this.registerFile(track.filePath);
+        }
+        if (typeof this.onTvRemoteSelect === 'function') {
+          try { this.onTvRemoteSelect(track, tvIp); } catch {}
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, id: track.id, title: track.title, streamUrl }));
+        return;
+      }
 
       // Handle Album Art requests
       if (parsedUrl.pathname.startsWith('/art/')) {
@@ -219,11 +322,58 @@ class CastService {
       }
     });
 
-    this.streamServer.listen(0, '0.0.0.0', () => {
+    const preferredPort = (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) ? 0 : 19215;
+    const onStreamListen = () => {
       this.streamPort = this.streamServer.address().port;
       this.streamServer.unref();
       console.log(`[CastService] Audio stream server ready at http://${this.hostIp}:${this.streamPort}`);
+      this._saveStreamServerEndpoint();
+    };
+    this.streamServer.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE' && preferredPort !== 0) {
+        this.streamServer.listen(0, '0.0.0.0', onStreamListen);
+      }
     });
+    this.streamServer.listen(preferredPort, '0.0.0.0', onStreamListen);
+  }
+
+  _saveStreamServerEndpoint() {
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      const dir = path.dirname(cfgPath);
+      fs.mkdirSync(dir, { recursive: true });
+      const raw = fs.existsSync(cfgPath) ? JSON.parse(fs.readFileSync(cfgPath, 'utf8')) : {};
+      raw.moviePlayerServer = {
+        hostIp: this.hostIp,
+        streamPort: this.streamPort,
+        libraryUrl: `http://${this.hostIp}:${this.streamPort}/api/tv-library`,
+        playUrl: `http://${this.hostIp}:${this.streamPort}/api/tv-play`,
+        updatedAt: new Date().toISOString(),
+      };
+      if (raw.activeCinemaCast && raw.activeCinemaCast.mediaUrl && this.streamPort) {
+        raw.activeCinemaCast.mediaUrl = String(raw.activeCinemaCast.mediaUrl).replace(
+          new RegExp(`^http://${this.hostIp.replace(/\./g, '\\.')}:\\d+/`),
+          `http://${this.hostIp}:${this.streamPort}/`
+        );
+      }
+      if (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) {
+        raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => ({
+          index: idx + 1,
+          id: t.id,
+          title: String(t.title || 'Untitled Movie').slice(0, 80),
+          artist: String(t.artist || 'Feature Film').slice(0, 50),
+          album: String(t.album || 'RobOS Cinema').slice(0, 60),
+          genre: String(t.genre || 'Movies').slice(0, 32),
+          year: t.year || null,
+          duration: Number(t.duration) || 0,
+          artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
+          streamUrl: t.cloud
+            ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.mp4`
+            : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
+        }));
+      }
+      fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+    } catch {}
   }
 
   // The real type matters: speakers may refuse a WAV (e.g. a DJ voice clip) sent as MP3.
@@ -249,9 +399,10 @@ class CastService {
   }
 
   /**
-   * Scan local subnet for Google Cast / Nest devices
+   * Scan local subnet for RobOS Smart TVs & Google Cast devices
    */
-  async scanSubnet(timeoutMs = 1500) {
+  async scanSubnet(timeoutMs = 1200) {
+    this._loadRobosSmartTvs();
     const subnetPrefix = this.hostIp.split('.').slice(0, 3).join('.');
     const promises = [];
 
@@ -263,7 +414,15 @@ class CastService {
     const results = await Promise.all(promises);
     for (const dev of results) {
       if (dev) {
-        this.speakers.set(dev.ip, dev);
+        const existing = this.speakers.get(dev.ip) || {};
+        this.speakers.set(dev.ip, {
+          ...existing,
+          ...dev,
+          name: existing.name || dev.name,
+          model: existing.model || dev.model,
+          platformId: existing.platformId || 'android-tv',
+          platformName: existing.platformName || 'Google TV / Cast',
+        });
       }
     }
 
@@ -374,26 +533,315 @@ class CastService {
     });
   }
 
+  _updateCinemaCastState(mutator) {
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      if (!fs.existsSync(cfgPath)) return;
+      const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      const next = mutator(raw.activeCinemaCast || {});
+      raw.activeCinemaCast = next;
+      // Keep the 10-foot Movie Library active behind the video player so pressing Back
+      // or finishing a movie returns to the Movie Library instead of the RobOS Dashboard.
+      if (next && next.tvIp) {
+        raw.activeCinemaLibrary = {
+          ...(raw.activeCinemaLibrary || {}),
+          active: true,
+          tvIp: next.tvIp,
+          tvId: next.tvId || raw.activeCinemaLibrary?.tvId || `tv-${next.tvIp}`,
+          tvName: next.tvName || raw.activeCinemaLibrary?.tvName || next.tvIp,
+          platformId: next.platformId || raw.activeCinemaLibrary?.platformId || 'roku-os',
+        };
+      }
+      fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+    } catch {}
+  }
+
+  _ensureRokuDevChannelLaunched(ip, ecpPort = 8060) {
+    if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return;
+    try {
+      const req = http.get({
+        hostname: ip,
+        port: ecpPort,
+        path: '/query/active-app',
+        timeout: 1200,
+      }, (res) => {
+        let xml = '';
+        res.on('data', (c) => { xml += c; });
+        res.on('end', () => {
+          if (!xml.includes('id="dev"')) {
+            const launchReq = http.request({
+              hostname: ip,
+              port: ecpPort,
+              path: '/launch/dev',
+              method: 'POST',
+              headers: { 'Content-Length': '0' },
+              timeout: 1500,
+            }, (lRes) => { lRes.resume(); });
+            launchReq.on('error', () => {});
+            launchReq.on('timeout', () => { launchReq.destroy(); });
+            launchReq.end();
+          }
+        });
+      });
+      req.on('error', () => {});
+      req.on('timeout', () => { req.destroy(); });
+    } catch {}
+  }
+
+  _queryRokuMediaPlayer(ip, ecpPort = 8060) {
+    return new Promise((resolve) => {
+      if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return resolve(null);
+      const req = http.get({
+        hostname: ip,
+        port: ecpPort,
+        path: '/query/media-player',
+        timeout: 900,
+      }, (res) => {
+        let xml = '';
+        res.on('data', (c) => { xml += c; });
+        res.on('end', () => {
+          const stateMatch = xml.match(/<player[^>]*state="([^"]+)"/);
+          const posMatch = xml.match(/<position>\s*(\d+)/);
+          const durMatch = xml.match(/<duration>\s*(\d+)/);
+          const resMatch = xml.match(/video_res="([^"]+)"/);
+          if (!stateMatch) return resolve(null);
+          const rState = stateMatch[1];
+          const posMs = posMatch ? Number(posMatch[1]) : null;
+          const durMs = durMatch ? Number(durMatch[1]) : null;
+          const videoRes = resMatch ? resMatch[1] : '';
+          resolve({
+            state: rState,
+            positionSec: posMs != null ? posMs / 1000 : null,
+            durationSec: durMs != null ? durMs / 1000 : null,
+            videoRes,
+            isKeepAlive: durMs === 60000 || videoRes === '160x90',
+          });
+        });
+      });
+      req.on('error', () => resolve(null));
+      req.on('timeout', () => { req.destroy(); resolve(null); });
+    });
+  }
+
+  _dispatchSmartTvBridge(ip, tvInfo, mediaUrl, metadata = {}) {
+    const platformId = tvInfo?.platformId || 'smart-tv';
+    const title = metadata.title || 'RobOS Cinema Stream';
+    const startAt = Math.max(0, Math.floor(Number(metadata.currentTime) || 0));
+    const loadKey = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    // 1. Record active cinema cast session in ~/.config/robos/tv-studio.json so RobOS Smart TV Portal (:19210)
+    //    and the Roku SceneGraph channel (<Video id="cinemaVideo">) immediately play it full-screen.
+    this._updateCinemaCastState(() => ({
+      active: true,
+      loadKey,
+      tvIp: ip,
+      tvId: tvInfo?.id || `tv-${ip}`,
+      tvName: tvInfo?.name || ip,
+      platformId,
+      mediaUrl,
+      title,
+      artist: metadata.artist || '',
+      startAt,
+      paused: false,
+      seekKey: '',
+      seekSeconds: startAt,
+      startedAt: new Date().toISOString(),
+    }));
+
+    // 2. If Roku OS, ensure the RobOS TV channel (`dev`) is active on the screen
+    if (platformId === 'roku-os') {
+      this._ensureRokuDevChannelLaunched(ip, tvInfo?.ports?.ecp || 8060);
+    }
+    return loadKey;
+  }
+
+  _startSmartTvBridgeSession(ip, mediaUrl, metadata = {}, onStatusUpdate = null, role = 'song', loadId = 1) {
+    const tvInfo = this.speakers.get(ip) || { ip, name: `RobOS Smart TV (${ip})`, platformId: 'smart-tv' };
+    this._dispatchSmartTvBridge(ip, tvInfo, mediaUrl, metadata);
+
+    const existing = this.activeConnections.get(ip);
+    if (existing && existing.progressTimer) {
+      clearInterval(existing.progressTimer);
+      existing.progressTimer = null;
+    }
+
+    const sessionId = `robos-tv-${ip}-${Date.now()}`;
+    const state = {
+      playerState: 'PLAYING',
+      currentTime: Number(metadata.currentTime) > 0 ? Number(metadata.currentTime) : 0,
+      duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : 0,
+      idleReason: null,
+      lastSeekAt: Date.now(),
+    };
+
+    const virtualPlayer = {
+      session: { sessionId },
+      getStatus: (cb) => {
+        cb(null, {
+          playerState: state.playerState,
+          idleReason: state.idleReason,
+          currentTime: state.currentTime,
+          media: { duration: state.duration },
+        });
+      },
+      pause: () => {
+        state.playerState = 'PAUSED';
+        this._updateCinemaCastState((prev) => ({ ...prev, paused: true }));
+        if (typeof entry.onStatusUpdate === 'function') {
+          entry.onStatusUpdate(normalizeStatus({ playerState: 'PAUSED', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
+        }
+      },
+      play: () => {
+        state.playerState = 'PLAYING';
+        this._updateCinemaCastState((prev) => ({ ...prev, paused: false }));
+        if (typeof entry.onStatusUpdate === 'function') {
+          entry.onStatusUpdate(normalizeStatus({ playerState: 'PLAYING', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
+        }
+      },
+      seek: (seconds, cb) => {
+        const targetSec = Math.max(0, Math.floor(Number(seconds) || 0));
+        state.currentTime = targetSec;
+        state.lastSeekAt = Date.now();
+        this._updateCinemaCastState((prev) => ({
+          ...prev,
+          startAt: targetSec,
+          seekKey: `seek-${Date.now()}`,
+          seekSeconds: targetSec,
+        }));
+        if (typeof entry.onStatusUpdate === 'function') {
+          entry.onStatusUpdate(normalizeStatus({ playerState: state.playerState, currentTime: state.currentTime, media: { duration: state.duration } }, entry));
+        }
+        if (cb) cb(null);
+      },
+      load: (newMedia, newOpts, cb) => {
+        state.currentTime = Number(newOpts?.currentTime) > 0 ? Number(newOpts.currentTime) : 0;
+        if (Number(newMedia?.metadata?.duration) > 0) state.duration = Number(newMedia.metadata.duration);
+        state.playerState = 'PLAYING';
+        state.lastSeekAt = Date.now();
+        this._dispatchSmartTvBridge(ip, tvInfo, newMedia?.contentId || mediaUrl, {
+          ...(newMedia?.metadata || metadata),
+          currentTime: state.currentTime,
+        });
+        const st = { playerState: 'PLAYING', currentTime: state.currentTime, media: { duration: state.duration } };
+        if (cb) cb(null, st);
+      },
+    };
+
+    const entry = {
+      client: {
+        close: () => {},
+        receiver: {
+          stop: (_sid, cb) => {
+            state.playerState = 'IDLE';
+            this._updateCinemaCastState((prev) => ({ ...prev, active: false, stoppedAt: new Date().toISOString() }));
+            if (cb) cb();
+          },
+        },
+      },
+      player: virtualPlayer,
+      mediaUrl,
+      sessionId,
+      onStatusUpdate,
+      role,
+      loadId,
+      duration: state.duration,
+      isSmartTvBridge: true,
+      _tvState: state,
+    };
+
+    this.activeConnections.set(ip, entry);
+
+    entry.progressTimer = setInterval(async () => {
+      if (this.activeConnections.get(ip) !== entry) {
+        clearInterval(entry.progressTimer);
+        entry.progressTimer = null;
+        return;
+      }
+      let updatedFromRoku = false;
+      if (tvInfo.platformId === 'roku-os') {
+        const rokuSt = await this._queryRokuMediaPlayer(ip, tvInfo?.ports?.ecp || 8060);
+        if (rokuSt && !rokuSt.isKeepAlive) {
+          if (rokuSt.durationSec && rokuSt.durationSec > 65) {
+            state.duration = rokuSt.durationSec;
+            entry.duration = rokuSt.durationSec;
+          }
+          // Only overwrite currentTime from Roku if we didn't just seek within the last 2.5s
+          if (rokuSt.positionSec != null && Date.now() - state.lastSeekAt > 2500) {
+            state.currentTime = rokuSt.positionSec;
+            updatedFromRoku = true;
+          } else if (rokuSt.state === 'startup' || rokuSt.state === 'buffer') {
+            // Hold clock while Roku is buffering so it doesn't run ahead of the TV
+            updatedFromRoku = true;
+          }
+          if (rokuSt.state === 'pause') state.playerState = 'PAUSED';
+          else if (rokuSt.state === 'play') state.playerState = 'PLAYING';
+        }
+      }
+      if (!updatedFromRoku && state.playerState === 'PLAYING') {
+        state.currentTime += 1;
+        if (state.duration > 0 && state.currentTime >= state.duration) {
+          state.playerState = 'IDLE';
+          state.idleReason = 'FINISHED';
+        }
+      }
+      const out = normalizeStatus({
+        playerState: state.playerState,
+        idleReason: state.idleReason,
+        currentTime: state.currentTime,
+        media: { duration: state.duration },
+      }, entry);
+      if (out && typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(out);
+    }, 1000);
+    if (entry.progressTimer.unref) entry.progressTimer.unref();
+
+    // Emit initial PLAYING status immediately
+    setTimeout(() => {
+      const out = normalizeStatus({
+        playerState: state.playerState,
+        currentTime: state.currentTime,
+        media: { duration: state.duration },
+      }, entry);
+      if (out && typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(out);
+    }, 50);
+
+    return {
+      ok: true,
+      playerState: 'PLAYING',
+      ip,
+      sessionId,
+      loadId,
+      duration: state.duration,
+      platformId: tvInfo.platformId,
+    };
+  }
+
   async castMediaUrl(ip, mediaUrl, metadata = {}, onStatusUpdate = null) {
+    this._loadRobosSmartTvs();
+    const tvInfo = this.speakers.get(ip);
     const media = {
       contentId: mediaUrl,
-      contentType: metadata.contentType || 'audio/mpeg',
+      contentType: metadata.contentType || 'video/mp4',
       streamType: 'BUFFERED',
       metadata: {
         type: 0,
-        metadataType: 0,
-        title: metadata.title || 'RobOS Audio Stream',
-        artist: metadata.artist || 'RobOS Audio Player',
+        metadataType: 1,
+        title: metadata.title || 'RobOS Cinema Stream',
+        subtitle: metadata.artist || 'RobOS Movie Player',
+        artist: metadata.artist || 'RobOS Movie Player',
         images: metadata.images || []
       }
     };
 
-    // `currentTime` starts the song part-way (resuming after a DJ preview).
+    // `currentTime` starts the movie part-way (resuming after a DJ preview or local seek).
     const loadOpts = { autoplay: true };
     if (metadata.currentTime > 0) loadOpts.currentTime = metadata.currentTime;
-    // 'song' or 'dj' (a Virtual DJ line): status updates say which load they are about.
     const role = metadata.role || 'song';
     const loadId = ++this.loadCounter;
+
+    // For Roku OS, LG webOS, or Samsung Tizen Smart TVs, use the Smart TV Bridge directly
+    if (tvInfo && tvInfo.platformId && tvInfo.platformId !== 'android-tv') {
+      return this._startSmartTvBridgeSession(ip, mediaUrl, metadata, onStatusUpdate, role, loadId);
+    }
 
     // Next song on a speaker we're already casting to: load it into the same
     // receiver session. Stopping and relaunching the receiver for every song made
@@ -461,7 +909,14 @@ class CastService {
       client.on('error', (err) => {
         const entry = this.activeConnections.get(ip);
         if (entry && entry.client === client) this._dropConnection(ip, entry);
-        if (!settled) { settled = true; reject(err); }
+        if (!settled) {
+          settled = true;
+          if (tvInfo && tvInfo.robosTv) {
+            resolve(this._startSmartTvBridgeSession(ip, mediaUrl, metadata, onStatusUpdate, role, loadId));
+            return;
+          }
+          reject(err);
+        }
       });
     });
   }
@@ -526,6 +981,11 @@ class CastService {
     }
 
     // Fallback: connect directly and terminate any running session
+    const tvInfo = this.speakers.get(ip);
+    if (tvInfo && tvInfo.platformId && tvInfo.platformId !== 'android-tv') {
+      this._updateCinemaCastState((prev) => ({ ...prev, active: false, stoppedAt: new Date().toISOString() }));
+      return { ok: true, stopped: true, ip };
+    }
     return new Promise((resolve) => {
       const client = new Client();
       const timer = setTimeout(() => {
