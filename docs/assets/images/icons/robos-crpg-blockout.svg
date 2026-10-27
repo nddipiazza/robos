@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Map frame -->
+  <rect x="6" y="6" width="36" height="36" rx="3" stroke-width="2" />
+  <!-- 5-ft grid -->
+  <path d="M15 6v36M24 6v36M33 6v36M6 15h36M6 24h36M6 33h36" stroke-width="1" stroke-opacity="0.4" />
+  <!-- Flat L-shaped wall block -->
+  <path d="M15 6h9v18h9v9H15z" fill="#00bcd4" fill-opacity="0.35" />
+  <!-- Crate -->
+  <rect x="35" y="8.5" width="5" height="5" fill="#00bcd4" fill-opacity="0.35" />
+  <!-- Tree -->
+  <circle cx="11" cy="37" r="3" fill="#00bcd4" fill-opacity="0.2" />
+</svg>
