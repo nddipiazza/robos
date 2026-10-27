@@ -80,7 +80,7 @@ if (id) {
         }
         app.quit();
       });
-      window = new BrowserWindow({ width: 1180, height: 850, minWidth: 850, minHeight: 600, backgroundColor: '#0d1117', autoHideMenuBar: true,
+      window = new BrowserWindow({ width: 1180, height: 850, minWidth: 960, minHeight: 600, backgroundColor: '#202020', autoHideMenuBar: true,
         webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
       window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
       window.webContents.on('will-navigate', event => event.preventDefault());

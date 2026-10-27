@@ -28,7 +28,8 @@ jobs:
         shell: bash
         run: echo "tag=v$(cat VERSION | tr -d '\r\n')" >> "$GITHUB_OUTPUT"
       - name: Install manager build dependencies
-        run: npm install --prefix packages/app-manager --no-audit --no-fund
+        working-directory: packages/app-manager
+        run: npm install --no-audit --no-fund
       - name: Verify component lifecycle and installer boundaries
         run: node --test packages/app-manager/test/*.test.cjs
       - name: Build Windows installer or Linux AppImage
