@@ -43,6 +43,11 @@ export default function TrackInfo({ track, onClose }) {
               <LoveButton track={track} size={16} />
               <button className="btn-chip" onClick={() => { onClose(); actions.playTracks([track], 0); }}><Icon name="play" size={10} /> Play</button>
               <button className="btn-chip" onClick={() => { onClose(); actions.goToAlbumOf(track); }}>Go to album</button>
+              {actions.fixMetadata && (
+                <button id="btn-track-info-ai-fix" className="btn-chip" onClick={() => { onClose(); actions.fixMetadata([track]); }}>
+                  ✦ AI Fix Metadata
+                </button>
+              )}
               {track.filePath && !track.cloud && (
                 <button className="btn-chip" onClick={() => actions.showInFolder(track)}>Show in file manager</button>
               )}

@@ -82,6 +82,18 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
   },
   {
+    appId: 'cloud-accounts',
+    label: 'RobOS Cloud Accounts',
+    category: 'System',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><circle cx="12" cy="13" r="2.2"/><path d="M9.2 17.5a3.3 3.3 0 0 1 5.6 0"/></svg>'
+  },
+  {
+    appId: 'google-calendar',
+    label: 'RobOS Google Calendar',
+    category: 'Internet',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>'
+  },
+  {
     appId: 'crpg-editor',
     label: 'RobOS cRPG Editor',
     category: 'Game Development',
@@ -110,6 +122,12 @@ const BUILTIN_APPS = [
     label: 'Tabletop Quest Map Editor',
     category: 'Game Development',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="36" height="36" rx="4" /><path d="M18 6v36" stroke-dasharray="2 3" opacity="0.4" /><path d="M30 6v36" stroke-dasharray="2 3" opacity="0.4" /><path d="M6 18h36" stroke-dasharray="2 3" opacity="0.4" /><path d="M6 30h36" stroke-dasharray="2 3" opacity="0.4" /><rect x="15" y="16" width="6" height="4" fill="#00bcd4" fill-opacity="0.3" stroke="#00bcd4" stroke-width="1.5" /><circle cx="24" cy="24" r="3" fill="#00bcd4" /><path d="M24 19v2" /><path d="M24 27v2" /><path d="M19 24h2" /><path d="M27 24h2" /><path d="M32 36v-3h3v-3h3" /></svg>'
+  },
+  {
+    appId: 'party-game',
+    label: 'RobOS Party Game',
+    category: 'Party Games',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></svg>'
   },
   {
     appId: 'context-manager',
@@ -550,10 +568,22 @@ const BUILTIN_APPS = [
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#eab308\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2 4 5v6c0 5.5 3.4 10.3 8 11 4.6-.7 8-5.5 8-11V5l-8-3z\"/><circle cx=\"12\" cy=\"10\" r=\"2.2\"/><path d=\"M8.5 16c.6-1.8 2-2.8 3.5-2.8s2.9 1 3.5 2.8\"/></svg>"
   },
   {
+    appId: 'robos-dashboards',
+    label: 'RobOS Dashboards',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="16" height="20" rx="2.5" fill="#00bcd4" fill-opacity="0.15"/><rect x="26" y="6" width="16" height="12" rx="2.5"/><rect x="26" y="22" width="16" height="20" rx="2.5" fill="#00bcd4" fill-opacity="0.15"/><rect x="6" y="30" width="16" height="12" rx="2.5"/><line x1="10" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="18" y2="16"/><line x1="10" y1="20" x2="15" y2="20"/><polyline points="30 34 33 30 36 33 39 27"/></svg>'
+  },
+  {
     appId: 'robos-tv',
     label: 'RobOS Smart TV Studio',
     category: 'System',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="40" height="26" rx="3"/><polyline points="17 4 24 10 31 4"/><line x1="16" y1="42" x2="32" y2="42"/><line x1="24" y1="36" x2="24" y2="42"/><polygon points="21 18 29 23 21 28 21 18" fill="#00bcd4" fill-opacity="0.25"/></svg>'
+  },
+  {
+    appId: 'smart-light',
+    label: 'RobOS Smart Light',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 34h12" stroke="#00bcd4"/><path d="M20 40h8" stroke="#00bcd4"/><path d="M24 6v3M9 21H6M42 21h-3M12.5 9.5l2.2 2.2M35.5 9.5l-2.2 2.2"/><path d="M17 29c-2.8-2.1-4.5-5.3-4.5-9a11.5 11.5 0 0 1 23 0c0 3.7-1.7 6.9-4.5 9l-1.5 5h-11L17 29Z" fill="#eab308" fill-opacity="0.22"/><path d="M21 23l3-4 3 4" stroke="#00bcd4"/></svg>'
   },
   {
     appId: 'software-center',
@@ -602,6 +632,12 @@ const BUILTIN_APPS = [
     label: "Workspace Manager",
     category: "core-desktop",
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#00bcd4\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z\"/><path d=\"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12\"/><path d=\"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17\"/></svg>"
+  },
+  {
+    appId: 'movie-player',
+    label: 'RobOS Movie Player',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2.5" fill="#e8a33d" fill-opacity="0.12" stroke="#e8a33d"/><line x1="6.5" y1="3" x2="6.5" y2="21"/><line x1="17.5" y1="3" x2="17.5" y2="21"/><line x1="2" y1="8" x2="6.5" y2="8"/><line x1="2" y1="12" x2="6.5" y2="12"/><line x1="2" y1="16" x2="6.5" y2="16"/><line x1="17.5" y1="8" x2="22" y2="8"/><line x1="17.5" y1="12" x2="22" y2="12"/><line x1="17.5" y1="16" x2="22" y2="16"/><polygon points="10.2,9.2 10.2,14.8 15,12" fill="#e8a33d" stroke="#e8a33d" stroke-width="1.2"/></svg>'
   }
 ];
 

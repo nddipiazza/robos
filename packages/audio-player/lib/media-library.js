@@ -14,7 +14,7 @@ const {
 const { readCloudTags, mergeTags } = require('./cloud-tags');
 
 const ART_MEMORY_LIMIT = 200;
-const ART_EXTENSIONS = ['jpg', 'png', 'webp'];
+const ART_EXTENSIONS = ['jpg', 'png', 'webp', 'svg'];
 
 class MediaLibrary {
   // `tracks` is reassigned by LibraryFolders and older callers; every reassignment
@@ -238,7 +238,7 @@ class MediaLibrary {
   storeArt(artId, buffer, format = 'image/jpeg') {
     if (!artId || !buffer) return;
     const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
-    const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
+    const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : format === 'image/svg+xml' ? 'svg' : 'jpg';
     try {
       const target = path.join(this.artDir, `${artId}.${ext}`);
       if (!fs.existsSync(target)) {
@@ -507,7 +507,8 @@ class MediaLibrary {
       const file = path.join(this.artDir, `${artId}.${ext}`);
       try {
         if (fs.existsSync(file)) {
-          const art = { buffer: fs.readFileSync(file), format: ext === 'jpg' ? 'image/jpeg' : `image/${ext}` };
+          const mime = ext === 'jpg' ? 'image/jpeg' : ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
+          const art = { buffer: fs.readFileSync(file), format: mime };
           this._rememberArt(artId, art);
           return art;
         }

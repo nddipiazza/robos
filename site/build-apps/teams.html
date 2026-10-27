@@ -51,9 +51,10 @@ keywords: "team AI development workflow, build apps as a team, Dev Central, Task
 <h2 id="defaults">Step 2: Agree on review defaults</h2>
 <p>Two settings shape review. Agree on them once, then set them on each machine.</p>
 <h3>Per repository, in Git Projects</h3>
-<p>Open <strong>RobOS Git Projects</strong>, select the repository and open <strong>PR template</strong>:</p>
+<p>Open <strong>RobOS Git Projects</strong>, select the repository and open <strong>PR review</strong>:</p>
 <ul>
 <li><strong>Default GitHub PR reviewers</strong>: usernames or <code>organization/team</code>, separated by commas. They are filled in when an author moves a draft to ready, and can be changed for each pull request.</li>
+<li><strong>Review steps</strong>: whether Changes, Evidence and Walkthrough are required, optional or hidden in every author's review. Required steps must be finished before <strong>Create PR</strong>. See <a href="{{ '/code-review/#customize' | relative_url }}">Customize the review steps</a>.</li>
 <li><strong>PR description template</strong>: the outline every pull request description starts from, with fields such as <code>{% raw %}{{url}}{% endraw %}</code> and <code>{% raw %}{{description}}{% endraw %}</code>.</li>
 </ul>
 <figure class="guide-shot"><a href="{{ shots }}gitprojects-1-review-defaults.jpg"><img src="{{ shots }}gitprojects-1-review-defaults.jpg" alt="Git Projects with the pawfinder-api repository selected and the PR template tab open: Default GitHub PR reviewers set to priya-raman, and a PR description template with What changed and How it was verified sections" loading="lazy" width="1600" height="1091"></a><figcaption>The repository's review defaults: Priya reviews by default, and every description starts from the same outline.</figcaption></figure>
@@ -103,7 +104,7 @@ keywords: "team AI development workflow, build apps as a team, Dev Central, Task
 <li>In <strong>Approve</strong>, choose <strong>Approve</strong>, <strong>Request Changes</strong> or <strong>Submit Comment Only</strong>, write your notes and click <strong>Submit review</strong>. RobOS runs <code>gh pr review</code>. Approving does not merge.</li>
 </ol>
 <figure class="guide-shot"><a href="{{ shots }}reviewer-3-approved.jpg"><img src="{{ shots }}reviewer-3-approved.jpg" alt="The Approve step with Approve selected, the reviewer's notes, and a confirmation that PR 43 was approved and the author can now merge it" loading="lazy" width="1600" height="1029"></a><figcaption>The approval is recorded on the pull request. The author merges next.</figcaption></figure>
-<blockquote><p><strong>Know what reviewer mode shows today.</strong> Description, Changes and Approve use the real pull request. The Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content, not content from the pull request. With the default policy, Changes and Approve stay locked until the sample Overview quiz is passed; turn those locks off in <strong>Review settings</strong> if your team does not want them. Details: <a href="{{ '/v1/pr-review-theater.html#review-someone-elses-pr' | relative_url }}">PR Review Theater</a>.</p></blockquote>
+<blockquote><p><strong>Know what reviewer mode shows today.</strong> Description, Changes and Approve use the real pull request. The Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content, not content from the pull request. With the default policy, Changes and Approve stay locked until the sample Overview quiz is passed; turn those locks off in <strong>Review settings</strong> if your team does not want them. Details: <a href="{{ '/code-review/#reviewer' | relative_url }}">Code Review guide</a>.</p></blockquote>
 <p>When the reviewer requests changes, the author goes back to their local review, asks the agent for the change with <strong>Suggest changes</strong>, checks it, and pushes the new commits to the same branch. The pull request picks them up and the reviewer looks again.</p>
 
 <h2 id="merge">Step 7: Merge and follow up</h2>

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Party Game
+Comment=AI-hosted party game on your RobOS TVs: guests take a survey on their phones, get secret roles, and play mini games built from each other's answers
+Exec=/usr/bin/electron /usr/local/share/robos/party-game/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/party-game/icon.svg
+Terminal=false
+Categories=Game;X-PartyGame;
+X-RobOS-Category=Party Games
+StartupWMClass=robos-party-game

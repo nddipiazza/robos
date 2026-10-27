@@ -1,0 +1,9 @@
+{
+  "name": "robos-dashboards",
+  "version": "0.1.0",
+  "description": "Graphical KGraph dashboard studio where every widget is a composable RobOS component, embeddable via <robos-dashboard>, and castable to RobOS Smart TV Studio.",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

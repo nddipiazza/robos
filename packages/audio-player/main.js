@@ -14,6 +14,8 @@ const { createTagQueue } = require('./lib/cloud-tags');
 const lyrics = require('./lib/lyrics');
 const { LibraryFolders } = require('./lib/library-folders');
 const aiPlaylist = require('./lib/ai-playlist');
+const aiMetadata = require('./lib/ai-metadata');
+const { createControlServer } = require('./lib/control-server');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
 function requireShared(...relPaths) {
@@ -191,6 +193,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
   // Wait until the renderer subscribes; checks run without blocking first paint.
   mainWindow.webContents.once('did-finish-load', () => {
     libraryFolders.list();
@@ -209,6 +212,42 @@ app.whenReady().then(() => {
 // Large libraries batch their cache writes; make sure the last one lands.
 app.on('before-quit', () => {
   try { mediaLibrary.flush(); } catch {}
+  try { controlServer.stop(); } catch {}
+});
+
+// ── Control API for other RobOS apps (lib/control-server.js) ────────────────
+
+// The renderer owns playback, so each call is answered there.
+const controlRequests = new Map(); // requestId → resolve
+let controlRequestSeq = 0;
+function askRenderer(action, payload = {}, timeoutMs = 15000) {
+  if (!mainWindow || mainWindow.isDestroyed()) return Promise.resolve({ ok: false, error: 'The Audio Player window is closed' });
+  const requestId = ++controlRequestSeq;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      controlRequests.delete(requestId);
+      resolve({ ok: false, error: 'The Audio Player did not answer' });
+    }, timeoutMs);
+    controlRequests.set(requestId, (result) => { clearTimeout(timer); resolve(result); });
+    mainWindow.webContents.send('audio:control-request', { requestId, action, payload });
+  });
+}
+
+ipcMain.handle('audio:control-reply', async (_evt, { requestId, result } = {}) => {
+  const resolve = controlRequests.get(requestId);
+  controlRequests.delete(requestId);
+  if (resolve) resolve(result || { ok: false });
+  return true;
+});
+
+const controlServer = createControlServer({
+  handlers: {
+    status: () => askRenderer('status'),
+    speakClip: (clip) => askRenderer('speak-clip', clip, 60000),
+    pause: () => askRenderer('pause'),
+    resume: () => askRenderer('resume'),
+  },
+  log: (entry) => console.warn('[AudioPlayer] control:', JSON.stringify(entry)),
 });
 
 app.on('window-all-closed', () => {
@@ -595,9 +634,40 @@ const agentProviders = requireShared('robos-agent-client/providers');
 const agentOneShot = requireShared('robos-agent-client/one-shot');
 const aiJson = requireShared('robos-lib/ai-json');
 const quickAsk = requireShared('robos-lib/quick-ask');
+const skillCatalog = requireShared('robos-lib/skill-catalog');
 if (quickAsk && typeof quickAsk.registerQuickAskIPC === 'function') {
   try { quickAsk.registerQuickAskIPC(ipcMain); } catch {}
 }
+
+ipcMain.handle('robos-skills-list', async () => {
+  try {
+    return skillCatalog && typeof skillCatalog.listSkills === 'function' ? skillCatalog.listSkills() : [];
+  } catch {
+    return [];
+  }
+});
+
+ipcMain.handle('ap-list-path', async (_evt, prefix = '') => {
+  try {
+    const home = os.homedir();
+    const expanded = String(prefix || '').replace(/^~/, home);
+    const isDir = expanded.endsWith('/');
+    const dir = isDir ? expanded : path.dirname(expanded);
+    const partial = isDir ? '' : path.basename(expanded);
+    if (!fs.existsSync(dir)) return { ok: true, items: [] };
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const items = entries
+      .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
+      .slice(0, 12)
+      .map(e => ({
+        name: e.name + (e.isDirectory() ? '/' : ''),
+        path: path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+      }));
+    return { ok: true, items };
+  } catch (err) {
+    return { ok: false, items: [], error: err.message };
+  }
+});
 
 let ttsEngine = null;
 function getTtsEngine() {
@@ -632,6 +702,54 @@ ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj, 
         onProgress: (p) => sendToWindow('audio:ai-progress', p),
       }
     );
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:ai-fix-metadata-preview', async (_evt, { trackIds, scope = 'selected', prompt, agent, enableOpenLookup = true } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent.' };
+  try {
+    let targetTracks = [];
+    if (Array.isArray(trackIds) && trackIds.length > 0) {
+      const idSet = new Set(trackIds);
+      targetTracks = mediaLibrary.tracks.filter(t => idSet.has(t.id));
+    } else if (scope === 'missing') {
+      targetTracks = mediaLibrary.tracks.filter(t => aiMetadata.trackNeedsMetadataFix(t));
+    } else {
+      targetTracks = mediaLibrary.tracks.slice(0, 40);
+    }
+
+    if (!targetTracks.length) {
+      return { ok: false, error: 'No tracks matched the selected scope.' };
+    }
+
+    const ask = agentAsk(agent);
+    return await aiMetadata.previewAiMetadataFixes({
+      tracks: targetTracks,
+      prompt: prompt || aiMetadata.DEFAULT_FIX_METADATA_PROMPT,
+      providerId: agent.provider,
+      mediaLibrary,
+      enableOpenLookup: enableOpenLookup !== false,
+      onProgress: (p) => sendToWindow('audio:ai-progress', p),
+      askFn: async (fullPrompt) => {
+        const text = await ask(fullPrompt);
+        return { ok: true, text: typeof text === 'string' ? text : (text && text.text) || '', providerId: agent.provider };
+      },
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:ai-fix-metadata-apply', async (_evt, { fixes, writeFiles = false } = {}) => {
+  try {
+    return await aiMetadata.applyAiMetadataFixes({
+      fixes: Array.isArray(fixes) ? fixes : [],
+      writeFiles: !!writeFiles,
+      mediaLibrary,
+    });
   } catch (err) {
     return { ok: false, error: err.message };
   }

@@ -92,6 +92,7 @@ const ALIASES = {
   'crpg-game-builder-elearning': 'game development course|learn godot|rpg tutorial|game builder academy',
   'crpg-editor': 'rpg editor|game editor|campaign editor|characters|party|level design',
   'robos-tabletop': 'tabletop|games|board games|dungeons|quests|heroquest|campaigns|adventures|rpg',
+  'party-game': 'party|party games|games|trivia|icebreaker|guests|friends|family|tv|ai host|survey|house party',
   'tabletop-blockmap-creator': 'dungeon maps|blockmap|map calibration|board tiles|dungeon layout',
   'tabletop-quest-editor': 'quest maps|quest editor|monsters|traps|dungeon scenarios',
   'stage-demo': 'demos|walkthroughs|presentations|demo recordings',

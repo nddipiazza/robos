@@ -30,7 +30,7 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
         <p class="h-who">Plan, implement, review</p>
         <p>Take a task from a plan to a merged pull request with Task Planner, Task Implementer and Agent Code Review.</p>
       </a>
-      <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">
+      <a href="{{ '/code-review/' | relative_url }}">
         <h3>Review and proof of work</h3>
         <p class="h-who">Checking agent changes</p>
         <p>Read the diff, check the evidence, and approve a pull request.</p>
@@ -52,11 +52,11 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
       </div>
       <div class="h-index-row">
         <h3>Build apps</h3>
-        <p><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a>, <a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a>, <a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a>, <a href="{{ '/v1/app-development-flow.html' | relative_url }}">Starting a new project</a></p>
+        <p><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a>, <a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a>, <a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a>, <a href="{{ '/task-planner/' | relative_url }}">Task Planner</a>, <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a>, <a href="{{ '/v1/app-development-flow.html' | relative_url }}">Starting a new project</a></p>
       </div>
       <div class="h-index-row">
         <h3>Review and governance</h3>
-        <p><a href="{{ '/v1/agent-review-development.html' | relative_url }}">Overview</a>, <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater</a>, <a href="{{ '/v1/walkthroughs.html' | relative_url }}">Walkthroughs and proof of work</a>, <a href="{{ '/v1/agent-tiers.html' | relative_url }}">Agent tiers</a>, <a href="{{ '/security/' | relative_url }}">Security &amp; isolation proofs</a></p>
+        <p><a href="{{ '/v1/agent-review-development.html' | relative_url }}">Overview</a>, <a href="{{ '/code-review/' | relative_url }}">Code Review guide</a>, <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater reference</a>, <a href="{{ '/v1/walkthroughs.html' | relative_url }}">Walkthroughs and proof of work</a>, <a href="{{ '/v1/agent-tiers.html' | relative_url }}">Agent tiers</a>, <a href="{{ '/security/' | relative_url }}">Security &amp; isolation proofs</a></p>
       </div>
       <div class="h-index-row">
         <h3>Security &amp; VPN isolation</h3>

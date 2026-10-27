@@ -10,6 +10,9 @@ export const castClock = {
   get: () => state,
   set(patch) {
     state = { ...state, ...patch, at: Date.now() };
+    if (typeof window !== 'undefined') {
+      window.__robosCastPlaying = Boolean(state.playing);
+    }
     listeners.forEach(fn => fn());
   },
   now() {

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Dashboards
+Comment=Create KGraph graphical dashboards from card layouts where each widget is any RobOS component, embeddable via <robos-dashboard> and castable to Smart TVs
+Exec=/usr/bin/electron /usr/local/share/robos/robos-dashboards/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-dashboards/icon.svg
+Terminal=false
+Categories=Utility;Development;
+X-RobOS-Category=Tools
+StartupWMClass=robos-dashboards

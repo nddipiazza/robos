@@ -19,7 +19,7 @@
   // Explicit class membership, never local-name or substring guessing.
   const DEFINITIONS = [
     ['services', 'Services & processing', 'Microservice DataPipeline'],
-    ['applications', 'Applications & entry points', 'DesktopApp ConsoleApp MobileApp FrontEndApp PCGame MobileGame WebRoute CLICommand CLIFlag'],
+    ['applications', 'Applications & entry points', 'DesktopApp ConsoleApp MobileApp FrontEndApp PCGame MobileGame WebRoute CLICommand CLIFlag Dashboard DashboardLayout DashboardCard DashboardWidget'],
     ['contracts', 'Contracts & data models', 'Contract ProtobufContract GraphQLContract APIEndpoint DataModel Entity'],
     ['data', 'Data stores & messaging', 'Database NoSQLDatabase MessageBroker SearchIndex SearchCluster DatabaseSchema DatabaseTable DatabaseColumn DatabaseIndex NoSQLCollection MessageTopic ConsumerGroup DataStore BrokerDefinition'],
     ['libraries', 'Libraries & build systems', 'Library BuildSystem'],
@@ -1737,7 +1737,22 @@
     ],
     "robos:workerPools": [
       "infrastructure"
-    ]
+    ],
+    "robos:dashboardId": ["applications"],
+    "robos:layout": ["applications"],
+    "robos:layoutId": ["applications"],
+    "robos:gridTemplate": ["applications"],
+    "robos:slotCount": ["applications"],
+    "robos:slots": ["applications"],
+    "robos:cardId": ["applications"],
+    "robos:dashboard": ["applications"],
+    "robos:widget": ["applications"],
+    "robos:slotId": ["applications"],
+    "robos:widgetType": ["applications"],
+    "robos:componentTag": ["applications"],
+    "robos:widgetConfig": ["applications"],
+    "robos:cards": ["applications"],
+    "robos:tvCompatible": ["applications"]
   });
   const ordered = codes => [...new Set(codes)].sort((a, b) => CATALOG.findIndex(c => c.code === a) - CATALOG.findIndex(c => c.code === b));
   const reference = code => ({ '@id': NS + 'classification/' + code });

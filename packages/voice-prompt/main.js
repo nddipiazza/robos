@@ -101,26 +101,84 @@ ttsEngine.on('speaking-stopped', () => {
 });
 
 sttEngine.on('interim-text', (data) => {
+  try {
+    const msg = (data && (data.text || data.msg)) || '';
+    if (msg.trim()) {
+      const analysis = defaultIntentResolver.resolveLikelySkills(msg);
+      promptStore.recordLiveBubble({
+        text: msg,
+        isFinal: false,
+        likelySkills: analysis.likelySkills || [],
+        isAmbient: Boolean(analysis.isAmbient),
+        ambientReason: analysis.ambientReason || null,
+      });
+    }
+  } catch {}
   broadcastToWindows('vp-hud-interim-text', data);
   broadcastToWindows('vp-event-interim-text', data);
 });
 
 sttEngine.on('stream-text', (data) => {
+  try {
+    const msg = (data && (data.text || data.msg)) || '';
+    if (msg.trim()) {
+      const analysis = defaultIntentResolver.resolveLikelySkills(msg);
+      promptStore.recordLiveBubble({
+        text: msg,
+        isFinal: Boolean(data && data.isFinal),
+        likelySkills: analysis.likelySkills || [],
+        isAmbient: Boolean(analysis.isAmbient),
+        ambientReason: analysis.ambientReason || null,
+      });
+    }
+  } catch {}
   broadcastToWindows('vp-hud-stream-text', data);
   broadcastToWindows('vp-event-stream-text', data);
 });
 
 sttEngine.on('bubble', (data) => {
+  try {
+    const msg = (data && (data.msg || data.text)) || '';
+    if (msg.trim()) {
+      const analysis =
+        data && (data.likelySkills !== undefined || data.isAmbient !== undefined)
+          ? data
+          : defaultIntentResolver.resolveLikelySkills(msg);
+      promptStore.recordLiveBubble({
+        id: data.bubbleId || data.id,
+        text: msg,
+        time: data.timestamp || data.time,
+        isoTime: data.isoTime,
+        isFinal: Boolean(data.isFinal),
+        likelySkills: analysis.likelySkills || [],
+        isAmbient: Boolean(analysis.isAmbient),
+        ambientReason: analysis.ambientReason || null,
+      });
+    }
+  } catch {}
   broadcastToWindows('vp-hud-bubble', data);
   broadcastToWindows('vp-event-bubble', data);
 });
 
 sttEngine.on('activated', (data) => {
+  try {
+    promptStore.saveLiveBubbles({
+      active: true,
+      backgroundMode: Boolean(data && data.backgroundMode),
+    });
+  } catch {}
   broadcastToWindows('vp-hud-recording-state', { active: true, ...data });
   broadcastToWindows('vp-event-activated', data);
 });
 
 sttEngine.on('deactivated', (data) => {
+  try {
+    promptStore.saveLiveBubbles({
+      active: false,
+      backgroundMode: false,
+      interimBubble: null,
+    });
+  } catch {}
   broadcastToWindows('vp-hud-recording-state', { active: false, ...data });
   broadcastToWindows('vp-event-deactivated', data);
 });
@@ -249,6 +307,18 @@ async function handleDictation(input, options = {}) {
   };
 
   const savedPrompt = promptStore.savePrompt(promptEntry);
+  try {
+    const analysis = defaultIntentResolver.resolveLikelySkills(savedPrompt.text || '', context);
+    promptStore.recordLiveBubble({
+      id: savedPrompt.id,
+      text: savedPrompt.text,
+      isoTime: savedPrompt.timestamp,
+      isFinal: true,
+      likelySkills: analysis.likelySkills || [],
+      isAmbient: Boolean(analysis.isAmbient),
+      ambientReason: analysis.ambientReason || null,
+    });
+  } catch {}
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-dictation', savedPrompt);
@@ -632,6 +702,44 @@ function startApiServer(overridePort) {
         const chunk = sttEngine.simulateStreamChunk(text, isFinal);
         res.writeHead(200);
         return res.end(JSON.stringify({ ok: true, chunk }));
+      }
+
+      // 10.9b GET /api/bubbles, POST /api/bubbles, DELETE /api/bubbles — live RobOS Voice dialogue bubbles
+      if (pathname === '/api/bubbles') {
+        if (method === 'GET') {
+          const live = promptStore.loadLiveBubbles();
+          res.writeHead(200);
+          return res.end(
+            JSON.stringify({
+              ok: true,
+              ...live,
+              active: sttEngine.isActive(),
+              backgroundMode: sttEngine.isBackgroundMode(),
+              assistantState: desktopAssistant.getState(),
+            })
+          );
+        }
+        if (method === 'POST') {
+          const body = await parseBody(req);
+          const msg = typeof body === 'string' ? body : body.text || body.msg || '';
+          const isFinal = body && body.isFinal !== undefined ? Boolean(body.isFinal) : true;
+          const analysis = defaultIntentResolver.resolveLikelySkills(msg);
+          const updated = promptStore.recordLiveBubble({
+            ...(typeof body === 'object' ? body : {}),
+            text: msg,
+            isFinal,
+            likelySkills: (body && body.likelySkills) || analysis.likelySkills || [],
+            isAmbient: body && body.isAmbient !== undefined ? Boolean(body.isAmbient) : Boolean(analysis.isAmbient),
+            ambientReason: (body && body.ambientReason) || analysis.ambientReason || null,
+          });
+          res.writeHead(200);
+          return res.end(JSON.stringify({ ok: true, ...updated }));
+        }
+        if (method === 'DELETE') {
+          const cleared = promptStore.clearLiveBubbles();
+          res.writeHead(200);
+          return res.end(JSON.stringify({ ok: true, ...cleared }));
+        }
       }
 
       // 10.10 GET /api/skills & POST /api/skills/execute — execute RobOS skills via voice/API
@@ -1297,6 +1405,21 @@ ipcMain.handle('vp-hud-toggle-mic', async (_e, enable) => {
   } else {
     return sttEngine.activate({ backgroundMode: true });
   }
+});
+
+ipcMain.handle('vp-hud-sync-bubbles', (_e, payload = {}) => {
+  return promptStore.saveLiveBubbles({
+    active: payload.active !== undefined ? Boolean(payload.active) : sttEngine.isActive(),
+    backgroundMode: sttEngine.isBackgroundMode(),
+    assistantState: desktopAssistant.getState(),
+    interimBubble: payload.interimBubble !== undefined ? payload.interimBubble : null,
+    bubbles: Array.isArray(payload.bubbles) ? payload.bubbles : promptStore.loadLiveBubbles().bubbles,
+    cleared: Boolean(payload.cleared),
+  });
+});
+
+ipcMain.handle('vp-hud-clear-bubbles', () => {
+  return promptStore.clearLiveBubbles();
 });
 
 // App lifecycle

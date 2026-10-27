@@ -131,6 +131,10 @@ const TEXT_SNAPSHOT_SCRIPT = `
  * Call this after creating the window.
  */
 function registerSnapshotIPC(win) {
+  for (const ch of ['__robos_dom_snapshot', '__robos_text_snapshot', '__robos_screenshot', '__robos_eval']) {
+    try { ipcMain.removeHandler?.(ch); } catch {}
+  }
+
   ipcMain.handle('__robos_dom_snapshot', async () => {
     const result = await win.webContents.executeJavaScript(SNAPSHOT_SCRIPT);
     return JSON.parse(result);
@@ -394,6 +398,17 @@ function startDebugServer(win, port, appId) {
         const bounds = win.getBounds ? win.getBounds() : {};
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, bounds }));
+
+      } else if (url === '/window/bounds' && req.method === 'POST') {
+        // Place the window, e.g. side by side with another app for a two-window capture.
+        const { x = 0, y = 0, width, height } = await readBody(req);
+        try {
+          if (win.isMinimized()) win.restore();
+          win.setResizable(true);
+          if (Number.isFinite(width) && Number.isFinite(height)) win.setBounds({ x, y, width, height });
+        } catch (_) {}
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, bounds: win.getBounds ? win.getBounds() : {} }));
 
       } else if (url === '/window/fullscreen' && req.method === 'POST') {
         try {

@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * robos-tv — CLI tool to control Smart TVs (65" TCL Roku TV, Android TV, LG webOS, Samsung Tizen) in RobOS
+ *
+ * Usage:
+ *   robos-tv status [--ip 192.168.1.15]
+ *   robos-tv check [--ip 192.168.1.15]
+ *   robos-tv on [--ip 192.168.1.15]
+ *   robos-tv off [--ip 192.168.1.15]
+ *   robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute> [--ip 192.168.1.15]
+ *   robos-tv launch <appId|ps5|youtube|netflix|plex> [--ip 192.168.1.15]
+ *   robos-tv list
+ */
+
+const http = require('node:http');
+const { createTvEngine, TV_PLATFORMS } = require('../robos-lib/tv-engine');
+
+const DEFAULT_ROKU_IP = '192.168.1.15';
+
+const ROKU_SHORTCUT_APPS = {
+  ps5: 'tvinput.hdmi2',
+  playstation: 'tvinput.hdmi2',
+  hdmi1: 'tvinput.hdmi1',
+  hdmi2: 'tvinput.hdmi2',
+  hdmi3: 'tvinput.hdmi3',
+  youtube: '837',
+  youtubetv: '195316',
+  netflix: '12',
+  plex: '13535',
+  prime: '13',
+  disney: '291097',
+  hulu: '2285',
+  max: '61322',
+  spotify: '22297',
+  espn: '34376',
+  appletv: '551012',
+};
+
+function postEcp(ip, endpoint) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: ip,
+        port: 8060,
+        path: endpoint,
+        method: 'POST',
+        timeout: 2500,
+      },
+      (res) => {
+        res.resume();
+        resolve(res.statusCode);
+      }
+    );
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timed out'));
+    });
+    req.end();
+  });
+}
+
+function printRokuBlockedHelp(ip, ecpMode, httpStatus) {
+  const rokuSteps = TV_PLATFORMS.find((p) => p.id === 'roku-os')?.requiredPermissions?.[0]?.steps || [];
+  console.error(`\n⚠️  ROKU TV REMOTE CONTROL BLOCKED ON ${ip}`);
+  console.error(`   Reported Mode : <ecp-setting-mode>${ecpMode || 'limited'}</ecp-setting-mode> (HTTP ${httpStatus || 403})`);
+  console.error(`   Why           : "Control by mobile apps -> Network access" is disabled or set to Default/Limited.`);
+  console.error(`\n   How to enable on your physical Roku remote:`);
+  rokuSteps.forEach((step, idx) => {
+    console.error(`     ${idx + 1}. ${step}`);
+  });
+  console.error('');
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const cmd = (args[0] || 'status').toLowerCase();
+  const ipIdx = args.indexOf('--ip');
+  const ip = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : DEFAULT_ROKU_IP;
+
+  const engine = createTvEngine();
+
+  if (cmd === 'list') {
+    const ov = engine.getOverview();
+    for (const tv of ov.tvs) {
+      console.log(`${tv.name} — ${tv.ip} (${tv.model})`);
+    }
+    return;
+  }
+
+  if (cmd === 'status' || cmd === 'check') {
+    const st = await engine.queryRokuPowerMode(ip);
+    console.log(JSON.stringify(st, null, 2));
+    if (st.ok && !st.ecpAllowed) {
+      printRokuBlockedHelp(ip, st.ecpMode, 403);
+      process.exitCode = 2;
+    }
+    return;
+  }
+
+  if (cmd === 'on' || cmd === 'poweron' || cmd === 'off' || cmd === 'poweroff') {
+    const action = cmd.includes('off') ? 'off' : 'on';
+    const info = await engine.queryRokuPowerMode(ip);
+    if (info.ok && !info.ecpAllowed) {
+      printRokuBlockedHelp(ip, info.ecpMode, 403);
+      process.exit(2);
+    }
+    const status = await postEcp(ip, `/keypress/${action === 'off' ? 'PowerOff' : 'PowerOn'}`);
+    if (status === 403 || status === 401) {
+      printRokuBlockedHelp(ip, info.ecpMode, status);
+      process.exit(2);
+    }
+    const after = await engine.queryRokuPowerMode(ip);
+    console.log(JSON.stringify({ ...after, action, httpStatus: status }, null, 2));
+    return;
+  }
+
+  if (cmd === 'key') {
+    const keyName = args[1] || 'Home';
+    const info = await engine.queryRokuPowerMode(ip);
+    if (info.ok && !info.ecpAllowed) {
+      printRokuBlockedHelp(ip, info.ecpMode, 403);
+      process.exit(2);
+    }
+    const status = await postEcp(ip, `/keypress/${encodeURIComponent(keyName)}`);
+    if (status === 403 || status === 401) {
+      printRokuBlockedHelp(ip, info.ecpMode, status);
+      process.exit(2);
+    }
+    console.log(JSON.stringify({ ok: true, ip, key: keyName, httpStatus: status }));
+    return;
+  }
+
+  if (cmd === 'launch') {
+    const rawApp = (args[1] || 'Home').toLowerCase();
+    const appId = ROKU_SHORTCUT_APPS[rawApp] || args[1];
+    const info = await engine.queryRokuPowerMode(ip);
+    if (info.ok && !info.ecpAllowed) {
+      printRokuBlockedHelp(ip, info.ecpMode, 403);
+      process.exit(2);
+    }
+    const status = await postEcp(ip, `/launch/${encodeURIComponent(appId)}`);
+    if (status === 403 || status === 401) {
+      printRokuBlockedHelp(ip, info.ecpMode, status);
+      process.exit(2);
+    }
+    console.log(JSON.stringify({ ok: true, ip, launchedAppId: appId, httpStatus: status }));
+    return;
+  }
+
+  console.log(`Usage:
+  robos-tv on [--ip 192.168.1.15]
+  robos-tv off [--ip 192.168.1.15]
+  robos-tv status [--ip 192.168.1.15]
+  robos-tv check [--ip 192.168.1.15]
+  robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute>
+  robos-tv launch <ps5|youtube|netflix|plex|disney|hulu|max|spotify|appId>
+  robos-tv list`);
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});

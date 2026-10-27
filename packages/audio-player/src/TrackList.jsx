@@ -219,6 +219,9 @@ export default function TrackList({
           <button className="btn-chip" onClick={() => actions.queueTracks(selectedTracks(), 'next')}>Play next</button>
           <button className="btn-chip" onClick={() => actions.queueTracks(selectedTracks(), 'end')}>Add to queue</button>
           <button className="btn-chip" onClick={() => actions.addToPlaylist(selectedTracks())}>Add to playlist…</button>
+          {actions.fixMetadata && (
+            <button className="btn-chip" onClick={() => actions.fixMetadata(selectedTracks())}>✦ AI Fix Metadata</button>
+          )}
           <button className="btn-chip" onClick={(e) => openMenu(e, collectionMenuItems(selectedTracks(), ctx))}><Icon name="more" size={12} /></button>
           <button className="btn-chip" onClick={() => setSelected(new Set())}>Clear</button>
         </div>

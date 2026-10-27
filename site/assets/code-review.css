@@ -1,0 +1,26 @@
+/* rowbose.com/code-review: one long guide, single column so side-by-side screenshots get the full width */
+@import url("build-guide.css");
+.cr-page{padding:40px 0 80px}
+.cr-hero{display:grid;gap:18px;margin-bottom:28px}
+.cr-hero h1{font-size:clamp(2rem,4vw,3rem);line-height:1.1;letter-spacing:-.03em;margin:6px 0 4px}
+.cr-hero .lead{font-size:clamp(1.05rem,1.6vw,1.25rem);max-width:70ch;margin:0}
+.cr-body{max-width:1080px}
+.cr-body>p,.cr-body>ul,.cr-body>ol,.cr-body>blockquote,.cr-body>table{max-width:78ch}
+.cr-body>table.wide{max-width:none}
+.cr-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0 36px;padding:0;list-style:none}
+.cr-nav a{display:block;height:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);text-decoration:none!important;color:var(--fg)!important}
+.cr-nav a:hover{border-color:var(--accent)}
+.cr-nav b{display:block;font-size:.95rem}.cr-nav span{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.cr-body h2{scroll-margin-top:90px;padding-top:28px;border-top:1px solid var(--line);margin-top:56px}
+.cr-body h3{scroll-margin-top:90px}
+.cr-body figure.guide-shot{margin:22px 0 30px}
+.cr-body figure.guide-shot a{display:block;cursor:zoom-in}
+.cr-body figure.side img{border-radius:8px}
+.side-legend{display:flex;justify-content:space-between;gap:12px;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
+.side-legend span:first-child{flex:0 0 42%}.side-legend span:last-child{text-align:right}
+.cr-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 30px}
+.cr-pair figure.guide-shot{margin:0}
+.mode{display:inline-block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.mode.req{color:#b7791f;border-color:#e4c38e}.mode.opt{color:var(--muted)}.mode.hid{color:var(--muted);border-style:dashed}
+@media(max-width:760px){.cr-pair{grid-template-columns:1fr}.side-legend{display:none}}
+.cr-body>ul.cr-nav{max-width:none;padding-left:0}

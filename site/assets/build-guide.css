@@ -3,3 +3,4 @@
 .guide-body p a,.guide-body li a,.guide-body td a,.guide-body blockquote a,.guide-video figcaption a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 .guide-body .role-card,.guide-body .guide-pager a{text-decoration:none}
 .guide-body .role-card b{color:var(--fg)}
+@media (max-width:600px){.guide-pager{flex-direction:column}.guide-pager a{min-width:0}.guide-pager .next{margin-left:0}}

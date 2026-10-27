@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, initial-scale=1">
+  <title>RobOS Party Game — TV</title>
+  <link rel="stylesheet" href="/static/tv.css">
+</head>
+<body>
+  <div id="stageBg" class="stage-bg"><span></span><span></span><span></span></div>
+  <div id="flash" class="flash"></div>
+
+  <header class="tv-header">
+    <div class="brand"><span class="brand-dot"></span><span id="title">RobOS Party Game</span></div>
+    <div id="phaseLabel" class="phase-label"></div>
+    <div id="screenLabel" class="screen-label"></div>
+  </header>
+
+  <main class="tv-main">
+    <section id="hostCol" class="host-col">
+      <div id="face" class="face-wrap"></div>
+      <div id="caption" class="caption"></div>
+    </section>
+    <section id="content" class="content"></section>
+  </main>
+
+  <footer id="strip" class="score-strip"></footer>
+  <audio id="voice" preload="auto"></audio>
+
+  <script src="/static/face.js"></script>
+  <script src="/static/tv.js"></script>
+</body>
+</html>

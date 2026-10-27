@@ -6,8 +6,11 @@
 - [Home](https://rowbose.com/): Product overview, app suites, context-engineering customization, and SDLC workflow
 - [App Directory](https://rowbose.com/apps/): Searchable catalog of all RobOS desktop applications, domain sandboxes, game studios, and MCP servers
 - [Build Apps](https://rowbose.com/build-apps/): Overview of the Task Planner, Task Implementer, and Agent Code Review loop
+- [Code Review](https://rowbose.com/code-review/): The Code Review Theater tab by tab: diff, before-and-after evidence, agent walkthrough beside the running app, required/optional/hidden review steps, reviewer mode
 - [Build Apps on Your Own (Solo Guide)](https://rowbose.com/build-apps/solo/): Step-by-step solo developer guide with real app screenshots
 - [Build Apps as a Team (Team Guide)](https://rowbose.com/build-apps/teams/): Step-by-step team workflow guide with Dev Central and Reviewer mode
+- [Task Planner](https://rowbose.com/task-planner/): Turn a description or one of 67 templates into epics and tasks, edit them, and create GitHub or Jira issues; developer personas and KGraph project plans
+- [Task Implementer](https://rowbose.com/task-implementer/): Run the Claude Code CLI on one GitHub or Jira issue with a developer persona; it branches, tests, commits and pushes without opening a pull request
 - [Documentation Hub](https://rowbose.com/docs/): Entry point to RobOS user guides, architecture, schemas, and reference docs
 - [RobOS on Your Smart TV](https://rowbose.com/tv/): Developer Mode sideloading (LG webOS, Samsung Tizen, Google TV / Android TV ADB, Roku OS), 10-Foot Big-Screen Portal (:19210), and Moonlight/Sunshine 4K game streaming
 - [Security & Isolation Proofs](https://rowbose.com/security/): Live kernel E2E proofs for the RobOS VPN Sandbox (`ip netns` + 3-barrier `iptables` kill-switch) and RobOS VPN Servers
@@ -49,6 +52,8 @@
 - [Quest: Warrior Dragon Docs](https://rowbose.com/games/quest-warrior-dragon/docs/): Player guide, AI route planner, and reachability verification
 - [Quest: Warrior Dragon AI Playthrough](https://rowbose.com/games/quest-warrior-dragon/ai-playthrough/): Full 70-milestone autonomous playthrough from throne room to Dragonlord
 - [Quest: Warrior Dragon Proof of Viability](https://rowbose.com/games/quest-warrior-dragon/proof-of-viability.html): Global map completeness and pathfinding proof of viability
+- [RobOS Party Game](https://rowbose.com/games/party-game/): AI-hosted party game on RobOS TVs with phones as controllers; mini games written from the guests' survey and the house
+- [RobOS Party Game Docs](https://rowbose.com/games/party-game/docs/): Setup, how a party runs, the mini games and the mini game template
 
 ## Classic Documentation & Reference (/v1/)
 - [Classic Docs Index](https://rowbose.com/v1/): Complete RobOS v1 documentation, architecture, and 85+ app reference pages

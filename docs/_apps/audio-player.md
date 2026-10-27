@@ -128,6 +128,16 @@ flowchart TD
 - **Volume & Playback Control**: Centralized volume adjustment, pause, resume, individual speaker stop, and global `Stop All Speakers` controls.
 - **Harmonic Test Chime**: Synthesizes and broadcasts an in-memory 16-bit PCM harmonic test chime to verify speaker connectivity.
 
+### Control API for other RobOS apps
+
+Other RobOS apps can borrow the speaker the music is on for a moment without ending the music session. [RobOS Party Game]({{ '/apps/party-game/' | relative_url }}) uses it to say its AI host's lines on the speaker the music is playing on.
+
+- **Loopback only, with a token**: while the Audio Player runs, a small HTTP server listens on `127.0.0.1` on a free port. The port and a random token are in `~/.config/robos/audio-player-control.json` (readable only by you, removed when the Audio Player quits), and every request sends the token in an `X-RobOS-Token` header, so web pages in a browser cannot drive it.
+- **`POST /api/speak-clip`** `{ speakerIp?, filePath | url, title?, artist?, durationMs?, holdMs? }`: plays an audio clip (a local audio file or an http(s) URL) on the speaker the music is cast to. It works like a Virtual DJ break: the clip replaces the song on the speaker, and when the speaker reports the clip finished, the song is cast again from where it was, still paused if it was paused. Clips that arrive while one is playing queue up behind it, and the song waits `holdMs` (default 1.5 s, at most 10 s) after the last one in case another follows. If the music is on this computer or a different speaker, the answer is `{ handled: false }` and the caller casts the clip itself.
+- **`POST /api/pause`** and **`POST /api/resume`**: pause and resume the music. During a clip, they decide whether the song comes back playing or paused.
+- **`GET /api/status`**: where the music plays (`output`, `speakerIps`), whether it is playing, the current track and position, and whether a clip has the speaker.
+- **From Node**: `createAudioPlayerClient()` in `packages/audio-player/lib/control-server.js` finds the running Audio Player and makes these calls. Each one resolves with `null` when the Audio Player is not running.
+
 ### 4. Procedural Focus Soundscapes
 - **Real-Time Web Audio Synthesizers**: Generates procedural ambient focus audio directly via the browser Web Audio API with zero external media files:
   - **Coding Rain**: Resonant bandpass-filtered noise mimicking rainfall.
@@ -153,4 +163,5 @@ The player automatically probes and connects to:
 - **Play counts & loved tracks**: `~/.config/robos/audio-track-stats.json`
 - **Cover art cache**: `~/.cache/robos/audio-player/art/`
 - **Snapshot debug port**: `19196`
+- **Control API**: loopback port and token in `~/.config/robos/audio-player-control.json` (see *Control API for other RobOS apps*)
 - **Ephemeral stream server**: Dynamic port on host LAN interface

@@ -27,7 +27,7 @@
 
       <div class="header-right">
         <div class="portal-pill" id="portal-url-pill" title="Live 10-Foot Smart TV Portal HTTP endpoint">
-          <span class="dot online"></span>
+          <span class="dot online" id="portal-owner-dot"></span>
           <span class="pill-label">10-Foot TV Portal:</span>
           <code id="portal-url-text">http://192.168.1.100:19210</code>
         </div>
@@ -38,9 +38,37 @@
 
     <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
 
+    <!-- Shown when another process holds the 10-foot portal port -->
+    <div id="portal-owner-alert" class="setup-alert portal-owner-alert hidden" role="alert">
+      <div class="setup-alert-head">
+        <div>
+          <strong id="portal-owner-title">Smart TV Studio is not serving the TV portal</strong>
+          <p id="portal-owner-msg" class="setup-alert-msg"></p>
+          <p id="portal-owner-detail" class="portal-owner-detail"></p>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary" id="btn-restart-portal">Restart TV portal</button>
+      </div>
+    </div>
+
+    <!-- Setup Required / Permission Blocked Diagnostic Alert Box -->
+    <div id="setup-alert-box" class="setup-alert hidden" role="alert">
+      <div class="setup-alert-head">
+        <div>
+          <strong id="setup-alert-title">TV Setup Step Required</strong>
+          <p id="setup-alert-msg" class="setup-alert-msg"></p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <button type="button" class="btn btn-sm btn-primary" id="btn-retry-setup-alert">↻ Refresh / Try Again</button>
+          <button type="button" class="btn btn-sm" id="btn-dismiss-setup-alert">Dismiss</button>
+        </div>
+      </div>
+      <ol id="setup-alert-steps" class="setup-alert-steps"></ol>
+    </div>
+
     <!-- Navigation Tabs -->
     <nav class="tabs" role="tablist">
       <button type="button" class="tab-btn active" data-tab="tab-devices" role="tab">Paired Smart TVs &amp; Remote</button>
+      <button type="button" class="tab-btn" data-tab="tab-checklist" role="tab">TV Setup Checklists (All Brands)</button>
       <button type="button" class="tab-btn" data-tab="tab-sideload" role="tab">Developer Mode Sideloader (webOS / Tizen / ADB / Roku)</button>
       <button type="button" class="tab-btn" data-tab="tab-portal" role="tab">10-Foot TV Portal &amp; Big-Screen Launcher</button>
     </nav>
@@ -82,7 +110,10 @@
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">TV D-Pad Remote &amp; Instant App Launch</h2>
-              <select id="select-remote-target" class="select select-sm"></select>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <select id="select-remote-target" class="select select-sm"></select>
+                <button type="button" class="btn btn-sm" id="btn-refresh-tv-status" title="Re-verify TV connection and permission settings">↻ Refresh Status</button>
+              </div>
             </div>
             <p class="muted-text">Send directional D-Pad keys (`ADB keyevent`, `Roku ECP`, or `Portal Spatial Nav`) and launch RobOS experiences directly onto the selected TV screen.</p>
 
@@ -96,13 +127,35 @@
                 </div>
                 <button type="button" class="btn dpad-btn dpad-down" data-rkey="DPAD_DOWN">▼ Down</button>
                 <div class="dpad-aux">
+                  <button type="button" class="btn btn-sm btn-primary" data-rkey="POWER_ON" title="Turn TV On (Roku PowerOn / ADB Wakeup)">⚡ Power On</button>
+                  <button type="button" class="btn btn-sm btn-danger" data-rkey="POWER_OFF" title="Turn TV Off (Roku PowerOff / ADB Sleep)">⏻ Power Off</button>
+                </div>
+                <div class="dpad-aux">
                   <button type="button" class="btn btn-sm" data-rkey="BACK">↩ Back</button>
                   <button type="button" class="btn btn-sm" data-rkey="HOME">⌂ TV Home</button>
                   <button type="button" class="btn btn-sm" data-rkey="PLAY_PAUSE">⏯ Play/Pause</button>
                 </div>
+                <div class="dpad-aux">
+                  <button type="button" class="btn btn-sm" data-rkey="VOLUME_DOWN">🔉 Vol -</button>
+                  <button type="button" class="btn btn-sm" data-rkey="VOLUME_MUTE">🔇 Mute</button>
+                  <button type="button" class="btn btn-sm" data-rkey="VOLUME_UP">🔊 Vol +</button>
+                </div>
               </div>
 
               <div class="quick-cast-box">
+                <div class="sub-label">Show RobOS Dashboard on Smart TV</div>
+                <div class="active-tile-card" id="tv-dashboard-cast-box" style="margin-bottom:12px;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                    <select id="select-tv-dashboard" class="select select-sm" style="flex:1;min-width:170px;"></select>
+                    <select id="select-tv-dashboard-layout" class="select select-sm" style="flex:1;min-width:140px;"></select>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-show-dashboard-tv">📺 Show Dashboard on TV</button>
+                    <button type="button" class="btn btn-sm" id="btn-open-dashboard-tv">Open TV Dashboard URL</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="btn-stop-dashboard-tv">Stop</button>
+                  </div>
+                  <div id="tv-dashboard-cast-status" class="item-sub" style="margin-top:6px;"></div>
+                </div>
                 <div class="sub-label">Active TV Screen Experience</div>
                 <div class="active-tile-card" id="active-tile-summary"></div>
                 <div class="sub-label" style="margin-top:12px;">Switch TV Experience</div>
@@ -113,7 +166,22 @@
         </div>
       </section>
 
-      <!-- TAB 2: Developer Mode Sideloader Wizard -->
+      <!-- TAB 2: Exhaustive Setup Checklists & Live Permission Verifier -->
+      <section id="tab-checklist" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Exhaustive Smart TV Setup Checklists &amp; Live Readiness Probe</h2>
+              <p class="muted-text">Every setting required on your physical TV so RobOS can control power, volume, D-Pad navigation, and Developer Mode app sideloading.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-run-readiness-check">Check Selected TV Readiness Now</button>
+          </div>
+          <div id="live-readiness-results" style="margin-bottom:14px;"></div>
+          <div id="all-platforms-checklists" class="list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Developer Mode Sideloader Wizard -->
       <section id="tab-sideload" class="tab-pane">
         <div class="columns">
           <div class="card">
@@ -154,8 +222,18 @@
         </div>
       </section>
 
-      <!-- TAB 3: 10-Foot Big-Screen Portal Preview -->
+      <!-- TAB 4: 10-Foot Big-Screen Portal Preview -->
       <section id="tab-portal" class="tab-pane">
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Embedded RobOS Dashboard on Smart TV (<code style="font-size:12px;color:#00bcd4;">&lt;robos-dashboard&gt;</code>)</h2>
+              <p class="muted-text">Live preview of the active KGraph graphical dashboard (10 latest commits, daily calendar events, and running RobOS agent sessions with tailed status lines) served on your TV at <code id="dashboard-cast-url-code">http://192.168.1.100:19210/dashboard</code>.</p>
+            </div>
+            <span class="badge badge-green" id="dashboard-cast-pill">Ready to Cast</span>
+          </div>
+          <robos-dashboard id="tv-embedded-robos-dashboard"></robos-dashboard>
+        </div>
         <div class="card">
           <div class="card-header">
             <div>
@@ -171,6 +249,7 @@
       </section>
     </main>
   </div>
+  <script src="../../robos-ui/robos-dashboard.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

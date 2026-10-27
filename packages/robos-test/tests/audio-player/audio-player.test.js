@@ -1074,4 +1074,99 @@ describe('RobOS Audio Player Tests', () => {
       }
     });
   });
+
+  describe('Control API for other RobOS apps', () => {
+    const { createControlServer, createAudioPlayerClient, readControlInfo } = require(path.join(APP_DIR, 'lib', 'control-server'));
+
+    function fakeHandlers(calls) {
+      return {
+        status: () => ({ ok: true, running: true, output: '192.168.1.10', speakerIps: ['192.168.1.10'], playing: true }),
+        speakClip: (clip) => { calls.push(clip); return { ok: true, handled: clip.speakerIp === '192.168.1.10' }; },
+        pause: () => { calls.push('pause'); return { ok: true, playing: false }; },
+        resume: () => { calls.push('resume'); return { ok: true, playing: true }; },
+      };
+    }
+
+    it('listens on loopback with a private token file, and other apps reach it through the client', async () => {
+      const dir = fs.mkdtempSync('/tmp/robos-ap-control-');
+      const clipFile = path.join(dir, 'line.mp3');
+      fs.writeFileSync(clipFile, 'not really audio');
+      const calls = [];
+      const server = createControlServer({ handlers: fakeHandlers(calls), configDir: dir, probe: async () => 2345 });
+      const port = await server.start();
+      try {
+        const info = readControlInfo(dir);
+        assert.strictEqual(info.port, port);
+        assert.strictEqual(info.pid, process.pid);
+        assert.strictEqual(fs.statSync(server.file).mode & 0o777, 0o600, 'only this user can read the token');
+
+        const client = createAudioPlayerClient({ configDir: dir });
+        assert.strictEqual(client.running(), true);
+        const status = await client.status();
+        assert.strictEqual(status.output, '192.168.1.10');
+
+        const res = await client.speakClip({ speakerIp: '192.168.1.10', filePath: clipFile, title: 'RobOS Party Game' });
+        assert.deepStrictEqual([res.ok, res.handled], [true, true]);
+        assert.deepStrictEqual(calls[0], { speakerIp: '192.168.1.10', title: 'RobOS Party Game', artist: '', holdMs: 1500, durationMs: 2345, filePath: clipFile });
+        const other = await client.speakClip({ speakerIp: '192.168.1.99', filePath: clipFile, durationMs: 900, holdMs: 99999 });
+        assert.strictEqual(other.handled, false, 'the Audio Player says when the music is not on that speaker');
+        assert.deepStrictEqual([calls[1].durationMs, calls[1].holdMs], [900, 10000], 'a given duration is kept; the hold is capped');
+
+        assert.strictEqual((await client.pause()).playing, false);
+        assert.strictEqual((await client.resume()).playing, true);
+        assert.deepStrictEqual(calls.slice(2), ['pause', 'resume']);
+      } finally {
+        server.stop();
+      }
+      assert.strictEqual(fs.existsSync(server.file), false, 'the control file goes away with the Audio Player');
+      assert.strictEqual(await createAudioPlayerClient({ configDir: dir }).speakClip({ filePath: clipFile }), null, 'no Audio Player: the client answers null');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('refuses requests without the token and clips that are not audio files', async () => {
+      const dir = fs.mkdtempSync('/tmp/robos-ap-control-');
+      const calls = [];
+      const server = createControlServer({ handlers: fakeHandlers(calls), configDir: dir, probe: async () => null });
+      const port = await server.start();
+      const post = (route, body, headers = {}) => new Promise((resolve, reject) => {
+        const data = JSON.stringify(body);
+        const req = http.request({ hostname: '127.0.0.1', port, path: route, method: 'POST', headers: { 'Content-Type': 'application/json', ...headers } }, (res) => {
+          let text = '';
+          res.on('data', (c) => { text += c; });
+          res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(text) }));
+        });
+        req.on('error', reject);
+        req.end(data);
+      });
+      try {
+        const textFile = path.join(dir, 'secrets.txt');
+        fs.writeFileSync(textFile, 'x');
+        assert.strictEqual((await post('/api/pause', {})).status, 401);
+        assert.strictEqual((await post('/api/pause', {}, { 'X-RobOS-Token': 'nope' })).status, 401);
+        const auth = { 'X-RobOS-Token': server.token };
+        assert.strictEqual((await post('/api/speak-clip', { filePath: textFile }, auth)).status, 400);
+        assert.strictEqual((await post('/api/speak-clip', { filePath: path.join(dir, 'missing.mp3') }, auth)).status, 400);
+        assert.strictEqual((await post('/api/speak-clip', { url: 'file:///etc/passwd' }, auth)).status, 400);
+        assert.strictEqual((await post('/api/speak-clip', { url: 'http://10.0.0.5/line.mp3' }, auth)).body.ok, true);
+        assert.strictEqual((await post('/api/nope', {}, auth)).status, 404);
+        assert.deepStrictEqual(calls.map((c) => c.url), ['http://10.0.0.5/line.mp3']);
+      } finally {
+        server.stop();
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('the app answers control calls with the Virtual DJ cast-and-resume path', () => {
+      const main = fs.readFileSync(path.join(APP_DIR, 'main.js'), 'utf8');
+      assert.ok(main.includes("require('./lib/control-server')") && main.includes('controlServer.start()'), 'main starts the control API');
+      const preload = fs.readFileSync(path.join(APP_DIR, 'preload.js'), 'utf8');
+      assert.ok(preload.includes('onControlRequest:'), 'preload hands control calls to the renderer');
+      const hook = fs.readFileSync(path.join(APP_DIR, 'src', 'useSpeakerTakeover.js'), 'utf8');
+      assert.ok(hook.includes("role: 'clip'") && hook.includes('resumeCastAt(t.song, t.position, t.wasPlaying)'), 'clips borrow the speaker and the song resumes where it was');
+      const app = fs.readFileSync(path.join(APP_DIR, 'src', 'App.jsx'), 'utf8');
+      assert.ok(app.includes("status.role === 'clip'") && app.includes('useSpeakerTakeover('), 'the speaker reports when a clip ends');
+      const bundle = fs.readFileSync(path.join(APP_DIR, 'renderer', 'bundle.js'), 'utf8');
+      assert.ok(bundle.includes('onControlRequest'), 'bundle is rebuilt with the control API');
+    });
+  });
 });

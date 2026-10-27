@@ -25,6 +25,8 @@ const hudApi = {
   closeVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-close'),
   toggleVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-toggle'),
   resolveBubbleSkills: (msg, context) => ipcRenderer.invoke('vp-resolve-bubble-skills', { msg, context }),
+  syncBubbles: (payload) => ipcRenderer.invoke('vp-hud-sync-bubbles', payload),
+  clearBubbles: () => ipcRenderer.invoke('vp-hud-clear-bubbles'),
 
   // Events from main process
   onBubble: (callback) => {

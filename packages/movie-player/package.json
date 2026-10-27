@@ -1,0 +1,21 @@
+{
+  "name": "robos-movie-player",
+  "version": "0.1.0",
+  "description": "RobOS Movie Player with HTML5/FFmpeg cinema engine, synced subtitles, AI watchlists, Virtual Cinema Host, and zero-cloud Google Cast streaming",
+  "main": "main.js",
+  "scripts": {
+    "build": "esbuild src/index.jsx --bundle --outfile=renderer/bundle.js --loader:.js=jsx --loader:.jsx=jsx --platform=browser --define:process.env.NODE_ENV='\"production\"'",
+    "start": "npm run build && electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test lib/*.test.js"
+  },
+  "dependencies": {
+    "castv2-client": "^1.2.0",
+    "music-metadata": "^12.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-h5-audio-player": "^3.10.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -73,6 +73,7 @@ export default function Library({
   onAddFiles,
   isScanning,
   onAiPlaylist,
+  onAiFixMetadata,
 }) {
   const { stats, actions } = useLibrary();
   const [prefs, setPrefs] = useState(loadPrefs);
@@ -190,6 +191,17 @@ export default function Library({
               onClick={onAiPlaylist}
             >
               ✦ AI Playlist
+            </button>
+          )}
+          {onAiFixMetadata && (
+            <button
+              id="btn-library-ai-fix-metadata"
+              className="btn-secondary lib-shuffle-all"
+              disabled={!index.tracks.length}
+              title="Repair and enrich track metadata & cover art using your RobOS agent and open-source media tools"
+              onClick={() => onAiFixMetadata(scopeFolder ? index.tracks : [])}
+            >
+              ✦ AI Fix Metadata
             </button>
           )}
           <button

@@ -722,6 +722,8 @@ function createWindow() {
       win.webContents.send('dc-switch-tab', 'tasks');
     } else if (argv.includes('--feature') || argv.includes('--tab=feature')) {
       win.webContents.send('dc-switch-tab', 'feature');
+    } else if (argv.includes('--calendar') || argv.includes('--tab=calendar')) {
+      win.webContents.send('dc-switch-tab', 'calendar');
     }
     updateTrayAndIcon();
   });
@@ -737,6 +739,8 @@ app.on('second-instance', (_, commandLine) => {
     if (win && win.webContents) win.webContents.send('dc-switch-tab', 'tasks');
   } else if (commandLine.includes('--feature') || commandLine.includes('--tab=feature')) {
     if (win && win.webContents) win.webContents.send('dc-switch-tab', 'feature');
+  } else if (commandLine.includes('--calendar') || commandLine.includes('--tab=calendar')) {
+    if (win && win.webContents) win.webContents.send('dc-switch-tab', 'calendar');
   }
 });
 
@@ -1377,6 +1381,165 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
   }
 
   return { ok: true, unreadCount: getUnreadCount() };
+});
+
+// ── Smart TV Dashboard Casting IPC Handlers ──────────────────────────────────
+
+let tvEngineInstance = null;
+function getTvEngine() {
+  if (tvEngineInstance) return tvEngineInstance;
+  const candidates = [
+    path.resolve(__dirname, '../robos-lib/tv-engine'),
+    '/usr/local/share/robos/robos-lib/tv-engine',
+  ];
+  for (const modPath of candidates) {
+    try {
+      const { createTvEngine } = require(modPath);
+      tvEngineInstance = createTvEngine({ configDir: CONFIG_DIR });
+      return tvEngineInstance;
+    } catch {}
+  }
+  return null;
+}
+
+ipcMain.handle('dc-tv-list', async () => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable', tvs: [] };
+  await engine.startPortalServer();
+  return engine.getOverview();
+});
+
+ipcMain.handle('dc-tv-diagnose', async (_, tvId) => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable' };
+  return engine.diagnoseTvReadiness(tvId);
+});
+
+ipcMain.handle('dc-tv-cast-dashboard', async (_, payload = {}) => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable' };
+  await engine.startPortalServer();
+  return engine.castDevCentralDashboard(payload);
+});
+
+ipcMain.handle('dc-tv-stop-cast', async (_, payload = {}) => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable' };
+  return engine.stopDevCentralCast(payload);
+});
+
+ipcMain.handle('dc-open-tv-studio', async () => {
+  const launcherBin = path.join(os.homedir(), '.local', 'bin', 'robos-tv');
+  const pkgDir = path.resolve(__dirname, '../robos-tv');
+  try {
+    if (fs.existsSync(launcherBin)) {
+      const child = cp.spawn(launcherBin, [], { detached: true, stdio: 'ignore' });
+      child.unref();
+      return { ok: true };
+    }
+    const child = cp.spawn('npx', ['electron', pkgDir, '--no-sandbox'], { detached: true, stdio: 'ignore' });
+    child.unref();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+// ── RobOS Calendar Events & Google Calendar / Thunderbird Integration ───────
+
+function getThunderbirdGoogleLib() {
+  const candidates = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'thunderbird-google'),
+    path.resolve(__dirname, '../robos-lib/thunderbird-google'),
+    '/usr/local/share/robos/robos-lib/thunderbird-google',
+  ].filter(Boolean);
+  for (const modPath of candidates) {
+    try {
+      const resolved = require.resolve(modPath);
+      delete require.cache[resolved];
+      return require(resolved);
+    } catch {}
+  }
+  return null;
+}
+
+ipcMain.handle('dc-get-calendar-events', async (_, accountId = null) => {
+  const tb = getThunderbirdGoogleLib();
+  if (!tb) return { ok: false, error: 'thunderbird-google library unavailable', events: [] };
+  try {
+    return await tb.getUnifiedCalendarEvents(accountId, { configDir: CONFIG_DIR });
+  } catch (err) {
+    return { ok: false, error: err.message, events: [] };
+  }
+});
+
+ipcMain.handle('dc-add-calendar-event', async (_, payload = {}) => {
+  const tb = getThunderbirdGoogleLib();
+  if (!tb) return { ok: false, error: 'thunderbird-google library unavailable' };
+  try {
+    const added = tb.addCalendarEvent(payload, { configDir: CONFIG_DIR });
+    const unified = await tb.getUnifiedCalendarEvents(payload.accountId || null, { configDir: CONFIG_DIR, skipNetwork: true });
+    return { ...unified, addedEvent: added.event };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('dc-delete-calendar-event', async (_, eventId) => {
+  const tb = getThunderbirdGoogleLib();
+  if (!tb) return { ok: false, error: 'thunderbird-google library unavailable' };
+  try {
+    tb.deleteCalendarEvent(eventId, { configDir: CONFIG_DIR });
+    return await tb.getUnifiedCalendarEvents(null, { configDir: CONFIG_DIR, skipNetwork: true });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('dc-sync-thunderbird-calendar', async (_, accountId = null) => {
+  const tb = getThunderbirdGoogleLib();
+  if (!tb) return { ok: false, error: 'thunderbird-google library unavailable' };
+  try {
+    const cfg = tb.configureThunderbirdForGoogleAccount(accountId, {
+      enableCalendar: true,
+      enableContacts: true,
+    }, { configDir: CONFIG_DIR });
+    const unified = await tb.getUnifiedCalendarEvents(accountId, { configDir: CONFIG_DIR });
+    return { ...unified, configuredProfile: cfg.primaryProfilePath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('dc-open-calendar-app', async (_, target = 'google-calendar') => {
+  try {
+    if (target === 'thunderbird') {
+      const tb = getThunderbirdGoogleLib();
+      if (tb) return tb.launchThunderbird({ mode: 'calendar' });
+    }
+    const appId = target === 'cloud-accounts' ? 'cloud-accounts' : 'google-calendar';
+    const wrapperCandidates = [
+      path.join(HOME_DIR, '.local', 'bin', `robos-${appId}`),
+      path.join(HOME_DIR, '.local', 'bin', appId),
+    ];
+    const wrapper = wrapperCandidates.find(w => fs.existsSync(w));
+    if (wrapper) {
+      const child = cp.spawn(wrapper, [], { detached: true, stdio: 'ignore', env: { ...process.env } });
+      child.unref();
+      return { ok: true, appId };
+    }
+    const pkgDir = path.resolve(__dirname, '..', appId, 'main.js');
+    const electronBin = process.execPath || '/usr/bin/electron';
+    const child = cp.spawn(electronBin, [pkgDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
+      detached: true,
+      stdio: 'ignore',
+      env: { ...process.env },
+    });
+    child.unref();
+    return { ok: true, appId };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
 
 module.exports = {
