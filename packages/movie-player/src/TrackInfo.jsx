@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from './Icon.jsx';
-import { formatDuration } from '../lib/library-index.js';
+import { formatDuration, inferMovieGenres } from '../lib/library-index.js';
 import { useLibrary, Cover, LoveButton } from './library-ui.jsx';
 
 const when = (iso) => (iso ? new Date(iso).toLocaleString() : '—');
@@ -9,24 +9,24 @@ export default function TrackInfo({ track, onClose }) {
   const { stats, actions } = useLibrary();
   if (!track) return null;
   const st = stats[track.id] || {};
+  const cats = inferMovieGenres(track);
   const rows = [
     ['Title', track.title],
-    ['Artist', track.artist],
-    ['Album artist', track.albumArtist],
-    ['Album', track.album],
-    ['Track', track.trackNumber ? `${track.trackNumber}${track.trackTotal ? ` of ${track.trackTotal}` : ''}` : null],
-    ['Disc', track.discNumber ? `${track.discNumber}${track.discTotal ? ` of ${track.discTotal}` : ''}` : null],
-    ['Year', track.year],
-    ['Genre', track.genre],
-    ['Composer', track.composer],
-    ['Duration', formatDuration(track.duration)],
-    ['Format', [track.codec, track.lossless ? 'lossless' : null].filter(Boolean).join(', ') || null],
+    ['Release Format', track.artist],
+    ['Collection / Series', track.album],
+    ['Episode / Part', track.trackNumber ? `${track.trackNumber}${track.trackTotal ? ` of ${track.trackTotal}` : ''}` : null],
+    ['Season / Disc', track.discNumber ? `${track.discNumber}${track.discTotal ? ` of ${track.discTotal}` : ''}` : null],
+    ['Release Year', track.year],
+    ['Categories / Genres', cats.length ? cats.join(', ') : track.genre],
+    ['Studio / Director', track.composer],
+    ['Runtime', formatDuration(track.duration)],
+    ['Video / Audio Codec', [track.codec, track.lossless ? 'lossless' : null].filter(Boolean).join(', ') || null],
     ['Bitrate', track.bitrate ? `${Math.round(track.bitrate / 1000)} kbps` : null],
-    ['Sample rate', track.sampleRate ? `${(track.sampleRate / 1000).toFixed(1)} kHz${track.bitsPerSample ? ` · ${track.bitsPerSample}-bit` : ''}` : null],
-    ['Channels', track.channels === 1 ? 'Mono' : track.channels === 2 ? 'Stereo' : track.channels],
-    ['Plays', st.plays || 0],
-    ['Last played', when(st.lastPlayed)],
-    ['Added', when(track.addedAt)],
+    ['Audio Sample Rate', track.sampleRate ? `${(track.sampleRate / 1000).toFixed(1)} kHz${track.bitsPerSample ? ` · ${track.bitsPerSample}-bit` : ''}` : null],
+    ['Audio Channels', track.channels === 1 ? 'Mono' : track.channels === 2 ? 'Stereo' : track.channels],
+    ['Views', st.plays || 0],
+    ['Last Watched', when(st.lastPlayed)],
+    ['Added to Library', when(track.addedAt)],
     ['Source', track.cloud ? `Cloud (${track.cloud.driverType || 'remote'})${track.cloud.cached ? ', cached locally' : ''}` : (track.filePath ? 'Local file' : 'Stream')],
     ['Location', track.cloud ? track.cloud.remotePath : (track.filePath || track.src)],
   ].filter(([, v]) => v !== null && v !== undefined && v !== '');
@@ -42,7 +42,7 @@ export default function TrackInfo({ track, onClose }) {
             <div className="track-info-actions">
               <LoveButton track={track} size={16} />
               <button className="btn-chip" onClick={() => { onClose(); actions.playTracks([track], 0); }}><Icon name="play" size={10} /> Play</button>
-              <button className="btn-chip" onClick={() => { onClose(); actions.goToAlbumOf(track); }}>Go to album</button>
+              <button className="btn-chip" onClick={() => { onClose(); actions.goToAlbumOf(track); }}>View Movie / Show Details</button>
               {actions.fixMetadata && (
                 <button id="btn-track-info-ai-fix" className="btn-chip" onClick={() => { onClose(); actions.fixMetadata([track]); }}>
                   ✦ AI Fix Metadata

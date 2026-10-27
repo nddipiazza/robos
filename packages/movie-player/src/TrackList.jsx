@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useViewport, scrollRootTo } from './virtual.jsx';
 import { Icon } from './Icon.jsx';
-import { formatDuration } from '../lib/library-index.js';
+import { formatDuration, inferMovieGenres } from '../lib/library-index.js';
 import { useLibrary, sameTrack, trackMenuItems, collectionMenuItems, LoveButton, Cover, useStableArray, TRACK_DRAG_TYPE } from './library-ui.jsx';
 import { useColumns } from './resizable.jsx';
 
@@ -33,13 +33,13 @@ const HEADERS = {
   love: { label: '', sort: 'loved' },
   art: { label: '', sort: null },
   title: { label: 'Title', sort: 'title' },
-  album: { label: 'Album', sort: 'album' },
+  album: { label: 'Release / Series', sort: 'album' },
   year: { label: 'Year', sort: 'year' },
-  genre: { label: 'Genre', sort: 'genre' },
-  plays: { label: 'Plays', sort: 'plays' },
+  genre: { label: 'Category', sort: 'genre' },
+  plays: { label: 'Views', sort: 'plays' },
   added: { label: 'Added', sort: 'addedAt' },
-  lastPlayed: { label: 'Last played', sort: 'lastPlayed' },
-  duration: { label: 'Time', sort: 'duration' },
+  lastPlayed: { label: 'Last Watched', sort: 'lastPlayed' },
+  duration: { label: 'Runtime', sort: 'duration' },
   more: { label: '', sort: null },
 };
 
@@ -57,7 +57,7 @@ export default function TrackList({
   onSort = null,
   albumArtist = null,      // in album view, only show a row's artist if it differs
   showDiscs = false,
-  emptyText = 'No tracks here yet.',
+  emptyText = 'No titles here yet.',
   id,
 }) {
   const tracks = useStableArray(rawTracks);
@@ -186,7 +186,7 @@ export default function TrackList({
     const top = r * ROW_HEIGHT;
     const entry = discRows ? discRows[r] : null;
     if (entry && entry.disc != null) {
-      rows.push(<div key={`disc-${entry.disc}`} className="tl-disc" style={{ top }}><Icon name="disc" size={13} /> Disc {entry.disc}</div>);
+      rows.push(<div key={`disc-${entry.disc}`} className="tl-disc" style={{ top }}><Icon name="disc" size={13} /> Part / Season {entry.disc}</div>);
       continue;
     }
     const idx = entry ? entry.idx : r;
@@ -218,7 +218,7 @@ export default function TrackList({
           <button className="btn-chip" onClick={() => actions.playTracks(selectedTracks(), 0)}><Icon name="play" size={11} /> Play</button>
           <button className="btn-chip" onClick={() => actions.queueTracks(selectedTracks(), 'next')}>Play next</button>
           <button className="btn-chip" onClick={() => actions.queueTracks(selectedTracks(), 'end')}>Add to queue</button>
-          <button className="btn-chip" onClick={() => actions.addToPlaylist(selectedTracks())}>Add to playlist…</button>
+          <button className="btn-chip" onClick={() => actions.addToPlaylist(selectedTracks())}>Add to Watchlist…</button>
           {actions.fixMetadata && (
             <button className="btn-chip" onClick={() => actions.fixMetadata(selectedTracks())}>✦ AI Fix Metadata</button>
           )}
@@ -274,7 +274,7 @@ function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtis
           <span className="tl-title-text" title={t.title}>{t.title}</span>
           {showArtist && (
             <span className="tl-sub">
-              <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToArtist(t.artist); }}>{t.artist || 'Unknown Artist'}</a>
+              <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToArtist(t.artist); }}>{t.artist || 'Feature Film'}</a>
               {t.cloud && <span className="tl-badge">{t.cloud.cached ? 'Cloud · cached' : 'Cloud'}</span>}
             </span>
           )}
@@ -289,12 +289,14 @@ function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtis
       );
     case 'year':
       return <span key={col} className="tl-cell tl-year">{t.year || '—'}</span>;
-    case 'genre':
+    case 'genre': {
+      const primaryCategory = inferMovieGenres(t)[0] || t.genre || '';
       return (
-        <span key={col} className="tl-cell tl-genre" title={t.genre || ''}>
-          {t.genre ? <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToGenre(t.genre); }}>{t.genre}</a> : '—'}
+        <span key={col} className="tl-cell tl-genre" title={primaryCategory}>
+          {primaryCategory ? <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToGenre(primaryCategory); }}>{primaryCategory}</a> : '—'}
         </span>
       );
+    }
     case 'plays':
       return <span key={col} className="tl-cell tl-plays">{st.plays || ''}</span>;
     case 'added':

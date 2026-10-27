@@ -14,12 +14,14 @@ import { Splitter, useLayoutPref } from './resizable.jsx';
 const NAV_WIDTH = 196;
 
 export const LIBRARY_SECTIONS = [
-  { id: 'albums', label: 'All Movies', icon: 'disc' },
-  { id: 'franchises', label: 'Collections & Box Sets', icon: 'grid' },
+  { id: 'albums', label: 'All Movies & Shows', icon: 'disc' },
+  { id: 'movies_only', label: 'Movies (Feature Films)', icon: 'disc' },
+  { id: 'tv_shows', label: 'TV Shows & Series', icon: 'tv' },
+  { id: 'franchises', label: 'Franchises & Box Sets', icon: 'grid' },
   { id: 'genres', label: 'Genres & Categories', icon: 'tag' },
-  { id: 'artists', label: 'Releases & Formats', icon: 'tv' },
-  { id: 'decades', label: 'Decades', icon: 'calendar' },
-  { id: 'songs', label: 'Title List', icon: 'list' },
+  { id: 'artists', label: '4K & BluRay Formats', icon: 'tv' },
+  { id: 'decades', label: 'Release Decades', icon: 'calendar' },
+  { id: 'songs', label: 'All Titles (A–Z List)', icon: 'list' },
 ];
 
 export const LIBRARY_COLLECTIONS = [
@@ -105,6 +107,8 @@ export default function Library({
 
   const counts = useMemo(() => ({
     albums: index.albums.length,
+    movies_only: (index.moviesOnly || []).length,
+    tv_shows: (index.tvShows || []).length,
     franchises: (index.franchises || []).length,
     artists: index.artists.filter(a => !a.isPlaceholder).length,
     songs: index.tracks.length,
@@ -144,7 +148,7 @@ export default function Library({
         folderProps={{
           ...folderProps,
           activeId: prefs.scope || null,
-          onSelect: (id) => { setPref('scope', id); go({ section: 'songs' }); },
+          onSelect: (id) => { setPref('scope', id); go({ section: 'albums' }); },
         }}
       />
     );
@@ -165,24 +169,24 @@ export default function Library({
       />
       <nav className="lib-nav" aria-label="Library categories">
         <div className="lib-nav-group">
-          <span className="lib-nav-heading">Library</span>
+          <span className="lib-nav-heading">Browse Cinema</span>
           {LIBRARY_SECTIONS.map(s => (
             <NavItem key={s.id} item={s} count={counts[s.id]} active={!detail && !searching && section === s.id} onClick={() => go({ section: s.id })} />
           ))}
         </div>
         <div className="lib-nav-group">
-          <span className="lib-nav-heading">Collections</span>
+          <span className="lib-nav-heading">Watchlist &amp; Activity</span>
           {LIBRARY_COLLECTIONS.map(s => (
             <NavItem key={s.id} item={s} count={s.id === 'loved' ? lovedCount : null} active={!detail && !searching && section === s.id} onClick={() => go({ section: s.id })} />
           ))}
         </div>
         <div className="lib-nav-group">
-          <span className="lib-nav-heading">Sources</span>
-          <NavItem item={{ id: 'folders', label: 'Folders', icon: 'folder' }} count={folders.length} active={!detail && !searching && section === 'folders'} onClick={() => go({ section: 'folders' })} />
+          <span className="lib-nav-heading">Media Sources</span>
+          <NavItem item={{ id: 'folders', label: 'Folders & Cloud', icon: 'folder' }} count={folders.length} active={!detail && !searching && section === 'folders'} onClick={() => go({ section: 'folders' })} />
         </div>
         <div className="lib-nav-footer">
-          <span>{plural(index.tracks.length, 'movie')}</span>
-          <span>{plural(index.albums.length, 'title')} · {formatLongDuration(index.totalDuration)}</span>
+          <span>{plural((index.moviesOnly || []).length, 'movie')} · {plural((index.tvShows || []).length, 'show')}</span>
+          <span>{plural(index.tracks.length, 'video file')} · {formatLongDuration(index.totalDuration)}</span>
           {onAiPlaylist && (
             <button
               id="btn-library-ai-playlist"
@@ -211,7 +215,7 @@ export default function Library({
             disabled={!index.tracks.length}
             onClick={() => actions.playTracks(index.tracks, 0, { shuffle: true })}
           >
-            <Icon name="shuffle" size={14} /> Shuffle library
+            <Icon name="shuffle" size={14} /> Shuffle Library
           </button>
         </div>
       </nav>
@@ -228,7 +232,7 @@ export default function Library({
               id="library-search"
               ref={searchInputRef}
               type="search"
-              placeholder="Search songs, artists, albums, genres…  (Ctrl+F)"
+              placeholder="Search movies, TV shows, franchises, genres, years…  (Ctrl+F)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
@@ -238,22 +242,22 @@ export default function Library({
             <select
               id="library-scope"
               className="lib-select"
-              title="Limit the library to one folder"
+              title="Limit the library to one media folder"
               value={scopeFolder ? scopeFolder.id : ''}
               onChange={(e) => setPref('scope', e.target.value || null)}
             >
-              <option value="">All folders</option>
+              <option value="">All media sources</option>
               {folders.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
             </select>
           )}
-          <button id="btn-browse-refresh" className="btn-icon-only" onClick={onRefresh} title="Reload library index">
+          <button id="btn-browse-refresh" className="btn-icon-only" onClick={onRefresh} title="Reload movie & TV library index">
             <Icon name="history" size={15} />
           </button>
-          <button id="btn-browse-add-folder" className="btn-accent" onClick={onAddFolder} title="Add a music folder">
+          <button id="btn-browse-add-folder" className="btn-accent" onClick={onAddFolder} title="Add a movie or TV show folder">
             <Icon name="plus" size={14} /><span>Add folder</span>
           </button>
-          <button className="btn-secondary" onClick={onAddFiles} title="Add individual audio files">
-            <span>Add files</span>
+          <button className="btn-secondary" onClick={onAddFiles} title="Add individual movie or video files">
+            <span>Add videos</span>
           </button>
         </div>
         <div className="lib-content" ref={contentRef}>
@@ -283,7 +287,7 @@ function titleFor(nav, index) {
     const item = map && map.get(key);
     return item ? (item.title || item.name) : 'Library';
   }
-  const all = [...LIBRARY_SECTIONS, ...LIBRARY_COLLECTIONS, { id: 'folders', label: 'Folders' }];
+  const all = [...LIBRARY_SECTIONS, ...LIBRARY_COLLECTIONS, { id: 'folders', label: 'Folders & Cloud' }];
   return (all.find(s => s.id === (nav.section || 'albums')) || {}).label || 'Library';
 }
 
@@ -291,12 +295,12 @@ function EmptyLibrary({ onAddFolder, onAddFiles, onCloud, isScanning }) {
   return (
     <div className="lib-empty">
       <Icon name="library" size={40} />
-      <h3>{isScanning ? 'Indexing your movie library…' : 'Your cinema library is empty'}</h3>
-      <p>Add a movie folder from this computer, link a cloud/SFTP folder, or drag &amp; drop video files anywhere in this window.</p>
+      <h3>{isScanning ? 'Indexing your movie & TV library…' : 'Your cinema library is empty'}</h3>
+      <p>Add a movie or TV show folder from this computer, link a cloud/SFTP server, or drag &amp; drop video files anywhere in this window.</p>
       <div className="lib-empty-actions">
         <button className="btn-accent" onClick={onAddFolder}><Icon name="folder" size={14} /> Add folder</button>
-        <button className="btn-secondary" onClick={onAddFiles}>Add files</button>
-        <button className="btn-secondary" onClick={onCloud}><Icon name="cloud" size={14} /> Cloud storage</button>
+        <button className="btn-secondary" onClick={onAddFiles}>Add videos</button>
+        <button className="btn-secondary" onClick={onCloud}><Icon name="cloud" size={14} /> Cloud / SFTP storage</button>
       </div>
     </div>
   );
@@ -327,7 +331,7 @@ function SectionHeader({ title, subtitle, tracks, children }) {
         {children}
         {tracks && (
           <>
-            <button className="btn-accent" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0)}><Icon name="play" size={12} /> Play</button>
+            <button className="btn-accent" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0)}><Icon name="play" size={12} /> Watch All</button>
             <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0, { shuffle: true })}><Icon name="shuffle" size={13} /> Shuffle</button>
           </>
         )}
@@ -339,6 +343,8 @@ function SectionHeader({ title, subtitle, tracks, children }) {
 function SectionView({ section, ...props }) {
   switch (section) {
     case 'albums': return <AlbumsSection {...props} />;
+    case 'movies_only': return <MoviesOnlySection {...props} />;
+    case 'tv_shows': return <TvShowsSection {...props} />;
     case 'franchises': return <FranchisesSection {...props} />;
     case 'artists': return <ArtistsSection {...props} />;
     case 'songs': return <SongsSection {...props} />;
@@ -425,6 +431,8 @@ function AlbumsSection({ index, go, prefs, setPref }) {
   const filteredAlbums = useMemo(() => {
     const base = sortAlbums(index.albums, sortKey);
     if (activeGenre === 'all') return base;
+    if (activeGenre === '__movies__') return base.filter(a => !a.isTvShow);
+    if (activeGenre === '__tv__') return base.filter(a => !!a.isTvShow);
     if (activeGenre === '__franchises__') return base.filter(a => !!a.franchise);
     return base.filter(a => (a.genres || [a.genre]).some(g => fold(g) === activeGenre));
   }, [index, sortKey, activeGenre]);
@@ -432,19 +440,33 @@ function AlbumsSection({ index, go, prefs, setPref }) {
   return (
     <>
       <CinemaHeroSpotlight albums={index.albums} go={go} />
-      <div className="cinema-category-bar" role="tablist" aria-label="Movie Categories">
+      <div className="cinema-category-bar" role="tablist" aria-label="Movie & Show Categories">
         <button
           className={`cinema-cat-chip ${activeGenre === 'all' ? 'active' : ''}`}
           onClick={() => setPref('categoryFilter', 'all')}
         >
-          ★ All Movies <span className="chip-count">{index.albums.length}</span>
+          ★ All Movies &amp; Shows <span className="chip-count">{index.albums.length}</span>
         </button>
+        <button
+          className={`cinema-cat-chip ${activeGenre === '__movies__' ? 'active' : ''}`}
+          onClick={() => setPref('categoryFilter', '__movies__')}
+        >
+          🎬 Movies <span className="chip-count">{(index.moviesOnly || []).length}</span>
+        </button>
+        {(index.tvShows || []).length > 0 && (
+          <button
+            className={`cinema-cat-chip ${activeGenre === '__tv__' ? 'active' : ''}`}
+            onClick={() => setPref('categoryFilter', '__tv__')}
+          >
+            📺 TV Shows &amp; Series <span className="chip-count">{(index.tvShows || []).length}</span>
+          </button>
+        )}
         {(index.franchises || []).length > 0 && (
           <button
             className={`cinema-cat-chip ${activeGenre === '__franchises__' ? 'active' : ''}`}
             onClick={() => setPref('categoryFilter', '__franchises__')}
           >
-            🎬 Franchises &amp; Box Sets <span className="chip-count">{index.franchises.length}</span>
+            🎞️ Franchises &amp; Box Sets <span className="chip-count">{index.franchises.length}</span>
           </button>
         )}
         {index.genres.map(g => (
@@ -457,10 +479,47 @@ function AlbumsSection({ index, go, prefs, setPref }) {
           </button>
         ))}
       </div>
-      <SectionHeader subtitle={plural(filteredAlbums.length, 'movie')} tracks={filteredAlbums.flatMap(a => a.tracks)}>
+      <SectionHeader subtitle={plural(filteredAlbums.length, 'title')} tracks={filteredAlbums.flatMap(a => a.tracks)}>
         <SortSelect id="album-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added'], ['artist', 'Quality / Format']]} />
       </SectionHeader>
       <AlbumGrid albums={filteredAlbums} go={go} letterOf={lettered ? (sortKey === 'title' ? albumLetter : albumArtistLetter) : null} />
+    </>
+  );
+}
+
+function MoviesOnlySection({ index, go, prefs, setPref }) {
+  const sortKey = prefs.albumSort || 'title';
+  const movies = useMemo(() => sortAlbums(index.moviesOnly || [], sortKey), [index, sortKey]);
+  const lettered = (sortKey === 'title' || sortKey === 'artist') && movies.length >= LETTER_SECTION_MIN;
+  return (
+    <>
+      <CinemaHeroSpotlight albums={movies} go={go} />
+      <SectionHeader subtitle={`${plural(movies.length, 'feature film')} · Theatrical & home cinema`} tracks={movies.flatMap(a => a.tracks)}>
+        <SortSelect id="movies-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added'], ['artist', 'Quality / Format']]} />
+      </SectionHeader>
+      <AlbumGrid albums={movies} go={go} letterOf={lettered ? (sortKey === 'title' ? albumLetter : albumArtistLetter) : null} />
+    </>
+  );
+}
+
+function TvShowsSection({ index, go, prefs, setPref }) {
+  const sortKey = prefs.albumSort || 'title';
+  const shows = useMemo(() => sortAlbums(index.tvShows || [], sortKey), [index, sortKey]);
+  const allEpisodes = useMemo(() => shows.flatMap(s => s.tracks), [shows]);
+  return (
+    <>
+      <SectionHeader subtitle={`${plural(shows.length, 'show / episode')} · Episodic TV & streaming series`} tracks={allEpisodes}>
+        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title / Episode (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
+      </SectionHeader>
+      {shows.length ? (
+        <>
+          <AlbumGrid albums={shows} go={go} />
+          <SectionHeader title="All Episodes" subtitle={plural(allEpisodes.length, 'episode')} />
+          <TrackList id="tv-episodes" tracks={allEpisodes} emptyText="No TV episodes found." />
+        </>
+      ) : (
+        <div className="empty-inline">No TV shows or episodes found in your library yet.</div>
+      )}
     </>
   );
 }
@@ -481,8 +540,8 @@ function ArtistsSection({ index, go, prefs, setPref, stats }) {
   const lettered = sortKey === 'name' && artists.length >= LETTER_SECTION_MIN;
   return (
     <>
-      <SectionHeader subtitle={plural(artists.length, 'artist')} tracks={index.tracks}>
-        <SortSelect id="artist-sort" value={sortKey} onChange={(v) => setPref('artistSort', v)} options={[['name', 'Name'], ['tracks', 'Most songs'], ['albums', 'Most albums'], ['plays', 'Most played']]} />
+      <SectionHeader subtitle={plural(artists.length, 'release format')} tracks={index.tracks}>
+        <SortSelect id="artist-sort" value={sortKey} onChange={(v) => setPref('artistSort', v)} options={[['name', 'Format Name'], ['tracks', 'Most titles'], ['albums', 'Most releases'], ['plays', 'Most watched']]} />
       </SectionHeader>
       <ArtistGrid artists={artists} go={go} letterOf={lettered ? artistLetter : null} />
     </>
@@ -490,14 +549,14 @@ function ArtistsSection({ index, go, prefs, setPref, stats }) {
 }
 
 function SongsSection({ index, prefs, setPref, stats }) {
-  const sort = prefs.songSort || { key: 'artist', dir: 'asc' };
+  const sort = prefs.songSort || { key: 'title', dir: 'asc' };
   const sorted = useMemo(
     () => sortTracks(index.tracks, sort.key, sort.dir, stats),
     [index, sort.key, sort.dir, statsDep(sort.key, stats)] // eslint-disable-line react-hooks/exhaustive-deps
   );
   return (
     <>
-      <SectionHeader subtitle={`${plural(sorted.length, 'song')} · ${formatLongDuration(index.totalDuration)}`} tracks={sorted} />
+      <SectionHeader subtitle={`${plural(sorted.length, 'title')} · ${formatLongDuration(index.totalDuration)}`} tracks={sorted} />
       <TrackList id="library-songs" tracks={sorted} sort={sort} onSort={(key) => setPref('songSort', toggleSort(sort, key))} />
     </>
   );
@@ -511,10 +570,10 @@ function GenresSection({ index, go, prefs, setPref }) {
   );
   return (
     <>
-      <SectionHeader subtitle={plural(genres.length, 'genre')}>
-        <SortSelect id="genre-sort" value={sortKey} onChange={(v) => setPref('genreSort', v)} options={[['name', 'Name'], ['tracks', 'Most songs']]} />
+      <SectionHeader subtitle={plural(genres.length, 'category')}>
+        <SortSelect id="genre-sort" value={sortKey} onChange={(v) => setPref('genreSort', v)} options={[['name', 'Category Name'], ['tracks', 'Most titles']]} />
       </SectionHeader>
-      {genres.length ? <GroupGrid groups={genres} type="genre" go={go} /> : <div className="empty-inline">No genre tags found in your music.</div>}
+      {genres.length ? <GroupGrid groups={genres} type="genre" go={go} /> : <div className="empty-inline">No genre categories found in your library.</div>}
     </>
   );
 }
@@ -523,7 +582,7 @@ function DecadesSection({ index, go }) {
   return (
     <>
       <SectionHeader subtitle={plural(index.decades.length, 'decade')} />
-      {index.decades.length ? <GroupGrid groups={index.decades} type="decade" go={go} big /> : <div className="empty-inline">No release years found in your music tags.</div>}
+      {index.decades.length ? <GroupGrid groups={index.decades} type="decade" go={go} big /> : <div className="empty-inline">No release years found in your library.</div>}
     </>
   );
 }
@@ -531,7 +590,7 @@ function DecadesSection({ index, go }) {
 function ComposersSection({ index, go }) {
   return (
     <>
-      <SectionHeader subtitle={plural(index.composers.length, 'composer')} />
+      <SectionHeader subtitle={plural(index.composers.length, 'director / studio')} />
       {index.composers.length ? (
         <VirtualGrid
           items={index.composers}
@@ -546,11 +605,11 @@ function ComposersSection({ index, go }) {
             <button className="name-list-item" onClick={() => go({ section: 'composers', detail: { type: 'composer', key: c.key } })}>
               <Icon name="pen" size={14} />
               <span className="name-list-name">{c.name}</span>
-              <span className="name-list-meta">{plural(c.tracks.length, 'song')}</span>
+              <span className="name-list-meta">{plural(c.tracks.length, 'title')}</span>
             </button>
           )}
         />
-      ) : <div className="empty-inline">No composer tags found in your music.</div>}
+      ) : <div className="empty-inline">No director or studio tags found in your library.</div>}
     </>
   );
 }
@@ -559,8 +618,8 @@ function LovedSection({ index, stats }) {
   const loved = useMemo(() => lovedTracks(index.tracks, stats), [index, stats]);
   return (
     <>
-      <SectionHeader subtitle={`${plural(loved.length, 'loved song')} · newest first`} tracks={loved} />
-      <TrackList id="library-loved" tracks={loved} emptyText="Tap the ♥ on any track to keep it here." />
+      <SectionHeader subtitle={`${plural(loved.length, 'watchlist title')} · newest first`} tracks={loved} />
+      <TrackList id="library-loved" tracks={loved} emptyText="Tap the ♥ on any movie or episode to add it to My Watchlist." />
     </>
   );
 }
@@ -570,9 +629,9 @@ function RecentSection({ index, go }) {
   const recentTracks = useMemo(() => recentlyAddedTracks(index.tracks).slice(0, 500), [index]);
   return (
     <>
-      <SectionHeader title="Recently added albums" />
+      <SectionHeader title="Recently Added Movies &amp; Shows" />
       <AlbumGrid albums={recentAlbums} go={go} />
-      <SectionHeader title="Recently added songs" subtitle={recentTracks.length >= 500 ? 'Latest 500' : null} tracks={recentTracks} />
+      <SectionHeader title="Recently Added Video Files" subtitle={recentTracks.length >= 500 ? 'Latest 500' : null} tracks={recentTracks} />
       <TrackList id="library-recent" tracks={recentTracks} extraColumn="added" />
     </>
   );
@@ -582,8 +641,8 @@ function HistorySection({ index, stats }) {
   const played = useMemo(() => recentlyPlayedTracks(index.tracks, stats).slice(0, 500), [index, stats]);
   return (
     <>
-      <SectionHeader subtitle="Songs you listened to for at least 30 seconds" tracks={played} />
-      <TrackList id="library-history" tracks={played} extraColumn="lastPlayed" emptyText="Nothing played yet — your listening history will show up here." />
+      <SectionHeader subtitle="Movies and episodes you recently watched" tracks={played} />
+      <TrackList id="library-history" tracks={played} extraColumn="lastPlayed" emptyText="Nothing watched yet — your viewing history will show up here." />
     </>
   );
 }
@@ -596,12 +655,12 @@ function TopSection({ index, go, stats }) {
     <>
       {topArtists.length > 0 && (
         <>
-          <SectionHeader title="Top artists" />
+          <SectionHeader title="Top Release Formats" />
           <ArtistGrid artists={topArtists} go={go} />
         </>
       )}
-      <SectionHeader title="Top songs" subtitle={top.length ? `Top ${top.length}` : null} tracks={top} />
-      <TrackList id="library-top" tracks={top} emptyText="Play some music and your favourites will rise to the top." />
+      <SectionHeader title="Most Watched Titles" subtitle={top.length ? `Top ${top.length}` : null} tracks={top} />
+      <TrackList id="library-top" tracks={top} emptyText="Watch some movies or shows and your favorites will rise to the top." />
     </>
   );
 }
@@ -609,7 +668,7 @@ function TopSection({ index, go, stats }) {
 function FoldersSection({ folders, folderProps }) {
   return (
     <div className="lib-folders">
-      <p className="section-sub">Folders feed the library. Pick one to browse only its music, or use “All folders” in the toolbar.</p>
+      <p className="section-sub">Local folders and Cloud / SFTP servers feed your cinema library. Pick one to browse only its videos, or use “All media sources” in the toolbar.</p>
       <FolderPanel folders={folders} {...folderProps} />
     </div>
   );
@@ -624,7 +683,7 @@ function toggleSort(sort, key) {
 // ── Cards & grids ───────────────────────────────────────────────────────────
 
 function AlbumGrid({ albums, go, showArtist = true, letterOf = null }) {
-  if (!albums.length) return <div className="empty-inline">No albums.</div>;
+  if (!albums.length) return <div className="empty-inline">No movies or shows found.</div>;
   return (
     <VirtualGrid
       items={albums}
@@ -644,14 +703,14 @@ function AlbumCard({ album, go, showArtist }) {
     <div
       className="media-card album-card movie-poster-card"
       onClick={open}
-      onContextMenu={(e) => { e.preventDefault(); ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: 'Go to format', icon: 'artist', onClick: () => ctx.actions.goToArtist(album.artist) }]); }}
+      onContextMenu={(e) => { e.preventDefault(); ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: 'View release format', icon: 'tv', onClick: () => ctx.actions.goToArtist(album.artist) }]); }}
       title={`${album.title} — ${album.genre || album.artist}`}
     >
       <div className="media-card-art movie-poster-art">
         <Cover artId={album.artId} name={album.title} />
         {qualBadge && <span className="poster-badge-top">{qualBadge}</span>}
         {album.year && <span className="poster-badge-year">{album.year}</span>}
-        <button className="card-play" title={`Play ${album.title}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(album.tracks, 0); }}>
+        <button className="card-play" title={`Watch ${album.title}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(album.tracks, 0); }}>
           <Icon name="play" size={18} />
         </button>
       </div>
@@ -688,13 +747,13 @@ function ArtistCard({ artist: a, go }) {
     >
       <div className="media-card-art">
         <Cover artId={a.artId} name={a.name} round />
-        <button className="card-play" title={`Play ${a.name}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(a.tracks, 0, { shuffle: true }); }}>
+        <button className="card-play" title={`Watch ${a.name}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(a.tracks, 0, { shuffle: true }); }}>
           <Icon name="shuffle" size={16} />
         </button>
       </div>
       <span className="media-card-title">{a.name}</span>
       <span className="media-card-sub">
-        {a.albums.length ? `${plural(a.albums.length, 'album')} · ` : ''}{plural(a.tracks.length, 'song')}
+        {plural(a.tracks.length, 'title')}
       </span>
     </div>
   );
@@ -719,11 +778,11 @@ function GroupGrid({ groups, type, go, big = false }) {
           <div className="media-card-art">
             <Collage artIds={g.artIds} name={g.name} />
             <span className="group-card-name">{g.name}</span>
-            <button className="card-play" title={`Play ${g.name}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(g.tracks, 0); }}>
+            <button className="card-play" title={`Watch ${g.name}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(g.tracks, 0); }}>
               <Icon name="play" size={16} />
             </button>
           </div>
-          <span className="media-card-sub">{plural(g.albums.length, 'movie')} · {formatLongDuration(g.duration)}</span>
+          <span className="media-card-sub">{plural(g.albums.length, 'title')} · {formatLongDuration(g.duration)}</span>
         </div>
       )}
     />
@@ -765,11 +824,11 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
         {subtitle && <div className="detail-subtitle">{subtitle}</div>}
         <div className="detail-meta">{meta.filter(Boolean).map((m, i) => <span key={i}>{m}</span>)}</div>
         <div className="detail-actions">
-          <button id="btn-detail-play" className="btn-accent" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0)}><Icon name="play" size={13} /> Play</button>
+          <button id="btn-detail-play" className="btn-accent" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0)}><Icon name="play" size={13} /> Watch Now</button>
           <button id="btn-detail-shuffle" className="btn-secondary" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0, { shuffle: true })}><Icon name="shuffle" size={14} /> Shuffle</button>
-          <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'next')}><Icon name="playNext" size={14} /> Play next</button>
+          <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'next')}><Icon name="playNext" size={14} /> Watch next</button>
           <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'end')}><Icon name="queueAdd" size={14} /> Add to queue</button>
-          <button className={`btn-icon-only ${allLoved ? 'loved' : ''}`} title={allLoved ? 'Remove from Loved' : 'Love all'} onClick={() => actions.setLoved(tracks, !allLoved)}>
+          <button className={`btn-icon-only ${allLoved ? 'loved' : ''}`} title={allLoved ? 'Remove from Watchlist' : 'Add to Watchlist'} onClick={() => actions.setLoved(tracks, !allLoved)}>
             <Icon name={allLoved ? 'heartFill' : 'heart'} size={15} />
           </button>
           <button className="btn-icon-only" title="More" onClick={(e) => ctx.openMenu(e, collectionMenuItems(tracks, ctx, { label: menuLabel }))}>
@@ -786,7 +845,7 @@ function NotFound({ go }) {
     <div className="lib-empty">
       <h3>Not in your library anymore</h3>
       <p>It may have been removed by a folder sync, or it lives outside the selected folder.</p>
-      <button className="btn-secondary" onClick={() => go({ section: 'albums' })}>Browse albums</button>
+      <button className="btn-secondary" onClick={() => go({ section: 'albums' })}>Browse Movies &amp; Shows</button>
     </div>
   );
 }
@@ -822,7 +881,7 @@ function AlbumDetail({ album, index, go }) {
     <>
       <DetailHeader
         cover={<Cover artId={album.artId} name={album.title} />}
-        eyebrow={album.isCompilation ? 'Compilation' : 'Album'}
+        eyebrow={album.isTvShow ? 'TV Show / Series' : (album.franchise || 'Feature Film')}
         title={album.title}
         subtitle={album.artist === VARIOUS_ARTISTS
           ? <span>{album.artist}</span>
@@ -830,7 +889,7 @@ function AlbumDetail({ album, index, go }) {
         meta={[
           album.year,
           album.genre && <a className="link" onClick={() => actions.goToGenre(album.genre)}>{album.genre}</a>,
-          plural(album.tracks.length, 'song'),
+          plural(album.tracks.length, 'video file'),
           formatLongDuration(album.duration),
           codec,
         ]}
@@ -840,7 +899,7 @@ function AlbumDetail({ album, index, go }) {
       <TrackList id="album-tracks" tracks={album.tracks} variant="album" albumArtist={album.artist} showDiscs={album.discCount > 1} />
       {more.length > 0 && (
         <>
-          <SectionHeader title={`More by ${album.artist}`} />
+          <SectionHeader title={`More in ${album.artist}`} />
           <AlbumGrid albums={more} go={go} showArtist={false} />
         </>
       )}
@@ -856,7 +915,7 @@ function ArtistDetail({ artist, go, stats }) {
     <>
       <DetailHeader
         cover={<Cover artId={artist.artId} name={artist.name} round />}
-        eyebrow="Artist"
+        eyebrow="Release Format / Quality"
         title={artist.name}
         subtitle={artist.genres.length ? (
           <span className="detail-genres">
@@ -864,8 +923,8 @@ function ArtistDetail({ artist, go, stats }) {
           </span>
         ) : null}
         meta={[
-          artist.albums.length ? plural(artist.albums.length, 'album') : null,
-          plural(artist.tracks.length, 'song'),
+          artist.albums.length ? plural(artist.albums.length, 'release') : null,
+          plural(artist.tracks.length, 'title'),
           formatLongDuration(artist.duration),
         ]}
         tracks={allSongs}
@@ -873,48 +932,48 @@ function ArtistDetail({ artist, go, stats }) {
       />
       {top.length > 0 && (
         <>
-          <SectionHeader title="Most played" />
+          <SectionHeader title="Most Watched" />
           <TrackList tracks={top} variant="compact" />
         </>
       )}
       {artist.albums.length > 0 && (
         <>
-          <SectionHeader title="Albums" subtitle="Oldest first" />
+          <SectionHeader title="Movies &amp; Shows" subtitle="By release year" />
           <AlbumGrid albums={artist.albums} go={go} showArtist={false} />
         </>
       )}
       {artist.appearsOn.length > 0 && (
         <>
-          <SectionHeader title="Appears on" />
+          <SectionHeader title="Also Included In" />
           <AlbumGrid albums={artist.appearsOn} go={go} />
         </>
       )}
-      <SectionHeader title="All songs" subtitle={plural(allSongs.length, 'song')} />
+      <SectionHeader title="All Titles" subtitle={plural(allSongs.length, 'title')} />
       <TrackList id="artist-tracks" tracks={allSongs} />
     </>
   );
 }
 
 function GroupDetail({ group, type, index, go }) {
-  const songs = useMemo(() => sortTracks(group.tracks, 'artist', 'asc'), [group]);
-  const albums = useMemo(() => sortAlbums(group.albums, type === 'decade' ? 'year' : 'artist'), [group, type]);
+  const songs = useMemo(() => sortTracks(group.tracks, 'title', 'asc'), [group]);
+  const albums = useMemo(() => sortAlbums(group.albums, type === 'decade' || type === 'franchise' ? 'year' : 'title'), [group, type]);
   const years = useMemo(() => (type === 'decade' ? [...new Set(group.tracks.map(t => t.year).filter(Boolean))].sort() : []), [group, type]);
   return (
     <>
       <DetailHeader
         cover={<Collage artIds={group.artIds} name={group.name} />}
-        eyebrow={type === 'genre' ? 'Genre' : 'Decade'}
+        eyebrow={type === 'genre' ? 'Category / Genre' : type === 'franchise' ? 'Franchise & Box Set' : 'Release Decade'}
         title={group.name}
         subtitle={years.length ? <span className="detail-genres">{years.map(y => <span key={y}>{y}</span>)}</span> : null}
-        meta={[plural(group.albums.length, 'album'), plural(group.tracks.length, 'song'), plural(group.artistCount, 'artist'), formatLongDuration(group.duration)]}
+        meta={[plural(group.albums.length, 'title'), plural(group.tracks.length, 'video file'), formatLongDuration(group.duration)]}
         tracks={songs}
         menuLabel={group.name}
       />
-      <SectionHeader title="Artists" />
+      <SectionHeader title="Release Formats" />
       <ArtistChips tracks={group.tracks} index={index} go={go} />
-      <SectionHeader title="Albums" subtitle={plural(albums.length, 'album')} />
+      <SectionHeader title="Movies &amp; Shows" subtitle={plural(albums.length, 'title')} />
       <AlbumGrid albums={albums} go={go} />
-      <SectionHeader title="Songs" subtitle={plural(songs.length, 'song')} />
+      <SectionHeader title="All Video Files" subtitle={plural(songs.length, 'title')} />
       <TrackList id={`${type}-tracks`} tracks={songs} />
     </>
   );
@@ -926,9 +985,9 @@ function ComposerDetail({ composer }) {
     <>
       <DetailHeader
         cover={<Cover name={composer.name} round icon="pen" />}
-        eyebrow="Composer"
+        eyebrow="Director / Studio"
         title={composer.name}
-        meta={[plural(composer.albums.length, 'album'), plural(songs.length, 'song'), formatLongDuration(composer.duration)]}
+        meta={[plural(composer.albums.length, 'release'), plural(songs.length, 'title'), formatLongDuration(composer.duration)]}
         tracks={songs}
         menuLabel={composer.name}
       />
@@ -943,33 +1002,33 @@ function SearchResults({ results, go }) {
   const { actions } = useLibrary();
   const { artists, albums, genres, tracks, totals } = results;
   if (!tracks.length && !artists.length && !albums.length && !genres.length) {
-    return <div className="lib-empty"><h3>No matches</h3><p>Try fewer words, or search by artist, album, genre, composer or year.</p></div>;
+    return <div className="lib-empty"><h3>No matches</h3><p>Try fewer words, or search by movie title, TV show, franchise, genre, or release year.</p></div>;
   }
   return (
     <div className="search-results">
-      {artists.length > 0 && (
-        <>
-          <SectionHeader title="Artists" subtitle={totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists.toLocaleString()}` : null} />
-          <ArtistGrid artists={artists} go={go} />
-        </>
-      )}
       {albums.length > 0 && (
         <>
-          <SectionHeader title="Albums" subtitle={totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums.toLocaleString()}` : null} />
+          <SectionHeader title="Movies &amp; Shows" subtitle={totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums.toLocaleString()}` : null} />
           <AlbumGrid albums={albums} go={go} />
         </>
       )}
       {genres.length > 0 && (
         <>
-          <SectionHeader title="Genres" />
+          <SectionHeader title="Genres &amp; Categories" />
           <div className="chip-row">
             {genres.map(g => <button key={g.key} className="artist-chip" onClick={() => actions.goToGenre(g.name)}><Icon name="tag" size={13} /> {g.name} <span className="chip-count">{g.tracks.length}</span></button>)}
           </div>
         </>
       )}
+      {artists.length > 0 && (
+        <>
+          <SectionHeader title="Release Formats" subtitle={totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists.toLocaleString()}` : null} />
+          <ArtistGrid artists={artists} go={go} />
+        </>
+      )}
       {tracks.length > 0 && (
         <>
-          <SectionHeader title="Songs" subtitle={plural(tracks.length, 'match', 'matches')} tracks={tracks} />
+          <SectionHeader title="Matching Titles" subtitle={plural(tracks.length, 'match', 'matches')} tracks={tracks} />
           <TrackList id="search-tracks" tracks={tracks} />
         </>
       )}

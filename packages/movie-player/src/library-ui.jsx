@@ -143,11 +143,11 @@ export function collectionMenuItems(tracks, ctx, { label } = {}) {
     { label: 'Play', icon: 'play', onClick: () => actions.playTracks(tracks, 0) },
     { label: 'Shuffle', icon: 'shuffle', onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) },
     { label: 'Play next', icon: 'playNext', onClick: () => actions.queueTracks(tracks, 'next') },
-    { label: 'Add to queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
+    { label: 'Add to Watch Queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
     { separator: true },
-    { label: 'Add to playlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
+    { label: 'Add to Watchlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
     actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
-    { label: allLoved ? 'Remove from Loved' : 'Love', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
+    { label: allLoved ? 'Remove from Watchlist' : 'Add to My Watchlist', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
     actions.hasSpeakers ? { label: 'Cast to Smart TV', icon: 'cast', onClick: () => actions.castTracks(tracks) } : null,
   ];
 }
@@ -157,27 +157,26 @@ export function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra
   const single = tracks.length === 1 ? tracks[0] : null;
   const allLoved = tracks.every(t => (stats[t.id] || {}).loved);
   const items = [
-    tracks.length > 1 ? { header: `${tracks.length} tracks selected` } : null,
+    tracks.length > 1 ? { header: `${tracks.length} titles selected` } : null,
     {
       label: 'Play',
       icon: 'play',
-      // A single row plays "from here" through the surrounding list, like a music app.
       onClick: () => (single && allTracks ? actions.playTracks(allTracks, index) : actions.playTracks(tracks, 0)),
     },
     { label: 'Play next', icon: 'playNext', onClick: () => actions.queueTracks(tracks, 'next') },
-    { label: 'Add to queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
+    { label: 'Add to Watch Queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
     ...extra,
     { separator: true },
-    { label: 'Add to playlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
+    { label: 'Add to Watchlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
     actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
-    { label: allLoved ? 'Remove from Loved' : 'Love', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
+    { label: allLoved ? 'Remove from Watchlist' : 'Add to My Watchlist', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
     actions.hasSpeakers ? { label: 'Cast to Smart TV', icon: 'cast', onClick: () => actions.castTracks(tracks) } : null,
   ];
   if (single) {
     items.push({ separator: true });
-    items.push({ label: 'Go to album', icon: 'disc', onClick: () => actions.goToAlbumOf(single) });
-    items.push({ label: 'Go to artist', icon: 'artist', onClick: () => actions.goToArtist(single.artist) });
-    items.push({ label: 'Track info', icon: 'info', onClick: () => actions.showInfo(single) });
+    items.push({ label: 'View Movie / Show Details', icon: 'disc', onClick: () => actions.goToAlbumOf(single) });
+    items.push({ label: 'View Release Format', icon: 'artist', onClick: () => actions.goToArtist(single.artist) });
+    items.push({ label: 'Media & Stream Info', icon: 'info', onClick: () => actions.showInfo(single) });
     if (single.filePath && !single.cloud) {
       items.push({ label: 'Show in file manager', icon: 'external', onClick: () => actions.showInFolder(single) });
     }
@@ -192,7 +191,7 @@ export function LoveButton({ track, size = 14 }) {
   return (
     <button
       className={`love-btn ${loved ? 'loved' : ''}`}
-      title={loved ? 'Remove from Loved' : 'Love this track'}
+      title={loved ? 'Remove from My Watchlist' : 'Add to My Watchlist'}
       aria-pressed={loved}
       onClick={(e) => { e.stopPropagation(); actions.setLoved([track], !loved); }}
       onDoubleClick={(e) => e.stopPropagation()}
