@@ -4,7 +4,7 @@ packages:
     title: "RobOS App Manager"
     type: "robos:DesktopApp"
     repository: "packages/app-manager"
-    technology: "Electron / Vanilla JavaScript / Windows NSIS / Linux AppImage"
+    technology: "Electron / Vanilla JavaScript / NSIS / AppImage / macOS DMG"
   - id: "urn:robos:service:order-processing-java-service"
     title: "Order Processing Java Service Service"
     type: "robos:Microservice"

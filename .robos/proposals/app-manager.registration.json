@@ -1,5 +1,5 @@
 {
-  "prompt": "Register the shared Windows and Ubuntu GNOME RobOS App Manager. Apply after reconciling the pre-existing modular/aggregate graph mismatch.",
+  "prompt": "Register the shared Windows, Ubuntu GNOME and macOS RobOS App Manager. Apply after reconciling the pre-existing modular/aggregate graph mismatch.",
   "edits": [
     {
       "op": "add",
@@ -12,7 +12,7 @@
         "robos:namespace": "robos.apps",
         "robos:repository": "github.com/nddipiazza/robos",
         "robos:localPath": "packages/app-manager",
-        "robos:technology": "Electron / Vanilla JavaScript / NSIS / AppImage",
+        "robos:technology": "Electron / Vanilla JavaScript / NSIS / AppImage / macOS DMG",
         "robos:desktopFramework": "Electron",
         "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
         "robos:domainStandard": "https://schema.org/SoftwareApplication",
