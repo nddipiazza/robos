@@ -21,6 +21,18 @@ function appendLog(text) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
+const DEFAULT_REFRESH_MINUTES = 15;
+
+function currentRefreshMinutes() {
+  const minutes = Math.round(Number(document.getElementById('refresh-minutes').value));
+  return minutes > 0 ? minutes : DEFAULT_REFRESH_MINUTES;
+}
+
+function renderRefreshLabel() {
+  const label = document.getElementById('refresh-minutes-label');
+  if (label) label.textContent = String(currentRefreshMinutes());
+}
+
 function currentOptions() {
   return {
     accountId: _selectedAccountId,
@@ -28,7 +40,7 @@ function currentOptions() {
     enableContacts: document.getElementById('chk-contacts').checked,
     enableMail: document.getElementById('chk-mail').checked,
     calendarColor: document.getElementById('calendar-color').value.trim() || '#00bcd4',
-    refreshMinutes: Number(document.getElementById('refresh-minutes').value) || 15,
+    refreshMinutes: currentRefreshMinutes(),
   };
 }
 
@@ -68,6 +80,9 @@ function renderAccountSelector() {
     document.getElementById('chk-calendar').checked = active.suites?.calendar?.enabled !== false;
     document.getElementById('chk-contacts').checked = active.suites?.contacts?.enabled !== false;
     document.getElementById('chk-mail').checked = Boolean(active.suites?.mail?.enabled);
+    document.getElementById('calendar-color').value = active.calendarColor || '#00bcd4';
+    document.getElementById('refresh-minutes').value = String(active.calendarRefreshMinutes || DEFAULT_REFRESH_MINUTES);
+    renderRefreshLabel();
 
     summary.innerHTML = `
       <div><strong>Re-used Google Account:</strong> <code>${esc(active.email)}</code> <span class="badge ${active.loggedIn ? 'badge-ok' : 'badge-warn'}">${active.loggedIn ? 'Authenticated via RobOS Cloud Accounts' : 'Login Required'}</span></div>
@@ -129,7 +144,10 @@ document.getElementById('account-select').onchange = async (e) => {
 ['chk-calendar', 'chk-contacts', 'chk-mail', 'calendar-color', 'refresh-minutes'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
-    el.onchange = () => updatePreviewAndOverview();
+    el.onchange = () => {
+      if (id === 'refresh-minutes') renderRefreshLabel();
+      updatePreviewAndOverview();
+    };
   }
 });
 

@@ -324,10 +324,17 @@ function normalizeAccountRecord(raw = {}) {
     raw.calendarAccessToken ||
     raw.password ||
     raw.secretAccessKey ||
-    raw.localMountPath
+    raw.localMountPath ||
+    raw.dataSourceCredentials
   );
-  const loggedIn = raw.loggedIn !== undefined ? Boolean(raw.loggedIn) : hasCredentials;
-  const authStatus = loggedIn ? 'authenticated' : (raw.authStatus || 'logged_out');
+  // An account is only logged in when something to log in with is stored. A stored
+  // `loggedIn: true` without any credential (e.g. an account typed into the Add / Link
+  // form) is not trusted; an explicit `loggedIn: false` still wins over stored tokens.
+  const loggedIn = hasCredentials && (raw.loggedIn !== undefined ? Boolean(raw.loggedIn) : true);
+  const authStatus = loggedIn
+    ? 'authenticated'
+    : (raw.authStatus && raw.authStatus !== 'authenticated' ? raw.authStatus : 'logged_out');
+  const calendarRefreshMinutes = Math.round(Number(raw.calendarRefreshMinutes));
   const scopes = normalizeScopes(raw.scopes, provider, Boolean(raw.accessToken || raw.refreshToken));
   const endpoints = provider === 'google' ? buildGoogleEndpoints(email) : {};
 
@@ -353,6 +360,9 @@ function normalizeAccountRecord(raw = {}) {
     endpoints,
     linkedDataSourceIds: Array.isArray(raw.linkedDataSourceIds) ? [...new Set(raw.linkedDataSourceIds)] : [],
     linkedFolders: Array.isArray(raw.linkedFolders) ? raw.linkedFolders : [],
+    dataSourceCredentials: Boolean(raw.dataSourceCredentials),
+    calendarColor: raw.calendarColor || null,
+    calendarRefreshMinutes: calendarRefreshMinutes > 0 ? calendarRefreshMinutes : null,
     thunderbirdConfigured: Boolean(raw.thunderbirdConfigured),
     thunderbirdLastSyncedAt: raw.thunderbirdLastSyncedAt || null,
     thunderbirdProfilePath: raw.thunderbirdProfilePath || null,
@@ -442,6 +452,13 @@ function syncFromDataSources(options = {}) {
 
           const dsFolders = Array.isArray(ds.folders) ? ds.folders : [];
           const hasTokens = Boolean(ds.accessToken || ds.refreshToken);
+          // Data Sources can also connect a cloud store without OAuth tokens (local mount,
+          // service-account key, password or API key). Those secrets stay in
+          // data-sources.json; the account only records that they exist.
+          const dsHasOtherCredentials = Boolean(
+            ds.localMountPath || ds.serviceAccountKeyPath || ds.serviceAccountJson ||
+            ds.password || ds.apiKey || ds.secretAccessKey
+          );
 
           if (!existing) {
             const created = normalizeAccountRecord({
@@ -454,6 +471,7 @@ function syncFromDataSources(options = {}) {
               refreshToken: ds.refreshToken || '',
               clientId: ds.clientId || '',
               clientSecret: ds.clientSecret || '',
+              dataSourceCredentials: dsHasOtherCredentials,
               loggedIn: Boolean(ds.loggedIn || ds.authStatus === 'authenticated' || hasTokens),
               authStatus: (ds.loggedIn || ds.authStatus === 'authenticated' || hasTokens) ? 'authenticated' : 'logged_out',
               linkedDataSourceIds: [ds.id],
@@ -470,6 +488,10 @@ function syncFromDataSources(options = {}) {
             }
             if (ds.refreshToken && !existing.refreshToken) {
               existing.refreshToken = ds.refreshToken;
+              changed = true;
+            }
+            if (dsHasOtherCredentials && !existing.dataSourceCredentials) {
+              existing.dataSourceCredentials = true;
               changed = true;
             }
             if (email && !existing.email) {
@@ -590,6 +612,8 @@ function sanitizeAccountForRenderer(acc) {
     hasAccessToken: Boolean(normalized.accessToken),
     hasRefreshToken: Boolean(normalized.refreshToken),
     hasCalendarToken: Boolean(normalized.calendarRefreshToken || normalized.calendarAccessToken),
+    calendarColor: normalized.calendarColor,
+    calendarRefreshMinutes: normalized.calendarRefreshMinutes,
     scopes: normalized.scopes,
     endpoints: normalized.endpoints,
     suites: normalized.suites,
@@ -797,11 +821,18 @@ async function verifyCloudAccount(accountId, options = {}) {
   if (!acc) throw new Error(`Cloud account "${accountId}" not found.`);
 
   if (acc.provider !== 'google') {
+    // No live API check exists for these providers yet, so report only what is stored.
+    const who = acc.email || acc.user || acc.label;
+    const providerName = acc.shortProviderName || acc.providerName;
+    const detail = acc.loggedIn
+      ? `Credentials stored for ${who} (not checked against ${providerName})`
+      : `Login Required: no password, token or key is stored for ${who}. Connect it in RobOS Data Sources.`;
     return {
       ok: acc.loggedIn,
+      ...(acc.loggedIn ? {} : { error: detail }),
       account: sanitizeAccountForRenderer(acc),
       checks: {
-        auth: { ok: acc.loggedIn, detail: acc.loggedIn ? `Authenticated as ${acc.email || acc.user}` : 'Login Required' },
+        auth: { ok: acc.loggedIn, live: false, detail },
       },
     };
   }
@@ -846,7 +877,9 @@ async function verifyCloudAccount(accountId, options = {}) {
       driveDetail = err.message;
     }
   } else {
-    driveDetail = 'No OAuth token configured';
+    driveDetail = acc.loggedIn
+      ? 'No Google Drive OAuth token stored'
+      : 'Login Required: no OAuth token is stored. Click Sign in with Google.';
   }
 
   // Also check if Google Calendar REST API is reachable with current token or Calendar token
@@ -890,6 +923,7 @@ async function verifyCloudAccount(accountId, options = {}) {
 
   return {
     ok: driveOk || acc.loggedIn,
+    ...((driveOk || acc.loggedIn) ? {} : { error: driveDetail }),
     refreshed,
     displayName,
     email: verifiedEmail,

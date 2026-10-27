@@ -24,7 +24,9 @@ The window in `packages/cloud-accounts` sits on top of two shared modules, `pack
 | Dropbox | Storage | Track by email |
 | Amazon S3 / Cloudflare R2 / MinIO | Buckets | Track by username |
 
-The **Add / Link Account** form only asks for a provider, an email or username, and a label. It has no field for a password, token or access key. It saves the account with `loggedIn: true`, so a hand-added account shows **Connected** even though no credential is stored. **Verify** for a non-Google account only reports that stored flag.
+The **Add / Link Account** form only asks for a provider, an email or username, and a label. It has no field for a password, token or access key, so a hand-added account is tracked but not signed in: it shows **Login Required**. An account counts as signed in only when a credential is stored for it, either OAuth tokens on the account or, for an account imported from Data Sources, a token, password, API key, service-account key or local mount on the Data Sources entry. Those Data Sources secrets stay in `data-sources.json`; the account only records that they exist. An account saved by an older version with a **Connected** flag but no credential also shows **Login Required** now.
+
+To sign a Google account in, use **+ Sign in with Google**. The other providers have no sign-in here; one only shows **Connected** once a Data Sources entry with credentials for it is imported. **Verify** on a non-Google account makes no network call. It says whether a credential is stored and, if one is, that it was not checked against the provider.
 
 ## Where data is stored
 
@@ -40,7 +42,7 @@ Because [RobOS Audio Player]({{ '/apps/audio-player/' | relative_url }}) reads i
 
 With the built-in OAuth client the request only asks for the Google Drive scope. Calendar, Contacts and Gmail scopes are requested only when the account has its own OAuth client id stored. **Re-authenticate / Upgrade OAuth Scopes** runs the same flow for the selected account, so with the built-in client it also asks only for Drive.
 
-**Verify Token & Endpoints** calls the Drive `about` endpoint, refreshes the access token on a 401 if a refresh token is stored, then tries to list your calendars. Contacts is not called; the result just shows the CardDAV URL.
+**Verify Token & Endpoints** calls the Drive `about` endpoint, refreshes the access token on a 401 if a refresh token is stored, then tries to list your calendars. Contacts is not called; the result just shows the CardDAV URL. A Google account with no stored token fails Verify with **Login Required** and no request is made.
 
 ## Services and Thunderbird
 
@@ -64,4 +66,4 @@ Open **RobOS Cloud Accounts** from the desktop or the [App Launcher]({{ '/apps/a
 scripts/dev-launch.sh cloud-accounts
 ```
 
-Source: [`packages/cloud-accounts`](https://github.com/nddipiazza/robos/tree/main/packages/cloud-accounts). The registry's tests are in `packages/robos-lib/cloud-accounts.test.cjs`.
+Source: [`packages/cloud-accounts`](https://github.com/nddipiazza/robos/tree/main/packages/cloud-accounts). The registry's tests are in `packages/robos-lib/cloud-accounts.test.cjs` and `packages/robos-test/tests/cloud-accounts/unit.test.js`.

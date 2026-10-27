@@ -211,14 +211,18 @@ function renderDetail() {
     verifyBtn.onclick = async () => {
       verifyBtn.disabled = true;
       verifyBtn.textContent = 'Verifying…';
-      showStatus(`Verifying ${acc.email || acc.label} against Google APIs…`);
+      showStatus(isGoogle
+        ? `Verifying ${acc.email || acc.label} against Google APIs…`
+        : `Checking stored credentials for ${acc.email || acc.label}…`);
       const res = await window.robos.verifyAccount(acc.id);
       verifyBtn.disabled = false;
       verifyBtn.textContent = '✓ Verify Token & Endpoints';
-      if (res.ok) {
-        showStatus(`✓ Verified ${res.email || acc.email}: ${res.checks?.drive?.detail || 'Connected'} | ${res.checks?.calendar?.detail || ''}`);
+      if (res.ok && isGoogle) {
+        showStatus(`✓ Verified ${res.email || acc.email}: ${res.checks?.drive?.detail || ''} | ${res.checks?.calendar?.detail || ''}`);
+      } else if (res.ok) {
+        showStatus(`✓ ${res.checks?.auth?.detail || `Credentials stored for ${acc.email || acc.label}`}`);
       } else {
-        showStatus(`Verification warning: ${res.error || 'Check credentials'}`);
+        showStatus(`Verification warning: ${res.error || res.checks?.auth?.detail || 'Check credentials'}`);
       }
       await refreshAccounts();
     };
@@ -330,14 +334,17 @@ document.getElementById('btn-save-account').onclick = async () => {
     provider,
     email,
     label: label || undefined,
-    loggedIn: true,
+    // No password, token or key is collected here, so the account is tracked but not
+    // signed in; robos-lib/cloud-accounts derives loggedIn from stored credentials.
     createDataSource: provider === 'google' || provider === 'microsoft',
   });
   if (res.ok) {
     document.getElementById('add-email').value = '';
     document.getElementById('add-label').value = '';
     _selectedId = res.account?.id || _selectedId;
-    showStatus(`✓ Saved ${res.account?.label || email}.`);
+    showStatus(res.account?.loggedIn
+      ? `✓ Saved ${res.account?.label || email}.`
+      : `✓ Tracking ${res.account?.label || email}. It shows Login Required until you sign in${provider === 'google' ? ' with Google' : ' through RobOS Data Sources'}.`);
     await refreshAccounts();
   } else {
     showStatus(`Error saving account: ${res.error}`);
