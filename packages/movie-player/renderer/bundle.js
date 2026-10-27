@@ -21057,6 +21057,37 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         window.robosAudio.getArtBase().then((base) => base && setArtBase(base)).catch(() => {
         });
       }
+      if (window.robosAudio?.getActiveCast) {
+        window.robosAudio.getActiveCast().then((active) => {
+          if (active && active.active && active.ip) {
+            setOutputTarget(active.ip);
+            setActiveCastSession({
+              ip: active.ip,
+              trackId: active.trackId || null,
+              title: active.title || null,
+              filePath: active.filePath || null,
+              isPaused: Boolean(active.isPaused)
+            });
+            if (active.loadId != null) {
+              songLoadsRef.current = /* @__PURE__ */ new Set([active.loadId]);
+            }
+            castClock.set({
+              position: Number(active.positionSec) || 0,
+              duration: Number(active.durationSec) || 0,
+              playing: !active.isPaused
+            });
+            setIsPlaying(!active.isPaused);
+            if (active.trackId) {
+              setPlaylist((prev) => {
+                const idx = prev.findIndex((t) => t.id === active.trackId);
+                if (idx >= 0) setCurrentTrackIndex(idx);
+                return prev;
+              });
+            }
+          }
+        }).catch(() => {
+        });
+      }
       const cleanups = [];
       if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
       if (window.robosAudio?.onLibraryScanDiscovered) {
@@ -22557,7 +22588,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           className: "cast-pulse-dot",
           style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react24.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: () => {
+      ), /* @__PURE__ */ import_react24.default.createElement("span", null, activeCastSession ? `Casting "${activeCastSession.title || currentTrack?.title || "Movie"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          className: "btn-chip btn-stop-cast",
+          onClick: () => handleStopCast(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0]?.ip))
+        },
+        "Stop Cast"
+      ), outputTarget !== "local" && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: () => {
         setOutputTarget("local");
         handleStopCast();
       } }, "Switch to Local Desktop"))), isVideoTrack(currentTrack) && /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-box" }, /* @__PURE__ */ import_react24.default.createElement(
@@ -22688,6 +22726,19 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
         },
         "\u{1F3AE} TV Library (Remote UI)"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip btn-stop-cast",
+          onClick: () => {
+            const target = activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip);
+            setOutputTarget("local");
+            handleStopCast(target);
+          },
+          title: `Stop movie playback on ${getSpeakerName(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip))}`
+        },
+        "\u23F9 Stop TV"
       )), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
