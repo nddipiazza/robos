@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RobOS Movie Player</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      const s = document.createElement('script');
+      s.src = '../../robos-ui/robos-ui.js';
+      s.onerror = () => {
+        const s2 = document.createElement('script');
+        s2.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+      const a = document.createElement('script');
+      a.src = '../../robos-lib/agent-selector.js';
+      a.onerror = () => {
+        const a2 = document.createElement('script');
+        a2.src = '/usr/local/share/robos/robos-lib/agent-selector.js';
+        document.head.appendChild(a2);
+      };
+      document.head.appendChild(a);
+    })();
+  </script>
 </head>
 <body>
   <div id="root"></div>

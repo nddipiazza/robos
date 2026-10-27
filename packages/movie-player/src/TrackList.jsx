@@ -1,343 +1,321 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useViewport, scrollRootTo } from './virtual.jsx';
+import { Icon } from './Icon.jsx';
+import { formatDuration } from '../lib/library-index.js';
+import { useLibrary, sameTrack, trackMenuItems, collectionMenuItems, LoveButton, Cover, useStableArray, TRACK_DRAG_TYPE } from './library-ui.jsx';
+import { useColumns } from './resizable.jsx';
+
+// Must match `.tl-row` / `.tl-disc` height in style.css: rows are absolutely
+// positioned so only the visible slice of a 100k-track list is in the DOM.
+const ROW_HEIGHT = 44;
+const OVERSCAN_PX = 500;
+const HEADER_HEIGHT = 30;
+
+const relativeDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return d.toLocaleDateString();
+};
+
+// Column sets. `album` numbers rows by track number and hides the album column.
+const COLUMNS = {
+  full: ['num', 'love', 'title', 'album', 'year', 'genre', 'plays', 'duration', 'more'],
+  album: ['num', 'love', 'title', 'plays', 'duration', 'more'],
+  compact: ['num', 'art', 'title', 'album', 'plays', 'duration', 'more'],
+};
+
+const HEADERS = {
+  num: { label: '#', sort: null },
+  love: { label: '', sort: 'loved' },
+  art: { label: '', sort: null },
+  title: { label: 'Title', sort: 'title' },
+  album: { label: 'Album', sort: 'album' },
+  year: { label: 'Year', sort: 'year' },
+  genre: { label: 'Genre', sort: 'genre' },
+  plays: { label: 'Plays', sort: 'plays' },
+  added: { label: 'Added', sort: 'addedAt' },
+  lastPlayed: { label: 'Last played', sort: 'lastPlayed' },
+  duration: { label: 'Time', sort: 'duration' },
+  more: { label: '', sort: null },
+};
+
 /**
- * Multi-Column Resizable & Reorderable Movie Table for RobOS Movie Player
- *
- * Adapted from Audio Player's TrackList for movies & video libraries:
- *   - Supports drag-to-resize column widths
- *   - Supports drag-and-drop column header reordering
- *   - Supports click-to-sort ascending/descending on any column
- *   - Supports multi-row selection + context menu (Play, Add to Watchlist,
- *     AI Fix Metadata & Poster, Cast to TV, Movie Info)
+ * Library track table.
+ *  - double-click / Enter plays the list starting at that row
+ *  - click, Ctrl/⌘-click and Shift-click select; Ctrl+A selects everything
+ *  - right-click or ⋯ opens the track menu; rows drag onto the Now Playing panel
  */
-
-import React, { useState, useRef, useEffect } from 'react';
-import { VirtualTable } from './virtual';
-import { Icon } from './Icon';
-import { CoverThumb, formatTime } from './library-ui';
-
-const DEFAULT_COLUMNS = [
-  { id: 'num', label: '#', width: 42, minWidth: 34, sortable: true, sortKey: 'trackNumber' },
-  { id: 'loved', label: '♥', width: 34, minWidth: 30, sortable: false },
-  { id: 'title', label: 'Movie / Episode', flex: 2.2, minWidth: 180, sortable: true, sortKey: 'title' },
-  { id: 'artist', label: 'Director / Creator', flex: 1.3, minWidth: 120, sortable: true, sortKey: 'artist' },
-  { id: 'album', label: 'Collection / Series', flex: 1.3, minWidth: 120, sortable: true, sortKey: 'album' },
-  { id: 'genre', label: 'Genre', width: 110, minWidth: 80, sortable: true, sortKey: 'genre' },
-  { id: 'year', label: 'Year', width: 64, minWidth: 52, sortable: true, sortKey: 'year' },
-  { id: 'plays', label: 'Watched', width: 68, minWidth: 54, sortable: true, sortKey: 'playCount' },
-  { id: 'duration', label: 'Runtime', width: 76, minWidth: 62, sortable: true, sortKey: 'duration' }
-];
-
-export function TrackList({
-  tracks = [],
-  currentTrack = null,
-  isPlaying = false,
-  sortBy = 'title',
-  sortDir = 'asc',
-  onChangeSort,
-  onPlayTrack,
-  onQueueTrack,
-  onQueueTracks,
-  onToggleLoved,
-  onAddTrackToPlaylist,
-  onFixMetadata,
-  onInspectTrack,
-  playlists = []
+export default function TrackList({
+  tracks: rawTracks,
+  variant = 'full',
+  extraColumn = null,      // 'added' | 'lastPlayed'
+  sort = null,             // { key, dir } — headers are clickable when onSort is given
+  onSort = null,
+  albumArtist = null,      // in album view, only show a row's artist if it differs
+  showDiscs = false,
+  emptyText = 'No tracks here yet.',
+  id,
 }) {
-  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
-  const [selectedIds, setSelectedIds] = useState(() => new Set());
-  const [lastClickedIdx, setLastClickedIdx] = useState(-1);
-  const [contextMenu, setContextMenu] = useState(null);
-  const dragColId = useRef(null);
+  const tracks = useStableArray(rawTracks);
+  const ctx = useLibrary();
+  const { stats, currentTrack, isPlaying, actions, openMenu } = ctx;
+  const [selected, setSelected] = useState(() => new Set());
+  const anchorRef = useRef(null);
+  const listRef = useRef(null);
+  const view = useViewport(listRef, tracks.length > 0);
 
-  useEffect(() => {
-    const close = () => setContextMenu(null);
-    window.addEventListener('click', close);
-    return () => window.removeEventListener('click', close);
-  }, []);
-
-  const handleSortClick = (col) => {
-    if (!col.sortable || !onChangeSort) return;
-    const key = col.sortKey || col.id;
-    if (sortBy === key) {
-      onChangeSort(key, sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      onChangeSort(key, 'asc');
-    }
-  };
-
-  const startColumnResize = (e, colId) => {
-    e.stopPropagation();
-    e.preventDefault();
-    const startX = e.clientX;
-    const target = columns.find(c => c.id === colId);
-    const initialW = target.width || 160;
-
-    const onMove = (ev) => {
-      const nextW = Math.max(target.minWidth || 40, initialW + (ev.clientX - startX));
-      setColumns(prev => prev.map(c => c.id === colId ? { ...c, width: nextW, flex: undefined } : c));
-    };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  };
-
-  const handleColDragStart = (colId) => {
-    dragColId.current = colId;
-  };
-
-  const handleColDrop = (targetId) => {
-    const fromId = dragColId.current;
-    dragColId.current = null;
-    if (!fromId || fromId === targetId) return;
-    setColumns(prev => {
-      const next = [...prev];
-      const fromIdx = next.findIndex(c => c.id === fromId);
-      const toIdx = next.findIndex(c => c.id === targetId);
-      if (fromIdx === -1 || toIdx === -1) return prev;
-      const [moved] = next.splice(fromIdx, 1);
-      next.splice(toIdx, 0, moved);
-      return next;
+  // Disc headings occupy a row of their own; without them row i is track i.
+  const discRows = useMemo(() => {
+    if (!showDiscs) return null;
+    const rows = [];
+    let last = null;
+    tracks.forEach((t, idx) => {
+      const disc = t.discNumber || 1;
+      if (disc !== last) { rows.push({ disc }); last = disc; }
+      rows.push({ idx });
     });
+    return rows;
+  }, [tracks, showDiscs]);
+  const rowCount = discRows ? discRows.length : tracks.length;
+  const rowOfTrack = (idx) => (discRows ? discRows.findIndex(r => r.idx === idx) : idx);
+
+  const ensureVisible = (idx) => {
+    if (!view) return;
+    const y = rowOfTrack(idx) * ROW_HEIGHT;
+    if (y < view.top + HEADER_HEIGHT) scrollRootTo(view, listRef, y, HEADER_HEIGHT + 8);
+    else if (y + ROW_HEIGHT > view.bottom) scrollRootTo(view, listRef, y + ROW_HEIGHT, view.bottom - view.top);
   };
 
-  const handleRowClick = (e, track, idx) => {
-    if (e.shiftKey && lastClickedIdx >= 0) {
-      const start = Math.min(lastClickedIdx, idx);
-      const end = Math.max(lastClickedIdx, idx);
-      const next = new Set(selectedIds);
-      for (let i = start; i <= end; i++) {
-        if (tracks[i]) next.add(tracks[i].id);
-      }
-      setSelectedIds(next);
-    } else if (e.ctrlKey || e.metaKey) {
-      const next = new Set(selectedIds);
-      if (next.has(track.id)) next.delete(track.id);
-      else next.add(track.id);
-      setSelectedIds(next);
-      setLastClickedIdx(idx);
+  useEffect(() => { setSelected(new Set()); anchorRef.current = null; }, [tracks]);
+
+  const columns = useMemo(() => {
+    const cols = [...COLUMNS[variant]];
+    if (extraColumn) cols.splice(cols.indexOf('duration'), 0, extraColumn);
+    return cols;
+  }, [variant, extraColumn]);
+  const columnSpec = useMemo(() => columns.map(key => ({ key, label: HEADERS[key].label, ...COLUMN_SIZES[key] })), [columns]);
+  const { template, handleFor } = useColumns(`tl-${variant}${extraColumn ? `-${extraColumn}` : ''}`, columnSpec);
+
+  const selectedTracks = () => [...selected].sort((a, b) => a - b).map(i => tracks[i]).filter(Boolean);
+
+  const handleClick = (e, idx) => {
+    const next = new Set(e.ctrlKey || e.metaKey ? selected : []);
+    if (e.shiftKey && anchorRef.current != null) {
+      const [a, b] = [Math.min(anchorRef.current, idx), Math.max(anchorRef.current, idx)];
+      for (let i = a; i <= b; i++) next.add(i);
+    } else if ((e.ctrlKey || e.metaKey) && next.has(idx)) {
+      next.delete(idx);
+      anchorRef.current = idx;
     } else {
-      setSelectedIds(new Set([track.id]));
-      setLastClickedIdx(idx);
+      next.add(idx);
+      anchorRef.current = idx;
     }
+    setSelected(next);
   };
 
-  const handleContextMenu = (e, track, idx) => {
+  const handleContextMenu = (e, idx) => {
     e.preventDefault();
-    let activeSet = selectedIds;
-    if (!selectedIds.has(track.id)) {
-      activeSet = new Set([track.id]);
-      setSelectedIds(activeSet);
-      setLastClickedIdx(idx);
+    let sel = selected;
+    if (!sel.has(idx)) {
+      sel = new Set([idx]);
+      setSelected(sel);
+      anchorRef.current = idx;
     }
-    const selectedTracks = tracks.filter(t => activeSet.has(t.id));
-    setContextMenu({
-      x: Math.min(window.innerWidth - 230, e.clientX),
-      y: Math.min(window.innerHeight - 280, e.clientY),
-      track,
-      selectedTracks: selectedTracks.length > 0 ? selectedTracks : [track]
-    });
+    const chosen = [...sel].sort((a, b) => a - b).map(i => tracks[i]);
+    openMenu(e, trackMenuItems(chosen, ctx, { allTracks: tracks, index: idx }));
   };
 
-  const colStyle = (col) => (col.width
-    ? { width: col.width, minWidth: col.minWidth || 36, flexShrink: 0 }
-    : { flex: col.flex || 1, minWidth: col.minWidth || 90 });
-
-  const renderCell = (col, track, idx, active) => {
-    switch (col.id) {
-      case 'num':
-        return (
-          <div key="num" className="vt-cell vt-col-num" style={colStyle(col)}>
-            {active ? (
-              <span className="playing-eq">
-                <Icon name={isPlaying ? 'volume' : 'pause'} size={13} />
-              </span>
-            ) : (track.trackNumber || idx + 1)}
-          </div>
-        );
-      case 'loved':
-        return (
-          <div key="loved" className="vt-cell vt-col-love" style={colStyle(col)}>
-            <button
-              className={`love-btn ${track.loved ? 'loved' : ''}`}
-              onClick={e => { e.stopPropagation(); onToggleLoved && onToggleLoved(track); }}
-              title={track.loved ? 'In Watchlist (Loved)' : 'Add to Watchlist (Love)'}
-            >
-              <Icon name="heart" size={13} fill={track.loved ? 'currentColor' : 'none'} />
-            </button>
-          </div>
-        );
-      case 'title':
-        return (
-          <div key="title" className="vt-cell vt-col-title" style={colStyle(col)}>
-            <CoverThumb artId={track.artId} fallback="film" className="vt-art" />
-            <div className="vt-title-wrap">
-              <span className="vt-title-text">{track.title}</span>
-              <span className="vt-badges">
-                {track.resolution && <span className="vt-cloud-pill">{track.resolution}</span>}
-                {track.source === 'cloud' && <span className="vt-cloud-pill">CLOUD</span>}
-                {track.hasSubtitles && <span className="vt-cloud-pill">CC</span>}
-              </span>
-            </div>
-          </div>
-        );
-      case 'artist':
-        return <div key="artist" className="vt-cell" style={colStyle(col)}>{track.artist}</div>;
-      case 'album':
-        return <div key="album" className="vt-cell" style={colStyle(col)}>{track.album}</div>;
-      case 'genre':
-        return <div key="genre" className="vt-cell" style={colStyle(col)}>{track.genre || '—'}</div>;
-      case 'year':
-        return <div key="year" className="vt-cell" style={colStyle(col)}>{track.year || '—'}</div>;
-      case 'plays':
-        return <div key="plays" className="vt-cell" style={colStyle(col)}>{track.playCount || 0}</div>;
-      case 'duration':
-        return <div key="duration" className="vt-cell" style={colStyle(col)}>{formatTime(track.duration)}</div>;
-      default:
-        return null;
+  const handleKeyDown = (e) => {
+    if (e.target !== listRef.current) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      setSelected(new Set(tracks.map((_, i) => i)));
+    } else if (e.key === 'Escape') {
+      setSelected(new Set());
+    } else if (e.key === 'Enter' && selected.size) {
+      e.preventDefault();
+      const first = Math.min(...selected);
+      if (selected.size === 1) actions.playTracks(tracks, first);
+      else actions.playTracks(selectedTracks(), 0);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const cur = anchorRef.current == null ? -1 : anchorRef.current;
+      const nextIdx = Math.max(0, Math.min(tracks.length - 1, cur + (e.key === 'ArrowDown' ? 1 : -1)));
+      anchorRef.current = nextIdx;
+      setSelected(new Set([nextIdx]));
+      ensureVisible(nextIdx);
     }
   };
 
-  return (
-    <div className="vt-wrapper">
-      <div className="vt-header">
-        {columns.map(col => {
-          const isSorted = sortBy === (col.sortKey || col.id);
-          return (
-            <div
-              key={col.id}
-              className={`vt-hcell ${col.sortable ? 'sortable' : ''} ${isSorted ? 'sorted' : ''}`}
-              style={colStyle(col)}
-              draggable
-              onDragStart={() => handleColDragStart(col.id)}
-              onDragOver={e => e.preventDefault()}
-              onDrop={() => handleColDrop(col.id)}
-              onClick={() => handleSortClick(col)}
-            >
-              <span className="vt-hcell-label">{col.label}</span>
-              {isSorted && <span className="vt-sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-              <div
-                className="vt-col-resizer"
-                onMouseDown={e => startColumnResize(e, col.id)}
-                onClick={e => e.stopPropagation()}
-              />
-            </div>
-          );
-        })}
-        <div className="vt-hcell vt-col-actions" style={{ width: 92, flexShrink: 0 }} />
-      </div>
+  const handleDragStart = (e, idx) => {
+    const chosen = selected.has(idx) ? selectedTracks() : [tracks[idx]];
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData(TRACK_DRAG_TYPE, JSON.stringify(chosen));
+    e.dataTransfer.setData('text/plain', chosen.map(t => `${t.artist} – ${t.title}`).join('\n'));
+  };
 
-      <VirtualTable
-        items={tracks}
-        rowHeight={40}
-        renderRow={(track, idx) => {
-          const active = currentTrack && currentTrack.id === track.id;
-          const selected = selectedIds.has(track.id);
-          return (
-            <div
-              key={track.id || idx}
-              className={`vt-row ${active ? 'active' : ''} ${selected ? 'selected' : ''}`}
-              onClick={e => handleRowClick(e, track, idx)}
-              onDoubleClick={() => onPlayTrack(track, tracks)}
-              onContextMenu={e => handleContextMenu(e, track, idx)}
-            >
-              {columns.map(col => renderCell(col, track, idx, active))}
-              <div className="vt-cell vt-col-actions" style={{ width: 92, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                <button
-                  className="btn-icon"
-                  title="Queue Next"
-                  onClick={() => onQueueTrack && onQueueTrack(track)}
-                >+</button>
-                <button
-                  className="btn-icon"
-                  title="Movie Info & Streams"
-                  onClick={() => onInspectTrack && onInspectTrack(track)}
-                >
-                  <Icon name="info" size={14} />
-                </button>
-              </div>
-            </div>
-          );
-        }}
-      />
+  if (!tracks.length) return <div className="empty-inline">{emptyText}</div>;
 
-      {contextMenu && (
-        <div
-          className="track-context-menu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="ctx-header">
-            {contextMenu.selectedTracks.length > 1
-              ? `${contextMenu.selectedTracks.length} movies selected`
-              : contextMenu.track.title}
-          </div>
-          <button
-            className="ctx-item"
-            onClick={() => {
-              onPlayTrack(contextMenu.track, contextMenu.selectedTracks.length > 1 ? contextMenu.selectedTracks : tracks);
-              setContextMenu(null);
-            }}
-          >
-            <Icon name="play" size={13} /> Play Now
+  const header = (
+    <div className={`tl-row tl-head tl-${variant}`} style={{ gridTemplateColumns: template }}>
+      {columns.map(col => {
+        const h = HEADERS[col];
+        const sortable = onSort && h.sort;
+        const active = sort && sort.key === h.sort;
+        const border = handleFor(col);
+        return sortable ? (
+          <button key={col} className={`tl-cell tl-${col} tl-sort ${active ? 'active' : ''} ${border ? 'col-resizable' : ''}`} onClick={() => onSort(h.sort)}>
+            {col === 'love' ? <Icon name="heart" size={12} /> : h.label}
+            {active ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}
+            {border}
           </button>
-          <button
-            className="ctx-item"
-            onClick={() => {
-              if (onQueueTracks) onQueueTracks(contextMenu.selectedTracks);
-              else if (onQueueTrack) contextMenu.selectedTracks.forEach(t => onQueueTrack(t));
-              setContextMenu(null);
-            }}
-          >
-            <Icon name="plus" size={13} /> Add to Screening Queue
-          </button>
-          <button
-            className="ctx-item"
-            onClick={() => {
-              contextMenu.selectedTracks.forEach(t => onToggleLoved && onToggleLoved(t));
-              setContextMenu(null);
-            }}
-          >
-            <Icon name="heart" size={13} /> Toggle Watchlist (Love)
-          </button>
-          {onFixMetadata && (
-            <button
-              className="ctx-item"
-              onClick={() => {
-                onFixMetadata(contextMenu.selectedTracks);
-                setContextMenu(null);
-              }}
-            >
-              <Icon name="sparkles" size={13} /> ✦ AI Fix Metadata &amp; Poster
-            </button>
-          )}
-          <div className="ctx-divider" />
-          <div className="ctx-sublabel">Add to Watchlist / Playlist</div>
-          {playlists.map(pl => (
-            <button
-              key={pl.id}
-              className="ctx-item"
-              onClick={() => {
-                contextMenu.selectedTracks.forEach(t => onAddTrackToPlaylist && onAddTrackToPlaylist(pl.id, t));
-                setContextMenu(null);
-              }}
-            >
-              <Icon name="list" size={13} /> {pl.name}
-            </button>
-          ))}
-          <div className="ctx-divider" />
-          <button
-            className="ctx-item"
-            onClick={() => {
-              onInspectTrack && onInspectTrack(contextMenu.track);
-              setContextMenu(null);
-            }}
-          >
-            <Icon name="info" size={13} /> Movie Details &amp; Streams…
-          </button>
-        </div>
-      )}
+        ) : <span key={col} className={`tl-cell tl-${col} ${border ? 'col-resizable' : ''}`}>{h.label}{border}</span>;
+      })}
     </div>
   );
+
+  // Visible slice; before the first measurement only a screenful is rendered.
+  const firstRow = view ? Math.max(0, Math.floor((view.top - OVERSCAN_PX) / ROW_HEIGHT)) : 0;
+  const lastRow = view ? Math.min(rowCount, Math.ceil((view.bottom + OVERSCAN_PX) / ROW_HEIGHT)) : Math.min(rowCount, 40);
+  const rows = [];
+  for (let r = firstRow; r < lastRow; r++) {
+    const top = r * ROW_HEIGHT;
+    const entry = discRows ? discRows[r] : null;
+    if (entry && entry.disc != null) {
+      rows.push(<div key={`disc-${entry.disc}`} className="tl-disc" style={{ top }}><Icon name="disc" size={13} /> Disc {entry.disc}</div>);
+      continue;
+    }
+    const idx = entry ? entry.idx : r;
+    const t = tracks[idx];
+    const isCurrent = sameTrack(currentTrack, t);
+    const st = stats[t.id] || {};
+    rows.push(
+      <div
+        key={`${idx}-${t.id || t.filePath}`}
+        data-idx={idx}
+        className={`tl-row tl-${variant} ${isCurrent ? 'current' : ''} ${selected.has(idx) ? 'selected' : ''}`}
+        style={{ gridTemplateColumns: template, top }}
+        draggable
+        onDragStart={(e) => handleDragStart(e, idx)}
+        onClick={(e) => handleClick(e, idx)}
+        onDoubleClick={() => actions.playTracks(tracks, idx)}
+        onContextMenu={(e) => handleContextMenu(e, idx)}
+      >
+        {columns.map(col => renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtist, actions, tracks, openMenu, ctx }))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="track-list" id={id}>
+      {selected.size > 1 && (
+        <div className="selection-bar">
+          <span><strong>{selected.size}</strong> selected</span>
+          <button className="btn-chip" onClick={() => actions.playTracks(selectedTracks(), 0)}><Icon name="play" size={11} /> Play</button>
+          <button className="btn-chip" onClick={() => actions.queueTracks(selectedTracks(), 'next')}>Play next</button>
+          <button className="btn-chip" onClick={() => actions.queueTracks(selectedTracks(), 'end')}>Add to queue</button>
+          <button className="btn-chip" onClick={() => actions.addToPlaylist(selectedTracks())}>Add to playlist…</button>
+          {actions.fixMetadata && (
+            <button className="btn-chip" onClick={() => actions.fixMetadata(selectedTracks())}>✦ AI Fix Metadata</button>
+          )}
+          <button className="btn-chip" onClick={(e) => openMenu(e, collectionMenuItems(selectedTracks(), ctx))}><Icon name="more" size={12} /></button>
+          <button className="btn-chip" onClick={() => setSelected(new Set())}>Clear</button>
+        </div>
+      )}
+      {header}
+      <div className="tl-body" ref={listRef} tabIndex={0} onKeyDown={handleKeyDown} style={{ height: rowCount * ROW_HEIGHT }}>
+        {rows}
+      </div>
+    </div>
+  );
+}
+
+// Default widths; the title takes what is left. Fixed columns are not resizable.
+const COLUMN_SIZES = {
+  num: { width: '42px', fixed: true },
+  love: { width: '26px', fixed: true },
+  art: { width: '40px', fixed: true },
+  title: { width: 'minmax(0, 3fr)', fill: true },
+  album: { width: 'minmax(0, 2fr)', min: 60 },
+  year: { width: '52px', min: 40 },
+  genre: { width: 'minmax(0, 1.2fr)', min: 50 },
+  plays: { width: '60px', min: 44 },
+  added: { width: '96px', min: 60 },
+  lastPlayed: { width: '104px', min: 60 },
+  duration: { width: '56px', min: 44 },
+  more: { width: '34px', fixed: true },
+};
+
+function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtist, actions, tracks, openMenu, ctx }) {
+  switch (col) {
+    case 'num':
+      return (
+        <span key={col} className="tl-cell tl-num">
+          {isCurrent && isPlaying
+            ? <span className="eq-bars"><i></i><i></i><i></i></span>
+            : <span className="tl-index">{variant === 'album' ? (t.trackNumber || idx + 1) : idx + 1}</span>}
+          <button className="tl-play" title="Play" onClick={(e) => { e.stopPropagation(); actions.playTracks(tracks, idx); }}>
+            <Icon name="play" size={12} />
+          </button>
+        </span>
+      );
+    case 'love':
+      return <span key={col} className="tl-cell tl-love"><LoveButton track={t} size={13} /></span>;
+    case 'art':
+      return <span key={col} className="tl-cell tl-art"><Cover artId={t.artId} name={t.album} size={32} /></span>;
+    case 'title': {
+      const showArtist = variant !== 'album' || (t.artist && albumArtist && t.artist !== albumArtist);
+      return (
+        <span key={col} className="tl-cell tl-title">
+          <span className="tl-title-text" title={t.title}>{t.title}</span>
+          {showArtist && (
+            <span className="tl-sub">
+              <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToArtist(t.artist); }}>{t.artist || 'Unknown Artist'}</a>
+              {t.cloud && <span className="tl-badge">{t.cloud.cached ? 'Cloud · cached' : 'Cloud'}</span>}
+            </span>
+          )}
+        </span>
+      );
+    }
+    case 'album':
+      return (
+        <span key={col} className="tl-cell tl-album" title={t.album}>
+          <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToAlbumOf(t); }}>{t.album || '—'}</a>
+        </span>
+      );
+    case 'year':
+      return <span key={col} className="tl-cell tl-year">{t.year || '—'}</span>;
+    case 'genre':
+      return (
+        <span key={col} className="tl-cell tl-genre" title={t.genre || ''}>
+          {t.genre ? <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToGenre(t.genre); }}>{t.genre}</a> : '—'}
+        </span>
+      );
+    case 'plays':
+      return <span key={col} className="tl-cell tl-plays">{st.plays || ''}</span>;
+    case 'added':
+      return <span key={col} className="tl-cell tl-added">{relativeDate(t.addedAt)}</span>;
+    case 'lastPlayed':
+      return <span key={col} className="tl-cell tl-lastPlayed">{relativeDate(st.lastPlayed)}</span>;
+    case 'duration':
+      return <span key={col} className="tl-cell tl-duration">{formatDuration(t.duration)}</span>;
+    case 'more':
+      return (
+        <span key={col} className="tl-cell tl-more">
+          <button
+            className="tl-more-btn"
+            title="More actions"
+            onClick={(e) => { e.stopPropagation(); openMenu(e, trackMenuItems([t], ctx, { allTracks: tracks, index: idx })); }}
+          >
+            <Icon name="more" size={14} />
+          </button>
+        </span>
+      );
+    default:
+      return null;
+  }
 }

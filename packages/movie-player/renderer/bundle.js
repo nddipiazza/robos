@@ -29,9 +29,9 @@
     mod
   ));
 
-  // ../audio-player/node_modules/react/cjs/react.production.js
+  // node_modules/react/cjs/react.production.js
   var require_react_production = __commonJS({
-    "../audio-player/node_modules/react/cjs/react.production.js"(exports) {
+    "node_modules/react/cjs/react.production.js"(exports) {
       "use strict";
       var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element");
       var REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal");
@@ -481,9 +481,9 @@
     }
   });
 
-  // ../audio-player/node_modules/react/index.js
+  // node_modules/react/index.js
   var require_react = __commonJS({
-    "../audio-player/node_modules/react/index.js"(exports, module) {
+    "node_modules/react/index.js"(exports, module) {
       "use strict";
       if (true) {
         module.exports = require_react_production();
@@ -493,9 +493,9 @@
     }
   });
 
-  // ../audio-player/node_modules/scheduler/cjs/scheduler.production.js
+  // node_modules/scheduler/cjs/scheduler.production.js
   var require_scheduler_production = __commonJS({
-    "../audio-player/node_modules/scheduler/cjs/scheduler.production.js"(exports) {
+    "node_modules/scheduler/cjs/scheduler.production.js"(exports) {
       "use strict";
       function push(heap, node) {
         var index = heap.length;
@@ -766,9 +766,9 @@
     }
   });
 
-  // ../audio-player/node_modules/scheduler/index.js
+  // node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "../audio-player/node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (true) {
         module.exports = require_scheduler_production();
@@ -778,11 +778,11 @@
     }
   });
 
-  // ../audio-player/node_modules/react-dom/cjs/react-dom.production.js
+  // node_modules/react-dom/cjs/react-dom.production.js
   var require_react_dom_production = __commonJS({
-    "../audio-player/node_modules/react-dom/cjs/react-dom.production.js"(exports) {
+    "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
       "use strict";
-      var React19 = require_react();
+      var React20 = require_react();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
         if (1 < arguments.length) {
@@ -824,7 +824,7 @@
           implementation
         };
       }
-      var ReactSharedInternals = React19.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React20.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       function getCrossOriginStringAs(as, input) {
         if ("font" === as) return "";
         if ("string" === typeof input)
@@ -834,11 +834,11 @@
       exports.browser = function(reason) {
         return { $$typeof: REACT_RECOVERABLE_TYPE, _reason: reason };
       };
-      exports.createPortal = function(children, container) {
+      exports.createPortal = function(children, container2) {
         var key = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null;
-        if (!container || 1 !== container.nodeType && 9 !== container.nodeType && 11 !== container.nodeType)
+        if (!container2 || 1 !== container2.nodeType && 9 !== container2.nodeType && 11 !== container2.nodeType)
           throw Error(formatProdErrorMessage(299));
-        return createPortal$1(children, container, null, key);
+        return createPortal$1(children, container2, null, key);
       };
       exports.flushSync = function(fn) {
         var previousTransition = ReactSharedInternals.T, previousUpdatePriority = Internals.p;
@@ -935,9 +935,9 @@
     }
   });
 
-  // ../audio-player/node_modules/react-dom/index.js
+  // node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "../audio-player/node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       function checkDCE() {
         if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
@@ -961,12 +961,12 @@
     }
   });
 
-  // ../audio-player/node_modules/react-dom/cjs/react-dom-client.production.js
+  // node_modules/react-dom/cjs/react-dom-client.production.js
   var require_react_dom_client_production = __commonJS({
-    "../audio-player/node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
+    "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
       "use strict";
       var Scheduler = require_scheduler();
-      var React19 = require_react();
+      var React20 = require_react();
       var ReactDOM = require_react_dom();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
@@ -1126,17 +1126,17 @@
         );
         return result;
       }
-      function findFragmentInstanceOrTextInstanceSiblings(result, self, child, state) {
+      function findFragmentInstanceOrTextInstanceSiblings(result, self, child, state2) {
         for (; null !== child; ) {
-          if (child === self) state.foundSelf = true;
+          if (child === self) state2.foundSelf = true;
           else if (5 === child.tag || 27 === child.tag || 6 === child.tag) {
-            if (state.foundSelf) return result[1] = child, true;
+            if (state2.foundSelf) return result[1] = child, true;
             result[0] = child;
           } else if ((22 !== child.tag || null === child.memoizedState) && findFragmentInstanceOrTextInstanceSiblings(
             result,
             self,
             child.child,
-            state
+            state2
           ))
             return true;
           child = child.sibling;
@@ -1257,7 +1257,7 @@
         return null;
       }
       var isArrayImpl = Array.isArray;
-      var ReactSharedInternals = React19.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React20.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var sharedNotPendingObject = {
         pending: false,
@@ -1572,25 +1572,25 @@
             return lanes;
         }
       }
-      function getNextLanes(root3, wipLanes, rootHasPendingCommit) {
-        var pendingLanes = root3.pendingLanes;
+      function getNextLanes(root2, wipLanes, rootHasPendingCommit) {
+        var pendingLanes = root2.pendingLanes;
         if (0 === pendingLanes) return 0;
-        var nextLanes = 0, suspendedLanes = root3.suspendedLanes, pingedLanes = root3.pingedLanes;
-        root3 = root3.warmLanes;
+        var nextLanes = 0, suspendedLanes = root2.suspendedLanes, pingedLanes = root2.pingedLanes;
+        root2 = root2.warmLanes;
         var nonIdlePendingLanes = pendingLanes & 134217727;
-        0 !== nonIdlePendingLanes ? (pendingLanes = nonIdlePendingLanes & ~suspendedLanes, 0 !== pendingLanes ? nextLanes = getHighestPriorityLanes(pendingLanes) : (pingedLanes &= nonIdlePendingLanes, 0 !== pingedLanes ? nextLanes = getHighestPriorityLanes(pingedLanes) : rootHasPendingCommit || (rootHasPendingCommit = nonIdlePendingLanes & ~root3, 0 !== rootHasPendingCommit && (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))))) : (nonIdlePendingLanes = pendingLanes & ~suspendedLanes, 0 !== nonIdlePendingLanes ? nextLanes = getHighestPriorityLanes(nonIdlePendingLanes) : 0 !== pingedLanes ? nextLanes = getHighestPriorityLanes(pingedLanes) : rootHasPendingCommit || (rootHasPendingCommit = pendingLanes & ~root3, 0 !== rootHasPendingCommit && (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
+        0 !== nonIdlePendingLanes ? (pendingLanes = nonIdlePendingLanes & ~suspendedLanes, 0 !== pendingLanes ? nextLanes = getHighestPriorityLanes(pendingLanes) : (pingedLanes &= nonIdlePendingLanes, 0 !== pingedLanes ? nextLanes = getHighestPriorityLanes(pingedLanes) : rootHasPendingCommit || (rootHasPendingCommit = nonIdlePendingLanes & ~root2, 0 !== rootHasPendingCommit && (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))))) : (nonIdlePendingLanes = pendingLanes & ~suspendedLanes, 0 !== nonIdlePendingLanes ? nextLanes = getHighestPriorityLanes(nonIdlePendingLanes) : 0 !== pingedLanes ? nextLanes = getHighestPriorityLanes(pingedLanes) : rootHasPendingCommit || (rootHasPendingCommit = pendingLanes & ~root2, 0 !== rootHasPendingCommit && (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
         return 0 === nextLanes ? 0 : 0 !== wipLanes && wipLanes !== nextLanes && 0 === (wipLanes & suspendedLanes) && (suspendedLanes = nextLanes & -nextLanes, rootHasPendingCommit = wipLanes & -wipLanes, suspendedLanes >= rootHasPendingCommit || 32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194048)) ? wipLanes : nextLanes;
       }
-      function checkIfRootIsPrerendering(root3, renderLanes2) {
-        return 0 === (root3.pendingLanes & ~(root3.suspendedLanes & ~root3.pingedLanes) & renderLanes2);
+      function checkIfRootIsPrerendering(root2, renderLanes2) {
+        return 0 === (root2.pendingLanes & ~(root2.suspendedLanes & ~root2.pingedLanes) & renderLanes2);
       }
-      function getEntangledLanes(root3, renderLanes2) {
+      function getEntangledLanes(root2, renderLanes2) {
         0 !== (renderLanes2 & 8) && (renderLanes2 |= renderLanes2 & 32);
-        var allEntangledLanes = root3.entangledLanes;
+        var allEntangledLanes = root2.entangledLanes;
         if (0 !== allEntangledLanes)
-          for (root3 = root3.entanglements, allEntangledLanes &= renderLanes2; 0 < allEntangledLanes; ) {
+          for (root2 = root2.entanglements, allEntangledLanes &= renderLanes2; 0 < allEntangledLanes; ) {
             var index$4 = 31 - clz32(allEntangledLanes), lane = 1 << index$4;
-            renderLanes2 |= root3[index$4];
+            renderLanes2 |= root2[index$4];
             allEntangledLanes &= ~lane;
           }
         return renderLanes2;
@@ -1646,21 +1646,21 @@
         for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
         return laneMap;
       }
-      function markRootUpdated$1(root3, updateLane) {
-        root3.pendingLanes |= updateLane;
-        268435456 !== updateLane && (root3.suspendedLanes = 0, root3.pingedLanes = 0, root3.warmLanes = 0);
+      function markRootUpdated$1(root2, updateLane) {
+        root2.pendingLanes |= updateLane;
+        268435456 !== updateLane && (root2.suspendedLanes = 0, root2.pingedLanes = 0, root2.warmLanes = 0);
       }
-      function markRootFinished(root3, finishedLanes, remainingLanes, spawnedLane, updatedLanes, suspendedRetryLanes) {
-        var previouslyPendingLanes = root3.pendingLanes;
-        root3.pendingLanes = remainingLanes;
-        root3.suspendedLanes = 0;
-        root3.pingedLanes = 0;
-        root3.warmLanes = 0;
-        root3.expiredLanes &= remainingLanes;
-        root3.entangledLanes &= remainingLanes;
-        root3.errorRecoveryDisabledLanes &= remainingLanes;
-        root3.shellSuspendCounter = 0;
-        var entanglements = root3.entanglements, expirationTimes = root3.expirationTimes, hiddenUpdates = root3.hiddenUpdates;
+      function markRootFinished(root2, finishedLanes, remainingLanes, spawnedLane, updatedLanes, suspendedRetryLanes) {
+        var previouslyPendingLanes = root2.pendingLanes;
+        root2.pendingLanes = remainingLanes;
+        root2.suspendedLanes = 0;
+        root2.pingedLanes = 0;
+        root2.warmLanes = 0;
+        root2.expiredLanes &= remainingLanes;
+        root2.entangledLanes &= remainingLanes;
+        root2.errorRecoveryDisabledLanes &= remainingLanes;
+        root2.shellSuspendCounter = 0;
+        var entanglements = root2.entanglements, expirationTimes = root2.expirationTimes, hiddenUpdates = root2.hiddenUpdates;
         for (remainingLanes = previouslyPendingLanes & ~remainingLanes; 0 < remainingLanes; ) {
           var index$7 = 31 - clz32(remainingLanes), lane = 1 << index$7;
           entanglements[index$7] = 0;
@@ -1673,28 +1673,28 @@
             }
           remainingLanes &= ~lane;
         }
-        0 !== spawnedLane && markSpawnedDeferredLane(root3, spawnedLane, 0);
-        0 !== suspendedRetryLanes && 0 === updatedLanes && 0 !== root3.tag && (root3.suspendedLanes |= suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
+        0 !== spawnedLane && markSpawnedDeferredLane(root2, spawnedLane, 0);
+        0 !== suspendedRetryLanes && 0 === updatedLanes && 0 !== root2.tag && (root2.suspendedLanes |= suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
       }
-      function markSpawnedDeferredLane(root3, spawnedLane, entangledLanes) {
-        root3.pendingLanes |= spawnedLane;
-        root3.suspendedLanes &= ~spawnedLane;
+      function markSpawnedDeferredLane(root2, spawnedLane, entangledLanes) {
+        root2.pendingLanes |= spawnedLane;
+        root2.suspendedLanes &= ~spawnedLane;
         var spawnedLaneIndex = 31 - clz32(spawnedLane);
-        root3.entangledLanes |= spawnedLane;
-        root3.entanglements[spawnedLaneIndex] = root3.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes & 261930;
+        root2.entangledLanes |= spawnedLane;
+        root2.entanglements[spawnedLaneIndex] = root2.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes & 261930;
       }
-      function markRootEntangled(root3, entangledLanes) {
-        var rootEntangledLanes = root3.entangledLanes |= entangledLanes;
-        for (root3 = root3.entanglements; rootEntangledLanes; ) {
+      function markRootEntangled(root2, entangledLanes) {
+        var rootEntangledLanes = root2.entangledLanes |= entangledLanes;
+        for (root2 = root2.entanglements; rootEntangledLanes; ) {
           var index$8 = 31 - clz32(rootEntangledLanes), lane = 1 << index$8;
-          lane & entangledLanes | root3[index$8] & entangledLanes && (root3[index$8] |= entangledLanes);
+          lane & entangledLanes | root2[index$8] & entangledLanes && (root2[index$8] |= entangledLanes);
           rootEntangledLanes &= ~lane;
         }
       }
-      function getBumpedLaneForHydration(root3, renderLanes2) {
+      function getBumpedLaneForHydration(root2, renderLanes2) {
         var renderLane = renderLanes2 & -renderLanes2;
         renderLane = 0 !== (renderLane & 42) ? 1 : getBumpedLaneForHydrationByLane(renderLane);
-        return 0 !== (renderLane & (root3.suspendedLanes | renderLanes2)) ? 0 : renderLane;
+        return 0 !== (renderLane & (root2.suspendedLanes | renderLanes2)) ? 0 : renderLane;
       }
       function getBumpedLaneForHydrationByLane(lane) {
         switch (lane) {
@@ -1800,9 +1800,9 @@
         if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return inst.stateNode;
         throw Error(formatProdErrorMessage(33));
       }
-      function getResourcesFromRoot(root3) {
-        var resources = root3[internalRootNodeResourcesKey];
-        resources || (resources = root3[internalRootNodeResourcesKey] = { hoistableStyles: /* @__PURE__ */ new Map(), hoistableScripts: /* @__PURE__ */ new Map() });
+      function getResourcesFromRoot(root2) {
+        var resources = root2[internalRootNodeResourcesKey];
+        resources || (resources = root2[internalRootNodeResourcesKey] = { hoistableStyles: /* @__PURE__ */ new Map(), hoistableScripts: /* @__PURE__ */ new Map() });
         return resources;
       }
       function markNodeAsHoistable(node) {
@@ -2314,12 +2314,12 @@
           passiveBrowserEventsSupported = false;
         }
       var options;
-      var root2 = null;
+      var root = null;
       var startText = null;
       var fallbackText = null;
       function getData() {
         if (fallbackText) return fallbackText;
-        var start, startValue = startText, startLength = startValue.length, end, endValue = "value" in root2 ? root2.value : root2.textContent, endLength = endValue.length;
+        var start, startValue = startText, startLength = startValue.length, end, endValue = "value" in root ? root.value : root.textContent, endLength = endValue.length;
         for (start = 0; start < startLength && startValue[start] === endValue[start]; start++) ;
         var minEnd = startLength - start;
         for (end = 1; end <= minEnd && startValue[startLength - end] === endValue[endLength - end]; end++) ;
@@ -2613,7 +2613,7 @@
       }
       function getFallbackBeforeInputChars(domEventName, nativeEvent) {
         if (isComposing)
-          return "compositionend" === domEventName || !canUseCompositionEvent && isFallbackCompositionEnd(domEventName, nativeEvent) ? (domEventName = getData(), fallbackText = startText = root2 = null, isComposing = false, domEventName) : null;
+          return "compositionend" === domEventName || !canUseCompositionEvent && isFallbackCompositionEnd(domEventName, nativeEvent) ? (domEventName = getData(), fallbackText = startText = root = null, isComposing = false, domEventName) : null;
         switch (domEventName) {
           case "paste":
             return null;
@@ -2749,15 +2749,15 @@
         for (; node && node.firstChild; ) node = node.firstChild;
         return node;
       }
-      function getNodeForCharacterOffset(root3, offset) {
-        var node = getLeafNode(root3);
-        root3 = 0;
+      function getNodeForCharacterOffset(root2, offset) {
+        var node = getLeafNode(root2);
+        root2 = 0;
         for (var nodeEnd; node; ) {
           if (3 === node.nodeType) {
-            nodeEnd = root3 + node.textContent.length;
-            if (root3 <= offset && nodeEnd >= offset)
-              return { node, offset: offset - root3 };
-            root3 = nodeEnd;
+            nodeEnd = root2 + node.textContent.length;
+            if (root2 <= offset && nodeEnd >= offset)
+              return { node, offset: offset - root2 };
+            root2 = nodeEnd;
           }
           a: {
             for (; node; ) {
@@ -3447,15 +3447,15 @@
         return value;
       }
       var AbortControllerLocal = "undefined" !== typeof AbortController ? AbortController : function() {
-        var listeners = [], signal = this.signal = {
+        var listeners2 = [], signal = this.signal = {
           aborted: false,
           addEventListener: function(type, listener) {
-            listeners.push(listener);
+            listeners2.push(listener);
           }
         };
         this.abort = function() {
           signal.aborted = true;
-          listeners.forEach(function(listener) {
+          listeners2.forEach(function(listener) {
             return listener();
           });
         };
@@ -3483,20 +3483,20 @@
           cache.controller.abort();
         });
       }
-      function queueTransitionTypes(root3, transitionTypes) {
-        if (0 !== (root3.pendingLanes & 4194048)) {
-          var queued = root3.transitionTypes;
-          null === queued && (queued = root3.transitionTypes = []);
-          for (root3 = 0; root3 < transitionTypes.length; root3++) {
-            var transitionType = transitionTypes[root3];
+      function queueTransitionTypes(root2, transitionTypes) {
+        if (0 !== (root2.pendingLanes & 4194048)) {
+          var queued = root2.transitionTypes;
+          null === queued && (queued = root2.transitionTypes = []);
+          for (root2 = 0; root2 < transitionTypes.length; root2++) {
+            var transitionType = transitionTypes[root2];
             -1 === queued.indexOf(transitionType) && queued.push(transitionType);
           }
         }
       }
       var entangledTransitionTypes = null;
-      function claimQueuedTransitionTypes(root3) {
-        var claimed = root3.transitionTypes;
-        root3.transitionTypes = null;
+      function claimQueuedTransitionTypes(root2) {
+        var claimed = root2.transitionTypes;
+        root2.transitionTypes = null;
         return claimed;
       }
       var currentEntangledListeners = null;
@@ -3523,33 +3523,33 @@
       function pingEngtangledActionScope() {
         if (0 === --currentEntangledPendingCount && (entangledTransitionTypes = null, null !== currentEntangledListeners)) {
           null !== currentEntangledActionThenable && (currentEntangledActionThenable.status = "fulfilled");
-          var listeners = currentEntangledListeners;
+          var listeners2 = currentEntangledListeners;
           currentEntangledListeners = null;
           currentEntangledLane = 0;
           currentEntangledActionThenable = null;
-          for (var i = 0; i < listeners.length; i++) (0, listeners[i])();
+          for (var i = 0; i < listeners2.length; i++) (0, listeners2[i])();
         }
       }
       function chainThenableValue(thenable, result) {
-        var listeners = [], thenableWithOverride = {
+        var listeners2 = [], thenableWithOverride = {
           status: "pending",
           value: null,
           reason: null,
           then: function(resolve) {
-            listeners.push(resolve);
+            listeners2.push(resolve);
           }
         };
         thenable.then(
           function() {
             thenableWithOverride.status = "fulfilled";
             thenableWithOverride.value = result;
-            for (var i = 0; i < listeners.length; i++) (0, listeners[i])(result);
+            for (var i = 0; i < listeners2.length; i++) (0, listeners2[i])(result);
           },
           function(error) {
             thenableWithOverride.status = "rejected";
             thenableWithOverride.reason = error;
-            for (error = 0; error < listeners.length; error++)
-              (0, listeners[error])(void 0);
+            for (error = 0; error < listeners2.length; error++)
+              (0, listeners2[error])(void 0);
           }
         );
         return thenableWithOverride;
@@ -4166,14 +4166,14 @@
         enqueueUpdate$1(fiber, updateQueue, update, lane);
         return getRootForUpdatedFiber(fiber);
       }
-      function entangleTransitions(root3, fiber, lane) {
+      function entangleTransitions(root2, fiber, lane) {
         fiber = fiber.updateQueue;
         if (null !== fiber && (fiber = fiber.shared, 0 !== (lane & 4194048))) {
           var queueLanes = fiber.lanes;
-          queueLanes &= root3.pendingLanes;
+          queueLanes &= root2.pendingLanes;
           lane |= queueLanes;
           fiber.lanes = lane;
-          markRootEntangled(root3, lane);
+          markRootEntangled(root2, lane);
         }
       }
       function enqueueCapturedUpdate(workInProgress2, capturedUpdate) {
@@ -4364,8 +4364,8 @@
       function findFirstSuspended(row) {
         for (var node = row; null !== node; ) {
           if (13 === node.tag) {
-            var state = node.memoizedState;
-            if (null !== state && (state = state.dehydrated, null === state || isSuspenseInstancePending(state) || isSuspenseInstanceFallback(state)))
+            var state2 = node.memoizedState;
+            if (null !== state2 && (state2 = state2.dehydrated, null === state2 || isSuspenseInstancePending(state2) || isSuspenseInstanceFallback(state2)))
               return node;
           } else if (19 === node.tag && "independent" !== node.memoizedProps.revealOrder) {
             if (0 !== (node.flags & 128)) return node;
@@ -4567,8 +4567,8 @@
         memoCache.index++;
         return updateQueue;
       }
-      function basicStateReducer(state, action) {
-        return "function" === typeof action ? action(state) : action;
+      function basicStateReducer(state2, action) {
+        return "function" === typeof action ? action(state2) : action;
       }
       function updateReducer(reducer) {
         var hook = updateWorkInProgressHook();
@@ -4721,8 +4721,8 @@
         }
       }
       function forceStoreRerender(fiber) {
-        var root3 = enqueueConcurrentRenderForLane(fiber, 2);
-        null !== root3 && scheduleUpdateOnFiber(root3, fiber, 2);
+        var root2 = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== root2 && scheduleUpdateOnFiber(root2, fiber, 2);
       }
       function mountStateImpl(initialState) {
         var hook = mountWorkInProgressHook();
@@ -4933,12 +4933,12 @@
         stateHook = updateReducer(basicStateReducer)[0];
         if ("object" === typeof currentStateHook && null !== currentStateHook && "function" === typeof currentStateHook.then)
           try {
-            var state = useThenable(currentStateHook);
+            var state2 = useThenable(currentStateHook);
           } catch (x) {
             if (x === SuspenseException) throw SuspenseActionException;
             throw x;
           }
-        else state = currentStateHook;
+        else state2 = currentStateHook;
         currentStateHook = updateWorkInProgressHook();
         var actionQueue = currentStateHook.queue, dispatch = actionQueue.dispatch;
         action !== currentStateHook.memoizedState && (currentlyRenderingFiber.flags |= 2048, pushSimpleEffect(
@@ -4947,7 +4947,7 @@
           actionStateActionEffect.bind(null, actionQueue, action),
           null
         ));
-        return [state, dispatch, stateHook];
+        return [state2, dispatch, stateHook];
       }
       function actionStateActionEffect(actionQueue, action) {
         actionQueue.action = action;
@@ -5293,13 +5293,13 @@
         null === pending ? update.next = update : (update.next = pending.next, pending.next = update);
         queue.pending = update;
       }
-      function entangleTransitionUpdate(root3, queue, lane) {
+      function entangleTransitionUpdate(root2, queue, lane) {
         if (0 !== (lane & 4194048)) {
           var queueLanes = queue.lanes;
-          queueLanes &= root3.pendingLanes;
+          queueLanes &= root2.pendingLanes;
           lane |= queueLanes;
           queue.lanes = lane;
-          markRootEntangled(root3, lane);
+          markRootEntangled(root2, lane);
         }
       }
       var ContextOnlyDispatcher = {
@@ -5674,9 +5674,9 @@
       function defaultOnRecoverableError(error) {
         reportGlobalError(error);
       }
-      function logUncaughtError(root3, errorInfo) {
+      function logUncaughtError(root2, errorInfo) {
         try {
-          var onUncaughtError = root3.onUncaughtError;
+          var onUncaughtError = root2.onUncaughtError;
           onUncaughtError(errorInfo.value, { componentStack: errorInfo.stack });
         } catch (e$78) {
           setTimeout(function() {
@@ -5684,9 +5684,9 @@
           });
         }
       }
-      function logCaughtError(root3, boundary, errorInfo) {
+      function logCaughtError(root2, boundary, errorInfo) {
         try {
-          var onCaughtError = root3.onCaughtError;
+          var onCaughtError = root2.onCaughtError;
           onCaughtError(errorInfo.value, {
             componentStack: errorInfo.stack,
             errorBoundary: 1 === boundary.tag ? boundary.stateNode : null
@@ -5697,12 +5697,12 @@
           });
         }
       }
-      function createRootErrorUpdate(root3, errorInfo, lane) {
+      function createRootErrorUpdate(root2, errorInfo, lane) {
         lane = createUpdate(lane);
         lane.tag = 3;
         lane.payload = { element: null };
         lane.callback = function() {
-          logUncaughtError(root3, errorInfo);
+          logUncaughtError(root2, errorInfo);
         };
         return lane;
       }
@@ -5711,7 +5711,7 @@
         lane.tag = 3;
         return lane;
       }
-      function initializeClassErrorUpdate(update, root3, fiber, errorInfo) {
+      function initializeClassErrorUpdate(update, root2, fiber, errorInfo) {
         var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
         if ("function" === typeof getDerivedStateFromError) {
           var error = errorInfo.value;
@@ -5719,12 +5719,12 @@
             return getDerivedStateFromError(error);
           };
           update.callback = function() {
-            logCaughtError(root3, fiber, errorInfo);
+            logCaughtError(root2, fiber, errorInfo);
           };
         }
         var inst = fiber.stateNode;
         null !== inst && "function" === typeof inst.componentDidCatch && (update.callback = function() {
-          logCaughtError(root3, fiber, errorInfo);
+          logCaughtError(root2, fiber, errorInfo);
           "function" !== typeof getDerivedStateFromError && (null === legacyErrorBoundariesThatAlreadyFailed ? legacyErrorBoundariesThatAlreadyFailed = /* @__PURE__ */ new Set([this]) : legacyErrorBoundariesThatAlreadyFailed.add(this));
           var stack = errorInfo.stack;
           this.componentDidCatch(errorInfo.value, {
@@ -5732,7 +5732,7 @@
           });
         });
       }
-      function throwException(root3, returnFiber, sourceFiber, value, rootRenderLanes) {
+      function throwException(root2, returnFiber, sourceFiber, value, rootRenderLanes) {
         sourceFiber.flags |= 32768;
         if (null !== value && "object" === typeof value && "function" === typeof value.then) {
           returnFiber = sourceFiber.alternate;
@@ -5748,30 +5748,30 @@
               case 31:
               case 13:
               case 19:
-                return null === shellBoundary ? renderDidSuspendDelayIfPossible() : null === sourceFiber.alternate && 0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 3), sourceFiber.flags &= -257, sourceFiber.flags |= 65536, sourceFiber.lanes = rootRenderLanes, value === noopSuspenseyCommitThenable ? sourceFiber.flags |= 16384 : (returnFiber = sourceFiber.updateQueue, null === returnFiber ? sourceFiber.updateQueue = /* @__PURE__ */ new Set([value]) : returnFiber.add(value), attachPingListener(root3, value, rootRenderLanes)), false;
+                return null === shellBoundary ? renderDidSuspendDelayIfPossible() : null === sourceFiber.alternate && 0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 3), sourceFiber.flags &= -257, sourceFiber.flags |= 65536, sourceFiber.lanes = rootRenderLanes, value === noopSuspenseyCommitThenable ? sourceFiber.flags |= 16384 : (returnFiber = sourceFiber.updateQueue, null === returnFiber ? sourceFiber.updateQueue = /* @__PURE__ */ new Set([value]) : returnFiber.add(value), attachPingListener(root2, value, rootRenderLanes)), false;
               case 22:
                 return sourceFiber.flags |= 65536, value === noopSuspenseyCommitThenable ? sourceFiber.flags |= 16384 : (returnFiber = sourceFiber.updateQueue, null === returnFiber ? (returnFiber = {
                   transitions: null,
                   markerInstances: null,
                   retryQueue: /* @__PURE__ */ new Set([value])
-                }, sourceFiber.updateQueue = returnFiber) : (sourceFiber = returnFiber.retryQueue, null === sourceFiber ? returnFiber.retryQueue = /* @__PURE__ */ new Set([value]) : sourceFiber.add(value)), attachPingListener(root3, value, rootRenderLanes)), false;
+                }, sourceFiber.updateQueue = returnFiber) : (sourceFiber = returnFiber.retryQueue, null === sourceFiber ? returnFiber.retryQueue = /* @__PURE__ */ new Set([value]) : sourceFiber.add(value)), attachPingListener(root2, value, rootRenderLanes)), false;
             }
             throw Error(formatProdErrorMessage(435, sourceFiber.tag));
           }
-          attachPingListener(root3, value, rootRenderLanes);
+          attachPingListener(root2, value, rootRenderLanes);
           renderDidSuspendDelayIfPossible();
           return false;
         }
         if (isHydrating)
-          return returnFiber = suspenseHandlerStackCursor.current, null !== returnFiber ? (0 === (returnFiber.flags & 65536) && (returnFiber.flags |= 256), returnFiber.flags |= 65536, returnFiber.lanes = rootRenderLanes, value !== HydrationMismatchException && (root3 = Error(formatProdErrorMessage(422), { cause: value }), queueHydrationError(createCapturedValueAtFiber(root3, sourceFiber)))) : (value !== HydrationMismatchException && (returnFiber = Error(formatProdErrorMessage(423), {
+          return returnFiber = suspenseHandlerStackCursor.current, null !== returnFiber ? (0 === (returnFiber.flags & 65536) && (returnFiber.flags |= 256), returnFiber.flags |= 65536, returnFiber.lanes = rootRenderLanes, value !== HydrationMismatchException && (root2 = Error(formatProdErrorMessage(422), { cause: value }), queueHydrationError(createCapturedValueAtFiber(root2, sourceFiber)))) : (value !== HydrationMismatchException && (returnFiber = Error(formatProdErrorMessage(423), {
             cause: value
           }), queueHydrationError(
             createCapturedValueAtFiber(returnFiber, sourceFiber)
-          )), root3 = root3.current.alternate, root3.flags |= 65536, rootRenderLanes &= -rootRenderLanes, root3.lanes |= rootRenderLanes, value = createCapturedValueAtFiber(value, sourceFiber), rootRenderLanes = createRootErrorUpdate(
-            root3.stateNode,
+          )), root2 = root2.current.alternate, root2.flags |= 65536, rootRenderLanes &= -rootRenderLanes, root2.lanes |= rootRenderLanes, value = createCapturedValueAtFiber(value, sourceFiber), rootRenderLanes = createRootErrorUpdate(
+            root2.stateNode,
             value,
             rootRenderLanes
-          ), enqueueCapturedUpdate(root3, rootRenderLanes), 4 !== workInProgressRootExitStatus && (workInProgressRootExitStatus = 2)), false;
+          ), enqueueCapturedUpdate(root2, rootRenderLanes), 4 !== workInProgressRootExitStatus && (workInProgressRootExitStatus = 2)), false;
         var wrapperError = Error(formatProdErrorMessage(520), { cause: value });
         wrapperError = createCapturedValueAtFiber(wrapperError, sourceFiber);
         null === workInProgressRootConcurrentErrors ? workInProgressRootConcurrentErrors = [wrapperError] : workInProgressRootConcurrentErrors.push(wrapperError);
@@ -5782,14 +5782,14 @@
         do {
           switch (sourceFiber.tag) {
             case 3:
-              return sourceFiber.flags |= 65536, root3 = rootRenderLanes & -rootRenderLanes, sourceFiber.lanes |= root3, root3 = createRootErrorUpdate(sourceFiber.stateNode, value, root3), enqueueCapturedUpdate(sourceFiber, root3), false;
+              return sourceFiber.flags |= 65536, root2 = rootRenderLanes & -rootRenderLanes, sourceFiber.lanes |= root2, root2 = createRootErrorUpdate(sourceFiber.stateNode, value, root2), enqueueCapturedUpdate(sourceFiber, root2), false;
             case 1:
               returnFiber = sourceFiber.type;
               wrapperError = sourceFiber.stateNode;
               if (0 === (sourceFiber.flags & 128) && ("function" === typeof returnFiber.getDerivedStateFromError || null !== wrapperError && "function" === typeof wrapperError.componentDidCatch && (null === legacyErrorBoundariesThatAlreadyFailed || !legacyErrorBoundariesThatAlreadyFailed.has(wrapperError))))
                 return sourceFiber.flags |= 65536, rootRenderLanes &= -rootRenderLanes, sourceFiber.lanes |= rootRenderLanes, rootRenderLanes = createClassErrorUpdate(rootRenderLanes), initializeClassErrorUpdate(
                   rootRenderLanes,
-                  root3,
+                  root2,
                   sourceFiber,
                   value
                 ), enqueueCapturedUpdate(sourceFiber, rootRenderLanes), false;
@@ -7850,11 +7850,11 @@
       }
       function commitEnterViewTransitions(placement, gesture) {
         if (30 === placement.tag) {
-          var state = placement.stateNode, props = placement.memoizedProps, name = getViewTransitionName(props, state), className = getViewTransitionClassName(
+          var state2 = placement.stateNode, props = placement.memoizedProps, name = getViewTransitionName(props, state2), className = getViewTransitionClassName(
             props.default,
-            state.paired ? props.share : props.enter
+            state2.paired ? props.share : props.enter
           );
-          "none" !== className ? applyViewTransitionToHostInstances(placement, name, className, null, false) ? (commitAppearingPairViewTransitions(placement), state.paired || gesture || scheduleViewTransitionEvent(placement, props.onEnter)) : restoreViewTransitionOnHostInstances(placement.child, false) : commitAppearingPairViewTransitions(placement);
+          "none" !== className ? applyViewTransitionToHostInstances(placement, name, className, null, false) ? (commitAppearingPairViewTransitions(placement), state2.paired || gesture || scheduleViewTransitionEvent(placement, props.onEnter)) : restoreViewTransitionOnHostInstances(placement.child, false) : commitAppearingPairViewTransitions(placement);
         } else if (0 !== (placement.subtreeFlags & 33554432))
           for (placement = placement.child; null !== placement; )
             commitEnterViewTransitions(placement, gesture), placement = placement.sibling;
@@ -7997,17 +7997,17 @@
       function measureNestedViewTransitions(changedParent, gesture) {
         for (changedParent = changedParent.child; null !== changedParent; ) {
           if (30 === changedParent.tag) {
-            var props = changedParent.memoizedProps, state = changedParent.stateNode, name = getViewTransitionName(props, state), className = getViewTransitionClassName(props.default, props.update);
+            var props = changedParent.memoizedProps, state2 = changedParent.stateNode, name = getViewTransitionName(props, state2), className = getViewTransitionClassName(props.default, props.update);
             if (gesture) {
-              state = state.clones;
-              var previousMeasurements = null === state ? null : state.map(measureClonedInstance);
+              state2 = state2.clones;
+              var previousMeasurements = null === state2 ? null : state2.map(measureClonedInstance);
             } else
               previousMeasurements = changedParent.memoizedState, changedParent.memoizedState = null;
-            state = changedParent;
+            state2 = changedParent;
             var child = changedParent.child;
             viewTransitionHostInstanceIdx = 0;
             name = measureViewTransitionHostInstancesRecursive(
-              state,
+              state2,
               child,
               name,
               name,
@@ -8031,19 +8031,19 @@
       var inUpdateViewTransition = false;
       var rootViewTransitionAffected = false;
       var rootViewTransitionNameCanceled = false;
-      function commitBeforeMutationEffects(root3, firstChild, committedLanes) {
-        root3 = root3.containerInfo;
+      function commitBeforeMutationEffects(root2, firstChild, committedLanes) {
+        root2 = root2.containerInfo;
         eventsEnabled = _enabled;
-        root3 = getActiveElementDeep(root3);
-        if (hasSelectionCapabilities(root3)) {
-          if ("selectionStart" in root3)
+        root2 = getActiveElementDeep(root2);
+        if (hasSelectionCapabilities(root2)) {
+          if ("selectionStart" in root2)
             var JSCompiler_temp = {
-              start: root3.selectionStart,
-              end: root3.selectionEnd
+              start: root2.selectionStart,
+              end: root2.selectionEnd
             };
           else
             a: {
-              JSCompiler_temp = (JSCompiler_temp = root3.ownerDocument) && JSCompiler_temp.defaultView || window;
+              JSCompiler_temp = (JSCompiler_temp = root2.ownerDocument) && JSCompiler_temp.defaultView || window;
               var selection = JSCompiler_temp.getSelection && JSCompiler_temp.getSelection();
               if (selection && 0 !== selection.rangeCount) {
                 JSCompiler_temp = selection.anchorNode;
@@ -8055,7 +8055,7 @@
                   JSCompiler_temp = null;
                   break a;
                 }
-                var length = 0, start = -1, end = -1, indexWithinAnchor = 0, indexWithinFocus = 0, node = root3, parentNode = null;
+                var length = 0, start = -1, end = -1, indexWithinAnchor = 0, indexWithinFocus = 0, node = root2, parentNode = null;
                 b: for (; ; ) {
                   for (var next; ; ) {
                     node !== JSCompiler_temp || 0 !== anchorOffset && 3 !== node.nodeType || (start = length + anchorOffset);
@@ -8066,7 +8066,7 @@
                     node = next;
                   }
                   for (; ; ) {
-                    if (node === root3) break b;
+                    if (node === root2) break b;
                     parentNode === JSCompiler_temp && ++indexWithinAnchor === anchorOffset && (start = length);
                     parentNode === focusNode && ++indexWithinFocus === selection && (end = length);
                     if (null !== (next = node.nextSibling)) break;
@@ -8080,31 +8080,31 @@
             }
           JSCompiler_temp = JSCompiler_temp || { start: 0, end: 0 };
         } else JSCompiler_temp = null;
-        selectionInformation = { focusedElem: root3, selectionRange: JSCompiler_temp };
+        selectionInformation = { focusedElem: root2, selectionRange: JSCompiler_temp };
         _enabled = false;
         committedLanes = (committedLanes & 335544064) === committedLanes;
         nextEffect = firstChild;
         for (firstChild = committedLanes ? 9270 : 1024; null !== nextEffect; ) {
-          root3 = nextEffect;
-          if (committedLanes && (JSCompiler_temp = root3.deletions, null !== JSCompiler_temp))
+          root2 = nextEffect;
+          if (committedLanes && (JSCompiler_temp = root2.deletions, null !== JSCompiler_temp))
             for (anchorOffset = 0; anchorOffset < JSCompiler_temp.length; anchorOffset++)
               committedLanes && commitExitViewTransitions(JSCompiler_temp[anchorOffset]);
-          if (null === root3.alternate && 0 !== (root3.flags & 2))
-            committedLanes && trackEnterViewTransitions(root3), commitBeforeMutationEffects_complete(committedLanes);
+          if (null === root2.alternate && 0 !== (root2.flags & 2))
+            committedLanes && trackEnterViewTransitions(root2), commitBeforeMutationEffects_complete(committedLanes);
           else {
-            if (22 === root3.tag) {
-              if (JSCompiler_temp = root3.alternate, null !== root3.memoizedState) {
+            if (22 === root2.tag) {
+              if (JSCompiler_temp = root2.alternate, null !== root2.memoizedState) {
                 null !== JSCompiler_temp && null === JSCompiler_temp.memoizedState && committedLanes && commitExitViewTransitions(JSCompiler_temp);
                 commitBeforeMutationEffects_complete(committedLanes);
                 continue;
               } else if (null !== JSCompiler_temp && null !== JSCompiler_temp.memoizedState) {
-                committedLanes && trackEnterViewTransitions(root3);
+                committedLanes && trackEnterViewTransitions(root2);
                 commitBeforeMutationEffects_complete(committedLanes);
                 continue;
               }
             }
-            JSCompiler_temp = root3.child;
-            0 !== (root3.subtreeFlags & firstChild) && null !== JSCompiler_temp ? (JSCompiler_temp.return = root3, nextEffect = JSCompiler_temp) : (committedLanes && commitNestedViewTransitions(root3), commitBeforeMutationEffects_complete(committedLanes));
+            JSCompiler_temp = root2.child;
+            0 !== (root2.subtreeFlags & firstChild) && null !== JSCompiler_temp ? (JSCompiler_temp.return = root2, nextEffect = JSCompiler_temp) : (committedLanes && commitNestedViewTransitions(root2), commitBeforeMutationEffects_complete(committedLanes));
           }
         }
         appearingViewTransitions = null;
@@ -8580,7 +8580,7 @@
         var deletions = parentFiber.deletions;
         if (null !== deletions)
           for (var i = 0; i < deletions.length; i++) {
-            var childToDelete = deletions[i], root3 = root$jscomp$0, returnFiber = parentFiber, parent = returnFiber;
+            var childToDelete = deletions[i], root2 = root$jscomp$0, returnFiber = parentFiber, parent = returnFiber;
             a: for (; null !== parent; ) {
               switch (parent.tag) {
                 case 27:
@@ -8603,11 +8603,11 @@
               parent = parent.return;
             }
             if (null === hostParent) throw Error(formatProdErrorMessage(160));
-            commitDeletionEffectsOnFiber(root3, returnFiber, childToDelete);
+            commitDeletionEffectsOnFiber(root2, returnFiber, childToDelete);
             hostParent = null;
             hostParentIsContainer = false;
-            root3 = childToDelete.alternate;
-            null !== root3 && (root3.return = null);
+            root2 = childToDelete.alternate;
+            null !== root2 && (root2.return = null);
             childToDelete.return = null;
           }
         if (parentFiber.subtreeFlags & 13886)
@@ -8615,7 +8615,7 @@
             commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes), parentFiber = parentFiber.sibling;
       }
       var currentHoistableRoot = null;
-      function commitMutationEffectsOnFiber(finishedWork, root3, lanes) {
+      function commitMutationEffectsOnFiber(finishedWork, root2, lanes) {
         var current = finishedWork.alternate, flags = finishedWork.flags;
         switch (finishedWork.tag) {
           case 0:
@@ -8627,19 +8627,19 @@
                 var _eventPayloads$ii2 = current[ii];
                 _eventPayloads$ii2.ref.impl = _eventPayloads$ii2.nextImpl;
               }
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             flags & 4 && (commitHookEffectListUnmount(3, finishedWork, finishedWork.return), commitHookEffectListMount(3, finishedWork), commitHookEffectListUnmount(5, finishedWork, finishedWork.return));
             break;
           case 1:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             flags & 512 && (offscreenSubtreeWasHidden || null === current || safelyDetachRef(current, current.return));
-            flags & 64 && offscreenSubtreeIsHidden && (finishedWork = finishedWork.updateQueue, null !== finishedWork && (root3 = finishedWork.callbacks, null !== root3 && (lanes = finishedWork.shared.hiddenCallbacks, finishedWork.shared.hiddenCallbacks = null === lanes ? root3 : lanes.concat(root3))));
+            flags & 64 && offscreenSubtreeIsHidden && (finishedWork = finishedWork.updateQueue, null !== finishedWork && (root2 = finishedWork.callbacks, null !== root2 && (lanes = finishedWork.shared.hiddenCallbacks, finishedWork.shared.hiddenCallbacks = null === lanes ? root2 : lanes.concat(root2))));
             break;
           case 26:
             ii = currentHoistableRoot;
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             flags & 512 && (offscreenSubtreeWasHidden || null === current || safelyDetachRef(current, current.return));
             if (flags & 4)
@@ -8650,41 +8650,41 @@
                       finishedWork.stateNode = createHoistableInstance(
                         finishedWork.type,
                         finishedWork.memoizedProps,
-                        root3.containerInfo,
+                        root2.containerInfo,
                         finishedWork
                       );
                     else {
                       a: {
-                        root3 = finishedWork.type;
+                        root2 = finishedWork.type;
                         lanes = finishedWork.memoizedProps;
                         flags = ii.ownerDocument || ii;
-                        b: switch (root3) {
+                        b: switch (root2) {
                           case "title":
                             current = flags.getElementsByTagName("title")[0];
                             if (!current || current[internalHoistableMarker] || current[internalInstanceKey] || "http://www.w3.org/2000/svg" === current.namespaceURI || current.hasAttribute("itemprop"))
-                              current = flags.createElement(root3), flags.head.insertBefore(
+                              current = flags.createElement(root2), flags.head.insertBefore(
                                 current,
                                 flags.querySelector("head > title")
                               );
-                            setInitialProperties(current, root3, lanes);
+                            setInitialProperties(current, root2, lanes);
                             current[internalInstanceKey] = finishedWork;
                             markNodeAsHoistable(current);
-                            root3 = current;
+                            root2 = current;
                             break a;
                           case "link":
                             if (ii = getHydratableHoistableCache(
                               "link",
                               "href",
                               flags
-                            ).get(root3 + (lanes.href || ""))) {
+                            ).get(root2 + (lanes.href || ""))) {
                               for (_eventPayloads$ii2 = 0; _eventPayloads$ii2 < ii.length; _eventPayloads$ii2++)
                                 if (current = ii[_eventPayloads$ii2], current.getAttribute("href") === (null == lanes.href || "" === lanes.href ? null : lanes.href) && current.getAttribute("rel") === (null == lanes.rel ? null : lanes.rel) && current.getAttribute("title") === (null == lanes.title ? null : lanes.title) && current.getAttribute("crossorigin") === (null == lanes.crossOrigin ? null : lanes.crossOrigin)) {
                                   ii.splice(_eventPayloads$ii2, 1);
                                   break b;
                                 }
                             }
-                            current = flags.createElement(root3);
-                            setInitialProperties(current, root3, lanes);
+                            current = flags.createElement(root2);
+                            setInitialProperties(current, root2, lanes);
                             flags.head.appendChild(current);
                             break;
                           case "meta":
@@ -8692,25 +8692,25 @@
                               "meta",
                               "content",
                               flags
-                            ).get(root3 + (lanes.content || ""))) {
+                            ).get(root2 + (lanes.content || ""))) {
                               for (_eventPayloads$ii2 = 0; _eventPayloads$ii2 < ii.length; _eventPayloads$ii2++)
                                 if (current = ii[_eventPayloads$ii2], current.getAttribute("content") === (null == lanes.content ? null : "" + lanes.content) && current.getAttribute("name") === (null == lanes.name ? null : lanes.name) && current.getAttribute("property") === (null == lanes.property ? null : lanes.property) && current.getAttribute("http-equiv") === (null == lanes.httpEquiv ? null : lanes.httpEquiv) && current.getAttribute("charset") === (null == lanes.charSet ? null : lanes.charSet)) {
                                   ii.splice(_eventPayloads$ii2, 1);
                                   break b;
                                 }
                             }
-                            current = flags.createElement(root3);
-                            setInitialProperties(current, root3, lanes);
+                            current = flags.createElement(root2);
+                            setInitialProperties(current, root2, lanes);
                             flags.head.appendChild(current);
                             break;
                           default:
-                            throw Error(formatProdErrorMessage(468, root3));
+                            throw Error(formatProdErrorMessage(468, root2));
                         }
                         current[internalInstanceKey] = finishedWork;
                         markNodeAsHoistable(current);
-                        root3 = current;
+                        root2 = current;
                       }
-                      finishedWork.stateNode = root3;
+                      finishedWork.stateNode = root2;
                     }
                   else
                     offscreenSubtreeIsHidden || mountHoistable(ii, finishedWork.type, finishedWork.stateNode);
@@ -8721,14 +8721,14 @@
                     finishedWork.memoizedProps
                   );
               else
-                flags !== lanes ? (null === flags ? (root3 = current.stateNode, null === root3 || offscreenSubtreeWasHidden || root3.parentNode.removeChild(root3)) : flags.count--, null === lanes ? offscreenSubtreeIsHidden || mountHoistable(ii, finishedWork.type, finishedWork.stateNode) : acquireResource(ii, lanes, finishedWork.memoizedProps)) : null === lanes && null !== finishedWork.stateNode && commitHostUpdate(
+                flags !== lanes ? (null === flags ? (root2 = current.stateNode, null === root2 || offscreenSubtreeWasHidden || root2.parentNode.removeChild(root2)) : flags.count--, null === lanes ? offscreenSubtreeIsHidden || mountHoistable(ii, finishedWork.type, finishedWork.stateNode) : acquireResource(ii, lanes, finishedWork.memoizedProps)) : null === lanes && null !== finishedWork.stateNode && commitHostUpdate(
                   finishedWork,
                   finishedWork.memoizedProps,
                   current.memoizedProps
                 );
             break;
           case 27:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             flags & 512 && (offscreenSubtreeWasHidden || null === current || safelyDetachRef(current, current.return));
             null !== current && flags & 4 && commitHostUpdate(
@@ -8740,35 +8740,35 @@
           case 5:
             ii = offscreenDirectParentIsHidden;
             offscreenDirectParentIsHidden = false;
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             offscreenDirectParentIsHidden = ii;
             commitReconciliationEffects(finishedWork);
             flags & 512 && (offscreenSubtreeWasHidden || null === current || safelyDetachRef(current, current.return));
             if (finishedWork.flags & 32) {
-              root3 = finishedWork.stateNode;
+              root2 = finishedWork.stateNode;
               try {
-                setTextContent(root3, ""), viewTransitionMutationContext = true;
+                setTextContent(root2, ""), viewTransitionMutationContext = true;
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
             }
-            flags & 4 && null != finishedWork.stateNode && (root3 = finishedWork.memoizedProps, commitHostUpdate(
+            flags & 4 && null != finishedWork.stateNode && (root2 = finishedWork.memoizedProps, commitHostUpdate(
               finishedWork,
-              root3,
-              null !== current ? current.memoizedProps : root3
+              root2,
+              null !== current ? current.memoizedProps : root2
             ));
             flags & 1024 && (needsFormReset = true);
             break;
           case 6:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             if (flags & 4) {
               if (null === finishedWork.stateNode)
                 throw Error(formatProdErrorMessage(162));
-              root3 = finishedWork.memoizedProps;
+              root2 = finishedWork.memoizedProps;
               lanes = finishedWork.stateNode;
               try {
-                lanes.nodeValue = root3, viewTransitionMutationContext = true;
+                lanes.nodeValue = root2, viewTransitionMutationContext = true;
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -8778,13 +8778,13 @@
             viewTransitionMutationContext = false;
             tagCaches = null;
             ii = currentHoistableRoot;
-            currentHoistableRoot = getHoistableRoot(root3.containerInfo);
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            currentHoistableRoot = getHoistableRoot(root2.containerInfo);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             currentHoistableRoot = ii;
             commitReconciliationEffects(finishedWork);
             if (flags & 4 && null !== current && current.memoizedState.isDehydrated)
               try {
-                retryIfBlockedOn(root3.containerInfo);
+                retryIfBlockedOn(root2.containerInfo);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -8799,7 +8799,7 @@
             currentHoistableRoot = getHoistableRoot(
               finishedWork.stateNode.containerInfo
             );
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             currentHoistableRoot = ii;
             viewTransitionMutationContext && inUpdateViewTransition && (rootViewTransitionAffected = true);
@@ -8807,19 +8807,19 @@
             offscreenDirectParentIsHidden = flags;
             break;
           case 12:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             break;
           case 31:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
-            flags & 4 && (root3 = finishedWork.updateQueue, null !== root3 && (finishedWork.updateQueue = null, attachSuspenseRetryListeners(finishedWork, root3)));
+            flags & 4 && (root2 = finishedWork.updateQueue, null !== root2 && (finishedWork.updateQueue = null, attachSuspenseRetryListeners(finishedWork, root2)));
             break;
           case 13:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             finishedWork.child.flags & 8192 && null !== finishedWork.memoizedState !== (null !== current && null !== current.memoizedState) && (globalMostRecentFallbackTime = now());
-            flags & 4 && (root3 = finishedWork.updateQueue, null !== root3 && (finishedWork.updateQueue = null, attachSuspenseRetryListeners(finishedWork, root3)));
+            flags & 4 && (root2 = finishedWork.updateQueue, null !== root2 && (finishedWork.updateQueue = null, attachSuspenseRetryListeners(finishedWork, root2)));
             break;
           case 22:
             ii = null !== finishedWork.memoizedState;
@@ -8828,18 +8828,18 @@
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || ii;
             offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$166 || ii;
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || _eventPayloads$ii2;
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
             offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$166;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
             commitReconciliationEffects(finishedWork);
-            flags & 8192 && (root3 = finishedWork.stateNode, root3._visibility = ii ? root3._visibility & -2 : root3._visibility | 1, !ii || null === current || _eventPayloads$ii2 || offscreenSubtreeIsHidden || offscreenSubtreeWasHidden || (root3 = _eventPayloads$ii2 || offscreenSubtreeWasHidden, lanes = offscreenSubtreeIsHidden, current = offscreenSubtreeWasHidden, offscreenSubtreeIsHidden = ii || offscreenSubtreeIsHidden, offscreenSubtreeWasHidden = root3, recursivelyTraverseDisappearLayoutEffects(finishedWork, 2), offscreenSubtreeIsHidden = lanes, offscreenSubtreeWasHidden = current), !ii && offscreenDirectParentIsHidden || hideOrUnhideAllChildren(finishedWork, ii));
-            flags & 4 && (root3 = finishedWork.updateQueue, null !== root3 && (lanes = root3.retryQueue, null !== lanes && (root3.retryQueue = null, attachSuspenseRetryListeners(finishedWork, lanes))));
+            flags & 8192 && (root2 = finishedWork.stateNode, root2._visibility = ii ? root2._visibility & -2 : root2._visibility | 1, !ii || null === current || _eventPayloads$ii2 || offscreenSubtreeIsHidden || offscreenSubtreeWasHidden || (root2 = _eventPayloads$ii2 || offscreenSubtreeWasHidden, lanes = offscreenSubtreeIsHidden, current = offscreenSubtreeWasHidden, offscreenSubtreeIsHidden = ii || offscreenSubtreeIsHidden, offscreenSubtreeWasHidden = root2, recursivelyTraverseDisappearLayoutEffects(finishedWork, 2), offscreenSubtreeIsHidden = lanes, offscreenSubtreeWasHidden = current), !ii && offscreenDirectParentIsHidden || hideOrUnhideAllChildren(finishedWork, ii));
+            flags & 4 && (root2 = finishedWork.updateQueue, null !== root2 && (lanes = root2.retryQueue, null !== lanes && (root2.retryQueue = null, attachSuspenseRetryListeners(finishedWork, lanes))));
             break;
           case 19:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
-            flags & 4 && (root3 = finishedWork.updateQueue, null !== root3 && (finishedWork.updateQueue = null, attachSuspenseRetryListeners(finishedWork, root3)));
+            flags & 4 && (root2 = finishedWork.updateQueue, null !== root2 && (finishedWork.updateQueue = null, attachSuspenseRetryListeners(finishedWork, root2)));
             break;
           case 30:
             flags & 512 && (offscreenSubtreeWasHidden || null === current || safelyDetachRef(current, current.return));
@@ -8851,7 +8851,7 @@
               prevOffscreenSubtreeIsHidden.default,
               prevOffscreenSubtreeIsHidden.update
             );
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             _eventPayloads$ii2 && null !== current && viewTransitionMutationContext && (finishedWork.flags |= 4);
             inUpdateViewTransition = ii;
@@ -8862,7 +8862,7 @@
           case 7:
             flags & 512 && (offscreenSubtreeWasHidden || null === current || safelyDetachRef(current, current.return)), current && null !== current.stateNode && (current.stateNode._fragmentFiber = finishedWork);
           default:
-            recursivelyTraverseMutationEffects(root3, finishedWork, lanes), commitReconciliationEffects(finishedWork);
+            recursivelyTraverseMutationEffects(root2, finishedWork, lanes), commitReconciliationEffects(finishedWork);
         }
       }
       function commitReconciliationEffects(finishedWork) {
@@ -8937,13 +8937,13 @@
             parentFiber = parentFiber.sibling;
           }
       }
-      function recursivelyTraverseAfterMutationEffects(root3, parentFiber) {
+      function recursivelyTraverseAfterMutationEffects(root2, parentFiber) {
         if (parentFiber.subtreeFlags & 9270)
           for (parentFiber = parentFiber.child; null !== parentFiber; )
-            commitAfterMutationEffectsOnFiber(parentFiber, root3), parentFiber = parentFiber.sibling;
+            commitAfterMutationEffectsOnFiber(parentFiber, root2), parentFiber = parentFiber.sibling;
         else measureNestedViewTransitions(parentFiber, false);
       }
-      function commitAfterMutationEffectsOnFiber(finishedWork, root3) {
+      function commitAfterMutationEffectsOnFiber(finishedWork, root2) {
         var current = finishedWork.alternate;
         if (null === current) commitEnterViewTransitions(finishedWork, false);
         else
@@ -8951,7 +8951,7 @@
             case 3:
               rootViewTransitionNameCanceled = viewTransitionContextChanged = false;
               pushViewTransitionCancelableScope();
-              recursivelyTraverseAfterMutationEffects(root3, finishedWork);
+              recursivelyTraverseAfterMutationEffects(root2, finishedWork);
               if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
                 finishedWork = viewTransitionCancelableChildren;
                 if (null !== finishedWork)
@@ -8969,7 +8969,7 @@
                       }
                     );
                   }
-                finishedWork = root3.containerInfo;
+                finishedWork = root2.containerInfo;
                 finishedWork = 9 === finishedWork.nodeType ? finishedWork.documentElement : finishedWork.ownerDocument.documentElement;
                 null !== finishedWork && "" === finishedWork.style.viewTransitionName && (finishedWork.style.viewTransitionName = "none", finishedWork.animate(
                   { opacity: [0, 0], pointerEvents: ["none", "none"] },
@@ -8991,51 +8991,51 @@
               viewTransitionCancelableChildren = null;
               break;
             case 5:
-              recursivelyTraverseAfterMutationEffects(root3, finishedWork);
+              recursivelyTraverseAfterMutationEffects(root2, finishedWork);
               break;
             case 4:
               i = viewTransitionContextChanged;
               viewTransitionContextChanged = false;
-              recursivelyTraverseAfterMutationEffects(root3, finishedWork);
+              recursivelyTraverseAfterMutationEffects(root2, finishedWork);
               viewTransitionContextChanged && (rootViewTransitionAffected = true);
               viewTransitionContextChanged = i;
               break;
             case 22:
-              null === finishedWork.memoizedState && (null !== current.memoizedState ? commitEnterViewTransitions(finishedWork, false) : recursivelyTraverseAfterMutationEffects(root3, finishedWork));
+              null === finishedWork.memoizedState && (null !== current.memoizedState ? commitEnterViewTransitions(finishedWork, false) : recursivelyTraverseAfterMutationEffects(root2, finishedWork));
               break;
             case 30:
               i = viewTransitionContextChanged;
               oldName = pushViewTransitionCancelableScope();
               viewTransitionContextChanged = false;
-              recursivelyTraverseAfterMutationEffects(root3, finishedWork);
+              recursivelyTraverseAfterMutationEffects(root2, finishedWork);
               viewTransitionContextChanged && (finishedWork.flags |= 4);
-              var props = finishedWork.memoizedProps, state = finishedWork.stateNode;
-              root3 = getViewTransitionName(props, state);
-              state = getViewTransitionName(current.memoizedProps, state);
+              var props = finishedWork.memoizedProps, state2 = finishedWork.stateNode;
+              root2 = getViewTransitionName(props, state2);
+              state2 = getViewTransitionName(current.memoizedProps, state2);
               var className = getViewTransitionClassName(props.default, props.update);
-              "none" === className ? root3 = false : (props = current.memoizedState, current.memoizedState = null, current = finishedWork.child, viewTransitionHostInstanceIdx = 0, root3 = measureViewTransitionHostInstancesRecursive(
+              "none" === className ? root2 = false : (props = current.memoizedState, current.memoizedState = null, current = finishedWork.child, viewTransitionHostInstanceIdx = 0, root2 = measureViewTransitionHostInstancesRecursive(
                 finishedWork,
                 current,
-                root3,
-                state,
+                root2,
+                state2,
                 className,
                 props,
                 true
               ), viewTransitionHostInstanceIdx !== (null === props ? 0 : props.length) && (finishedWork.flags |= 32));
-              0 !== (finishedWork.flags & 4) && root3 ? (scheduleViewTransitionEvent(
+              0 !== (finishedWork.flags & 4) && root2 ? (scheduleViewTransitionEvent(
                 finishedWork,
                 finishedWork.memoizedProps.onUpdate
               ), viewTransitionCancelableChildren = oldName) : null !== oldName && (oldName.push.apply(oldName, viewTransitionCancelableChildren), viewTransitionCancelableChildren = oldName);
               viewTransitionContextChanged = 0 !== (finishedWork.flags & 32) ? true : i;
               break;
             default:
-              recursivelyTraverseAfterMutationEffects(root3, finishedWork);
+              recursivelyTraverseAfterMutationEffects(root2, finishedWork);
           }
       }
-      function recursivelyTraverseLayoutEffects(root3, parentFiber) {
+      function recursivelyTraverseLayoutEffects(root2, parentFiber) {
         if (parentFiber.subtreeFlags & 8772)
           for (parentFiber = parentFiber.child; null !== parentFiber; )
-            commitLayoutEffectOnFiber(root3, parentFiber.alternate, parentFiber), parentFiber = parentFiber.sibling;
+            commitLayoutEffectOnFiber(root2, parentFiber.alternate, parentFiber), parentFiber = parentFiber.sibling;
       }
       function recursivelyTraverseDisappearLayoutEffects(parentFiber, layoutEffectTraversalFlags$jscomp$0) {
         for (parentFiber = parentFiber.child; null !== parentFiber; ) {
@@ -9253,12 +9253,12 @@
         finishedWork = finishedWork.memoizedState.cache;
         finishedWork !== current && (finishedWork.refCount++, null != current && releaseCache(current));
       }
-      function recursivelyTraversePassiveMountEffects(root3, parentFiber, committedLanes, committedTransitions) {
+      function recursivelyTraversePassiveMountEffects(root2, parentFiber, committedLanes, committedTransitions) {
         var isViewTransitionEligible = (committedLanes & 335544064) === committedLanes;
         if (parentFiber.subtreeFlags & (isViewTransitionEligible ? 10262 : 10256))
           for (parentFiber = parentFiber.child; null !== parentFiber; )
             commitPassiveMountOnFiber(
-              root3,
+              root2,
               parentFiber,
               committedLanes,
               committedTransitions
@@ -9540,10 +9540,10 @@
             break;
           case 30:
             if (0 !== (fiber.flags & suspenseyCommitFlag) && (previousHoistableRoot = fiber.memoizedProps.name, null != previousHoistableRoot && "auto" !== previousHoistableRoot)) {
-              var state = fiber.stateNode;
-              state.paired = null;
+              var state2 = fiber.stateNode;
+              state2.paired = null;
               null === appearingViewTransitions && (appearingViewTransitions = /* @__PURE__ */ new Map());
-              appearingViewTransitions.set(previousHoistableRoot, state);
+              appearingViewTransitions.set(previousHoistableRoot, state2);
             }
             recursivelyAccumulateSuspenseyCommit(
               fiber,
@@ -9744,30 +9744,30 @@
       }
       function scheduleViewTransitionEvent(fiber, callback) {
         if (null != callback) {
-          var state = fiber.stateNode, instance = state.ref;
-          null === instance && (instance = state.ref = createViewTransitionInstance(
-            getViewTransitionName(fiber.memoizedProps, state)
+          var state2 = fiber.stateNode, instance = state2.ref;
+          null === instance && (instance = state2.ref = createViewTransitionInstance(
+            getViewTransitionName(fiber.memoizedProps, state2)
           ));
           null === pendingViewTransitionEvents && (pendingViewTransitionEvents = []);
           pendingViewTransitionEvents.push(callback.bind(null, instance));
         }
       }
-      function scheduleUpdateOnFiber(root3, fiber, lane) {
-        if (root3 === workInProgressRoot && (2 === workInProgressSuspendedReason || 9 === workInProgressSuspendedReason) || null !== root3.cancelPendingCommit)
-          prepareFreshStack(root3, 0), markRootSuspended(
-            root3,
+      function scheduleUpdateOnFiber(root2, fiber, lane) {
+        if (root2 === workInProgressRoot && (2 === workInProgressSuspendedReason || 9 === workInProgressSuspendedReason) || null !== root2.cancelPendingCommit)
+          prepareFreshStack(root2, 0), markRootSuspended(
+            root2,
             workInProgressRootRenderLanes,
             workInProgressDeferredLane,
             false
           );
-        markRootUpdated$1(root3, lane);
-        if (0 === (executionContext & 2) || root3 !== workInProgressRoot)
-          root3 === workInProgressRoot && (0 === (executionContext & 2) && (workInProgressRootInterleavedUpdatedLanes |= lane), 4 === workInProgressRootExitStatus && markRootSuspended(
-            root3,
+        markRootUpdated$1(root2, lane);
+        if (0 === (executionContext & 2) || root2 !== workInProgressRoot)
+          root2 === workInProgressRoot && (0 === (executionContext & 2) && (workInProgressRootInterleavedUpdatedLanes |= lane), 4 === workInProgressRootExitStatus && markRootSuspended(
+            root2,
             workInProgressRootRenderLanes,
             workInProgressDeferredLane,
             false
-          )), ensureRootIsScheduled(root3);
+          )), ensureRootIsScheduled(root2);
       }
       function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
@@ -9792,18 +9792,18 @@
               if (0 !== JSCompiler_inline_result) {
                 lanes = JSCompiler_inline_result;
                 a: {
-                  var root3 = root$jscomp$0;
+                  var root2 = root$jscomp$0;
                   exitStatus = workInProgressRootConcurrentErrors;
-                  var wasRootDehydrated = root3.current.memoizedState.isDehydrated;
-                  wasRootDehydrated && (prepareFreshStack(root3, JSCompiler_inline_result).flags |= 256);
+                  var wasRootDehydrated = root2.current.memoizedState.isDehydrated;
+                  wasRootDehydrated && (prepareFreshStack(root2, JSCompiler_inline_result).flags |= 256);
                   JSCompiler_inline_result = renderRootSync(
-                    root3,
+                    root2,
                     JSCompiler_inline_result,
                     false
                   );
                   if (2 !== JSCompiler_inline_result && 6 !== JSCompiler_inline_result) {
                     if (workInProgressRootDidAttachPingListener && !wasRootDehydrated) {
-                      root3.errorRecoveryDisabledLanes |= renderWasConcurrent;
+                      root2.errorRecoveryDisabledLanes |= renderWasConcurrent;
                       workInProgressRootInterleavedUpdatedLanes |= renderWasConcurrent;
                       exitStatus = 4;
                       break a;
@@ -9906,8 +9906,8 @@
         } while (1);
         ensureRootIsScheduled(root$jscomp$0);
       }
-      function completeRootWhenReady(root3, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane, updatedLanes, suspendedRetryLanes, didSkipSuspendedSiblings, exitStatus, suspendedCommitReason, completedRenderStartTime, completedRenderEndTime) {
-        root3.timeoutHandle = -1;
+      function completeRootWhenReady(root2, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane, updatedLanes, suspendedRetryLanes, didSkipSuspendedSiblings, exitStatus, suspendedCommitReason, completedRenderStartTime, completedRenderEndTime) {
+        root2.timeoutHandle = -1;
         var subtreeFlags = finishedWork.subtreeFlags, isViewTransitionEligible = (lanes & 335544064) === lanes;
         suspendedCommitReason = null;
         if (isViewTransitionEligible || subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) {
@@ -9924,15 +9924,15 @@
             finishedWork,
             lanes,
             suspendedCommitReason
-          ), isViewTransitionEligible && (subtreeFlags = suspendedCommitReason, isViewTransitionEligible = root3.containerInfo, isViewTransitionEligible = (9 === isViewTransitionEligible.nodeType ? isViewTransitionEligible : isViewTransitionEligible.ownerDocument).__reactViewTransition, null != isViewTransitionEligible && (subtreeFlags.count++, subtreeFlags.waitingForViewTransition = true, subtreeFlags = onUnsuspend.bind(subtreeFlags), isViewTransitionEligible.finished.then(subtreeFlags, subtreeFlags))), subtreeFlags = (lanes & 62914560) === lanes ? globalMostRecentFallbackTime - now() : (lanes & 4194048) === lanes ? globalMostRecentTransitionTime - now() : 0, subtreeFlags = waitForCommitToBeReady(
+          ), isViewTransitionEligible && (subtreeFlags = suspendedCommitReason, isViewTransitionEligible = root2.containerInfo, isViewTransitionEligible = (9 === isViewTransitionEligible.nodeType ? isViewTransitionEligible : isViewTransitionEligible.ownerDocument).__reactViewTransition, null != isViewTransitionEligible && (subtreeFlags.count++, subtreeFlags.waitingForViewTransition = true, subtreeFlags = onUnsuspend.bind(subtreeFlags), isViewTransitionEligible.finished.then(subtreeFlags, subtreeFlags))), subtreeFlags = (lanes & 62914560) === lanes ? globalMostRecentFallbackTime - now() : (lanes & 4194048) === lanes ? globalMostRecentTransitionTime - now() : 0, subtreeFlags = waitForCommitToBeReady(
             suspendedCommitReason,
             subtreeFlags
           ), null !== subtreeFlags) {
             pendingEffectsLanes = lanes;
-            root3.cancelPendingCommit = subtreeFlags(
+            root2.cancelPendingCommit = subtreeFlags(
               completeRoot.bind(
                 null,
-                root3,
+                root2,
                 finishedWork,
                 lanes,
                 recoverableErrors,
@@ -9949,12 +9949,12 @@
                 completedRenderEndTime
               )
             );
-            markRootSuspended(root3, lanes, spawnedLane, !didSkipSuspendedSiblings);
+            markRootSuspended(root2, lanes, spawnedLane, !didSkipSuspendedSiblings);
             return;
           }
         }
         completeRoot(
-          root3,
+          root2,
           finishedWork,
           lanes,
           recoverableErrors,
@@ -9996,20 +9996,20 @@
         }
         return true;
       }
-      function markRootSuspended(root3, suspendedLanes, spawnedLane, didAttemptEntireTree) {
-        suspendedLanes = getEntangledLanes(root3, suspendedLanes);
+      function markRootSuspended(root2, suspendedLanes, spawnedLane, didAttemptEntireTree) {
+        suspendedLanes = getEntangledLanes(root2, suspendedLanes);
         suspendedLanes &= ~workInProgressRootPingedLanes;
         suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
-        root3.suspendedLanes |= suspendedLanes;
-        root3.pingedLanes &= ~suspendedLanes;
-        didAttemptEntireTree && (root3.warmLanes |= suspendedLanes);
-        didAttemptEntireTree = root3.expirationTimes;
+        root2.suspendedLanes |= suspendedLanes;
+        root2.pingedLanes &= ~suspendedLanes;
+        didAttemptEntireTree && (root2.warmLanes |= suspendedLanes);
+        didAttemptEntireTree = root2.expirationTimes;
         for (var lanes = suspendedLanes; 0 < lanes; ) {
           var index$6 = 31 - clz32(lanes), lane = 1 << index$6;
           didAttemptEntireTree[index$6] = -1;
           lanes &= ~lane;
         }
-        0 !== spawnedLane && markSpawnedDeferredLane(root3, spawnedLane, suspendedLanes);
+        0 !== spawnedLane && markSpawnedDeferredLane(root2, spawnedLane, suspendedLanes);
       }
       function flushSyncWork$1() {
         return 0 === (executionContext & 6) ? (flushSyncWorkAcrossRoots_impl(0, false), false) : true;
@@ -10025,36 +10025,36 @@
           workInProgress = null;
         }
       }
-      function prepareFreshStack(root3, lanes) {
-        var timeoutHandle = root3.timeoutHandle;
-        -1 !== timeoutHandle && (root3.timeoutHandle = -1, cancelTimeout(timeoutHandle));
-        timeoutHandle = root3.cancelPendingCommit;
-        null !== timeoutHandle && (root3.cancelPendingCommit = null, timeoutHandle());
+      function prepareFreshStack(root2, lanes) {
+        var timeoutHandle = root2.timeoutHandle;
+        -1 !== timeoutHandle && (root2.timeoutHandle = -1, cancelTimeout(timeoutHandle));
+        timeoutHandle = root2.cancelPendingCommit;
+        null !== timeoutHandle && (root2.cancelPendingCommit = null, timeoutHandle());
         pendingEffectsLanes = 0;
         resetWorkInProgressStack();
-        workInProgressRoot = root3;
-        workInProgress = timeoutHandle = createWorkInProgress(root3.current, null);
+        workInProgressRoot = root2;
+        workInProgress = timeoutHandle = createWorkInProgress(root2.current, null);
         workInProgressRootRenderLanes = lanes;
         workInProgressSuspendedReason = 0;
         workInProgressThrownValue = null;
         workInProgressRootDidSkipSuspendedSiblings = false;
-        workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root3, lanes);
+        workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root2, lanes);
         workInProgressRootDidAttachPingListener = false;
         workInProgressSuspendedRetryLanes = workInProgressDeferredLane = workInProgressRootPingedLanes = workInProgressRootInterleavedUpdatedLanes = workInProgressRootSkippedLanes = workInProgressRootExitStatus = 0;
         workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors = null;
         workInProgressRootDidIncludeRecursiveRenderUpdate = false;
-        entangledRenderLanes = getEntangledLanes(root3, lanes);
+        entangledRenderLanes = getEntangledLanes(root2, lanes);
         finishQueueingConcurrentUpdates();
         return timeoutHandle;
       }
-      function handleThrow(root3, thrownValue) {
+      function handleThrow(root2, thrownValue) {
         currentlyRenderingFiber = null;
         ReactSharedInternals.H = ContextOnlyDispatcher;
         thrownValue === SuspenseException || thrownValue === SuspenseActionException ? (thrownValue = getSuspendedThenable(), workInProgressSuspendedReason = 3) : thrownValue === SuspenseyCommitException ? (thrownValue = getSuspendedThenable(), workInProgressSuspendedReason = 4) : workInProgressSuspendedReason = thrownValue === SelectiveHydrationException ? 8 : null !== thrownValue && "object" === typeof thrownValue && "function" === typeof thrownValue.then ? 6 : 1;
         workInProgressThrownValue = thrownValue;
         null === workInProgress && (workInProgressRootExitStatus = 1, logUncaughtError(
-          root3,
-          createCapturedValueAtFiber(thrownValue, root3.current)
+          root2,
+          createCapturedValueAtFiber(thrownValue, root2.current)
         ));
       }
       function shouldRemainOnPreviousScreen() {
@@ -10081,12 +10081,12 @@
           false
         );
       }
-      function renderRootSync(root3, lanes, shouldYieldForPrerendering) {
+      function renderRootSync(root2, lanes, shouldYieldForPrerendering) {
         var prevExecutionContext = executionContext;
         executionContext |= 2;
         var prevDispatcher = pushDispatcher(), prevAsyncDispatcher = pushAsyncDispatcher();
-        if (workInProgressRoot !== root3 || workInProgressRootRenderLanes !== lanes)
-          workInProgressTransitions = null, prepareFreshStack(root3, lanes);
+        if (workInProgressRoot !== root2 || workInProgressRootRenderLanes !== lanes)
+          workInProgressTransitions = null, prepareFreshStack(root2, lanes);
         lanes = false;
         var exitStatus = workInProgressRootExitStatus;
         a: do
@@ -10106,24 +10106,24 @@
                   var reason = workInProgressSuspendedReason;
                   workInProgressSuspendedReason = 0;
                   workInProgressThrownValue = null;
-                  throwAndUnwindWorkLoop(root3, unitOfWork, thrownValue, reason);
+                  throwAndUnwindWorkLoop(root2, unitOfWork, thrownValue, reason);
                   if (shouldYieldForPrerendering && workInProgressRootIsPrerendering) {
                     exitStatus = 0;
                     break a;
                   }
                   break;
                 default:
-                  reason = workInProgressSuspendedReason, workInProgressSuspendedReason = 0, workInProgressThrownValue = null, throwAndUnwindWorkLoop(root3, unitOfWork, thrownValue, reason);
+                  reason = workInProgressSuspendedReason, workInProgressSuspendedReason = 0, workInProgressThrownValue = null, throwAndUnwindWorkLoop(root2, unitOfWork, thrownValue, reason);
               }
             }
             workLoopSync();
             exitStatus = workInProgressRootExitStatus;
             break;
           } catch (thrownValue$184) {
-            handleThrow(root3, thrownValue$184);
+            handleThrow(root2, thrownValue$184);
           }
         while (1);
-        lanes && root3.shellSuspendCounter++;
+        lanes && root2.shellSuspendCounter++;
         lastContextDependency = currentlyRenderingFiber$1 = null;
         executionContext = prevExecutionContext;
         ReactSharedInternals.H = prevDispatcher;
@@ -10134,12 +10134,12 @@
       function workLoopSync() {
         for (; null !== workInProgress; ) performUnitOfWork(workInProgress);
       }
-      function renderRootConcurrent(root3, lanes) {
+      function renderRootConcurrent(root2, lanes) {
         var prevExecutionContext = executionContext;
         executionContext |= 2;
         var prevDispatcher = pushDispatcher(), prevAsyncDispatcher = pushAsyncDispatcher();
-        workInProgressRoot !== root3 || workInProgressRootRenderLanes !== lanes ? (workInProgressTransitions = null, workInProgressRootRenderTargetTime = now() + 500, prepareFreshStack(root3, lanes)) : workInProgressRootIsPrerendering = checkIfRootIsPrerendering(
-          root3,
+        workInProgressRoot !== root2 || workInProgressRootRenderLanes !== lanes ? (workInProgressTransitions = null, workInProgressRootRenderTargetTime = now() + 500, prepareFreshStack(root2, lanes)) : workInProgressRootIsPrerendering = checkIfRootIsPrerendering(
+          root2,
           lanes
         );
         a: do
@@ -10151,7 +10151,7 @@
                 case 1:
                   workInProgressSuspendedReason = 0;
                   workInProgressThrownValue = null;
-                  throwAndUnwindWorkLoop(root3, lanes, thrownValue, 1);
+                  throwAndUnwindWorkLoop(root2, lanes, thrownValue, 1);
                   break;
                 case 2:
                 case 9:
@@ -10162,8 +10162,8 @@
                     break;
                   }
                   lanes = function() {
-                    2 !== workInProgressSuspendedReason && 9 !== workInProgressSuspendedReason || workInProgressRoot !== root3 || (workInProgressSuspendedReason = 7);
-                    ensureRootIsScheduled(root3);
+                    2 !== workInProgressSuspendedReason && 9 !== workInProgressSuspendedReason || workInProgressRoot !== root2 || (workInProgressSuspendedReason = 7);
+                    ensureRootIsScheduled(root2);
                   };
                   thrownValue.then(lanes, lanes);
                   break a;
@@ -10174,7 +10174,7 @@
                   workInProgressSuspendedReason = 5;
                   break a;
                 case 7:
-                  isThenableResolved(thrownValue) ? (workInProgressSuspendedReason = 0, workInProgressThrownValue = null, replaySuspendedUnitOfWork(lanes)) : (workInProgressSuspendedReason = 0, workInProgressThrownValue = null, throwAndUnwindWorkLoop(root3, lanes, thrownValue, 7));
+                  isThenableResolved(thrownValue) ? (workInProgressSuspendedReason = 0, workInProgressThrownValue = null, replaySuspendedUnitOfWork(lanes)) : (workInProgressSuspendedReason = 0, workInProgressThrownValue = null, throwAndUnwindWorkLoop(root2, lanes, thrownValue, 7));
                   break;
                 case 5:
                   var resource = null;
@@ -10198,12 +10198,12 @@
                   }
                   workInProgressSuspendedReason = 0;
                   workInProgressThrownValue = null;
-                  throwAndUnwindWorkLoop(root3, lanes, thrownValue, 5);
+                  throwAndUnwindWorkLoop(root2, lanes, thrownValue, 5);
                   break;
                 case 6:
                   workInProgressSuspendedReason = 0;
                   workInProgressThrownValue = null;
-                  throwAndUnwindWorkLoop(root3, lanes, thrownValue, 6);
+                  throwAndUnwindWorkLoop(root2, lanes, thrownValue, 6);
                   break;
                 case 8:
                   resetWorkInProgressStack();
@@ -10216,7 +10216,7 @@
             workLoopConcurrentByScheduler();
             break;
           } catch (thrownValue$186) {
-            handleThrow(root3, thrownValue$186);
+            handleThrow(root2, thrownValue$186);
           }
         while (1);
         lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10273,7 +10273,7 @@
         unitOfWork.memoizedProps = unitOfWork.pendingProps;
         null === next ? completeUnitOfWork(unitOfWork) : workInProgress = next;
       }
-      function throwAndUnwindWorkLoop(root3, unitOfWork, thrownValue, suspendedReason) {
+      function throwAndUnwindWorkLoop(root2, unitOfWork, thrownValue, suspendedReason) {
         lastContextDependency = currentlyRenderingFiber$1 = null;
         resetHooksOnUnwind(unitOfWork);
         thenableState$1 = null;
@@ -10281,7 +10281,7 @@
         var returnFiber = unitOfWork.return;
         try {
           if (throwException(
-            root3,
+            root2,
             returnFiber,
             unitOfWork,
             thrownValue,
@@ -10289,8 +10289,8 @@
           )) {
             workInProgressRootExitStatus = 1;
             logUncaughtError(
-              root3,
-              createCapturedValueAtFiber(thrownValue, root3.current)
+              root2,
+              createCapturedValueAtFiber(thrownValue, root2.current)
             );
             workInProgress = null;
             return;
@@ -10299,19 +10299,19 @@
           if (null !== returnFiber) throw workInProgress = returnFiber, error;
           workInProgressRootExitStatus = 1;
           logUncaughtError(
-            root3,
-            createCapturedValueAtFiber(thrownValue, root3.current)
+            root2,
+            createCapturedValueAtFiber(thrownValue, root2.current)
           );
           workInProgress = null;
           return;
         }
         if (unitOfWork.flags & 32768) {
-          if (isHydrating || 1 === suspendedReason) root3 = true;
+          if (isHydrating || 1 === suspendedReason) root2 = true;
           else if (workInProgressRootIsPrerendering || 0 !== (workInProgressRootRenderLanes & 536870912))
-            root3 = false;
-          else if (workInProgressRootDidSkipSuspendedSiblings = root3 = true, 2 === suspendedReason || 9 === suspendedReason || 3 === suspendedReason || 6 === suspendedReason)
+            root2 = false;
+          else if (workInProgressRootDidSkipSuspendedSiblings = root2 = true, 2 === suspendedReason || 9 === suspendedReason || 3 === suspendedReason || 6 === suspendedReason)
             suspendedReason = suspenseHandlerStackCursor.current, null !== suspendedReason && 13 === suspendedReason.tag && (suspendedReason.flags |= 16384);
-          unwindUnitOfWork(unitOfWork, root3);
+          unwindUnitOfWork(unitOfWork, root2);
         } else completeUnitOfWork(unitOfWork);
       }
       function completeUnitOfWork(unitOfWork) {
@@ -10362,22 +10362,22 @@
         workInProgressRootExitStatus = 6;
         workInProgress = null;
       }
-      function completeRoot(root3, finishedWork, lanes, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, spawnedLane, updatedLanes, suspendedRetryLanes, didSkipSuspendedSiblings, exitStatus, suspendedState) {
-        root3.cancelPendingCommit = null;
+      function completeRoot(root2, finishedWork, lanes, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, spawnedLane, updatedLanes, suspendedRetryLanes, didSkipSuspendedSiblings, exitStatus, suspendedState) {
+        root2.cancelPendingCommit = null;
         do
           flushPendingEffects();
         while (0 !== pendingEffectsStatus);
         if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
         if (null !== finishedWork) {
-          if (finishedWork === root3.current) throw Error(formatProdErrorMessage(177));
-          root3 === workInProgressRoot && (workInProgress = workInProgressRoot = null, workInProgressRootRenderLanes = 0);
+          if (finishedWork === root2.current) throw Error(formatProdErrorMessage(177));
+          root2 === workInProgressRoot && (workInProgress = workInProgressRoot = null, workInProgressRootRenderLanes = 0);
           pendingFinishedWork = finishedWork;
-          pendingEffectsRoot = root3;
+          pendingEffectsRoot = root2;
           pendingEffectsLanes = lanes;
           pendingPassiveTransitions = transitions;
           pendingRecoverableErrors = recoverableErrors;
           commitRoot(
-            root3,
+            root2,
             finishedWork,
             lanes,
             spawnedLane,
@@ -10387,12 +10387,12 @@
           );
         }
       }
-      function commitRoot(root3, finishedWork, lanes, spawnedLane, updatedLanes, suspendedRetryLanes, suspendedState) {
+      function commitRoot(root2, finishedWork, lanes, spawnedLane, updatedLanes, suspendedRetryLanes, suspendedState) {
         var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
         pendingEffectsRemainingLanes = remainingLanes;
         remainingLanes |= concurrentlyUpdatedLanes;
         markRootFinished(
-          root3,
+          root2,
           lanes,
           remainingLanes,
           spawnedLane,
@@ -10400,11 +10400,11 @@
           suspendedRetryLanes
         );
         pendingViewTransitionEvents = null;
-        (lanes & 335544064) === lanes ? (pendingTransitionTypes = claimQueuedTransitionTypes(root3), spawnedLane = 10262) : (pendingTransitionTypes = null, spawnedLane = 10256);
-        0 !== (finishedWork.subtreeFlags & spawnedLane) || 0 !== (finishedWork.flags & spawnedLane) ? (root3.callbackNode = null, root3.callbackPriority = 0, scheduleCallback$1(NormalPriority$1, function() {
+        (lanes & 335544064) === lanes ? (pendingTransitionTypes = claimQueuedTransitionTypes(root2), spawnedLane = 10262) : (pendingTransitionTypes = null, spawnedLane = 10256);
+        0 !== (finishedWork.subtreeFlags & spawnedLane) || 0 !== (finishedWork.flags & spawnedLane) ? (root2.callbackNode = null, root2.callbackPriority = 0, scheduleCallback$1(NormalPriority$1, function() {
           flushPassiveEffects();
           return null;
-        })) : (root3.callbackNode = null, root3.callbackPriority = 0);
+        })) : (root2.callbackNode = null, root2.callbackPriority = 0);
         shouldStartViewTransition = false;
         spawnedLane = 0 !== (finishedWork.flags & 13878);
         if (0 !== (finishedWork.subtreeFlags & 13878) || spawnedLane) {
@@ -10415,7 +10415,7 @@
           suspendedRetryLanes = executionContext;
           executionContext |= 4;
           try {
-            commitBeforeMutationEffects(root3, finishedWork, lanes);
+            commitBeforeMutationEffects(root2, finishedWork, lanes);
           } finally {
             executionContext = suspendedRetryLanes, ReactDOMSharedInternals.p = updatedLanes, ReactSharedInternals.T = spawnedLane;
           }
@@ -10423,7 +10423,7 @@
         pendingEffectsStatus = 1;
         shouldStartViewTransition ? pendingViewTransition = startViewTransition(
           suspendedState,
-          root3.containerInfo,
+          root2.containerInfo,
           pendingTransitionTypes,
           flushMutationEffects,
           flushLayoutEffects,
@@ -10447,7 +10447,7 @@
       function flushMutationEffects() {
         if (1 === pendingEffectsStatus) {
           pendingEffectsStatus = 0;
-          var root3 = pendingEffectsRoot, finishedWork = pendingFinishedWork, lanes = pendingEffectsLanes, rootMutationHasEffect = 0 !== (finishedWork.flags & 13878);
+          var root2 = pendingEffectsRoot, finishedWork = pendingFinishedWork, lanes = pendingEffectsLanes, rootMutationHasEffect = 0 !== (finishedWork.flags & 13878);
           if (0 !== (finishedWork.subtreeFlags & 13878) || rootMutationHasEffect) {
             rootMutationHasEffect = ReactSharedInternals.T;
             ReactSharedInternals.T = null;
@@ -10457,9 +10457,9 @@
             executionContext |= 4;
             try {
               inUpdateViewTransition = rootViewTransitionAffected = false;
-              commitMutationEffectsOnFiber(finishedWork, root3, lanes);
+              commitMutationEffectsOnFiber(finishedWork, root2, lanes);
               lanes = selectionInformation;
-              var curFocusedElem = getActiveElementDeep(root3.containerInfo), priorFocusedElem = lanes.focusedElem, priorSelectionRange = lanes.selectionRange;
+              var curFocusedElem = getActiveElementDeep(root2.containerInfo), priorFocusedElem = lanes.focusedElem, priorSelectionRange = lanes.selectionRange;
               if (curFocusedElem !== priorFocusedElem && priorFocusedElem && priorFocusedElem.ownerDocument && containsNode(
                 priorFocusedElem.ownerDocument.documentElement,
                 priorFocusedElem
@@ -10513,14 +10513,14 @@
               executionContext = prevExecutionContext, ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = rootMutationHasEffect;
             }
           }
-          root3.current = finishedWork;
+          root2.current = finishedWork;
           pendingEffectsStatus = 2;
         }
       }
       function flushLayoutEffects() {
         if (2 === pendingEffectsStatus) {
           pendingEffectsStatus = 0;
-          var root3 = pendingEffectsRoot, finishedWork = pendingFinishedWork, rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
+          var root2 = pendingEffectsRoot, finishedWork = pendingFinishedWork, rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
           if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
             rootHasLayoutEffect = ReactSharedInternals.T;
             ReactSharedInternals.T = null;
@@ -10529,7 +10529,7 @@
             var prevExecutionContext = executionContext;
             executionContext |= 4;
             try {
-              commitLayoutEffectOnFiber(root3, finishedWork.alternate, finishedWork);
+              commitLayoutEffectOnFiber(root2, finishedWork.alternate, finishedWork);
             } finally {
               executionContext = prevExecutionContext, ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = rootHasLayoutEffect;
             }
@@ -10543,9 +10543,9 @@
           var committedViewTransition = pendingViewTransition;
           pendingViewTransition = null;
           requestPaint();
-          var root3 = pendingEffectsRoot, finishedWork = pendingFinishedWork, lanes = pendingEffectsLanes, recoverableErrors = pendingRecoverableErrors, passiveSubtreeMask = (lanes & 335544064) === lanes ? 10262 : 10256;
-          0 !== (finishedWork.subtreeFlags & passiveSubtreeMask) || 0 !== (finishedWork.flags & passiveSubtreeMask) ? pendingEffectsStatus = 5 : (pendingEffectsStatus = 0, pendingFinishedWork = pendingEffectsRoot = null, releaseRootPooledCache(root3, root3.pendingLanes));
-          passiveSubtreeMask = root3.pendingLanes;
+          var root2 = pendingEffectsRoot, finishedWork = pendingFinishedWork, lanes = pendingEffectsLanes, recoverableErrors = pendingRecoverableErrors, passiveSubtreeMask = (lanes & 335544064) === lanes ? 10262 : 10256;
+          0 !== (finishedWork.subtreeFlags & passiveSubtreeMask) || 0 !== (finishedWork.flags & passiveSubtreeMask) ? pendingEffectsStatus = 5 : (pendingEffectsStatus = 0, pendingFinishedWork = pendingEffectsRoot = null, releaseRootPooledCache(root2, root2.pendingLanes));
+          passiveSubtreeMask = root2.pendingLanes;
           0 === passiveSubtreeMask && (legacyErrorBoundariesThatAlreadyFailed = null);
           lanesToEventPriority(lanes);
           finishedWork = finishedWork.stateNode;
@@ -10565,7 +10565,7 @@
             ReactDOMSharedInternals.p = 2;
             ReactSharedInternals.T = null;
             try {
-              for (var onRecoverableError = root3.onRecoverableError, i = 0; i < recoverableErrors.length; i++) {
+              for (var onRecoverableError = root2.onRecoverableError, i = 0; i < recoverableErrors.length; i++) {
                 var recoverableError = recoverableErrors[i];
                 onRecoverableError(recoverableError.value, {
                   componentStack: recoverableError.stack
@@ -10584,14 +10584,14 @@
                 onRecoverableError
               ), void 0 !== finishedWork && committedViewTransition.finished.finally(finishedWork);
           0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
-          ensureRootIsScheduled(root3);
-          passiveSubtreeMask = root3.pendingLanes;
-          0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42) ? root3 === rootWithNestedUpdates ? nestedUpdateCount++ : (nestedUpdateCount = 0, rootWithNestedUpdates = root3) : (nestedUpdateCount = 0, rootWithNestedUpdates = null);
+          ensureRootIsScheduled(root2);
+          passiveSubtreeMask = root2.pendingLanes;
+          0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42) ? root2 === rootWithNestedUpdates ? nestedUpdateCount++ : (nestedUpdateCount = 0, rootWithNestedUpdates = root2) : (nestedUpdateCount = 0, rootWithNestedUpdates = null);
           flushSyncWorkAcrossRoots_impl(0, false);
         }
       }
-      function releaseRootPooledCache(root3, remainingLanes) {
-        0 === (root3.pooledCacheLanes &= remainingLanes) && (remainingLanes = root3.pooledCache, null != remainingLanes && (root3.pooledCache = null, releaseCache(remainingLanes)));
+      function releaseRootPooledCache(root2, remainingLanes) {
+        0 === (root2.pooledCacheLanes &= remainingLanes) && (remainingLanes = root2.pooledCache, null != remainingLanes && (root2.pooledCache = null, releaseCache(remainingLanes)));
       }
       function flushPendingEffects() {
         null !== pendingViewTransition && (pendingViewTransition.skipTransition(), pendingViewTransition = null);
@@ -10602,7 +10602,7 @@
       }
       function flushPassiveEffects() {
         if (5 !== pendingEffectsStatus) return false;
-        var root3 = pendingEffectsRoot, remainingLanes = pendingEffectsRemainingLanes;
+        var root2 = pendingEffectsRoot, remainingLanes = pendingEffectsRemainingLanes;
         pendingEffectsRemainingLanes = 0;
         var renderPriority = lanesToEventPriority(pendingEffectsLanes), prevTransition = ReactSharedInternals.T, previousPriority = ReactDOMSharedInternals.p;
         try {
@@ -10633,7 +10633,7 @@
             }
           return true;
         } finally {
-          ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = prevTransition, releaseRootPooledCache(root3, remainingLanes);
+          ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = prevTransition, releaseRootPooledCache(root2, remainingLanes);
         }
       }
       function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
@@ -10672,23 +10672,23 @@
             nearestMountedAncestor = nearestMountedAncestor.return;
           }
       }
-      function attachPingListener(root3, wakeable, lanes) {
-        var pingCache = root3.pingCache;
+      function attachPingListener(root2, wakeable, lanes) {
+        var pingCache = root2.pingCache;
         if (null === pingCache) {
-          pingCache = root3.pingCache = new PossiblyWeakMap();
+          pingCache = root2.pingCache = new PossiblyWeakMap();
           var threadIDs = /* @__PURE__ */ new Set();
           pingCache.set(wakeable, threadIDs);
         } else
           threadIDs = pingCache.get(wakeable), void 0 === threadIDs && (threadIDs = /* @__PURE__ */ new Set(), pingCache.set(wakeable, threadIDs));
-        threadIDs.has(lanes) || (workInProgressRootDidAttachPingListener = true, threadIDs.add(lanes), root3 = pingSuspendedRoot.bind(null, root3, wakeable, lanes), wakeable.then(root3, root3));
+        threadIDs.has(lanes) || (workInProgressRootDidAttachPingListener = true, threadIDs.add(lanes), root2 = pingSuspendedRoot.bind(null, root2, wakeable, lanes), wakeable.then(root2, root2));
       }
-      function pingSuspendedRoot(root3, wakeable, pingedLanes) {
-        var pingCache = root3.pingCache;
+      function pingSuspendedRoot(root2, wakeable, pingedLanes) {
+        var pingCache = root2.pingCache;
         null !== pingCache && pingCache.delete(wakeable);
-        root3.pingedLanes |= root3.suspendedLanes & pingedLanes;
-        root3.warmLanes &= ~pingedLanes;
-        workInProgressRoot === root3 && (workInProgressRootRenderLanes & pingedLanes) === pingedLanes && (4 === workInProgressRootExitStatus || 3 === workInProgressRootExitStatus && (workInProgressRootRenderLanes & 62914560) === workInProgressRootRenderLanes && 300 > now() - globalMostRecentFallbackTime ? 0 === (executionContext & 2) ? prepareFreshStack(root3, 0) : workInProgressRootPingedLanes |= pingedLanes : workInProgressRootPingedLanes |= pingedLanes, workInProgressSuspendedRetryLanes === workInProgressRootRenderLanes && (workInProgressSuspendedRetryLanes = 0));
-        ensureRootIsScheduled(root3);
+        root2.pingedLanes |= root2.suspendedLanes & pingedLanes;
+        root2.warmLanes &= ~pingedLanes;
+        workInProgressRoot === root2 && (workInProgressRootRenderLanes & pingedLanes) === pingedLanes && (4 === workInProgressRootExitStatus || 3 === workInProgressRootExitStatus && (workInProgressRootRenderLanes & 62914560) === workInProgressRootRenderLanes && 300 > now() - globalMostRecentFallbackTime ? 0 === (executionContext & 2) ? prepareFreshStack(root2, 0) : workInProgressRootPingedLanes |= pingedLanes : workInProgressRootPingedLanes |= pingedLanes, workInProgressSuspendedRetryLanes === workInProgressRootRenderLanes && (workInProgressSuspendedRetryLanes = 0));
+        ensureRootIsScheduled(root2);
       }
       function retryTimedOutBoundary(boundaryFiber, retryLane) {
         0 === retryLane && (retryLane = claimNextRetryLane());
@@ -10730,8 +10730,8 @@
       var mightHavePendingSyncWork = false;
       var isFlushingWork = false;
       var currentEventTransitionLane = 0;
-      function ensureRootIsScheduled(root3) {
-        root3 !== lastScheduledRoot && null === root3.next && (null === lastScheduledRoot ? firstScheduledRoot = lastScheduledRoot = root3 : lastScheduledRoot = lastScheduledRoot.next = root3);
+      function ensureRootIsScheduled(root2) {
+        root2 !== lastScheduledRoot && null === root2.next && (null === lastScheduledRoot ? firstScheduledRoot = lastScheduledRoot = root2 : lastScheduledRoot = lastScheduledRoot.next = root2);
         mightHavePendingSyncWork = true;
         didScheduleMicrotask || (didScheduleMicrotask = true, scheduleImmediateRootScheduleTask());
       }
@@ -10771,39 +10771,39 @@
         mightHavePendingSyncWork = didScheduleMicrotask = false;
         var syncTransitionLanes = 0;
         0 !== currentEventTransitionLane && shouldAttemptEagerTransition() && (syncTransitionLanes = currentEventTransitionLane);
-        for (var currentTime = now(), prev = null, root3 = firstScheduledRoot; null !== root3; ) {
-          var next = root3.next, nextLanes = scheduleTaskForRootDuringMicrotask(root3, currentTime);
+        for (var currentTime = now(), prev = null, root2 = firstScheduledRoot; null !== root2; ) {
+          var next = root2.next, nextLanes = scheduleTaskForRootDuringMicrotask(root2, currentTime);
           if (0 === nextLanes)
-            root3.next = null, null === prev ? firstScheduledRoot = next : prev.next = next, null === next && (lastScheduledRoot = prev);
-          else if (prev = root3, 0 !== syncTransitionLanes || 0 !== (nextLanes & 3))
+            root2.next = null, null === prev ? firstScheduledRoot = next : prev.next = next, null === next && (lastScheduledRoot = prev);
+          else if (prev = root2, 0 !== syncTransitionLanes || 0 !== (nextLanes & 3))
             mightHavePendingSyncWork = true;
-          root3 = next;
+          root2 = next;
         }
         0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus || flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
         0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
       }
-      function scheduleTaskForRootDuringMicrotask(root3, currentTime) {
-        for (var suspendedLanes = root3.suspendedLanes, pingedLanes = root3.pingedLanes, expirationTimes = root3.expirationTimes, lanes = root3.pendingLanes & -62914561; 0 < lanes; ) {
+      function scheduleTaskForRootDuringMicrotask(root2, currentTime) {
+        for (var suspendedLanes = root2.suspendedLanes, pingedLanes = root2.pingedLanes, expirationTimes = root2.expirationTimes, lanes = root2.pendingLanes & -62914561; 0 < lanes; ) {
           var index$5 = 31 - clz32(lanes), lane = 1 << index$5, expirationTime = expirationTimes[index$5];
           if (-1 === expirationTime) {
             if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
               expirationTimes[index$5] = computeExpirationTime(lane, currentTime);
-          } else expirationTime <= currentTime && (root3.expiredLanes |= lane);
+          } else expirationTime <= currentTime && (root2.expiredLanes |= lane);
           lanes &= ~lane;
         }
         currentTime = workInProgressRoot;
         suspendedLanes = workInProgressRootRenderLanes;
         suspendedLanes = getNextLanes(
-          root3,
-          root3 === currentTime ? suspendedLanes : 0,
-          null !== root3.cancelPendingCommit || -1 !== root3.timeoutHandle
+          root2,
+          root2 === currentTime ? suspendedLanes : 0,
+          null !== root2.cancelPendingCommit || -1 !== root2.timeoutHandle
         );
-        pingedLanes = root3.callbackNode;
-        if (0 === suspendedLanes || root3 === currentTime && (2 === workInProgressSuspendedReason || 9 === workInProgressSuspendedReason) || null !== root3.cancelPendingCommit)
-          return null !== pingedLanes && null !== pingedLanes && cancelCallback$1(pingedLanes), root3.callbackNode = null, root3.callbackPriority = 0;
-        if (0 === (suspendedLanes & 3) || checkIfRootIsPrerendering(root3, suspendedLanes)) {
+        pingedLanes = root2.callbackNode;
+        if (0 === suspendedLanes || root2 === currentTime && (2 === workInProgressSuspendedReason || 9 === workInProgressSuspendedReason) || null !== root2.cancelPendingCommit)
+          return null !== pingedLanes && null !== pingedLanes && cancelCallback$1(pingedLanes), root2.callbackNode = null, root2.callbackPriority = 0;
+        if (0 === (suspendedLanes & 3) || checkIfRootIsPrerendering(root2, suspendedLanes)) {
           currentTime = suspendedLanes & -suspendedLanes;
-          if (currentTime === root3.callbackPriority) return currentTime;
+          if (currentTime === root2.callbackPriority) return currentTime;
           null !== pingedLanes && cancelCallback$1(pingedLanes);
           switch (lanesToEventPriority(suspendedLanes)) {
             case 2:
@@ -10819,37 +10819,37 @@
             default:
               suspendedLanes = NormalPriority$1;
           }
-          pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root3);
+          pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root2);
           suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes);
-          root3.callbackPriority = currentTime;
-          root3.callbackNode = suspendedLanes;
+          root2.callbackPriority = currentTime;
+          root2.callbackNode = suspendedLanes;
           return currentTime;
         }
         null !== pingedLanes && null !== pingedLanes && cancelCallback$1(pingedLanes);
-        root3.callbackPriority = 2;
-        root3.callbackNode = null;
+        root2.callbackPriority = 2;
+        root2.callbackNode = null;
         return 2;
       }
-      function performWorkOnRootViaSchedulerTask(root3, didTimeout) {
+      function performWorkOnRootViaSchedulerTask(root2, didTimeout) {
         if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
-          return root3.callbackNode = null, root3.callbackPriority = 0, null;
-        var originalCallbackNode = root3.callbackNode;
-        if (flushPendingEffects() && root3.callbackNode !== originalCallbackNode)
+          return root2.callbackNode = null, root2.callbackPriority = 0, null;
+        var originalCallbackNode = root2.callbackNode;
+        if (flushPendingEffects() && root2.callbackNode !== originalCallbackNode)
           return null;
         var workInProgressRootRenderLanes$jscomp$0 = workInProgressRootRenderLanes;
         workInProgressRootRenderLanes$jscomp$0 = getNextLanes(
-          root3,
-          root3 === workInProgressRoot ? workInProgressRootRenderLanes$jscomp$0 : 0,
-          null !== root3.cancelPendingCommit || -1 !== root3.timeoutHandle
+          root2,
+          root2 === workInProgressRoot ? workInProgressRootRenderLanes$jscomp$0 : 0,
+          null !== root2.cancelPendingCommit || -1 !== root2.timeoutHandle
         );
         if (0 === workInProgressRootRenderLanes$jscomp$0) return null;
-        performWorkOnRoot(root3, workInProgressRootRenderLanes$jscomp$0, didTimeout);
-        scheduleTaskForRootDuringMicrotask(root3, now());
-        return null != root3.callbackNode && root3.callbackNode === originalCallbackNode ? performWorkOnRootViaSchedulerTask.bind(null, root3) : null;
+        performWorkOnRoot(root2, workInProgressRootRenderLanes$jscomp$0, didTimeout);
+        scheduleTaskForRootDuringMicrotask(root2, now());
+        return null != root2.callbackNode && root2.callbackNode === originalCallbackNode ? performWorkOnRootViaSchedulerTask.bind(null, root2) : null;
       }
-      function performSyncWorkOnRoot(root3, lanes) {
+      function performSyncWorkOnRoot(root2, lanes) {
         if (flushPendingEffects()) return null;
-        performWorkOnRoot(root3, lanes, true);
+        performWorkOnRoot(root2, lanes, true);
       }
       function scheduleImmediateRootScheduleTask() {
         scheduleMicrotask(function() {
@@ -11086,8 +11086,8 @@
             if (null === targetInst$jscomp$0) return;
             var nodeTag = targetInst$jscomp$0.tag;
             if (3 === nodeTag || 4 === nodeTag) {
-              var container = targetInst$jscomp$0.stateNode.containerInfo;
-              if (container === targetContainer) break;
+              var container2 = targetInst$jscomp$0.stateNode.containerInfo;
+              if (container2 === targetContainer) break;
               if (4 === nodeTag)
                 for (nodeTag = targetInst$jscomp$0.return; null !== nodeTag; ) {
                   var grandTag = nodeTag.tag;
@@ -11095,15 +11095,15 @@
                     return;
                   nodeTag = nodeTag.return;
                 }
-              for (; null !== container; ) {
-                nodeTag = getClosestInstanceFromNode(container);
+              for (; null !== container2; ) {
+                nodeTag = getClosestInstanceFromNode(container2);
                 if (null === nodeTag) return;
                 grandTag = nodeTag.tag;
                 if (5 === grandTag || 6 === grandTag || 26 === grandTag || 27 === grandTag) {
                   targetInst$jscomp$0 = ancestorInst = nodeTag;
                   continue a;
                 }
-                container = container.parentNode;
+                container2 = container2.parentNode;
               }
             }
             targetInst$jscomp$0 = targetInst$jscomp$0.return;
@@ -11347,7 +11347,7 @@
               }
             else
               isComposing ? isFallbackCompositionEnd(domEventName, nativeEvent) && (eventType = "onCompositionEnd") : "keydown" === domEventName && 229 === nativeEvent.keyCode && (eventType = "onCompositionStart");
-            eventType && (useFallbackCompositionData && "ko" !== nativeEvent.locale && (isComposing || "onCompositionStart" !== eventType ? "onCompositionEnd" === eventType && isComposing && (fallbackData = getData()) : (root2 = nativeEventTarget, startText = "value" in root2 ? root2.value : root2.textContent, isComposing = true)), handleEventFunc = accumulateTwoPhaseListeners(targetInst, eventType), 0 < handleEventFunc.length && (eventType = new SyntheticCompositionEvent(
+            eventType && (useFallbackCompositionData && "ko" !== nativeEvent.locale && (isComposing || "onCompositionStart" !== eventType ? "onCompositionEnd" === eventType && isComposing && (fallbackData = getData()) : (root = nativeEventTarget, startText = "value" in root ? root.value : root.textContent, isComposing = true)), handleEventFunc = accumulateTwoPhaseListeners(targetInst, eventType), 0 < handleEventFunc.length && (eventType = new SyntheticCompositionEvent(
               eventType,
               domEventName,
               null,
@@ -11384,15 +11384,15 @@
         };
       }
       function accumulateTwoPhaseListeners(targetFiber, reactName) {
-        for (var captureName = reactName + "Capture", listeners = []; null !== targetFiber; ) {
+        for (var captureName = reactName + "Capture", listeners2 = []; null !== targetFiber; ) {
           var _instance2 = targetFiber, stateNode = _instance2.stateNode;
           _instance2 = _instance2.tag;
-          5 !== _instance2 && 26 !== _instance2 && 27 !== _instance2 || null === stateNode || (_instance2 = getListener(targetFiber, captureName), null != _instance2 && listeners.unshift(
+          5 !== _instance2 && 26 !== _instance2 && 27 !== _instance2 || null === stateNode || (_instance2 = getListener(targetFiber, captureName), null != _instance2 && listeners2.unshift(
             createDispatchListener(targetFiber, _instance2, stateNode)
-          ), _instance2 = getListener(targetFiber, reactName), null != _instance2 && listeners.push(
+          ), _instance2 = getListener(targetFiber, reactName), null != _instance2 && listeners2.push(
             createDispatchListener(targetFiber, _instance2, stateNode)
           ));
-          if (3 === targetFiber.tag) return listeners;
+          if (3 === targetFiber.tag) return listeners2;
           targetFiber = targetFiber.return;
         }
         return [];
@@ -11405,18 +11405,18 @@
         return inst ? inst : null;
       }
       function accumulateEnterLeaveListenersForEvent(dispatchQueue, event, target, common, inCapturePhase) {
-        for (var registrationName = event._reactName, listeners = []; null !== target && target !== common; ) {
+        for (var registrationName = event._reactName, listeners2 = []; null !== target && target !== common; ) {
           var _instance3 = target, alternate = _instance3.alternate, stateNode = _instance3.stateNode;
           _instance3 = _instance3.tag;
           if (null !== alternate && alternate === common) break;
-          5 !== _instance3 && 26 !== _instance3 && 27 !== _instance3 || null === stateNode || (alternate = stateNode, inCapturePhase ? (stateNode = getListener(target, registrationName), null != stateNode && listeners.unshift(
+          5 !== _instance3 && 26 !== _instance3 && 27 !== _instance3 || null === stateNode || (alternate = stateNode, inCapturePhase ? (stateNode = getListener(target, registrationName), null != stateNode && listeners2.unshift(
             createDispatchListener(target, stateNode, alternate)
-          )) : inCapturePhase || (stateNode = getListener(target, registrationName), null != stateNode && listeners.push(
+          )) : inCapturePhase || (stateNode = getListener(target, registrationName), null != stateNode && listeners2.push(
             createDispatchListener(target, stateNode, alternate)
           )));
           target = target.return;
         }
-        0 !== listeners.length && dispatchQueue.push({ event, listeners });
+        0 !== listeners2.length && dispatchQueue.push({ event, listeners: listeners2 });
       }
       var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
       var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
@@ -12565,8 +12565,8 @@
         if (null != optionsOrUseCapture && "boolean" !== typeof optionsOrUseCapture && (signal = optionsOrUseCapture.signal || null, null !== signal && signal.aborted))
           return;
         null === this._eventListeners && (this._eventListeners = []);
-        var listeners = this._eventListeners;
-        if (-1 === indexOfEventListener(listeners, type, listener, optionsOrUseCapture)) {
+        var listeners2 = this._eventListeners;
+        if (-1 === indexOfEventListener(listeners2, type, listener, optionsOrUseCapture)) {
           var fragmentInstance = this, attachedListener = listener;
           null != optionsOrUseCapture && "boolean" !== typeof optionsOrUseCapture && true === optionsOrUseCapture.once && (attachedListener = function(event) {
             fragmentInstance.removeEventListener(
@@ -12583,7 +12583,7 @@
             optionsOrUseCapture
           ), signal.addEventListener("abort", cleanup, { once: true }), cleanup = signal.removeEventListener.bind(signal, "abort", cleanup));
           signal = getAttachOptions(optionsOrUseCapture);
-          listeners.push({
+          listeners2.push({
             type,
             listener,
             optionsOrUseCapture,
@@ -12599,7 +12599,7 @@
             signal
           );
         }
-        this._eventListeners = listeners;
+        this._eventListeners = listeners2;
       };
       function addEventListenerToChild(child, type, listener, optionsOrUseCapture) {
         getInstanceFromHostFiber(child).addEventListener(
@@ -12610,14 +12610,14 @@
         return false;
       }
       FragmentInstance.prototype.removeEventListener = function(type, listener, optionsOrUseCapture) {
-        var listeners = this._eventListeners;
-        if (null !== listeners && (listener = indexOfEventListener(
-          listeners,
+        var listeners2 = this._eventListeners;
+        if (null !== listeners2 && (listener = indexOfEventListener(
+          listeners2,
           type,
           listener,
           optionsOrUseCapture
         ), -1 !== listener)) {
-          var _listeners$index = listeners[listener];
+          var _listeners$index = listeners2[listener];
           optionsOrUseCapture = _listeners$index.attachedListener;
           var cleanup = _listeners$index.cleanup;
           _listeners$index = getAttachOptions(_listeners$index.optionsOrUseCapture);
@@ -12629,7 +12629,7 @@
             optionsOrUseCapture,
             _listeners$index
           );
-          listeners.splice(listener, 1);
+          listeners2.splice(listener, 1);
           null !== cleanup && cleanup();
         }
       };
@@ -13035,8 +13035,8 @@
           ) : observer.unobserve(childInstance);
         }), null != childInstance.reactFragments && childInstance.reactFragments.delete(fragmentInstance));
       }
-      function clearContainerSparingly(container) {
-        var nextNode = container.firstChild;
+      function clearContainerSparingly(container2) {
+        var nextNode = container2.firstChild;
         nextNode && 10 === nextNode.nodeType && (nextNode = nextNode.nextSibling);
         for (; nextNode; ) {
           var node = nextNode;
@@ -13054,7 +13054,7 @@
             case "LINK":
               if ("stylesheet" === node.rel.toLowerCase()) continue;
           }
-          container.removeChild(node);
+          container2.removeChild(node);
         }
       }
       function canHydrateInstance(instance, type, props, inRootOrSingleton) {
@@ -13235,12 +13235,12 @@
       }
       var preloadPropsMap = /* @__PURE__ */ new Map();
       var preconnectsSet = /* @__PURE__ */ new Set();
-      function getHoistableRoot(container) {
-        if ("function" === typeof container.getRootNode) {
-          var rootNode = container.getRootNode();
+      function getHoistableRoot(container2) {
+        if ("function" === typeof container2.getRootNode) {
+          var rootNode = container2.getRootNode();
           if (9 === rootNode.nodeType || 11 === rootNode.nodeType) return rootNode;
         }
-        return 9 === container.nodeType ? container : container.ownerDocument;
+        return 9 === container2.nodeType ? container2 : container2.ownerDocument;
       }
       var previousDispatcher = ReactDOMSharedInternals.d;
       ReactDOMSharedInternals.d = {
@@ -13356,11 +13356,11 @@
           precedence = precedence || "default";
           var resource = styles.get(key);
           if (!resource) {
-            var state = { loading: 0, preload: null };
+            var state2 = { loading: 0, preload: null };
             if (resource = ownerDocument.querySelector(
               getStylesheetSelectorFromKey(key)
             ))
-              state.loading = 5;
+              state2.loading = 5;
             else {
               href = assign(
                 { rel: "stylesheet", href, "data-precedence": precedence },
@@ -13375,19 +13375,19 @@
                 link.onerror = reject;
               });
               link.addEventListener("load", function() {
-                state.loading |= 1;
+                state2.loading |= 1;
               });
               link.addEventListener("error", function() {
-                state.loading |= 2;
+                state2.loading |= 2;
               });
-              state.loading |= 4;
+              state2.loading |= 4;
               insertStylesheet(resource, precedence, ownerDocument);
             }
             resource = {
               type: "stylesheet",
               instance: resource,
               count: 1,
-              state
+              state: state2
             };
             styles.set(key, resource);
           }
@@ -13495,22 +13495,22 @@
           precedence: null
         });
       }
-      function preloadStylesheet(ownerDocument, key, preloadProps, state) {
+      function preloadStylesheet(ownerDocument, key, preloadProps, state2) {
         if (key = ownerDocument.querySelector(
           'link[rel="preload"][as="style"][' + key + "]"
         )) {
           if (true !== key[internalLoadPendingKey]) {
-            state.loading = 1;
+            state2.loading = 1;
             return;
           }
         } else
           key = ownerDocument.createElement("link"), key[internalLoadPendingKey] = true, key.onload = key.onerror = clearPendingLoadOnNode.bind(null, key), setInitialProperties(key, "link", preloadProps), markNodeAsHoistable(key), ownerDocument.head.appendChild(key);
-        state.preload = key;
+        state2.preload = key;
         key.addEventListener("load", function() {
-          return state.loading |= 1;
+          return state2.loading |= 1;
         });
         key.addEventListener("error", function() {
-          return state.loading |= 2;
+          return state2.loading |= 2;
         });
       }
       function getScriptKey(src) {
@@ -13586,15 +13586,15 @@
           "stylesheet" === resource.type && 0 === (resource.state.loading & 4) && (instance = resource.instance, resource.state.loading |= 4, insertStylesheet(instance, props.precedence, hoistableRoot));
         return resource.instance;
       }
-      function insertStylesheet(instance, precedence, root3) {
-        for (var nodes = root3.querySelectorAll(
+      function insertStylesheet(instance, precedence, root2) {
+        for (var nodes = root2.querySelectorAll(
           'link[rel="stylesheet"][data-precedence],style[data-precedence]'
         ), last = nodes.length ? nodes[nodes.length - 1] : null, prior = last, i = 0; i < nodes.length; i++) {
           var node = nodes[i];
           if (node.dataset.precedence === precedence) prior = node;
           else if (prior !== last) break;
         }
-        prior ? prior.parentNode.insertBefore(instance, prior.nextSibling) : (precedence = 9 === root3.nodeType ? root3.head : root3, precedence.insertBefore(instance, precedence.firstChild));
+        prior ? prior.parentNode.insertBefore(instance, prior.nextSibling) : (precedence = 9 === root2.nodeType ? root2.head : root2, precedence.insertBefore(instance, precedence.firstChild));
       }
       function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
         null == stylesheetProps.crossOrigin && (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
@@ -13669,10 +13669,10 @@
       function estimateImageBytes(instance) {
         return (instance.width || 100) * (instance.height || 100) * ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) * 0.25;
       }
-      function suspendInstance(state, instance) {
-        "function" === typeof instance.decode && (state.imgCount++, instance.complete || (state.imgBytes += estimateImageBytes(instance), state.suspenseyImages.push(instance)), state = onUnsuspendImg.bind(state), instance.decode().then(state, state));
+      function suspendInstance(state2, instance) {
+        "function" === typeof instance.decode && (state2.imgCount++, instance.complete || (state2.imgBytes += estimateImageBytes(instance), state2.suspenseyImages.push(instance)), state2 = onUnsuspendImg.bind(state2), instance.decode().then(state2, state2));
       }
-      function suspendResource(state, hoistableRoot, resource, props) {
+      function suspendResource(state2, hoistableRoot, resource, props) {
         if ("stylesheet" === resource.type && ("string" !== typeof props.media || false !== matchMedia(props.media).matches) && 0 === (resource.state.loading & 4)) {
           if (null === resource.instance) {
             var key = getStyleKey(props.href), instance = hoistableRoot.querySelector(
@@ -13680,7 +13680,7 @@
             );
             if (instance) {
               hoistableRoot = instance._p;
-              null !== hoistableRoot && "object" === typeof hoistableRoot && "function" === typeof hoistableRoot.then && (state.count++, state = onUnsuspend.bind(state), hoistableRoot.then(state, state));
+              null !== hoistableRoot && "object" === typeof hoistableRoot && "function" === typeof hoistableRoot.then && (state2.count++, state2 = onUnsuspend.bind(state2), hoistableRoot.then(state2, state2));
               resource.state.loading |= 4;
               resource.instance = instance;
               markNodeAsHoistable(instance);
@@ -13699,49 +13699,49 @@
             setInitialProperties(instance, "link", props);
             resource.instance = instance;
           }
-          null === state.stylesheets && (state.stylesheets = /* @__PURE__ */ new Map());
-          state.stylesheets.set(resource, hoistableRoot);
-          (hoistableRoot = resource.state.preload) && 0 === (resource.state.loading & 3) && (state.count++, resource = onUnsuspend.bind(state), hoistableRoot.addEventListener("load", resource), hoistableRoot.addEventListener("error", resource));
+          null === state2.stylesheets && (state2.stylesheets = /* @__PURE__ */ new Map());
+          state2.stylesheets.set(resource, hoistableRoot);
+          (hoistableRoot = resource.state.preload) && 0 === (resource.state.loading & 3) && (state2.count++, resource = onUnsuspend.bind(state2), hoistableRoot.addEventListener("load", resource), hoistableRoot.addEventListener("error", resource));
         }
       }
       var estimatedBytesWithinLimit = 0;
-      function waitForCommitToBeReady(state, timeoutOffset) {
-        state.stylesheets && 0 === state.count && insertSuspendedStylesheets(state, state.stylesheets);
-        return 0 < state.count || 0 < state.imgCount ? function(commit) {
+      function waitForCommitToBeReady(state2, timeoutOffset) {
+        state2.stylesheets && 0 === state2.count && insertSuspendedStylesheets(state2, state2.stylesheets);
+        return 0 < state2.count || 0 < state2.imgCount ? function(commit) {
           var stylesheetTimer = setTimeout(function() {
-            state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets);
-            if (state.unsuspend) {
-              var unsuspend = state.unsuspend;
-              state.unsuspend = null;
+            state2.stylesheets && insertSuspendedStylesheets(state2, state2.stylesheets);
+            if (state2.unsuspend) {
+              var unsuspend = state2.unsuspend;
+              state2.unsuspend = null;
               unsuspend();
             }
           }, 6e4 + timeoutOffset);
-          0 < state.imgBytes && 0 === estimatedBytesWithinLimit && (estimatedBytesWithinLimit = 62500 * estimateBandwidth());
+          0 < state2.imgBytes && 0 === estimatedBytesWithinLimit && (estimatedBytesWithinLimit = 62500 * estimateBandwidth());
           var imgTimer = setTimeout(
             function() {
-              state.waitingForImages = false;
-              if (0 === state.count && (state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets), state.unsuspend)) {
-                var unsuspend = state.unsuspend;
-                state.unsuspend = null;
+              state2.waitingForImages = false;
+              if (0 === state2.count && (state2.stylesheets && insertSuspendedStylesheets(state2, state2.stylesheets), state2.unsuspend)) {
+                var unsuspend = state2.unsuspend;
+                state2.unsuspend = null;
                 unsuspend();
               }
             },
-            (state.imgBytes > estimatedBytesWithinLimit ? 50 : 800) + timeoutOffset
+            (state2.imgBytes > estimatedBytesWithinLimit ? 50 : 800) + timeoutOffset
           );
-          state.unsuspend = commit;
+          state2.unsuspend = commit;
           return function() {
-            state.unsuspend = null;
+            state2.unsuspend = null;
             clearTimeout(stylesheetTimer);
             clearTimeout(imgTimer);
           };
         } : null;
       }
-      function checkIfFullyUnsuspended(state) {
-        if (0 === state.count && (0 === state.imgCount || !state.waitingForImages)) {
-          if (state.stylesheets) insertSuspendedStylesheets(state, state.stylesheets);
-          else if (state.unsuspend) {
-            var unsuspend = state.unsuspend;
-            state.unsuspend = null;
+      function checkIfFullyUnsuspended(state2) {
+        if (0 === state2.count && (0 === state2.imgCount || !state2.waitingForImages)) {
+          if (state2.stylesheets) insertSuspendedStylesheets(state2, state2.stylesheets);
+          else if (state2.unsuspend) {
+            var unsuspend = state2.unsuspend;
+            state2.unsuspend = null;
             unsuspend();
           }
         }
@@ -13755,18 +13755,18 @@
         checkIfFullyUnsuspended(this);
       }
       var precedencesByRoot = null;
-      function insertSuspendedStylesheets(state, resources) {
-        state.stylesheets = null;
-        null !== state.unsuspend && (state.count++, precedencesByRoot = /* @__PURE__ */ new Map(), resources.forEach(insertStylesheetIntoRoot, state), precedencesByRoot = null, onUnsuspend.call(state));
+      function insertSuspendedStylesheets(state2, resources) {
+        state2.stylesheets = null;
+        null !== state2.unsuspend && (state2.count++, precedencesByRoot = /* @__PURE__ */ new Map(), resources.forEach(insertStylesheetIntoRoot, state2), precedencesByRoot = null, onUnsuspend.call(state2));
       }
-      function insertStylesheetIntoRoot(root3, resource) {
+      function insertStylesheetIntoRoot(root2, resource) {
         if (!(resource.state.loading & 4)) {
-          var precedences = precedencesByRoot.get(root3);
+          var precedences = precedencesByRoot.get(root2);
           if (precedences) var last = precedences.get(null);
           else {
             precedences = /* @__PURE__ */ new Map();
-            precedencesByRoot.set(root3, precedences);
-            for (var nodes = root3.querySelectorAll(
+            precedencesByRoot.set(root2, precedences);
+            for (var nodes = root2.querySelectorAll(
               "link[data-precedence],style[data-precedence]"
             ), i = 0; i < nodes.length; i++) {
               var node = nodes[i];
@@ -13784,7 +13784,7 @@
           last = onUnsuspend.bind(this);
           nodes.addEventListener("load", last);
           nodes.addEventListener("error", last);
-          i ? i.parentNode.insertBefore(nodes, i.nextSibling) : (root3 = 9 === root3.nodeType ? root3.head : root3, root3.insertBefore(nodes, root3.firstChild));
+          i ? i.parentNode.insertBefore(nodes, i.nextSibling) : (root2 = 9 === root2.nodeType ? root2.head : root2, root2.insertBefore(nodes, root2.firstChild));
           resource.state.loading |= 4;
         }
       }
@@ -13851,14 +13851,14 @@
         parentComponent = emptyContextObject;
         return parentComponent;
       }
-      function updateContainerImpl(rootFiber, lane, element, container, parentComponent, callback) {
+      function updateContainerImpl(rootFiber, lane, element, container2, parentComponent, callback) {
         parentComponent = getContextForSubtree(parentComponent);
-        null === container.context ? container.context = parentComponent : container.pendingContext = parentComponent;
-        container = createUpdate(lane);
-        container.payload = { element };
+        null === container2.context ? container2.context = parentComponent : container2.pendingContext = parentComponent;
+        container2 = createUpdate(lane);
+        container2.payload = { element };
         callback = void 0 === callback ? null : callback;
-        null !== callback && (container.callback = callback);
-        element = enqueueUpdate(rootFiber, container, lane);
+        null !== callback && (container2.callback = callback);
+        element = enqueueUpdate(rootFiber, container2, lane);
         null !== element && (scheduleUpdateOnFiber(element, rootFiber, lane), entangleTransitions(element, rootFiber, lane));
       }
       function markRetryLaneImpl(fiber, retryLane) {
@@ -13874,8 +13874,8 @@
       }
       function attemptContinuousHydration(fiber) {
         if (13 === fiber.tag || 31 === fiber.tag) {
-          var root3 = enqueueConcurrentRenderForLane(fiber, 67108864);
-          null !== root3 && scheduleUpdateOnFiber(root3, fiber, 67108864);
+          var root2 = enqueueConcurrentRenderForLane(fiber, 67108864);
+          null !== root2 && scheduleUpdateOnFiber(root2, fiber, 67108864);
           markRetryLaneIfNotHydrated(fiber, 67108864);
         }
       }
@@ -13883,28 +13883,28 @@
         if (13 === fiber.tag || 31 === fiber.tag) {
           var lane = requestUpdateLane();
           lane = getBumpedLaneForHydrationByLane(lane);
-          var root3 = enqueueConcurrentRenderForLane(fiber, lane);
-          null !== root3 && scheduleUpdateOnFiber(root3, fiber, lane);
+          var root2 = enqueueConcurrentRenderForLane(fiber, lane);
+          null !== root2 && scheduleUpdateOnFiber(root2, fiber, lane);
           markRetryLaneIfNotHydrated(fiber, lane);
         }
       }
       var _enabled = true;
-      function dispatchDiscreteEvent(domEventName, eventSystemFlags, container, nativeEvent) {
+      function dispatchDiscreteEvent(domEventName, eventSystemFlags, container2, nativeEvent) {
         var prevTransition = ReactSharedInternals.T;
         ReactSharedInternals.T = null;
         var previousPriority = ReactDOMSharedInternals.p;
         try {
-          ReactDOMSharedInternals.p = 2, dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
+          ReactDOMSharedInternals.p = 2, dispatchEvent(domEventName, eventSystemFlags, container2, nativeEvent);
         } finally {
           ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = prevTransition;
         }
       }
-      function dispatchContinuousEvent(domEventName, eventSystemFlags, container, nativeEvent) {
+      function dispatchContinuousEvent(domEventName, eventSystemFlags, container2, nativeEvent) {
         var prevTransition = ReactSharedInternals.T;
         ReactSharedInternals.T = null;
         var previousPriority = ReactDOMSharedInternals.p;
         try {
-          ReactDOMSharedInternals.p = 8, dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
+          ReactDOMSharedInternals.p = 8, dispatchEvent(domEventName, eventSystemFlags, container2, nativeEvent);
         } finally {
           ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = prevTransition;
         }
@@ -13938,11 +13938,11 @@
                     if (fiber.current.memoizedState.isDehydrated) {
                       var lanes = getHighestPriorityLanes(fiber.pendingLanes);
                       if (0 !== lanes) {
-                        var root3 = fiber;
-                        root3.pendingLanes |= 2;
-                        for (root3.entangledLanes |= 2; lanes; ) {
+                        var root2 = fiber;
+                        root2.pendingLanes |= 2;
+                        for (root2.entangledLanes |= 2; lanes; ) {
                           var lane = 1 << 31 - clz32(lanes);
-                          root3.entanglements[1] |= lane;
+                          root2.entanglements[1] |= lane;
                           lanes &= ~lane;
                         }
                         ensureRootIsScheduled(fiber);
@@ -13952,7 +13952,7 @@
                     break;
                   case 31:
                   case 13:
-                    root3 = enqueueConcurrentRenderForLane(fiber, 2), null !== root3 && scheduleUpdateOnFiber(root3, fiber, 2), flushSyncWork$1(), markRetryLaneIfNotHydrated(fiber, 2);
+                    root2 = enqueueConcurrentRenderForLane(fiber, 2), null !== root2 && scheduleUpdateOnFiber(root2, fiber, 2), flushSyncWork$1(), markRetryLaneIfNotHydrated(fiber, 2);
                 }
               fiber = findInstanceBlockingEvent(nativeEvent);
               null === fiber && dispatchEventForPluginEventSystem(
@@ -14379,19 +14379,19 @@
         this._internalRoot = internalRoot;
       }
       ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(children) {
-        var root3 = this._internalRoot;
-        if (null === root3) throw Error(formatProdErrorMessage(409));
-        var current = root3.current, lane = requestUpdateLane();
-        updateContainerImpl(current, lane, children, root3, null, null);
+        var root2 = this._internalRoot;
+        if (null === root2) throw Error(formatProdErrorMessage(409));
+        var current = root2.current, lane = requestUpdateLane();
+        updateContainerImpl(current, lane, children, root2, null, null);
       };
       ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function() {
-        var root3 = this._internalRoot;
-        if (null !== root3) {
+        var root2 = this._internalRoot;
+        if (null !== root2) {
           this._internalRoot = null;
-          var container = root3.containerInfo;
-          updateContainerImpl(root3.current, 2, null, root3, null, null);
+          var container2 = root2.containerInfo;
+          updateContainerImpl(root2.current, 2, null, root2, null, null);
           flushSyncWork$1();
-          container[internalContainerInstanceKey] = null;
+          container2[internalContainerInstanceKey] = null;
         }
       };
       function ReactDOMHydrationRoot(internalRoot) {
@@ -14406,7 +14406,7 @@
           0 === i && attemptExplicitHydrationTarget(target);
         }
       };
-      var isomorphicReactPackageVersion$jscomp$inline_2043 = React19.version;
+      var isomorphicReactPackageVersion$jscomp$inline_2043 = React20.version;
       if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
@@ -14446,12 +14446,12 @@
           }
       }
       var hook$jscomp$inline_2587;
-      exports.createRoot = function(container, options2) {
-        if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
+      exports.createRoot = function(container2, options2) {
+        if (!isValidContainer(container2)) throw Error(formatProdErrorMessage(299));
         var isStrictMode = false, identifierPrefix = "", onUncaughtError = defaultOnUncaughtError, onCaughtError = defaultOnCaughtError, onRecoverableError = defaultOnRecoverableError;
         null !== options2 && void 0 !== options2 && (true === options2.unstable_strictMode && (isStrictMode = true), void 0 !== options2.identifierPrefix && (identifierPrefix = options2.identifierPrefix), void 0 !== options2.onUncaughtError && (onUncaughtError = options2.onUncaughtError), void 0 !== options2.onCaughtError && (onCaughtError = options2.onCaughtError), void 0 !== options2.onRecoverableError && (onRecoverableError = options2.onRecoverableError));
         options2 = createFiberRoot(
-          container,
+          container2,
           1,
           false,
           null,
@@ -14464,16 +14464,16 @@
           onRecoverableError,
           defaultOnDefaultTransitionIndicator
         );
-        container[internalContainerInstanceKey] = options2.current;
-        listenToAllSupportedEvents(container);
+        container2[internalContainerInstanceKey] = options2.current;
+        listenToAllSupportedEvents(container2);
         return new ReactDOMRoot(options2);
       };
-      exports.hydrateRoot = function(container, initialChildren, options2) {
-        if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
+      exports.hydrateRoot = function(container2, initialChildren, options2) {
+        if (!isValidContainer(container2)) throw Error(formatProdErrorMessage(299));
         var isStrictMode = false, identifierPrefix = "", onUncaughtError = defaultOnUncaughtError, onCaughtError = defaultOnCaughtError, onRecoverableError = defaultOnRecoverableError, formState = null;
         null !== options2 && void 0 !== options2 && (true === options2.unstable_strictMode && (isStrictMode = true), void 0 !== options2.identifierPrefix && (identifierPrefix = options2.identifierPrefix), void 0 !== options2.onUncaughtError && (onUncaughtError = options2.onUncaughtError), void 0 !== options2.onCaughtError && (onCaughtError = options2.onCaughtError), void 0 !== options2.onRecoverableError && (onRecoverableError = options2.onRecoverableError), void 0 !== options2.formState && (formState = options2.formState));
         initialChildren = createFiberRoot(
-          container,
+          container2,
           1,
           true,
           initialChildren,
@@ -14497,17 +14497,17 @@
         initialChildren.current.lanes = options2;
         markRootUpdated$1(initialChildren, options2);
         ensureRootIsScheduled(initialChildren);
-        container[internalContainerInstanceKey] = initialChildren.current;
-        listenToAllSupportedEvents(container);
+        container2[internalContainerInstanceKey] = initialChildren.current;
+        listenToAllSupportedEvents(container2);
         return new ReactDOMHydrationRoot(initialChildren);
       };
       exports.version = "19.3.0";
     }
   });
 
-  // ../audio-player/node_modules/react-dom/client.js
+  // node_modules/react-dom/client.js
   var require_client = __commonJS({
-    "../audio-player/node_modules/react-dom/client.js"(exports, module) {
+    "node_modules/react-dom/client.js"(exports, module) {
       "use strict";
       function checkDCE() {
         if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
@@ -14531,6 +14531,405 @@
     }
   });
 
+  // lib/library-index.js
+  var require_library_index = __commonJS({
+    "lib/library-index.js"(exports, module) {
+      "use strict";
+      var UNKNOWN_ARTIST = "Unknown Artist";
+      var UNKNOWN_ALBUM = "Unknown Album";
+      var VARIOUS_ARTISTS2 = "Various Artists";
+      var PLACEHOLDER_ARTISTS = /* @__PURE__ */ new Set(["unknown artist", "cloud stream", "local file", ""]);
+      var foldCache = /* @__PURE__ */ new Map();
+      var FOLD_CACHE_LIMIT = 3e5;
+      function fold4(value) {
+        const raw = value == null ? "" : String(value);
+        let out = foldCache.get(raw);
+        if (out === void 0) {
+          if (foldCache.size > FOLD_CACHE_LIMIT) foldCache.clear();
+          out = raw.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+          foldCache.set(raw, out);
+        }
+        return out;
+      }
+      var sortNameCache = /* @__PURE__ */ new Map();
+      function sortName(value) {
+        return sortKey(value).replace(/\d{12}/g, (d) => String(Number(d)));
+      }
+      function sortKey(value) {
+        const raw = value == null ? "" : String(value);
+        let key = sortNameCache.get(raw);
+        if (key === void 0) {
+          if (sortNameCache.size > FOLD_CACHE_LIMIT) sortNameCache.clear();
+          key = fold4(raw).replace(/^(the|a|an)\s+/, "").replace(/\d+/g, (d) => d.padStart(12, "0"));
+          sortNameCache.set(raw, key);
+        }
+        return key;
+      }
+      function compareNames(a, b) {
+        const ka = sortKey(a);
+        const kb = sortKey(b);
+        return ka < kb ? -1 : ka > kb ? 1 : 0;
+      }
+      function indexLetter2(name) {
+        const c = sortKey(name).charAt(0).toUpperCase();
+        return c >= "A" && c <= "Z" ? c : "#";
+      }
+      function isPlaceholderArtist(name) {
+        return PLACEHOLDER_ARTISTS.has(fold4(name));
+      }
+      function splitGenres2(genre) {
+        if (!genre) return [];
+        return String(genre).split(/\s*[;|]\s*/).map((g) => g.trim()).filter(Boolean);
+      }
+      function dirOf(filePath) {
+        if (!filePath) return "";
+        const parts = String(filePath).split("/");
+        parts.pop();
+        if (parts.length > 1 && /^(cd|disc|disk)\s*\d+$/i.test(parts[parts.length - 1])) parts.pop();
+        return parts.join("/");
+      }
+      function albumKeyOf2(track) {
+        const title = fold4(track.album || UNKNOWN_ALBUM);
+        if (track.albumArtist) return `${title}aa:${fold4(track.albumArtist)}`;
+        if (track.filePath) return `${title}dir:${dirOf(track.filePath)}`;
+        return `${title}ar:${fold4(track.artist)}`;
+      }
+      function compareAlbumOrder(a, b) {
+        return (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 9999) - (b.trackNumber || 9999) || compareNames(a.title, b.title);
+      }
+      function mostCommon(values) {
+        const counts = /* @__PURE__ */ new Map();
+        let best = null;
+        let bestCount = 0;
+        for (const v of values) {
+          if (!v) continue;
+          const n = (counts.get(v) || 0) + 1;
+          counts.set(v, n);
+          if (n > bestCount) {
+            best = v;
+            bestCount = n;
+          }
+        }
+        return best;
+      }
+      function sumDuration(tracks) {
+        let total = 0;
+        for (const t of tracks) total += t.duration || 0;
+        return total;
+      }
+      function buildIndex2(tracks = []) {
+        const albumMap = /* @__PURE__ */ new Map();
+        for (const t of tracks) {
+          const key = albumKeyOf2(t);
+          let album = albumMap.get(key);
+          if (!album) {
+            album = { key, title: t.album || UNKNOWN_ALBUM, tracks: [] };
+            albumMap.set(key, album);
+          }
+          album.tracks.push(t);
+        }
+        const albums = [];
+        for (const album of albumMap.values()) {
+          const list = album.tracks;
+          if (list.length > 1) list.sort(compareAlbumOrder);
+          let trackArtist = null;
+          let multipleArtists = false;
+          let albumArtist = null;
+          let mixedAlbumArtists = false;
+          let year = null;
+          let artId = null;
+          let duration = 0;
+          let addedAt = null;
+          let lossless = true;
+          let discCount = 0;
+          let lastDisc = null;
+          let genre = null;
+          let mixedGenres = false;
+          let codec = null;
+          for (const t of list) {
+            if (t.artist && !isPlaceholderArtist(t.artist)) {
+              if (trackArtist === null) trackArtist = t.artist;
+              else if (t.artist !== trackArtist) multipleArtists = true;
+            }
+            if (t.albumArtist) {
+              if (albumArtist === null) albumArtist = t.albumArtist;
+              else if (t.albumArtist !== albumArtist) mixedAlbumArtists = true;
+            }
+            if (t.year && (year === null || t.year < year)) year = t.year;
+            if (!artId && t.artId) artId = t.artId;
+            duration += t.duration || 0;
+            if (t.addedAt && (!addedAt || t.addedAt > addedAt)) addedAt = t.addedAt;
+            if (!t.lossless) lossless = false;
+            const disc = t.discNumber || 1;
+            if (disc !== lastDisc) {
+              discCount++;
+              lastDisc = disc;
+            }
+            if (t.genre) {
+              if (genre === null) genre = t.genre;
+              else if (t.genre !== genre) mixedGenres = true;
+            }
+            if (!codec && t.codec) codec = t.codec;
+          }
+          if (mixedAlbumArtists) albumArtist = mostCommon(list.map((t) => t.albumArtist));
+          album.artist = albumArtist || (multipleArtists ? VARIOUS_ARTISTS2 : trackArtist || list[0].artist || UNKNOWN_ARTIST);
+          album.artistKey = fold4(album.artist);
+          album.isCompilation = album.artist === VARIOUS_ARTISTS2;
+          album.year = year;
+          album.genre = mixedGenres ? mostCommon(list.flatMap((t) => splitGenres2(t.genre))) : splitGenres2(genre)[0] || null;
+          album.artId = artId;
+          album.duration = duration;
+          album.discCount = discCount;
+          album.addedAt = addedAt;
+          album.lossless = list.length > 0 && lossless;
+          album.codec = codec;
+          album.isUnknown = fold4(album.title) === "unknown album";
+          albums.push(album);
+        }
+        albums.sort((a, b) => compareNames(a.title, b.title) || compareNames(a.artist, b.artist));
+        const albumByKey = new Map(albums.map((a) => [a.key, a]));
+        const albumOfTrack = /* @__PURE__ */ new Map();
+        for (const a of albums) for (const t of a.tracks) albumOfTrack.set(t, a);
+        const artistMap = /* @__PURE__ */ new Map();
+        const ensureArtist = (name) => {
+          const key = fold4(name);
+          let artist = artistMap.get(key);
+          if (!artist) {
+            artist = { key, name, tracks: [], albumKeys: /* @__PURE__ */ new Set(), appearsOnKeys: /* @__PURE__ */ new Set() };
+            artistMap.set(key, artist);
+          }
+          return artist;
+        };
+        for (const album of albums) {
+          if (!album.isCompilation && !isPlaceholderArtist(album.artist)) ensureArtist(album.artist).albumKeys.add(album.key);
+        }
+        for (const t of tracks) {
+          const name = t.artist || UNKNOWN_ARTIST;
+          const artist = ensureArtist(name);
+          artist.tracks.push(t);
+          const album = albumOfTrack.get(t);
+          if (album && album.artistKey !== artist.key) artist.appearsOnKeys.add(album.key);
+        }
+        const artists = [];
+        for (const artist of artistMap.values()) {
+          if (!artist.tracks.length) {
+            for (const key of artist.albumKeys) artist.tracks.push(...albumByKey.get(key).tracks);
+          }
+          const ownAlbums = [...artist.albumKeys].map((k) => albumByKey.get(k));
+          artist.albums = ownAlbums.sort((a, b) => (a.year || 9999) - (b.year || 9999) || compareNames(a.title, b.title));
+          artist.appearsOn = [...artist.appearsOnKeys].map((k) => albumByKey.get(k)).filter((a) => !artist.albumKeys.has(a.key)).sort((a, b) => (a.year || 9999) - (b.year || 9999));
+          delete artist.albumKeys;
+          delete artist.appearsOnKeys;
+          artist.artId = (artist.albums.find((a) => a.artId) || artist.appearsOn.find((a) => a.artId) || {}).artId || (artist.tracks.find((t) => t.artId) || {}).artId || null;
+          artist.duration = sumDuration(artist.tracks);
+          artist.genres = topValues(artist.tracks.flatMap((t) => splitGenres2(t.genre)), 3);
+          artist.isPlaceholder = isPlaceholderArtist(artist.name);
+          artists.push(artist);
+        }
+        artists.sort((a, b) => a.isPlaceholder - b.isPlaceholder || compareNames(a.name, b.name));
+        const artistByKey = new Map(artists.map((a) => [a.key, a]));
+        const genres = groupBy(tracks, (t) => splitGenres2(t.genre), albumOfTrack);
+        const composers = groupBy(tracks, (t) => t.composer ? [t.composer] : [], albumOfTrack);
+        const decades = groupBy(tracks, (t) => t.year ? [`${Math.floor(t.year / 10) * 10}s`] : [], albumOfTrack);
+        for (const d of decades) d.start = parseInt(d.name, 10);
+        decades.sort((a, b) => b.start - a.start);
+        return {
+          tracks,
+          albums,
+          artists,
+          genres,
+          decades,
+          composers,
+          albumByKey,
+          artistByKey,
+          genreByKey: new Map(genres.map((g) => [g.key, g])),
+          decadeByKey: new Map(decades.map((d) => [d.key, d])),
+          composerByKey: new Map(composers.map((c) => [c.key, c])),
+          albumOfTrack,
+          totalDuration: sumDuration(tracks)
+        };
+      }
+      function topValues(values, n) {
+        const counts = /* @__PURE__ */ new Map();
+        for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
+        return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([v]) => v);
+      }
+      function groupBy(tracks, namesOf, albumOfTrack) {
+        const map = /* @__PURE__ */ new Map();
+        for (const t of tracks) {
+          for (const name of namesOf(t)) {
+            const key = fold4(name);
+            let g = map.get(key);
+            if (!g) {
+              g = { key, name, tracks: [] };
+              map.set(key, g);
+            }
+            g.tracks.push(t);
+          }
+        }
+        const groups = [...map.values()];
+        for (const g of groups) {
+          const albums = [];
+          const seen = /* @__PURE__ */ new Set();
+          for (const t of g.tracks) {
+            const a = albumOfTrack.get(t);
+            if (a && !seen.has(a.key)) {
+              seen.add(a.key);
+              albums.push(a);
+            }
+          }
+          g.albums = albums;
+          g.artistCount = new Set(g.tracks.map((t) => fold4(t.artist))).size;
+          g.artIds = [...new Set(albums.map((a) => a.artId).filter(Boolean))].slice(0, 4);
+          g.duration = sumDuration(g.tracks);
+        }
+        groups.sort((a, b) => compareNames(a.name, b.name));
+        return groups;
+      }
+      var haystackCache = /* @__PURE__ */ new WeakMap();
+      function cachedHaystack(item, text) {
+        let hay = haystackCache.get(item);
+        if (hay === void 0) {
+          hay = fold4(text());
+          haystackCache.set(item, hay);
+        }
+        return hay;
+      }
+      function trackHaystack(t) {
+        let hay = haystackCache.get(t);
+        if (hay === void 0) {
+          hay = fold4([t.title, t.artist, t.albumArtist, t.album, t.genre, t.composer, t.year].filter(Boolean).join(" "));
+          haystackCache.set(t, hay);
+        }
+        return hay;
+      }
+      function searchIndex2(index, query, limits = {}) {
+        const terms = fold4(query).split(/\s+/).filter(Boolean);
+        if (!terms.length) return { terms, tracks: [], albums: [], artists: [], genres: [] };
+        const matches = (hay) => terms.every((term) => hay.includes(term));
+        const nameScore = (name) => {
+          const n = fold4(name);
+          const q = terms.join(" ");
+          return n === q ? 0 : n.startsWith(q) ? 1 : 2;
+        };
+        const byScore = (nameOf) => (a, b) => nameScore(nameOf(a)) - nameScore(nameOf(b)) || compareNames(nameOf(a), nameOf(b));
+        const artists = index.artists.filter((a) => matches(fold4(a.name))).sort(byScore((a) => a.name));
+        const albums = index.albums.filter((a) => matches(cachedHaystack(a, () => `${a.title} ${a.artist} ${a.year || ""}`))).sort(byScore((a) => a.title));
+        const genres = index.genres.filter((g) => matches(g.key)).sort(byScore((g) => g.name));
+        const tracks = index.tracks.filter((t) => matches(trackHaystack(t))).sort(byScore((t) => t.title));
+        return {
+          terms,
+          artists: limits.artists ? artists.slice(0, limits.artists) : artists,
+          albums: limits.albums ? albums.slice(0, limits.albums) : albums,
+          genres: limits.genres ? genres.slice(0, limits.genres) : genres,
+          tracks,
+          totals: { artists: artists.length, albums: albums.length, genres: genres.length, tracks: tracks.length }
+        };
+      }
+      var TRACK_SORTS = {
+        title: (a, b) => compareNames(a.title, b.title),
+        artist: (a, b) => compareNames(a.artist, b.artist) || compareNames(a.album, b.album) || compareAlbumOrder(a, b),
+        album: (a, b) => compareNames(a.album, b.album) || compareAlbumOrder(a, b),
+        genre: (a, b) => compareNames(a.genre || "\uFFFF", b.genre || "\uFFFF") || compareNames(a.artist, b.artist),
+        year: (a, b) => (a.year || 0) - (b.year || 0) || compareNames(a.album, b.album) || compareAlbumOrder(a, b),
+        duration: (a, b) => (a.duration || 0) - (b.duration || 0),
+        addedAt: (a, b) => String(a.addedAt || "").localeCompare(String(b.addedAt || "")),
+        trackNumber: compareAlbumOrder
+      };
+      function sortTracks3(tracks, key = "title", dir = "asc", stats = {}) {
+        let cmp = TRACK_SORTS[key];
+        if (key === "plays") cmp = (a, b) => ((stats[a.id] || {}).plays || 0) - ((stats[b.id] || {}).plays || 0);
+        if (key === "lastPlayed") cmp = (a, b) => String((stats[a.id] || {}).lastPlayed || "").localeCompare(String((stats[b.id] || {}).lastPlayed || ""));
+        if (key === "loved") cmp = (a, b) => Number(!!(stats[a.id] || {}).loved) - Number(!!(stats[b.id] || {}).loved);
+        if (!cmp) cmp = TRACK_SORTS.title;
+        const sign = dir === "desc" ? -1 : 1;
+        return [...tracks].sort((a, b) => sign * cmp(a, b) || TRACK_SORTS.title(a, b));
+      }
+      var ALBUM_SORTS = {
+        title: (a, b) => compareNames(a.title, b.title) || compareNames(a.artist, b.artist),
+        artist: (a, b) => compareNames(a.artist, b.artist) || (a.year || 0) - (b.year || 0),
+        year: (a, b) => (b.year || 0) - (a.year || 0) || compareNames(a.title, b.title),
+        addedAt: (a, b) => String(b.addedAt || "").localeCompare(String(a.addedAt || "")),
+        tracks: (a, b) => b.tracks.length - a.tracks.length
+      };
+      function sortAlbums2(albums, key = "title") {
+        return [...albums].sort(ALBUM_SORTS[key] || ALBUM_SORTS.title);
+      }
+      var ARTIST_SORTS = {
+        name: (a, b) => a.isPlaceholder - b.isPlaceholder || compareNames(a.name, b.name),
+        tracks: (a, b) => b.tracks.length - a.tracks.length || compareNames(a.name, b.name),
+        albums: (a, b) => b.albums.length - a.albums.length || compareNames(a.name, b.name)
+      };
+      function sortArtists2(artists, key = "name", stats = {}) {
+        if (key === "plays") {
+          const plays = (a) => a.tracks.reduce((n, t) => n + ((stats[t.id] || {}).plays || 0), 0);
+          return [...artists].sort((a, b) => plays(b) - plays(a) || compareNames(a.name, b.name));
+        }
+        return [...artists].sort(ARTIST_SORTS[key] || ARTIST_SORTS.name);
+      }
+      function lovedTracks2(tracks, stats = {}) {
+        return tracks.filter((t) => (stats[t.id] || {}).loved).sort((a, b) => String((stats[b.id] || {}).lovedAt || "").localeCompare(String((stats[a.id] || {}).lovedAt || "")));
+      }
+      function recentlyAddedTracks2(tracks) {
+        return sortTracks3(tracks.filter((t) => t.addedAt), "addedAt", "desc");
+      }
+      function recentlyPlayedTracks2(tracks, stats = {}) {
+        return sortTracks3(tracks.filter((t) => (stats[t.id] || {}).lastPlayed), "lastPlayed", "desc", stats);
+      }
+      function mostPlayedTracks2(tracks, stats = {}) {
+        return sortTracks3(tracks.filter((t) => (stats[t.id] || {}).plays > 0), "plays", "desc", stats);
+      }
+      function unplayedTracks(tracks, stats = {}) {
+        return tracks.filter((t) => !((stats[t.id] || {}).plays > 0));
+      }
+      function formatDuration5(sec) {
+        if (!sec || isNaN(sec)) return "--:--";
+        const total = Math.round(sec);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor(total % 3600 / 60);
+        const s = total % 60;
+        const ss = `${s < 10 ? "0" : ""}${s}`;
+        return h > 0 ? `${h}:${m < 10 ? "0" : ""}${m}:${ss}` : `${m}:${ss}`;
+      }
+      function formatLongDuration4(sec) {
+        const totalMin = Math.round((sec || 0) / 60);
+        if (totalMin < 60) return `${totalMin} min`;
+        const days = Math.floor(totalMin / 1440);
+        const hours = Math.floor(totalMin % 1440 / 60);
+        const mins = totalMin % 60;
+        if (days > 0) return `${days}d ${hours}h`;
+        return mins ? `${hours} hr ${mins} min` : `${hours} hr`;
+      }
+      function plural4(n, word, pluralWord) {
+        return `${Number(n).toLocaleString()} ${n === 1 ? word : pluralWord || `${word}s`}`;
+      }
+      module.exports = {
+        UNKNOWN_ARTIST,
+        UNKNOWN_ALBUM,
+        VARIOUS_ARTISTS: VARIOUS_ARTISTS2,
+        fold: fold4,
+        sortName,
+        compareNames,
+        indexLetter: indexLetter2,
+        splitGenres: splitGenres2,
+        albumKeyOf: albumKeyOf2,
+        buildIndex: buildIndex2,
+        searchIndex: searchIndex2,
+        sortTracks: sortTracks3,
+        sortAlbums: sortAlbums2,
+        sortArtists: sortArtists2,
+        lovedTracks: lovedTracks2,
+        recentlyAddedTracks: recentlyAddedTracks2,
+        recentlyPlayedTracks: recentlyPlayedTracks2,
+        mostPlayedTracks: mostPlayedTracks2,
+        unplayedTracks,
+        formatDuration: formatDuration5,
+        formatLongDuration: formatLongDuration4,
+        plural: plural4
+      };
+    }
+  });
+
   // src/index.jsx
   var import_react25 = __toESM(require_react());
   var import_client = __toESM(require_client());
@@ -14538,10 +14937,10 @@
   // src/App.jsx
   var import_react24 = __toESM(require_react());
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/index.js
+  // node_modules/react-h5-audio-player/es/index.js
   var import_react6 = __toESM(require_react());
 
-  // ../audio-player/node_modules/@iconify/react/dist/iconify.js
+  // node_modules/@iconify/react/dist/iconify.js
   var import_react = __toESM(require_react(), 1);
   var defaultIconDimensions = Object.freeze(
     {
@@ -15292,11 +15691,11 @@
       const prefix = icon.prefix;
       const name = icon.name;
       const providerStorage = storage2[provider] || (storage2[provider] = /* @__PURE__ */ Object.create(null));
-      const localStorage = providerStorage[prefix] || (providerStorage[prefix] = getStorage(provider, prefix));
+      const localStorage2 = providerStorage[prefix] || (providerStorage[prefix] = getStorage(provider, prefix));
       let list;
-      if (name in localStorage.icons) {
+      if (name in localStorage2.icons) {
         list = result.loaded;
-      } else if (prefix === "" || localStorage.missing.has(name)) {
+      } else if (prefix === "" || localStorage2.missing.has(name)) {
         list = result.missing;
       } else {
         list = result.pending;
@@ -16155,7 +16554,7 @@
         name: ""
       };
     }
-    const [state, setState] = (0, import_react.useState)(getInitialState(!!props.ssr));
+    const [state2, setState] = (0, import_react.useState)(getInitialState(!!props.ssr));
     function cleanup() {
       const callback = abort.callback;
       if (callback) {
@@ -16164,7 +16563,7 @@
       }
     }
     function changeState(newState) {
-      if (JSON.stringify(state) !== JSON.stringify(newState)) {
+      if (JSON.stringify(state2) !== JSON.stringify(newState)) {
         cleanup();
         setState(newState);
         return true;
@@ -16204,7 +16603,7 @@
         updateState();
       }
     }, [props.icon, mounted]);
-    const { name, data } = state;
+    const { name, data } = state2;
     if (!data) {
       return props.children ? props.children : props.fallback ? props.fallback : (0, import_react.createElement)("span", {});
     }
@@ -16223,7 +16622,7 @@
     _ref: ref
   }));
 
-  // ../audio-player/node_modules/@babel/runtime/helpers/esm/extends.js
+  // node_modules/@babel/runtime/helpers/esm/extends.js
   function _extends() {
     return _extends = Object.assign ? Object.assign.bind() : function(n) {
       for (var e = 1; e < arguments.length; e++) {
@@ -16234,10 +16633,10 @@
     }, _extends.apply(null, arguments);
   }
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/ProgressBar.js
+  // node_modules/react-h5-audio-player/es/ProgressBar.js
   var import_react2 = __toESM(require_react());
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/utils.js
+  // node_modules/react-h5-audio-player/es/utils.js
   var getMainLayoutClassName = (layout) => {
     switch (layout) {
       case "stacked":
@@ -16296,7 +16695,7 @@
     };
   }
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/ProgressBar.js
+  // node_modules/react-h5-audio-player/es/ProgressBar.js
   var ProgressBar = class extends import_react2.Component {
     timeOnMouseMove = 0;
     hasAddedAudioEventListener = false;
@@ -16547,7 +16946,7 @@
   }));
   var ProgressBar_default = (0, import_react2.forwardRef)(ProgressBarForwardRef);
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/CurrentTime.js
+  // node_modules/react-h5-audio-player/es/CurrentTime.js
   var import_react3 = __toESM(require_react());
   var CurrentTime = class extends import_react3.PureComponent {
     hasAddedAudioEventListener = false;
@@ -16610,7 +17009,7 @@
   };
   var CurrentTime_default = CurrentTime;
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/Duration.js
+  // node_modules/react-h5-audio-player/es/Duration.js
   var import_react4 = __toESM(require_react());
   var Duration = class extends import_react4.PureComponent {
     hasAddedAudioEventListener = false;
@@ -16667,7 +17066,7 @@
   };
   var Duration_default = Duration;
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/VolumeBar.js
+  // node_modules/react-h5-audio-player/es/VolumeBar.js
   var import_react5 = __toESM(require_react());
   var VolumeControls = class extends import_react5.Component {
     hasAddedAudioEventListener = false;
@@ -16866,7 +17265,7 @@
   };
   var VolumeBar_default = VolumeControls;
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/constants.js
+  // node_modules/react-h5-audio-player/es/constants.js
   var RHAP_UI = (function(RHAP_UI2) {
     RHAP_UI2["CURRENT_TIME"] = "CURRENT_TIME";
     RHAP_UI2["CURRENT_LEFT_TIME"] = "CURRENT_LEFT_TIME";
@@ -16880,7 +17279,7 @@
     return RHAP_UI2;
   })({});
 
-  // ../audio-player/node_modules/react-h5-audio-player/es/index.js
+  // node_modules/react-h5-audio-player/es/index.js
   var H5AudioPlayer = class _H5AudioPlayer extends import_react6.Component {
     static defaultI18nAriaLabels = {
       player: "Audio player",
@@ -17391,2987 +17790,5274 @@
   };
   var es_default = H5AudioPlayer;
 
-  // src/Library.jsx
-  var import_react14 = __toESM(require_react());
-
-  // src/virtual.jsx
-  var import_react8 = __toESM(require_react());
-  function VirtualTable({
-    items = [],
-    rowHeight = 40,
-    overscan = 10,
-    className = "",
-    renderRow
-  }) {
-    const containerRef = (0, import_react8.useRef)(null);
-    const [scrollTop, setScrollTop] = (0, import_react8.useState)(0);
-    const [viewportHeight, setViewportHeight] = (0, import_react8.useState)(520);
-    (0, import_react8.useEffect)(() => {
-      const el = containerRef.current;
-      if (!el) return void 0;
-      const updateSize = () => {
-        if (el.clientHeight > 0) setViewportHeight(el.clientHeight);
-      };
-      updateSize();
-      const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateSize) : null;
-      if (ro) ro.observe(el);
-      window.addEventListener("resize", updateSize);
-      return () => {
-        if (ro) ro.disconnect();
-        window.removeEventListener("resize", updateSize);
-      };
-    }, []);
-    const totalHeight = items.length * rowHeight;
-    const startIdx = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
-    const visibleCount = Math.ceil(viewportHeight / rowHeight) + overscan * 2;
-    const endIdx = Math.min(items.length, startIdx + visibleCount);
-    const offsetY = startIdx * rowHeight;
-    const visibleItems = items.slice(startIdx, endIdx);
-    return /* @__PURE__ */ import_react8.default.createElement(
-      "div",
-      {
-        ref: containerRef,
-        className: `vt-scroll-container ${className}`,
-        onScroll: (e) => setScrollTop(e.currentTarget.scrollTop),
-        style: { overflowY: "auto", flex: 1, position: "relative" }
-      },
-      /* @__PURE__ */ import_react8.default.createElement("div", { style: { height: totalHeight, position: "relative", width: "100%" } }, /* @__PURE__ */ import_react8.default.createElement("div", { style: { transform: `translateY(${offsetY}px)`, position: "absolute", left: 0, right: 0, top: 0 } }, visibleItems.map((item, i) => renderRow(item, startIdx + i))))
-    );
-  }
-  function VirtualGrid({
-    items = [],
-    minCardWidth = 168,
-    cardHeight = 224,
-    gap = 14,
-    overscanRows = 3,
-    renderItem
-  }) {
-    const containerRef = (0, import_react8.useRef)(null);
-    const [scrollTop, setScrollTop] = (0, import_react8.useState)(0);
-    const [dims, setDims] = (0, import_react8.useState)({ width: 900, height: 520 });
-    (0, import_react8.useEffect)(() => {
-      const el = containerRef.current;
-      if (!el) return void 0;
-      const measure = () => {
-        setDims({
-          width: el.clientWidth || 900,
-          height: el.clientHeight || 520
-        });
-      };
-      measure();
-      const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-      if (ro) ro.observe(el);
-      window.addEventListener("resize", measure);
-      return () => {
-        if (ro) ro.disconnect();
-        window.removeEventListener("resize", measure);
-      };
-    }, []);
-    const cols = Math.max(1, Math.floor((dims.width + gap) / (minCardWidth + gap)));
-    const rowCount = Math.ceil(items.length / cols);
-    const rowStride = cardHeight + gap;
-    const totalHeight = rowCount * rowStride;
-    const startRow = Math.max(0, Math.floor(scrollTop / rowStride) - overscanRows);
-    const visibleRows = Math.ceil(dims.height / rowStride) + overscanRows * 2;
-    const endRow = Math.min(rowCount, startRow + visibleRows);
-    const rows = [];
-    for (let r = startRow; r < endRow; r++) {
-      const slice = items.slice(r * cols, (r + 1) * cols);
-      rows.push({ rowIndex: r, items: slice, top: r * rowStride });
-    }
-    return /* @__PURE__ */ import_react8.default.createElement(
-      "div",
-      {
-        ref: containerRef,
-        className: "vg-scroll-container",
-        onScroll: (e) => setScrollTop(e.currentTarget.scrollTop),
-        style: { overflowY: "auto", flex: 1, position: "relative", padding: "8px 12px" }
-      },
-      /* @__PURE__ */ import_react8.default.createElement("div", { style: { height: totalHeight, position: "relative", width: "100%" } }, rows.map((row) => /* @__PURE__ */ import_react8.default.createElement(
-        "div",
-        {
-          key: row.rowIndex,
-          style: {
-            position: "absolute",
-            top: row.top,
-            left: 0,
-            right: 0,
-            height: cardHeight,
-            display: "grid",
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-            gap
-          }
-        },
-        row.items.map((item, idx) => /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, { key: item.key || item.id || idx }, renderItem(item, row.rowIndex * cols + idx)))
-      )))
-    );
-  }
-
   // src/Icon.jsx
-  var import_react9 = __toESM(require_react());
+  var import_react8 = __toESM(require_react());
   var ICON_PATHS = {
-    music: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "18", cy: "16", r: "3" })),
-    film: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "2", y: "2", width: "20", height: "20", rx: "2.18", ry: "2.18" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "7", y1: "2", x2: "7", y2: "22" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "17", y1: "2", x2: "17", y2: "22" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "2", y1: "7", x2: "7", y2: "7" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "2", y1: "17", x2: "7", y2: "17" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "17", y1: "17", x2: "22", y2: "17" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "17", y1: "7", x2: "22", y2: "7" })),
-    tv: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "2", y: "7", width: "20", height: "15", rx: "2", ry: "2" }), /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "17 2 12 7 7 2" })),
-    subtitles: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "2", y: "4", width: "20", height: "16", rx: "2" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M7 15h4" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M15 15h2" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M7 11h2" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M13 11h4" })),
-    fullscreen: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "15 3 21 3 21 9" }), /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "9 21 3 21 3 15" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "21", y1: "3", x2: "14", y2: "10" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "3", y1: "21", x2: "10", y2: "14" })),
-    pip: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "2", y: "4", width: "20", height: "16", rx: "2" }), /* @__PURE__ */ import_react9.default.createElement("rect", { x: "12", y: "11", width: "8", height: "6", rx: "1" })),
-    camera: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "12", cy: "13", r: "4" })),
-    disc: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "12", cy: "12", r: "3" })),
-    mic: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M19 10v2a7 7 0 0 1-14 0v-2" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "12", y1: "19", x2: "12", y2: "22" })),
-    tag: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l8.59-8.59a1 1 0 0 0 0-1.41L12 2Z" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "7", cy: "7", r: "1.5" })),
-    calendar: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "16", y1: "2", x2: "16", y2: "6" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "8", y1: "2", x2: "8", y2: "6" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "3", y1: "10", x2: "21", y2: "10" })),
-    feather: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "16", y1: "8", x2: "2", y2: "22" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "17.5", y1: "15", x2: "9", y2: "15" })),
-    heart: /* @__PURE__ */ import_react9.default.createElement("path", { d: "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" }),
-    clock: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "12 6 12 12 16 14" })),
-    flame: /* @__PURE__ */ import_react9.default.createElement("path", { d: "M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" }),
-    folder: /* @__PURE__ */ import_react9.default.createElement("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }),
-    cloud: /* @__PURE__ */ import_react9.default.createElement("path", { d: "M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" }),
-    list: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("line", { x1: "8", y1: "6", x2: "21", y2: "6" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "8", y1: "12", x2: "21", y2: "12" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "8", y1: "18", x2: "21", y2: "18" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "3", y1: "6", x2: "3.01", y2: "6" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "3", y1: "12", x2: "3.01", y2: "12" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "3", y1: "18", x2: "3.01", y2: "18" })),
-    grid: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "3", y: "3", width: "7", height: "7" }), /* @__PURE__ */ import_react9.default.createElement("rect", { x: "14", y: "3", width: "7", height: "7" }), /* @__PURE__ */ import_react9.default.createElement("rect", { x: "14", y: "14", width: "7", height: "7" }), /* @__PURE__ */ import_react9.default.createElement("rect", { x: "3", y: "14", width: "7", height: "7" })),
-    search: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })),
-    shuffle: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "16 3 21 3 21 8" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "4", y1: "20", x2: "21", y2: "3" }), /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "21 16 21 21 16 21" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "15", y1: "15", x2: "21", y2: "21" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "4", y1: "4", x2: "9", y2: "9" })),
-    repeat: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "17 1 21 5 17 9" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M3 11V9a4 4 0 0 1 4-4h14" }), /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "7 23 3 19 7 15" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M21 13v2a4 4 0 0 1-4 4H3" })),
-    play: /* @__PURE__ */ import_react9.default.createElement("polygon", { points: "6 3 20 12 6 21 6 3" }),
-    pause: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("rect", { x: "6", y: "4", width: "4", height: "16" }), /* @__PURE__ */ import_react9.default.createElement("rect", { x: "14", y: "4", width: "4", height: "16" })),
-    skipBack: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polygon", { points: "19 20 9 12 19 4 19 20" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "5", y1: "19", x2: "5", y2: "5" })),
-    skipForward: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polygon", { points: "5 4 15 12 5 20 5 4" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "19", y1: "5", x2: "19", y2: "19" })),
-    volume: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polygon", { points: "11 5 6 9 2 9 2 15 6 15 11 19 11 5" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M15.54 8.46a5 5 0 0 1 0 7.07" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M19.07 4.93a10 10 0 0 1 0 14.14" })),
-    cast: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "2", y1: "20", x2: "2.01", y2: "20" })),
-    waves: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" })),
-    plus: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("line", { x1: "12", y1: "5", x2: "12", y2: "19" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "5", y1: "12", x2: "19", y2: "12" })),
-    trash: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "3 6 5 6 21 6" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" })),
-    refresh: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "23 4 23 10 17 10" }), /* @__PURE__ */ import_react9.default.createElement("polyline", { points: "1 20 1 14 7 14" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" })),
-    info: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "12", y1: "16", x2: "12", y2: "12" }), /* @__PURE__ */ import_react9.default.createElement("line", { x1: "12", y1: "8", x2: "12.01", y2: "8" })),
-    sparkles: /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("path", { d: "m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M5 3v4" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M19 17v4" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M3 5h4" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M17 19h4" }))
+    play: /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "6 4 20 12 6 20 6 4", fill: "currentColor", stroke: "none" }),
+    pause: /* @__PURE__ */ import_react8.default.createElement("g", { fill: "currentColor", stroke: "none" }, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "6", y: "4", width: "4", height: "16" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "14", y: "4", width: "4", height: "16" })),
+    prev: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "19 5 9 12 19 19 19 5", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "5", y1: "5", x2: "5", y2: "19" })),
+    next: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "5 5 15 12 5 19 5 5", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "19", y1: "5", x2: "19", y2: "19" })),
+    note: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "18", cy: "16", r: "3" })),
+    list: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "6", x2: "21", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "12", x2: "21", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "18", x2: "21", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "6", x2: "3.01", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "12", x2: "3.01", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "18", x2: "3.01", y2: "18" })),
+    library: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 19l3-14 4 1-3 14-4-1z" })),
+    cloud: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 18a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 18h11z" }),
+    wave: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12h3l2-6 4 12 3-9 2 3h6" }),
+    speaker: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "5", y: "2", width: "14", height: "20", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "14", r: "4" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12.01", y2: "6" })),
+    rain: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 12a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 12h11z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "16", x2: "7", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "16", x2: "11", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "16", y1: "16", x2: "15", y2: "20" })),
+    synth: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "2", y: "6", width: "20", height: "12", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "7", y1: "6", x2: "7", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "17", y1: "6", x2: "17", y2: "18" })),
+    noise: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 12h2l1-4 2 8 2-12 2 14 2-10 1 4h6" }),
+    x: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" })),
+    up: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "6 15 12 9 18 15" }),
+    down: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "6 9 12 15 18 9" }),
+    folder: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" }),
+    file: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "14 3 14 8 19 8" })),
+    check: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "5 12 10 17 19 7" }),
+    mic: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "9", y: "2", width: "6", height: "12", rx: "3" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M5 11a7 7 0 0 0 14 0" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "22" })),
+    disc: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "9" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "2.5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M12 6.5a5.5 5.5 0 0 1 5.5 5.5" })),
+    artist: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "8", r: "4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 21a8 8 0 0 1 16 0" })),
+    tag: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "7.5", cy: "7.5", r: "1.2", fill: "currentColor" })),
+    calendar: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "3", y: "5", width: "18", height: "16", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "10", x2: "21", y2: "10" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "3", x2: "8", y2: "7" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "16", y1: "3", x2: "16", y2: "7" })),
+    pen: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M12 20h9" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" })),
+    heart: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z" }),
+    heartFill: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z", fill: "currentColor" }),
+    clock: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "9" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "12 7 12 12 15 14" })),
+    history: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 12a9 9 0 1 0 3-6.7L3 8" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "3 3 3 8 8 8" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "12 7 12 12 15 14" })),
+    chart: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "6", y1: "20", x2: "6", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "20", x2: "12", y2: "5" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "18", y1: "20", x2: "18", y2: "9" })),
+    shuffle: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "16 3 21 3 21 8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "4", y1: "20", x2: "21", y2: "3" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "21 16 21 21 16 21" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "15", y1: "15", x2: "21", y2: "21" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "4", y1: "4", x2: "9", y2: "9" })),
+    repeat: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "17 1 21 5 17 9" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 11V9a4 4 0 0 1 4-4h14" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "7 23 3 19 7 15" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M21 13v2a4 4 0 0 1-4 4H3" })),
+    repeatOne: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "17 1 21 5 17 9" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 11V9a4 4 0 0 1 4-4h14" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "7 23 3 19 7 15" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M21 13v2a4 4 0 0 1-4 4H3" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M11 10h1.5v5" })),
+    more: /* @__PURE__ */ import_react8.default.createElement("g", { fill: "currentColor", stroke: "none" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "5", cy: "12", r: "1.8" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "1.8" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "19", cy: "12", r: "1.8" })),
+    back: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "15 18 9 12 15 6" }),
+    chevron: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "9 18 15 12 9 6" }),
+    search: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "21", x2: "16.5", y2: "16.5" })),
+    queueAdd: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "6", x2: "15", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "12", x2: "15", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "18", x2: "11", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "18", y1: "14", x2: "18", y2: "22" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "14", y1: "18", x2: "22", y2: "18" })),
+    playNext: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "3 5 11 10 3 15 3 5", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "14", y1: "7", x2: "21", y2: "7" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "14", y1: "12", x2: "21", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "19", x2: "21", y2: "19" })),
+    info: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "9" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "11", x2: "12", y2: "16" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "8", x2: "12.01", y2: "8" })),
+    panel: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "3", y: "4", width: "18", height: "16", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "15", y1: "4", x2: "15", y2: "20" })),
+    locate: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "7" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "2", fill: "currentColor" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "5" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "19", x2: "12", y2: "22" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "2", y1: "12", x2: "5", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "19", y1: "12", x2: "22", y2: "12" })),
+    save: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "17 21 17 13 7 13 7 21" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "7 3 7 8 15 8" })),
+    trash: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "3 6 5 6 21 6" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M10 11v6" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 11v6" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" })),
+    external: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "15 3 21 3 21 9" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "10", y1: "14", x2: "21", y2: "3" })),
+    volume: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "4 9 8 9 13 5 13 19 8 15 4 15 4 9", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M16.5 8.5a5 5 0 0 1 0 7" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M19 6a8.5 8.5 0 0 1 0 12" })),
+    volumeMute: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "4 9 8 9 13 5 13 19 8 15 4 15 4 9", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "16", y1: "9.5", x2: "21", y2: "14.5" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "9.5", x2: "16", y2: "14.5" })),
+    plus: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "5", x2: "12", y2: "19" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "5", y1: "12", x2: "19", y2: "12" })),
+    grid: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "3", y: "3", width: "7", height: "7", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "14", y: "3", width: "7", height: "7", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "3", y: "14", width: "7", height: "7", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "14", y: "14", width: "7", height: "7", rx: "1" })),
+    rows: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "6", x2: "21", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "12", x2: "21", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "18", x2: "21", y2: "18" })),
+    cast: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 16a5 5 0 0 1 5 5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12a9 9 0 0 1 9 9" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "2.5", cy: "20.5", r: "0.8", fill: "currentColor" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" })),
+    sparkle: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M12 3l1.9 5.3L19.2 10l-5.3 1.9L12 17.2l-1.9-5.3L4.8 10l5.3-1.7L12 3z" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M5 3v4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 5h4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M19 17v4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M17 19h4" }))
   };
-  function Icon2({ name, size = 16, fill = "none", className = "", style = {} }) {
-    const content = ICON_PATHS[name] || ICON_PATHS.film;
-    return /* @__PURE__ */ import_react9.default.createElement(
-      "svg",
-      {
-        width: size,
-        height: size,
-        viewBox: "0 0 24 24",
-        fill,
-        stroke: "currentColor",
-        strokeWidth: "2",
-        strokeLinecap: "round",
-        strokeLinejoin: "round",
-        className: `robos-svg-icon ${className}`,
-        style: { flexShrink: 0, verticalAlign: "middle", ...style }
-      },
-      content
-    );
-  }
-
-  // src/library-ui.jsx
-  var import_react10 = __toESM(require_react());
-  var artUrlCache = /* @__PURE__ */ new Map();
-  function useArtUrl(artId) {
-    const [url, setUrl] = (0, import_react10.useState)(() => artId && artUrlCache.has(artId) ? artUrlCache.get(artId) : null);
-    (0, import_react10.useEffect)(() => {
-      if (!artId) {
-        setUrl(null);
-        return;
-      }
-      if (artUrlCache.has(artId)) {
-        setUrl(artUrlCache.get(artId));
-        return;
-      }
-      let cancelled = false;
-      window.robosAudio.getArtUrl(artId).then((resolved) => {
-        if (resolved) artUrlCache.set(artId, resolved);
-        if (!cancelled) setUrl(resolved);
-      }).catch(() => {
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [artId]);
-    return url;
-  }
-  function CoverThumb({ artId, fallback = "film", className = "card-cover" }) {
-    const url = useArtUrl(artId);
-    const iconName = fallback === "\u266A" ? "film" : fallback;
-    return /* @__PURE__ */ import_react10.default.createElement("div", { className }, url ? /* @__PURE__ */ import_react10.default.createElement("img", { src: url, alt: "", loading: "lazy" }) : /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: iconName, size: 22 }));
-  }
-  function formatTime(sec) {
-    if (!sec || !Number.isFinite(sec) || sec < 0) return "0:00";
-    const total = Math.floor(sec);
-    const hrs = Math.floor(total / 3600);
-    const mins = Math.floor(total % 3600 / 60);
-    const secs = total % 60;
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    }
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  }
-  function formatBytes(bytes) {
-    const b = Number(bytes) || 0;
-    if (b < 1024) return `${b} B`;
-    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-    if (b < 1024 * 1024 * 1024) return `${(b / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(b / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  }
-
-  // src/TrackList.jsx
-  var import_react11 = __toESM(require_react());
-  var DEFAULT_COLUMNS = [
-    { id: "num", label: "#", width: 42, minWidth: 34, sortable: true, sortKey: "trackNumber" },
-    { id: "loved", label: "\u2665", width: 34, minWidth: 30, sortable: false },
-    { id: "title", label: "Movie / Episode", flex: 2.2, minWidth: 180, sortable: true, sortKey: "title" },
-    { id: "artist", label: "Director / Creator", flex: 1.3, minWidth: 120, sortable: true, sortKey: "artist" },
-    { id: "album", label: "Collection / Series", flex: 1.3, minWidth: 120, sortable: true, sortKey: "album" },
-    { id: "genre", label: "Genre", width: 110, minWidth: 80, sortable: true, sortKey: "genre" },
-    { id: "year", label: "Year", width: 64, minWidth: 52, sortable: true, sortKey: "year" },
-    { id: "plays", label: "Watched", width: 68, minWidth: 54, sortable: true, sortKey: "playCount" },
-    { id: "duration", label: "Runtime", width: 76, minWidth: 62, sortable: true, sortKey: "duration" }
-  ];
-  function TrackList({
-    tracks = [],
-    currentTrack = null,
-    isPlaying = false,
-    sortBy = "title",
-    sortDir = "asc",
-    onChangeSort,
-    onPlayTrack,
-    onQueueTrack,
-    onQueueTracks,
-    onToggleLoved,
-    onAddTrackToPlaylist,
-    onFixMetadata,
-    onInspectTrack,
-    playlists = []
-  }) {
-    const [columns, setColumns] = (0, import_react11.useState)(DEFAULT_COLUMNS);
-    const [selectedIds, setSelectedIds] = (0, import_react11.useState)(() => /* @__PURE__ */ new Set());
-    const [lastClickedIdx, setLastClickedIdx] = (0, import_react11.useState)(-1);
-    const [contextMenu, setContextMenu] = (0, import_react11.useState)(null);
-    const dragColId = (0, import_react11.useRef)(null);
-    (0, import_react11.useEffect)(() => {
-      const close = () => setContextMenu(null);
-      window.addEventListener("click", close);
-      return () => window.removeEventListener("click", close);
-    }, []);
-    const handleSortClick = (col) => {
-      if (!col.sortable || !onChangeSort) return;
-      const key = col.sortKey || col.id;
-      if (sortBy === key) {
-        onChangeSort(key, sortDir === "asc" ? "desc" : "asc");
-      } else {
-        onChangeSort(key, "asc");
-      }
-    };
-    const startColumnResize = (e, colId) => {
-      e.stopPropagation();
-      e.preventDefault();
-      const startX = e.clientX;
-      const target = columns.find((c) => c.id === colId);
-      const initialW = target.width || 160;
-      const onMove = (ev) => {
-        const nextW = Math.max(target.minWidth || 40, initialW + (ev.clientX - startX));
-        setColumns((prev) => prev.map((c) => c.id === colId ? { ...c, width: nextW, flex: void 0 } : c));
-      };
-      const onUp = () => {
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-      };
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-    };
-    const handleColDragStart = (colId) => {
-      dragColId.current = colId;
-    };
-    const handleColDrop = (targetId) => {
-      const fromId = dragColId.current;
-      dragColId.current = null;
-      if (!fromId || fromId === targetId) return;
-      setColumns((prev) => {
-        const next = [...prev];
-        const fromIdx = next.findIndex((c) => c.id === fromId);
-        const toIdx = next.findIndex((c) => c.id === targetId);
-        if (fromIdx === -1 || toIdx === -1) return prev;
-        const [moved] = next.splice(fromIdx, 1);
-        next.splice(toIdx, 0, moved);
-        return next;
-      });
-    };
-    const handleRowClick = (e, track, idx) => {
-      if (e.shiftKey && lastClickedIdx >= 0) {
-        const start = Math.min(lastClickedIdx, idx);
-        const end = Math.max(lastClickedIdx, idx);
-        const next = new Set(selectedIds);
-        for (let i = start; i <= end; i++) {
-          if (tracks[i]) next.add(tracks[i].id);
-        }
-        setSelectedIds(next);
-      } else if (e.ctrlKey || e.metaKey) {
-        const next = new Set(selectedIds);
-        if (next.has(track.id)) next.delete(track.id);
-        else next.add(track.id);
-        setSelectedIds(next);
-        setLastClickedIdx(idx);
-      } else {
-        setSelectedIds(/* @__PURE__ */ new Set([track.id]));
-        setLastClickedIdx(idx);
-      }
-    };
-    const handleContextMenu = (e, track, idx) => {
-      e.preventDefault();
-      let activeSet = selectedIds;
-      if (!selectedIds.has(track.id)) {
-        activeSet = /* @__PURE__ */ new Set([track.id]);
-        setSelectedIds(activeSet);
-        setLastClickedIdx(idx);
-      }
-      const selectedTracks = tracks.filter((t) => activeSet.has(t.id));
-      setContextMenu({
-        x: Math.min(window.innerWidth - 230, e.clientX),
-        y: Math.min(window.innerHeight - 280, e.clientY),
-        track,
-        selectedTracks: selectedTracks.length > 0 ? selectedTracks : [track]
-      });
-    };
-    const colStyle = (col) => col.width ? { width: col.width, minWidth: col.minWidth || 36, flexShrink: 0 } : { flex: col.flex || 1, minWidth: col.minWidth || 90 };
-    const renderCell = (col, track, idx, active) => {
-      switch (col.id) {
-        case "num":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "num", className: "vt-cell vt-col-num", style: colStyle(col) }, active ? /* @__PURE__ */ import_react11.default.createElement("span", { className: "playing-eq" }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: isPlaying ? "volume" : "pause", size: 13 })) : track.trackNumber || idx + 1);
-        case "loved":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "loved", className: "vt-cell vt-col-love", style: colStyle(col) }, /* @__PURE__ */ import_react11.default.createElement(
-            "button",
-            {
-              className: `love-btn ${track.loved ? "loved" : ""}`,
-              onClick: (e) => {
-                e.stopPropagation();
-                onToggleLoved && onToggleLoved(track);
-              },
-              title: track.loved ? "In Watchlist (Loved)" : "Add to Watchlist (Love)"
-            },
-            /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "heart", size: 13, fill: track.loved ? "currentColor" : "none" })
-          ));
-        case "title":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "title", className: "vt-cell vt-col-title", style: colStyle(col) }, /* @__PURE__ */ import_react11.default.createElement(CoverThumb, { artId: track.artId, fallback: "film", className: "vt-art" }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "vt-title-wrap" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-title-text" }, track.title), /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-badges" }, track.resolution && /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-cloud-pill" }, track.resolution), track.source === "cloud" && /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-cloud-pill" }, "CLOUD"), track.hasSubtitles && /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-cloud-pill" }, "CC"))));
-        case "artist":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "artist", className: "vt-cell", style: colStyle(col) }, track.artist);
-        case "album":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "album", className: "vt-cell", style: colStyle(col) }, track.album);
-        case "genre":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "genre", className: "vt-cell", style: colStyle(col) }, track.genre || "\u2014");
-        case "year":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "year", className: "vt-cell", style: colStyle(col) }, track.year || "\u2014");
-        case "plays":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "plays", className: "vt-cell", style: colStyle(col) }, track.playCount || 0);
-        case "duration":
-          return /* @__PURE__ */ import_react11.default.createElement("div", { key: "duration", className: "vt-cell", style: colStyle(col) }, formatTime(track.duration));
-        default:
-          return null;
-      }
-    };
-    return /* @__PURE__ */ import_react11.default.createElement("div", { className: "vt-wrapper" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "vt-header" }, columns.map((col) => {
-      const isSorted = sortBy === (col.sortKey || col.id);
-      return /* @__PURE__ */ import_react11.default.createElement(
-        "div",
-        {
-          key: col.id,
-          className: `vt-hcell ${col.sortable ? "sortable" : ""} ${isSorted ? "sorted" : ""}`,
-          style: colStyle(col),
-          draggable: true,
-          onDragStart: () => handleColDragStart(col.id),
-          onDragOver: (e) => e.preventDefault(),
-          onDrop: () => handleColDrop(col.id),
-          onClick: () => handleSortClick(col)
-        },
-        /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-hcell-label" }, col.label),
-        isSorted && /* @__PURE__ */ import_react11.default.createElement("span", { className: "vt-sort-arrow" }, sortDir === "asc" ? "\u25B2" : "\u25BC"),
-        /* @__PURE__ */ import_react11.default.createElement(
-          "div",
-          {
-            className: "vt-col-resizer",
-            onMouseDown: (e) => startColumnResize(e, col.id),
-            onClick: (e) => e.stopPropagation()
-          }
-        )
-      );
-    }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "vt-hcell vt-col-actions", style: { width: 92, flexShrink: 0 } })), /* @__PURE__ */ import_react11.default.createElement(
-      VirtualTable,
-      {
-        items: tracks,
-        rowHeight: 40,
-        renderRow: (track, idx) => {
-          const active = currentTrack && currentTrack.id === track.id;
-          const selected = selectedIds.has(track.id);
-          return /* @__PURE__ */ import_react11.default.createElement(
-            "div",
-            {
-              key: track.id || idx,
-              className: `vt-row ${active ? "active" : ""} ${selected ? "selected" : ""}`,
-              onClick: (e) => handleRowClick(e, track, idx),
-              onDoubleClick: () => onPlayTrack(track, tracks),
-              onContextMenu: (e) => handleContextMenu(e, track, idx)
-            },
-            columns.map((col) => renderCell(col, track, idx, active)),
-            /* @__PURE__ */ import_react11.default.createElement("div", { className: "vt-cell vt-col-actions", style: { width: 92, flexShrink: 0 }, onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react11.default.createElement(
-              "button",
-              {
-                className: "btn-icon",
-                title: "Queue Next",
-                onClick: () => onQueueTrack && onQueueTrack(track)
-              },
-              "+"
-            ), /* @__PURE__ */ import_react11.default.createElement(
-              "button",
-              {
-                className: "btn-icon",
-                title: "Movie Info & Streams",
-                onClick: () => onInspectTrack && onInspectTrack(track)
-              },
-              /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "info", size: 14 })
-            ))
-          );
-        }
-      }
-    ), contextMenu && /* @__PURE__ */ import_react11.default.createElement(
-      "div",
-      {
-        className: "track-context-menu",
-        style: { left: contextMenu.x, top: contextMenu.y },
-        onClick: (e) => e.stopPropagation()
-      },
-      /* @__PURE__ */ import_react11.default.createElement("div", { className: "ctx-header" }, contextMenu.selectedTracks.length > 1 ? `${contextMenu.selectedTracks.length} movies selected` : contextMenu.track.title),
-      /* @__PURE__ */ import_react11.default.createElement(
-        "button",
-        {
-          className: "ctx-item",
-          onClick: () => {
-            onPlayTrack(contextMenu.track, contextMenu.selectedTracks.length > 1 ? contextMenu.selectedTracks : tracks);
-            setContextMenu(null);
-          }
-        },
-        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "play", size: 13 }),
-        " Play Now"
-      ),
-      /* @__PURE__ */ import_react11.default.createElement(
-        "button",
-        {
-          className: "ctx-item",
-          onClick: () => {
-            if (onQueueTracks) onQueueTracks(contextMenu.selectedTracks);
-            else if (onQueueTrack) contextMenu.selectedTracks.forEach((t) => onQueueTrack(t));
-            setContextMenu(null);
-          }
-        },
-        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "plus", size: 13 }),
-        " Add to Screening Queue"
-      ),
-      /* @__PURE__ */ import_react11.default.createElement(
-        "button",
-        {
-          className: "ctx-item",
-          onClick: () => {
-            contextMenu.selectedTracks.forEach((t) => onToggleLoved && onToggleLoved(t));
-            setContextMenu(null);
-          }
-        },
-        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "heart", size: 13 }),
-        " Toggle Watchlist (Love)"
-      ),
-      onFixMetadata && /* @__PURE__ */ import_react11.default.createElement(
-        "button",
-        {
-          className: "ctx-item",
-          onClick: () => {
-            onFixMetadata(contextMenu.selectedTracks);
-            setContextMenu(null);
-          }
-        },
-        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "sparkles", size: 13 }),
-        " \u2726 AI Fix Metadata & Poster"
-      ),
-      /* @__PURE__ */ import_react11.default.createElement("div", { className: "ctx-divider" }),
-      /* @__PURE__ */ import_react11.default.createElement("div", { className: "ctx-sublabel" }, "Add to Watchlist / Playlist"),
-      playlists.map((pl) => /* @__PURE__ */ import_react11.default.createElement(
-        "button",
-        {
-          key: pl.id,
-          className: "ctx-item",
-          onClick: () => {
-            contextMenu.selectedTracks.forEach((t) => onAddTrackToPlaylist && onAddTrackToPlaylist(pl.id, t));
-            setContextMenu(null);
-          }
-        },
-        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "list", size: 13 }),
-        " ",
-        pl.name
-      )),
-      /* @__PURE__ */ import_react11.default.createElement("div", { className: "ctx-divider" }),
-      /* @__PURE__ */ import_react11.default.createElement(
-        "button",
-        {
-          className: "ctx-item",
-          onClick: () => {
-            onInspectTrack && onInspectTrack(contextMenu.track);
-            setContextMenu(null);
-          }
-        },
-        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "info", size: 13 }),
-        " Movie Details & Streams\u2026"
-      )
-    ));
-  }
-
-  // src/TrackInfo.jsx
-  var import_react12 = __toESM(require_react());
-  function TrackInfoModal({ track, onClose, onToggleLoved }) {
-    if (!track) return null;
-    const rows = [
-      ["Title", track.title || "\u2014"],
-      ["Director / Creator", track.artist || "Unknown Director"],
-      ["Collection / Series", track.album || "Standalone Films"],
-      ["Lead / Franchise", track.albumArtist || track.artist || "\u2014"],
-      ["Studio / Writer", track.composer || "\u2014"],
-      ["Genre", track.genre || "Cinema"],
-      ["Release Year", track.year || "\u2014"],
-      ["Season / Episode", track.discNumber || track.trackNumber ? `${track.discNumber ? `S${String(track.discNumber).padStart(2, "0")} ` : ""}${track.trackNumber ? `E${String(track.trackNumber).padStart(2, "0")}` : ""}` : "Feature Film"],
-      ["Runtime", formatTime(track.duration)],
-      ["Resolution", track.resolution || (track.height ? `${track.height}p` : "1080p")],
-      ["Video Codec / Format", [track.videoCodec || track.codec, track.format ? track.format.toUpperCase() : null].filter(Boolean).join(" / ") || "\u2014"],
-      ["Bitrate", track.bitrate ? `${track.bitrate} kbps` : "\u2014"],
-      ["Audio Sample Rate", track.sampleRate ? `${track.sampleRate} Hz` : "\u2014"],
-      ["File Size", track.size ? formatBytes(track.size) : "\u2014"],
-      ["Source", track.source === "cloud" ? `Cloud (${track.sourceName || track.sourceId})` : track.source === "stream" ? "Network Stream" : "Local Disk"],
-      ["Watch Count", track.playCount || 0],
-      ["Path", track.remotePath || track.path || "\u2014"]
-    ];
-    return /* @__PURE__ */ import_react12.default.createElement("div", { className: "modal-backdrop", onClick: onClose }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "modal-card track-info-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "modal-header" }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "track-info-header" }, /* @__PURE__ */ import_react12.default.createElement(CoverThumb, { artId: track.artId, fallback: "film", className: "track-info-cover" }), /* @__PURE__ */ import_react12.default.createElement("div", { className: "track-info-headings" }, /* @__PURE__ */ import_react12.default.createElement("h3", null, track.title), /* @__PURE__ */ import_react12.default.createElement("div", { className: "track-info-sub" }, track.artist, " \u2022 ", track.album), /* @__PURE__ */ import_react12.default.createElement("div", { className: "track-info-badges" }, track.resolution && /* @__PURE__ */ import_react12.default.createElement("span", { className: "pill" }, track.resolution), track.videoCodec && /* @__PURE__ */ import_react12.default.createElement("span", { className: "pill" }, track.videoCodec), track.format && /* @__PURE__ */ import_react12.default.createElement("span", { className: "pill" }, track.format.toUpperCase()), track.year && /* @__PURE__ */ import_react12.default.createElement("span", { className: "pill" }, track.year)))), /* @__PURE__ */ import_react12.default.createElement("button", { className: "btn-icon", onClick: onClose, title: "Close" }, "\u2715")), /* @__PURE__ */ import_react12.default.createElement("div", { className: "track-info-grid" }, rows.map(([label, val]) => /* @__PURE__ */ import_react12.default.createElement("div", { key: label, className: "track-info-row" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "track-info-label" }, label), /* @__PURE__ */ import_react12.default.createElement("span", { className: "track-info-value" }, String(val))))), /* @__PURE__ */ import_react12.default.createElement("div", { className: "modal-footer" }, /* @__PURE__ */ import_react12.default.createElement(
-      "button",
-      {
-        className: `btn btn-sm ${track.loved ? "btn-accent" : ""}`,
-        onClick: () => onToggleLoved && onToggleLoved(track)
-      },
-      /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "heart", size: 13, fill: track.loved ? "currentColor" : "none" }),
-      /* @__PURE__ */ import_react12.default.createElement("span", null, track.loved ? "In Watchlist (Loved)" : "Add to Watchlist (Love)")
-    ), /* @__PURE__ */ import_react12.default.createElement("button", { className: "btn btn-sm", onClick: onClose }, "Close"))));
-  }
-
-  // src/FolderPanel.jsx
-  var import_react13 = __toESM(require_react());
-  function FolderManagerPanel({
-    onSelectFolder,
-    onLibraryChanged
-  }) {
-    const [folders, setFolders] = (0, import_react13.useState)([]);
-    const [busyPath, setBusyPath] = (0, import_react13.useState)(null);
-    const refresh = async () => {
-      const list = await window.robosAudio.listLibraryFolders();
-      setFolders(Array.isArray(list) ? list : []);
-    };
-    (0, import_react13.useEffect)(() => {
-      refresh();
-    }, []);
-    const handleAdd = async () => {
-      setBusyPath("__adding__");
-      try {
-        const res = await window.robosAudio.addLibraryFolder();
-        if (res && res.folders) {
-          setFolders(res.folders);
-          if (onLibraryChanged && res.library) onLibraryChanged(res.library);
-        }
-      } finally {
-        setBusyPath(null);
-      }
-    };
-    const handleRemove = async (dirPath) => {
-      setBusyPath(dirPath);
-      try {
-        const res = await window.robosAudio.removeLibraryFolder(dirPath);
-        if (res && res.folders) {
-          setFolders(res.folders);
-          if (onLibraryChanged && res.library) onLibraryChanged(res.library);
-        }
-      } finally {
-        setBusyPath(null);
-      }
-    };
-    const handleRescan = async (dirPath = null) => {
-      setBusyPath(dirPath || "__all__");
-      try {
-        const res = await window.robosAudio.rescanLibraryFolder(dirPath);
-        if (res && res.folders) {
-          setFolders(res.folders);
-          if (onLibraryChanged && res.library) onLibraryChanged(res.library);
-        }
-      } finally {
-        setBusyPath(null);
-      }
-    };
-    return /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-manager-panel" }, /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-manager-header" }, /* @__PURE__ */ import_react13.default.createElement("div", null, /* @__PURE__ */ import_react13.default.createElement("h4", null, "Watched Movie & Video Folders"), /* @__PURE__ */ import_react13.default.createElement("p", { className: "muted" }, "Folders scanned in the background for movies, series episodes, and sidecar subtitles.")), /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-manager-actions" }, /* @__PURE__ */ import_react13.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm",
-        disabled: busyPath !== null,
-        onClick: () => handleRescan(null)
-      },
-      /* @__PURE__ */ import_react13.default.createElement(Icon2, { name: "refresh", size: 14 }),
-      " Rescan All"
-    ), /* @__PURE__ */ import_react13.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm btn-accent",
-        disabled: busyPath !== null,
-        onClick: handleAdd
-      },
-      /* @__PURE__ */ import_react13.default.createElement(Icon2, { name: "plus", size: 14 }),
-      " Add Folder"
-    ))), /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-cards-list" }, folders.length === 0 ? /* @__PURE__ */ import_react13.default.createElement("div", { className: "empty-state" }, "No library folders configured. Click ", /* @__PURE__ */ import_react13.default.createElement("strong", null, "Add Folder"), " to index local movies and videos.") : folders.map((f) => /* @__PURE__ */ import_react13.default.createElement("div", { key: f.path, className: "folder-managed-card" }, /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-main", onClick: () => onSelectFolder && onSelectFolder(f.path) }, /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-icon" }, /* @__PURE__ */ import_react13.default.createElement(Icon2, { name: "folder", size: 20 })), /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-info" }, /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-title" }, /* @__PURE__ */ import_react13.default.createElement("span", null, f.label), !f.exists && /* @__PURE__ */ import_react13.default.createElement("span", { className: "pill pill-warn" }, "Missing on disk")), /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-path" }, f.path), /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-stats" }, /* @__PURE__ */ import_react13.default.createElement("span", null, (f.trackCount || 0).toLocaleString(), " movies/videos"), /* @__PURE__ */ import_react13.default.createElement("span", null, "\u2022"), /* @__PURE__ */ import_react13.default.createElement("span", null, formatBytes(f.totalBytes || 0)), /* @__PURE__ */ import_react13.default.createElement("span", null, "\u2022"), /* @__PURE__ */ import_react13.default.createElement("span", null, formatTime(f.totalDuration || 0)), f.lastScanAt && /* @__PURE__ */ import_react13.default.createElement(import_react13.default.Fragment, null, /* @__PURE__ */ import_react13.default.createElement("span", null, "\u2022"), /* @__PURE__ */ import_react13.default.createElement("span", null, "Scanned ", new Date(f.lastScanAt).toLocaleTimeString()))))), /* @__PURE__ */ import_react13.default.createElement("div", { className: "folder-managed-btns" }, /* @__PURE__ */ import_react13.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: () => onSelectFolder && onSelectFolder(f.path),
-        title: "Browse movies in this folder"
-      },
-      "Browse"
-    ), /* @__PURE__ */ import_react13.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        disabled: busyPath !== null,
-        onClick: () => handleRescan(f.path),
-        title: "Rescan this folder"
-      },
-      busyPath === f.path ? "Scanning\u2026" : "Rescan"
-    ), /* @__PURE__ */ import_react13.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs btn-danger",
-        disabled: busyPath !== null,
-        onClick: () => handleRemove(f.path),
-        title: "Remove folder and its movies from library"
-      },
-      "Remove"
-    ))))));
-  }
-
-  // src/Library.jsx
-  var SUB_TABS = [
-    { id: "albums", label: "Collections", icon: "disc" },
-    { id: "artists", label: "Directors", icon: "mic" },
-    { id: "songs", label: "Movies", icon: "film" },
-    { id: "genres", label: "Genres", icon: "tag" },
-    { id: "decades", label: "Decades", icon: "calendar" },
-    { id: "composers", label: "Studios", icon: "feather" },
-    { id: "loved", label: "Watchlist", icon: "heart" },
-    { id: "recent-added", label: "Recently Added", icon: "clock" },
-    { id: "recent-played", label: "Recently Watched", icon: "play" },
-    { id: "most-played", label: "Most Watched", icon: "flame" },
-    { id: "folders", label: "Folders", icon: "folder" }
-  ];
-  function LibraryBrowser({
-    summary = {},
-    albums = [],
-    artists = [],
-    genres = [],
-    decades = [],
-    composers = [],
-    folders = [],
-    currentTrack,
-    isPlaying,
-    scanStatus,
-    playlists = [],
-    onPlayTrack,
-    onQueueTrack,
-    onQueueTracks,
-    onAddTrackToPlaylist,
-    onOpenAiPlaylist,
-    onOpenFixMetadata,
-    onLibraryChanged,
-    onAddFolder,
-    onAddFiles,
-    onRescan
-  }) {
-    const [subTab, setSubTab] = (0, import_react14.useState)("songs");
-    const [viewMode, setViewMode] = (0, import_react14.useState)("grid");
-    const [search, setSearch] = (0, import_react14.useState)("");
-    const [sortBy, setSortBy] = (0, import_react14.useState)("title");
-    const [sortDir, setSortDir] = (0, import_react14.useState)("asc");
-    const [drillFilter, setDrillFilter] = (0, import_react14.useState)(null);
-    const [tracksResult, setTracksResult] = (0, import_react14.useState)({ tracks: [], total: 0 });
-    const [inspectingTrack, setInspectingTrack] = (0, import_react14.useState)(null);
-    const isSmartTab = ["loved", "recent-added", "recent-played", "most-played"].includes(subTab);
-    const showTrackTable = subTab === "songs" || isSmartTab || Boolean(drillFilter);
-    const refreshTracks = () => {
-      const queryOpts = {
-        search,
-        sortBy,
-        sortDir,
-        offset: 0,
-        limit: 5e4
-      };
-      if (isSmartTab) queryOpts.smartFilter = subTab;
-      if (drillFilter) {
-        if (drillFilter.type === "album") queryOpts.albumKey = drillFilter.value;
-        else if (drillFilter.type === "artist") queryOpts.artist = drillFilter.value;
-        else if (drillFilter.type === "genre") queryOpts.genre = drillFilter.value;
-        else if (drillFilter.type === "decade") queryOpts.decade = drillFilter.value;
-        else if (drillFilter.type === "composer") queryOpts.composer = drillFilter.value;
-        else if (drillFilter.type === "folder") queryOpts.folder = drillFilter.value;
-      }
-      window.robosAudio.queryTracks(queryOpts).then((res) => {
-        if (res) setTracksResult(res);
-      }).catch(() => {
-      });
-    };
-    (0, import_react14.useEffect)(() => {
-      let cancelled = false;
-      const timer = setTimeout(() => {
-        if (!cancelled) refreshTracks();
-      }, 60);
-      return () => {
-        cancelled = true;
-        clearTimeout(timer);
-      };
-    }, [search, sortBy, sortDir, subTab, drillFilter, summary.trackCount, summary.lovedCount]);
-    const qLower = search.trim().toLowerCase();
-    const filteredAlbums = (0, import_react14.useMemo)(() => {
-      if (!qLower) return albums;
-      return albums.filter(
-        (a) => a.name.toLowerCase().includes(qLower) || a.artist.toLowerCase().includes(qLower) || (a.genre || "").toLowerCase().includes(qLower)
-      );
-    }, [albums, qLower]);
-    const filteredArtists = (0, import_react14.useMemo)(() => {
-      if (!qLower) return artists;
-      return artists.filter(
-        (a) => a.name.toLowerCase().includes(qLower) || (a.genre || "").toLowerCase().includes(qLower)
-      );
-    }, [artists, qLower]);
-    const filteredGenres = (0, import_react14.useMemo)(() => {
-      if (!qLower) return genres;
-      return genres.filter((g) => g.name.toLowerCase().includes(qLower));
-    }, [genres, qLower]);
-    const filteredComposers = (0, import_react14.useMemo)(() => {
-      if (!qLower) return composers;
-      return composers.filter((c) => c.name.toLowerCase().includes(qLower));
-    }, [composers, qLower]);
-    const handleToggleLoved = async (track) => {
-      await window.robosAudio.toggleLoved(track.id);
-      refreshTracks();
-      if (inspectingTrack && inspectingTrack.id === track.id) {
-        setInspectingTrack({ ...inspectingTrack, loved: !inspectingTrack.loved });
-      }
-    };
-    const openDrill = (type, value, label, meta = null) => {
-      setDrillFilter({ type, value, label, meta });
-    };
-    const clearDrill = () => setDrillFilter(null);
-    const handlePlayAllMatching = async (shuffle = false) => {
-      let list = tracksResult.tracks || [];
-      if (list.length === 0) return;
-      if (shuffle) {
-        list = [...list].sort(() => Math.random() - 0.5);
-      }
-      onPlayTrack(list[0], list);
-    };
-    return /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-root" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-topbar" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-subtabs" }, SUB_TABS.map((t) => /* @__PURE__ */ import_react14.default.createElement(
-      "button",
-      {
-        key: t.id,
-        className: `lib-subtab ${subTab === t.id && !drillFilter ? "active" : ""}`,
-        onClick: () => {
-          setSubTab(t.id);
-          setDrillFilter(null);
-        },
-        title: t.label
-      },
-      /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: t.icon, size: 14 }),
-      /* @__PURE__ */ import_react14.default.createElement("span", { className: "lib-subtab-label" }, t.label)
-    ))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-controls" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-search-box" }, /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "search", size: 14 }), /* @__PURE__ */ import_react14.default.createElement(
-      "input",
-      {
-        type: "text",
-        className: "input lib-search-input",
-        placeholder: `Search ${(summary.trackCount || 0).toLocaleString()} movies, directors, 4K\u2026`,
-        value: search,
-        onChange: (e) => setSearch(e.target.value)
-      }
-    ), search && /* @__PURE__ */ import_react14.default.createElement("button", { className: "lib-clear-btn", onClick: () => setSearch("") }, "\u2715")), (subTab === "albums" || subTab === "artists") && !drillFilter && /* @__PURE__ */ import_react14.default.createElement("div", { className: "view-mode-toggle", title: "Switch Poster Grid / List view" }, /* @__PURE__ */ import_react14.default.createElement(
-      "button",
-      {
-        className: `btn-icon ${viewMode === "grid" ? "active" : ""}`,
-        onClick: () => setViewMode("grid"),
-        title: "Poster Grid"
-      },
-      /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "grid", size: 14 })
-    ), /* @__PURE__ */ import_react14.default.createElement(
-      "button",
-      {
-        className: `btn-icon ${viewMode === "list" ? "active" : ""}`,
-        onClick: () => setViewMode("list"),
-        title: "List View"
-      },
-      /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "list", size: 14 })
-    )), onOpenAiPlaylist && /* @__PURE__ */ import_react14.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm btn-accent",
-        onClick: onOpenAiPlaylist,
-        title: "Build an AI Watchlist & Virtual Cinema Host from your library"
-      },
-      /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "sparkles", size: 14 }),
-      " \u2726 AI Watchlist"
-    ), onOpenFixMetadata && /* @__PURE__ */ import_react14.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm",
-        onClick: () => onOpenFixMetadata([]),
-        title: "Fix missing movie titles, directors, collections, and poster art"
-      },
-      /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "sparkles", size: 14 }),
-      " \u2726 AI Fix Metadata"
-    ), /* @__PURE__ */ import_react14.default.createElement("button", { className: "btn btn-sm", onClick: onAddFolder, title: "Scan a movie folder" }, /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "folder", size: 14 }), " + Folder"), /* @__PURE__ */ import_react14.default.createElement("button", { className: "btn btn-sm", onClick: onAddFiles, title: "Add movie files" }, /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "plus", size: 14 }), " + Files"), /* @__PURE__ */ import_react14.default.createElement("button", { className: "btn btn-sm", onClick: onRescan, title: "Rescan ~/Videos and ~/Movies" }, /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "refresh", size: 14 })))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-stats-strip" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-stats-left" }, drillFilter ? /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-breadcrumb" }, /* @__PURE__ */ import_react14.default.createElement("button", { className: "crumb-back", onClick: clearDrill }, "\u2190 Back to ", subTab), /* @__PURE__ */ import_react14.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react14.default.createElement("span", { className: "crumb-current" }, drillFilter.label), /* @__PURE__ */ import_react14.default.createElement("span", { className: "crumb-count" }, "(", tracksResult.total.toLocaleString(), " films)")) : /* @__PURE__ */ import_react14.default.createElement("span", null, /* @__PURE__ */ import_react14.default.createElement("strong", null, (summary.trackCount || 0).toLocaleString()), " movies \u2022", " ", /* @__PURE__ */ import_react14.default.createElement("strong", null, (summary.albumCount || 0).toLocaleString()), " collections \u2022", " ", /* @__PURE__ */ import_react14.default.createElement("strong", null, (summary.artistCount || 0).toLocaleString()), " directors \u2022", " ", formatBytes(summary.totalSize || 0), summary.cloudCount > 0 && ` \u2022 ${summary.cloudCount.toLocaleString()} cloud`)), /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-stats-right" }, scanStatus && scanStatus.active && /* @__PURE__ */ import_react14.default.createElement("span", { className: "scan-pill" }, "Scanning ", scanStatus.processed.toLocaleString(), " / ", (scanStatus.total || 0).toLocaleString(), "\u2026"), showTrackTable && tracksResult.total > 0 && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("button", { className: "btn btn-xs btn-accent", onClick: () => handlePlayAllMatching(false) }, /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "play", size: 12 }), " Play All (", tracksResult.total.toLocaleString(), ")"), /* @__PURE__ */ import_react14.default.createElement("button", { className: "btn btn-xs", onClick: () => handlePlayAllMatching(true) }, /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: "shuffle", size: 12 }), " Shuffle")))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "lib-body" }, subTab === "albums" && !drillFilter && (viewMode === "grid" ? /* @__PURE__ */ import_react14.default.createElement(
-      VirtualGrid,
-      {
-        items: filteredAlbums,
-        minCardWidth: 168,
-        cardHeight: 224,
-        gap: 14,
-        renderItem: (alb) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "media-card",
-            onClick: () => openDrill("album", alb.key, `${alb.name} \u2014 ${alb.artist}`, alb)
-          },
-          /* @__PURE__ */ import_react14.default.createElement(CoverThumb, { artId: alb.artId, fallback: "film", className: "media-card-art" }),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "media-card-title", title: alb.name }, alb.name),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "media-card-sub", title: alb.artist }, alb.artist),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "media-card-meta" }, /* @__PURE__ */ import_react14.default.createElement("span", null, alb.trackCount, " films"), alb.year && /* @__PURE__ */ import_react14.default.createElement("span", null, alb.year))
-        )
-      }
-    ) : /* @__PURE__ */ import_react14.default.createElement(
-      VirtualTable,
-      {
-        items: filteredAlbums,
-        rowHeight: 54,
-        renderRow: (alb) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "artist-row",
-            onClick: () => openDrill("album", alb.key, `${alb.name} \u2014 ${alb.artist}`, alb)
-          },
-          /* @__PURE__ */ import_react14.default.createElement(CoverThumb, { artId: alb.artId, fallback: "film", className: "artist-row-art" }),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-main" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-name" }, alb.name), /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-sub" }, alb.artist, " \u2022 ", alb.trackCount, " films \u2022 ", formatTime(alb.duration))),
-          /* @__PURE__ */ import_react14.default.createElement("span", { className: "pill" }, alb.year || alb.genre || "Collection")
-        )
-      }
-    )), subTab === "artists" && !drillFilter && (viewMode === "grid" ? /* @__PURE__ */ import_react14.default.createElement(
-      VirtualGrid,
-      {
-        items: filteredArtists,
-        minCardWidth: 168,
-        cardHeight: 214,
-        gap: 14,
-        renderItem: (art) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "media-card",
-            onClick: () => openDrill("artist", art.name, art.name, art)
-          },
-          /* @__PURE__ */ import_react14.default.createElement(CoverThumb, { artId: art.artId, fallback: "mic", className: "media-card-art artist-circle" }),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "media-card-title", title: art.name }, art.name),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "media-card-sub" }, art.albumCount, " collections \u2022 ", art.trackCount, " films")
-        )
-      }
-    ) : /* @__PURE__ */ import_react14.default.createElement(
-      VirtualTable,
-      {
-        items: filteredArtists,
-        rowHeight: 54,
-        renderRow: (art) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "artist-row",
-            onClick: () => openDrill("artist", art.name, art.name, art)
-          },
-          /* @__PURE__ */ import_react14.default.createElement(CoverThumb, { artId: art.artId, fallback: "mic", className: "artist-row-art" }),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-main" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-name" }, art.name), /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-sub" }, art.albumCount, " collections \u2022 ", art.trackCount, " films \u2022 ", formatTime(art.duration))),
-          /* @__PURE__ */ import_react14.default.createElement("span", { className: "pill" }, art.genre)
-        )
-      }
-    )), subTab === "genres" && !drillFilter && /* @__PURE__ */ import_react14.default.createElement(
-      VirtualGrid,
-      {
-        items: filteredGenres,
-        minCardWidth: 180,
-        cardHeight: 116,
-        gap: 12,
-        renderItem: (g) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "genre-card",
-            onClick: () => openDrill("genre", g.name, g.name, g)
-          },
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "genre-card-name" }, g.name),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "genre-card-meta" }, g.trackCount.toLocaleString(), " films \u2022 ", formatTime(g.duration))
-        )
-      }
-    ), subTab === "decades" && !drillFilter && /* @__PURE__ */ import_react14.default.createElement(
-      VirtualGrid,
-      {
-        items: decades,
-        minCardWidth: 180,
-        cardHeight: 116,
-        gap: 12,
-        renderItem: (d) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "genre-card decade-card",
-            onClick: () => openDrill("decade", d.decade, d.name, d)
-          },
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "genre-card-name" }, d.name),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "genre-card-meta" }, d.trackCount.toLocaleString(), " films \u2022 ", formatTime(d.duration))
-        )
-      }
-    ), subTab === "composers" && !drillFilter && /* @__PURE__ */ import_react14.default.createElement(
-      VirtualTable,
-      {
-        items: filteredComposers,
-        rowHeight: 50,
-        renderRow: (c) => /* @__PURE__ */ import_react14.default.createElement(
-          "div",
-          {
-            className: "artist-row",
-            onClick: () => openDrill("composer", c.name, `Studio / Writer: ${c.name}`, c)
-          },
-          /* @__PURE__ */ import_react14.default.createElement(CoverThumb, { artId: c.artId, fallback: "feather", className: "artist-row-art" }),
-          /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-main" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-name" }, c.name), /* @__PURE__ */ import_react14.default.createElement("div", { className: "artist-row-sub" }, c.trackCount.toLocaleString(), " films \u2022 ", formatTime(c.duration)))
-        )
-      }
-    ), subTab === "folders" && !drillFilter && /* @__PURE__ */ import_react14.default.createElement(
-      FolderManagerPanel,
-      {
-        onSelectFolder: (dirPath) => openDrill("folder", dirPath, dirPath),
-        onLibraryChanged: (lib) => {
-          if (onLibraryChanged) onLibraryChanged(lib);
-          refreshTracks();
-        }
-      }
-    ), showTrackTable && /* @__PURE__ */ import_react14.default.createElement("div", { className: "vt-outer" }, drillFilter && drillFilter.meta && /* @__PURE__ */ import_react14.default.createElement("div", { className: "drill-hero" }, /* @__PURE__ */ import_react14.default.createElement(CoverThumb, { artId: drillFilter.meta.artId, fallback: "film", className: "drill-hero-art" }), /* @__PURE__ */ import_react14.default.createElement("div", { className: "drill-hero-info" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "drill-hero-type" }, drillFilter.type.toUpperCase()), /* @__PURE__ */ import_react14.default.createElement("h3", null, drillFilter.meta.name || drillFilter.label), /* @__PURE__ */ import_react14.default.createElement("div", { className: "drill-hero-sub" }, drillFilter.meta.artist && /* @__PURE__ */ import_react14.default.createElement("span", null, drillFilter.meta.artist, " \u2022 "), /* @__PURE__ */ import_react14.default.createElement("span", null, tracksResult.total.toLocaleString(), " movies"), drillFilter.meta.year && /* @__PURE__ */ import_react14.default.createElement("span", null, " \u2022 ", drillFilter.meta.year)))), /* @__PURE__ */ import_react14.default.createElement(
-      TrackList,
-      {
-        tracks: tracksResult.tracks,
-        currentTrack,
-        isPlaying,
-        sortBy,
-        sortDir,
-        onChangeSort: (key, dir) => {
-          setSortBy(key);
-          setSortDir(dir);
-        },
-        onPlayTrack,
-        onQueueTrack,
-        onQueueTracks,
-        onToggleLoved: handleToggleLoved,
-        onAddTrackToPlaylist,
-        onFixMetadata: onOpenFixMetadata,
-        onInspectTrack: setInspectingTrack,
-        playlists
-      }
-    ))), inspectingTrack && /* @__PURE__ */ import_react14.default.createElement(
-      TrackInfoModal,
-      {
-        track: inspectingTrack,
-        onClose: () => setInspectingTrack(null),
-        onToggleLoved: handleToggleLoved
-      }
-    ));
+  function Icon2({ name, size = 16 }) {
+    return /* @__PURE__ */ import_react8.default.createElement("svg", { className: "icon", xmlns: "http://www.w3.org/2000/svg", width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, ICON_PATHS[name]);
   }
 
   // src/CloudBrowser.jsx
-  var import_react15 = __toESM(require_react());
-  var CACHE_BUDGET_PRESETS = [
-    { label: "512 MB", bytes: 512 * 1024 * 1024 },
+  var import_react9 = __toESM(require_react());
+  var formatSize = (b) => b == null ? "" : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+  var CACHE_LIMIT_OPTIONS = [
+    { label: "250 MB", bytes: 250 * 1024 * 1024 },
+    { label: "500 MB (Default)", bytes: 500 * 1024 * 1024 },
     { label: "1 GB", bytes: 1024 * 1024 * 1024 },
-    { label: "2 GB", bytes: 2 * 1024 * 1024 * 1024 },
-    { label: "5 GB", bytes: 5 * 1024 * 1024 * 1024 },
-    { label: "10 GB", bytes: 10 * 1024 * 1024 * 1024 }
+    { label: "2 GB", bytes: 2048 * 1024 * 1024 },
+    { label: "5 GB", bytes: 5120 * 1024 * 1024 }
   ];
-  function CloudBrowser({
-    cloudSources = [],
-    cloudCache = null,
-    onIndexCloudSource,
-    onRemoveCloudSourceTracks,
-    onPlayCloudItem,
-    onOpenDataSources,
-    onRefreshCloudSources
-  }) {
-    const [selectedSourceId, setSelectedSourceId] = (0, import_react15.useState)(() => cloudSources[0] ? cloudSources[0].id : null);
-    const [remotePath, setRemotePath] = (0, import_react15.useState)("/");
-    const [listing, setListing] = (0, import_react15.useState)({ items: [], mode: "", hint: "" });
-    const [loading, setLoading] = (0, import_react15.useState)(false);
-    const [indexingId, setIndexingId] = (0, import_react15.useState)(null);
-    const [indexProgress, setIndexProgress] = (0, import_react15.useState)(null);
-    const [cacheState, setCacheState] = (0, import_react15.useState)(cloudCache);
-    (0, import_react15.useEffect)(() => {
-      setCacheState(cloudCache);
-    }, [cloudCache]);
-    (0, import_react15.useEffect)(() => {
-      if (!selectedSourceId && cloudSources.length > 0) {
-        setSelectedSourceId(cloudSources[0].id);
+  var providerBadge = (driverType) => {
+    const d = (driverType || "").toLowerCase();
+    if (d === "gdrive") return { label: "Google Drive", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.12)" };
+    if (d === "onedrive") return { label: "OneDrive", color: "#60a5fa", bg: "rgba(96, 165, 250, 0.12)" };
+    if (d === "dropbox") return { label: "Dropbox", color: "#818cf8", bg: "rgba(129, 140, 248, 0.12)" };
+    if (d === "s3") return { label: "Amazon S3", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.12)" };
+    return { label: (driverType || "Cloud").toUpperCase(), color: "#e8a33d", bg: "rgba(232, 163, 61, 0.12)" };
+  };
+  function CloudBrowser({ onLibrary, onFolders, showStatus, folders = [], onEnabled, onRescan, busyId }) {
+    const [connections, setConnections] = (0, import_react9.useState)(null);
+    const [connId, setConnId] = (0, import_react9.useState)("");
+    const [listing, setListing] = (0, import_react9.useState)(null);
+    const [loading, setLoading] = (0, import_react9.useState)(false);
+    const [error, setError] = (0, import_react9.useState)("");
+    const [selected, setSelected] = (0, import_react9.useState)(/* @__PURE__ */ new Set());
+    const [progress, setProgress] = (0, import_react9.useState)(null);
+    const [cacheStats, setCacheStats] = (0, import_react9.useState)(null);
+    const importing = (0, import_react9.useRef)(false);
+    const dirCacheRef = (0, import_react9.useRef)(/* @__PURE__ */ new Map());
+    const loadCacheStats = async () => {
+      try {
+        if (window.robosAudio?.cloudCacheStats) {
+          setCacheStats(await window.robosAudio.cloudCacheStats());
+        }
+      } catch {
       }
-    }, [cloudSources]);
-    (0, import_react15.useEffect)(() => {
-      if (!window.robosAudio || !window.robosAudio.onCloudIndexProgress) return void 0;
-      return window.robosAudio.onCloudIndexProgress((prog) => setIndexProgress(prog));
-    }, []);
-    const loadFolder = async (sourceId, targetPath = "/") => {
-      if (!sourceId) return;
+    };
+    const browse = async (id, p, force = false) => {
+      if (!id) return;
+      if (id !== connId) setConnId(id);
+      const normPath = p || "/";
+      const cacheKey = `${id}::${normPath}`;
+      if (!force && dirCacheRef.current.has(cacheKey)) {
+        setError("");
+        setSelected(/* @__PURE__ */ new Set());
+        setListing(dirCacheRef.current.get(cacheKey));
+        return;
+      }
       setLoading(true);
+      setError("");
+      setSelected(/* @__PURE__ */ new Set());
+      const res = await window.robosAudio.cloudList(id, normPath, force);
+      setLoading(false);
+      if (!res.ok) {
+        setError(res.error);
+        setListing(null);
+        return;
+      }
+      dirCacheRef.current.set(cacheKey, res);
+      setListing(res);
+    };
+    const loadConnections = async (forceRefresh = false) => {
+      if (forceRefresh) dirCacheRef.current.clear();
+      const list = await window.robosAudio.cloudConnections();
+      const seen = /* @__PURE__ */ new Set();
+      const unique = list.map((c) => ({ ...c, folders: (c.folders || []).filter((f) => {
+        if (!f.cloudKey || !f.cloudKey.startsWith("gdrive:")) return true;
+        if (seen.has(f.cloudKey)) return false;
+        seen.add(f.cloudKey);
+        return true;
+      }) })).filter((c, i) => !list[i].folders?.length || c.folders.length);
+      setConnections(unique);
+      if (list.length) {
+        const target = unique.find((c) => c.id === connId && c.browsable) || unique.find((c) => c.browsable);
+        if (target) {
+          setConnId(target.id);
+          browse(target.id, target.startPath || "/", forceRefresh);
+        }
+      }
+      loadCacheStats();
+    };
+    (0, import_react9.useEffect)(() => {
+      loadConnections(false);
+      return window.robosAudio.onCloudProgress((p) => setProgress(p.phase === "done" ? null : p));
+    }, []);
+    (0, import_react9.useEffect)(() => {
+      setProgress(null);
+    }, [folders]);
+    const toggle = (p) => setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(p) ? next.delete(p) : next.add(p);
+      return next;
+    });
+    const parentPath = listing && listing.path !== "/" ? listing.path.replace(/\/[^/]*$/, "") || "/" : null;
+    const crumbs = listing ? listing.path.split("/").filter(Boolean) : [];
+    const doImport = async (paths) => {
+      if (importing.current || !paths.length) return;
+      importing.current = true;
+      setProgress({ phase: "scanning" });
+      const res = await window.robosAudio.cloudImport(connId, paths);
+      importing.current = false;
+      setProgress(null);
+      if (!res.ok) {
+        showStatus(`Cloud import failed: ${res.error}`);
+        return;
+      }
+      onLibrary(res.library);
+      setSelected(/* @__PURE__ */ new Set());
+      loadCacheStats();
+      showStatus(res.added ? `Indexed ${res.added} cloud track${res.added === 1 ? "" : "s"} (streamed on play, cached up to limit).` : "No audio files found in the selection.");
+    };
+    const addFolder = async (p, targetConnId = connId) => {
+      if (importing.current) return;
+      importing.current = true;
+      setProgress({ phase: "scanning" });
+      let res;
       try {
-        const res = await window.robosAudio.browseCloud(sourceId, targetPath);
-        setRemotePath(targetPath);
-        setListing(res || { items: [], mode: "" });
+        res = await window.robosAudio.addCloudFolder(targetConnId, p);
       } catch (err) {
-        setListing({ items: [], mode: "error", hint: err.message });
-      } finally {
-        setLoading(false);
+        res = { ok: false, error: err.message };
       }
+      importing.current = false;
+      setProgress(null);
+      onFolders(res);
+      if (!res.ok) {
+        showStatus(`Could not add folder: ${res.error}`);
+        return;
+      }
+      loadCacheStats();
+      showStatus(`Cloud folder synced: ${res.added} track${res.added === 1 ? "" : "s"} indexed for on-demand streaming.`);
     };
-    (0, import_react15.useEffect)(() => {
-      if (selectedSourceId) {
-        loadFolder(selectedSourceId, "/");
-      }
-    }, [selectedSourceId]);
-    const handleIndex = async (sourceId, folderPath = "/") => {
-      setIndexingId(sourceId);
-      setIndexProgress({ sourceId, indexed: 0, currentPath: folderPath });
-      try {
-        await onIndexCloudSource(sourceId, folderPath);
-      } finally {
-        setIndexingId(null);
-        setIndexProgress(null);
-      }
+    const handleMaxCacheChange = async (e) => {
+      const bytes = Number(e.target.value);
+      if (!window.robosAudio?.cloudCacheSetMax) return;
+      const stats = await window.robosAudio.cloudCacheSetMax(bytes);
+      setCacheStats(stats);
+      showStatus(`Cloud audio LRU cache limit set to ${formatSize(stats.maxCacheBytes)}.`);
     };
-    const handleChangeBudget = async (bytes) => {
-      const next = await window.robosAudio.setCloudCacheMaxBytes(bytes);
-      setCacheState(next);
+    const refreshFolder = async (id) => {
+      await onRescan(id);
+      dirCacheRef.current.clear();
+      if (listing) await browse(connId, listing.path, true);
     };
     const handleClearCache = async () => {
-      const next = await window.robosAudio.clearCloudCache();
-      setCacheState(next);
+      if (!window.robosAudio?.cloudCacheClear) return;
+      const res = await window.robosAudio.cloudCacheClear();
+      setCacheStats(res);
+      showStatus(`Cleared ${res.removed || 0} cached cloud audio file(s). Tracks will stream on demand when played.`);
     };
-    const breadcrumbs = remotePath.split("/").filter(Boolean);
-    return /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-view" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react15.default.createElement("div", null, /* @__PURE__ */ import_react15.default.createElement("h2", null, "Cloud Cinema Storage (Google Drive / OneDrive / Dropbox / S3)"), /* @__PURE__ */ import_react15.default.createElement("p", { className: "muted" }, "Index 50,000+ cloud movies by metadata only \u2014 video streams on-demand over HTTP Range with bounded LRU disk caching.")), /* @__PURE__ */ import_react15.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn btn-sm", onClick: onRefreshCloudSources }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "refresh", size: 14 }), " Refresh Sources"), /* @__PURE__ */ import_react15.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm",
-        onClick: () => window.robosAudio.openCloudAccountsApp && window.robosAudio.openCloudAccountsApp(),
-        title: "Sign in to Google Drive or OneDrive in RobOS Cloud Accounts"
-      },
-      /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "cloud", size: 14 }),
-      " Cloud Accounts"
-    ), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn btn-sm btn-accent", onClick: onOpenDataSources }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "plus", size: 14 }), " Configure in Data Sources"))), cacheState && /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-cache-bar" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-cache-info" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "pill" }, "On-Demand Video LRU Cache"), /* @__PURE__ */ import_react15.default.createElement("span", null, /* @__PURE__ */ import_react15.default.createElement("strong", null, formatBytes(cacheState.usedBytes)), " / ", formatBytes(cacheState.maxBytes), " used (", cacheState.fileCount || 0, " cached movies)")), /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-cache-controls" }, /* @__PURE__ */ import_react15.default.createElement("label", { className: "muted", style: { fontSize: 11 } }, "Max Budget:"), /* @__PURE__ */ import_react15.default.createElement(
+    const usable = (connections || []).filter((c) => c.browsable);
+    const other = (connections || []).filter((c) => !c.browsable);
+    const activeConn = usable.find((c) => c.id === connId) || usable[0] || null;
+    const currentPath = listing ? listing.path : "/";
+    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react9.default.createElement(
       "select",
       {
-        className: "select-sm",
-        value: cacheState.maxBytes,
-        onChange: (e) => handleChangeBudget(Number(e.target.value))
+        id: "cloud-conn-select",
+        style: { display: "none" },
+        value: connId,
+        onChange: (e) => setConnId(e.target.value),
+        disabled: !usable.length
       },
-      CACHE_BUDGET_PRESETS.map((p) => /* @__PURE__ */ import_react15.default.createElement("option", { key: p.bytes, value: p.bytes }, p.label))
-    ), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn btn-xs", onClick: handleClearCache }, "Clear Cache"))), indexProgress && /* @__PURE__ */ import_react15.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react15.default.createElement("span", null, "Indexing ", /* @__PURE__ */ import_react15.default.createElement("strong", null, indexProgress.sourceId), ": ", indexProgress.indexed, " movies discovered (", indexProgress.currentPath, ")")), /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-split" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-sources-col" }, cloudSources.length === 0 ? /* @__PURE__ */ import_react15.default.createElement("div", { className: "empty-state" }, "No cloud sources found in ", /* @__PURE__ */ import_react15.default.createElement("code", null, "~/.config/robos/data-sources.json"), ".") : cloudSources.map((src) => /* @__PURE__ */ import_react15.default.createElement(
+      !usable.length && /* @__PURE__ */ import_react9.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
+      usable.map((c) => /* @__PURE__ */ import_react9.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
+    ), /* @__PURE__ */ import_react9.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react9.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud & SFTP movies"), /* @__PURE__ */ import_react9.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Movie Player starts.")), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Movies stream on demand when played"), usable.map((c) => {
+      const badge = providerBadge(c.driverType);
+      const linked = c.folders || [];
+      const rows = [
+        ...linked.map((lf) => ({ ...lf, saved: folders.find((f) => f.cloudKey === lf.cloudKey) })),
+        ...folders.filter((f) => f.kind === "cloud" && f.connectionId === c.id && !linked.some((lf) => lf.cloudKey === f.cloudKey)).map((f) => ({ label: f.label, remotePath: f.path, cloudKey: f.cloudKey, saved: f }))
+      ];
+      return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react9.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react9.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react9.default.createElement("span", null, c.user), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
+        const f = lf.saved;
+        const checked = !!f && f.syncEnabled !== false;
+        const busy = !!progress || !!busyId;
+        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react9.default.createElement(
+          "input",
+          {
+            type: "checkbox",
+            "aria-label": "Keep " + lf.label + " synced",
+            checked,
+            disabled: busy,
+            onChange: (e) => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)
+          }
+        ), /* @__PURE__ */ import_react9.default.createElement("span", null, /* @__PURE__ */ import_react9.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react9.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react9.default.createElement("small", null, f.trackCount, " tracks \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f?.syncError && /* @__PURE__ */ import_react9.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react9.default.createElement(
+          "button",
+          {
+            className: "btn-secondary",
+            disabled: busy || !checked,
+            onClick: () => refreshFolder(f.id),
+            "aria-label": "Refresh " + lf.label
+          },
+          busyId === f?.id ? "Syncing\u2026" : "Refresh"
+        ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
+      }), !rows.length && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
+    })), cacheStats && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-cache-bar", style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "12px",
+      padding: "8px 12px",
+      marginBottom: "10px",
+      background: "rgba(0, 188, 212, 0.06)",
+      border: "1px solid rgba(0, 188, 212, 0.2)",
+      borderRadius: "6px",
+      fontSize: "12px",
+      color: "#94a3b8"
+    } }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react9.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react9.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react9.default.createElement(
+      "select",
+      {
+        id: "cloud-cache-limit",
+        value: cacheStats.maxCacheBytes,
+        onChange: handleMaxCacheChange,
+        style: { padding: "3px 6px", fontSize: "11px", background: "#0d1117", color: "#e2e8f0", border: "1px solid #30363d", borderRadius: "4px" }
+      },
+      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react9.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
+    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react9.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react9.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected movies"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, { key: i }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react9.default.createElement(
       "div",
       {
-        key: src.id,
-        className: `cloud-source-card ${selectedSourceId === src.id ? "active" : ""}`,
-        onClick: () => setSelectedSourceId(src.id)
+        key: e.path,
+        className: `cloud-row ${selected.has(e.path) ? "selected" : ""}`,
+        onClick: () => e.type === "dir" ? browse(connId, e.path) : toggle(e.path)
       },
-      /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-source-top" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "cloud-type-badge" }, src.type), /* @__PURE__ */ import_react15.default.createElement("span", { className: `status-dot ${src.status === "connected" ? "online" : ""}` })),
-      /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-source-name" }, src.name),
-      /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-source-desc" }, src.description || src.id),
-      /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-source-actions", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react15.default.createElement(
-        "button",
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react9.default.createElement(
+        "input",
         {
-          className: "btn btn-xs btn-accent",
-          disabled: indexingId === src.id,
-          onClick: () => handleIndex(src.id, "/")
-        },
-        indexingId === src.id ? "Indexing\u2026" : "Index Movies"
-      ), /* @__PURE__ */ import_react15.default.createElement(
-        "button",
-        {
-          className: "btn btn-xs",
-          onClick: () => onRemoveCloudSourceTracks(src.id)
-        },
-        "Purge Index"
-      ))
-    ))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-browser-col" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-breadcrumb-bar" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-breadcrumbs" }, /* @__PURE__ */ import_react15.default.createElement("button", { className: "crumb-btn", onClick: () => loadFolder(selectedSourceId, "/") }, "root"), breadcrumbs.map((part, idx) => {
-      const sub = "/" + breadcrumbs.slice(0, idx + 1).join("/");
-      return /* @__PURE__ */ import_react15.default.createElement(import_react15.default.Fragment, { key: sub }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "crumb-btn", onClick: () => loadFolder(selectedSourceId, sub) }, part));
-    })), selectedSourceId && /* @__PURE__ */ import_react15.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs btn-accent",
-        disabled: indexingId !== null,
-        onClick: () => handleIndex(selectedSourceId, remotePath)
-      },
-      "Index This Folder"
-    )), listing.hint && /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-hint-banner" }, listing.hint), /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-file-list" }, loading ? /* @__PURE__ */ import_react15.default.createElement("div", { className: "empty-state" }, "Browsing remote folder\u2026") : (listing.items || []).length === 0 ? /* @__PURE__ */ import_react15.default.createElement("div", { className: "empty-state" }, "No movie files or subfolders found at this path.") : listing.items.map((item) => /* @__PURE__ */ import_react15.default.createElement(
-      "div",
-      {
-        key: item.path,
-        className: "cloud-file-row",
-        onDoubleClick: () => {
-          if (item.type === "folder") loadFolder(selectedSourceId, item.path);
-          else if (onPlayCloudItem) onPlayCloudItem(selectedSourceId, item);
+          type: "checkbox",
+          checked: e.type === "dir" ? folders.some((f) => f.connectionId === connId && f.path === e.path && f.syncEnabled !== false) : selected.has(e.path),
+          disabled: e.type === "dir" && (!!progress || !!busyId),
+          onChange: (ev) => {
+            if (e.type !== "dir") {
+              toggle(e.path);
+              return;
+            }
+            const folder = folders.find((f) => f.connectionId === connId && f.path === e.path);
+            folder ? onEnabled(folder.id, ev.target.checked) : addFolder(e.path, connId);
+          },
+          "aria-label": e.type === "dir" ? `Keep ${e.name} synced` : `Select ${e.name}`
         }
-      },
-      /* @__PURE__ */ import_react15.default.createElement("span", { className: "cloud-file-icon" }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: item.type === "folder" ? "folder" : "film", size: 15 })),
-      /* @__PURE__ */ import_react15.default.createElement("span", { className: "cloud-file-name" }, item.name),
-      /* @__PURE__ */ import_react15.default.createElement("span", { className: "cloud-file-size" }, item.type === "folder" ? "Folder" : formatBytes(item.size)),
-      /* @__PURE__ */ import_react15.default.createElement("div", { className: "cloud-file-btns" }, item.type === "folder" ? /* @__PURE__ */ import_react15.default.createElement(import_react15.default.Fragment, null, /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn btn-xs", onClick: () => loadFolder(selectedSourceId, item.path) }, "Open"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn btn-xs btn-accent", onClick: () => handleIndex(selectedSourceId, item.path) }, "Index")) : /* @__PURE__ */ import_react15.default.createElement(
+      )),
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react9.default.createElement(
         "button",
         {
-          className: "btn btn-xs btn-accent",
-          onClick: () => onPlayCloudItem && onPlayCloudItem(selectedSourceId, item)
+          className: "row-btn",
+          style: { fontSize: "0.7rem", padding: "2px 7px" },
+          disabled: !!progress,
+          title: `Sync folder "${e.name}" to Library`,
+          onClick: (ev) => {
+            ev.stopPropagation();
+            addFolder(e.path, connId);
+          }
         },
-        "Stream"
-      ))
-    ))))));
-  }
-
-  // src/NowPlayingPanel.jsx
-  var import_react16 = __toESM(require_react());
-  function NowPlayingPanel({
-    queue = [],
-    currentTrack = null,
-    isPlaying = false,
-    collapsed = false,
-    width = 280,
-    onToggleCollapse,
-    onPlayTrack,
-    onRemoveFromQueue,
-    onClearQueue,
-    onMoveQueueItem
-  }) {
-    if (collapsed) {
-      return /* @__PURE__ */ import_react16.default.createElement("aside", { className: "np-panel collapsed", title: "Expand Screening Queue" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "np-expand-btn", onClick: onToggleCollapse }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "list", size: 16 }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-badge-count" }, queue.length)));
-    }
-    const totalSec = queue.reduce((s, t) => s + (t.duration || 0), 0);
-    return /* @__PURE__ */ import_react16.default.createElement("aside", { className: "np-panel", style: { width, minWidth: width } }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-title-block" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-title" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "list", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Screening Queue")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-subtitle" }, queue.length.toLocaleString(), " films \u2022 ", formatTime(totalSec))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-header-actions" }, queue.length > 0 && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn btn-xs", onClick: onClearQueue, title: "Clear queue" }, "Clear"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon", onClick: onToggleCollapse, title: "Collapse queue panel" }, "\u2715"))), queue.length === 0 ? /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-empty" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "film", size: 28 }), /* @__PURE__ */ import_react16.default.createElement("div", null, "Screening queue is empty"), /* @__PURE__ */ import_react16.default.createElement("small", null, "Double-click any movie or click + to queue a marathon")) : /* @__PURE__ */ import_react16.default.createElement(
-      VirtualTable,
-      {
-        items: queue,
-        rowHeight: 48,
-        className: "np-list",
-        renderRow: (track, idx) => {
-          const active = currentTrack && currentTrack.id === track.id;
-          return /* @__PURE__ */ import_react16.default.createElement(
-            "div",
-            {
-              key: `${track.id}-${idx}`,
-              className: `np-item ${active ? "active" : ""}`,
-              onDoubleClick: () => onPlayTrack(track, queue)
-            },
-            /* @__PURE__ */ import_react16.default.createElement(
-              "button",
-              {
-                className: "np-play-indicator",
-                onClick: () => onPlayTrack(track, queue),
-                title: "Play this film"
-              },
-              active ? /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: isPlaying ? "volume" : "pause", size: 13 }) : /* @__PURE__ */ import_react16.default.createElement("span", null, idx + 1)
-            ),
-            /* @__PURE__ */ import_react16.default.createElement(CoverThumb, { artId: track.artId, fallback: "film", className: "np-item-art" }),
-            /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-item-meta", onClick: () => onPlayTrack(track, queue) }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-item-title" }, track.title), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-item-artist" }, track.artist, track.resolution ? ` \u2022 ${track.resolution}` : "")),
-            /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-item-right" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-item-dur" }, formatTime(track.duration)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-item-btns" }, onMoveQueueItem && idx > 0 && /* @__PURE__ */ import_react16.default.createElement(
-              "button",
-              {
-                className: "btn-icon np-mini-btn",
-                onClick: () => onMoveQueueItem(idx, idx - 1),
-                title: "Move up"
-              },
-              "\u2191"
-            ), /* @__PURE__ */ import_react16.default.createElement(
-              "button",
-              {
-                className: "btn-icon np-mini-btn",
-                onClick: () => onRemoveFromQueue(idx),
-                title: "Remove from queue"
-              },
-              "\u2715"
-            )))
-          );
-        }
-      }
-    ));
+        "+ Library"
+      ) : formatSize(e.size))
+    )))), loading && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-error" }, error));
   }
 
   // src/Lyrics.jsx
-  var import_react17 = __toESM(require_react());
-  function LyricsPanel({ currentTrack, currentTime = 0, onSeek, onActiveCueChange }) {
-    const [lyrics, setLyrics] = (0, import_react17.useState)({ found: false, source: "none", synced: [], plain: "" });
-    const [loading, setLoading] = (0, import_react17.useState)(false);
-    const [autoFollow, setAutoFollow] = (0, import_react17.useState)(true);
-    const [collapsed, setCollapsed] = (0, import_react17.useState)(false);
-    const activeLineRef = (0, import_react17.useRef)(null);
-    const containerRef = (0, import_react17.useRef)(null);
-    (0, import_react17.useEffect)(() => {
-      if (!currentTrack || !currentTrack.id) {
-        setLyrics({ found: false, source: "none", synced: [], plain: "" });
-        if (onActiveCueChange) onActiveCueChange(null);
-        return;
+  var import_react11 = __toESM(require_react());
+
+  // src/resizable.jsx
+  var import_react10 = __toESM(require_react());
+  var STORE_KEY = "robos-audio-layout";
+  function readStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {};
+    } catch {
+      return {};
+    }
+  }
+  function writeStore(key, value) {
+    try {
+      const all = readStore();
+      if (value == null) delete all[key];
+      else all[key] = value;
+      localStorage.setItem(STORE_KEY, JSON.stringify(all));
+    } catch {
+    }
+  }
+  function useLayoutPref(key, fallback) {
+    const [value, setValue] = (0, import_react10.useState)(() => {
+      const stored = readStore()[key];
+      return stored === void 0 ? fallback : stored;
+    });
+    const first = (0, import_react10.useRef)(true);
+    (0, import_react10.useEffect)(() => {
+      if (first.current) {
+        first.current = false;
+        return void 0;
       }
+      const timer = setTimeout(() => writeStore(key, value), 250);
+      return () => clearTimeout(timer);
+    }, [key, value]);
+    return [value, setValue];
+  }
+  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function startDrag(e, onMove, onEnd) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const el = e.currentTarget;
+    const startX = e.clientX;
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch {
+    }
+    document.body.classList.add("is-resizing");
+    const move = (ev) => onMove(ev.clientX - startX);
+    const up = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      document.body.classList.remove("is-resizing");
+      if (onEnd) onEnd();
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+  }
+  function Splitter({ id, width, onChange, min, max, defaultWidth, side = "left", label, className = "", style }) {
+    const hi = typeof max === "function" ? max() : max;
+    const sign = side === "left" ? 1 : -1;
+    const onPointerDown = (e) => {
+      const start = width;
+      const limit = typeof max === "function" ? max() : max;
+      startDrag(e, (dx) => onChange(clamp(Math.round(start + sign * dx), min, limit)));
+    };
+    const onKeyDown = (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const dir = e.key === "ArrowRight" ? 1 : -1;
+        onChange(clamp(width + sign * dir * step, min, hi));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        onChange(min);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        onChange(hi);
+      }
+    };
+    return /* @__PURE__ */ import_react10.default.createElement(
+      "div",
+      {
+        id,
+        className: `splitter ${className}`,
+        style,
+        role: "separator",
+        "aria-orientation": "vertical",
+        "aria-label": label,
+        "aria-valuenow": Math.round(width),
+        "aria-valuemin": min,
+        "aria-valuemax": Math.round(hi),
+        tabIndex: 0,
+        title: `${label}: drag to resize, double-click to reset`,
+        onPointerDown,
+        onDoubleClick: () => onChange(defaultWidth),
+        onKeyDown
+      }
+    );
+  }
+  function useColumns(storeKey, spec) {
+    const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
+    const template = spec.map((c) => !c.fill && !c.fixed && widths[c.key] != null ? `${widths[c.key]}px` : c.width).join(" ");
+    const handleFor = (0, import_react10.useCallback)((key) => {
+      const i = spec.findIndex((c) => c.key === key);
+      const a = spec[i];
+      const b = spec[i + 1];
+      if (!a || !b || a.fixed || b.fixed) return null;
+      return /* @__PURE__ */ import_react10.default.createElement(
+        ColumnBorder,
+        {
+          key: "col-border",
+          label: `Resize the ${a.label || a.key} column`,
+          onDragStart: (cell) => {
+            const row = cell.parentElement;
+            const cells = Array.from(row.children);
+            const measured = {};
+            spec.forEach((c, n) => {
+              if (cells[n]) measured[c.key] = cells[n].getBoundingClientRect().width;
+            });
+            const frozen = {};
+            spec.forEach((c) => {
+              if (!c.fill && !c.fixed) frozen[c.key] = Math.round(measured[c.key]);
+            });
+            setWidths(frozen);
+            const minA = a.min || 40;
+            const minB = b.min || 40;
+            const fillSpare = Math.max(0, (measured[(spec.find((c) => c.fill) || {}).key] || 0) - 80);
+            return (dx) => {
+              const lo = a.fill ? -fillSpare : minA - measured[a.key];
+              const hi = a.fill ? measured[b.key] - minB : fillSpare;
+              const d = Math.round(clamp(dx, Math.min(lo, 0), Math.max(hi, 0)));
+              setWidths(() => {
+                const next = { ...frozen };
+                if (a.fill) next[b.key] = Math.max(minB, Math.round(measured[b.key] - d));
+                else next[a.key] = Math.max(minA, Math.round(measured[a.key] + d));
+                return next;
+              });
+            };
+          },
+          onReset: () => setWidths({})
+        }
+      );
+    }, [spec, setWidths]);
+    return { template, handleFor, widths };
+  }
+  function ColumnBorder({ label, onDragStart, onReset }) {
+    const onPointerDown = (e) => {
+      const cell = e.currentTarget.parentElement;
+      const move = onDragStart(cell);
+      startDrag(e, move);
+    };
+    return /* @__PURE__ */ import_react10.default.createElement(
+      "span",
+      {
+        className: "col-border",
+        role: "separator",
+        "aria-orientation": "vertical",
+        "aria-label": label,
+        title: "Drag to resize \xB7 double-click to reset columns",
+        onPointerDown,
+        onClick: (e) => e.stopPropagation(),
+        onDoubleClick: (e) => {
+          e.stopPropagation();
+          onReset();
+        }
+      }
+    );
+  }
+
+  // src/Lyrics.jsx
+  function Lyrics({ track, getTime, onSeek }) {
+    const [enabled, setEnabled] = useLayoutPref("lyricsEnabled", true);
+    const [follow, setFollow] = useLayoutPref("lyricsFollow", true);
+    const [data, setData] = (0, import_react11.useState)(null);
+    const [active, setActive] = (0, import_react11.useState)(-1);
+    const boxRef = (0, import_react11.useRef)(null);
+    const lineRefs = (0, import_react11.useRef)([]);
+    (0, import_react11.useEffect)(() => {
       let cancelled = false;
-      setLoading(true);
-      window.robosAudio.getLyrics(currentTrack.id).then((res) => {
-        if (!cancelled) {
-          setLyrics(res || { found: false, source: "none", synced: [], plain: "" });
-          setLoading(false);
-        }
+      setData(null);
+      setActive(-1);
+      if (!enabled) return void 0;
+      if (!track || !window.robosAudio?.getLyrics) {
+        setData({ found: false });
+        return void 0;
+      }
+      window.robosAudio.getLyrics({ title: track.title, artist: track.artist, album: track.album, duration: track.duration, filePath: track.filePath }).then((r) => {
+        if (!cancelled) setData(r);
       }).catch(() => {
-        if (!cancelled) {
-          setLyrics({ found: false, source: "none", synced: [], plain: "" });
-          setLoading(false);
-        }
+        if (!cancelled) setData({ found: false });
       });
       return () => {
         cancelled = true;
       };
-    }, [currentTrack && currentTrack.id]);
-    const activeIdx = (0, import_react17.useMemo)(() => {
-      const list = lyrics.synced || [];
-      if (list.length === 0) return -1;
-      let idx = -1;
-      for (let i = 0; i < list.length; i++) {
-        if (currentTime + 0.12 >= list[i].t) {
-          idx = i;
-        } else {
-          break;
+    }, [enabled, track?.id, track?.filePath, track?.title, track?.artist]);
+    const synced = enabled && data?.synced || [];
+    (0, import_react11.useEffect)(() => {
+      if (!synced.length) return void 0;
+      const tick = () => {
+        const time = getTime();
+        if (time == null) return;
+        const t = time + 0.15;
+        let lo = 0, hi = synced.length - 1, idx = -1;
+        while (lo <= hi) {
+          const mid = lo + hi >> 1;
+          if (synced[mid].t <= t) {
+            idx = mid;
+            lo = mid + 1;
+          } else hi = mid - 1;
         }
-      }
-      return idx;
-    }, [lyrics.synced, currentTime]);
-    (0, import_react17.useEffect)(() => {
-      if (!onActiveCueChange) return;
-      const list = lyrics.synced || [];
-      if (activeIdx >= 0 && list[activeIdx]) {
-        const cue = list[activeIdx];
-        const end = cue.end != null ? cue.end : list[activeIdx + 1] ? list[activeIdx + 1].t : cue.t + 5;
-        if (currentTime <= end + 0.25) {
-          onActiveCueChange(cue);
-          return;
-        }
-      }
-      onActiveCueChange(null);
-    }, [activeIdx, currentTime, lyrics.synced]);
-    (0, import_react17.useEffect)(() => {
-      if (!autoFollow || collapsed || activeIdx < 0 || !activeLineRef.current || !containerRef.current) return;
-      const el = activeLineRef.current;
-      const parent = containerRef.current;
-      const targetTop = el.offsetTop - parent.clientHeight / 2 + el.clientHeight / 2;
-      parent.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-    }, [activeIdx, autoFollow, collapsed]);
-    const handleImportSubtitles = async () => {
-      if (!currentTrack || !window.robosMovie || !window.robosMovie.importSubtitles) return;
-      const res = await window.robosMovie.importSubtitles(currentTrack.id);
-      if (res && res.ok && res.subtitles) {
-        setLyrics(res.subtitles);
-      }
+        setActive((prev) => prev === idx ? prev : idx);
+      };
+      const timer = setInterval(tick, 120);
+      tick();
+      return () => clearInterval(timer);
+    }, [data, enabled]);
+    const scrollToActive = (smooth = true) => {
+      const el = lineRefs.current[active];
+      const box = boxRef.current;
+      if (el && box) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: smooth ? "smooth" : "auto" });
     };
-    return /* @__PURE__ */ import_react17.default.createElement("div", { className: `lyrics-panel ${collapsed ? "collapsed" : ""}` }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-header" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-title-row" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "subtitles", size: 14 }), /* @__PURE__ */ import_react17.default.createElement("span", null, "Subtitles & Synced Dialogue"), lyrics.found && /* @__PURE__ */ import_react17.default.createElement("span", { className: "lyrics-source-badge" }, lyrics.synced && lyrics.synced.length > 0 ? `Synced (${lyrics.source})` : lyrics.source)), /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-actions" }, currentTrack && /* @__PURE__ */ import_react17.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: handleImportSubtitles,
-        title: "Load external .srt, .vtt, or .lrc subtitle file"
-      },
-      "Load .SRT/.VTT"
-    ), lyrics.synced && lyrics.synced.length > 0 && !collapsed && /* @__PURE__ */ import_react17.default.createElement(
-      "button",
-      {
-        className: `btn btn-xs ${autoFollow ? "btn-active-pill" : ""}`,
-        onClick: () => setAutoFollow((v) => !v),
-        title: "Auto-scroll subtitles with movie playback"
-      },
-      "Follow"
-    ), /* @__PURE__ */ import_react17.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: () => setCollapsed((v) => !v),
-        title: collapsed ? "Show subtitles panel" : "Hide subtitles panel"
-      },
-      collapsed ? "Show" : "Hide"
-    ))), !collapsed && /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-body", ref: containerRef }, !currentTrack ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-empty" }, "Select a movie or video to view synchronized subtitles & dialogue") : loading ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-empty" }, "Loading subtitles for \u201C", currentTrack.title, "\u201D\u2026") : !lyrics.found ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-empty" }, "No subtitles found for \u201C", currentTrack.title, "\u201D.", /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-hint" }, "Drop a ", /* @__PURE__ */ import_react17.default.createElement("code", null, ".srt"), " or ", /* @__PURE__ */ import_react17.default.createElement("code", null, ".vtt"), " file next to the video or click ", /* @__PURE__ */ import_react17.default.createElement("strong", null, "Load .SRT/.VTT"), " above.")) : lyrics.synced && lyrics.synced.length > 0 ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "lyrics-synced-list" }, lyrics.synced.map((line, i) => {
-      const isActive = i === activeIdx;
-      const isPast = i < activeIdx;
-      return /* @__PURE__ */ import_react17.default.createElement(
+    (0, import_react11.useEffect)(() => {
+      if (follow) scrollToActive();
+    }, [active, follow]);
+    const stopFollowing = () => {
+      if (follow && synced.length) setFollow(false);
+    };
+    let body;
+    if (data === null) body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, "Looking up lyrics...");
+    else if (synced.length) {
+      body = synced.map((l, i) => /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
-          key: `${line.t}-${i}`,
-          ref: isActive ? activeLineRef : null,
-          className: `lyrics-line ${isActive ? "active" : ""} ${isPast ? "past" : ""}`,
-          onClick: () => onSeek && onSeek(line.t),
-          title: `Jump to ${formatTime(line.t)}`
+          key: i,
+          ref: (el) => {
+            lineRefs.current[i] = el;
+          },
+          className: `lyric-line ${i === active ? "active" : i < active ? "past" : ""}`,
+          onClick: () => onSeek(l.t)
         },
-        /* @__PURE__ */ import_react17.default.createElement("span", { style: { fontSize: 11, opacity: 0.55, marginRight: 8, fontFamily: "monospace" } }, formatTime(line.t)),
-        line.text
+        l.text || " "
+      ));
+    } else if (data.plain) body = /* @__PURE__ */ import_react11.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
+    else body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced lyrics found for this track.");
+    return /* @__PURE__ */ import_react11.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "mic", size: 14 }), " Lyrics"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, "Synced", data.source === "lrclib" ? " via LRCLIB" : " from .lrc file"), enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
+      "button",
+      {
+        id: "btn-lyrics-follow",
+        className: `btn-chip lyrics-btn ${follow ? "on" : ""}`,
+        "aria-pressed": follow,
+        title: follow ? "Following the song: the current line stays in view" : "Follow the song: keep the current line in view",
+        onClick: () => {
+          const next = !follow;
+          setFollow(next);
+          if (next) scrollToActive();
+        }
+      },
+      /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "locate", size: 12 }),
+      " Follow"
+    ), /* @__PURE__ */ import_react11.default.createElement(
+      "button",
+      {
+        id: "btn-lyrics-toggle",
+        className: `btn-chip lyrics-btn ${enabled ? "on" : ""}`,
+        "aria-pressed": enabled,
+        title: enabled ? "Turn lyrics off" : "Turn lyrics on",
+        onClick: () => setEnabled(!enabled)
+      },
+      enabled ? "On" : "Off"
+    ))), enabled && /* @__PURE__ */ import_react11.default.createElement(
+      "div",
+      {
+        className: "lyrics-scroll",
+        ref: boxRef,
+        tabIndex: 0,
+        onWheel: stopFollowing,
+        onTouchMove: stopFollowing,
+        onPointerDown: (e) => {
+          if (e.target === boxRef.current) stopFollowing();
+        },
+        onKeyDown: (e) => {
+          if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key)) stopFollowing();
+        }
+      },
+      body
+    ));
+  }
+
+  // src/Library.jsx
+  var import_react16 = __toESM(require_react());
+
+  // src/FolderPanel.jsx
+  var import_react12 = __toESM(require_react());
+  var when = (iso) => {
+    if (!iso) return "Not indexed yet";
+    const d = new Date(iso);
+    return `Synced ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  };
+  var providerLabel = (protocol) => {
+    const p = (protocol || "").toLowerCase();
+    if (p === "gdrive") return "Google Drive";
+    if (p === "onedrive") return "OneDrive";
+    if (p === "dropbox") return "Dropbox";
+    if (p === "s3") return "S3";
+    return p ? p.toUpperCase() : "Cloud";
+  };
+  function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
+    const [confirmId, setConfirmId] = (0, import_react12.useState)(null);
+    const [alsoTracks, setAlsoTracks] = (0, import_react12.useState)(true);
+    const [editId, setEditId] = (0, import_react12.useState)(null);
+    const [editValue, setEditValue] = (0, import_react12.useState)("");
+    const commitRename = (id) => {
+      if (editValue.trim()) onRename(id, editValue);
+      setEditId(null);
+    };
+    return /* @__PURE__ */ import_react12.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react12.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), /* @__PURE__ */ import_react12.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-name" }, "All Library Tracks"), /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-sub" }, "Combined view across all folders"))), folders.length === 0 && /* @__PURE__ */ import_react12.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder or link folders in RobOS Data Sources (Google Drive, OneDrive, SFTP, FTP)."), folders.map((f) => /* @__PURE__ */ import_react12.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: f.kind === "cloud" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react12.default.createElement(
+      "input",
+      {
+        className: "folder-edit",
+        autoFocus: true,
+        value: editValue,
+        onClick: (e) => e.stopPropagation(),
+        onChange: (e) => setEditValue(e.target.value),
+        onBlur: () => commitRename(f.id),
+        onKeyDown: (e) => {
+          if (e.key === "Enter") commitRename(f.id);
+          if (e.key === "Escape") setEditId(null);
+        }
+      }
+    ) : /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
+      setEditId(f.id);
+      setEditValue(f.label);
+    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react12.default.createElement("strong", null, f.trackCount, " track", f.trackCount === 1 ? "" : "s"), " \xB7 ", when(f.lastSynced)))), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react12.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react12.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        "aria-label": `Keep ${f.label} synced`,
+        checked: f.syncEnabled !== false,
+        disabled: !!busyId,
+        onChange: (e) => onEnabled(f.id, e.target.checked)
+      }
+    ), " Keep synced"), /* @__PURE__ */ import_react12.default.createElement(
+      "button",
+      {
+        className: "row-btn",
+        style: f.trackCount === 0 && !f.lastSynced ? { color: "#00bcd4", borderColor: "rgba(0,188,212,0.4)" } : void 0,
+        onClick: () => onRescan(f.id),
+        disabled: !!busyId || f.connectionMissing || f.syncEnabled === false
+      },
+      busyId === f.id ? "Syncing..." : "Refresh"
+    ), /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
+      setConfirmId(confirmId === f.id ? null : f.id);
+      setAlsoTracks(true);
+    } }, "Remove")), f.syncError && /* @__PURE__ */ import_react12.default.createElement("p", { className: "cloud-error", role: "status" }, "Could not check for updates: ", f.syncError, ". Existing tracks are available; refresh to retry."), confirmId === f.id && /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-confirm" }, /* @__PURE__ */ import_react12.default.createElement("label", null, /* @__PURE__ */ import_react12.default.createElement("input", { type: "checkbox", checked: alsoTracks, onChange: (e) => setAlsoTracks(e.target.checked) }), "Also remove its ", f.trackCount, " track", f.trackCount === 1 ? "" : "s", " from the library", f.kind === "cloud" ? " and delete the downloaded copies" : ""), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react12.default.createElement("button", { className: "btn-secondary", onClick: () => setConfirmId(null) }, "Cancel"), /* @__PURE__ */ import_react12.default.createElement("button", { className: "btn-accent", onClick: () => {
+      setConfirmId(null);
+      onRemove(f.id, alsoTracks);
+    } }, "Remove folder"))))));
+  }
+
+  // src/TrackList.jsx
+  var import_react15 = __toESM(require_react());
+
+  // src/virtual.jsx
+  var import_react13 = __toESM(require_react());
+  var ScrollContainerContext = (0, import_react13.createContext)(null);
+  var OVERSCAN_PX = 600;
+  function useViewport(rootRef, active = true) {
+    const containerRef = (0, import_react13.useContext)(ScrollContainerContext);
+    const [view, setView] = (0, import_react13.useState)(null);
+    (0, import_react13.useEffect)(() => {
+      const container2 = containerRef && containerRef.current;
+      if (!container2 || !rootRef.current) return void 0;
+      let frame = 0;
+      const measure = () => {
+        frame = 0;
+        const root = rootRef.current;
+        if (!root) return;
+        const offset = root.getBoundingClientRect().top - container2.getBoundingClientRect().top;
+        const top = -offset;
+        const bottom = top + container2.clientHeight;
+        const width = root.clientWidth;
+        setView((v) => v && Math.abs(v.top - top) < 1 && Math.abs(v.bottom - bottom) < 1 && v.width === width ? v : { top, bottom, width, container: container2 });
+      };
+      const schedule = () => {
+        if (!frame) frame = requestAnimationFrame(measure);
+      };
+      measure();
+      container2.addEventListener("scroll", schedule, { passive: true });
+      const ro = new ResizeObserver(schedule);
+      ro.observe(container2);
+      ro.observe(rootRef.current);
+      return () => {
+        container2.removeEventListener("scroll", schedule);
+        ro.disconnect();
+        if (frame) cancelAnimationFrame(frame);
+      };
+    }, [containerRef, rootRef, active]);
+    return view;
+  }
+  function scrollRootTo(view, rootRef, y, margin = 0) {
+    if (!view || !rootRef.current) return;
+    const { container: container2 } = view;
+    const offset = rootRef.current.getBoundingClientRect().top - container2.getBoundingClientRect().top;
+    container2.scrollTop += offset + y - margin;
+  }
+  function firstRowAt(rows, y) {
+    let lo = 0;
+    let hi = rows.length - 1;
+    let ans = rows.length;
+    while (lo <= hi) {
+      const mid = lo + hi >> 1;
+      if (rows[mid].top + rows[mid].height >= y) {
+        ans = mid;
+        hi = mid - 1;
+      } else lo = mid + 1;
+    }
+    return ans;
+  }
+  var DEFAULT_GRID = { minWidth: 150, gapX: 16, gapY: 20, textHeight: 46, headingHeight: 50 };
+  var RAIL_WIDTH = 26;
+  function VirtualGrid({
+    items,
+    renderItem,
+    keyOf,
+    letterOf = null,
+    className = "",
+    virtualizeFrom = 60,
+    ...options
+  }) {
+    const opts = { ...DEFAULT_GRID, ...options };
+    const rootRef = (0, import_react13.useRef)(null);
+    const view = useViewport(rootRef);
+    const width = view ? view.width - (letterOf ? RAIL_WIDTH : 0) : 0;
+    const virtual = items.length >= virtualizeFrom && !!view && width > 0;
+    const layout = (0, import_react13.useMemo)(() => {
+      if (!virtual) return null;
+      const cols = Math.max(1, Math.floor((width + opts.gapX) / (opts.minWidth + opts.gapX)));
+      const cardWidth = (width - opts.gapX * (cols - 1)) / cols;
+      const rowHeight = (opts.itemHeight || cardWidth + opts.textHeight) + opts.gapY;
+      const rows = [];
+      const letterTops = [];
+      let top = 0;
+      let i = 0;
+      while (i < items.length) {
+        const letter = letterOf ? letterOf(items[i]) : null;
+        if (letterOf) {
+          letterTops.push({ letter, top });
+          rows.push({ kind: "heading", letter, top, height: opts.headingHeight });
+          top += opts.headingHeight;
+        }
+        while (i < items.length && (!letterOf || letterOf(items[i]) === letter)) {
+          const start = i;
+          const chunk = [];
+          while (chunk.length < cols && i < items.length && (!letterOf || letterOf(items[i]) === letter)) {
+            chunk.push(items[i]);
+            i++;
+          }
+          rows.push({ kind: "cards", items: chunk, start, top, height: rowHeight });
+          top += rowHeight;
+        }
+      }
+      return { cols, rows, total: top, letterTops };
+    }, [virtual, items, width, letterOf, opts.minWidth, opts.gapX, opts.gapY, opts.textHeight, opts.itemHeight, opts.headingHeight]);
+    const plainGrid = () => /* @__PURE__ */ import_react13.default.createElement("div", { className: `card-grid ${className}`, style: opts.itemHeight ? { gridAutoRows: opts.itemHeight } : void 0 }, items.map((item) => /* @__PURE__ */ import_react13.default.createElement(import_react13.default.Fragment, { key: keyOf(item) }, renderItem(item))));
+    if (!virtual) {
+      const waitingForMeasure = items.length >= virtualizeFrom;
+      return /* @__PURE__ */ import_react13.default.createElement("div", { ref: rootRef, className: `vgrid ${letterOf ? "with-rail" : ""}` }, waitingForMeasure ? null : plainGrid());
+    }
+    const first = firstRowAt(layout.rows, view.top - OVERSCAN_PX);
+    const visible = [];
+    for (let r = first; r < layout.rows.length && layout.rows[r].top < view.bottom + OVERSCAN_PX; r++) {
+      visible.push(layout.rows[r]);
+    }
+    return /* @__PURE__ */ import_react13.default.createElement("div", { ref: rootRef, className: `vgrid virtual ${letterOf ? "with-rail" : ""}`, style: { height: layout.total } }, letterOf && layout.letterTops.length > 1 && /* @__PURE__ */ import_react13.default.createElement("div", { className: "letter-rail-track" }, /* @__PURE__ */ import_react13.default.createElement("div", { className: "letter-rail" }, layout.letterTops.map(({ letter, top }) => /* @__PURE__ */ import_react13.default.createElement("button", { key: letter, title: `Jump to ${letter}`, onClick: () => scrollRootTo(view, rootRef, top, 4) }, letter)))), visible.map((row) => row.kind === "heading" ? /* @__PURE__ */ import_react13.default.createElement("h4", { key: `h-${row.letter}`, className: "letter-heading vgrid-heading", style: { top: row.top } }, row.letter) : /* @__PURE__ */ import_react13.default.createElement(
+      "div",
+      {
+        key: `r-${row.start}`,
+        className: `card-grid vgrid-row ${className}`,
+        style: { top: row.top, height: row.height - opts.gapY, gridTemplateColumns: `repeat(${layout.cols}, minmax(0, 1fr))` }
+      },
+      row.items.map((item) => /* @__PURE__ */ import_react13.default.createElement(import_react13.default.Fragment, { key: keyOf(item) }, renderItem(item)))
+    )));
+  }
+
+  // src/TrackList.jsx
+  var import_library_index = __toESM(require_library_index());
+
+  // src/library-ui.jsx
+  var import_react14 = __toESM(require_react());
+  var LibraryContext = (0, import_react14.createContext)({
+    artBase: null,
+    stats: {},
+    currentTrack: null,
+    isPlaying: false,
+    actions: {},
+    openMenu: () => {
+    }
+  });
+  var useLibrary = () => (0, import_react14.useContext)(LibraryContext);
+  var sameTrack = (a, b) => !!(a && b && (a.id && b.id && a.id === b.id || a.filePath && b.filePath && a.filePath === b.filePath));
+  function artUrlFor(artBase, artId) {
+    return artBase && artId ? `${artBase}${artId}.jpg` : null;
+  }
+  function hashHue(text) {
+    let h = 0;
+    const s = String(text || "");
+    for (let i = 0; i < s.length; i++) h = h * 31 + s.charCodeAt(i) >>> 0;
+    return h % 360;
+  }
+  function placeholderBackground(name) {
+    const hue = hashHue(name);
+    return `linear-gradient(135deg, hsl(${hue}, 32%, 30%), hsl(${(hue + 40) % 360}, 38%, 16%))`;
+  }
+  function initials(name) {
+    const words = String(name || "?").replace(/^(the|a|an)\s+/i, "").split(/\s+/).filter(Boolean);
+    return ((words[0] || "?")[0] + (words[1] ? words[1][0] : "")).toUpperCase();
+  }
+  function Cover({ artId, name, round = false, size, className = "", icon = null }) {
+    const { artBase } = useLibrary();
+    const [failed, setFailed] = (0, import_react14.useState)(false);
+    (0, import_react14.useEffect)(() => setFailed(false), [artId, artBase]);
+    const url = !failed ? artUrlFor(artBase, artId) : null;
+    const style = size ? { width: size, height: size, fontSize: Math.max(9, Math.round(size * 0.36)) } : {};
+    if (!url) style.background = placeholderBackground(name);
+    return /* @__PURE__ */ import_react14.default.createElement("div", { className: `cover ${round ? "round" : ""} ${className}`, style }, url ? /* @__PURE__ */ import_react14.default.createElement("img", { src: url, alt: "", loading: "lazy", draggable: false, onError: () => setFailed(true) }) : icon ? /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: icon, size: size ? Math.max(14, Math.round(size / 3)) : 32 }) : /* @__PURE__ */ import_react14.default.createElement("span", { className: "cover-initials" }, initials(name)));
+  }
+  function Collage({ artIds = [], name }) {
+    if (artIds.length < 4) return /* @__PURE__ */ import_react14.default.createElement(Cover, { artId: artIds[0], name, icon: artIds[0] ? null : "tag" });
+    return /* @__PURE__ */ import_react14.default.createElement("div", { className: "cover collage" }, artIds.slice(0, 4).map((id) => /* @__PURE__ */ import_react14.default.createElement(Cover, { key: id, artId: id, name })));
+  }
+  function ContextMenu({ menu, onClose }) {
+    const ref = (0, import_react14.useRef)(null);
+    const [pos, setPos] = (0, import_react14.useState)(null);
+    (0, import_react14.useLayoutEffect)(() => {
+      if (!menu || !ref.current) {
+        setPos(null);
+        return;
+      }
+      const rect = ref.current.getBoundingClientRect();
+      const x = Math.min(menu.x, window.innerWidth - rect.width - 8);
+      const y = menu.y + rect.height > window.innerHeight - 8 ? Math.max(8, menu.y - rect.height) : menu.y;
+      setPos({ x: Math.max(8, x), y });
+    }, [menu]);
+    (0, import_react14.useEffect)(() => {
+      if (!menu) return void 0;
+      const close = (e) => {
+        if (!ref.current || !ref.current.contains(e.target)) onClose();
+      };
+      const onKey = (e) => {
+        if (e.key === "Escape") onClose();
+      };
+      window.addEventListener("mousedown", close, true);
+      window.addEventListener("keydown", onKey, true);
+      window.addEventListener("blur", onClose);
+      window.addEventListener("resize", onClose);
+      document.addEventListener("scroll", onClose, true);
+      return () => {
+        window.removeEventListener("mousedown", close, true);
+        window.removeEventListener("keydown", onKey, true);
+        window.removeEventListener("blur", onClose);
+        window.removeEventListener("resize", onClose);
+        document.removeEventListener("scroll", onClose, true);
+      };
+    }, [menu, onClose]);
+    if (!menu) return null;
+    return /* @__PURE__ */ import_react14.default.createElement(
+      "div",
+      {
+        ref,
+        className: "context-menu",
+        role: "menu",
+        style: { left: pos ? pos.x : menu.x, top: pos ? pos.y : menu.y, visibility: pos ? "visible" : "hidden" },
+        onContextMenu: (e) => e.preventDefault()
+      },
+      menu.items.filter(Boolean).map((item, i) => {
+        if (item.separator) return /* @__PURE__ */ import_react14.default.createElement("div", { key: i, className: "context-sep" });
+        if (item.header) return /* @__PURE__ */ import_react14.default.createElement("div", { key: i, className: "context-header" }, item.header);
+        return /* @__PURE__ */ import_react14.default.createElement(
+          "button",
+          {
+            key: i,
+            role: "menuitem",
+            className: `context-item ${item.danger ? "danger" : ""}`,
+            disabled: item.disabled,
+            onClick: () => {
+              onClose();
+              item.onClick && item.onClick();
+            }
+          },
+          /* @__PURE__ */ import_react14.default.createElement("span", { className: "context-icon" }, item.icon && /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: item.icon, size: 14 })),
+          /* @__PURE__ */ import_react14.default.createElement("span", null, item.label)
+        );
+      })
+    );
+  }
+  function collectionMenuItems(tracks, ctx, { label } = {}) {
+    const { actions, stats } = ctx;
+    const allLoved = tracks.length > 0 && tracks.every((t) => (stats[t.id] || {}).loved);
+    return [
+      label ? { header: label } : null,
+      { label: "Play", icon: "play", onClick: () => actions.playTracks(tracks, 0) },
+      { label: "Shuffle", icon: "shuffle", onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) },
+      { label: "Play next", icon: "playNext", onClick: () => actions.queueTracks(tracks, "next") },
+      { label: "Add to queue", icon: "queueAdd", onClick: () => actions.queueTracks(tracks, "end") },
+      { separator: true },
+      { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
+      { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
+      actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+    ];
+  }
+  function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra = [] } = {}) {
+    const { actions, stats } = ctx;
+    const single = tracks.length === 1 ? tracks[0] : null;
+    const allLoved = tracks.every((t) => (stats[t.id] || {}).loved);
+    const items = [
+      tracks.length > 1 ? { header: `${tracks.length} tracks selected` } : null,
+      {
+        label: "Play",
+        icon: "play",
+        // A single row plays "from here" through the surrounding list, like a music app.
+        onClick: () => single && allTracks ? actions.playTracks(allTracks, index) : actions.playTracks(tracks, 0)
+      },
+      { label: "Play next", icon: "playNext", onClick: () => actions.queueTracks(tracks, "next") },
+      { label: "Add to queue", icon: "queueAdd", onClick: () => actions.queueTracks(tracks, "end") },
+      ...extra,
+      { separator: true },
+      { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
+      { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
+      actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+    ];
+    if (single) {
+      items.push({ separator: true });
+      items.push({ label: "Go to album", icon: "disc", onClick: () => actions.goToAlbumOf(single) });
+      items.push({ label: "Go to artist", icon: "artist", onClick: () => actions.goToArtist(single.artist) });
+      items.push({ label: "Track info", icon: "info", onClick: () => actions.showInfo(single) });
+      if (single.filePath && !single.cloud) {
+        items.push({ label: "Show in file manager", icon: "external", onClick: () => actions.showInFolder(single) });
+      }
+    }
+    return items;
+  }
+  function LoveButton({ track, size = 14 }) {
+    const { stats, actions } = useLibrary();
+    const loved = !!(track && (stats[track.id] || {}).loved);
+    if (!track) return null;
+    return /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        className: `love-btn ${loved ? "loved" : ""}`,
+        title: loved ? "Remove from Loved" : "Love this track",
+        "aria-pressed": loved,
+        onClick: (e) => {
+          e.stopPropagation();
+          actions.setLoved([track], !loved);
+        },
+        onDoubleClick: (e) => e.stopPropagation()
+      },
+      /* @__PURE__ */ import_react14.default.createElement(Icon2, { name: loved ? "heartFill" : "heart", size })
+    );
+  }
+  function useStableArray(items) {
+    const ref = (0, import_react14.useRef)(items);
+    const prev = ref.current;
+    if (prev !== items && (prev.length !== items.length || items.some((v, i) => v !== prev[i]))) {
+      ref.current = items;
+    }
+    return ref.current;
+  }
+  var TRACK_DRAG_TYPE = "application/x-robos-tracks";
+
+  // src/TrackList.jsx
+  var ROW_HEIGHT = 44;
+  var OVERSCAN_PX2 = 500;
+  var HEADER_HEIGHT = 30;
+  var relativeDate = (iso) => {
+    if (!iso) return "\u2014";
+    const d = new Date(iso);
+    const days = Math.floor((Date.now() - d.getTime()) / 864e5);
+    if (days <= 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return `${days} days ago`;
+    return d.toLocaleDateString();
+  };
+  var COLUMNS = {
+    full: ["num", "love", "title", "album", "year", "genre", "plays", "duration", "more"],
+    album: ["num", "love", "title", "plays", "duration", "more"],
+    compact: ["num", "art", "title", "album", "plays", "duration", "more"]
+  };
+  var HEADERS = {
+    num: { label: "#", sort: null },
+    love: { label: "", sort: "loved" },
+    art: { label: "", sort: null },
+    title: { label: "Title", sort: "title" },
+    album: { label: "Album", sort: "album" },
+    year: { label: "Year", sort: "year" },
+    genre: { label: "Genre", sort: "genre" },
+    plays: { label: "Plays", sort: "plays" },
+    added: { label: "Added", sort: "addedAt" },
+    lastPlayed: { label: "Last played", sort: "lastPlayed" },
+    duration: { label: "Time", sort: "duration" },
+    more: { label: "", sort: null }
+  };
+  function TrackList({
+    tracks: rawTracks,
+    variant = "full",
+    extraColumn = null,
+    // 'added' | 'lastPlayed'
+    sort = null,
+    // { key, dir } — headers are clickable when onSort is given
+    onSort = null,
+    albumArtist = null,
+    // in album view, only show a row's artist if it differs
+    showDiscs = false,
+    emptyText = "No tracks here yet.",
+    id
+  }) {
+    const tracks = useStableArray(rawTracks);
+    const ctx = useLibrary();
+    const { stats, currentTrack, isPlaying, actions, openMenu } = ctx;
+    const [selected, setSelected] = (0, import_react15.useState)(() => /* @__PURE__ */ new Set());
+    const anchorRef = (0, import_react15.useRef)(null);
+    const listRef = (0, import_react15.useRef)(null);
+    const view = useViewport(listRef, tracks.length > 0);
+    const discRows = (0, import_react15.useMemo)(() => {
+      if (!showDiscs) return null;
+      const rows2 = [];
+      let last = null;
+      tracks.forEach((t, idx) => {
+        const disc = t.discNumber || 1;
+        if (disc !== last) {
+          rows2.push({ disc });
+          last = disc;
+        }
+        rows2.push({ idx });
+      });
+      return rows2;
+    }, [tracks, showDiscs]);
+    const rowCount = discRows ? discRows.length : tracks.length;
+    const rowOfTrack = (idx) => discRows ? discRows.findIndex((r) => r.idx === idx) : idx;
+    const ensureVisible = (idx) => {
+      if (!view) return;
+      const y = rowOfTrack(idx) * ROW_HEIGHT;
+      if (y < view.top + HEADER_HEIGHT) scrollRootTo(view, listRef, y, HEADER_HEIGHT + 8);
+      else if (y + ROW_HEIGHT > view.bottom) scrollRootTo(view, listRef, y + ROW_HEIGHT, view.bottom - view.top);
+    };
+    (0, import_react15.useEffect)(() => {
+      setSelected(/* @__PURE__ */ new Set());
+      anchorRef.current = null;
+    }, [tracks]);
+    const columns = (0, import_react15.useMemo)(() => {
+      const cols = [...COLUMNS[variant]];
+      if (extraColumn) cols.splice(cols.indexOf("duration"), 0, extraColumn);
+      return cols;
+    }, [variant, extraColumn]);
+    const columnSpec = (0, import_react15.useMemo)(() => columns.map((key) => ({ key, label: HEADERS[key].label, ...COLUMN_SIZES[key] })), [columns]);
+    const { template, handleFor } = useColumns(`tl-${variant}${extraColumn ? `-${extraColumn}` : ""}`, columnSpec);
+    const selectedTracks = () => [...selected].sort((a, b) => a - b).map((i) => tracks[i]).filter(Boolean);
+    const handleClick = (e, idx) => {
+      const next = new Set(e.ctrlKey || e.metaKey ? selected : []);
+      if (e.shiftKey && anchorRef.current != null) {
+        const [a, b] = [Math.min(anchorRef.current, idx), Math.max(anchorRef.current, idx)];
+        for (let i = a; i <= b; i++) next.add(i);
+      } else if ((e.ctrlKey || e.metaKey) && next.has(idx)) {
+        next.delete(idx);
+        anchorRef.current = idx;
+      } else {
+        next.add(idx);
+        anchorRef.current = idx;
+      }
+      setSelected(next);
+    };
+    const handleContextMenu = (e, idx) => {
+      e.preventDefault();
+      let sel = selected;
+      if (!sel.has(idx)) {
+        sel = /* @__PURE__ */ new Set([idx]);
+        setSelected(sel);
+        anchorRef.current = idx;
+      }
+      const chosen = [...sel].sort((a, b) => a - b).map((i) => tracks[i]);
+      openMenu(e, trackMenuItems(chosen, ctx, { allTracks: tracks, index: idx }));
+    };
+    const handleKeyDown = (e) => {
+      if (e.target !== listRef.current) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setSelected(new Set(tracks.map((_, i) => i)));
+      } else if (e.key === "Escape") {
+        setSelected(/* @__PURE__ */ new Set());
+      } else if (e.key === "Enter" && selected.size) {
+        e.preventDefault();
+        const first = Math.min(...selected);
+        if (selected.size === 1) actions.playTracks(tracks, first);
+        else actions.playTracks(selectedTracks(), 0);
+      } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const cur = anchorRef.current == null ? -1 : anchorRef.current;
+        const nextIdx = Math.max(0, Math.min(tracks.length - 1, cur + (e.key === "ArrowDown" ? 1 : -1)));
+        anchorRef.current = nextIdx;
+        setSelected(/* @__PURE__ */ new Set([nextIdx]));
+        ensureVisible(nextIdx);
+      }
+    };
+    const handleDragStart = (e, idx) => {
+      const chosen = selected.has(idx) ? selectedTracks() : [tracks[idx]];
+      e.dataTransfer.effectAllowed = "copy";
+      e.dataTransfer.setData(TRACK_DRAG_TYPE, JSON.stringify(chosen));
+      e.dataTransfer.setData("text/plain", chosen.map((t) => `${t.artist} \u2013 ${t.title}`).join("\n"));
+    };
+    if (!tracks.length) return /* @__PURE__ */ import_react15.default.createElement("div", { className: "empty-inline" }, emptyText);
+    const header = /* @__PURE__ */ import_react15.default.createElement("div", { className: `tl-row tl-head tl-${variant}`, style: { gridTemplateColumns: template } }, columns.map((col) => {
+      const h = HEADERS[col];
+      const sortable = onSort && h.sort;
+      const active = sort && sort.key === h.sort;
+      const border = handleFor(col);
+      return sortable ? /* @__PURE__ */ import_react15.default.createElement("button", { key: col, className: `tl-cell tl-${col} tl-sort ${active ? "active" : ""} ${border ? "col-resizable" : ""}`, onClick: () => onSort(h.sort) }, col === "love" ? /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "heart", size: 12 }) : h.label, active ? sort.dir === "asc" ? " \u2191" : " \u2193" : "", border) : /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: `tl-cell tl-${col} ${border ? "col-resizable" : ""}` }, h.label, border);
+    }));
+    const firstRow = view ? Math.max(0, Math.floor((view.top - OVERSCAN_PX2) / ROW_HEIGHT)) : 0;
+    const lastRow = view ? Math.min(rowCount, Math.ceil((view.bottom + OVERSCAN_PX2) / ROW_HEIGHT)) : Math.min(rowCount, 40);
+    const rows = [];
+    for (let r = firstRow; r < lastRow; r++) {
+      const top = r * ROW_HEIGHT;
+      const entry = discRows ? discRows[r] : null;
+      if (entry && entry.disc != null) {
+        rows.push(/* @__PURE__ */ import_react15.default.createElement("div", { key: `disc-${entry.disc}`, className: "tl-disc", style: { top } }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "disc", size: 13 }), " Disc ", entry.disc));
+        continue;
+      }
+      const idx = entry ? entry.idx : r;
+      const t = tracks[idx];
+      const isCurrent = sameTrack(currentTrack, t);
+      const st = stats[t.id] || {};
+      rows.push(
+        /* @__PURE__ */ import_react15.default.createElement(
+          "div",
+          {
+            key: `${idx}-${t.id || t.filePath}`,
+            "data-idx": idx,
+            className: `tl-row tl-${variant} ${isCurrent ? "current" : ""} ${selected.has(idx) ? "selected" : ""}`,
+            style: { gridTemplateColumns: template, top },
+            draggable: true,
+            onDragStart: (e) => handleDragStart(e, idx),
+            onClick: (e) => handleClick(e, idx),
+            onDoubleClick: () => actions.playTracks(tracks, idx),
+            onContextMenu: (e) => handleContextMenu(e, idx)
+          },
+          columns.map((col) => renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtist, actions, tracks, openMenu, ctx }))
+        )
       );
-    })) : /* @__PURE__ */ import_react17.default.createElement("pre", { className: "lyrics-plain" }, lyrics.plain)));
+    }
+    return /* @__PURE__ */ import_react15.default.createElement("div", { className: "track-list", id }, selected.size > 1 && /* @__PURE__ */ import_react15.default.createElement("div", { className: "selection-bar" }, /* @__PURE__ */ import_react15.default.createElement("span", null, /* @__PURE__ */ import_react15.default.createElement("strong", null, selected.size), " selected"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.playTracks(selectedTracks(), 0) }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "play", size: 11 }), " Play"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.queueTracks(selectedTracks(), "next") }, "Play next"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.queueTracks(selectedTracks(), "end") }, "Add to queue"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.addToPlaylist(selectedTracks()) }, "Add to playlist\u2026"), actions.fixMetadata && /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.fixMetadata(selectedTracks()) }, "\u2726 AI Fix Metadata"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: (e) => openMenu(e, collectionMenuItems(selectedTracks(), ctx)) }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "more", size: 12 })), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => setSelected(/* @__PURE__ */ new Set()) }, "Clear")), header, /* @__PURE__ */ import_react15.default.createElement("div", { className: "tl-body", ref: listRef, tabIndex: 0, onKeyDown: handleKeyDown, style: { height: rowCount * ROW_HEIGHT } }, rows));
+  }
+  var COLUMN_SIZES = {
+    num: { width: "42px", fixed: true },
+    love: { width: "26px", fixed: true },
+    art: { width: "40px", fixed: true },
+    title: { width: "minmax(0, 3fr)", fill: true },
+    album: { width: "minmax(0, 2fr)", min: 60 },
+    year: { width: "52px", min: 40 },
+    genre: { width: "minmax(0, 1.2fr)", min: 50 },
+    plays: { width: "60px", min: 44 },
+    added: { width: "96px", min: 60 },
+    lastPlayed: { width: "104px", min: 60 },
+    duration: { width: "56px", min: 44 },
+    more: { width: "34px", fixed: true }
+  };
+  function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtist, actions, tracks, openMenu, ctx }) {
+    switch (col) {
+      case "num":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-num" }, isCurrent && isPlaying ? /* @__PURE__ */ import_react15.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react15.default.createElement("i", null), /* @__PURE__ */ import_react15.default.createElement("i", null), /* @__PURE__ */ import_react15.default.createElement("i", null)) : /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-index" }, variant === "album" ? t.trackNumber || idx + 1 : idx + 1), /* @__PURE__ */ import_react15.default.createElement("button", { className: "tl-play", title: "Play", onClick: (e) => {
+          e.stopPropagation();
+          actions.playTracks(tracks, idx);
+        } }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "play", size: 12 })));
+      case "love":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-love" }, /* @__PURE__ */ import_react15.default.createElement(LoveButton, { track: t, size: 13 }));
+      case "art":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-art" }, /* @__PURE__ */ import_react15.default.createElement(Cover, { artId: t.artId, name: t.album, size: 32 }));
+      case "title": {
+        const showArtist = variant !== "album" || t.artist && albumArtist && t.artist !== albumArtist;
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-title" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-title-text", title: t.title }, t.title), showArtist && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-sub" }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
+          e.stopPropagation();
+          actions.goToArtist(t.artist);
+        } }, t.artist || "Unknown Artist"), t.cloud && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-badge" }, t.cloud.cached ? "Cloud \xB7 cached" : "Cloud")));
+      }
+      case "album":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-album", title: t.album }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
+          e.stopPropagation();
+          actions.goToAlbumOf(t);
+        } }, t.album || "\u2014"));
+      case "year":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-year" }, t.year || "\u2014");
+      case "genre":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-genre", title: t.genre || "" }, t.genre ? /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
+          e.stopPropagation();
+          actions.goToGenre(t.genre);
+        } }, t.genre) : "\u2014");
+      case "plays":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-plays" }, st.plays || "");
+      case "added":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-added" }, relativeDate(t.addedAt));
+      case "lastPlayed":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-lastPlayed" }, relativeDate(st.lastPlayed));
+      case "duration":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-duration" }, (0, import_library_index.formatDuration)(t.duration));
+      case "more":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-more" }, /* @__PURE__ */ import_react15.default.createElement(
+          "button",
+          {
+            className: "tl-more-btn",
+            title: "More actions",
+            onClick: (e) => {
+              e.stopPropagation();
+              openMenu(e, trackMenuItems([t], ctx, { allTracks: tracks, index: idx }));
+            }
+          },
+          /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "more", size: 14 })
+        ));
+      default:
+        return null;
+    }
+  }
+
+  // src/Library.jsx
+  var import_library_index2 = __toESM(require_library_index());
+  var NAV_WIDTH = 196;
+  var LIBRARY_SECTIONS = [
+    { id: "albums", label: "Movies", icon: "disc" },
+    { id: "artists", label: "Releases & Formats", icon: "artist" },
+    { id: "songs", label: "All Titles", icon: "note" },
+    { id: "genres", label: "Genres", icon: "tag" },
+    { id: "decades", label: "Decades", icon: "calendar" },
+    { id: "composers", label: "Directors", icon: "pen" }
+  ];
+  var LIBRARY_COLLECTIONS = [
+    { id: "loved", label: "Loved", icon: "heart" },
+    { id: "recent", label: "Recently Added", icon: "clock" },
+    { id: "history", label: "Recently Played", icon: "history" },
+    { id: "top", label: "Most Played", icon: "chart" }
+  ];
+  var PREFS_KEY = "robos-audio-player.library-prefs.v1";
+  var LETTER_SECTION_MIN = 40;
+  var ALBUM_GRID = { minWidth: 150, textHeight: 46 };
+  var ARTIST_GRID = { minWidth: 132, textHeight: 46 };
+  function loadPrefs() {
+    try {
+      return JSON.parse(localStorage.getItem(PREFS_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+  function folderOwnsTrack(folder, filePath) {
+    if (!folder || !filePath) return false;
+    const normalize = (p) => String(p || "").replace(/\\/g, "/").replace(/\/$/, "");
+    filePath = normalize(filePath);
+    if ([folder.localRoot, ...folder.aliasRoots || []].some((root) => root && (filePath === normalize(root) || filePath.startsWith(normalize(root) + "/")))) return true;
+    const legacyRoot = normalize(folder.legacyRootDir);
+    if (legacyRoot && filePath.startsWith(legacyRoot + "/")) {
+      const rel = filePath.slice(legacyRoot.length + 1);
+      if (rel && !rel.includes("/")) return true;
+    }
+    return false;
+  }
+  function Library({
+    tracks,
+    folders,
+    nav,
+    onNavigate,
+    onBack,
+    canGoBack,
+    searchInputRef,
+    folderProps,
+    onRefresh,
+    onAddFolder,
+    onAddFiles,
+    isScanning,
+    onAiPlaylist,
+    onAiFixMetadata
+  }) {
+    const { stats, actions } = useLibrary();
+    const [prefs, setPrefs] = (0, import_react16.useState)(loadPrefs);
+    const [query, setQuery] = (0, import_react16.useState)("");
+    const contentRef = (0, import_react16.useRef)(null);
+    const [navWidth, setNavWidth] = useLayoutPref("libNavWidth", NAV_WIDTH);
+    (0, import_react16.useEffect)(() => {
+      try {
+        localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      } catch {
+      }
+    }, [prefs]);
+    const setPref = (key, value) => setPrefs((p) => ({ ...p, [key]: value }));
+    (0, import_react16.useEffect)(() => {
+      setQuery("");
+      if (contentRef.current) contentRef.current.scrollTop = 0;
+    }, [nav]);
+    const scopeFolder = folders.find((f) => f.id === prefs.scope) || null;
+    const scopedTracks = (0, import_react16.useMemo)(
+      () => scopeFolder ? tracks.filter((t) => folderOwnsTrack(scopeFolder, t.filePath)) : tracks,
+      [tracks, scopeFolder]
+    );
+    const index = (0, import_react16.useMemo)(() => (0, import_library_index2.buildIndex)(scopedTracks), [scopedTracks]);
+    const go = (view) => onNavigate(view);
+    const section = nav.section || "albums";
+    const detail = nav.detail || null;
+    const counts = (0, import_react16.useMemo)(() => ({
+      albums: index.albums.length,
+      artists: index.artists.filter((a) => !a.isPlaceholder).length,
+      songs: index.tracks.length,
+      genres: index.genres.length,
+      decades: index.decades.length,
+      composers: index.composers.length
+    }), [index]);
+    const lovedCount = (0, import_react16.useMemo)(() => index.tracks.filter((t) => (stats[t.id] || {}).loved).length, [index, stats]);
+    const searching = query.trim().length > 0;
+    const deferredQuery = (0, import_react16.useDeferredValue)(query);
+    const results = (0, import_react16.useMemo)(
+      () => deferredQuery.trim() ? (0, import_library_index2.searchIndex)(index, deferredQuery, { artists: 12, albums: 12, genres: 8 }) : null,
+      [index, deferredQuery]
+    );
+    const pageTitle = searching ? `Results for \u201C${query.trim()}\u201D` : titleFor(nav, index);
+    let body;
+    if (!tracks.length) {
+      body = /* @__PURE__ */ import_react16.default.createElement(EmptyLibrary, { onAddFolder, onAddFiles, onCloud: folderProps.onAddCloud, isScanning });
+    } else if (searching) {
+      body = results ? /* @__PURE__ */ import_react16.default.createElement(SearchResults, { results, go }) : null;
+    } else if (detail) {
+      body = /* @__PURE__ */ import_react16.default.createElement(DetailView, { detail, index, go, stats });
+    } else {
+      body = /* @__PURE__ */ import_react16.default.createElement(
+        SectionView,
+        {
+          section,
+          index,
+          go,
+          prefs,
+          setPref,
+          stats,
+          folders,
+          folderProps: {
+            ...folderProps,
+            activeId: prefs.scope || null,
+            onSelect: (id) => {
+              setPref("scope", id);
+              go({ section: "songs" });
+            }
+          }
+        }
+      );
+    }
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib", style: { gridTemplateColumns: `${navWidth}px minmax(0, 1fr)` } }, /* @__PURE__ */ import_react16.default.createElement(
+      Splitter,
+      {
+        id: "lib-nav-splitter",
+        className: "overlay",
+        style: { left: navWidth - 5 },
+        label: "Library sidebar width",
+        width: navWidth,
+        onChange: setNavWidth,
+        min: 140,
+        max: 420,
+        defaultWidth: NAV_WIDTH
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Library"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Collections"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Sources"), /* @__PURE__ */ import_react16.default.createElement(NavItem, { item: { id: "folders", label: "Folders", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index2.plural)(index.tracks.length, "movie")), /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index2.plural)(index.albums.length, "title"), " \xB7 ", (0, import_library_index2.formatLongDuration)(index.totalDuration)), onAiPlaylist && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-library-ai-playlist",
+        className: "btn-accent ai-btn lib-shuffle-all",
+        disabled: !index.tracks.length,
+        title: "Describe a watchlist and let your RobOS agent build it from your movie library",
+        onClick: onAiPlaylist
+      },
+      "\u2726 AI Watchlist"
+    ), onAiFixMetadata && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-library-ai-fix-metadata",
+        className: "btn-secondary lib-shuffle-all",
+        disabled: !index.tracks.length,
+        title: "Repair scene-release filenames & posters using your RobOS agent and open media tools",
+        onClick: () => onAiFixMetadata(scopeFolder ? index.tracks : [])
+      },
+      "\u2726 AI Fix Metadata"
+    ), /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-shuffle-library",
+        className: "btn-secondary lib-shuffle-all",
+        disabled: !index.tracks.length,
+        onClick: () => actions.playTracks(index.tracks, 0, { shuffle: true })
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 }),
+      " Shuffle library"
+    ))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-main" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-toolbar" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only", title: "Back", disabled: !canGoBack && !searching, onClick: () => searching ? setQuery("") : onBack() }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "back", size: 16 })), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "lib-title", title: pageTitle }, pageTitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "search-box lib-search" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "search", size: 15 }), /* @__PURE__ */ import_react16.default.createElement(
+      "input",
+      {
+        id: "library-search",
+        ref: searchInputRef,
+        type: "search",
+        placeholder: "Search songs, artists, albums, genres\u2026  (Ctrl+F)",
+        value: query,
+        onChange: (e) => setQuery(e.target.value),
+        onKeyDown: (e) => {
+          if (e.key === "Escape") setQuery("");
+        }
+      }
+    )), folders.length > 0 && /* @__PURE__ */ import_react16.default.createElement(
+      "select",
+      {
+        id: "library-scope",
+        className: "lib-select",
+        title: "Limit the library to one folder",
+        value: scopeFolder ? scopeFolder.id : "",
+        onChange: (e) => setPref("scope", e.target.value || null)
+      },
+      /* @__PURE__ */ import_react16.default.createElement("option", { value: "" }, "All folders"),
+      folders.map((f) => /* @__PURE__ */ import_react16.default.createElement("option", { key: f.id, value: f.id }, f.label))
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-browse-refresh", className: "btn-icon-only", onClick: onRefresh, title: "Reload library index" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "history", size: 15 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: onAddFolder, title: "Add a music folder" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "plus", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Add folder")), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onAddFiles, title: "Add individual audio files" }, /* @__PURE__ */ import_react16.default.createElement("span", null, "Add files"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-content", ref: contentRef }, /* @__PURE__ */ import_react16.default.createElement(ScrollContainerContext.Provider, { value: contentRef }, body))));
+  }
+  function NavItem({ item, count, active, onClick }) {
+    return /* @__PURE__ */ import_react16.default.createElement("button", { id: `lib-nav-${item.id}`, className: `lib-nav-item ${active ? "active" : ""}`, onClick }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: item.icon, size: 15 }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-label" }, item.label), count != null && /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-count" }, count.toLocaleString()));
+  }
+  function titleFor(nav, index) {
+    if (nav.detail) {
+      const { type, key } = nav.detail;
+      const map = { album: index.albumByKey, artist: index.artistByKey, genre: index.genreByKey, decade: index.decadeByKey, composer: index.composerByKey }[type];
+      const item = map && map.get(key);
+      return item ? item.title || item.name : "Library";
+    }
+    const all = [...LIBRARY_SECTIONS, ...LIBRARY_COLLECTIONS, { id: "folders", label: "Folders" }];
+    return (all.find((s) => s.id === (nav.section || "albums")) || {}).label || "Library";
+  }
+  function EmptyLibrary({ onAddFolder, onAddFiles, onCloud, isScanning }) {
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "library", size: 40 }), /* @__PURE__ */ import_react16.default.createElement("h3", null, isScanning ? "Indexing your music\u2026" : "Your library is empty"), /* @__PURE__ */ import_react16.default.createElement("p", null, "Add a music folder from this computer, link a cloud folder, or drag & drop folders and files anywhere in this window."), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-accent", onClick: onAddFolder }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "folder", size: 14 }), " Add folder"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onAddFiles }, "Add files"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onCloud }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cloud", size: 14 }), " Cloud storage")));
+  }
+  function SortSelect({ value, options, onChange, id }) {
+    return /* @__PURE__ */ import_react16.default.createElement("label", { className: "lib-sort" }, /* @__PURE__ */ import_react16.default.createElement("span", null, "Sort"), /* @__PURE__ */ import_react16.default.createElement("select", { id, className: "lib-select", value, onChange: (e) => onChange(e.target.value) }, options.map(([v, label]) => /* @__PURE__ */ import_react16.default.createElement("option", { key: v, value: v }, label))));
+  }
+  function SectionHeader({ title, subtitle, tracks, children }) {
+    const { actions } = useLibrary();
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "section-header-text" }, title && /* @__PURE__ */ import_react16.default.createElement("h3", null, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("span", { className: "section-sub" }, subtitle)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "section-header-actions" }, children, tracks && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-accent", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 12 }), " Play"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 13 }), " Shuffle"))));
+  }
+  function SectionView({ section, ...props }) {
+    switch (section) {
+      case "albums":
+        return /* @__PURE__ */ import_react16.default.createElement(AlbumsSection, { ...props });
+      case "artists":
+        return /* @__PURE__ */ import_react16.default.createElement(ArtistsSection, { ...props });
+      case "songs":
+        return /* @__PURE__ */ import_react16.default.createElement(SongsSection, { ...props });
+      case "genres":
+        return /* @__PURE__ */ import_react16.default.createElement(GenresSection, { ...props });
+      case "decades":
+        return /* @__PURE__ */ import_react16.default.createElement(DecadesSection, { ...props });
+      case "composers":
+        return /* @__PURE__ */ import_react16.default.createElement(ComposersSection, { ...props });
+      case "loved":
+        return /* @__PURE__ */ import_react16.default.createElement(LovedSection, { ...props });
+      case "recent":
+        return /* @__PURE__ */ import_react16.default.createElement(RecentSection, { ...props });
+      case "history":
+        return /* @__PURE__ */ import_react16.default.createElement(HistorySection, { ...props });
+      case "top":
+        return /* @__PURE__ */ import_react16.default.createElement(TopSection, { ...props });
+      case "folders":
+        return /* @__PURE__ */ import_react16.default.createElement(FoldersSection, { ...props });
+      default:
+        return null;
+    }
+  }
+  var STATS_SORTS = /* @__PURE__ */ new Set(["plays", "lastPlayed", "loved"]);
+  var statsDep = (key, stats) => STATS_SORTS.has(key) ? stats : null;
+  var albumLetter = (a) => (0, import_library_index2.indexLetter)(a.title);
+  var albumArtistLetter = (a) => (0, import_library_index2.indexLetter)(a.artist);
+  var artistLetter = (a) => a.isPlaceholder ? "?" : (0, import_library_index2.indexLetter)(a.name);
+  function AlbumsSection({ index, go, prefs, setPref }) {
+    const sortKey = prefs.albumSort || "title";
+    const albums = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.albums, sortKey), [index, sortKey]);
+    const lettered = (sortKey === "title" || sortKey === "artist") && albums.length >= LETTER_SECTION_MIN;
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(albums.length, "album"), tracks: index.tracks }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "album-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title"], ["artist", "Artist"], ["year", "Year (newest)"], ["addedAt", "Recently added"], ["tracks", "Most tracks"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
+  }
+  function ArtistsSection({ index, go, prefs, setPref, stats }) {
+    const sortKey = prefs.artistSort || "name";
+    const artists = (0, import_react16.useMemo)(() => (0, import_library_index2.sortArtists)(index.artists, sortKey, stats), [index, sortKey, statsDep(sortKey, stats)]);
+    const lettered = sortKey === "name" && artists.length >= LETTER_SECTION_MIN;
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(artists.length, "artist"), tracks: index.tracks }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "artist-sort", value: sortKey, onChange: (v) => setPref("artistSort", v), options: [["name", "Name"], ["tracks", "Most songs"], ["albums", "Most albums"], ["plays", "Most played"]] })), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists, go, letterOf: lettered ? artistLetter : null }));
+  }
+  function SongsSection({ index, prefs, setPref, stats }) {
+    const sort = prefs.songSort || { key: "artist", dir: "asc" };
+    const sorted = (0, import_react16.useMemo)(
+      () => (0, import_library_index2.sortTracks)(index.tracks, sort.key, sort.dir, stats),
+      [index, sort.key, sort.dir, statsDep(sort.key, stats)]
+      // eslint-disable-line react-hooks/exhaustive-deps
+    );
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(sorted.length, "song")} \xB7 ${(0, import_library_index2.formatLongDuration)(index.totalDuration)}`, tracks: sorted }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-songs", tracks: sorted, sort, onSort: (key) => setPref("songSort", toggleSort(sort, key)) }));
+  }
+  function GenresSection({ index, go, prefs, setPref }) {
+    const sortKey = prefs.genreSort || "name";
+    const genres = (0, import_react16.useMemo)(
+      () => sortKey === "tracks" ? [...index.genres].sort((a, b) => b.tracks.length - a.tracks.length) : index.genres,
+      [index, sortKey]
+    );
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(genres.length, "genre") }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "genre-sort", value: sortKey, onChange: (v) => setPref("genreSort", v), options: [["name", "Name"], ["tracks", "Most songs"]] })), genres.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: genres, type: "genre", go }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No genre tags found in your music."));
+  }
+  function DecadesSection({ index, go }) {
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(index.decades.length, "decade") }), index.decades.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: index.decades, type: "decade", go, big: true }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No release years found in your music tags."));
+  }
+  function ComposersSection({ index, go }) {
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(index.composers.length, "composer") }), index.composers.length ? /* @__PURE__ */ import_react16.default.createElement(
+      VirtualGrid,
+      {
+        items: index.composers,
+        keyOf: (c) => c.key,
+        className: "name-list",
+        minWidth: 240,
+        gapX: 6,
+        gapY: 6,
+        itemHeight: 42,
+        letterOf: index.composers.length >= LETTER_SECTION_MIN ? (c) => (0, import_library_index2.indexLetter)(c.name) : null,
+        renderItem: (c) => /* @__PURE__ */ import_react16.default.createElement("button", { className: "name-list-item", onClick: () => go({ section: "composers", detail: { type: "composer", key: c.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "pen", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "name-list-name" }, c.name), /* @__PURE__ */ import_react16.default.createElement("span", { className: "name-list-meta" }, (0, import_library_index2.plural)(c.tracks.length, "song")))
+      }
+    ) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No composer tags found in your music."));
+  }
+  function LovedSection({ index, stats }) {
+    const loved = (0, import_react16.useMemo)(() => (0, import_library_index2.lovedTracks)(index.tracks, stats), [index, stats]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(loved.length, "loved song")} \xB7 newest first`, tracks: loved }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-loved", tracks: loved, emptyText: "Tap the \u2665 on any track to keep it here." }));
+  }
+  function RecentSection({ index, go }) {
+    const recentAlbums = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.albums, "addedAt").slice(0, 12), [index]);
+    const recentTracks = (0, import_react16.useMemo)(() => (0, import_library_index2.recentlyAddedTracks)(index.tracks).slice(0, 500), [index]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Recently added albums" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: recentAlbums, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Recently added songs", subtitle: recentTracks.length >= 500 ? "Latest 500" : null, tracks: recentTracks }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-recent", tracks: recentTracks, extraColumn: "added" }));
+  }
+  function HistorySection({ index, stats }) {
+    const played = (0, import_react16.useMemo)(() => (0, import_library_index2.recentlyPlayedTracks)(index.tracks, stats).slice(0, 500), [index, stats]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: "Songs you listened to for at least 30 seconds", tracks: played }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-history", tracks: played, extraColumn: "lastPlayed", emptyText: "Nothing played yet \u2014 your listening history will show up here." }));
+  }
+  function TopSection({ index, go, stats }) {
+    const top = (0, import_react16.useMemo)(() => (0, import_library_index2.mostPlayedTracks)(index.tracks, stats).slice(0, 200), [index, stats]);
+    const topArtists = (0, import_react16.useMemo)(() => (0, import_library_index2.sortArtists)(index.artists.filter((a) => !a.isPlaceholder), "plays", stats).filter((a) => a.tracks.some((t) => (stats[t.id] || {}).plays)).slice(0, 8), [index, stats]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, topArtists.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Top artists" }), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists: topArtists, go })), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Top songs", subtitle: top.length ? `Top ${top.length}` : null, tracks: top }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-top", tracks: top, emptyText: "Play some music and your favourites will rise to the top." }));
+  }
+  function FoldersSection({ folders, folderProps }) {
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-folders" }, /* @__PURE__ */ import_react16.default.createElement("p", { className: "section-sub" }, "Folders feed the library. Pick one to browse only its music, or use \u201CAll folders\u201D in the toolbar."), /* @__PURE__ */ import_react16.default.createElement(FolderPanel, { folders, ...folderProps }));
+  }
+  function toggleSort(sort, key) {
+    if (sort && sort.key === key) return { key, dir: sort.dir === "asc" ? "desc" : "asc" };
+    const descFirst = ["plays", "addedAt", "lastPlayed", "loved", "year"];
+    return { key, dir: descFirst.includes(key) ? "desc" : "asc" };
+  }
+  function AlbumGrid({ albums, go, showArtist = true, letterOf = null }) {
+    if (!albums.length) return /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No albums.");
+    return /* @__PURE__ */ import_react16.default.createElement(
+      VirtualGrid,
+      {
+        items: albums,
+        keyOf: (a) => a.key,
+        letterOf,
+        ...ALBUM_GRID,
+        renderItem: (a) => /* @__PURE__ */ import_react16.default.createElement(AlbumCard, { album: a, go, showArtist })
+      }
+    );
+  }
+  function AlbumCard({ album, go, showArtist }) {
+    const ctx = useLibrary();
+    const open = () => go({ section: "albums", detail: { type: "album", key: album.key } });
+    return /* @__PURE__ */ import_react16.default.createElement(
+      "div",
+      {
+        className: "media-card album-card",
+        onClick: open,
+        onContextMenu: (e) => {
+          e.preventDefault();
+          ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: "Go to artist", icon: "artist", onClick: () => ctx.actions.goToArtist(album.artist) }]);
+        },
+        title: `${album.title} \u2014 ${album.artist}`
+      },
+      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Play ${album.title}`, onClick: (e) => {
+        e.stopPropagation();
+        ctx.actions.playTracks(album.tracks, 0);
+      } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, album.title),
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, showArtist && (album.artist === import_library_index2.VARIOUS_ARTISTS ? /* @__PURE__ */ import_react16.default.createElement("span", null, album.artist) : /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: (e) => {
+        e.stopPropagation();
+        ctx.actions.goToArtist(album.artist);
+      } }, album.artist)), showArtist && album.year ? " \xB7 " : "", album.year || (!showArtist ? (0, import_library_index2.plural)(album.tracks.length, "song") : ""))
+    );
+  }
+  function ArtistGrid({ artists, go, letterOf = null }) {
+    return /* @__PURE__ */ import_react16.default.createElement(
+      VirtualGrid,
+      {
+        items: artists,
+        keyOf: (a) => a.key,
+        letterOf,
+        className: "artists",
+        ...ARTIST_GRID,
+        renderItem: (a) => /* @__PURE__ */ import_react16.default.createElement(ArtistCard, { artist: a, go })
+      }
+    );
+  }
+  function ArtistCard({ artist: a, go }) {
+    const ctx = useLibrary();
+    return /* @__PURE__ */ import_react16.default.createElement(
+      "div",
+      {
+        className: "media-card artist-card",
+        onClick: () => go({ section: "artists", detail: { type: "artist", key: a.key } }),
+        onContextMenu: (e) => {
+          e.preventDefault();
+          ctx.openMenu(e, collectionMenuItems(a.tracks, ctx, { label: a.name }));
+        }
+      },
+      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: a.artId, name: a.name, round: true }), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Play ${a.name}`, onClick: (e) => {
+        e.stopPropagation();
+        ctx.actions.playTracks(a.tracks, 0, { shuffle: true });
+      } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 16 }))),
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, a.name),
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, a.albums.length ? `${(0, import_library_index2.plural)(a.albums.length, "album")} \xB7 ` : "", (0, import_library_index2.plural)(a.tracks.length, "song"))
+    );
+  }
+  function GroupGrid({ groups, type, go, big = false }) {
+    const ctx = useLibrary();
+    const section = type === "genre" ? "genres" : "decades";
+    return /* @__PURE__ */ import_react16.default.createElement(
+      VirtualGrid,
+      {
+        items: groups,
+        keyOf: (g) => g.key,
+        className: `groups ${big ? "big" : ""}`,
+        minWidth: big ? 210 : 170,
+        textHeight: 24,
+        renderItem: (g) => /* @__PURE__ */ import_react16.default.createElement(
+          "div",
+          {
+            className: "media-card group-card",
+            onClick: () => go({ section, detail: { type, key: g.key } }),
+            onContextMenu: (e) => {
+              e.preventDefault();
+              ctx.openMenu(e, collectionMenuItems(g.tracks, ctx, { label: g.name }));
+            }
+          },
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art" }, /* @__PURE__ */ import_react16.default.createElement(Collage, { artIds: g.artIds, name: g.name }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "group-card-name" }, g.name), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Shuffle ${g.name}`, onClick: (e) => {
+            e.stopPropagation();
+            ctx.actions.playTracks(g.tracks, 0, { shuffle: true });
+          } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 16 }))),
+          /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index2.plural)(g.tracks.length, "song"), " \xB7 ", (0, import_library_index2.plural)(g.artistCount, "artist"))
+        )
+      }
+    );
+  }
+  function ArtistChips({ tracks, index, go, limit = 12 }) {
+    const top = (0, import_react16.useMemo)(() => {
+      const counts = /* @__PURE__ */ new Map();
+      for (const t of tracks) counts.set((0, import_library_index2.fold)(t.artist), (counts.get((0, import_library_index2.fold)(t.artist)) || 0) + 1);
+      return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([key]) => index.artistByKey.get(key)).filter((a) => a && !a.isPlaceholder).slice(0, limit);
+    }, [tracks, index, limit]);
+    if (!top.length) return null;
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "chip-row" }, top.map((a) => /* @__PURE__ */ import_react16.default.createElement("button", { key: a.key, className: "artist-chip", onClick: () => go({ section: "artists", detail: { type: "artist", key: a.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: a.artId, name: a.name, round: true, size: 24 }), /* @__PURE__ */ import_react16.default.createElement("span", null, a.name))));
+  }
+  function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel }) {
+    const ctx = useLibrary();
+    const { actions } = ctx;
+    const allLoved = tracks.length > 0 && tracks.every((t) => (ctx.stats[t.id] || {}).loved);
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " Play"), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-shuffle", className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 }), " Shuffle"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "next") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "playNext", size: 14 }), " Play next"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "end") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "queueAdd", size: 14 }), " Add to queue"), /* @__PURE__ */ import_react16.default.createElement("button", { className: `btn-icon-only ${allLoved ? "loved" : ""}`, title: allLoved ? "Remove from Loved" : "Love all", onClick: () => actions.setLoved(tracks, !allLoved) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: allLoved ? "heartFill" : "heart", size: 15 })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only", title: "More", onClick: (e) => ctx.openMenu(e, collectionMenuItems(tracks, ctx, { label: menuLabel })) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 15 })))));
+  }
+  function NotFound({ go }) {
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement("h3", null, "Not in your library anymore"), /* @__PURE__ */ import_react16.default.createElement("p", null, "It may have been removed by a folder sync, or it lives outside the selected folder."), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => go({ section: "albums" }) }, "Browse albums"));
+  }
+  function DetailView({ detail, index, go, stats }) {
+    const { type, key } = detail;
+    if (type === "album") {
+      const album = index.albumByKey.get(key);
+      return album ? /* @__PURE__ */ import_react16.default.createElement(AlbumDetail, { album, index, go }) : /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
+    }
+    if (type === "artist") {
+      const artist = index.artistByKey.get(key);
+      return artist ? /* @__PURE__ */ import_react16.default.createElement(ArtistDetail, { artist, go, stats }) : /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
+    }
+    if (type === "genre" || type === "decade") {
+      const group = (type === "genre" ? index.genreByKey : index.decadeByKey).get(key);
+      return group ? /* @__PURE__ */ import_react16.default.createElement(GroupDetail, { group, type, index, go }) : /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
+    }
+    if (type === "composer") {
+      const composer = index.composerByKey.get(key);
+      return composer ? /* @__PURE__ */ import_react16.default.createElement(ComposerDetail, { composer }) : /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
+    }
+    return /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
+  }
+  function AlbumDetail({ album, index, go }) {
+    const { actions } = useLibrary();
+    const artist = index.artistByKey.get(album.artistKey);
+    const more = (0, import_react16.useMemo)(() => artist ? artist.albums.filter((a) => a.key !== album.key) : [], [artist, album]);
+    const codec = [album.codec, album.lossless ? "Lossless" : null].filter(Boolean).join(" \xB7 ");
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      DetailHeader,
+      {
+        cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }),
+        eyebrow: album.isCompilation ? "Compilation" : "Album",
+        title: album.title,
+        subtitle: album.artist === import_library_index2.VARIOUS_ARTISTS ? /* @__PURE__ */ import_react16.default.createElement("span", null, album.artist) : /* @__PURE__ */ import_react16.default.createElement("a", { className: "link strong", onClick: () => actions.goToArtist(album.artist) }, album.artist),
+        meta: [
+          album.year,
+          album.genre && /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToGenre(album.genre) }, album.genre),
+          (0, import_library_index2.plural)(album.tracks.length, "song"),
+          (0, import_library_index2.formatLongDuration)(album.duration),
+          codec
+        ],
+        tracks: album.tracks,
+        menuLabel: album.title
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "album-tracks", tracks: album.tracks, variant: "album", albumArtist: album.artist, showDiscs: album.discCount > 1 }), more.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: `More by ${album.artist}` }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: more, go, showArtist: false })));
+  }
+  function ArtistDetail({ artist, go, stats }) {
+    const { actions } = useLibrary();
+    const allSongs = (0, import_react16.useMemo)(() => (0, import_library_index2.sortTracks)(artist.tracks, "year", "asc"), [artist]);
+    const top = (0, import_react16.useMemo)(() => (0, import_library_index2.mostPlayedTracks)(artist.tracks, stats).slice(0, 5), [artist, stats]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      DetailHeader,
+      {
+        cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: artist.artId, name: artist.name, round: true }),
+        eyebrow: "Artist",
+        title: artist.name,
+        subtitle: artist.genres.length ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-genres" }, artist.genres.map((g) => /* @__PURE__ */ import_react16.default.createElement("a", { key: g, className: "link", onClick: () => actions.goToGenre(g) }, g))) : null,
+        meta: [
+          artist.albums.length ? (0, import_library_index2.plural)(artist.albums.length, "album") : null,
+          (0, import_library_index2.plural)(artist.tracks.length, "song"),
+          (0, import_library_index2.formatLongDuration)(artist.duration)
+        ],
+        tracks: allSongs,
+        menuLabel: artist.name
+      }
+    ), top.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Most played" }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { tracks: top, variant: "compact" })), artist.albums.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Albums", subtitle: "Oldest first" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: artist.albums, go, showArtist: false })), artist.appearsOn.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Appears on" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: artist.appearsOn, go })), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "All songs", subtitle: (0, import_library_index2.plural)(allSongs.length, "song") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "artist-tracks", tracks: allSongs }));
+  }
+  function GroupDetail({ group, type, index, go }) {
+    const songs = (0, import_react16.useMemo)(() => (0, import_library_index2.sortTracks)(group.tracks, "artist", "asc"), [group]);
+    const albums = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(group.albums, type === "decade" ? "year" : "artist"), [group, type]);
+    const years = (0, import_react16.useMemo)(() => type === "decade" ? [...new Set(group.tracks.map((t) => t.year).filter(Boolean))].sort() : [], [group, type]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      DetailHeader,
+      {
+        cover: /* @__PURE__ */ import_react16.default.createElement(Collage, { artIds: group.artIds, name: group.name }),
+        eyebrow: type === "genre" ? "Genre" : "Decade",
+        title: group.name,
+        subtitle: years.length ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-genres" }, years.map((y) => /* @__PURE__ */ import_react16.default.createElement("span", { key: y }, y))) : null,
+        meta: [(0, import_library_index2.plural)(group.albums.length, "album"), (0, import_library_index2.plural)(group.tracks.length, "song"), (0, import_library_index2.plural)(group.artistCount, "artist"), (0, import_library_index2.formatLongDuration)(group.duration)],
+        tracks: songs,
+        menuLabel: group.name
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Artists" }), /* @__PURE__ */ import_react16.default.createElement(ArtistChips, { tracks: group.tracks, index, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Albums", subtitle: (0, import_library_index2.plural)(albums.length, "album") }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Songs", subtitle: (0, import_library_index2.plural)(songs.length, "song") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: `${type}-tracks`, tracks: songs }));
+  }
+  function ComposerDetail({ composer }) {
+    const songs = (0, import_react16.useMemo)(() => (0, import_library_index2.sortTracks)(composer.tracks, "album", "asc"), [composer]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      DetailHeader,
+      {
+        cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { name: composer.name, round: true, icon: "pen" }),
+        eyebrow: "Composer",
+        title: composer.name,
+        meta: [(0, import_library_index2.plural)(composer.albums.length, "album"), (0, import_library_index2.plural)(songs.length, "song"), (0, import_library_index2.formatLongDuration)(composer.duration)],
+        tracks: songs,
+        menuLabel: composer.name
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "composer-tracks", tracks: songs }));
+  }
+  function SearchResults({ results, go }) {
+    const { actions } = useLibrary();
+    const { artists, albums, genres, tracks, totals } = results;
+    if (!tracks.length && !artists.length && !albums.length && !genres.length) {
+      return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement("h3", null, "No matches"), /* @__PURE__ */ import_react16.default.createElement("p", null, "Try fewer words, or search by artist, album, genre, composer or year."));
+    }
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "search-results" }, artists.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Artists", subtitle: totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists.toLocaleString()}` : null }), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists, go })), albums.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Albums", subtitle: totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums.toLocaleString()}` : null }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go })), genres.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Genres" }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "chip-row" }, genres.map((g) => /* @__PURE__ */ import_react16.default.createElement("button", { key: g.key, className: "artist-chip", onClick: () => actions.goToGenre(g.name) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "tag", size: 13 }), " ", g.name, " ", /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, g.tracks.length))))), tracks.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Songs", subtitle: (0, import_library_index2.plural)(tracks.length, "match", "matches"), tracks }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "search-tracks", tracks })));
+  }
+
+  // src/NowPlayingPanel.jsx
+  var import_react17 = __toESM(require_react());
+  var import_library_index3 = __toESM(require_library_index());
+  var ROW_HEIGHT2 = 30;
+  var OVERSCAN = 12;
+  var QUEUE_DRAG_TYPE = "application/x-robos-queue";
+  var DOCK_WIDTH = 330;
+  var dockMaxWidth = () => Math.max(260, Math.min(900, window.innerWidth - 520));
+  var QUEUE_COLUMNS = [
+    { key: "state", width: "28px", fixed: true },
+    { key: "title", label: "Title", width: "minmax(0, 1.4fr)", fill: true },
+    { key: "artist", label: "Artist", width: "minmax(0, 1fr)", min: 50 },
+    { key: "duration", label: "Time", width: "44px", min: 36 }
+  ];
+  var REPEAT_LABEL = { off: "Repeat: off", all: "Repeat: whole queue", one: "Repeat: current track" };
+  function NowPlayingPanel({
+    queue,
+    currentIndex,
+    collapsed,
+    onToggleCollapsed,
+    onPlayIndex,
+    onRemove,
+    onMove,
+    onInsert,
+    onSort,
+    onClear,
+    onSave,
+    onShuffleOrder,
+    shuffle,
+    repeat,
+    onToggleShuffle,
+    onCycleRepeat,
+    dj = null
+  }) {
+    const ctx = useLibrary();
+    const { isPlaying, actions, openMenu } = ctx;
+    const [filter, setFilter] = (0, import_react17.useState)("");
+    const [selected, setSelected] = (0, import_react17.useState)(() => /* @__PURE__ */ new Set());
+    const [scrollTop, setScrollTop] = (0, import_react17.useState)(0);
+    const [viewport, setViewport] = (0, import_react17.useState)(400);
+    const [dropAt, setDropAt] = (0, import_react17.useState)(null);
+    const [sortState, setSortState] = (0, import_react17.useState)(null);
+    const anchorRef = (0, import_react17.useRef)(null);
+    const scrollRef = (0, import_react17.useRef)(null);
+    const [dockWidth, setDockWidth] = useLayoutPref("dockWidth", DOCK_WIDTH);
+    const { template: queueGrid, handleFor } = useColumns("queue", QUEUE_COLUMNS);
+    const rows = (0, import_react17.useMemo)(() => {
+      const all = queue.map((t, i) => i);
+      const terms = (0, import_library_index3.fold)(filter).split(/\s+/).filter(Boolean);
+      if (!terms.length) return all;
+      return all.filter((i) => {
+        const t = queue[i];
+        const hay = (0, import_library_index3.fold)(`${t.title} ${t.artist} ${t.album}`);
+        return terms.every((term) => hay.includes(term));
+      });
+    }, [queue, filter]);
+    const totalDuration = (0, import_react17.useMemo)(() => queue.reduce((n, t) => n + (t.duration || 0), 0), [queue]);
+    const remaining = (0, import_react17.useMemo)(() => queue.slice(currentIndex + 1).reduce((n, t) => n + (t.duration || 0), 0), [queue, currentIndex]);
+    (0, import_react17.useEffect)(() => {
+      setSelected(/* @__PURE__ */ new Set());
+    }, [queue.length, filter]);
+    (0, import_react17.useEffect)(() => {
+      const el = scrollRef.current;
+      if (!el) return void 0;
+      const ro = new ResizeObserver(() => setViewport(el.clientHeight || 400));
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, [collapsed]);
+    const locateCurrent = (smooth = false) => {
+      const el = scrollRef.current;
+      const pos = rows.indexOf(currentIndex);
+      if (!el || pos < 0) return;
+      const top = pos * ROW_HEIGHT2;
+      if (top < el.scrollTop || top + ROW_HEIGHT2 > el.scrollTop + el.clientHeight) {
+        el.scrollTo({ top: Math.max(0, top - el.clientHeight / 2 + ROW_HEIGHT2), behavior: smooth ? "smooth" : "auto" });
+      }
+    };
+    (0, import_react17.useEffect)(() => {
+      locateCurrent();
+    }, [currentIndex, collapsed]);
+    if (collapsed) {
+      return /* @__PURE__ */ import_react17.default.createElement("aside", { className: "np-dock collapsed", "aria-label": "Now Playing" }, /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-expand-queue-panel", className: "np-rail", title: "Show the Now Playing playlist", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "list", size: 16 }), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-rail-label" }, "Now Playing \xB7 ", queue.length)));
+    }
+    const selectedIndices = () => [...selected].sort((a, b) => a - b);
+    const handleClick = (e, qIdx) => {
+      const next = new Set(e.ctrlKey || e.metaKey ? selected : []);
+      if (e.shiftKey && anchorRef.current != null) {
+        const a = rows.indexOf(anchorRef.current);
+        const b = rows.indexOf(qIdx);
+        for (let i = Math.min(a, b); i <= Math.max(a, b); i++) next.add(rows[i]);
+      } else if ((e.ctrlKey || e.metaKey) && next.has(qIdx)) {
+        next.delete(qIdx);
+      } else {
+        next.add(qIdx);
+        anchorRef.current = qIdx;
+      }
+      setSelected(next);
+    };
+    const handleKeyDown = (e) => {
+      if (e.target !== scrollRef.current) return;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selected.size) {
+          e.preventDefault();
+          onRemove(selectedIndices());
+          setSelected(/* @__PURE__ */ new Set());
+        }
+      } else if (e.key === "Enter") {
+        if (selected.size) {
+          e.preventDefault();
+          onPlayIndex(selectedIndices()[0]);
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setSelected(new Set(rows));
+      } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const pos = anchorRef.current == null ? -1 : rows.indexOf(anchorRef.current);
+        const nextPos = Math.max(0, Math.min(rows.length - 1, pos + (e.key === "ArrowDown" ? 1 : -1)));
+        const qIdx = rows[nextPos];
+        anchorRef.current = qIdx;
+        setSelected(/* @__PURE__ */ new Set([qIdx]));
+        const el = scrollRef.current;
+        const top = nextPos * ROW_HEIGHT2;
+        if (top < el.scrollTop) el.scrollTop = top;
+        else if (top + ROW_HEIGHT2 > el.scrollTop + el.clientHeight) el.scrollTop = top + ROW_HEIGHT2 - el.clientHeight;
+      } else if (e.key === "Escape") {
+        setSelected(/* @__PURE__ */ new Set());
+      }
+    };
+    const handleContextMenu = (e, qIdx) => {
+      e.preventDefault();
+      let sel = selected;
+      if (!sel.has(qIdx)) {
+        sel = /* @__PURE__ */ new Set([qIdx]);
+        setSelected(sel);
+        anchorRef.current = qIdx;
+      }
+      const indices = [...sel].sort((a, b) => a - b);
+      const tracks = indices.map((i) => queue[i]);
+      const items = trackMenuItems(tracks, ctx);
+      items.splice(
+        1,
+        3,
+        { label: "Play", icon: "play", onClick: () => onPlayIndex(indices[0]) },
+        { label: "Play next", icon: "playNext", disabled: indices.includes(currentIndex), onClick: () => onMove(indices, currentIndex + 1) },
+        { label: "Move to top", icon: "up", onClick: () => onMove(indices, 0) },
+        { label: "Move to bottom", icon: "down", onClick: () => onMove(indices, queue.length) },
+        { label: indices.length > 1 ? `Remove ${indices.length} from queue` : "Remove from queue", icon: "x", danger: true, onClick: () => onRemove(indices) },
+        dj && dj.onPreview && tracks.length === 1 ? { label: "Announce this song (Virtual DJ)", icon: "mic", onClick: () => dj.onPreview(tracks[0]) } : null
+      );
+      openMenu(e, items);
+    };
+    const dropIndexFor = (e) => {
+      const el = scrollRef.current;
+      const rect = el.getBoundingClientRect();
+      const y = e.clientY - rect.top + el.scrollTop;
+      const pos = Math.max(0, Math.min(rows.length, Math.round(y / ROW_HEIGHT2)));
+      return pos >= rows.length ? queue.length : rows[pos];
+    };
+    const handleDragStart = (e, qIdx) => {
+      const indices = selected.has(qIdx) ? selectedIndices() : [qIdx];
+      e.dataTransfer.effectAllowed = "copyMove";
+      e.dataTransfer.setData(QUEUE_DRAG_TYPE, JSON.stringify(indices));
+      e.dataTransfer.setData(TRACK_DRAG_TYPE, JSON.stringify(indices.map((i) => queue[i])));
+    };
+    const acceptsDrag = (e) => {
+      const types = Array.from(e.dataTransfer.types || []);
+      return types.includes(QUEUE_DRAG_TYPE) || types.includes(TRACK_DRAG_TYPE);
+    };
+    const handleDragOver = (e) => {
+      if (!acceptsDrag(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = Array.from(e.dataTransfer.types).includes(QUEUE_DRAG_TYPE) ? "move" : "copy";
+      setDropAt(dropIndexFor(e));
+    };
+    const handleDrop = (e) => {
+      if (!acceptsDrag(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const at = dropIndexFor(e);
+      setDropAt(null);
+      const moving = e.dataTransfer.getData(QUEUE_DRAG_TYPE);
+      if (moving) {
+        try {
+          onMove(JSON.parse(moving), at);
+        } catch {
+        }
+        return;
+      }
+      try {
+        const tracks = JSON.parse(e.dataTransfer.getData(TRACK_DRAG_TYPE) || "[]");
+        if (tracks.length) onInsert(tracks, at);
+      } catch {
+      }
+    };
+    const sortBy = (key) => {
+      const dir = sortState && sortState.key === key && sortState.dir === "asc" ? "desc" : "asc";
+      setSortState({ key, dir });
+      onSort(key, dir);
+    };
+    const sortMark = (key) => sortState && sortState.key === key ? sortState.dir === "asc" ? " \u2191" : " \u2193" : "";
+    const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT2) - OVERSCAN);
+    const end = Math.min(rows.length, Math.ceil((scrollTop + viewport) / ROW_HEIGHT2) + OVERSCAN);
+    const current = queue[currentIndex] || null;
+    const dropPos = dropAt == null ? null : dropAt >= queue.length ? rows.length : rows.indexOf(dropAt);
+    return /* @__PURE__ */ import_react17.default.createElement("aside", { className: "np-dock", "aria-label": "Now Playing", style: { width: Math.min(dockWidth, dockMaxWidth()), "--np-grid": queueGrid } }, /* @__PURE__ */ import_react17.default.createElement(
+      Splitter,
+      {
+        id: "np-dock-splitter",
+        className: "overlay edge-left",
+        label: "Now Playing width",
+        side: "right",
+        width: Math.min(dockWidth, dockMaxWidth()),
+        onChange: setDockWidth,
+        min: 240,
+        max: dockMaxWidth,
+        defaultWidth: DOCK_WIDTH
+      }
+    ), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react17.default.createElement("span", null, "Now Playing"), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react17.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react17.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Unknown Artist"), current.album ? /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react17.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), dj && dj.speaking && /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "DJ is warming up\u2026" : dj.speaking.preview ? "DJ preview" : "DJ on the mic"), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: dj.speaking.preview ? "Stop the preview" : "Skip the DJ and play the next song" }, dj.speaking.preview ? "Stop" : "Skip")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react17.default.createElement(
+      "input",
+      {
+        id: "queue-filter",
+        type: "search",
+        placeholder: "Filter playlist\u2026",
+        value: filter,
+        onChange: (e) => setFilter(e.target.value),
+        onKeyDown: (e) => {
+          if (e.key === "Escape") setFilter("");
+        }
+      }
+    )), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-cols" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-state" }), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-title col-resizable", onClick: () => sortBy("title"), title: "Sort by title" }, "Title", sortMark("title"), handleFor("title")), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-artist col-resizable", onClick: () => sortBy("artist"), title: "Sort by artist" }, "Artist", sortMark("artist"), handleFor("artist")), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-dur", onClick: () => sortBy("duration"), title: "Sort by duration" }, "Time", sortMark("duration"))), /* @__PURE__ */ import_react17.default.createElement(
+      "div",
+      {
+        id: "queue-list",
+        className: `np-list ${dropAt != null ? "dragging" : ""}`,
+        ref: scrollRef,
+        tabIndex: 0,
+        onScroll: (e) => setScrollTop(e.currentTarget.scrollTop),
+        onKeyDown: handleKeyDown,
+        onDragOver: handleDragOver,
+        onDragLeave: (e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setDropAt(null);
+        },
+        onDrop: handleDrop
+      },
+      rows.length === 0 ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-empty" }, queue.length ? "No tracks match the filter." : "The queue is empty. Double-click songs in the Library, or drag them here.") : /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-spacer", style: { height: rows.length * ROW_HEIGHT2 } }, rows.slice(start, end).map((qIdx, i) => {
+        const t = queue[qIdx];
+        const pos = start + i;
+        const isCurrent = qIdx === currentIndex;
+        return /* @__PURE__ */ import_react17.default.createElement(
+          "div",
+          {
+            key: `${qIdx}-${t.id || t.src}`,
+            className: `np-row ${isCurrent ? "current" : ""} ${selected.has(qIdx) ? "selected" : ""} ${qIdx < currentIndex ? "played" : ""}`,
+            style: { top: pos * ROW_HEIGHT2, height: ROW_HEIGHT2 },
+            title: `${t.title}
+${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
+            draggable: true,
+            onDragStart: (e) => handleDragStart(e, qIdx),
+            onClick: (e) => handleClick(e, qIdx),
+            onDoubleClick: () => onPlayIndex(qIdx),
+            onContextMenu: (e) => handleContextMenu(e, qIdx)
+          },
+          /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-state" }, isCurrent ? isPlaying ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null)) : /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "play", size: 10 }) : /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-num" }, qIdx + 1)),
+          /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-title" }, t.title),
+          /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-artist" }, t.artist),
+          /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-dur" }, (0, import_library_index3.formatDuration)(t.duration))
+        );
+      }), dropPos != null && dropPos >= 0 && /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-drop-line", style: { top: dropPos * ROW_HEIGHT2 - 1 } }))
+    ), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer-stats" }, /* @__PURE__ */ import_react17.default.createElement("span", null, queue.length.toLocaleString(), " tracks \xB7 ", (0, import_library_index3.formatLongDuration)(totalDuration)), currentIndex >= 0 && queue.length > 1 && /* @__PURE__ */ import_react17.default.createElement("span", null, (0, import_library_index3.formatLongDuration)(remaining), " left")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer-actions" }, /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-shuffle-mode", className: `btn-icon-only small ${shuffle ? "on" : ""}`, title: shuffle ? "Random playback: on" : "Random playback: off", "aria-pressed": shuffle, onClick: onToggleShuffle }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "shuffle", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-repeat-mode", className: `btn-icon-only small ${repeat !== "off" ? "on" : ""}`, title: REPEAT_LABEL[repeat], onClick: onCycleRepeat }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: repeat === "one" ? "repeatOne" : "repeat", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { className: "btn-icon-only small", title: "Locate the playing track", onClick: () => locateCurrent(true) }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "locate", size: 14 })), dj && /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, null, /* @__PURE__ */ import_react17.default.createElement(
+      "button",
+      {
+        id: "btn-dj-toggle",
+        className: `btn-icon-only small ${dj.enabled ? "on" : ""}`,
+        title: dj.enabled ? `Virtual DJ is on: ${dj.persona}` : "Virtual DJ between songs",
+        "aria-pressed": dj.enabled,
+        onClick: dj.onSettings
+      },
+      /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "mic", size: 14 })
+    ), dj.enabled && /* @__PURE__ */ import_react17.default.createElement(
+      "button",
+      {
+        id: "btn-dj-preview",
+        className: "btn-icon-only small np-dj-preview",
+        title: dj.nextTrack ? `Announce the next song: hear what the DJ will say before \u201C${dj.nextTrack.title}\u201D` : "Nothing is queued after this song",
+        disabled: !dj.nextTrack || !!dj.speaking,
+        onClick: () => dj.onPreview(dj.nextTrack)
+      },
+      /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "speaker", size: 14 })
+    ), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-ai-playlist", className: "btn-icon-only small ai-btn-icon", title: "AI Playlist: describe it, your RobOS agent builds it", onClick: dj.onAiPlaylist }, "\u2726")), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-footer-spacer" }), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-shuffle-queue", className: "btn-icon-only small", title: "Shuffle the order of the queue", onClick: onShuffleOrder }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "rows", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-save-queue-as-playlist", className: "btn-icon-only small", title: "Save queue as a playlist", onClick: onSave, disabled: !queue.length }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "save", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-clear-queue", className: "btn-icon-only small danger", title: "Clear the queue (keeps the playing track)", onClick: onClear, disabled: queue.length <= 1 }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "trash", size: 14 })))));
+  }
+
+  // src/TrackInfo.jsx
+  var import_react18 = __toESM(require_react());
+  var import_library_index4 = __toESM(require_library_index());
+  var when2 = (iso) => iso ? new Date(iso).toLocaleString() : "\u2014";
+  function TrackInfo({ track, onClose }) {
+    const { stats, actions } = useLibrary();
+    if (!track) return null;
+    const st = stats[track.id] || {};
+    const rows = [
+      ["Title", track.title],
+      ["Artist", track.artist],
+      ["Album artist", track.albumArtist],
+      ["Album", track.album],
+      ["Track", track.trackNumber ? `${track.trackNumber}${track.trackTotal ? ` of ${track.trackTotal}` : ""}` : null],
+      ["Disc", track.discNumber ? `${track.discNumber}${track.discTotal ? ` of ${track.discTotal}` : ""}` : null],
+      ["Year", track.year],
+      ["Genre", track.genre],
+      ["Composer", track.composer],
+      ["Duration", (0, import_library_index4.formatDuration)(track.duration)],
+      ["Format", [track.codec, track.lossless ? "lossless" : null].filter(Boolean).join(", ") || null],
+      ["Bitrate", track.bitrate ? `${Math.round(track.bitrate / 1e3)} kbps` : null],
+      ["Sample rate", track.sampleRate ? `${(track.sampleRate / 1e3).toFixed(1)} kHz${track.bitsPerSample ? ` \xB7 ${track.bitsPerSample}-bit` : ""}` : null],
+      ["Channels", track.channels === 1 ? "Mono" : track.channels === 2 ? "Stereo" : track.channels],
+      ["Plays", st.plays || 0],
+      ["Last played", when2(st.lastPlayed)],
+      ["Added", when2(track.addedAt)],
+      ["Source", track.cloud ? `Cloud (${track.cloud.driverType || "remote"})${track.cloud.cached ? ", cached locally" : ""}` : track.filePath ? "Local file" : "Stream"],
+      ["Location", track.cloud ? track.cloud.remotePath : track.filePath || track.src]
+    ].filter(([, v]) => v !== null && v !== void 0 && v !== "");
+    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-overlay", onClick: onClose }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card track-info-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-info-head" }, /* @__PURE__ */ import_react18.default.createElement(Cover, { artId: track.artId, name: track.album || track.title, size: 96 }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-info-title" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, track.title), /* @__PURE__ */ import_react18.default.createElement("span", null, track.artist, track.album ? ` \u2014 ${track.album}` : ""), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-info-actions" }, /* @__PURE__ */ import_react18.default.createElement(LoveButton, { track, size: 16 }), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => {
+      onClose();
+      actions.playTracks([track], 0);
+    } }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 10 }), " Play"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => {
+      onClose();
+      actions.goToAlbumOf(track);
+    } }, "Go to album"), actions.fixMetadata && /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-track-info-ai-fix", className: "btn-chip", onClick: () => {
+      onClose();
+      actions.fixMetadata([track]);
+    } }, "\u2726 AI Fix Metadata"), track.filePath && !track.cloud && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => actions.showInFolder(track) }, "Show in file manager")))), /* @__PURE__ */ import_react18.default.createElement("dl", { className: "track-info-grid" }, rows.map(([k, v]) => /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, { key: k }, /* @__PURE__ */ import_react18.default.createElement("dt", null, k), /* @__PURE__ */ import_react18.default.createElement("dd", { title: String(v) }, String(v))))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Close"))));
   }
 
   // src/AiPlaylist.jsx
-  var import_react18 = __toESM(require_react());
-  var EXAMPLE_PROMPTS = [
-    "Cyberpunk & sci-fi movie marathon for a rainy night",
-    "Blender open-source animated short films back to back",
-    "Classic 1990s & 2000s high-resolution 1080p/4K action features",
-    "Short episodes and quick video clips under 30 minutes",
-    "Most-watched favorites and director spotlight double feature"
-  ];
-  var DJ_STYLES = [
-    { id: "warm classic cinema host", label: "Classic Theater Host \u2014 warm, welcoming, silver-screen intro" },
-    { id: "film festival curator", label: "Film Festival Curator \u2014 director notes, cinematography & release context" },
-    { id: "late-night drive-in host", label: "Late-Night Drive-In \u2014 retro, atmospheric double-feature energy" },
-    { id: "concise screening intro", label: "Minimalist \u2014 brief title, director, and year only" }
-  ];
-  function AiPlaylistModal({
-    open,
-    trackCount = 0,
-    onClose,
-    onCreated
-  }) {
-    const [prompt, setPrompt] = (0, import_react18.useState)("");
-    const [count, setCount] = (0, import_react18.useState)(12);
-    const [virtualDj, setVirtualDj] = (0, import_react18.useState)(true);
-    const [djStyle, setDjStyle] = (0, import_react18.useState)(DJ_STYLES[0].id);
-    const [busy, setBusy] = (0, import_react18.useState)(false);
-    const [error, setError] = (0, import_react18.useState)("");
-    if (!open) return null;
-    const handleSubmit = async (e) => {
-      if (e) e.preventDefault();
-      const trimmed = prompt.trim();
-      if (!trimmed) {
-        setError("Describe the movie marathon, mood, director, or genre you want to watch.");
+  var import_react20 = __toESM(require_react());
+
+  // src/useVirtualDj.js
+  var import_react19 = __toESM(require_react());
+  var LOOKAHEAD = 3;
+  var DJ_LEVEL_DEFAULT = 150;
+  var FREQUENCY_EVERY = { every: 1, alternate: 2, sometimes: 3 };
+  var LINE_WAIT_MS = 3e4;
+  var CLIP_WAIT_MS = 15e3;
+  var fileUrl = (filePath) => `file://${filePath.split("/").map(encodeURIComponent).join("/")}`;
+  var slim = (t) => ({ id: t.id, title: t.title, artist: t.artist, album: t.album, year: t.year, genre: t.genre, duration: t.duration });
+  var within = (promise, ms, fallback = null) => new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    Promise.resolve(promise).then((v) => {
+      clearTimeout(timer);
+      resolve(v);
+    }, () => {
+      clearTimeout(timer);
+      resolve(fallback);
+    });
+  });
+  var systemVoiceAvailable = () => !!(window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined" && window.speechSynthesis.getVoices().length > 0);
+  function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent, castClip }) {
+    const [settings, setSettings] = (0, import_react19.useState)(() => ({ enabled: false, persona: "", voice: "", frequency: "every", level: DJ_LEVEL_DEFAULT, ...initial || {} }));
+    const [speaking, setSpeaking] = (0, import_react19.useState)(null);
+    const lines = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const clips = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const lineRequests = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const clipRequests = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const generation = (0, import_react19.useRef)(0);
+    const transitions = (0, import_react19.useRef)(0);
+    const active = (0, import_react19.useRef)(null);
+    const latest = (0, import_react19.useRef)({});
+    latest.current = { settings, outputTarget, getVolume, showStatus, getAgent, castClip };
+    const active_ = settings.enabled && settings.persona.trim().length > 0;
+    const updateSettings = (0, import_react19.useCallback)((patch) => {
+      const prev = latest.current.settings;
+      const next = { ...prev, ...patch };
+      if (next.persona !== prev.persona) {
+        generation.current += 1;
+        lines.current.clear();
+        clips.current.clear();
+        lineRequests.current.clear();
+        clipRequests.current.clear();
+      } else if (next.voice !== prev.voice || next.level !== prev.level) {
+        clips.current.clear();
+        clipRequests.current.clear();
+      }
+      latest.current.settings = next;
+      setSettings(next);
+    }, []);
+    const requestLines = (0, import_react19.useCallback)((tracks) => {
+      const missing = tracks.filter((t) => t && t.id && !lines.current.has(t.id) && !lineRequests.current.has(t.id));
+      if (!missing.length || !window.robosAudio?.djLines) return;
+      const gen = generation.current;
+      const req = window.robosAudio.djLines(latest.current.settings.persona, missing.map(slim), latest.current.getAgent()).then((res) => {
+        if (gen !== generation.current) return;
+        for (const [id, text] of Object.entries(res && res.lines || {})) lines.current.set(id, text);
+        if (res && !res.ok && res.error) latest.current.showStatus(`Virtual DJ: ${res.error}`);
+      }).catch((err) => latest.current.showStatus(`Virtual DJ: ${err.message}`)).finally(() => missing.forEach((t) => {
+        if (lineRequests.current.get(t.id) === req) lineRequests.current.delete(t.id);
+      }));
+      missing.forEach((t) => lineRequests.current.set(t.id, req));
+    }, []);
+    const requestClip = (0, import_react19.useCallback)((track) => {
+      if (!track || !track.id) return Promise.resolve(null);
+      const text = lines.current.get(track.id);
+      if (!text) return Promise.resolve(null);
+      const done = clips.current.get(track.id);
+      if (done && !(done.failed && Date.now() - done.at > 2e4)) return Promise.resolve(done);
+      if (clipRequests.current.has(track.id)) return clipRequests.current.get(track.id);
+      const gen = generation.current;
+      const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice, latest.current.settings.level).then((res) => res && res.ok ? { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs } : { failed: true, at: Date.now(), error: res && res.error || "no audio" }).catch((err) => ({ failed: true, at: Date.now(), error: err.message })).then((clip) => {
+        if (gen === generation.current) clips.current.set(track.id, clip);
+        clipRequests.current.delete(track.id);
+        return clip;
+      });
+      clipRequests.current.set(track.id, req);
+      return req;
+    }, []);
+    const lineFor = (0, import_react19.useCallback)(async (track, ms) => {
+      if (lines.current.has(track.id)) return lines.current.get(track.id);
+      if (!lineRequests.current.has(track.id)) requestLines([track]);
+      await within(lineRequests.current.get(track.id), ms);
+      return lines.current.get(track.id) || null;
+    }, [requestLines]);
+    (0, import_react19.useEffect)(() => {
+      if (active_ && window.robosAudio?.djWarmup) window.robosAudio.djWarmup().catch(() => {
+      });
+    }, [active_]);
+    const upcomingKey = upcoming.map((t) => t && t.id).join("|");
+    (0, import_react19.useEffect)(() => {
+      if (!active_) return;
+      const next = upcoming.filter(Boolean).slice(0, LOOKAHEAD);
+      requestLines(next);
+      const first = next[0];
+      if (first && first.id) {
+        if (lines.current.has(first.id)) requestClip(first);
+        else if (lineRequests.current.has(first.id)) lineRequests.current.get(first.id).then(() => requestClip(first));
+      }
+    }, [active_, upcomingKey, settings.persona, settings.voice, settings.level, requestLines, requestClip]);
+    const stop = (0, import_react19.useCallback)(() => {
+      const a = active.current;
+      if (!a) return;
+      active.current = null;
+      if (a.audio) {
+        a.audio.onended = null;
+        a.audio.onerror = null;
+        a.audio.pause();
+      }
+      if (a.timer) clearTimeout(a.timer);
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setSpeaking(null);
+      a.finish();
+    }, []);
+    const playLine = (0, import_react19.useCallback)((text, clip, then, { preview: preview2 = false, clipError = "" } = {}) => {
+      const { outputTarget: target, getVolume: volume, settings: s, castClip: sendToSpeaker } = latest.current;
+      const entry = { finish: then, audio: null, timer: null };
+      active.current = entry;
+      setSpeaking({ text, preview: preview2 });
+      const done = () => {
+        if (active.current !== entry) return;
+        active.current = null;
+        if (entry.timer) clearTimeout(entry.timer);
+        setSpeaking(null);
+        then();
+      };
+      if (clip && clip.filePath && target !== "local") {
+        entry.cast = true;
+        const meta = { title: "Virtual DJ", artist: s.persona.slice(0, 60), role: "dj" };
+        const failed = (msg) => {
+          latest.current.showStatus(`Virtual DJ: the speaker could not play the line (${msg}).`);
+          done();
+        };
+        entry.timer = setTimeout(done, (clip.durationMs || 4e3) + 3e4);
+        Promise.resolve(sendToSpeaker ? sendToSpeaker(clip.castPath || clip.filePath, meta) : null).then((res) => {
+          if (active.current !== entry) return;
+          if (res && res.ok === false) {
+            failed(res.error || "unknown error");
+            return;
+          }
+          clearTimeout(entry.timer);
+          entry.timer = setTimeout(done, (clip.durationMs || 4e3) + 2500);
+        }).catch((err) => failed(err.message));
         return;
       }
-      setBusy(true);
-      setError("");
-      try {
-        const res = await window.robosAudio.generateAiPlaylist({
-          prompt: trimmed,
-          count: Number(count) || 12,
-          virtualDj,
-          djStyle,
-          save: true
-        });
-        if (!res || !Array.isArray(res.tracks) || res.tracks.length === 0) {
-          setError("No matching movies were found in your library. Scan a folder or index a cloud source first.");
-          setBusy(false);
+      if (target !== "local") {
+        latest.current.showStatus(`Virtual DJ: no recorded voice for the speaker${clipError ? ` (${clipError})` : ""}; speaking on this computer.`);
+      }
+      if (clip && clip.filePath) {
+        const audio = new Audio(fileUrl(clip.filePath));
+        audio.volume = Math.max(0, Math.min(1, typeof volume === "function" ? volume() : 1));
+        audio.onended = done;
+        audio.onerror = done;
+        entry.audio = audio;
+        audio.play().catch(done);
+        entry.timer = setTimeout(done, (clip.durationMs || 15e3) + 4e3);
+        return;
+      }
+      if (systemVoiceAvailable()) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.onend = done;
+        u.onerror = done;
+        window.speechSynthesis.speak(u);
+        entry.timer = setTimeout(done, Math.max(4e3, text.split(/\s+/).length * 450));
+        return;
+      }
+      latest.current.showStatus(`Virtual DJ could not speak${clipError ? `: ${clipError}` : " (no voice available)"}. Pick another voice in the DJ settings.`);
+      entry.timer = setTimeout(done, preview2 ? 6e3 : 2500);
+    }, []);
+    const speakFor = (0, import_react19.useCallback)((track, then, { preview: preview2 = false } = {}) => {
+      const waiting = { finish: then, audio: null, timer: null };
+      active.current = waiting;
+      setSpeaking({ text: `Getting the intro for \u201C${track.title || "the next song"}\u201D ready\u2026`, warming: true, preview: preview2 });
+      (async () => {
+        const text = await lineFor(track, LINE_WAIT_MS);
+        if (active.current !== waiting) return;
+        if (!text) {
+          latest.current.showStatus(`Virtual DJ had nothing ready for \u201C${track.title || "this song"}\u201D \u2014 playing on.`);
+          active.current = null;
+          setSpeaking(null);
+          then();
           return;
         }
-        if (onCreated) onCreated(res);
-        onClose();
+        setSpeaking({ text, warming: true, preview: preview2 });
+        const clip = await within(requestClip(track), CLIP_WAIT_MS);
+        if (active.current !== waiting) return;
+        playLine(text, clip && !clip.failed ? clip : null, then, { preview: preview2, clipError: clip && clip.failed ? clip.error : "" });
+      })();
+    }, [lineFor, requestClip, playLine]);
+    const talkBefore = (0, import_react19.useCallback)((track, then) => {
+      const { settings: s } = latest.current;
+      if (!s.enabled || !s.persona.trim() || !track || !track.id) return false;
+      transitions.current += 1;
+      if (transitions.current % (FREQUENCY_EVERY[s.frequency] || 1) !== 0) return false;
+      speakFor(track, then);
+      return true;
+    }, [speakFor]);
+    const preview = (0, import_react19.useCallback)((track, then) => {
+      const { settings: s } = latest.current;
+      if (!s.persona.trim() || !track || !track.id) return false;
+      if (active.current) stop();
+      speakFor(track, then, { preview: true });
+      return true;
+    }, [speakFor, stop]);
+    const announce = (0, import_react19.useCallback)(async (text, then) => {
+      const { settings: s } = latest.current;
+      if (!text) {
+        then();
+        return;
+      }
+      setSpeaking({ text, warming: true });
+      let clip = null;
+      let clipError = "";
+      try {
+        const res = await window.robosAudio.djSynthesize(text, s.voice, s.level);
+        if (res && res.ok) clip = { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs };
+        else clipError = res && res.error || "";
       } catch (err) {
-        setError(err.message || "Could not generate AI Watchlist");
-      } finally {
-        setBusy(false);
+        clipError = err.message;
       }
+      playLine(text, clip, then, { clipError });
+    }, [playLine]);
+    const loadScript = (0, import_react19.useCallback)((dj) => {
+      if (!dj) return;
+      updateSettings({
+        enabled: true,
+        persona: dj.persona || "",
+        voice: dj.voice || latest.current.settings.voice,
+        frequency: dj.frequency || "every",
+        level: dj.level || latest.current.settings.level || DJ_LEVEL_DEFAULT
+      });
+      for (const [id, text] of Object.entries(dj.lines || {})) lines.current.set(id, text);
+      transitions.current = 0;
+    }, [updateSettings]);
+    const castLineFinished = (0, import_react19.useCallback)(() => {
+      const a = active.current;
+      if (!a || !a.cast) return;
+      active.current = null;
+      if (a.timer) clearTimeout(a.timer);
+      setSpeaking(null);
+      a.finish();
+    }, []);
+    return { settings, setSettings: updateSettings, speaking, talkBefore, preview, announce, loadScript, skip: stop, castLineFinished, active: active_ };
+  }
+
+  // src/AiPlaylist.jsx
+  var import_library_index5 = __toESM(require_library_index());
+  var DJ_FREQUENCY_LABELS = {
+    every: "Before every song",
+    alternate: "Every other song",
+    sometimes: "Now and then (every third song)"
+  };
+  function AiPromptBox({ id, placeholder, initialValue = "", minHeight = 100, showCommands = false, onChange, onSubmit }) {
+    const hostRef = (0, import_react20.useRef)(null);
+    const [missing, setMissing] = (0, import_react20.useState)(false);
+    const latest = (0, import_react20.useRef)({ onChange, onSubmit });
+    latest.current = { onChange, onSubmit };
+    (0, import_react20.useEffect)(() => {
+      const host = hostRef.current;
+      if (!host || typeof customElements === "undefined") return void 0;
+      const el = document.createElement("robos-ai-textarea");
+      el.id = id;
+      el.setAttribute("show-submit", "false");
+      el.setAttribute("show-commands", showCommands ? "true" : "false");
+      el.setAttribute("show-agent", "false");
+      el.setAttribute("placeholder", placeholder);
+      el.setAttribute("min-height", String(minHeight));
+      host.appendChild(el);
+      let alive = true;
+      const report = () => latest.current.onChange && latest.current.onChange(String(el.value || ""));
+      const onKey = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && String(el.value || "").trim() && latest.current.onSubmit) {
+          e.preventDefault();
+          latest.current.onSubmit();
+        }
+      };
+      const onPathQuery = async (e) => {
+        const prefix = e.detail?.prefix || "";
+        if (window.robos?.searchIndex) {
+          const res = await window.robos.searchIndex(prefix);
+          if (res && res.ok && typeof el.setTypeaheadItems === "function") {
+            el.setTypeaheadItems(res.items || []);
+          }
+        }
+      };
+      customElements.whenDefined("robos-ai-textarea").then(() => {
+        if (!alive) return;
+        if (initialValue && !String(el.value || "").trim()) el.value = initialValue;
+        report();
+      });
+      const timer = setTimeout(() => {
+        if (alive && !customElements.get("robos-ai-textarea")) setMissing(true);
+      }, 4e3);
+      ["input", "change", "keyup"].forEach((t) => el.addEventListener(t, report));
+      el.addEventListener("keydown", onKey);
+      el.addEventListener("robos-path-query", onPathQuery);
+      return () => {
+        alive = false;
+        clearTimeout(timer);
+        ["input", "change", "keyup"].forEach((t) => el.removeEventListener(t, report));
+        el.removeEventListener("keydown", onKey);
+        el.removeEventListener("robos-path-query", onPathQuery);
+        el.remove();
+      };
+    }, []);
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-prompt-box" }, /* @__PURE__ */ import_react20.default.createElement("div", { ref: hostRef }), missing && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error" }, "RobOS UI components (robos-ui) are not installed, so the prompt box can't load."));
+  }
+  function AgentPicker({ value, onChange }) {
+    const hostRef = (0, import_react20.useRef)(null);
+    const [error, setError] = (0, import_react20.useState)("");
+    const latest = (0, import_react20.useRef)(onChange);
+    latest.current = onChange;
+    (0, import_react20.useEffect)(() => {
+      const host = hostRef.current;
+      if (!host || typeof customElements === "undefined") return void 0;
+      const el = document.createElement("robos-agent-selector");
+      el.id = "ai-agent-selector";
+      host.appendChild(el);
+      let alive = true;
+      const report = () => {
+        if (!alive) return;
+        const v = el.value || {};
+        latest.current({ provider: v.provider || "", model: v.model || "", effort: v.effort || "", ready: !!el.ready });
+      };
+      el.addEventListener("change", report);
+      const timer = setTimeout(() => {
+        if (alive && !customElements.get("robos-agent-selector")) setError("The RobOS agent selector (robos-lib) is not installed.");
+      }, 4e3);
+      customElements.whenDefined("robos-agent-selector").then(async () => {
+        if (!alive) return;
+        try {
+          if (!window.robosProviders) throw new Error("The RobOS provider catalog is not available.");
+          const providers = await window.robosProviders.list();
+          const saved = value && providers.find((p) => p.id === value.provider && p.available);
+          await el.load(saved ? { providers, provider: saved.id, model: value.model, effort: value.effort } : { providers });
+          if (alive && !providers.some((p) => p.available)) setError("No AI agent is ready. Install and sign in to AGY or Codex in RobOS Agents.");
+        } catch (err) {
+          if (alive) setError(err.message);
+        }
+        report();
+      });
+      return () => {
+        alive = false;
+        clearTimeout(timer);
+        el.removeEventListener("change", report);
+        el.remove();
+      };
+    }, []);
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "agent-picker" }, /* @__PURE__ */ import_react20.default.createElement("div", { ref: hostRef }), error && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error" }, error));
+  }
+  function useDjVoices() {
+    const [voices, setVoices] = (0, import_react20.useState)(null);
+    (0, import_react20.useEffect)(() => {
+      let alive = true;
+      (window.robosAudio?.djVoices ? window.robosAudio.djVoices() : Promise.resolve({ ok: false, voices: {} })).then((res) => {
+        if (alive) setVoices(res && res.ok ? res.voices || {} : {});
+      }).catch(() => {
+        if (alive) setVoices({});
+      });
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return voices;
+  }
+  var ENGINE_LABELS = { kokoro: "Kokoro (offline)", "edge-tts": "Edge neural voices (online)", piper: "Piper (offline)", "speech-dispatcher": "System speech" };
+  function defaultDjVoice(voices) {
+    if (!voices) return "";
+    for (const engine of ["kokoro", "edge-tts", "piper"]) {
+      const list = voices[engine] || [];
+      const pick = list.find((v) => v.gender === "male" && v.recommended) || list.find((v) => v.recommended) || list[0];
+      if (pick) return `${engine}:${pick.id}`;
+    }
+    return "";
+  }
+  function DjSettingsFields({ value, onChange, idPrefix = "dj" }) {
+    const voices = useDjVoices();
+    const [previewing, setPreviewing] = (0, import_react20.useState)(false);
+    const set = (patch) => onChange({ ...value, ...patch });
+    (0, import_react20.useEffect)(() => {
+      if (voices && !value.voice) set({ voice: defaultDjVoice(voices) });
+    }, [voices]);
+    const preview = async () => {
+      setPreviewing(true);
+      try {
+        const res = await window.robosAudio.djSynthesize("Hey, you're listening to the RobOS Virtual DJ. Here's what's coming up next.", value.voice, value.level || DJ_LEVEL_DEFAULT);
+        if (res && res.ok) {
+          const audio = new Audio(`file://${res.filePath.split("/").map(encodeURIComponent).join("/")}`);
+          audio.onended = () => setPreviewing(false);
+          audio.onerror = () => setPreviewing(false);
+          await audio.play();
+          return;
+        }
+      } catch {
+      }
+      setPreviewing(false);
     };
-    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-backdrop", onClick: () => !busy && onClose() }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card ai-playlist-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-header" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-info-header" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-badge-icon" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "sparkles", size: 20 })), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-info-headings" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "AI Watchlist & Virtual Cinema Host"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-info-sub" }, "Picks and orders movies from your library (", trackCount.toLocaleString(), " indexed films)"))), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-icon", onClick: onClose, disabled: busy, title: "Close" }, "\u2715")), /* @__PURE__ */ import_react18.default.createElement("form", { onSubmit: handleSubmit, className: "ai-playlist-form" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "ai-field-label" }, "Describe your movie marathon or mood"), /* @__PURE__ */ import_react18.default.createElement(
-      "textarea",
+    const engines = voices ? Object.entries(voices).filter(([, list]) => list && list.length) : [];
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "dj-fields" }, /* @__PURE__ */ import_react20.default.createElement("label", { className: "modal-label" }, "Describe your DJ"), /* @__PURE__ */ import_react20.default.createElement(
+      AiPromptBox,
       {
-        className: "input ai-prompt-textarea",
-        rows: 3,
-        placeholder: "e.g., Sci-fi and animated open-movie double feature with atmospheric pacing\u2026",
-        value: prompt,
-        onChange: (e) => setPrompt(e.target.value),
-        disabled: busy,
-        autoFocus: true
+        id: `${idPrefix}-persona`,
+        minHeight: 90,
+        initialValue: value.persona || "",
+        placeholder: "e.g. A laid-back late-night jazz radio host with a dry sense of humour who keeps it short",
+        onChange: (persona) => set({ persona })
       }
-    ), /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-preset-chips" }, EXAMPLE_PROMPTS.map((sample) => /* @__PURE__ */ import_react18.default.createElement(
-      "button",
-      {
-        key: sample,
-        type: "button",
-        className: "chip",
-        disabled: busy,
-        onClick: () => setPrompt(sample)
-      },
-      sample
-    ))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-options-row" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-option-col" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "ai-field-label" }, "Movies in watchlist"), /* @__PURE__ */ import_react18.default.createElement(
-      "select",
-      {
-        className: "select-sm",
-        value: count,
-        onChange: (e) => setCount(Number(e.target.value)),
-        disabled: busy
-      },
-      /* @__PURE__ */ import_react18.default.createElement("option", { value: 5 }, "5 films (~double/triple feature)"),
-      /* @__PURE__ */ import_react18.default.createElement("option", { value: 12 }, "12 films / episodes"),
-      /* @__PURE__ */ import_react18.default.createElement("option", { value: 20 }, "20 films / episodes"),
-      /* @__PURE__ */ import_react18.default.createElement("option", { value: 35 }, "35 films (weekend marathon)")
-    )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-option-col" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "ai-field-label" }, "Virtual Cinema Host (RobOS Voice)"), /* @__PURE__ */ import_react18.default.createElement("label", { className: "ai-checkbox-row" }, /* @__PURE__ */ import_react18.default.createElement(
+    ), /* @__PURE__ */ import_react20.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "Voice"), engines.length ? /* @__PURE__ */ import_react20.default.createElement("select", { id: `${idPrefix}-voice`, value: value.voice || "", onChange: (e) => set({ voice: e.target.value }) }, engines.map(([engine, list]) => /* @__PURE__ */ import_react20.default.createElement("optgroup", { key: engine, label: ENGINE_LABELS[engine] || engine }, list.map((v) => /* @__PURE__ */ import_react20.default.createElement("option", { key: v.id, value: `${engine}:${v.id}` }, v.name))))) : /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, voices ? "RobOS voice is not installed; the DJ will use the system voice." : "Loading voices\u2026")), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "Talks"), /* @__PURE__ */ import_react20.default.createElement("select", { id: `${idPrefix}-frequency`, value: value.frequency || "every", onChange: (e) => set({ frequency: e.target.value }) }, Object.entries(DJ_FREQUENCY_LABELS).map(([k, label]) => /* @__PURE__ */ import_react20.default.createElement("option", { key: k, value: k }, label)))), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field dj-level" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "DJ volume ", /* @__PURE__ */ import_react20.default.createElement("em", null, value.level || DJ_LEVEL_DEFAULT, "% of the music")), /* @__PURE__ */ import_react20.default.createElement(
       "input",
       {
-        type: "checkbox",
-        checked: virtualDj,
-        onChange: (e) => setVirtualDj(e.target.checked),
-        disabled: busy
+        id: `${idPrefix}-level`,
+        type: "range",
+        min: "50",
+        max: "300",
+        step: "10",
+        value: value.level || DJ_LEVEL_DEFAULT,
+        title: "How loud the DJ is next to the music: 100% is about as loud as a song",
+        onChange: (e) => set({ level: Number(e.target.value) })
       }
-    ), /* @__PURE__ */ import_react18.default.createElement("span", null, "Speak short cinema host intros between films")))), virtualDj && /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-option-col" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "ai-field-label" }, "Cinema Host Persona"), /* @__PURE__ */ import_react18.default.createElement(
-      "select",
+    )), engines.length > 0 && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary dj-preview", onClick: preview, disabled: previewing || !value.voice }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "speaker", size: 13 }), " ", previewing ? "Playing\u2026" : "Hear voice")));
+  }
+  function AiPlaylistModal({ initialDj, agent: initialAgent, onAgentChange, onClose, onPlay, onSave }) {
+    const [request, setRequest] = (0, import_react20.useState)("");
+    const [count, setCount] = (0, import_react20.useState)(25);
+    const [withDj, setWithDj] = (0, import_react20.useState)(!!(initialDj && initialDj.enabled));
+    const [dj, setDj] = (0, import_react20.useState)({ persona: "", voice: "", frequency: "every", level: DJ_LEVEL_DEFAULT, ...initialDj || {} });
+    const [phase, setPhase] = (0, import_react20.useState)("edit");
+    const [progress, setProgress] = (0, import_react20.useState)("");
+    const [error, setError] = (0, import_react20.useState)("");
+    const [result, setResult] = (0, import_react20.useState)(null);
+    const [name, setName] = (0, import_react20.useState)("");
+    const [agent, setAgent] = (0, import_react20.useState)({ ...initialAgent || {}, ready: false });
+    const pickAgent = (next) => {
+      setAgent(next);
+      if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+    };
+    (0, import_react20.useEffect)(() => {
+      const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
+      return () => {
+        if (typeof off === "function") off();
+      };
+    }, []);
+    const djReady = !withDj || dj.persona.trim().length > 0;
+    const canGenerate = request.trim().length > 0 && djReady && agent.ready && phase !== "working";
+    const generate = async () => {
+      if (!canGenerate) return;
+      setPhase("working");
+      setError("");
+      setProgress("Asking your RobOS agent\u2026");
+      try {
+        const chosen = { provider: agent.provider, model: agent.model, effort: agent.effort };
+        const res = await window.robosAudio.aiPlaylistGenerate(request.trim(), count, withDj ? dj : null, chosen);
+        if (res && res.ok) {
+          setResult(res.playlist);
+          setName(res.playlist.name);
+          setPhase("result");
+        } else {
+          setError(res && res.error || "The agent did not answer.");
+          setPhase("edit");
+        }
+      } catch (err) {
+        setError(err.message);
+        setPhase("edit");
+      }
+    };
+    const final = () => ({ ...result, name: name.trim() || result.name });
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: phase === "working" ? void 0 : onClose }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-spark" }, "\u2726"), " AI Playlist"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, "Your RobOS agent picks and orders songs from your library.")), phase !== "result" && /* @__PURE__ */ import_react20.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), phase !== "result" && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("label", { className: "modal-label" }, "What should it sound like?"), /* @__PURE__ */ import_react20.default.createElement(
+      AiPromptBox,
       {
-        className: "select-sm",
-        value: djStyle,
-        onChange: (e) => setDjStyle(e.target.value),
-        disabled: busy
-      },
-      DJ_STYLES.map((s) => /* @__PURE__ */ import_react18.default.createElement("option", { key: s.id, value: s.id }, s.label))
-    )), error && /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-error-banner" }, error), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-footer" }, /* @__PURE__ */ import_react18.default.createElement("button", { type: "button", className: "btn btn-sm", onClick: onClose, disabled: busy }, "Cancel"), /* @__PURE__ */ import_react18.default.createElement("button", { type: "submit", className: "btn btn-sm btn-accent", disabled: busy }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "sparkles", size: 14 }), /* @__PURE__ */ import_react18.default.createElement("span", null, busy ? "Curating Watchlist\u2026" : "Create & Screen Watchlist"))))));
+        id: "ai-playlist-prompt",
+        placeholder: "e.g. An hour of upbeat 90s alternative rock for coding \u2014 no ballads, end with something mellow",
+        onChange: setRequest,
+        onSubmit: generate
+      }
+    ), /* @__PURE__ */ import_react20.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "Songs"), /* @__PURE__ */ import_react20.default.createElement(
+      "input",
+      {
+        id: "ai-playlist-count",
+        type: "number",
+        min: "3",
+        max: "100",
+        value: count,
+        onChange: (e) => setCount(Math.max(3, Math.min(100, parseInt(e.target.value, 10) || 25)))
+      }
+    )), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-dj", type: "checkbox", checked: withDj, onChange: (e) => setWithDj(e.target.checked) }), /* @__PURE__ */ import_react20.default.createElement("span", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 14 }), " Virtual DJ between songs"))), withDj && /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "ai-dj" }), error && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error", role: "alert" }, error), phase === "working" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react20.default.createElement("span", null, progress)), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: phase === "working" }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-generate", className: "btn-accent", onClick: generate, disabled: !canGenerate }, "\u2726 ", phase === "working" ? "Working\u2026" : "Generate with AI"))), phase === "result" && result && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-name", className: "ai-name-input", value: name, onChange: (e) => setName(e.target.value), "aria-label": "Playlist name" }), /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-description" }, result.description), /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-meta" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index5.plural)(result.tracks.length, "song")), /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index5.formatLongDuration)(result.tracks.reduce((n, t) => n + (t.duration || 0), 0))), result.dj && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 11 }), " Virtual DJ")), result.dj && result.dj.intro && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-dj-quote" }, "\u{1F399} \u201C", result.dj.intro, "\u201D"), /* @__PURE__ */ import_react20.default.createElement("ol", { className: "ai-track-list" }, result.tracks.map((t, i) => /* @__PURE__ */ import_react20.default.createElement("li", { key: `${t.id}-${i}` }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-title" }, t.title), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-sub" }, t.artist, t.album ? ` \xB7 ${t.album}` : ""), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-dur" }, (0, import_library_index5.formatDuration)(t.duration))))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => {
+      setPhase("edit");
+      setResult(null);
+    } }, "Start over"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-save", className: "btn-secondary", onClick: () => onSave(final()) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "save", size: 13 }), " Save playlist"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-play", className: "btn-accent", onClick: () => onPlay(final()) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "play", size: 12 }), " ", result.dj ? "Play with DJ" : "Play")))));
+  }
+  function DjSettingsModal({ value, agent: initialAgent, onAgentChange, onClose, onSave }) {
+    const [dj, setDj] = (0, import_react20.useState)({ persona: "", voice: "", frequency: "every", level: DJ_LEVEL_DEFAULT, ...value });
+    const [agent, setAgent] = (0, import_react20.useState)({ ...initialAgent || {}, ready: false });
+    const pickAgent = (next) => {
+      setAgent(next);
+      if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+    };
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: onClose }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 16 }), " Virtual DJ"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, "Your RobOS agent writes a short intro before songs, spoken in the voice you pick.")), /* @__PURE__ */ import_react20.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "queue-dj" }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, value.enabled && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => onSave({ ...dj, enabled: false }) }, "Turn DJ off"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-dj-save", className: "btn-accent", disabled: !dj.persona.trim() || !agent.ready, onClick: () => onSave({ ...dj, enabled: true }) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 13 }), " ", value.enabled ? "Save" : "Start DJ"))));
   }
 
   // src/AiFixMetadata.jsx
-  var import_react19 = __toESM(require_react());
+  var import_react21 = __toESM(require_react());
+  var import_library_index6 = __toESM(require_library_index());
+  var DEFAULT_FIX_METADATA_PROMPT = `@skill(robos:fix-media-metadata)
+Inspect all selected media files and fix missing, noisy, or incomplete metadata and artwork using open-source tools and open databases:
+1. Clean noisy titles (strip [Official Video], (Lyrics), bitrate/resolution tags, leading track numbers, and underscores) while preserving legitimate feat./remix/live credits.
+2. Infer missing artist, albumArtist, album, year, genre, composer, trackNumber/trackTotal, and discNumber/discTotal from container streams, folder/filename hierarchy, .cue/.lrc/.nfo sidecars, and MusicBrainz / LRCLIB open-data matches.
+3. Ensure every track gets high-quality artwork: extract embedded pictures or video frames, use folder cover images, fetch Cover Art Archive release covers, or generate an open-source waveform/album cover when none exists.`;
+  var NOISE_RE = /(\[\s*(?:official|hd|hq|4k|1080p|720p|lyrics?|audio|flac|320\s*kbps|mp3)[^\]]*\]|\(\s*(?:official|hd|hq|4k|1080p|720p|lyrics?)[^)]*\)|^\d{1,3}\s*[-._]\s*\S+)/i;
+  function trackNeedsFixClient(t) {
+    if (!t) return false;
+    if (!t.artist || t.artist === "Unknown Artist" || t.artist === "Cloud Stream") return true;
+    if (!t.album || t.album === "Unknown Album" || t.album === "Imported Playlist") return true;
+    if (!t.title || NOISE_RE.test(t.title) || t.title.includes("_")) return true;
+    if (!t.artId) return true;
+    if (!t.year || !t.genre) return true;
+    return false;
+  }
+  var COVER_BADGE_LABELS = {
+    embedded: "Embedded Stream",
+    "video-frame": "FFmpeg Frame",
+    folder: "Folder Cover",
+    coverartarchive: "Cover Art Archive",
+    caa: "Cover Art Archive",
+    waveform: "FFmpeg Waveform",
+    generated: "Open-Source SVG Cover",
+    existing: "Existing Cover"
+  };
   function AiFixMetadataModal({
-    open,
-    selectedTracks = [],
-    totalLibraryTracks = 0,
-    onClose,
-    onCompleted
+    tracks = [],
+    initialTracks = [],
+    agent: initialAgent,
+    onAgentChange,
+    onApplied,
+    onClose
   }) {
-    const hasSelection = Array.isArray(selectedTracks) && selectedTracks.length > 0;
-    const [scope, setScope] = (0, import_react19.useState)(hasSelection ? "selected" : "missing");
-    const [useAi, setUseAi] = (0, import_react19.useState)(true);
-    const [generateFallbackArt, setGenerateFallbackArt] = (0, import_react19.useState)(true);
-    const [writeFileTags, setWriteFileTags] = (0, import_react19.useState)(false);
-    const [busy, setBusy] = (0, import_react19.useState)(false);
-    const [progress, setProgress] = (0, import_react19.useState)(null);
-    const [summary, setSummary] = (0, import_react19.useState)(null);
-    const [error, setError] = (0, import_react19.useState)("");
-    (0, import_react19.useEffect)(() => {
-      if (open) {
-        setScope(selectedTracks && selectedTracks.length > 0 ? "selected" : "missing");
-        setSummary(null);
-        setError("");
-        setProgress(null);
+    const hasInitialSubset = Array.isArray(initialTracks) && initialTracks.length > 0;
+    const missingTracks = (0, import_react21.useMemo)(() => tracks.filter(trackNeedsFixClient), [tracks]);
+    const [scope, setScope] = (0, import_react21.useState)(() => {
+      if (hasInitialSubset) return "selected";
+      if (missingTracks.length > 0) return "missing";
+      return "all";
+    });
+    const [prompt, setPrompt] = (0, import_react21.useState)(DEFAULT_FIX_METADATA_PROMPT);
+    const [enableOpenLookup, setEnableOpenLookup] = (0, import_react21.useState)(true);
+    const [writeFiles, setWriteFiles] = (0, import_react21.useState)(false);
+    const [agent, setAgent] = (0, import_react21.useState)({ ...initialAgent || {}, ready: false });
+    const pickAgent = (next) => {
+      setAgent(next);
+      if (next.provider && onAgentChange) {
+        onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
       }
-    }, [open, selectedTracks && selectedTracks.length]);
-    (0, import_react19.useEffect)(() => {
-      if (!open || !window.robosAudio || !window.robosAudio.onFixMetadataProgress) return void 0;
-      return window.robosAudio.onFixMetadataProgress((p) => setProgress(p));
-    }, [open]);
-    if (!open) return null;
-    const handleRun = async (e) => {
-      if (e) e.preventDefault();
+    };
+    const [busy, setBusy] = (0, import_react21.useState)(false);
+    const [progress, setProgress] = (0, import_react21.useState)("");
+    const [error, setError] = (0, import_react21.useState)("");
+    const [previewResult, setPreviewResult] = (0, import_react21.useState)(null);
+    const [selectedIds, setSelectedIds] = (0, import_react21.useState)(() => /* @__PURE__ */ new Set());
+    (0, import_react21.useEffect)(() => {
+      const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
+      return () => {
+        if (typeof off === "function") off();
+      };
+    }, []);
+    const targetList = (0, import_react21.useMemo)(() => {
+      if (scope === "selected" && hasInitialSubset) return initialTracks.slice(0, 40);
+      if (scope === "missing") return missingTracks.slice(0, 40);
+      return tracks.slice(0, 40);
+    }, [scope, hasInitialSubset, initialTracks, missingTracks, tracks]);
+    const canRunPreview = !busy && prompt.trim().length > 0 && targetList.length > 0 && !!(agent && agent.provider && agent.ready);
+    const runPreview = async () => {
+      if (!canRunPreview) return;
       setBusy(true);
       setError("");
-      setSummary(null);
+      setProgress(`Starting open-source metadata & artwork analysis for ${(0, import_library_index6.plural)(targetList.length, "track")}\u2026`);
       try {
-        const trackIds = scope === "selected" && hasSelection ? selectedTracks.map((t) => t.id) : null;
-        const res = await window.robosAudio.fixTrackMetadata({
-          trackIds,
-          scope: scope === "selected" ? "missing" : scope,
-          useAi,
-          generateFallbackArt,
-          writeFileTags
+        const res = await window.robosAudio.aiFixMetadataPreview({
+          trackIds: targetList.map((t) => t.id),
+          scope,
+          prompt: prompt.trim(),
+          agent: { provider: agent.provider, model: agent.model, effort: agent.effort },
+          enableOpenLookup
         });
-        setSummary(res);
-        if (onCompleted) onCompleted(res);
+        if (!res || !res.ok) {
+          setError(res && res.error || "Could not analyze track metadata.");
+          return;
+        }
+        setPreviewResult(res);
+        const changedSet = new Set(
+          (res.proposals || []).filter((p) => p.changed).map((p) => p.id)
+        );
+        if (changedSet.size === 0) {
+          (res.proposals || []).forEach((p) => changedSet.add(p.id));
+        }
+        setSelectedIds(changedSet);
       } catch (err) {
-        setError(err.message || "Metadata enrichment failed");
+        setError(err.message);
       } finally {
         setBusy(false);
-        setProgress(null);
+        setProgress("");
       }
     };
-    return /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-backdrop", onClick: () => !busy && onClose() }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-card ai-playlist-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-header" }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "track-info-header" }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-badge-icon" }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "sparkles", size: 20 })), /* @__PURE__ */ import_react19.default.createElement("div", { className: "track-info-headings" }, /* @__PURE__ */ import_react19.default.createElement("h3", null, "Fix Movie Metadata & Poster Art"), /* @__PURE__ */ import_react19.default.createElement("div", { className: "track-info-sub" }, "Scene filename cleaning \u2022 ", /* @__PURE__ */ import_react19.default.createElement("code", null, ".nfo"), " sidecar \u2022 ", /* @__PURE__ */ import_react19.default.createElement("code", null, "ffprobe"), " stream inspection \u2022 ", /* @__PURE__ */ import_react19.default.createElement("code", null, "ffmpeg"), " frame poster \u2022 AI Agent"))), /* @__PURE__ */ import_react19.default.createElement("button", { className: "btn-icon", onClick: onClose, disabled: busy, title: "Close" }, "\u2715")), /* @__PURE__ */ import_react19.default.createElement("form", { onSubmit: handleRun, className: "ai-playlist-form" }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-option-col" }, /* @__PURE__ */ import_react19.default.createElement("label", { className: "ai-field-label" }, "Target Movies"), /* @__PURE__ */ import_react19.default.createElement(
-      "select",
+    const toggleProposal = (id) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    };
+    const applySelected = async () => {
+      if (!previewResult || !selectedIds.size || busy) return;
+      setBusy(true);
+      setError("");
+      setProgress(`Applying metadata & cover art fixes to ${(0, import_library_index6.plural)(selectedIds.size, "track")}\u2026`);
+      try {
+        const chosen = (previewResult.proposals || []).filter((p) => selectedIds.has(p.id));
+        const res = await window.robosAudio.aiFixMetadataApply({
+          fixes: chosen,
+          writeFiles
+        });
+        if (!res || !res.ok) {
+          setError(res && res.error || "Failed to apply metadata fixes.");
+          return;
+        }
+        if (onApplied) onApplied(res);
+        onClose();
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setBusy(false);
+        setProgress("");
+      }
+    };
+    return /* @__PURE__ */ import_react21.default.createElement("div", { className: "modal-overlay", onClick: busy ? void 0 : onClose }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "modal-card ai-modal ai-fix-metadata-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react21.default.createElement("h3", null, /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-spark" }, "\u2726"), " AI Fix Metadata & Artwork"), /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, "Your RobOS agent inspects media streams, paths, sidecars, and open databases (", /* @__PURE__ */ import_react21.default.createElement("strong", null, "MusicBrainz CC0"), ", ", /* @__PURE__ */ import_react21.default.createElement("strong", null, "Cover Art Archive"), ", ", /* @__PURE__ */ import_react21.default.createElement("strong", null, "LRCLIB"), ", ", /* @__PURE__ */ import_react21.default.createElement("strong", null, "FFmpeg"), ") to repair tags and artwork.")), /* @__PURE__ */ import_react21.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-scope-group" }, /* @__PURE__ */ import_react21.default.createElement("label", { className: "modal-label" }, "Tracks to Inspect"), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-scope-pills" }, hasInitialSubset && /* @__PURE__ */ import_react21.default.createElement(
+      "button",
       {
-        className: "select-sm",
-        value: scope,
-        onChange: (e) => setScope(e.target.value),
+        type: "button",
+        id: "btn-ai-fix-scope-selected",
+        className: scope === "selected" ? "btn-accent" : "btn-secondary",
+        onClick: () => {
+          setScope("selected");
+          setPreviewResult(null);
+        },
         disabled: busy
       },
-      hasSelection && /* @__PURE__ */ import_react19.default.createElement("option", { value: "selected" }, "Selected movies only (", selectedTracks.length, " movie", selectedTracks.length === 1 ? "" : "s", ")"),
-      /* @__PURE__ */ import_react19.default.createElement("option", { value: "missing" }, "All movies missing tags or posters (scans ", totalLibraryTracks.toLocaleString(), " films)"),
-      /* @__PURE__ */ import_react19.default.createElement("option", { value: "all" }, "Re-verify entire movie library (up to 500 films per batch)")
-    )), /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-option-col" }, /* @__PURE__ */ import_react19.default.createElement("label", { className: "ai-field-label" }, "Enrichment Sources (100% Open-Source & Legal)"), /* @__PURE__ */ import_react19.default.createElement("label", { className: "ai-checkbox-row" }, /* @__PURE__ */ import_react19.default.createElement(
+      "Selected (",
+      initialTracks.length > 40 ? "40 max" : initialTracks.length,
+      ")"
+    ), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        id: "btn-ai-fix-scope-missing",
+        className: scope === "missing" ? "btn-accent" : "btn-secondary",
+        onClick: () => {
+          setScope("missing");
+          setPreviewResult(null);
+        },
+        disabled: busy
+      },
+      "Needs Metadata / Art (",
+      missingTracks.length > 40 ? `40 of ${missingTracks.length}` : missingTracks.length,
+      ")"
+    ), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        id: "btn-ai-fix-scope-all",
+        className: scope === "all" ? "btn-accent" : "btn-secondary",
+        onClick: () => {
+          setScope("all");
+          setPreviewResult(null);
+        },
+        disabled: busy
+      },
+      "Library Batch (",
+      Math.min(tracks.length, 40),
+      " of ",
+      tracks.length,
+      ")"
+    ))), /* @__PURE__ */ import_react21.default.createElement("label", { className: "modal-label" }, "Instructions & Open-Source Media Skill (use ", /* @__PURE__ */ import_react21.default.createElement("code", null, "/skills"), " or ", /* @__PURE__ */ import_react21.default.createElement("code", null, "@"), " to attach files)"), /* @__PURE__ */ import_react21.default.createElement(
+      AiPromptBox,
+      {
+        id: "ai-fix-metadata-prompt",
+        placeholder: "Describe how to clean or enrich metadata and cover art\u2026",
+        initialValue: DEFAULT_FIX_METADATA_PROMPT,
+        minHeight: 108,
+        showCommands: true,
+        onChange: setPrompt,
+        onSubmit: runPreview
+      }
+    ), /* @__PURE__ */ import_react21.default.createElement("div", { className: "dj-row ai-fix-options-row" }, /* @__PURE__ */ import_react21.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react21.default.createElement(
       "input",
       {
+        id: "ai-fix-open-lookup",
         type: "checkbox",
-        checked: useAi,
-        onChange: (e) => setUseAi(e.target.checked),
+        checked: enableOpenLookup,
+        onChange: (e) => setEnableOpenLookup(e.target.checked),
         disabled: busy
       }
-    ), /* @__PURE__ */ import_react19.default.createElement("span", null, "Clean scene release filenames & infer Director / Collection / Year with RobOS AI Agent")), /* @__PURE__ */ import_react19.default.createElement("label", { className: "ai-checkbox-row" }, /* @__PURE__ */ import_react19.default.createElement(
+    ), /* @__PURE__ */ import_react21.default.createElement("span", null, "Query open-data APIs (MusicBrainz CC0, Cover Art Archive, LRCLIB)")), /* @__PURE__ */ import_react21.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react21.default.createElement(
       "input",
       {
+        id: "ai-fix-write-files",
         type: "checkbox",
-        checked: generateFallbackArt,
-        onChange: (e) => setGenerateFallbackArt(e.target.checked),
+        checked: writeFiles,
+        onChange: (e) => setWriteFiles(e.target.checked),
         disabled: busy
       }
-    ), /* @__PURE__ */ import_react19.default.createElement("span", null, "Extract video frame thumbnail via ", /* @__PURE__ */ import_react19.default.createElement("code", null, "ffmpeg"), " or generate cinema SVG poster when missing")), /* @__PURE__ */ import_react19.default.createElement("label", { className: "ai-checkbox-row" }, /* @__PURE__ */ import_react19.default.createElement(
-      "input",
+    ), /* @__PURE__ */ import_react21.default.createElement("span", null, "Also write updated tags & cover art to local media files via FFmpeg"))), previewResult && Array.isArray(previewResult.proposals) && /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-preview-section" }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-preview-head" }, /* @__PURE__ */ import_react21.default.createElement("div", null, /* @__PURE__ */ import_react21.default.createElement("strong", null, "Proposed Fixes (", selectedIds.size, " of ", previewResult.proposals.length, " selected)"), previewResult.summary && /* @__PURE__ */ import_react21.default.createElement("p", { className: "ai-note" }, previewResult.summary)), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-preview-actions" }, /* @__PURE__ */ import_react21.default.createElement(
+      "button",
       {
-        type: "checkbox",
-        checked: writeFileTags,
-        onChange: (e) => setWriteFileTags(e.target.checked),
+        type: "button",
+        className: "btn-chip",
+        onClick: () => setSelectedIds(new Set(previewResult.proposals.map((p) => p.id))),
         disabled: busy
-      }
-    ), /* @__PURE__ */ import_react19.default.createElement("span", null, "Also write updated container tags & poster back to local ", /* @__PURE__ */ import_react19.default.createElement("code", null, ".mp4"), " / ", /* @__PURE__ */ import_react19.default.createElement("code", null, ".mkv"), " files via ", /* @__PURE__ */ import_react19.default.createElement("code", null, "ffmpeg")))), progress && /* @__PURE__ */ import_react19.default.createElement("div", { className: "scan-progress-banner" }, "Enriching ", progress.processed, " / ", progress.total, ": ", /* @__PURE__ */ import_react19.default.createElement("strong", null, progress.currentTitle || "\u2026")), error && /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-error-banner" }, error), summary && /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-fix-summary" }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-fix-summary-head" }, /* @__PURE__ */ import_react19.default.createElement("strong", null, "Completed:"), " Checked ", summary.total, " film", summary.total === 1 ? "" : "s", " \u2022 Updated ", /* @__PURE__ */ import_react19.default.createElement("strong", null, summary.updatedCount), " \u2022 Added ", /* @__PURE__ */ import_react19.default.createElement("strong", null, summary.artAddedCount), " poster", summary.artAddedCount === 1 ? "" : "s"), Array.isArray(summary.results) && summary.results.filter((r) => r.changed).length > 0 && /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-fix-results-list" }, summary.results.filter((r) => r.changed).slice(0, 8).map((r) => /* @__PURE__ */ import_react19.default.createElement("div", { key: r.id, className: "ai-fix-result-row" }, /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-fix-result-main" }, /* @__PURE__ */ import_react19.default.createElement("strong", null, r.after.title), " \u2014 ", r.after.artist, " (", r.after.album, r.after.year ? `, ${r.after.year}` : "", r.after.resolution ? `, ${r.after.resolution}` : "", ")"), /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-fix-result-badges" }, (r.sources || []).map((s) => /* @__PURE__ */ import_react19.default.createElement("span", { key: s, className: "pill" }, s))))))), /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-footer" }, /* @__PURE__ */ import_react19.default.createElement("button", { type: "button", className: "btn btn-sm", onClick: onClose, disabled: busy }, summary ? "Done" : "Cancel"), /* @__PURE__ */ import_react19.default.createElement("button", { type: "submit", className: "btn btn-sm btn-accent", disabled: busy }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "sparkles", size: 14 }), /* @__PURE__ */ import_react19.default.createElement("span", null, busy ? "Fixing Metadata & Posters\u2026" : "Fix Metadata & Posters"))))));
-  }
-
-  // src/useVirtualDj.js
-  var import_react20 = __toESM(require_react());
-  function useVirtualDj({
-    enabled = false,
-    djStyle = "warm classic cinema host",
-    playlistName = "Screening Queue",
-    queue = [],
-    currentIndex = -1,
-    activeCastDevice = null,
-    onAdvanceToIndex
-  } = {}) {
-    const [djSpeaking, setDjSpeaking] = (0, import_react20.useState)(false);
-    const [djStatus, setDjStatus] = (0, import_react20.useState)("");
-    const [currentIntroText, setCurrentIntroText] = (0, import_react20.useState)("");
-    const introsCacheRef = (0, import_react20.useRef)({});
-    const audioRef = (0, import_react20.useRef)(null);
-    (0, import_react20.useEffect)(() => {
-      if (!enabled || queue.length === 0) return;
-      const start = Math.max(0, currentIndex);
-      const slice = queue.slice(start, start + 5).filter((t) => t && t.id && !introsCacheRef.current[t.id]);
-      if (slice.length === 0) return;
-      let cancelled = false;
-      window.robosAudio.generateDjIntros({
-        tracks: slice,
-        playlistName,
-        djStyle
-      }).then((res) => {
-        if (cancelled || !res || !res.intros) return;
-        introsCacheRef.current = { ...introsCacheRef.current, ...res.intros };
-        const cur = queue[currentIndex];
-        if (cur && introsCacheRef.current[cur.id]) {
-          setCurrentIntroText(introsCacheRef.current[cur.id]);
-        }
-      }).catch(() => {
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [enabled, djStyle, playlistName, currentIndex, queue.length]);
-    const TransitionWithDj = (0, import_react20.useCallback)(async (nextIndex) => {
-      const nextTrack = queue[nextIndex];
-      if (!enabled || !nextTrack) {
-        if (onAdvanceToIndex) onAdvanceToIndex(nextIndex);
-        return;
-      }
-      let line = introsCacheRef.current[nextTrack.id];
-      if (!line) {
-        const yearBit = nextTrack.year ? ` (${nextTrack.year})` : "";
-        line = `Up next in our screening: ${nextTrack.title}${yearBit}, directed by ${nextTrack.artist || "Unknown Director"}.`;
-      }
-      setDjSpeaking(true);
-      setCurrentIntroText(line);
-      setDjStatus(`Cinema Host introducing "${nextTrack.title}": \u201C${line}\u201D`);
-      const finish = () => {
-        setDjSpeaking(false);
-        setDjStatus("");
-        if (onAdvanceToIndex) onAdvanceToIndex(nextIndex);
-      };
-      try {
-        const res = await window.robosAudio.synthesizeDjSpeech({ text: line });
-        if (res && res.ok && res.fileUrl) {
-          if (activeCastDevice && res.filePath) {
-            await window.robosAudio.castTrack(activeCastDevice, {
-              id: `dj-intro-${Date.now()}`,
-              title: `Cinema Host Intro: ${nextTrack.title}`,
-              artist: "RobOS Virtual Cinema Host",
-              path: res.filePath
-            }, 0);
-            setTimeout(finish, 4500);
-            return;
+      },
+      "Select All"
+    ), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        className: "btn-chip",
+        onClick: () => setSelectedIds(/* @__PURE__ */ new Set()),
+        disabled: busy
+      },
+      "Clear"
+    ))), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-proposal-list" }, previewResult.proposals.map((prop) => {
+      const checked = selectedIds.has(prop.id);
+      const coverSourceLabel = COVER_BADGE_LABELS[prop.after.coverSource || prop.after.coverAction] || "Artwork";
+      return /* @__PURE__ */ import_react21.default.createElement(
+        "div",
+        {
+          key: prop.id,
+          className: `ai-fix-proposal-card ${checked ? "is-selected" : ""} ${prop.changed ? "has-changes" : ""}`,
+          onClick: () => !busy && toggleProposal(prop.id)
+        },
+        /* @__PURE__ */ import_react21.default.createElement(
+          "input",
+          {
+            type: "checkbox",
+            checked,
+            onChange: () => toggleProposal(prop.id),
+            onClick: (e) => e.stopPropagation(),
+            disabled: busy
           }
-          const a = new Audio(res.fileUrl);
-          audioRef.current = a;
-          a.onended = finish;
-          a.onerror = finish;
-          await a.play();
-          return;
-        }
-      } catch (_) {
-      }
-      if (typeof window !== "undefined" && window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined") {
-        try {
-          const u = new SpeechSynthesisUtterance(line);
-          u.onend = finish;
-          u.onerror = finish;
-          window.speechSynthesis.speak(u);
-          setTimeout(finish, 6e3);
-          return;
-        } catch (_) {
-        }
-      }
-      setTimeout(finish, 1800);
-    }, [enabled, queue, activeCastDevice, onAdvanceToIndex]);
-    return {
-      djSpeaking,
-      djStatus,
-      currentIntroText,
-      TransitionWithDj
-    };
-  }
-
-  // src/resizable.jsx
-  var import_react21 = __toESM(require_react());
-  function useResizablePane({ initial = 220, min = 150, max = 420, direction = "right" } = {}) {
-    const [size, setSize] = (0, import_react21.useState)(initial);
-    const onMouseDown = (0, import_react21.useCallback)((e) => {
-      e.preventDefault();
-      const startX = e.clientX;
-      const startSize = size;
-      const mul = direction === "left" ? -1 : 1;
-      const onMove = (ev) => {
-        const delta = (ev.clientX - startX) * mul;
-        const next = Math.max(min, Math.min(max, startSize + delta));
-        setSize(next);
-      };
-      const onUp = () => {
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-      };
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-    }, [size, min, max, direction]);
-    return { size, setSize, onMouseDown };
+        ),
+        /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-cover-col" }, /* @__PURE__ */ import_react21.default.createElement(
+          Cover,
+          {
+            artId: prop.after.artId || prop.before.artId,
+            name: prop.after.album || prop.after.title,
+            size: 48
+          }
+        ), prop.after.artId && prop.after.artId !== prop.before.artId && /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-fix-cover-badge", title: `Cover source: ${coverSourceLabel}` }, coverSourceLabel)),
+        /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-details-col" }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-title-line" }, /* @__PURE__ */ import_react21.default.createElement("strong", null, prop.after.title), /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, " \u2014 ", prop.after.artist), prop.after.album && /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, " \xB7 ", prop.after.album), prop.after.year && /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, " (", prop.after.year, ")")), prop.changes.length > 0 ? /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-diff-chips" }, prop.changes.map((c, idx) => /* @__PURE__ */ import_react21.default.createElement("span", { key: idx, className: "ai-fix-diff-chip" }, /* @__PURE__ */ import_react21.default.createElement("b", null, c.field, ":"), " ", /* @__PURE__ */ import_react21.default.createElement("span", { className: "diff-from" }, c.from ?? "\u2014"), " \u2192", " ", /* @__PURE__ */ import_react21.default.createElement("span", { className: "diff-to" }, c.to)))) : /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-note" }, "Metadata already clean"), prop.reason && /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-reason ai-note" }, prop.reason))
+      );
+    }))), error && /* @__PURE__ */ import_react21.default.createElement("p", { className: "ai-note error", role: "alert" }, error), busy && /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react21.default.createElement("span", null, progress || "Analyzing media\u2026")), /* @__PURE__ */ import_react21.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react21.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: busy }, "Cancel"), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        id: "btn-ai-fix-metadata-run",
+        className: previewResult ? "btn-secondary" : "btn-accent",
+        onClick: runPreview,
+        disabled: !canRunPreview,
+        title: !agent.ready ? "Choose a ready AI agent first" : !prompt.trim() ? "Enter metadata instructions first" : "Inspect tracks and preview metadata & artwork fixes"
+      },
+      "\u2726 ",
+      busy ? "Working\u2026" : previewResult ? "Re-Analyze with AI" : `Fix Metadata with AI (${targetList.length})`
+    ), previewResult && /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        id: "btn-ai-fix-metadata-apply",
+        className: "btn-accent",
+        onClick: applySelected,
+        disabled: busy || selectedIds.size === 0
+      },
+      /* @__PURE__ */ import_react21.default.createElement(Icon2, { name: "check", size: 13 }),
+      " Apply ",
+      (0, import_library_index6.plural)(selectedIds.size, "Fix", "Fixes")
+    ))));
   }
 
   // src/castClock.jsx
   var import_react22 = __toESM(require_react());
-  function CastClockCard({ castDevices = [], activeCastDevice = null }) {
-    const [style, setStyle] = (0, import_react22.useState)("minimal");
-    const [format24h, setFormat24h] = (0, import_react22.useState)(false);
-    const [chimeHourly, setChimeHourly] = (0, import_react22.useState)(false);
-    const [status, setStatus] = (0, import_react22.useState)("");
-    const target = activeCastDevice || castDevices[0] || null;
-    const handleStart = async () => {
-      if (!target) {
-        setStatus("Select or add a Cast TV / display above first.");
-        return;
+  var state = { position: 0, duration: 0, playing: false, at: 0 };
+  var listeners = /* @__PURE__ */ new Set();
+  var castClock = {
+    get: () => state,
+    set(patch) {
+      state = { ...state, ...patch, at: Date.now() };
+      if (typeof window !== "undefined") {
+        window.__robosCastPlaying = Boolean(state.playing);
       }
-      try {
-        await window.robosAudio.castClockStart({ device: target, style, format24h, chimeHourly });
-        setStatus(`Clock active on ${target.name}`);
-      } catch (err) {
-        setStatus(`Clock error: ${err.message}`);
-      }
-    };
-    const handleStop = async () => {
-      try {
-        await window.robosAudio.castClockStop();
-        setStatus("Clock stopped");
-      } catch (_) {
-      }
-    };
-    return /* @__PURE__ */ import_react22.default.createElement("div", { className: "cast-feature-card", style: { marginTop: 14, padding: 12, background: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: 10 } }, /* @__PURE__ */ import_react22.default.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } }, /* @__PURE__ */ import_react22.default.createElement("div", null, /* @__PURE__ */ import_react22.default.createElement("h4", { style: { margin: 0, display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "clock", size: 15 }), " Theater Lobby Clock Display"), /* @__PURE__ */ import_react22.default.createElement("p", { className: "muted", style: { margin: "4px 0 0 0", fontSize: 12 } }, "Cast an ambient theater clock face to your Smart TV or Nest Hub between screenings.")), /* @__PURE__ */ import_react22.default.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ import_react22.default.createElement("select", { className: "select-sm", value: style, onChange: (e) => setStyle(e.target.value) }, /* @__PURE__ */ import_react22.default.createElement("option", { value: "minimal" }, "Minimal Cinema"), /* @__PURE__ */ import_react22.default.createElement("option", { value: "retro" }, "Retro Flip"), /* @__PURE__ */ import_react22.default.createElement("option", { value: "neon" }, "Amber Marquee")), /* @__PURE__ */ import_react22.default.createElement("label", { style: { fontSize: 12, display: "flex", alignItems: "center", gap: 4 } }, /* @__PURE__ */ import_react22.default.createElement("input", { type: "checkbox", checked: format24h, onChange: (e) => setFormat24h(e.target.checked) }), "24h"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn btn-xs btn-accent", onClick: handleStart }, "Cast Clock"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn btn-xs", onClick: handleStop }, "Stop"))), status && /* @__PURE__ */ import_react22.default.createElement("div", { style: { fontSize: 11, color: "var(--accent)", marginTop: 6 } }, status));
-  }
-  function CastAmbientCard({ castDevices = [], activeCastDevice = null }) {
-    const [presetId, setPresetId] = (0, import_react22.useState)("rain");
-    const [status, setStatus] = (0, import_react22.useState)("");
-    const target = activeCastDevice || castDevices[0] || null;
-    const handleStart = async () => {
-      if (!target) {
-        setStatus("Select or add a Cast TV / speaker above first.");
-        return;
-      }
-      try {
-        await window.robosAudio.castAmbientStart({ device: target, presetId, durationSec: 3600 });
-        setStatus(`Streaming ambient "${presetId}" to ${target.name}`);
-      } catch (err) {
-        setStatus(`Ambient cast error: ${err.message}`);
-      }
-    };
-    const handleStop = async () => {
-      try {
-        await window.robosAudio.castAmbientStop();
-        setStatus("Ambient stream stopped");
-      } catch (_) {
-      }
-    };
-    return /* @__PURE__ */ import_react22.default.createElement("div", { className: "cast-feature-card", style: { marginTop: 10, padding: 12, background: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: 10 } }, /* @__PURE__ */ import_react22.default.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } }, /* @__PURE__ */ import_react22.default.createElement("div", null, /* @__PURE__ */ import_react22.default.createElement("h4", { style: { margin: 0, display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "waves", size: 15 }), " Cast Theater Ambient Soundscape"), /* @__PURE__ */ import_react22.default.createElement("p", { className: "muted", style: { margin: "4px 0 0 0", fontSize: 12 } }, "Stream procedural theater rain or projector room tone directly to a LAN Cast device.")), /* @__PURE__ */ import_react22.default.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ import_react22.default.createElement("select", { className: "select-sm", value: presetId, onChange: (e) => setPresetId(e.target.value) }, /* @__PURE__ */ import_react22.default.createElement("option", { value: "rain" }, "Cinema Rain"), /* @__PURE__ */ import_react22.default.createElement("option", { value: "pink" }, "Projector Hum"), /* @__PURE__ */ import_react22.default.createElement("option", { value: "brown" }, "Sub-Bass Warmth")), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn btn-xs btn-accent", onClick: handleStart }, "Cast Ambient"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn btn-xs", onClick: handleStop }, "Stop"))), status && /* @__PURE__ */ import_react22.default.createElement("div", { style: { fontSize: 11, color: "var(--accent)", marginTop: 6 } }, status));
-  }
-
-  // src/useSpeakerTakeover.js
-  var import_react23 = __toESM(require_react());
-  function useSpeakerTakeover({
-    castDevices = [],
-    activeCastDevice = null,
-    onExternalTakeover
-  } = {}) {
-    const [takeoverBanner, setTakeoverBanner] = (0, import_react23.useState)(null);
-    (0, import_react23.useEffect)(() => {
-      if (!window.robosAudio || !window.robosAudio.speakerWatchConfigure) return;
-      if (activeCastDevice) {
-        window.robosAudio.speakerWatchConfigure({
-          enabled: true,
-          devices: [activeCastDevice]
-        }).catch(() => {
-        });
-      } else if (castDevices.length > 0) {
-        window.robosAudio.speakerWatchConfigure({
-          enabled: true,
-          devices: castDevices
-        }).catch(() => {
-        });
-      }
-    }, [activeCastDevice?.id, castDevices.length]);
-    (0, import_react23.useEffect)(() => {
-      if (!window.robosAudio || !window.robosAudio.onSpeakerTakeover) return void 0;
-      return window.robosAudio.onSpeakerTakeover((evt) => {
-        if (!evt) return;
-        setTakeoverBanner(evt);
-        if (onExternalTakeover) onExternalTakeover(evt);
-      });
-    }, [onExternalTakeover]);
-    return {
-      takeoverBanner,
-      dismissTakeover: () => setTakeoverBanner(null)
-    };
-  }
-
-  // src/App.jsx
-  var AMBIENT_PRESETS = [
-    { id: "rain", name: "Cinema Rain", desc: "Filtered brownian rain outside the theater", color: "#38bdf8" },
-    { id: "pink", name: "Projector Reel Hum", desc: "Warm analog 35mm projector & room tone", color: "#f472b6" },
-    { id: "drone", name: "Sci-Fi Intermission Drone", desc: "Detuned binaural fifth pad (110 Hz + 165 Hz)", color: "#a78bfa" },
-    { id: "brown", name: "Deep Sub-Bass Rumble", desc: "Warm low-frequency theater acoustics", color: "#fb923c" }
-  ];
-  function createNoiseEngine(type) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioCtx();
-    const gainNode = ctx.createGain();
-    gainNode.gain.value = 0.25;
-    gainNode.connect(ctx.destination);
-    if (type === "drone") {
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const filter2 = ctx.createBiquadFilter();
-      osc1.type = "sawtooth";
-      osc2.type = "triangle";
-      osc1.frequency.value = 110;
-      osc2.frequency.value = 164.81;
-      filter2.type = "lowpass";
-      filter2.frequency.value = 320;
-      osc1.connect(filter2);
-      osc2.connect(filter2);
-      filter2.connect(gainNode);
-      osc1.start();
-      osc2.start();
-      return {
-        setVolume: (v) => {
-          gainNode.gain.setTargetAtTime(v * 0.35, ctx.currentTime, 0.05);
-        },
-        stop: () => {
-          try {
-            osc1.stop();
-            osc2.stop();
-            ctx.close();
-          } catch (_) {
-          }
-        }
-      };
+      listeners.forEach((fn) => fn());
+    },
+    now() {
+      if (!state.playing) return state.position;
+      const t = state.position + (Date.now() - state.at) / 1e3;
+      return state.duration ? Math.min(state.duration, t) : t;
+    },
+    subscribe(fn) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
     }
-    const bufferSize = 2 * ctx.sampleRate;
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    if (type === "pink") {
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.969 * b2 + white * 0.153852;
-        b3 = 0.8665 * b3 + white * 0.3104856;
-        b4 = 0.55 * b4 + white * 0.5329522;
-        b5 = -0.7616 * b5 - white * 0.016898;
-        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
-        b6 = white * 0.115926;
-      }
-    } else {
-      let lastOut = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + 0.02 * white) / 1.02;
-        lastOut = output[i];
-        output[i] *= 1.8;
-      }
-    }
-    const whiteNoise = ctx.createBufferSource();
-    whiteNoise.buffer = noiseBuffer;
-    whiteNoise.loop = true;
-    const filter = ctx.createBiquadFilter();
-    filter.type = type === "rain" ? "bandpass" : "lowpass";
-    filter.frequency.value = type === "rain" ? 950 : 420;
-    whiteNoise.connect(filter);
-    filter.connect(gainNode);
-    whiteNoise.start(0);
-    return {
-      setVolume: (v) => {
-        gainNode.gain.setTargetAtTime(v * 0.5, ctx.currentTime, 0.05);
-      },
-      stop: () => {
-        try {
-          whiteNoise.stop();
-          ctx.close();
-        } catch (_) {
-        }
-      }
-    };
+  };
+  function useCastTime() {
+    const s = (0, import_react22.useSyncExternalStore)(castClock.subscribe, castClock.get);
+    const [, tick] = (0, import_react22.useState)(0);
+    (0, import_react22.useEffect)(() => {
+      if (!s.playing) return void 0;
+      const timer = setInterval(() => tick((n) => n + 1), 250);
+      return () => clearInterval(timer);
+    }, [s.playing]);
+    return { current: castClock.now(), duration: s.duration, playing: s.playing };
   }
-  function App() {
-    const [activeTab, setActiveTab] = (0, import_react24.useState)("now-playing");
-    const [libraryAgg, setLibraryAgg] = (0, import_react24.useState)({
-      summary: { trackCount: 0, albumCount: 0, artistCount: 0, genreCount: 0, cloudCount: 0, totalDuration: 0, totalSize: 0 },
-      albums: [],
-      artists: [],
-      genres: [],
-      decades: [],
-      composers: [],
-      folders: []
-    });
-    const [scanStatus, setScanStatus] = (0, import_react24.useState)({ active: false, processed: 0, total: 0 });
-    const [cloudSources, setCloudSources] = (0, import_react24.useState)([]);
-    const [cloudCache, setCloudCache] = (0, import_react24.useState)(null);
-    const [playlists, setPlaylists] = (0, import_react24.useState)([]);
-    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react24.useState)(null);
-    const [queue, setQueue] = (0, import_react24.useState)([]);
-    const [currentIndex, setCurrentIndex] = (0, import_react24.useState)(-1);
-    const [currentSrc, setCurrentSrc] = (0, import_react24.useState)("");
-    const [isPlaying, setIsPlaying] = (0, import_react24.useState)(false);
-    const [currentTime, setCurrentTime] = (0, import_react24.useState)(0);
-    const [duration, setDuration] = (0, import_react24.useState)(0);
-    const [volume, setVolume] = (0, import_react24.useState)(0.85);
-    const [shuffle, setShuffle] = (0, import_react24.useState)(false);
-    const [repeat, setRepeat] = (0, import_react24.useState)(false);
-    const [playbackRate, setPlaybackRate] = (0, import_react24.useState)(1);
-    const [videoFit, setVideoFit] = (0, import_react24.useState)("contain");
-    const [theaterExpanded, setTheaterExpanded] = (0, import_react24.useState)(false);
-    const [subtitlesEnabled, setSubtitlesEnabled] = (0, import_react24.useState)(true);
-    const [activeSubtitleCue, setActiveSubtitleCue] = (0, import_react24.useState)(null);
-    const [snapshotNotice, setSnapshotNotice] = (0, import_react24.useState)("");
-    const [activeAmbient, setActiveAmbient] = (0, import_react24.useState)(null);
-    const [ambientVolume, setAmbientVolume] = (0, import_react24.useState)(0.35);
-    const ambientEngineRef = (0, import_react24.useRef)(null);
-    const [castDevices, setCastDevices] = (0, import_react24.useState)([]);
-    const [activeCastDevice, setActiveCastDevice] = (0, import_react24.useState)(null);
-    const [castStatusText, setCastStatusText] = (0, import_react24.useState)("");
-    const [testingDeviceId, setTestingDeviceId] = (0, import_react24.useState)(null);
-    const [manualHost, setManualHost] = (0, import_react24.useState)("");
-    const [manualName, setManualName] = (0, import_react24.useState)("");
-    const [newPlaylistName, setNewPlaylistName] = (0, import_react24.useState)("");
-    const [npCollapsed, setNpCollapsed] = (0, import_react24.useState)(false);
-    const [aiModalOpen, setAiModalOpen] = (0, import_react24.useState)(false);
-    const [fixMetaModal, setFixMetaModal] = (0, import_react24.useState)({ open: false, tracks: [] });
-    const [virtualDjEnabled, setVirtualDjEnabled] = (0, import_react24.useState)(false);
-    const [djStyle, setDjStyle] = (0, import_react24.useState)("warm classic cinema host");
-    const sidebarResize = useResizablePane({ initial: 215, min: 155, max: 380, direction: "right" });
-    const queueResize = useResizablePane({ initial: 280, min: 210, max: 460, direction: "left" });
-    const playerRef = (0, import_react24.useRef)(null);
-    const videoRef = (0, import_react24.useRef)(null);
-    const stageShellRef = (0, import_react24.useRef)(null);
-    const currentTrack = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;
-    const currentArtUrl = useArtUrl(currentTrack?.artId);
-    const advanceAfterDj = (0, import_react24.useCallback)((nextIndex) => {
-      setCurrentIndex(nextIndex);
-      setIsPlaying(true);
-    }, []);
-    const virtualDj = useVirtualDj({
-      enabled: virtualDjEnabled,
-      djStyle,
-      playlistName: playlists.find((p) => p.id === selectedPlaylistId)?.name || "Screening Queue",
-      queue,
-      currentIndex,
-      activeCastDevice,
-      onAdvanceToIndex: advanceAfterDj
-    });
-    const { takeoverBanner, dismissTakeover } = useSpeakerTakeover({
-      castDevices,
-      activeCastDevice,
-      onExternalTakeover: (evt) => {
-        const a = getAudioEl();
-        if (a && !a.paused) a.pause();
-        if (videoRef.current && !videoRef.current.paused) videoRef.current.pause();
-        setIsPlaying(false);
-        setActiveCastDevice(null);
-        setCastStatusText(
-          `Stopped: ${evt.deviceName} switched to ${evt.title || evt.appName || "another cast session"}`
-        );
-      }
-    });
-    const getAudioEl = (0, import_react24.useCallback)(() => {
-      return playerRef.current?.audio?.current || null;
-    }, []);
-    (0, import_react24.useEffect)(() => {
-      window.robosAudio.getLibrary().then((lib) => {
-        if (!lib) return;
-        setLibraryAgg({
-          summary: lib.summary || {},
-          albums: lib.albums || [],
-          artists: lib.artists || [],
-          genres: lib.genres || [],
-          decades: lib.decades || [],
-          composers: lib.composers || [],
-          folders: lib.folders || []
-        });
-      });
-      window.robosAudio.getPlaylists().then((pls) => {
-        const list = Array.isArray(pls) ? pls : [];
-        setPlaylists(list);
-        if (list.length > 0) {
-          setSelectedPlaylistId(list[0].id);
-          const initialPl = list.find((p) => Array.isArray(p.tracks) && p.tracks.length > 0) || list[0];
-          if (initialPl && Array.isArray(initialPl.tracks) && initialPl.tracks.length > 0) {
-            setQueue(initialPl.tracks);
-            setCurrentIndex(0);
-          }
-        }
-      });
-      window.robosAudio.getCloudSources().then((res) => {
-        if (res) {
-          setCloudSources(res.sources || []);
-          setCloudCache(res.cache || null);
-        }
-      });
-      window.robosAudio.getCastDevices().then((devs) => {
-        setCastDevices(Array.isArray(devs) ? devs : []);
-      });
-      const offScan = window.robosAudio.onScanProgress((prog) => {
-        setScanStatus(prog);
-        if (!prog.active) {
-          window.robosAudio.getLibrarySummary().then((agg) => {
-            if (agg) setLibraryAgg(agg);
-          });
-        }
-      });
-      const offDevs = window.robosAudio.onCastDevicesUpdated((devs) => {
-        setCastDevices(Array.isArray(devs) ? devs : []);
-      });
-      const offStatus = window.robosAudio.onCastStatus(({ device, status }) => {
-        if (status && status.playerState) {
-          setCastStatusText(`${device.name}: ${status.playerState}`);
-        }
-      });
-      return () => {
-        offScan();
-        offDevs();
-        offStatus();
-        if (ambientEngineRef.current) ambientEngineRef.current.stop();
-      };
-    }, []);
-    (0, import_react24.useEffect)(() => {
-      if (!currentTrack) {
-        setCurrentSrc("");
-        return;
-      }
-      let cancelled = false;
-      if (currentTrack.source === "cloud") {
-        window.robosAudio.getCloudStreamUrl(currentTrack.id).then((url) => {
-          if (!cancelled) setCurrentSrc(url);
-        }).catch(() => {
-        });
-      } else {
-        const src = currentTrack.path.startsWith("http://") || currentTrack.path.startsWith("https://") || currentTrack.path.startsWith("file://") ? currentTrack.path : `file://${encodeURI(currentTrack.path).replace(/#/g, "%23")}`;
-        setCurrentSrc(src);
-      }
-      window.robosAudio.recordPlay(currentTrack.id).catch(() => {
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [currentTrack?.id]);
-    (0, import_react24.useEffect)(() => {
-      const a = getAudioEl();
-      if (a) {
-        a.muted = true;
-        a.playbackRate = playbackRate;
-      }
-      if (videoRef.current) {
-        videoRef.current.volume = activeCastDevice ? 0 : volume;
-        videoRef.current.playbackRate = playbackRate;
-      }
-    }, [currentSrc, volume, playbackRate, activeCastDevice, getAudioEl]);
-    (0, import_react24.useEffect)(() => {
-      const v = videoRef.current;
-      if (!v || !currentSrc) return;
-      if (isPlaying && !activeCastDevice) {
-        v.play().catch(() => {
-        });
-      } else {
-        v.pause();
-      }
-    }, [isPlaying, currentSrc, activeCastDevice]);
-    const handlePlayTrack = (0, import_react24.useCallback)(async (track, contextQueue = null) => {
-      const targetQueue = Array.isArray(contextQueue) && contextQueue.length > 0 ? contextQueue : queue;
-      let idx = targetQueue.findIndex((t) => t.id === track.id || t.path === track.path);
-      let nextQueue = targetQueue;
-      if (idx === -1) {
-        nextQueue = [...targetQueue, track];
-        idx = nextQueue.length - 1;
-      }
-      setQueue(nextQueue);
-      setCurrentIndex(idx);
-      setIsPlaying(true);
-      if (activeCastDevice) {
-        try {
-          setCastStatusText(`Casting "${track.title}" to ${activeCastDevice.name}...`);
-          await window.robosAudio.castTrack(activeCastDevice, track, 0);
-          const a = getAudioEl();
-          if (a) a.pause();
-          if (videoRef.current) videoRef.current.pause();
-        } catch (err) {
-          setCastStatusText(`Cast error: ${err.message}`);
-        }
-      }
-    }, [queue, activeCastDevice, getAudioEl]);
-    const togglePlayPause = (0, import_react24.useCallback)(() => {
-      if (!currentTrack && queue.length > 0) {
-        setCurrentIndex(0);
-        setIsPlaying(true);
-        return;
-      }
-      const a = getAudioEl();
-      const v = videoRef.current;
-      if (!a && !v) return;
-      const paused = v ? v.paused : a.paused;
-      if (paused) {
-        if (v && !activeCastDevice) v.play().catch(() => {
-        });
-        if (a) a.play().catch(() => {
-        });
-        setIsPlaying(true);
-        if (activeCastDevice) window.robosAudio.castControl("play");
-      } else {
-        if (v) v.pause();
-        if (a) a.pause();
-        setIsPlaying(false);
-        if (activeCastDevice) window.robosAudio.castControl("pause");
-      }
-    }, [currentTrack, queue, activeCastDevice, getAudioEl]);
-    const computeNextIndex = (0, import_react24.useCallback)(() => {
-      if (queue.length === 0) return -1;
-      if (shuffle) return Math.floor(Math.random() * queue.length);
-      const nextIdx = currentIndex + 1;
-      if (nextIdx >= queue.length) return repeat ? 0 : -1;
-      return nextIdx;
-    }, [queue.length, shuffle, repeat, currentIndex]);
-    const handleNext = (0, import_react24.useCallback)(() => {
-      const nextIdx = computeNextIndex();
-      if (nextIdx === -1) {
-        setIsPlaying(false);
-        return;
-      }
-      setCurrentIndex(nextIdx);
-      setIsPlaying(true);
-    }, [computeNextIndex]);
-    const handleTrackEnded = (0, import_react24.useCallback)(() => {
-      const nextIdx = computeNextIndex();
-      if (nextIdx === -1) {
-        setIsPlaying(false);
-        return;
-      }
-      if (virtualDjEnabled) {
-        const a = getAudioEl();
-        if (a) a.pause();
-        if (videoRef.current) videoRef.current.pause();
-        virtualDj.TransitionWithDj(nextIdx);
-        return;
-      }
-      setCurrentIndex(nextIdx);
-      setIsPlaying(true);
-    }, [computeNextIndex, virtualDjEnabled, virtualDj, getAudioEl]);
-    const handlePrev = (0, import_react24.useCallback)(() => {
-      if (queue.length === 0) return;
-      const v = videoRef.current;
-      const a = getAudioEl();
-      if (v && v.currentTime > 3 || a && a.currentTime > 3) {
-        if (v) v.currentTime = 0;
-        if (a) a.currentTime = 0;
-        return;
-      }
-      const prevIdx = currentIndex > 0 ? currentIndex - 1 : queue.length - 1;
-      setCurrentIndex(prevIdx);
-      setIsPlaying(true);
-    }, [queue.length, currentIndex, getAudioEl]);
-    (0, import_react24.useEffect)(() => {
-      if (!window.robosAudio || !window.robosAudio.reportPlaybackState) return;
-      window.robosAudio.reportPlaybackState({
-        isPlaying,
-        currentTrack: currentTrack ? {
-          id: currentTrack.id,
-          title: currentTrack.title,
-          artist: currentTrack.artist,
-          album: currentTrack.album,
-          resolution: currentTrack.resolution,
-          duration: currentTrack.duration || duration,
-          path: currentTrack.path
-        } : null,
-        currentTime,
-        duration,
-        volume,
-        activeCastDevice
-      }).catch(() => {
-      });
-    }, [isPlaying, currentTrack?.id, Math.floor(currentTime / 2), duration, volume, activeCastDevice]);
-    (0, import_react24.useEffect)(() => {
-      if (!window.robosAudio || !window.robosAudio.onRemoteCommand) return void 0;
-      return window.robosAudio.onRemoteCommand((cmd) => {
-        if (!cmd || !cmd.action) return;
-        const a = getAudioEl();
-        const v = videoRef.current;
-        if (cmd.action === "play") {
-          if (v && v.paused) v.play().catch(() => {
-          });
-          if (a && a.paused) a.play().catch(() => {
-          });
-          setIsPlaying(true);
-        } else if (cmd.action === "pause") {
-          if (v && !v.paused) v.pause();
-          if (a && !a.paused) a.pause();
-          setIsPlaying(false);
-        } else if (cmd.action === "toggle") {
-          togglePlayPause();
-        } else if (cmd.action === "next") {
-          handleNext();
-        } else if (cmd.action === "prev") {
-          handlePrev();
-        } else if (cmd.action === "volume" && typeof cmd.volume === "number") {
-          const vol = Math.max(0, Math.min(1, cmd.volume));
-          setVolume(vol);
-          if (v) v.volume = vol;
-        } else if (cmd.action === "seek" && typeof cmd.time === "number") {
-          if (v) v.currentTime = cmd.time;
-          if (a) a.currentTime = cmd.time;
-          setCurrentTime(cmd.time);
-        } else if (cmd.action === "play-track" && cmd.track) {
-          handlePlayTrack(cmd.track);
-        }
-      });
-    }, [togglePlayPause, handleNext, handlePrev, handlePlayTrack, getAudioEl]);
-    const handleSeekTo = (sec) => {
-      const v = videoRef.current;
-      const a = getAudioEl();
-      if (v) v.currentTime = sec;
-      if (a) a.currentTime = sec;
-      setCurrentTime(sec);
-      if (activeCastDevice) window.robosAudio.castControl("seek", sec);
+  var fmt = (sec) => {
+    if (!sec || !isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const ss = Math.floor(sec % 60);
+    return `${m}:${ss < 10 ? "0" : ""}${ss}`;
+  };
+  function CastProgress({ onSeek, className = "mini-progress", id }) {
+    const { current, duration } = useCastTime();
+    const [dragging, setDragging] = (0, import_react22.useState)(null);
+    const commitTimer = (0, import_react22.useRef)(null);
+    const value = dragging != null ? dragging : current;
+    const pct = duration ? Math.min(value, duration) / duration * 100 : 0;
+    const commit = (v) => {
+      clearTimeout(commitTimer.current);
+      commitTimer.current = setTimeout(() => {
+        castClock.set({ position: v });
+        setDragging(null);
+        onSeek(v);
+      }, 250);
     };
-    const handleCycleSpeed = () => {
-      const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-      const next = speeds[(speeds.indexOf(playbackRate) + 1) % speeds.length] || 1;
-      setPlaybackRate(next);
-    };
-    const handleCycleVideoFit = () => {
-      const modes = ["contain", "cover", "fill"];
-      const next = modes[(modes.indexOf(videoFit) + 1) % modes.length] || "contain";
-      setVideoFit(next);
-    };
-    const handleTogglePiP = async () => {
-      try {
-        if (document.pictureInPictureElement) {
-          await document.exitPictureInPicture();
-        } else if (videoRef.current && videoRef.current.requestPictureInPicture) {
-          await videoRef.current.requestPictureInPicture();
-        }
-      } catch (_) {
-      }
-    };
-    const handleToggleFullscreen = () => {
-      const el = stageShellRef.current || videoRef.current;
-      if (!el) return;
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {
-        });
-      } else if (el.requestFullscreen) {
-        el.requestFullscreen().catch(() => {
-        });
-      }
-    };
-    const handleCaptureSnapshot = async () => {
-      const v = videoRef.current;
-      if (!v || !currentTrack) return;
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = v.videoWidth || 1280;
-        canvas.height = v.videoHeight || 720;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/png");
-        const res = await window.robosMovie.saveSnapshotFrame({
-          dataUrl,
-          title: currentTrack.title,
-          timestamp: currentTime
-        });
-        if (res && res.ok) {
-          setSnapshotNotice(`Saved frame to ${res.path}`);
-          setTimeout(() => setSnapshotNotice(""), 4e3);
-        }
-      } catch (err) {
-        setSnapshotNotice(`Snapshot error: ${err.message}`);
-        setTimeout(() => setSnapshotNotice(""), 4e3);
-      }
-    };
-    const handleAddFolder = async () => {
-      const res = await window.robosAudio.pickFolder();
-      if (res && res.summary) setLibraryAgg(res);
-    };
-    const handleAddFiles = async () => {
-      const res = await window.robosAudio.pickFiles();
-      if (res && res.summary) setLibraryAgg(res);
-    };
-    const handleRescan = async () => {
-      const res = await window.robosAudio.scanFolders();
-      if (res && res.summary) setLibraryAgg(res);
-    };
-    const handleIndexCloudSource = async (sourceId, remotePath) => {
-      const res = await window.robosAudio.indexCloudSource(sourceId, remotePath);
-      if (res && res.summary) setLibraryAgg(res);
-      const cs = await window.robosAudio.getCloudSources();
-      if (cs) setCloudCache(cs.cache);
-    };
-    const handleRemoveCloudSourceTracks = async (sourceId) => {
-      const res = await window.robosAudio.removeCloudSourceTracks(sourceId);
-      if (res && res.summary) setLibraryAgg(res);
-    };
-    const handlePlayCloudItem = async (sourceId, item) => {
-      await handleIndexCloudSource(sourceId, item.path.split("/").slice(0, -1).join("/") || "/");
-      const q = await window.robosAudio.queryTracks({ sourceId, search: item.name, limit: 5 });
-      if (q && q.tracks && q.tracks[0]) {
-        handlePlayTrack(q.tracks[0], q.tracks);
-        setActiveTab("now-playing");
-      }
-    };
-    const handleCreatePlaylist = async () => {
-      const name = newPlaylistName.trim();
-      if (!name) return;
-      const next = [...playlists, { id: `pl-${Date.now()}`, name, description: "Custom movie watchlist", tracks: [] }];
-      setPlaylists(next);
-      setSelectedPlaylistId(next[next.length - 1].id);
-      setNewPlaylistName("");
-      await window.robosAudio.savePlaylists(next);
-    };
-    const handleDeletePlaylist = async (id) => {
-      const next = playlists.filter((p) => p.id !== id);
-      setPlaylists(next);
-      if (selectedPlaylistId === id) setSelectedPlaylistId(next[0]?.id || null);
-      await window.robosAudio.savePlaylists(next);
-    };
-    const handleAddTrackToPlaylist = async (playlistId, track) => {
-      const next = playlists.map((pl) => {
-        if (pl.id !== playlistId) return pl;
-        if (pl.tracks.some((t) => t.path === track.path)) return pl;
-        return { ...pl, tracks: [...pl.tracks, track] };
-      });
-      setPlaylists(next);
-      await window.robosAudio.savePlaylists(next);
-    };
-    const handleRemoveTrackFromPlaylist = async (playlistId, trackPath) => {
-      const next = playlists.map((pl) => {
-        if (pl.id !== playlistId) return pl;
-        return { ...pl, tracks: pl.tracks.filter((t) => t.path !== trackPath) };
-      });
-      setPlaylists(next);
-      await window.robosAudio.savePlaylists(next);
-    };
-    const handleMovePlaylistTrack = async (playlistId, fromIdx, toIdx) => {
-      const next = playlists.map((pl) => {
-        if (pl.id !== playlistId) return pl;
-        const list = [...pl.tracks || []];
-        if (toIdx < 0 || toIdx >= list.length) return pl;
-        const [item] = list.splice(fromIdx, 1);
-        list.splice(toIdx, 0, item);
-        return { ...pl, tracks: list };
-      });
-      setPlaylists(next);
-      await window.robosAudio.savePlaylists(next);
-    };
-    const handleImportM3U = async () => {
-      const res = await window.robosAudio.importM3U();
-      if (res && res.playlists) {
-        setPlaylists(res.playlists);
-        if (res.imported) setSelectedPlaylistId(res.imported.id);
-      }
-    };
-    const handleAiPlaylistCreated = (res) => {
-      if (res && Array.isArray(res.playlists)) {
-        setPlaylists(res.playlists);
-      }
-      if (res && res.playlist) {
-        setSelectedPlaylistId(res.playlist.id);
-      }
-      if (res && Array.isArray(res.tracks) && res.tracks.length > 0) {
-        setVirtualDjEnabled(Boolean(res.virtualDj));
-        if (res.djStyle) setDjStyle(res.djStyle);
-        setQueue(res.tracks);
-        setCurrentIndex(0);
-        setIsPlaying(true);
-        setActiveTab("playlists");
-      }
-    };
-    const handleOpenFixMetadata = (tracks = []) => {
-      setFixMetaModal({ open: true, tracks: Array.isArray(tracks) ? tracks : [] });
-    };
-    const handleMetadataFixed = (res) => {
-      if (res && res.library) setLibraryAgg(res.library);
-      if (res && Array.isArray(res.playlists)) setPlaylists(res.playlists);
-      if (res && Array.isArray(res.results) && res.results.length > 0) {
-        const byId = new Map(res.results.map((r) => [r.id, r.after]));
-        setQueue((prev) => prev.map((t) => byId.has(t.id) ? { ...t, ...byId.get(t.id) } : t));
-      }
-    };
-    const toggleAmbient = (presetId) => {
-      if (activeAmbient === presetId) {
-        if (ambientEngineRef.current) ambientEngineRef.current.stop();
-        ambientEngineRef.current = null;
-        setActiveAmbient(null);
-        return;
-      }
-      if (ambientEngineRef.current) ambientEngineRef.current.stop();
-      const engine = createNoiseEngine(presetId);
-      engine.setVolume(ambientVolume);
-      ambientEngineRef.current = engine;
-      setActiveAmbient(presetId);
-    };
-    const handleAmbientVolume = (v) => {
-      setAmbientVolume(v);
-      if (ambientEngineRef.current) ambientEngineRef.current.setVolume(v);
-    };
-    const handleSelectCastDevice = async (device) => {
-      if (activeCastDevice && activeCastDevice.id === device.id) {
-        await window.robosAudio.castDisconnect();
-        setActiveCastDevice(null);
-        setCastStatusText("");
-        return;
-      }
-      setActiveCastDevice(device);
-      setCastStatusText(`Connected to ${device.name}`);
-      if (currentTrack) {
-        try {
-          await window.robosAudio.castTrack(device, currentTrack, currentTime);
-          const a = getAudioEl();
-          if (a) a.pause();
-          if (videoRef.current) videoRef.current.pause();
-        } catch (err) {
-          setCastStatusText(`Cast failed: ${err.message}`);
-        }
-      }
-    };
-    const handleAddManualDevice = async (e) => {
-      e.preventDefault();
-      if (!manualHost.trim()) return;
-      const dev = await window.robosAudio.addManualCastDevice({
-        name: manualName.trim() || manualHost.trim(),
-        host: manualHost.trim(),
-        port: 8009
-      });
-      setCastDevices((prev) => [...prev.filter((d) => d.id !== dev.id), dev]);
-      setManualHost("");
-      setManualName("");
-    };
-    const handleCastEntirePlaylist = async (pl) => {
-      if (!pl || !Array.isArray(pl.tracks) || pl.tracks.length === 0) return;
-      const targetDevice = activeCastDevice || castDevices[0];
-      if (!targetDevice) {
-        setActiveTab("cast");
-        setCastStatusText("Select or add a Smart TV / Chromecast device first to cast this watchlist.");
-        return;
-      }
-      setActiveCastDevice(targetDevice);
-      setQueue(pl.tracks);
-      setCurrentIndex(0);
-      try {
-        setCastStatusText(`Casting watchlist "${pl.name}" (${pl.tracks.length} movies) to ${targetDevice.name}\u2026`);
-        await window.robosAudio.castPlaylist(targetDevice, pl.tracks, 0);
-        const a = getAudioEl();
-        if (a) a.pause();
-        if (videoRef.current) videoRef.current.pause();
-        setCastStatusText(`Playing "${pl.name}" (${pl.tracks.length} movies) on ${targetDevice.name}`);
-      } catch (err) {
-        setCastStatusText(`Cast watchlist error: ${err.message}`);
-      }
-    };
-    const handleTestCastSpeaker = async (device) => {
-      if (!device) return;
-      setTestingDeviceId(device.id);
-      setCastStatusText(`Sending test chime to ${device.name} (${device.host})\u2026`);
-      try {
-        await window.robosAudio.testCastSpeaker(device);
-        setActiveCastDevice(device);
-        setCastStatusText(`Test chime playing on ${device.name}`);
-      } catch (err) {
-        setCastStatusText(`Speaker test failed on ${device.name}: ${err.message}`);
-      } finally {
-        setTestingDeviceId(null);
-      }
-    };
-    const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
-    return /* @__PURE__ */ import_react24.default.createElement("div", { className: "app-shell" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "main-split" }, /* @__PURE__ */ import_react24.default.createElement("aside", { className: "sidebar", style: { width: sidebarResize.size, minWidth: sidebarResize.size } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "brand" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "brand-icon" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "film", size: 20 })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("div", { className: "brand-title" }, "RobOS Movie"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "brand-sub" }, "Cinema & Cast Studio"))), /* @__PURE__ */ import_react24.default.createElement("nav", { className: "nav-list" }, [
-      { id: "now-playing", icon: "film", label: "Now Playing" },
-      { id: "playlists", icon: "list", label: "Playlists" },
-      { id: "library", icon: "disc", label: "Library", badge: libraryAgg.summary.trackCount ? libraryAgg.summary.trackCount.toLocaleString() : null },
-      { id: "cloud", icon: "cloud", label: "Cloud Storage", badge: cloudSources.length || null },
-      { id: "ambient", icon: "waves", label: "Ambient" },
-      { id: "cast", icon: "cast", label: "Cast Devices", badge: castDevices.length || null }
-    ].map((tab) => /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        key: tab.id,
-        className: `nav-item ${activeTab === tab.id ? "active" : ""}`,
-        onClick: () => setActiveTab(tab.id)
-      },
-      /* @__PURE__ */ import_react24.default.createElement("span", { className: "nav-icon" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: tab.icon, size: 16 })),
-      /* @__PURE__ */ import_react24.default.createElement("span", null, tab.label),
-      tab.badge && /* @__PURE__ */ import_react24.default.createElement("span", { className: "nav-badge" }, tab.badge)
-    ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "sidebar-footer" }, activeAmbient && /* @__PURE__ */ import_react24.default.createElement("div", { className: "status-pill ambient-pill" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "waves", size: 13 }), " Ambient: ", AMBIENT_PRESETS.find((p) => p.id === activeAmbient)?.name), activeCastDevice && /* @__PURE__ */ import_react24.default.createElement("div", { className: "status-pill cast-pill" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "cast", size: 13 }), " Casting: ", activeCastDevice.name))), /* @__PURE__ */ import_react24.default.createElement(
-      "div",
-      {
-        className: "pane-resizer",
-        onMouseDown: sidebarResize.onMouseDown,
-        title: "Drag to resize navigation sidebar"
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement("main", { className: "content-area" }, takeoverBanner && /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-takeover-banner" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-takeover-text" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "cast", size: 15 }), /* @__PURE__ */ import_react24.default.createElement("span", null, /* @__PURE__ */ import_react24.default.createElement("strong", null, takeoverBanner.deviceName), " was taken over by", " ", /* @__PURE__ */ import_react24.default.createElement("strong", null, takeoverBanner.appName || "another cast session"), takeoverBanner.title ? ` (\u201C${takeoverBanner.title}\u201D)` : "", ". Local & Cast playback paused.")), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn btn-xs", onClick: dismissTakeover }, "Dismiss")), activeTab === "now-playing" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "now-playing-view" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-card" }, /* @__PURE__ */ import_react24.default.createElement(
-      "div",
-      {
-        ref: stageShellRef,
-        className: `video-viewport-shell ${theaterExpanded ? "theater-expanded" : ""}`,
-        onDoubleClick: handleToggleFullscreen
-      },
-      /* @__PURE__ */ import_react24.default.createElement(
-        "video",
-        {
-          ref: videoRef,
-          src: currentSrc || void 0,
-          poster: currentArtUrl || void 0,
-          className: `cinema-video-element fit-${videoFit}`,
-          playsInline: true,
-          onClick: togglePlayPause,
-          onPlay: () => setIsPlaying(true),
-          onPause: () => setIsPlaying(false),
-          onTimeUpdate: (e) => {
-            const t = e.currentTarget.currentTime || 0;
-            setCurrentTime(t);
-            const a = getAudioEl();
-            if (a && Math.abs((a.currentTime || 0) - t) > 0.6) {
-              a.currentTime = t;
-            }
-          },
-          onLoadedMetadata: (e) => {
-            const d = e.currentTarget.duration || currentTrack?.duration || 0;
-            setDuration(d);
-          },
-          onEnded: handleTrackEnded
-        }
-      ),
-      !currentTrack && /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-idle-backdrop" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "film", size: 44 }), /* @__PURE__ */ import_react24.default.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: "var(--text-main)" } }, "RobOS Cinema Stage Ready"), /* @__PURE__ */ import_react24.default.createElement("div", { style: { fontSize: 13 } }, "Choose a film from your Library, Playlists, or Cloud Storage to begin screening.")),
-      subtitlesEnabled && activeSubtitleCue && activeSubtitleCue.text && /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-subtitle-overlay" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-subtitle-pill" }, activeSubtitleCue.text))
-    ), /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-stage-toolbar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-stage-toolbar-group" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "video-badge-pill" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "tv", size: 12 }), currentTrack?.resolution || "1080p"), currentTrack?.videoCodec && /* @__PURE__ */ import_react24.default.createElement("span", { className: "video-badge-pill" }, currentTrack.videoCodec), currentTrack?.year && /* @__PURE__ */ import_react24.default.createElement("span", { className: "video-badge-pill" }, currentTrack.year), currentTrack?.genre && /* @__PURE__ */ import_react24.default.createElement("span", { className: "video-badge-pill" }, currentTrack.genre), snapshotNotice && /* @__PURE__ */ import_react24.default.createElement("span", { className: "pill", style: { color: "var(--accent)" } }, snapshotNotice)), /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-stage-toolbar-group" }, /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn btn-xs ${subtitlesEnabled ? "btn-accent" : ""}`,
-        onClick: () => setSubtitlesEnabled((v) => !v),
-        title: "Toggle on-screen closed captions / subtitles"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "subtitles", size: 13 }),
-      " CC ",
-      subtitlesEnabled ? "On" : "Off"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: handleCycleSpeed,
-        title: "Cycle video playback speed (0.5x \u2013 2x)"
-      },
-      "Speed: ",
-      playbackRate,
-      "x"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: handleCycleVideoFit,
-        title: "Cycle video aspect fit (Contain, Cover, Stretch)"
-      },
-      "Fit: ",
-      videoFit.toUpperCase()
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn btn-xs ${theaterExpanded ? "btn-active-pill" : ""}`,
-        onClick: () => setTheaterExpanded((v) => !v),
-        title: "Toggle expanded theater screen height"
-      },
-      "Theater"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: handleCaptureSnapshot,
-        disabled: !currentTrack,
-        title: "Capture PNG frame snapshot to ~/Pictures/RobOS Movie Snapshots"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "camera", size: 13 }),
-      " Frame"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: handleTogglePiP,
-        disabled: !currentTrack,
-        title: "Toggle Picture-in-Picture floating window"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "pip", size: 13 }),
-      " PiP"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: handleToggleFullscreen,
-        title: "Toggle Fullscreen cinema view"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "fullscreen", size: 13 }),
-      " Fullscreen"
-    ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-meta-strip" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-meta-strip-left" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "video-mini-poster" }, currentArtUrl ? /* @__PURE__ */ import_react24.default.createElement("img", { src: currentArtUrl, alt: currentTrack?.title || "Poster" }) : /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "film", size: 24 })), /* @__PURE__ */ import_react24.default.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ import_react24.default.createElement("h2", { className: "hero-title", style: { fontSize: 18, margin: 0 } }, currentTrack ? currentTrack.title : "No Movie Loaded"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "hero-artist", style: { fontSize: 13 } }, currentTrack ? `${currentTrack.artist} \u2014 ${currentTrack.album}` : "Scan a local folder, open a video file, or stream from Cloud Storage"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "hero-badges" }, currentTrack?.source === "cloud" && /* @__PURE__ */ import_react24.default.createElement("span", { className: "pill" }, "CLOUD STREAM"), activeCastDevice && /* @__PURE__ */ import_react24.default.createElement("span", { className: "pill" }, "CAST: ", activeCastDevice.name))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "transport-deck" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "rhap-deck-wrapper" }, /* @__PURE__ */ import_react24.default.createElement(
-      es_default,
-      {
-        ref: playerRef,
-        src: currentSrc,
-        autoPlay: false,
-        showSkipControls: true,
-        showJumpControls: true,
-        progressJumpSteps: { backward: 1e4, forward: 1e4 },
-        onClickPrevious: handlePrev,
-        onClickNext: handleNext,
-        onEnded: handleTrackEnded,
-        onPlay: () => {
-          setIsPlaying(true);
-          if (videoRef.current && videoRef.current.paused && !activeCastDevice) {
-            videoRef.current.play().catch(() => {
-            });
-          }
-        },
-        onPause: () => {
-          setIsPlaying(false);
-          if (videoRef.current && !videoRef.current.paused) {
-            videoRef.current.pause();
-          }
-        },
-        onSeeked: (e) => {
-          const t = e.target.currentTime || 0;
-          setCurrentTime(t);
-          if (videoRef.current && Math.abs((videoRef.current.currentTime || 0) - t) > 0.3) {
-            videoRef.current.currentTime = t;
-          }
-          if (activeCastDevice) window.robosAudio.castControl("seek", t);
-        },
-        onVolumeChange: (e) => {
-          const v = e.target.volume;
-          setVolume(v);
-          if (videoRef.current) videoRef.current.volume = activeCastDevice ? 0 : v;
-        },
-        listenInterval: 250,
-        className: "robos-rhap-theme"
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement("div", { className: "deck-mode-toggles" }, /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn-icon ${shuffle ? "active" : ""}`,
-        onClick: () => setShuffle(!shuffle),
-        title: "Shuffle Watchlist"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "shuffle", size: 15 })
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn-icon ${repeat ? "active" : ""}`,
-        onClick: () => setRepeat(!repeat),
-        title: "Repeat Movie / Queue"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "repeat", size: 15 })
-    ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "quick-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "quick-cast-left" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "cast", size: 14 }), /* @__PURE__ */ import_react24.default.createElement("span", { className: "quick-cast-label" }, "Screen Output:"), /* @__PURE__ */ import_react24.default.createElement(
-      "select",
-      {
-        className: "select-sm",
-        value: activeCastDevice ? activeCastDevice.id : "__local__",
-        onChange: (e) => {
-          const val = e.target.value;
-          if (val === "__local__") {
-            if (activeCastDevice) handleSelectCastDevice(activeCastDevice);
-          } else {
-            const dev = castDevices.find((d) => d.id === val);
-            if (dev) handleSelectCastDevice(dev);
-          }
-        }
-      },
-      /* @__PURE__ */ import_react24.default.createElement("option", { value: "__local__" }, "Local Cinema Stage (This Display)"),
-      castDevices.map((dev) => /* @__PURE__ */ import_react24.default.createElement("option", { key: dev.id, value: dev.id }, dev.name, " (", dev.host, ")"))
-    ), activeCastDevice && /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        disabled: testingDeviceId === activeCastDevice.id,
-        onClick: () => handleTestCastSpeaker(activeCastDevice)
-      },
-      testingDeviceId === activeCastDevice.id ? "Testing\u2026" : "Test TV Chime"
-    )), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: () => setActiveTab("cast"),
-        title: "Manage Smart TVs, Chromecasts & speakers"
-      },
-      "Manage TVs (",
-      castDevices.length,
-      ")"
-    )))), virtualDjEnabled && (virtualDj.djSpeaking || virtualDj.djStatus || virtualDj.currentIntroText) && /* @__PURE__ */ import_react24.default.createElement("div", { className: `virtual-dj-banner ${virtualDj.djSpeaking ? "speaking" : ""}` }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "virtual-dj-left" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react24.default.createElement("span", { className: "virtual-dj-badge" }, "Virtual Cinema Host"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "virtual-dj-text" }, virtualDj.djStatus || virtualDj.currentIntroText)), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs",
-        onClick: () => setVirtualDjEnabled(false),
-        title: "Turn off Virtual Cinema Host"
-      },
-      "Turn Off Host"
-    )), /* @__PURE__ */ import_react24.default.createElement(
-      LyricsPanel,
-      {
-        currentTrack,
-        currentTime,
-        onSeek: handleSeekTo,
-        onActiveCueChange: setActiveSubtitleCue
-      }
-    )), activeTab === "playlists" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-view" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-sidebar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-create-row" }, /* @__PURE__ */ import_react24.default.createElement(
-      "input",
-      {
-        type: "text",
-        placeholder: "New watchlist name...",
-        value: newPlaylistName,
-        onChange: (e) => setNewPlaylistName(e.target.value),
-        onKeyDown: (e) => e.key === "Enter" && handleCreatePlaylist(),
-        className: "input"
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn btn-accent", onClick: handleCreatePlaylist }, "+")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-io-row" }, /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm btn-accent",
-        onClick: () => setAiModalOpen(true),
-        title: "Create a movie marathon watchlist with AI + optional Virtual Cinema Host"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "sparkles", size: 13 }),
-      " \u2726 AI Watchlist"
-    ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn btn-sm", onClick: handleImportM3U }, "Import M3U"), selectedPlaylist && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn btn-sm", onClick: () => window.robosAudio.exportM3U(selectedPlaylist) }, "Export M3U")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-list" }, playlists.map((pl) => /* @__PURE__ */ import_react24.default.createElement(
-      "div",
-      {
-        key: pl.id,
-        className: `playlist-card ${pl.id === selectedPlaylistId ? "active" : ""}`,
-        onClick: () => setSelectedPlaylistId(pl.id)
-      },
-      /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-card-name" }, pl.aiGenerated && /* @__PURE__ */ import_react24.default.createElement("span", { className: "ai-sparkle-prefix" }, "\u2726 "), pl.name), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-card-count" }, (pl.tracks || []).length, " movies", pl.virtualDj ? " \u2022 Host" : "")),
-      pl.id !== "favorites" && /* @__PURE__ */ import_react24.default.createElement(
-        "button",
-        {
-          className: "btn-icon",
-          onClick: (e) => {
-            e.stopPropagation();
-            handleDeletePlaylist(pl.id);
-          },
-          title: "Delete watchlist"
-        },
-        "\u2715"
-      )
-    )))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-detail" }, selectedPlaylist ? /* @__PURE__ */ import_react24.default.createElement(import_react24.default.Fragment, null, /* @__PURE__ */ import_react24.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react24.default.createElement("p", { className: "muted" }, selectedPlaylist.description || "Custom movie watchlist")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn btn-sm ${virtualDjEnabled ? "btn-accent" : ""}`,
-        onClick: () => setVirtualDjEnabled((v) => !v),
-        title: "Speak short cinema host intros between movies using RobOS Voice"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "mic", size: 14 }),
-      " Virtual Host: ",
-      virtualDjEnabled ? "On" : "Off"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-accent",
-        disabled: (selectedPlaylist.tracks || []).length === 0,
-        onClick: () => {
-          if (selectedPlaylist.virtualDj && !virtualDjEnabled) {
-            setVirtualDjEnabled(true);
-          }
-          if (selectedPlaylist.djStyle) setDjStyle(selectedPlaylist.djStyle);
-          handlePlayTrack(selectedPlaylist.tracks[0], selectedPlaylist.tracks);
-          setActiveTab("now-playing");
-        }
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "play", size: 14 }),
-      " Screen Watchlist"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm",
-        disabled: (selectedPlaylist.tracks || []).length === 0,
-        onClick: () => handleCastEntirePlaylist(selectedPlaylist),
-        title: "Cast entire watchlist queue to a Google TV or Chromecast"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "cast", size: 14 }),
-      " Cast Watchlist"
-    ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-table" }, (selectedPlaylist.tracks || []).length === 0 ? /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-state" }, "No movies in this watchlist yet. Right-click any movie in the Library tab to add it.") : selectedPlaylist.tracks.map((track, idx) => /* @__PURE__ */ import_react24.default.createElement(
-      "div",
-      {
-        key: `${track.path}-${idx}`,
-        className: "track-row",
-        onDoubleClick: () => {
-          handlePlayTrack(track, selectedPlaylist.tracks);
-          setActiveTab("now-playing");
-        }
-      },
-      /* @__PURE__ */ import_react24.default.createElement("span", { className: "track-idx" }, idx + 1),
-      /* @__PURE__ */ import_react24.default.createElement(CoverThumb, { artId: track.artId, fallback: "film", className: "vt-art" }),
-      /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-main" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-title" }, track.title, track.resolution && /* @__PURE__ */ import_react24.default.createElement("span", { className: "vt-cloud-pill", style: { marginLeft: 8 } }, track.resolution)), /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-sub" }, track.artist, " \u2022 ", track.album)),
-      /* @__PURE__ */ import_react24.default.createElement("span", { className: "track-dur" }, formatTime(track.duration)),
-      /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-row-actions" }, /* @__PURE__ */ import_react24.default.createElement(
-        "button",
-        {
-          className: "btn-icon",
-          disabled: idx === 0,
-          onClick: () => handleMovePlaylistTrack(selectedPlaylist.id, idx, idx - 1),
-          title: "Move up"
-        },
-        "\u2191"
-      ), /* @__PURE__ */ import_react24.default.createElement(
-        "button",
-        {
-          className: "btn-icon",
-          disabled: idx === selectedPlaylist.tracks.length - 1,
-          onClick: () => handleMovePlaylistTrack(selectedPlaylist.id, idx, idx + 1),
-          title: "Move down"
-        },
-        "\u2193"
-      ), /* @__PURE__ */ import_react24.default.createElement(
-        "button",
-        {
-          className: "btn-icon",
-          onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, track.path),
-          title: "Remove from watchlist"
-        },
-        "\u2715"
-      ))
-    )))) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-state" }, "Select or create a watchlist"))), activeTab === "library" && /* @__PURE__ */ import_react24.default.createElement(
-      LibraryBrowser,
-      {
-        summary: libraryAgg.summary,
-        albums: libraryAgg.albums,
-        artists: libraryAgg.artists,
-        genres: libraryAgg.genres,
-        decades: libraryAgg.decades,
-        composers: libraryAgg.composers,
-        folders: libraryAgg.folders,
-        currentTrack,
-        isPlaying,
-        scanStatus,
-        playlists,
-        onPlayTrack: (track, ctx) => {
-          handlePlayTrack(track, ctx);
-          setActiveTab("now-playing");
-        },
-        onQueueTrack: (track) => setQueue((prev) => [...prev, track]),
-        onQueueTracks: (tracks) => setQueue((prev) => [...prev, ...tracks]),
-        onAddTrackToPlaylist: handleAddTrackToPlaylist,
-        onOpenAiPlaylist: () => setAiModalOpen(true),
-        onOpenFixMetadata: handleOpenFixMetadata,
-        onLibraryChanged: (agg) => setLibraryAgg(agg),
-        onAddFolder: handleAddFolder,
-        onAddFiles: handleAddFiles,
-        onRescan: handleRescan
-      }
-    ), activeTab === "cloud" && /* @__PURE__ */ import_react24.default.createElement(
-      CloudBrowser,
-      {
-        cloudSources,
-        cloudCache,
-        onIndexCloudSource: handleIndexCloudSource,
-        onRemoveCloudSourceTracks: handleRemoveCloudSourceTracks,
-        onPlayCloudItem: handlePlayCloudItem,
-        onOpenDataSources: () => window.robosAudio.openDataSourcesApp(),
-        onRefreshCloudSources: async () => {
-          const cs = await window.robosAudio.getCloudSources();
-          if (cs) {
-            setCloudSources(cs.sources || []);
-            setCloudCache(cs.cache || null);
-          }
-        }
-      }
-    ), activeTab === "ambient" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "ambient-view" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h2", null, "Theater & Focus Soundscapes"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "muted" }, "Procedural Web Audio API theater atmospheres \u2014 can play solo or layer beneath movies")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "ambient-vol" }, /* @__PURE__ */ import_react24.default.createElement("span", null, "Ambient Volume"), /* @__PURE__ */ import_react24.default.createElement(
+    (0, import_react22.useEffect)(() => () => clearTimeout(commitTimer.current), []);
+    return /* @__PURE__ */ import_react22.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react22.default.createElement(
       "input",
       {
         type: "range",
         min: "0",
-        max: "1",
-        step: "0.01",
-        value: ambientVolume,
-        onChange: (e) => handleAmbientVolume(parseFloat(e.target.value))
+        max: duration || 0,
+        step: "0.5",
+        value: Math.min(value, duration || 0),
+        disabled: !duration,
+        style: { "--pct": `${pct}%` },
+        "aria-label": "Seek on the speaker",
+        onChange: (e) => {
+          const v = Number(e.target.value);
+          setDragging(v);
+          commit(v);
+        }
       }
-    ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "ambient-grid" }, AMBIENT_PRESETS.map((preset) => {
-      const active = activeAmbient === preset.id;
-      return /* @__PURE__ */ import_react24.default.createElement(
-        "div",
-        {
-          key: preset.id,
-          className: `ambient-card ${active ? "active" : ""}`,
-          style: { "--ambient-color": preset.color },
-          onClick: () => toggleAmbient(preset.id)
-        },
-        /* @__PURE__ */ import_react24.default.createElement("div", { className: "ambient-card-header" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "ambient-dot", style: { background: preset.color } }), /* @__PURE__ */ import_react24.default.createElement("span", { className: "ambient-status" }, active ? "PLAYING" : "CLICK TO START")),
-        /* @__PURE__ */ import_react24.default.createElement("h3", null, preset.name),
-        /* @__PURE__ */ import_react24.default.createElement("p", { className: "muted" }, preset.desc)
+    ), /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(duration)));
+  }
+
+  // src/useSpeakerTakeover.js
+  var import_react23 = __toESM(require_react());
+  var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function useSpeakerTakeover({ getPlayer, showStatus }) {
+    const takeover = (0, import_react23.useRef)(null);
+    const finish = (0, import_react23.useCallback)(() => {
+      const t = takeover.current;
+      if (!t) return;
+      takeover.current = null;
+      if (t.timer) clearTimeout(t.timer);
+      const p = getPlayer();
+      if (t.song && p.song === t.song && p.outputTarget === t.target) p.resumeCastAt(t.song, t.position, t.wasPlaying);
+    }, [getPlayer]);
+    const playNext = (0, import_react23.useCallback)(() => {
+      const t = takeover.current;
+      if (!t) return;
+      if (t.timer) clearTimeout(t.timer);
+      const item = t.queue.shift();
+      t.item = item || null;
+      if (!item) {
+        t.timer = setTimeout(() => {
+          if (takeover.current === t && !t.queue.length) finish();
+        }, t.hold);
+        return;
+      }
+      t.hold = item.holdMs;
+      t.loads = /* @__PURE__ */ new Set();
+      const meta = { title: item.title, artist: item.artist, role: "clip" };
+      const castOne = (ip) => (item.filePath ? window.robosAudio.castFile(ip, item.filePath, meta) : window.robosAudio.castUrl(ip, item.url, meta)).then((res) => {
+        if (res && res.loadId != null) t.loads.add(res.loadId);
+        return res;
+      });
+      const p = getPlayer();
+      const ips = t.target === "all" ? p.speakers.map((s) => s.ip) : [t.target];
+      t.timer = setTimeout(() => {
+        if (t.item === item) playNext();
+      }, (item.durationMs || 4e3) + 3e4);
+      item.started = Promise.all(ips.map(castOne)).then((results) => {
+        const failed = results.find((r) => !r || r.ok === false);
+        if (t.item !== item) return failed ? { ok: false, error: failed && failed.error || "cast failed" } : { ok: true };
+        if (failed && results.every((r) => !r || r.ok === false)) {
+          showStatus(`Could not play a clip on the speaker (${failed && failed.error || "unknown error"}).`);
+          playNext();
+          return { ok: false, error: failed && failed.error || "cast failed" };
+        }
+        clearTimeout(t.timer);
+        t.timer = setTimeout(() => {
+          if (t.item === item) playNext();
+        }, (item.durationMs || 4e3) + 2500);
+        return { ok: true };
+      }).catch((err) => {
+        if (t.item === item) playNext();
+        return { ok: false, error: err.message };
+      });
+    }, [getPlayer, finish, showStatus]);
+    const clipFinished = (0, import_react23.useCallback)((loadId) => {
+      const t = takeover.current;
+      if (!t || !t.item || !t.loads || !t.loads.has(loadId)) return;
+      t.loads = null;
+      playNext();
+    }, [playNext]);
+    const speakClip = (0, import_react23.useCallback)(async (clip) => {
+      let p = getPlayer();
+      if (p.outputTarget === "local") return { ok: true, handled: false, reason: "not-casting" };
+      const onTarget = !clip.speakerIp || clip.speakerIp === p.outputTarget || p.outputTarget === "all" && p.speakers.some((s) => s.ip === clip.speakerIp);
+      if (!onTarget) return { ok: true, handled: false, reason: "other-speaker", output: p.outputTarget };
+      let t0 = takeover.current;
+      if (t0 && t0.target !== p.outputTarget) {
+        if (t0.timer) clearTimeout(t0.timer);
+        takeover.current = t0 = null;
+      }
+      if (t0) {
+        if (t0.item) {
+          t0.queue.push(clip);
+          return { ok: true, handled: true, queued: true };
+        }
+        t0.queue.push(clip);
+        playNext();
+        return { ok: true, handled: true, ...await clip.started };
+      }
+      for (let i = 0; i < 120 && p.djSpeaking; i++) {
+        await sleep(250);
+        p = getPlayer();
+      }
+      if (p.djSpeaking) return { ok: false, handled: true, error: "The Virtual DJ is still talking" };
+      if (takeover.current) return speakClip(clip);
+      p.holdClock(p.position);
+      takeover.current = { target: p.outputTarget, song: p.castActive ? p.song : null, position: p.position, wasPlaying: p.playing, queue: [clip], item: null, loads: null, timer: null, hold: clip.holdMs };
+      showStatus(`\u{1F50A} ${clip.title}${clip.artist ? ` \u2014 ${clip.artist}` : ""} on the speaker`);
+      playNext();
+      return { ok: true, handled: true, ...await clip.started };
+    }, [getPlayer, playNext, showStatus]);
+    const status = (0, import_react23.useCallback)(() => {
+      const p = getPlayer();
+      const casting = p.outputTarget !== "local";
+      return {
+        ok: true,
+        running: true,
+        output: p.outputTarget,
+        speakerIps: !casting ? [] : p.outputTarget === "all" ? p.speakers.map((s) => s.ip) : [p.outputTarget],
+        playing: !!p.playing,
+        track: p.song ? { title: p.song.title || "", artist: p.song.artist || "", album: p.song.album || "" } : null,
+        position: p.position,
+        speakingClip: !!takeover.current
+      };
+    }, [getPlayer]);
+    const pause = (0, import_react23.useCallback)(async () => {
+      if (takeover.current) {
+        takeover.current.wasPlaying = false;
+        return { ok: true, paused: true };
+      }
+      return getPlayer().pauseMusic();
+    }, [getPlayer]);
+    const resume = (0, import_react23.useCallback)(async () => {
+      if (takeover.current) {
+        takeover.current.wasPlaying = true;
+        return { ok: true, playing: true };
+      }
+      return getPlayer().resumeMusic();
+    }, [getPlayer]);
+    const handlers = (0, import_react23.useRef)({});
+    handlers.current = { status, "speak-clip": speakClip, pause, resume };
+    (0, import_react23.useEffect)(() => {
+      if (!window.robosAudio?.onControlRequest) return void 0;
+      return window.robosAudio.onControlRequest((action, payload) => {
+        const fn = handlers.current[action];
+        return fn ? fn(payload || {}) : { ok: false, error: `Unknown action: ${action}` };
+      });
+    }, []);
+    return { clipFinished, active: () => !!takeover.current };
+  }
+
+  // src/App.jsx
+  var import_library_index7 = __toESM(require_library_index());
+  var DEFAULT_QUEUE = [
+    {
+      id: "default-1",
+      title: "RobOS Lo-Fi Synth Session",
+      artist: "Procedural Ambient Engine",
+      album: "RobOS Focus Series",
+      src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+    }
+  ];
+  var QUEUE_KEY = "robos-movie-player.queue.v1";
+  var PLAYER_PREFS_KEY = "robos-movie-player.player-prefs.v1";
+  var MAX_SAVED_QUEUE = 5e3;
+  var VIDEO_EXT_RE = /\.(mp4|mkv|webm|mov|m4v|avi|ogv|ts|m2ts|mpg|mpeg|flv|wmv|3gp)(\?|$)/i;
+  var isVideoTrack = (t) => !!(t && (VIDEO_EXT_RE.test(t.filePath || "") || VIDEO_EXT_RE.test(t.src || "") || t.genre === "Movies"));
+  function loadJson(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key));
+    } catch {
+      return null;
+    }
+  }
+  function restoredQueue() {
+    const saved = loadJson(QUEUE_KEY);
+    if (saved && Array.isArray(saved.queue) && saved.queue.length) {
+      return { queue: saved.queue, index: Math.max(0, Math.min(saved.index || 0, saved.queue.length - 1)) };
+    }
+    return { queue: DEFAULT_QUEUE, index: 0 };
+  }
+  var fileUrl2 = (filePath) => `file://${filePath.split("/").map(encodeURIComponent).join("/")}`;
+  var PLAYLIST_SIDEBAR_WIDTH = 270;
+  var PLAYLIST_COLUMNS = [
+    { key: "num", width: "36px", fixed: true },
+    { key: "title", label: "Title", width: "minmax(0, 3fr)", fill: true },
+    { key: "artist", label: "Artist", width: "minmax(0, 2fr)", min: 60 },
+    { key: "album", label: "Album", width: "minmax(0, 2fr)", min: 60 },
+    { key: "duration", label: "Duration", width: "75px", min: 56 },
+    { key: "actions", width: "120px", fixed: true }
+  ];
+  function App() {
+    const [initial] = (0, import_react24.useState)(restoredQueue);
+    const [playerPrefs] = (0, import_react24.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
+    const [activeTab, setActiveTab] = (0, import_react24.useState)("player");
+    const [playlist, setPlaylist] = (0, import_react24.useState)(initial.queue);
+    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react24.useState)(initial.index);
+    const [folders, setFolders] = (0, import_react24.useState)([]);
+    const [syncingFolder, setSyncingFolder] = (0, import_react24.useState)(null);
+    const [outputTarget, setOutputTarget] = (0, import_react24.useState)("local");
+    const [speakers, setSpeakers] = (0, import_react24.useState)([]);
+    const [library, setLibrary] = (0, import_react24.useState)({ tracks: [], artists: [], albums: [] });
+    const [stats, setStats] = (0, import_react24.useState)({});
+    const [artBase, setArtBase] = (0, import_react24.useState)({ local: null, cast: null });
+    const [repeatMode, setRepeatMode] = (0, import_react24.useState)(playerPrefs.repeat || "all");
+    const [shuffleMode, setShuffleMode] = (0, import_react24.useState)(!!playerPrefs.shuffle);
+    const [dockCollapsed, setDockCollapsed] = (0, import_react24.useState)(!!playerPrefs.dockCollapsed);
+    const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref("playlistSidebarWidth", PLAYLIST_SIDEBAR_WIDTH);
+    const playlistColumns = useColumns("playlist", PLAYLIST_COLUMNS);
+    const [libNav, setLibNav] = (0, import_react24.useState)([{ section: playerPrefs.librarySection || "albums" }]);
+    const [menu, setMenu] = (0, import_react24.useState)(null);
+    const [infoTrack, setInfoTrack] = (0, import_react24.useState)(null);
+    const [isScanning, setIsScanning] = (0, import_react24.useState)(false);
+    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react24.useState)(false);
+    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react24.useState)(null);
+    const [activeCastSession, setActiveCastSession] = (0, import_react24.useState)(null);
+    const [statusMsg, setStatusMsg] = (0, import_react24.useState)("");
+    const [activeAmbient, setActiveAmbient] = (0, import_react24.useState)(null);
+    const [isPlaying, setIsPlaying] = (0, import_react24.useState)(false);
+    const [playlists, setPlaylists] = (0, import_react24.useState)([]);
+    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react24.useState)(null);
+    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react24.useState)(false);
+    const [newPlaylistName, setNewPlaylistName] = (0, import_react24.useState)("");
+    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react24.useState)("");
+    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react24.useState)(false);
+    const [saveQueueName, setSaveQueueName] = (0, import_react24.useState)("");
+    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react24.useState)("");
+    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react24.useState)(null);
+    const [showAiPlaylist, setShowAiPlaylist] = (0, import_react24.useState)(false);
+    const [showDjSettings, setShowDjSettings] = (0, import_react24.useState)(false);
+    const [tracksForAiFix, setTracksForAiFix] = (0, import_react24.useState)(null);
+    const [aiAgent, setAiAgent] = (0, import_react24.useState)(playerPrefs.aiAgent || null);
+    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react24.useState)("");
+    const playerRef = (0, import_react24.useRef)(null);
+    const videoRef = (0, import_react24.useRef)(null);
+    const [videoFit, setVideoFit] = (0, import_react24.useState)("contain");
+    const getMediaEl = () => isVideoTrack(latestRef.current.currentTrack) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
+    const audioCtxRef = (0, import_react24.useRef)(null);
+    const ambientNodeRef = (0, import_react24.useRef)(null);
+    const toastTimerRef = (0, import_react24.useRef)(null);
+    const searchInputRef = (0, import_react24.useRef)(null);
+    const playedRef = (0, import_react24.useRef)({ key: null, counted: false });
+    const shuffleHistoryRef = (0, import_react24.useRef)([]);
+    const latestRef = (0, import_react24.useRef)({});
+    const formatDuration5 = (sec) => {
+      if (!sec || isNaN(sec)) return "--:--";
+      const totalSec = Math.round(sec);
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${m}:${s < 10 ? "0" : ""}${s}`;
+    };
+    const formatTotalDuration = (tracks) => {
+      if (!tracks || !tracks.length) return "0 min";
+      const totalSec = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
+      const mins = Math.floor(totalSec / 60);
+      const hours = Math.floor(mins / 60);
+      if (hours > 0) {
+        return `${hours}h ${mins % 60}m`;
+      }
+      return `${mins} min`;
+    };
+    const getSpeakerName = (ip) => {
+      if (!ip) return "Speaker";
+      if (ip === "local") return "Desktop (Local Audio)";
+      if (ip === "all") return "All Connected Speakers";
+      const found = speakers.find((s) => s.ip === ip);
+      return found ? found.name : `Speaker (${ip})`;
+    };
+    (0, import_react24.useEffect)(() => {
+      refreshSpeakers();
+      loadLibrary();
+      loadStats();
+      refreshFolders();
+      refreshPlaylists();
+      if (window.robosAudio?.getArtBase) {
+        window.robosAudio.getArtBase().then((base) => base && setArtBase(base)).catch(() => {
+        });
+      }
+      const cleanups = [];
+      if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
+      if (window.robosAudio?.onLibraryScanDiscovered) {
+        cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {
+          setIsScanningLibrary(true);
+          setLibraryScanStatus({
+            current: 0,
+            total: info.total,
+            file: "Starting background metadata extraction..."
+          });
+          showStatus(`Discovered ${info.total} audio files. Scanning in background...`);
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanProgress) {
+        cleanups.push(window.robosAudio.onLibraryScanProgress((p) => {
+          setIsScanningLibrary(true);
+          setLibraryScanStatus(p);
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanBatch) {
+        cleanups.push(window.robosAudio.onLibraryScanBatch((batch) => {
+          if (batch.library) {
+            setLibrary(batch.library);
+          }
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanComplete) {
+        cleanups.push(window.robosAudio.onLibraryScanComplete((done) => {
+          setIsScanningLibrary(false);
+          setLibraryScanStatus(null);
+          if (done.library) setLibrary(done.library);
+          refreshFolders();
+          showStatus(`Library background scan complete! Found ${done.totalFound} track(s).`);
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanCanceled) {
+        cleanups.push(window.robosAudio.onLibraryScanCanceled(() => {
+          setIsScanningLibrary(false);
+          setLibraryScanStatus(null);
+          showStatus("Library background scan canceled.");
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanError) {
+        cleanups.push(window.robosAudio.onLibraryScanError((err) => {
+          setIsScanningLibrary(false);
+          setLibraryScanStatus(null);
+          showStatus(`Library scan error: ${err.error}`);
+        }));
+      }
+      if (window.robosAudio?.onSpeakerPlaybackStopped) {
+        cleanups.push(window.robosAudio.onSpeakerPlaybackStopped((data) => {
+          setActiveCastSession(null);
+          castClock.set({ playing: false });
+          setIsPlaying(false);
+        }));
+      }
+      if (window.robosAudio?.onSpeakerStatusChange) {
+        cleanups.push(window.robosAudio.onSpeakerStatusChange(({ ip, status }) => {
+          if (!status) return;
+          const L = latestRef.current;
+          if (L.outputTarget === "local" || L.outputTarget !== "all" && ip !== L.outputTarget) return;
+          const finished = status.playerState === "IDLE" && status.idleReason === "FINISHED";
+          if (status.role === "clip") {
+            if (finished) L.controlClipFinished(status.loadId);
+            return;
+          }
+          if (status.role === "dj") {
+            if (finished) L.djCastLineFinished();
+            return;
+          }
+          if (status.currentTime != null) {
+            castClock.set({ position: status.currentTime, duration: status.duration || castClock.get().duration, playing: status.playerState === "PLAYING" });
+            L.countCastPlay(status.currentTime, status.duration);
+          } else if (status.playerState) {
+            castClock.set({ playing: status.playerState === "PLAYING" });
+          }
+          if (finished) {
+            const loads = songLoadsRef.current;
+            if (!loads.has(status.loadId)) return;
+            loads.clear();
+            setActiveCastSession(null);
+            castClock.set({ playing: false, position: castClock.get().duration || castClock.get().position });
+            L.castSongFinished();
+          } else if (status?.playerState === "PAUSED") {
+            setActiveCastSession((prev) => prev ? { ...prev, isPaused: true } : prev);
+          } else if (status?.playerState === "PLAYING") {
+            setActiveCastSession((prev) => prev ? { ...prev, isPaused: false } : prev);
+          }
+          if (status.playerState === "PLAYING" || status.playerState === "PAUSED") {
+            setIsPlaying(status.playerState === "PLAYING");
+          } else if (status.playerState === "IDLE" && !finished) {
+            setIsPlaying(false);
+          }
+        }));
+      }
+      return () => {
+        cleanups.forEach((fn) => {
+          try {
+            fn();
+          } catch {
+          }
+        });
+      };
+    }, []);
+    const refreshFolders = async () => {
+      try {
+        const res = await window.robosAudio.listFolders();
+        if (res && res.folders) setFolders(res.folders);
+      } catch {
+      }
+    };
+    const applyFolderState = (res) => {
+      if (!res) return;
+      if (res.folders) setFolders(res.folders);
+      if (res.library) setLibrary(res.library);
+    };
+    const handleRescanFolder = async (id) => {
+      setSyncingFolder(id || "all");
+      showStatus(id ? "Syncing folder..." : "Syncing all folders...");
+      try {
+        const res = await window.robosAudio.rescanFolders(id);
+        applyFolderState(res);
+        showStatus(res.ok ? "Folder sync finished." : `Sync problem: ${res.error}`);
+      } catch (err) {
+        showStatus(`Sync problem: ${err.message}`);
+      } finally {
+        setSyncingFolder(null);
+      }
+    };
+    const handleRenameFolder = async (id, label) => applyFolderState(await window.robosAudio.renameFolder(id, label));
+    const handleFolderEnabled = async (id, enabled) => {
+      setSyncingFolder(id);
+      try {
+        const res = await window.robosAudio.setFolderEnabled(id, enabled);
+        applyFolderState(res);
+        showStatus(res.ok ? enabled ? "Folder synced. Updates will be checked at startup." : "Folder sync paused. Existing music stays in your library." : `Sync problem: ${res.error}`);
+      } catch (err) {
+        showStatus(`Sync problem: ${err.message}`);
+      } finally {
+        setSyncingFolder(null);
+      }
+    };
+    const handleRemoveFolder = async (id, removeTracks) => {
+      const res = await window.robosAudio.removeFolder(id, removeTracks);
+      applyFolderState(res);
+      showStatus(removeTracks ? "Folder and its tracks removed from the library." : "Folder removed. Its tracks stay in the library.");
+    };
+    const showStatus = (msg) => {
+      setStatusMsg(msg);
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+      toastTimerRef.current = setTimeout(() => {
+        setStatusMsg("");
+        toastTimerRef.current = null;
+      }, 4e3);
+    };
+    const refreshSpeakers = async () => {
+      setIsScanning(true);
+      showStatus("Scanning local network for Google Cast speakers...");
+      try {
+        const found = await window.robosAudio.discoverSpeakers();
+        setSpeakers(found || []);
+        if (found && found.length > 0) {
+          showStatus(`Discovered ${found.length} local Google Cast speakers!`);
+        } else {
+          showStatus("No Cast speakers responded on local subnet.");
+        }
+      } catch (err) {
+        showStatus("Discovery error: " + err.message);
+      } finally {
+        setIsScanning(false);
+      }
+    };
+    const loadLibrary = async () => {
+      try {
+        const lib = await window.robosAudio.getLibrary();
+        if (lib && lib.tracks) {
+          setLibrary(lib);
+          if (lib.tracks.length > 0) {
+            setPlaylist((prev) => prev.length === 1 && prev[0].id === "default-1" ? lib.tracks.slice(0, 25) : prev);
+          }
+        }
+      } catch {
+      }
+    };
+    const loadStats = async () => {
+      try {
+        if (window.robosAudio?.getTrackStats) setStats(await window.robosAudio.getTrackStats() || {});
+      } catch {
+      }
+    };
+    const refreshPlaylists = async () => {
+      try {
+        if (window.robosAudio?.getPlaylists) {
+          const list = await window.robosAudio.getPlaylists();
+          setPlaylists(list || []);
+          if (list && list.length > 0) {
+            setSelectedPlaylistId((prev) => prev && list.some((p) => p.id === prev) ? prev : list[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching playlists:", err);
+      }
+    };
+    const handleSelectFolder = async () => {
+      showStatus("Opening file manager to select music folder(s)...");
+      try {
+        const res = await window.robosAudio.addLocalFolder();
+        if (res && !res.canceled) {
+          applyFolderState(res);
+          setIsScanningLibrary(true);
+          setLibraryScanStatus({ current: 0, total: 0, file: "Discovering audio files in folder(s)..." });
+          showStatus("Folder added to your library. Scanning in the background...");
+        }
+      } catch (err) {
+        showStatus("Error adding folder: " + err.message);
+      }
+    };
+    const handleCancelScan = async () => {
+      try {
+        await window.robosAudio.cancelLibraryScan();
+        setIsScanningLibrary(false);
+        setLibraryScanStatus(null);
+        showStatus("Canceled background library scan.");
+      } catch (err) {
+        showStatus("Error canceling scan: " + err.message);
+      }
+    };
+    const handleAddFiles = async () => {
+      try {
+        const res = await window.robosAudio.openFileDialog();
+        if (!res.canceled && res.tracks && res.tracks.length > 0) {
+          setPlaylist((prev) => [...prev, ...res.tracks]);
+          showStatus(`Added ${res.tracks.length} track(s) to playlist`);
+        }
+      } catch (err) {
+        showStatus("Error opening files: " + err.message);
+      }
+    };
+    const handleDrop = async (e) => {
+      e.preventDefault();
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      if (!droppedFiles.length) return;
+      const paths = droppedFiles.map((f) => f.path).filter(Boolean);
+      if (!paths.length) return;
+      showStatus(`Importing ${paths.length} dropped item(s)...`);
+      try {
+        const res = await window.robosAudio.importPaths(paths);
+        if (res && res.tracks && res.tracks.length > 0) {
+          setPlaylist((prev) => {
+            const existingPaths = new Set(prev.map((t) => t.filePath));
+            const newItems = res.tracks.filter((t) => !existingPaths.has(t.filePath));
+            return [...prev, ...newItems];
+          });
+          if (res.library) setLibrary(res.library);
+        }
+        if (res && res.scanningDirs) {
+          setIsScanningLibrary(true);
+          showStatus(`Scanning ${res.dirs.length} directory/directories in background...`);
+        } else if (res && res.tracks && res.tracks.length > 0) {
+          showStatus(`Imported ${res.tracks.length} track(s) into library & queue!`);
+        }
+      } catch (err) {
+        showStatus("Error importing dropped items: " + err.message);
+      }
+    };
+    const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || playlists[0] || null;
+    const handlePlayPlaylist = (pl, replaceQueue = true) => {
+      if (!pl || !pl.tracks || pl.tracks.length === 0) {
+        showStatus(`Playlist "${pl?.name || "Playlist"}" has no tracks to play.`);
+        return;
+      }
+      if (replaceQueue && pl.dj && pl.dj.persona) {
+        startWithDj(pl);
+        return;
+      }
+      if (replaceQueue) {
+        setPlaylist([...pl.tracks]);
+        setCurrentTrackIndex(0);
+        const first = pl.tracks[0];
+        if (outputTarget !== "local") {
+          castTrack(outputTarget, first);
+          if (playerRef.current?.audio?.current) {
+            playerRef.current.audio.current.muted = true;
+            playerRef.current.audio.current.play().catch(() => {
+            });
+          }
+        } else {
+          if (activeCastSession) handleStopCast();
+          if (playerRef.current?.audio?.current) {
+            playerRef.current.audio.current.muted = false;
+            playerRef.current.audio.current.play().catch(() => {
+            });
+          }
+        }
+        showStatus(`Playing playlist "${pl.name}" (${pl.tracks.length} tracks)`);
+      } else {
+        setPlaylist((prev) => [...prev, ...pl.tracks]);
+        showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
+      }
+    };
+    const handleAppendPlaylistToQueue = (pl) => {
+      if (!pl || !pl.tracks || pl.tracks.length === 0) {
+        showStatus(`Playlist "${pl?.name || "Playlist"}" has no tracks.`);
+        return;
+      }
+      setPlaylist((prev) => [...prev, ...pl.tracks]);
+      showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
+    };
+    const castTracks = (tracks, label = null) => {
+      if (!tracks || tracks.length === 0) {
+        showStatus(`${label ? `"${label}"` : "Selection"} has no tracks.`);
+        return;
+      }
+      if (!speakers.length) {
+        showStatus('No Cast speakers found yet. Use "Scan Speakers" first.');
+        return;
+      }
+      const target = outputTarget !== "local" ? outputTarget : speakers[0]?.ip || "all";
+      const list = tracks.map((t) => ({ ...t }));
+      setOutputTarget(target);
+      setPlaylist(list);
+      setCurrentTrackIndex(0);
+      shuffleHistoryRef.current = [];
+      castTrack(target, list[0]);
+      playerRef.current?.audio?.current?.pause();
+      setIsPlaying(true);
+      showStatus(`Casting ${label ? `"${label}"` : `${list.length} track(s)`} to ${getSpeakerName(target)}!`);
+    };
+    const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || "Playlist");
+    const handleCreatePlaylist = async () => {
+      if (!newPlaylistName.trim()) {
+        showStatus("Please enter a playlist name");
+        return;
+      }
+      try {
+        const created = await window.robosAudio.createPlaylist({
+          name: newPlaylistName.trim(),
+          description: newPlaylistDesc.trim(),
+          tracks: []
+        });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setNewPlaylistName("");
+        setNewPlaylistDesc("");
+        setShowCreatePlaylistModal(false);
+        showStatus(`Created playlist "${created?.name || newPlaylistName}"!`);
+      } catch (err) {
+        showStatus("Error creating playlist: " + err.message);
+      }
+    };
+    const handleDeletePlaylist = async (id) => {
+      const pl = playlists.find((p) => p.id === id);
+      const confirmDelete = window.confirm(`Are you sure you want to delete playlist "${pl?.name || "this playlist"}"?`);
+      if (!confirmDelete) return;
+      try {
+        await window.robosAudio.deletePlaylist(id);
+        const updated = playlists.filter((p) => p.id !== id);
+        setPlaylists(updated);
+        if (selectedPlaylistId === id) {
+          setSelectedPlaylistId(updated[0]?.id || null);
+        }
+        showStatus(`Deleted playlist "${pl?.name || ""}"`);
+      } catch (err) {
+        showStatus("Error deleting playlist: " + err.message);
+      }
+    };
+    const handleAddTracksToPlaylist = async (playlistId, tracks) => {
+      if (!tracks || !tracks.length) return;
+      try {
+        await window.robosAudio.addTracksToPlaylist(playlistId, tracks);
+        await refreshPlaylists();
+        const targetPl = playlists.find((p) => p.id === playlistId);
+        setTracksForPlaylist(null);
+        const what = tracks.length === 1 ? `"${tracks[0].title}"` : `${tracks.length} tracks`;
+        showStatus(`Added ${what} to "${targetPl?.name || "playlist"}"!`);
+      } catch (err) {
+        showStatus("Error adding to playlist: " + err.message);
+      }
+    };
+    const handleAddTrackToPlaylist = (playlistId, track) => handleAddTracksToPlaylist(playlistId, [track]);
+    const handleCreatePlaylistFromTracks = async () => {
+      const tracks = tracksForPlaylist || [];
+      const name = quickPlaylistName.trim();
+      if (!name) {
+        showStatus("Please enter a playlist name");
+        return;
+      }
+      try {
+        const created = await window.robosAudio.createPlaylist({ name, description: "", tracks });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setQuickPlaylistName("");
+        setTracksForPlaylist(null);
+        showStatus(`Created playlist "${name}" with ${tracks.length} track(s)!`);
+      } catch (err) {
+        showStatus("Error creating playlist: " + err.message);
+      }
+    };
+    const handleRemoveTrackFromPlaylist = async (playlistId, trackIndex) => {
+      try {
+        await window.robosAudio.removeTrackFromPlaylist(playlistId, trackIndex);
+        await refreshPlaylists();
+        showStatus("Removed track from playlist");
+      } catch (err) {
+        showStatus("Error removing track: " + err.message);
+      }
+    };
+    const handleMoveTrackInPlaylist = async (playlistId, fromIdx, toIdx) => {
+      try {
+        await window.robosAudio.reorderPlaylistTracks(playlistId, fromIdx, toIdx);
+        await refreshPlaylists();
+      } catch (err) {
+        showStatus("Error reordering playlist: " + err.message);
+      }
+    };
+    const handleExportM3u = async (plId) => {
+      try {
+        const res = await window.robosAudio.exportPlaylistM3u(plId);
+        if (!res.canceled && res.ok) {
+          showStatus(`Playlist exported to ${res.path}`);
+        }
+      } catch (err) {
+        showStatus("Error exporting playlist: " + err.message);
+      }
+    };
+    const handleImportM3u = async () => {
+      try {
+        const res = await window.robosAudio.importPlaylistM3u();
+        if (!res.canceled && res.playlist) {
+          await refreshPlaylists();
+          setSelectedPlaylistId(res.playlist.id);
+          showStatus(`Imported playlist "${res.playlist.name}" (${res.playlist.tracks.length} tracks)!`);
+        }
+      } catch (err) {
+        showStatus("Error importing M3U: " + err.message);
+      }
+    };
+    const handleAddFilesToSelectedPlaylist = async () => {
+      if (!selectedPlaylistId) return;
+      try {
+        const res = await window.robosAudio.openFileDialog();
+        if (!res.canceled && res.tracks && res.tracks.length > 0) {
+          await window.robosAudio.addTracksToPlaylist(selectedPlaylistId, res.tracks);
+          await refreshPlaylists();
+          showStatus(`Added ${res.tracks.length} track(s) to playlist`);
+        }
+      } catch (err) {
+        showStatus("Error adding files to playlist: " + err.message);
+      }
+    };
+    const handleSaveQueueAsPlaylist = async () => {
+      if (!saveQueueName.trim()) {
+        showStatus("Please enter a playlist name");
+        return;
+      }
+      try {
+        const created = await window.robosAudio.createPlaylist({
+          name: saveQueueName.trim(),
+          description: saveQueueDesc.trim() || `Saved queue of ${playlist.length} track(s)`,
+          tracks: playlist
+        });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setSaveQueueName("");
+        setSaveQueueDesc("");
+        setShowSaveQueueModal(false);
+        showStatus(`Saved queue as playlist "${created?.name || saveQueueName}" (${playlist.length} tracks)!`);
+      } catch (err) {
+        showStatus("Error saving queue as playlist: " + err.message);
+      }
+    };
+    const handleMoveInQueue = (indices, target) => {
+      const sorted = [...new Set(indices)].filter((i) => i >= 0 && i < playlist.length).sort((a, b) => a - b);
+      if (!sorted.length) return;
+      const moving = sorted.map((i) => playlist[i]);
+      const set = new Set(sorted);
+      const rest = playlist.filter((_, i) => !set.has(i));
+      const pos = Math.max(0, Math.min(rest.length, target - sorted.filter((i) => i < target).length));
+      const next = [...rest.slice(0, pos), ...moving, ...rest.slice(pos)];
+      const current = playlist[currentTrackIndex];
+      setPlaylist(next);
+      setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
+    };
+    const handleRemoveFromQueue = (indices) => {
+      const set = new Set(indices);
+      if (!set.size) return;
+      const next = playlist.filter((_, i) => !set.has(i));
+      const current = playlist[currentTrackIndex];
+      let idx = next.indexOf(current);
+      if (idx < 0) {
+        const removedBefore = indices.filter((i) => i < currentTrackIndex).length;
+        idx = Math.min(currentTrackIndex - removedBefore, next.length - 1);
+      }
+      if (!next.length) {
+        playerRef.current?.audio?.current?.pause();
+        setIsPlaying(false);
+      }
+      setPlaylist(next);
+      setCurrentTrackIndex(Math.max(0, idx));
+      showStatus(set.size === 1 ? "Removed track from queue" : `Removed ${set.size} tracks from queue`);
+    };
+    const handleInsertIntoQueue = (tracks, at) => {
+      const items = tracks.map((t) => ({ ...t }));
+      const pos = Math.max(0, Math.min(playlist.length, at));
+      setPlaylist([...playlist.slice(0, pos), ...items, ...playlist.slice(pos)]);
+      if (playlist.length && pos <= currentTrackIndex) setCurrentTrackIndex(currentTrackIndex + items.length);
+      showStatus(`Added ${items.length} track(s) to the queue`);
+    };
+    const handleSortQueue = (key, dir) => {
+      const current = playlist[currentTrackIndex];
+      const next = (0, import_library_index7.sortTracks)(playlist, key, dir, stats);
+      setPlaylist(next);
+      setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
+    };
+    const handleShuffleQueue = () => {
+      if (playlist.length <= 1) return;
+      const current = playlist[currentTrackIndex];
+      const rest = playlist.filter((_, idx) => idx !== currentTrackIndex);
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      setPlaylist([current, ...rest]);
+      setCurrentTrackIndex(0);
+      showStatus("Queue shuffled!");
+    };
+    const handleClearQueue = () => {
+      if (playlist.length <= 1) return;
+      const current = playlist[currentTrackIndex];
+      setPlaylist([current]);
+      setCurrentTrackIndex(0);
+      showStatus("Cleared other tracks from queue");
+    };
+    const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
+    const libraryById = (0, import_react24.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
+    const resolveSrc = (t) => {
+      if (!t) return "";
+      if (t.cloud) {
+        const fresh = libraryById.get(t.id);
+        if (fresh && fresh.src) return fresh.src;
+      }
+      return t.src || (t.filePath ? fileUrl2(t.filePath) : "");
+    };
+    const handleStopCast = async (targetIp = null) => {
+      const ipToStop = targetIp || activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : null);
+      showStatus(`Stopping playback on ${ipToStop ? getSpeakerName(ipToStop) : "speakers"}...`);
+      try {
+        if (ipToStop && ipToStop !== "all") {
+          await window.robosAudio.castStop(ipToStop);
+        } else {
+          await window.robosAudio.castStopAll();
+        }
+        setActiveCastSession(null);
+        castClock.set({ playing: false });
+        setIsPlaying(false);
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.pause();
+        }
+        showStatus("Cast playback stopped.");
+      } catch (err) {
+        showStatus("Error stopping cast: " + err.message);
+      }
+    };
+    const handleToggleCastPause = async () => {
+      if (!activeCastSession?.ip) return;
+      try {
+        if (activeCastSession.isPaused) {
+          await window.robosAudio.castResume(activeCastSession.ip);
+          setActiveCastSession((prev) => ({ ...prev, isPaused: false }));
+          castClock.set({ playing: true });
+          setIsPlaying(true);
+          showStatus(`Resumed cast on ${getSpeakerName(activeCastSession.ip)}`);
+        } else {
+          await window.robosAudio.castPause(activeCastSession.ip);
+          setActiveCastSession((prev) => ({ ...prev, isPaused: true }));
+          castClock.set({ position: castClock.now(), playing: false });
+          setIsPlaying(false);
+          showStatus(`Paused cast on ${getSpeakerName(activeCastSession.ip)}`);
+        }
+      } catch (err) {
+        showStatus("Error toggling pause: " + err.message);
+      }
+    };
+    const pendingLocalSeekRef = (0, import_react24.useRef)(null);
+    const songLoadsRef = (0, import_react24.useRef)(/* @__PURE__ */ new Set());
+    const handleCastSeek = (seconds) => {
+      castClock.set({ position: seconds });
+      if (outputTarget !== "local") window.robosAudio.castSeek(outputTarget, seconds).catch(() => {
+      });
+    };
+    const castTrack = async (speakerIp, track, { startAt = 0 } = {}) => {
+      if (!speakerIp || speakerIp === "local" || !track) return;
+      castClock.set({ position: startAt || 0, duration: track.duration || 0, playing: false });
+      const loads = /* @__PURE__ */ new Set();
+      songLoadsRef.current = loads;
+      const remember = (res) => {
+        if (res && res.loadId != null) loads.add(res.loadId);
+        return res;
+      };
+      showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
+      const metadata = {
+        title: track.title,
+        artist: track.artist,
+        album: track.album
+      };
+      if (startAt > 0) metadata.currentTime = startAt;
+      const castArt = artUrlFor(artBase.cast, track.artId);
+      if (castArt) {
+        metadata.images = [{ url: castArt }];
+      }
+      try {
+        if (speakerIp === "all") {
+          for (const s of speakers) {
+            if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata).then(remember);
+            else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata).then(remember);
+          }
+          setActiveCastSession({ ip: "all", trackId: track.id, filePath: track.filePath, isPaused: false });
+        } else {
+          if (track.filePath) {
+            remember(await window.robosAudio.castFile(speakerIp, track.filePath, metadata));
+          } else if (track.src) {
+            remember(await window.robosAudio.castUrl(speakerIp, track.src, metadata));
+          }
+          setActiveCastSession({ ip: speakerIp, trackId: track.id, filePath: track.filePath, isPaused: false });
+        }
+        showStatus(`Streaming "${track.title}" to ${getSpeakerName(speakerIp)}!`);
+      } catch (err) {
+        showStatus("Error casting track: " + err.message);
+        setActiveCastSession(null);
+      }
+    };
+    const beginPlayback = (trackToPlay, sameSrc = false) => {
+      const audio = playerRef.current?.audio?.current;
+      playedRef.current = { key: null, counted: false };
+      if (sameSrc && audio) audio.currentTime = 0;
+      if (outputTarget !== "local") {
+        castTrack(outputTarget, trackToPlay);
+        if (audio) audio.pause();
+      } else {
+        if (activeCastSession) handleStopCast();
+        if (audio) {
+          audio.muted = false;
+        }
+        setTimeout(() => {
+          const el = isVideoTrack(trackToPlay) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
+          if (el) {
+            el.muted = false;
+            el.play().catch((err) => {
+              console.warn("[MoviePlayer] Playback error:", err);
+            });
+          }
+        }, 80);
+      }
+      setIsPlaying(true);
+    };
+    const playTracks = (tracks, startIndex = 0, { shuffle = false } = {}) => {
+      if (!tracks || !tracks.length) return;
+      const list = tracks.map((t) => ({ ...t }));
+      let idx = Math.max(0, Math.min(startIndex, list.length - 1));
+      if (shuffle) {
+        for (let i = list.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [list[i], list[j]] = [list[j], list[i]];
+        }
+        idx = 0;
+      }
+      const first = list[idx];
+      if (first.filePath && !first.cloud && window.robosAudio?.ensureFileAccessible) {
+        window.robosAudio.ensureFileAccessible(first.filePath).catch(() => {
+        });
+      }
+      const sameSrc = resolveSrc(first) === resolveSrc(currentTrack);
+      shuffleHistoryRef.current = [];
+      setPlaylist(list);
+      setCurrentTrackIndex(idx);
+      beginPlayback(first, sameSrc);
+      showStatus(list.length === 1 ? `Playing "${first.title}" by ${first.artist || "Unknown"}` : `${shuffle ? "Shuffling" : "Playing"} ${list.length} tracks \u2014 starting with "${first.title}"`);
+    };
+    const queueTracks = (tracks, where = "end") => {
+      if (!tracks || !tracks.length) return;
+      const items = tracks.map((t) => ({ ...t }));
+      if (!playlist.length) {
+        setPlaylist(items);
+        setCurrentTrackIndex(0);
+      } else if (where === "next") {
+        const at = Math.min(playlist.length, currentTrackIndex + 1);
+        setPlaylist([...playlist.slice(0, at), ...items, ...playlist.slice(at)]);
+      } else {
+        setPlaylist([...playlist, ...items]);
+      }
+      const what = items.length === 1 ? `"${items[0].title}"` : `${items.length} tracks`;
+      showStatus(where === "next" ? `${what} will play next` : `Added ${what} to the queue`);
+    };
+    const playTrack = async (track) => {
+      if (!track) return;
+      if (track.filePath && window.robosAudio?.ensureFileAccessible) {
+        await window.robosAudio.ensureFileAccessible(track.filePath).catch(() => {
+        });
+      }
+      let trackToPlay = { ...track };
+      if (!trackToPlay.src && trackToPlay.filePath) {
+        trackToPlay.src = fileUrl2(trackToPlay.filePath);
+      }
+      const sameSrc = resolveSrc(trackToPlay) === resolveSrc(currentTrack);
+      const existingIdx = playlist.findIndex(
+        (t) => t.id && trackToPlay.id && t.id === trackToPlay.id || t.filePath && trackToPlay.filePath && t.filePath === trackToPlay.filePath || t.src && trackToPlay.src && t.src === trackToPlay.src
       );
-    }))), activeTab === "cast" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-view" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h2", null, "Smart TVs, Chromecast & Speakers (Zero-Cloud LAN)"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "muted" }, "Discovers Google TV, Chromecast, Nest Hub, and Cast devices via mDNS (", /* @__PURE__ */ import_react24.default.createElement("code", null, "_googlecast._tcp.local"), ") and streams local or cloud movies over HTTP Range.")), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-sm",
-        onClick: () => window.robosAudio.getCastDevices().then(setCastDevices)
+      if (existingIdx >= 0) {
+        setCurrentTrackIndex(existingIdx);
+      } else {
+        setPlaylist((prev) => [...prev, trackToPlay]);
+        setCurrentTrackIndex(playlist.length);
+      }
+      if (sameSrc && playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = 0;
+      if (outputTarget !== "local") {
+        castTrack(outputTarget, trackToPlay);
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.muted = true;
+          setTimeout(() => {
+            playerRef.current?.audio?.current?.play().catch(() => {
+            });
+          }, 60);
+        }
+      } else {
+        if (activeCastSession) {
+          handleStopCast();
+        }
+        setTimeout(() => {
+          const el = isVideoTrack(trackToPlay) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
+          if (el) {
+            el.muted = false;
+            el.play().catch((err) => {
+              console.warn("[MoviePlayer] Playback error:", err);
+              showStatus(`Playback error: ${err.message || "File not accessible"}`);
+            });
+          }
+        }, 80);
+      }
+      setIsPlaying(true);
+      showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || "Unknown"}`);
+    };
+    const handlePlayerPlay = () => {
+      if (outputTarget === "local") setIsPlaying(true);
+    };
+    const handlePlayerPause = () => {
+      if (outputTarget === "local") setIsPlaying(false);
+    };
+    const handleTogglePlayPause = () => {
+      if (latestRef.current.djSpeaking) {
+        latestRef.current.skipDj();
+        return;
+      }
+      if (outputTarget !== "local") {
+        handleToggleCastPause();
+      } else {
+        if (playerRef.current?.audio?.current) {
+          if (playerRef.current.audio.current.paused) {
+            playerRef.current.audio.current.play().catch(() => {
+            });
+            setIsPlaying(true);
+          } else {
+            playerRef.current.audio.current.pause();
+            setIsPlaying(false);
+          }
+        }
+      }
+    };
+    const pickNextIndex = (fromEnded) => {
+      const n = playlist.length;
+      if (!n) return null;
+      if (shuffleMode && n > 1) {
+        const played = new Set(shuffleHistoryRef.current);
+        let candidates = playlist.map((_, i) => i).filter((i) => i !== currentTrackIndex && !played.has(playlist[i]));
+        if (!candidates.length) {
+          if (fromEnded && repeatMode === "off") return null;
+          shuffleHistoryRef.current = [];
+          candidates = playlist.map((_, i) => i).filter((i) => i !== currentTrackIndex);
+        }
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      }
+      if (currentTrackIndex + 1 < n) return currentTrackIndex + 1;
+      if (fromEnded && repeatMode === "off") return null;
+      return 0;
+    };
+    const restartCurrent = () => {
+      const audio = playerRef.current?.audio?.current;
+      playedRef.current = { key: null, counted: false };
+      if (audio && outputTarget === "local") {
+        audio.currentTime = 0;
+        audio.play().catch(() => {
+        });
+      }
+      if (outputTarget !== "local" && currentTrack) castTrack(outputTarget, currentTrack);
+    };
+    const goToIndex = (idx, { remember = true } = {}) => {
+      const track = playlist[idx];
+      if (!track) return;
+      if (remember && playlist[currentTrackIndex]) {
+        shuffleHistoryRef.current = [...shuffleHistoryRef.current.slice(-500), playlist[currentTrackIndex]];
+      }
+      if (idx === currentTrackIndex) {
+        restartCurrent();
+        return;
+      }
+      setCurrentTrackIndex(idx);
+      if (outputTarget !== "local") castTrack(outputTarget, track);
+      else if (playerRef.current?.audio?.current) playerRef.current.audio.current.muted = false;
+      setIsPlaying(true);
+    };
+    const handlePlayNext = () => {
+      const idx = pickNextIndex(false);
+      if (idx != null) goToIndex(idx);
+    };
+    const plannedNextIndex = (0, import_react24.useMemo)(
+      () => shuffleMode ? pickNextIndex(true) : null,
+      [shuffleMode, currentTrackIndex, playlist, repeatMode]
+      // eslint-disable-line react-hooks/exhaustive-deps
+    );
+    const upcomingTracks = (0, import_react24.useMemo)(() => {
+      if (shuffleMode) return plannedNextIndex != null ? [playlist[plannedNextIndex]] : [];
+      const next = playlist.slice(currentTrackIndex + 1, currentTrackIndex + 4);
+      if (next.length < 3 && repeatMode === "all") next.push(...playlist.slice(0, 3 - next.length));
+      return next;
+    }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
+    const nextCloudPath = upcomingTracks[0] && upcomingTracks[0].cloud && !upcomingTracks[0].cloud.cached ? upcomingTracks[0].filePath : null;
+    (0, import_react24.useEffect)(() => {
+      if (!nextCloudPath || !isPlaying || !window.robosAudio?.prefetchTrack) return void 0;
+      const timer = setTimeout(() => {
+        window.robosAudio.prefetchTrack(nextCloudPath).catch(() => {
+        });
+      }, 5e3);
+      return () => clearTimeout(timer);
+    }, [nextCloudPath, isPlaying]);
+    const dj = useVirtualDj({
+      initial: playerPrefs.dj,
+      upcoming: upcomingTracks,
+      outputTarget,
+      getVolume: () => playerRef.current?.audio?.current?.volume ?? 1,
+      showStatus,
+      getAgent: () => latestRef.current.aiAgent,
+      // DJ lines go to the speaker(s) the music is cast to.
+      castClip: (filePath, meta) => {
+        const target = latestRef.current.outputTarget;
+        if (target === "all") return Promise.all(latestRef.current.speakers.map((sp) => window.robosAudio.castFile(sp.ip, filePath, meta))).then((r) => r.find((x) => x && x.ok === false) || { ok: true });
+        return window.robosAudio.castFile(target, filePath, meta);
+      }
+    });
+    const getControlPlayer = (0, import_react24.useCallback)(() => latestRef.current.controlPlayer(), []);
+    const speakerTakeover = useSpeakerTakeover({ getPlayer: getControlPlayer, showStatus });
+    const handleTrackEnded = () => {
+      if (repeatMode === "one") {
+        restartCurrent();
+        return;
+      }
+      const planned = shuffleMode && plannedNextIndex != null && playlist[plannedNextIndex] ? plannedNextIndex : null;
+      const idx = planned != null ? planned : pickNextIndex(true);
+      if (idx == null) {
+        setIsPlaying(false);
+        showStatus("Reached the end of the queue.");
+        return;
+      }
+      const nextTrack = playlist[idx];
+      if (dj.talkBefore(nextTrack, () => latestRef.current.goToTrack(nextTrack, idx))) {
+        setIsPlaying(false);
+        return;
+      }
+      goToIndex(idx);
+    };
+    const handleDjPreview = (track) => {
+      if (!dj.settings.persona.trim()) {
+        showStatus("Set up the Virtual DJ first: describe the DJ you want.");
+        setShowDjSettings(true);
+        return;
+      }
+      const audio = playerRef.current?.audio?.current;
+      const casting = outputTarget !== "local";
+      const wasPlaying = casting ? castClock.get().playing || isPlaying && !(activeCastSession && activeCastSession.isPaused) : !!(isPlaying && audio && !audio.paused);
+      const song = playlist[currentTrackIndex];
+      const position = casting ? castClock.now() : audio ? audio.currentTime : 0;
+      if (audio && !audio.paused) audio.pause();
+      dj.preview(track, () => {
+        if (casting) {
+          if (song) latestRef.current.resumeCastAt(song, position, wasPlaying);
+          return;
+        }
+        if (wasPlaying) {
+          playerRef.current?.audio?.current?.play().catch(() => {
+          });
+          setIsPlaying(true);
+        }
+      });
+    };
+    const startWithDj = (pl) => {
+      dj.loadScript(pl.dj);
+      playerRef.current?.audio?.current?.pause();
+      setIsPlaying(false);
+      showStatus(`\u{1F399} Starting "${pl.name}" with your Virtual DJ\u2026`);
+      dj.announce(pl.dj.intro, () => latestRef.current.playTracks(pl.tracks, 0));
+    };
+    const handleAiPlaylistPlay = (pl) => {
+      setShowAiPlaylist(false);
+      if (pl.dj && pl.dj.persona) startWithDj(pl);
+      else playTracks(pl.tracks, 0);
+    };
+    const handleAiPlaylistSave = async (pl) => {
+      try {
+        const created = await window.robosAudio.createPlaylist({
+          name: pl.name,
+          description: pl.description,
+          tracks: pl.tracks,
+          ai: pl.ai,
+          dj: pl.dj
+        });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setShowAiPlaylist(false);
+        setActiveTab("playlists");
+        showStatus(`Saved AI playlist "${pl.name}" (${pl.tracks.length} songs)`);
+      } catch (err) {
+        showStatus("Error saving playlist: " + err.message);
+      }
+    };
+    const handlePlayPrev = () => {
+      const audio = playerRef.current?.audio?.current;
+      if (outputTarget !== "local") {
+        if (castClock.now() > 3) {
+          handleCastSeek(0);
+          return;
+        }
+      } else if (audio && audio.currentTime > 3) {
+        audio.currentTime = 0;
+        return;
+      }
+      if (shuffleMode) {
+        const history = shuffleHistoryRef.current;
+        while (history.length) {
+          const idx = playlist.indexOf(history.pop());
+          if (idx >= 0) {
+            goToIndex(idx, { remember: false });
+            return;
+          }
+        }
+      }
+      if (playlist.length <= 1) return;
+      goToIndex((currentTrackIndex - 1 + playlist.length) % playlist.length, { remember: false });
+    };
+    const cycleRepeat = () => {
+      const next = repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off";
+      setRepeatMode(next);
+      showStatus({ off: "Repeat off", all: "Repeat whole queue", one: "Repeat current track" }[next]);
+    };
+    const toggleShuffleMode = () => {
+      setShuffleMode((on) => {
+        shuffleHistoryRef.current = [];
+        showStatus(on ? "Random playback off" : "Random playback on");
+        return !on;
+      });
+    };
+    const libraryNav = libNav[libNav.length - 1];
+    const navigateLibrary = (view) => {
+      setActiveTab("library");
+      setLibNav((prev) => {
+        const top = prev[prev.length - 1];
+        if (JSON.stringify(top) === JSON.stringify(view)) return prev;
+        return [...prev.slice(-40), view];
+      });
+    };
+    const libraryBack = () => setLibNav((prev) => prev.length > 1 ? prev.slice(0, -1) : prev);
+    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index7.albumKeyOf)(track) } });
+    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index7.fold)(name || "Unknown Artist") } });
+    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index7.fold)((0, import_library_index7.splitGenres)(genre)[0] || genre) } });
+    const setLovedTracks = async (tracks, loved) => {
+      const ids = [...new Set((tracks || []).map((t) => t.id).filter(Boolean))];
+      if (!ids.length) return;
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      setStats((prev) => {
+        const next = { ...prev };
+        for (const id of ids) next[id] = { ...prev[id] || {}, loved, lovedAt: loved ? now : null };
+        return next;
+      });
+      try {
+        const changed = await window.robosAudio.setLoved(ids, loved);
+        if (changed) setStats((prev) => ({ ...prev, ...changed }));
+      } catch {
+      }
+      const what = ids.length === 1 ? `"${tracks[0].title}"` : `${ids.length} tracks`;
+      showStatus(loved ? `Added ${what} to Loved` : `Removed ${what} from Loved`);
+    };
+    const recordPlay = (track) => {
+      if (!track?.id || !window.robosAudio?.recordPlay) return;
+      window.robosAudio.recordPlay(track.id).then((entry) => {
+        if (entry) setStats((prev) => ({ ...prev, [track.id]: entry }));
+      }).catch(() => {
+      });
+    };
+    const showInFolder = async (track) => {
+      const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
+      if (!res || !res.ok) showStatus("That file is not reachable right now.");
+    };
+    const openMenu = (0, import_react24.useCallback)((e, items) => {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+      setMenu({ x: e.clientX, y: e.clientY, items });
+    }, []);
+    const closeMenu = (0, import_react24.useCallback)(() => setMenu(null), []);
+    const handleAiMetadataApplied = async (res) => {
+      if (res && res.library) {
+        setLibrary(res.library);
+      } else {
+        await loadLibrary();
+      }
+      await refreshPlaylists();
+      if (Array.isArray(res?.tracks) && res.tracks.length) {
+        const updatedById = new Map(res.tracks.map((t) => [t.id, t]));
+        setPlaylist((prev) => prev.map((pt) => pt && updatedById.has(pt.id) ? { ...pt, ...updatedById.get(pt.id) } : pt));
+        setInfoTrack((prev) => prev && updatedById.has(prev.id) ? { ...prev, ...updatedById.get(prev.id) } : prev);
+      }
+      showStatus(`\u2726 AI updated metadata & artwork for ${res?.updatedCount || 0} track(s)!`);
+    };
+    const libraryCtx = {
+      artBase: artBase.local,
+      stats,
+      currentTrack,
+      isPlaying,
+      openMenu,
+      actions: {
+        playTracks,
+        queueTracks,
+        castTracks,
+        hasSpeakers: speakers.length > 0,
+        addToPlaylist: (tracks) => {
+          setQuickPlaylistName("");
+          setTracksForPlaylist(tracks);
+        },
+        fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
+        setLoved: setLovedTracks,
+        showInfo: setInfoTrack,
+        showInFolder,
+        goToAlbumOf,
+        goToArtist,
+        goToGenre
+      }
+    };
+    latestRef.current = {
+      next: handlePlayNext,
+      prev: handlePlayPrev,
+      toggle: () => handleTogglePlayPause(),
+      playTracks,
+      djSpeaking: !!dj.speaking,
+      aiAgent,
+      skipDj: dj.skip,
+      // Speaker events while casting (see onSpeakerStatusChange).
+      castSongFinished: () => handleTrackEnded(),
+      djCastLineFinished: () => dj.castLineFinished(),
+      countCastPlay: (position, duration) => {
+        const t = playlist[currentTrackIndex];
+        if (!t || position == null) return;
+        const key = `${currentTrackIndex}:${t.id || t.src}`;
+        if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+        if (!playedRef.current.counted && position >= Math.min(30, (duration || t.duration || 60) / 2)) {
+          playedRef.current.counted = true;
+          recordPlay(t);
+        }
       },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "refresh", size: 14 }),
-      " Refresh mDNS"
-    )), castStatusText && /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-banner" }, castStatusText), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-grid" }, castDevices.length === 0 ? /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-state" }, "No Google Cast TVs or displays auto-discovered on this network yet. Add one by IP below.") : castDevices.map((dev) => {
-      const connected = activeCastDevice && activeCastDevice.id === dev.id;
-      return /* @__PURE__ */ import_react24.default.createElement("div", { key: dev.id, className: `cast-card ${connected ? "active" : ""}` }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-card-icon" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "tv", size: 22 })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-card-info" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-card-name" }, dev.name), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-card-sub" }, dev.model, " \u2022 ", dev.host, ":", dev.port)), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-card-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+      outputTarget,
+      speakers,
+      // Re-cast the song after a DJ preview, from `position`; paused if it was paused.
+      resumeCastAt: async (song, position, play) => {
+        await castTrack(outputTarget, song, { startAt: position });
+        if (play) setIsPlaying(true);
+        else if (outputTarget !== "all") {
+          await window.robosAudio.castPause(outputTarget);
+          setActiveCastSession((prev) => prev ? { ...prev, isPaused: true } : prev);
+        }
+      },
+      controlClipFinished: (loadId) => speakerTakeover.clipFinished(loadId),
+      // What the control API sees and does (see useSpeakerTakeover).
+      controlPlayer: () => {
+        const audio = playerRef.current?.audio?.current;
+        const casting = outputTarget !== "local";
+        return {
+          outputTarget,
+          speakers,
+          song: playlist[currentTrackIndex] || null,
+          castActive: !!activeCastSession,
+          position: casting ? castClock.now() : audio ? audio.currentTime : 0,
+          playing: casting ? castClock.get().playing || isPlaying && !!activeCastSession && !activeCastSession.isPaused : !!(audio && !audio.paused),
+          djSpeaking: !!dj.speaking,
+          holdClock: (position) => castClock.set({ position, playing: false }),
+          resumeCastAt: (song, position, play) => latestRef.current.resumeCastAt(song, position, play),
+          pauseMusic: async () => {
+            if (outputTarget === "local") {
+              if (audio && !audio.paused) {
+                audio.pause();
+                setIsPlaying(false);
+              }
+            } else if (activeCastSession && !activeCastSession.isPaused) {
+              await handleToggleCastPause();
+            }
+            return { ok: true, playing: false };
+          },
+          resumeMusic: async () => {
+            const song = playlist[currentTrackIndex];
+            if (!song) return { ok: false, error: "Nothing to play" };
+            if (outputTarget === "local") {
+              if (audio && audio.paused) {
+                audio.play().catch(() => {
+                });
+                setIsPlaying(true);
+              }
+            } else if (activeCastSession) {
+              if (activeCastSession.isPaused) await handleToggleCastPause();
+            } else {
+              await castTrack(outputTarget, song, { startAt: castClock.now() });
+              setIsPlaying(true);
+            }
+            return { ok: true, playing: true };
+          }
+        };
+      },
+      // After a DJ break the queue may have changed: find the planned song again.
+      goToTrack: (track, fallbackIdx) => {
+        const idx = playlist.indexOf(track);
+        if (idx >= 0) goToIndex(idx);
+        else if (playlist[fallbackIdx]) goToIndex(fallbackIdx);
+      }
+    };
+    const playAmbient = (type) => {
+      if (activeAmbient === type) {
+        if (ambientNodeRef.current) {
+          try {
+            ambientNodeRef.current.stop();
+          } catch {
+          }
+          ambientNodeRef.current = null;
+        }
+        setActiveAmbient(null);
+        return;
+      }
+      if (ambientNodeRef.current) {
+        try {
+          ambientNodeRef.current.stop();
+        } catch {
+        }
+        ambientNodeRef.current = null;
+      }
+      if (!audioCtxRef.current) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtxRef.current = new AudioCtx();
+      }
+      const actx = audioCtxRef.current;
+      if (actx.state === "suspended") actx.resume();
+      const gain = actx.createGain();
+      gain.gain.setValueAtTime(0.3, actx.currentTime);
+      gain.connect(actx.destination);
+      if (type === "rain" || type === "pink") {
+        const bufferSize = actx.sampleRate * 2;
+        const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99 * b0 + white * 0.05;
+          b1 = 0.96 * b1 + white * 0.15;
+          b2 = 0.86 * b2 + white * 0.3;
+          data[i] = (b0 + b1 + b2) * 0.15;
+        }
+        const noise = actx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+        if (type === "rain") {
+          const filter = actx.createBiquadFilter();
+          filter.frequency.setValueAtTime(800, actx.currentTime);
+          noise.connect(filter);
+          filter.connect(gain);
+        } else {
+          noise.connect(gain);
+        }
+        noise.start();
+        ambientNodeRef.current = noise;
+      } else if (type === "synth") {
+        const o1 = actx.createOscillator();
+        const o2 = actx.createOscillator();
+        o1.type = "sawtooth";
+        o1.frequency.setValueAtTime(55, actx.currentTime);
+        o2.type = "sawtooth";
+        o2.frequency.setValueAtTime(55.5, actx.currentTime);
+        const filter = actx.createBiquadFilter();
+        filter.frequency.setValueAtTime(350, actx.currentTime);
+        o1.connect(filter);
+        o2.connect(filter);
+        filter.connect(gain);
+        o1.start();
+        o2.start();
+        ambientNodeRef.current = { stop: () => {
+          o1.stop();
+          o2.stop();
+        } };
+      }
+      setActiveAmbient(type);
+      showStatus(`Playing procedural ambient soundscape: ${type}`);
+    };
+    latestRef.current.currentTrack = currentTrack;
+    latestRef.current.currentIndex = currentTrackIndex;
+    latestRef.current.recordPlay = recordPlay;
+    (0, import_react24.useEffect)(() => {
+      const audio = playerRef.current?.audio?.current;
+      if (!audio) return void 0;
+      const onTime = () => {
+        const { currentTrack: t, currentIndex } = latestRef.current;
+        if (!t) return;
+        const key = `${currentIndex}:${t.id || t.src}`;
+        if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+        if (playedRef.current.counted) return;
+        const threshold = Math.min(30, (audio.duration || 60) / 2);
+        if (audio.currentTime >= threshold) {
+          playedRef.current.counted = true;
+          latestRef.current.recordPlay(t);
+        }
+      };
+      const onEnded = () => {
+        playedRef.current = { key: null, counted: false };
+      };
+      audio.addEventListener("timeupdate", onTime);
+      audio.addEventListener("ended", onEnded);
+      return () => {
+        audio.removeEventListener("timeupdate", onTime);
+        audio.removeEventListener("ended", onEnded);
+      };
+    }, []);
+    (0, import_react24.useEffect)(() => {
+      if (!("mediaSession" in navigator)) return;
+      const isPaused = () => {
+        const audio = playerRef.current?.audio?.current;
+        return !audio || audio.paused;
+      };
+      const handlers = {
+        previoustrack: () => latestRef.current.prev(),
+        nexttrack: () => latestRef.current.next(),
+        play: () => {
+          if (isPaused()) latestRef.current.toggle();
+        },
+        pause: () => {
+          if (!isPaused()) latestRef.current.toggle();
+        }
+      };
+      for (const [action, fn] of Object.entries(handlers)) {
+        try {
+          navigator.mediaSession.setActionHandler(action, fn);
+        } catch {
+        }
+      }
+    }, []);
+    (0, import_react24.useEffect)(() => {
+      if (!("mediaSession" in navigator) || !currentTrack || typeof MediaMetadata === "undefined") return;
+      const art = artUrlFor(artBase.local, currentTrack.artId);
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentTrack.title || "",
+          artist: currentTrack.artist || "",
+          album: currentTrack.album || "",
+          artwork: art ? [{ src: art, sizes: "512x512" }] : []
+        });
+      } catch {
+      }
+    }, [currentTrack?.id, currentTrack?.title, currentTrack?.artId, artBase.local]);
+    (0, import_react24.useEffect)(() => {
+      const onKey = (e) => {
+        const tag = (e.target.tagName || "").toLowerCase();
+        const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
+        const mod = e.ctrlKey || e.metaKey;
+        if (mod && e.key.toLowerCase() === "f") {
+          e.preventDefault();
+          setActiveTab("library");
+          if (searchInputRef.current) searchInputRef.current.focus();
+          else setTimeout(() => searchInputRef.current?.focus(), 30);
+          return;
+        }
+        if (typing || e.target.closest && e.target.closest(".rhap_container")) return;
+        if (e.code === "Space" && tag !== "button") {
+          e.preventDefault();
+          latestRef.current.toggle();
+        } else if (mod && e.key === "ArrowRight") {
+          e.preventDefault();
+          latestRef.current.next();
+        } else if (mod && e.key === "ArrowLeft") {
+          e.preventDefault();
+          latestRef.current.prev();
+        }
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, []);
+    (0, import_react24.useEffect)(() => {
+      const timer = setTimeout(() => {
+        try {
+          const start = Math.max(0, Math.min(currentTrackIndex - 500, playlist.length - MAX_SAVED_QUEUE));
+          const queue = playlist.slice(start, start + MAX_SAVED_QUEUE).map((t) => t.cloud ? { ...t, src: void 0 } : t);
+          localStorage.setItem(QUEUE_KEY, JSON.stringify({ queue, index: Math.min(currentTrackIndex - start, Math.max(0, queue.length - 1)) }));
+        } catch {
+        }
+      }, 400);
+      return () => clearTimeout(timer);
+    }, [playlist, currentTrackIndex]);
+    (0, import_react24.useEffect)(() => {
+      try {
+        localStorage.setItem(PLAYER_PREFS_KEY, JSON.stringify({
+          repeat: repeatMode,
+          shuffle: shuffleMode,
+          dockCollapsed,
+          librarySection: libraryNav.section,
+          dj: dj.settings,
+          aiAgent
+        }));
+      } catch {
+      }
+    }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings, aiAgent]);
+    return /* @__PURE__ */ import_react24.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react24.default.createElement(
+      "div",
+      {
+        className: "react-audio-app",
+        onDragOver: (e) => e.preventDefault(),
+        onDrop: handleDrop
+      },
+      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react24.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and Google Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
-          className: "btn btn-sm",
-          disabled: testingDeviceId === dev.id,
-          onClick: () => handleTestCastSpeaker(dev),
-          title: "Play a test chord chime on this TV/speaker"
+          id: "btn-header-add-folder",
+          className: "btn-accent",
+          onClick: handleSelectFolder,
+          title: "Open built-in system file manager to add music folder"
         },
-        testingDeviceId === dev.id ? "Testing\u2026" : "Test Chime"
+        /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Add Folder")
       ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
-          className: `btn btn-sm ${connected ? "btn-danger" : "btn-accent"}`,
-          onClick: () => handleSelectCastDevice(dev)
+          id: "btn-header-add-files",
+          className: "btn-secondary",
+          onClick: handleAddFiles,
+          title: "Open file picker to select individual audio files"
         },
-        connected ? "Disconnect" : "Cast Here"
-      )));
-    })), /* @__PURE__ */ import_react24.default.createElement(CastClockCard, { castDevices, activeCastDevice }), /* @__PURE__ */ import_react24.default.createElement(CastAmbientCard, { castDevices, activeCastDevice }), /* @__PURE__ */ import_react24.default.createElement("form", { className: "manual-cast-form", onSubmit: handleAddManualDevice }, /* @__PURE__ */ import_react24.default.createElement("h4", null, "Add Smart TV / Chromecast by IP Address"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "manual-cast-inputs" }, /* @__PURE__ */ import_react24.default.createElement(
+        /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react24.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Add Files")
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react24.default.createElement(
+        "select",
+        {
+          id: "output-select",
+          value: outputTarget,
+          onChange: (e) => {
+            const target = e.target.value;
+            setOutputTarget(target);
+            const audio = playerRef.current?.audio?.current;
+            if (target === "local") {
+              if (outputTarget !== "local" && currentTrack) pendingLocalSeekRef.current = castClock.now();
+              if (activeCastSession) handleStopCast();
+              if (audio) audio.muted = false;
+            } else {
+              const from = outputTarget === "local" && audio ? audio.currentTime : castClock.now();
+              if (audio) {
+                audio.pause();
+                audio.muted = true;
+              }
+              if (currentTrack) {
+                castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
+              }
+            }
+            showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
+          }
+        },
+        /* @__PURE__ */ import_react24.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
+        speakers.map((s) => /* @__PURE__ */ import_react24.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
+        speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-scan-speakers",
+          className: `btn-icon ${isScanning ? "loading" : ""}`,
+          onClick: refreshSpeakers,
+          title: "Scan LAN for Google Cast speakers"
+        },
+        /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M16 21h5v-5" })),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Scan Speakers")
+      )))),
+      /* @__PURE__ */ import_react24.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "tab-btn-player",
+          className: `tab-btn ${activeTab === "player" ? "active" : ""}`,
+          onClick: () => setActiveTab("player")
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "note" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Now Playing")
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "tab-btn-playlists",
+          className: `tab-btn ${activeTab === "playlists" ? "active" : ""}`,
+          onClick: () => setActiveTab("playlists")
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "list" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Playlists (", playlists.length, ")")
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "tab-btn-library",
+          className: `tab-btn ${activeTab === "library" ? "active" : ""}`,
+          onClick: () => setActiveTab("library")
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "library" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Library (", library.tracks.length, ")")
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "tab-btn-cloud",
+          className: `tab-btn ${activeTab === "cloud" ? "active" : ""}`,
+          onClick: () => setActiveTab("cloud")
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "cloud" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Cloud Storage")
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "tab-btn-ambient",
+          className: `tab-btn ${activeTab === "ambient" ? "active" : ""}`,
+          onClick: () => setActiveTab("ambient")
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "wave" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Ambient")
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "tab-btn-speakers",
+          className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
+          onClick: () => setActiveTab("speakers")
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "speaker" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Speakers (", speakers.length, ")")
+      ), /* @__PURE__ */ import_react24.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-toggle-queue-panel",
+          className: `tab-btn ${dockCollapsed ? "" : "active"}`,
+          onClick: () => setDockCollapsed((c) => !c),
+          title: "Show or hide the Now Playing playlist"
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "panel" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Now Playing list")
+      )),
+      /* @__PURE__ */ import_react24.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react24.default.createElement("main", { className: `tab-content ${activeTab === "library" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react24.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react24.default.createElement(
+        "div",
+        {
+          className: "scan-bar-fill",
+          style: {
+            width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
+          }
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react24.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react24.default.createElement(
+        "span",
+        {
+          className: "cast-pulse-dot",
+          style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
+        }
+      ), /* @__PURE__ */ import_react24.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: () => {
+        setOutputTarget("local");
+        handleStopCast();
+      } }, "Switch to Local Desktop"))), isVideoTrack(currentTrack) && /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-box" }, /* @__PURE__ */ import_react24.default.createElement(
+        "video",
+        {
+          id: "cinema-video-element",
+          ref: videoRef,
+          className: `cinema-video-el fit-${videoFit}`,
+          src: outputTarget === "local" ? resolveSrc(currentTrack) : void 0,
+          poster: artUrlFor(artBase.local, currentTrack?.artId) || void 0,
+          controls: true,
+          playsInline: true,
+          onPlay: () => setIsPlaying(true),
+          onPause: () => setIsPlaying(false),
+          onEnded: () => {
+            if (outputTarget === "local") handleTrackEnded();
+          }
+        }
+      ), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          onClick: () => setVideoFit((f) => f === "contain" ? "cover" : "contain"),
+          title: "Toggle widescreen aspect fit"
+        },
+        "Fit: ",
+        videoFit === "contain" ? "Letterbox" : "Fill"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          onClick: () => {
+            if (videoRef.current && document.pictureInPictureEnabled) {
+              if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {
+              });
+              else videoRef.current.requestPictureInPicture().catch(() => {
+              });
+            }
+          },
+          title: "Toggle Picture-in-Picture"
+        },
+        "PiP"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          onClick: () => {
+            const v = videoRef.current;
+            if (v && v.requestFullscreen) v.requestFullscreen().catch(() => {
+            });
+          },
+          title: "Fullscreen video"
+        },
+        "Fullscreen"
+      )))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react24.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react24.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react24.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react24.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react24.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react24.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react24.default.createElement(
+        es_default,
+        {
+          ref: playerRef,
+          src: outputTarget === "local" && !isVideoTrack(currentTrack) ? resolveSrc(currentTrack) : void 0,
+          onLoadedMetaData: () => {
+            const at = pendingLocalSeekRef.current;
+            const a = getMediaEl();
+            if (at != null && a) {
+              pendingLocalSeekRef.current = null;
+              a.currentTime = at;
+            }
+          },
+          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react24.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react24.default.createElement(MiniProgress, { key: "video-progress", getAudio: () => videoRef.current })] : void 0,
+          customControlsSection: outputTarget !== "local" || isVideoTrack(currentTrack) ? [
+            RHAP_UI.ADDITIONAL_CONTROLS,
+            /* @__PURE__ */ import_react24.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react24.default.createElement(
+              "button",
+              {
+                type: "button",
+                id: "cast-play-pause",
+                className: "rhap_button-clear rhap_main-controls-button rhap_play-pause-button",
+                "aria-label": isPlaying ? "Pause" : "Play",
+                onClick: () => {
+                  if (outputTarget === "local" && isVideoTrack(currentTrack) && videoRef.current) {
+                    if (videoRef.current.paused) {
+                      videoRef.current.play().catch(() => {
+                      });
+                      setIsPlaying(true);
+                    } else {
+                      videoRef.current.pause();
+                      setIsPlaying(false);
+                    }
+                  } else {
+                    handleTogglePlayPause();
+                  }
+                }
+              },
+              /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 34 })
+            ), /* @__PURE__ */ import_react24.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: handlePlayNext }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 24 }))),
+            /* @__PURE__ */ import_react24.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })
+          ] : void 0,
+          showSkipControls: true,
+          showJumpControls: false,
+          autoPlayAfterSrcChange: true,
+          onClickNext: handlePlayNext,
+          onClickPrevious: handlePlayPrev,
+          onEnded: () => {
+            if (outputTarget === "local") handleTrackEnded();
+          },
+          onPlay: handlePlayerPlay,
+          onPause: handlePlayerPause,
+          onError: (e) => {
+            if (!currentTrack || outputTarget !== "local") return;
+            console.warn("[AudioPlayer] Audio playback error:", e);
+            setIsPlaying(false);
+            showStatus("Playback error: Track file may be missing, network drive unmounted, or format unsupported.");
+          },
+          className: "robos-rhap-theme",
+          customIcons: {
+            play: /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "play", size: 34 }),
+            pause: /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "pause", size: 34 }),
+            previous: /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 24 }),
+            next: /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 24 }),
+            volume: /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "volume", size: 20 }),
+            volumeMute: /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "volumeMute", size: 20 })
+          },
+          layout: "stacked",
+          customAdditionalControls: [],
+          muted: outputTarget !== "local"
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement(
+        Lyrics,
+        {
+          track: currentTrack,
+          getTime: () => outputTarget !== "local" ? castClock.now() : getMediaEl()?.currentTime ?? null,
+          onSeek: (t) => {
+            if (outputTarget !== "local") handleCastSeek(t);
+            else if (getMediaEl()) getMediaEl().currentTime = t;
+          }
+        }
+      ))), activeTab === "playlists" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-create-playlist",
+          className: "btn-accent",
+          onClick: () => setShowCreatePlaylistModal(true)
+        },
+        "New Playlist"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-ai-playlist",
+          className: "btn-accent ai-btn",
+          onClick: () => setShowAiPlaylist(true),
+          title: "Describe a playlist and let your RobOS agent build it"
+        },
+        "\u2726 AI Playlist"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-import-m3u",
+          className: "btn-secondary",
+          onClick: handleImportM3u,
+          title: "Import external .m3u or .m3u8 playlist file"
+        },
+        "Import M3U"
+      ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlists-sidebar", style: { width: playlistSidebarWidth } }, playlists.length === 0 ? /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react24.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react24.default.createElement(
+        "div",
+        {
+          key: pl.id,
+          className: `playlist-sidebar-card ${selectedPlaylistId === pl.id ? "active" : ""}`,
+          onClick: () => setSelectedPlaylistId(pl.id)
+        },
+        /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react24.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react24.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
+        /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react24.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react24.default.createElement(
+          "button",
+          {
+            className: "btn-playlist-quick-play",
+            title: `Play "${pl.name}"`,
+            onClick: (e) => {
+              e.stopPropagation();
+              handlePlayPlaylist(pl, true);
+            }
+          },
+          /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "play", size: 14 })
+        )
+      ))), /* @__PURE__ */ import_react24.default.createElement(
+        Splitter,
+        {
+          id: "playlists-splitter",
+          label: "Playlist list width",
+          width: playlistSidebarWidth,
+          onChange: setPlaylistSidebarWidth,
+          min: 180,
+          max: () => Math.max(220, Math.min(560, window.innerWidth - 700)),
+          defaultWidth: PLAYLIST_SIDEBAR_WIDTH
+        }
+      ), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react24.default.createElement(import_react24.default.Fragment, null, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react24.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react24.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react24.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react24.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-play-all-playlist",
+          className: "btn-accent",
+          onClick: () => handlePlayPlaylist(selectedPlaylist, true),
+          disabled: !selectedPlaylist.tracks?.length,
+          title: "Play all tracks in order (replaces queue)"
+        },
+        "Play All"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-append-playlist",
+          className: "btn-secondary",
+          onClick: () => handleAppendPlaylistToQueue(selectedPlaylist),
+          disabled: !selectedPlaylist.tracks?.length,
+          title: "Append all tracks to current queue"
+        },
+        "Append to Queue"
+      ), speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-cast-playlist",
+          className: "btn-secondary",
+          onClick: () => handleCastPlaylist(selectedPlaylist),
+          disabled: !selectedPlaylist.tracks?.length,
+          title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
+        },
+        "Cast Playlist"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-export-m3u",
+          className: "btn-secondary",
+          onClick: () => handleExportM3u(selectedPlaylist.id),
+          title: "Export playlist to .m3u file"
+        },
+        "Export M3U"
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          id: "btn-delete-playlist",
+          className: "btn-chip btn-stop-cast",
+          onClick: () => handleDeletePlaylist(selectedPlaylist.id),
+          title: "Delete playlist"
+        },
+        "Delete"
+      ))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react24.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react24.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          className: "btn-accent",
+          onClick: handleAddFilesToSelectedPlaylist,
+          style: { marginTop: "12px" }
+        },
+        "Add Audio Files from Disk"
+      )) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist col-resizable" }, "Artist", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album col-resizable" }, "Album", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react24.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, formatDuration5(track.duration)), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          className: "btn-row-action",
+          title: "Play track",
+          onClick: () => playTrack(track)
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "play", size: 14 })
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          className: "btn-row-action",
+          title: "Move up",
+          disabled: tIdx === 0,
+          onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "up", size: 14 })
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          className: "btn-row-action",
+          title: "Move down",
+          disabled: tIdx === selectedPlaylist.tracks.length - 1,
+          onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "down", size: 14 })
+      ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          className: "btn-row-action btn-danger",
+          title: "Remove from playlist",
+          onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)
+        },
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "x", size: 14 })
+      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react24.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react24.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react24.default.createElement(
+        "select",
+        {
+          id: "select-track-to-add",
+          className: "library-track-picker",
+          defaultValue: "",
+          onChange: (e) => {
+            if (!e.target.value) return;
+            const track = library.tracks.find((t) => t.id === e.target.value || t.filePath === e.target.value);
+            if (track) {
+              handleAddTrackToPlaylist(selectedPlaylist.id, track);
+              e.target.value = "";
+            }
+          }
+        },
+        /* @__PURE__ */ import_react24.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react24.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration5(t.duration), ")"))
+      ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react24.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react24.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react24.default.createElement(
+        "span",
+        {
+          className: "cast-pulse-dot",
+          style: { background: activeCastSession.isPaused ? "#eab308" : "#22c55e" }
+        }
+      ), /* @__PURE__ */ import_react24.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react24.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react24.default.createElement(
+        Library,
+        {
+          tracks: library.tracks,
+          folders,
+          nav: libraryNav,
+          onNavigate: navigateLibrary,
+          onBack: libraryBack,
+          canGoBack: libNav.length > 1,
+          searchInputRef,
+          isScanning: isScanningLibrary,
+          onAiPlaylist: () => setShowAiPlaylist(true),
+          onAiFixMetadata: (scopedTracks) => setTracksForAiFix(Array.isArray(scopedTracks) ? scopedTracks : []),
+          onAddFolder: handleSelectFolder,
+          onAddFiles: handleAddFiles,
+          onRefresh: async () => {
+            await loadLibrary();
+            await loadStats();
+            showStatus("Library refreshed from disk cache.");
+          },
+          folderProps: {
+            onAddLocal: handleSelectFolder,
+            onAddCloud: () => setActiveTab("cloud"),
+            onRescan: handleRescanFolder,
+            onEnabled: handleFolderEnabled,
+            onRename: handleRenameFolder,
+            onRemove: handleRemoveFolder,
+            busyId: syncingFolder === "all" ? "__all__" : syncingFolder
+          }
+        }
+      )), activeTab === "cloud" && /* @__PURE__ */ import_react24.default.createElement(
+        CloudBrowser,
+        {
+          folders,
+          onEnabled: handleFolderEnabled,
+          onRescan: handleRescanFolder,
+          busyId: syncingFolder,
+          showStatus,
+          onFolders: applyFolderState,
+          onLibrary: (lib) => {
+            if (lib) setLibrary(lib);
+          }
+        }
+      ), activeTab === "ambient" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "ambient-grid" }, [
+        { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
+        { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
+        { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
+      ].map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react24.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => {
+        setOutputTarget(s.ip);
+        setActiveTab("player");
+      } }, "Set as Output"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+        showStatus(`Playing harmonic test chime on ${s.name}...`);
+        try {
+          await window.robosAudio.playTestChime(s.ip);
+          showStatus(`Test chime played on ${s.name}`);
+        } catch (err) {
+          showStatus("Test chime error: " + err.message);
+        }
+      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react24.default.createElement(
+        NowPlayingPanel,
+        {
+          queue: playlist,
+          currentIndex: currentTrack ? currentTrackIndex : -1,
+          collapsed: dockCollapsed,
+          onToggleCollapsed: () => setDockCollapsed((c) => !c),
+          onPlayIndex: (idx) => goToIndex(idx),
+          onRemove: handleRemoveFromQueue,
+          onMove: handleMoveInQueue,
+          onInsert: handleInsertIntoQueue,
+          onSort: handleSortQueue,
+          onClear: handleClearQueue,
+          onSave: () => setShowSaveQueueModal(true),
+          onShuffleOrder: handleShuffleQueue,
+          shuffle: shuffleMode,
+          repeat: repeatMode,
+          onToggleShuffle: toggleShuffleMode,
+          onCycleRepeat: cycleRepeat,
+          dj: {
+            enabled: dj.active,
+            speaking: dj.speaking,
+            persona: dj.settings.persona,
+            onSkip: dj.skip,
+            nextTrack: upcomingTracks[0] || null,
+            onPreview: handleDjPreview,
+            onSettings: () => setShowDjSettings(true),
+            onAiPlaylist: () => setShowAiPlaylist(true)
+          }
+        }
+      )),
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react24.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react24.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react24.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react24.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react24.default.createElement(MiniProgress, { getAudio: getMediaEl })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      showAiPlaylist && /* @__PURE__ */ import_react24.default.createElement(
+        AiPlaylistModal,
+        {
+          initialDj: dj.settings,
+          agent: aiAgent,
+          onAgentChange: setAiAgent,
+          onClose: () => setShowAiPlaylist(false),
+          onPlay: handleAiPlaylistPlay,
+          onSave: handleAiPlaylistSave
+        }
+      ),
+      showDjSettings && /* @__PURE__ */ import_react24.default.createElement(
+        DjSettingsModal,
+        {
+          value: dj.settings,
+          agent: aiAgent,
+          onAgentChange: setAiAgent,
+          onClose: () => setShowDjSettings(false),
+          onSave: (next) => {
+            dj.setSettings(next);
+            setShowDjSettings(false);
+            showStatus(next.enabled ? "\u{1F399} Virtual DJ is on \u2014 they\u2019ll talk between songs." : "Virtual DJ is off.");
+          }
+        }
+      ),
+      tracksForAiFix !== null && /* @__PURE__ */ import_react24.default.createElement(
+        AiFixMetadataModal,
+        {
+          tracks: library.tracks,
+          initialTracks: tracksForAiFix,
+          agent: aiAgent,
+          onAgentChange: setAiAgent,
+          onApplied: handleAiMetadataApplied,
+          onClose: () => setTracksForAiFix(null)
+        }
+      ),
+      showCreatePlaylistModal && /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react24.default.createElement(
+        "input",
+        {
+          id: "input-playlist-name",
+          type: "text",
+          placeholder: "e.g. Focus Flow, Night Drive...",
+          value: newPlaylistName,
+          autoFocus: true,
+          onChange: (e) => setNewPlaylistName(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") handleCreatePlaylist();
+          }
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react24.default.createElement(
+        "textarea",
+        {
+          id: "input-playlist-desc",
+          rows: "3",
+          placeholder: "A collection of favorite tracks...",
+          value: newPlaylistDesc,
+          onChange: (e) => setNewPlaylistDesc(e.target.value)
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
+      showSaveQueueModal && /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react24.default.createElement(
+        "input",
+        {
+          id: "input-save-queue-name",
+          type: "text",
+          placeholder: "e.g. My Queue Session...",
+          value: saveQueueName,
+          autoFocus: true,
+          onChange: (e) => setSaveQueueName(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") handleSaveQueueAsPlaylist();
+          }
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react24.default.createElement(
+        "textarea",
+        {
+          id: "input-save-queue-desc",
+          rows: "2",
+          placeholder: "Saved queue session...",
+          value: saveQueueDesc,
+          onChange: (e) => setSaveQueueDesc(e.target.value)
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
+      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react24.default.createElement(import_react24.default.Fragment, null, /* @__PURE__ */ import_react24.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react24.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react24.default.createElement(import_react24.default.Fragment, null, /* @__PURE__ */ import_react24.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react24.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react24.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react24.default.createElement(
+        "div",
+        {
+          key: pl.id,
+          className: "modal-playlist-select-item",
+          onClick: () => handleAddTracksToPlaylist(pl.id, tracksForPlaylist)
+        },
+        /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react24.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
+        /* @__PURE__ */ import_react24.default.createElement("span", { className: "btn-chip" }, "Add")
+      )))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react24.default.createElement(
+        "input",
+        {
+          id: "input-quick-playlist-name",
+          type: "text",
+          placeholder: "New playlist name",
+          value: quickPlaylistName,
+          onChange: (e) => setQuickPlaylistName(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") handleCreatePlaylistFromTracks();
+          }
+        }
+      ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
+      /* @__PURE__ */ import_react24.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
+      infoTrack && /* @__PURE__ */ import_react24.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
+      statusMsg && /* @__PURE__ */ import_react24.default.createElement("div", { className: "toast" }, statusMsg)
+    ));
+  }
+  function MiniProgress({ getAudio }) {
+    const [time, setTime] = (0, import_react24.useState)({ current: 0, duration: 0 });
+    (0, import_react24.useEffect)(() => {
+      const audio = getAudio();
+      if (!audio) return void 0;
+      const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
+      update();
+      audio.addEventListener("timeupdate", update);
+      audio.addEventListener("durationchange", update);
+      audio.addEventListener("emptied", update);
+      return () => {
+        audio.removeEventListener("timeupdate", update);
+        audio.removeEventListener("durationchange", update);
+        audio.removeEventListener("emptied", update);
+      };
+    }, []);
+    const fmt2 = (sec) => {
+      if (!sec || !isFinite(sec)) return "0:00";
+      const m = Math.floor(sec / 60);
+      const ss = Math.floor(sec % 60);
+      return `${m}:${ss < 10 ? "0" : ""}${ss}`;
+    };
+    const pct = time.duration ? time.current / time.duration * 100 : 0;
+    return /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(time.current)), /* @__PURE__ */ import_react24.default.createElement(
       "input",
       {
-        type: "text",
-        className: "input",
-        placeholder: "Living Room Google TV",
-        value: manualName,
-        onChange: (e) => setManualName(e.target.value)
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "input",
-      {
-        type: "text",
-        className: "input",
-        placeholder: "192.168.1.50",
-        value: manualHost,
-        onChange: (e) => setManualHost(e.target.value)
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement("button", { type: "submit", className: "btn btn-accent" }, "Add TV / Device"))))), !npCollapsed && /* @__PURE__ */ import_react24.default.createElement(
-      "div",
-      {
-        className: "pane-resizer",
-        onMouseDown: queueResize.onMouseDown,
-        title: "Drag to resize Screening Queue dock"
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      NowPlayingPanel,
-      {
-        queue,
-        currentTrack,
-        isPlaying,
-        collapsed: npCollapsed,
-        width: queueResize.size,
-        onToggleCollapse: () => setNpCollapsed((c) => !c),
-        onPlayTrack: handlePlayTrack,
-        onRemoveFromQueue: (idx) => setQueue((prev) => prev.filter((_, i) => i !== idx)),
-        onMoveQueueItem: (fromIdx, toIdx) => {
-          setQueue((prev) => {
-            const next = [...prev];
-            if (toIdx < 0 || toIdx >= next.length) return prev;
-            const [item] = next.splice(fromIdx, 1);
-            next.splice(toIdx, 0, item);
-            return next;
-          });
-        },
-        onClearQueue: () => {
-          setQueue([]);
-          setCurrentIndex(-1);
-          setIsPlaying(false);
+        type: "range",
+        min: "0",
+        max: time.duration || 0,
+        step: "0.5",
+        value: time.current,
+        disabled: !time.duration,
+        style: { "--pct": `${pct}%` },
+        "aria-label": "Seek",
+        onChange: (e) => {
+          const audio = getAudio();
+          if (audio) audio.currentTime = Number(e.target.value);
         }
       }
-    )), /* @__PURE__ */ import_react24.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react24.default.createElement(
-      "div",
-      {
-        className: "mini-track-info",
-        onClick: () => setActiveTab("now-playing"),
-        style: { cursor: "pointer" }
-      },
-      /* @__PURE__ */ import_react24.default.createElement(CoverThumb, { artId: currentTrack?.artId, fallback: "film", className: "mini-cover" }),
-      /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-meta" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-title" }, currentTrack ? currentTrack.title : "Ready to Screen"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-artist" }, currentTrack ? `${currentTrack.artist}${currentTrack.resolution ? ` \u2022 ${currentTrack.resolution}` : ""}` : `${(libraryAgg.summary.trackCount || 0).toLocaleString()} movies indexed`))
-    ), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-transport" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-icon", onClick: handlePrev, title: "Previous Movie" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "skipBack", size: 16 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-play-sm", onClick: togglePlayPause, title: isPlaying ? "Pause" : "Play" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 15 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-icon", onClick: handleNext, title: "Next Movie" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "skipForward", size: 16 })), /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-time" }, formatTime(currentTime), " / ", formatTime(duration))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-extra" }, /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn btn-xs ${virtualDjEnabled ? "btn-accent" : ""}`,
-        onClick: () => setVirtualDjEnabled((v) => !v),
-        title: "Toggle Virtual Cinema Host spoken introductions between films"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "mic", size: 13 }),
-      " Host ",
-      virtualDjEnabled ? "On" : "Off"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: "btn btn-xs btn-accent",
-        onClick: () => setAiModalOpen(true),
-        title: "Create an AI Watchlist"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "sparkles", size: 13 }),
-      " \u2726 AI Watchlist"
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      "button",
-      {
-        className: `btn btn-xs ${activeCastDevice ? "btn-accent" : ""}`,
-        onClick: () => setActiveTab("cast"),
-        title: "Cast to Smart TV or Chromecast"
-      },
-      /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "cast", size: 13 }),
-      " ",
-      activeCastDevice ? activeCastDevice.name : "Cast"
-    ))), /* @__PURE__ */ import_react24.default.createElement(
-      AiPlaylistModal,
-      {
-        open: aiModalOpen,
-        trackCount: libraryAgg.summary.trackCount || 0,
-        onClose: () => setAiModalOpen(false),
-        onCreated: handleAiPlaylistCreated
-      }
-    ), /* @__PURE__ */ import_react24.default.createElement(
-      AiFixMetadataModal,
-      {
-        open: fixMetaModal.open,
-        selectedTracks: fixMetaModal.tracks,
-        totalLibraryTracks: libraryAgg.summary.trackCount || 0,
-        onClose: () => setFixMetaModal({ open: false, tracks: [] }),
-        onCompleted: handleMetadataFixed
-      }
-    ));
+    ), /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(time.duration)));
   }
 
   // src/index.jsx
-  var root = (0, import_client.createRoot)(document.getElementById("root"));
-  root.render(/* @__PURE__ */ import_react25.default.createElement(App, null));
+  var container = document.getElementById("root");
+  if (container) {
+    const root = (0, import_client.createRoot)(container);
+    root.render(/* @__PURE__ */ import_react25.default.createElement(App, null));
+  }
 })();
 /*! Bundled license information:
 

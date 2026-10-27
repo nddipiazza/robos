@@ -1,384 +1,317 @@
-/**
- * Fast, low-allocation movie/video & audio metadata reader shared between
- * the main process and the background scan worker thread.
- *
- * Designed for scanning tens of thousands of movies, series, and video clips without
- * holding poster Buffers in RAM: posters are content-addressed on disk
- * (sha1 -> ~/.cache/robos/movie-player/art/<sha1>.<ext>) and tracks only store
- * the short `artId` string.
- */
+'use strict';
+
+// Shared track-building helpers used by MediaLibrary (main thread) and the
+// background scan worker, so both produce identical track records.
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-
-const VIDEO_EXTENSIONS = new Set([
-  '.mp4', '.mkv', '.webm', '.mov', '.m4v', '.avi', '.ogv', '.ts', '.m2ts',
-  '.flv', '.wmv', '.mpg', '.mpeg', '.3gp'
-]);
+const { pathToFileURL } = require('url');
 
 const AUDIO_EXTENSIONS = new Set([
-  '.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.opus', '.wma',
-  ...VIDEO_EXTENSIONS
+  '.mp4', '.mkv', '.webm', '.mov', '.m4v', '.avi', '.ogv', '.ts', '.m2ts', '.mpg', '.mpeg', '.flv', '.wmv', '.3gp',
+  '.mp3', '.m4a', '.flac', '.ogg', '.wav', '.aac', '.opus', '.wma',
+]);
+const VIDEO_EXTENSIONS = new Set([
+  '.mp4', '.mkv', '.webm', '.mov', '.m4v', '.avi', '.ogv', '.ts', '.m2ts', '.mpg', '.mpeg', '.flv', '.wmv', '.3gp',
 ]);
 
-const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
-const FOLDER_ART_NAMES = [
-  'poster', 'cover', 'folder', 'front', 'movie', 'fanart', 'thumb', 'artwork', 'album'
-];
+// Image files commonly dropped next to movies or albums, in preference order.
+const FOLDER_COVER_NAMES = ['poster', 'cover', 'folder', 'front', 'movie', 'thumb', 'fanart', 'album', 'albumart'];
+const FOLDER_COVER_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
+const MAX_FOLDER_COVER_BYTES = 8 * 1024 * 1024;
+const FOLDER_COVER_CACHE_SIZE = 32;
 
-// Scene release & video tag tokens used to clean filenames into clean titles
-const SCENE_NOISE_RE = /\b(2160p|1080p|720p|480p|4k|uhd|hdr|hdr10|dv|dolby\.?vision|bluray|blu-ray|bdrip|brrip|web-dl|webdl|webrip|hdtv|dvdrip|remux|proper|repack|extended|unrated|directors\.?cut|theatrical|x264|x265|h\.?264|h\.?265|hevc|av1|avc|aac|ac3|eac3|dts|truehd|atmos|10bit|8bit|5\.1|7\.1|2\.0|multi|subs|subbed|dubbed)\b/gi;
-
-function detectResolutionFromName(name) {
-  if (!name) return '';
-  const s = String(name);
-  if (/\b(2160p|4k|uhd)\b/i.test(s)) return '4K';
-  if (/\b1440p\b/i.test(s)) return '1440p';
-  if (/\b1080p\b/i.test(s)) return '1080p';
-  if (/\b720p\b/i.test(s)) return '720p';
-  if (/\b(480p|sd)\b/i.test(s)) return '480p';
-  return '';
+function generateTrackId(filePath) {
+  return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
 }
 
-function detectCodecFromName(name) {
-  if (!name) return '';
-  const s = String(name);
-  if (/\b(x265|h\.?265|hevc)\b/i.test(s)) return 'HEVC';
-  if (/\bav1\b/i.test(s)) return 'AV1';
-  if (/\b(x264|h\.?264|avc)\b/i.test(s)) return 'H.264';
-  if (/\bvp9\b/i.test(s)) return 'VP9';
-  if (/\bprores\b/i.test(s)) return 'ProRes';
-  return '';
+// Art is keyed by image content so every track of an album shares one cached file.
+function generateArtId(buffer) {
+  return `art_${crypto.createHash('sha1').update(buffer).digest('hex').slice(0, 16)}`;
 }
 
-function cleanMovieFilename(baseName) {
-  let raw = String(baseName || '').replace(/[._]+/g, ' ').trim();
-  let year = null;
-  let season = null;
-  let episode = null;
-
-  // Match S01E02 or 1x02
-  const seMatch = raw.match(/\bS(\d{1,2})E(\d{1,3})\b/i) || raw.match(/\b(\d{1,2})x(\d{2,3})\b/);
-  if (seMatch) {
-    season = parseInt(seMatch[1], 10);
-    episode = parseInt(seMatch[2], 10);
+function toSafeFileUrl(filePath) {
+  try {
+    return pathToFileURL(filePath).href;
+  } catch {
+    return encodeURI(`file://${filePath}`);
   }
+}
 
-  // Extract 4-digit release year in parens, brackets, or standalone before scene tags
-  const yearParen = raw.match(/[\(\[](19\d{2}|20\d{2})[\)\]]/);
-  if (yearParen) {
-    year = parseInt(yearParen[1], 10);
-    raw = raw.slice(0, yearParen.index).trim() || raw.replace(yearParen[0], ' ').trim();
-  } else {
-    const yearToken = raw.match(/\b(19\d{2}|20\d{2})\b/);
-    if (yearToken && yearToken.index > 1) {
-      year = parseInt(yearToken[1], 10);
-      raw = raw.slice(0, yearToken.index).trim();
+function imageFormatForExt(ext) {
+  if (ext === '.png') return 'image/png';
+  if (ext === '.webp') return 'image/webp';
+  return 'image/jpeg';
+}
+
+/**
+ * Look for cover.jpg / folder.png / ... beside a track. Results are memoised
+ * per directory in `cache` (a small LRU Map) so a 20-track album costs one readdir.
+ */
+function findFolderCover(dir, cache = null) {
+  if (cache && cache.has(dir)) return cache.get(dir);
+  let found = null;
+  try {
+    const byLower = new Map(fs.readdirSync(dir).map(name => [name.toLowerCase(), name]));
+    outer:
+    for (const base of FOLDER_COVER_NAMES) {
+      for (const ext of FOLDER_COVER_EXTS) {
+        const real = byLower.get(base + ext);
+        if (!real) continue;
+        const full = path.join(dir, real);
+        const stat = fs.statSync(full);
+        if (stat.isFile() && stat.size > 0 && stat.size <= MAX_FOLDER_COVER_BYTES) {
+          found = { data: fs.readFileSync(full), format: imageFormatForExt(ext) };
+          break outer;
+        }
+      }
     }
+  } catch {}
+  if (cache) {
+    // Scans visit one folder at a time, so a few recent folders are all that's worth
+    // keeping; caching every folder's image would hold ~1 GB for a 100k-track library.
+    if (cache.size >= FOLDER_COVER_CACHE_SIZE) cache.delete(cache.keys().next().value);
+    cache.set(dir, found);
+  }
+  return found;
+}
+
+function firstOf(value) {
+  if (Array.isArray(value)) return value.find(v => v != null && String(v).trim()) || null;
+  return value || null;
+}
+
+/**
+ * Build a library track from music-metadata output.
+ * Returns { track, art } where art is { artId, buffer, format } or null.
+ */
+function trackFromMetadata(filePath, metadata, parser, coverCache = null) {
+  const common = metadata.common || {};
+  const format = metadata.format || {};
+
+  let cover = parser && typeof parser.selectCover === 'function' ? parser.selectCover(common.picture) : null;
+  if (!cover || !cover.data) cover = findFolderCover(path.dirname(filePath), coverCache);
+
+  let art = null;
+  if (cover && cover.data) {
+    const buffer = Buffer.from(cover.data);
+    art = { artId: generateArtId(buffer), buffer, format: cover.format || 'image/jpeg' };
   }
 
-  raw = raw
-    .replace(SCENE_NOISE_RE, ' ')
+  const cleaned = cleanMovieTitle(common.title || path.parse(filePath).name);
+  const folderCleaned = cleanMovieTitle(path.basename(path.dirname(filePath)));
+  const useFolderTitle = (!common.title && folderCleaned.year && !cleaned.year) || /^(movie|video|film|track|sample)$/i.test(cleaned.title);
+  const bestTitle = common.title || (useFolderTitle ? folderCleaned.title : cleaned.title) || path.parse(filePath).name;
+  const bestYear = common.year || cleaned.year || folderCleaned.year || null;
+  const resBadge = [cleaned.resolution || folderCleaned.resolution, cleaned.source || folderCleaned.source].filter(Boolean).join(' ');
+
+  const track = {
+    id: generateTrackId(filePath),
+    filePath,
+    title: bestTitle,
+    artist: common.artist || common.albumartist || (resBadge ? resBadge : 'Feature Film'),
+    albumArtist: common.albumartist || null,
+    album: common.album || (bestYear ? `${bestTitle} (${bestYear})` : bestTitle),
+    year: bestYear,
+    genre: firstOf(common.genre) || (VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase()) ? 'Movies' : null),
+    composer: firstOf(common.composer),
+    trackNumber: common.track?.no || null,
+    trackTotal: common.track?.of || null,
+    discNumber: common.disk?.no || null,
+    discTotal: common.disk?.of || null,
+    duration: format.duration || 0,
+    bitrate: format.bitrate || 0,
+    sampleRate: format.sampleRate || 0,
+    bitsPerSample: format.bitsPerSample || null,
+    channels: format.numberOfChannels || null,
+    codec: format.codec || format.container || null,
+    lossless: !!format.lossless,
+    artId: art ? art.artId : null,
+    src: toSafeFileUrl(filePath),
+  };
+  return { track, art };
+}
+
+function fallbackTrack(filePath, err, coverCache = null) {
+  const cover = findFolderCover(path.dirname(filePath), coverCache);
+  let art = null;
+  if (cover) {
+    const buffer = Buffer.from(cover.data);
+    art = { artId: generateArtId(buffer), buffer, format: cover.format };
+  }
+  const cleaned = cleanMovieTitle(path.parse(filePath).name);
+  const folderCleaned = cleanMovieTitle(path.basename(path.dirname(filePath)));
+  const bestTitle = (folderCleaned.year && !cleaned.year ? folderCleaned.title : cleaned.title) || path.parse(filePath).name;
+  const bestYear = cleaned.year || folderCleaned.year || null;
+  const resBadge = [cleaned.resolution || folderCleaned.resolution, cleaned.source || folderCleaned.source].filter(Boolean).join(' ');
+  return {
+    track: {
+      id: generateTrackId(filePath),
+      filePath,
+      title: bestTitle,
+      artist: resBadge || 'Feature Film',
+      album: bestYear ? `${bestTitle} (${bestYear})` : bestTitle,
+      year: bestYear,
+      genre: VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase()) ? 'Movies' : null,
+      duration: 0,
+      artId: art ? art.artId : null,
+      src: toSafeFileUrl(filePath),
+      error: err ? err.message : undefined,
+    },
+    art,
+  };
+}
+
+// Folder names that say nothing about the movie collection ("Movies", "Downloads").
+const GENERIC_FOLDERS = new Set(['', '.', '/', 'movies', 'movie', 'films', 'video', 'videos', 'tv', 'shows', 'music', 'my music',
+  'mp3', 'mp3s', 'audio', 'songs', 'albums', 'my drive', 'drive', 'onedrive', 'cloud', 'media', 'downloads', 'library',
+  'itunes', 'itunes media', 'itunes music', 'shared with me', 'flac', 'misc', 'various', 'unsorted', 'new folder', 'sync', 'documents']);
+const DISC_FOLDER = /^(cd|disc|disk|part|pt)\s*(\d+)$/i;
+
+/**
+ * Cleans scene-release movie filenames & folder names:
+ * e.g. "Beetlejuice.Beetlejuice.2024.1080p.WEB.H264-BEETLEJUICE[TGx]"
+ *   -> { title: "Beetlejuice Beetlejuice", year: 2024, resolution: "1080p", source: "WEB" }
+ * e.g. "Dune (2021) [1080p] [WEBRip] [5.1] [YTS.MX]"
+ *   -> { title: "Dune", year: 2021, resolution: "1080p", source: "WEBRip" }
+ */
+function cleanMovieTitle(raw) {
+  const str = String(raw || '').trim();
+  if (!str) return { title: '', year: null, resolution: null, source: null };
+
+  const resMatch = /\b(2160p|4k|1080p|720p|480p)\b/i.exec(str);
+  const resolution = resMatch ? resMatch[1].toUpperCase().replace('P', 'p') : null;
+
+  const srcMatch = /\b(BluRay|BRRip|BDRip|WEBRip|WEB-DL|WEB|HDRip|DVDRip|HDTV|REMUX)\b/i.exec(str);
+  const source = srcMatch ? srcMatch[1] : null;
+
+  // Match year in parentheses/brackets or dot/space/underscore separated before quality tags
+  const yearMatch = /[([.\s_]((19\d\d|20\d\d))(?:[)\].\s_]|$)/.exec(str);
+  const year = yearMatch ? Number(yearMatch[1]) : null;
+
+  let head = str;
+  if (yearMatch && yearMatch.index > 0) {
+    head = str.slice(0, yearMatch.index);
+  } else if (resMatch && resMatch.index > 0) {
+    head = str.slice(0, resMatch.index);
+  } else if (srcMatch && srcMatch.index > 0) {
+    head = str.slice(0, srcMatch.index);
+  }
+
+  // Strip bracketed tags, release groups, leading/trailing dashes, and replace dots/underscores with spaces
+  head = head
     .replace(/\[[^\]]*\]/g, ' ')
-    .replace(/\(\s*\)/g, ' ')
-    .replace(/\s+-\s+[A-Za-z0-9]+$/, '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\b(camrip|hdcam|ts|hdts|telesync|dvdscr|xvid|x264|x265|hevc|h264|aac|ac3|ddp5|10bit)\b.*$/i, ' ')
+    .replace(/[._]+/g, ' ')
+    .replace(/^\s*[-–—:]+\s*/, '')
+    .replace(/\s*[-–—:]+\s*$/, '')
     .replace(/\s+/g, ' ')
     .trim();
 
   return {
-    title: raw || baseName,
+    title: head || str.replace(/[._]+/g, ' ').trim(),
     year,
-    season,
-    episode,
-    resolution: detectResolutionFromName(baseName),
-    videoCodec: detectCodecFromName(baseName)
+    resolution,
+    source,
   };
 }
 
-let mmModulePromise = null;
-function loadMusicMetadata() {
-  if (!mmModulePromise) {
-    mmModulePromise = import('music-metadata').catch(() => null);
-  }
-  return mmModulePromise;
-}
-
-function extFromMime(mime = '') {
-  const m = String(mime).toLowerCase();
-  if (m.includes('png')) return 'png';
-  if (m.includes('webp')) return 'webp';
-  if (m.includes('gif')) return 'gif';
-  return 'jpg';
-}
-
-function storeArtworkBuffer(artDir, data, mime) {
-  if (!artDir || !data || !data.length) return null;
-  try {
-    const hash = crypto.createHash('sha1').update(data).digest('hex').slice(0, 20);
-    const ext = extFromMime(mime);
-    const id = `${hash}.${ext}`;
-    const target = path.join(artDir, id);
-    if (!fs.existsSync(target)) {
-      fs.mkdirSync(artDir, { recursive: true });
-      fs.writeFileSync(target, data);
-    }
-    return id;
-  } catch (_) {
-    return null;
-  }
-}
-
-function findFolderArt(dirPath, artDir, folderArtCache) {
-  if (!dirPath || !artDir) return null;
-  if (folderArtCache && folderArtCache.has(dirPath)) {
-    return folderArtCache.get(dirPath);
-  }
-  let result = null;
-  try {
-    const entries = fs.readdirSync(dirPath);
-    let picked = null;
-    for (const wanted of FOLDER_ART_NAMES) {
-      picked = entries.find(e => {
-        const ext = path.extname(e).toLowerCase();
-        const stem = path.basename(e, ext).toLowerCase();
-        return IMAGE_EXTENSIONS.has(ext) && stem === wanted;
-      });
-      if (picked) break;
-    }
-    if (!picked) {
-      picked = entries.find(e => IMAGE_EXTENSIONS.has(path.extname(e).toLowerCase()));
-    }
-    if (picked) {
-      const full = path.join(dirPath, picked);
-      const st = fs.statSync(full);
-      if (st.isFile() && st.size > 0 && st.size <= 10 * 1024 * 1024) {
-        const buf = fs.readFileSync(full);
-        const ext = path.extname(picked).slice(1).toLowerCase();
-        result = storeArtworkBuffer(artDir, buf, `image/${ext}`);
-      }
-    }
-  } catch (_) {}
-  if (folderArtCache) folderArtCache.set(dirPath, result);
-  return result;
-}
-
-function findSidecarSubtitlePath(filePath) {
-  if (!filePath || filePath.startsWith('http') || filePath.startsWith('cloud://')) return null;
-  try {
-    const dir = path.dirname(filePath);
-    const stem = path.basename(filePath, path.extname(filePath));
-    for (const ext of ['.srt', '.vtt', '.en.srt', '.en.vtt', '.lrc']) {
-      const candidate = path.join(dir, stem + ext);
-      if (fs.existsSync(candidate)) return candidate;
-    }
-  } catch (_) {}
-  return null;
-}
-
 /**
- * Parse a single media file into a lightweight track/movie record.
- * Never attaches raw base64 artwork to the returned object.
+ * Best guess at title / artist / album / year from a remote movie or audio path.
  */
-async function readTrackMetadata(filePath, { artDir = null, stat = null, folderArtCache = null } = {}) {
-  const baseName = path.basename(filePath, path.extname(filePath));
-  const ext = path.extname(filePath).slice(1).toLowerCase();
-  const cleaned = cleanMovieFilename(baseName);
+function guessFromRemotePath(remotePath, name = '') {
+  const parts = String(remotePath || '').split('/').filter(Boolean);
+  const file = name || parts[parts.length - 1] || '';
+  const ext = path.extname(file).toLowerCase();
+  const rawName = path.parse(file).name;
+  const isVideo = VIDEO_EXTENSIONS.has(ext);
 
-  const track = {
-    id: crypto.createHash('md5').update(filePath).digest('hex'),
-    path: filePath,
-    title: cleaned.title || baseName,
-    artist: 'Unknown Director',
-    album: 'Standalone Films',
-    albumArtist: '',
-    genre: 'Cinema',
-    year: cleaned.year || null,
-    trackNumber: cleaned.episode || null,
-    discNumber: cleaned.season || null,
-    composer: '',
-    duration: 0,
-    bitrate: 0,
-    sampleRate: 0,
-    codec: cleaned.videoCodec || ext.toUpperCase(),
-    videoCodec: cleaned.videoCodec || ext.toUpperCase(),
-    resolution: cleaned.resolution || '1080p',
-    width: cleaned.resolution === '4K' ? 3840 : cleaned.resolution === '720p' ? 1280 : 1920,
-    height: cleaned.resolution === '4K' ? 2160 : cleaned.resolution === '720p' ? 720 : 1080,
-    format: ext,
-    size: 0,
-    mtimeMs: 0,
-    addedAt: Date.now(),
-    artId: null,
-    hasSubtitles: Boolean(findSidecarSubtitlePath(filePath)),
-    source: 'local'
-  };
+  const dirs = parts.slice(0, -1);
+  let discNumber = null;
+  if (dirs.length && DISC_FOLDER.test(dirs[dirs.length - 1])) {
+    discNumber = Number(DISC_FOLDER.exec(dirs[dirs.length - 1])[2]);
+    dirs.pop();
+  }
+  const parentDir = dirs[dirs.length - 1] || '';
+  const grandParentDir = dirs[dirs.length - 2] || '';
 
-  try {
-    const st = stat || fs.statSync(filePath);
-    track.size = st.size;
-    track.mtimeMs = Math.floor(st.mtimeMs || 0);
-    track.addedAt = Math.floor(st.birthtimeMs || st.ctimeMs || st.mtimeMs || Date.now());
-  } catch (_) {}
+  if (isVideo) {
+    const fileCleaned = cleanMovieTitle(rawName);
+    const folderCleaned = parentDir && !GENERIC_FOLDERS.has(parentDir.toLowerCase())
+      ? cleanMovieTitle(parentDir)
+      : { title: '', year: null, resolution: null, source: null };
 
-  // Heuristic fallback from folder hierarchy: .../Director/Collection (or Series)/Movie.mp4
-  const parentDir = path.dirname(filePath);
-  const folderName = path.basename(parentDir);
-  const grandParent = path.basename(path.dirname(parentDir));
+    const preferFolder = folderCleaned.title && (
+      (folderCleaned.year && !fileCleaned.year) ||
+      /^(movie|video|film|sample|feature|disc\s*\d+|part\s*\d+)$/i.test(fileCleaned.title) ||
+      fileCleaned.title.length < 2
+    );
 
-  // Leading episode/track number "01 - Pilot"
-  const numMatch = baseName.match(/^(\d{1,3})\s*[-._)\s]\s*(.+)$/);
-  if (numMatch) {
-    track.trackNumber = parseInt(numMatch[1], 10);
-    const subClean = cleanMovieFilename(numMatch[2].trim());
-    track.title = subClean.title || numMatch[2].trim();
+    const title = (preferFolder ? folderCleaned.title : fileCleaned.title) || folderCleaned.title || rawName;
+    const year = fileCleaned.year || folderCleaned.year || null;
+    const resolution = fileCleaned.resolution || folderCleaned.resolution || null;
+    const source = fileCleaned.source || folderCleaned.source || null;
+    const badge = [resolution, source].filter(Boolean).join(' ');
+
+    // Each movie gets its own poster card in the Library grid ("Title (Year)")
+    const album = year ? `${title} (${year})` : title;
+    const artist = badge || (grandParentDir && !GENERIC_FOLDERS.has(grandParentDir.toLowerCase()) ? grandParentDir : 'Feature Film');
+
+    return {
+      title,
+      artist,
+      album,
+      trackNumber: null,
+      discNumber,
+      year,
+      genre: 'Movies',
+      resolution,
+    };
   }
 
-  // "Director - Title" in filename
-  const dashParts = baseName.split(' - ');
-  if (dashParts.length >= 2 && !cleaned.season) {
-    track.artist = dashParts[0].trim();
-    const rhsClean = cleanMovieFilename(dashParts.slice(1).join(' - ').trim());
-    track.title = rhsClean.title || dashParts.slice(1).join(' - ').trim();
-    if (rhsClean.year && !track.year) track.year = rhsClean.year;
-  }
+  let title = rawName.replace(/_/g, ' ').trim();
+  const out = { title, artist: 'Unknown Artist', album: 'Unknown Album', trackNumber: null, discNumber, year: null };
 
-  if (folderName && !['movies', 'videos', 'films', 'media', 'downloads', 'tv', 'series'].includes(folderName.toLowerCase())) {
-    const folderClean = cleanMovieFilename(folderName);
-    if (folderClean.year && !track.year) track.year = folderClean.year;
-    track.album = folderClean.title || folderName;
-  }
-  if (grandParent && !['movies', 'videos', 'films', 'media', 'downloads', 'home', 'tv', 'series'].includes(grandParent.toLowerCase())) {
-    if (track.artist === 'Unknown Director') track.artist = grandParent;
-  }
-
-  try {
-    const mm = await loadMusicMetadata();
-    if (mm) {
-      const metadata = await mm.parseFile(filePath, {
-        duration: true,
-        skipPostHeaders: true
-      });
-      if (metadata && metadata.common) {
-        const c = metadata.common;
-        if (c.title) track.title = c.title;
-        if (c.artist) track.artist = c.artist;
-        if (c.album) track.album = c.album;
-        if (c.albumartist) track.albumArtist = c.albumartist;
-        if (Array.isArray(c.genre) && c.genre[0]) track.genre = c.genre[0];
-        else if (typeof c.genre === 'string' && c.genre) track.genre = c.genre;
-        if (c.year) track.year = c.year;
-        if (c.track && c.track.no) track.trackNumber = c.track.no;
-        if (c.disk && c.disk.no) track.discNumber = c.disk.no;
-        if (Array.isArray(c.composer) && c.composer[0]) track.composer = c.composer[0];
-        else if (typeof c.composer === 'string') track.composer = c.composer;
-        if (artDir && Array.isArray(c.picture) && c.picture.length > 0) {
-          const pic = c.picture[0];
-          const raw = Buffer.isBuffer(pic.data) ? pic.data : Buffer.from(pic.data);
-          track.artId = storeArtworkBuffer(artDir, raw, pic.format);
-        }
-      }
-      if (metadata && metadata.format) {
-        const f = metadata.format;
-        if (f.duration) track.duration = Math.round(f.duration);
-        if (f.bitrate) track.bitrate = Math.round(f.bitrate / 1000);
-        if (f.sampleRate) track.sampleRate = f.sampleRate;
-        if (f.codec) {
-          track.codec = f.codec;
-          track.videoCodec = f.codec;
-        }
-      }
-    }
-  } catch (_) {
-    // Metadata parse errors are non-fatal; filename fallbacks remain intact
-  }
-
-  if (!track.artId && artDir) {
-    track.artId = findFolderArt(parentDir, artDir, folderArtCache);
-  }
-  if (!track.albumArtist) track.albumArtist = track.artist;
-
-  return track;
-}
-
-/**
- * Build a track/movie record from a cloud/remote path without downloading the file.
- * Extracts Director / Collection / Season-Episode / Title / Year / Resolution from path structure.
- */
-function guessFromRemotePath({ sourceId, sourceName, sourceType, remotePath, size = 0, mtime = null }) {
-  const ext = path.extname(remotePath).slice(1).toLowerCase();
-  const base = path.basename(remotePath, path.extname(remotePath));
-  const parts = remotePath.split('/').filter(Boolean);
-  const folder = parts.length >= 2 ? parts[parts.length - 2] : '';
-  const grandFolder = parts.length >= 3 ? parts[parts.length - 3] : '';
-
-  const cleaned = cleanMovieFilename(base);
-  let title = cleaned.title || base;
-  let artist = grandFolder || sourceName || 'Cloud Cinema';
-  let album = folder || sourceName || 'Cloud Collection';
-  let trackNumber = cleaned.episode || null;
-  let year = cleaned.year || null;
-
-  const numMatch = base.match(/^(\d{1,3})\s*[-._)\s]\s*(.+)$/);
-  if (numMatch) {
-    trackNumber = parseInt(numMatch[1], 10);
-    const subClean = cleanMovieFilename(numMatch[2].trim());
-    title = subClean.title || numMatch[2].trim();
+  const num = /^(?:(\d{1,2})[-.])?(\d{1,3})(?:\s*[-.)_]\s*|\s+)(.+)$/.exec(title);
+  if (num && Number(num[2]) > 0 && Number(num[2]) < 200) {
+    out.trackNumber = Number(num[2]);
+    if (num[1]) out.discNumber = Number(num[1]);
+    title = num[3].trim();
   }
   const dash = title.split(' - ');
-  if (dash.length >= 2 && !grandFolder) {
-    artist = dash[0].trim();
+  if (dash.length >= 2 && dash[0].trim() && !/^\d+$/.test(dash[0].trim())) {
+    out.artist = dash[0].trim();
     title = dash.slice(1).join(' - ').trim();
   }
+  out.title = title || out.title;
 
-  if (folder) {
-    const folderClean = cleanMovieFilename(folder);
-    if (folderClean.year && !year) year = folderClean.year;
-    album = folderClean.title || folder;
+  let albumDir = parentDir;
+  const artistDir = grandParentDir;
+  if (albumDir && !GENERIC_FOLDERS.has(albumDir.toLowerCase())) {
+    const year = /\s*[([]((?:19|20)\d\d)[)\]]\s*/.exec(albumDir) || /^((?:19|20)\d\d)\s*-\s*/.exec(albumDir);
+    if (year) { out.year = Number(year[1]); albumDir = albumDir.replace(year[0], ' ').trim(); }
+    const split = albumDir.split(' - ');
+    if (split.length >= 2 && !/^\d+$/.test(split[0].trim())) {
+      if (out.artist === 'Unknown Artist') out.artist = split[0].trim();
+      albumDir = split.slice(1).join(' - ').trim();
+    }
+    out.album = albumDir || out.album;
+    if (out.artist === 'Unknown Artist' && artistDir && !GENERIC_FOLDERS.has(artistDir.toLowerCase())) out.artist = artistDir;
   }
-
-  const key = `cloud://${sourceId}/${remotePath.replace(/^\/+/, '')}`;
-  return {
-    id: crypto.createHash('md5').update(key).digest('hex'),
-    path: key,
-    remotePath,
-    sourceId,
-    sourceName: sourceName || sourceId,
-    sourceType: sourceType || 'cloud',
-    source: 'cloud',
-    title,
-    artist,
-    album,
-    albumArtist: artist,
-    genre: 'Cloud Cinema',
-    year,
-    trackNumber,
-    discNumber: cleaned.season || null,
-    composer: '',
-    duration: 0,
-    bitrate: 0,
-    sampleRate: 0,
-    codec: cleaned.videoCodec || ext.toUpperCase(),
-    videoCodec: cleaned.videoCodec || ext.toUpperCase(),
-    resolution: cleaned.resolution || '1080p',
-    format: ext,
-    size: Number(size) || 0,
-    mtimeMs: mtime ? new Date(mtime).getTime() || 0 : 0,
-    addedAt: Date.now(),
-    artId: null
-  };
+  return out;
 }
 
 module.exports = {
-  VIDEO_EXTENSIONS,
-  AUDIO_EXTENSIONS,
-  IMAGE_EXTENSIONS,
-  cleanMovieFilename,
-  detectResolutionFromName,
-  detectCodecFromName,
-  readTrackMetadata,
+  cleanMovieTitle,
   guessFromRemotePath,
-  storeArtworkBuffer,
-  findFolderArt,
-  findSidecarSubtitlePath
+  AUDIO_EXTENSIONS,
+  VIDEO_EXTENSIONS,
+  generateTrackId,
+  generateArtId,
+  toSafeFileUrl,
+  findFolderCover,
+  trackFromMetadata,
+  fallbackTrack,
 };
