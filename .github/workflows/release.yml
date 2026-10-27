@@ -42,7 +42,7 @@ jobs:
           generate_release_notes: true
           body: |
             ## Install RobOS on Windows
-            Choose **RobOS-${{ github.ref_name }}-Windows-Setup.exe** for a Windows installation wizard, or **RobOS-${{ github.ref_name }}-Windows-Portable.exe** to run without an installation wizard. Both bundle the native app suite and runtime. The separate Windows EXE workflow adds these files after packaging and smoke tests pass.
+            Choose **RobOS-${{ github.ref_name }}-Windows-Setup.exe** on Windows or **RobOS-${{ github.ref_name }}-Linux-x86_64.AppImage** on Ubuntu GNOME. Both run the same App Manager. Select apps in its grouped checkbox tree; selected apps and shared components download separately. Each installed app gets its own native menu entry. The Modular RobOS apps workflow adds the manager and individual app downloads after packaging checks pass.
 
             **Install-RobOS.cmd** and **Install-RobOS.ps1** remain script alternatives and are available while EXEs are building. No USB drive or Linux installation is required.
 
