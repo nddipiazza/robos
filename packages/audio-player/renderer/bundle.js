@@ -18799,15 +18799,16 @@
     return d.toLocaleDateString();
   };
   var COLUMNS = {
-    full: ["num", "love", "title", "album", "year", "genre", "plays", "duration", "more"],
-    album: ["num", "love", "title", "plays", "duration", "more"],
-    compact: ["num", "art", "title", "album", "plays", "duration", "more"]
+    full: ["num", "love", "title", "artist", "album", "year", "genre", "plays", "duration", "more"],
+    album: ["num", "love", "title", "artist", "plays", "duration", "more"],
+    compact: ["num", "art", "title", "artist", "album", "plays", "duration", "more"]
   };
   var HEADERS = {
     num: { label: "#", sort: null },
     love: { label: "", sort: "loved" },
     art: { label: "", sort: null },
     title: { label: "Title", sort: "title" },
+    artist: { label: "Artist", sort: "artist" },
     album: { label: "Album", sort: "album" },
     year: { label: "Year", sort: "year" },
     genre: { label: "Genre", sort: "genre" },
@@ -18970,10 +18971,11 @@
     num: { width: "42px", fixed: true },
     love: { width: "26px", fixed: true },
     art: { width: "40px", fixed: true },
-    title: { width: "minmax(0, 3fr)", fill: true },
-    album: { width: "minmax(0, 2fr)", min: 60 },
+    title: { width: "minmax(0, 2.5fr)", fill: true },
+    artist: { width: "minmax(0, 1.8fr)", min: 60 },
+    album: { width: "minmax(0, 1.8fr)", min: 60 },
     year: { width: "52px", min: 40 },
-    genre: { width: "minmax(0, 1.2fr)", min: 50 },
+    genre: { width: "minmax(0, 1.1fr)", min: 50 },
     plays: { width: "60px", min: 44 },
     added: { width: "96px", min: 60 },
     lastPlayed: { width: "104px", min: 60 },
@@ -18992,12 +18994,18 @@
       case "art":
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-art" }, /* @__PURE__ */ import_react15.default.createElement(Cover, { artId: t.artId, name: t.album, size: 32 }));
       case "title": {
-        const showArtist = variant !== "album" || t.artist && albumArtist && t.artist !== albumArtist;
-        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-title" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-title-text", title: t.title }, t.title), showArtist && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-sub" }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
+        const hasArtistCol = COLUMNS[variant]?.includes("artist");
+        const showArtist = !hasArtistCol && (variant !== "album" || t.artist && albumArtist && t.artist !== albumArtist);
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-title" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-title-text", title: t.title }, t.title), (showArtist || t.cloud) && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-sub" }, showArtist && /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
           e.stopPropagation();
           actions.goToArtist(t.artist);
         } }, t.artist || "Unknown Artist"), t.cloud && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-badge" }, t.cloud.cached ? "Cloud \xB7 cached" : "Cloud")));
       }
+      case "artist":
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-artist", title: t.artist || "Unknown Artist" }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
+          e.stopPropagation();
+          actions.goToArtist(t.artist);
+        } }, t.artist || "Unknown Artist"));
       case "album":
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-album", title: t.album }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
           e.stopPropagation();
