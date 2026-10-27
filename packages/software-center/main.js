@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const fs = require('node:fs');
 const { spawn, execSync } = require('child_process');
 const { WindowsTools } = require('./windows-tools');
 const windowsTools = process.platform === 'win32' ? new WindowsTools({
