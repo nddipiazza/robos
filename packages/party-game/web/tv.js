@@ -59,7 +59,9 @@
     if (!n || n.id === lastNarrationId) return;
     lastNarrationId = n.id;
     var audio = null;
-    if (view.narrationAudio === 'tv' && screen === 'stage') {
+    // Browser TVs on the main stage speak the line. Pages opened with
+    // capture=1 (Roku frame windows, host console previews) stay silent.
+    if ((view.narrationOutputs || []).indexOf('tvs') >= 0 && screen === 'stage' && !params.get('capture')) {
       voice.src = '/api/narration/' + encodeURIComponent(n.id);
       var p = voice.play();
       if (p && p.catch) p.catch(function () {});

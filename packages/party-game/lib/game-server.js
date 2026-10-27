@@ -53,6 +53,38 @@ function readBody(req, limit = 64 * 1024) {
   });
 }
 
+// Media players (Roku, Cast speakers) need a length and byte ranges, not a
+// chunked stream, before they will play a file.
+function sendFileWithRanges(req, res, file) {
+  const size = fs.statSync(file).size;
+  const type = MIME[path.extname(file)] || 'audio/wav';
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+  if (range) {
+    let start = range[1] === '' ? size - Number(range[2]) : Number(range[1]);
+    let end = range[1] !== '' && range[2] !== '' ? Number(range[2]) : size - 1;
+    start = Math.max(0, start);
+    end = Math.min(size - 1, end);
+    if (start > end) {
+      res.writeHead(416, { 'Content-Range': `bytes */${size}` });
+      res.end();
+      return;
+    }
+    res.writeHead(206, {
+      'Content-Type': type,
+      'Content-Length': end - start + 1,
+      'Content-Range': `bytes ${start}-${end}/${size}`,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-store',
+    });
+    if (req.method === 'HEAD') return res.end();
+    fs.createReadStream(file, { start, end }).pipe(res);
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': type, 'Content-Length': size, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-store' });
+  if (req.method === 'HEAD') return res.end();
+  fs.createReadStream(file).pipe(res);
+}
+
 function sendJson(res, status, body) {
   const data = JSON.stringify(body);
   res.writeHead(status, {
@@ -112,7 +144,7 @@ function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarration
     const u = new URL(req.url || '/', 'http://localhost');
     const p = u.pathname;
 
-    if (req.method === 'GET') {
+    if (req.method === 'GET' || req.method === 'HEAD') {
       if (p === '/' ) {
         res.writeHead(302, { Location: '/join' });
         res.end();
@@ -156,12 +188,11 @@ function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarration
       }
 
       if (p.startsWith('/api/narration/')) {
-        const id = decodeURIComponent(p.slice('/api/narration/'.length));
+        const id = decodeURIComponent(p.slice('/api/narration/'.length)).replace(/\.mp3$/, '');
+        log({ msg: 'narration request', id, from: req.socket.remoteAddress, range: req.headers.range || null, ua: req.headers['user-agent'] || null });
         const file = await getNarrationAudio(id);
         if (!file || !fs.existsSync(file)) return sendJson(res, 404, { error: 'no audio' });
-        res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'audio/wav', 'Cache-Control': 'no-store' });
-        fs.createReadStream(file).pipe(res);
-        return;
+        return sendFileWithRanges(req, res, file);
       }
 
       if (p === '/qr.svg') {

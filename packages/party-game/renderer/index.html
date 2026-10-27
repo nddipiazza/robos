@@ -66,14 +66,19 @@
           <label>Answer timer (s, 0 = default) <input type="number" id="answerSeconds" min="0" max="120"></label>
           <label>Reveal time (s) <input type="number" id="revealSeconds" min="3" max="60"></label>
           <label>Minimum guests <input type="number" id="minGuests" min="2" max="12"></label>
-          <label>Narration audio
-            <select id="narrationAudio">
-              <option value="host">This computer's speakers</option>
-              <option value="tv">Main stage TV (browser TVs)</option>
-              <option value="off">Off (captions only)</option>
-            </select>
-          </label>
+
         </div>
+        <h3>AI host voice</h3>
+        <div class="checks" id="voiceOutputs">
+          <label class="check"><input type="checkbox" value="tvs"> Main-stage TVs (Roku included)</label>
+          <label class="check"><input type="checkbox" value="speaker"> Audio Player speaker</label>
+          <label class="check"><input type="checkbox" value="host"> This computer</label>
+        </div>
+        <div class="speaker-row" id="speakerRow">
+          <select id="speakerId" aria-label="Speaker"></select>
+          <button type="button" class="ghost" id="scanSpeakers">Scan for speakers</button>
+        </div>
+        <div class="muted small" id="voiceHint">A Cast speaker plays one thing at a time: the host's lines replace music on that speaker, so pick a different one from the music.</div>
         <div class="checks">
           <label class="check"><input type="checkbox" id="autoAdvance"> Auto-advance when timers run out</label>
           <label class="check"><input type="checkbox" id="secretRoles"> Secret roles (the Mole)</label>

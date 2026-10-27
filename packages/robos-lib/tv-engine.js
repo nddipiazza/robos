@@ -1822,6 +1822,8 @@ ${cloneBarsXml}
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
+    <!-- Spoken lines from apps cast to this TV (e.g. the Party Game host) -->
+    <Audio id="castAudio" />
     <Timer id="clockTimer" repeat="true" duration="1.0" />
   </children>
 </component>
@@ -2090,6 +2092,36 @@ sub onLivePosterLoaded(evt as Object)
     end if
 end sub
 
+' Plays an app cast's narration once per new id. The Roku has one media
+' pipeline, so the keep-alive video is stopped while the line plays and
+' restarted afterwards.
+sub playAppCastAudio(narration as Object)
+    if narration = invalid or narration.id = invalid or narration.url = invalid then return
+    if type(m.lastCastAudioId) <> "roString" and type(m.lastCastAudioId) <> "String" then m.lastCastAudioId = ""
+    if m.lastCastAudioId = narration.id then return
+    m.lastCastAudioId = narration.id
+    if m.castAudio = invalid
+        m.castAudio = m.top.findNode("castAudio")
+        m.castAudio.observeField("state", "onCastAudioState")
+    end if
+    print "RobOS castAudio play "; narration.url
+    if m.keepAliveVideo <> invalid then m.keepAliveVideo.control = "stop"
+    m.castAudio.control = "stop"
+    content = CreateObject("roSGNode", "ContentNode")
+    content.url = narration.url
+    content.streamFormat = "mp3"
+    m.castAudio.content = content
+    m.castAudio.control = "play"
+end sub
+
+sub onCastAudioState()
+    st = m.castAudio.state
+    print "RobOS castAudio state "; st; " "; m.castAudio.errorMsg
+    if st = "finished" or st = "error"
+        startKeepAliveVideo()
+    end if
+end sub
+
 sub hideAppCastFrames()
     if m.livePosterA <> invalid
         m.livePosterA.opacity = 0.0
@@ -2105,6 +2137,7 @@ sub onPayloadUpdated()
     if json = invalid then return
     if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
         showAppCastFrame(json.appCast.frameUrl)
+        if json.appCast.narration <> invalid then playAppCastAudio(json.appCast.narration)
         return
     end if
     hideAppCastFrames()
@@ -2715,6 +2748,17 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
       }
     }
     return { ok: true, tv, appCast, message: `${appCast.title} is on ${tv.name}. ${note}` };
+  }
+
+  // Merges fields into a live app cast, e.g. { narration: { id, url } } so a
+  // Roku plays the app's latest spoken line.
+  function updateAppCast({ tvId, appId, patch = {} } = {}) {
+    loadState();
+    const cast = state.appCasts && state.appCasts[tvId];
+    if (!cast || !cast.active || (appId && cast.appId !== appId)) return { ok: false, error: 'No active app cast on that TV' };
+    state.appCasts[tvId] = { ...cast, ...patch };
+    saveState();
+    return { ok: true, appCast: state.appCasts[tvId] };
   }
 
   function stopAppCast({ tvId, appId } = {}) {
@@ -3793,6 +3837,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     setLiveDashboardFrame,
     getLiveDashboardFrame,
     castAppToTv,
+    updateAppCast,
     stopAppCast,
     listAppCasts,
     setAppCastFrame,

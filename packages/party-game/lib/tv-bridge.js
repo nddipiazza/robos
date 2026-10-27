@@ -72,7 +72,8 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
       backgroundColor: '#070b12',
       webPreferences: { contextIsolation: true, nodeIntegration: false, backgroundThrottling: false },
     });
-    win.loadURL(tvPageUrl(screen, '127.0.0.1'));
+    win.loadURL(`${tvPageUrl(screen, '127.0.0.1')}&capture=1`);
+    win.webContents.setAudioMuted(true);
     let busy = false;
     const timer = setInterval(async () => {
       if (busy || win.isDestroyed()) return;
