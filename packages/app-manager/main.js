@@ -21,7 +21,7 @@ if (id) {
     const running = new Map();
     const image = process.env.APPIMAGE;
     const macBundle = process.platform === 'darwin' && app.isPackaged ? path.resolve(path.dirname(process.execPath), '../..') : null;
-    const fromDiskImage = macBundle?.startsWith('/Volumes/');
+    const fromDiskImage = macBundle && !macBundle.startsWith('/Applications/') && !macBundle.startsWith(path.join(os.homedir(), 'Applications') + path.sep);
     const executable = process.platform === 'linux' && image ? locations.image : fromDiskImage ? path.join(locations.macManager, 'Contents/MacOS/RobOS') : process.execPath;
     const native = integration({ locations, executable, host: path.dirname(__filename), packaged: app.isPackaged, shell });
     const show = () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } };
