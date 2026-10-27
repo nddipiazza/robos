@@ -1905,25 +1905,27 @@ function createSmartLightEngine(options = {}) {
         });
       });
 
-      srv.once('error', () => {
-        // Fallback to ephemeral port if 19219 is busy
-        srv.listen(0, '127.0.0.1', () => {
-          apiPort = srv.address().port;
-          apiServer = srv;
-          resolve({ ok: true, port: apiPort });
-        });
-      });
-
-      srv.listen(apiPort, '127.0.0.1', () => {
+      const onListening = () => {
         apiPort = srv.address().port;
         apiServer = srv;
         resolve({ ok: true, port: apiPort });
+      };
+
+      srv.once('error', () => {
+        srv.removeListener('listening', onListening);
+        // Fallback to ephemeral port if 19219 is busy
+        srv.listen(0, '127.0.0.1', onListening);
       });
+
+      srv.listen(apiPort, '127.0.0.1', onListening);
     });
   }
 
   function stopApiServer() {
-    if (!apiServer) return Promise.resolve();
+    if (!apiServer || !apiServer.listening) {
+      apiServer = null;
+      return Promise.resolve();
+    }
     return new Promise((resolve) => {
       const s = apiServer;
       apiServer = null;

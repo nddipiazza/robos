@@ -620,11 +620,13 @@ async function init() {
         }
       }
       const cards = Array.isArray(fresh.dashboard.cards) ? fresh.dashboard.cards : [];
-      const agentCard = cards.find((c) => c.widgetType === 'agent-sessions');
-      if (agentCard && window.RobOSDashboardUI) {
-        const bodyEl = document.querySelector('section[data-widget-type="agent-sessions"] .robos-embed-card-body');
-        if (bodyEl) {
-          bodyEl.innerHTML = window.RobOSDashboardUI.renderWidgetInnerHtml(agentCard);
+      for (const liveType of ['agent-sessions', 'music-now-playing']) {
+        const liveCard = cards.find((c) => c.widgetType === liveType);
+        if (liveCard && window.RobOSDashboardUI) {
+          const bodyEl = document.querySelector(`section[data-widget-type="${liveType}"] .robos-embed-card-body`);
+          if (bodyEl) {
+            bodyEl.innerHTML = window.RobOSDashboardUI.renderWidgetInnerHtml(liveCard);
+          }
         }
       }
     } catch {}

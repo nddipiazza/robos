@@ -1,8 +1,8 @@
 'use strict';
 
-let app, BrowserWindow, ipcMain, shell;
+let app, BrowserWindow, ipcMain, shell, dialog;
 try {
-  ({ app, BrowserWindow, ipcMain, shell } = require('electron'));
+  ({ app, BrowserWindow, ipcMain, shell, dialog } = require('electron'));
 } catch (error) {
   if (process.versions.electron) throw error;
   app = {
@@ -17,6 +17,7 @@ try {
   BrowserWindow = class {};
   ipcMain = { handle: () => {} };
   shell = { openExternal: () => {} };
+  dialog = {};
 }
 
 const path = require('node:path');
@@ -26,6 +27,16 @@ const { spawn } = require('node:child_process');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = path.join(HOME_DIR, '.config', 'robos');
+
+try {
+  const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+  setupGlobalErrorHandlers('cloud-accounts', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+    setupGlobalErrorHandlers('cloud-accounts', dialog);
+  } catch {}
+}
 
 function requireShared(modName) {
   for (const p of [
@@ -41,6 +52,28 @@ function requireShared(modName) {
 let _debugServer = null;
 try { _debugServer = requireShared('dom-snapshot'); } catch {}
 
+const userDataDir = path.join(CONFIG_DIR, 'electron', 'cloud-accounts');
+app.setName('robos-cloud-accounts');
+app.setPath?.('userData', userDataDir);
+
+try {
+  const lockFile = path.join(userDataDir, 'SingletonLock');
+  if (fs.existsSync(lockFile)) {
+    const target = fs.readlinkSync(lockFile);
+    const m = target.match(/-(\d+)$/);
+    if (m) {
+      const pid = parseInt(m[1], 10);
+      try {
+        process.kill(pid, 0);
+      } catch {
+        try { fs.unlinkSync(lockFile); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonCookie')); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonSocket')); } catch {}
+      }
+    }
+  }
+} catch {}
+
 if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
   const gotLock = app.requestSingleInstanceLock();
   if (!gotLock) {
@@ -52,8 +85,6 @@ if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
-app.setName('robos-cloud-accounts');
-app.setPath?.('userData', path.join(CONFIG_DIR, 'electron', 'cloud-accounts'));
 
 let mainWindow = null;
 

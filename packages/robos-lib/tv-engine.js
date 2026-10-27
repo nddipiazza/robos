@@ -1470,13 +1470,19 @@ tizen run -p robostv001.RobOSTV
       <Label id="s1WfSub${i}" translation="[86, ${y + 65}]" scale="[0.50, 0.50]" width="940" height="26" numLines="1" color="0x94A3B8FF" text="${safeXml(`Commit: ${String(wf.displayTitle || 'Latest main push').slice(0, 56)}`)}" />`;
     }).join('\n');
 
-    const musicPlaying = Boolean(musicData.isPlaying !== false);
-    const musicStatusLine = `NOW PLAYING [${musicPlaying ? 'PLAYING' : 'PAUSED'}]  ${musicData.elapsed || '24:45'} / ${musicData.duration || '46:07'}  |  ${musicData.output || 'Local Audio'}`;
-    const musicTitleLine = `${musicData.title || 'Ambience & Music'}`;
+    const musicPlaying = Boolean(musicData.isPlaying === true);
+    const musicStatusLine = musicPlaying
+      ? `NOW PLAYING [PLAYING]  ${musicData.elapsed || '0:00'} / ${musicData.duration || '46:07'}  |  ${musicData.output || 'Local Audio'}`
+      : `AUDIO IDLE [NOT PLAYING]  0:00 / ${musicData.duration || '0:00'}  |  ${musicData.output || 'Local Audio'}`;
+    const musicTitleLine = musicPlaying
+      ? `${musicData.title || 'Ambience & Music'}`
+      : 'No Audio Currently Playing';
     const musicArtistClean = String(musicData.artistAlbum || `${musicData.artist || ''} - ${musicData.album || ''}`).replace(/[^\x20-\x7E]/g, '-');
-    const musicArtistLine = `${musicArtistClean}  (${musicData.source || 'Google Drive'})`;
-    const musicPct = Math.max(4, Math.min(100, Number(musicData.progressPct) || 54));
-    const musicBarW = Math.max(16, Math.round((musicPct / 100) * 512));
+    const musicArtistLine = musicPlaying
+      ? `${musicArtistClean}  (${musicData.source || 'Google Drive'})`
+      : `Last queued: ${String(musicData.title || 'None').slice(0, 38)} (${musicData.output || 'RobOS Audio Player'})`;
+    const musicPct = musicPlaying ? Math.max(4, Math.min(100, Number(musicData.progressPct) || 1)) : 0;
+    const musicBarW = musicPlaying ? Math.max(16, Math.round((musicPct / 100) * 512)) : 0;
     const upNextArr = Array.isArray(musicData.upNext) ? musicData.upNext : [];
     const musicUpNextLine = upNextArr.length
       ? `Up Next: ${upNextArr.map((u) => `${u.title} (${u.artist})`).join(' | ')}`
@@ -1484,9 +1490,11 @@ tizen run -p robostv001.RobOSTV
 
     const eqBarsXml = Array.from({ length: 8 }, (_, i) => {
       const bx = 1116 + i * 11;
-      const bh = 10 + ((i * 7) % 22);
+      const bh = musicPlaying ? 10 + ((i * 7) % 22) : 4;
       const by = 228 - bh;
-      const bColor = i % 3 === 0 ? '0xA855F7FF' : i % 2 === 0 ? '0x00BCD4FF' : '0x10B981FF';
+      const bColor = musicPlaying
+        ? i % 3 === 0 ? '0xA855F7FF' : i % 2 === 0 ? '0x00BCD4FF' : '0x10B981FF'
+        : '0x334155FF';
       return `    <Rectangle id="eqBar${i}" translation="[${bx}, ${by}]" width="7" height="${bh}" color="${bColor}" />`;
     }).join('\n');
 
@@ -1560,6 +1568,7 @@ end sub
 end sub
 
 sub pollDashboard()
+    pollCount = 0
     while true
         url = m.top.apiUrl
         if url <> ""
@@ -1569,6 +1578,13 @@ sub pollDashboard()
             if raw <> ""
                 m.top.payloadJson = raw
             end if
+        end if
+        pollCount = pollCount + 1
+        if (pollCount mod 20) = 0
+            ' Silent ECP keep-alive pulse every 40s to reset Roku OS screensaver & auto-standby idle timers
+            ka = CreateObject("roUrlTransfer")
+            ka.SetUrl("http://127.0.0.1:8060/keypress/Lit_%7E")
+            ka.PostFromString("")
         end if
         sleep(2000)
     end while
@@ -1819,6 +1835,7 @@ ${cloneBarsXml}
     m.slideNumber = ${ssSlideNum}
     m.slideTotal = ${ssTotal}
     m.activeDashId = "daily-engineering-ops"
+    m.musicPlaying = ${musicPlaying ? 'true' : 'false'}
     m.agentActive = [${sessions[0] ? 'true' : 'false'}, ${sessions[1] ? 'true' : 'false'}, ${sessions[2] ? 'true' : 'false'}]
     m.agentElapsed = [${Number(sessions[0]?.elapsedSec) || 5}, ${Number(sessions[1]?.elapsedSec) || 5}, ${Number(sessions[2]?.elapsedSec) || 5}]
     m.agentActivity = ["${safeXml(String(sessions[0]?.activity || sessions[0]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[1]?.activity || sessions[1]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[2]?.activity || sessions[2]?.cwd || '').slice(0, 42))}"]
@@ -1936,10 +1953,17 @@ sub onClockTick()
         eqNode = m.top.findNode("eqBar" + i.ToStr())
         if eqNode <> invalid
             bx = 1116 + i * 11
-            bh = 8 + (((m.tickCount * 5) + (i * 9)) mod 26)
-            by = 236 - bh
-            eqNode.height = bh
-            eqNode.translation = [bx, by]
+            if m.musicPlaying = true
+                bh = 8 + (((m.tickCount * 5) + (i * 9)) mod 26)
+                by = 236 - bh
+                eqNode.height = bh
+                eqNode.translation = [bx, by]
+                if (i mod 3) = 0 then eqNode.color = "0xA855F7FF" else if (i mod 2) = 0 then eqNode.color = "0x00BCD4FF" else eqNode.color = "0x10B981FF"
+            else
+                eqNode.height = 4
+                eqNode.translation = [bx, 232]
+                eqNode.color = "0x334155FF"
+            end if
         end if
     end for
 
@@ -2101,16 +2125,44 @@ sub onPayloadUpdated()
             maNode = m.top.findNode("musicArtistLabel")
             mpNode = m.top.findNode("musicProgFill")
             muNode = m.top.findNode("musicUpNextLabel")
-            pState = "PLAYING"
-            if md.isPlaying = false then pState = "PAUSED"
-            if msNode <> invalid then msNode.text = "NOW PLAYING [" + pState + "]  " + cleanAscii(md.elapsed) + " / " + cleanAscii(md.duration) + "  |  " + cleanAscii(md.output)
-            if mtNode <> invalid then mtNode.text = Left(cleanAscii(md.title), 42)
-            if maNode <> invalid then maNode.text = cleanAscii(md.artistAlbum) + "  (" + cleanAscii(md.source) + ")"
-            if mpNode <> invalid and md.progressPct <> invalid
-                pct = md.progressPct
-                if pct < 4 then pct = 4
-                if pct > 100 then pct = 100
-                mpNode.width = Int((pct / 100.0) * 512)
+            mStripe = m.top.findNode("musicStripe")
+            isMusPlaying = (md.isPlaying = true)
+            m.musicPlaying = isMusPlaying
+            if isMusPlaying = true
+                if mStripe <> invalid then mStripe.color = "0xA855F7FF"
+                if msNode <> invalid
+                    msNode.text = "NOW PLAYING [PLAYING]  " + cleanAscii(md.elapsed) + " / " + cleanAscii(md.duration) + "  |  " + cleanAscii(md.output)
+                    msNode.color = "0x6EE7B7FF"
+                end if
+                if mtNode <> invalid
+                    mtNode.text = Left(cleanAscii(md.title), 42)
+                    mtNode.color = "0xF8FAFCFF"
+                end if
+                if maNode <> invalid
+                    maNode.text = cleanAscii(md.artistAlbum) + "  (" + cleanAscii(md.source) + ")"
+                    maNode.color = "0xD8B4FEFF"
+                end if
+                if mpNode <> invalid and md.progressPct <> invalid
+                    pct = md.progressPct
+                    if pct < 4 then pct = 4
+                    if pct > 100 then pct = 100
+                    mpNode.width = Int((pct / 100.0) * 512)
+                end if
+            else
+                if mStripe <> invalid then mStripe.color = "0x475569FF"
+                if msNode <> invalid
+                    msNode.text = "AUDIO IDLE [NOT PLAYING]  0:00 / " + cleanAscii(md.duration) + "  |  " + cleanAscii(md.output)
+                    msNode.color = "0x94A3B8FF"
+                end if
+                if mtNode <> invalid
+                    mtNode.text = "No Audio Currently Playing"
+                    mtNode.color = "0x94A3B8FF"
+                end if
+                if maNode <> invalid
+                    maNode.text = "Last queued: " + Left(cleanAscii(md.title), 36) + " (" + cleanAscii(md.output) + ")"
+                    maNode.color = "0x64748BFF"
+                end if
+                if mpNode <> invalid then mpNode.width = 0
             end if
             if muNode <> invalid and md.upNext <> invalid and md.upNext.Count() > 0
                 u0 = md.upNext[0]
@@ -2238,6 +2290,13 @@ sub onItemSelected()
         m.statusFooter.text = "Launched on RobOS Host (${portalUrl}): " + t.title
     end if
 end sub
+
+function onKeyEvent(key as String, press as Boolean) as Boolean
+    if key = "Lit_~" or Left(key, 4) = "Lit_"
+        return true
+    end if
+    return false
+end function
 `;
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
@@ -2506,7 +2565,12 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         }
 
         if (u.pathname === '/api/dashboard-cast') {
-          const dashEngine = require('./dashboard-engine').createDashboardEngine({ configDir: resolvedConfigDir });
+          let dashMod;
+          try {
+            delete require.cache[require.resolve('./dashboard-engine')];
+          } catch {}
+          dashMod = require('./dashboard-engine');
+          const dashEngine = dashMod.createDashboardEngine({ configDir: resolvedConfigDir });
           const ssState = dashEngine.getSlideshowState();
           const explicitDashId = u.searchParams.get('id');
           const targetDashId = explicitDashId
@@ -2515,6 +2579,35 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             ? 'slideshow'
             : state.activeDashboardCast?.dashboardId || 'daily-engineering-ops';
           const resolved = dashEngine.resolveDashboard(targetDashId);
+
+          // Send periodic silent ECP keep-alive pulse (every 45s) to prevent Roku screensaver & auto-standby
+          if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+            const remoteIp = String(req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
+            const targetRokuIp =
+              (remoteIp && remoteIp !== '127.0.0.1' && remoteIp !== '::1' ? remoteIp : null) ||
+              state.activeDashboardCast?.tvIp ||
+              state.tvs.find((t) => t.platformId === 'roku-os')?.ip;
+            if (targetRokuIp) {
+              if (!global.__robosRokuKeepAliveMap) global.__robosRokuKeepAliveMap = new Map();
+              const lastKa = global.__robosRokuKeepAliveMap.get(targetRokuIp) || 0;
+              if (Date.now() - lastKa >= 45000) {
+                global.__robosRokuKeepAliveMap.set(targetRokuIp, Date.now());
+                const kaReq = http.request(
+                  {
+                    hostname: targetRokuIp,
+                    port: 8060,
+                    path: '/keypress/Lit_%7E',
+                    method: 'POST',
+                    timeout: 1500,
+                  },
+                  (kaRes) => kaRes.resume()
+                );
+                kaReq.on('error', () => {});
+                kaReq.end();
+              }
+            }
+          }
+
           res.writeHead(200, {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
@@ -2525,6 +2618,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
               cast: state.activeDashboardCast || null,
               slideshow: resolved.slideshow || ssState || null,
               dashboard: resolved.dashboard,
+              keepAliveActive: true,
               castUrl: `http://${hostIp}:${boundPort}/dashboard`,
             })
           );
@@ -2621,26 +2715,36 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         res.end(html);
       });
 
-      server.once('error', () => {
-        // Fallback to ephemeral port if preferredPort is already bound
-        server.listen(0, '0.0.0.0', () => {
-          boundPort = server.address().port;
-          server.unref();
-          resolve({ ok: true, port: boundPort, url: `http://${detectLanIp()}:${boundPort}` });
-        });
-      });
-
-      server.listen(preferredPort, '0.0.0.0', () => {
+      const onListening = () => {
         boundPort = server.address().port;
         server.unref();
         resolve({ ok: true, port: boundPort, url: `http://${detectLanIp()}:${boundPort}` });
+      };
+
+      server.once('error', (err) => {
+        server.removeListener('listening', onListening);
+        if (err && err.code === 'EADDRINUSE' && preferredPort === DEFAULT_PORTAL_PORT && process.env.ROBOS_TEST !== '1') {
+          // Another RobOS app (e.g. robos-tv or robos-dashboards) is already serving the 10-foot portal on :19210.
+          // Reuse :19210 rather than overwriting tv-studio.json / Roku channel URLs with a random ephemeral port.
+          boundPort = preferredPort;
+          server = null;
+          resolve({ ok: true, port: boundPort, reused: true, url: `http://${detectLanIp()}:${boundPort}` });
+          return;
+        }
+        // Fallback to ephemeral port if preferredPort is already bound in test mode
+        server.listen(0, '0.0.0.0', onListening);
       });
+
+      server.listen(preferredPort, '0.0.0.0', onListening);
     });
   }
 
   function stopPortalServer() {
     return new Promise((resolve) => {
-      if (!server) return resolve({ ok: true });
+      if (!server || !server.listening) {
+        server = null;
+        return resolve({ ok: true });
+      }
       server.close(() => {
         server = null;
         resolve({ ok: true });

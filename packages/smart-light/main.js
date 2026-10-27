@@ -1,8 +1,8 @@
 'use strict';
 
-let app, BrowserWindow, ipcMain;
+let app, BrowserWindow, ipcMain, dialog;
 try {
-  ({ app, BrowserWindow, ipcMain } = require('electron'));
+  ({ app, BrowserWindow, ipcMain, dialog } = require('electron'));
 } catch (error) {
   if (process.versions.electron) throw error;
   app = {
@@ -16,6 +16,7 @@ try {
   };
   BrowserWindow = class {};
   ipcMain = { handle: () => {} };
+  dialog = {};
 }
 
 const path = require('node:path');
@@ -25,6 +26,16 @@ const { spawn } = require('node:child_process');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config', 'robos');
+
+try {
+  const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+  setupGlobalErrorHandlers('smart-light', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+    setupGlobalErrorHandlers('smart-light', dialog);
+  } catch {}
+}
 
 function requireShared(modName) {
   for (const p of [
@@ -50,7 +61,27 @@ const lightEngine = lightEngineModule.createSmartLightEngine({
   apiPort: Number(process.env.ROBOS_SMART_LIGHT_API_PORT || lightEngineModule.DEFAULT_API_PORT),
 });
 
-app.setPath?.('userData', path.join(CONFIG_DIR, 'electron', 'smart-light'));
+const userDataDir = path.join(CONFIG_DIR, 'electron', 'smart-light');
+app.setName?.('robos-smart-light');
+app.setPath?.('userData', userDataDir);
+
+try {
+  const lockFile = path.join(userDataDir, 'SingletonLock');
+  if (fs.existsSync(lockFile)) {
+    const target = fs.readlinkSync(lockFile);
+    const m = target.match(/-(\d+)$/);
+    if (m) {
+      const pid = parseInt(m[1], 10);
+      try {
+        process.kill(pid, 0);
+      } catch {
+        try { fs.unlinkSync(lockFile); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonCookie')); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonSocket')); } catch {}
+      }
+    }
+  }
+} catch {}
 
 if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
   const gotLock = app.requestSingleInstanceLock?.();
@@ -65,7 +96,6 @@ app.commandLine?.appendSwitch('disable-gpu');
 app.commandLine?.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
-app.setName?.('robos-smart-light');
 
 function createWindow() {
   const iconPng = path.join(__dirname, 'icon.png');
@@ -113,9 +143,17 @@ app.on?.('window-all-closed', async () => {
 
 app.on?.('second-instance', () => {
   if (mainWindow && !mainWindow.isDestroyed?.()) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (mainWindow.isMinimized?.()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
+  } else {
+    createWindow();
+  }
+});
+
+app.on?.('activate', () => {
+  if (!mainWindow || mainWindow.isDestroyed?.()) {
+    createWindow();
   }
 });
 
