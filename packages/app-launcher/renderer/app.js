@@ -48,6 +48,7 @@ const CATEGORY_MAP = {
   'Presentation': 'Office',
   'Calendar': 'Office',
   'Game': 'Games',
+  'X-PartyGame': 'Party Games',
   'Education': 'Education',
   'Science': 'Education',
   'Math': 'Education',
@@ -57,7 +58,7 @@ const CATEGORY_MAP = {
 // Display order for categories
 const CATEGORY_ORDER = [
   'All', 'Utilities', 'System', 'Internet', 'Development',
-  'Graphics', 'Media', 'Office', 'Games', 'Education', 'Accessibility', 'Other'
+  'Graphics', 'Media', 'Office', 'Games', 'Party Games', 'Education', 'Accessibility', 'Other'
 ];
 
 function resolveCategory(rawCategories) {

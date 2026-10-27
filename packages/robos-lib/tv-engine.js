@@ -309,6 +309,15 @@ const TEN_FOOT_LAUNCH_TILES = [
     packageId: 'point-of-sale',
     shortcutKey: '8',
   },
+  {
+    id: 'party-game',
+    title: 'RobOS Party Game',
+    category: 'Party Games',
+    badge: 'Phones as Controllers',
+    description: 'An AI host face runs survey-powered mini games about your guests; phones are the controllers.',
+    packageId: 'party-game',
+    shortcutKey: '9',
+  },
 ];
 
 function detectLanIp() {
@@ -1045,6 +1054,15 @@ function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-ho
     updateClock();
     setInterval(updateClock, 15000);
     renderGrid();
+
+    // Another RobOS app (e.g. Party Game) can cast its own page to this TV.
+    function followAppCast() {
+      fetch('/api/app-cast').then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.appCast && j.appCast.active && j.appCast.url) location.replace(j.appCast.url);
+      }).catch(function () {});
+    }
+    followAppCast();
+    setInterval(followAppCast, 3000);
   </script>
 </body>
 </html>`;
@@ -1569,6 +1587,7 @@ end sub
 
 sub pollDashboard()
     while true
+        raw = ""
         url = m.top.apiUrl
         if url <> ""
             http = CreateObject("roUrlTransfer")
@@ -1578,7 +1597,11 @@ sub pollDashboard()
                 m.top.payloadJson = raw
             end if
         end if
-        sleep(2000)
+        if Instr(1, raw, Chr(34) + "appCastActive" + Chr(34) + ":true") > 0
+            sleep(700)
+        else
+            sleep(2000)
+        end if
     end while
 end sub
 `;
@@ -2039,11 +2062,53 @@ function cleanAscii(s as Dynamic) as String
     return out
 end function
 
+sub showAppCastFrame(frameUrl as String)
+    if m.livePosterA = invalid
+        m.livePosterA = m.top.findNode("livePosterA")
+        m.livePosterB = m.top.findNode("livePosterB")
+        m.frontPoster = ""
+        m.frameSeq = 0
+    end if
+    m.frameSeq = m.frameSeq + 1
+    if m.frontPoster = "A" then target = m.livePosterB else target = m.livePosterA
+    target.observeField("loadStatus", "onLivePosterLoaded")
+    target.uri = frameUrl + "&seq=" + m.frameSeq.ToStr()
+end sub
+
+sub onLivePosterLoaded(evt as Object)
+    p = evt.getRoSGNode()
+    if p.loadStatus <> "ready" then return
+    p.unobserveField("loadStatus")
+    if p.id = "livePosterA"
+        m.livePosterA.opacity = 1.0
+        m.livePosterB.opacity = 0.0
+        m.frontPoster = "A"
+    else
+        m.livePosterB.opacity = 1.0
+        m.livePosterA.opacity = 0.0
+        m.frontPoster = "B"
+    end if
+end sub
+
+sub hideAppCastFrames()
+    if m.livePosterA <> invalid
+        m.livePosterA.opacity = 0.0
+        m.livePosterB.opacity = 0.0
+        m.frontPoster = ""
+    end if
+end sub
+
 sub onPayloadUpdated()
     raw = m.dashTask.payloadJson
     if raw = "" then return
     json = ParseJson(raw)
-    if json = invalid or json.dashboard = invalid then return
+    if json = invalid then return
+    if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
+        showAppCastFrame(json.appCast.frameUrl)
+        return
+    end if
+    hideAppCastFrames()
+    if json.dashboard = invalid then return
     dash = json.dashboard
     ss = json.slideshow
     if ss <> invalid
@@ -2575,6 +2640,103 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     };
   }
 
+  // ── App casts ──────────────────────────────────────────────────────────
+  // Any RobOS app can take over a TV with its own page (state.appCasts[tvId]).
+  // Browser TVs (webOS, Tizen, Android TV) are sent to the page's URL; Roku,
+  // which has no browser, shows JPEG frames the app pushes to
+  // POST /api/app-cast-frame?tv=<id>. Frames are kept in the memory of the
+  // process serving the portal, so apps push them over HTTP, not in-process.
+  const appCastFrames = new Map();
+
+  function setAppCastFrame(tvId, buf) {
+    if (!tvId || !Buffer.isBuffer(buf) || buf.length < 500) return false;
+    appCastFrames.set(String(tvId), { buf, at: Date.now() });
+    return true;
+  }
+
+  function isLoopback(req) {
+    const addr = String(req.socket?.remoteAddress || '');
+    return addr === '::1' || addr.startsWith('127.') || addr.startsWith('::ffff:127.');
+  }
+
+  function appCastForRequest(req, u, platformId = null) {
+    const casts = Object.values(state.appCasts || {}).filter((c) => c && c.active && (!platformId || c.platformId === platformId));
+    if (!casts.length) return null;
+    const explicit = u.searchParams.get('tv');
+    if (explicit) return casts.find((c) => c.tvId === explicit) || null;
+    const addr = String(req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
+    const byIp = casts.find((c) => c.tvIp === addr);
+    if (byIp) return byIp;
+    // A Roku behind NAT or with a stale IP still gets the cast if it is the only one.
+    return platformId && casts.length === 1 ? casts[0] : null;
+  }
+
+  async function castAppToTv({ tvId, appId, title, url } = {}) {
+    loadState();
+    const tv = state.tvs.find((t) => t.id === tvId);
+    if (!tv) return { ok: false, error: `TV ${tvId} is not paired` };
+    if (!url) return { ok: false, error: 'url is required' };
+    const hostIp = detectLanIp();
+    const portalUrl = `http://${hostIp}:${boundPort || DEFAULT_PORTAL_PORT}`;
+    const isRoku = tv.platformId === 'roku-os';
+    const appCast = {
+      active: true,
+      tvId: tv.id,
+      tvName: tv.name,
+      tvIp: tv.ip,
+      platformId: tv.platformId,
+      appId: appId || 'app',
+      title: title || appId || 'RobOS App',
+      url,
+      mode: isRoku ? 'frames' : 'url',
+      frameUrl: isRoku ? `${portalUrl}/api/app-cast-frame.jpg?tv=${encodeURIComponent(tv.id)}` : null,
+      castAt: new Date().toISOString(),
+    };
+    state.appCasts = { ...(state.appCasts || {}), [tv.id]: appCast };
+    state.lastRemoteKey = `SHOW ${appCast.title} → ${tv.name}`;
+    saveState();
+
+    let note = 'The TV opens it from the RobOS portal within a few seconds.';
+    if (process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      if (tv.platformId === 'android-tv') {
+        exec(`adb -s "${tv.ip}:5555" shell am start -a android.intent.action.VIEW -d "${url}"`, () => {});
+        note = 'Opened on the TV with adb.';
+      } else if (isRoku) {
+        const status = await new Promise((resolve) => {
+          const r = http.request(
+            { hostname: tv.ip, port: 8060, path: '/launch/dev', method: 'POST', agent: false, timeout: 2000, headers: { 'Content-Length': '0', Connection: 'close' } },
+            (resp) => { resp.resume(); resolve(resp.statusCode || 0); }
+          );
+          r.on('error', () => resolve(0));
+          r.on('timeout', () => { r.destroy(); resolve(0); });
+          r.end();
+        });
+        note = status >= 200 && status < 300
+          ? 'Launched the RobOS TV channel; it shows live frames of the page.'
+          : 'Open the RobOS TV channel on the Roku (sideload it from Smart TV Studio if needed); it will show live frames.';
+      }
+    }
+    return { ok: true, tv, appCast, message: `${appCast.title} is on ${tv.name}. ${note}` };
+  }
+
+  function stopAppCast({ tvId, appId } = {}) {
+    loadState();
+    const casts = { ...(state.appCasts || {}) };
+    for (const [id, c] of Object.entries(casts)) {
+      if ((tvId && id !== tvId) || (appId && c.appId !== appId)) continue;
+      casts[id] = { ...c, active: false, stoppedAt: new Date().toISOString() };
+      appCastFrames.delete(id);
+    }
+    state.appCasts = casts;
+    saveState();
+    return { ok: true, appCasts: casts };
+  }
+
+  function listAppCasts() {
+    loadState();
+    return Object.values(state.appCasts || {}).filter((c) => c && c.active);
+  }
+
   function startPortalServer(preferredPort = boundPort) {
     if (server && server.listening) {
       return Promise.resolve({ ok: true, port: boundPort, url: `http://${detectLanIp()}:${boundPort}` });
@@ -2598,6 +2760,56 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             res.end('Live frame not active');
           }
+          return;
+        }
+
+        if (u.pathname === '/api/app-cast-frame' && req.method === 'POST') {
+          // Local RobOS apps push rendered JPEG frames for TVs without a browser (Roku).
+          if (!isLoopback(req)) {
+            res.writeHead(403, { 'Content-Type': 'text/plain' });
+            res.end('Frames may only be pushed from this computer');
+            return;
+          }
+          const tvId = u.searchParams.get('tv') || '';
+          const chunks = [];
+          let size = 0;
+          req.on('data', (c) => {
+            size += c.length;
+            if (size <= 4 * 1024 * 1024) chunks.push(c);
+          });
+          req.on('end', () => {
+            const ok = size <= 4 * 1024 * 1024 && setAppCastFrame(tvId, Buffer.concat(chunks));
+            res.writeHead(ok ? 204 : 400, { 'Content-Type': 'text/plain' });
+            res.end();
+          });
+          return;
+        }
+
+        if (u.pathname === '/api/app-cast-frame.jpg') {
+          const frame = appCastFrames.get(u.searchParams.get('tv') || '');
+          if (!frame || Date.now() - frame.at > 30000) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('No app cast frame');
+            return;
+          }
+          res.writeHead(200, {
+            'Content-Type': 'image/jpeg',
+            'Content-Length': String(frame.buf.length),
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Access-Control-Allow-Origin': '*',
+          });
+          res.end(frame.buf);
+          return;
+        }
+
+        if (u.pathname === '/api/app-cast') {
+          const body = JSON.stringify({ ok: true, appCast: appCastForRequest(req, u) });
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+            'Access-Control-Allow-Origin': '*',
+          });
+          res.end(body);
           return;
         }
 
@@ -2646,8 +2858,11 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             }
           } catch {}
 
+          const rokuAppCast = appCastForRequest(req, u, 'roku-os');
           const bodyJson = JSON.stringify({
             ok: true,
+            appCastActive: Boolean(rokuAppCast),
+            appCast: rokuAppCast,
             cast: state.activeDashboardCast || null,
             slideshow: resolved.slideshow || ssState || null,
             dashboard: resolved.dashboard,
@@ -3571,6 +3786,10 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     stopDashboardCast,
     setLiveDashboardFrame,
     getLiveDashboardFrame,
+    castAppToTv,
+    stopAppCast,
+    listAppCasts,
+    setAppCastFrame,
   };
 }
 

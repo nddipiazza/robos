@@ -919,6 +919,22 @@
       "robos:repository": "packages/robos-dashboards",
       "robos:technology": "Electron 28 / RobOS UI Web Components / Smart TV 10-Foot Portal",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:desktop-app:party-game",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "schema:VideoGame"
+      ],
+      "dcterms:title": "RobOS Party Game",
+      "dcterms:description": "First game in the Party Games category: an animated AI host face runs survey-powered mini games on one or more RobOS TVs (stage, scoreboard and spotlight screens) while guests play on their phones. Guests get roles from their answers, the party host describes the house, and the required AI agent writes the show (role reveals, superlatives, interest trivia, House Quests using the real rooms and supplies, bluffs, recaps and finale awards). Mini games share a reusable template.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "packages/party-game",
+      "robos:technology": "Electron 28 / LAN HTTP + SSE / RobOS TV app casts / robos-agent-client",
+      "robos:schemaOrgType": "https://schema.org/VideoGame"
     }
   ]
 }

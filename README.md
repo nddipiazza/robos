@@ -25,7 +25,7 @@ Separately, AI-powered features inside the apps are optional extras you switch o
 
 ## What is in this repository
 
-- **App suites.** Point of Sale, Auto Center, Household, Audio Player and Home Speaker, and games (a cRPG, a tabletop RPG and an RTS), each with optional AI features.
+- **App suites.** Point of Sale, Auto Center, Household, Audio Player and Home Speaker, and games (a cRPG, a tabletop RPG, an RTS, and the AI-hosted RobOS Party Game played on your TVs and phones), each with optional AI features.
 - **Developer suite.** Electron apps covering the development lifecycle that builds and changes the apps: planning, code review, git and issues, databases and API clients, Kubernetes, builds, documentation and eLearning. See the [app directory](https://rowbose.com/apps/).
 - **Knowledge graph.** Apps, services, contracts, databases, teams and work items stored as JSON-LD under `.robos/` and validated with SHACL. Two states of the graph (`main` and a feature branch) can be diffed to see what a change touches before it merges.
 - **Agent harness.** Runs the agent CLIs you have installed (Claude Code, Codex, Copilot, Gemini CLI / Antigravity), scans prompts for secrets and personal data, runs agents in disposable profiles, and captures test and UI evidence for review. No API keys are needed. An optional API mode can send quick requests to Anthropic, OpenAI, Gemini or a local Ollama server instead ([AI agents and API mode](https://rowbose.com/v1/ai-providers.html)).
