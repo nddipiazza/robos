@@ -49,6 +49,8 @@
 - [Quest: Warrior Dragon Docs](https://rowbose.com/games/quest-warrior-dragon/docs/): Player guide, AI route planner, and reachability verification
 - [Quest: Warrior Dragon AI Playthrough](https://rowbose.com/games/quest-warrior-dragon/ai-playthrough/): Full 70-milestone autonomous playthrough from throne room to Dragonlord
 - [Quest: Warrior Dragon Proof of Viability](https://rowbose.com/games/quest-warrior-dragon/proof-of-viability.html): Global map completeness and pathfinding proof of viability
+- [RobOS Party Game](https://rowbose.com/games/party-game/): AI-hosted party game on RobOS TVs with phones as controllers; mini games written from the guests' survey and the house
+- [RobOS Party Game Docs](https://rowbose.com/games/party-game/docs/): Setup, how a party runs, the mini games and the mini game template
 
 ## Classic Documentation & Reference (/v1/)
 - [Classic Docs Index](https://rowbose.com/v1/): Complete RobOS v1 documentation, architecture, and 85+ app reference pages
