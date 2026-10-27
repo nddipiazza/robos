@@ -23,17 +23,37 @@ const CLIP_DIR = path.join(os.tmpdir(), 'robos-party-narration');
 
 // Normalise to typical speaker loudness and encode as MP3 (Roku and Cast
 // speakers both play it; voice engines write quiet, sometimes float WAVs).
-function toMp3(filePath) {
+// `key` names the output so two lines rendered at once never share a file.
+function toMp3(filePath, key = filePath) {
   return new Promise((resolve) => {
     try {
       fs.mkdirSync(CLIP_DIR, { recursive: true });
-      const out = path.join(CLIP_DIR, `${crypto.createHash('md5').update(filePath).digest('hex').slice(0, 16)}.mp3`);
+      const out = path.join(CLIP_DIR, `${crypto.createHash('md5').update(String(key)).digest('hex').slice(0, 16)}.mp3`);
       const ff = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-i', filePath,
         '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ac', '2', '-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', '128k', out], { stdio: 'ignore' });
       ff.on('error', () => resolve(filePath));
-      ff.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? out : filePath));
+      ff.on('close', (code) => resolve(code === 0 && fs.existsSync(out) && fs.statSync(out).size > 0 ? out : filePath));
     } catch {
       resolve(filePath);
+    }
+  });
+}
+
+// Roku TVs play lines through the same Video node as their keep-alive clip, so
+// lines go out in that clip's format: a tiny black H.264 video with AAC audio.
+function toRokuMp4(audioPath, key) {
+  return new Promise((resolve) => {
+    try {
+      fs.mkdirSync(CLIP_DIR, { recursive: true });
+      const out = path.join(CLIP_DIR, `${crypto.createHash('md5').update(`roku:${key}`).digest('hex').slice(0, 16)}.mp4`);
+      const ff = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error',
+        '-f', 'lavfi', '-i', 'color=c=black:s=160x90:r=15', '-i', audioPath, '-shortest',
+        '-c:v', 'libx264', '-profile:v', 'baseline', '-level', '3.0', '-pix_fmt', 'yuv420p', '-g', '30',
+        '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-movflags', '+faststart', out], { stdio: 'ignore' });
+      ff.on('error', () => resolve(null));
+      ff.on('close', (code) => resolve(code === 0 && fs.existsSync(out) && fs.statSync(out).size > 0 ? out : null));
+    } catch {
+      resolve(null);
     }
   });
 }
@@ -62,6 +82,7 @@ function createNarrationRouter({
   log = () => {},
 }) {
   const clips = new Map(); // narration id → Promise<mp3 path | null>
+  const rokuClips = new Map(); // narration id → Promise<mp4 path | null>
   let cast = null;
 
   function getCast() {
@@ -106,12 +127,12 @@ function createNarrationRouter({
 
   // ── Lines ────────────────────────────────────────────────────────────────
 
-  function clip(id) {
-    return clips.get(id) || null;
+  function clip(id, format = 'mp3') {
+    return (format === 'mp4' ? rokuClips : clips).get(id) || null;
   }
 
-  function narrationUrl(id) {
-    return `http://${getLanIp()}:${getGamePort()}/api/narration/${encodeURIComponent(id)}.mp3`;
+  function narrationUrl(id, ext = 'mp3') {
+    return `http://${getLanIp()}:${getGamePort()}/api/narration/${encodeURIComponent(id)}.${ext}`;
   }
 
   // Called for every new line the host says.
@@ -122,10 +143,15 @@ function createNarrationRouter({
     if (!tts) return;
     const job = tts
       .synthesize(narration.text, { kokoroTimeoutMs: 30000 })
-      .then((res) => (res && res.ok && res.engine !== 'fallback' ? toMp3(res.filePath) : null))
+      .then((res) => (res && res.ok && res.engine !== 'fallback' ? toMp3(res.filePath, narration.id) : null))
       .catch(() => null);
     clips.set(narration.id, job);
     while (clips.size > 40) clips.delete(clips.keys().next().value);
+    const rokuStage = outputs.includes('tvs') && engine.state.tvs.some((tv) => tv.screen === 'stage' && tv.platformId === 'roku-os');
+    if (rokuStage) {
+      rokuClips.set(narration.id, job.then((file) => (file ? toRokuMp4(file, narration.id) : null)));
+      while (rokuClips.size > 40) rokuClips.delete(rokuClips.keys().next().value);
+    }
 
     job.then(async (file) => {
       if (!file) return;
@@ -134,10 +160,10 @@ function createNarrationRouter({
       if (ms && engine.state.narration && engine.state.narration.id === narration.id) {
         engine.state.narration.durationMs = ms;
       }
-      if (outputs.includes('tvs') && tvEngine) {
+      if (rokuStage && tvEngine && (await rokuClips.get(narration.id))) {
         for (const tv of engine.state.tvs) {
           if (tv.screen !== 'stage' || tv.platformId !== 'roku-os') continue;
-          tvEngine.updateAppCast({ tvId: tv.tvId, appId: 'party-game', patch: { narration: { id: narration.id, url: narrationUrl(narration.id) } } });
+          tvEngine.updateAppCast({ tvId: tv.tvId, appId: 'party-game', patch: { narration: { id: narration.id, url: narrationUrl(narration.id, 'mp4') } } });
         }
       }
       const speakerId = engine.state.settings.speakerId;
@@ -156,4 +182,4 @@ function createNarrationRouter({
   return { handle, clip, listSpeakers, scanSpeakers, stop, speakersAvailable: () => Boolean(castModule && castModule.CastService) };
 }
 
-module.exports = { createNarrationRouter, toMp3 };
+module.exports = { createNarrationRouter, toMp3, toRokuMp4 };

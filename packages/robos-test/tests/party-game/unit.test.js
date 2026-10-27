@@ -401,9 +401,11 @@ describe('RobOS Party Game', () => {
       router.handle({ id: 'n1', text: 'Welcome to the party!' });
       const file = await router.clip('n1');
       assert.ok(file && fs.existsSync(file), 'line rendered to a playable file');
-      for (let i = 0; i < 50 && !casts.length; i++) await new Promise((r) => setTimeout(r, 20));
+      for (let i = 0; i < 100 && (!casts.length || !patches.length); i++) await new Promise((r) => setTimeout(r, 20));
       assert.deepStrictEqual(patches.map((p) => p.tvId), ['roku'], 'only main-stage Roku TVs get the line');
-      assert.deepStrictEqual(patches[0].patch.narration, { id: 'n1', url: 'http://10.0.0.5:19213/api/narration/n1.mp3' });
+      assert.deepStrictEqual(patches[0].patch.narration, { id: 'n1', url: 'http://10.0.0.5:19213/api/narration/n1.mp4' });
+      const mp4 = await router.clip('n1', 'mp4');
+      assert.ok(mp4 && mp4.endsWith('.mp4') && fs.statSync(mp4).size > 0, 'Roku gets a keep-alive-style MP4');
       assert.deepStrictEqual(casts.map((c) => c.ip), ['192.168.1.6']);
     });
   });
