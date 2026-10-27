@@ -387,6 +387,54 @@ function renderPortalPreview() {
   });
 }
 
+function describePortalOwner(o) {
+  if (o.legacy) return 'an older RobOS build that does not report its owner';
+  if (o.foreign) return 'a process that is not a RobOS TV portal';
+  if (!o.owner) return 'another process';
+  const kind = o.robosApp ? o.owner.appName : `${o.owner.appName} (not a RobOS app)`;
+  return `${kind}, pid ${o.owner.pid}`;
+}
+
+function renderPortalOwnership(o) {
+  const box = document.getElementById('portal-owner-alert');
+  const dot = document.getElementById('portal-owner-dot');
+  const blocked = Boolean(o && o.ok && !o.serving && o.reachable);
+  if (dot) dot.className = 'dot ' + (blocked ? 'warning' : 'online');
+  if (!box) return;
+  if (!blocked) {
+    box.classList.add('hidden');
+    return;
+  }
+  const versionNote = o.owner
+    ? o.sameVersion
+      ? 'It runs the same portal code as this app.'
+      : `It runs portal code ${o.owner.codeVersion}; this app has ${o.self.codeVersion}.`
+    : 'Its portal code version is unknown, so new portal features may be missing.';
+  document.getElementById('portal-owner-title').textContent = o.stale
+    ? 'Smart TV Studio is not serving the TV portal (stale server)'
+    : 'Smart TV Studio is not serving the TV portal';
+  document.getElementById('portal-owner-msg').textContent =
+    `Port ${o.port} is held by ${describePortalOwner(o)}. ${versionNote} ` +
+    (o.canRestart
+      ? 'Restart the portal to serve it from Smart TV Studio.'
+      : 'That process cannot be asked to hand the port over; quit it, then restart the portal.');
+  document.getElementById('portal-owner-detail').textContent = o.listener
+    ? `Listening: pid ${o.listener.pid} ${o.listener.command || ''}`
+    : '';
+  box.classList.remove('hidden');
+}
+
+async function refreshPortalOwnership() {
+  try {
+    const o = await window.robosTv.getPortalOwnership();
+    state.portalOwnership = o;
+    renderPortalOwnership(o);
+    return o;
+  } catch {
+    return null;
+  }
+}
+
 async function init() {
   // Wire up tabs
   document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -607,6 +655,28 @@ async function init() {
       showBanner(`Extended LG webOS Developer Mode session to ${res.remainingHours} hours (ares-extend-dev).`);
     }
   };
+
+  const restartPortalBtn = document.getElementById('btn-restart-portal');
+  restartPortalBtn.onclick = async () => {
+    restartPortalBtn.disabled = true;
+    restartPortalBtn.textContent = 'Restarting...';
+    try {
+      const res = await window.robosTv.restartPortal();
+      if (res && res.ok) {
+        const prev = res.previousOwner ? ` (took over from ${res.previousOwner.appName}, pid ${res.previousOwner.pid})` : '';
+        showBanner(`Smart TV Studio now serves the TV portal on :${res.port}${prev}.`);
+      } else {
+        showBanner((res && res.error) || 'Could not restart the TV portal', true);
+      }
+    } finally {
+      restartPortalBtn.disabled = false;
+      restartPortalBtn.textContent = 'Restart TV portal';
+      await refreshPortalOwnership();
+    }
+  };
+  window.robosTv.onPortalChanged?.(() => refreshPortalOwnership());
+  setInterval(refreshPortalOwnership, 5000);
+  refreshPortalOwnership();
 
   const initial = await window.robosTv.getOverview();
   if (initial && initial.ok) {

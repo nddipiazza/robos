@@ -67,7 +67,18 @@ for (const base of [
 const tvEngine = tvEngineModule.createTvEngine({
   configDir: CONFIG_DIR,
   portalPort: Number(process.env.ROBOS_TV_PORTAL_PORT || tvEngineModule.DEFAULT_PORTAL_PORT),
+  appName: 'robos-tv',
+  // Smart TV Studio renders the live dashboard frames, so it should serve the
+  // portal; reuse (and flag in the UI) only when another process holds it.
+  reusePortal: process.env.ROBOS_TEST !== '1',
+  onPortalReleased: () => notifyPortalChanged(),
 });
+
+function notifyPortalChanged() {
+  if (mainWindow && !mainWindow.isDestroyed?.()) {
+    try { mainWindow.webContents.send('tv:portalChanged'); } catch {}
+  }
+}
 
 const userDataDir = path.join(CONFIG_DIR, 'electron', 'robos-tv');
 app.setName?.('robos-tv');
@@ -240,6 +251,18 @@ app.on?.('activate', () => {
 
 ipcMain.handle('tv:getOverview', async () => {
   return tvEngine.getOverview();
+});
+
+ipcMain.handle('tv:getPortalOwnership', async () => {
+  return tvEngine.getPortalOwnership(portalPortBound);
+});
+
+ipcMain.handle('tv:restartPortal', async () => {
+  const res = await tvEngine.restartPortal({ port: portalPortBound });
+  if (res.ok && wallboardWindow && !wallboardWindow.isDestroyed?.()) {
+    try { wallboardWindow.webContents.reloadIgnoringCache(); } catch {}
+  }
+  return res;
 });
 
 ipcMain.handle('tv:scanLan', async () => {

@@ -27,7 +27,7 @@
 
       <div class="header-right">
         <div class="portal-pill" id="portal-url-pill" title="Live 10-Foot Smart TV Portal HTTP endpoint">
-          <span class="dot online"></span>
+          <span class="dot online" id="portal-owner-dot"></span>
           <span class="pill-label">10-Foot TV Portal:</span>
           <code id="portal-url-text">http://192.168.1.100:19210</code>
         </div>
@@ -37,6 +37,18 @@
     </header>
 
     <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
+
+    <!-- Shown when another process holds the 10-foot portal port -->
+    <div id="portal-owner-alert" class="setup-alert portal-owner-alert hidden" role="alert">
+      <div class="setup-alert-head">
+        <div>
+          <strong id="portal-owner-title">Smart TV Studio is not serving the TV portal</strong>
+          <p id="portal-owner-msg" class="setup-alert-msg"></p>
+          <p id="portal-owner-detail" class="portal-owner-detail"></p>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary" id="btn-restart-portal">Restart TV portal</button>
+      </div>
+    </div>
 
     <!-- Setup Required / Permission Blocked Diagnostic Alert Box -->
     <div id="setup-alert-box" class="setup-alert hidden" role="alert">
