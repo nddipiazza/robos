@@ -1595,6 +1595,8 @@ end sub
 <component name="MainScene" extends="Scene">
   <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
   <children>
+    <!-- Silent 160x90 looping H.264+AAC video node placed behind opaque bg Rectangle so Roku hardware media player stays in state=play (suppresses screensaver & auto-standby with zero keypress audio) -->
+    <Video id="keepAliveVideo" translation="[0, 0]" width="160" height="90" mute="true" loop="true" enableUI="false" />
     <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
     <Rectangle id="headerBar" width="1920" height="84" color="0x0F172AFF" />
     <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="2" color="0x00BCD4FF" />
@@ -1794,8 +1796,6 @@ ${cloneBarsXml}
       color="0xF8FAFCFF"
       focusedColor="0x061318FF" />
 
-    <!-- Silent 1x1 looping video node (no audio track) to suppress Roku OS screensaver & auto-standby without ECP keypress sounds -->
-    <Video id="keepAliveVideo" translation="[0, 0]" width="1" height="1" opacity="0.0" mute="true" loop="true" enableUI="false" />
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
@@ -1803,7 +1803,19 @@ ${cloneBarsXml}
   </children>
 </component>
 `;
-    const mainSceneBrs = `sub init()
+    const mainSceneBrs = `sub startKeepAliveVideo()
+    if m.keepAliveVideo <> invalid
+        vidContent = CreateObject("roSGNode", "ContentNode")
+        vidContent.url = "pkg:/source/keepalive.mp4"
+        vidContent.streamFormat = "mp4"
+        m.keepAliveVideo.content = vidContent
+        m.keepAliveVideo.mute = true
+        m.keepAliveVideo.loop = true
+        m.keepAliveVideo.control = "play"
+    end if
+end sub
+
+sub init()
     m.tileList = m.top.findNode("tileList")
     m.heroTitle = m.top.findNode("heroTitle")
     m.heroDesc = m.top.findNode("heroDesc")
@@ -1835,15 +1847,7 @@ ${cloneBarsXml}
     m.agentElapsed = [${Number(sessions[0]?.elapsedSec) || 5}, ${Number(sessions[1]?.elapsedSec) || 5}, ${Number(sessions[2]?.elapsedSec) || 5}]
     m.agentActivity = ["${safeXml(String(sessions[0]?.activity || sessions[0]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[1]?.activity || sessions[1]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[2]?.activity || sessions[2]?.cwd || '').slice(0, 42))}"]
 
-    if m.keepAliveVideo <> invalid
-        vidContent = CreateObject("roSGNode", "ContentNode")
-        vidContent.url = "pkg:/source/keepalive.mp4"
-        vidContent.streamFormat = "mp4"
-        m.keepAliveVideo.content = vidContent
-        m.keepAliveVideo.mute = true
-        m.keepAliveVideo.loop = true
-        m.keepAliveVideo.control = "play"
-    end if
+    startKeepAliveVideo()
 
     m.clockTimer.observeField("fire", "onClockTick")
     m.clockTimer.control = "start"
@@ -1919,7 +1923,7 @@ sub onClockTick()
     if m.keepAliveVideo <> invalid
         vState = m.keepAliveVideo.state
         if vState = "finished" or vState = "stopped" or vState = "error"
-            m.keepAliveVideo.control = "play"
+            startKeepAliveVideo()
         end if
     end if
     if m.remainingSec > 0
@@ -2327,12 +2331,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     return false
 end function
 `;
-    const keepAliveMp4B64 =
-      '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';
+    const keepAliveSrc = path.join(__dirname, 'keepalive.mp4');
     const keepAliveFull = path.join(targetDir, 'source/keepalive.mp4');
     fs.mkdirSync(path.dirname(keepAliveFull), { recursive: true });
-    fs.writeFileSync(keepAliveFull, Buffer.from(keepAliveMp4B64, 'base64'));
-    filesCreated.push(keepAliveFull);
+    if (fs.existsSync(keepAliveSrc)) {
+      fs.copyFileSync(keepAliveSrc, keepAliveFull);
+      filesCreated.push(keepAliveFull);
+    }
 
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
