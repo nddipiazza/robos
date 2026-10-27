@@ -7,7 +7,7 @@ extra_css: /assets/blog.css
 og_image: /assets/hero/poster.jpg
 og_image_alt: "RobOS Engineering Blog — What changed in RobOS and why"
 schema_type: Blog
-keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Player Virtual DJ, Quest Warrior Dragon AI playthrough, KGraph updates"
+keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party game on Roku, OBD-II Auto Center, Audio Player Virtual DJ, Quest Warrior Dragon AI playthrough, KGraph updates"
 ---
 <section class="blog-hero">
   <div class="wrap">
@@ -16,6 +16,7 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#party-game">RobOS Party Game</a>
     <a href="#audio-player-ai-fix-metadata">Audio Player AI Fix Metadata</a>
     <a href="#vpn-sandbox-and-killswitch-proof">VPN Sandbox &amp; Kill-Switch Proof</a>
     <a href="#frontier-hunters-live-map-editor">RTS: Frontier Hunters &amp; Map Editor</a>
@@ -39,6 +40,54 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="party-game">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-27">Oct 27, 2026</time>
+      <span class="blog-tag">RobOS Party Game</span>
+      <span class="blog-tag">Party Games</span>
+      <span class="blog-tag">Roku &amp; Smart TVs</span>
+      <span class="blog-tag">AI Host</span>
+    </div>
+    <h2><a href="#party-game">RobOS Party Game: an AI Host That Writes the Party About Your Guests and Your House</a></h2>
+    <p class="blog-summary"><strong>RobOS Party Game</strong> (<code>packages/party-game</code>) is the first game in the new <strong>Party Games</strong> category. An AI host in a hooded mask runs the show on one or more RobOS TVs while guests play on their phones. Before the first round, the AI reads every guest's survey and the party host's description of the house, then writes the night: each guest's role and why, superlatives about this group, trivia about their interests, bluffs, and real challenges that use the rooms and things in the house. The host speaks through the TV (Roku included) and any Google Cast speaker from the RobOS Audio Player.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/party-game/roku-living-room.jpg' | relative_url }}" alt="The Party Game lobby on a TCL Roku TV: the hooded masked AI host welcomes Quinn next to the join QR code" loading="lazy">
+        <figcaption>A screenshot taken from the living-room <strong>TCL Roku TV</strong> through Roku's developer console: the lobby, with the host welcoming each guest by name as they scan the code.</figcaption>
+      </figure>
+      <p><strong>How a party runs.</strong> The host console needs at least one RobOS TV paired in Smart TV Studio and an AI agent picked with the shared <code>&lt;robos-agent-selector&gt;</code>. This is the one RobOS app where AI is required, because the AI host <em>is</em> the game. Guests scan the QR code on the TV and answer a survey: the basics, their interests, a few confessions and some wild cards. Until someone claims it, every phone shows <strong>I'm the party host</strong>. Whoever taps it describes the house: the usable spaces, what is special about them (guitar amps in the basement, a hot tub, a cat named Pancake), the games in the house, craft supplies, gear such as a printer, the vibe, and what is off-limits. The game cannot start until the required house answers are in. A meter on the phone encourages the party host to add more detail, because more detail makes better challenges.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/lobby.jpg' | relative_url }}" alt="Lobby with the AI host giving a house tour" loading="lazy"><figcaption>The lobby once the house is described: the host's "house tour" name-drops the garage ping pong, the basement rock venue and Pancake.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/roles.jpg' | relative_url }}" alt="Role reveal: Jordan is The Detective" loading="lazy"><figcaption>Role reveal. The AI explains each role from the guest's own answers; the Mole is shown as "The Party Guest" until the finale.</figcaption></figure>
+      </div>
+      <p><strong>The writers' room never makes the room wait.</strong> Agent CLIs take seconds to answer, so every AI call runs in the background ahead of when it is needed (<a href="https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/ai-host.js"><code>lib/ai-host.js</code></a>). A guest finishes the survey and gets a personal welcome on the TV. The party host finishes the house and the host gives a house tour. Once everyone is ready, three calls run in parallel: the show script (title, opening, role reasons, game intros, Who Said That? teasers, superlatives and bluffs), trivia about each guest's interests, and House Quests built from the house survey. Standings recaps are written during the last reveal of each mini game, and the finale awards during the last mini game. In a real run with Antigravity, each call took 16 to 33 seconds and all of them were ready before the host pressed Start. If a call is slow or fails, the host uses stock material, so no click ever waits on an agent.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/house-quest.jpg' | relative_url }}" alt="House Quest: The Sourdough Rock Opera in the basement" loading="lazy"><figcaption><strong>House Quest</strong>: the AI sent Maya to the basement drum kit and Priya to the karaoke mic for a sourdough rock anthem. Everyone else judges on their phones.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/trivia.jpg' | relative_url }}" alt="Nerd Alert Trivia question about Fleetwood Mac for Maya" loading="lazy"><figcaption><strong>Nerd Alert Trivia</strong>: Maya listed Fleetwood Mac, so she is the resident expert on this one. Beat the expert for a bonus.</figcaption></figure>
+      </div>
+      <p><strong>Five mini games on one template.</strong> <em>Who Said That?</em>, <em>Most Likely To</em>, <em>House Quest</em>, <em>Nerd Alert Trivia</em> and <em>Two Truths &amp; a Bot</em> are each a small file built on <a href="https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/minigames/template.js"><code>lib/minigames/template.js</code></a>. A mini game builds its rounds from the guests, the house and whatever the AI wrote, scores the answers, and supplies the host's lines. The engine (<a href="https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/game-engine.js"><code>lib/game-engine.js</code></a>) handles the TVs, phones, timers, scoreboard and role perks. The Detective sees one wrong answer crossed out, the Wildcard can double down, the Trickster earns a point for every guest they fool, and the Mole has a secret mission that is revealed at the finale.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/finale.jpg' | relative_url }}" alt="Finale with the winner, the Mole unmasked and an AI award for every guest" loading="lazy"><figcaption>The finale: the winner, the Mole unmasked, and an AI-written award for every guest, including one thanking the party host for the house.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/phones.jpg' | relative_url }}" alt="Phones: the party host's house survey and the Detective's crossed-out answer" loading="lazy"><figcaption>On the phones: the party host's house survey, and the Detective's perk crossing out a wrong answer.</figcaption></figure>
+      </div>
+      <p><strong>Getting a Roku to show and speak the game.</strong> Browser TVs (LG webOS, Samsung Tizen, Android TV) simply load the game's TV page. A Roku has no browser, so the shared TV engine gained <em>app casts</em> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js"><code>robos-lib/tv-engine.js</code></a>). The party game renders each Roku's screen in an offscreen window and pushes JPEG frames to the TV portal. The RobOS TV channel, rebuilt and sideloaded on cast just as a Dashboards cast does, shows those frames on its poster layer. Sound took two fixes, both confirmed on the TV through Roku's media-player query and debug console. A Roku has a single media pipeline, so the host's lines now play through the channel's keep-alive video player as small MP4 clips. That keep-alive stops the TV from going to standby, and its once-a-second check was restarting it over every line, so the check now steps aside while the host is talking: stop the keep-alive, play the line, start the keep-alive again. The same lines can also go to a <strong>RobOS Audio Player</strong> speaker. If music is playing on that speaker, the Audio Player's new control API plays the line on it and resumes the song where it left off.</p>
+      <div class="blog-log"># Run the Party Game tests (engine, AI writers' room with a stub agent, mini games, LAN server, narration routing)
+cd packages/robos-test && node --test tests/party-game/unit.test.js
+
+# Start the game from source (pair a TV in Smart TV Studio and sign in to an agent first)
+cd packages/party-game && npm install && npx electron . --no-sandbox
+
+# Check what a Roku is playing: the 60000 ms clip is the keep-alive; anything else is the host speaking
+curl http://&lt;roku-ip&gt;:8060/query/media-player</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/games/party-game/' | relative_url }}">RobOS Party Game →</a>
+      <a href="{{ '/games/party-game/docs/' | relative_url }}">Party Game docs →</a>
+      <a href="https://github.com/nddipiazza/robos/tree/main/packages/party-game/lib/minigames">Mini game template &amp; examples →</a>
+      <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/6e4f4314">6e4f4314</a> · <a href="https://github.com/nddipiazza/robos/commit/7c48575b">7c48575b</a> · <a href="https://github.com/nddipiazza/robos/commit/763b802e">763b802e</a> · <a href="https://github.com/nddipiazza/robos/commit/6a1cafbe">6a1cafbe</a> · <a href="https://github.com/nddipiazza/robos/commit/3f2de2b2">3f2de2b2</a> · <a href="https://github.com/nddipiazza/robos/commit/0738f77c">0738f77c</a> · <a href="https://github.com/nddipiazza/robos/commit/20cfe81a">20cfe81a</a> · <a href="https://github.com/nddipiazza/robos/commit/a58803ae">a58803ae</a> · <a href="https://github.com/nddipiazza/robos/commit/12c28cdc">12c28cdc</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="audio-player-ai-fix-metadata">
     <div class="blog-meta">
