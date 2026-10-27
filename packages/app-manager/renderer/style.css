@@ -13,6 +13,7 @@
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
 button, input { font: inherit; }
 button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 6px 13px; min-height: 32px; color: var(--text); background: var(--button); border: 1px solid var(--button-border); border-radius: 5px; cursor: pointer; white-space: nowrap; }

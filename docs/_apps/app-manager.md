@@ -11,8 +11,12 @@ Use the same RobOS App Manager on Windows, Ubuntu GNOME and macOS. The base down
 
 1. Open the Windows installer, Linux AppImage or macOS DMG.
 2. Expand a group and check the apps you want. Group checkboxes select their apps; partly selected groups show an intermediate state.
-3. Review the download size and choose **Install selected apps**. Dependencies are included automatically and shared between apps.
-4. Use **Installed apps** to open or uninstall an app. Each installed app also has a Windows Start menu entry or GNOME app entry.
+3. Review the download size and choose **Install selected**. Install one app, several checked apps, or use **Select all apps** to install the whole library. Shared dependencies download once.
+4. Use **Uninstall selected** to remove one or several installed apps in one batch, with one confirmation. Shared components needed by remaining apps are kept.
+5. In **Installed**, use **Uninstall all apps** to clear the entire library while keeping App Manager ready to install apps again. This also works offline.
+6. Choose **Uninstall RobOS** to remove App Manager and its entire managed library together. Personal settings are retained.
+
+Each installed app has its own native launcher. The table header checkbox selects visible rows; **Select all apps** selects the entire library even when search hides some apps. In the Installed view, **Select all installed** selects every installed app.
 
 On GNOME, first launch copies the AppImage to `~/.local/share/robos/RobOS.AppImage` and registers the manager in the app grid. Keep the original download only if you want a backup.
 

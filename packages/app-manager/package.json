@@ -1,6 +1,6 @@
 {
   "name": "robos-app-manager",
-  "version": "0.0.9-preview.2",
+  "version": "0.0.9-preview.3",
   "description": "Choose, download, launch and remove RobOS apps on Windows, Linux and macOS",
   "main": "main.js",
   "author": "RobOS",

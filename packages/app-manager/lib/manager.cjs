@@ -109,22 +109,58 @@ class Manager extends EventEmitter {
       return this.state();
     });
   }
-  async uninstall(id) {
-    return this.exclusive(async () => {
+  previewUninstall(ids, { all = false } = {}) {
+    if (all) ids = Object.values(this.installed).filter(item => item.kind === 'app').map(item => item.id);
+    if (!Array.isArray(ids) || !ids.every(id => typeof id === 'string') || (!all && !ids.length)) throw new Error('Select installed apps to uninstall');
+    const selected = new Set(ids);
+    const apps = [...selected].map(id => {
       const item = this.installed[id];
-      if (!item || item.kind !== 'app') throw new Error('App is not installed');
-      if (Object.values(this.installed).some(other => other.dependencies.includes(id))) throw new Error('Another installed app needs this app. Remove that app first.');
-      const remove = entry => { this.native.shortcut(entry, true); fs.rmSync(this.destination(entry), { recursive: true, force: true }); delete this.installed[entry.id]; this.save(); };
-      remove(item);
-      // Reclaim shared packages only when no installed app needs them, including transitive dependencies.
-      let unused;
-      do {
-        unused = Object.values(this.installed).filter(entry => entry.kind !== 'app' && !Object.values(this.installed).some(other => other.dependencies.includes(entry.id)));
-        for (const entry of unused) { fs.rmSync(this.destination(entry), { recursive: true, force: true }); delete this.installed[entry.id]; this.save(); }
-      } while (unused.length);
-      return this.state();
+      if (!item || item.kind !== 'app') throw new Error(`App is not installed: ${id}`);
+      return item;
+    });
+    const keep = new Set();
+    const retain = id => {
+      if (keep.has(id)) return;
+      keep.add(id);
+      for (const dep of this.installed[id]?.dependencies || []) retain(dep);
+    };
+    for (const item of Object.values(this.installed)) if (item.kind === 'app' && !selected.has(item.id)) retain(item.id);
+    const required = apps.filter(item => keep.has(item.id));
+    if (required.length) throw new Error(`Other installed apps need ${required.map(item => item.label).join(', ')}. Include those dependent apps in the selection.`);
+    // Dependencies retained by any remaining app are protected. Everything else
+    // is removed in reverse dependency order, even if the user clicked it first.
+    const removable = new Map(Object.values(this.installed).filter(item => !keep.has(item.id)).map(item => [item.id, item]));
+    const visiting = new Set(), done = new Set(), ordered = [];
+    const visit = item => {
+      if (visiting.has(item.id)) throw new Error('Installed dependency cycle prevents removal');
+      if (done.has(item.id)) return;
+      visiting.add(item.id);
+      for (const dep of item.dependencies || []) if (removable.has(dep)) visit(removable.get(dep));
+      visiting.delete(item.id); done.add(item.id); ordered.push(item);
+    };
+    for (const item of removable.values()) visit(item);
+    return { apps, items: ordered.reverse(), unpackedBytes: ordered.reduce((sum, item) => sum + (item.unpackedBytes || 0), 0) };
+  }
+  async uninstall(ids, options) {
+    if (this.busy) throw new Error('Another operation is in progress');
+    if (typeof ids === 'string') ids = [ids];
+    const { items } = this.previewUninstall(ids, options);
+    return this.exclusive(async () => {
+      for (let index = 0; index < items.length; index++) {
+        // Give the renderer and cancel request a turn between component removals.
+        await new Promise(resolve => setImmediate(resolve));
+        this.controller.signal.throwIfAborted();
+        const item = items[index];
+        this.emit('progress', { id: item.id, label: item.label, phase: 'Uninstalling', completed: index, count: items.length });
+        if (item.kind === 'app') this.native.shortcut(item, true);
+        fs.rmSync(this.destination(item), { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+        delete this.installed[item.id]; this.save();
+        this.logger.info({ id: item.id }, 'Uninstalled app component');
+        this.emit('state', this.state());
+      }
     });
   }
+  uninstallAll() { return this.uninstall([], { all: true }); }
   async removeAll() {
     return this.exclusive(async () => {
       this.native.removeAll(); fs.rmSync(this.locations.root, { recursive: true, force: true }); this.installed = {};

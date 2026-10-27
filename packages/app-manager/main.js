@@ -26,13 +26,20 @@ if (id) {
     const native = integration({ locations, executable, host: path.dirname(__filename), packaged: app.isPackaged, shell });
     const show = () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } };
     const removeRequested = argv => argv.find(arg => arg.startsWith('--remove='))?.slice(9);
-    async function remove(id) {
-      if (activeApps(locations.root).includes(id)) throw new Error('Close the app before removing it');
-      const item = manager.installed[id]; if (!item) throw new Error('App is not installed');
-      const { response } = await dialog.showMessageBox(window, { type: 'question', buttons: ['Keep app', 'Uninstall'], defaultId: 0, cancelId: 0,
-        message: `Uninstall ${item.label}?`, detail: 'The app and its shortcuts will be removed. Your personal data and settings will be kept.' });
-      if (response === 1) await manager.uninstall(id);
-      return manager.state();
+    async function remove(ids, all = false) {
+      if (manager.busy) throw new Error('Another operation is in progress');
+      if (typeof ids === 'string') ids = [ids];
+      const preview = manager.previewUninstall(ids, { all });
+      if (!preview.items.length) return manager.state();
+      const active = new Set(activeApps(locations.root));
+      if (preview.items.some(item => active.has(item.id))) throw new Error('Close the selected RobOS apps before removing them');
+      const message = all ? 'Uninstall all RobOS apps?' : preview.apps.length === 1 ? `Uninstall ${preview.apps[0].label}?` : `Uninstall ${preview.apps.length} selected apps?`;
+      const names = preview.apps.map(item => item.label);
+      const summary = names.length > 12 ? `${names.slice(0, 12).join('\n')}\n…and ${names.length - 12} more apps.` : names.join('\n');
+      const { response } = await dialog.showMessageBox(window, { type: 'question', buttons: ['Keep apps', 'Uninstall'], defaultId: 0, cancelId: 0,
+        message, detail: `${summary}\n\nSelected apps, their shortcuts and unused shared components will be removed. RobOS App Manager and personal settings will be kept.` });
+      if (response !== 1) return { ...manager.state(), cancelled: true };
+      return all ? manager.uninstallAll() : manager.uninstall(ids);
     }
     app.on('second-instance', (_event, argv) => { show(); const id = removeRequested(argv); if (id) remove(id).catch(error => dialog.showErrorBox('Could not remove app', error.message)); });
     app.whenReady().then(async () => {
@@ -52,6 +59,7 @@ if (id) {
       });
       ipcMain.handle('manager:cancel', () => manager.cancel());
       ipcMain.handle('manager:uninstall', (_event, id) => remove(id));
+      ipcMain.handle('manager:uninstall-all', () => remove([], true));
       ipcMain.handle('manager:launch', (_event, id) => {
         if (!manager.installed[id] || manager.installed[id].kind !== 'app') throw new Error('Install this app first');
         if (activeApps(locations.root).includes(id)) throw new Error('This app is already running. Switch to its open window.');
@@ -73,7 +81,7 @@ if (id) {
       ipcMain.handle('manager:remove-all', async () => {
         if (activeApps(locations.root).length) throw new Error('Close your running RobOS apps first');
         const { response } = await dialog.showMessageBox(window, { type: 'warning', buttons: ['Keep RobOS', 'Uninstall RobOS'], defaultId: 0, cancelId: 0,
-          message: 'Uninstall RobOS and all managed apps?', detail: 'This removes the app downloads and their Start menu or GNOME entries. Personal app data and settings are kept.' });
+          message: 'Uninstall RobOS and all managed apps?', detail: 'This removes the manager, every downloaded RobOS app and their native launchers. Personal app data and settings are kept.' });
         if (response !== 1) return;
         await manager.removeAll();
         if (process.platform === 'win32' && app.isPackaged) {

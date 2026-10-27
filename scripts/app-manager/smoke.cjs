@@ -16,10 +16,11 @@ async function main() {
   fs.writeFileSync(path.join(source, 'main.js'), `const {app,BrowserWindow}=require('electron');app.whenReady().then(()=>{const w=new BrowserWindow({webPreferences:{contextIsolation:true,nodeIntegration:false}});w.loadURL('data:text/html,<h1>Selected app opened successfully</h1>')});app.on('window-all-closed',()=>app.quit());`);
   const archive = path.join(temporary, 'fixture.tgz'); await tools('tar').c({ cwd: source, file: archive, gzip: true, portable: true }, ['.']);
   const payload = fs.readFileSync(archive), version = require('../../packages/app-manager/package.json').version;
-  const item = (id, group) => ({ id, label: id === 'smoke-one' ? 'Sample Notes' : 'Sample Register', group, kind: 'app', description: 'An independently downloaded test app',
+  const labels = { 'smoke-one': 'Sample Notes', 'smoke-two': 'Sample Register', 'smoke-three': 'Sample Calendar' };
+  const item = (id, group) => ({ id, label: labels[id], group, kind: 'app', description: 'An independently downloaded test app',
     version, dependencies: [], bytes: payload.length, unpackedBytes: 10000, sha256: crypto.createHash('sha256').update(payload).digest('hex'),
     url: `https://github.com/nddipiazza/robos/releases/download/v${version}/${id}.tgz` });
-  const catalog = { schema: 1, version, platform: process.platform, arch: process.arch, components: [item('smoke-one', 'Everyday & business'), item('smoke-two', 'Developer tools')] };
+  const catalog = { schema: 1, version, platform: process.platform, arch: process.arch, components: [item('smoke-one', 'Everyday & business'), item('smoke-two', 'Developer tools'), item('smoke-three', 'Everyday & business')] };
   const server = http.createServer((req, res) => { if (req.url.endsWith('.json')) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(catalog)); } else res.end(payload); });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const env = { ...process.env, HOME: temporary, USERPROFILE: temporary, LOCALAPPDATA: path.join(temporary, 'AppData/Local'), APPDATA: path.join(temporary, 'AppData/Roaming') };
@@ -27,14 +28,16 @@ async function main() {
   delete env.ELECTRON_RUN_AS_NODE;
   const executablePath = process.platform === 'win32' ? path.join(repo, 'release/app-manager/win-unpacked/RobOS.exe') : path.join(repo, 'release/app-manager/linux-unpacked/robos-app-manager');
   const { _electron: electron } = tools('playwright-core');
-  let application;
+  let application, applicationClosed = false;
   const steps = [];
   try {
     application = await electron.launch({ executablePath, args: ['--no-sandbox', '--disable-gpu', '--enable-logging=stderr'], env, timeout: 30000 });
+    application.on('close', () => { applicationClosed = true; });
     await application.evaluate(({ dialog }, port) => {
       const original = globalThis.fetch;
       globalThis.fetch = (url, options) => original(`http://127.0.0.1:${port}/${String(url).split('/').pop()}`, options);
-      dialog.showMessageBox = async () => ({ response: 1 });
+      globalThis.robosSmokeConfirmations = [];
+      dialog.showMessageBox = async (_window, options) => { globalThis.robosSmokeConfirmations.push(options.message); return { response: 1 }; };
     }, server.address().port);
     const window = await application.firstWindow(); await window.waitForSelector('#refresh');
     await window.locator('#refresh').click(); await window.getByText('Sample Notes', { exact: true }).waitFor();
@@ -75,13 +78,48 @@ async function main() {
     if (Object.keys(removedState.installed).length) throw new Error('Uninstall left an installed component');
     if (fs.existsSync(shortcut)) throw new Error('Uninstall left a stale shortcut');
     await window.screenshot({ path: path.join(output, 'removed.png') });
+    const installedApps = async () => Object.values((await window.evaluate(() => window.robosManager.state())).installed).filter(item => item.kind === 'app').map(item => item.id).sort();
+    const expectApps = async ids => { const actual = await installedApps(); if (actual.join() !== [...ids].sort().join()) throw new Error(`Unexpected installed apps: ${actual}`); };
+    await narrate('Select two apps from different groups and install them in one batch.');
+    await window.getByRole('checkbox', { name: 'Select Sample Notes', exact: true }).check();
+    await window.getByRole('checkbox', { name: 'Select Sample Register', exact: true }).check();
+    await window.locator('#install').click(); await window.getByText('Selected apps are ready to open.', { exact: true }).waitFor();
+    await expectApps(['smoke-one', 'smoke-two']);
+    await narrate('Select both installed apps and uninstall them with one confirmation.');
+    await window.getByRole('checkbox', { name: 'Select Sample Notes', exact: true }).check();
+    await window.getByRole('checkbox', { name: 'Select Sample Register', exact: true }).check();
+    const beforeBatch = await application.evaluate(() => globalThis.robosSmokeConfirmations.length);
+    await window.locator('#uninstall').click(); await window.getByText('Selected apps were uninstalled.', { exact: true }).waitFor();
+    await expectApps([]);
+    if (await application.evaluate(() => globalThis.robosSmokeConfirmations.length) !== beforeBatch + 1) throw new Error('Batch removal asked for more than one confirmation');
+    await narrate('Select the entire library, including apps hidden by the search filter.');
+    await window.locator('#search').fill('Notes'); await window.locator('#select-library').click();
+    await window.getByText('3 apps selected', { exact: true }).waitFor();
+    await window.locator('#search').fill(''); await window.locator('#install').click();
+    await window.getByText('Selected apps are ready to open.', { exact: true }).waitFor(); await expectApps(Object.keys(labels));
+    await window.screenshot({ path: path.join(output, 'all-installed.png') });
+    await narrate('Uninstall the entire library while keeping App Manager available.');
+    await window.locator('#installed').click(); const beforeAll = await application.evaluate(() => globalThis.robosSmokeConfirmations.length);
+    await window.locator('#uninstall-all').click();
+    await window.getByText('All RobOS apps were uninstalled. App Manager is ready to install apps again.', { exact: true }).waitFor();
+    await expectApps([]);
+    if (!fs.existsSync(locations.root)) throw new Error('Uninstall all apps removed the manager data directory');
+    if (await application.evaluate(() => globalThis.robosSmokeConfirmations.length) !== beforeAll + 1) throw new Error('Uninstall all apps asked for more than one confirmation');
+    await narrate('Install an app again, then remove RobOS and its whole managed library.');
+    await window.locator('#browse').click(); await window.getByRole('checkbox', { name: 'Select Sample Calendar', exact: true }).check();
+    await window.locator('#install').click(); await window.getByText('Selected apps are ready to open.', { exact: true }).waitFor();
+    const personal = path.join(temporary, '.config/robos/personal-settings.json'); fs.writeFileSync(personal, '{}');
+    const closed = application.waitForEvent('close'); await window.locator('#remove-all').click(); await closed;
+    if (fs.existsSync(locations.root)) throw new Error('Uninstall RobOS left managed app files');
+    if (process.platform === 'win32' && fs.existsSync(locations.shortcuts)) throw new Error('Uninstall RobOS left Start menu entries');
+    if (!fs.existsSync(personal)) throw new Error('Uninstall RobOS removed personal settings');
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: true, platform: process.platform, steps }, null, 2));
-    console.log('Packaged manager: selective download, installation, native shortcut, launch and removal passed.');
+    console.log('Packaged manager: one, multiple and all app installs/removals, native shortcuts, launch, and full RobOS removal passed.');
   } catch (error) {
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: false, error: error.stack, steps }, null, 2));
     throw error;
   } finally {
-    if (application) await application.close();
+    if (application && !applicationClosed) await application.close();
     await new Promise(resolve => server.close(resolve));
     try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
     catch { console.warn(`Temporary test profile could not be removed: ${temporary}`); }

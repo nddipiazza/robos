@@ -60,6 +60,54 @@ test('checksum mismatch preserves installed version; shortcut failure rolls back
   assert.equal(m.installed.one.sha256, 'e'.repeat(64));
   assert.ok(fs.existsSync(path.join(locations.root, 'packages/one/main.js')));
 });
+test('one batch installs and uninstalls multiple apps, removing a shared dependency once', async t => {
+  const { manager: m, calls, locations } = await fixture(t);
+  await m.install(['one', 'two']);
+  assert.deepEqual(new Set(Object.keys(m.installed)), new Set(['shared', 'one', 'two']));
+  const progress = []; m.on('progress', event => progress.push(event));
+  const result = await m.uninstall(['one', 'two', 'one']);
+  assert.equal(result.busy, false); assert.deepEqual(result.installed, {});
+  assert.deepEqual(calls.filter(([, remove]) => remove).map(([id]) => id).sort(), ['one', 'two']);
+  assert.equal(progress.filter(event => event.id === 'shared').length, 1);
+  assert.equal(progress.at(-1).id, 'shared');
+  assert.ok(fs.existsSync(locations.root), 'bulk removal retains the manager installation');
+});
+test('bulk removal validates dependents before deleting anything and uses dependency order', async t => {
+  const { manager: m, calls } = await fixture(t);
+  m.catalog.components.find(item => item.id === 'two').dependencies = ['one'];
+  await m.install(['two']);
+  const before = calls.length;
+  await assert.rejects(m.uninstall(['one']), /Other installed apps need/);
+  assert.equal(calls.length, before); assert.ok(m.installed.one); assert.ok(m.installed.two);
+  await assert.rejects(m.uninstall(['two', 'missing']), /not installed/);
+  assert.equal(calls.length, before);
+  await m.uninstall(['one', 'two']);
+  assert.deepEqual(calls.filter(([, remove]) => remove).map(([id]) => id), ['two', 'one']);
+  assert.deepEqual(m.installed, {});
+});
+test('install all and uninstall all work offline and retain personal data and the manager catalog', async t => {
+  const { manager: m, locations, root } = await fixture(t);
+  await m.install(m.catalog.components.filter(item => item.kind === 'app').map(item => item.id));
+  const catalogFile = path.join(locations.root, 'catalog.json'); fs.writeFileSync(catalogFile, JSON.stringify(m.catalog));
+  const personal = path.join(root, 'personal.json'); fs.writeFileSync(personal, '{}');
+  m.catalog = undefined;
+  await m.uninstallAll();
+  assert.deepEqual(m.installed, {}); assert.ok(fs.existsSync(catalogFile)); assert.ok(fs.existsSync(personal));
+  // Cancellation may leave only shared components. The all-apps action can clean these too.
+  m.installed.shared = { id: 'shared', kind: 'library', dependencies: [], label: 'Shared' }; m.save();
+  fs.mkdirSync(m.destination(m.installed.shared), { recursive: true });
+  await m.uninstallAll(); assert.deepEqual(m.installed, {});
+});
+test('batch uninstall can be cancelled between apps and resumed without losing remaining state', async t => {
+  const { manager: m } = await fixture(t); await m.install(['one', 'two']);
+  const cancel = event => { if (event.phase === 'Uninstalling') m.cancel(); };
+  m.on('progress', cancel);
+  await assert.rejects(m.uninstallAll(), /abort/i);
+  assert.equal(m.busy, false);
+  assert.equal(Object.values(m.installed).filter(item => item.kind === 'app').length, 1);
+  m.removeListener('progress', cancel);
+  await m.uninstallAll(); assert.deepEqual(m.installed, {});
+});
 test('catalog rejects traversal IDs, wrong platforms, external origins, missing dependencies and cycles', async t => {
   const { manager: m } = await fixture(t);
   for (const mutate of [d => d.components[0].id = '../bad', d => d.platform = 'other',

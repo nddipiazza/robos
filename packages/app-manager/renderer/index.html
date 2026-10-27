@@ -22,6 +22,8 @@
     <div class="toolbar">
       <div class="search-field"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><input id="search" type="search" placeholder="Search apps" aria-label="Search apps"></div>
       <button id="refresh" title="Refresh app catalog"><svg viewBox="0 0 20 20"><path d="M16 8a6 6 0 1 0 0 5M16 3v5h-5"/></svg>Refresh</button>
+      <button id="select-library">Select all apps</button>
+      <button id="uninstall-all" hidden>Uninstall all apps…</button>
     </div>
     <div id="notice" role="status" aria-live="polite"></div>
     <section class="app-list" aria-label="App catalog">
@@ -30,7 +32,7 @@
     </section>
     <footer>
       <div class="selection-summary"><strong id="selection">No apps selected</strong><span id="estimate">Select apps using the checkboxes.</span></div>
-      <div class="footer-actions"><button id="clear" class="subtle">Clear</button><button id="install" class="primary" disabled>Install selected</button></div>
+      <div class="footer-actions"><button id="clear" class="subtle">Clear</button><button id="uninstall" disabled>Uninstall selected</button><button id="install" class="primary" disabled>Install selected</button></div>
       <div id="progress-area" hidden><label id="progress-label" for="progress">Preparing…</label><progress id="progress" max="100"></progress><button id="cancel">Cancel</button></div>
     </footer>
   </main>
