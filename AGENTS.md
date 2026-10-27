@@ -88,7 +88,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | App | Purpose |
 |-----|---------|
 | **App Launcher** | Searchable grid of all installed RobOS apps |
-| **App Manager** | Shared Windows and Ubuntu GNOME launcher and app installer, with grouped selection, independent downloads, native menu entries and removal |
+| **App Manager** | Shared Windows, Ubuntu GNOME and macOS launcher and app installer, with grouped selection, independent downloads, native launchers and removal |
 | **Dev Central** | Daily dashboard: sprint board, PR health, calendar, AI standup, blocker radar |
 | **Issue Manager** | GitHub Issues client with Kanban board, AI issue breakdown |
 | **Git Projects** | Repo manager with AI dev-setup generation, Monaco editor, terminal/IDE runners |

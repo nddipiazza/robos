@@ -16,8 +16,9 @@ keywords: "download RobOS, Windows installer, Linux app suite, macOS install, Ub
 <section style="padding-top:20px">
   <div class="wrap">
     <h2 class="h2">RobOS App Manager preview</h2>
-    <p>The same app manager runs on Windows and Ubuntu GNOME. Choose apps in a grouped checkbox tree, download only your selection, and add or remove apps later. Each installed app gets its own Start menu or GNOME entry. Uninstalling RobOS removes its managed apps.</p>
+    <p>The same app manager runs on Windows, Ubuntu GNOME and macOS. Choose apps in a grouped checkbox tree, download only your selection, and add or remove apps later. Each installed app gets its own native launcher. Uninstalling RobOS removes its managed apps.</p>
     <p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.9-preview.1/RobOS-v0.0.9-preview.1-Windows-Setup.exe">Windows app manager</a> <a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.9-preview.1/RobOS-v0.0.9-preview.1-Linux-x86_64.AppImage">Linux AppImage</a></p>
+    <p><a href="https://github.com/nddipiazza/robos/releases/download/v0.0.9-preview.1/RobOS-v0.0.9-preview.1-macOS-arm64.dmg">macOS — Apple Silicon</a> · <a href="https://github.com/nddipiazza/robos/releases/download/v0.0.9-preview.1/RobOS-v0.0.9-preview.1-macOS-x64.dmg">macOS — Intel</a></p>
     <p class="muted small">Preview downloads appear after the <a href="https://github.com/nddipiazza/robos/releases/tag/v0.0.9-preview.1">preview release builds</a> complete. Windows EXE and AppImage share one interface; apps use platform-specific downloads. The legacy suite setup and appliance installers are below.</p>
     <div class="os-grid">
       <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">Appliance installer (.dmg)</p><a class="btn" href="{{ site.data.release.url }}">View macOS USB flasher</a></div>

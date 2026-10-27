@@ -2,6 +2,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { ID } = require('./catalog.cjs');
+const quoteShell = value => "'" + value.replace(/'/g, "'\\''") + "'";
+const xml = value => value.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
 function quoteDesktop(value) {
   // Desktop string escaping happens before Exec argument parsing.
   return '"' + value.replace(/%/g, '%%').replace(/\\/g, '\\\\\\\\').replace(/["`$]/g, '\\\\$&') + '"';
@@ -22,6 +24,15 @@ function integration({ locations, executable, host, packaged, shell, platform = 
         if (!shell.writeShortcutLink(path.join(dir, `${label}.lnk`), 'create', { target: executable, args,
           description: label, appUserModelId: `com.rowbose.robos.${item.id}`, icon: executable, iconIndex: 0 })) throw new Error('Could not create Start menu shortcut');
       }
+    } else if (platform === 'darwin') {
+      const bundle = path.join(locations.shortcuts, `${item.id}.app`);
+      if (remove) { fs.rmSync(bundle, { recursive: true, force: true }); return; }
+      fs.mkdirSync(path.join(bundle, 'Contents/MacOS'), { recursive: true });
+      fs.mkdirSync(path.join(bundle, 'Contents/Resources'), { recursive: true });
+      fs.writeFileSync(path.join(bundle, 'Contents/Info.plist'), `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>CFBundleName</key><string>${xml(item.label)}</string><key>CFBundleDisplayName</key><string>${xml(item.label)}</string><key>CFBundleIdentifier</key><string>com.rowbose.robos.${item.id}</string><key>CFBundleExecutable</key><string>launch</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleIconFile</key><string>icon.icns</string></dict></plist>\n`);
+      fs.writeFileSync(path.join(bundle, 'Contents/MacOS/launch'), `#!/bin/sh\nexec ${[executable, ...command([`--app=${item.id}`])].map(quoteShell).join(' ')} "$@"\n`, { mode: 0o755 });
+      const icon = path.resolve(path.dirname(executable), '../Resources/icon.icns');
+      if (fs.existsSync(icon)) fs.copyFileSync(icon, path.join(bundle, 'Contents/Resources/icon.icns'));
     } else {
       fs.mkdirSync(locations.shortcuts, { recursive: true });
       const file = path.join(locations.shortcuts, `robos-managed-${item.id}.desktop`);
@@ -32,12 +43,19 @@ function integration({ locations, executable, host, packaged, shell, platform = 
     }
   }
   function removeAll() {
-    if (platform === 'win32') fs.rmSync(locations.shortcuts, { recursive: true, force: true });
+    if (platform === 'win32' || platform === 'darwin') fs.rmSync(locations.shortcuts, { recursive: true, force: true });
     else if (fs.existsSync(locations.shortcuts)) for (const file of fs.readdirSync(locations.shortcuts)) {
       if (/^robos-managed-[a-z0-9-]+\.desktop$/.test(file)) fs.rmSync(path.join(locations.shortcuts, file));
     }
   }
   function installManager(image) {
+    if (platform === 'darwin') {
+      if (image && path.resolve(image) !== locations.macManager) {
+        fs.mkdirSync(path.dirname(locations.macManager), { recursive: true });
+        fs.cpSync(image, locations.macManager, { recursive: true });
+      }
+      return;
+    }
     if (platform !== 'linux' || !image) return;
     fs.mkdirSync(locations.data, { recursive: true });
     if (path.resolve(image) !== locations.image) { fs.copyFileSync(image, `${locations.image}.new`); fs.renameSync(`${locations.image}.new`, locations.image); }

@@ -17,6 +17,7 @@ function walk(dir, visit) {
   }
 }
 function dependencies(id, root = repo) {
+  const sourceId = id === 'knowledge-graph-explorer' ? 'robos-graph' : id;
   const support = {
     'robos-lib': ['robos-task-client', 'robos-store', 'robos-llm', 'robos-ui'],
     'robos-graph': ['robos-lib', 'robos-store', 'robos-llm'],
@@ -24,13 +25,20 @@ function dependencies(id, root = repo) {
   };
   if (support[id]) return support[id];
   const found = new Set(['robos-lib', 'robos-icons', 'graph-data']);
-  walk(path.join(root, 'packages', id), file => {
+  const apps = new Set(sourceCatalog(root).map(item => item.sourceId));
+  walk(path.join(root, 'packages', sourceId), file => {
     if (!/\.(?:c?js|mjs|html)$/.test(file) || /(?:\.test\.|test-|bundle\.js)/.test(file)) return;
     const text = fs.readFileSync(file, 'utf8');
     // Actual imports and renderer assets, not links that merely offer to open another app.
     for (const match of text.matchAll(/(?:require\(\s*['"]|(?:src|href)=['"])(?:\/usr\/local\/share\/robos\/|\.\.\/)([a-z][a-z0-9-]+)(?:\/|['"])/g)) {
       const dep = match[1];
       if (dep !== id && dep !== 'app-manager' && ID.test(dep) && fs.existsSync(path.join(root, 'packages', dep, 'package.json'))) found.add(dep);
+    }
+    // Some older apps resolve a list of candidate paths before calling require.
+    // Include referenced libraries without turning optional app links into installs.
+    for (const match of text.matchAll(/(?:\/usr\/local\/share\/robos\/|['"]\.\.\/)(robos-[a-z0-9-]+)(?:\/|['"])/g)) {
+      const dep = match[1];
+      if (dep !== sourceId && dep !== 'robos-test' && (!apps.has(dep) || support[dep]) && fs.existsSync(path.join(root, 'packages', dep, 'package.json'))) found.add(dep);
     }
   });
   const games = { 'robos-tabletop': 'tabletop-rpg', 'tabletop-blockmap-creator': 'tabletop-rpg', 'tabletop-quest-editor': 'tabletop-rpg',
@@ -41,18 +49,18 @@ function dependencies(id, root = repo) {
 function sourceCatalog(root = repo, platform = process.platform) {
   const icons = require(path.join(root, 'packages/robos-icons')).getAllIcons();
   const exclude = new Set(['app-manager', 'app-launcher', 'robos-desktop', 'pass-unlock']);
-  if (platform === 'win32') exclude.add('gnome-desktop-installer');
+  if (platform !== 'linux') exclude.add('gnome-desktop-installer');
   return fs.readdirSync(path.join(root, 'packages')).flatMap(id => {
     const dir = path.join(root, 'packages', id);
     if (exclude.has(id) || !fs.existsSync(path.join(dir, 'package.json'))) return [];
-    const desktop = fs.readdirSync(dir).some(name => name.endsWith('.desktop'));
     const main = path.join(dir, 'main.js');
-    if (id !== 'household' && !(desktop && fs.existsSync(main) && /require\(['"]electron['"]\)/.test(fs.readFileSync(main, 'utf8')))) return [];
+    if (id !== 'household' && !(fs.existsSync(main) && /require\(['"]electron['"]\)/.test(fs.readFileSync(main, 'utf8')))) return [];
     const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))), icon = icons.find(item => item.appId === id);
     const group = ['point-of-sale', 'auto-center', 'household', 'audio-player', 'home-speaker'].includes(id) ? 'Everyday & business' :
       /game|crpg|tabletop/.test(id) ? 'Games & game tools' : /agent|claude|ai-|context|prompt/.test(id) ? 'AI & agents' :
         /System|Security|Internet/.test(icon?.category || '') ? 'System & security' : 'Developer tools';
-    return [{ id, kind: 'app', label: icon?.label || id, iconSvg: icon?.iconSvg || null, group, description: pkg.description || '' }];
+    return [{ id: id === 'robos-graph' ? 'knowledge-graph-explorer' : id, sourceId: id, kind: 'app',
+      label: id === 'robos-graph' ? 'Knowledge Graph Explorer' : icon?.label || id, iconSvg: icon?.iconSvg || null, group, description: pkg.description || '' }];
   });
 }
 function runNpm(dir) {
@@ -83,7 +91,7 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
     for (const item of chosen.values()) {
       console.log(`Packaging ${item.id} (${platform})`);
       const dir = path.join(stage, item.id);
-      const source = item.id === 'graph-data' ? path.join(repo, '.robos') : item.id.startsWith('game-data-') ? path.join(repo, 'games', item.id.slice(10)) : path.join(repo, 'packages', item.id);
+      const source = item.id === 'graph-data' ? path.join(repo, '.robos') : item.id.startsWith('game-data-') ? path.join(repo, 'games', item.id.slice(10)) : path.join(repo, 'packages', item.sourceId || item.id);
       const gameData = item.id.startsWith('game-data-');
       // Game Playthrough executes the game's own E2E driver as an app feature.
       fs.cpSync(source, dir, { recursive: true, filter: file => (!ignored.has(path.basename(file)) || gameData && path.basename(file) === 'tests') &&
@@ -91,7 +99,7 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
       if (item.id === 'robos-graph') for (const name of ['renderer', 'main.js', 'preload.js']) fs.rmSync(path.join(dir, name), { force: true, recursive: true });
       if (fs.existsSync(path.join(dir, 'package.json'))) {
         const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json')));
-        if (item.id === 'robos-graph') pkg.main = 'lib/graph-store.js';
+        if (item.id === 'robos-graph') pkg.main = 'index.js';
         delete pkg.dependencies?.electron; delete pkg.devDependencies;
         fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
         if (install && (Object.keys(pkg.dependencies || {}).length || pkg.scripts?.postinstall)) runNpm(dir);

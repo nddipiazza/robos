@@ -20,7 +20,9 @@ if (id) {
     let window, manager;
     const running = new Map();
     const image = process.env.APPIMAGE;
-    const executable = process.platform === 'linux' && image ? locations.image : process.execPath;
+    const macBundle = process.platform === 'darwin' && app.isPackaged ? path.resolve(path.dirname(process.execPath), '../..') : null;
+    const fromDiskImage = macBundle?.startsWith('/Volumes/');
+    const executable = process.platform === 'linux' && image ? locations.image : fromDiskImage ? path.join(locations.macManager, 'Contents/MacOS/RobOS') : process.execPath;
     const native = integration({ locations, executable, host: path.dirname(__filename), packaged: app.isPackaged, shell });
     const show = () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } };
     const removeRequested = argv => argv.find(arg => arg.startsWith('--remove='))?.slice(9);
@@ -39,6 +41,7 @@ if (id) {
       manager = new Manager({ locations, native, version: require('./package.json').version, logger });
       try { manager.loadCached(); } catch (error) { logger.warn({ err: error }, 'Ignoring invalid cached catalog'); }
       if (image) native.installManager(image);
+      if (fromDiskImage) native.installManager(macBundle);
       ipcMain.handle('manager:state', () => manager.state());
       ipcMain.handle('manager:refresh', () => manager.refresh());
       ipcMain.handle('manager:preview', (_event, ids) => manager.preview(ids));
@@ -79,6 +82,8 @@ if (id) {
         } else if (process.platform === 'linux') {
           fs.rmSync(path.join(locations.shortcuts, 'robos-app-manager.desktop'), { force: true });
           fs.rmSync(locations.image, { force: true });
+        } else if (process.platform === 'darwin' && macBundle?.endsWith('/RobOS.app')) {
+          await shell.trashItem(fromDiskImage ? locations.macManager : macBundle);
         }
         app.quit();
       });

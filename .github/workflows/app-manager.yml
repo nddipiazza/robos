@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-24.04]
+        os: [windows-latest, ubuntu-24.04, macos-15-intel, macos-15]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
@@ -35,7 +35,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verify component lifecycle and installer boundaries
         run: node --test packages/app-manager/test/*.test.cjs
-      - name: Build Windows installer or Linux AppImage
+      - name: Build platform app manager
         run: node scripts/app-manager/build.cjs
       - name: Smoke test packaged manager
         if: runner.os == 'Windows'
@@ -46,10 +46,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: robos-app-manager-${{ runner.os }}
+          name: robos-app-manager-${{ runner.os }}-${{ runner.arch }}
           path: |
             release/app-manager/*.exe
             release/app-manager/*.AppImage
+            release/app-manager/*.dmg
             release/app-manager/*.tgz
             release/app-manager/robos-catalog-*.json
             run/app-manager-smoke/**
@@ -60,9 +61,9 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
           name: RobOS App Manager ${{ steps.version.outputs.tag }}
-          body: 'Lightweight RobOS App Manager for Windows and Ubuntu GNOME. Select apps in a grouped checkbox tree; only selected apps and shared components download. Each app gets a native menu entry. Uninstalling RobOS removes managed apps and shortcuts while retaining personal settings.'
+          body: 'RobOS App Manager for Windows, Ubuntu GNOME and macOS (Intel and Apple Silicon). Select apps in a grouped checkbox tree; selected apps and shared components download separately for your OS and CPU. Each app gets a native launcher. Uninstalling RobOS removes managed apps and launchers while retaining personal settings.'
           files: |
-            release/app-manager/${{ runner.os == 'Windows' && '*.exe' || '*.AppImage' }}
+            release/app-manager/${{ runner.os == 'Windows' && '*.exe' || runner.os == 'macOS' && '*.dmg' || '*.AppImage' }}
             release/app-manager/*.tgz
             release/app-manager/robos-catalog-*.json
           fail_on_unmatched_files: true
