@@ -109,6 +109,19 @@ class RenderAndBuildTests(unittest.TestCase):
         g = img.getpixel((50, 150))
         self.assertTrue(all(abs(a - b) <= 10 for a, b in zip(g, TERRAIN_COLORS["grass"])))
 
+    def test_render_debug_collision_outlines_survive_labels(self):
+        path = (MapBuilder("dbg", "Debug", 40, 30)
+                .building("hut", 0, 0, 15, 10, label="Hut").rect("pond", "water", 25, 15, 10, 10)
+                .save(self.tmp / "dbg.jsonld"))
+        plain, debug = self.tmp / "plain.png", self.tmp / "debug.png"
+        self.assertEqual(cli_main(["render", str(path), "-o", str(plain), "--px-per-ft", "8"]), 0)
+        self.assertEqual(cli_main(["render", str(path), "-o", str(debug), "--px-per-ft", "8", "--debug-collision"]), 0)
+        self.assertNotEqual(plain.read_bytes(), debug.read_bytes())
+        # The blocked outline is on the hut's top-left cell edge, the difficult outline inset in the pond
+        a, b = Image.open(plain).convert("RGB"), Image.open(debug).convert("RGB")
+        self.assertNotEqual(a.getpixel((20, 0)), b.getpixel((20, 0)))
+        self.assertNotEqual(a.getpixel((25 * 8 + 4, 15 * 8 + 20)), b.getpixel((25 * 8 + 4, 15 * 8 + 20)))
+
     def test_build_writes_the_image_and_collision_grid_into_the_kgraph_node(self):
         path = MapBuilder("yard", "Yard", 30, 30).building("hut", 0, 0, 10, 10, label="Hut").save(self.tmp / "maps" / "yard.jsonld")
         summary = build_map_file(path, self.tmp, px_per_ft=8)

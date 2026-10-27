@@ -23,6 +23,21 @@ const cloudAccounts = require('./cloud-accounts');
 const ROBOS_BLOCK_START = '// >>> ROBOS-GOOGLE-INTEGRATION-START';
 const ROBOS_BLOCK_END = '// <<< ROBOS-GOOGLE-INTEGRATION-END';
 
+// Matches the Sync Interval field's default in the Google Calendar app.
+const DEFAULT_CALENDAR_REFRESH_MINUTES = 15;
+
+/**
+ * Resolves the CalDAV refresh interval: the explicit option, else the interval stored on
+ * the Cloud Account by an earlier configure, else the default.
+ */
+function resolveRefreshMinutes(account, configOptions = {}) {
+  for (const candidate of [configOptions.refreshMinutes, account?.calendarRefreshMinutes]) {
+    const minutes = Math.round(Number(candidate));
+    if (minutes > 0) return minutes;
+  }
+  return DEFAULT_CALENDAR_REFRESH_MINUTES;
+}
+
 function getHomeDir(options = {}) {
   return options.homeDir || process.env.HOME || os.homedir();
 }
@@ -357,7 +372,7 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
     configOptions.calendarColor ||
     account.calendarColor ||
     (account.isDefault ? '#00bcd4' : ACCOUNT_PALETTE[defaultColorIdx === 0 ? 1 : defaultColorIdx]);
-  const refreshMinutes = Number(configOptions.refreshMinutes) || 1;
+  const refreshMinutes = resolveRefreshMinutes(account, configOptions);
   const displayName = configOptions.displayName || account.label || email;
   const isDefaultCalendar =
     configOptions.isDefaultCalendar !== undefined ? Boolean(configOptions.isDefaultCalendar) : Boolean(account.isDefault);
@@ -468,6 +483,8 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
     enableCalendar,
     enableContacts,
     enableMail,
+    calendarColor,
+    refreshMinutes,
     userJsBlock: lines.join('\n'),
   };
 }
@@ -524,6 +541,9 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
       } else {
         merged = `${merged.trimEnd()}\n${sortOrderLine}\n`;
       }
+    } else {
+      // Calendar unticked for every account: drop the stale list that names removed calendars.
+      merged = merged.replace(/^user_pref\("calendar\.list\.sortOrder",[^)]+\);\n?/gm, '');
     }
 
     fs.writeFileSync(userJsPath, merged, 'utf8');
@@ -533,7 +553,8 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
   // Persist suite toggles and Thunderbird sync metadata on the Cloud Account
   const saved = cloudAccounts.saveAccount({
     ...account,
-    calendarColor: configOptions.calendarColor || account.calendarColor || (account.isDefault ? '#00bcd4' : '#10b981'),
+    calendarColor: generated.calendarColor,
+    calendarRefreshMinutes: generated.refreshMinutes,
     suites: {
       ...(account.suites || {}),
       calendar: { ...(account.suites?.calendar || {}), enabled: generated.enableCalendar },
@@ -554,6 +575,8 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
     enableCalendar: generated.enableCalendar,
     enableContacts: generated.enableContacts,
     enableMail: generated.enableMail,
+    calendarColor: generated.calendarColor,
+    refreshMinutes: generated.refreshMinutes,
     userJsBlock: generated.userJsBlock,
     writtenFiles,
     primaryProfilePath: profiles[0]?.fullPath || null,
@@ -564,6 +587,7 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
 /**
  * Configures ALL Google accounts in RobOS Cloud Accounts into Mozilla Thunderbird's
  * Calendar (CalDAV) & Contacts (CardDAV) registry with distinct colors and composite view enabled.
+ * Each account keeps the suite toggles, color and sync interval stored by its last configure.
  */
 function configureAllGoogleAccountsInThunderbird(options = {}) {
   const PALETTE = ['#00bcd4', '#10b981', '#a855f7', '#f59e0b', '#ec4899'];
@@ -576,10 +600,11 @@ function configureAllGoogleAccountsInThunderbird(options = {}) {
     const res = configureThunderbirdForGoogleAccount(
       acc.id,
       {
-        enableCalendar: true,
+        enableCalendar: acc.suites?.calendar?.enabled !== false,
         enableContacts: acc.suites?.contacts?.enabled !== false,
         enableMail: Boolean(acc.suites?.mail?.enabled),
         calendarColor: color,
+        refreshMinutes: acc.calendarRefreshMinutes,
         isDefaultCalendar: i === 0 || Boolean(acc.isDefault),
       },
       options
@@ -1357,6 +1382,7 @@ async function getUnifiedCalendarEvents(accountIdOrEmail = null, options = {}) {
 module.exports = {
   ROBOS_BLOCK_START,
   ROBOS_BLOCK_END,
+  DEFAULT_CALENDAR_REFRESH_MINUTES,
   deterministicUuid,
   detectThunderbird,
   parseProfilesIni,

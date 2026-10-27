@@ -122,6 +122,7 @@ function refreshCloudTrackUrls() {
   if (updated) {
     mediaLibrary._saveCache();
   }
+  castService._saveStreamServerEndpoint();
 }
 
 // ── Cloud song tags ─────────────────────────────────────────────────────────
@@ -194,6 +195,19 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
+  try {
+    const tvMod = requireShared('robos-lib/tv-engine');
+    if (tvMod && typeof tvMod.createTvEngine === 'function') {
+      const tvEngine = tvMod.createTvEngine({ appName: 'movie-player' });
+      tvEngine.getPortalOwnership().then(async (own) => {
+        if (!own.reachable) {
+          await tvEngine.startPortalServer();
+        } else if (own.stale && own.canRestart) {
+          await tvEngine.restartPortal();
+        }
+      }).catch(() => {});
+    }
+  } catch {}
   // Wait until the renderer subscribes; checks run without blocking first paint.
   mainWindow.webContents.once('did-finish-load', () => {
     libraryFolders.list();
@@ -315,12 +329,68 @@ function scanUpdates({ onDone } = {}) {
 
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
-ipcMain.handle('audio:discover-speakers', async () => {
+ipcMain.handle('audio:launch-tv-library', async (_evt, ip) => {
   try {
+    refreshCloudTrackUrls();
+    castService._saveStreamServerEndpoint();
+    const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+    if (fs.existsSync(cfgPath)) {
+      const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      const tvInfo = castService.speakers.get(ip) || (raw.tvs || []).find(t => t.ip === ip) || { ip, name: `Smart TV (${ip})`, platformId: 'roku-os' };
+      raw.activeCinemaLibrary = {
+        active: true,
+        tvIp: ip,
+        tvId: tvInfo.id || `tv-${ip}`,
+        tvName: tvInfo.name || ip,
+        platformId: tvInfo.platformId || 'roku-os',
+        openedAt: new Date().toISOString(),
+      };
+      // Stop any currently playing video stream so the TV shows the interactive Library Browser
+      if (raw.activeCinemaCast) {
+        raw.activeCinemaCast.active = false;
+      }
+      fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+      if (tvInfo.platformId === 'roku-os') {
+        castService._ensureRokuDevChannelLaunched(ip, tvInfo?.ports?.ecp || 8060);
+      }
+    }
+    return {
+      ok: true,
+      ip,
+      portalLibraryUrl: `http://${castService.hostIp}:19210/movie-player`,
+      totalMovies: mediaLibrary.tracks.length,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:close-tv-library', async (_evt, ip) => {
+  try {
+    const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+    if (fs.existsSync(cfgPath)) {
+      const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      if (raw.activeCinemaLibrary) {
+        raw.activeCinemaLibrary.active = false;
+        fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+      }
+    }
+    return { ok: true, ip };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:discover-speakers', async (_evt, { scanLan = false } = {}) => {
+  try {
+    if (!scanLan) {
+      const paired = castService.getPairedSmartTvs();
+      if (paired && paired.length > 0) return paired;
+    }
     return await castService.scanSubnet();
   } catch (err) {
-    console.error('[AudioPlayer] Error scanning speakers:', err);
-    return [];
+    console.error('[MoviePlayer] Error scanning Smart TVs:', err);
+    return castService.getPairedSmartTvs();
   }
 });
 

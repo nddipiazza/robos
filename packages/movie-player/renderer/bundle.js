@@ -17802,6 +17802,7 @@
     library: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 19l3-14 4 1-3 14-4-1z" })),
     cloud: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 18a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 18h11z" }),
     wave: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12h3l2-6 4 12 3-9 2 3h6" }),
+    tv: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "2", y: "5", width: "20", height: "14", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "22", x2: "16", y2: "22" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "19", x2: "12", y2: "22" })),
     speaker: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "5", y: "2", width: "14", height: "20", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "14", r: "4" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12.01", y2: "6" })),
     rain: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 12a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 12h11z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "16", x2: "7", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "16", x2: "11", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "16", y1: "16", x2: "15", y2: "20" })),
     synth: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "2", y: "6", width: "20", height: "12", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "7", y1: "6", x2: "7", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "17", y1: "6", x2: "17", y2: "18" })),
@@ -18721,7 +18722,7 @@
       { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
-      actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+      actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
     ];
   }
   function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra = [] } = {}) {
@@ -18743,7 +18744,7 @@
       { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
-      actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+      actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
     ];
     if (single) {
       items.push({ separator: true });
@@ -20738,8 +20739,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   }
   var fmt = (sec) => {
     if (!sec || !isFinite(sec)) return "0:00";
-    const m = Math.floor(sec / 60);
-    const ss = Math.floor(sec % 60);
+    const total = Math.max(0, Math.floor(sec));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor(total % 3600 / 60);
+    const ss = total % 60;
+    if (h > 0) {
+      return `${h}:${m < 10 ? "0" : ""}${m}:${ss < 10 ? "0" : ""}${ss}`;
+    }
     return `${m}:${ss < 10 ? "0" : ""}${ss}`;
   };
   function CastProgress({ onSeek, className = "mini-progress", id }) {
@@ -20747,14 +20753,21 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const [dragging, setDragging] = (0, import_react22.useState)(null);
     const commitTimer = (0, import_react22.useRef)(null);
     const value = dragging != null ? dragging : current;
-    const pct = duration ? Math.min(value, duration) / duration * 100 : 0;
-    const commit = (v) => {
+    const maxVal = duration > 0 ? duration : Math.max(value, 1);
+    const pct = maxVal ? Math.min(value, maxVal) / maxVal * 100 : 0;
+    const commit = (v, immediate = false) => {
       clearTimeout(commitTimer.current);
+      if (immediate) {
+        castClock.set({ position: v });
+        setDragging(null);
+        onSeek(v);
+        return;
+      }
       commitTimer.current = setTimeout(() => {
         castClock.set({ position: v });
         setDragging(null);
         onSeek(v);
-      }, 250);
+      }, 180);
     };
     (0, import_react22.useEffect)(() => () => clearTimeout(commitTimer.current), []);
     return /* @__PURE__ */ import_react22.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react22.default.createElement(
@@ -20762,16 +20775,24 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       {
         type: "range",
         min: "0",
-        max: duration || 0,
+        max: maxVal,
         step: "0.5",
-        value: Math.min(value, duration || 0),
-        disabled: !duration,
+        value: Math.min(value, maxVal),
         style: { "--pct": `${pct}%` },
-        "aria-label": "Seek on the speaker",
+        "aria-label": "Seek on the Smart TV",
         onChange: (e) => {
           const v = Number(e.target.value);
           setDragging(v);
-          commit(v);
+          commit(v, false);
+        },
+        onMouseUp: () => {
+          if (dragging != null) commit(dragging, true);
+        },
+        onTouchEnd: () => {
+          if (dragging != null) commit(dragging, true);
+        },
+        onKeyUp: () => {
+          if (dragging != null) commit(dragging, true);
         }
       }
     ), /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(duration)));
@@ -21020,14 +21041,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       return `${mins} min`;
     };
     const getSpeakerName = (ip) => {
-      if (!ip) return "Speaker";
-      if (ip === "local") return "Desktop (Local Audio)";
-      if (ip === "all") return "All Connected Speakers";
+      if (!ip) return "Smart TV";
+      if (ip === "local") return "Desktop (Local Cinema)";
+      if (ip === "all") return "All RobOS Smart TVs";
       const found = speakers.find((s) => s.ip === ip);
-      return found ? found.name : `Speaker (${ip})`;
+      return found ? found.name : `Smart TV (${ip})`;
     };
     (0, import_react24.useEffect)(() => {
-      refreshSpeakers();
+      refreshSpeakers(false);
       loadLibrary();
       loadStats();
       refreshFolders();
@@ -21107,8 +21128,12 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             return;
           }
           if (status.currentTime != null) {
-            castClock.set({ position: status.currentTime, duration: status.duration || castClock.get().duration, playing: status.playerState === "PLAYING" });
-            L.countCastPlay(status.currentTime, status.duration);
+            const nextDur = status.duration && status.duration > 0 ? status.duration : castClock.get().duration || (videoRef.current && isFinite(videoRef.current.duration) ? videoRef.current.duration : 0);
+            castClock.set({ position: status.currentTime, duration: nextDur, playing: status.playerState === "PLAYING" });
+            if (videoRef.current && videoRef.current.paused && Math.abs((videoRef.current.currentTime || 0) - status.currentTime) > 0.75) {
+              syncVideoElementTime(status.currentTime);
+            }
+            L.countCastPlay(status.currentTime, nextDur);
           } else if (status.playerState) {
             castClock.set({ playing: status.playerState === "PLAYING" });
           }
@@ -21193,19 +21218,21 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         toastTimerRef.current = null;
       }, 4e3);
     };
-    const refreshSpeakers = async () => {
+    const refreshSpeakers = async (scanLan = true) => {
       setIsScanning(true);
-      showStatus("Scanning local network for Google Cast speakers...");
+      if (scanLan) showStatus("Scanning local network & RobOS Smart TV Studio for Smart TVs...");
       try {
-        const found = await window.robosAudio.discoverSpeakers();
+        const found = await window.robosAudio.discoverSpeakers({ scanLan });
         setSpeakers(found || []);
-        if (found && found.length > 0) {
-          showStatus(`Discovered ${found.length} local Google Cast speakers!`);
-        } else {
-          showStatus("No Cast speakers responded on local subnet.");
+        if (scanLan) {
+          if (found && found.length > 0) {
+            showStatus(`Discovered ${found.length} RobOS Smart TV(s)!`);
+          } else {
+            showStatus("No Smart TVs responded on local subnet.");
+          }
         }
       } catch (err) {
-        showStatus("Discovery error: " + err.message);
+        if (scanLan) showStatus("Discovery error: " + err.message);
       } finally {
         setIsScanning(false);
       }
@@ -21352,7 +21379,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         return;
       }
       if (!speakers.length) {
-        showStatus('No Cast speakers found yet. Use "Scan Speakers" first.');
+        showStatus('No RobOS Smart TVs found yet. Use "Scan Smart TVs" first.');
         return;
       }
       const target = outputTarget !== "local" ? outputTarget : speakers[0]?.ip || "all";
@@ -21363,8 +21390,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       shuffleHistoryRef.current = [];
       castTrack(target, list[0]);
       playerRef.current?.audio?.current?.pause();
+      if (videoRef.current) videoRef.current.pause();
       setIsPlaying(true);
-      showStatus(`Casting ${label ? `"${label}"` : `${list.length} track(s)`} to ${getSpeakerName(target)}!`);
+      showStatus(`Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
     };
     const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || "Playlist");
     const handleCreatePlaylist = async () => {
@@ -21623,14 +21651,37 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const pendingLocalSeekRef = (0, import_react24.useRef)(null);
     const songLoadsRef = (0, import_react24.useRef)(/* @__PURE__ */ new Set());
+    const internalVideoSyncTimeoutRef = (0, import_react24.useRef)(null);
+    const lastProgrammaticVideoSeekRef = (0, import_react24.useRef)({ time: 0, target: 0 });
+    const syncVideoElementTime = (targetSec) => {
+      const v = videoRef.current;
+      if (!v || !isFinite(targetSec)) return;
+      lastProgrammaticVideoSeekRef.current = { time: Date.now(), target: targetSec };
+      try {
+        v.currentTime = targetSec;
+      } catch {
+      }
+    };
+    const getRealTrackDuration = (track) => {
+      const v = videoRef.current;
+      if (v && isFinite(v.duration) && v.duration > 0) return v.duration;
+      const a = playerRef.current?.audio?.current;
+      if (a && isFinite(a.duration) && a.duration > 0) return a.duration;
+      return Number(track?.duration) > 0 ? Number(track.duration) : 0;
+    };
     const handleCastSeek = (seconds) => {
-      castClock.set({ position: seconds });
-      if (outputTarget !== "local") window.robosAudio.castSeek(outputTarget, seconds).catch(() => {
+      const targetSec = Math.max(0, Number(seconds) || 0);
+      castClock.set({ position: targetSec });
+      if (videoRef.current && Math.abs((videoRef.current.currentTime || 0) - targetSec) > 0.5) {
+        syncVideoElementTime(targetSec);
+      }
+      if (outputTarget !== "local") window.robosAudio.castSeek(outputTarget, targetSec).catch(() => {
       });
     };
     const castTrack = async (speakerIp, track, { startAt = 0 } = {}) => {
       if (!speakerIp || speakerIp === "local" || !track) return;
-      castClock.set({ position: startAt || 0, duration: track.duration || 0, playing: false });
+      const knownDuration = getRealTrackDuration(track);
+      castClock.set({ position: startAt || 0, duration: knownDuration, playing: true });
       const loads = /* @__PURE__ */ new Set();
       songLoadsRef.current = loads;
       const remember = (res) => {
@@ -21641,7 +21692,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       const metadata = {
         title: track.title,
         artist: track.artist,
-        album: track.album
+        album: track.album,
+        duration: knownDuration
       };
       if (startAt > 0) metadata.currentTime = startAt;
       const castArt = artUrlFor(artBase.cast, track.artId);
@@ -22362,13 +22414,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react24.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and Google Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react24.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and RobOS Smart TV Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
           className: "btn-accent",
           onClick: handleSelectFolder,
-          title: "Open built-in system file manager to add music folder"
+          title: "Open built-in system file manager to add movie folder"
         },
         /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
         /* @__PURE__ */ import_react24.default.createElement("span", null, "Add Folder")
@@ -22378,11 +22430,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           id: "btn-header-add-files",
           className: "btn-secondary",
           onClick: handleAddFiles,
-          title: "Open file picker to select individual audio files"
+          title: "Open file picker to select individual movie files"
         },
         /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react24.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
         /* @__PURE__ */ import_react24.default.createElement("span", null, "Add Files")
-      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react24.default.createElement(
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Display Output:"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react24.default.createElement(
         "select",
         {
           id: "output-select",
@@ -22390,7 +22442,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onChange: (e) => {
             const target = e.target.value;
             setOutputTarget(target);
-            const audio = playerRef.current?.audio?.current;
+            const audio = getMediaEl();
             if (target === "local") {
               if (outputTarget !== "local" && currentTrack) pendingLocalSeekRef.current = castClock.now();
               if (activeCastSession) handleStopCast();
@@ -22401,26 +22453,30 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 audio.pause();
                 audio.muted = true;
               }
+              if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.muted = true;
+              }
               if (currentTrack) {
                 castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
               }
             }
-            showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
+            showStatus(`Switched display output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
-        /* @__PURE__ */ import_react24.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
+        /* @__PURE__ */ import_react24.default.createElement("option", { value: "local" }, "Desktop (Local Cinema)"),
         speakers.map((s) => /* @__PURE__ */ import_react24.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
-        speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
+        speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement("option", { value: "all" }, "Broadcast to All Smart TVs")
       ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           id: "btn-scan-speakers",
           className: `btn-icon ${isScanning ? "loading" : ""}`,
-          onClick: refreshSpeakers,
-          title: "Scan LAN for Google Cast speakers"
+          onClick: () => refreshSpeakers(true),
+          title: "Scan LAN & RobOS Smart TV Studio for Smart TVs"
         },
         /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M16 21h5v-5" })),
-        /* @__PURE__ */ import_react24.default.createElement("span", null, "Scan Speakers")
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Scan Smart TVs")
       )))),
       /* @__PURE__ */ import_react24.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
@@ -22474,8 +22530,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
-        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "speaker" }),
-        /* @__PURE__ */ import_react24.default.createElement("span", null, "Speakers (", speakers.length, ")")
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "tv" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Smart TVs (", speakers.length, ")")
       ), /* @__PURE__ */ import_react24.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
@@ -22510,12 +22566,56 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           id: "cinema-video-element",
           ref: videoRef,
           className: `cinema-video-el fit-${videoFit}`,
-          src: outputTarget === "local" ? resolveSrc(currentTrack) : void 0,
+          src: resolveSrc(currentTrack),
           poster: artUrlFor(artBase.local, currentTrack?.artId) || void 0,
+          muted: outputTarget !== "local",
           controls: true,
           playsInline: true,
-          onPlay: () => setIsPlaying(true),
-          onPause: () => setIsPlaying(false),
+          onLoadedMetadata: (e) => {
+            const d = e.currentTarget?.duration;
+            if (d && isFinite(d) && d > 0) {
+              if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+              if (outputTarget !== "local") {
+                castClock.set({ duration: d });
+              }
+            }
+            const at = pendingLocalSeekRef.current;
+            if (outputTarget === "local" && at != null && e.currentTarget) {
+              pendingLocalSeekRef.current = null;
+              e.currentTarget.currentTime = at;
+            }
+          },
+          onDurationChange: (e) => {
+            const d = e.currentTarget?.duration;
+            if (d && isFinite(d) && d > 0) {
+              if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+              if (outputTarget !== "local") {
+                castClock.set({ duration: d });
+              }
+            }
+          },
+          onSeeked: (e) => {
+            if (outputTarget !== "local") {
+              const sec = e.currentTarget?.currentTime || 0;
+              const last = lastProgrammaticVideoSeekRef.current;
+              if (Date.now() - last.time < 4e3 && Math.abs(sec - last.target) < 4) {
+                return;
+              }
+              handleCastSeek(sec);
+            }
+          },
+          onPlay: () => {
+            if (outputTarget === "local") {
+              setIsPlaying(true);
+            } else if (activeCastSession?.isPaused) {
+              handleToggleCastPause();
+            }
+          },
+          onPause: () => {
+            if (outputTarget === "local") {
+              setIsPlaying(false);
+            }
+          },
           onEnded: () => {
             if (outputTarget === "local") handleTrackEnded();
           }
@@ -22546,7 +22646,49 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Toggle Picture-in-Picture"
         },
         "PiP"
+      ), speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement(import_react24.default.Fragment, null, /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          style: { borderColor: "#e8a33d", color: "#e8a33d" },
+          onClick: () => {
+            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+            setOutputTarget(target);
+            const v = videoRef.current;
+            const from = v ? v.currentTime : 0;
+            if (v) {
+              v.pause();
+              v.muted = true;
+            }
+            if (currentTrack) {
+              castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
+              setIsPlaying(true);
+            }
+          },
+          title: `Cast movie to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
+        },
+        "\u{1F4FA} Cast to ",
+        outputTarget !== "local" ? getSpeakerName(outputTarget) : speakers[0].name
       ), /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          style: { borderColor: "#38bdf8", color: "#38bdf8" },
+          onClick: async () => {
+            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+            if (window.robosAudio?.launchTvLibrary) {
+              const res = await window.robosAudio.launchTvLibrary(target);
+              if (res && res.ok) {
+                showStatus(`\u{1F4FA} 10-Foot Movie Library opened on ${getSpeakerName(target)}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+              }
+            }
+          },
+          title: "Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
+        },
+        "\u{1F3AE} TV Library (Remote UI)"
+      )), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           type: "button",
@@ -22572,7 +22714,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               a.currentTime = at;
             }
           },
-          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react24.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react24.default.createElement(MiniProgress, { key: "video-progress", getAudio: () => videoRef.current })] : void 0,
+          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react24.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react24.default.createElement(MiniProgress, { key: "video-progress", trackId: currentTrack?.id || currentTrack?.filePath, getAudio: () => videoRef.current })] : void 0,
           customControlsSection: outputTarget !== "local" || isVideoTrack(currentTrack) ? [
             RHAP_UI.ADDITIONAL_CONTROLS,
             /* @__PURE__ */ import_react24.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react24.default.createElement(
@@ -22727,7 +22869,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           disabled: !selectedPlaylist.tracks?.length,
           title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
         },
-        "Cast Playlist"
+        "Cast to Smart TV"
       ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
@@ -22858,18 +23000,78 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
         { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
         { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react24.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => {
-        setOutputTarget(s.ip);
-        setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
-        showStatus(`Playing harmonic test chime on ${s.name}...`);
-        try {
-          await window.robosAudio.playTestChime(s.ip);
-          showStatus(`Test chime played on ${s.name}`);
-        } catch (err) {
-          showStatus("Test chime error: " + err.message);
-        }
-      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react24.default.createElement(
+      ].map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Paired RobOS Smart TVs (", speakers.length, ")"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "subtitle", style: { marginTop: "4px" } }, "Cast movies directly to RobOS Smart TVs (Roku OS, Google TV / Cast, LG webOS, Samsung Tizen) over zero-cloud LAN")), /* @__PURE__ */ import_react24.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Smart TVs"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: () => refreshSpeakers(true) }, "Scan Smart TVs"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => {
+        const isSelected = outputTarget === s.ip || outputTarget === "all";
+        const isCastingHere = activeCastSession && (activeCastSession.ip === s.ip || activeCastSession.ip === "all");
+        return /* @__PURE__ */ import_react24.default.createElement(
+          "div",
+          {
+            key: s.ip,
+            className: "speaker-card",
+            style: isSelected ? { borderColor: "#e8a33d", boxShadow: "0 0 0 1px rgba(232,163,61,0.35)" } : void 0
+          },
+          /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-badge" }, isCastingHere ? "CASTING LIVE" : s.online !== false ? "ONLINE \xB7 READY" : "PAIRED"),
+          /* @__PURE__ */ import_react24.default.createElement("h4", { style: { paddingRight: "108px" } }, s.name),
+          s.platformName && /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model", style: { color: "#e8a33d", fontWeight: 600 } }, "Platform: ", s.platformName),
+          /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-ip" }, "LAN IP: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.ip)),
+          /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model),
+          s.sideloadStatus && /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model", style: { fontSize: "12px", opacity: 0.8 } }, "RobOS TV Studio: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.sideloadStatus)),
+          /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+            "button",
+            {
+              className: "btn-accent",
+              onClick: () => {
+                setOutputTarget(s.ip);
+                const el = getMediaEl();
+                const from = outputTarget === "local" && el ? el.currentTime : castClock.now();
+                if (el) {
+                  el.pause();
+                  el.muted = true;
+                }
+                if (currentTrack) {
+                  castTrack(s.ip, currentTrack, { startAt: from > 1 ? from : 0 });
+                  setIsPlaying(true);
+                }
+                setActiveTab("player");
+              }
+            },
+            currentTrack ? `Display "${currentTrack.title.slice(0, 22)}${currentTrack.title.length > 22 ? "\u2026" : ""}" on TV` : "Display on TV"
+          ), /* @__PURE__ */ import_react24.default.createElement(
+            "button",
+            {
+              className: "btn-secondary",
+              style: { borderColor: "#38bdf8", color: "#38bdf8" },
+              onClick: async () => {
+                showStatus(`Opening 10-Foot Movie Library UI on ${s.name} (${s.ip})...`);
+                try {
+                  const res = await window.robosAudio.launchTvLibrary(s.ip);
+                  if (res && res.ok) {
+                    showStatus(`\u{1F4FA} Movie Library (${res.totalMovies || library.tracks.length} movies) is now open on ${s.name}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+                  } else {
+                    showStatus(`Could not open TV Library: ${res?.error || "Unknown error"}`);
+                  }
+                } catch (err) {
+                  showStatus("Error opening TV Library: " + err.message);
+                }
+              },
+              title: "Open the interactive 10-foot Movie Library on this Smart TV to browse and play movies using your physical TV remote"
+            },
+            "\u{1F3AE} Open TV Library (Remote UI)"
+          ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: async () => {
+            if (window.robosAudio?.closeTvLibrary) await window.robosAudio.closeTvLibrary(s.ip).catch(() => {
+            });
+            handleStopCast(s.ip);
+          } }, "Stop TV"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+            showStatus(`Sending test signal to ${s.name} (${s.ip})...`);
+            try {
+              await window.robosAudio.playTestChime(s.ip);
+              showStatus(`Test signal verified on ${s.name}`);
+            } catch (err) {
+              showStatus("TV test error: " + err.message);
+            }
+          } }, "Test TV Signal"))
+        );
+      })))), /* @__PURE__ */ import_react24.default.createElement(
         NowPlayingPanel,
         {
           queue: playlist,
@@ -22900,7 +23102,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           }
         }
       )),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react24.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react24.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react24.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react24.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react24.default.createElement(MiniProgress, { getAudio: getMediaEl })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react24.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react24.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react24.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react24.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react24.default.createElement(MiniProgress, { trackId: currentTrack?.id || currentTrack?.filePath, getAudio: getMediaEl })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
       showAiPlaylist && /* @__PURE__ */ import_react24.default.createElement(
         AiPlaylistModal,
         {
@@ -23010,44 +23212,86 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       statusMsg && /* @__PURE__ */ import_react24.default.createElement("div", { className: "toast" }, statusMsg)
     ));
   }
-  function MiniProgress({ getAudio }) {
+  function MiniProgress({ getAudio, trackId }) {
     const [time, setTime] = (0, import_react24.useState)({ current: 0, duration: 0 });
+    const [dragging, setDragging] = (0, import_react24.useState)(null);
     (0, import_react24.useEffect)(() => {
-      const audio = getAudio();
-      if (!audio) return void 0;
-      const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
-      update();
-      audio.addEventListener("timeupdate", update);
-      audio.addEventListener("durationchange", update);
-      audio.addEventListener("emptied", update);
-      return () => {
-        audio.removeEventListener("timeupdate", update);
-        audio.removeEventListener("durationchange", update);
-        audio.removeEventListener("emptied", update);
+      let attached = null;
+      let pollTimer = null;
+      const update = () => {
+        const el = getAudio();
+        if (!el) return;
+        const d = isFinite(el.duration) && el.duration > 0 ? el.duration : 0;
+        setTime({ current: el.currentTime || 0, duration: d });
       };
-    }, []);
+      const attach = () => {
+        const el = getAudio();
+        if (!el || el === attached) return;
+        if (attached) {
+          attached.removeEventListener("timeupdate", update);
+          attached.removeEventListener("durationchange", update);
+          attached.removeEventListener("loadedmetadata", update);
+          attached.removeEventListener("seeked", update);
+          attached.removeEventListener("emptied", update);
+        }
+        attached = el;
+        update();
+        el.addEventListener("timeupdate", update);
+        el.addEventListener("durationchange", update);
+        el.addEventListener("loadedmetadata", update);
+        el.addEventListener("seeked", update);
+        el.addEventListener("emptied", update);
+      };
+      attach();
+      pollTimer = setInterval(() => {
+        attach();
+        update();
+      }, 350);
+      return () => {
+        if (pollTimer) clearInterval(pollTimer);
+        if (attached) {
+          attached.removeEventListener("timeupdate", update);
+          attached.removeEventListener("durationchange", update);
+          attached.removeEventListener("loadedmetadata", update);
+          attached.removeEventListener("seeked", update);
+          attached.removeEventListener("emptied", update);
+        }
+      };
+    }, [getAudio, trackId]);
     const fmt2 = (sec) => {
       if (!sec || !isFinite(sec)) return "0:00";
-      const m = Math.floor(sec / 60);
-      const ss = Math.floor(sec % 60);
+      const total = Math.max(0, Math.floor(sec));
+      const h = Math.floor(total / 3600);
+      const m = Math.floor(total % 3600 / 60);
+      const ss = total % 60;
+      if (h > 0) {
+        return `${h}:${m < 10 ? "0" : ""}${m}:${ss < 10 ? "0" : ""}${ss}`;
+      }
       return `${m}:${ss < 10 ? "0" : ""}${ss}`;
     };
-    const pct = time.duration ? time.current / time.duration * 100 : 0;
-    return /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(time.current)), /* @__PURE__ */ import_react24.default.createElement(
+    const val = dragging != null ? dragging : time.current;
+    const maxVal = time.duration > 0 ? time.duration : Math.max(val, 1);
+    const pct = maxVal ? Math.min(val, maxVal) / maxVal * 100 : 0;
+    return /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(val)), /* @__PURE__ */ import_react24.default.createElement(
       "input",
       {
         type: "range",
         min: "0",
-        max: time.duration || 0,
+        max: maxVal,
         step: "0.5",
-        value: time.current,
-        disabled: !time.duration,
+        value: Math.min(val, maxVal),
         style: { "--pct": `${pct}%` },
         "aria-label": "Seek",
         onChange: (e) => {
+          const next = Number(e.target.value);
+          setDragging(next);
+          setTime((prev) => ({ ...prev, current: next }));
           const audio = getAudio();
-          if (audio) audio.currentTime = Number(e.target.value);
-        }
+          if (audio) audio.currentTime = next;
+        },
+        onMouseUp: () => setDragging(null),
+        onTouchEnd: () => setDragging(null),
+        onKeyUp: () => setDragging(null)
       }
     ), /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(time.duration)));
   }

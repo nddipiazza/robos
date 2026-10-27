@@ -120,14 +120,16 @@ def render(m: BattleMap, out_path: str | Path, px_per_ft: int = 16, show_grid: b
             d.line([(c, 0), (c, h)], fill=(255, 255, 255, 22), width=1)
         for r in range(0, h + 1, cell):
             d.line([(0, r), (w, r)], fill=(255, 255, 255, 22), width=1)
-    if show_labels:
-        img = _render_labels(img, objs, s, w, h)
+    # Collision outlines go before labels: _render_labels returns a new image, so
+    # anything drawn through `d` afterwards would be lost, and labels on top stay legible.
     if debug_collision:
         grid = compute_blockout(m)
         for c, r in grid["blocked"]:
             d.rectangle([c * cell, r * cell, c * cell + cell, r * cell + cell], outline=(255, 60, 60, 200), width=2)
         for c, r in grid["difficult"]:
             d.rectangle([c * cell + 4, r * cell + 4, c * cell + cell - 4, r * cell + cell - 4], outline=(80, 160, 255, 200), width=2)
+    if show_labels:
+        img = _render_labels(img, objs, s, w, h)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.suffix.lower() in (".jpg", ".jpeg"):

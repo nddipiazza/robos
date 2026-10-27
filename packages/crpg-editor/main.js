@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 const util = require('util');
+const { countBlockoutStats } = require('./lib/blockout-stats');
 
 const execPromise = util.promisify(exec);
 
@@ -1043,13 +1044,7 @@ function setupIpcHandlers() {
         mapPath,
         pngPath: targetPng,
         pngExists: fs.existsSync(targetPng),
-        blockoutStats: {
-          blocked: (blockout.blocked || []).length,
-          opaque: (blockout.opaque || []).length,
-          difficult: (blockout.difficult || []).length,
-          halfCover: (blockout.halfCover || []).length,
-          threeQuarterCover: (blockout.threeQuarterCover || []).length,
-        },
+        blockoutStats: countBlockoutStats(blockout),
         stdout,
         stderr,
       };

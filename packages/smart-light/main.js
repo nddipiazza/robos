@@ -133,12 +133,19 @@ function createWindow() {
 
 app.whenReady?.().then(async () => {
   await lightEngine.startApiServer();
+  // Once-a-minute check that runs enabled schedules on their days and times.
+  lightEngine.startScheduler();
   createWindow();
 });
 
 app.on?.('window-all-closed', async () => {
+  lightEngine.stopScheduler();
   await lightEngine.stopApiServer();
   app.quit();
+});
+
+app.on?.('before-quit', () => {
+  lightEngine.stopScheduler();
 });
 
 app.on?.('second-instance', () => {
