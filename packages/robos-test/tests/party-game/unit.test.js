@@ -408,6 +408,69 @@ describe('RobOS Party Game', () => {
       assert.ok(mp4 && mp4.endsWith('.mp4') && fs.statSync(mp4).size > 0, 'Roku gets a keep-alive-style MP4');
       assert.deepStrictEqual(casts.map((c) => c.ip), ['192.168.1.6']);
     });
+
+    it('plays speaker lines through the running Audio Player so its song resumes, else casts directly', async () => {
+      const os = require('node:os');
+      const { createNarrationRouter } = require(path.join(APP_DIR, 'lib', 'narration-outputs'));
+      const casts = [];
+      class FakeCast {
+        constructor() { this.streamPort = 1234; }
+        registerFile(f) { return `http://host/media/${path.basename(f)}`; }
+        async castMediaUrl(ip, url) { casts.push({ ip, url }); return { ok: true }; }
+      }
+      const asked = [];
+      let answer = null;
+      const router = createNarrationRouter({
+        engine: createPartyEngine({ seed: 1, settings: { agent: { provider: 'stub' } }, ai: stubAgent() }),
+        getTts: () => null,
+        castModule: { CastService: FakeCast },
+        audioPlayer: { speakClip: async (clip) => { asked.push(clip); return answer; } },
+        configDir: os.tmpdir(),
+        getLanIp: () => '10.0.0.5',
+        getGamePort: () => 19213,
+      });
+      answer = { ok: true, handled: true };
+      assert.strictEqual(await router.playOnSpeaker('192.168.1.10', '/tmp/line.mp3', 1800), 'audio-player');
+      assert.deepStrictEqual(asked[0], { speakerIp: '192.168.1.10', filePath: '/tmp/line.mp3', title: 'RobOS Party Game', artist: 'Your AI host', durationMs: 1800, holdMs: 2500 });
+      assert.strictEqual(casts.length, 0, 'the Audio Player had the speaker: no direct cast');
+      answer = { ok: true, handled: false, reason: 'other-speaker' };
+      assert.strictEqual(await router.playOnSpeaker('192.168.1.6', '/tmp/line.mp3'), 'cast');
+      answer = null; // Audio Player not running
+      assert.strictEqual(await router.playOnSpeaker('192.168.1.6', '/tmp/line.mp3'), 'cast');
+      assert.deepStrictEqual(casts.map((c) => c.ip), ['192.168.1.6', '192.168.1.6']);
+    });
+
+    it('reaches a real Audio Player control server through the shared client', async () => {
+      const os = require('node:os');
+      const { createNarrationRouter } = require(path.join(APP_DIR, 'lib', 'narration-outputs'));
+      const control = require(path.join(APP_DIR, '..', 'audio-player', 'lib', 'control-server'));
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'party-ap-'));
+      const line = path.join(dir, 'line.mp3');
+      fs.writeFileSync(line, 'x');
+      const clips = [];
+      const server = control.createControlServer({
+        configDir: dir,
+        probe: async () => null,
+        handlers: { status: () => ({ ok: true }), speakClip: (c) => { clips.push(c); return { ok: true, handled: true }; }, pause: () => ({}), resume: () => ({}) },
+      });
+      await server.start();
+      try {
+        const router = createNarrationRouter({
+          engine: createPartyEngine({ seed: 1, settings: { agent: { provider: 'stub' } }, ai: stubAgent() }),
+          getTts: () => null,
+          castModule: { CastService: class { async castMediaUrl() { throw new Error('should not cast directly'); } } },
+          audioPlayer: control.createAudioPlayerClient({ configDir: dir }),
+          configDir: dir,
+          getLanIp: () => '10.0.0.5',
+          getGamePort: () => 19213,
+        });
+        assert.strictEqual(await router.playOnSpeaker('192.168.1.10', line, 1200), 'audio-player');
+        assert.deepStrictEqual([clips[0].speakerIp, clips[0].filePath, clips[0].durationMs, clips[0].holdMs], ['192.168.1.10', line, 1200, 2500]);
+      } finally {
+        server.stop();
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    });
   });
 
   describe('AI JSON parsing', () => {

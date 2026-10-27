@@ -15,6 +15,7 @@ const lyrics = require('./lib/lyrics');
 const { LibraryFolders } = require('./lib/library-folders');
 const aiPlaylist = require('./lib/ai-playlist');
 const aiMetadata = require('./lib/ai-metadata');
+const { createControlServer } = require('./lib/control-server');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
 function requireShared(...relPaths) {
@@ -192,6 +193,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
   // Wait until the renderer subscribes; checks run without blocking first paint.
   mainWindow.webContents.once('did-finish-load', () => {
     libraryFolders.list();
@@ -210,6 +212,42 @@ app.whenReady().then(() => {
 // Large libraries batch their cache writes; make sure the last one lands.
 app.on('before-quit', () => {
   try { mediaLibrary.flush(); } catch {}
+  try { controlServer.stop(); } catch {}
+});
+
+// ── Control API for other RobOS apps (lib/control-server.js) ────────────────
+
+// The renderer owns playback, so each call is answered there.
+const controlRequests = new Map(); // requestId → resolve
+let controlRequestSeq = 0;
+function askRenderer(action, payload = {}, timeoutMs = 15000) {
+  if (!mainWindow || mainWindow.isDestroyed()) return Promise.resolve({ ok: false, error: 'The Audio Player window is closed' });
+  const requestId = ++controlRequestSeq;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      controlRequests.delete(requestId);
+      resolve({ ok: false, error: 'The Audio Player did not answer' });
+    }, timeoutMs);
+    controlRequests.set(requestId, (result) => { clearTimeout(timer); resolve(result); });
+    mainWindow.webContents.send('audio:control-request', { requestId, action, payload });
+  });
+}
+
+ipcMain.handle('audio:control-reply', async (_evt, { requestId, result } = {}) => {
+  const resolve = controlRequests.get(requestId);
+  controlRequests.delete(requestId);
+  if (resolve) resolve(result || { ok: false });
+  return true;
+});
+
+const controlServer = createControlServer({
+  handlers: {
+    status: () => askRenderer('status'),
+    speakClip: (clip) => askRenderer('speak-clip', clip, 60000),
+    pause: () => askRenderer('pause'),
+    resume: () => askRenderer('resume'),
+  },
+  log: (entry) => console.warn('[AudioPlayer] control:', JSON.stringify(entry)),
 });
 
 app.on('window-all-closed', () => {

@@ -16,7 +16,7 @@ description: "AI-hosted party game on your RobOS TVs: guests take a survey on th
 - **At least one RobOS TV** paired in [RobOS Smart TV Studio]({{ '/apps/robos-tv/' | relative_url }}). With two or more, each TV gets a screen: the **main stage** (host face and the action), a live **scoreboard**, and a **spotlight** on the guest each round is about. Browser TVs (LG webOS, Samsung Tizen, Google TV) open the game page; Roku TVs show live frames through the RobOS TV channel.
 - **An AI agent.** The AI host (a hooded masked figure by default, or a robot) is required: pick it with the shared agent selector (Codex, Antigravity, …). Every agent call runs in the background ahead of when it is needed, so a slow reply never stalls the party, and stock material fills in if a call fails.
 - Guests' phones on the same Wi-Fi. They scan the QR code on the TV.
-- **Where the host's voice plays** (pick any): the main-stage TVs (browser TVs play it in the page; Roku plays it through the RobOS TV channel), an **RobOS Audio Player speaker** (Google Cast speakers found by the Audio Player or Home Speaker, or a fresh scan), and this computer. A Cast speaker plays one stream at a time, so choose a different speaker from the one playing music.
+- **Where the host's voice plays** (pick any): the main-stage TVs (browser TVs play it in the page; Roku plays it through the RobOS TV channel), an **RobOS Audio Player speaker** (Google Cast speakers found by the Audio Player or Home Speaker, or a fresh scan), and this computer. A Cast speaker plays one stream at a time, so when the RobOS Audio Player is running, the host's lines go through its [control API]({{ '/apps/audio-player/' | relative_url }}): if the music is on the chosen speaker, each line plays there and the song then picks up where it left off. If the Audio Player is closed or playing somewhere else, the line is cast straight to the speaker.
 
 ## How a party runs
 
@@ -45,4 +45,5 @@ Mini games share a template (`packages/party-game/lib/minigames/template.js`). A
 
 - Settings: `~/.config/robos/party-game/settings.json`; finished games: `~/.config/robos/party-game/history/`.
 - LAN game server: `:19213` (`/tv?screen=stage|scoreboard|spotlight`, `/join`). DOM snapshot debug port: `19212`.
+- Speaker lines go through the Audio Player's control API (`createAudioPlayerClient()` from `packages/audio-player/lib/control-server.js`, called from `lib/narration-outputs.js`) and fall back to casting with its `CastService`.
 - TVs are reached through the shared TV engine's app casts (`robos-lib/tv-engine.js`: `castAppToTv`, `/api/app-cast`, `/api/app-cast-frame.jpg`).
