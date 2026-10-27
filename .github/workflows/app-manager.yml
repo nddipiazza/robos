@@ -29,7 +29,13 @@ jobs:
       - name: Read release version
         id: version
         shell: bash
-        run: echo "tag=v$(cat VERSION | tr -d '\r\n')" >> "$GITHUB_OUTPUT"
+        run: |
+          tag="v$(cat VERSION | tr -d '\r\n')"
+          if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "$tag" ]]; then
+            echo "::error::Release tag does not match VERSION"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Install manager build dependencies
         working-directory: packages/app-manager
         run: npm install --no-audit --no-fund
@@ -59,6 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
           name: RobOS App Manager ${{ steps.version.outputs.tag }}
           body: 'RobOS App Manager for Windows, Ubuntu GNOME and macOS (Intel and Apple Silicon). Select apps in a grouped checkbox tree; selected apps and shared components download separately for your OS and CPU. Each app gets a native launcher. Uninstalling RobOS removes managed apps and launchers while retaining personal settings.'
