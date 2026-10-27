@@ -349,19 +349,6 @@ const DEFAULT_DASHBOARDS = [
         },
       },
       {
-        id: 'voice-dictation-bubbles',
-        kgraphId: 'urn:robos:dashboard-card:voice-dictation-bubbles',
-        title: 'RobOS Voice Dictation (Live Dialogue Bubbles)',
-        widgetType: 'voice-dictation',
-        componentTag: 'robos-widget-voice-dictation',
-        slotId: 'col-3',
-        config: {
-          limit: 6,
-          showInterimBubble: true,
-          showSkillBadges: true,
-        },
-      },
-      {
         id: 'latest-10-commits',
         kgraphId: 'urn:robos:dashboard-card:latest-10-commits',
         title: '10 Latest Commit Messages',
@@ -441,6 +428,31 @@ const DEFAULT_DASHBOARDS = [
           repo: 'nddipiazza/robos',
           branch: 'main',
           mode: 'popularity-traffic',
+        },
+      },
+    ],
+  },
+  {
+    id: 'robos-voice-dictation',
+    kgraphId: 'urn:robos:dashboard:robos-voice-dictation',
+    title: 'RobOS Voice Dictation — Most Recent Chats',
+    description: 'Dedicated page showing the most recent RobOS Voice dictation chat bubbles, live interim speech stream, timestamps, matched voice commands, and likely AI skills.',
+    layoutId: 'single-focus',
+    tvCompatible: true,
+    isDefault: false,
+    cards: [
+      {
+        id: 'voice-dictation-bubbles',
+        kgraphId: 'urn:robos:dashboard-card:voice-dictation-bubbles',
+        title: 'RobOS Voice Dictation — Most Recent Chats',
+        widgetType: 'voice-dictation',
+        componentTag: 'robos-widget-voice-dictation',
+        slotId: 'canvas-main',
+        config: {
+          limit: 10,
+          showInterimBubble: true,
+          showSkillBadges: true,
+          fullPage: true,
         },
       },
     ],
@@ -2209,12 +2221,13 @@ function enrichVoiceBubble(rawBubble) {
  * Collects live & recent RobOS Voice dictation dialogue bubbles from
  * `~/.config/robos/voice-bubbles-live.json` and `~/.config/robos/voice-prompts.json`.
  */
-function collectVoiceDictationBubbles({ configDir, limit = 6 } = {}) {
+function collectVoiceDictationBubbles({ configDir, limit = 10 } = {}) {
+  const defaultUserConfigDir = path.join(process.env.HOME || os.homedir(), '.config', 'robos');
   const resolvedConfigDir =
     configDir ||
     process.env.ROBOS_CONFIG_DIR ||
-    path.join(process.env.HOME || os.homedir(), '.config', 'robos');
-  const maxBubbles = Math.max(1, Math.min(20, Number(limit) || 6));
+    defaultUserConfigDir;
+  const maxBubbles = Math.max(1, Math.min(25, Number(limit) || 10));
   const liveFile = path.join(resolvedConfigDir, 'voice-bubbles-live.json');
   const promptsFile = path.join(resolvedConfigDir, 'voice-prompts.json');
   const prefsFile = path.join(resolvedConfigDir, 'voice-prompt-prefs.json');
@@ -2238,29 +2251,124 @@ function collectVoiceDictationBubbles({ configDir, limit = 6 } = {}) {
   let interimBubble = null;
   let bubbles = [];
 
-  // 1. Read live dialogue bubble state (`voice-bubbles-live.json`)
-  try {
-    if (fs.existsSync(liveFile)) {
-      const parsed = JSON.parse(fs.readFileSync(liveFile, 'utf8'));
-      if (parsed && typeof parsed === 'object') {
-        const pidAlive = parsed.allowTestActive || (parsed.pid && isPidAlive(parsed.pid));
-        const ageMs = parsed.updatedAt ? Date.now() - new Date(parsed.updatedAt).getTime() : 0;
-        const freshEnough = !Number.isFinite(ageMs) || ageMs < 60000;
-        active = Boolean(parsed.active && (pidAlive || freshEnough));
-        backgroundMode = Boolean(parsed.backgroundMode && active);
-        assistantState = parsed.assistantState || 'IDLE';
-        cleared = Boolean(parsed.cleared);
-        if (parsed.interimBubble && (parsed.interimBubble.text || parsed.interimBubble.msg) && (active || freshEnough)) {
-          interimBubble = enrichVoiceBubble({ ...parsed.interimBubble, isFinal: false });
-        }
-        if (Array.isArray(parsed.bubbles) && parsed.bubbles.length > 0) {
-          bubbles = parsed.bubbles
-            .filter((b) => b && (b.text || b.msg))
-            .map((b) => enrichVoiceBubble({ ...b, isFinal: true }));
+  // 0. If running against the real user config directory (not a test fixture),
+  //    poll the live RobOS Voice HUD debug endpoint (`http://127.0.0.1:19188/eval`)
+  //    so an active recording session immediately streams its `#chat-feed .dictation-bubble` DOM.
+  if (
+    process.env.ROBOS_TEST !== '1' &&
+    process.env.ROBOS_TEST_MODE !== '1' &&
+    resolvedConfigDir === defaultUserConfigDir
+  ) {
+    try {
+      const evalCode = `(() => {
+        const recBtn = document.getElementById('btn-toggle-record');
+        const isRecording = Boolean(recBtn && recBtn.classList.contains('recording'));
+        const feed = document.getElementById('chat-feed');
+        const els = feed ? Array.from(feed.querySelectorAll('.dictation-bubble')) : [];
+        let interim = null;
+        const finalized = [];
+        els.forEach((el, idx) => {
+          const timeEl = el.querySelector('.bubble-time');
+          const msgEl = el.querySelector('.bubble-msg');
+          const cmdTitleEl = el.querySelector('.bubble-cmd-title');
+          const cmdStatusEl = el.querySelector('.bubble-cmd-status');
+          const cmdResultEl = el.querySelector('.bubble-cmd-result');
+          const text = msgEl ? (msgEl.textContent || '').trim() : '';
+          const time = timeEl ? (timeEl.textContent || '').replace('Listening…', '').replace('Listening...', '').trim() : '';
+          const commandCard = cmdTitleEl ? {
+            typeLabel: 'Command',
+            typeClass: 'skill',
+            title: (cmdTitleEl.textContent || '').trim(),
+            status: 'done',
+            statusLabel: cmdStatusEl ? (cmdStatusEl.textContent || '').trim() : '✓ Done',
+            resultText: cmdResultEl ? (cmdResultEl.textContent || '').trim() : ''
+          } : null;
+          if (el.classList.contains('interim')) {
+            if (text) interim = { id: 'vp-interim-live', text, msg: text, time: time || 'Live', isFinal: false };
+          } else if (text) {
+            finalized.push({ id: 'vp-hud-' + idx, text, msg: text, time, isFinal: true, commandCard });
+          }
+        });
+        return { isRecording, interim, bubbles: finalized };
+      })()`;
+      const hudRes = spawnSync(
+        'curl',
+        [
+          '-sS',
+          '--max-time',
+          '0.35',
+          '-X',
+          'POST',
+          'http://127.0.0.1:19188/eval',
+          '-H',
+          'Content-Type: application/json',
+          '-d',
+          JSON.stringify({ code: evalCode }),
+        ],
+        { encoding: 'utf8', timeout: 500 }
+      );
+      if (hudRes.status === 0 && hudRes.stdout) {
+        const parsedHud = JSON.parse(hudRes.stdout);
+        const r = parsedHud?.result;
+        if (r && (r.isRecording || r.interim || (Array.isArray(r.bubbles) && r.bubbles.length > 0))) {
+          active = Boolean(r.isRecording || r.interim);
+          if (r.interim && r.interim.text) {
+            interimBubble = enrichVoiceBubble({ ...r.interim, isFinal: false });
+          }
+          if (Array.isArray(r.bubbles) && r.bubbles.length > 0) {
+            bubbles = r.bubbles
+              .filter((b) => b && (b.text || b.msg))
+              .map((b) => enrichVoiceBubble({ ...b, isFinal: true }));
+          }
+          try {
+            fs.mkdirSync(resolvedConfigDir, { recursive: true });
+            fs.writeFileSync(
+              liveFile,
+              JSON.stringify(
+                {
+                  active,
+                  backgroundMode: active,
+                  assistantState: active ? 'LISTENING' : 'IDLE',
+                  updatedAt: new Date().toISOString(),
+                  interimBubble,
+                  bubbles,
+                },
+                null,
+                2
+              ),
+              'utf8'
+            );
+          } catch {}
         }
       }
-    }
-  } catch {}
+    } catch {}
+  }
+
+  // 1. Read live dialogue bubble state (`voice-bubbles-live.json`)
+  if (bubbles.length === 0 && !interimBubble) {
+    try {
+      if (fs.existsSync(liveFile)) {
+        const parsed = JSON.parse(fs.readFileSync(liveFile, 'utf8'));
+        if (parsed && typeof parsed === 'object') {
+          const pidAlive = parsed.allowTestActive || (parsed.pid && isPidAlive(parsed.pid));
+          const ageMs = parsed.updatedAt ? Date.now() - new Date(parsed.updatedAt).getTime() : 0;
+          const freshEnough = !Number.isFinite(ageMs) || ageMs < 60000;
+          active = Boolean(parsed.active && (pidAlive || freshEnough));
+          backgroundMode = Boolean(parsed.backgroundMode && active);
+          assistantState = parsed.assistantState || 'IDLE';
+          cleared = Boolean(parsed.cleared);
+          if (parsed.interimBubble && (parsed.interimBubble.text || parsed.interimBubble.msg) && (active || freshEnough)) {
+            interimBubble = enrichVoiceBubble({ ...parsed.interimBubble, isFinal: false });
+          }
+          if (Array.isArray(parsed.bubbles) && parsed.bubbles.length > 0) {
+            bubbles = parsed.bubbles
+              .filter((b) => b && (b.text || b.msg))
+              .map((b) => enrichVoiceBubble({ ...b, isFinal: true }));
+          }
+        }
+      }
+    } catch {}
+  }
 
   // 2. If no live bubbles are populated yet (and user hasn't explicitly cleared the feed),
   //    load recent dictated utterances from `voice-prompts.json`, merging sliding-window chunks
@@ -2386,6 +2494,7 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
       dashboardIds: [
         'daily-engineering-ops',
         'github-ci-popularity',
+        'robos-voice-dictation',
       ],
       startedEpochMs: 0,
       currentIndex: 0,
@@ -2409,10 +2518,12 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     if (!state.dashboards.some((d) => d.id === 'daily-engineering-ops')) {
       state.dashboards.unshift(JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[0])));
     } else {
-      // Ensure daily-engineering-ops removes live-clock, removes CI status from slide 1, and includes github-repo, music-now-playing, and next-meeting-countdown
+      // Ensure daily-engineering-ops removes live-clock and voice-dictation (voice-dictation is on Slide 3), removes CI status from slide 1, and includes github-repo, music-now-playing, and next-meeting-countdown
       const daily = state.dashboards.find((d) => d.id === 'daily-engineering-ops');
       if (daily && Array.isArray(daily.cards)) {
-        daily.cards = daily.cards.filter((c) => c.widgetType !== 'live-clock');
+        daily.cards = daily.cards.filter(
+          (c) => c.widgetType !== 'live-clock' && c.widgetType !== 'voice-dictation'
+        );
         const defaultDaily = DEFAULT_DASHBOARDS[0];
         for (const defCard of defaultDaily.cards) {
           if (!daily.cards.some((c) => c.widgetType === defCard.widgetType)) {
@@ -2436,20 +2547,31 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     if (!state.dashboards.some((d) => d.id === 'github-ci-popularity')) {
       state.dashboards.splice(1, 0, JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[1])));
     }
+    if (!state.dashboards.some((d) => d.id === 'robos-voice-dictation')) {
+      state.dashboards.splice(2, 0, JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[2])));
+    }
     if (!state.dashboards.some((d) => d.id === state.activeDashboardId)) {
       state.activeDashboardId = state.dashboards[0]?.id || 'daily-engineering-ops';
     }
     const rawSs = state.slideshow || {};
-    const validIds = Array.isArray(rawSs.dashboardIds)
+    let validIds = Array.isArray(rawSs.dashboardIds)
       ? rawSs.dashboardIds.filter((id) => state.dashboards.some((d) => d.id === id))
       : [];
+    if (
+      validIds.length === 2 &&
+      validIds[0] === 'daily-engineering-ops' &&
+      validIds[1] === 'github-ci-popularity' &&
+      state.dashboards.some((d) => d.id === 'robos-voice-dictation')
+    ) {
+      validIds = ['daily-engineering-ops', 'github-ci-popularity', 'robos-voice-dictation'];
+    }
     state.slideshow = {
       enabled: Boolean(rawSs.enabled),
       intervalSeconds: Math.max(3, Math.min(3600, Number(rawSs.intervalSeconds) || 15)),
       dashboardIds:
         validIds.length >= 2
           ? validIds
-          : ['daily-engineering-ops', 'github-ci-popularity'].filter((id) =>
+          : ['daily-engineering-ops', 'github-ci-popularity', 'robos-voice-dictation'].filter((id) =>
               state.dashboards.some((d) => d.id === id)
             ),
       startedEpochMs: Number(rawSs.startedEpochMs) || Date.now(),
