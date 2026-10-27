@@ -147,6 +147,10 @@ const narration = createNarrationRouter({
   getTts,
   tvEngine,
   castModule: requireShared('audio-player/lib/cast-service'),
+  audioPlayer: (() => {
+    const control = requireShared('audio-player/lib/control-server');
+    return control ? control.createAudioPlayerClient({ configDir: CONFIG_DIR }) : null;
+  })(),
   configDir: CONFIG_DIR,
   getLanIp: lanIp,
   getGamePort: () => gamePort,

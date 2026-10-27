@@ -109,6 +109,16 @@ contextBridge.exposeInMainWorld('robosAudio', {
     ipcRenderer.on('audio:speaker-status-change', handler);
     return () => ipcRenderer.removeListener('audio:speaker-status-change', handler);
   },
+  // Calls from other RobOS apps (lib/control-server.js): `callback` answers each.
+  onControlRequest: (callback) => {
+    const handler = async (_event, { requestId, action, payload }) => {
+      let result;
+      try { result = await callback(action, payload); } catch (err) { result = { ok: false, error: err.message }; }
+      ipcRenderer.invoke('audio:control-reply', { requestId, result });
+    };
+    ipcRenderer.on('audio:control-request', handler);
+    return () => ipcRenderer.removeListener('audio:control-request', handler);
+  },
   onSpeakerPlaybackStopped: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:speaker-playback-stopped', handler);

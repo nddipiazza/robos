@@ -11,6 +11,7 @@ import { AiFixMetadataModal } from './AiFixMetadata.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
+import { useSpeakerTakeover } from './useSpeakerTakeover.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
 
@@ -217,6 +218,11 @@ export default function App() {
         const L = latestRef.current;
         if (L.outputTarget === 'local' || (L.outputTarget !== 'all' && ip !== L.outputTarget)) return;
         const finished = status.playerState === 'IDLE' && status.idleReason === 'FINISHED';
+        // A clip another RobOS app asked for (control API): its end hands back too.
+        if (status.role === 'clip') {
+          if (finished) L.controlClipFinished(status.loadId);
+          return;
+        }
         // A Virtual DJ line on the speaker: its end hands back to the music.
         if (status.role === 'dj') {
           if (finished) L.djCastLineFinished();
@@ -1071,6 +1077,11 @@ export default function App() {
     },
   });
 
+  // Other RobOS apps (e.g. RobOS Party Game) can play a clip on the music's
+  // speaker; the song picks up where it was afterwards.
+  const getControlPlayer = useCallback(() => latestRef.current.controlPlayer(), []);
+  const speakerTakeover = useSpeakerTakeover({ getPlayer: getControlPlayer, showStatus });
+
   const handleTrackEnded = () => {
     if (repeatMode === 'one') {
       restartCurrent();
@@ -1313,6 +1324,46 @@ export default function App() {
         await window.robosAudio.castPause(outputTarget);
         setActiveCastSession(prev => (prev ? { ...prev, isPaused: true } : prev));
       }
+    },
+    controlClipFinished: (loadId) => speakerTakeover.clipFinished(loadId),
+    // What the control API sees and does (see useSpeakerTakeover).
+    controlPlayer: () => {
+      const audio = playerRef.current?.audio?.current;
+      const casting = outputTarget !== 'local';
+      return {
+        outputTarget,
+        speakers,
+        song: playlist[currentTrackIndex] || null,
+        castActive: !!activeCastSession,
+        position: casting ? castClock.now() : (audio ? audio.currentTime : 0),
+        playing: casting
+          ? (castClock.get().playing || (isPlaying && !!activeCastSession && !activeCastSession.isPaused))
+          : !!(audio && !audio.paused),
+        djSpeaking: !!dj.speaking,
+        holdClock: (position) => castClock.set({ position, playing: false }),
+        resumeCastAt: (song, position, play) => latestRef.current.resumeCastAt(song, position, play),
+        pauseMusic: async () => {
+          if (outputTarget === 'local') {
+            if (audio && !audio.paused) { audio.pause(); setIsPlaying(false); }
+          } else if (activeCastSession && !activeCastSession.isPaused) {
+            await handleToggleCastPause();
+          }
+          return { ok: true, playing: false };
+        },
+        resumeMusic: async () => {
+          const song = playlist[currentTrackIndex];
+          if (!song) return { ok: false, error: 'Nothing to play' };
+          if (outputTarget === 'local') {
+            if (audio && audio.paused) { audio.play().catch(() => {}); setIsPlaying(true); }
+          } else if (activeCastSession) {
+            if (activeCastSession.isPaused) await handleToggleCastPause();
+          } else {
+            await castTrack(outputTarget, song, { startAt: castClock.now() });
+            setIsPlaying(true);
+          }
+          return { ok: true, playing: true };
+        },
+      };
     },
     // After a DJ break the queue may have changed: find the planned song again.
     goToTrack: (track, fallbackIdx) => {

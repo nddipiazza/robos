@@ -6,9 +6,13 @@
 //   tvs      main-stage TVs: browser TVs play it in the TV page; Roku TVs get
 //            { narration: { id, url } } on their app cast and the RobOS TV
 //            channel plays it
-//   speaker  an Audio Player device (Google Cast speaker) through the Audio
-//            Player's CastService. A Cast speaker plays one stream at a time,
-//            so a line replaces whatever that speaker was playing.
+//   speaker  an Audio Player device (Google Cast speaker). A Cast speaker
+//            plays one stream at a time, so when the RobOS Audio Player is
+//            running the line goes through its control API: if the music is
+//            on that speaker, the line plays there and the song picks up where
+//            it was. Otherwise (Audio Player closed, or playing elsewhere) the
+//            line is cast straight to the speaker with the Audio Player's
+//            CastService, replacing whatever it was playing.
 //
 // Each line is synthesized once with RobOS Voice and rendered to a loud, level
 // MP3 that every output can play.
@@ -76,6 +80,7 @@ function createNarrationRouter({
   getTts,
   tvEngine = null,
   castModule = null, // require('audio-player/lib/cast-service')
+  audioPlayer = null, // createAudioPlayerClient() from audio-player/lib/control-server
   configDir,
   getLanIp,
   getGamePort,
@@ -116,13 +121,22 @@ function createNarrationRouter({
     return speakers;
   }
 
-  async function playOnSpeaker(ip, file) {
+  // Returns how the line went out: 'audio-player', 'cast' or null.
+  async function playOnSpeaker(ip, file, durationMs = null) {
+    if (audioPlayer) {
+      const res = await audioPlayer.speakClip({ speakerIp: ip, filePath: file, title: 'RobOS Party Game', artist: 'Your AI host', durationMs, holdMs: 2500 });
+      if (res && res.handled) {
+        if (!res.ok) log({ msg: 'Audio Player could not play the line', ip, err: res.error });
+        return 'audio-player';
+      }
+    }
     const c = getCast();
-    if (!c) return;
+    if (!c) return null;
     for (let i = 0; i < 30 && !c.streamPort; i++) await new Promise((r) => setTimeout(r, 50));
     const url = c.registerFile(file, castModule.sniffAudioType ? castModule.sniffAudioType(file) : 'audio/mpeg');
     const res = await c.castMediaUrl(ip, url, { title: 'RobOS Party Game', artist: 'Your AI host', contentType: 'audio/mpeg' });
     if (!res || !res.ok) log({ msg: 'speaker narration failed', ip, err: res && res.error });
+    return 'cast';
   }
 
   // ── Lines ────────────────────────────────────────────────────────────────
@@ -168,7 +182,7 @@ function createNarrationRouter({
       }
       const speakerId = engine.state.settings.speakerId;
       if (outputs.includes('speaker') && speakerId) {
-        playOnSpeaker(speakerId, file).catch((err) => log({ msg: 'speaker narration failed', err: err.message }));
+        playOnSpeaker(speakerId, file, ms).catch((err) => log({ msg: 'speaker narration failed', err: err.message }));
       }
     });
   }
@@ -179,7 +193,7 @@ function createNarrationRouter({
     } catch {}
   }
 
-  return { handle, clip, listSpeakers, scanSpeakers, stop, speakersAvailable: () => Boolean(castModule && castModule.CastService) };
+  return { handle, clip, listSpeakers, scanSpeakers, stop, playOnSpeaker, speakersAvailable: () => Boolean(castModule && castModule.CastService) };
 }
 
 module.exports = { createNarrationRouter, toMp3, toRokuMp4 };
