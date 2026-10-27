@@ -55,11 +55,21 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(ov.ok, true);
     assert.equal(ov.dashboard.id, 'daily-engineering-ops');
     assert.equal(ov.dashboard.layout.id, 'mission-control-3col');
-    assert.equal(ov.dashboard.cards.length, 6);
+    assert.equal(ov.dashboard.cards.length, 7);
     assert.equal(DASHBOARD_LAYOUTS.length, 6);
-    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 12);
+    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 13);
     assert.ok(DASHBOARD_WIDGET_CATALOG.some((w) => w.type === 'live-clock'));
+    assert.ok(DASHBOARD_WIDGET_CATALOG.some((w) => w.type === 'voice-dictation'));
     assert.ok(!ov.dashboard.cards.some((c) => c.widgetType === 'live-clock'));
+
+    // RobOS Voice Dictation card (Live Dialogue Bubbles)
+    const voiceCard = ov.dashboard.cards.find((c) => c.widgetType === 'voice-dictation');
+    assert.ok(voiceCard);
+    assert.equal(voiceCard.componentTag, 'robos-widget-voice-dictation');
+    assert.ok(Array.isArray(voiceCard.liveData.bubbles));
+    assert.ok(voiceCard.liveData.bubbles.length >= 3);
+    assert.ok(voiceCard.liveData.bubbles[0].text);
+    assert.ok(voiceCard.liveData.bubbles[0].time);
 
     // Music Now Playing card (RobOS Audio Player)
     const musicCard = ov.dashboard.cards.find((c) => c.widgetType === 'music-now-playing');
@@ -150,11 +160,40 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       )
     );
 
+    // Dynamically stream an interim RobOS Voice dictation bubble and then finalize it
+    const interimRes = engine.recordVoiceDictationBubble({
+      text: 'Open the Knowledge Graph Explorer',
+      isFinal: false,
+    });
+    const voiceCardInterim = interimRes.dashboard.cards.find((c) => c.widgetType === 'voice-dictation');
+    assert.equal(voiceCardInterim.liveData.active, true);
+    assert.ok(voiceCardInterim.liveData.interimBubble);
+    assert.equal(voiceCardInterim.liveData.interimBubble.text, 'Open the Knowledge Graph Explorer');
+
+    const finalRes = engine.recordVoiceDictationBubble({
+      text: 'Open the Knowledge Graph Explorer and run SHACL validation',
+      isFinal: true,
+      commandCard: {
+        typeLabel: 'Skill',
+        title: 'KGraph Validate',
+        statusLabel: '✓ Done',
+      },
+    });
+    const voiceCardFinal = finalRes.dashboard.cards.find((c) => c.widgetType === 'voice-dictation');
+    assert.equal(voiceCardFinal.liveData.interimBubble, null);
+    assert.ok(
+      voiceCardFinal.liveData.bubbles.some((b) =>
+        b.text.includes('Open the Knowledge Graph Explorer and run SHACL validation')
+      )
+    );
+
     // Embeddable <robos-dashboard> HTML rendering
-    const html = RobOSDashboardUI.renderDashboardHtml(tailRes.dashboard, { editable: true });
+    const html = RobOSDashboardUI.renderDashboardHtml(finalRes.dashboard, { editable: true });
     assert.ok(html.includes('robos-embed-dashboard'));
     assert.ok(html.includes('robos-widget-git-commits'));
     assert.ok(html.includes('robos-widget-calendar-today'));
+    assert.ok(html.includes('robos-widget-voice-dictation'));
+    assert.ok(html.includes('Open the Knowledge Graph Explorer and run SHACL validation'));
     assert.ok(html.includes('robos-widget-agent-sessions'));
     assert.ok(html.includes('Smart TV Dashboard Demo with Team'));
   });
@@ -191,7 +230,7 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(apiJson.ok, true);
       assert.equal(apiJson.cast.active, true);
       assert.equal(apiJson.dashboard.id, 'daily-engineering-ops');
-      assert.equal(apiJson.dashboard.cards.length, 6);
+      assert.equal(apiJson.dashboard.cards.length, 7);
 
       // Verify 10-Foot Portal Home (/) shows the live dashboard cast banner
       const homeRes = await httpGet(`http://127.0.0.1:${srv.port}/`);

@@ -46,7 +46,7 @@
 robos-dashboard, robos-dashboard-widget,
 robos-widget-git-commits, robos-widget-calendar-today, robos-widget-agent-sessions,
 robos-widget-smart-tv, robos-widget-smart-lights, robos-widget-kgraph,
-robos-widget-sprint-radar, robos-widget-custom {
+robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
   display: block;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -852,6 +852,79 @@ robos-widget-sprint-radar, robos-widget-custom {
       `;
     }
 
+    if (widgetType === 'voice-dictation') {
+      const isRec = Boolean(data.active || data.interimBubble);
+      const interim = data.interimBubble || null;
+      const bubbles = Array.isArray(data.bubbles) ? data.bubbles : [];
+      const renderSkillBadges = (b) => {
+        if (b.isAmbient) {
+          return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">
+            <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;">🍃 Ambient audio: ${esc(b.ambientReason || 'Background sound')}</span>
+          </div>`;
+        }
+        const skills = Array.isArray(b.likelySkills) ? b.likelySkills.slice(0, 2) : [];
+        const cmd = b.commandCard || null;
+        if (!skills.length && !cmd) return '';
+        return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">
+          ${
+            cmd
+              ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;">⚡ ${esc(cmd.typeLabel || 'Cmd')}: ${esc(cmd.title)} (${esc(cmd.statusLabel || '✓ Done')})</span>`
+              : ''
+          }
+          ${skills
+            .map(
+              (sk) =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9.5px;padding:1px 6px;border-radius:4px;background:rgba(0,188,212,0.12);border:1px solid rgba(0,188,212,0.3);color:#67e8f9;">⚡ <strong>${esc(sk.category || 'Skill')}</strong> · ${esc(sk.title || sk.name)}${sk.confidence ? ` (${Math.round(sk.confidence * 100)}%)` : ''}</span>`
+            )
+            .join('')}
+        </div>`;
+      };
+
+      return `
+        <div class="robos-w-meta" data-live-voice-meta="true">
+          <span>🎙️ <strong>RobOS Voice Dictation</strong> · <code>${esc(data.pushToTalkKey || 'Super+V')}</code></span>
+          <span class="robos-w-pill" style="${isRec ? 'background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.5);' : 'background:rgba(0,188,212,0.14);color:#67e8f9;border-color:rgba(0,188,212,0.35);'}">
+            ${isRec ? '● LISTENING LIVE' : `● STANDBY (${bubbles.length} Bubbles)`}
+          </span>
+        </div>
+        <div class="robos-voice-bubbles-list" data-live-voice-root="true" style="display:flex;flex-direction:column;gap:6px;">
+          ${
+            interim
+              ? `<div class="robos-voice-bubble interim" data-bubble-id="${esc(interim.id)}" style="background:rgba(0,188,212,0.08);border:1px dashed rgba(0,188,212,0.55);border-left:3px solid #00bcd4;border-radius:8px;padding:7px 9px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#67e8f9;margin-bottom:3px;">
+                    <span style="font-family:ui-monospace,monospace;">${esc(interim.time || 'Live')}</span>
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-weight:700;color:#fca5a5;"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Listening…</span>
+                  </div>
+                  <div class="robos-voice-bubble-text" style="font-size:12px;font-weight:600;color:#f0f6fc;line-height:1.35;">“${esc(interim.text || interim.msg)}”</div>
+                  ${renderSkillBadges(interim)}
+                </div>`
+              : ''
+          }
+          ${
+            bubbles.length > 0
+              ? bubbles
+                  .slice()
+                  .reverse()
+                  .map(
+                    (b) => `
+                  <div class="robos-voice-bubble" data-bubble-id="${esc(b.id)}" style="background:#0d1117;border:1px solid #21262d;border-left:3px solid ${b.commandCard ? '#10b981' : '#a855f7'};border-radius:8px;padding:7px 9px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#8b949e;margin-bottom:2px;">
+                      <span style="font-family:ui-monospace,monospace;color:#d8b4fe;font-weight:700;">🗣️ ${esc(b.time)}</span>
+                      <span style="font-size:9.5px;color:#6e7681;">RobOS Voice HUD</span>
+                    </div>
+                    <div class="robos-voice-bubble-text" style="font-size:11.5px;font-weight:600;color:#f0f6fc;line-height:1.35;">“${esc(b.text || b.msg)}”</div>
+                    ${renderSkillBadges(b)}
+                  </div>`
+                  )
+                  .join('')
+              : !interim
+              ? `<div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:9px;font-size:11px;color:#8b949e;text-align:center;">No voice dictation bubbles yet. Press <code>Super+V</code> or say <strong>"Hello RobOS"</strong> to dictate.</div>`
+              : ''
+          }
+        </div>
+      `;
+    }
+
     const customTag = data.customElementTag || card.config?.customElementTag || 'robos-ai-textarea';
     const placeholder = data.placeholder || card.config?.placeholder || 'Ask RobOS AI or trigger a workflow…';
     return `
@@ -977,6 +1050,7 @@ robos-widget-sprint-radar, robos-widget-custom {
       ['robos-widget-github-repo', 'github-repo'],
       ['robos-widget-music-player', 'music-now-playing'],
       ['robos-widget-next-meeting', 'next-meeting-countdown'],
+      ['robos-widget-voice-dictation', 'voice-dictation'],
       ['robos-widget-smart-tv', 'smart-tv'],
       ['robos-widget-smart-lights', 'smart-lights'],
       ['robos-widget-kgraph', 'kgraph-summary'],

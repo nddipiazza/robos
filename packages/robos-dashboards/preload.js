@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('robosDashboards', {
   removeCard: (payload) => ipcRenderer.invoke('dashboards:removeCard', payload),
   addCalendarEvent: (payload) => ipcRenderer.invoke('dashboards:addCalendarEvent', payload),
   appendAgentStatusLine: (payload) => ipcRenderer.invoke('dashboards:appendAgentStatusLine', payload),
+  recordVoiceBubble: (payload) => ipcRenderer.invoke('dashboards:recordVoiceBubble', payload),
+  clearVoiceBubbles: () => ipcRenderer.invoke('dashboards:clearVoiceBubbles'),
   getKGraphNodes: (dashboardId) => ipcRenderer.invoke('dashboards:getKGraphNodes', dashboardId),
   castToSmartTv: (payload) => ipcRenderer.invoke('dashboards:castToSmartTv', payload),
   stopSmartTvCast: (payload) => ipcRenderer.invoke('dashboards:stopSmartTvCast', payload),

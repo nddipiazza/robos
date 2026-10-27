@@ -255,6 +255,15 @@
       "robos:package": "dashboards"
     },
     {
+      "@id": "urn:robos:dashboard-widget:voice-dictation",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "RobOS Voice Dictation (Live Dialogue Bubbles)",
+      "robos:widgetType": "voice-dictation",
+      "robos:componentTag": "robos-widget-voice-dictation",
+      "robos:description": "Displays live, dynamically updated speech-to-text dialogue bubbles from RobOS Voice with interim listening stream, timestamps, matched voice commands, likely AI skills, and ambient audio classification.",
+      "robos:package": "dashboards"
+    },
+    {
       "@id": "urn:robos:dashboard-widget:robos-component",
       "@type": "robos:DashboardWidget",
       "dcterms:title": "Any RobOS Custom Component Widget",
@@ -279,9 +288,30 @@
         { "@id": "urn:robos:dashboard-card:music-now-playing" },
         { "@id": "urn:robos:dashboard-card:today-calendar-events" },
         { "@id": "urn:robos:dashboard-card:next-meeting-countdown" },
+        { "@id": "urn:robos:dashboard-card:voice-dictation-bubbles" },
         { "@id": "urn:robos:dashboard-card:latest-10-commits" },
         { "@id": "urn:robos:dashboard-card:running-agent-sessions" }
       ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:voice-dictation-bubbles",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "RobOS Voice Dictation (Live Dialogue Bubbles)",
+      "robos:cardId": "voice-dictation-bubbles",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:voice-dictation"
+      },
+      "robos:slotId": "col-3",
+      "robos:componentTag": "robos-widget-voice-dictation",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "limit": 6,
+        "showInterimBubble": true,
+        "showSkillBadges": true
+      }
     },
     {
       "@id": "urn:robos:dashboard-card:next-meeting-countdown",
