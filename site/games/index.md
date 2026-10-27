@@ -2,13 +2,13 @@
 layout: game
 title: Games
 permalink: /games/
-description: "Games built by AI agents inside RobOS, including Starfall Command: one player versus AI on Frontier Hunters, with a reusable Godot map editor and live gameplay tests."
+description: "Games built by AI agents inside RobOS, including Starfall Command: one player versus AI on Frontier Hunters, with a reusable Godot map editor and live gameplay tests, and RobOS Party Game, an AI-hosted party game on your TVs."
 bg_video: /assets/games/tabletop-bg.mp4
 bg_poster: /assets/games/tabletop-bg-poster.jpg
 accent: "#e0b252"
 og_image_alt: "RobOS Games — Games built by AI agents in Godot 4"
 schema_type: CollectionPage
-keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tabletop RPG, Starfall Command RTS, Quest Warrior Dragon JRPG, autonomous game testing"
+keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tabletop RPG, Starfall Command RTS, Quest Warrior Dragon JRPG, RobOS Party Game, AI party game, autonomous game testing"
 ---
 <section class="g-hero wrap">
   <p class="kicker">Built by agents · Verified on video</p>
@@ -32,6 +32,9 @@ keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tab
       </a>
       <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}" style="background-image:url('{{ '/assets/games/quest-warrior-dragon/05_world_map_alefgard_overworld.png' | relative_url }}');--accent:#00bcd4">
         <div class="in"><h2>Quest: Warrior Dragon</h2><p>An NES-authentic 2D console RPG across 29 maps in Alefgard with in-engine Stride AI and 100% verified BFS map completeness.</p><span class="go">Begin the quest →</span></div>
+      </a>
+      <a href="{{ '/games/party-game/' | relative_url }}" style="background-image:url('{{ '/assets/games/party-game/finale.jpg' | relative_url }}');--accent:#ec4899">
+        <div class="in"><h2>RobOS Party Game</h2><p>An AI host in a hooded mask runs mini games about your guests on your TVs. Phones are the controllers; the house is the game board.</p><span class="go">Start the party →</span></div>
       </a>
     </div>
   </div>
