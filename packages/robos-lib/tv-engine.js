@@ -2423,7 +2423,13 @@ sub playCinemaVideo(cinema as Object)
         content = CreateObject("roSGNode", "ContentNode")
         content.url = cinema.mediaUrl
         if cinema.title <> invalid then content.title = cinema.title else content.title = "RobOS Movie Player"
-        content.streamFormat = "mp4"
+        fmt = "mp4"
+        if cinema.streamFormat <> invalid and cinema.streamFormat <> ""
+            fmt = LCase(cinema.streamFormat.ToStr())
+        else if Instr(1, LCase(cinema.mediaUrl.ToStr()), ".mkv") > 0
+            fmt = "mkv"
+        end if
+        content.streamFormat = fmt
         if cinema.startAt <> invalid and cinema.startAt > 0
             content.PlayStart = Int(cinema.startAt)
         end if
@@ -2549,10 +2555,17 @@ sub onCinemaLibItemSelected()
         m.cinemaLibFooter.text = "Starting full-screen playback: " + cleanAscii(mv.title) + "..."
     end if
     m.localVideoPlaying = true
+    fmt = "mp4"
+    if mv.streamFormat <> invalid and mv.streamFormat <> ""
+        fmt = LCase(mv.streamFormat.ToStr())
+    else if Instr(1, LCase(mv.streamUrl.ToStr()), ".mkv") > 0
+        fmt = "mkv"
+    end if
     playCinemaVideo({
         active: true,
         loadKey: "remote-" + idx.ToStr() + "-" + m.tickCount.ToStr(),
         mediaUrl: mv.streamUrl,
+        streamFormat: fmt,
         title: cleanAscii(mv.title),
         startAt: 0,
         paused: false

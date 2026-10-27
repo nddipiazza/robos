@@ -147,9 +147,11 @@ class CastService {
       if (parsedUrl.pathname === '/api/tv-library') {
         const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
         const items = tracks.slice(0, 250).map((t, idx) => {
+          const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
+          const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
           let streamUrl = '';
           if (t.cloud) {
-            streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.mp4`;
+            streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`;
           } else if (t.filePath && fs.existsSync(t.filePath)) {
             streamUrl = this.registerFile(t.filePath);
           } else {
@@ -167,6 +169,7 @@ class CastService {
             duration: Number(t.duration) || 0,
             artUrl,
             streamUrl,
+            streamFormat,
           };
         });
         const body = JSON.stringify({
@@ -195,9 +198,11 @@ class CastService {
           res.end(JSON.stringify({ ok: false, error: 'Movie not found' }));
           return;
         }
+        const ext = path.extname(String(track.filePath || track.cloud?.remotePath || '')).toLowerCase();
+        const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
         let streamUrl = '';
         if (track.cloud) {
-          streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(track.id)}.mp4`;
+          streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(track.id)}.${streamFormat}`;
         } else if (track.filePath && fs.existsSync(track.filePath)) {
           streamUrl = this.registerFile(track.filePath);
         }
@@ -205,7 +210,7 @@ class CastService {
           try { this.onTvRemoteSelect(track, tvIp); } catch {}
         }
         res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ ok: true, id: track.id, title: track.title, streamUrl }));
+        res.end(JSON.stringify({ ok: true, id: track.id, title: track.title, streamUrl, streamFormat }));
         return;
       }
 
@@ -261,6 +266,8 @@ class CastService {
             if (!res.headersSent) {
               res.writeHead(502, { 'Content-Type': 'text/plain' });
               res.end(`Cloud stream error: ${err.message}`);
+            } else {
+              try { res.destroy(); } catch {}
             }
           });
           return;
@@ -325,7 +332,9 @@ class CastService {
     const preferredPort = (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) ? 0 : 19215;
     const onStreamListen = () => {
       this.streamPort = this.streamServer.address().port;
-      this.streamServer.unref();
+      if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) {
+        this.streamServer.unref();
+      }
       console.log(`[CastService] Audio stream server ready at http://${this.hostIp}:${this.streamPort}`);
       this._saveStreamServerEndpoint();
     };
@@ -357,20 +366,25 @@ class CastService {
         );
       }
       if (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) {
-        raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => ({
-          index: idx + 1,
-          id: t.id,
-          title: String(t.title || 'Untitled Movie').slice(0, 80),
-          artist: String(t.artist || 'Feature Film').slice(0, 50),
-          album: String(t.album || 'RobOS Cinema').slice(0, 60),
-          genre: String(t.genre || 'Movies').slice(0, 32),
-          year: t.year || null,
-          duration: Number(t.duration) || 0,
-          artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
-          streamUrl: t.cloud
-            ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.mp4`
-            : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
-        }));
+        raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => {
+          const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
+          const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
+          return {
+            index: idx + 1,
+            id: t.id,
+            title: String(t.title || 'Untitled Movie').slice(0, 80),
+            artist: String(t.artist || 'Feature Film').slice(0, 50),
+            album: String(t.album || 'RobOS Cinema').slice(0, 60),
+            genre: String(t.genre || 'Movies').slice(0, 32),
+            year: t.year || null,
+            duration: Number(t.duration) || 0,
+            artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
+            streamFormat,
+            streamUrl: t.cloud
+              ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`
+              : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
+          };
+        });
       }
       fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
     } catch {}
@@ -395,7 +409,12 @@ class CastService {
 
   getCloudStreamUrl(trackId, forCast = false) {
     const host = forCast ? this.hostIp : '127.0.0.1';
-    return `http://${host}:${this.streamPort}/cloud-stream/${encodeURIComponent(trackId)}.mp4`;
+    const track = this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)
+      ? this.mediaLibrary.tracks.find(t => t.id === trackId)
+      : null;
+    const ext = path.extname(String(track?.filePath || track?.cloud?.remotePath || '')).toLowerCase();
+    const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
+    return `http://${host}:${this.streamPort}/cloud-stream/${encodeURIComponent(trackId)}.${streamFormat}`;
   }
 
   /**
@@ -628,6 +647,8 @@ class CastService {
     const title = metadata.title || 'RobOS Cinema Stream';
     const startAt = Math.max(0, Math.floor(Number(metadata.currentTime) || 0));
     const loadKey = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const isMkv = String(mediaUrl || '').toLowerCase().endsWith('.mkv') || metadata.contentType === 'video/x-matroska';
+    const streamFormat = isMkv ? 'mkv' : 'mp4';
 
     // 1. Record active cinema cast session in ~/.config/robos/tv-studio.json so RobOS Smart TV Portal (:19210)
     //    and the Roku SceneGraph channel (<Video id="cinemaVideo">) immediately play it full-screen.
@@ -639,6 +660,7 @@ class CastService {
       tvName: tvInfo?.name || ip,
       platformId,
       mediaUrl,
+      streamFormat,
       title,
       artist: metadata.artist || '',
       startAt,

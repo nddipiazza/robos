@@ -1544,6 +1544,60 @@ function sftpOptions(ds) {
   return opts;
 }
 
+const sftpClientPool = new Map();
+
+async function getPooledSftpClient(ds) {
+  const key = `${ds.id || ''}:${ds.host || ''}:${ds.port || 22}:${ds.user || ''}`;
+  let entry = sftpClientPool.get(key);
+  if (entry && entry.connecting) {
+    return entry.connecting;
+  }
+  if (entry && entry.client && entry.client.sftp) {
+    return entry.client;
+  }
+  const Client = requireModuleWithFallback('ssh2-sftp-client');
+  const client = new Client();
+  const opts = sftpOptions(ds);
+  if (opts.password) {
+    const respondKeyboard = (_name, _instructions, _instructionsLang, prompts, finish) => {
+      finish((prompts || []).map(() => opts.password));
+    };
+    if (typeof client.on === 'function') client.on('keyboard-interactive', respondKeyboard);
+    if (client.client && typeof client.client.on === 'function') client.client.on('keyboard-interactive', respondKeyboard);
+  }
+  const drop = () => {
+    const cur = sftpClientPool.get(key);
+    if (cur && cur.client === client) sftpClientPool.delete(key);
+  };
+  if (typeof client.on === 'function') {
+    client.on('end', drop);
+    client.on('close', drop);
+    client.on('error', drop);
+  }
+  const connecting = client.connect(opts).then(() => {
+    sftpClientPool.set(key, { client, connecting: null });
+    return client;
+  }).catch((err) => {
+    sftpClientPool.delete(key);
+    throw err;
+  });
+  sftpClientPool.set(key, { client, connecting });
+  return connecting;
+}
+
+async function withPooledSftp(ds, fn) {
+  let client = await getPooledSftpClient(ds);
+  try {
+    return await fn(client);
+  } catch (err) {
+    const key = `${ds.id || ''}:${ds.host || ''}:${ds.port || 22}:${ds.user || ''}`;
+    sftpClientPool.delete(key);
+    try { await client.end(); } catch {}
+    client = await getPooledSftpClient(ds);
+    return await fn(client);
+  }
+}
+
 async function withSftp(ds, fn) {
   const Client = requireModuleWithFallback('ssh2-sftp-client');
   const client = new Client();
@@ -2328,6 +2382,8 @@ module.exports = {
   openGDriveMediaStream,
   openOneDriveMediaStream,
   withSftp,
+  withPooledSftp,
+  getPooledSftpClient,
   isRemoteDriver,
   isCloudStorageDriver,
   isOAuthCloudDriver,
