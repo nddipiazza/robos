@@ -111,6 +111,7 @@ const PLACEHOLDER_VALUES = new Set(['', 'unknown artist', 'unknown album', 'clou
 const isPlaceholder = (v) => v == null || PLACEHOLDER_VALUES.has(String(v).trim().toLowerCase());
 
 const COPY_FIELDS = ['albumArtist', 'year', 'genre', 'composer', 'trackNumber', 'trackTotal', 'discNumber', 'discTotal',
+  'mediaType', 'showName', 'seasonNumber', 'episodeNumber', 'episodeTitle', 'episodeCode',
   'bitrate', 'sampleRate', 'bitsPerSample', 'channels', 'codec', 'lossless', 'artId'];
 
 /**

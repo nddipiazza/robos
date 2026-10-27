@@ -5,9 +5,9 @@ import TrackList from './TrackList.jsx';
 import {
   buildIndex, searchIndex, sortTracks, sortAlbums, sortArtists, indexLetter, fold,
   lovedTracks, recentlyAddedTracks, recentlyPlayedTracks, mostPlayedTracks,
-  formatLongDuration, plural, VARIOUS_ARTISTS,
+  formatDuration, formatLongDuration, plural, inferTvShowEpisode, VARIOUS_ARTISTS,
 } from '../lib/library-index.js';
-import { useLibrary, Cover, Collage, collectionMenuItems } from './library-ui.jsx';
+import { useLibrary, Cover, Collage, LoveButton, sameTrack, trackMenuItems, collectionMenuItems } from './library-ui.jsx';
 import { ScrollContainerContext, VirtualGrid } from './virtual.jsx';
 import { Splitter, useLayoutPref } from './resizable.jsx';
 
@@ -506,16 +506,28 @@ function TvShowsSection({ index, go, prefs, setPref }) {
   const sortKey = prefs.albumSort || 'title';
   const shows = useMemo(() => sortAlbums(index.tvShows || [], sortKey), [index, sortKey]);
   const allEpisodes = useMemo(() => shows.flatMap(s => s.tracks), [shows]);
+  const totalSeasons = useMemo(() => shows.reduce((sum, s) => sum + (s.seasonCount || 1), 0), [shows]);
   return (
     <>
-      <SectionHeader subtitle={`${plural(shows.length, 'show / episode')} · Episodic TV & streaming series`} tracks={allEpisodes}>
-        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title / Episode (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
+      <SectionHeader
+        subtitle={`${plural(shows.length, 'TV show')} · ${plural(totalSeasons, 'season')} · ${plural(allEpisodes.length, 'episode')}`}
+        tracks={allEpisodes}
+      >
+        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Show Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
       </SectionHeader>
       {shows.length ? (
         <>
           <AlbumGrid albums={shows} go={go} />
-          <SectionHeader title="All Episodes" subtitle={plural(allEpisodes.length, 'episode')} />
-          <TrackList id="tv-episodes" tracks={allEpisodes} emptyText="No TV episodes found." />
+          {shows.map(show => (
+            <div key={show.key} className="tv-show-section-block">
+              <SectionHeader
+                title={show.title}
+                subtitle={`${plural(show.seasonCount || 1, 'Season')} · ${plural(show.episodeCount || show.tracks.length, 'Episode')}`}
+                tracks={show.tracks}
+              />
+              <TvShowSeasonsBreakdown album={show} />
+            </div>
+          ))}
         </>
       ) : (
         <div className="empty-inline">No TV shows or episodes found in your library yet.</div>
@@ -699,26 +711,32 @@ function AlbumCard({ album, go, showArtist }) {
   const ctx = useLibrary();
   const open = () => go({ section: 'albums', detail: { type: 'album', key: album.key } });
   const qualBadge = album.quality?.resolution || album.quality?.badge || null;
+  const topBadge = album.isTvShow ? `📺 TV SERIES${qualBadge ? ` · ${qualBadge}` : ''}` : qualBadge;
+  const bottomBadge = album.isTvShow
+    ? `${album.seasonCount || 1}S · ${album.episodeCount || album.tracks.length}E`
+    : album.year;
   return (
     <div
       className="media-card album-card movie-poster-card"
       onClick={open}
       onContextMenu={(e) => { e.preventDefault(); ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: 'View release format', icon: 'tv', onClick: () => ctx.actions.goToArtist(album.artist) }]); }}
-      title={`${album.title} — ${album.genre || album.artist}`}
+      title={`${album.title} — ${album.isTvShow ? `${plural(album.seasonCount || 1, 'Season')}, ${plural(album.episodeCount || album.tracks.length, 'Episode')}` : (album.genre || album.artist)}`}
     >
       <div className="media-card-art movie-poster-art">
         <Cover artId={album.artId} name={album.title} />
-        {qualBadge && <span className="poster-badge-top">{qualBadge}</span>}
-        {album.year && <span className="poster-badge-year">{album.year}</span>}
+        {topBadge && <span className={`poster-badge-top ${album.isTvShow ? 'tv-badge' : ''}`}>{topBadge}</span>}
+        {bottomBadge && <span className="poster-badge-year">{bottomBadge}</span>}
         <button className="card-play" title={`Watch ${album.title}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(album.tracks, 0); }}>
           <Icon name="play" size={18} />
         </button>
       </div>
       <span className="media-card-title">{album.title}</span>
       <span className="media-card-sub">
-        {album.franchise
-          ? <span className="poster-franchise-tag">{album.franchise}</span>
-          : (album.genre || (showArtist ? album.artist : plural(album.tracks.length, 'title')))}
+        {album.isTvShow
+          ? <span className="poster-franchise-tag">{plural(album.seasonCount || 1, 'Season')} · {plural(album.episodeCount || album.tracks.length, 'Episode')}</span>
+          : album.franchise
+            ? <span className="poster-franchise-tag">{album.franchise}</span>
+            : (album.genre || (showArtist ? album.artist : plural(album.tracks.length, 'title')))}
       </span>
     </div>
   );
@@ -872,6 +890,108 @@ function DetailView({ detail, index, go, stats }) {
   return <NotFound go={go} />;
 }
 
+function TvShowSeasonsBreakdown({ album }) {
+  const ctx = useLibrary();
+  const { actions, currentTrack, isPlaying, openMenu } = ctx;
+  const seasons = album.seasons && album.seasons.length
+    ? album.seasons
+    : [{ seasonNumber: 1, label: 'Season 1', code: 'S01', episodes: album.tracks, episodeCount: album.tracks.length, duration: album.duration }];
+  const [selectedSeason, setSelectedSeason] = useState('all');
+
+  const visibleSeasons = selectedSeason === 'all'
+    ? seasons
+    : seasons.filter(s => String(s.seasonNumber) === String(selectedSeason));
+
+  return (
+    <div className="tv-seasons-breakdown">
+      <div className="tv-season-tabs" role="tablist" aria-label="Seasons">
+        <button
+          className={`cinema-cat-chip ${selectedSeason === 'all' ? 'active' : ''}`}
+          onClick={() => setSelectedSeason('all')}
+        >
+          📺 All Seasons <span className="chip-count">{seasons.length}</span>
+        </button>
+        {seasons.map(s => (
+          <button
+            key={s.seasonNumber}
+            className={`cinema-cat-chip ${String(selectedSeason) === String(s.seasonNumber) ? 'active' : ''}`}
+            onClick={() => setSelectedSeason(String(s.seasonNumber))}
+          >
+            {s.label} <span className="chip-count">{plural(s.episodeCount, 'Episode')}</span>
+          </button>
+        ))}
+      </div>
+
+      {visibleSeasons.map(season => (
+        <div key={season.seasonNumber} className="tv-season-card">
+          <div className="tv-season-card-header">
+            <div className="tv-season-card-title">
+              <span className="tv-season-badge">{season.code}</span>
+              <h4>{season.label}</h4>
+              <span className="tv-season-meta">
+                {plural(season.episodeCount, 'Episode')}
+                {season.duration > 0 ? ` · ${formatLongDuration(season.duration)}` : ''}
+              </span>
+            </div>
+            <div className="tv-season-card-actions">
+              <button className="btn-accent" onClick={() => actions.playTracks(season.episodes, 0)}>
+                <Icon name="play" size={12} /> Watch {season.label}
+              </button>
+              <button className="btn-secondary" onClick={() => actions.playTracks(season.episodes, 0, { shuffle: true })}>
+                <Icon name="shuffle" size={12} /> Shuffle
+              </button>
+            </div>
+          </div>
+
+          <div className="tv-episode-list">
+            {season.episodes.map((ep, idx) => {
+              const tv = inferTvShowEpisode(ep);
+              const epNum = (tv && tv.episodeNumber) || ep.episodeNumber || ep.trackNumber || (idx + 1);
+              const epCode = (tv && tv.episodeCode) || ep.episodeCode || `S${String(season.seasonNumber).padStart(2, '0')}E${String(epNum).padStart(2, '0')}`;
+              const epTitle = (tv && tv.episodeTitle) || ep.episodeTitle || ep.title;
+              const isCurrent = sameTrack(currentTrack, ep);
+              return (
+                <div
+                  key={ep.id || ep.filePath || idx}
+                  className={`tv-episode-row ${isCurrent ? 'current' : ''}`}
+                  onDoubleClick={() => actions.playTracks(season.episodes, idx)}
+                  onContextMenu={(e) => { e.preventDefault(); openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx })); }}
+                >
+                  <button
+                    className="tv-episode-play"
+                    title={`Play ${epCode} — ${epTitle}`}
+                    onClick={() => actions.playTracks(season.episodes, idx)}
+                  >
+                    {isCurrent && isPlaying ? <span className="eq-bars"><i></i><i></i><i></i></span> : <Icon name="play" size={13} />}
+                  </button>
+                  <span className="tv-episode-code">{epCode}</span>
+                  <div className="tv-episode-info">
+                    <span className="tv-episode-title">Episode {epNum}: {epTitle}</span>
+                    <span className="tv-episode-sub">
+                      {album.title} · {season.label}
+                      {ep.artist && ep.artist !== album.title ? ` · ${ep.artist}` : ''}
+                      {ep.cloud ? ` · ${ep.cloud.cached ? 'Cloud (Cached)' : 'Cloud Stream'}` : ''}
+                    </span>
+                  </div>
+                  <LoveButton track={ep} size={14} />
+                  <span className="tv-episode-duration">{formatDuration(ep.duration)}</span>
+                  <button
+                    className="tl-more-btn"
+                    title="More actions"
+                    onClick={(e) => { e.stopPropagation(); openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx })); }}
+                  >
+                    <Icon name="more" size={14} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AlbumDetail({ album, index, go }) {
   const { actions } = useLibrary();
   const artist = index.artistByKey.get(album.artistKey);
@@ -886,17 +1006,30 @@ function AlbumDetail({ album, index, go }) {
         subtitle={album.artist === VARIOUS_ARTISTS
           ? <span>{album.artist}</span>
           : <a className="link strong" onClick={() => actions.goToArtist(album.artist)}>{album.artist}</a>}
-        meta={[
-          album.year,
-          album.genre && <a className="link" onClick={() => actions.goToGenre(album.genre)}>{album.genre}</a>,
-          plural(album.tracks.length, 'video file'),
-          formatLongDuration(album.duration),
-          codec,
-        ]}
+        meta={album.isTvShow
+          ? [
+              album.year,
+              album.genre && <a className="link" onClick={() => actions.goToGenre(album.genre)}>{album.genre}</a>,
+              plural(album.seasonCount || 1, 'Season'),
+              plural(album.episodeCount || album.tracks.length, 'Episode'),
+              formatLongDuration(album.duration),
+              codec,
+            ]
+          : [
+              album.year,
+              album.genre && <a className="link" onClick={() => actions.goToGenre(album.genre)}>{album.genre}</a>,
+              plural(album.tracks.length, 'video file'),
+              formatLongDuration(album.duration),
+              codec,
+            ]}
         tracks={album.tracks}
         menuLabel={album.title}
       />
-      <TrackList id="album-tracks" tracks={album.tracks} variant="album" albumArtist={album.artist} showDiscs={album.discCount > 1} />
+      {album.isTvShow ? (
+        <TvShowSeasonsBreakdown album={album} />
+      ) : (
+        <TrackList id="album-tracks" tracks={album.tracks} variant="album" albumArtist={album.artist} showDiscs={album.discCount > 1} />
+      )}
       {more.length > 0 && (
         <>
           <SectionHeader title={`More in ${album.artist}`} />

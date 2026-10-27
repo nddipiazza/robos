@@ -16,6 +16,22 @@ const providerLabel = (protocol) => {
   return p ? p.toUpperCase() : 'Cloud';
 };
 
+export function formatFolderMediaSummary(f) {
+  if (!f) return '0 movies';
+  const movies = f.movieCount != null ? f.movieCount : f.trackCount || 0;
+  const shows = f.showCount || 0;
+  const seasons = f.seasonCount || 0;
+  const episodes = f.episodeCount || 0;
+  const parts = [];
+  if (movies > 0 || shows === 0) {
+    parts.push(`${movies} Movie${movies === 1 ? '' : 's'}`);
+  }
+  if (shows > 0) {
+    parts.push(`${shows} TV Show${shows === 1 ? '' : 's'} (${seasons} Season${seasons === 1 ? '' : 's'} · ${episodes} Episode${episodes === 1 ? '' : 's'})`);
+  }
+  return parts.join(' · ');
+}
+
 export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
   const [confirmId, setConfirmId] = useState(null);
   const [alsoTracks, setAlsoTracks] = useState(true);
@@ -41,8 +57,8 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
       <div className={`folder-row ${activeId === null ? 'active' : ''}`} onClick={() => onSelect(null)}>
         <Icon name="library" size={15} />
         <div className="folder-text">
-          <span className="folder-name">All Library Tracks</span>
-          <span className="folder-sub">Combined view across all folders</span>
+          <span className="folder-name">All Movies &amp; Shows</span>
+          <span className="folder-sub">Combined view across all library folders</span>
         </div>
       </div>
 
@@ -72,8 +88,17 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
                   : (f.available ? f.path : `${f.path} (not found)`)}
               </span>
               <span className="folder-sub">
-                <strong>{f.trackCount} track{f.trackCount === 1 ? '' : 's'}</strong> · {when(f.lastSynced)}
+                <strong>{formatFolderMediaSummary(f)}</strong> · {when(f.lastSynced)}
               </span>
+              {Array.isArray(f.shows) && f.shows.length > 0 && (
+                <div className="folder-shows-breakdown">
+                  {f.shows.map(s => (
+                    <span key={s.showName} className="folder-show-pill">
+                      📺 <strong>{s.showName}</strong>: {s.seasons.map(sn => `Season ${sn.seasonNumber} (${sn.episodeCount} ep${sn.episodeCount === 1 ? '' : 's'})`).join(', ')}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="folder-actions">
@@ -96,7 +121,7 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
             <div className="folder-confirm">
               <label>
                 <input type="checkbox" checked={alsoTracks} onChange={(e) => setAlsoTracks(e.target.checked)} />
-                Also remove its {f.trackCount} track{f.trackCount === 1 ? '' : 's'} from the library{f.kind === 'cloud' ? ' and delete the downloaded copies' : ''}
+                Also remove its {f.trackCount} video{f.trackCount === 1 ? '' : 's'} ({formatFolderMediaSummary(f)}) from the library{f.kind === 'cloud' ? ' and delete the downloaded copies' : ''}
               </label>
               <div className="folder-confirm-actions">
                 <button className="btn-secondary" onClick={() => setConfirmId(null)}>Cancel</button>

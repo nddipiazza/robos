@@ -2837,3 +2837,202 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   text-overflow: ellipsis;
 }
 
+.poster-badge-top.tv-badge {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #38bdf8;
+}
+
+/* ── TV Show Season & Episode Breakdown ─────────────────────────────────── */
+.tv-show-section-block {
+  margin-top: 28px;
+}
+
+.tv-seasons-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.tv-season-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tv-season-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.tv-season-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(232, 163, 61, 0.1) 0%, rgba(28, 24, 20, 0.4) 100%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tv-season-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tv-season-card-title h4 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.tv-season-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(232, 163, 61, 0.18);
+  border: 1px solid rgba(232, 163, 61, 0.45);
+  color: var(--accent);
+}
+
+.tv-season-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.tv-season-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-episode-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tv-episode-row {
+  display: grid;
+  grid-template-columns: 32px 66px minmax(0, 1fr) 28px 60px 30px;
+  align-items: center;
+  column-gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(53, 46, 38, 0.55);
+  transition: background 0.12s ease;
+  cursor: pointer;
+}
+
+.tv-episode-row:last-child {
+  border-bottom: none;
+}
+
+.tv-episode-row:hover {
+  background: var(--bg-tertiary);
+}
+
+.tv-episode-row.current {
+  background: rgba(232, 163, 61, 0.12);
+}
+
+.tv-episode-play {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(232, 163, 61, 0.14);
+  border: 1px solid rgba(232, 163, 61, 0.35);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.tv-episode-row:hover .tv-episode-play {
+  background: var(--accent);
+  color: #140f0a;
+}
+
+.tv-episode-code {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-align: center;
+}
+
+.tv-episode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tv-episode-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tv-episode-row.current .tv-episode-title {
+  color: var(--accent);
+}
+
+.tv-episode-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tv-episode-duration {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.tv-episode-row:hover .love-btn,
+.tv-episode-row:hover .tl-more-btn {
+  opacity: 1;
+}
+
+/* Folder Show/Season Breakdown Pills */
+.folder-shows-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.folder-show-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #e2e8f0;
+}
+
+

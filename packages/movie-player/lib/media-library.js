@@ -10,6 +10,7 @@ const {
   trackFromMetadata,
   fallbackTrack,
   guessFromRemotePath,
+  upgradeTrackVideoGrouping,
 } = require('./track-metadata');
 const { readCloudTags, mergeTags } = require('./cloud-tags');
 
@@ -97,6 +98,9 @@ class MediaLibrary {
           // Libraries indexed before "Recently Added" existed: use the file's mtime.
           if (!track.addedAt) {
             track.addedAt = this._fileTimeIso(track.filePath) || data.updatedAt || new Date().toISOString();
+            needsSave = true;
+          }
+          if (upgradeTrackVideoGrouping(track)) {
             needsSave = true;
           }
         }
@@ -427,10 +431,18 @@ class MediaLibrary {
       filePath,
       title: guess.title,
       artist: guess.artist,
+      albumArtist: guess.albumArtist || null,
       album: guess.album,
       trackNumber: guess.trackNumber,
       discNumber: guess.discNumber,
       year: guess.year,
+      genre: guess.genre || null,
+      mediaType: guess.mediaType || 'movie',
+      showName: guess.showName || null,
+      seasonNumber: guess.seasonNumber || null,
+      episodeNumber: guess.episodeNumber || null,
+      episodeTitle: guess.episodeTitle || null,
+      episodeCode: guess.episodeCode || null,
       duration: 0,
       addedAt: new Date().toISOString(),
       cloud: cloudMeta,
