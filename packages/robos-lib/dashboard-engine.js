@@ -3914,7 +3914,13 @@ function renderDashboardTvWallboardHtml({
             }
           }
           if (json && json.dashboard && json.dashboard.id && json.dashboard.id !== currentRenderedDashId) {
-            window.location.reload();
+            if (ss && ss.enabled && window.location.pathname !== '/dashboard') {
+              window.location.href = '/dashboard';
+            } else if (ss && ss.enabled && window.location.search) {
+              window.location.href = '/dashboard';
+            } else {
+              window.location.reload();
+            }
             return;
           }
           const cards = (json && json.dashboard && Array.isArray(json.dashboard.cards)) ? json.dashboard.cards : [];

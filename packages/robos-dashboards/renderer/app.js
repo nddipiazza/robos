@@ -596,7 +596,10 @@ async function init() {
   }
 
   // Live dynamic polling for slideshow transitions, in-progress agent sessions, music, and countdown (every 1s)
+  let isPollingOverview = false;
   setInterval(async () => {
+    if (isPollingOverview) return;
+    isPollingOverview = true;
     try {
       const prevDashId = state.dashboard?.id;
       const queryDashId = state.slideshow?.enabled ? undefined : prevDashId;
@@ -610,6 +613,13 @@ async function init() {
       }
       state.dashboard = fresh.dashboard;
       const ss = fresh.slideshow;
+      const toggleBtn = document.getElementById('btn-toggle-slideshow');
+      if (toggleBtn && ss) {
+        toggleBtn.textContent = ss.enabled
+          ? `🎞️ Slideshow: ON (${ss.slideNumber || 1}/${ss.totalSlides || 2})`
+          : '🎞️ Slideshow: OFF';
+        toggleBtn.className = ss.enabled ? 'btn btn-sm btn-primary' : 'btn btn-sm';
+      }
       const ssPill = document.getElementById('slideshow-status-pill');
       if (ssPill) {
         if (ss && ss.enabled) {
@@ -629,7 +639,9 @@ async function init() {
           }
         }
       }
-    } catch {}
+    } catch {} finally {
+      isPollingOverview = false;
+    }
   }, 1000);
 }
 
