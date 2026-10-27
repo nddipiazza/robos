@@ -17802,6 +17802,7 @@
     library: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 19l3-14 4 1-3 14-4-1z" })),
     cloud: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 18a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 18h11z" }),
     wave: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12h3l2-6 4 12 3-9 2 3h6" }),
+    tv: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "2", y: "5", width: "20", height: "14", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "22", x2: "16", y2: "22" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "19", x2: "12", y2: "22" })),
     speaker: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "5", y: "2", width: "14", height: "20", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "14", r: "4" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12.01", y2: "6" })),
     rain: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 12a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 12h11z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "16", x2: "7", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "16", x2: "11", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "16", y1: "16", x2: "15", y2: "20" })),
     synth: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "2", y: "6", width: "20", height: "12", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "7", y1: "6", x2: "7", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "17", y1: "6", x2: "17", y2: "18" })),
@@ -18721,7 +18722,7 @@
       { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
-      actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+      actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
     ];
   }
   function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra = [] } = {}) {
@@ -18743,7 +18744,7 @@
       { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
-      actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+      actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
     ];
     if (single) {
       items.push({ separator: true });
@@ -21020,14 +21021,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       return `${mins} min`;
     };
     const getSpeakerName = (ip) => {
-      if (!ip) return "Speaker";
-      if (ip === "local") return "Desktop (Local Audio)";
-      if (ip === "all") return "All Connected Speakers";
+      if (!ip) return "Smart TV";
+      if (ip === "local") return "Desktop (Local Cinema)";
+      if (ip === "all") return "All RobOS Smart TVs";
       const found = speakers.find((s) => s.ip === ip);
-      return found ? found.name : `Speaker (${ip})`;
+      return found ? found.name : `Smart TV (${ip})`;
     };
     (0, import_react24.useEffect)(() => {
-      refreshSpeakers();
+      refreshSpeakers(false);
       loadLibrary();
       loadStats();
       refreshFolders();
@@ -21193,19 +21194,21 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         toastTimerRef.current = null;
       }, 4e3);
     };
-    const refreshSpeakers = async () => {
+    const refreshSpeakers = async (scanLan = true) => {
       setIsScanning(true);
-      showStatus("Scanning local network for Google Cast speakers...");
+      if (scanLan) showStatus("Scanning local network & RobOS Smart TV Studio for Smart TVs...");
       try {
-        const found = await window.robosAudio.discoverSpeakers();
+        const found = await window.robosAudio.discoverSpeakers({ scanLan });
         setSpeakers(found || []);
-        if (found && found.length > 0) {
-          showStatus(`Discovered ${found.length} local Google Cast speakers!`);
-        } else {
-          showStatus("No Cast speakers responded on local subnet.");
+        if (scanLan) {
+          if (found && found.length > 0) {
+            showStatus(`Discovered ${found.length} RobOS Smart TV(s)!`);
+          } else {
+            showStatus("No Smart TVs responded on local subnet.");
+          }
         }
       } catch (err) {
-        showStatus("Discovery error: " + err.message);
+        if (scanLan) showStatus("Discovery error: " + err.message);
       } finally {
         setIsScanning(false);
       }
@@ -21352,7 +21355,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         return;
       }
       if (!speakers.length) {
-        showStatus('No Cast speakers found yet. Use "Scan Speakers" first.');
+        showStatus('No RobOS Smart TVs found yet. Use "Scan Smart TVs" first.');
         return;
       }
       const target = outputTarget !== "local" ? outputTarget : speakers[0]?.ip || "all";
@@ -21363,8 +21366,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       shuffleHistoryRef.current = [];
       castTrack(target, list[0]);
       playerRef.current?.audio?.current?.pause();
+      if (videoRef.current) videoRef.current.pause();
       setIsPlaying(true);
-      showStatus(`Casting ${label ? `"${label}"` : `${list.length} track(s)`} to ${getSpeakerName(target)}!`);
+      showStatus(`Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
     };
     const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || "Playlist");
     const handleCreatePlaylist = async () => {
@@ -21641,7 +21645,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       const metadata = {
         title: track.title,
         artist: track.artist,
-        album: track.album
+        album: track.album,
+        duration: track.duration || 0
       };
       if (startAt > 0) metadata.currentTime = startAt;
       const castArt = artUrlFor(artBase.cast, track.artId);
@@ -22362,13 +22367,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react24.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and Google Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react24.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and RobOS Smart TV Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
           className: "btn-accent",
           onClick: handleSelectFolder,
-          title: "Open built-in system file manager to add music folder"
+          title: "Open built-in system file manager to add movie folder"
         },
         /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
         /* @__PURE__ */ import_react24.default.createElement("span", null, "Add Folder")
@@ -22378,11 +22383,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           id: "btn-header-add-files",
           className: "btn-secondary",
           onClick: handleAddFiles,
-          title: "Open file picker to select individual audio files"
+          title: "Open file picker to select individual movie files"
         },
         /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react24.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react24.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
         /* @__PURE__ */ import_react24.default.createElement("span", null, "Add Files")
-      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react24.default.createElement(
+      )), /* @__PURE__ */ import_react24.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react24.default.createElement("label", null, "Display Output:"), /* @__PURE__ */ import_react24.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react24.default.createElement(
         "select",
         {
           id: "output-select",
@@ -22390,7 +22395,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onChange: (e) => {
             const target = e.target.value;
             setOutputTarget(target);
-            const audio = playerRef.current?.audio?.current;
+            const audio = getMediaEl();
             if (target === "local") {
               if (outputTarget !== "local" && currentTrack) pendingLocalSeekRef.current = castClock.now();
               if (activeCastSession) handleStopCast();
@@ -22401,26 +22406,30 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 audio.pause();
                 audio.muted = true;
               }
+              if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.muted = true;
+              }
               if (currentTrack) {
                 castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
               }
             }
-            showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
+            showStatus(`Switched display output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
-        /* @__PURE__ */ import_react24.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
+        /* @__PURE__ */ import_react24.default.createElement("option", { value: "local" }, "Desktop (Local Cinema)"),
         speakers.map((s) => /* @__PURE__ */ import_react24.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
-        speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
+        speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement("option", { value: "all" }, "Broadcast to All Smart TVs")
       ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           id: "btn-scan-speakers",
           className: `btn-icon ${isScanning ? "loading" : ""}`,
-          onClick: refreshSpeakers,
-          title: "Scan LAN for Google Cast speakers"
+          onClick: () => refreshSpeakers(true),
+          title: "Scan LAN & RobOS Smart TV Studio for Smart TVs"
         },
         /* @__PURE__ */ import_react24.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M16 21h5v-5" })),
-        /* @__PURE__ */ import_react24.default.createElement("span", null, "Scan Speakers")
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Scan Smart TVs")
       )))),
       /* @__PURE__ */ import_react24.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
@@ -22474,8 +22483,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
-        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "speaker" }),
-        /* @__PURE__ */ import_react24.default.createElement("span", null, "Speakers (", speakers.length, ")")
+        /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "tv" }),
+        /* @__PURE__ */ import_react24.default.createElement("span", null, "Smart TVs (", speakers.length, ")")
       ), /* @__PURE__ */ import_react24.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
@@ -22546,6 +22555,30 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Toggle Picture-in-Picture"
         },
         "PiP"
+      ), speakers.length > 0 && /* @__PURE__ */ import_react24.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-chip",
+          style: { borderColor: "#e8a33d", color: "#e8a33d" },
+          onClick: () => {
+            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+            setOutputTarget(target);
+            const v = videoRef.current;
+            const from = v ? v.currentTime : 0;
+            if (v) {
+              v.pause();
+              v.muted = true;
+            }
+            if (currentTrack) {
+              castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
+              setIsPlaying(true);
+            }
+          },
+          title: `Cast movie to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
+        },
+        "\u{1F4FA} Cast to ",
+        outputTarget !== "local" ? getSpeakerName(outputTarget) : speakers[0].name
       ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
@@ -22727,7 +22760,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           disabled: !selectedPlaylist.tracks?.length,
           title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
         },
-        "Cast Playlist"
+        "Cast to Smart TV"
       ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
@@ -22858,18 +22891,53 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
         { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
         { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react24.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => {
-        setOutputTarget(s.ip);
-        setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
-        showStatus(`Playing harmonic test chime on ${s.name}...`);
-        try {
-          await window.robosAudio.playTestChime(s.ip);
-          showStatus(`Test chime played on ${s.name}`);
-        } catch (err) {
-          showStatus("Test chime error: " + err.message);
-        }
-      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react24.default.createElement(
+      ].map((s) => /* @__PURE__ */ import_react24.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react24.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react24.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h3", null, "Paired RobOS Smart TVs (", speakers.length, ")"), /* @__PURE__ */ import_react24.default.createElement("p", { className: "subtitle", style: { marginTop: "4px" } }, "Cast movies directly to RobOS Smart TVs (Roku OS, Google TV / Cast, LG webOS, Samsung Tizen) over zero-cloud LAN")), /* @__PURE__ */ import_react24.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Smart TVs"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: () => refreshSpeakers(true) }, "Scan Smart TVs"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => {
+        const isSelected = outputTarget === s.ip || outputTarget === "all";
+        const isCastingHere = activeCastSession && (activeCastSession.ip === s.ip || activeCastSession.ip === "all");
+        return /* @__PURE__ */ import_react24.default.createElement(
+          "div",
+          {
+            key: s.ip,
+            className: "speaker-card",
+            style: isSelected ? { borderColor: "#e8a33d", boxShadow: "0 0 0 1px rgba(232,163,61,0.35)" } : void 0
+          },
+          /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-badge" }, isCastingHere ? "CASTING LIVE" : s.online !== false ? "ONLINE \xB7 READY" : "PAIRED"),
+          /* @__PURE__ */ import_react24.default.createElement("h4", { style: { paddingRight: "108px" } }, s.name),
+          s.platformName && /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model", style: { color: "#e8a33d", fontWeight: 600 } }, "Platform: ", s.platformName),
+          /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-ip" }, "LAN IP: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.ip)),
+          /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model),
+          s.sideloadStatus && /* @__PURE__ */ import_react24.default.createElement("p", { className: "speaker-model", style: { fontSize: "12px", opacity: 0.8 } }, "RobOS TV Studio: ", /* @__PURE__ */ import_react24.default.createElement("code", null, s.sideloadStatus)),
+          /* @__PURE__ */ import_react24.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+            "button",
+            {
+              className: "btn-accent",
+              onClick: () => {
+                setOutputTarget(s.ip);
+                const el = getMediaEl();
+                const from = outputTarget === "local" && el ? el.currentTime : castClock.now();
+                if (el) {
+                  el.pause();
+                  el.muted = true;
+                }
+                if (currentTrack) {
+                  castTrack(s.ip, currentTrack, { startAt: from > 1 ? from : 0 });
+                  setIsPlaying(true);
+                }
+                setActiveTab("player");
+              }
+            },
+            currentTrack ? `Display "${currentTrack.title.slice(0, 22)}${currentTrack.title.length > 22 ? "\u2026" : ""}" on TV` : "Display on TV"
+          ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop TV"), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+            showStatus(`Sending test signal to ${s.name} (${s.ip})...`);
+            try {
+              await window.robosAudio.playTestChime(s.ip);
+              showStatus(`Test signal verified on ${s.name}`);
+            } catch (err) {
+              showStatus("TV test error: " + err.message);
+            }
+          } }, "Test TV Signal"))
+        );
+      })))), /* @__PURE__ */ import_react24.default.createElement(
         NowPlayingPanel,
         {
           queue: playlist,

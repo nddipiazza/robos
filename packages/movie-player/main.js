@@ -315,12 +315,16 @@ function scanUpdates({ onDone } = {}) {
 
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
-ipcMain.handle('audio:discover-speakers', async () => {
+ipcMain.handle('audio:discover-speakers', async (_evt, { scanLan = false } = {}) => {
   try {
+    if (!scanLan) {
+      const paired = castService.getPairedSmartTvs();
+      if (paired && paired.length > 0) return paired;
+    }
     return await castService.scanSubnet();
   } catch (err) {
-    console.error('[AudioPlayer] Error scanning speakers:', err);
-    return [];
+    console.error('[MoviePlayer] Error scanning Smart TVs:', err);
+    return castService.getPairedSmartTvs();
   }
 });
 

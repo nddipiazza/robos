@@ -76,6 +76,44 @@ class CastService {
     this.hostIp = this._detectHostIp();
 
     this._initStreamServer();
+    this._loadRobosSmartTvs();
+  }
+
+  _loadRobosSmartTvs() {
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      if (!fs.existsSync(cfgPath)) return;
+      const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      const tvs = Array.isArray(raw?.tvs) ? raw.tvs : [];
+      for (const tv of tvs) {
+        if (!tv || !tv.ip) continue;
+        const existing = this.speakers.get(tv.ip) || {};
+        this.speakers.set(tv.ip, {
+          ...existing,
+          id: tv.id || `tv-${tv.ip}`,
+          ip: tv.ip,
+          name: tv.name || `RobOS Smart TV (${tv.ip})`,
+          model: tv.model || tv.platformName || 'RobOS Smart TV',
+          platformId: tv.platformId || 'smart-tv',
+          platformName: tv.platformName || 'Smart TV',
+          sideloadStatus: tv.sideloadStatus || 'READY',
+          devModeEnabled: tv.devModeEnabled !== false,
+          ports: tv.ports || {},
+          volume: existing.volume ?? 0.75,
+          muted: existing.muted ?? false,
+          online: tv.online !== false,
+          lastSeen: Date.now(),
+          robosTv: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[CastService] Could not load RobOS Smart TVs from tv-studio.json:', err.message);
+    }
+  }
+
+  getPairedSmartTvs() {
+    this._loadRobosSmartTvs();
+    return Array.from(this.speakers.values());
   }
 
   _detectHostIp() {
@@ -249,9 +287,10 @@ class CastService {
   }
 
   /**
-   * Scan local subnet for Google Cast / Nest devices
+   * Scan local subnet for RobOS Smart TVs & Google Cast devices
    */
-  async scanSubnet(timeoutMs = 1500) {
+  async scanSubnet(timeoutMs = 1200) {
+    this._loadRobosSmartTvs();
     const subnetPrefix = this.hostIp.split('.').slice(0, 3).join('.');
     const promises = [];
 
@@ -263,7 +302,15 @@ class CastService {
     const results = await Promise.all(promises);
     for (const dev of results) {
       if (dev) {
-        this.speakers.set(dev.ip, dev);
+        const existing = this.speakers.get(dev.ip) || {};
+        this.speakers.set(dev.ip, {
+          ...existing,
+          ...dev,
+          name: existing.name || dev.name,
+          model: existing.model || dev.model,
+          platformId: existing.platformId || 'android-tv',
+          platformName: existing.platformName || 'Google TV / Cast',
+        });
       }
     }
 
@@ -374,26 +421,195 @@ class CastService {
     });
   }
 
+  _dispatchSmartTvBridge(ip, tvInfo, mediaUrl, metadata = {}) {
+    const platformId = tvInfo?.platformId || 'smart-tv';
+    const title = metadata.title || 'RobOS Cinema Stream';
+    // 1. If Roku OS, attempt ECP Play-on-Roku / input launch on port 8060 (non-blocking)
+    if (platformId === 'roku-os') {
+      try {
+        const params = new URLSearchParams({
+          t: 'v',
+          u: mediaUrl,
+          videoName: title,
+          videoFormat: 'mp4',
+        });
+        const req = http.request({
+          hostname: ip,
+          port: tvInfo?.ports?.ecp || 8060,
+          path: `/input/15985?${params.toString()}`,
+          method: 'POST',
+          timeout: 1200,
+        }, (res) => { res.resume(); });
+        req.on('error', () => {});
+        req.on('timeout', () => { req.destroy(); });
+        req.end();
+      } catch {}
+    }
+    // 2. Record active cinema cast session in ~/.config/robos/tv-studio.json so RobOS Smart TV Portal (:19210) can display it
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      if (fs.existsSync(cfgPath)) {
+        const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+        raw.activeCinemaCast = {
+          tvIp: ip,
+          tvId: tvInfo?.id || `tv-${ip}`,
+          tvName: tvInfo?.name || ip,
+          platformId,
+          mediaUrl,
+          title,
+          artist: metadata.artist || '',
+          startedAt: new Date().toISOString(),
+        };
+        fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+      }
+    } catch {}
+  }
+
+  _startSmartTvBridgeSession(ip, mediaUrl, metadata = {}, onStatusUpdate = null, role = 'song', loadId = 1) {
+    const tvInfo = this.speakers.get(ip) || { ip, name: `RobOS Smart TV (${ip})`, platformId: 'smart-tv' };
+    this._dispatchSmartTvBridge(ip, tvInfo, mediaUrl, metadata);
+
+    const existing = this.activeConnections.get(ip);
+    if (existing && existing.progressTimer) {
+      clearInterval(existing.progressTimer);
+      existing.progressTimer = null;
+    }
+
+    const sessionId = `robos-tv-${ip}-${Date.now()}`;
+    const state = {
+      playerState: 'PLAYING',
+      currentTime: Number(metadata.currentTime) > 0 ? Number(metadata.currentTime) : 0,
+      duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : 7200,
+      idleReason: null,
+    };
+
+    const virtualPlayer = {
+      session: { sessionId },
+      getStatus: (cb) => {
+        cb(null, {
+          playerState: state.playerState,
+          idleReason: state.idleReason,
+          currentTime: state.currentTime,
+          media: { duration: state.duration },
+        });
+      },
+      pause: () => {
+        state.playerState = 'PAUSED';
+        if (typeof entry.onStatusUpdate === 'function') {
+          entry.onStatusUpdate(normalizeStatus({ playerState: 'PAUSED', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
+        }
+      },
+      play: () => {
+        state.playerState = 'PLAYING';
+        if (typeof entry.onStatusUpdate === 'function') {
+          entry.onStatusUpdate(normalizeStatus({ playerState: 'PLAYING', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
+        }
+      },
+      seek: (seconds, cb) => {
+        state.currentTime = Math.max(0, Number(seconds) || 0);
+        if (typeof entry.onStatusUpdate === 'function') {
+          entry.onStatusUpdate(normalizeStatus({ playerState: state.playerState, currentTime: state.currentTime, media: { duration: state.duration } }, entry));
+        }
+        if (cb) cb(null);
+      },
+      load: (newMedia, newOpts, cb) => {
+        state.currentTime = Number(newOpts?.currentTime) > 0 ? Number(newOpts.currentTime) : 0;
+        state.playerState = 'PLAYING';
+        this._dispatchSmartTvBridge(ip, tvInfo, newMedia?.contentId || mediaUrl, newMedia?.metadata || metadata);
+        const st = { playerState: 'PLAYING', currentTime: state.currentTime, media: { duration: state.duration } };
+        if (cb) cb(null, st);
+      },
+    };
+
+    const entry = {
+      client: {
+        close: () => {},
+        receiver: { stop: (_sid, cb) => { state.playerState = 'IDLE'; if (cb) cb(); } },
+      },
+      player: virtualPlayer,
+      mediaUrl,
+      sessionId,
+      onStatusUpdate,
+      role,
+      loadId,
+      duration: state.duration,
+      isSmartTvBridge: true,
+      _tvState: state,
+    };
+
+    this.activeConnections.set(ip, entry);
+
+    entry.progressTimer = setInterval(() => {
+      if (this.activeConnections.get(ip) !== entry) {
+        clearInterval(entry.progressTimer);
+        entry.progressTimer = null;
+        return;
+      }
+      if (state.playerState === 'PLAYING') {
+        state.currentTime += 1;
+        if (state.duration > 0 && state.currentTime >= state.duration) {
+          state.playerState = 'IDLE';
+          state.idleReason = 'FINISHED';
+        }
+      }
+      const out = normalizeStatus({
+        playerState: state.playerState,
+        idleReason: state.idleReason,
+        currentTime: state.currentTime,
+        media: { duration: state.duration },
+      }, entry);
+      if (out && typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(out);
+    }, 1000);
+    if (entry.progressTimer.unref) entry.progressTimer.unref();
+
+    // Emit initial PLAYING status immediately
+    setTimeout(() => {
+      const out = normalizeStatus({
+        playerState: state.playerState,
+        currentTime: state.currentTime,
+        media: { duration: state.duration },
+      }, entry);
+      if (out && typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(out);
+    }, 50);
+
+    return {
+      ok: true,
+      playerState: 'PLAYING',
+      ip,
+      sessionId,
+      loadId,
+      duration: state.duration,
+      platformId: tvInfo.platformId,
+    };
+  }
+
   async castMediaUrl(ip, mediaUrl, metadata = {}, onStatusUpdate = null) {
+    this._loadRobosSmartTvs();
+    const tvInfo = this.speakers.get(ip);
     const media = {
       contentId: mediaUrl,
-      contentType: metadata.contentType || 'audio/mpeg',
+      contentType: metadata.contentType || 'video/mp4',
       streamType: 'BUFFERED',
       metadata: {
         type: 0,
-        metadataType: 0,
-        title: metadata.title || 'RobOS Audio Stream',
-        artist: metadata.artist || 'RobOS Audio Player',
+        metadataType: 1,
+        title: metadata.title || 'RobOS Cinema Stream',
+        subtitle: metadata.artist || 'RobOS Movie Player',
+        artist: metadata.artist || 'RobOS Movie Player',
         images: metadata.images || []
       }
     };
 
-    // `currentTime` starts the song part-way (resuming after a DJ preview).
+    // `currentTime` starts the movie part-way (resuming after a DJ preview or local seek).
     const loadOpts = { autoplay: true };
     if (metadata.currentTime > 0) loadOpts.currentTime = metadata.currentTime;
-    // 'song' or 'dj' (a Virtual DJ line): status updates say which load they are about.
     const role = metadata.role || 'song';
     const loadId = ++this.loadCounter;
+
+    // For Roku OS, LG webOS, or Samsung Tizen Smart TVs, use the Smart TV Bridge directly
+    if (tvInfo && tvInfo.platformId && tvInfo.platformId !== 'android-tv') {
+      return this._startSmartTvBridgeSession(ip, mediaUrl, metadata, onStatusUpdate, role, loadId);
+    }
 
     // Next song on a speaker we're already casting to: load it into the same
     // receiver session. Stopping and relaunching the receiver for every song made
@@ -461,7 +677,14 @@ class CastService {
       client.on('error', (err) => {
         const entry = this.activeConnections.get(ip);
         if (entry && entry.client === client) this._dropConnection(ip, entry);
-        if (!settled) { settled = true; reject(err); }
+        if (!settled) {
+          settled = true;
+          if (tvInfo && tvInfo.robosTv) {
+            resolve(this._startSmartTvBridgeSession(ip, mediaUrl, metadata, onStatusUpdate, role, loadId));
+            return;
+          }
+          reject(err);
+        }
       });
     });
   }
@@ -526,6 +749,10 @@ class CastService {
     }
 
     // Fallback: connect directly and terminate any running session
+    const tvInfo = this.speakers.get(ip);
+    if (tvInfo && tvInfo.platformId && tvInfo.platformId !== 'android-tv') {
+      return { ok: true, stopped: true, ip };
+    }
     return new Promise((resolve) => {
       const client = new Client();
       const timer = setTimeout(() => {

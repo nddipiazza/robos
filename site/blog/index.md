@@ -16,6 +16,7 @@ keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party gam
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#robos-movie-player">RobOS Movie Player</a>
     <a href="#party-game">RobOS Party Game</a>
     <a href="#audio-player-ai-fix-metadata">Audio Player AI Fix Metadata</a>
     <a href="#vpn-sandbox-and-killswitch-proof">VPN Sandbox &amp; Kill-Switch Proof</a>
@@ -40,6 +41,48 @@ keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party gam
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="robos-movie-player">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-27">Oct 27, 2026</time>
+      <span class="blog-tag">RobOS Movie Player</span>
+      <span class="blog-tag">Cinema &amp; Subtitles</span>
+      <span class="blog-tag">AI Watchlists &amp; Host</span>
+      <span class="blog-tag">RobOS Smart TVs</span>
+    </div>
+    <h2><a href="#robos-movie-player">RobOS Movie Player: A 100,000-Film Cinema Stage Sharing the Exact Warm Theme, AI Host, and RobOS Smart TV Casting</a></h2>
+    <p class="blog-summary"><strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) brings the exact warm dark theater theme (<code>#15120f</code>, <code>#1c1814</code>, <code>#26211b</code>, <code>#e8a33d</code>, <code>#f1e9dc</code>) and multi-pane architecture of <strong>RobOS Audio Player</strong> to movies, TV series, and video collections. Every audio player feature has a direct cinema counterpart: a 16:9 HTML5 <code>&lt;video&gt;</code> stage with synchronized transport controls, live on-screen <code>.srt</code> / <code>.vtt</code> closed captions and click-to-seek dialogue transcripts, a 100,000-movie virtualized library with scene-release filename cleaning, <strong>✦ AI Watchlists</strong>, a spoken <strong>Virtual Cinema Host</strong> powered by <strong>RobOS Voice</strong>, an open-source <code>ffprobe</code> / <code>ffmpeg</code> metadata &amp; video-frame poster fixer, metadata-only SFTP/cloud indexing with HTTP <code>206 Partial Content</code> streaming, and a dedicated <strong>Smart TVs</strong> tab &amp; <strong>Display Output</strong> selector that casts directly to paired <strong>RobOS Smart TVs</strong> (Roku OS, Google TV / Cast, LG webOS, Samsung Tizen).</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/movie-player/01-cinema-stage.png' | relative_url }}" alt="RobOS Movie Player Now Playing Cinema Stage screening Dune (2021) with Display Output selector and Cast to Smart TV button" loading="lazy">
+        <figcaption><strong>RobOS Movie Player</strong> on the <strong>Now Playing</strong> tab: the 16:9 Cinema Stage with the header <strong>Display Output</strong> selector (<code>Desktop (Local Cinema)</code> or any paired RobOS Smart TV), one-click <strong>Cast to Smart TV</strong> stage button, synchronized <code>.robos-rhap-theme</code> transport deck, and the collapsible <strong>Now Playing</strong> dock on the right.</figcaption>
+      </figure>
+      <p><strong>One warm theater design language across audio and cinema, plus native RobOS Smart TV casting.</strong> Rather than building a disconnected video player, <strong>RobOS Movie Player</strong> reuses the exact CSS custom properties, resizable split panes, virtualized table/grid primitives, and IPC bridge contract as <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a>. Instead of audio speakers, Movie Player integrates directly with your paired <strong>RobOS Smart TVs</strong> from <code>~/.config/robos/tv-studio.json</code> and LAN discovery: pick any TV in the header <strong>Display Output</strong> selector or open the <strong>Smart TVs</strong> tab to display movies on <strong>Roku OS</strong>, <strong>Google TV / Android TV</strong>, <strong>LG webOS</strong>, or <strong>Samsung Tizen</strong> displays.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/05-smart-tvs.png' | relative_url }}" alt="RobOS Movie Player Smart TVs tab showing paired Roku OS, Google TV, LG webOS, and Samsung Tizen Smart TVs" loading="lazy"><figcaption>The <strong>Smart TVs (4)</strong> tab: loads paired RobOS Smart TVs from <code>tv-studio.json</code> (Roku OS, Google TV / Android TV, LG webOS, Samsung Tizen) with one-click <strong>Display on TV</strong> casting.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/02-library-grid.png' | relative_url }}" alt="RobOS Movie Player 129-movie SFTP Library Browser showing generated cinema posters and scene-cleaned titles" loading="lazy"><figcaption>The virtualized <strong>Library (129)</strong> browser synced from an SFTP data source with scene-cleaned movie titles, years, resolution badges, and generated posters.</figcaption></figure>
+      </div>
+      <p><strong>Scene-release filename cleaning, AI Watchlists, a Virtual Cinema Host, and open-source poster extraction.</strong> Movie folders often arrive with noisy scene filenames like <code>Blade.Runner.2049.(2017).2160p.UHD.BluRay.x265.10bit.HDR-GROUP.mkv</code>. During background worker-thread scanning (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/track-metadata.js"><code>lib/track-metadata.js</code></a>), <code>cleanMovieFilename()</code> strips release tags while preserving the clean film title, 4-digit release year, <code>SxxExx</code> episode numbers, resolution badge (<code>4K</code>, <code>1080p</code>, <code>720p</code>), and video codec (<code>HEVC</code>, <code>AV1</code>, <code>H.264</code>). Clicking <strong>✦ AI Watchlist</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/AiPlaylist.jsx"><code>src/AiPlaylist.jsx</code></a>) lets you describe a marathon or mood and optionally enable the <strong>Virtual Cinema Host</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/useVirtualDj.js"><code>src/useVirtualDj.js</code></a>), which pre-generates short spoken cinema introductions between films using <strong>RobOS Voice</strong>. Clicking <strong>✦ AI Fix Metadata</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/ai-metadata.js"><code>lib/ai-metadata.js</code></a>) inspects <code>.nfo</code> sidecars, probes video/audio streams with <code>ffprobe</code>, extracts a real video frame thumbnail at 10% runtime via <code>ffmpeg</code> (or synthesizes a warm cinema SVG poster), and optionally runs your RobOS agent with <code>@skill(robos:fix-media-metadata)</code>.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/ai-watchlist-modal.png' | relative_url }}" alt="AI Watchlist and Virtual Cinema Host modal in RobOS Movie Player" loading="lazy"><figcaption><strong>✦ AI Watchlist &amp; Virtual Cinema Host</strong>: describe your movie marathon, choose a Cinema Host persona (<em>Classic Theater Host</em>, <em>Film Festival Curator</em>, <em>Late-Night Drive-In</em>), and screen immediately.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/blog/movie-player/ai-fix-metadata-modal.png' | relative_url }}" alt="Fix Movie Metadata and Poster Art modal in RobOS Movie Player" loading="lazy"><figcaption><strong>✦ Fix Movie Metadata &amp; Poster Art</strong>: scene filename cleaning, <code>.nfo</code> sidecar parsing, <code>ffprobe</code> stream inspection, and <code>ffmpeg</code> frame poster extraction.</figcaption></figure>
+      </div>
+      <div class="blog-log"># Build the renderer bundle and run the 10-test Movie Player verification suite
+cd packages/movie-player && npm run build && npm test
+
+# Launch RobOS Movie Player and inspect via DOM Snapshot server (port 19214)
+npx electron packages/movie-player --no-sandbox
+node packages/robos-lib/snapshot-cli.js movie-player --text
+node packages/robos-lib/snapshot-cli.js movie-player --screenshot /tmp/movie-player.png</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/v1/apps/movie-player/' | relative_url }}">RobOS Movie Player docs →</a>
+      <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player docs →</a>
+      <a href="https://github.com/nddipiazza/robos/tree/main/packages/movie-player">packages/movie-player source →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/movie-player.test.js">Unit tests →</a>
+      <span class="blog-commits">Commit: <a href="https://github.com/nddipiazza/robos/commit/caf8ed3e">caf8ed3e</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="party-game">
     <div class="blog-meta">
