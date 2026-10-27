@@ -20739,8 +20739,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   }
   var fmt = (sec) => {
     if (!sec || !isFinite(sec)) return "0:00";
-    const m = Math.floor(sec / 60);
-    const ss = Math.floor(sec % 60);
+    const total = Math.max(0, Math.floor(sec));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor(total % 3600 / 60);
+    const ss = total % 60;
+    if (h > 0) {
+      return `${h}:${m < 10 ? "0" : ""}${m}:${ss < 10 ? "0" : ""}${ss}`;
+    }
     return `${m}:${ss < 10 ? "0" : ""}${ss}`;
   };
   function CastProgress({ onSeek, className = "mini-progress", id }) {
@@ -20748,14 +20753,21 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const [dragging, setDragging] = (0, import_react22.useState)(null);
     const commitTimer = (0, import_react22.useRef)(null);
     const value = dragging != null ? dragging : current;
-    const pct = duration ? Math.min(value, duration) / duration * 100 : 0;
-    const commit = (v) => {
+    const maxVal = duration > 0 ? duration : Math.max(value, 1);
+    const pct = maxVal ? Math.min(value, maxVal) / maxVal * 100 : 0;
+    const commit = (v, immediate = false) => {
       clearTimeout(commitTimer.current);
+      if (immediate) {
+        castClock.set({ position: v });
+        setDragging(null);
+        onSeek(v);
+        return;
+      }
       commitTimer.current = setTimeout(() => {
         castClock.set({ position: v });
         setDragging(null);
         onSeek(v);
-      }, 250);
+      }, 180);
     };
     (0, import_react22.useEffect)(() => () => clearTimeout(commitTimer.current), []);
     return /* @__PURE__ */ import_react22.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react22.default.createElement(
@@ -20763,16 +20775,24 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       {
         type: "range",
         min: "0",
-        max: duration || 0,
+        max: maxVal,
         step: "0.5",
-        value: Math.min(value, duration || 0),
-        disabled: !duration,
+        value: Math.min(value, maxVal),
         style: { "--pct": `${pct}%` },
-        "aria-label": "Seek on the speaker",
+        "aria-label": "Seek on the Smart TV",
         onChange: (e) => {
           const v = Number(e.target.value);
           setDragging(v);
-          commit(v);
+          commit(v, false);
+        },
+        onMouseUp: () => {
+          if (dragging != null) commit(dragging, true);
+        },
+        onTouchEnd: () => {
+          if (dragging != null) commit(dragging, true);
+        },
+        onKeyUp: () => {
+          if (dragging != null) commit(dragging, true);
         }
       }
     ), /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(duration)));
@@ -21108,8 +21128,12 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             return;
           }
           if (status.currentTime != null) {
-            castClock.set({ position: status.currentTime, duration: status.duration || castClock.get().duration, playing: status.playerState === "PLAYING" });
-            L.countCastPlay(status.currentTime, status.duration);
+            const nextDur = status.duration && status.duration > 0 ? status.duration : castClock.get().duration || (videoRef.current && isFinite(videoRef.current.duration) ? videoRef.current.duration : 0);
+            castClock.set({ position: status.currentTime, duration: nextDur, playing: status.playerState === "PLAYING" });
+            if (videoRef.current && videoRef.current.paused && Math.abs((videoRef.current.currentTime || 0) - status.currentTime) > 0.75) {
+              syncVideoElementTime(status.currentTime);
+            }
+            L.countCastPlay(status.currentTime, nextDur);
           } else if (status.playerState) {
             castClock.set({ playing: status.playerState === "PLAYING" });
           }
@@ -21627,14 +21651,37 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const pendingLocalSeekRef = (0, import_react24.useRef)(null);
     const songLoadsRef = (0, import_react24.useRef)(/* @__PURE__ */ new Set());
+    const internalVideoSyncTimeoutRef = (0, import_react24.useRef)(null);
+    const lastProgrammaticVideoSeekRef = (0, import_react24.useRef)({ time: 0, target: 0 });
+    const syncVideoElementTime = (targetSec) => {
+      const v = videoRef.current;
+      if (!v || !isFinite(targetSec)) return;
+      lastProgrammaticVideoSeekRef.current = { time: Date.now(), target: targetSec };
+      try {
+        v.currentTime = targetSec;
+      } catch {
+      }
+    };
+    const getRealTrackDuration = (track) => {
+      const v = videoRef.current;
+      if (v && isFinite(v.duration) && v.duration > 0) return v.duration;
+      const a = playerRef.current?.audio?.current;
+      if (a && isFinite(a.duration) && a.duration > 0) return a.duration;
+      return Number(track?.duration) > 0 ? Number(track.duration) : 0;
+    };
     const handleCastSeek = (seconds) => {
-      castClock.set({ position: seconds });
-      if (outputTarget !== "local") window.robosAudio.castSeek(outputTarget, seconds).catch(() => {
+      const targetSec = Math.max(0, Number(seconds) || 0);
+      castClock.set({ position: targetSec });
+      if (videoRef.current && Math.abs((videoRef.current.currentTime || 0) - targetSec) > 0.5) {
+        syncVideoElementTime(targetSec);
+      }
+      if (outputTarget !== "local") window.robosAudio.castSeek(outputTarget, targetSec).catch(() => {
       });
     };
     const castTrack = async (speakerIp, track, { startAt = 0 } = {}) => {
       if (!speakerIp || speakerIp === "local" || !track) return;
-      castClock.set({ position: startAt || 0, duration: track.duration || 0, playing: false });
+      const knownDuration = getRealTrackDuration(track);
+      castClock.set({ position: startAt || 0, duration: knownDuration, playing: true });
       const loads = /* @__PURE__ */ new Set();
       songLoadsRef.current = loads;
       const remember = (res) => {
@@ -21646,7 +21693,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         title: track.title,
         artist: track.artist,
         album: track.album,
-        duration: track.duration || 0
+        duration: knownDuration
       };
       if (startAt > 0) metadata.currentTime = startAt;
       const castArt = artUrlFor(artBase.cast, track.artId);
@@ -22519,12 +22566,56 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           id: "cinema-video-element",
           ref: videoRef,
           className: `cinema-video-el fit-${videoFit}`,
-          src: outputTarget === "local" ? resolveSrc(currentTrack) : void 0,
+          src: resolveSrc(currentTrack),
           poster: artUrlFor(artBase.local, currentTrack?.artId) || void 0,
+          muted: outputTarget !== "local",
           controls: true,
           playsInline: true,
-          onPlay: () => setIsPlaying(true),
-          onPause: () => setIsPlaying(false),
+          onLoadedMetadata: (e) => {
+            const d = e.currentTarget?.duration;
+            if (d && isFinite(d) && d > 0) {
+              if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+              if (outputTarget !== "local") {
+                castClock.set({ duration: d });
+              }
+            }
+            const at = pendingLocalSeekRef.current;
+            if (outputTarget === "local" && at != null && e.currentTarget) {
+              pendingLocalSeekRef.current = null;
+              e.currentTarget.currentTime = at;
+            }
+          },
+          onDurationChange: (e) => {
+            const d = e.currentTarget?.duration;
+            if (d && isFinite(d) && d > 0) {
+              if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+              if (outputTarget !== "local") {
+                castClock.set({ duration: d });
+              }
+            }
+          },
+          onSeeked: (e) => {
+            if (outputTarget !== "local") {
+              const sec = e.currentTarget?.currentTime || 0;
+              const last = lastProgrammaticVideoSeekRef.current;
+              if (Date.now() - last.time < 4e3 && Math.abs(sec - last.target) < 4) {
+                return;
+              }
+              handleCastSeek(sec);
+            }
+          },
+          onPlay: () => {
+            if (outputTarget === "local") {
+              setIsPlaying(true);
+            } else if (activeCastSession?.isPaused) {
+              handleToggleCastPause();
+            }
+          },
+          onPause: () => {
+            if (outputTarget === "local") {
+              setIsPlaying(false);
+            }
+          },
           onEnded: () => {
             if (outputTarget === "local") handleTrackEnded();
           }
@@ -22605,7 +22696,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               a.currentTime = at;
             }
           },
-          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react24.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react24.default.createElement(MiniProgress, { key: "video-progress", getAudio: () => videoRef.current })] : void 0,
+          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react24.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react24.default.createElement(MiniProgress, { key: "video-progress", trackId: currentTrack?.id || currentTrack?.filePath, getAudio: () => videoRef.current })] : void 0,
           customControlsSection: outputTarget !== "local" || isVideoTrack(currentTrack) ? [
             RHAP_UI.ADDITIONAL_CONTROLS,
             /* @__PURE__ */ import_react24.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react24.default.createElement(
@@ -22968,7 +23059,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           }
         }
       )),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react24.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react24.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react24.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react24.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react24.default.createElement(MiniProgress, { getAudio: getMediaEl })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react24.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react24.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react24.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react24.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react24.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react24.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react24.default.createElement(MiniProgress, { trackId: currentTrack?.id || currentTrack?.filePath, getAudio: getMediaEl })), /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react24.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
       showAiPlaylist && /* @__PURE__ */ import_react24.default.createElement(
         AiPlaylistModal,
         {
@@ -23078,44 +23169,86 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       statusMsg && /* @__PURE__ */ import_react24.default.createElement("div", { className: "toast" }, statusMsg)
     ));
   }
-  function MiniProgress({ getAudio }) {
+  function MiniProgress({ getAudio, trackId }) {
     const [time, setTime] = (0, import_react24.useState)({ current: 0, duration: 0 });
+    const [dragging, setDragging] = (0, import_react24.useState)(null);
     (0, import_react24.useEffect)(() => {
-      const audio = getAudio();
-      if (!audio) return void 0;
-      const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
-      update();
-      audio.addEventListener("timeupdate", update);
-      audio.addEventListener("durationchange", update);
-      audio.addEventListener("emptied", update);
-      return () => {
-        audio.removeEventListener("timeupdate", update);
-        audio.removeEventListener("durationchange", update);
-        audio.removeEventListener("emptied", update);
+      let attached = null;
+      let pollTimer = null;
+      const update = () => {
+        const el = getAudio();
+        if (!el) return;
+        const d = isFinite(el.duration) && el.duration > 0 ? el.duration : 0;
+        setTime({ current: el.currentTime || 0, duration: d });
       };
-    }, []);
+      const attach = () => {
+        const el = getAudio();
+        if (!el || el === attached) return;
+        if (attached) {
+          attached.removeEventListener("timeupdate", update);
+          attached.removeEventListener("durationchange", update);
+          attached.removeEventListener("loadedmetadata", update);
+          attached.removeEventListener("seeked", update);
+          attached.removeEventListener("emptied", update);
+        }
+        attached = el;
+        update();
+        el.addEventListener("timeupdate", update);
+        el.addEventListener("durationchange", update);
+        el.addEventListener("loadedmetadata", update);
+        el.addEventListener("seeked", update);
+        el.addEventListener("emptied", update);
+      };
+      attach();
+      pollTimer = setInterval(() => {
+        attach();
+        update();
+      }, 350);
+      return () => {
+        if (pollTimer) clearInterval(pollTimer);
+        if (attached) {
+          attached.removeEventListener("timeupdate", update);
+          attached.removeEventListener("durationchange", update);
+          attached.removeEventListener("loadedmetadata", update);
+          attached.removeEventListener("seeked", update);
+          attached.removeEventListener("emptied", update);
+        }
+      };
+    }, [getAudio, trackId]);
     const fmt2 = (sec) => {
       if (!sec || !isFinite(sec)) return "0:00";
-      const m = Math.floor(sec / 60);
-      const ss = Math.floor(sec % 60);
+      const total = Math.max(0, Math.floor(sec));
+      const h = Math.floor(total / 3600);
+      const m = Math.floor(total % 3600 / 60);
+      const ss = total % 60;
+      if (h > 0) {
+        return `${h}:${m < 10 ? "0" : ""}${m}:${ss < 10 ? "0" : ""}${ss}`;
+      }
       return `${m}:${ss < 10 ? "0" : ""}${ss}`;
     };
-    const pct = time.duration ? time.current / time.duration * 100 : 0;
-    return /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(time.current)), /* @__PURE__ */ import_react24.default.createElement(
+    const val = dragging != null ? dragging : time.current;
+    const maxVal = time.duration > 0 ? time.duration : Math.max(val, 1);
+    const pct = maxVal ? Math.min(val, maxVal) / maxVal * 100 : 0;
+    return /* @__PURE__ */ import_react24.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(val)), /* @__PURE__ */ import_react24.default.createElement(
       "input",
       {
         type: "range",
         min: "0",
-        max: time.duration || 0,
+        max: maxVal,
         step: "0.5",
-        value: time.current,
-        disabled: !time.duration,
+        value: Math.min(val, maxVal),
         style: { "--pct": `${pct}%` },
         "aria-label": "Seek",
         onChange: (e) => {
+          const next = Number(e.target.value);
+          setDragging(next);
+          setTime((prev) => ({ ...prev, current: next }));
           const audio = getAudio();
-          if (audio) audio.currentTime = Number(e.target.value);
-        }
+          if (audio) audio.currentTime = next;
+        },
+        onMouseUp: () => setDragging(null),
+        onTouchEnd: () => setDragging(null),
+        onKeyUp: () => setDragging(null)
       }
     ), /* @__PURE__ */ import_react24.default.createElement("span", null, fmt2(time.duration)));
   }

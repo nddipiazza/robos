@@ -374,8 +374,8 @@ const PORTAL_CODE_VERSION = (() => {
     return 'unknown';
   }
 })();
-const PORTAL_FEATURES = ['owner', 'shutdown', 'live-frame-push'];
-const ROBOS_PORTAL_APPS = ['robos-tv', 'robos-dashboards', 'party-game', 'dev-central'];
+const PORTAL_FEATURES = ['owner', 'shutdown', 'live-frame-push', 'cinema-cast'];
+const ROBOS_PORTAL_APPS = ['robos-tv', 'robos-dashboards', 'party-game', 'dev-central', 'movie-player'];
 const PORTAL_SHUTDOWN_HEADER = 'x-robos-portal';
 
 function defaultPortalAppName() {
@@ -1719,7 +1719,7 @@ sub pollDashboard()
                 m.top.payloadJson = raw
             end if
         end if
-        if Instr(1, raw, Chr(34) + "appCastActive" + Chr(34) + ":true") > 0
+        if Instr(1, raw, Chr(34) + "appCastActive" + Chr(34) + ":true") > 0 or Instr(1, raw, Chr(34) + "cinemaCastActive" + Chr(34) + ":true") > 0
             sleep(700)
         else
             sleep(2000)
@@ -1960,6 +1960,8 @@ ${voiceSlide2RowsXml}
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
+    <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player Cast -->
+    <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="true" />
     <Timer id="clockTimer" repeat="true" duration="1.0" />
   </children>
 </component>
@@ -1994,6 +1996,10 @@ sub init()
     m.secBarFill = m.top.findNode("secBarFill")
     m.secPulseDot = m.top.findNode("secPulseDot")
     m.keepAliveVideo = m.top.findNode("keepAliveVideo")
+    m.cinemaVideo = m.top.findNode("cinemaVideo")
+    m.cinemaVideoActive = false
+    m.lastCinemaLoadKey = ""
+    m.lastCinemaSeekKey = ""
     m.clockTimer = m.top.findNode("clockTimer")
     m.tickCount = 0
     m.remainingSec = ${initialRemSec}
@@ -2083,9 +2089,9 @@ end sub
 
 sub onClockTick()
     m.tickCount = m.tickCount + 1
-    ' While an app cast's narration owns the video player, its own handlers
+    ' While an app cast's narration or cinema video owns the video player, its own handlers
     ' bring the keep-alive back.
-    if m.keepAliveVideo <> invalid and m.castAudioActive <> true
+    if m.keepAliveVideo <> invalid and m.castAudioActive <> true and m.cinemaVideoActive <> true
         vState = m.keepAliveVideo.state
         if vState = "finished" or vState = "stopped" or vState = "error"
             startKeepAliveVideo()
@@ -2309,11 +2315,74 @@ sub hideAppCastFrames()
     end if
 end sub
 
+sub playCinemaVideo(cinema as Object)
+    if cinema = invalid or cinema.mediaUrl = invalid then return
+    if m.cinemaVideo = invalid then m.cinemaVideo = m.top.findNode("cinemaVideo")
+    if m.cinemaVideo = invalid then return
+    if m.keepAliveVideo <> invalid and m.cinemaVideoActive <> true
+        m.keepAliveVideo.control = "stop"
+    end if
+    m.cinemaVideoActive = true
+    m.cinemaVideo.visible = true
+    m.cinemaVideo.mute = false
+    loadKey = ""
+    if cinema.loadKey <> invalid then loadKey = cinema.loadKey.ToStr() else loadKey = cinema.mediaUrl.ToStr()
+    if m.lastCinemaLoadKey <> loadKey
+        m.lastCinemaLoadKey = loadKey
+        m.cinemaVideo.control = "stop"
+        content = CreateObject("roSGNode", "ContentNode")
+        content.url = cinema.mediaUrl
+        if cinema.title <> invalid then content.title = cinema.title else content.title = "RobOS Movie Player"
+        content.streamFormat = "mp4"
+        if cinema.startAt <> invalid and cinema.startAt > 0
+            content.PlayStart = Int(cinema.startAt)
+        end if
+        m.cinemaVideo.content = content
+        m.cinemaVideo.setFocus(true)
+        m.cinemaVideo.control = "play"
+        if cinema.seekKey <> invalid then m.lastCinemaSeekKey = cinema.seekKey.ToStr()
+        return
+    end if
+    if cinema.seekKey <> invalid
+        sk = cinema.seekKey.ToStr()
+        if sk <> "" and sk <> m.lastCinemaSeekKey
+            m.lastCinemaSeekKey = sk
+            if cinema.seekSeconds <> invalid
+                m.cinemaVideo.seek = cinema.seekSeconds
+            end if
+        end if
+    end if
+    if cinema.paused = true
+        if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause"
+    else
+        if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
+    end if
+end sub
+
+sub stopCinemaVideo()
+    if m.cinemaVideoActive <> true then return
+    m.cinemaVideoActive = false
+    m.lastCinemaLoadKey = ""
+    m.lastCinemaSeekKey = ""
+    if m.cinemaVideo <> invalid
+        m.cinemaVideo.control = "stop"
+        m.cinemaVideo.visible = false
+    end if
+    if m.tileList <> invalid then m.tileList.setFocus(true)
+    startKeepAliveVideo()
+end sub
+
 sub onPayloadUpdated()
     raw = m.dashTask.payloadJson
     if raw = "" then return
     json = ParseJson(raw)
     if json = invalid then return
+    if json.cinemaCast <> invalid and json.cinemaCast.active = true and json.cinemaCast.mediaUrl <> invalid
+        hideAppCastFrames()
+        playCinemaVideo(json.cinemaCast)
+        return
+    end if
+    stopCinemaVideo()
     if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
         showAppCastFrame(json.appCast.frameUrl)
         if json.appCast.narration <> invalid then playAppCastAudio(json.appCast.narration)
@@ -3261,10 +3330,15 @@ function createTvEngine({
           } catch {}
 
           const rokuAppCast = appCastForRequest(req, u, 'roku-os');
+          const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
+            ? { ...state.activeCinemaCast, active: true }
+            : null;
           const bodyJson = JSON.stringify({
             ok: true,
             appCastActive: Boolean(rokuAppCast),
             appCast: rokuAppCast,
+            cinemaCastActive: Boolean(activeCinema),
+            cinemaCast: activeCinema,
             cast: state.activeDashboardCast || null,
             slideshow: resolved.slideshow || ssState || null,
             dashboard: resolved.dashboard,

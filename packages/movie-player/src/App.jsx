@@ -235,8 +235,14 @@ export default function App() {
         }
         // The speaker is the clock while casting: progress, play counts, song end.
         if (status.currentTime != null) {
-          castClock.set({ position: status.currentTime, duration: status.duration || castClock.get().duration, playing: status.playerState === 'PLAYING' });
-          L.countCastPlay(status.currentTime, status.duration);
+          const nextDur = (status.duration && status.duration > 0)
+            ? status.duration
+            : (castClock.get().duration || (videoRef.current && isFinite(videoRef.current.duration) ? videoRef.current.duration : 0));
+          castClock.set({ position: status.currentTime, duration: nextDur, playing: status.playerState === 'PLAYING' });
+          if (videoRef.current && videoRef.current.paused && Math.abs((videoRef.current.currentTime || 0) - status.currentTime) > 0.75) {
+            syncVideoElementTime(status.currentTime);
+          }
+          L.countCastPlay(status.currentTime, nextDur);
         } else if (status.playerState) {
           castClock.set({ playing: status.playerState === 'PLAYING' });
         }
@@ -792,18 +798,40 @@ export default function App() {
 
   // Where to continue locally after switching back from a speaker.
   const pendingLocalSeekRef = useRef(null);
-  // Loads (one per speaker) of the song now playing; a speaker reports "finished"
+  //Loads (one per speaker) of the song now playing; a speaker reports "finished"
   // more than once, and only the first report for the current song moves on.
   const songLoadsRef = useRef(new Set());
+  const internalVideoSyncTimeoutRef = useRef(null);
+  const lastProgrammaticVideoSeekRef = useRef({ time: 0, target: 0 });
+
+  const syncVideoElementTime = (targetSec) => {
+    const v = videoRef.current;
+    if (!v || !isFinite(targetSec)) return;
+    lastProgrammaticVideoSeekRef.current = { time: Date.now(), target: targetSec };
+    try { v.currentTime = targetSec; } catch {}
+  };
+
+  const getRealTrackDuration = (track) => {
+    const v = videoRef.current;
+    if (v && isFinite(v.duration) && v.duration > 0) return v.duration;
+    const a = playerRef.current?.audio?.current;
+    if (a && isFinite(a.duration) && a.duration > 0) return a.duration;
+    return Number(track?.duration) > 0 ? Number(track.duration) : 0;
+  };
 
   const handleCastSeek = (seconds) => {
-    castClock.set({ position: seconds });
-    if (outputTarget !== 'local') window.robosAudio.castSeek(outputTarget, seconds).catch(() => {});
+    const targetSec = Math.max(0, Number(seconds) || 0);
+    castClock.set({ position: targetSec });
+    if (videoRef.current && Math.abs((videoRef.current.currentTime || 0) - targetSec) > 0.5) {
+      syncVideoElementTime(targetSec);
+    }
+    if (outputTarget !== 'local') window.robosAudio.castSeek(outputTarget, targetSec).catch(() => {});
   };
 
   const castTrack = async (speakerIp, track, { startAt = 0 } = {}) => {
     if (!speakerIp || speakerIp === 'local' || !track) return;
-    castClock.set({ position: startAt || 0, duration: track.duration || 0, playing: false });
+    const knownDuration = getRealTrackDuration(track);
+    castClock.set({ position: startAt || 0, duration: knownDuration, playing: true });
     const loads = new Set();
     songLoadsRef.current = loads;
     const remember = (res) => { if (res && res.loadId != null) loads.add(res.loadId); return res; };
@@ -812,7 +840,7 @@ export default function App() {
       title: track.title,
       artist: track.artist,
       album: track.album,
-      duration: track.duration || 0,
+      duration: knownDuration,
     };
     if (startAt > 0) metadata.currentTime = startAt;
     const castArt = artUrlFor(artBase.cast, track.artId);
@@ -1804,12 +1832,56 @@ export default function App() {
                     id="cinema-video-element"
                     ref={videoRef}
                     className={`cinema-video-el fit-${videoFit}`}
-                    src={outputTarget === 'local' ? resolveSrc(currentTrack) : undefined}
+                    src={resolveSrc(currentTrack)}
                     poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
+                    muted={outputTarget !== 'local'}
                     controls
                     playsInline
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
+                    onLoadedMetadata={(e) => {
+                      const d = e.currentTarget?.duration;
+                      if (d && isFinite(d) && d > 0) {
+                        if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+                        if (outputTarget !== 'local') {
+                          castClock.set({ duration: d });
+                        }
+                      }
+                      const at = pendingLocalSeekRef.current;
+                      if (outputTarget === 'local' && at != null && e.currentTarget) {
+                        pendingLocalSeekRef.current = null;
+                        e.currentTarget.currentTime = at;
+                      }
+                    }}
+                    onDurationChange={(e) => {
+                      const d = e.currentTarget?.duration;
+                      if (d && isFinite(d) && d > 0) {
+                        if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+                        if (outputTarget !== 'local') {
+                          castClock.set({ duration: d });
+                        }
+                      }
+                    }}
+                    onSeeked={(e) => {
+                      if (outputTarget !== 'local') {
+                        const sec = e.currentTarget?.currentTime || 0;
+                        const last = lastProgrammaticVideoSeekRef.current;
+                        if (Date.now() - last.time < 4000 && Math.abs(sec - last.target) < 4.0) {
+                          return;
+                        }
+                        handleCastSeek(sec);
+                      }
+                    }}
+                    onPlay={() => {
+                      if (outputTarget === 'local') {
+                        setIsPlaying(true);
+                      } else if (activeCastSession?.isPaused) {
+                        handleToggleCastPause();
+                      }
+                    }}
+                    onPause={() => {
+                      if (outputTarget === 'local') {
+                        setIsPlaying(false);
+                      }
+                    }}
                     onEnded={() => { if (outputTarget === 'local') handleTrackEnded(); }}
                   />
                   <div className="cinema-stage-toolbar">
@@ -1925,7 +1997,7 @@ export default function App() {
                   customProgressBarSection={outputTarget !== 'local'
                     ? [<CastProgress key="cast-progress" className="mini-progress rhap-cast-progress" id="cast-progress" onSeek={handleCastSeek} />]
                     : isVideoTrack(currentTrack)
-                      ? [<MiniProgress key="video-progress" getAudio={() => videoRef.current} />]
+                      ? [<MiniProgress key="video-progress" trackId={currentTrack?.id || currentTrack?.filePath} getAudio={() => videoRef.current} />]
                       : undefined}
                   customControlsSection={(outputTarget !== 'local' || isVideoTrack(currentTrack))
                     ? [
@@ -2497,7 +2569,7 @@ export default function App() {
             </div>
             {outputTarget !== 'local'
               ? <CastProgress onSeek={handleCastSeek} />
-              : <MiniProgress getAudio={getMediaEl} />}
+              : <MiniProgress trackId={currentTrack?.id || currentTrack?.filePath} getAudio={getMediaEl} />}
           </div>
           <div className="mini-player-right">
             <span className="badge mini-badge">Output: {getSpeakerName(outputTarget)}</span>
@@ -2706,47 +2778,90 @@ function CastControls({ onPrev, onToggle, onNext }) {
   );
 }
 
-// Seek bar for the mini player. Subscribes to the audio element itself so the
+// Seek bar for the mini player. Subscribes to the audio/video element itself so the
 // rest of the app doesn't re-render on every timeupdate.
-function MiniProgress({ getAudio }) {
+function MiniProgress({ getAudio, trackId }) {
   const [time, setTime] = useState({ current: 0, duration: 0 });
+  const [dragging, setDragging] = useState(null);
   useEffect(() => {
-    const audio = getAudio();
-    if (!audio) return undefined;
-    const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
-    update();
-    audio.addEventListener('timeupdate', update);
-    audio.addEventListener('durationchange', update);
-    audio.addEventListener('emptied', update);
-    return () => {
-      audio.removeEventListener('timeupdate', update);
-      audio.removeEventListener('durationchange', update);
-      audio.removeEventListener('emptied', update);
+    let attached = null;
+    let pollTimer = null;
+    const update = () => {
+      const el = getAudio();
+      if (!el) return;
+      const d = (isFinite(el.duration) && el.duration > 0) ? el.duration : 0;
+      setTime({ current: el.currentTime || 0, duration: d });
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const attach = () => {
+      const el = getAudio();
+      if (!el || el === attached) return;
+      if (attached) {
+        attached.removeEventListener('timeupdate', update);
+        attached.removeEventListener('durationchange', update);
+        attached.removeEventListener('loadedmetadata', update);
+        attached.removeEventListener('seeked', update);
+        attached.removeEventListener('emptied', update);
+      }
+      attached = el;
+      update();
+      el.addEventListener('timeupdate', update);
+      el.addEventListener('durationchange', update);
+      el.addEventListener('loadedmetadata', update);
+      el.addEventListener('seeked', update);
+      el.addEventListener('emptied', update);
+    };
+    attach();
+    pollTimer = setInterval(() => {
+      attach();
+      update();
+    }, 350);
+    return () => {
+      if (pollTimer) clearInterval(pollTimer);
+      if (attached) {
+        attached.removeEventListener('timeupdate', update);
+        attached.removeEventListener('durationchange', update);
+        attached.removeEventListener('loadedmetadata', update);
+        attached.removeEventListener('seeked', update);
+        attached.removeEventListener('emptied', update);
+      }
+    };
+  }, [getAudio, trackId]);
+
   const fmt = (sec) => {
     if (!sec || !isFinite(sec)) return '0:00';
-    const m = Math.floor(sec / 60);
-    const ss = Math.floor(sec % 60);
+    const total = Math.max(0, Math.floor(sec));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const ss = total % 60;
+    if (h > 0) {
+      return `${h}:${m < 10 ? '0' : ''}${m}:${ss < 10 ? '0' : ''}${ss}`;
+    }
     return `${m}:${ss < 10 ? '0' : ''}${ss}`;
   };
-  const pct = time.duration ? (time.current / time.duration) * 100 : 0;
+  const val = dragging != null ? dragging : time.current;
+  const maxVal = time.duration > 0 ? time.duration : Math.max(val, 1);
+  const pct = maxVal ? (Math.min(val, maxVal) / maxVal) * 100 : 0;
   return (
     <div className="mini-progress">
-      <span>{fmt(time.current)}</span>
+      <span>{fmt(val)}</span>
       <input
         type="range"
         min="0"
-        max={time.duration || 0}
+        max={maxVal}
         step="0.5"
-        value={time.current}
-        disabled={!time.duration}
+        value={Math.min(val, maxVal)}
         style={{ '--pct': `${pct}%` }}
         aria-label="Seek"
         onChange={(e) => {
+          const next = Number(e.target.value);
+          setDragging(next);
+          setTime(prev => ({ ...prev, current: next }));
           const audio = getAudio();
-          if (audio) audio.currentTime = Number(e.target.value);
+          if (audio) audio.currentTime = next;
         }}
+        onMouseUp={() => setDragging(null)}
+        onTouchEnd={() => setDragging(null)}
+        onKeyUp={() => setDragging(null)}
       />
       <span>{fmt(time.duration)}</span>
     </div>

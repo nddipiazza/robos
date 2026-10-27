@@ -131,7 +131,7 @@ const PORT_REGISTRY = {
   'smart-light':       19209,
   'robos-dashboards':  19211,
   'party-game':        19212,
-  'movie-player':      19213,
+  'movie-player':      19214,
 };
 
 
