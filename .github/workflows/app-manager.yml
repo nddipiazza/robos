@@ -61,7 +61,7 @@ jobs:
         working-directory: packages/app-manager
         run: npm install --no-audit --no-fund
       - name: Verify lifecycle, installer boundaries and release assets
-        run: node --test packages/app-manager/test/*.test.cjs
+        run: node --test packages/app-manager/test/*.test.cjs scripts/app-manager/publish-release.test.cjs
       - name: Build platform app manager
         run: node scripts/app-manager/build.cjs
       - name: Smoke test packaged manager
@@ -106,21 +106,7 @@ jobs:
       - name: Verify every platform catalog and archive
         id: release
         run: node scripts/app-manager/stage-release.cjs release/publish
-      - name: Publish verified release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.release.outputs.tag }}
-          target_commitish: ${{ github.sha }}
-          prerelease: ${{ contains(steps.release.outputs.tag, '-') }}
-          make_latest: ${{ !contains(steps.release.outputs.tag, '-') }}
-          name: RobOS ${{ steps.release.outputs.tag }}
-          body: |
-            RobOS App Manager runs on Windows, Ubuntu GNOME and macOS (Intel and Apple Silicon).
-
-            Install or uninstall one app, several selected apps or the entire library in a batch. Apps download separately for your OS and CPU, with shared components downloaded once and native launchers for each app.
-
-            Uninstall all apps keeps App Manager available. Uninstall RobOS removes the manager and its managed library. Personal settings are retained.
-
-            Publication requires the Windows regression suite, core unit tests and all platform builds to pass. SHA256SUMS and release-manifest.json verify the downloads and source revision.
-          files: release/publish/*
-          fail_on_unmatched_files: true
+      - name: Publish verified release with resumable, paced uploads
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/app-manager/publish-release.cjs release/publish

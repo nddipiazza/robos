@@ -1,0 +1,47 @@
+name: Resume verified app release
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Modular RobOS apps run whose build and regression jobs all passed'
+        required: true
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: robos-release-upload
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test publication recovery
+        run: node --test packages/app-manager/test/release*.test.cjs scripts/app-manager/publish-release.test.cjs
+      - name: Require every original build and regression check
+        id: source
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN: ${{ inputs.run_id }}
+        run: node scripts/app-manager/release-source.cjs "$SOURCE_RUN"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.revision }}
+          path: release-source
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: robos-app-manager-*
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release/publish
+          merge-multiple: true
+      - name: Verify the exact tested source and archives
+        run: node release-source/scripts/app-manager/stage-release.cjs release/publish
+      - name: Resume uploads and publish verified release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/app-manager/publish-release.cjs release/publish
