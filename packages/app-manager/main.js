@@ -14,6 +14,8 @@ if (id) {
   require('./lib/app-host.cjs').start(id, locations);
 } else {
   app.setName('robos-app-manager');
+  const profile = path.join(os.homedir(), '.config/robos/electron/app-manager');
+  fs.mkdirSync(profile, { recursive: true }); app.setPath('userData', profile);
   if (!app.requestSingleInstanceLock()) { app.quit(); } else {
     let window, manager;
     const running = new Map();

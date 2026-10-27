@@ -40,6 +40,7 @@ jobs:
       - name: Build individual app downloads
         run: node scripts/app-manager/publish-catalog.cjs
       - name: Upload manager and app downloads
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: robos-app-manager-${{ runner.os }}
