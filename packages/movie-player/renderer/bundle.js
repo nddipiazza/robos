@@ -19181,7 +19181,7 @@
   ];
   var PREFS_KEY = "robos-audio-player.library-prefs.v1";
   var LETTER_SECTION_MIN = 40;
-  var ALBUM_GRID = { minWidth: 162, textHeight: 54, aspectRatio: 1.45 };
+  var ALBUM_GRID = { minWidth: 168, textHeight: 56, aspectRatio: 1 };
   var ARTIST_GRID = { minWidth: 132, textHeight: 46 };
   function loadPrefs() {
     try {

@@ -215,8 +215,9 @@ class CastService {
         return;
       }
 
-      // Handle Album Art requests
+      // Handle Album Art requests (auto-rasterizes SVG to JPEG for Roku SceneGraph <Poster> compatibility)
       if (parsedUrl.pathname.startsWith('/art/')) {
+        const wantJpg = parsedUrl.pathname.endsWith('.jpg') || parsedUrl.pathname.endsWith('.jpeg');
         const artId = parsedUrl.pathname.replace(/^\/art\//, '').replace(/\.[^.]+$/, '');
         const lookup = this.mediaLibrary && typeof this.mediaLibrary.getArtAsync === 'function'
           ? this.mediaLibrary.getArtAsync(artId)
@@ -227,6 +228,50 @@ class CastService {
             art = this.mediaRegistry.get(artId);
           }
           if (art && art.buffer) {
+            if (wantJpg && art.format === 'image/svg+xml' && this.mediaLibrary && this.mediaLibrary.artDir) {
+              const jpgPath = path.join(this.mediaLibrary.artDir, `${artId}.jpg`);
+              const svgPath = path.join(this.mediaLibrary.artDir, `${artId}.svg`);
+              if (fs.existsSync(jpgPath)) {
+                try {
+                  const jpgBuf = fs.readFileSync(jpgPath);
+                  this.mediaLibrary._rememberArt(artId, { buffer: jpgBuf, format: 'image/jpeg' });
+                  res.writeHead(200, {
+                    'Content-Type': 'image/jpeg',
+                    'Content-Length': jpgBuf.length,
+                    'Cache-Control': 'public, max-age=86400',
+                    'Access-Control-Allow-Origin': '*'
+                  });
+                  res.end(jpgBuf);
+                  return;
+                } catch {}
+              } else if (fs.existsSync(svgPath)) {
+                const { execFile } = require('child_process');
+                execFile('ffmpeg', ['-y', '-loglevel', 'error', '-i', svgPath, '-frames:v', '1', '-update', '1', '-q:v', '2', jpgPath], (err) => {
+                  if (!err && fs.existsSync(jpgPath)) {
+                    try {
+                      const jpgBuf = fs.readFileSync(jpgPath);
+                      this.mediaLibrary._rememberArt(artId, { buffer: jpgBuf, format: 'image/jpeg' });
+                      res.writeHead(200, {
+                        'Content-Type': 'image/jpeg',
+                        'Content-Length': jpgBuf.length,
+                        'Cache-Control': 'public, max-age=86400',
+                        'Access-Control-Allow-Origin': '*'
+                      });
+                      res.end(jpgBuf);
+                      return;
+                    } catch {}
+                  }
+                  res.writeHead(200, {
+                    'Content-Type': art.format || 'image/jpeg',
+                    'Content-Length': art.buffer.length,
+                    'Cache-Control': 'public, max-age=86400',
+                    'Access-Control-Allow-Origin': '*'
+                  });
+                  res.end(art.buffer);
+                });
+                return;
+              }
+            }
             res.writeHead(200, {
               'Content-Type': art.format || 'image/jpeg',
               'Content-Length': art.buffer.length,

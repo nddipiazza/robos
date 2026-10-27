@@ -31,7 +31,7 @@ export const LIBRARY_COLLECTIONS = [
 
 const PREFS_KEY = 'robos-audio-player.library-prefs.v1';
 const LETTER_SECTION_MIN = 40;
-const ALBUM_GRID = { minWidth: 162, textHeight: 54, aspectRatio: 1.45 };
+const ALBUM_GRID = { minWidth: 168, textHeight: 56, aspectRatio: 1 };
 const ARTIST_GRID = { minWidth: 132, textHeight: 46 };
 
 function loadPrefs() {
