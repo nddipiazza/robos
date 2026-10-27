@@ -59,7 +59,7 @@ export default function Lyrics({ track, getTime, onSeek }) {
   const stopFollowing = () => { if (follow && synced.length) setFollow(false); };
 
   let body;
-  if (data === null) body = <div className="lyrics-empty">Looking up lyrics...</div>;
+  if (data === null) body = <div className="lyrics-empty">Looking up subtitles & dialogue...</div>;
   else if (synced.length) {
     body = synced.map((l, i) => (
       <div key={i} ref={el => { lineRefs.current[i] = el; }}
@@ -69,20 +69,20 @@ export default function Lyrics({ track, getTime, onSeek }) {
       </div>
     ));
   } else if (data.plain) body = <pre className="lyrics-plain">{data.plain}</pre>;
-  else body = <div className="lyrics-empty">{data.error || 'No synced lyrics found for this track.'}</div>;
+  else body = <div className="lyrics-empty">{data.error || 'No synced subtitles (.srt / .vtt) found for this title.'}</div>;
 
   return (
     <div className={`lyrics-panel ${enabled ? '' : 'off'}`}>
       <div className="lyrics-head">
-        <span><Icon name="mic" size={14} /> Lyrics</span>
+        <span><Icon name="mic" size={14} /> Subtitles & Dialogue</span>
         <span className="lyrics-tools">
-          {enabled && synced.length > 0 && <span className="lyrics-src">Synced{data.source === 'lrclib' ? ' via LRCLIB' : ' from .lrc file'}</span>}
+          {enabled && synced.length > 0 && <span className="lyrics-src">Synced{data.source === 'lrclib' ? ' via OpenSubtitles / LRCLIB' : ' from .srt / .vtt file'}</span>}
           {enabled && synced.length > 0 && (
             <button
               id="btn-lyrics-follow"
               className={`btn-chip lyrics-btn ${follow ? 'on' : ''}`}
               aria-pressed={follow}
-              title={follow ? 'Following the song: the current line stays in view' : 'Follow the song: keep the current line in view'}
+              title={follow ? 'Following playback: the current subtitle line stays in view' : 'Follow playback: keep the current subtitle line in view'}
               onClick={() => { const next = !follow; setFollow(next); if (next) scrollToActive(); }}
             >
               <Icon name="locate" size={12} /> Follow
@@ -92,7 +92,7 @@ export default function Lyrics({ track, getTime, onSeek }) {
             id="btn-lyrics-toggle"
             className={`btn-chip lyrics-btn ${enabled ? 'on' : ''}`}
             aria-pressed={enabled}
-            title={enabled ? 'Turn lyrics off' : 'Turn lyrics on'}
+            title={enabled ? 'Turn subtitles off' : 'Turn subtitles on'}
             onClick={() => setEnabled(!enabled)}
           >
             {enabled ? 'On' : 'Off'}

@@ -14,11 +14,11 @@ const dockMaxWidth = () => Math.max(260, Math.min(900, window.innerWidth - 520))
 const QUEUE_COLUMNS = [
   { key: 'state', width: '28px', fixed: true },
   { key: 'title', label: 'Title', width: 'minmax(0, 1.4fr)', fill: true },
-  { key: 'artist', label: 'Artist', width: 'minmax(0, 1fr)', min: 50 },
-  { key: 'duration', label: 'Time', width: '44px', min: 36 },
+  { key: 'artist', label: 'Format', width: 'minmax(0, 1fr)', min: 50 },
+  { key: 'duration', label: 'Runtime', width: '44px', min: 36 },
 ];
 
-const REPEAT_LABEL = { off: 'Repeat: off', all: 'Repeat: whole queue', one: 'Repeat: current track' };
+const REPEAT_LABEL = { off: 'Repeat: off', all: 'Repeat: whole queue', one: 'Repeat: current title' };
 
 /**
  * Always-visible play queue, modelled on VLC's playlist dock:
@@ -99,10 +99,10 @@ export default function NowPlayingPanel({
 
   if (collapsed) {
     return (
-      <aside className="np-dock collapsed" aria-label="Now Playing">
-        <button id="btn-expand-queue-panel" className="np-rail" title="Show the Now Playing playlist" onClick={onToggleCollapsed}>
+      <aside className="np-dock collapsed" aria-label="Watch Queue">
+        <button id="btn-expand-queue-panel" className="np-rail" title="Show the Watch Queue" onClick={onToggleCollapsed}>
           <Icon name="list" size={16} />
-          <span className="np-rail-label">Now Playing · {queue.length}</span>
+          <span className="np-rail-label">Watch Queue · {queue.length}</span>
         </button>
       </aside>
     );
@@ -245,7 +245,7 @@ export default function NowPlayingPanel({
       <div className="np-head">
         <div className="np-head-title">
           <Icon name="list" size={15} />
-          <span>Now Playing</span>
+          <span>Watch Queue</span>
           <span className="np-count">{queue.length.toLocaleString()}</span>
         </div>
         <button id="btn-collapse-queue-panel" className="btn-icon-only small" title="Hide panel" onClick={onToggleCollapsed}>
@@ -259,7 +259,7 @@ export default function NowPlayingPanel({
           <div className="np-current-text">
             <span className="np-current-title">{current.title}</span>
             <span className="np-current-sub">
-              <a className="link" onClick={() => actions.goToArtist(current.artist)}>{current.artist || 'Unknown Artist'}</a>
+              <a className="link" onClick={() => actions.goToArtist(current.artist)}>{current.artist || 'Feature Film'}</a>
               {current.album ? <> · <a className="link" onClick={() => actions.goToAlbumOf(current)}>{current.album}</a></> : null}
             </span>
           </div>
@@ -270,10 +270,10 @@ export default function NowPlayingPanel({
         <div className="np-dj-banner" role="status">
           <Icon name="mic" size={15} />
           <div className="np-dj-text">
-            <span className="np-dj-label">{dj.speaking.warming ? 'DJ is warming up…' : dj.speaking.preview ? 'DJ preview' : 'DJ on the mic'}</span>
+            <span className="np-dj-label">{dj.speaking.warming ? 'Cinema Host is warming up…' : dj.speaking.preview ? 'Cinema Host preview' : 'Cinema Host on the mic'}</span>
             <span className="np-dj-line">{dj.speaking.text}</span>
           </div>
-          <button id="btn-dj-skip" className="btn-chip" onClick={dj.onSkip} title={dj.speaking.preview ? 'Stop the preview' : 'Skip the DJ and play the next song'}>{dj.speaking.preview ? 'Stop' : 'Skip'}</button>
+          <button id="btn-dj-skip" className="btn-chip" onClick={dj.onSkip} title={dj.speaking.preview ? 'Stop the preview' : 'Skip the host and play the next movie'}>{dj.speaking.preview ? 'Stop' : 'Skip'}</button>
         </div>
       )}
 
@@ -282,7 +282,7 @@ export default function NowPlayingPanel({
         <input
           id="queue-filter"
           type="search"
-          placeholder="Filter playlist…"
+          placeholder="Filter watch queue…"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Escape') setFilter(''); }}
@@ -292,8 +292,8 @@ export default function NowPlayingPanel({
       <div className="np-cols">
         <span className="np-col-state" />
         <button className="np-col-title col-resizable" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}{handleFor('title')}</button>
-        <button className="np-col-artist col-resizable" onClick={() => sortBy('artist')} title="Sort by artist">Artist{sortMark('artist')}{handleFor('artist')}</button>
-        <button className="np-col-dur" onClick={() => sortBy('duration')} title="Sort by duration">Time{sortMark('duration')}</button>
+        <button className="np-col-artist col-resizable" onClick={() => sortBy('artist')} title="Sort by release format">Format{sortMark('artist')}{handleFor('artist')}</button>
+        <button className="np-col-dur" onClick={() => sortBy('duration')} title="Sort by runtime">Runtime{sortMark('duration')}</button>
       </div>
 
       <div
@@ -309,7 +309,7 @@ export default function NowPlayingPanel({
       >
         {rows.length === 0 ? (
           <div className="np-empty">
-            {queue.length ? 'No tracks match the filter.' : 'The queue is empty. Double-click songs in the Library, or drag them here.'}
+            {queue.length ? 'No titles match the filter.' : 'The watch queue is empty. Double-click movies or shows in the Library, or drag them here.'}
           </div>
         ) : (
           <div className="np-spacer" style={{ height: rows.length * ROW_HEIGHT }}>
@@ -347,7 +347,7 @@ export default function NowPlayingPanel({
 
       <div className="np-footer">
         <div className="np-footer-stats">
-          <span>{queue.length.toLocaleString()} tracks · {formatLongDuration(totalDuration)}</span>
+          <span>{queue.length.toLocaleString()} titles · {formatLongDuration(totalDuration)}</span>
           {currentIndex >= 0 && queue.length > 1 && <span>{formatLongDuration(remaining)} left</span>}
         </div>
         <div className="np-footer-actions">

@@ -2228,7 +2228,9 @@ sub init()
     m.cinemaLibHash = ""
     m.cinemaCatIndex = 0
     m.cinemaCategories = [
-        { id: "all", label: "* Featured & All Movies" },
+        { id: "all", label: "* All Movies & Shows" },
+        { id: "movies_only", label: "Movies (Feature Films)" },
+        { id: "tv", label: "TV Shows & Series" },
         { id: "franchises", label: "Franchises & Box Sets" },
         { id: "scifi", label: "Sci-Fi & Fantasy" },
         { id: "action", label: "Action & Adventure" },
@@ -2236,7 +2238,6 @@ sub init()
         { id: "family", label: "Animation & Family" },
         { id: "comedy", label: "Comedy & Romance" },
         { id: "thriller", label: "Thriller & Mystery" },
-        { id: "tv", label: "TV Series & Episodes" },
         { id: "uhd", label: "4K UHD & 1080p BluRay" },
         { id: "new", label: "New Releases (2023-2026)" },
         { id: "classics", label: "Classics (Pre-2010)" }
@@ -2800,6 +2801,8 @@ end function
 function cinemaItemMatchesCat(mv as Object, catId as String) as Boolean
     if catId = "all" or catId = "" then return true
     info = cinemaClassifyItem(mv)
+    if catId = "movies_only" then return (not info.isTv)
+    if catId = "tv" then return info.isTv
     if catId = "franchises" then return (info.franchise <> "")
     if catId = "scifi" then return info.isScifi
     if catId = "action" then return info.isAction
@@ -2807,7 +2810,6 @@ function cinemaItemMatchesCat(mv as Object, catId as String) as Boolean
     if catId = "family" then return info.isFamily
     if catId = "comedy" then return info.isComedy
     if catId = "thriller" then return info.isThriller
-    if catId = "tv" then return info.isTv
     if catId = "uhd" then return info.isUhd
     if catId = "new" then return info.isNew
     if catId = "classics" then return info.isClassic
@@ -4404,15 +4406,16 @@ function createTvEngine({
   <script>
     const ALL_MOVIES = ${itemsJson};
     const CATEGORIES = [
-      { id: 'all', label: '★ Featured & All Movies' },
-      { id: 'franchises', label: '🎬 Franchises & Box Sets' },
+      { id: 'all', label: '★ All Movies & Shows' },
+      { id: 'moviesOnly', label: '🎬 Movies (Feature Films)' },
+      { id: 'tv', label: '📺 TV Shows & Series' },
+      { id: 'franchises', label: '🍿 Franchises & Box Sets' },
       { id: 'scifi', label: '⚡ Sci-Fi & Fantasy' },
       { id: 'action', label: '🔥 Action & Adventure' },
       { id: 'horror', label: '👻 Horror & Supernatural' },
       { id: 'family', label: '🎨 Animation & Family' },
       { id: 'comedy', label: '🎭 Comedy & Romance' },
       { id: 'thriller', label: '🕵️ Thriller & Mystery' },
-      { id: 'tv', label: '📺 TV Series & Episodes' },
       { id: 'uhd', label: '💎 4K UHD & 1080p BluRay' },
       { id: 'new', label: '🆕 New Releases (2023-2026)' },
       { id: 'classics', label: '🎞️ Classics (Pre-2010)' }
@@ -4449,6 +4452,7 @@ function createTvEngine({
     function matchesCat(m, catId) {
       if (catId === 'all') return true;
       const c = classify(m);
+      if (catId === 'moviesOnly') return !c.isTv;
       if (catId === 'franchises') return !!c.franchise;
       return !!c['is' + catId.charAt(0).toUpperCase() + catId.slice(1)];
     }

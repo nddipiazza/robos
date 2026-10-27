@@ -291,6 +291,7 @@ function buildIndex(tracks = []) {
       || (mixedGenres ? mostCommon(list.flatMap(t => splitGenres(t.genre))) : (splitGenres(genre)[0] || null));
     album.franchise = inferMovieFranchise(list[0]);
     album.quality = inferQualityMeta(list[0]);
+    album.isTvShow = inferredGenres.includes('TV Series') || /\bs\d{1,2}\s*e\d{1,2}\b|\bseason\s*\d+\b|\bepisode\s*\d+\b/i.test(`${album.title || ''} ${list[0]?.title || ''}`);
     album.artId = artId;
     album.duration = duration;
     album.discCount = discCount;
@@ -363,9 +364,14 @@ function buildIndex(tracks = []) {
   for (const d of decades) d.start = parseInt(d.name, 10);
   decades.sort((a, b) => b.start - a.start);
 
+  const moviesOnly = albums.filter(a => !a.isTvShow);
+  const tvShows = albums.filter(a => a.isTvShow);
+
   return {
     tracks,
     albums,
+    moviesOnly,
+    tvShows,
     artists,
     genres,
     franchises,

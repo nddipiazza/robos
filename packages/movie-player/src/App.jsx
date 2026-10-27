@@ -49,9 +49,9 @@ const PLAYLIST_SIDEBAR_WIDTH = 270;
 const PLAYLIST_COLUMNS = [
   { key: 'num', width: '36px', fixed: true },
   { key: 'title', label: 'Title', width: 'minmax(0, 3fr)', fill: true },
-  { key: 'artist', label: 'Artist', width: 'minmax(0, 2fr)', min: 60 },
-  { key: 'album', label: 'Album', width: 'minmax(0, 2fr)', min: 60 },
-  { key: 'duration', label: 'Duration', width: '75px', min: 56 },
+  { key: 'artist', label: 'Release Format', width: 'minmax(0, 2fr)', min: 60 },
+  { key: 'album', label: 'Release / Series', width: 'minmax(0, 2fr)', min: 60 },
+  { key: 'duration', label: 'Runtime', width: '75px', min: 56 },
   { key: 'actions', width: '120px', fixed: true },
 ];
 
@@ -73,7 +73,12 @@ export default function App() {
   const [dockCollapsed, setDockCollapsed] = useState(!!playerPrefs.dockCollapsed);
   const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref('playlistSidebarWidth', PLAYLIST_SIDEBAR_WIDTH);
   const playlistColumns = useColumns('playlist', PLAYLIST_COLUMNS);
-  const [libNav, setLibNav] = useState([{ section: playerPrefs.librarySection || 'albums' }]);
+  const [libNav, setLibNav] = useState(() => {
+    const saved = playerPrefs.librarySection;
+    // Default to All Movies & Shows ('albums') so the user opens directly into the Plex/Netflix visual library
+    const initialSection = (!saved || saved === 'songs') ? 'albums' : saved;
+    return [{ section: initialSection }];
+  });
   const [menu, setMenu] = useState(null);
   const [infoTrack, setInfoTrack] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -1738,21 +1743,21 @@ export default function App() {
           className={`tab-btn ${activeTab === 'player' ? 'active' : ''}`}
           onClick={() => setActiveTab('player')}
         >
-          <Icon name="note" /><span>Now Playing</span>
+          <Icon name="tv" /><span>Cinema Stage</span>
         </button>
         <button
           id="tab-btn-playlists"
           className={`tab-btn ${activeTab === 'playlists' ? 'active' : ''}`}
           onClick={() => setActiveTab('playlists')}
         >
-          <Icon name="list" /><span>Playlists ({playlists.length})</span>
+          <Icon name="list" /><span>Watchlists ({playlists.length})</span>
         </button>
         <button
           id="tab-btn-library"
           className={`tab-btn ${activeTab === 'library' ? 'active' : ''}`}
           onClick={() => setActiveTab('library')}
         >
-          <Icon name="library" /><span>Library ({library.tracks.length})</span>
+          <Icon name="library" /><span>Movies &amp; Shows ({library.tracks.length})</span>
         </button>
         <button
           id="tab-btn-cloud"
@@ -1766,7 +1771,7 @@ export default function App() {
           className={`tab-btn ${activeTab === 'ambient' ? 'active' : ''}`}
           onClick={() => setActiveTab('ambient')}
         >
-          <Icon name="wave" /><span>Ambient</span>
+          <Icon name="wave" /><span>Theater Ambience</span>
         </button>
         <button
           id="tab-btn-speakers"
@@ -1780,9 +1785,9 @@ export default function App() {
           id="btn-toggle-queue-panel"
           className={`tab-btn ${dockCollapsed ? '' : 'active'}`}
           onClick={() => setDockCollapsed(c => !c)}
-          title="Show or hide the Now Playing playlist"
+          title="Show or hide the Watch Queue"
         >
-          <Icon name="panel" /><span>Now Playing list</span>
+          <Icon name="panel" /><span>Watch Queue</span>
         </button>
       </nav>
 
@@ -2130,13 +2135,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* TAB: PLAYLISTS */}
+        {/* TAB: WATCHLISTS */}
         {activeTab === 'playlists' && (
           <div className="playlists-view-container">
             <div className="playlists-header">
               <div className="playlists-title-group">
-                <h3>Custom Playlists ({playlists.length})</h3>
-                <p className="subtitle">Curate custom music collections, import/export M3U playlists, and cast directly to speakers</p>
+                <h3>Custom Watchlists ({playlists.length})</h3>
+                <p className="subtitle">Curate custom movie &amp; show watchlists, import/export M3U queues, and cast directly to Smart TVs</p>
               </div>
               <div className="playlists-header-actions">
                 <button
@@ -2144,15 +2149,15 @@ export default function App() {
                   className="btn-accent"
                   onClick={() => setShowCreatePlaylistModal(true)}
                 >
-                  New Playlist
+                  New Watchlist
                 </button>
                 <button
                   id="btn-ai-playlist"
                   className="btn-accent ai-btn"
                   onClick={() => setShowAiPlaylist(true)}
-                  title="Describe a playlist and let your RobOS agent build it"
+                  title="Describe a watchlist or marathon and let your RobOS agent build it"
                 >
-                  ✦ AI Playlist
+                  ✦ AI Watchlist
                 </button>
                 <button
                   id="btn-import-m3u"
@@ -2304,9 +2309,9 @@ export default function App() {
                           <div className="playlist-table-header">
                             <span className="col-num">#</span>
                             <span className="col-title col-resizable">Title{playlistColumns.handleFor('title')}</span>
-                            <span className="col-artist col-resizable">Artist{playlistColumns.handleFor('artist')}</span>
-                            <span className="col-album col-resizable">Album{playlistColumns.handleFor('album')}</span>
-                            <span className="col-duration">Duration</span>
+                            <span className="col-artist col-resizable">Release Format{playlistColumns.handleFor('artist')}</span>
+                            <span className="col-album col-resizable">Release / Series{playlistColumns.handleFor('album')}</span>
+                            <span className="col-duration">Runtime</span>
                             <span className="col-actions">Actions</span>
                           </div>
                           <div className="playlist-table-body">
