@@ -407,11 +407,11 @@ class CastService {
     return `http://${this.hostIp}:${this.streamPort}/media/${id}.mp3`;
   }
 
-  getCloudStreamUrl(trackId, forCast = false) {
+  getCloudStreamUrl(trackId, forCast = false, trackObj = null) {
     const host = forCast ? this.hostIp : '127.0.0.1';
-    const track = this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)
+    const track = trackObj || ((this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks))
       ? this.mediaLibrary.tracks.find(t => t.id === trackId)
-      : null;
+      : null);
     const ext = path.extname(String(track?.filePath || track?.cloud?.remotePath || '')).toLowerCase();
     const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
     return `http://${host}:${this.streamPort}/cloud-stream/${encodeURIComponent(trackId)}.${streamFormat}`;
