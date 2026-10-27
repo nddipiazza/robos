@@ -478,6 +478,8 @@ function classifyCommitType(subject = '') {
   return m[1].toLowerCase();
 }
 
+let _gitCommitsCache = { key: '', expiresAt: 0, payload: null };
+
 /**
  * Collects the N latest Git commit messages from the repository in a structured format
  * ready for the compact, small, readable text list widget.
@@ -485,6 +487,17 @@ function classifyCommitType(subject = '') {
 function collectLatestGitCommits({ repoDir, limit = 10 } = {}) {
   const targetDir = repoDir || findRepoRoot();
   const maxCount = Math.max(1, Math.min(50, Number(limit) || 10));
+  const cacheKey = `${targetDir}::${maxCount}`;
+  const nowMs = Date.now();
+  if (
+    process.env.ROBOS_TEST !== '1' &&
+    process.env.ROBOS_TEST_MODE !== '1' &&
+    _gitCommitsCache.key === cacheKey &&
+    _gitCommitsCache.payload &&
+    nowMs < _gitCommitsCache.expiresAt
+  ) {
+    return _gitCommitsCache.payload;
+  }
   let branch = 'main';
   let repoName = path.basename(targetDir);
 
@@ -537,7 +550,7 @@ function collectLatestGitCommits({ repoDir, limit = 10 } = {}) {
         });
 
       if (commits.length > 0) {
-        return {
+        const resObj = {
           ok: true,
           repoDir: targetDir,
           repoName,
@@ -546,6 +559,8 @@ function collectLatestGitCommits({ repoDir, limit = 10 } = {}) {
           count: commits.length,
           commits,
         };
+        _gitCommitsCache = { key: cacheKey, expiresAt: nowMs + 15000, payload: resObj };
+        return resObj;
       }
     }
   } catch {}
@@ -1890,7 +1905,7 @@ function collectGitHubRepoActivity({
 
   _ghRepoCache = {
     key: cacheKey,
-    expiresAt: nowMs + 20000,
+    expiresAt: nowMs + 120000,
     payload: result,
   };
 

@@ -175,7 +175,10 @@ async function getLyrics(track) {
 
   const cached = cacheFile(track);
   try { return JSON.parse(fs.readFileSync(cached, 'utf8')); } catch {}
-  if (track.duration > MAX_DURATION) return { found: false };
+  const ext = path.extname(String(track.filePath || track.cloud?.remotePath || '')).toLowerCase();
+  const isVideo = ['.mp4', '.mkv', '.webm', '.mov', '.m4v', '.avi', '.ogv', '.ts', '.m2ts', '.mpg', '.mpeg'].includes(ext)
+    || track.genre === 'Movies';
+  if (isVideo || track.duration > MAX_DURATION) return { found: false };
 
   let hit;
   try {

@@ -3586,6 +3586,47 @@ function createTvEngine({
         }
 
         if (u.pathname === '/api/dashboard-cast') {
+          const rokuAppCast = appCastForRequest(req, u, 'roku-os');
+          const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
+            ? { ...state.activeCinemaCast, active: true }
+            : null;
+          const cinemaLibItems = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
+          const cinemaLibrary = {
+            active: Boolean(state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
+            tvIp: state.activeCinemaLibrary?.tvIp || null,
+            tvName: state.activeCinemaLibrary?.tvName || null,
+            server: state.moviePlayerServer || null,
+            items: cinemaLibItems,
+          };
+          const cinemaCastActive = Boolean(activeCinema || cinemaLibrary.active);
+
+          // Fast path: when the TV is playing a movie, in the 10-foot Movie Library, or showing an app cast,
+          // MainScene.brs returns before reading dashboard cards — skip expensive synchronous dashboard widget
+          // resolution (git log, gh api, curl, pactl) so the host app's event loop never freezes!
+          if (cinemaCastActive || rokuAppCast) {
+            const fastBody = JSON.stringify({
+              ok: true,
+              appCastActive: Boolean(rokuAppCast),
+              appCast: rokuAppCast,
+              cinemaCastActive,
+              cinemaCast: activeCinema,
+              cinemaLibrary,
+              cast: state.activeDashboardCast || null,
+              slideshow: null,
+              dashboard: null,
+              allSlideCards: [],
+              keepAliveActive: true,
+              castUrl: `http://${hostIp}:${boundPort}/dashboard`,
+            });
+            res.writeHead(200, {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(fastBody),
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(fastBody);
+            return;
+          }
+
           const dashMod = require('./dashboard-engine');
           const dashEngine = dashMod.createDashboardEngine({ configDir: resolvedConfigDir });
           const ssState = dashEngine.getSlideshowState();
@@ -3608,23 +3649,11 @@ function createTvEngine({
             }
           } catch {}
 
-          const rokuAppCast = appCastForRequest(req, u, 'roku-os');
-          const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
-            ? { ...state.activeCinemaCast, active: true }
-            : null;
-          const cinemaLibItems = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
-          const cinemaLibrary = {
-            active: Boolean(state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
-            tvIp: state.activeCinemaLibrary?.tvIp || null,
-            tvName: state.activeCinemaLibrary?.tvName || null,
-            server: state.moviePlayerServer || null,
-            items: cinemaLibItems,
-          };
           const bodyJson = JSON.stringify({
             ok: true,
             appCastActive: Boolean(rokuAppCast),
             appCast: rokuAppCast,
-            cinemaCastActive: Boolean(activeCinema || cinemaLibrary.active),
+            cinemaCastActive,
             cinemaCast: activeCinema,
             cinemaLibrary,
             cast: state.activeDashboardCast || null,

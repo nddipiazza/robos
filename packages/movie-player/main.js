@@ -33,19 +33,24 @@ function requireShared(...relPaths) {
 }
 
 function ensureFileAccessible(filePath) {
-  if (!filePath || typeof filePath !== 'string') return false;
-  if (fs.existsSync(filePath)) return true;
-  // If it's a GVFS SFTP mount that timed out or disconnected, attempt auto-reconnect via gio mount
+  if (!filePath || typeof filePath !== 'string') return Promise.resolve(false);
+  if (fs.existsSync(filePath)) return Promise.resolve(true);
+  // If it's a GVFS SFTP mount that timed out or disconnected, attempt non-blocking auto-reconnect via gio mount
   const match = filePath.match(/\/run\/user\/\d+\/gvfs\/sftp:host=([^/]+)/);
   if (match) {
     const host = match[1];
-    try {
-      const { execFileSync } = require('child_process');
-      execFileSync('gio', ['mount', `sftp://${host}`], { stdio: 'ignore', timeout: 5000 });
-      return fs.existsSync(filePath);
-    } catch {}
+    return new Promise((resolve) => {
+      try {
+        const proc = spawn('gio', ['mount', `sftp://${host}`], { stdio: 'ignore' });
+        const timer = setTimeout(() => { try { proc.kill(); } catch {} resolve(false); }, 4000);
+        proc.on('error', () => { clearTimeout(timer); resolve(false); });
+        proc.on('close', () => { clearTimeout(timer); resolve(fs.existsSync(filePath)); });
+      } catch {
+        resolve(false);
+      }
+    });
   }
-  return false;
+  return Promise.resolve(false);
 }
 
 // Optional snapshot debug server
@@ -91,6 +96,7 @@ const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
 // and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
 function refreshCloudTrackUrls() {
   if (!castService.streamPort) return;
+  const trackMap = new Map(mediaLibrary.tracks.map(t => [t.id, t]));
   let updated = false;
   for (const track of mediaLibrary.tracks) {
     if (!track.cloud && track.filePath && track.filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
@@ -111,8 +117,10 @@ function refreshCloudTrackUrls() {
       }
     }
     if (track.cloud) {
-      track.cloud.cached = cloud.isTrackCached(track.filePath, track.cloud.size);
-      const nextSrc = castService.getCloudStreamUrl(track.id, false);
+      if (track.cloud.cached === undefined) {
+        track.cloud.cached = cloud.isTrackCached(track.filePath, track.cloud.size);
+      }
+      const nextSrc = castService.getCloudStreamUrl(track.id, false, trackMap.get(track.id));
       if (track.src !== nextSrc) {
         track.src = nextSrc;
         updated = true;
@@ -120,7 +128,7 @@ function refreshCloudTrackUrls() {
     }
   }
   if (updated) {
-    mediaLibrary._saveCache();
+    mediaLibrary._saveCacheSoon();
   }
   castService._saveStreamServerEndpoint();
 }
