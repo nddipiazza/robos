@@ -7,6 +7,7 @@ const path = require('path');
 const os = require('os');
 const net = require('net');
 const { Client, DefaultMediaReceiver } = require('castv2-client');
+const { inferMovieGenres, inferMovieFranchise, inferQualityMeta } = require('./library-index');
 
 const AUDIO_MIME = {
   '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.mkv': 'video/x-matroska', '.webm': 'video/webm',
@@ -369,13 +370,19 @@ class CastService {
         raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => {
           const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
           const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
+          const inferredGenres = inferMovieGenres(t);
+          const franchise = inferMovieFranchise(t) || '';
+          const quality = inferQualityMeta(t);
           return {
             index: idx + 1,
             id: t.id,
             title: String(t.title || 'Untitled Movie').slice(0, 80),
             artist: String(t.artist || 'Feature Film').slice(0, 50),
             album: String(t.album || 'RobOS Cinema').slice(0, 60),
-            genre: String(t.genre || 'Movies').slice(0, 32),
+            genre: String(inferredGenres[0] || t.genre || 'Movies').slice(0, 32),
+            genres: inferredGenres,
+            franchise: String(franchise).slice(0, 48),
+            qualityBadge: String(quality.badge || '1080p HD').slice(0, 28),
             year: t.year || null,
             duration: Number(t.duration) || 0,
             artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',

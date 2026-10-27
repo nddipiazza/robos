@@ -8,6 +8,112 @@ const UNKNOWN_ARTIST = 'Unknown Artist';
 const UNKNOWN_ALBUM = 'Unknown Album';
 const VARIOUS_ARTISTS = 'Various Artists';
 const PLACEHOLDER_ARTISTS = new Set(['unknown artist', 'cloud stream', 'local file', '']);
+const GENERIC_MOVIE_GENRES = new Set(['movies', 'movie', 'video', 'videos', 'film', 'films', 'feature film', 'unknown', '']);
+
+const MOVIE_GENRE_RULES = [
+  {
+    genre: 'TV Series',
+    re: /\b(s\d{1,2}e\d{1,2}|season\s*\d+|episode\s*\d+|atypical|stranger things|breaking bad|mandalorian|the office|friends|game of thrones|house of the dragon|last of us|fallout|arcane|wednesday|boys|invincible|severed|severance)\b/i,
+  },
+  {
+    genre: 'Sci-Fi & Fantasy',
+    re: /\b(dune|harry potter|lord of the rings|fellowship of the ring|two towers|return of the king|hobbit|ex machina|serenity|wicked|wizard of oz|willow|ne zha|star wars|matrix|avatar|interstellar|blade runner|alien|predator|backrooms|arrival|inception|terminator|tron|fantastic beasts|narnia|labyrinth|fifth element|mad max)\b/i,
+  },
+  {
+    genre: 'Action & Adventure',
+    re: /\b(avengers|endgame|infinity war|mortal kombat|resident evil|dune|lord of the rings|fellowship of the ring|two towers|return of the king|harry potter|willow|hunting games|outpost|serenity|ne zha|spider-?man|batman|dark knight|john wick|top gun|mission impossible|gladiator|deadpool|wolverine|iron man|captain america|thor|black panther|jurassic|indiana jones|pirates of the caribbean|fast and furious|bond|007|transformers)\b/i,
+  },
+  {
+    genre: 'Animation & Family',
+    re: /\b(inside out|riley'?s first date|tangled|zootopia|super mario|ne zha|home\b|matilda|cruella|spirited|wizard of oz|wicked|kpop demon hunters|harry potter|toy story|shrek|frozen|moana|encanto|coco|minions|despicable me|kung fu panda|how to train your dragon|finding nemo|finding dory|incredibles|wall-?e|up\b|ratatouille|cars\b|monsters inc|brave|soul|luca|turning red|elemental|wild robot|puss in boots|spider-?verse|sonic|paddington|wonka)\b/i,
+  },
+  {
+    genre: 'Horror & Supernatural',
+    re: /\b(conjuring|annabelle|insidious|scream|paranormal activity|the nun|nun ii|final destination|friday the 13th|halloween|terrifier|babadook|malignant|it follows|smile|orphan|lights out|five nights at freddy|fnaf|jennifer'?s body|megan is missing|backrooms|other mommy|hokum|beetlejuice|exorcist|hereditary|midsommar|nosferatu|evil dead|saw\b|chucky|candyman|sinister|quiet place|us\b|get out|nope|talk to me|longlegs|witch|lighthouse)\b/i,
+  },
+  {
+    genre: 'Comedy & Romance',
+    re: /\b(scary movie|anyone but you|ticket to paradise|four rooms|beetlejuice|buddy|spirited|men up|heist before christmas|cruella|matilda|atypical|jennifer'?s body|riley'?s first date|deadpool|barbie|superbad|hangover|mean girls|bridesmaids|knives out|grand budapest|palm springs|crazy rich asians|la la land|clueless|legally blonde|ghostbusters|shaun of the dead|hot fuzz|step brothers|anchorman|tropic thunder)\b/i,
+  },
+  {
+    genre: 'Thriller & Mystery',
+    re: /\b(ready or not|missing|housemaid|obsession|passenger|megan is missing|orphan|scream|final destination|ex machina|it follows|malignant|hunting games|outpost|gone girl|shutter island|se7en|zodiac|prisoners|nightcrawler|parasite|knives out|glass onion|sixth sense|split|unbreakable|black swan|donnie darko|memento|prestige|departed|sicario)\b/i,
+  },
+];
+
+const FRANCHISE_RULES = [
+  { name: 'Harry Potter Wizarding World', re: /\b(harry potter|fantastic beasts|hogwarts)\b/i },
+  { name: 'The Lord of the Rings', re: /\b(lord of the rings|fellowship of the ring|two towers|return of the king|hobbit)\b/i },
+  { name: 'The Conjuring Universe', re: /\b(the conjuring|conjuring|annabelle|the nun|nun ii)\b/i },
+  { name: 'Insidious Collection', re: /\binsidious\b/i },
+  { name: 'Scream Collection', re: /\bscream\b/i },
+  { name: 'Final Destination Collection', re: /\bfinal destination\b/i },
+  { name: 'Paranormal Activity Collection', re: /\bparanormal activity\b/i },
+  { name: 'Marvel & Avengers', re: /\b(avengers|iron man|captain america|thor|spider-?man|black panther|guardians of the galaxy|deadpool)\b/i },
+  { name: 'Mortal Kombat Collection', re: /\bmortal kombat\b/i },
+  { name: 'Scary Movie Collection', re: /\bscary movie\b/i },
+  { name: 'Wicked & Wizard of Oz', re: /\b(wicked|wizard of oz)\b/i },
+  { name: 'Resident Evil Collection', re: /\bresident evil\b/i },
+  { name: "Five Nights at Freddy's", re: /\b(five nights at freddy|fnaf)\b/i },
+  { name: 'Ne Zha Collection', re: /\bne zha\b/i },
+  { name: 'Halloween Collection', re: /\bhalloween\b/i },
+  { name: 'Orphan Collection', re: /\borphan\b/i },
+  { name: 'Inside Out Collection', re: /\b(inside out|riley'?s first date)\b/i },
+  { name: 'Atypical (Series)', re: /\batypical\b/i },
+];
+
+function inferMovieGenres(track) {
+  if (!track) return [];
+  const explicit = splitGenres(track.genre).filter(g => !GENERIC_MOVIE_GENRES.has(fold(g)));
+  const hay = `${track.title || ''} ${track.album || ''}`;
+  const matched = [...explicit];
+  const seen = new Set(matched.map(fold));
+  for (const rule of MOVIE_GENRE_RULES) {
+    if (rule.re.test(hay) && !seen.has(fold(rule.genre))) {
+      seen.add(fold(rule.genre));
+      matched.push(rule.genre);
+    }
+  }
+  if (!matched.length) {
+    if (explicit.length) return explicit;
+    const rawGenres = splitGenres(track.genre);
+    if (rawGenres.length && !GENERIC_MOVIE_GENRES.has(fold(rawGenres[0]))) return rawGenres;
+    return ['Drama & Cinema'];
+  }
+  return matched;
+}
+
+function inferMovieFranchise(track) {
+  if (!track) return null;
+  const hay = `${track.title || ''} ${track.album || ''}`;
+  for (const rule of FRANCHISE_RULES) {
+    if (rule.re.test(hay)) return rule.name;
+  }
+  return null;
+}
+
+function inferQualityMeta(track) {
+  if (!track) return { resolution: 'HD', source: null, container: null, badge: 'HD' };
+  const hay = `${track.artist || ''} ${track.album || ''} ${track.filePath || ''} ${track.codec || ''}`;
+  let resolution = null;
+  if (/\b(2160p|4k|uhd)\b/i.test(hay)) resolution = '4K UHD';
+  else if (/\b1080p\b/i.test(hay)) resolution = '1080p';
+  else if (/\b720p\b/i.test(hay)) resolution = '720p';
+  else if (/\b480p\b/i.test(hay)) resolution = '480p';
+
+  let source = null;
+  if (/\b(blu-?ray|brrip|bdrip)\b/i.test(hay)) source = 'BluRay';
+  else if (/\b(web-?dl|webrip|web)\b/i.test(hay)) source = 'WEB-DL';
+  else if (/\bhdrip\b/i.test(hay)) source = 'HDRip';
+  else if (/\bdvdrip\b/i.test(hay)) source = 'DVDRip';
+
+  let container = null;
+  if (/\.mkv(\?|$)/i.test(hay)) container = 'MKV';
+  else if (/\.mp4(\?|$)/i.test(hay)) container = 'MP4';
+
+  const badge = [resolution, source].filter(Boolean).join(' · ') || resolution || source || container || 'Cinema';
+  return { resolution, source, container, badge };
+}
 
 // Artist, album and genre strings repeat thousands of times in a big library, so
 // the (slow) Unicode normalisation is cached per distinct string.
@@ -179,7 +285,12 @@ function buildIndex(tracks = []) {
     album.artistKey = fold(album.artist);
     album.isCompilation = album.artist === VARIOUS_ARTISTS;
     album.year = year;
-    album.genre = mixedGenres ? mostCommon(list.flatMap(t => splitGenres(t.genre))) : (splitGenres(genre)[0] || null);
+    const inferredGenres = topValues(list.flatMap(t => inferMovieGenres(t)), 3);
+    album.genres = inferredGenres;
+    album.genre = inferredGenres[0]
+      || (mixedGenres ? mostCommon(list.flatMap(t => splitGenres(t.genre))) : (splitGenres(genre)[0] || null));
+    album.franchise = inferMovieFranchise(list[0]);
+    album.quality = inferQualityMeta(list[0]);
     album.artId = artId;
     album.duration = duration;
     album.discCount = discCount;
@@ -238,7 +349,15 @@ function buildIndex(tracks = []) {
   artists.sort((a, b) => (a.isPlaceholder - b.isPlaceholder) || compareNames(a.name, b.name));
   const artistByKey = new Map(artists.map(a => [a.key, a]));
 
-  const genres = groupBy(tracks, t => splitGenres(t.genre), albumOfTrack);
+  const genres = groupBy(tracks, t => inferMovieGenres(t), albumOfTrack);
+  const franchises = groupBy(tracks, t => {
+    const f = inferMovieFranchise(t);
+    return f ? [f] : [];
+  }, albumOfTrack);
+  for (const f of franchises) {
+    f.albums.sort((a, b) => (a.year || 9999) - (b.year || 9999) || compareNames(a.title, b.title));
+  }
+  franchises.sort((a, b) => b.albums.length - a.albums.length || compareNames(a.name, b.name));
   const composers = groupBy(tracks, t => (t.composer ? [t.composer] : []), albumOfTrack);
   const decades = groupBy(tracks, t => (t.year ? [`${Math.floor(t.year / 10) * 10}s`] : []), albumOfTrack);
   for (const d of decades) d.start = parseInt(d.name, 10);
@@ -249,11 +368,13 @@ function buildIndex(tracks = []) {
     albums,
     artists,
     genres,
+    franchises,
     decades,
     composers,
     albumByKey,
     artistByKey,
     genreByKey: new Map(genres.map(g => [g.key, g])),
+    franchiseByKey: new Map(franchises.map(f => [f.key, f])),
     decadeByKey: new Map(decades.map(d => [d.key, d])),
     composerByKey: new Map(composers.map(c => [c.key, c])),
     albumOfTrack,
@@ -313,7 +434,17 @@ function cachedHaystack(item, text) {
 function trackHaystack(t) {
   let hay = haystackCache.get(t);
   if (hay === undefined) {
-    hay = fold([t.title, t.artist, t.albumArtist, t.album, t.genre, t.composer, t.year].filter(Boolean).join(' '));
+    hay = fold([
+      t.title,
+      t.artist,
+      t.albumArtist,
+      t.album,
+      t.genre,
+      ...inferMovieGenres(t),
+      inferMovieFranchise(t),
+      t.composer,
+      t.year,
+    ].filter(Boolean).join(' '));
     haystackCache.set(t, hay);
   }
   return hay;
@@ -457,6 +588,9 @@ module.exports = {
   compareNames,
   indexLetter,
   splitGenres,
+  inferMovieGenres,
+  inferMovieFranchise,
+  inferQualityMeta,
   albumKeyOf,
   buildIndex,
   searchIndex,

@@ -14539,6 +14539,104 @@
       var UNKNOWN_ALBUM = "Unknown Album";
       var VARIOUS_ARTISTS2 = "Various Artists";
       var PLACEHOLDER_ARTISTS = /* @__PURE__ */ new Set(["unknown artist", "cloud stream", "local file", ""]);
+      var GENERIC_MOVIE_GENRES = /* @__PURE__ */ new Set(["movies", "movie", "video", "videos", "film", "films", "feature film", "unknown", ""]);
+      var MOVIE_GENRE_RULES = [
+        {
+          genre: "TV Series",
+          re: /\b(s\d{1,2}e\d{1,2}|season\s*\d+|episode\s*\d+|atypical|stranger things|breaking bad|mandalorian|the office|friends|game of thrones|house of the dragon|last of us|fallout|arcane|wednesday|boys|invincible|severed|severance)\b/i
+        },
+        {
+          genre: "Sci-Fi & Fantasy",
+          re: /\b(dune|harry potter|lord of the rings|fellowship of the ring|two towers|return of the king|hobbit|ex machina|serenity|wicked|wizard of oz|willow|ne zha|star wars|matrix|avatar|interstellar|blade runner|alien|predator|backrooms|arrival|inception|terminator|tron|fantastic beasts|narnia|labyrinth|fifth element|mad max)\b/i
+        },
+        {
+          genre: "Action & Adventure",
+          re: /\b(avengers|endgame|infinity war|mortal kombat|resident evil|dune|lord of the rings|fellowship of the ring|two towers|return of the king|harry potter|willow|hunting games|outpost|serenity|ne zha|spider-?man|batman|dark knight|john wick|top gun|mission impossible|gladiator|deadpool|wolverine|iron man|captain america|thor|black panther|jurassic|indiana jones|pirates of the caribbean|fast and furious|bond|007|transformers)\b/i
+        },
+        {
+          genre: "Animation & Family",
+          re: /\b(inside out|riley'?s first date|tangled|zootopia|super mario|ne zha|home\b|matilda|cruella|spirited|wizard of oz|wicked|kpop demon hunters|harry potter|toy story|shrek|frozen|moana|encanto|coco|minions|despicable me|kung fu panda|how to train your dragon|finding nemo|finding dory|incredibles|wall-?e|up\b|ratatouille|cars\b|monsters inc|brave|soul|luca|turning red|elemental|wild robot|puss in boots|spider-?verse|sonic|paddington|wonka)\b/i
+        },
+        {
+          genre: "Horror & Supernatural",
+          re: /\b(conjuring|annabelle|insidious|scream|paranormal activity|the nun|nun ii|final destination|friday the 13th|halloween|terrifier|babadook|malignant|it follows|smile|orphan|lights out|five nights at freddy|fnaf|jennifer'?s body|megan is missing|backrooms|other mommy|hokum|beetlejuice|exorcist|hereditary|midsommar|nosferatu|evil dead|saw\b|chucky|candyman|sinister|quiet place|us\b|get out|nope|talk to me|longlegs|witch|lighthouse)\b/i
+        },
+        {
+          genre: "Comedy & Romance",
+          re: /\b(scary movie|anyone but you|ticket to paradise|four rooms|beetlejuice|buddy|spirited|men up|heist before christmas|cruella|matilda|atypical|jennifer'?s body|riley'?s first date|deadpool|barbie|superbad|hangover|mean girls|bridesmaids|knives out|grand budapest|palm springs|crazy rich asians|la la land|clueless|legally blonde|ghostbusters|shaun of the dead|hot fuzz|step brothers|anchorman|tropic thunder)\b/i
+        },
+        {
+          genre: "Thriller & Mystery",
+          re: /\b(ready or not|missing|housemaid|obsession|passenger|megan is missing|orphan|scream|final destination|ex machina|it follows|malignant|hunting games|outpost|gone girl|shutter island|se7en|zodiac|prisoners|nightcrawler|parasite|knives out|glass onion|sixth sense|split|unbreakable|black swan|donnie darko|memento|prestige|departed|sicario)\b/i
+        }
+      ];
+      var FRANCHISE_RULES = [
+        { name: "Harry Potter Wizarding World", re: /\b(harry potter|fantastic beasts|hogwarts)\b/i },
+        { name: "The Lord of the Rings", re: /\b(lord of the rings|fellowship of the ring|two towers|return of the king|hobbit)\b/i },
+        { name: "The Conjuring Universe", re: /\b(the conjuring|conjuring|annabelle|the nun|nun ii)\b/i },
+        { name: "Insidious Collection", re: /\binsidious\b/i },
+        { name: "Scream Collection", re: /\bscream\b/i },
+        { name: "Final Destination Collection", re: /\bfinal destination\b/i },
+        { name: "Paranormal Activity Collection", re: /\bparanormal activity\b/i },
+        { name: "Marvel & Avengers", re: /\b(avengers|iron man|captain america|thor|spider-?man|black panther|guardians of the galaxy|deadpool)\b/i },
+        { name: "Mortal Kombat Collection", re: /\bmortal kombat\b/i },
+        { name: "Scary Movie Collection", re: /\bscary movie\b/i },
+        { name: "Wicked & Wizard of Oz", re: /\b(wicked|wizard of oz)\b/i },
+        { name: "Resident Evil Collection", re: /\bresident evil\b/i },
+        { name: "Five Nights at Freddy's", re: /\b(five nights at freddy|fnaf)\b/i },
+        { name: "Ne Zha Collection", re: /\bne zha\b/i },
+        { name: "Halloween Collection", re: /\bhalloween\b/i },
+        { name: "Orphan Collection", re: /\borphan\b/i },
+        { name: "Inside Out Collection", re: /\b(inside out|riley'?s first date)\b/i },
+        { name: "Atypical (Series)", re: /\batypical\b/i }
+      ];
+      function inferMovieGenres(track) {
+        if (!track) return [];
+        const explicit = splitGenres2(track.genre).filter((g) => !GENERIC_MOVIE_GENRES.has(fold4(g)));
+        const hay = `${track.title || ""} ${track.album || ""}`;
+        const matched = [...explicit];
+        const seen = new Set(matched.map(fold4));
+        for (const rule of MOVIE_GENRE_RULES) {
+          if (rule.re.test(hay) && !seen.has(fold4(rule.genre))) {
+            seen.add(fold4(rule.genre));
+            matched.push(rule.genre);
+          }
+        }
+        if (!matched.length) {
+          if (explicit.length) return explicit;
+          const rawGenres = splitGenres2(track.genre);
+          if (rawGenres.length && !GENERIC_MOVIE_GENRES.has(fold4(rawGenres[0]))) return rawGenres;
+          return ["Drama & Cinema"];
+        }
+        return matched;
+      }
+      function inferMovieFranchise(track) {
+        if (!track) return null;
+        const hay = `${track.title || ""} ${track.album || ""}`;
+        for (const rule of FRANCHISE_RULES) {
+          if (rule.re.test(hay)) return rule.name;
+        }
+        return null;
+      }
+      function inferQualityMeta(track) {
+        if (!track) return { resolution: "HD", source: null, container: null, badge: "HD" };
+        const hay = `${track.artist || ""} ${track.album || ""} ${track.filePath || ""} ${track.codec || ""}`;
+        let resolution = null;
+        if (/\b(2160p|4k|uhd)\b/i.test(hay)) resolution = "4K UHD";
+        else if (/\b1080p\b/i.test(hay)) resolution = "1080p";
+        else if (/\b720p\b/i.test(hay)) resolution = "720p";
+        else if (/\b480p\b/i.test(hay)) resolution = "480p";
+        let source = null;
+        if (/\b(blu-?ray|brrip|bdrip)\b/i.test(hay)) source = "BluRay";
+        else if (/\b(web-?dl|webrip|web)\b/i.test(hay)) source = "WEB-DL";
+        else if (/\bhdrip\b/i.test(hay)) source = "HDRip";
+        else if (/\bdvdrip\b/i.test(hay)) source = "DVDRip";
+        let container2 = null;
+        if (/\.mkv(\?|$)/i.test(hay)) container2 = "MKV";
+        else if (/\.mp4(\?|$)/i.test(hay)) container2 = "MP4";
+        const badge = [resolution, source].filter(Boolean).join(" \xB7 ") || resolution || source || container2 || "Cinema";
+        return { resolution, source, container: container2, badge };
+      }
       var foldCache = /* @__PURE__ */ new Map();
       var FOLD_CACHE_LIMIT = 3e5;
       function fold4(value) {
@@ -14676,7 +14774,11 @@
           album.artistKey = fold4(album.artist);
           album.isCompilation = album.artist === VARIOUS_ARTISTS2;
           album.year = year;
-          album.genre = mixedGenres ? mostCommon(list.flatMap((t) => splitGenres2(t.genre))) : splitGenres2(genre)[0] || null;
+          const inferredGenres = topValues(list.flatMap((t) => inferMovieGenres(t)), 3);
+          album.genres = inferredGenres;
+          album.genre = inferredGenres[0] || (mixedGenres ? mostCommon(list.flatMap((t) => splitGenres2(t.genre))) : splitGenres2(genre)[0] || null);
+          album.franchise = inferMovieFranchise(list[0]);
+          album.quality = inferQualityMeta(list[0]);
           album.artId = artId;
           album.duration = duration;
           album.discCount = discCount;
@@ -14728,7 +14830,15 @@
         }
         artists.sort((a, b) => a.isPlaceholder - b.isPlaceholder || compareNames(a.name, b.name));
         const artistByKey = new Map(artists.map((a) => [a.key, a]));
-        const genres = groupBy(tracks, (t) => splitGenres2(t.genre), albumOfTrack);
+        const genres = groupBy(tracks, (t) => inferMovieGenres(t), albumOfTrack);
+        const franchises = groupBy(tracks, (t) => {
+          const f = inferMovieFranchise(t);
+          return f ? [f] : [];
+        }, albumOfTrack);
+        for (const f of franchises) {
+          f.albums.sort((a, b) => (a.year || 9999) - (b.year || 9999) || compareNames(a.title, b.title));
+        }
+        franchises.sort((a, b) => b.albums.length - a.albums.length || compareNames(a.name, b.name));
         const composers = groupBy(tracks, (t) => t.composer ? [t.composer] : [], albumOfTrack);
         const decades = groupBy(tracks, (t) => t.year ? [`${Math.floor(t.year / 10) * 10}s`] : [], albumOfTrack);
         for (const d of decades) d.start = parseInt(d.name, 10);
@@ -14738,11 +14848,13 @@
           albums,
           artists,
           genres,
+          franchises,
           decades,
           composers,
           albumByKey,
           artistByKey,
           genreByKey: new Map(genres.map((g) => [g.key, g])),
+          franchiseByKey: new Map(franchises.map((f) => [f.key, f])),
           decadeByKey: new Map(decades.map((d) => [d.key, d])),
           composerByKey: new Map(composers.map((c) => [c.key, c])),
           albumOfTrack,
@@ -14798,7 +14910,17 @@
       function trackHaystack(t) {
         let hay = haystackCache.get(t);
         if (hay === void 0) {
-          hay = fold4([t.title, t.artist, t.albumArtist, t.album, t.genre, t.composer, t.year].filter(Boolean).join(" "));
+          hay = fold4([
+            t.title,
+            t.artist,
+            t.albumArtist,
+            t.album,
+            t.genre,
+            ...inferMovieGenres(t),
+            inferMovieFranchise(t),
+            t.composer,
+            t.year
+          ].filter(Boolean).join(" "));
           haystackCache.set(t, hay);
         }
         return hay;
@@ -14912,6 +15034,9 @@
         compareNames,
         indexLetter: indexLetter2,
         splitGenres: splitGenres2,
+        inferMovieGenres,
+        inferMovieFranchise,
+        inferQualityMeta,
         albumKeyOf: albumKeyOf2,
         buildIndex: buildIndex2,
         searchIndex: searchIndex2,
@@ -18552,7 +18677,7 @@
       if (!virtual) return null;
       const cols = Math.max(1, Math.floor((width + opts.gapX) / (opts.minWidth + opts.gapX)));
       const cardWidth = (width - opts.gapX * (cols - 1)) / cols;
-      const rowHeight = (opts.itemHeight || cardWidth + opts.textHeight) + opts.gapY;
+      const rowHeight = (opts.itemHeight || cardWidth * (opts.aspectRatio || 1) + opts.textHeight) + opts.gapY;
       const rows = [];
       const letterTops = [];
       let top = 0;
@@ -19041,22 +19166,22 @@
   var import_library_index2 = __toESM(require_library_index());
   var NAV_WIDTH = 196;
   var LIBRARY_SECTIONS = [
-    { id: "albums", label: "Movies", icon: "disc" },
-    { id: "artists", label: "Releases & Formats", icon: "artist" },
-    { id: "songs", label: "All Titles", icon: "note" },
-    { id: "genres", label: "Genres", icon: "tag" },
+    { id: "albums", label: "All Movies", icon: "disc" },
+    { id: "franchises", label: "Collections & Box Sets", icon: "grid" },
+    { id: "genres", label: "Genres & Categories", icon: "tag" },
+    { id: "artists", label: "Releases & Formats", icon: "tv" },
     { id: "decades", label: "Decades", icon: "calendar" },
-    { id: "composers", label: "Directors", icon: "pen" }
+    { id: "songs", label: "Title List", icon: "list" }
   ];
   var LIBRARY_COLLECTIONS = [
-    { id: "loved", label: "Loved", icon: "heart" },
+    { id: "loved", label: "My Watchlist", icon: "heart" },
     { id: "recent", label: "Recently Added", icon: "clock" },
-    { id: "history", label: "Recently Played", icon: "history" },
-    { id: "top", label: "Most Played", icon: "chart" }
+    { id: "history", label: "Continue Watching", icon: "history" },
+    { id: "top", label: "Most Watched", icon: "chart" }
   ];
   var PREFS_KEY = "robos-audio-player.library-prefs.v1";
   var LETTER_SECTION_MIN = 40;
-  var ALBUM_GRID = { minWidth: 150, textHeight: 46 };
+  var ALBUM_GRID = { minWidth: 162, textHeight: 54, aspectRatio: 1.45 };
   var ARTIST_GRID = { minWidth: 132, textHeight: 46 };
   function loadPrefs() {
     try {
@@ -19120,6 +19245,7 @@
     const detail = nav.detail || null;
     const counts = (0, import_react16.useMemo)(() => ({
       albums: index.albums.length,
+      franchises: (index.franchises || []).length,
       artists: index.artists.filter((a) => !a.isPlaceholder).length,
       songs: index.tracks.length,
       genres: index.genres.length,
@@ -19238,7 +19364,7 @@
   function titleFor(nav, index) {
     if (nav.detail) {
       const { type, key } = nav.detail;
-      const map = { album: index.albumByKey, artist: index.artistByKey, genre: index.genreByKey, decade: index.decadeByKey, composer: index.composerByKey }[type];
+      const map = { album: index.albumByKey, artist: index.artistByKey, genre: index.genreByKey, franchise: index.franchiseByKey, decade: index.decadeByKey, composer: index.composerByKey }[type];
       const item = map && map.get(key);
       return item ? item.title || item.name : "Library";
     }
@@ -19246,7 +19372,7 @@
     return (all.find((s) => s.id === (nav.section || "albums")) || {}).label || "Library";
   }
   function EmptyLibrary({ onAddFolder, onAddFiles, onCloud, isScanning }) {
-    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "library", size: 40 }), /* @__PURE__ */ import_react16.default.createElement("h3", null, isScanning ? "Indexing your music\u2026" : "Your library is empty"), /* @__PURE__ */ import_react16.default.createElement("p", null, "Add a music folder from this computer, link a cloud folder, or drag & drop folders and files anywhere in this window."), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-accent", onClick: onAddFolder }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "folder", size: 14 }), " Add folder"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onAddFiles }, "Add files"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onCloud }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cloud", size: 14 }), " Cloud storage")));
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "library", size: 40 }), /* @__PURE__ */ import_react16.default.createElement("h3", null, isScanning ? "Indexing your movie library\u2026" : "Your cinema library is empty"), /* @__PURE__ */ import_react16.default.createElement("p", null, "Add a movie folder from this computer, link a cloud/SFTP folder, or drag & drop video files anywhere in this window."), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-accent", onClick: onAddFolder }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "folder", size: 14 }), " Add folder"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onAddFiles }, "Add files"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onCloud }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cloud", size: 14 }), " Cloud storage")));
   }
   function SortSelect({ value, options, onChange, id }) {
     return /* @__PURE__ */ import_react16.default.createElement("label", { className: "lib-sort" }, /* @__PURE__ */ import_react16.default.createElement("span", null, "Sort"), /* @__PURE__ */ import_react16.default.createElement("select", { id, className: "lib-select", value, onChange: (e) => onChange(e.target.value) }, options.map(([v, label]) => /* @__PURE__ */ import_react16.default.createElement("option", { key: v, value: v }, label))));
@@ -19259,6 +19385,8 @@
     switch (section) {
       case "albums":
         return /* @__PURE__ */ import_react16.default.createElement(AlbumsSection, { ...props });
+      case "franchises":
+        return /* @__PURE__ */ import_react16.default.createElement(FranchisesSection, { ...props });
       case "artists":
         return /* @__PURE__ */ import_react16.default.createElement(ArtistsSection, { ...props });
       case "songs":
@@ -19288,11 +19416,59 @@
   var albumLetter = (a) => (0, import_library_index2.indexLetter)(a.title);
   var albumArtistLetter = (a) => (0, import_library_index2.indexLetter)(a.artist);
   var artistLetter = (a) => a.isPlaceholder ? "?" : (0, import_library_index2.indexLetter)(a.name);
+  function CinemaHeroSpotlight({ albums, go }) {
+    const ctx = useLibrary();
+    const [spotIdx, setSpotIdx] = (0, import_react16.useState)(0);
+    const featured = (0, import_react16.useMemo)(() => {
+      const withYear = albums.filter((a) => a.year >= 2e3 || a.franchise);
+      return (withYear.length ? withYear : albums).slice(0, 8);
+    }, [albums]);
+    if (!featured.length) return null;
+    const movie = featured[spotIdx % featured.length] || featured[0];
+    const qualBadge = movie.quality?.badge || movie.artist || "1080p HD";
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-billboard" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-poster", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: movie.artId, name: movie.title }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-top" }, qualBadge)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-info" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-eyebrow-row" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-spotlight-pill" }, "ROBOS CINEMA+ SPOTLIGHT"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-hero-collection" }, movie.franchise || movie.genre || "Feature Film")), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "cinema-hero-title", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, movie.title), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-badges" }, movie.year && /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill gold" }, movie.year), /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill cyan" }, qualBadge), (movie.genres || [movie.genre]).filter(Boolean).map((g) => /* @__PURE__ */ import_react16.default.createElement("span", { key: g, className: "cinema-meta-pill purple", onClick: () => ctx.actions.goToGenre(g) }, g))), /* @__PURE__ */ import_react16.default.createElement("p", { className: "cinema-hero-desc" }, movie.franchise ? `Part of the ${movie.franchise} collection. ` : "", "Instant HTTP 206 byte-range streaming to desktop or 10-foot Smart TV with zero-cloud LAN cast."), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-cinema-play", onClick: () => ctx.actions.playTracks(movie.tracks, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 14 }), " Watch Now"), ctx.actions.hasSpeakers && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => ctx.actions.castTracks(movie.tracks) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cast", size: 14 }), " Cast to TV"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "info", size: 14 }), " Details"), featured.length > 1 && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => setSpotIdx((spotIdx + 1) % featured.length), title: "Next Featured Movie" }, "Next Spotlight \u25B8"))));
+  }
   function AlbumsSection({ index, go, prefs, setPref }) {
     const sortKey = prefs.albumSort || "title";
-    const albums = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.albums, sortKey), [index, sortKey]);
-    const lettered = (sortKey === "title" || sortKey === "artist") && albums.length >= LETTER_SECTION_MIN;
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(albums.length, "album"), tracks: index.tracks }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "album-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title"], ["artist", "Artist"], ["year", "Year (newest)"], ["addedAt", "Recently added"], ["tracks", "Most tracks"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
+    const activeGenre = prefs.categoryFilter || "all";
+    const filteredAlbums = (0, import_react16.useMemo)(() => {
+      const base = (0, import_library_index2.sortAlbums)(index.albums, sortKey);
+      if (activeGenre === "all") return base;
+      if (activeGenre === "__franchises__") return base.filter((a) => !!a.franchise);
+      return base.filter((a) => (a.genres || [a.genre]).some((g) => (0, import_library_index2.fold)(g) === activeGenre));
+    }, [index, sortKey, activeGenre]);
+    const lettered = activeGenre === "all" && (sortKey === "title" || sortKey === "artist") && filteredAlbums.length >= LETTER_SECTION_MIN;
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(CinemaHeroSpotlight, { albums: index.albums, go }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-category-bar", role: "tablist", "aria-label": "Movie Categories" }, /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        className: `cinema-cat-chip ${activeGenre === "all" ? "active" : ""}`,
+        onClick: () => setPref("categoryFilter", "all")
+      },
+      "\u2605 All Movies ",
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, index.albums.length)
+    ), (index.franchises || []).length > 0 && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        className: `cinema-cat-chip ${activeGenre === "__franchises__" ? "active" : ""}`,
+        onClick: () => setPref("categoryFilter", "__franchises__")
+      },
+      "\u{1F3AC} Franchises & Box Sets ",
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, index.franchises.length)
+    ), index.genres.map((g) => /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        key: g.key,
+        className: `cinema-cat-chip ${activeGenre === g.key ? "active" : ""}`,
+        onClick: () => setPref("categoryFilter", g.key)
+      },
+      g.name,
+      " ",
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, g.albums.length)
+    ))), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(filteredAlbums.length, "movie"), tracks: filteredAlbums.flatMap((a) => a.tracks) }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "album-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"], ["artist", "Quality / Format"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: filteredAlbums, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
+  }
+  function FranchisesSection({ index, go }) {
+    const franchises = index.franchises || [];
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(franchises.length, "collection")} \xB7 Multi-movie box sets & series` }), franchises.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: franchises, type: "franchise", go, big: true }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No multi-movie franchises detected yet."));
   }
   function ArtistsSection({ index, go, prefs, setPref, stats }) {
     const sortKey = prefs.artistSort || "name";
@@ -19378,26 +19554,24 @@
   function AlbumCard({ album, go, showArtist }) {
     const ctx = useLibrary();
     const open = () => go({ section: "albums", detail: { type: "album", key: album.key } });
+    const qualBadge = album.quality?.resolution || album.quality?.badge || null;
     return /* @__PURE__ */ import_react16.default.createElement(
       "div",
       {
-        className: "media-card album-card",
+        className: "media-card album-card movie-poster-card",
         onClick: open,
         onContextMenu: (e) => {
           e.preventDefault();
-          ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: "Go to artist", icon: "artist", onClick: () => ctx.actions.goToArtist(album.artist) }]);
+          ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: "Go to format", icon: "artist", onClick: () => ctx.actions.goToArtist(album.artist) }]);
         },
-        title: `${album.title} \u2014 ${album.artist}`
+        title: `${album.title} \u2014 ${album.genre || album.artist}`
       },
-      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Play ${album.title}`, onClick: (e) => {
+      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), qualBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-top" }, qualBadge), album.year && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, album.year), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Play ${album.title}`, onClick: (e) => {
         e.stopPropagation();
         ctx.actions.playTracks(album.tracks, 0);
       } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, album.title),
-      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, showArtist && (album.artist === import_library_index2.VARIOUS_ARTISTS ? /* @__PURE__ */ import_react16.default.createElement("span", null, album.artist) : /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: (e) => {
-        e.stopPropagation();
-        ctx.actions.goToArtist(album.artist);
-      } }, album.artist)), showArtist && album.year ? " \xB7 " : "", album.year || (!showArtist ? (0, import_library_index2.plural)(album.tracks.length, "song") : ""))
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index2.plural)(album.tracks.length, "title")))
     );
   }
   function ArtistGrid({ artists, go, letterOf = null }) {
@@ -19435,7 +19609,7 @@
   }
   function GroupGrid({ groups, type, go, big = false }) {
     const ctx = useLibrary();
-    const section = type === "genre" ? "genres" : "decades";
+    const section = type === "genre" ? "genres" : type === "franchise" ? "franchises" : "decades";
     return /* @__PURE__ */ import_react16.default.createElement(
       VirtualGrid,
       {
@@ -19454,11 +19628,11 @@
               ctx.openMenu(e, collectionMenuItems(g.tracks, ctx, { label: g.name }));
             }
           },
-          /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art" }, /* @__PURE__ */ import_react16.default.createElement(Collage, { artIds: g.artIds, name: g.name }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "group-card-name" }, g.name), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Shuffle ${g.name}`, onClick: (e) => {
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art" }, /* @__PURE__ */ import_react16.default.createElement(Collage, { artIds: g.artIds, name: g.name }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "group-card-name" }, g.name), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Play ${g.name}`, onClick: (e) => {
             e.stopPropagation();
-            ctx.actions.playTracks(g.tracks, 0, { shuffle: true });
-          } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 16 }))),
-          /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index2.plural)(g.tracks.length, "song"), " \xB7 ", (0, import_library_index2.plural)(g.artistCount, "artist"))
+            ctx.actions.playTracks(g.tracks, 0);
+          } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 16 }))),
+          /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index2.plural)(g.albums.length, "movie"), " \xB7 ", (0, import_library_index2.formatLongDuration)(g.duration))
         )
       }
     );
@@ -19491,8 +19665,9 @@
       const artist = index.artistByKey.get(key);
       return artist ? /* @__PURE__ */ import_react16.default.createElement(ArtistDetail, { artist, go, stats }) : /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
     }
-    if (type === "genre" || type === "decade") {
-      const group = (type === "genre" ? index.genreByKey : index.decadeByKey).get(key);
+    if (type === "genre" || type === "decade" || type === "franchise") {
+      const map = type === "genre" ? index.genreByKey : type === "franchise" ? index.franchiseByKey : index.decadeByKey;
+      const group = map && map.get(key);
       return group ? /* @__PURE__ */ import_react16.default.createElement(GroupDetail, { group, type, index, go }) : /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
     }
     if (type === "composer") {
