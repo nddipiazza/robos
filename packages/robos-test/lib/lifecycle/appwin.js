@@ -10,7 +10,7 @@ const http = require('http');
 const { spawn } = require('child_process');
 
 const APP_PORT = 4173, CDP_PORT = 9333;
-const CHROME = process.env.FAKE_CHROME || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.FAKE_CHROME || ['/opt/pw-browsers/chromium-1194/chrome-linux/chrome', '/opt/pw-browsers/chromium'].find(f => fs.existsSync(f)) || 'chromium';
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const ping = (port, p = '/') => new Promise(res => { const r = http.get({ host: '127.0.0.1', port, path: p, timeout: 800 }, x => { x.resume(); res(x.statusCode); }); r.on('error', () => res(0)); r.on('timeout', () => { r.destroy(); res(0); }); });
 async function until(fn, ms = 8000) { const t = Date.now(); while (Date.now() - t < ms) { if (await fn()) return true; await sleep(150); } return false; }
@@ -23,7 +23,8 @@ function killPid(file) {
 }
 
 /** Start the dev server (from `ws`) and a browser window showing it. Idempotent. */
-async function ensureApp(ws, { position = '40,480', size = '1300,560' } = {}) {
+// FAKE_APP_POSITION / FAKE_APP_SIZE / FAKE_APP_SCALE place the window the agent pops up (e.g. beside the review window).
+async function ensureApp(ws, { position = process.env.FAKE_APP_POSITION || '40,480', size = process.env.FAKE_APP_SIZE || '1300,560', scale = process.env.FAKE_APP_SCALE } = {}) {
   fs.mkdirSync(runDir(), { recursive: true });
   if (await ping(APP_PORT) !== 200) {
     const p = spawn('node', ['src/server.js'], { cwd: ws, env: { ...process.env, PORT: String(APP_PORT) }, detached: true, stdio: 'ignore' });
@@ -33,7 +34,7 @@ async function ensureApp(ws, { position = '40,480', size = '1300,560' } = {}) {
   if (await ping(CDP_PORT, '/json/version') !== 200) {
     const p = spawn(CHROME, ['--no-sandbox', '--test-type', '--disable-gpu', '--disable-infobars', '--disable-features=Translate,MediaRouter', '--no-first-run', '--no-default-browser-check',
       `--user-data-dir=${path.join(runDir(), 'chrome-profile')}`, `--remote-debugging-port=${CDP_PORT}`,
-      `--window-position=${position}`, `--window-size=${size}`, `--app=http://127.0.0.1:${APP_PORT}/`],
+      `--window-position=${position}`, `--window-size=${size}`, ...(scale ? [`--force-device-scale-factor=${scale}`] : []), `--app=http://127.0.0.1:${APP_PORT}/`],
       { detached: true, stdio: 'ignore', env: { ...process.env, GOOGLE_API_KEY: 'no', GOOGLE_DEFAULT_CLIENT_ID: 'no', GOOGLE_DEFAULT_CLIENT_SECRET: 'no' } });
     fs.writeFileSync(pidFile('chrome'), String(p.pid)); p.unref();
     await until(async () => (await ping(CDP_PORT, '/json/version')) === 200, 15000);

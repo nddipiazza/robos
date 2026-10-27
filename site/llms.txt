@@ -6,6 +6,7 @@
 - [Home](https://rowbose.com/): Product overview, app suites, context-engineering customization, and SDLC workflow
 - [App Directory](https://rowbose.com/apps/): Searchable catalog of all RobOS desktop applications, domain sandboxes, game studios, and MCP servers
 - [Build Apps](https://rowbose.com/build-apps/): Overview of the Task Planner, Task Implementer, and Agent Code Review loop
+- [Code Review](https://rowbose.com/code-review/): The Code Review Theater tab by tab: diff, before-and-after evidence, agent walkthrough beside the running app, required/optional/hidden review steps, reviewer mode
 - [Build Apps on Your Own (Solo Guide)](https://rowbose.com/build-apps/solo/): Step-by-step solo developer guide with real app screenshots
 - [Build Apps as a Team (Team Guide)](https://rowbose.com/build-apps/teams/): Step-by-step team workflow guide with Dev Central and Reviewer mode
 - [Task Planner](https://rowbose.com/task-planner/): Turn a description or one of 67 templates into epics and tasks, edit them, and create GitHub or Jira issues; developer personas and KGraph project plans

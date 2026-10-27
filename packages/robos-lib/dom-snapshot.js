@@ -399,6 +399,17 @@ function startDebugServer(win, port, appId) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, bounds }));
 
+      } else if (url === '/window/bounds' && req.method === 'POST') {
+        // Place the window, e.g. side by side with another app for a two-window capture.
+        const { x = 0, y = 0, width, height } = await readBody(req);
+        try {
+          if (win.isMinimized()) win.restore();
+          win.setResizable(true);
+          if (Number.isFinite(width) && Number.isFinite(height)) win.setBounds({ x, y, width, height });
+        } catch (_) {}
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, bounds: win.getBounds ? win.getBounds() : {} }));
+
       } else if (url === '/window/fullscreen' && req.method === 'POST') {
         try {
           if (win.isMinimized()) win.restore();

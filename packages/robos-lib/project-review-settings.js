@@ -5,6 +5,19 @@ const os = require('node:os');
 const { createHash } = require('node:crypto');
 const DEFAULT_PR = '## Changes\n\n{{description}}\n';
 const DEFAULT_MESSAGE = 'Please review {{title}}\n{{url}}\n\nRepository: {{repo}}\nBranch: {{branch}}';
+// Tabs of a local review a team can require before the PR is created, keep optional, or hide.
+const REVIEW_STEPS = ['changes', 'evidence', 'walkthrough'];
+const STEP_MODES = ['required', 'optional', 'hidden'];
+function reviewSteps(value = {}, { strict = true } = {}) {
+  const steps = Object.fromEntries(REVIEW_STEPS.map(step => [step, 'optional']));
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) { if (strict) throw Error('Invalid review steps.'); return steps; }
+  for (const step of REVIEW_STEPS) {
+    if (value[step] === undefined) continue;
+    if (STEP_MODES.includes(value[step])) steps[step] = value[step];
+    else if (strict) throw Error('Set each review step to required, optional or hidden.');
+  }
+  return steps;
+}
 function repoKey(value) {
   const key = String(value || '').replace(/^https?:\/\/github.com\//, '').replace(/^git@github.com:/, '').replace(/\.git\/?$/, '').replace(/\/$/, '');
   if (!/^[\w.-]+\/[\w.-]+$/.test(key)) throw Error('Choose a GitHub project.');
@@ -15,7 +28,7 @@ function file(repo, root = path.join(os.homedir(), '.robos', 'project-review-set
 }
 function read(repo, root) {
   let value = {}; try { value = JSON.parse(fs.readFileSync(file(repo, root), 'utf8')); } catch(e) { if(e.code !== 'ENOENT') throw e; }
-  return { prTemplate: DEFAULT_PR, messageTemplate: DEFAULT_MESSAGE, serverId: '', channel: '', reviewers: [], githubReviewers: [], ...value };
+  return { prTemplate: DEFAULT_PR, messageTemplate: DEFAULT_MESSAGE, serverId: '', channel: '', reviewers: [], githubReviewers: [], ...value, reviewSteps: reviewSteps(value.reviewSteps, { strict: false }) };
 }
 function save(repo, input, root) {
   input = {...read(repo, root), ...input};
@@ -26,6 +39,7 @@ function save(repo, input, root) {
   }
   value.githubReviewers = validateGitHubReviewers(input.githubReviewers || []);
   value.reviewers = validateReviewers(input.reviewers || []);
+  value.reviewSteps = reviewSteps(input.reviewSteps);
   if (!value.messageTemplate.includes('{{url}}')) throw Error('The notification template must include {{url}}.');
   const target = file(repo, root); fs.mkdirSync(path.dirname(target), {recursive:true, mode:0o700});
   fs.writeFileSync(target+'.tmp', JSON.stringify(value,null,2)+'\n', {mode:0o600}); fs.renameSync(target+'.tmp',target);
@@ -95,4 +109,4 @@ async function resolveReviewers(serverId, reviewers, call = service()) {
     return member;
   });
 }
-module.exports={validateGitHubReviewers,members,resolveReviewers,validateReviewers,read,save,format,service,options,channels,DEFAULT_PR,DEFAULT_MESSAGE};
+module.exports={reviewSteps,REVIEW_STEPS,STEP_MODES,validateGitHubReviewers,members,resolveReviewers,validateReviewers,read,save,format,service,options,channels,DEFAULT_PR,DEFAULT_MESSAGE};
