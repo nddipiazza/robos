@@ -772,32 +772,34 @@ robos-widget-sprint-radar, robos-widget-custom {
     }
 
     if (widgetType === 'music-now-playing') {
-      const isPlaying = Boolean(data.isPlaying !== false);
+      const isPlaying = Boolean(data.isPlaying === true);
       const upNext = Array.isArray(data.upNext) ? data.upNext : [];
-      const pct = Math.max(2, Math.min(100, Number(data.progressPct) || 54));
+      const pct = isPlaying
+        ? Math.max(2, Math.min(100, Number(data.progressPct) || 1))
+        : Math.max(0, Math.min(100, Number(data.progressPct) || 0));
       return `
         <div class="robos-w-meta">
           <span>🎵 <strong>RobOS Audio Player</strong> · ${esc(data.output || 'Desktop (Local Audio)')}</span>
-          <span class="robos-w-pill" style="${isPlaying ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);' : 'background:rgba(148,163,184,0.16);color:#cbd5e1;'}">
-            ${isPlaying ? '▶ PLAYING NOW' : '⏸ PAUSED'}
+          <span class="robos-w-pill" style="${isPlaying ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);' : 'background:rgba(148,163,184,0.16);color:#94a3b8;border-color:rgba(148,163,184,0.3);'}">
+            ${isPlaying ? '▶ PLAYING NOW' : '⏹ NOT PLAYING — IDLE'}
           </span>
         </div>
-        <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #a855f7;border-radius:8px;padding:9px 10px;">
+        <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid ${isPlaying ? '#a855f7' : '#475569'};border-radius:8px;padding:9px 10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="min-width:0;flex:1;">
-              <div style="font-size:13.5px;font-weight:800;color:#f0f6fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🎵 ${esc(data.title || 'Ambience & Music')}</div>
-              <div style="font-size:11.5px;color:#d8b4fe;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(data.artistAlbum || "Baldur's Gate 3 • video game music")}</div>
+              <div style="font-size:13.5px;font-weight:800;color:${isPlaying ? '#f0f6fc' : '#8b949e'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? `🎵 ${esc(data.title || 'Ambience & Music')}` : '🔇 No Audio Currently Playing'}</div>
+              <div style="font-size:11.5px;color:${isPlaying ? '#d8b4fe' : '#6e7681'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? esc(data.artistAlbum || "Baldur's Gate 3 • video game music") : `Last queued: ${esc(data.title || 'None')} (${esc(data.artist || 'RobOS Audio Player')})`}</div>
               <div style="font-size:10px;color:#8b949e;margin-top:2px;">${esc(data.source || 'Google Drive')} · ${esc(data.codec || 'MPEG 1 Layer 3 · 48 kHz')}</div>
             </div>
             <div style="text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;">
-              <div style="font-size:12.5px;font-weight:800;color:#67e8f9;">${esc(data.elapsed || '24:45')} <span style="color:#6e7681;font-weight:500;">/ ${esc(data.duration || '46:07')}</span></div>
-              <div style="font-size:9.5px;color:#6ee7b7;margin-top:2px;">${pct}% elapsed</div>
+              <div style="font-size:12.5px;font-weight:800;color:${isPlaying ? '#67e8f9' : '#6e7681'};">${esc(isPlaying ? (data.elapsed || '0:00') : '0:00')} <span style="color:#6e7681;font-weight:500;">/ ${esc(data.duration || '0:00')}</span></div>
+              <div style="font-size:9.5px;color:${isPlaying ? '#6ee7b7' : '#6e7681'};margin-top:2px;">${isPlaying ? `${pct}% elapsed` : 'Stopped'}</div>
             </div>
           </div>
           <div style="height:5px;background:#070b14;border-radius:999px;overflow:hidden;margin-top:7px;">
-            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a855f7,#00bcd4,#10b981);"></div>
+            <div style="height:100%;width:${isPlaying ? pct : 0}%;background:linear-gradient(90deg,#a855f7,#00bcd4,#10b981);"></div>
           </div>
-          <canvas class="robos-music-eq-canvas" width="440" height="32" style="width:100%;height:32px;margin-top:6px;border-radius:4px;"></canvas>
+          <canvas class="robos-music-eq-canvas" width="440" height="32" data-playing="${isPlaying ? '1' : '0'}" style="width:100%;height:32px;margin-top:6px;border-radius:4px;"></canvas>
           ${
             upNext.length > 0
               ? `<div style="margin-top:5px;padding-top:5px;border-top:1px solid #21262d;font-size:10.5px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -1160,8 +1162,16 @@ robos-widget-sprint-radar, robos-widget-custom {
         ctx.clearRect(0, 0, w, h);
         ctx.fillStyle = '#070b14';
         ctx.fillRect(0, 0, w, h);
+        const isPlaying = canvas.getAttribute('data-playing') === '1';
         const count = 24;
         const bw = (w - 16) / count;
+        if (!isPlaying) {
+          for (let i = 0; i < count; i++) {
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(8 + i * bw, h - 5, Math.max(4, bw - 4), 3);
+          }
+          return;
+        }
         const t = Date.now() / 180;
         for (let i = 0; i < count; i++) {
           const wave = Math.abs(Math.sin(t + i * 0.45) * Math.cos(t * 0.7 - i * 0.25));

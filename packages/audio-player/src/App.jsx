@@ -206,6 +206,8 @@ export default function App() {
     if (window.robosAudio?.onSpeakerPlaybackStopped) {
       cleanups.push(window.robosAudio.onSpeakerPlaybackStopped((data) => {
         setActiveCastSession(null);
+        castClock.set({ playing: false });
+        setIsPlaying(false);
       }));
     }
 
@@ -239,7 +241,11 @@ export default function App() {
         } else if (status?.playerState === 'PLAYING') {
           setActiveCastSession(prev => prev ? { ...prev, isPaused: false } : prev);
         }
-        if (status.playerState === 'PLAYING' || status.playerState === 'PAUSED') setIsPlaying(status.playerState === 'PLAYING');
+        if (status.playerState === 'PLAYING' || status.playerState === 'PAUSED') {
+          setIsPlaying(status.playerState === 'PLAYING');
+        } else if (status.playerState === 'IDLE' && !finished) {
+          setIsPlaying(false);
+        }
       }));
     }
 
@@ -736,6 +742,7 @@ export default function App() {
       }
       setActiveCastSession(null);
       castClock.set({ playing: false });
+      setIsPlaying(false);
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.pause();
       }

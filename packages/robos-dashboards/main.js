@@ -1,8 +1,8 @@
 'use strict';
 
-let app, BrowserWindow, ipcMain, shell;
+let app, BrowserWindow, ipcMain, shell, dialog;
 try {
-  ({ app, BrowserWindow, ipcMain, shell } = require('electron'));
+  ({ app, BrowserWindow, ipcMain, shell, dialog } = require('electron'));
 } catch (error) {
   if (process.versions.electron) throw error;
   app = {
@@ -17,6 +17,7 @@ try {
   BrowserWindow = class {};
   ipcMain = { handle: () => {} };
   shell = { openExternal: async () => {} };
+  dialog = {};
 }
 
 const path = require('node:path');
@@ -26,6 +27,16 @@ const { spawn } = require('node:child_process');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config', 'robos');
+
+try {
+  const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+  setupGlobalErrorHandlers('robos-dashboards', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+    setupGlobalErrorHandlers('robos-dashboards', dialog);
+  } catch {}
+}
 
 function requireShared(modName) {
   for (const base of [
@@ -57,7 +68,27 @@ const tvEngine = tvEngineModule.createTvEngine({
   portalPort: Number(process.env.ROBOS_TV_PORTAL_PORT || tvEngineModule.DEFAULT_PORTAL_PORT),
 });
 
-app.setPath?.('userData', path.join(CONFIG_DIR, 'electron', 'robos-dashboards'));
+const userDataDir = path.join(CONFIG_DIR, 'electron', 'robos-dashboards');
+app.setName?.('robos-dashboards');
+app.setPath?.('userData', userDataDir);
+
+try {
+  const lockFile = path.join(userDataDir, 'SingletonLock');
+  if (fs.existsSync(lockFile)) {
+    const target = fs.readlinkSync(lockFile);
+    const m = target.match(/-(\d+)$/);
+    if (m) {
+      const pid = parseInt(m[1], 10);
+      try {
+        process.kill(pid, 0);
+      } catch {
+        try { fs.unlinkSync(lockFile); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonCookie')); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonSocket')); } catch {}
+      }
+    }
+  }
+} catch {}
 
 if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
   const gotLock = app.requestSingleInstanceLock?.();
@@ -72,12 +103,14 @@ app.commandLine?.appendSwitch('disable-gpu');
 app.commandLine?.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
-app.setName?.('robos-dashboards');
 
-app.whenReady?.().then(async () => {
-  try {
-    await tvEngine.startPortalServer();
-  } catch {}
+function createWindow() {
+  if (mainWindow && !mainWindow.isDestroyed?.()) {
+    if (mainWindow.isMinimized?.()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    return mainWindow;
+  }
 
   const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
@@ -97,11 +130,17 @@ app.whenReady?.().then(async () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  mainWindow.setMenuBarVisibility(false);
+  mainWindow.setMenuBarVisibility?.(false);
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    mainWindow.focus();
+  mainWindow.once?.('ready-to-show', () => {
+    if (mainWindow && !mainWindow.isDestroyed?.()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+
+  mainWindow.on?.('closed', () => {
+    mainWindow = null;
   });
 
   if (_debugServer) {
@@ -112,6 +151,15 @@ app.whenReady?.().then(async () => {
       _debugServer.startDebugServer(mainWindow, 19211, 'robos-dashboards');
     } catch {}
   }
+
+  return mainWindow;
+}
+
+app.whenReady?.().then(async () => {
+  try {
+    await tvEngine.startPortalServer();
+  } catch {}
+  createWindow();
 });
 
 app.on?.('window-all-closed', async () => {
@@ -120,10 +168,18 @@ app.on?.('window-all-closed', async () => {
 });
 
 app.on?.('second-instance', () => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
+  if (mainWindow && !mainWindow.isDestroyed?.()) {
+    if (mainWindow.isMinimized?.()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
+  } else {
+    createWindow();
+  }
+});
+
+app.on?.('activate', () => {
+  if (!mainWindow || mainWindow.isDestroyed?.()) {
+    createWindow();
   }
 });
 

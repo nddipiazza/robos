@@ -291,7 +291,14 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => app.quit());
-app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); win.webContents.send('show-github-accounts'); } });
+app.on('second-instance', () => {
+  if (win && !win.isDestroyed?.()) {
+    if (win.isMinimized?.()) win.restore();
+    win.show();
+    win.focus();
+    win.webContents?.send('show-github-accounts');
+  }
+});
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 

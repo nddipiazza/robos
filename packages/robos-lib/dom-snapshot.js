@@ -131,6 +131,10 @@ const TEXT_SNAPSHOT_SCRIPT = `
  * Call this after creating the window.
  */
 function registerSnapshotIPC(win) {
+  for (const ch of ['__robos_dom_snapshot', '__robos_text_snapshot', '__robos_screenshot', '__robos_eval']) {
+    try { ipcMain.removeHandler?.(ch); } catch {}
+  }
+
   ipcMain.handle('__robos_dom_snapshot', async () => {
     const result = await win.webContents.executeJavaScript(SNAPSHOT_SCRIPT);
     return JSON.parse(result);

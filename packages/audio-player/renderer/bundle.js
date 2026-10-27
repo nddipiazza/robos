@@ -20711,6 +20711,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     get: () => state,
     set(patch) {
       state = { ...state, ...patch, at: Date.now() };
+      if (typeof window !== "undefined") {
+        window.__robosCastPlaying = Boolean(state.playing);
+      }
       listeners.forEach((fn) => fn());
     },
     now() {
@@ -20951,6 +20954,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (window.robosAudio?.onSpeakerPlaybackStopped) {
         cleanups.push(window.robosAudio.onSpeakerPlaybackStopped((data) => {
           setActiveCastSession(null);
+          castClock.set({ playing: false });
+          setIsPlaying(false);
         }));
       }
       if (window.robosAudio?.onSpeakerStatusChange) {
@@ -20981,7 +20986,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           } else if (status?.playerState === "PLAYING") {
             setActiveCastSession((prev) => prev ? { ...prev, isPaused: false } : prev);
           }
-          if (status.playerState === "PLAYING" || status.playerState === "PAUSED") setIsPlaying(status.playerState === "PLAYING");
+          if (status.playerState === "PLAYING" || status.playerState === "PAUSED") {
+            setIsPlaying(status.playerState === "PLAYING");
+          } else if (status.playerState === "IDLE" && !finished) {
+            setIsPlaying(false);
+          }
         }));
       }
       return () => {
@@ -21442,6 +21451,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         }
         setActiveCastSession(null);
         castClock.set({ playing: false });
+        setIsPlaying(false);
         if (playerRef.current?.audio?.current) {
           playerRef.current.audio.current.pause();
         }

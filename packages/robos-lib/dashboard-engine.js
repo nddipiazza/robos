@@ -1858,12 +1858,12 @@ function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
     artist: "Baldur's Gate 3",
     album: 'video game music',
     artistAlbum: "Baldur's Gate 3 • video game music",
-    elapsed: '24:45',
+    elapsed: '0:00',
     duration: '46:07',
-    elapsedSec: 1485,
+    elapsedSec: 0,
     maxSec: 2767.7,
-    progressPct: 54,
-    isPlaying: true,
+    progressPct: 0,
+    isPlaying: false,
     output: 'Desktop (Local Audio)',
     codec: 'MPEG 1 Layer 3 · 48 kHz',
     source: 'Google Drive (/video game music)',
@@ -1916,9 +1916,17 @@ function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
 
   // 2. Query live running RobOS Audio Player Electron renderer on port 19196
   if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+    let hasActiveDesktopAudioStream = false;
+    try {
+      const pactlRes = spawnSync('pactl', ['list', 'sink-inputs'], { encoding: 'utf8', timeout: 350 });
+      if (pactlRes.status === 0 && pactlRes.stdout) {
+        hasActiveDesktopAudioStream = /Corked:\s*no/i.test(pactlRes.stdout);
+      }
+    } catch {}
+
     try {
       const evalJs =
-        'JSON.stringify({ title: document.querySelector(".mini-title")?.textContent || "", artistAlbum: document.querySelector(".mini-artist")?.textContent || "", elapsed: document.querySelectorAll(".mini-progress span")[0]?.textContent || "0:00", duration: document.querySelectorAll(".mini-progress span")[1]?.textContent || "0:00", elapsedSec: Number(document.querySelector(".mini-progress input")?.value || 0), maxSec: Number(document.querySelector(".mini-progress input")?.max || 0), output: document.querySelector(".mini-badge")?.textContent || "", isPlaying: Boolean(document.querySelector(".np-row.current .eq-bars")), upNext: Array.from(document.querySelectorAll(".np-row:not(.current)")).slice(0, 4).map(r => ({ title: r.querySelector(".np-col-title")?.textContent || "", artist: r.querySelector(".np-col-artist")?.textContent || "" })) })';
+        '(() => { const outVal = document.querySelector("#output-select")?.value || "local"; const audio = document.querySelector("audio"); const localPlaying = Boolean(audio && !audio.paused && !audio.ended && (audio.src || audio.currentSrc) && audio.currentTime > 0); const castSec = Number(document.querySelector(".cast-progress input")?.value || 0); const eqVisible = Boolean(document.querySelector(".np-row.current .eq-bars")); const castPlaying = Boolean(window.__robosCastPlaying != null ? window.__robosCastPlaying : (eqVisible && castSec > 0)); const actuallyPlaying = outVal === "local" ? localPlaying : castPlaying; return JSON.stringify({ title: document.querySelector(".mini-title")?.textContent || "", artistAlbum: document.querySelector(".mini-artist")?.textContent || "", elapsed: document.querySelectorAll(".mini-progress span")[0]?.textContent || "0:00", duration: document.querySelectorAll(".mini-progress span")[1]?.textContent || "0:00", elapsedSec: Number(document.querySelector(".mini-progress input")?.value || 0), maxSec: Number(document.querySelector(".mini-progress input")?.max || 0), output: document.querySelector(".mini-badge")?.textContent || "", outputTarget: outVal, isPlaying: actuallyPlaying, upNext: Array.from(document.querySelectorAll(".np-row:not(.current)")).slice(0, 4).map(r => ({ title: r.querySelector(".np-col-title")?.textContent || "", artist: r.querySelector(".np-col-artist")?.textContent || "" })) }); })()';
       const curlRes = spawnSync(
         'curl',
         [
@@ -1944,17 +1952,26 @@ function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
           const parts = String(track.artistAlbum).split('•').map((s) => s.trim());
           if (parts[0]) track.artist = parts[0];
           if (parts[1]) track.album = parts[1];
-          track.elapsed = live.elapsed || track.elapsed;
+          track.elapsed = live.elapsed || '0:00';
           track.duration = live.duration || track.duration;
-          track.elapsedSec = Number(live.elapsedSec) || track.elapsedSec;
+          track.elapsedSec = Number(live.elapsedSec) || 0;
           if (Number(live.maxSec) > 0) {
             track.maxSec = Number(live.maxSec);
           }
+          const verifiedPlaying =
+            live.outputTarget === 'local'
+              ? Boolean(live.isPlaying && hasActiveDesktopAudioStream)
+              : Boolean(live.isPlaying);
+          track.isPlaying = verifiedPlaying;
           track.progressPct =
-            track.maxSec > 0
+            verifiedPlaying && track.maxSec > 0
               ? Math.max(1, Math.min(100, Math.round((track.elapsedSec / track.maxSec) * 100)))
-              : 50;
-          track.isPlaying = Boolean(live.isPlaying);
+              : track.maxSec > 0 && track.elapsedSec > 0
+              ? Math.max(0, Math.min(100, Math.round((track.elapsedSec / track.maxSec) * 100)))
+              : 0;
+          if (!verifiedPlaying && track.elapsedSec === 0) {
+            track.elapsed = '0:00';
+          }
           track.output = String(live.output || track.output).replace(/^Output:\s*/i, '');
           if (Array.isArray(live.upNext) && live.upNext.length > 0) {
             track.upNext = live.upNext.slice(0, Math.max(1, Number(upNextLimit) || 3));
@@ -3174,30 +3191,32 @@ function renderDashboardTvWallboardHtml({
     }
 
     if (card.widgetType === 'music-now-playing') {
-      const isPlaying = Boolean(data.isPlaying !== false);
+      const isPlaying = Boolean(data.isPlaying === true);
       const upNext = Array.isArray(data.upNext) ? data.upNext : [];
-      const pct = Math.max(2, Math.min(100, Number(data.progressPct) || 54));
+      const pct = isPlaying
+        ? Math.max(2, Math.min(100, Number(data.progressPct) || 1))
+        : Math.max(0, Math.min(100, Number(data.progressPct) || 0));
       return `
         <div class="widget-meta-row">
           <span>🎵 <strong>RobOS Audio Player</strong> · ${esc(data.output || 'Desktop (Local Audio)')}</span>
-          <span class="pill-mini" style="${isPlaying ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);' : 'background:rgba(148,163,184,0.16);color:#cbd5e1;'}">
-            ${isPlaying ? '▶ PLAYING NOW' : '⏸ PAUSED'}
+          <span class="pill-mini" style="${isPlaying ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);' : 'background:rgba(148,163,184,0.16);color:#94a3b8;border-color:rgba(148,163,184,0.3);'}">
+            ${isPlaying ? '▶ PLAYING NOW' : '⏹ NOT PLAYING — IDLE'}
           </span>
         </div>
-        <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #a855f7;border-radius:10px;padding:10px 12px;">
+        <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid ${isPlaying ? '#a855f7' : '#475569'};border-radius:10px;padding:10px 12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div style="min-width:0;flex:1;">
-              <div style="font-size:15px;font-weight:800;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🎵 ${esc(data.title || 'Ambience & Music')}</div>
-              <div style="font-size:12px;color:#d8b4fe;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(data.artistAlbum || "Baldur's Gate 3 • video game music")}</div>
+              <div style="font-size:15px;font-weight:800;color:${isPlaying ? '#f8fafc' : '#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? `🎵 ${esc(data.title || 'Ambience & Music')}` : '🔇 No Audio Currently Playing'}</div>
+              <div style="font-size:12px;color:${isPlaying ? '#d8b4fe' : '#64748b'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? esc(data.artistAlbum || "Baldur's Gate 3 • video game music") : `Last queued: ${esc(data.title || 'None')} (${esc(data.artist || 'RobOS Audio Player')})`}</div>
               <div style="font-size:10.5px;color:#94a3b8;margin-top:2px;">${esc(data.source || 'Google Drive')} · ${esc(data.codec || 'MPEG 1 Layer 3 · 48 kHz')}</div>
             </div>
             <div style="text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;">
-              <div style="font-size:14px;font-weight:800;color:#67e8f9;">${esc(data.elapsed || '24:45')} <span style="color:#64748b;font-weight:500;">/ ${esc(data.duration || '46:07')}</span></div>
-              <div style="font-size:10px;color:#6ee7b7;margin-top:2px;">${pct}% elapsed</div>
+              <div style="font-size:14px;font-weight:800;color:${isPlaying ? '#67e8f9' : '#64748b'};">${esc(isPlaying ? (data.elapsed || '0:00') : '0:00')} <span style="color:#64748b;font-weight:500;">/ ${esc(data.duration || '0:00')}</span></div>
+              <div style="font-size:10px;color:${isPlaying ? '#6ee7b7' : '#64748b'};margin-top:2px;">${isPlaying ? `${pct}% elapsed` : 'Stopped'}</div>
             </div>
           </div>
           <div style="height:6px;background:#070b14;border-radius:999px;overflow:hidden;margin-top:8px;">
-            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a855f7,#00bcd4,#10b981);"></div>
+            <div style="height:100%;width:${isPlaying ? pct : 0}%;background:linear-gradient(90deg,#a855f7,#00bcd4,#10b981);"></div>
           </div>
           <canvas class="robos-music-eq-canvas" width="480" height="36" data-playing="${isPlaying ? '1' : '0'}" style="width:100%;height:36px;margin-top:7px;border-radius:5px;"></canvas>
           ${
@@ -3796,8 +3815,16 @@ function renderDashboardTvWallboardHtml({
           ctx.clearRect(0, 0, w, h);
           ctx.fillStyle = '#070b14';
           ctx.fillRect(0, 0, w, h);
+          const isPlaying = canvas.getAttribute('data-playing') === '1';
           const count = 24;
           const bw = (w - 16) / count;
+          if (!isPlaying) {
+            for (let i = 0; i < count; i++) {
+              ctx.fillStyle = '#334155';
+              ctx.fillRect(8 + i * bw, h - 6, Math.max(4, bw - 4), 3);
+            }
+            return;
+          }
           const t = Date.now() / 180;
           for (let i = 0; i < count; i++) {
             const wave = Math.abs(Math.sin(t + i * 0.45) * Math.cos(t * 0.7 - i * 0.25));
