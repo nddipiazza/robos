@@ -1,0 +1,15 @@
+{
+  "name": "robos-app-manager",
+  "version": "0.0.9-preview.1",
+  "description": "Choose, download, launch and remove RobOS apps on Windows and Ubuntu GNOME",
+  "main": "main.js",
+  "author": "RobOS",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "build": "node ../../scripts/app-manager/build.cjs"
+  },
+  "dependencies": { "pino": "^9.14.0", "tar": "^7.5.2" },
+  "devDependencies": { "electron": "33.4.11", "electron-builder": "^24.13.3", "esbuild": "0.28.2", "playwright-core": "^1.63.0" }
+}

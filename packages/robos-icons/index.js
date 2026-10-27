@@ -18,6 +18,7 @@
  */
 
 const BUILTIN_APPS = [
+  { appId: 'app-manager', label: 'App Manager', category: 'System', iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="38" height="38" rx="8"/><rect x="12" y="12" width="9" height="9" rx="2"/><rect x="27" y="12" width="9" height="9" rx="2"/><rect x="12" y="27" width="9" height="9" rx="2"/><path d="M27 32h10m-5-5v10"/></svg>' },
   {"appId": "auto-center", "label": "Auto Center", "category": "Auto", "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"#00bcd4\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m10 23 4-11h20l4 11M7 23h34v14H7zM7 30h34M12 37v5m24-5v5\"/><circle cx=\"14\" cy=\"27\" r=\"2\"/><circle cx=\"34\" cy=\"27\" r=\"2\"/><path d=\"M17 35h14\"/></svg>"},
   {"appId": "point-of-sale", "label": "Point of Sale", "category": "Retail", "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"#22c55e\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"15\" y=\"6\" width=\"18\" height=\"9\" rx=\"1.5\"/><path d=\"M11 21h26l3 6H8z\"/><rect x=\"8\" y=\"27\" width=\"32\" height=\"13\" rx=\"2\"/><path d=\"M14 33h4m4 0h4m4 0h4M16 40v3m16-3v3\"/></svg>"},
   {
