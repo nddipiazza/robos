@@ -2334,6 +2334,24 @@ end function
     const keepAliveSrc = path.join(__dirname, 'keepalive.mp4');
     const keepAliveFull = path.join(targetDir, 'source/keepalive.mp4');
     fs.mkdirSync(path.dirname(keepAliveFull), { recursive: true });
+    if (!fs.existsSync(keepAliveSrc)) {
+      try {
+        spawnSync(
+          'ffmpeg',
+          [
+            '-y',
+            '-f', 'lavfi', '-i', 'color=c=black:s=160x90:r=15:d=60',
+            '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono',
+            '-shortest',
+            '-c:v', 'libx264', '-profile:v', 'baseline', '-level', '3.0', '-pix_fmt', 'yuv420p', '-g', '30',
+            '-c:a', 'aac', '-b:a', '32k',
+            '-movflags', '+faststart',
+            keepAliveSrc,
+          ],
+          { timeout: 8000 }
+        );
+      } catch {}
+    }
     if (fs.existsSync(keepAliveSrc)) {
       fs.copyFileSync(keepAliveSrc, keepAliveFull);
       filesCreated.push(keepAliveFull);
