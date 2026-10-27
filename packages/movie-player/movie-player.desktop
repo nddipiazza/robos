@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Movie Player
+Comment=Open-source cinema & video player with synced subtitles, AI watchlists, Virtual Cinema Host, and zero-cloud Google Cast streaming
+Exec=/usr/bin/electron /usr/local/share/robos/movie-player/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/movie-player/icon.svg
+Terminal=false
+Categories=AudioVideo;Video;Player;
+X-RobOS-Category=Tools
+StartupWMClass=robos-movie-player
