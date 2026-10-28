@@ -977,6 +977,17 @@ ipcMain.handle('audio:record-play', async (_evt, trackId) => mediaLibrary.record
 
 ipcMain.handle('audio:set-loved', async (_evt, { ids, loved }) => mediaLibrary.setLoved(ids, loved));
 
+ipcMain.handle('audio:save-progress', async (_evt, { trackId, positionSec, durationSec, completed } = {}) => {
+  const entry = mediaLibrary.saveProgress(trackId, { positionSec, durationSec, completed });
+  return entry;
+});
+
+ipcMain.handle('audio:set-watched', async (_evt, { ids, watched } = {}) => {
+  const changed = mediaLibrary.setWatched(ids, watched);
+  castService._saveStreamServerEndpoint();
+  return changed;
+});
+
 ipcMain.handle('audio:show-in-folder', async (_evt, filePath) => {
   if (!filePath || typeof filePath !== 'string' || !fs.existsSync(filePath)) return { ok: false };
   shell.showItemInFolder(filePath);

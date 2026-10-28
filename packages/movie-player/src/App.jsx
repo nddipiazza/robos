@@ -524,7 +524,7 @@ export default function App() {
     showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
   };
 
-  const castTracks = (tracks, label = null) => {
+  const castTracks = (tracks, label = null, { startIndex = 0, startAt = null } = {}) => {
     if (!tracks || tracks.length === 0) {
       showStatus(`${label ? `"${label}"` : 'Selection'} has no tracks.`);
       return;
@@ -535,15 +535,23 @@ export default function App() {
     }
     const target = outputTarget !== 'local' ? outputTarget : (speakers[0]?.ip || 'all');
     const list = tracks.map(t => ({ ...t }));
+    const idx = Math.max(0, Math.min(startIndex, list.length - 1));
+    const first = list[idx];
+    const st = (first?.id && stats[first.id]) || {};
+    const resumeSec = startAt != null
+      ? Math.max(0, Number(startAt) || 0)
+      : (!st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0);
     setOutputTarget(target);
     setPlaylist(list);
-    setCurrentTrackIndex(0);
+    setCurrentTrackIndex(idx);
     shuffleHistoryRef.current = [];
-    castTrack(target, list[0]);
+    castTrack(target, first, { startAt: resumeSec });
     playerRef.current?.audio?.current?.pause();
     if (videoRef.current) videoRef.current.pause();
     setIsPlaying(true);
-    showStatus(`Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
+    showStatus(resumeSec >= 5
+      ? `Resuming "${first.title}" at ${formatDuration(resumeSec)} on ${getSpeakerName(target)}!`
+      : `Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
   };
 
   const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || 'Playlist');
@@ -872,6 +880,7 @@ export default function App() {
     const remember = (res) => { if (res && res.loadId != null) loads.add(res.loadId); return res; };
     showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
     const metadata = {
+      trackId: track.id,
       title: track.title,
       artist: track.artist,
       album: track.album,
@@ -907,16 +916,26 @@ export default function App() {
 
   // Routes a track that was just made current to the speaker or local output.
   // `sameSrc` restarts the audio element when the source didn't change.
-  const beginPlayback = (trackToPlay, sameSrc = false) => {
+  const beginPlayback = (trackToPlay, sameSrc = false, { startAt = null } = {}) => {
     const audio = playerRef.current?.audio?.current;
     playedRef.current = { key: null, counted: false };
-    if (sameSrc && audio) audio.currentTime = 0;
+    const st = (trackToPlay?.id && stats[trackToPlay.id]) || {};
+    const resumeSec = startAt != null
+      ? Math.max(0, Number(startAt) || 0)
+      : (!st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0);
+
+    if (sameSrc && audio) audio.currentTime = resumeSec;
     if (outputTarget !== 'local') {
       // The speaker plays it; the local player stays silent and idle.
-      castTrack(outputTarget, trackToPlay);
+      castTrack(outputTarget, trackToPlay, { startAt: resumeSec });
       if (audio) audio.pause();
     } else {
       if (activeCastSession) handleStopCast();
+      if (resumeSec > 0) {
+        pendingLocalSeekRef.current = resumeSec;
+      } else {
+        pendingLocalSeekRef.current = null;
+      }
       if (audio) {
         audio.muted = false;
       }
@@ -924,6 +943,9 @@ export default function App() {
         const el = isVideoTrack(trackToPlay) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
         if (el) {
           el.muted = false;
+          if (sameSrc) {
+            try { el.currentTime = resumeSec; } catch {}
+          }
           el.play().catch((err) => {
             console.warn('[MoviePlayer] Playback error:', err);
           });
@@ -937,7 +959,7 @@ export default function App() {
    * Replace the queue with `tracks` and start at `startIndex` — what double-click
    * and every "Play" button in the library do.
    */
-  const playTracks = (tracks, startIndex = 0, { shuffle = false } = {}) => {
+  const playTracks = (tracks, startIndex = 0, { shuffle = false, startAt = null } = {}) => {
     if (!tracks || !tracks.length) return;
     const list = tracks.map(t => ({ ...t }));
     let idx = Math.max(0, Math.min(startIndex, list.length - 1));
@@ -956,10 +978,18 @@ export default function App() {
     shuffleHistoryRef.current = [];
     setPlaylist(list);
     setCurrentTrackIndex(idx);
-    beginPlayback(first, sameSrc);
-    showStatus(list.length === 1
-      ? `Playing "${first.title}" by ${first.artist || 'Unknown'}`
-      : `${shuffle ? 'Shuffling' : 'Playing'} ${list.length} tracks — starting with "${first.title}"`);
+    beginPlayback(first, sameSrc, { startAt });
+    const st = (first?.id && stats[first.id]) || {};
+    const resumeSec = startAt != null
+      ? Math.max(0, Number(startAt) || 0)
+      : (!st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0);
+    if (resumeSec >= 5) {
+      showStatus(`Resuming "${first.title}" at ${formatDuration(resumeSec)}...`);
+    } else {
+      showStatus(list.length === 1
+        ? `Playing "${first.title}" by ${first.artist || 'Unknown'}`
+        : `${shuffle ? 'Shuffling' : 'Playing'} ${list.length} tracks — starting with "${first.title}"`);
+    }
   };
 
   // "Play next" inserts right after the playing track; "end" appends.
@@ -1324,6 +1354,45 @@ export default function App() {
       .catch(() => {});
   };
 
+  const lastProgressSaveRef = useRef({ trackId: null, time: 0 });
+
+  const saveTrackProgress = (track, positionSec, durationSec, completed = false, { force = false } = {}) => {
+    if (!track?.id || !window.robosAudio?.saveProgress) return;
+    const now = Date.now();
+    if (!force && !completed && lastProgressSaveRef.current.trackId === track.id && now - lastProgressSaveRef.current.time < 3000) {
+      return;
+    }
+    if (positionSec < 3 && !completed && !force) return;
+    lastProgressSaveRef.current = { trackId: track.id, time: now };
+    window.robosAudio.saveProgress(track.id, { positionSec, durationSec, completed })
+      .then(entry => { if (entry) setStats(prev => ({ ...prev, [track.id]: entry })); })
+      .catch(() => {});
+  };
+
+  const setWatchedTracks = async (tracks, watched) => {
+    const ids = [...new Set((tracks || []).map(t => t.id).filter(Boolean))];
+    if (!ids.length) return;
+    const now = new Date().toISOString();
+    setStats(prev => {
+      const next = { ...prev };
+      for (const id of ids) {
+        const cur = prev[id] || { plays: 0, lastPlayed: null, loved: false };
+        if (watched) {
+          next[id] = { ...cur, plays: Math.max(1, cur.plays || 0), lastPlayed: now, positionSec: 0, progressPct: 100, inProgress: false, completed: true };
+        } else {
+          next[id] = { ...cur, positionSec: 0, progressPct: 0, inProgress: false, completed: false };
+        }
+      }
+      return next;
+    });
+    try {
+      const changed = await window.robosAudio.setWatched(ids, watched);
+      if (changed) setStats(prev => ({ ...prev, ...changed }));
+    } catch {}
+    const what = ids.length === 1 ? `"${tracks[0].title}"` : `${ids.length} titles`;
+    showStatus(watched ? `Marked ${what} as Watched` : `Reset watch progress for ${what}`);
+  };
+
   const showInFolder = async (track) => {
     const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
     if (!res || !res.ok) showStatus('That file is not reachable right now.');
@@ -1365,6 +1434,8 @@ export default function App() {
       addToPlaylist: (tracks) => { setQuickPlaylistName(''); setTracksForPlaylist(tracks); },
       fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
       setLoved: setLovedTracks,
+      setWatched: setWatchedTracks,
+      saveProgress: saveTrackProgress,
       showInfo: setInfoTrack,
       showInFolder,
       goToAlbumOf,
@@ -1382,7 +1453,11 @@ export default function App() {
     aiAgent,
     skipDj: dj.skip,
     // Speaker events while casting (see onSpeakerStatusChange).
-    castSongFinished: () => handleTrackEnded(),
+    castSongFinished: () => {
+      const t = playlist[currentTrackIndex];
+      if (t) saveTrackProgress(t, getRealTrackDuration(t), getRealTrackDuration(t), true, { force: true });
+      handleTrackEnded();
+    },
     djCastLineFinished: () => dj.castLineFinished(),
     countCastPlay: (position, duration) => {
       const t = playlist[currentTrackIndex];
@@ -1392,6 +1467,9 @@ export default function App() {
       if (!playedRef.current.counted && position >= Math.min(30, (duration || t.duration || 60) / 2)) {
         playedRef.current.counted = true;
         recordPlay(t);
+      }
+      if (position >= 5) {
+        saveTrackProgress(t, position, duration || t.duration || 0, false);
       }
     },
     outputTarget,
@@ -1896,14 +1974,34 @@ export default function App() {
                         }
                       }
                     }}
+                    onTimeUpdate={(e) => {
+                      if (outputTarget !== 'local') return;
+                      const v = e.currentTarget;
+                      if (!v || !currentTrack) return;
+                      const pos = v.currentTime || 0;
+                      const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                      const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
+                      if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+                      if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
+                        playedRef.current.counted = true;
+                        recordPlay(currentTrack);
+                      }
+                      if (pos >= 5) {
+                        saveTrackProgress(currentTrack, pos, dur, false);
+                      }
+                    }}
                     onSeeked={(e) => {
+                      const v = e.currentTarget;
+                      const sec = v?.currentTime || 0;
                       if (outputTarget !== 'local') {
-                        const sec = e.currentTarget?.currentTime || 0;
                         const last = lastProgrammaticVideoSeekRef.current;
                         if (Date.now() - last.time < 4000 && Math.abs(sec - last.target) < 4.0) {
                           return;
                         }
                         handleCastSeek(sec);
+                      } else if (currentTrack && sec >= 5) {
+                        const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                        saveTrackProgress(currentTrack, sec, dur, false, { force: true });
                       }
                     }}
                     onPlay={() => {
@@ -1913,12 +2011,24 @@ export default function App() {
                         handleToggleCastPause();
                       }
                     }}
-                    onPause={() => {
+                    onPause={(e) => {
                       if (outputTarget === 'local') {
                         setIsPlaying(false);
+                        const v = e.currentTarget;
+                        if (v && currentTrack && (v.currentTime || 0) >= 5) {
+                          const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                          saveTrackProgress(currentTrack, v.currentTime, dur, false, { force: true });
+                        }
                       }
                     }}
-                    onEnded={() => { if (outputTarget === 'local') handleTrackEnded(); }}
+                    onEnded={(e) => {
+                      if (outputTarget === 'local') {
+                        const v = e.currentTarget;
+                        const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack?.duration || 0);
+                        if (currentTrack) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
+                        handleTrackEnded();
+                      }
+                    }}
                   />
                   <div className="cinema-stage-toolbar">
                     <span className="cinema-stage-badge">

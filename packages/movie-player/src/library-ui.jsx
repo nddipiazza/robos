@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icon.jsx';
+import { formatDuration, getTrackWatchState } from '../lib/library-index.js';
 
 // Everything a library row, card or queue entry needs to act on tracks. Provided
 // by App so deeply nested views don't need a dozen pass-through props.
@@ -138,13 +139,21 @@ export function ContextMenu({ menu, onClose }) {
 export function collectionMenuItems(tracks, ctx, { label } = {}) {
   const { actions, stats } = ctx;
   const allLoved = tracks.length > 0 && tracks.every(t => (stats[t.id] || {}).loved);
+  const allWatched = tracks.length > 0 && tracks.every(t => getTrackWatchState(t, stats).completed);
+  const anyProgress = tracks.some(t => {
+    const ws = getTrackWatchState(t, stats);
+    return ws.inProgress || ws.completed;
+  });
   return [
     label ? { header: label } : null,
-    { label: 'Play', icon: 'play', onClick: () => actions.playTracks(tracks, 0) },
+    { label: 'Play / Resume', icon: 'play', onClick: () => actions.playTracks(tracks, 0) },
+    { label: 'Play from beginning', icon: 'history', onClick: () => actions.playTracks(tracks, 0, { startAt: 0 }) },
     { label: 'Shuffle', icon: 'shuffle', onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) },
     { label: 'Play next', icon: 'playNext', onClick: () => actions.queueTracks(tracks, 'next') },
     { label: 'Add to Watch Queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
     { separator: true },
+    actions.setWatched ? { label: allWatched ? 'Mark as Unwatched' : 'Mark as Watched', icon: 'check', onClick: () => actions.setWatched(tracks, !allWatched) } : null,
+    (actions.setWatched && anyProgress && !allWatched) ? { label: 'Reset watch progress', icon: 'history', onClick: () => actions.setWatched(tracks, false) } : null,
     { label: 'Add to Watchlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
     actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
     { label: allLoved ? 'Remove from Watchlist' : 'Add to My Watchlist', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
@@ -155,18 +164,35 @@ export function collectionMenuItems(tracks, ctx, { label } = {}) {
 export function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra = [] } = {}) {
   const { actions, stats } = ctx;
   const single = tracks.length === 1 ? tracks[0] : null;
+  const singleWs = single ? getTrackWatchState(single, stats) : null;
   const allLoved = tracks.every(t => (stats[t.id] || {}).loved);
+  const allWatched = tracks.every(t => getTrackWatchState(t, stats).completed);
+  const anyProgress = tracks.some(t => {
+    const ws = getTrackWatchState(t, stats);
+    return ws.inProgress || ws.completed;
+  });
   const items = [
     tracks.length > 1 ? { header: `${tracks.length} titles selected` } : null,
-    {
+    single && singleWs && singleWs.inProgress ? {
+      label: `Resume at ${formatDuration(singleWs.positionSec)} (${singleWs.progressPct}%)`,
+      icon: 'play',
+      onClick: () => (allTracks ? actions.playTracks(allTracks, index, { startAt: singleWs.positionSec }) : actions.playTracks(tracks, 0, { startAt: singleWs.positionSec })),
+    } : {
       label: 'Play',
       icon: 'play',
       onClick: () => (single && allTracks ? actions.playTracks(allTracks, index) : actions.playTracks(tracks, 0)),
     },
+    single && singleWs && singleWs.inProgress ? {
+      label: 'Start over from beginning',
+      icon: 'history',
+      onClick: () => (allTracks ? actions.playTracks(allTracks, index, { startAt: 0 }) : actions.playTracks(tracks, 0, { startAt: 0 })),
+    } : null,
     { label: 'Play next', icon: 'playNext', onClick: () => actions.queueTracks(tracks, 'next') },
     { label: 'Add to Watch Queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
     ...extra,
     { separator: true },
+    actions.setWatched ? { label: allWatched ? 'Mark as Unwatched' : 'Mark as Watched', icon: 'check', onClick: () => actions.setWatched(tracks, !allWatched) } : null,
+    (actions.setWatched && anyProgress && !allWatched) ? { label: 'Reset watch progress', icon: 'history', onClick: () => actions.setWatched(tracks, false) } : null,
     { label: 'Add to Watchlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
     actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
     { label: allLoved ? 'Remove from Watchlist' : 'Add to My Watchlist', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },

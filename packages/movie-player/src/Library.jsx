@@ -4,7 +4,8 @@ import FolderPanel from './FolderPanel.jsx';
 import TrackList from './TrackList.jsx';
 import {
   buildIndex, searchIndex, sortTracks, sortAlbums, sortArtists, indexLetter, fold,
-  lovedTracks, recentlyAddedTracks, recentlyPlayedTracks, mostPlayedTracks,
+  lovedTracks, recentlyAddedTracks, recentlyPlayedTracks, mostPlayedTracks, inProgressTracks,
+  getTrackWatchState, getShowWatchState,
   formatDuration, formatLongDuration, plural, inferTvShowEpisode, VARIOUS_ARTISTS,
 } from '../lib/library-index.js';
 import { useLibrary, Cover, Collage, LoveButton, sameTrack, trackMenuItems, collectionMenuItems } from './library-ui.jsx';
@@ -518,13 +519,17 @@ function TvShowsSection({ index, go, prefs, setPref }) {
       {shows.length ? (
         <>
           <AlbumGrid albums={shows} go={go} />
-          {shows.map(show => (
+          {shows.slice(0, 12).map(show => (
             <div key={show.key} className="tv-show-section-block">
               <SectionHeader
                 title={show.title}
                 subtitle={`${plural(show.seasonCount || 1, 'Season')} · ${plural(show.episodeCount || show.tracks.length, 'Episode')}`}
                 tracks={show.tracks}
-              />
+              >
+                <button className="btn-secondary" onClick={() => go({ section: 'albums', detail: { type: 'album', key: show.key } })}>
+                  Open Show Page
+                </button>
+              </SectionHeader>
               <TvShowSeasonsBreakdown album={show} />
             </div>
           ))}
@@ -649,12 +654,42 @@ function RecentSection({ index, go }) {
   );
 }
 
-function HistorySection({ index, stats }) {
+function HistorySection({ index, go, stats }) {
+  const inProgress = useMemo(() => inProgressTracks(index.tracks, stats), [index, stats]);
+  const inProgressShows = useMemo(() => {
+    return (index.tvShows || []).filter(show => {
+      const st = getShowWatchState(show, stats);
+      return st.hasActivity && !st.completed;
+    });
+  }, [index, stats]);
   const played = useMemo(() => recentlyPlayedTracks(index.tracks, stats).slice(0, 500), [index, stats]);
   return (
     <>
-      <SectionHeader subtitle="Movies and episodes you recently watched" tracks={played} />
-      <TrackList id="library-history" tracks={played} extraColumn="lastPlayed" emptyText="Nothing watched yet — your viewing history will show up here." />
+      {inProgress.length > 0 && (
+        <>
+          <SectionHeader
+            title="Continue Watching — Pick Up Where You Left Off"
+            subtitle={`${plural(inProgress.length, 'title')} paused mid-stream`}
+            tracks={inProgress}
+          />
+          <TrackList id="library-continue-watching" tracks={inProgress} extraColumn="lastPlayed" />
+        </>
+      )}
+      {inProgressShows.length > 0 && (
+        <>
+          <SectionHeader
+            title="TV Series In Progress"
+            subtitle={`${plural(inProgressShows.length, 'show')} with active episode progress`}
+          />
+          <AlbumGrid albums={inProgressShows} go={go} />
+        </>
+      )}
+      <SectionHeader
+        title="Recently Watched History"
+        subtitle="Movies and episodes you recently watched"
+        tracks={played}
+      />
+      <TrackList id="library-history" tracks={played} extraColumn="lastPlayed" emptyText="Nothing watched yet — start watching any movie or TV episode and your progress will be saved automatically." />
     </>
   );
 }
@@ -709,12 +744,60 @@ function AlbumGrid({ albums, go, showArtist = true, letterOf = null }) {
 
 function AlbumCard({ album, go, showArtist }) {
   const ctx = useLibrary();
+  const { stats, actions } = ctx;
   const open = () => go({ section: 'albums', detail: { type: 'album', key: album.key } });
   const qualBadge = album.quality?.resolution || album.quality?.badge || null;
   const topBadge = album.isTvShow ? `📺 TV SERIES${qualBadge ? ` · ${qualBadge}` : ''}` : qualBadge;
   const bottomBadge = album.isTvShow
     ? `${album.seasonCount || 1}S · ${album.episodeCount || album.tracks.length}E`
     : album.year;
+
+  const showWatch = album.isTvShow ? getShowWatchState(album, stats) : null;
+  const movieWatch = (!album.isTvShow && album.tracks.length) ? getTrackWatchState(album.tracks[0], stats) : null;
+
+  let watchBadge = null;
+  let watchProgressPct = 0;
+  let playLabel = `Watch ${album.title}`;
+  let handleCardPlay = (e) => {
+    e.stopPropagation();
+    actions.playTracks(album.tracks, 0);
+  };
+
+  if (album.isTvShow && showWatch) {
+    watchProgressPct = showWatch.progressPct;
+    if (showWatch.completed) {
+      watchBadge = { text: '✓ All Watched', cls: 'watched' };
+    } else if (showWatch.hasActivity) {
+      const epCode = showWatch.resumeTrack?.episodeCode
+        || (showWatch.resumeTrack?.seasonNumber != null
+          ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, '0')}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, '0')}`
+          : 'Next');
+      if (showWatch.resumePositionSec >= 5) {
+        watchBadge = { text: `▶ ${epCode} · ${formatDuration(showWatch.resumePositionSec)}`, cls: 'resume' };
+        playLabel = `Resume ${album.title} (${epCode} at ${formatDuration(showWatch.resumePositionSec)})`;
+      } else {
+        watchBadge = { text: `▶ Next: ${epCode} (${showWatch.completedCount}/${showWatch.totalEpisodes})`, cls: 'resume' };
+        playLabel = `Continue ${album.title} (${epCode})`;
+      }
+      handleCardPlay = (e) => {
+        e.stopPropagation();
+        actions.playTracks(album.tracks, showWatch.resumeIndex, { startAt: showWatch.resumePositionSec });
+      };
+    }
+  } else if (movieWatch) {
+    watchProgressPct = movieWatch.progressPct;
+    if (movieWatch.completed) {
+      watchBadge = { text: '✓ Watched', cls: 'watched' };
+    } else if (movieWatch.inProgress) {
+      watchBadge = { text: `▶ ${formatDuration(movieWatch.positionSec)} (${movieWatch.progressPct}%)`, cls: 'resume' };
+      playLabel = `Resume ${album.title} at ${formatDuration(movieWatch.positionSec)}`;
+      handleCardPlay = (e) => {
+        e.stopPropagation();
+        actions.playTracks(album.tracks, 0, { startAt: movieWatch.positionSec });
+      };
+    }
+  }
+
   return (
     <div
       className="media-card album-card movie-poster-card"
@@ -725,15 +808,21 @@ function AlbumCard({ album, go, showArtist }) {
       <div className="media-card-art movie-poster-art">
         <Cover artId={album.artId} name={album.title} />
         {topBadge && <span className={`poster-badge-top ${album.isTvShow ? 'tv-badge' : ''}`}>{topBadge}</span>}
+        {watchBadge && <span className={`poster-badge-watch ${watchBadge.cls}`}>{watchBadge.text}</span>}
         {bottomBadge && <span className="poster-badge-year">{bottomBadge}</span>}
-        <button className="card-play" title={`Watch ${album.title}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(album.tracks, 0); }}>
+        {watchProgressPct > 0 && (
+          <div className={`poster-watch-progress ${watchProgressPct >= 100 ? 'completed' : ''}`}>
+            <div className="poster-watch-progress-fill" style={{ width: `${Math.min(100, watchProgressPct)}%` }} />
+          </div>
+        )}
+        <button className="card-play" title={playLabel} onClick={handleCardPlay}>
           <Icon name="play" size={18} />
         </button>
       </div>
       <span className="media-card-title">{album.title}</span>
       <span className="media-card-sub">
         {album.isTvShow
-          ? <span className="poster-franchise-tag">{plural(album.seasonCount || 1, 'Season')} · {plural(album.episodeCount || album.tracks.length, 'Episode')}</span>
+          ? <span className="poster-franchise-tag">{plural(album.seasonCount || 1, 'Season')} · {plural(album.episodeCount || album.tracks.length, 'Episode')}{showWatch?.completedCount ? ` · ${showWatch.completedCount}/${showWatch.totalEpisodes} watched` : ''}</span>
           : album.franchise
             ? <span className="poster-franchise-tag">{album.franchise}</span>
             : (album.genre || (showArtist ? album.artist : plural(album.tracks.length, 'title')))}
@@ -829,10 +918,36 @@ function ArtistChips({ tracks, index, go, limit = 12 }) {
 
 // ── Detail pages ────────────────────────────────────────────────────────────
 
-function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel }) {
+function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel, album = null }) {
   const ctx = useLibrary();
-  const { actions } = ctx;
-  const allLoved = tracks.length > 0 && tracks.every(t => (ctx.stats[t.id] || {}).loved);
+  const { actions, stats } = ctx;
+  const allLoved = tracks.length > 0 && tracks.every(t => (stats[t.id] || {}).loved);
+  const allWatched = tracks.length > 0 && tracks.every(t => getTrackWatchState(t, stats).completed);
+  const showWatch = (album && album.isTvShow) ? getShowWatchState(album, stats) : null;
+  const movieWatch = (album && !album.isTvShow && tracks.length) ? getTrackWatchState(tracks[0], stats) : null;
+
+  let primaryPlayLabel = 'Watch Now';
+  let handlePrimaryPlay = () => actions.playTracks(tracks, 0);
+  let showStartOver = false;
+
+  if (showWatch && showWatch.hasActivity && !showWatch.completed) {
+    const epCode = showWatch.resumeTrack?.episodeCode
+      || (showWatch.resumeTrack?.seasonNumber != null
+        ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, '0')}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, '0')}`
+        : 'Next Episode');
+    if (showWatch.resumePositionSec >= 5) {
+      primaryPlayLabel = `Resume ${epCode} (${formatDuration(showWatch.resumePositionSec)})`;
+      showStartOver = true;
+    } else {
+      primaryPlayLabel = `Continue: ${epCode}`;
+    }
+    handlePrimaryPlay = () => actions.playTracks(tracks, showWatch.resumeIndex, { startAt: showWatch.resumePositionSec });
+  } else if (movieWatch && movieWatch.inProgress) {
+    primaryPlayLabel = `Resume at ${formatDuration(movieWatch.positionSec)} (${movieWatch.progressPct}%)`;
+    showStartOver = true;
+    handlePrimaryPlay = () => actions.playTracks(tracks, 0, { startAt: movieWatch.positionSec });
+  }
+
   return (
     <div className="detail-header">
       <div className="detail-cover">{cover}</div>
@@ -842,10 +957,41 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
         {subtitle && <div className="detail-subtitle">{subtitle}</div>}
         <div className="detail-meta">{meta.filter(Boolean).map((m, i) => <span key={i}>{m}</span>)}</div>
         <div className="detail-actions">
-          <button id="btn-detail-play" className="btn-accent" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0)}><Icon name="play" size={13} /> Watch Now</button>
+          <button id="btn-detail-play" className="btn-accent" disabled={!tracks.length} onClick={handlePrimaryPlay}><Icon name="play" size={13} /> {primaryPlayLabel}</button>
+          {showStartOver && (
+            <button
+              className="btn-secondary"
+              onClick={() => actions.playTracks(tracks, showWatch ? showWatch.resumeIndex : 0, { startAt: 0 })}
+              title="Start over from 0:00"
+            >
+              <Icon name="history" size={14} /> Start Over
+            </button>
+          )}
+          {actions.hasSpeakers && (
+            <button
+              className="btn-secondary"
+              disabled={!tracks.length}
+              onClick={() => actions.castTracks(tracks, title, {
+                startIndex: showWatch ? showWatch.resumeIndex : 0,
+                startAt: showWatch ? showWatch.resumePositionSec : (movieWatch?.inProgress ? movieWatch.positionSec : null),
+              })}
+            >
+              <Icon name="cast" size={14} /> Cast to TV
+            </button>
+          )}
           <button id="btn-detail-shuffle" className="btn-secondary" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0, { shuffle: true })}><Icon name="shuffle" size={14} /> Shuffle</button>
           <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'next')}><Icon name="playNext" size={14} /> Watch next</button>
           <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'end')}><Icon name="queueAdd" size={14} /> Add to queue</button>
+          {actions.setWatched && (
+            <button
+              className="btn-secondary"
+              disabled={!tracks.length}
+              onClick={() => actions.setWatched(tracks, !allWatched)}
+              title={allWatched ? 'Mark all as unwatched' : 'Mark as watched'}
+            >
+              <Icon name="check" size={14} /> {allWatched ? 'Watched ✓' : 'Mark Watched'}
+            </button>
+          )}
           <button className={`btn-icon-only ${allLoved ? 'loved' : ''}`} title={allLoved ? 'Remove from Watchlist' : 'Add to Watchlist'} onClick={() => actions.setLoved(tracks, !allLoved)}>
             <Icon name={allLoved ? 'heartFill' : 'heart'} size={15} />
           </button>
@@ -892,7 +1038,7 @@ function DetailView({ detail, index, go, stats }) {
 
 function TvShowSeasonsBreakdown({ album }) {
   const ctx = useLibrary();
-  const { actions, currentTrack, isPlaying, openMenu } = ctx;
+  const { actions, currentTrack, isPlaying, openMenu, stats } = ctx;
   const seasons = album.seasons && album.seasons.length
     ? album.seasons
     : [{ seasonNumber: 1, label: 'Season 1', code: 'S01', episodes: album.tracks, episodeCount: album.tracks.length, duration: album.duration }];
@@ -911,83 +1057,150 @@ function TvShowSeasonsBreakdown({ album }) {
         >
           📺 All Seasons <span className="chip-count">{seasons.length}</span>
         </button>
-        {seasons.map(s => (
-          <button
-            key={s.seasonNumber}
-            className={`cinema-cat-chip ${String(selectedSeason) === String(s.seasonNumber) ? 'active' : ''}`}
-            onClick={() => setSelectedSeason(String(s.seasonNumber))}
-          >
-            {s.label} <span className="chip-count">{plural(s.episodeCount, 'Episode')}</span>
-          </button>
-        ))}
+        {seasons.map(s => {
+          const watchedInSeason = s.episodes.filter(ep => getTrackWatchState(ep, stats).completed).length;
+          return (
+            <button
+              key={s.seasonNumber}
+              className={`cinema-cat-chip ${String(selectedSeason) === String(s.seasonNumber) ? 'active' : ''}`}
+              onClick={() => setSelectedSeason(String(s.seasonNumber))}
+            >
+              {s.label} <span className="chip-count">{watchedInSeason > 0 ? `${watchedInSeason}/${s.episodeCount}` : plural(s.episodeCount, 'Episode')}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {visibleSeasons.map(season => (
-        <div key={season.seasonNumber} className="tv-season-card">
-          <div className="tv-season-card-header">
-            <div className="tv-season-card-title">
-              <span className="tv-season-badge">{season.code}</span>
-              <h4>{season.label}</h4>
-              <span className="tv-season-meta">
-                {plural(season.episodeCount, 'Episode')}
-                {season.duration > 0 ? ` · ${formatLongDuration(season.duration)}` : ''}
-              </span>
-            </div>
-            <div className="tv-season-card-actions">
-              <button className="btn-accent" onClick={() => actions.playTracks(season.episodes, 0)}>
-                <Icon name="play" size={12} /> Watch {season.label}
-              </button>
-              <button className="btn-secondary" onClick={() => actions.playTracks(season.episodes, 0, { shuffle: true })}>
-                <Icon name="shuffle" size={12} /> Shuffle
-              </button>
-            </div>
-          </div>
-
-          <div className="tv-episode-list">
-            {season.episodes.map((ep, idx) => {
-              const tv = inferTvShowEpisode(ep);
-              const epNum = (tv && tv.episodeNumber) || ep.episodeNumber || ep.trackNumber || (idx + 1);
-              const epCode = (tv && tv.episodeCode) || ep.episodeCode || `S${String(season.seasonNumber).padStart(2, '0')}E${String(epNum).padStart(2, '0')}`;
-              const epTitle = (tv && tv.episodeTitle) || ep.episodeTitle || ep.title;
-              const isCurrent = sameTrack(currentTrack, ep);
-              return (
-                <div
-                  key={ep.id || ep.filePath || idx}
-                  className={`tv-episode-row ${isCurrent ? 'current' : ''}`}
-                  onDoubleClick={() => actions.playTracks(season.episodes, idx)}
-                  onContextMenu={(e) => { e.preventDefault(); openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx })); }}
+      {visibleSeasons.map(season => {
+        const watchedCount = season.episodes.filter(ep => getTrackWatchState(ep, stats).completed).length;
+        const allSeasonWatched = season.episodes.length > 0 && watchedCount === season.episodes.length;
+        const seasonState = getShowWatchState({ tracks: season.episodes }, stats);
+        return (
+          <div key={season.seasonNumber} className="tv-season-card">
+            <div className="tv-season-card-header">
+              <div className="tv-season-card-title">
+                <span className="tv-season-badge">{season.code}</span>
+                <h4>{season.label}</h4>
+                <span className="tv-season-meta">
+                  {plural(season.episodeCount, 'Episode')}
+                  {watchedCount > 0 ? ` · ${watchedCount}/${season.episodeCount} Watched` : ''}
+                  {season.duration > 0 ? ` · ${formatLongDuration(season.duration)}` : ''}
+                </span>
+              </div>
+              <div className="tv-season-card-actions">
+                <button
+                  className="btn-accent"
+                  onClick={() => actions.playTracks(season.episodes, seasonState.resumeIndex, { startAt: seasonState.resumePositionSec })}
                 >
+                  <Icon name="play" size={12} />
+                  {seasonState.hasActivity && !seasonState.completed
+                    ? (seasonState.resumePositionSec >= 5
+                      ? `Resume E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, '0')} (${formatDuration(seasonState.resumePositionSec)})`
+                      : `Continue E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, '0')}`)
+                    : `Watch ${season.label}`}
+                </button>
+                {actions.setWatched && (
                   <button
-                    className="tv-episode-play"
-                    title={`Play ${epCode} — ${epTitle}`}
-                    onClick={() => actions.playTracks(season.episodes, idx)}
+                    className="btn-secondary"
+                    onClick={() => actions.setWatched(season.episodes, !allSeasonWatched)}
+                    title={allSeasonWatched ? `Mark ${season.label} unwatched` : `Mark all episodes in ${season.label} watched`}
                   >
-                    {isCurrent && isPlaying ? <span className="eq-bars"><i></i><i></i><i></i></span> : <Icon name="play" size={13} />}
+                    <Icon name="check" size={12} /> {allSeasonWatched ? 'Season Watched ✓' : 'Mark Season Watched'}
                   </button>
-                  <span className="tv-episode-code">{epCode}</span>
-                  <div className="tv-episode-info">
-                    <span className="tv-episode-title">Episode {epNum}: {epTitle}</span>
-                    <span className="tv-episode-sub">
-                      {album.title} · {season.label}
-                      {ep.artist && ep.artist !== album.title ? ` · ${ep.artist}` : ''}
-                      {ep.cloud ? ` · ${ep.cloud.cached ? 'Cloud (Cached)' : 'Cloud Stream'}` : ''}
-                    </span>
+                )}
+                <button className="btn-secondary" onClick={() => actions.playTracks(season.episodes, 0, { shuffle: true })}>
+                  <Icon name="shuffle" size={12} /> Shuffle
+                </button>
+              </div>
+            </div>
+
+            <div className="tv-episode-list">
+              {season.episodes.map((ep, idx) => {
+                const tv = inferTvShowEpisode(ep);
+                const epNum = (tv && tv.episodeNumber) || ep.episodeNumber || ep.trackNumber || (idx + 1);
+                const epCode = (tv && tv.episodeCode) || ep.episodeCode || `S${String(season.seasonNumber).padStart(2, '0')}E${String(epNum).padStart(2, '0')}`;
+                const epTitle = (tv && tv.episodeTitle) || ep.episodeTitle || ep.title;
+                const isCurrent = sameTrack(currentTrack, ep);
+                const ws = getTrackWatchState(ep, stats);
+                return (
+                  <div
+                    key={ep.id || ep.filePath || idx}
+                    className={`tv-episode-row ${isCurrent ? 'current' : ''} ${ws.completed ? 'ep-completed' : ''} ${ws.inProgress ? 'ep-in-progress' : ''}`}
+                    onDoubleClick={() => actions.playTracks(season.episodes, idx)}
+                    onContextMenu={(e) => { e.preventDefault(); openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx })); }}
+                  >
+                    <button
+                      className="tv-episode-play"
+                      title={ws.inProgress ? `Resume ${epCode} at ${formatDuration(ws.positionSec)}` : `Play ${epCode} — ${epTitle}`}
+                      onClick={() => actions.playTracks(season.episodes, idx)}
+                    >
+                      {isCurrent && isPlaying ? <span className="eq-bars"><i></i><i></i><i></i></span> : <Icon name="play" size={13} />}
+                    </button>
+                    <span className="tv-episode-code">{epCode}</span>
+                    <div className="tv-episode-info">
+                      <span className="tv-episode-title">
+                        Episode {epNum}: {epTitle}
+                        {ws.inProgress && (
+                          <span className="tv-ep-status-badge resume">
+                            ▶ Resume {formatDuration(ws.positionSec)}{ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}
+                          </span>
+                        )}
+                        {ws.completed && (
+                          <span className="tv-ep-status-badge watched">
+                            ✓ Watched
+                          </span>
+                        )}
+                      </span>
+                      <span className="tv-episode-sub">
+                        {album.title} · {season.label}
+                        {ep.artist && ep.artist !== album.title ? ` · ${ep.artist}` : ''}
+                        {ep.cloud ? ` · ${ep.cloud.cached ? 'Cloud (Cached)' : 'Cloud Stream'}` : ''}
+                      </span>
+                      {(ws.inProgress || ws.completed) && (
+                        <div className="tv-episode-progress-bar">
+                          <div
+                            className={`tv-episode-progress-fill ${ws.completed ? 'completed' : ''}`}
+                            style={{ width: `${ws.completed ? 100 : Math.max(4, ws.progressPct)}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="tv-ep-actions-cell">
+                      {ws.inProgress && (
+                        <button
+                          className="btn-chip tv-ep-start-over"
+                          title="Start episode over from 0:00"
+                          onClick={(e) => { e.stopPropagation(); actions.playTracks(season.episodes, idx, { startAt: 0 }); }}
+                        >
+                          ↺ Start Over
+                        </button>
+                      )}
+                      {actions.setWatched && (
+                        <button
+                          className={`btn-icon-only tv-ep-watched-btn ${ws.completed ? 'watched' : ''}`}
+                          title={ws.completed ? 'Mark as unwatched' : 'Mark as watched'}
+                          onClick={(e) => { e.stopPropagation(); actions.setWatched([ep], !ws.completed); }}
+                        >
+                          <Icon name="check" size={13} />
+                        </button>
+                      )}
+                      <LoveButton track={ep} size={14} />
+                    </div>
+                    <span className="tv-episode-duration">{formatDuration(ep.duration)}</span>
+                    <button
+                      className="tl-more-btn"
+                      title="More actions"
+                      onClick={(e) => { e.stopPropagation(); openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx })); }}
+                    >
+                      <Icon name="more" size={14} />
+                    </button>
                   </div>
-                  <LoveButton track={ep} size={14} />
-                  <span className="tv-episode-duration">{formatDuration(ep.duration)}</span>
-                  <button
-                    className="tl-more-btn"
-                    title="More actions"
-                    onClick={(e) => { e.stopPropagation(); openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx })); }}
-                  >
-                    <Icon name="more" size={14} />
-                  </button>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1000,6 +1213,7 @@ function AlbumDetail({ album, index, go }) {
   return (
     <>
       <DetailHeader
+        album={album}
         cover={<Cover artId={album.artId} name={album.title} />}
         eyebrow={album.isTvShow ? 'TV Show / Series' : (album.franchise || 'Feature Film')}
         title={album.title}

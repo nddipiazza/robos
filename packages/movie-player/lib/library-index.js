@@ -126,8 +126,8 @@ function inferTvShowEpisode(track) {
   if (tvEpisodeCache.has(track)) return tvEpisodeCache.get(track);
 
   if (track.mediaType === 'tv' && track.showName) {
-    const seasonNumber = Number(track.seasonNumber || track.discNumber || 1);
-    const episodeNumber = Number(track.episodeNumber || track.trackNumber || 1);
+    const seasonNumber = track.seasonNumber != null ? Number(track.seasonNumber) : (track.discNumber != null ? Number(track.discNumber) : 1);
+    const episodeNumber = track.episodeNumber != null ? Number(track.episodeNumber) : (track.trackNumber != null ? Number(track.trackNumber) : 1);
     const episodeCode = track.episodeCode || `S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}`;
     const result = {
       isTvShow: true,
@@ -220,7 +220,7 @@ function summarizeMediaBreakdown(tracks = []) {
       .sort((a, b) => a[0] - b[0])
       .map(([seasonNumber, count]) => ({
         seasonNumber,
-        label: `Season ${seasonNumber}`,
+        label: seasonNumber === 0 ? 'Specials & Extras' : `Season ${seasonNumber}`,
         episodeCount: count,
       }));
     return {
@@ -315,19 +315,18 @@ function albumKeyOf(track) {
   }
   const title = fold(track.album || UNKNOWN_ALBUM);
   if (track.albumArtist) return `${title}\u0001aa:${fold(track.albumArtist)}`;
-  // Without an album-artist tag, tracks of one album normally share a folder; that
-  // keeps compilations together while separating same-named albums by different artists.
-  if (track.filePath) return `${title}\u0001dir:${dirOf(track.filePath)}`;
+  const dirKey = track.cloud?.remotePath || track.filePath || '';
+  if (dirKey) return `${title}\u0001dir:${dirOf(dirKey)}`;
   return `${title}\u0001ar:${fold(track.artist)}`;
 }
 
 function compareAlbumOrder(a, b) {
   const tvA = inferTvShowEpisode(a);
   const tvB = inferTvShowEpisode(b);
-  const seasonA = (tvA && tvA.seasonNumber) || a.seasonNumber || a.discNumber || 1;
-  const seasonB = (tvB && tvB.seasonNumber) || b.seasonNumber || b.discNumber || 1;
-  const epA = (tvA && tvA.episodeNumber) || a.episodeNumber || a.trackNumber || 9999;
-  const epB = (tvB && tvB.episodeNumber) || b.episodeNumber || b.trackNumber || 9999;
+  const seasonA = (tvA && tvA.seasonNumber != null) ? tvA.seasonNumber : (a.seasonNumber != null ? a.seasonNumber : (a.discNumber || 1));
+  const seasonB = (tvB && tvB.seasonNumber != null) ? tvB.seasonNumber : (b.seasonNumber != null ? b.seasonNumber : (b.discNumber || 1));
+  const epA = (tvA && tvA.episodeNumber != null) ? tvA.episodeNumber : (a.episodeNumber != null ? a.episodeNumber : (a.trackNumber || 9999));
+  const epB = (tvB && tvB.episodeNumber != null) ? tvB.episodeNumber : (b.episodeNumber != null ? b.episodeNumber : (b.trackNumber || 9999));
   return seasonA - seasonB
     || epA - epB
     || compareNames(a.title, b.title);
@@ -444,12 +443,12 @@ function buildIndex(tracks = []) {
       const seasonMap = new Map();
       for (const t of list) {
         const tv = inferTvShowEpisode(t);
-        const sNum = (tv && tv.seasonNumber) || t.seasonNumber || t.discNumber || 1;
+        const sNum = (tv && tv.seasonNumber != null) ? tv.seasonNumber : (t.seasonNumber != null ? t.seasonNumber : (t.discNumber || 1));
         let season = seasonMap.get(sNum);
         if (!season) {
           season = {
             seasonNumber: sNum,
-            label: `Season ${sNum}`,
+            label: sNum === 0 ? 'Specials & Extras' : `Season ${sNum}`,
             code: `S${String(sNum).padStart(2, '0')}`,
             episodes: [],
             duration: 0,
@@ -737,6 +736,168 @@ function unplayedTracks(tracks, stats = {}) {
   return tracks.filter(t => !((stats[t.id] || {}).plays > 0));
 }
 
+function getTrackWatchState(track, stats = {}) {
+  if (!track || !track.id) {
+    return { positionSec: 0, durationSec: 0, progressPct: 0, inProgress: false, completed: false, plays: 0, lastPlayed: null, resumeLabel: null };
+  }
+  const st = stats[track.id] || {};
+  const positionSec = Math.max(0, Math.round(Number(st.positionSec) || 0));
+  const durationSec = Math.max(0, Math.round(Number(st.durationSec || track.duration) || 0));
+  const completed = !!st.completed || (!st.inProgress && positionSec === 0 && (st.plays || 0) > 0 && st.completed !== false);
+  const inProgress = !completed && (!!st.inProgress || positionSec >= 5);
+  let progressPct = Number(st.progressPct) || 0;
+  if (!progressPct && inProgress && durationSec > 0) {
+    progressPct = Math.min(99, Math.max(1, Math.round((positionSec / durationSec) * 100)));
+  } else if (completed) {
+    progressPct = 100;
+  }
+  const resumeLabel = inProgress
+    ? `Resume at ${formatDuration(positionSec)}${progressPct > 0 ? ` (${progressPct}%)` : ''}`
+    : completed
+      ? 'Watched'
+      : null;
+  return {
+    positionSec: inProgress ? positionSec : 0,
+    durationSec,
+    progressPct,
+    inProgress,
+    completed,
+    plays: st.plays || 0,
+    lastPlayed: st.lastPlayed || null,
+    resumeLabel,
+  };
+}
+
+function getShowWatchState(album, stats = {}) {
+  const episodes = (album && Array.isArray(album.tracks)) ? album.tracks : [];
+  if (!episodes.length) {
+    return {
+      totalEpisodes: 0,
+      watchedCount: 0,
+      completedCount: 0,
+      inProgressCount: 0,
+      progressPct: 0,
+      hasActivity: false,
+      completed: false,
+      inProgress: false,
+      resumeEpisode: null,
+      resumeTrack: null,
+      resumeIndex: 0,
+      resumePositionSec: 0,
+      resumeEpisodeCode: 'S01E01',
+      actionLabel: 'Watch Now',
+      statusBadge: null,
+    };
+  }
+
+  let watchedCount = 0;
+  let inProgressCount = 0;
+  let latestActiveIdx = -1;
+  let latestActiveTime = '';
+  let latestInProgressIdx = -1;
+  let latestInProgressTime = '';
+
+  episodes.forEach((ep, idx) => {
+    const ws = getTrackWatchState(ep, stats);
+    if (ws.completed) watchedCount++;
+    if (ws.inProgress) {
+      inProgressCount++;
+      const t = ws.lastPlayed || '1970-01-01';
+      if (t >= latestInProgressTime) {
+        latestInProgressTime = t;
+        latestInProgressIdx = idx;
+      }
+    }
+    if (ws.inProgress || ws.completed || ws.lastPlayed) {
+      const t = ws.lastPlayed || '1970-01-01';
+      if (t >= latestActiveTime) {
+        latestActiveTime = t;
+        latestActiveIdx = idx;
+      }
+    }
+  });
+
+  let resumeIdx = 0;
+  let resumePositionSec = 0;
+  let isMidEpisode = false;
+  let isNextUp = false;
+
+  if (latestInProgressIdx >= 0) {
+    resumeIdx = latestInProgressIdx;
+    const ws = getTrackWatchState(episodes[resumeIdx], stats);
+    resumePositionSec = ws.positionSec;
+    isMidEpisode = true;
+  } else if (latestActiveIdx >= 0) {
+    const lastWs = getTrackWatchState(episodes[latestActiveIdx], stats);
+    if (lastWs.completed && latestActiveIdx + 1 < episodes.length) {
+      resumeIdx = latestActiveIdx + 1;
+      const nextWs = getTrackWatchState(episodes[resumeIdx], stats);
+      resumePositionSec = nextWs.inProgress ? nextWs.positionSec : 0;
+      isNextUp = true;
+    } else {
+      resumeIdx = latestActiveIdx;
+      resumePositionSec = lastWs.inProgress ? lastWs.positionSec : 0;
+    }
+  } else {
+    // First unwatched episode
+    const firstUnwatched = episodes.findIndex(ep => !getTrackWatchState(ep, stats).completed);
+    resumeIdx = firstUnwatched >= 0 ? firstUnwatched : 0;
+  }
+
+  const resumeEpisode = episodes[resumeIdx] || episodes[0];
+  const tv = inferTvShowEpisode(resumeEpisode);
+  const epCode = (tv && tv.episodeCode) || resumeEpisode.episodeCode || 'S01E01';
+  const epTitle = (tv && tv.episodeTitle) || resumeEpisode.episodeTitle || resumeEpisode.title || '';
+  const allCompleted = watchedCount > 0 && watchedCount >= episodes.length && inProgressCount === 0;
+  const anyStarted = watchedCount > 0 || inProgressCount > 0;
+  const progressPct = episodes.length > 0
+    ? Math.min(100, Math.round(((watchedCount + (isMidEpisode ? 0.5 : 0)) / episodes.length) * 100))
+    : 0;
+
+  let actionLabel = `Watch ${epCode}`;
+  let statusBadge = null;
+  if (isMidEpisode) {
+    actionLabel = `Resume ${epCode} (${formatDuration(resumePositionSec)})`;
+    statusBadge = `▶ ${epCode} · ${formatDuration(resumePositionSec)}`;
+  } else if (isNextUp) {
+    actionLabel = `Continue: ${epCode}`;
+    statusBadge = `Next: ${epCode} · ${watchedCount}/${episodes.length} watched`;
+  } else if (allCompleted) {
+    actionLabel = `Rewatch ${epCode}`;
+    statusBadge = `✓ All ${episodes.length} Watched`;
+  } else if (watchedCount > 0) {
+    actionLabel = `Continue ${epCode}`;
+    statusBadge = `${watchedCount}/${episodes.length} watched`;
+  }
+
+  return {
+    totalEpisodes: episodes.length,
+    watchedCount,
+    completedCount: watchedCount,
+    inProgressCount,
+    progressPct,
+    hasActivity: anyStarted,
+    completed: allCompleted,
+    inProgress: anyStarted && !allCompleted,
+    isMidEpisode,
+    isNextUp,
+    resumeEpisode,
+    resumeTrack: resumeEpisode,
+    resumeIndex: resumeIdx,
+    resumePositionSec,
+    resumeEpisodeCode: epCode,
+    resumeEpisodeTitle: epTitle,
+    actionLabel,
+    statusBadge,
+  };
+}
+
+function inProgressTracks(tracks, stats = {}) {
+  return tracks
+    .filter(t => getTrackWatchState(t, stats).inProgress)
+    .sort((a, b) => String((stats[b.id] || {}).lastPlayed || '').localeCompare(String((stats[a.id] || {}).lastPlayed || '')));
+}
+
 // ── Formatting ──────────────────────────────────────────────────────────────
 
 function formatDuration(sec) {
@@ -788,6 +949,9 @@ module.exports = {
   recentlyPlayedTracks,
   mostPlayedTracks,
   unplayedTracks,
+  getTrackWatchState,
+  getShowWatchState,
+  inProgressTracks,
   formatDuration,
   formatLongDuration,
   plural,

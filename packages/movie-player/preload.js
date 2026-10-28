@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('robosAudio', {
   getTrackStats: () => ipcRenderer.invoke('audio:get-track-stats'),
   recordPlay: (trackId) => ipcRenderer.invoke('audio:record-play', trackId),
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
+  saveProgress: (trackId, progress) => ipcRenderer.invoke('audio:save-progress', { trackId, ...(progress || {}) }),
+  setWatched: (ids, watched) => ipcRenderer.invoke('audio:set-watched', { ids, watched }),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
   aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
   aiFixMetadataPreview: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-preview', opts || {}),

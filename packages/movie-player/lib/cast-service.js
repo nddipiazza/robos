@@ -147,38 +147,7 @@ class CastService {
 
       if (parsedUrl.pathname === '/api/tv-library') {
         const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
-        const items = tracks.slice(0, 250).map((t, idx) => {
-          const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
-          const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
-          let streamUrl = '';
-          if (t.cloud) {
-            streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`;
-          } else if (t.filePath && fs.existsSync(t.filePath)) {
-            streamUrl = this.registerFile(t.filePath);
-          } else {
-            streamUrl = t.src || '';
-          }
-          const artUrl = t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '';
-          return {
-            index: idx + 1,
-            id: t.id,
-            title: String(t.title || 'Untitled Movie').slice(0, 80),
-            artist: String(t.artist || 'Feature Film').slice(0, 50),
-            album: String(t.album || 'RobOS Cinema').slice(0, 60),
-            genre: String(t.genre || 'Movies').slice(0, 32),
-            year: t.year || null,
-            mediaType: t.mediaType || 'movie',
-            showName: t.showName || null,
-            seasonNumber: t.seasonNumber || null,
-            episodeNumber: t.episodeNumber || null,
-            episodeCode: t.episodeCode || null,
-            episodeTitle: t.episodeTitle || null,
-            duration: Number(t.duration) || 0,
-            artUrl,
-            streamUrl,
-            streamFormat,
-          };
-        });
+        const items = this._buildTvLibraryItems(500);
         const body = JSON.stringify({
           ok: true,
           hostIp: this.hostIp,
@@ -198,6 +167,7 @@ class CastService {
       if (parsedUrl.pathname === '/api/tv-play' && (req.method === 'POST' || req.method === 'GET')) {
         const trackId = parsedUrl.searchParams.get('id') || '';
         const tvIp = parsedUrl.searchParams.get('tvIp') || '';
+        const explicitStart = parsedUrl.searchParams.get('startAt');
         const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
         const track = tracks.find(t => t.id === trackId) || tracks[0];
         if (!track) {
@@ -213,11 +183,15 @@ class CastService {
         } else if (track.filePath && fs.existsSync(track.filePath)) {
           streamUrl = this.registerFile(track.filePath);
         }
+        const st = (this.mediaLibrary && this.mediaLibrary.stats && this.mediaLibrary.stats[track.id]) || {};
+        const startAt = explicitStart != null
+          ? Math.max(0, Math.floor(Number(explicitStart) || 0))
+          : (st.inProgress && st.positionSec >= 5 ? Math.floor(st.positionSec) : 0);
         if (typeof this.onTvRemoteSelect === 'function') {
-          try { this.onTvRemoteSelect(track, tvIp); } catch {}
+          try { this.onTvRemoteSelect({ ...track, currentTime: startAt }, tvIp); } catch {}
         }
         res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ ok: true, id: track.id, title: track.title, streamUrl, streamFormat }));
+        res.end(JSON.stringify({ ok: true, id: track.id, title: track.title, streamUrl, streamFormat, startAt }));
         return;
       }
 
@@ -398,6 +372,102 @@ class CastService {
     this.streamServer.listen(preferredPort, '0.0.0.0', onStreamListen);
   }
 
+  _buildTvLibraryItems(maxItems = 500) {
+    if (!this.mediaLibrary || !Array.isArray(this.mediaLibrary.tracks)) return [];
+    const stats = this.mediaLibrary.stats || {};
+    const allTracks = this.mediaLibrary.tracks;
+
+    // Include all standalone movies + prioritized episodes across all TV Shows so every show & movie is represented
+    const movies = [];
+    const showBuckets = new Map();
+    for (const t of allTracks) {
+      if (!t) continue;
+      if (t.mediaType === 'tv') {
+        const key = String(t.showName || t.album || 'TV Series').toLowerCase();
+        if (!showBuckets.has(key)) showBuckets.set(key, []);
+        showBuckets.get(key).push(t);
+      } else {
+        movies.push(t);
+      }
+    }
+
+    const selectedShows = [];
+    const remainingBudget = Math.max(100, maxItems - movies.length);
+    const perShowQuota = Math.max(4, Math.floor(remainingBudget / Math.max(1, showBuckets.size)));
+
+    for (const eps of showBuckets.values()) {
+      eps.sort((a, b) => (a.seasonNumber ?? 1) - (b.seasonNumber ?? 1) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
+      // Always include in-progress or recently watched episodes + first unwatched + episodes across seasons
+      const prioritized = [];
+      const seen = new Set();
+      const addEp = (e) => {
+        if (e && !seen.has(e.id) && prioritized.length < perShowQuota) {
+          seen.add(e.id);
+          prioritized.push(e);
+        }
+      };
+      for (const e of eps) {
+        const st = stats[e.id];
+        if (st && (st.inProgress || st.completed)) addEp(e);
+      }
+      // First episode of each season
+      const seenSeasons = new Set();
+      for (const e of eps) {
+        const sNum = e.seasonNumber ?? 1;
+        if (!seenSeasons.has(sNum)) {
+          seenSeasons.add(sNum);
+          addEp(e);
+        }
+      }
+      for (const e of eps) addEp(e);
+      prioritized.sort((a, b) => (a.seasonNumber ?? 1) - (b.seasonNumber ?? 1) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
+      selectedShows.push(...prioritized);
+    }
+
+    const combined = [...movies, ...selectedShows].slice(0, maxItems);
+    return combined.map((t, idx) => {
+      const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
+      const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
+      const inferredGenres = inferMovieGenres(t);
+      const franchise = inferMovieFranchise(t) || '';
+      const quality = inferQualityMeta(t);
+      const st = stats[t.id] || {};
+      const positionSec = st.inProgress ? Math.max(0, Math.round(Number(st.positionSec) || 0)) : 0;
+      const durationSec = Math.max(0, Math.round(Number(st.durationSec || t.duration) || 0));
+      const completed = !!st.completed;
+      const inProgress = !completed && (!!st.inProgress || positionSec >= 5);
+      const progressPct = completed ? 100 : (Number(st.progressPct) || (inProgress && durationSec > 0 ? Math.min(99, Math.round((positionSec / durationSec) * 100)) : 0));
+      return {
+        index: idx + 1,
+        id: t.id,
+        title: String(t.title || 'Untitled Movie').slice(0, 80),
+        artist: String(t.artist || 'Feature Film').slice(0, 50),
+        album: String(t.album || 'RobOS Cinema').slice(0, 60),
+        mediaType: t.mediaType || 'movie',
+        showName: t.showName || '',
+        seasonNumber: t.seasonNumber != null ? t.seasonNumber : null,
+        episodeNumber: t.episodeNumber != null ? t.episodeNumber : null,
+        episodeCode: t.episodeCode || '',
+        episodeTitle: t.episodeTitle || '',
+        genre: String(inferredGenres[0] || t.genre || 'Movies').slice(0, 32),
+        genres: inferredGenres,
+        franchise: String(franchise).slice(0, 48),
+        qualityBadge: String(quality.badge || '1080p HD').slice(0, 28),
+        year: t.year || null,
+        duration: durationSec,
+        positionSec,
+        progressPct,
+        inProgress,
+        completed,
+        artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
+        streamFormat,
+        streamUrl: t.cloud
+          ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`
+          : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
+      };
+    });
+  }
+
   _saveStreamServerEndpoint() {
     try {
       const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
@@ -418,37 +488,7 @@ class CastService {
         );
       }
       if (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) {
-        raw.moviePlayerLibrarySnapshot = this.mediaLibrary.tracks.slice(0, 200).map((t, idx) => {
-          const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
-          const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
-          const inferredGenres = inferMovieGenres(t);
-          const franchise = inferMovieFranchise(t) || '';
-          const quality = inferQualityMeta(t);
-          return {
-            index: idx + 1,
-            id: t.id,
-            title: String(t.title || 'Untitled Movie').slice(0, 80),
-            artist: String(t.artist || 'Feature Film').slice(0, 50),
-            album: String(t.album || 'RobOS Cinema').slice(0, 60),
-            mediaType: t.mediaType || 'movie',
-            showName: t.showName || '',
-            seasonNumber: t.seasonNumber || null,
-            episodeNumber: t.episodeNumber || null,
-            episodeCode: t.episodeCode || '',
-            episodeTitle: t.episodeTitle || '',
-            genre: String(inferredGenres[0] || t.genre || 'Movies').slice(0, 32),
-            genres: inferredGenres,
-            franchise: String(franchise).slice(0, 48),
-            qualityBadge: String(quality.badge || '1080p HD').slice(0, 28),
-            year: t.year || null,
-            duration: Number(t.duration) || 0,
-            artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
-            streamFormat,
-            streamUrl: t.cloud
-              ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`
-              : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
-          };
-        });
+        raw.moviePlayerLibrarySnapshot = this._buildTvLibraryItems(500);
       }
       fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
     } catch {}
@@ -760,6 +800,33 @@ class CastService {
       duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : 0,
       idleReason: null,
       lastSeekAt: reattachOnly ? 0 : Date.now(),
+      lastSavedProgressAt: 0,
+      trackId: metadata.trackId || null,
+    };
+    if (!state.trackId && mediaUrl && this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) {
+      const m = String(mediaUrl).match(/\/cloud-stream\/([^./?]+)/);
+      if (m) {
+        try { state.trackId = decodeURIComponent(m[1]); } catch {}
+      }
+      if (!state.trackId && metadata.title) {
+        const found = this.mediaLibrary.tracks.find((t) => t && t.title === metadata.title);
+        if (found) state.trackId = found.id;
+      }
+    }
+
+    const persistCastProgress = (completed = false, force = false) => {
+      if (!state.trackId || !this.mediaLibrary || typeof this.mediaLibrary.saveProgress !== 'function') return;
+      const now = Date.now();
+      if (!force && !completed && now - state.lastSavedProgressAt < 4000) return;
+      if (state.currentTime < 3 && !completed) return;
+      state.lastSavedProgressAt = now;
+      try {
+        this.mediaLibrary.saveProgress(state.trackId, {
+          positionSec: state.currentTime,
+          durationSec: state.duration,
+          completed,
+        });
+      } catch {}
     };
 
     const virtualPlayer = {
@@ -774,7 +841,8 @@ class CastService {
       },
       pause: () => {
         state.playerState = 'PAUSED';
-        this._updateCinemaCastState((prev) => ({ ...prev, paused: true }));
+        persistCastProgress(false, true);
+        this._updateCinemaCastState((prev) => ({ ...prev, paused: true, startAt: Math.floor(state.currentTime) }));
         if (typeof entry.onStatusUpdate === 'function') {
           entry.onStatusUpdate(normalizeStatus({ playerState: 'PAUSED', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
         }
@@ -790,6 +858,7 @@ class CastService {
         const targetSec = Math.max(0, Math.floor(Number(seconds) || 0));
         state.currentTime = targetSec;
         state.lastSeekAt = Date.now();
+        persistCastProgress(false, true);
         this._updateCinemaCastState((prev) => ({
           ...prev,
           startAt: targetSec,
@@ -820,6 +889,7 @@ class CastService {
         close: () => {},
         receiver: {
           stop: (_sid, cb) => {
+            persistCastProgress(false, true);
             state.playerState = 'IDLE';
             this._updateCinemaCastState((prev) => ({ ...prev, active: false, stoppedAt: new Date().toISOString() }));
             if (cb) cb();
@@ -866,6 +936,7 @@ class CastService {
           else if (rokuSt.state === 'play') state.playerState = 'PLAYING';
         } else if (rokuSt && state.sawMovieOnRoku && (rokuSt.isKeepAlive || rokuSt.state === 'none' || rokuSt.state === 'close')) {
           // User stopped the movie on the TV via their physical remote
+          persistCastProgress(false, true);
           state.playerState = 'IDLE';
           this._updateCinemaCastState((prev) => ({ ...prev, active: false, stoppedAt: new Date().toISOString() }));
           this.activeConnections.delete(ip);
@@ -880,6 +951,11 @@ class CastService {
           state.playerState = 'IDLE';
           state.idleReason = 'FINISHED';
         }
+      }
+      if (state.playerState === 'PLAYING' || state.playerState === 'PAUSED') {
+        persistCastProgress(false, false);
+      } else if (state.playerState === 'IDLE' && state.idleReason === 'FINISHED') {
+        persistCastProgress(true, true);
       }
       const out = normalizeStatus({
         playerState: state.playerState,

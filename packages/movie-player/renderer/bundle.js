@@ -14642,8 +14642,8 @@
         if (!track) return null;
         if (tvEpisodeCache.has(track)) return tvEpisodeCache.get(track);
         if (track.mediaType === "tv" && track.showName) {
-          const seasonNumber = Number(track.seasonNumber || track.discNumber || 1);
-          const episodeNumber = Number(track.episodeNumber || track.trackNumber || 1);
+          const seasonNumber = track.seasonNumber != null ? Number(track.seasonNumber) : track.discNumber != null ? Number(track.discNumber) : 1;
+          const episodeNumber = track.episodeNumber != null ? Number(track.episodeNumber) : track.trackNumber != null ? Number(track.trackNumber) : 1;
           const episodeCode = track.episodeCode || `S${String(seasonNumber).padStart(2, "0")}E${String(episodeNumber).padStart(2, "0")}`;
           const result = {
             isTvShow: true,
@@ -14714,7 +14714,7 @@
         const shows = [...showMap.values()].map((s) => {
           const seasons = [...s.seasons.entries()].sort((a, b) => a[0] - b[0]).map(([seasonNumber, count]) => ({
             seasonNumber,
-            label: `Season ${seasonNumber}`,
+            label: seasonNumber === 0 ? "Specials & Extras" : `Season ${seasonNumber}`,
             episodeCount: count
           }));
           return {
@@ -14789,16 +14789,17 @@
         }
         const title = fold4(track.album || UNKNOWN_ALBUM);
         if (track.albumArtist) return `${title}aa:${fold4(track.albumArtist)}`;
-        if (track.filePath) return `${title}dir:${dirOf(track.filePath)}`;
+        const dirKey = track.cloud?.remotePath || track.filePath || "";
+        if (dirKey) return `${title}dir:${dirOf(dirKey)}`;
         return `${title}ar:${fold4(track.artist)}`;
       }
       function compareAlbumOrder(a, b) {
         const tvA = inferTvShowEpisode2(a);
         const tvB = inferTvShowEpisode2(b);
-        const seasonA = tvA && tvA.seasonNumber || a.seasonNumber || a.discNumber || 1;
-        const seasonB = tvB && tvB.seasonNumber || b.seasonNumber || b.discNumber || 1;
-        const epA = tvA && tvA.episodeNumber || a.episodeNumber || a.trackNumber || 9999;
-        const epB = tvB && tvB.episodeNumber || b.episodeNumber || b.trackNumber || 9999;
+        const seasonA = tvA && tvA.seasonNumber != null ? tvA.seasonNumber : a.seasonNumber != null ? a.seasonNumber : a.discNumber || 1;
+        const seasonB = tvB && tvB.seasonNumber != null ? tvB.seasonNumber : b.seasonNumber != null ? b.seasonNumber : b.discNumber || 1;
+        const epA = tvA && tvA.episodeNumber != null ? tvA.episodeNumber : a.episodeNumber != null ? a.episodeNumber : a.trackNumber || 9999;
+        const epB = tvB && tvB.episodeNumber != null ? tvB.episodeNumber : b.episodeNumber != null ? b.episodeNumber : b.trackNumber || 9999;
         return seasonA - seasonB || epA - epB || compareNames(a.title, b.title);
       }
       function mostCommon(values) {
@@ -14898,12 +14899,12 @@
             const seasonMap = /* @__PURE__ */ new Map();
             for (const t of list) {
               const tv = inferTvShowEpisode2(t);
-              const sNum = tv && tv.seasonNumber || t.seasonNumber || t.discNumber || 1;
+              const sNum = tv && tv.seasonNumber != null ? tv.seasonNumber : t.seasonNumber != null ? t.seasonNumber : t.discNumber || 1;
               let season = seasonMap.get(sNum);
               if (!season) {
                 season = {
                   seasonNumber: sNum,
-                  label: `Season ${sNum}`,
+                  label: sNum === 0 ? "Specials & Extras" : `Season ${sNum}`,
                   code: `S${String(sNum).padStart(2, "0")}`,
                   episodes: [],
                   duration: 0
@@ -15152,7 +15153,150 @@
       function unplayedTracks(tracks, stats = {}) {
         return tracks.filter((t) => !((stats[t.id] || {}).plays > 0));
       }
-      function formatDuration6(sec) {
+      function getTrackWatchState4(track, stats = {}) {
+        if (!track || !track.id) {
+          return { positionSec: 0, durationSec: 0, progressPct: 0, inProgress: false, completed: false, plays: 0, lastPlayed: null, resumeLabel: null };
+        }
+        const st = stats[track.id] || {};
+        const positionSec = Math.max(0, Math.round(Number(st.positionSec) || 0));
+        const durationSec = Math.max(0, Math.round(Number(st.durationSec || track.duration) || 0));
+        const completed = !!st.completed || !st.inProgress && positionSec === 0 && (st.plays || 0) > 0 && st.completed !== false;
+        const inProgress = !completed && (!!st.inProgress || positionSec >= 5);
+        let progressPct = Number(st.progressPct) || 0;
+        if (!progressPct && inProgress && durationSec > 0) {
+          progressPct = Math.min(99, Math.max(1, Math.round(positionSec / durationSec * 100)));
+        } else if (completed) {
+          progressPct = 100;
+        }
+        const resumeLabel = inProgress ? `Resume at ${formatDuration7(positionSec)}${progressPct > 0 ? ` (${progressPct}%)` : ""}` : completed ? "Watched" : null;
+        return {
+          positionSec: inProgress ? positionSec : 0,
+          durationSec,
+          progressPct,
+          inProgress,
+          completed,
+          plays: st.plays || 0,
+          lastPlayed: st.lastPlayed || null,
+          resumeLabel
+        };
+      }
+      function getShowWatchState2(album, stats = {}) {
+        const episodes = album && Array.isArray(album.tracks) ? album.tracks : [];
+        if (!episodes.length) {
+          return {
+            totalEpisodes: 0,
+            watchedCount: 0,
+            completedCount: 0,
+            inProgressCount: 0,
+            progressPct: 0,
+            hasActivity: false,
+            completed: false,
+            inProgress: false,
+            resumeEpisode: null,
+            resumeTrack: null,
+            resumeIndex: 0,
+            resumePositionSec: 0,
+            resumeEpisodeCode: "S01E01",
+            actionLabel: "Watch Now",
+            statusBadge: null
+          };
+        }
+        let watchedCount = 0;
+        let inProgressCount = 0;
+        let latestActiveIdx = -1;
+        let latestActiveTime = "";
+        let latestInProgressIdx = -1;
+        let latestInProgressTime = "";
+        episodes.forEach((ep, idx) => {
+          const ws = getTrackWatchState4(ep, stats);
+          if (ws.completed) watchedCount++;
+          if (ws.inProgress) {
+            inProgressCount++;
+            const t = ws.lastPlayed || "1970-01-01";
+            if (t >= latestInProgressTime) {
+              latestInProgressTime = t;
+              latestInProgressIdx = idx;
+            }
+          }
+          if (ws.inProgress || ws.completed || ws.lastPlayed) {
+            const t = ws.lastPlayed || "1970-01-01";
+            if (t >= latestActiveTime) {
+              latestActiveTime = t;
+              latestActiveIdx = idx;
+            }
+          }
+        });
+        let resumeIdx = 0;
+        let resumePositionSec = 0;
+        let isMidEpisode = false;
+        let isNextUp = false;
+        if (latestInProgressIdx >= 0) {
+          resumeIdx = latestInProgressIdx;
+          const ws = getTrackWatchState4(episodes[resumeIdx], stats);
+          resumePositionSec = ws.positionSec;
+          isMidEpisode = true;
+        } else if (latestActiveIdx >= 0) {
+          const lastWs = getTrackWatchState4(episodes[latestActiveIdx], stats);
+          if (lastWs.completed && latestActiveIdx + 1 < episodes.length) {
+            resumeIdx = latestActiveIdx + 1;
+            const nextWs = getTrackWatchState4(episodes[resumeIdx], stats);
+            resumePositionSec = nextWs.inProgress ? nextWs.positionSec : 0;
+            isNextUp = true;
+          } else {
+            resumeIdx = latestActiveIdx;
+            resumePositionSec = lastWs.inProgress ? lastWs.positionSec : 0;
+          }
+        } else {
+          const firstUnwatched = episodes.findIndex((ep) => !getTrackWatchState4(ep, stats).completed);
+          resumeIdx = firstUnwatched >= 0 ? firstUnwatched : 0;
+        }
+        const resumeEpisode = episodes[resumeIdx] || episodes[0];
+        const tv = inferTvShowEpisode2(resumeEpisode);
+        const epCode = tv && tv.episodeCode || resumeEpisode.episodeCode || "S01E01";
+        const epTitle = tv && tv.episodeTitle || resumeEpisode.episodeTitle || resumeEpisode.title || "";
+        const allCompleted = watchedCount > 0 && watchedCount >= episodes.length && inProgressCount === 0;
+        const anyStarted = watchedCount > 0 || inProgressCount > 0;
+        const progressPct = episodes.length > 0 ? Math.min(100, Math.round((watchedCount + (isMidEpisode ? 0.5 : 0)) / episodes.length * 100)) : 0;
+        let actionLabel = `Watch ${epCode}`;
+        let statusBadge = null;
+        if (isMidEpisode) {
+          actionLabel = `Resume ${epCode} (${formatDuration7(resumePositionSec)})`;
+          statusBadge = `\u25B6 ${epCode} \xB7 ${formatDuration7(resumePositionSec)}`;
+        } else if (isNextUp) {
+          actionLabel = `Continue: ${epCode}`;
+          statusBadge = `Next: ${epCode} \xB7 ${watchedCount}/${episodes.length} watched`;
+        } else if (allCompleted) {
+          actionLabel = `Rewatch ${epCode}`;
+          statusBadge = `\u2713 All ${episodes.length} Watched`;
+        } else if (watchedCount > 0) {
+          actionLabel = `Continue ${epCode}`;
+          statusBadge = `${watchedCount}/${episodes.length} watched`;
+        }
+        return {
+          totalEpisodes: episodes.length,
+          watchedCount,
+          completedCount: watchedCount,
+          inProgressCount,
+          progressPct,
+          hasActivity: anyStarted,
+          completed: allCompleted,
+          inProgress: anyStarted && !allCompleted,
+          isMidEpisode,
+          isNextUp,
+          resumeEpisode,
+          resumeTrack: resumeEpisode,
+          resumeIndex: resumeIdx,
+          resumePositionSec,
+          resumeEpisodeCode: epCode,
+          resumeEpisodeTitle: epTitle,
+          actionLabel,
+          statusBadge
+        };
+      }
+      function inProgressTracks2(tracks, stats = {}) {
+        return tracks.filter((t) => getTrackWatchState4(t, stats).inProgress).sort((a, b) => String((stats[b.id] || {}).lastPlayed || "").localeCompare(String((stats[a.id] || {}).lastPlayed || "")));
+      }
+      function formatDuration7(sec) {
         if (!sec || isNaN(sec)) return "--:--";
         const total = Math.round(sec);
         const h = Math.floor(total / 3600);
@@ -15198,7 +15342,10 @@
         recentlyPlayedTracks: recentlyPlayedTracks2,
         mostPlayedTracks: mostPlayedTracks2,
         unplayedTracks,
-        formatDuration: formatDuration6,
+        getTrackWatchState: getTrackWatchState4,
+        getShowWatchState: getShowWatchState2,
+        inProgressTracks: inProgressTracks2,
+        formatDuration: formatDuration7,
         formatLongDuration: formatLongDuration4,
         plural: plural4
       };
@@ -18893,10 +19040,11 @@
   }
 
   // src/TrackList.jsx
-  var import_library_index = __toESM(require_library_index());
+  var import_library_index2 = __toESM(require_library_index());
 
   // src/library-ui.jsx
   var import_react14 = __toESM(require_react());
+  var import_library_index = __toESM(require_library_index());
   var LibraryContext = (0, import_react14.createContext)({
     artBase: null,
     stats: {},
@@ -19006,13 +19154,21 @@
   function collectionMenuItems(tracks, ctx, { label } = {}) {
     const { actions, stats } = ctx;
     const allLoved = tracks.length > 0 && tracks.every((t) => (stats[t.id] || {}).loved);
+    const allWatched = tracks.length > 0 && tracks.every((t) => (0, import_library_index.getTrackWatchState)(t, stats).completed);
+    const anyProgress = tracks.some((t) => {
+      const ws = (0, import_library_index.getTrackWatchState)(t, stats);
+      return ws.inProgress || ws.completed;
+    });
     return [
       label ? { header: label } : null,
-      { label: "Play", icon: "play", onClick: () => actions.playTracks(tracks, 0) },
+      { label: "Play / Resume", icon: "play", onClick: () => actions.playTracks(tracks, 0) },
+      { label: "Play from beginning", icon: "history", onClick: () => actions.playTracks(tracks, 0, { startAt: 0 }) },
       { label: "Shuffle", icon: "shuffle", onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) },
       { label: "Play next", icon: "playNext", onClick: () => actions.queueTracks(tracks, "next") },
       { label: "Add to Watch Queue", icon: "queueAdd", onClick: () => actions.queueTracks(tracks, "end") },
       { separator: true },
+      actions.setWatched ? { label: allWatched ? "Mark as Unwatched" : "Mark as Watched", icon: "check", onClick: () => actions.setWatched(tracks, !allWatched) } : null,
+      actions.setWatched && anyProgress && !allWatched ? { label: "Reset watch progress", icon: "history", onClick: () => actions.setWatched(tracks, false) } : null,
       { label: "Add to Watchlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Watchlist" : "Add to My Watchlist", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
@@ -19022,18 +19178,35 @@
   function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra = [] } = {}) {
     const { actions, stats } = ctx;
     const single = tracks.length === 1 ? tracks[0] : null;
+    const singleWs = single ? (0, import_library_index.getTrackWatchState)(single, stats) : null;
     const allLoved = tracks.every((t) => (stats[t.id] || {}).loved);
+    const allWatched = tracks.every((t) => (0, import_library_index.getTrackWatchState)(t, stats).completed);
+    const anyProgress = tracks.some((t) => {
+      const ws = (0, import_library_index.getTrackWatchState)(t, stats);
+      return ws.inProgress || ws.completed;
+    });
     const items = [
       tracks.length > 1 ? { header: `${tracks.length} titles selected` } : null,
-      {
+      single && singleWs && singleWs.inProgress ? {
+        label: `Resume at ${(0, import_library_index.formatDuration)(singleWs.positionSec)} (${singleWs.progressPct}%)`,
+        icon: "play",
+        onClick: () => allTracks ? actions.playTracks(allTracks, index, { startAt: singleWs.positionSec }) : actions.playTracks(tracks, 0, { startAt: singleWs.positionSec })
+      } : {
         label: "Play",
         icon: "play",
         onClick: () => single && allTracks ? actions.playTracks(allTracks, index) : actions.playTracks(tracks, 0)
       },
+      single && singleWs && singleWs.inProgress ? {
+        label: "Start over from beginning",
+        icon: "history",
+        onClick: () => allTracks ? actions.playTracks(allTracks, index, { startAt: 0 }) : actions.playTracks(tracks, 0, { startAt: 0 })
+      } : null,
       { label: "Play next", icon: "playNext", onClick: () => actions.queueTracks(tracks, "next") },
       { label: "Add to Watch Queue", icon: "queueAdd", onClick: () => actions.queueTracks(tracks, "end") },
       ...extra,
       { separator: true },
+      actions.setWatched ? { label: allWatched ? "Mark as Unwatched" : "Mark as Watched", icon: "check", onClick: () => actions.setWatched(tracks, !allWatched) } : null,
+      actions.setWatched && anyProgress && !allWatched ? { label: "Reset watch progress", icon: "history", onClick: () => actions.setWatched(tracks, false) } : null,
       { label: "Add to Watchlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Watchlist" : "Add to My Watchlist", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
@@ -19287,10 +19460,11 @@
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-art" }, /* @__PURE__ */ import_react15.default.createElement(Cover, { artId: t.artId, name: t.album, size: 32 }));
       case "title": {
         const showArtist = variant !== "album" || t.artist && albumArtist && t.artist !== albumArtist;
-        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-title" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-title-text", title: t.title }, t.title), showArtist && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-sub" }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
+        const ws = (0, import_library_index2.getTrackWatchState)(t, ctx.stats);
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-title" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-title-text", title: t.title }, t.title, ws.inProgress && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-badge resume-pill", title: `Resume at ${(0, import_library_index2.formatDuration)(ws.positionSec)} (${ws.progressPct}%)` }, "\u25B6 ", (0, import_library_index2.formatDuration)(ws.positionSec), ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ""), ws.completed && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-badge watched-pill", title: "Watched" }, "\u2713 Watched")), (showArtist || ws.inProgress) && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-sub" }, showArtist && /* @__PURE__ */ import_react15.default.createElement(import_react15.default.Fragment, null, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
           e.stopPropagation();
           actions.goToArtist(t.artist);
-        } }, t.artist || "Feature Film"), t.cloud && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-badge" }, t.cloud.cached ? "Cloud \xB7 cached" : "Cloud")));
+        } }, t.artist || "Feature Film"), t.cloud && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-badge" }, t.cloud.cached ? "Cloud \xB7 cached" : "Cloud")), ws.inProgress && ws.progressPct > 0 && /* @__PURE__ */ import_react15.default.createElement("span", { className: "tl-inline-progress", title: `${ws.progressPct}% watched` }, /* @__PURE__ */ import_react15.default.createElement("i", { style: { width: `${ws.progressPct}%` } }))));
       }
       case "album":
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-album", title: t.album }, /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
@@ -19300,7 +19474,7 @@
       case "year":
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-year" }, t.year || "\u2014");
       case "genre": {
-        const primaryCategory = (0, import_library_index.inferMovieGenres)(t)[0] || t.genre || "";
+        const primaryCategory = (0, import_library_index2.inferMovieGenres)(t)[0] || t.genre || "";
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-genre", title: primaryCategory }, primaryCategory ? /* @__PURE__ */ import_react15.default.createElement("a", { className: "link", onClick: (e) => {
           e.stopPropagation();
           actions.goToGenre(primaryCategory);
@@ -19313,7 +19487,7 @@
       case "lastPlayed":
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-lastPlayed" }, relativeDate(st.lastPlayed));
       case "duration":
-        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-duration" }, (0, import_library_index.formatDuration)(t.duration));
+        return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-duration" }, (0, import_library_index2.formatDuration)(t.duration));
       case "more":
         return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: "tl-cell tl-more" }, /* @__PURE__ */ import_react15.default.createElement(
           "button",
@@ -19333,7 +19507,7 @@
   }
 
   // src/Library.jsx
-  var import_library_index2 = __toESM(require_library_index());
+  var import_library_index3 = __toESM(require_library_index());
   var NAV_WIDTH = 196;
   var LIBRARY_SECTIONS = [
     { id: "albums", label: "All Movies & Shows", icon: "disc" },
@@ -19411,7 +19585,7 @@
       () => scopeFolder ? tracks.filter((t) => folderOwnsTrack(scopeFolder, t.filePath)) : tracks,
       [tracks, scopeFolder]
     );
-    const index = (0, import_react16.useMemo)(() => (0, import_library_index2.buildIndex)(scopedTracks), [scopedTracks]);
+    const index = (0, import_react16.useMemo)(() => (0, import_library_index3.buildIndex)(scopedTracks), [scopedTracks]);
     const go = (view) => onNavigate(view);
     const section = nav.section || "albums";
     const detail = nav.detail || null;
@@ -19430,7 +19604,7 @@
     const searching = query.trim().length > 0;
     const deferredQuery = (0, import_react16.useDeferredValue)(query);
     const results = (0, import_react16.useMemo)(
-      () => deferredQuery.trim() ? (0, import_library_index2.searchIndex)(index, deferredQuery, { artists: 12, albums: 12, genres: 8 }) : null,
+      () => deferredQuery.trim() ? (0, import_library_index3.searchIndex)(index, deferredQuery, { artists: 12, albums: 12, genres: 8 }) : null,
       [index, deferredQuery]
     );
     const pageTitle = searching ? `Results for \u201C${query.trim()}\u201D` : titleFor(nav, index);
@@ -19476,7 +19650,7 @@
         max: 420,
         defaultWidth: NAV_WIDTH
       }
-    ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Browse Cinema"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Watchlist & Activity"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Media Sources"), /* @__PURE__ */ import_react16.default.createElement(NavItem, { item: { id: "folders", label: "Folders & Cloud", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index2.plural)((index.moviesOnly || []).length, "movie"), " \xB7 ", (0, import_library_index2.plural)((index.tvShows || []).length, "show")), /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index2.plural)(index.tracks.length, "video file"), " \xB7 ", (0, import_library_index2.formatLongDuration)(index.totalDuration)), onAiPlaylist && /* @__PURE__ */ import_react16.default.createElement(
+    ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Browse Cinema"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Watchlist & Activity"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Media Sources"), /* @__PURE__ */ import_react16.default.createElement(NavItem, { item: { id: "folders", label: "Folders & Cloud", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)((index.moviesOnly || []).length, "movie"), " \xB7 ", (0, import_library_index3.plural)((index.tvShows || []).length, "show")), /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)(index.tracks.length, "video file"), " \xB7 ", (0, import_library_index3.formatLongDuration)(index.totalDuration)), onAiPlaylist && /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
         id: "btn-library-ai-playlist",
@@ -19591,9 +19765,9 @@
   }
   var STATS_SORTS = /* @__PURE__ */ new Set(["plays", "lastPlayed", "loved"]);
   var statsDep = (key, stats) => STATS_SORTS.has(key) ? stats : null;
-  var albumLetter = (a) => (0, import_library_index2.indexLetter)(a.title);
-  var albumArtistLetter = (a) => (0, import_library_index2.indexLetter)(a.artist);
-  var artistLetter = (a) => a.isPlaceholder ? "?" : (0, import_library_index2.indexLetter)(a.name);
+  var albumLetter = (a) => (0, import_library_index3.indexLetter)(a.title);
+  var albumArtistLetter = (a) => (0, import_library_index3.indexLetter)(a.artist);
+  var artistLetter = (a) => a.isPlaceholder ? "?" : (0, import_library_index3.indexLetter)(a.name);
   function CinemaHeroSpotlight({ albums, go }) {
     const ctx = useLibrary();
     const [spotIdx, setSpotIdx] = (0, import_react16.useState)(0);
@@ -19610,12 +19784,12 @@
     const sortKey = prefs.albumSort || "title";
     const activeGenre = prefs.categoryFilter || "all";
     const filteredAlbums = (0, import_react16.useMemo)(() => {
-      const base = (0, import_library_index2.sortAlbums)(index.albums, sortKey);
+      const base = (0, import_library_index3.sortAlbums)(index.albums, sortKey);
       if (activeGenre === "all") return base;
       if (activeGenre === "__movies__") return base.filter((a) => !a.isTvShow);
       if (activeGenre === "__tv__") return base.filter((a) => !!a.isTvShow);
       if (activeGenre === "__franchises__") return base.filter((a) => !!a.franchise);
-      return base.filter((a) => (a.genres || [a.genre]).some((g) => (0, import_library_index2.fold)(g) === activeGenre));
+      return base.filter((a) => (a.genres || [a.genre]).some((g) => (0, import_library_index3.fold)(g) === activeGenre));
     }, [index, sortKey, activeGenre]);
     const lettered = activeGenre === "all" && (sortKey === "title" || sortKey === "artist") && filteredAlbums.length >= LETTER_SECTION_MIN;
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(CinemaHeroSpotlight, { albums: index.albums, go }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-category-bar", role: "tablist", "aria-label": "Movie & Show Categories" }, /* @__PURE__ */ import_react16.default.createElement(
@@ -19660,53 +19834,54 @@
       g.name,
       " ",
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, g.albums.length)
-    ))), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(filteredAlbums.length, "title"), tracks: filteredAlbums.flatMap((a) => a.tracks) }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "album-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"], ["artist", "Quality / Format"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: filteredAlbums, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
+    ))), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index3.plural)(filteredAlbums.length, "title"), tracks: filteredAlbums.flatMap((a) => a.tracks) }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "album-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"], ["artist", "Quality / Format"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: filteredAlbums, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
   }
   function MoviesOnlySection({ index, go, prefs, setPref }) {
     const sortKey = prefs.albumSort || "title";
-    const movies = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.moviesOnly || [], sortKey), [index, sortKey]);
+    const movies = (0, import_react16.useMemo)(() => (0, import_library_index3.sortAlbums)(index.moviesOnly || [], sortKey), [index, sortKey]);
     const lettered = (sortKey === "title" || sortKey === "artist") && movies.length >= LETTER_SECTION_MIN;
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(CinemaHeroSpotlight, { albums: movies, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(movies.length, "feature film")} \xB7 Theatrical & home cinema`, tracks: movies.flatMap((a) => a.tracks) }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "movies-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"], ["artist", "Quality / Format"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: movies, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(CinemaHeroSpotlight, { albums: movies, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index3.plural)(movies.length, "feature film")} \xB7 Theatrical & home cinema`, tracks: movies.flatMap((a) => a.tracks) }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "movies-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"], ["artist", "Quality / Format"]] })), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: movies, go, letterOf: lettered ? sortKey === "title" ? albumLetter : albumArtistLetter : null }));
   }
   function TvShowsSection({ index, go, prefs, setPref }) {
     const sortKey = prefs.albumSort || "title";
-    const shows = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.tvShows || [], sortKey), [index, sortKey]);
+    const shows = (0, import_react16.useMemo)(() => (0, import_library_index3.sortAlbums)(index.tvShows || [], sortKey), [index, sortKey]);
     const allEpisodes = (0, import_react16.useMemo)(() => shows.flatMap((s) => s.tracks), [shows]);
     const totalSeasons = (0, import_react16.useMemo)(() => shows.reduce((sum, s) => sum + (s.seasonCount || 1), 0), [shows]);
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
       SectionHeader,
       {
-        subtitle: `${(0, import_library_index2.plural)(shows.length, "TV show")} \xB7 ${(0, import_library_index2.plural)(totalSeasons, "season")} \xB7 ${(0, import_library_index2.plural)(allEpisodes.length, "episode")}`,
+        subtitle: `${(0, import_library_index3.plural)(shows.length, "TV show")} \xB7 ${(0, import_library_index3.plural)(totalSeasons, "season")} \xB7 ${(0, import_library_index3.plural)(allEpisodes.length, "episode")}`,
         tracks: allEpisodes
       },
       /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "tv-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Show Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"]] })
-    ), shows.length ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: shows, go }), shows.map((show) => /* @__PURE__ */ import_react16.default.createElement("div", { key: show.key, className: "tv-show-section-block" }, /* @__PURE__ */ import_react16.default.createElement(
+    ), shows.length ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: shows, go }), shows.slice(0, 12).map((show) => /* @__PURE__ */ import_react16.default.createElement("div", { key: show.key, className: "tv-show-section-block" }, /* @__PURE__ */ import_react16.default.createElement(
       SectionHeader,
       {
         title: show.title,
-        subtitle: `${(0, import_library_index2.plural)(show.seasonCount || 1, "Season")} \xB7 ${(0, import_library_index2.plural)(show.episodeCount || show.tracks.length, "Episode")}`,
+        subtitle: `${(0, import_library_index3.plural)(show.seasonCount || 1, "Season")} \xB7 ${(0, import_library_index3.plural)(show.episodeCount || show.tracks.length, "Episode")}`,
         tracks: show.tracks
-      }
+      },
+      /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => go({ section: "albums", detail: { type: "album", key: show.key } }) }, "Open Show Page")
     ), /* @__PURE__ */ import_react16.default.createElement(TvShowSeasonsBreakdown, { album: show })))) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No TV shows or episodes found in your library yet."));
   }
   function FranchisesSection({ index, go }) {
     const franchises = index.franchises || [];
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(franchises.length, "collection")} \xB7 Multi-movie box sets & series` }), franchises.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: franchises, type: "franchise", go, big: true }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No multi-movie franchises detected yet."));
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index3.plural)(franchises.length, "collection")} \xB7 Multi-movie box sets & series` }), franchises.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: franchises, type: "franchise", go, big: true }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No multi-movie franchises detected yet."));
   }
   function ArtistsSection({ index, go, prefs, setPref, stats }) {
     const sortKey = prefs.artistSort || "name";
-    const artists = (0, import_react16.useMemo)(() => (0, import_library_index2.sortArtists)(index.artists, sortKey, stats), [index, sortKey, statsDep(sortKey, stats)]);
+    const artists = (0, import_react16.useMemo)(() => (0, import_library_index3.sortArtists)(index.artists, sortKey, stats), [index, sortKey, statsDep(sortKey, stats)]);
     const lettered = sortKey === "name" && artists.length >= LETTER_SECTION_MIN;
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(artists.length, "release format"), tracks: index.tracks }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "artist-sort", value: sortKey, onChange: (v) => setPref("artistSort", v), options: [["name", "Format Name"], ["tracks", "Most titles"], ["albums", "Most releases"], ["plays", "Most watched"]] })), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists, go, letterOf: lettered ? artistLetter : null }));
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index3.plural)(artists.length, "release format"), tracks: index.tracks }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "artist-sort", value: sortKey, onChange: (v) => setPref("artistSort", v), options: [["name", "Format Name"], ["tracks", "Most titles"], ["albums", "Most releases"], ["plays", "Most watched"]] })), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists, go, letterOf: lettered ? artistLetter : null }));
   }
   function SongsSection({ index, prefs, setPref, stats }) {
     const sort = prefs.songSort || { key: "title", dir: "asc" };
     const sorted = (0, import_react16.useMemo)(
-      () => (0, import_library_index2.sortTracks)(index.tracks, sort.key, sort.dir, stats),
+      () => (0, import_library_index3.sortTracks)(index.tracks, sort.key, sort.dir, stats),
       [index, sort.key, sort.dir, statsDep(sort.key, stats)]
       // eslint-disable-line react-hooks/exhaustive-deps
     );
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(sorted.length, "title")} \xB7 ${(0, import_library_index2.formatLongDuration)(index.totalDuration)}`, tracks: sorted }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-songs", tracks: sorted, sort, onSort: (key) => setPref("songSort", toggleSort(sort, key)) }));
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index3.plural)(sorted.length, "title")} \xB7 ${(0, import_library_index3.formatLongDuration)(index.totalDuration)}`, tracks: sorted }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-songs", tracks: sorted, sort, onSort: (key) => setPref("songSort", toggleSort(sort, key)) }));
   }
   function GenresSection({ index, go, prefs, setPref }) {
     const sortKey = prefs.genreSort || "name";
@@ -19714,13 +19889,13 @@
       () => sortKey === "tracks" ? [...index.genres].sort((a, b) => b.tracks.length - a.tracks.length) : index.genres,
       [index, sortKey]
     );
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(genres.length, "category") }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "genre-sort", value: sortKey, onChange: (v) => setPref("genreSort", v), options: [["name", "Category Name"], ["tracks", "Most titles"]] })), genres.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: genres, type: "genre", go }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No genre categories found in your library."));
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index3.plural)(genres.length, "category") }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "genre-sort", value: sortKey, onChange: (v) => setPref("genreSort", v), options: [["name", "Category Name"], ["tracks", "Most titles"]] })), genres.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: genres, type: "genre", go }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No genre categories found in your library."));
   }
   function DecadesSection({ index, go }) {
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(index.decades.length, "decade") }), index.decades.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: index.decades, type: "decade", go, big: true }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No release years found in your library."));
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index3.plural)(index.decades.length, "decade") }), index.decades.length ? /* @__PURE__ */ import_react16.default.createElement(GroupGrid, { groups: index.decades, type: "decade", go, big: true }) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No release years found in your library."));
   }
   function ComposersSection({ index, go }) {
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index2.plural)(index.composers.length, "director / studio") }), index.composers.length ? /* @__PURE__ */ import_react16.default.createElement(
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: (0, import_library_index3.plural)(index.composers.length, "director / studio") }), index.composers.length ? /* @__PURE__ */ import_react16.default.createElement(
       VirtualGrid,
       {
         items: index.composers,
@@ -19730,27 +19905,54 @@
         gapX: 6,
         gapY: 6,
         itemHeight: 42,
-        letterOf: index.composers.length >= LETTER_SECTION_MIN ? (c) => (0, import_library_index2.indexLetter)(c.name) : null,
-        renderItem: (c) => /* @__PURE__ */ import_react16.default.createElement("button", { className: "name-list-item", onClick: () => go({ section: "composers", detail: { type: "composer", key: c.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "pen", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "name-list-name" }, c.name), /* @__PURE__ */ import_react16.default.createElement("span", { className: "name-list-meta" }, (0, import_library_index2.plural)(c.tracks.length, "title")))
+        letterOf: index.composers.length >= LETTER_SECTION_MIN ? (c) => (0, import_library_index3.indexLetter)(c.name) : null,
+        renderItem: (c) => /* @__PURE__ */ import_react16.default.createElement("button", { className: "name-list-item", onClick: () => go({ section: "composers", detail: { type: "composer", key: c.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "pen", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "name-list-name" }, c.name), /* @__PURE__ */ import_react16.default.createElement("span", { className: "name-list-meta" }, (0, import_library_index3.plural)(c.tracks.length, "title")))
       }
     ) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No director or studio tags found in your library."));
   }
   function LovedSection({ index, stats }) {
-    const loved = (0, import_react16.useMemo)(() => (0, import_library_index2.lovedTracks)(index.tracks, stats), [index, stats]);
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(loved.length, "watchlist title")} \xB7 newest first`, tracks: loved }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-loved", tracks: loved, emptyText: "Tap the \u2665 on any movie or episode to add it to My Watchlist." }));
+    const loved = (0, import_react16.useMemo)(() => (0, import_library_index3.lovedTracks)(index.tracks, stats), [index, stats]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index3.plural)(loved.length, "watchlist title")} \xB7 newest first`, tracks: loved }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-loved", tracks: loved, emptyText: "Tap the \u2665 on any movie or episode to add it to My Watchlist." }));
   }
   function RecentSection({ index, go }) {
-    const recentAlbums = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.albums, "addedAt").slice(0, 12), [index]);
-    const recentTracks = (0, import_react16.useMemo)(() => (0, import_library_index2.recentlyAddedTracks)(index.tracks).slice(0, 500), [index]);
+    const recentAlbums = (0, import_react16.useMemo)(() => (0, import_library_index3.sortAlbums)(index.albums, "addedAt").slice(0, 12), [index]);
+    const recentTracks = (0, import_react16.useMemo)(() => (0, import_library_index3.recentlyAddedTracks)(index.tracks).slice(0, 500), [index]);
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Recently Added Movies & Shows" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: recentAlbums, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Recently Added Video Files", subtitle: recentTracks.length >= 500 ? "Latest 500" : null, tracks: recentTracks }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-recent", tracks: recentTracks, extraColumn: "added" }));
   }
-  function HistorySection({ index, stats }) {
-    const played = (0, import_react16.useMemo)(() => (0, import_library_index2.recentlyPlayedTracks)(index.tracks, stats).slice(0, 500), [index, stats]);
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: "Movies and episodes you recently watched", tracks: played }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-history", tracks: played, extraColumn: "lastPlayed", emptyText: "Nothing watched yet \u2014 your viewing history will show up here." }));
+  function HistorySection({ index, go, stats }) {
+    const inProgress = (0, import_react16.useMemo)(() => (0, import_library_index3.inProgressTracks)(index.tracks, stats), [index, stats]);
+    const inProgressShows = (0, import_react16.useMemo)(() => {
+      return (index.tvShows || []).filter((show) => {
+        const st = (0, import_library_index3.getShowWatchState)(show, stats);
+        return st.hasActivity && !st.completed;
+      });
+    }, [index, stats]);
+    const played = (0, import_react16.useMemo)(() => (0, import_library_index3.recentlyPlayedTracks)(index.tracks, stats).slice(0, 500), [index, stats]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, inProgress.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      SectionHeader,
+      {
+        title: "Continue Watching \u2014 Pick Up Where You Left Off",
+        subtitle: `${(0, import_library_index3.plural)(inProgress.length, "title")} paused mid-stream`,
+        tracks: inProgress
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-continue-watching", tracks: inProgress, extraColumn: "lastPlayed" })), inProgressShows.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      SectionHeader,
+      {
+        title: "TV Series In Progress",
+        subtitle: `${(0, import_library_index3.plural)(inProgressShows.length, "show")} with active episode progress`
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: inProgressShows, go })), /* @__PURE__ */ import_react16.default.createElement(
+      SectionHeader,
+      {
+        title: "Recently Watched History",
+        subtitle: "Movies and episodes you recently watched",
+        tracks: played
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-history", tracks: played, extraColumn: "lastPlayed", emptyText: "Nothing watched yet \u2014 start watching any movie or TV episode and your progress will be saved automatically." }));
   }
   function TopSection({ index, go, stats }) {
-    const top = (0, import_react16.useMemo)(() => (0, import_library_index2.mostPlayedTracks)(index.tracks, stats).slice(0, 200), [index, stats]);
-    const topArtists = (0, import_react16.useMemo)(() => (0, import_library_index2.sortArtists)(index.artists.filter((a) => !a.isPlaceholder), "plays", stats).filter((a) => a.tracks.some((t) => (stats[t.id] || {}).plays)).slice(0, 8), [index, stats]);
+    const top = (0, import_react16.useMemo)(() => (0, import_library_index3.mostPlayedTracks)(index.tracks, stats).slice(0, 200), [index, stats]);
+    const topArtists = (0, import_react16.useMemo)(() => (0, import_library_index3.sortArtists)(index.artists.filter((a) => !a.isPlaceholder), "plays", stats).filter((a) => a.tracks.some((t) => (stats[t.id] || {}).plays)).slice(0, 8), [index, stats]);
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, topArtists.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Top Release Formats" }), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists: topArtists, go })), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Most Watched Titles", subtitle: top.length ? `Top ${top.length}` : null, tracks: top }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "library-top", tracks: top, emptyText: "Watch some movies or shows and your favorites will rise to the top." }));
   }
   function FoldersSection({ folders, folderProps }) {
@@ -19776,10 +19978,51 @@
   }
   function AlbumCard({ album, go, showArtist }) {
     const ctx = useLibrary();
+    const { stats, actions } = ctx;
     const open = () => go({ section: "albums", detail: { type: "album", key: album.key } });
     const qualBadge = album.quality?.resolution || album.quality?.badge || null;
     const topBadge = album.isTvShow ? `\u{1F4FA} TV SERIES${qualBadge ? ` \xB7 ${qualBadge}` : ""}` : qualBadge;
     const bottomBadge = album.isTvShow ? `${album.seasonCount || 1}S \xB7 ${album.episodeCount || album.tracks.length}E` : album.year;
+    const showWatch = album.isTvShow ? (0, import_library_index3.getShowWatchState)(album, stats) : null;
+    const movieWatch = !album.isTvShow && album.tracks.length ? (0, import_library_index3.getTrackWatchState)(album.tracks[0], stats) : null;
+    let watchBadge = null;
+    let watchProgressPct = 0;
+    let playLabel = `Watch ${album.title}`;
+    let handleCardPlay = (e) => {
+      e.stopPropagation();
+      actions.playTracks(album.tracks, 0);
+    };
+    if (album.isTvShow && showWatch) {
+      watchProgressPct = showWatch.progressPct;
+      if (showWatch.completed) {
+        watchBadge = { text: "\u2713 All Watched", cls: "watched" };
+      } else if (showWatch.hasActivity) {
+        const epCode = showWatch.resumeTrack?.episodeCode || (showWatch.resumeTrack?.seasonNumber != null ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, "0")}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, "0")}` : "Next");
+        if (showWatch.resumePositionSec >= 5) {
+          watchBadge = { text: `\u25B6 ${epCode} \xB7 ${(0, import_library_index3.formatDuration)(showWatch.resumePositionSec)}`, cls: "resume" };
+          playLabel = `Resume ${album.title} (${epCode} at ${(0, import_library_index3.formatDuration)(showWatch.resumePositionSec)})`;
+        } else {
+          watchBadge = { text: `\u25B6 Next: ${epCode} (${showWatch.completedCount}/${showWatch.totalEpisodes})`, cls: "resume" };
+          playLabel = `Continue ${album.title} (${epCode})`;
+        }
+        handleCardPlay = (e) => {
+          e.stopPropagation();
+          actions.playTracks(album.tracks, showWatch.resumeIndex, { startAt: showWatch.resumePositionSec });
+        };
+      }
+    } else if (movieWatch) {
+      watchProgressPct = movieWatch.progressPct;
+      if (movieWatch.completed) {
+        watchBadge = { text: "\u2713 Watched", cls: "watched" };
+      } else if (movieWatch.inProgress) {
+        watchBadge = { text: `\u25B6 ${(0, import_library_index3.formatDuration)(movieWatch.positionSec)} (${movieWatch.progressPct}%)`, cls: "resume" };
+        playLabel = `Resume ${album.title} at ${(0, import_library_index3.formatDuration)(movieWatch.positionSec)}`;
+        handleCardPlay = (e) => {
+          e.stopPropagation();
+          actions.playTracks(album.tracks, 0, { startAt: movieWatch.positionSec });
+        };
+      }
+    }
     return /* @__PURE__ */ import_react16.default.createElement(
       "div",
       {
@@ -19789,14 +20032,11 @@
           e.preventDefault();
           ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: "View release format", icon: "tv", onClick: () => ctx.actions.goToArtist(album.artist) }]);
         },
-        title: `${album.title} \u2014 ${album.isTvShow ? `${(0, import_library_index2.plural)(album.seasonCount || 1, "Season")}, ${(0, import_library_index2.plural)(album.episodeCount || album.tracks.length, "Episode")}` : album.genre || album.artist}`
+        title: `${album.title} \u2014 ${album.isTvShow ? `${(0, import_library_index3.plural)(album.seasonCount || 1, "Season")}, ${(0, import_library_index3.plural)(album.episodeCount || album.tracks.length, "Episode")}` : album.genre || album.artist}`
       },
-      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), topBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-top ${album.isTvShow ? "tv-badge" : ""}` }, topBadge), bottomBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, bottomBadge), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Watch ${album.title}`, onClick: (e) => {
-        e.stopPropagation();
-        ctx.actions.playTracks(album.tracks, 0);
-      } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
+      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), topBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-top ${album.isTvShow ? "tv-badge" : ""}` }, topBadge), watchBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-watch ${watchBadge.cls}` }, watchBadge.text), bottomBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, bottomBadge), watchProgressPct > 0 && /* @__PURE__ */ import_react16.default.createElement("div", { className: `poster-watch-progress ${watchProgressPct >= 100 ? "completed" : ""}` }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "poster-watch-progress-fill", style: { width: `${Math.min(100, watchProgressPct)}%` } })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: playLabel, onClick: handleCardPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, album.title),
-      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.isTvShow ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, (0, import_library_index2.plural)(album.seasonCount || 1, "Season"), " \xB7 ", (0, import_library_index2.plural)(album.episodeCount || album.tracks.length, "Episode")) : album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index2.plural)(album.tracks.length, "title")))
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.isTvShow ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, (0, import_library_index3.plural)(album.seasonCount || 1, "Season"), " \xB7 ", (0, import_library_index3.plural)(album.episodeCount || album.tracks.length, "Episode"), showWatch?.completedCount ? ` \xB7 ${showWatch.completedCount}/${showWatch.totalEpisodes} watched` : "") : album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index3.plural)(album.tracks.length, "title")))
     );
   }
   function ArtistGrid({ artists, go, letterOf = null }) {
@@ -19829,7 +20069,7 @@
         ctx.actions.playTracks(a.tracks, 0, { shuffle: true });
       } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 16 }))),
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, a.name),
-      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index2.plural)(a.tracks.length, "title"))
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index3.plural)(a.tracks.length, "title"))
     );
   }
   function GroupGrid({ groups, type, go, big = false }) {
@@ -19857,7 +20097,7 @@
             e.stopPropagation();
             ctx.actions.playTracks(g.tracks, 0);
           } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 16 }))),
-          /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index2.plural)(g.albums.length, "title"), " \xB7 ", (0, import_library_index2.formatLongDuration)(g.duration))
+          /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, (0, import_library_index3.plural)(g.albums.length, "title"), " \xB7 ", (0, import_library_index3.formatLongDuration)(g.duration))
         )
       }
     );
@@ -19865,17 +20105,69 @@
   function ArtistChips({ tracks, index, go, limit = 12 }) {
     const top = (0, import_react16.useMemo)(() => {
       const counts = /* @__PURE__ */ new Map();
-      for (const t of tracks) counts.set((0, import_library_index2.fold)(t.artist), (counts.get((0, import_library_index2.fold)(t.artist)) || 0) + 1);
+      for (const t of tracks) counts.set((0, import_library_index3.fold)(t.artist), (counts.get((0, import_library_index3.fold)(t.artist)) || 0) + 1);
       return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([key]) => index.artistByKey.get(key)).filter((a) => a && !a.isPlaceholder).slice(0, limit);
     }, [tracks, index, limit]);
     if (!top.length) return null;
     return /* @__PURE__ */ import_react16.default.createElement("div", { className: "chip-row" }, top.map((a) => /* @__PURE__ */ import_react16.default.createElement("button", { key: a.key, className: "artist-chip", onClick: () => go({ section: "artists", detail: { type: "artist", key: a.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: a.artId, name: a.name, round: true, size: 24 }), /* @__PURE__ */ import_react16.default.createElement("span", null, a.name))));
   }
-  function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel }) {
+  function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel, album = null }) {
     const ctx = useLibrary();
-    const { actions } = ctx;
-    const allLoved = tracks.length > 0 && tracks.every((t) => (ctx.stats[t.id] || {}).loved);
-    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " Watch Now"), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-shuffle", className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 }), " Shuffle"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "next") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "playNext", size: 14 }), " Watch next"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "end") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "queueAdd", size: 14 }), " Add to queue"), /* @__PURE__ */ import_react16.default.createElement("button", { className: `btn-icon-only ${allLoved ? "loved" : ""}`, title: allLoved ? "Remove from Watchlist" : "Add to Watchlist", onClick: () => actions.setLoved(tracks, !allLoved) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: allLoved ? "heartFill" : "heart", size: 15 })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only", title: "More", onClick: (e) => ctx.openMenu(e, collectionMenuItems(tracks, ctx, { label: menuLabel })) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 15 })))));
+    const { actions, stats } = ctx;
+    const allLoved = tracks.length > 0 && tracks.every((t) => (stats[t.id] || {}).loved);
+    const allWatched = tracks.length > 0 && tracks.every((t) => (0, import_library_index3.getTrackWatchState)(t, stats).completed);
+    const showWatch = album && album.isTvShow ? (0, import_library_index3.getShowWatchState)(album, stats) : null;
+    const movieWatch = album && !album.isTvShow && tracks.length ? (0, import_library_index3.getTrackWatchState)(tracks[0], stats) : null;
+    let primaryPlayLabel = "Watch Now";
+    let handlePrimaryPlay = () => actions.playTracks(tracks, 0);
+    let showStartOver = false;
+    if (showWatch && showWatch.hasActivity && !showWatch.completed) {
+      const epCode = showWatch.resumeTrack?.episodeCode || (showWatch.resumeTrack?.seasonNumber != null ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, "0")}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, "0")}` : "Next Episode");
+      if (showWatch.resumePositionSec >= 5) {
+        primaryPlayLabel = `Resume ${epCode} (${(0, import_library_index3.formatDuration)(showWatch.resumePositionSec)})`;
+        showStartOver = true;
+      } else {
+        primaryPlayLabel = `Continue: ${epCode}`;
+      }
+      handlePrimaryPlay = () => actions.playTracks(tracks, showWatch.resumeIndex, { startAt: showWatch.resumePositionSec });
+    } else if (movieWatch && movieWatch.inProgress) {
+      primaryPlayLabel = `Resume at ${(0, import_library_index3.formatDuration)(movieWatch.positionSec)} (${movieWatch.progressPct}%)`;
+      showStartOver = true;
+      handlePrimaryPlay = () => actions.playTracks(tracks, 0, { startAt: movieWatch.positionSec });
+    }
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: handlePrimaryPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " ", primaryPlayLabel), showStartOver && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        className: "btn-secondary",
+        onClick: () => actions.playTracks(tracks, showWatch ? showWatch.resumeIndex : 0, { startAt: 0 }),
+        title: "Start over from 0:00"
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "history", size: 14 }),
+      " Start Over"
+    ), actions.hasSpeakers && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        className: "btn-secondary",
+        disabled: !tracks.length,
+        onClick: () => actions.castTracks(tracks, title, {
+          startIndex: showWatch ? showWatch.resumeIndex : 0,
+          startAt: showWatch ? showWatch.resumePositionSec : movieWatch?.inProgress ? movieWatch.positionSec : null
+        })
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cast", size: 14 }),
+      " Cast to TV"
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-shuffle", className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 }), " Shuffle"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "next") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "playNext", size: 14 }), " Watch next"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "end") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "queueAdd", size: 14 }), " Add to queue"), actions.setWatched && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        className: "btn-secondary",
+        disabled: !tracks.length,
+        onClick: () => actions.setWatched(tracks, !allWatched),
+        title: allWatched ? "Mark all as unwatched" : "Mark as watched"
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "check", size: 14 }),
+      " ",
+      allWatched ? "Watched \u2713" : "Mark Watched"
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { className: `btn-icon-only ${allLoved ? "loved" : ""}`, title: allLoved ? "Remove from Watchlist" : "Add to Watchlist", onClick: () => actions.setLoved(tracks, !allLoved) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: allLoved ? "heartFill" : "heart", size: 15 })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only", title: "More", onClick: (e) => ctx.openMenu(e, collectionMenuItems(tracks, ctx, { label: menuLabel })) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 15 })))));
   }
   function NotFound({ go }) {
     return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement("h3", null, "Not in your library anymore"), /* @__PURE__ */ import_react16.default.createElement("p", null, "It may have been removed by a folder sync, or it lives outside the selected folder."), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => go({ section: "albums" }) }, "Browse Movies & Shows"));
@@ -19903,7 +20195,7 @@
   }
   function TvShowSeasonsBreakdown({ album }) {
     const ctx = useLibrary();
-    const { actions, currentTrack, isPlaying, openMenu } = ctx;
+    const { actions, currentTrack, isPlaying, openMenu, stats } = ctx;
     const seasons = album.seasons && album.seasons.length ? album.seasons : [{ seasonNumber: 1, label: "Season 1", code: "S01", episodes: album.tracks, episodeCount: album.tracks.length, duration: album.duration }];
     const [selectedSeason, setSelectedSeason] = (0, import_react16.useState)("all");
     const visibleSeasons = selectedSeason === "all" ? seasons : seasons.filter((s) => String(s.seasonNumber) === String(selectedSeason));
@@ -19915,60 +20207,115 @@
       },
       "\u{1F4FA} All Seasons ",
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, seasons.length)
-    ), seasons.map((s) => /* @__PURE__ */ import_react16.default.createElement(
-      "button",
-      {
-        key: s.seasonNumber,
-        className: `cinema-cat-chip ${String(selectedSeason) === String(s.seasonNumber) ? "active" : ""}`,
-        onClick: () => setSelectedSeason(String(s.seasonNumber))
-      },
-      s.label,
-      " ",
-      /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, (0, import_library_index2.plural)(s.episodeCount, "Episode"))
-    ))), visibleSeasons.map((season) => /* @__PURE__ */ import_react16.default.createElement("div", { key: season.seasonNumber, className: "tv-season-card" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-title" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-season-badge" }, season.code), /* @__PURE__ */ import_react16.default.createElement("h4", null, season.label), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-season-meta" }, (0, import_library_index2.plural)(season.episodeCount, "Episode"), season.duration > 0 ? ` \xB7 ${(0, import_library_index2.formatLongDuration)(season.duration)}` : "")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-accent", onClick: () => actions.playTracks(season.episodes, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 12 }), " Watch ", season.label), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => actions.playTracks(season.episodes, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 12 }), " Shuffle"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-list" }, season.episodes.map((ep, idx) => {
-      const tv = (0, import_library_index2.inferTvShowEpisode)(ep);
-      const epNum = tv && tv.episodeNumber || ep.episodeNumber || ep.trackNumber || idx + 1;
-      const epCode = tv && tv.episodeCode || ep.episodeCode || `S${String(season.seasonNumber).padStart(2, "0")}E${String(epNum).padStart(2, "0")}`;
-      const epTitle = tv && tv.episodeTitle || ep.episodeTitle || ep.title;
-      const isCurrent = sameTrack(currentTrack, ep);
+    ), seasons.map((s) => {
+      const watchedInSeason = s.episodes.filter((ep) => (0, import_library_index3.getTrackWatchState)(ep, stats).completed).length;
       return /* @__PURE__ */ import_react16.default.createElement(
-        "div",
+        "button",
         {
-          key: ep.id || ep.filePath || idx,
-          className: `tv-episode-row ${isCurrent ? "current" : ""}`,
-          onDoubleClick: () => actions.playTracks(season.episodes, idx),
-          onContextMenu: (e) => {
-            e.preventDefault();
-            openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx }));
-          }
+          key: s.seasonNumber,
+          className: `cinema-cat-chip ${String(selectedSeason) === String(s.seasonNumber) ? "active" : ""}`,
+          onClick: () => setSelectedSeason(String(s.seasonNumber))
         },
-        /* @__PURE__ */ import_react16.default.createElement(
-          "button",
+        s.label,
+        " ",
+        /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, watchedInSeason > 0 ? `${watchedInSeason}/${s.episodeCount}` : (0, import_library_index3.plural)(s.episodeCount, "Episode"))
+      );
+    })), visibleSeasons.map((season) => {
+      const watchedCount = season.episodes.filter((ep) => (0, import_library_index3.getTrackWatchState)(ep, stats).completed).length;
+      const allSeasonWatched = season.episodes.length > 0 && watchedCount === season.episodes.length;
+      const seasonState = (0, import_library_index3.getShowWatchState)({ tracks: season.episodes }, stats);
+      return /* @__PURE__ */ import_react16.default.createElement("div", { key: season.seasonNumber, className: "tv-season-card" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-title" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-season-badge" }, season.code), /* @__PURE__ */ import_react16.default.createElement("h4", null, season.label), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-season-meta" }, (0, import_library_index3.plural)(season.episodeCount, "Episode"), watchedCount > 0 ? ` \xB7 ${watchedCount}/${season.episodeCount} Watched` : "", season.duration > 0 ? ` \xB7 ${(0, import_library_index3.formatLongDuration)(season.duration)}` : "")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-actions" }, /* @__PURE__ */ import_react16.default.createElement(
+        "button",
+        {
+          className: "btn-accent",
+          onClick: () => actions.playTracks(season.episodes, seasonState.resumeIndex, { startAt: seasonState.resumePositionSec })
+        },
+        /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 12 }),
+        seasonState.hasActivity && !seasonState.completed ? seasonState.resumePositionSec >= 5 ? `Resume E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, "0")} (${(0, import_library_index3.formatDuration)(seasonState.resumePositionSec)})` : `Continue E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, "0")}` : `Watch ${season.label}`
+      ), actions.setWatched && /* @__PURE__ */ import_react16.default.createElement(
+        "button",
+        {
+          className: "btn-secondary",
+          onClick: () => actions.setWatched(season.episodes, !allSeasonWatched),
+          title: allSeasonWatched ? `Mark ${season.label} unwatched` : `Mark all episodes in ${season.label} watched`
+        },
+        /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "check", size: 12 }),
+        " ",
+        allSeasonWatched ? "Season Watched \u2713" : "Mark Season Watched"
+      ), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => actions.playTracks(season.episodes, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 12 }), " Shuffle"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-list" }, season.episodes.map((ep, idx) => {
+        const tv = (0, import_library_index3.inferTvShowEpisode)(ep);
+        const epNum = tv && tv.episodeNumber || ep.episodeNumber || ep.trackNumber || idx + 1;
+        const epCode = tv && tv.episodeCode || ep.episodeCode || `S${String(season.seasonNumber).padStart(2, "0")}E${String(epNum).padStart(2, "0")}`;
+        const epTitle = tv && tv.episodeTitle || ep.episodeTitle || ep.title;
+        const isCurrent = sameTrack(currentTrack, ep);
+        const ws = (0, import_library_index3.getTrackWatchState)(ep, stats);
+        return /* @__PURE__ */ import_react16.default.createElement(
+          "div",
           {
-            className: "tv-episode-play",
-            title: `Play ${epCode} \u2014 ${epTitle}`,
-            onClick: () => actions.playTracks(season.episodes, idx)
-          },
-          isCurrent && isPlaying ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null)) : /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 })
-        ),
-        /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-code" }, epCode),
-        /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, "Episode ", epNum, ": ", epTitle), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : "")),
-        /* @__PURE__ */ import_react16.default.createElement(LoveButton, { track: ep, size: 14 }),
-        /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-duration" }, (0, import_library_index2.formatDuration)(ep.duration)),
-        /* @__PURE__ */ import_react16.default.createElement(
-          "button",
-          {
-            className: "tl-more-btn",
-            title: "More actions",
-            onClick: (e) => {
-              e.stopPropagation();
+            key: ep.id || ep.filePath || idx,
+            className: `tv-episode-row ${isCurrent ? "current" : ""} ${ws.completed ? "ep-completed" : ""} ${ws.inProgress ? "ep-in-progress" : ""}`,
+            onDoubleClick: () => actions.playTracks(season.episodes, idx),
+            onContextMenu: (e) => {
+              e.preventDefault();
               openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx }));
             }
           },
-          /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 14 })
-        )
-      );
-    })))));
+          /* @__PURE__ */ import_react16.default.createElement(
+            "button",
+            {
+              className: "tv-episode-play",
+              title: ws.inProgress ? `Resume ${epCode} at ${(0, import_library_index3.formatDuration)(ws.positionSec)}` : `Play ${epCode} \u2014 ${epTitle}`,
+              onClick: () => actions.playTracks(season.episodes, idx)
+            },
+            isCurrent && isPlaying ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null)) : /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 })
+          ),
+          /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-code" }, epCode),
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, "Episode ", epNum, ": ", epTitle, ws.inProgress && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge resume" }, "\u25B6 Resume ", (0, import_library_index3.formatDuration)(ws.positionSec), ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ""), ws.completed && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge watched" }, "\u2713 Watched")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : ""), (ws.inProgress || ws.completed) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-progress-bar" }, /* @__PURE__ */ import_react16.default.createElement(
+            "div",
+            {
+              className: `tv-episode-progress-fill ${ws.completed ? "completed" : ""}`,
+              style: { width: `${ws.completed ? 100 : Math.max(4, ws.progressPct)}%` }
+            }
+          ))),
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-ep-actions-cell" }, ws.inProgress && /* @__PURE__ */ import_react16.default.createElement(
+            "button",
+            {
+              className: "btn-chip tv-ep-start-over",
+              title: "Start episode over from 0:00",
+              onClick: (e) => {
+                e.stopPropagation();
+                actions.playTracks(season.episodes, idx, { startAt: 0 });
+              }
+            },
+            "\u21BA Start Over"
+          ), actions.setWatched && /* @__PURE__ */ import_react16.default.createElement(
+            "button",
+            {
+              className: `btn-icon-only tv-ep-watched-btn ${ws.completed ? "watched" : ""}`,
+              title: ws.completed ? "Mark as unwatched" : "Mark as watched",
+              onClick: (e) => {
+                e.stopPropagation();
+                actions.setWatched([ep], !ws.completed);
+              }
+            },
+            /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "check", size: 13 })
+          ), /* @__PURE__ */ import_react16.default.createElement(LoveButton, { track: ep, size: 14 })),
+          /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-duration" }, (0, import_library_index3.formatDuration)(ep.duration)),
+          /* @__PURE__ */ import_react16.default.createElement(
+            "button",
+            {
+              className: "tl-more-btn",
+              title: "More actions",
+              onClick: (e) => {
+                e.stopPropagation();
+                openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx }));
+              }
+            },
+            /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 14 })
+          )
+        );
+      })));
+    }));
   }
   function AlbumDetail({ album, index, go }) {
     const { actions } = useLibrary();
@@ -19978,22 +20325,23 @@
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
       DetailHeader,
       {
+        album,
         cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }),
         eyebrow: album.isTvShow ? "TV Show / Series" : album.franchise || "Feature Film",
         title: album.title,
-        subtitle: album.artist === import_library_index2.VARIOUS_ARTISTS ? /* @__PURE__ */ import_react16.default.createElement("span", null, album.artist) : /* @__PURE__ */ import_react16.default.createElement("a", { className: "link strong", onClick: () => actions.goToArtist(album.artist) }, album.artist),
+        subtitle: album.artist === import_library_index3.VARIOUS_ARTISTS ? /* @__PURE__ */ import_react16.default.createElement("span", null, album.artist) : /* @__PURE__ */ import_react16.default.createElement("a", { className: "link strong", onClick: () => actions.goToArtist(album.artist) }, album.artist),
         meta: album.isTvShow ? [
           album.year,
           album.genre && /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToGenre(album.genre) }, album.genre),
-          (0, import_library_index2.plural)(album.seasonCount || 1, "Season"),
-          (0, import_library_index2.plural)(album.episodeCount || album.tracks.length, "Episode"),
-          (0, import_library_index2.formatLongDuration)(album.duration),
+          (0, import_library_index3.plural)(album.seasonCount || 1, "Season"),
+          (0, import_library_index3.plural)(album.episodeCount || album.tracks.length, "Episode"),
+          (0, import_library_index3.formatLongDuration)(album.duration),
           codec
         ] : [
           album.year,
           album.genre && /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToGenre(album.genre) }, album.genre),
-          (0, import_library_index2.plural)(album.tracks.length, "video file"),
-          (0, import_library_index2.formatLongDuration)(album.duration),
+          (0, import_library_index3.plural)(album.tracks.length, "video file"),
+          (0, import_library_index3.formatLongDuration)(album.duration),
           codec
         ],
         tracks: album.tracks,
@@ -20003,8 +20351,8 @@
   }
   function ArtistDetail({ artist, go, stats }) {
     const { actions } = useLibrary();
-    const allSongs = (0, import_react16.useMemo)(() => (0, import_library_index2.sortTracks)(artist.tracks, "year", "asc"), [artist]);
-    const top = (0, import_react16.useMemo)(() => (0, import_library_index2.mostPlayedTracks)(artist.tracks, stats).slice(0, 5), [artist, stats]);
+    const allSongs = (0, import_react16.useMemo)(() => (0, import_library_index3.sortTracks)(artist.tracks, "year", "asc"), [artist]);
+    const top = (0, import_react16.useMemo)(() => (0, import_library_index3.mostPlayedTracks)(artist.tracks, stats).slice(0, 5), [artist, stats]);
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
       DetailHeader,
       {
@@ -20013,18 +20361,18 @@
         title: artist.name,
         subtitle: artist.genres.length ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-genres" }, artist.genres.map((g) => /* @__PURE__ */ import_react16.default.createElement("a", { key: g, className: "link", onClick: () => actions.goToGenre(g) }, g))) : null,
         meta: [
-          artist.albums.length ? (0, import_library_index2.plural)(artist.albums.length, "release") : null,
-          (0, import_library_index2.plural)(artist.tracks.length, "title"),
-          (0, import_library_index2.formatLongDuration)(artist.duration)
+          artist.albums.length ? (0, import_library_index3.plural)(artist.albums.length, "release") : null,
+          (0, import_library_index3.plural)(artist.tracks.length, "title"),
+          (0, import_library_index3.formatLongDuration)(artist.duration)
         ],
         tracks: allSongs,
         menuLabel: artist.name
       }
-    ), top.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Most Watched" }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { tracks: top, variant: "compact" })), artist.albums.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Movies & Shows", subtitle: "By release year" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: artist.albums, go, showArtist: false })), artist.appearsOn.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Also Included In" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: artist.appearsOn, go })), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "All Titles", subtitle: (0, import_library_index2.plural)(allSongs.length, "title") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "artist-tracks", tracks: allSongs }));
+    ), top.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Most Watched" }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { tracks: top, variant: "compact" })), artist.albums.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Movies & Shows", subtitle: "By release year" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: artist.albums, go, showArtist: false })), artist.appearsOn.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Also Included In" }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: artist.appearsOn, go })), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "All Titles", subtitle: (0, import_library_index3.plural)(allSongs.length, "title") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "artist-tracks", tracks: allSongs }));
   }
   function GroupDetail({ group, type, index, go }) {
-    const songs = (0, import_react16.useMemo)(() => (0, import_library_index2.sortTracks)(group.tracks, "title", "asc"), [group]);
-    const albums = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(group.albums, type === "decade" || type === "franchise" ? "year" : "title"), [group, type]);
+    const songs = (0, import_react16.useMemo)(() => (0, import_library_index3.sortTracks)(group.tracks, "title", "asc"), [group]);
+    const albums = (0, import_react16.useMemo)(() => (0, import_library_index3.sortAlbums)(group.albums, type === "decade" || type === "franchise" ? "year" : "title"), [group, type]);
     const years = (0, import_react16.useMemo)(() => type === "decade" ? [...new Set(group.tracks.map((t) => t.year).filter(Boolean))].sort() : [], [group, type]);
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
       DetailHeader,
@@ -20033,21 +20381,21 @@
         eyebrow: type === "genre" ? "Category / Genre" : type === "franchise" ? "Franchise & Box Set" : "Release Decade",
         title: group.name,
         subtitle: years.length ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-genres" }, years.map((y) => /* @__PURE__ */ import_react16.default.createElement("span", { key: y }, y))) : null,
-        meta: [(0, import_library_index2.plural)(group.albums.length, "title"), (0, import_library_index2.plural)(group.tracks.length, "video file"), (0, import_library_index2.formatLongDuration)(group.duration)],
+        meta: [(0, import_library_index3.plural)(group.albums.length, "title"), (0, import_library_index3.plural)(group.tracks.length, "video file"), (0, import_library_index3.formatLongDuration)(group.duration)],
         tracks: songs,
         menuLabel: group.name
       }
-    ), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Release Formats" }), /* @__PURE__ */ import_react16.default.createElement(ArtistChips, { tracks: group.tracks, index, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Movies & Shows", subtitle: (0, import_library_index2.plural)(albums.length, "title") }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "All Video Files", subtitle: (0, import_library_index2.plural)(songs.length, "title") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: `${type}-tracks`, tracks: songs }));
+    ), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Release Formats" }), /* @__PURE__ */ import_react16.default.createElement(ArtistChips, { tracks: group.tracks, index, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Movies & Shows", subtitle: (0, import_library_index3.plural)(albums.length, "title") }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "All Video Files", subtitle: (0, import_library_index3.plural)(songs.length, "title") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: `${type}-tracks`, tracks: songs }));
   }
   function ComposerDetail({ composer }) {
-    const songs = (0, import_react16.useMemo)(() => (0, import_library_index2.sortTracks)(composer.tracks, "album", "asc"), [composer]);
+    const songs = (0, import_react16.useMemo)(() => (0, import_library_index3.sortTracks)(composer.tracks, "album", "asc"), [composer]);
     return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
       DetailHeader,
       {
         cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { name: composer.name, round: true, icon: "pen" }),
         eyebrow: "Director / Studio",
         title: composer.name,
-        meta: [(0, import_library_index2.plural)(composer.albums.length, "release"), (0, import_library_index2.plural)(songs.length, "title"), (0, import_library_index2.formatLongDuration)(composer.duration)],
+        meta: [(0, import_library_index3.plural)(composer.albums.length, "release"), (0, import_library_index3.plural)(songs.length, "title"), (0, import_library_index3.formatLongDuration)(composer.duration)],
         tracks: songs,
         menuLabel: composer.name
       }
@@ -20059,12 +20407,12 @@
     if (!tracks.length && !artists.length && !albums.length && !genres.length) {
       return /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-empty" }, /* @__PURE__ */ import_react16.default.createElement("h3", null, "No matches"), /* @__PURE__ */ import_react16.default.createElement("p", null, "Try fewer words, or search by movie title, TV show, franchise, genre, or release year."));
     }
-    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "search-results" }, albums.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Movies & Shows", subtitle: totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums.toLocaleString()}` : null }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go })), genres.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Genres & Categories" }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "chip-row" }, genres.map((g) => /* @__PURE__ */ import_react16.default.createElement("button", { key: g.key, className: "artist-chip", onClick: () => actions.goToGenre(g.name) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "tag", size: 13 }), " ", g.name, " ", /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, g.tracks.length))))), artists.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Release Formats", subtitle: totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists.toLocaleString()}` : null }), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists, go })), tracks.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Matching Titles", subtitle: (0, import_library_index2.plural)(tracks.length, "match", "matches"), tracks }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "search-tracks", tracks })));
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "search-results" }, albums.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Movies & Shows", subtitle: totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums.toLocaleString()}` : null }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums, go })), genres.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Genres & Categories" }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "chip-row" }, genres.map((g) => /* @__PURE__ */ import_react16.default.createElement("button", { key: g.key, className: "artist-chip", onClick: () => actions.goToGenre(g.name) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "tag", size: 13 }), " ", g.name, " ", /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, g.tracks.length))))), artists.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Release Formats", subtitle: totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists.toLocaleString()}` : null }), /* @__PURE__ */ import_react16.default.createElement(ArtistGrid, { artists, go })), tracks.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "Matching Titles", subtitle: (0, import_library_index3.plural)(tracks.length, "match", "matches"), tracks }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "search-tracks", tracks })));
   }
 
   // src/NowPlayingPanel.jsx
   var import_react17 = __toESM(require_react());
-  var import_library_index3 = __toESM(require_library_index());
+  var import_library_index4 = __toESM(require_library_index());
   var ROW_HEIGHT2 = 30;
   var OVERSCAN = 12;
   var QUEUE_DRAG_TYPE = "application/x-robos-queue";
@@ -20110,11 +20458,11 @@
     const { template: queueGrid, handleFor } = useColumns("queue", QUEUE_COLUMNS);
     const rows = (0, import_react17.useMemo)(() => {
       const all = queue.map((t, i) => i);
-      const terms = (0, import_library_index3.fold)(filter).split(/\s+/).filter(Boolean);
+      const terms = (0, import_library_index4.fold)(filter).split(/\s+/).filter(Boolean);
       if (!terms.length) return all;
       return all.filter((i) => {
         const t = queue[i];
-        const hay = (0, import_library_index3.fold)(`${t.title} ${t.artist} ${t.album}`);
+        const hay = (0, import_library_index4.fold)(`${t.title} ${t.artist} ${t.album}`);
         return terms.every((term) => hay.includes(term));
       });
     }, [queue, filter]);
@@ -20329,10 +20677,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-state" }, isCurrent ? isPlaying ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null)) : /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "play", size: 10 }) : /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-num" }, qIdx + 1)),
           /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-title" }, t.title),
           /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-artist" }, t.artist),
-          /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-dur" }, (0, import_library_index3.formatDuration)(t.duration))
+          /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-dur" }, (0, import_library_index4.formatDuration)(t.duration))
         );
       }), dropPos != null && dropPos >= 0 && /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-drop-line", style: { top: dropPos * ROW_HEIGHT2 - 1 } }))
-    ), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer-stats" }, /* @__PURE__ */ import_react17.default.createElement("span", null, queue.length.toLocaleString(), " titles \xB7 ", (0, import_library_index3.formatLongDuration)(totalDuration)), currentIndex >= 0 && queue.length > 1 && /* @__PURE__ */ import_react17.default.createElement("span", null, (0, import_library_index3.formatLongDuration)(remaining), " left")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer-actions" }, /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-shuffle-mode", className: `btn-icon-only small ${shuffle ? "on" : ""}`, title: shuffle ? "Random playback: on" : "Random playback: off", "aria-pressed": shuffle, onClick: onToggleShuffle }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "shuffle", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-repeat-mode", className: `btn-icon-only small ${repeat !== "off" ? "on" : ""}`, title: REPEAT_LABEL[repeat], onClick: onCycleRepeat }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: repeat === "one" ? "repeatOne" : "repeat", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { className: "btn-icon-only small", title: "Locate the playing track", onClick: () => locateCurrent(true) }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "locate", size: 14 })), dj && /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, null, /* @__PURE__ */ import_react17.default.createElement(
+    ), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer-stats" }, /* @__PURE__ */ import_react17.default.createElement("span", null, queue.length.toLocaleString(), " titles \xB7 ", (0, import_library_index4.formatLongDuration)(totalDuration)), currentIndex >= 0 && queue.length > 1 && /* @__PURE__ */ import_react17.default.createElement("span", null, (0, import_library_index4.formatLongDuration)(remaining), " left")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-footer-actions" }, /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-shuffle-mode", className: `btn-icon-only small ${shuffle ? "on" : ""}`, title: shuffle ? "Random playback: on" : "Random playback: off", "aria-pressed": shuffle, onClick: onToggleShuffle }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "shuffle", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-queue-repeat-mode", className: `btn-icon-only small ${repeat !== "off" ? "on" : ""}`, title: REPEAT_LABEL[repeat], onClick: onCycleRepeat }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: repeat === "one" ? "repeatOne" : "repeat", size: 14 })), /* @__PURE__ */ import_react17.default.createElement("button", { className: "btn-icon-only small", title: "Locate the playing track", onClick: () => locateCurrent(true) }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "locate", size: 14 })), dj && /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, null, /* @__PURE__ */ import_react17.default.createElement(
       "button",
       {
         id: "btn-dj-toggle",
@@ -20357,13 +20705,13 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
 
   // src/TrackInfo.jsx
   var import_react18 = __toESM(require_react());
-  var import_library_index4 = __toESM(require_library_index());
+  var import_library_index5 = __toESM(require_library_index());
   var when2 = (iso) => iso ? new Date(iso).toLocaleString() : "\u2014";
   function TrackInfo({ track, onClose }) {
     const { stats, actions } = useLibrary();
     if (!track) return null;
     const st = stats[track.id] || {};
-    const cats = (0, import_library_index4.inferMovieGenres)(track);
+    const cats = (0, import_library_index5.inferMovieGenres)(track);
     const rows = [
       ["Title", track.title],
       ["Release Format", track.artist],
@@ -20373,7 +20721,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       ["Release Year", track.year],
       ["Categories / Genres", cats.length ? cats.join(", ") : track.genre],
       ["Studio / Director", track.composer],
-      ["Runtime", (0, import_library_index4.formatDuration)(track.duration)],
+      ["Runtime", (0, import_library_index5.formatDuration)(track.duration)],
       ["Video / Audio Codec", [track.codec, track.lossless ? "lossless" : null].filter(Boolean).join(", ") || null],
       ["Bitrate", track.bitrate ? `${Math.round(track.bitrate / 1e3)} kbps` : null],
       ["Audio Sample Rate", track.sampleRate ? `${(track.sampleRate / 1e3).toFixed(1)} kHz${track.bitsPerSample ? ` \xB7 ${track.bitsPerSample}-bit` : ""}` : null],
@@ -20644,7 +20992,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
   }
 
   // src/AiPlaylist.jsx
-  var import_library_index5 = __toESM(require_library_index());
+  var import_library_index6 = __toESM(require_library_index());
   var DJ_FREQUENCY_LABELS = {
     every: "Before every song",
     alternate: "Every other song",
@@ -20882,7 +21230,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         value: count,
         onChange: (e) => setCount(Math.max(3, Math.min(100, parseInt(e.target.value, 10) || 25)))
       }
-    )), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-dj", type: "checkbox", checked: withDj, onChange: (e) => setWithDj(e.target.checked) }), /* @__PURE__ */ import_react20.default.createElement("span", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 14 }), " Virtual DJ between songs"))), withDj && /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "ai-dj" }), error && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error", role: "alert" }, error), phase === "working" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react20.default.createElement("span", null, progress)), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: phase === "working" }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-generate", className: "btn-accent", onClick: generate, disabled: !canGenerate }, "\u2726 ", phase === "working" ? "Working\u2026" : "Generate with AI"))), phase === "result" && result && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-name", className: "ai-name-input", value: name, onChange: (e) => setName(e.target.value), "aria-label": "Playlist name" }), /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-description" }, result.description), /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-meta" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index5.plural)(result.tracks.length, "song")), /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index5.formatLongDuration)(result.tracks.reduce((n, t) => n + (t.duration || 0), 0))), result.dj && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 11 }), " Virtual DJ")), result.dj && result.dj.intro && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-dj-quote" }, "\u{1F399} \u201C", result.dj.intro, "\u201D"), /* @__PURE__ */ import_react20.default.createElement("ol", { className: "ai-track-list" }, result.tracks.map((t, i) => /* @__PURE__ */ import_react20.default.createElement("li", { key: `${t.id}-${i}` }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-title" }, t.title), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-sub" }, t.artist, t.album ? ` \xB7 ${t.album}` : ""), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-dur" }, (0, import_library_index5.formatDuration)(t.duration))))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => {
+    )), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-dj", type: "checkbox", checked: withDj, onChange: (e) => setWithDj(e.target.checked) }), /* @__PURE__ */ import_react20.default.createElement("span", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 14 }), " Virtual DJ between songs"))), withDj && /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "ai-dj" }), error && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error", role: "alert" }, error), phase === "working" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react20.default.createElement("span", null, progress)), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: phase === "working" }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-generate", className: "btn-accent", onClick: generate, disabled: !canGenerate }, "\u2726 ", phase === "working" ? "Working\u2026" : "Generate with AI"))), phase === "result" && result && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-name", className: "ai-name-input", value: name, onChange: (e) => setName(e.target.value), "aria-label": "Playlist name" }), /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-description" }, result.description), /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-meta" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index6.plural)(result.tracks.length, "song")), /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index6.formatLongDuration)(result.tracks.reduce((n, t) => n + (t.duration || 0), 0))), result.dj && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 11 }), " Virtual DJ")), result.dj && result.dj.intro && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-dj-quote" }, "\u{1F399} \u201C", result.dj.intro, "\u201D"), /* @__PURE__ */ import_react20.default.createElement("ol", { className: "ai-track-list" }, result.tracks.map((t, i) => /* @__PURE__ */ import_react20.default.createElement("li", { key: `${t.id}-${i}` }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-title" }, t.title), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-sub" }, t.artist, t.album ? ` \xB7 ${t.album}` : ""), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-dur" }, (0, import_library_index6.formatDuration)(t.duration))))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => {
       setPhase("edit");
       setResult(null);
     } }, "Start over"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-save", className: "btn-secondary", onClick: () => onSave(final()) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "save", size: 13 }), " Save playlist"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-play", className: "btn-accent", onClick: () => onPlay(final()) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "play", size: 12 }), " ", result.dj ? "Play with DJ" : "Play")))));
@@ -20899,7 +21247,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
 
   // src/AiFixMetadata.jsx
   var import_react21 = __toESM(require_react());
-  var import_library_index6 = __toESM(require_library_index());
+  var import_library_index7 = __toESM(require_library_index());
   var DEFAULT_FIX_METADATA_PROMPT = `@skill(robos:fix-media-metadata)
 Inspect all selected media files and fix missing, noisy, or incomplete metadata and artwork using open-source tools and open databases:
 1. Clean noisy titles (strip [Official Video], (Lyrics), bitrate/resolution tags, leading track numbers, and underscores) while preserving legitimate feat./remix/live credits.
@@ -20971,7 +21319,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (!canRunPreview) return;
       setBusy(true);
       setError("");
-      setProgress(`Starting open-source metadata & artwork analysis for ${(0, import_library_index6.plural)(targetList.length, "track")}\u2026`);
+      setProgress(`Starting open-source metadata & artwork analysis for ${(0, import_library_index7.plural)(targetList.length, "track")}\u2026`);
       try {
         const res = await window.robosAudio.aiFixMetadataPreview({
           trackIds: targetList.map((t) => t.id),
@@ -21011,7 +21359,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (!previewResult || !selectedIds.size || busy) return;
       setBusy(true);
       setError("");
-      setProgress(`Applying metadata & cover art fixes to ${(0, import_library_index6.plural)(selectedIds.size, "track")}\u2026`);
+      setProgress(`Applying metadata & cover art fixes to ${(0, import_library_index7.plural)(selectedIds.size, "track")}\u2026`);
       try {
         const chosen = (previewResult.proposals || []).filter((p) => selectedIds.has(p.id));
         const res = await window.robosAudio.aiFixMetadataApply({
@@ -21176,7 +21524,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       },
       /* @__PURE__ */ import_react21.default.createElement(Icon2, { name: "check", size: 13 }),
       " Apply ",
-      (0, import_library_index6.plural)(selectedIds.size, "Fix", "Fixes")
+      (0, import_library_index7.plural)(selectedIds.size, "Fix", "Fixes")
     ))));
   }
 
@@ -21407,7 +21755,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   }
 
   // src/App.jsx
-  var import_library_index7 = __toESM(require_library_index());
+  var import_library_index8 = __toESM(require_library_index());
   var DEFAULT_QUEUE = [
     {
       id: "default-1",
@@ -21503,7 +21851,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const playedRef = (0, import_react24.useRef)({ key: null, counted: false });
     const shuffleHistoryRef = (0, import_react24.useRef)([]);
     const latestRef = (0, import_react24.useRef)({});
-    const formatDuration6 = (sec) => {
+    const formatDuration7 = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
       const m = Math.floor(totalSec / 60);
@@ -21884,7 +22232,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       setPlaylist((prev) => [...prev, ...pl.tracks]);
       showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
     };
-    const castTracks = (tracks, label = null) => {
+    const castTracks = (tracks, label = null, { startIndex = 0, startAt = null } = {}) => {
       if (!tracks || tracks.length === 0) {
         showStatus(`${label ? `"${label}"` : "Selection"} has no tracks.`);
         return;
@@ -21895,15 +22243,19 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       const target = outputTarget !== "local" ? outputTarget : speakers[0]?.ip || "all";
       const list = tracks.map((t) => ({ ...t }));
+      const idx = Math.max(0, Math.min(startIndex, list.length - 1));
+      const first = list[idx];
+      const st = first?.id && stats[first.id] || {};
+      const resumeSec = startAt != null ? Math.max(0, Number(startAt) || 0) : !st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0;
       setOutputTarget(target);
       setPlaylist(list);
-      setCurrentTrackIndex(0);
+      setCurrentTrackIndex(idx);
       shuffleHistoryRef.current = [];
-      castTrack(target, list[0]);
+      castTrack(target, first, { startAt: resumeSec });
       playerRef.current?.audio?.current?.pause();
       if (videoRef.current) videoRef.current.pause();
       setIsPlaying(true);
-      showStatus(`Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
+      showStatus(resumeSec >= 5 ? `Resuming "${first.title}" at ${formatDuration7(resumeSec)} on ${getSpeakerName(target)}!` : `Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
     };
     const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || "Playlist");
     const handleCreatePlaylist = async () => {
@@ -22087,7 +22439,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const handleSortQueue = (key, dir) => {
       const current = playlist[currentTrackIndex];
-      const next = (0, import_library_index7.sortTracks)(playlist, key, dir, stats);
+      const next = (0, import_library_index8.sortTracks)(playlist, key, dir, stats);
       setPlaylist(next);
       setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
     };
@@ -22201,6 +22553,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       };
       showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
       const metadata = {
+        trackId: track.id,
         title: track.title,
         artist: track.artist,
         album: track.album,
@@ -22232,15 +22585,22 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         setActiveCastSession(null);
       }
     };
-    const beginPlayback = (trackToPlay, sameSrc = false) => {
+    const beginPlayback = (trackToPlay, sameSrc = false, { startAt = null } = {}) => {
       const audio = playerRef.current?.audio?.current;
       playedRef.current = { key: null, counted: false };
-      if (sameSrc && audio) audio.currentTime = 0;
+      const st = trackToPlay?.id && stats[trackToPlay.id] || {};
+      const resumeSec = startAt != null ? Math.max(0, Number(startAt) || 0) : !st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0;
+      if (sameSrc && audio) audio.currentTime = resumeSec;
       if (outputTarget !== "local") {
-        castTrack(outputTarget, trackToPlay);
+        castTrack(outputTarget, trackToPlay, { startAt: resumeSec });
         if (audio) audio.pause();
       } else {
         if (activeCastSession) handleStopCast();
+        if (resumeSec > 0) {
+          pendingLocalSeekRef.current = resumeSec;
+        } else {
+          pendingLocalSeekRef.current = null;
+        }
         if (audio) {
           audio.muted = false;
         }
@@ -22248,6 +22608,12 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           const el = isVideoTrack(trackToPlay) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
           if (el) {
             el.muted = false;
+            if (sameSrc) {
+              try {
+                el.currentTime = resumeSec;
+              } catch {
+              }
+            }
             el.play().catch((err) => {
               console.warn("[MoviePlayer] Playback error:", err);
             });
@@ -22256,7 +22622,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       setIsPlaying(true);
     };
-    const playTracks = (tracks, startIndex = 0, { shuffle = false } = {}) => {
+    const playTracks = (tracks, startIndex = 0, { shuffle = false, startAt = null } = {}) => {
       if (!tracks || !tracks.length) return;
       const list = tracks.map((t) => ({ ...t }));
       let idx = Math.max(0, Math.min(startIndex, list.length - 1));
@@ -22276,8 +22642,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       shuffleHistoryRef.current = [];
       setPlaylist(list);
       setCurrentTrackIndex(idx);
-      beginPlayback(first, sameSrc);
-      showStatus(list.length === 1 ? `Playing "${first.title}" by ${first.artist || "Unknown"}` : `${shuffle ? "Shuffling" : "Playing"} ${list.length} tracks \u2014 starting with "${first.title}"`);
+      beginPlayback(first, sameSrc, { startAt });
+      const st = first?.id && stats[first.id] || {};
+      const resumeSec = startAt != null ? Math.max(0, Number(startAt) || 0) : !st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0;
+      if (resumeSec >= 5) {
+        showStatus(`Resuming "${first.title}" at ${formatDuration7(resumeSec)}...`);
+      } else {
+        showStatus(list.length === 1 ? `Playing "${first.title}" by ${first.artist || "Unknown"}` : `${shuffle ? "Shuffling" : "Playing"} ${list.length} tracks \u2014 starting with "${first.title}"`);
+      }
     };
     const queueTracks = (tracks, where = "end") => {
       if (!tracks || !tracks.length) return;
@@ -22569,9 +22941,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       });
     };
     const libraryBack = () => setLibNav((prev) => prev.length > 1 ? prev.slice(0, -1) : prev);
-    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index7.albumKeyOf)(track) } });
-    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index7.fold)(name || "Unknown Artist") } });
-    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index7.fold)((0, import_library_index7.splitGenres)(genre)[0] || genre) } });
+    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index8.albumKeyOf)(track) } });
+    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index8.fold)(name || "Unknown Artist") } });
+    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index8.fold)((0, import_library_index8.splitGenres)(genre)[0] || genre) } });
     const setLovedTracks = async (tracks, loved) => {
       const ids = [...new Set((tracks || []).map((t) => t.id).filter(Boolean))];
       if (!ids.length) return;
@@ -22595,6 +22967,44 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         if (entry) setStats((prev) => ({ ...prev, [track.id]: entry }));
       }).catch(() => {
       });
+    };
+    const lastProgressSaveRef = (0, import_react24.useRef)({ trackId: null, time: 0 });
+    const saveTrackProgress = (track, positionSec, durationSec, completed = false, { force = false } = {}) => {
+      if (!track?.id || !window.robosAudio?.saveProgress) return;
+      const now = Date.now();
+      if (!force && !completed && lastProgressSaveRef.current.trackId === track.id && now - lastProgressSaveRef.current.time < 3e3) {
+        return;
+      }
+      if (positionSec < 3 && !completed && !force) return;
+      lastProgressSaveRef.current = { trackId: track.id, time: now };
+      window.robosAudio.saveProgress(track.id, { positionSec, durationSec, completed }).then((entry) => {
+        if (entry) setStats((prev) => ({ ...prev, [track.id]: entry }));
+      }).catch(() => {
+      });
+    };
+    const setWatchedTracks = async (tracks, watched) => {
+      const ids = [...new Set((tracks || []).map((t) => t.id).filter(Boolean))];
+      if (!ids.length) return;
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      setStats((prev) => {
+        const next = { ...prev };
+        for (const id of ids) {
+          const cur = prev[id] || { plays: 0, lastPlayed: null, loved: false };
+          if (watched) {
+            next[id] = { ...cur, plays: Math.max(1, cur.plays || 0), lastPlayed: now, positionSec: 0, progressPct: 100, inProgress: false, completed: true };
+          } else {
+            next[id] = { ...cur, positionSec: 0, progressPct: 0, inProgress: false, completed: false };
+          }
+        }
+        return next;
+      });
+      try {
+        const changed = await window.robosAudio.setWatched(ids, watched);
+        if (changed) setStats((prev) => ({ ...prev, ...changed }));
+      } catch {
+      }
+      const what = ids.length === 1 ? `"${tracks[0].title}"` : `${ids.length} titles`;
+      showStatus(watched ? `Marked ${what} as Watched` : `Reset watch progress for ${what}`);
     };
     const showInFolder = async (track) => {
       const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
@@ -22637,6 +23047,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         },
         fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
         setLoved: setLovedTracks,
+        setWatched: setWatchedTracks,
+        saveProgress: saveTrackProgress,
         showInfo: setInfoTrack,
         showInFolder,
         goToAlbumOf,
@@ -22653,7 +23065,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       aiAgent,
       skipDj: dj.skip,
       // Speaker events while casting (see onSpeakerStatusChange).
-      castSongFinished: () => handleTrackEnded(),
+      castSongFinished: () => {
+        const t = playlist[currentTrackIndex];
+        if (t) saveTrackProgress(t, getRealTrackDuration(t), getRealTrackDuration(t), true, { force: true });
+        handleTrackEnded();
+      },
       djCastLineFinished: () => dj.castLineFinished(),
       countCastPlay: (position, duration) => {
         const t = playlist[currentTrackIndex];
@@ -22663,6 +23079,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         if (!playedRef.current.counted && position >= Math.min(30, (duration || t.duration || 60) / 2)) {
           playedRef.current.counted = true;
           recordPlay(t);
+        }
+        if (position >= 5) {
+          saveTrackProgress(t, position, duration || t.duration || 0, false);
         }
       },
       outputTarget,
@@ -23112,14 +23531,34 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               }
             }
           },
+          onTimeUpdate: (e) => {
+            if (outputTarget !== "local") return;
+            const v = e.currentTarget;
+            if (!v || !currentTrack) return;
+            const pos = v.currentTime || 0;
+            const dur = isFinite(v.duration) && v.duration > 0 ? v.duration : currentTrack.duration || 0;
+            const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
+            if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+            if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
+              playedRef.current.counted = true;
+              recordPlay(currentTrack);
+            }
+            if (pos >= 5) {
+              saveTrackProgress(currentTrack, pos, dur, false);
+            }
+          },
           onSeeked: (e) => {
+            const v = e.currentTarget;
+            const sec = v?.currentTime || 0;
             if (outputTarget !== "local") {
-              const sec = e.currentTarget?.currentTime || 0;
               const last = lastProgrammaticVideoSeekRef.current;
               if (Date.now() - last.time < 4e3 && Math.abs(sec - last.target) < 4) {
                 return;
               }
               handleCastSeek(sec);
+            } else if (currentTrack && sec >= 5) {
+              const dur = v && isFinite(v.duration) && v.duration > 0 ? v.duration : currentTrack.duration || 0;
+              saveTrackProgress(currentTrack, sec, dur, false, { force: true });
             }
           },
           onPlay: () => {
@@ -23129,13 +23568,23 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               handleToggleCastPause();
             }
           },
-          onPause: () => {
+          onPause: (e) => {
             if (outputTarget === "local") {
               setIsPlaying(false);
+              const v = e.currentTarget;
+              if (v && currentTrack && (v.currentTime || 0) >= 5) {
+                const dur = isFinite(v.duration) && v.duration > 0 ? v.duration : currentTrack.duration || 0;
+                saveTrackProgress(currentTrack, v.currentTime, dur, false, { force: true });
+              }
             }
           },
-          onEnded: () => {
-            if (outputTarget === "local") handleTrackEnded();
+          onEnded: (e) => {
+            if (outputTarget === "local") {
+              const v = e.currentTarget;
+              const dur = v && isFinite(v.duration) && v.duration > 0 ? v.duration : currentTrack?.duration || 0;
+              if (currentTrack) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
+              handleTrackEnded();
+            }
           }
         }
       ), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react24.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react24.default.createElement(
@@ -23427,7 +23876,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           style: { marginTop: "12px" }
         },
         "Add Audio Files from Disk"
-      )) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist col-resizable" }, "Release Format", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album col-resizable" }, "Release / Series", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, "Runtime"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react24.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, formatDuration6(track.duration)), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+      )) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist col-resizable" }, "Release Format", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album col-resizable" }, "Release / Series", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, "Runtime"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react24.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, formatDuration7(track.duration)), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -23477,7 +23926,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           }
         },
         /* @__PURE__ */ import_react24.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
-        library.tracks.map((t, idx) => /* @__PURE__ */ import_react24.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration6(t.duration), ")"))
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react24.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration7(t.duration), ")"))
       ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react24.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react24.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react24.default.createElement(
         "span",
         {
