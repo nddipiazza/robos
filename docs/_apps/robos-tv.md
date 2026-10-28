@@ -9,6 +9,7 @@ related:
   - /tv/
   - /apps/home-speaker/
   - /apps/audio-player/
+  - /apps/movie-player/
   - /apps/game-playthrough/
 ---
 
