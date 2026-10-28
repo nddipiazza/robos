@@ -14,21 +14,30 @@ import { Splitter, useLayoutPref } from './resizable.jsx';
 
 const NAV_WIDTH = 196;
 
-export const LIBRARY_SECTIONS = [
-  { id: 'albums', label: 'All Movies & Shows', icon: 'disc' },
-  { id: 'movies_only', label: 'Movies (Feature Films)', icon: 'disc' },
-  { id: 'tv_shows', label: 'TV Shows & Series', icon: 'tv' },
+export const MOVIE_SECTIONS = [
+  { id: 'albums', label: 'All Movies', icon: 'disc' },
   { id: 'franchises', label: 'Franchises & Box Sets', icon: 'grid' },
-  { id: 'genres', label: 'Genres & Categories', icon: 'tag' },
+  { id: 'genres', label: 'Movie Genres', icon: 'tag' },
   { id: 'artists', label: '4K & BluRay Formats', icon: 'tv' },
   { id: 'decades', label: 'Release Decades', icon: 'calendar' },
-  { id: 'songs', label: 'All Titles (A–Z List)', icon: 'list' },
+  { id: 'songs', label: 'All Movies (A–Z List)', icon: 'list' },
 ];
 
+export const SHOW_SECTIONS = [
+  { id: 'tv_navigator', label: 'Show & Season Navigator', icon: 'tv' },
+  { id: 'tv_shows', label: 'All TV Series (Poster Grid)', icon: 'grid' },
+  { id: 'tv_networks', label: 'Networks & Studios', icon: 'disc' },
+  { id: 'genres', label: 'TV Show Genres', icon: 'tag' },
+  { id: 'decades', label: 'Premiere Decades', icon: 'calendar' },
+  { id: 'songs', label: 'All Episodes (A–Z)', icon: 'list' },
+];
+
+export const LIBRARY_SECTIONS = MOVIE_SECTIONS;
+
 export const LIBRARY_COLLECTIONS = [
+  { id: 'history', label: 'Continue Watching', icon: 'history' },
   { id: 'loved', label: 'My Watchlist', icon: 'heart' },
   { id: 'recent', label: 'Recently Added', icon: 'clock' },
-  { id: 'history', label: 'Continue Watching', icon: 'history' },
   { id: 'top', label: 'Most Watched', icon: 'chart' },
 ];
 
@@ -63,6 +72,7 @@ export function folderOwnsTrack(folder, filePath) {
  * player can deep-link into album/artist pages.
  */
 export default function Library({
+  mode = 'movies',
   tracks,
   folders,
   nav,
@@ -84,7 +94,7 @@ export default function Library({
   const [prefs, setPrefs] = useState(loadPrefs);
   const [query, setQuery] = useState('');
   const contentRef = useRef(null);
-  const [navWidth, setNavWidth] = useLayoutPref('libNavWidth', NAV_WIDTH);
+  const [navWidth, setNavWidth] = useLayoutPref(mode === 'shows' ? 'libShowsNavWidth' : 'libNavWidth', mode === 'shows' ? 218 : NAV_WIDTH);
 
   useEffect(() => {
     try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
@@ -95,31 +105,64 @@ export default function Library({
   useEffect(() => {
     setQuery('');
     if (contentRef.current) contentRef.current.scrollTop = 0;
-  }, [nav]);
+  }, [nav, mode]);
+
+  const isShowsMode = mode === 'shows';
+  const modeTracks = useMemo(() => {
+    if (mode === 'shows') return tracks.filter(t => t && t.mediaType === 'tv');
+    if (mode === 'movies') return tracks.filter(t => t && t.mediaType !== 'tv');
+    return tracks;
+  }, [tracks, mode]);
 
   const scopeFolder = folders.find(f => f.id === prefs.scope) || null;
   const scopedTracks = useMemo(
-    () => (scopeFolder ? tracks.filter(t => folderOwnsTrack(scopeFolder, t.filePath)) : tracks),
-    [tracks, scopeFolder]
+    () => (scopeFolder ? modeTracks.filter(t => folderOwnsTrack(scopeFolder, t.filePath)) : modeTracks),
+    [modeTracks, scopeFolder]
   );
   const index = useMemo(() => buildIndex(scopedTracks), [scopedTracks]);
 
+  const defaultSection = isShowsMode ? 'tv_navigator' : 'albums';
   const go = (view) => onNavigate(view);
-  const section = nav.section || 'albums';
+  const rawSection = nav.section || defaultSection;
+  const section = (isShowsMode && (rawSection === 'albums' || rawSection === 'movies_only'))
+    ? 'tv_navigator'
+    : (!isShowsMode && (rawSection === 'tv_navigator' || rawSection === 'tv_shows' || rawSection === 'tv_networks'))
+      ? 'albums'
+      : rawSection;
   const detail = nav.detail || null;
+
+  const networksCount = useMemo(() => {
+    if (!isShowsMode) return 0;
+    const set = new Set();
+    for (const s of (index.tvShows || [])) {
+      if (s.network) set.add(s.network);
+    }
+    return set.size;
+  }, [index, isShowsMode]);
 
   const counts = useMemo(() => ({
     albums: index.albums.length,
     movies_only: (index.moviesOnly || []).length,
+    tv_navigator: (index.tvShows || []).length,
     tv_shows: (index.tvShows || []).length,
+    tv_networks: networksCount,
     franchises: (index.franchises || []).length,
     artists: index.artists.filter(a => !a.isPlaceholder).length,
     songs: index.tracks.length,
     genres: index.genres.length,
     decades: index.decades.length,
     composers: index.composers.length,
-  }), [index]);
+  }), [index, networksCount]);
   const lovedCount = useMemo(() => index.tracks.filter(t => (stats[t.id] || {}).loved).length, [index, stats]);
+  const inProgressCount = useMemo(() => {
+    if (isShowsMode) {
+      return (index.tvShows || []).filter(s => {
+        const ws = getShowWatchState(s, stats);
+        return ws.hasActivity && !ws.completed;
+      }).length;
+    }
+    return inProgressTracks(index.tracks, stats).length;
+  }, [index, stats, isShowsMode]);
 
   // Typing stays responsive on 100k tracks: results follow the deferred query.
   const searching = query.trim().length > 0;
@@ -129,18 +172,20 @@ export default function Library({
     [index, deferredQuery]
   );
 
-  const pageTitle = searching ? `Results for “${query.trim()}”` : titleFor(nav, index);
+  const activeSections = isShowsMode ? SHOW_SECTIONS : MOVIE_SECTIONS;
+  const pageTitle = searching ? `Results for “${query.trim()}”` : titleFor({ ...nav, section }, index, isShowsMode);
 
   let body;
-  if (!tracks.length) {
-    body = <EmptyLibrary onAddFolder={onAddFolder} onAddFiles={onAddFiles} onCloud={folderProps.onAddCloud} isScanning={isScanning} />;
+  if (!modeTracks.length) {
+    body = <EmptyLibrary mode={mode} onAddFolder={onAddFolder} onAddFiles={onAddFiles} onCloud={folderProps.onAddCloud} isScanning={isScanning} />;
   } else if (searching) {
-    body = results ? <SearchResults results={results} go={go} /> : null;
+    body = results ? <SearchResults results={results} go={go} isShowsMode={isShowsMode} /> : null;
   } else if (detail) {
     body = <DetailView detail={detail} index={index} go={go} stats={stats} />;
   } else {
     body = (
       <SectionView
+        mode={mode}
         section={section}
         index={index}
         go={go}
@@ -151,7 +196,7 @@ export default function Library({
         folderProps={{
           ...folderProps,
           activeId: prefs.scope || null,
-          onSelect: (id) => { setPref('scope', id); go({ section: 'albums' }); },
+          onSelect: (id) => { setPref('scope', id); go({ section: defaultSection }); },
         }}
       />
     );
@@ -168,35 +213,81 @@ export default function Library({
         onChange={setNavWidth}
         min={140}
         max={420}
-        defaultWidth={NAV_WIDTH}
+        defaultWidth={isShowsMode ? 218 : NAV_WIDTH}
       />
-      <nav className="lib-nav" aria-label="Library categories">
+      <nav className="lib-nav" aria-label={isShowsMode ? 'TV Shows navigation' : 'Movies navigation'}>
         <div className="lib-nav-group">
-          <span className="lib-nav-heading">Browse Cinema</span>
-          {LIBRARY_SECTIONS.map(s => (
+          <span className="lib-nav-heading">{isShowsMode ? 'Browse TV Shows' : 'Browse Movies'}</span>
+          {activeSections.map(s => (
             <NavItem key={s.id} item={s} count={counts[s.id]} active={!detail && !searching && section === s.id} onClick={() => go({ section: s.id })} />
           ))}
         </div>
         <div className="lib-nav-group">
-          <span className="lib-nav-heading">Watchlist &amp; Activity</span>
+          <span className="lib-nav-heading">{isShowsMode ? 'Show Progress & Lists' : 'Movie Watchlist & Activity'}</span>
           {LIBRARY_COLLECTIONS.map(s => (
-            <NavItem key={s.id} item={s} count={s.id === 'loved' ? lovedCount : null} active={!detail && !searching && section === s.id} onClick={() => go({ section: s.id })} />
+            <NavItem
+              key={s.id}
+              item={s}
+              count={s.id === 'loved' ? lovedCount : s.id === 'history' && inProgressCount > 0 ? inProgressCount : null}
+              active={!detail && !searching && section === s.id}
+              onClick={() => go({ section: s.id })}
+            />
           ))}
         </div>
+        {isShowsMode && (index.tvShows || []).length > 0 && (
+          <div className="lib-nav-group lib-nav-shows-jump">
+            <span className="lib-nav-heading">Quick Jump to Series ({index.tvShows.length})</span>
+            <div className="lib-nav-series-scroll">
+              {index.tvShows.map(show => {
+                const ws = getShowWatchState(show, stats);
+                const isSelectedDetail = detail && detail.type === 'album' && detail.key === show.key;
+                const isSelectedNav = !detail && section === 'tv_navigator' && (prefs.selectedShowKey || index.tvShows[0]?.key) === show.key;
+                return (
+                  <button
+                    key={show.key}
+                    className={`lib-nav-item lib-nav-series-item ${(isSelectedDetail || isSelectedNav) ? 'active' : ''}`}
+                    onClick={() => {
+                      setPref('selectedShowKey', show.key);
+                      if (section !== 'tv_navigator' || detail) {
+                        go({ section: 'tv_navigator' });
+                      }
+                    }}
+                    title={`${show.title} — ${plural(show.seasonCount || 1, 'Season')}, ${plural(show.episodeCount || show.tracks.length, 'Episode')}`}
+                  >
+                    <Cover artId={show.artId} name={show.title} size={22} />
+                    <span className="lib-nav-label">{show.title}</span>
+                    <span className="lib-nav-count">
+                      {ws.completed ? '✓' : ws.hasActivity ? `▶ S${String(ws.resumeTrack?.seasonNumber || 1).padStart(2, '0')}E${String(ws.resumeTrack?.episodeNumber || 1).padStart(2, '0')}` : `${show.seasonCount || 1}S`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="lib-nav-group">
           <span className="lib-nav-heading">Media Sources</span>
           <NavItem item={{ id: 'folders', label: 'Folders & Cloud', icon: 'folder' }} count={folders.length} active={!detail && !searching && section === 'folders'} onClick={() => go({ section: 'folders' })} />
         </div>
         <div className="lib-nav-footer">
-          <span>{plural((index.moviesOnly || []).length, 'movie')} · {plural((index.tvShows || []).length, 'show')}</span>
-          <span>{plural(index.tracks.length, 'video file')} · {formatLongDuration(index.totalDuration)}</span>
+          {isShowsMode ? (
+            <>
+              <span>{plural((index.tvShows || []).length, 'TV series')} · {plural((index.tvShows || []).reduce((acc, s) => acc + (s.seasonCount || 1), 0), 'season')}</span>
+              <span>{plural(index.tracks.length, 'episode')} · {formatLongDuration(index.totalDuration)}</span>
+            </>
+          ) : (
+            <>
+              <span>{plural(index.albums.length, 'feature film')} · {plural((index.franchises || []).length, 'franchise')}</span>
+              <span>{formatLongDuration(index.totalDuration)} total runtime</span>
+            </>
+          )}
           {onFetchMetadata && (
             <button
               id="btn-fetch-public-metadata"
               className="btn-accent lib-shuffle-all"
               disabled={!index.tracks.length || isFetchingMetadata}
               title="Fetch official posters, plot synopses, cast, ratings & episode guides from public APIs (IMDb, TVmaze, Wikipedia — no AI required)"
-              onClick={() => onFetchMetadata(scopeFolder ? index.tracks : null, { force: true })}
+              onClick={() => onFetchMetadata(index.tracks, { force: true })}
             >
               <Icon name="locate" size={14} /> {isFetchingMetadata ? 'Fetching Metadata…' : 'Fetch Posters & Metadata'}
             </button>
@@ -206,7 +297,7 @@ export default function Library({
               id="btn-library-ai-playlist"
               className="btn-secondary lib-shuffle-all"
               disabled={!index.tracks.length}
-              title="Describe a watchlist and let your RobOS agent build it from your movie library"
+              title="Describe a watchlist and let your RobOS agent build it"
               onClick={onAiPlaylist}
             >
               ✦ AI Watchlist
@@ -218,7 +309,7 @@ export default function Library({
             disabled={!index.tracks.length}
             onClick={() => actions.playTracks(index.tracks, 0, { shuffle: true })}
           >
-            <Icon name="shuffle" size={14} /> Shuffle Library
+            <Icon name="shuffle" size={14} /> {isShowsMode ? 'Shuffle Episodes' : 'Shuffle Movies'}
           </button>
         </div>
       </nav>
@@ -235,7 +326,7 @@ export default function Library({
               id="library-search"
               ref={searchInputRef}
               type="search"
-              placeholder="Search movies, TV shows, franchises, genres, years…  (Ctrl+F)"
+              placeholder={isShowsMode ? 'Search TV shows, episodes (S01E01), networks, cast… (Ctrl+F)' : 'Search movies, franchises, directors, cast, genres, years… (Ctrl+F)'}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
@@ -295,23 +386,24 @@ function NavItem({ item, count, active, onClick }) {
   );
 }
 
-function titleFor(nav, index) {
+function titleFor(nav, index, isShowsMode = false) {
   if (nav.detail) {
     const { type, key } = nav.detail;
     const map = { album: index.albumByKey, artist: index.artistByKey, genre: index.genreByKey, franchise: index.franchiseByKey, decade: index.decadeByKey, composer: index.composerByKey }[type];
     const item = map && map.get(key);
-    return item ? (item.title || item.name) : 'Library';
+    return item ? (item.title || item.name) : (isShowsMode ? 'TV Shows' : 'Movies');
   }
-  const all = [...LIBRARY_SECTIONS, ...LIBRARY_COLLECTIONS, { id: 'folders', label: 'Folders & Cloud' }];
-  return (all.find(s => s.id === (nav.section || 'albums')) || {}).label || 'Library';
+  const all = [...MOVIE_SECTIONS, ...SHOW_SECTIONS, ...LIBRARY_COLLECTIONS, { id: 'folders', label: 'Folders & Cloud' }];
+  return (all.find(s => s.id === (nav.section || (isShowsMode ? 'tv_navigator' : 'albums'))) || {}).label || (isShowsMode ? 'TV Shows' : 'Movies');
 }
 
-function EmptyLibrary({ onAddFolder, onAddFiles, onCloud, isScanning }) {
+function EmptyLibrary({ mode = 'movies', onAddFolder, onAddFiles, onCloud, isScanning }) {
+  const isShows = mode === 'shows';
   return (
     <div className="lib-empty">
-      <Icon name="library" size={40} />
-      <h3>{isScanning ? 'Indexing your movie & TV library…' : 'Your cinema library is empty'}</h3>
-      <p>Add a movie or TV show folder from this computer, link a cloud/SFTP server, or drag &amp; drop video files anywhere in this window.</p>
+      <Icon name={isShows ? 'tv' : 'library'} size={40} />
+      <h3>{isScanning ? `Indexing your ${isShows ? 'TV shows' : 'movies'}…` : `Your ${isShows ? 'TV Shows' : 'Movies'} library is empty`}</h3>
+      <p>Add a {isShows ? 'TV show series' : 'movie'} folder from this computer, link a cloud/SFTP server, or drag &amp; drop video files anywhere in this window.</p>
       <div className="lib-empty-actions">
         <button className="btn-accent" onClick={onAddFolder}><Icon name="folder" size={14} /> Add folder</button>
         <button className="btn-secondary" onClick={onAddFiles}>Add videos</button>
@@ -359,7 +451,9 @@ function SectionView({ section, ...props }) {
   switch (section) {
     case 'albums': return <AlbumsSection {...props} />;
     case 'movies_only': return <MoviesOnlySection {...props} />;
+    case 'tv_navigator': return <TvNavigatorSection {...props} />;
     case 'tv_shows': return <TvShowsSection {...props} />;
+    case 'tv_networks': return <TvNetworksSection {...props} />;
     case 'franchises': return <FranchisesSection {...props} />;
     case 'artists': return <ArtistsSection {...props} />;
     case 'songs': return <SongsSection {...props} />;
@@ -402,9 +496,9 @@ function CinemaHeroSpotlight({ albums, go }) {
       </div>
       <div className="cinema-hero-info">
         <div className="cinema-hero-eyebrow-row">
-          <span className="cinema-spotlight-pill">ROBOS CINEMA+ SPOTLIGHT</span>
+          <span className="cinema-spotlight-pill">{movie.isTvShow ? '📺 TV SERIES SPOTLIGHT' : '🎬 FEATURE FILM SPOTLIGHT'}</span>
           <span className="cinema-hero-collection">
-            {movie.isTvShow ? `TV Series · ${plural(movie.seasonCount || 1, 'Season')}` : (movie.franchise || movie.genre || 'Feature Film')}
+            {movie.isTvShow ? `TV Series · ${plural(movie.seasonCount || 1, 'Season')} · ${plural(movie.episodeCount || movie.tracks.length, 'Episode')}` : (movie.franchise || movie.genre || 'Feature Film')}
           </span>
         </div>
         <h2 className="cinema-hero-title" onClick={() => go({ section: 'albums', detail: { type: 'album', key: movie.key } })}>{movie.title}</h2>
@@ -430,7 +524,7 @@ function CinemaHeroSpotlight({ albums, go }) {
         )}
         <div className="cinema-hero-actions">
           <button className="btn-cinema-play" onClick={() => ctx.actions.playTracks(movie.tracks, 0)}>
-            <Icon name="play" size={14} /> Watch Now
+            <Icon name="play" size={14} /> {movie.isTvShow ? 'Start / Resume Series' : 'Watch Movie'}
           </button>
           {ctx.actions.hasSpeakers && (
             <button className="btn-secondary" onClick={() => ctx.actions.castTracks(movie.tracks)}>
@@ -438,10 +532,10 @@ function CinemaHeroSpotlight({ albums, go }) {
             </button>
           )}
           <button className="btn-secondary" onClick={() => go({ section: 'albums', detail: { type: 'album', key: movie.key } })}>
-            <Icon name="info" size={14} /> Details
+            <Icon name="info" size={14} /> {movie.isTvShow ? 'Seasons & Episodes' : 'Movie Details'}
           </button>
           {featured.length > 1 && (
-            <button className="btn-secondary" onClick={() => setSpotIdx((spotIdx + 1) % featured.length)} title="Next Featured Movie">
+            <button className="btn-secondary" onClick={() => setSpotIdx((spotIdx + 1) % featured.length)} title="Next Featured Title">
               Next Spotlight ▸
             </button>
           )}
@@ -456,37 +550,21 @@ function AlbumsSection({ index, go, prefs, setPref }) {
   const activeGenre = prefs.categoryFilter || 'all';
   const filteredAlbums = useMemo(() => {
     const base = sortAlbums(index.albums, sortKey);
-    if (activeGenre === 'all') return base;
-    if (activeGenre === '__movies__') return base.filter(a => !a.isTvShow);
-    if (activeGenre === '__tv__') return base.filter(a => !!a.isTvShow);
+    if (activeGenre === 'all' || activeGenre === '__movies__' || activeGenre === '__tv__') return base;
     if (activeGenre === '__franchises__') return base.filter(a => !!a.franchise);
     return base.filter(a => (a.genres || [a.genre]).some(g => fold(g) === activeGenre));
   }, [index, sortKey, activeGenre]);
-  const lettered = activeGenre === 'all' && (sortKey === 'title' || sortKey === 'artist') && filteredAlbums.length >= LETTER_SECTION_MIN;
+  const lettered = (activeGenre === 'all' || activeGenre === '__movies__') && (sortKey === 'title' || sortKey === 'artist') && filteredAlbums.length >= LETTER_SECTION_MIN;
   return (
     <>
       <CinemaHeroSpotlight albums={index.albums} go={go} />
-      <div className="cinema-category-bar" role="tablist" aria-label="Movie & Show Categories">
+      <div className="cinema-category-bar" role="tablist" aria-label="Movie Categories">
         <button
-          className={`cinema-cat-chip ${activeGenre === 'all' ? 'active' : ''}`}
+          className={`cinema-cat-chip ${(activeGenre === 'all' || activeGenre === '__movies__') ? 'active' : ''}`}
           onClick={() => setPref('categoryFilter', 'all')}
         >
-          ★ All Movies &amp; Shows <span className="chip-count">{index.albums.length}</span>
+          🎬 All Movies <span className="chip-count">{index.albums.length}</span>
         </button>
-        <button
-          className={`cinema-cat-chip ${activeGenre === '__movies__' ? 'active' : ''}`}
-          onClick={() => setPref('categoryFilter', '__movies__')}
-        >
-          🎬 Movies <span className="chip-count">{(index.moviesOnly || []).length}</span>
-        </button>
-        {(index.tvShows || []).length > 0 && (
-          <button
-            className={`cinema-cat-chip ${activeGenre === '__tv__' ? 'active' : ''}`}
-            onClick={() => setPref('categoryFilter', '__tv__')}
-          >
-            📺 TV Shows &amp; Series <span className="chip-count">{(index.tvShows || []).length}</span>
-          </button>
-        )}
         {(index.franchises || []).length > 0 && (
           <button
             className={`cinema-cat-chip ${activeGenre === '__franchises__' ? 'active' : ''}`}
@@ -505,7 +583,7 @@ function AlbumsSection({ index, go, prefs, setPref }) {
           </button>
         ))}
       </div>
-      <SectionHeader subtitle={plural(filteredAlbums.length, 'title')} tracks={filteredAlbums.flatMap(a => a.tracks)}>
+      <SectionHeader subtitle={`${plural(filteredAlbums.length, 'feature film')} · Theatrical & home cinema`} tracks={filteredAlbums.flatMap(a => a.tracks)}>
         <SortSelect id="album-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added'], ['artist', 'Quality / Format']]} />
       </SectionHeader>
       <AlbumGrid albums={filteredAlbums} go={go} letterOf={lettered ? (sortKey === 'title' ? albumLetter : albumArtistLetter) : null} />
@@ -514,55 +592,319 @@ function AlbumsSection({ index, go, prefs, setPref }) {
 }
 
 function MoviesOnlySection({ index, go, prefs, setPref }) {
+  return <AlbumsSection index={index} go={go} prefs={prefs} setPref={setPref} />;
+}
+
+/**
+ * Purpose-built TV Show Navigator (`Show -> Season -> Episode` split browser).
+ * Unlike Movies (which are flat single files), TV Shows have a 3-tier hierarchy:
+ *   1. Series Picker (with Network / Genre / Search / In-Progress filter)
+ *   2. Show Overview Banner + Interactive Season Tabs (`All Seasons`, `Season 1`, `Season 2`, ...)
+ *   3. Episode Guide (with `S01E01` codes, episode titles, air dates, ratings, plot synopses, and resume bars)
+ */
+function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
+  const shows = useMemo(() => sortAlbums(index.tvShows || [], prefs.tvSort || 'title'), [index, prefs.tvSort]);
+  const [seriesFilter, setSeriesFilter] = useState('all'); // 'all' | 'continue' | network
+  const [seriesQuery, setSeriesQuery] = useState('');
+
+  const networks = useMemo(() => {
+    const counts = new Map();
+    for (const s of shows) {
+      if (s.network) counts.set(s.network, (counts.get(s.network) || 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [shows]);
+
+  const inProgressShows = useMemo(() => {
+    return shows.filter(s => {
+      const ws = getShowWatchState(s, stats);
+      return ws.hasActivity && !ws.completed;
+    });
+  }, [shows, stats]);
+
+  const filteredShows = useMemo(() => {
+    let list = shows;
+    if (seriesFilter === 'continue') {
+      list = inProgressShows;
+    } else if (seriesFilter.startsWith('net:')) {
+      const net = seriesFilter.slice(4);
+      list = list.filter(s => s.network === net);
+    } else if (seriesFilter.startsWith('genre:')) {
+      const gKey = seriesFilter.slice(6);
+      list = list.filter(s => (s.genres || [s.genre]).some(g => fold(g) === gKey));
+    }
+    if (seriesQuery.trim()) {
+      const q = seriesQuery.trim().toLowerCase();
+      list = list.filter(s =>
+        String(s.title || '').toLowerCase().includes(q)
+        || String(s.network || '').toLowerCase().includes(q)
+        || String(s.overview || '').toLowerCase().includes(q)
+        || String(s.cast || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [shows, inProgressShows, seriesFilter, seriesQuery]);
+
+  const selectedKey = prefs.selectedShowKey && index.albumByKey.has(prefs.selectedShowKey)
+    ? prefs.selectedShowKey
+    : (filteredShows[0]?.key || shows[0]?.key || null);
+  const activeShow = (selectedKey && index.albumByKey.get(selectedKey)) || filteredShows[0] || shows[0] || null;
+
+  if (!shows.length) {
+    return <div className="empty-inline">No TV shows or episodes found in your library yet.</div>;
+  }
+
+  return (
+    <div className="tv-navigator-workspace">
+      {/* Top Filter & View Switcher Bar */}
+      <div className="cinema-category-bar tv-nav-filter-bar" role="tablist" aria-label="TV Series Filters">
+        <button
+          className={`cinema-cat-chip ${seriesFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setSeriesFilter('all')}
+        >
+          📺 All Series <span className="chip-count">{shows.length}</span>
+        </button>
+        {inProgressShows.length > 0 && (
+          <button
+            className={`cinema-cat-chip ${seriesFilter === 'continue' ? 'active' : ''}`}
+            onClick={() => setSeriesFilter('continue')}
+          >
+            ▶ Continue Watching <span className="chip-count">{inProgressShows.length}</span>
+          </button>
+        )}
+        {networks.slice(0, 8).map(([net, cnt]) => (
+          <button
+            key={net}
+            className={`cinema-cat-chip ${seriesFilter === `net:${net}` ? 'active' : ''}`}
+            onClick={() => setSeriesFilter(`net:${net}`)}
+          >
+            {net} <span className="chip-count">{cnt}</span>
+          </button>
+        ))}
+        {index.genres.slice(0, 5).map(g => (
+          <button
+            key={g.key}
+            className={`cinema-cat-chip ${seriesFilter === `genre:${g.key}` ? 'active' : ''}`}
+            onClick={() => setSeriesFilter(`genre:${g.key}`)}
+          >
+            {g.name} <span className="chip-count">{g.albums.length}</span>
+          </button>
+        ))}
+        <span style={{ flex: 1 }} />
+        <button
+          className="btn-secondary"
+          onClick={() => go({ section: 'tv_shows' })}
+          title="Switch to full-width TV Series Poster Grid"
+        >
+          <Icon name="grid" size={13} /> Poster Grid View
+        </button>
+      </div>
+
+      <div className="tv-navigator-split">
+        {/* Left Column: Series List (Show Picker) */}
+        <aside className="tv-navigator-series-list" aria-label="TV Series List">
+          <div className="tv-navigator-series-header">
+            <input
+              type="search"
+              className="tv-series-filter-input"
+              placeholder="Filter shows by title, network, cast…"
+              value={seriesQuery}
+              onChange={(e) => setSeriesQuery(e.target.value)}
+            />
+            <SortSelect
+              id="tv-nav-sort"
+              value={prefs.tvSort || 'title'}
+              onChange={(v) => setPref('tvSort', v)}
+              options={[['title', 'A–Z'], ['year', 'Newest'], ['addedAt', 'Added']]}
+            />
+          </div>
+          <div className="tv-navigator-series-items">
+            {filteredShows.map(show => {
+              const ws = getShowWatchState(show, stats);
+              const isSelected = activeShow && activeShow.key === show.key;
+              const epCode = ws.resumeTrack?.episodeCode
+                || (ws.resumeTrack?.seasonNumber != null
+                  ? `S${String(ws.resumeTrack.seasonNumber).padStart(2, '0')}E${String(ws.resumeTrack.episodeNumber || 1).padStart(2, '0')}`
+                  : null);
+              return (
+                <div
+                  key={show.key}
+                  className={`tv-series-rail-card ${isSelected ? 'active' : ''}`}
+                  onClick={() => setPref('selectedShowKey', show.key)}
+                >
+                  <div className="tv-series-rail-poster">
+                    <Cover artId={show.artId} name={show.title} />
+                  </div>
+                  <div className="tv-series-rail-body">
+                    <div className="tv-series-rail-title-row">
+                      <span className="tv-series-rail-title">{show.title}</span>
+                      {show.rating && <span className="tv-series-rail-rating">★ {show.rating}</span>}
+                    </div>
+                    <div className="tv-series-rail-meta">
+                      <span>{plural(show.seasonCount || 1, 'Season')} · {plural(show.episodeCount || show.tracks.length, 'Ep')}</span>
+                      {show.network && <span className="tv-series-rail-net">{show.network}</span>}
+                    </div>
+                    {ws.completed ? (
+                      <span className="tv-series-rail-status watched">✓ All {ws.totalEpisodes} Watched</span>
+                    ) : ws.hasActivity ? (
+                      <span className="tv-series-rail-status resume">
+                        ▶ {ws.resumePositionSec >= 5 ? `Resume ${epCode} (${formatDuration(ws.resumePositionSec)})` : `Next: ${epCode} (${ws.completedCount}/${ws.totalEpisodes})`}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Right Column: Active Show Banner + Season Tabs + Episode Guide */}
+        <section className="tv-navigator-show-stage">
+          {activeShow ? (
+            <>
+              <DetailHeader
+                album={activeShow}
+                cover={<Cover artId={activeShow.artId} name={activeShow.title} />}
+                eyebrow="TV Series"
+                title={activeShow.title}
+                subtitle={activeShow.network ? <span>{activeShow.network}{activeShow.year ? ` · Premiered ${activeShow.year}` : ''}</span> : null}
+                meta={[
+                  activeShow.year,
+                  activeShow.genre,
+                  plural(activeShow.seasonCount || 1, 'Season'),
+                  plural(activeShow.episodeCount || activeShow.tracks.length, 'Episode'),
+                  formatLongDuration(activeShow.duration),
+                ]}
+                tracks={activeShow.tracks}
+                menuLabel={activeShow.title}
+              />
+              <TvShowSeasonsBreakdown key={activeShow.key} album={activeShow} />
+            </>
+          ) : (
+            <div className="empty-inline">Select a TV show on the left to browse its seasons and episodes.</div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function TvShowsSection({ index, go, prefs, setPref, stats }) {
   const sortKey = prefs.albumSort || 'title';
-  const movies = useMemo(() => sortAlbums(index.moviesOnly || [], sortKey), [index, sortKey]);
-  const lettered = (sortKey === 'title' || sortKey === 'artist') && movies.length >= LETTER_SECTION_MIN;
+  const [netFilter, setNetFilter] = useState('all');
+  const shows = useMemo(() => sortAlbums(index.tvShows || [], sortKey), [index, sortKey]);
+  const networks = useMemo(() => {
+    const counts = new Map();
+    for (const s of shows) {
+      if (s.network) counts.set(s.network, (counts.get(s.network) || 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [shows]);
+
+  const inProgressShows = useMemo(() => {
+    return shows.filter(s => {
+      const ws = getShowWatchState(s, stats || {});
+      return ws.hasActivity && !ws.completed;
+    });
+  }, [shows, stats]);
+
+  const filteredShows = useMemo(() => {
+    if (netFilter === 'all') return shows;
+    if (netFilter === '__continue__') return inProgressShows;
+    return shows.filter(s => s.network === netFilter);
+  }, [shows, inProgressShows, netFilter]);
+
+  const allEpisodes = useMemo(() => filteredShows.flatMap(s => s.tracks), [filteredShows]);
+  const totalSeasons = useMemo(() => filteredShows.reduce((sum, s) => sum + (s.seasonCount || 1), 0), [filteredShows]);
   return (
     <>
-      <CinemaHeroSpotlight albums={movies} go={go} />
-      <SectionHeader subtitle={`${plural(movies.length, 'feature film')} · Theatrical & home cinema`} tracks={movies.flatMap(a => a.tracks)}>
-        <SortSelect id="movies-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added'], ['artist', 'Quality / Format']]} />
+      <CinemaHeroSpotlight albums={shows} go={go} />
+      <div className="cinema-category-bar" role="tablist" aria-label="TV Networks & Filters">
+        <button
+          className={`cinema-cat-chip ${netFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setNetFilter('all')}
+        >
+          📺 All TV Series <span className="chip-count">{shows.length}</span>
+        </button>
+        {inProgressShows.length > 0 && (
+          <button
+            className={`cinema-cat-chip ${netFilter === '__continue__' ? 'active' : ''}`}
+            onClick={() => setNetFilter('__continue__')}
+          >
+            ▶ Continue Watching <span className="chip-count">{inProgressShows.length}</span>
+          </button>
+        )}
+        {networks.map(([net, cnt]) => (
+          <button
+            key={net}
+            className={`cinema-cat-chip ${netFilter === net ? 'active' : ''}`}
+            onClick={() => setNetFilter(net)}
+          >
+            {net} <span className="chip-count">{cnt}</span>
+          </button>
+        ))}
+      </div>
+      <SectionHeader
+        subtitle={`${plural(filteredShows.length, 'TV show')} · ${plural(totalSeasons, 'season')} · ${plural(allEpisodes.length, 'episode')}`}
+        tracks={allEpisodes}
+      >
+        <button className="btn-secondary" onClick={() => go({ section: 'tv_navigator' })}>
+          <Icon name="tv" size={13} /> Split Season/Episode Navigator
+        </button>
+        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Show Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
       </SectionHeader>
-      <AlbumGrid albums={movies} go={go} letterOf={lettered ? (sortKey === 'title' ? albumLetter : albumArtistLetter) : null} />
+      {filteredShows.length ? (
+        <AlbumGrid
+          albums={filteredShows}
+          go={(view) => {
+            if (view?.detail?.type === 'album') {
+              setPref('selectedShowKey', view.detail.key);
+            }
+            go(view);
+          }}
+        />
+      ) : (
+        <div className="empty-inline">No TV shows match this filter.</div>
+      )}
     </>
   );
 }
 
-function TvShowsSection({ index, go, prefs, setPref }) {
-  const sortKey = prefs.albumSort || 'title';
-  const shows = useMemo(() => sortAlbums(index.tvShows || [], sortKey), [index, sortKey]);
-  const allEpisodes = useMemo(() => shows.flatMap(s => s.tracks), [shows]);
-  const totalSeasons = useMemo(() => shows.reduce((sum, s) => sum + (s.seasonCount || 1), 0), [shows]);
+function TvNetworksSection({ index, go, setPref }) {
+  const shows = index.tvShows || [];
+  const networkGroups = useMemo(() => {
+    const map = new Map();
+    for (const s of shows) {
+      const net = s.network || 'Other Networks';
+      if (!map.has(net)) map.set(net, []);
+      map.get(net).push(s);
+    }
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [shows]);
+
+  if (!networkGroups.length) {
+    return <div className="empty-inline">No TV network metadata found yet. Click “Fetch Metadata” to enrich your shows.</div>;
+  }
+
   return (
-    <>
-      <SectionHeader
-        subtitle={`${plural(shows.length, 'TV show')} · ${plural(totalSeasons, 'season')} · ${plural(allEpisodes.length, 'episode')}`}
-        tracks={allEpisodes}
-      >
-        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Show Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
-      </SectionHeader>
-      {shows.length ? (
-        <>
-          <AlbumGrid albums={shows} go={go} />
-          {shows.slice(0, 12).map(show => (
-            <div key={show.key} className="tv-show-section-block">
-              <SectionHeader
-                title={show.title}
-                subtitle={`${plural(show.seasonCount || 1, 'Season')} · ${plural(show.episodeCount || show.tracks.length, 'Episode')}`}
-                tracks={show.tracks}
-              >
-                <button className="btn-secondary" onClick={() => go({ section: 'albums', detail: { type: 'album', key: show.key } })}>
-                  Open Show Page
-                </button>
-              </SectionHeader>
-              <TvShowSeasonsBreakdown album={show} />
-            </div>
-          ))}
-        </>
-      ) : (
-        <div className="empty-inline">No TV shows or episodes found in your library yet.</div>
-      )}
-    </>
+    <div className="tv-networks-page">
+      {networkGroups.map(([netName, netShows]) => (
+        <div key={netName} className="tv-show-section-block">
+          <SectionHeader
+            title={netName}
+            subtitle={`${plural(netShows.length, 'TV series')} · ${plural(netShows.reduce((acc, s) => acc + (s.episodeCount || s.tracks.length), 0), 'episode')}`}
+            tracks={netShows.flatMap(s => s.tracks)}
+          />
+          <AlbumGrid
+            albums={netShows}
+            go={(view) => {
+              if (view?.detail?.type === 'album' && setPref) setPref('selectedShowKey', view.detail.key);
+              go(view);
+            }}
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 

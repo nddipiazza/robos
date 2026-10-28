@@ -75,10 +75,10 @@ export default function App() {
   const playlistColumns = useColumns('playlist', PLAYLIST_COLUMNS);
   const [libNav, setLibNav] = useState(() => {
     const saved = playerPrefs.librarySection;
-    // Default to All Movies & Shows ('albums') so the user opens directly into the Plex/Netflix visual library
-    const initialSection = (!saved || saved === 'songs') ? 'albums' : saved;
+    const initialSection = (!saved || saved === 'songs' || saved.startsWith('tv_')) ? 'albums' : saved;
     return [{ section: initialSection }];
   });
+  const [showsNav, setShowsNav] = useState(() => [{ section: 'tv_navigator' }]);
   const [menu, setMenu] = useState(null);
   const [infoTrack, setInfoTrack] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -1329,6 +1329,17 @@ export default function App() {
   // ── Library navigation, loved tracks, track info ──────────────────────────
 
   const libraryNav = libNav[libNav.length - 1];
+  const currentShowsNav = showsNav[showsNav.length - 1];
+
+  const movieCount = useMemo(() => (library.tracks || []).filter(t => t && t.mediaType !== 'tv').length, [library.tracks]);
+  const tvEpisodeCount = useMemo(() => (library.tracks || []).filter(t => t && t.mediaType === 'tv').length, [library.tracks]);
+  const tvShowCount = useMemo(() => {
+    const set = new Set();
+    for (const t of (library.tracks || [])) {
+      if (t && t.mediaType === 'tv') set.add(String(t.showName || t.album || '').trim().toLowerCase());
+    }
+    return set.size;
+  }, [library.tracks]);
 
   const navigateLibrary = (view) => {
     setActiveTab('library');
@@ -1341,9 +1352,30 @@ export default function App() {
 
   const libraryBack = () => setLibNav(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
 
-  const goToAlbumOf = (track) => navigateLibrary({ section: 'albums', detail: { type: 'album', key: albumKeyOf(track) } });
+  const navigateShows = (view) => {
+    setActiveTab('shows');
+    setShowsNav(prev => {
+      const top = prev[prev.length - 1];
+      if (JSON.stringify(top) === JSON.stringify(view)) return prev;
+      return [...prev.slice(-40), view];
+    });
+  };
+
+  const showsBack = () => setShowsNav(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+
+  const goToAlbumOf = (track) => {
+    if (track && track.mediaType === 'tv') {
+      navigateShows({ section: 'tv_shows', detail: { type: 'album', key: albumKeyOf(track) } });
+    } else {
+      navigateLibrary({ section: 'albums', detail: { type: 'album', key: albumKeyOf(track) } });
+    }
+  };
   const goToArtist = (name) => navigateLibrary({ section: 'artists', detail: { type: 'artist', key: fold(name || 'Unknown Artist') } });
-  const goToGenre = (genre) => navigateLibrary({ section: 'genres', detail: { type: 'genre', key: fold(splitGenres(genre)[0] || genre) } });
+  const goToGenre = (genre) => {
+    const view = { section: 'genres', detail: { type: 'genre', key: fold(splitGenres(genre)[0] || genre) } };
+    if (activeTab === 'shows') navigateShows(view);
+    else navigateLibrary(view);
+  };
 
   const setLovedTracks = async (tracks, loved) => {
     const ids = [...new Set((tracks || []).map(t => t.id).filter(Boolean))];
@@ -1884,18 +1916,25 @@ export default function App() {
           <Icon name="tv" /><span>Cinema Stage</span>
         </button>
         <button
+          id="tab-btn-library"
+          className={`tab-btn ${activeTab === 'library' ? 'active' : ''}`}
+          onClick={() => setActiveTab('library')}
+        >
+          <Icon name="disc" /><span>Movies ({movieCount})</span>
+        </button>
+        <button
+          id="tab-btn-shows"
+          className={`tab-btn ${activeTab === 'shows' ? 'active' : ''}`}
+          onClick={() => setActiveTab('shows')}
+        >
+          <Icon name="tv" /><span>TV Shows ({tvShowCount}{tvEpisodeCount ? ` · ${tvEpisodeCount} Eps` : ''})</span>
+        </button>
+        <button
           id="tab-btn-playlists"
           className={`tab-btn ${activeTab === 'playlists' ? 'active' : ''}`}
           onClick={() => setActiveTab('playlists')}
         >
           <Icon name="list" /><span>Watchlists ({playlists.length})</span>
-        </button>
-        <button
-          id="tab-btn-library"
-          className={`tab-btn ${activeTab === 'library' ? 'active' : ''}`}
-          onClick={() => setActiveTab('library')}
-        >
-          <Icon name="library" /><span>Movies &amp; Shows ({library.tracks.length})</span>
         </button>
         <button
           id="tab-btn-cloud"
@@ -1931,7 +1970,7 @@ export default function App() {
 
       <div className="app-body">
       {/* Main Content Area */}
-      <main className={`tab-content ${activeTab === 'library' ? 'library-active' : ''}`}>
+      <main className={`tab-content ${(activeTab === 'library' || activeTab === 'shows') ? 'library-active' : ''}`}>
         {/* Background Scan Banner */}
         {isScanningLibrary && (
           <div className="scan-progress-banner">
@@ -2605,8 +2644,8 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 2: MEDIA LIBRARY BROWSER */}
-        {activeTab === 'library' && (
+        {/* TAB 2: MOVIES & TV SHOWS BROWSERS (Separated into Movies tab & TV Shows tab) */}
+        {(activeTab === 'library' || activeTab === 'shows') && (
           <div className="library-tab">
             {activeCastSession && (
               <div className="active-cast-bar">
@@ -2628,12 +2667,13 @@ export default function App() {
               </div>
             )}
             <Library
+              mode={activeTab === 'shows' ? 'shows' : 'movies'}
               tracks={library.tracks}
               folders={folders}
-              nav={libraryNav}
-              onNavigate={navigateLibrary}
-              onBack={libraryBack}
-              canGoBack={libNav.length > 1}
+              nav={activeTab === 'shows' ? currentShowsNav : libraryNav}
+              onNavigate={activeTab === 'shows' ? navigateShows : navigateLibrary}
+              onBack={activeTab === 'shows' ? showsBack : libraryBack}
+              canGoBack={activeTab === 'shows' ? showsNav.length > 1 : libNav.length > 1}
               searchInputRef={searchInputRef}
               isScanning={isScanningLibrary}
               isFetchingMetadata={isFetchingMetadata}
