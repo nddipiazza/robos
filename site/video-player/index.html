@@ -1,0 +1,169 @@
+---
+layout: default
+title: RobOS Movie & Video Player — Home Theater, TV Shows, AI Host & Roku Smart TV App
+permalink: /video-player/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "RobOS Movie Player (packages/movie-player): an open-source 100,000-movie and TV series home theater player with TMDB/TVmaze posters, Show & Season Navigator, synced .srt/.vtt subtitles, AI Watchlists, a RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku & Smart TV app."
+og_image: /assets/blog/movie-player/02-library-grid.png
+og_image_alt: "RobOS Movie Player Movies (107) Library Poster Grid with real TMDB theatrical posters, ratings, and Spotlight Hero Banner"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, home theater software, Roku OS cinema app, Smart TV casting, TV show season navigator, TMDB TVmaze metadata, AI Watchlists, Virtual Cinema Host, HTTP 206 SFTP cloud streaming"
+---
+{%- assign mp = '/assets/blog/movie-player/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">App Suite · Home Theater, TV Series &amp; Big-Screen Casting</p>
+<h1>RobOS Movie &amp; Video Player</h1>
+<p class="lead">Your movies and TV shows, on your desktop and on your living-room TV. <strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) shares the warm dark theater theme and multi-pane architecture of <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a>, scaled for 100,000 films and multi-season TV series — with automatic scene-filename cleaning, official TMDB &amp; TVmaze posters, a dedicated <strong>TV Shows &amp; Season Navigator</strong>, synced <code>.srt</code> / <code>.vtt</code> subtitles, SFTP &amp; cloud byte-range streaming, optional <strong>✦ AI Watchlists</strong> and a spoken <strong>Virtual Cinema Host</strong>, plus a native 3-row visual image-card app for <strong>Roku OS</strong> and Smart TVs.</p>
+<div class="cta" style="margin-top:6px">
+  <a class="btn" href="#movies">Tour the Movies Theater</a>
+  <a class="btn btn-ghost" href="#tv-shows">TV Shows &amp; Seasons</a>
+  <a class="btn btn-ghost" href="#roku-tv">Roku &amp; Smart TV App</a>
+  <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/movie-player">Source code</a>
+</div>
+</header>
+
+<figure class="guide-shot"><a href="{{ mp }}02-library-grid.png"><img src="{{ mp }}02-library-grid.png" alt="RobOS Movie Player on the Movies (107) tab showing the Feature Film Spotlight hero banner for Annabelle (2014), genre filter chips, and 2:3 theatrical posters" width="1920" height="1040"></a><figcaption><strong>RobOS Movie Player</strong> on the <strong>Movies (107)</strong> tab: the Feature Film Spotlight banner at top, one-click genre and franchise filter chips, virtualized 2:3 theatrical posters with resolution and year badges, and the collapsible <strong>Watch Queue</strong> dock on the right.</figcaption></figure>
+
+<ul class="cr-nav">
+<li><a href="#movies"><b>1. Movies Theater</b><span>2:3 posters, spotlight hero, franchises, genres &amp; 4K/BluRay filters</span></a></li>
+<li><a href="#tv-shows"><b>2. TV Shows &amp; Seasons</b><span>48 series &amp; 2,641 episodes grouped by Show → Season → Episode</span></a></li>
+<li><a href="#roku-tv"><b>3. Roku &amp; Smart TV App</b><span>100% visual image-card 3-row TV interface with D-Pad navigation</span></a></li>
+<li><a href="#cinema-stage"><b>4. Cinema Stage &amp; Subtitles</b><span>16:9 HTML5 video, synced .srt/.vtt dialogue, PiP &amp; frame capture</span></a></li>
+<li><a href="#ai-host"><b>5. AI Watchlists &amp; Host</b><span>Optional AI movie marathons &amp; spoken RobOS Voice introductions</span></a></li>
+<li><a href="#metadata"><b>6. Poster &amp; Metadata Fixer</b><span>TMDB, TVmaze, Wikidata, .nfo sidecars, ffprobe &amp; ffmpeg</span></a></li>
+<li><a href="#cloud-sftp"><b>7. SFTP &amp; Cloud Streaming</b><span>Zero-download indexing + HTTP 206 byte-range streaming</span></a></li>
+<li><a href="#architecture"><b>8. Architecture &amp; CLI</b><span>System diagram, file layout, and reproducible test commands</span></a></li>
+</ul>
+
+<blockquote><p><strong>Works 100% without AI.</strong> Like every app in RobOS, Movie Player is a complete, fast local and LAN home theater out of the box. Public poster and plot enrichment uses open public APIs (TMDB/TVmaze/Wikidata) and local <code>ffprobe</code>/<code>ffmpeg</code> inspection. AI features (<strong>✦ AI Watchlist</strong>, <strong>Virtual Cinema Host</strong>, and agentic <strong>✦ AI Fix Metadata</strong>) are optional buttons that use the coding-agent CLI you already signed in to.</p></blockquote>
+
+<h2 id="movies">1. Movies Theater: 100,000-Film Virtualized Poster Browser</h2>
+<p>Movie folders rarely arrive with clean metadata: filenames look like <code>Avengers.Endgame.2019.2160p.UHD.BluRay.x265.10bit.HDR-GROUP.mkv</code>, and duplicate encodes (`720p`, `1080p BluRay`, `2160p WEB-DL`) often sit side by side. During background worker-thread scanning (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/track-metadata.js"><code>lib/track-metadata.js</code></a>), <code>cleanMovieFilename()</code> strips release noise while extracting the canonical film title, 4-digit release year, resolution badge (<code>4K UHD</code>, <code>1080p</code>, <code>720p</code>), source medium (<code>BluRay</code>, <code>WEB-DL</code>, <code>HDRip</code>), and video codec (<code>HEVC</code>, <code>AV1</code>, <code>H.264</code>).</p>
+
+<ul>
+  <li><strong>Feature Film Spotlight Banner:</strong> Highlights a featured film at the top of the library with its 2:3 theatrical poster, franchise badge (e.g. <em>The Conjuring Universe</em>, <em>Marvel &amp; Avengers</em>, <em>The Lord of the Rings</em>, <em>Harry Potter Wizarding World</em>), release year, resolution badge, director and cast credits, plot synopsis, and one-click <strong>▶ Watch Movie</strong> or <strong>📺 Cast to TV</strong> actions.</li>
+  <li><strong>Cinema Navigation Views:</strong> Switch between <strong>All Movies</strong> (virtualized 2:3 poster grid with an A–Z jump rail), <strong>Franchises &amp; Box Sets</strong> (auto-grouped sagas and trilogies), <strong>Movie Genres</strong> (<em>Action &amp; Adventure</em>, <em>Animation &amp; Family</em>, <em>Comedy &amp; Romance</em>, <em>Drama &amp; Cinema</em>, <em>Horror &amp; Supernatural</em>, <em>Sci-Fi &amp; Fantasy</em>, <em>Thriller &amp; Mystery</em>), <strong>4K &amp; BluRay Formats</strong>, <strong>Release Decades</strong>, and <strong>All Movies (A–Z List)</strong>.</li>
+  <li><strong>Watch Progress &amp; Resume Tracking:</strong> Remembers your exact playback timestamp (`positionSec`, `progressPct`, `inProgress`, `completed`) across desktop and Smart TV sessions, surfacing partially watched films under <strong>Continue Watching</strong>.</li>
+</ul>
+
+<h2 id="tv-shows">2. TV Shows &amp; Season Navigator: 48 Series &amp; 2,641 Episodes</h2>
+<p>Movies and episodic television need different browsing ergonomics. Instead of dumping 2,600 episodes into a flat movie grid, <strong>RobOS Movie Player</strong> automatically detects episodic patterns (`S01E01`, `1x02`, `Season 1`, `Book One`, `Part II`, `Extras/Specials`) in <a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/library-index.js"><code>lib/library-index.js</code></a> and separates them into a dedicated top-level <strong>TV Shows</strong> tab.</p>
+
+<figure class="guide-shot"><a href="{{ mp }}03-tv-shows-grid.png"><img src="{{ mp }}03-tv-shows-grid.png" alt="RobOS Movie Player TV Shows (48 Series, 2,641 Episodes) Show and Season Navigator showing Archer Season 1 episodes with TVmaze ratings, air dates, and episode synopses" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Show &amp; Season Navigator</strong>: pick any series on the left (with official TVmaze poster, star rating, season/episode counts, and network badge), choose a season pill in the center, and browse or play individual episodes with original air dates and episode synopses.</figcaption></figure>
+
+<figure class="guide-shot"><a href="{{ mp }}04-tv-shows-poster-grid.png"><img src="{{ mp }}04-tv-shows-poster-grid.png" alt="RobOS Movie Player All TV Series Poster Grid showing 2:3 series posters for Archer, Atypical, Avatar: The Last Airbender, Big Brother, Bluey, BoJack Horseman, Breaking Bad, and more" loading="lazy" width="1920" height="1040"></a><figcaption><strong>All TV Series (Poster Grid)</strong>: browse all 48 series as 2:3 poster cards with network pills (<em>Netflix</em>, <em>HBO</em>, <em>FX</em>, <em>Apple TV+</em>, <em>AMC</em>, <em>Comedy Central</em>), star ratings, and season/episode badges.</figcaption></figure>
+
+<table class="wide">
+<thead><tr><th>TV Shows Workspace View</th><th>What it organizes</th></tr></thead>
+<tbody>
+<tr><td><strong>Show &amp; Season Navigator</strong></td><td>Three-tier master-detail browser: searchable Series list on the left → Series Hero header &amp; horizontal Season pills (<code>All Seasons</code>, <code>Season 1</code>, <code>Season 2</code>, …, <code>Specials &amp; Extras</code>) → Episode list with <code>S01E01</code> badges, TVmaze star ratings, air dates, and plot summaries.</td></tr>
+<tr><td><strong>All TV Series (Poster Grid)</strong></td><td>2:3 poster wall of every series in your library with one-click filter chips by network (<em>Netflix</em>, <em>Syfy</em>, <em>FOX</em>, <em>CBS</em>, <em>Hulu</em>) and genre. Clicking any series poster opens its seasons and episodes.</td></tr>
+<tr><td><strong>Networks &amp; Studios</strong></td><td>Groups series by original broadcast network or streaming studio (<em>HBO</em>, <em>Netflix</em>, <em>Apple TV+</em>, <em>FX / FXX</em>, <em>AMC</em>, <em>Nickelodeon</em>, <em>Cartoon Network</em>, <em>Showtime</em>).</td></tr>
+<tr><td><strong>TV Show Genres &amp; Decades</strong></td><td>Filter series across 24 television genres (<em>Sci-Fi &amp; Fantasy</em>, <em>Crime &amp; Mystery</em>, <em>Animated Sitcom</em>, <em>Espionage</em>) or premiere decade (<code>1990s</code>–<code>2020s</code>).</td></tr>
+<tr><td><strong>Up Next &amp; Continue Watching</strong></td><td>Tracks watch progress per episode and computes each show's <strong>Up Next</strong> episode (the currently in-progress episode or the next unwatched episode in season order).</td></tr>
+</tbody>
+</table>
+
+<h2 id="roku-tv">3. Roku OS &amp; Smart TV App: 3-Row 100% Visual Image-Card UX</h2>
+<p>When you sit 10 feet from a 65-inch TV with a directional remote, plain text menus feel dated and slow. <strong>RobOS Movie Player</strong> pairs with <a href="{{ '/tv/' | relative_url }}">RobOS Smart TV Studio</a> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js"><code>packages/robos-lib/tv-engine.js</code></a>) to sideload a native <strong>Roku OS SceneGraph channel</strong> (and serve an identical 10-foot web portal at <code>:19210/movie-player</code> for LG webOS, Samsung Tizen, and Google TV / Android TV) where <strong>every selectable item in every row is an image card with text</strong>.</p>
+
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ mp }}roku-cinema-library.jpg"><img src="{{ mp }}roku-cinema-library.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing the 3-row visual image-card Movies browser with Annabelle, Anyone But You, and Avengers posters" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — Movies (107)</strong>: Row 1 Movie/TV Show image tabs, Hero Spotlight banner, Row 2 Category image cards, and Row 3 theatrical poster cards.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ mp }}roku-cinema-tv-shows.jpg"><img src="{{ mp }}roku-cinema-tv-shows.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing the TV Shows (48 Series) browser with Archer, Atypical, Avatar, Big Brother, Bluey, and BoJack Horseman posters" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — TV Shows (48 Series)</strong>: switch to the TV Shows tab to browse series posters, network badges, and season/episode counts.</figcaption></figure>
+</div>
+
+<figure class="guide-shot"><a href="{{ mp }}roku-cinema-seasons.jpg"><img src="{{ mp }}roku-cinema-seasons.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing Archer Season cards in Row 2 and Episode cards in Row 3" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — Series Season &amp; Episode Drill-Down</strong>: pressing <strong>OK</strong> on any TV series turns Row 2 into visual <strong>Season Image Cards</strong> (<code>All All Episodes</code>, <code>S01 Season 1</code>, <code>S02 Season 2</code>…) and Row 3 into <strong>Episode Cards</strong> (<code>S01E01 Mole Hunt</code>, <code>S01E02 Training Day</code>…).</figcaption></figure>
+
+<h3>Thoughtful 2D Remote D-Pad Navigation</h3>
+<p>The entire 10-foot TV experience is organized into <strong>3 visual rows</strong> so you can reach the <strong>Movies</strong> and <strong>TV Shows</strong> tabs in at most two presses of <code>[UP]</code> from anywhere on screen, and move <code>[LEFT]</code> / <code>[RIGHT]</code> smoothly across whichever row is focused:</p>
+
+<table class="wide">
+<thead><tr><th>Row</th><th>What is in the row</th><th><code>[LEFT]</code> / <code>[RIGHT]</code> behavior</th><th><code>[UP]</code> / <code>[DOWN]</code> &amp; <code>[OK]</code> behavior</th></tr></thead>
+<tbody>
+<tr><td><strong>Row 1: Top Image Tabs</strong></td><td><strong>Movies (107)</strong> image tab card, <strong>TV Shows (48 Series)</strong> image tab card, and contextual <strong>All TV Shows</strong> back-card when viewing a show's seasons.</td><td>Instant live-switch between the <strong>Movies</strong> theater and <strong>TV Shows</strong> library (wrapping cleanly at ends).</td><td><code>[DOWN]</code> or <code>[OK]</code> drops into Row 2 Category/Season cards.</td></tr>
+<tr><td><strong>Row 2: Category &amp; Season Image Cards</strong></td><td>6-card sliding shelf of visual category cards (each with a representative thumbnail poster, category title, and live film/series count) — or <strong>Season Image Cards</strong> (`All Seasons`, `Season 1`, `Season 2`…) when inside a TV series.</td><td>Slides the 6-card window across all 12 Movie categories, 8 TV Show categories, or all Seasons of the active show, live-filtering Row 3 posters as you move.</td><td><code>[UP]</code> jumps straight to Row 1 Tabs; <code>[DOWN]</code> or <code>[OK]</code> drops into Row 3 Poster cards.</td></tr>
+<tr><td><strong>Row 3: Poster &amp; Episode Cards</strong></td><td>6-card sliding shelf of large 2:3 Movie posters, TV Series posters, or Episode cards, synchronized with the Hero Spotlight banner above.</td><td>Moves across posters one by one (wrapping around the collection) and updates the Hero Spotlight title, ratings, cast, and synopsis in real time.</td><td><code>[UP]</code> moves to Row 2 Categories/Seasons (and one more <code>[UP]</code> reaches Row 1 Tabs); <code>[DOWN]</code> pages ahead <code>+6</code> posters; <code>[OK]</code> starts hardware video playback (or opens a TV show's seasons).</td></tr>
+</tbody>
+</table>
+
+<h2 id="cinema-stage">4. Cinema Stage, Synced Subtitles &amp; Smart TV Output</h2>
+<p>Clicking any movie or episode (or switching to the <strong>Cinema Stage</strong> tab) opens the 16:9 theater viewport and synchronized transport deck:</p>
+
+<figure class="guide-shot"><a href="{{ mp }}01-cinema-stage.png"><img src="{{ mp }}01-cinema-stage.png" alt="RobOS Movie Player Cinema Stage screening Dune (2021) while casting live to a 65-inch TCL Roku TV" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Cinema Stage</strong>: 16:9 HTML5 <code>&lt;video&gt;</code> viewport with letterbox/cover aspect controls, Picture-in-Picture (<code>PiP</code>), one-click <strong>Cast to 65&quot; TCL Roku TV</strong> and <strong>TV Library (Remote UI)</strong> buttons, synchronized transport bar, and the <strong>Subtitles &amp; Dialogue</strong> transcript panel below.</figcaption></figure>
+
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ mp }}05-smart-tvs.png"><img src="{{ mp }}05-smart-tvs.png" alt="RobOS Movie Player Smart TVs (4) tab showing paired Roku OS, Google TV, LG webOS, and Samsung Tizen TVs" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Smart TVs (4)</strong> tab: manage paired Roku OS, Google TV / Cast, LG webOS, and Samsung Tizen displays with one-click <strong>Display on TV</strong> and <strong>Open TV Library (Remote UI)</strong> actions.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ mp }}08-theater-ambience.png"><img src="{{ mp }}08-theater-ambience.png" alt="RobOS Movie Player Theater Ambience tab showing procedural lobby and cinema soundscapes" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Theater Ambience</strong> tab: procedural WebAudio soundscapes (<em>Velvet Lobby Rain</em>, <em>35mm Projector Booth</em>, <em>Late-Night Drive-In</em>, <em>Deep Space Drone</em>) for intermissions or background focus.</figcaption></figure>
+</div>
+
+<ul>
+  <li><strong>Synced <code>.srt</code> / <code>.vtt</code> Subtitles &amp; Click-to-Seek Dialogue (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/lyrics.js"><code>lib/lyrics.js</code></a>):</strong> Automatically loads sidecar <code>.srt</code>, <code>.vtt</code>, or <code>.lrc</code> files or extracts embedded subtitle tracks via <code>ffmpeg</code>. Active lines render as a theater caption overlay on the video stage and auto-scroll in the transcript panel; clicking any dialogue line seeks both the local video and active Smart TV stream to that exact second.</li>
+  <li><strong>Playback Speed, Aspect Fit, PiP &amp; Frame Snapshots:</strong> Cycle speed (`0.5x`–`2x`), aspect fit (`Letterbox`, `Cover`, `Fill`), float the stage in an always-on-top Picture-in-Picture window, or capture native-resolution PNG stills to <code>~/Pictures/RobOS Movie Snapshots/</code>.</li>
+</ul>
+
+<h2 id="ai-host">5. Optional AI Watchlists &amp; Spoken Virtual Cinema Host</h2>
+<p>Just like <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a> offers AI Playlists and a Virtual DJ, <strong>RobOS Movie Player</strong> includes optional AI curation grounded in your own library:</p>
+
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ mp }}ai-watchlist-modal.png"><img src="{{ mp }}ai-watchlist-modal.png" alt="AI Watchlist and Virtual Cinema Host modal in RobOS Movie Player" loading="lazy" width="1920" height="1040"></a><figcaption><strong>✦ AI Watchlist &amp; Virtual Cinema Host</strong>: describe your marathon or mood, pick your RobOS agent, and optionally enable spoken introductions between films.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ mp }}06-watchlists.png"><img src="{{ mp }}06-watchlists.png" alt="Watchlists tab in RobOS Movie Player showing saved movie marathons and queues" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Watchlists</strong> tab: curate, reorder, export (<code>.m3u8</code>), and screen saved movie marathons or AI-generated double features.</figcaption></figure>
+</div>
+
+<ul>
+  <li><strong>✦ AI Watchlist (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/AiPlaylist.jsx"><code>src/AiPlaylist.jsx</code></a>):</strong> Describe a theme (e.g. <em>"90-minute supernatural horror double feature from the 2010s"</em> or <em>"family-friendly animated adventure night"</em>) and your active coding agent selects and orders matching titles from your library.</li>
+  <li><strong>Virtual Cinema Host (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/useVirtualDj.js"><code>src/useVirtualDj.js</code></a>):</strong> Writes short 1–2 sentence TCM-style presenter intros ahead of each film in your queue and speaks them aloud via <strong>RobOS Voice</strong> (locally or over your Smart TV).</li>
+</ul>
+
+<h2 id="metadata">6. Public TMDB / TVmaze Enrichment &amp; AI Metadata Fixer</h2>
+<p>Clicking <strong>Fetch Posters &amp; Metadata</strong> in the library sidebar (or <strong>Fetch Metadata</strong> in the toolbar) runs <a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/public-metadata.js"><code>lib/public-metadata.js</code></a> across your movies and TV series:</p>
+
+<figure class="guide-shot"><a href="{{ mp }}ai-fix-metadata-modal.png"><img src="{{ mp }}ai-fix-metadata-modal.png" alt="AI Fix Metadata and Artwork modal in RobOS Movie Player" loading="lazy" width="1920" height="1040"></a><figcaption><strong>✦ AI Fix Metadata &amp; Artwork</strong>: combines scene filename cleaning, <code>.nfo</code> sidecar parsing, <code>ffprobe</code> stream inspection, public poster lookup, and <code>ffmpeg</code> frame extraction.</figcaption></figure>
+
+<ol>
+  <li><strong>TV Series &amp; Episode Enrichment (TVmaze Public API):</strong> Matches each TV series title, downloads the official 2:3 series poster into the content-addressed art cache (<code>~/.cache/robos/movie-player/art/</code>), and populates series plot synopses, network names, star ratings, premiere years, and per-episode titles, air dates, and episode overviews.</li>
+  <li><strong>Feature Film Enrichment (TMDB / Wikidata / Wikipedia REST + Apple iTunes Search):</strong> Fetches official theatrical 2:3 poster artwork, release years, MPAA/content ratings, director &amp; cast credits, and plot synopses, persisted in <code>~/.config/robos/movie-public-metadata-cache.json</code>.</li>
+  <li><strong>Local Sidecars &amp; <code>ffprobe</code> / <code>ffmpeg</code> Fallback:</strong> Parses Kodi/Jellyfin <code>.nfo</code> XML files, inspects container streams via <code>ffprobe</code>, and extracts a real video frame at 10% runtime via <code>ffmpeg</code> whenever a personal home video has no public poster.</li>
+</ol>
+
+<h2 id="cloud-sftp">7. SFTP Data Sources &amp; Cloud HTTP 206 Byte-Range Streaming</h2>
+<p>Your video library doesn't have to fit on your laptop's internal SSD. <strong>RobOS Movie Player</strong> connects directly to <strong>RobOS Data Sources</strong> (SSH/SFTP servers) and <strong>RobOS Cloud Accounts</strong> (Google Drive, Microsoft OneDrive, Dropbox, S3):</p>
+
+<figure class="guide-shot"><a href="{{ mp }}07-cloud-storage.png"><img src="{{ mp }}07-cloud-storage.png" alt="Cloud Storage and SFTP sources tab in RobOS Movie Player" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Cloud Storage &amp; SFTP Sources</strong>: index remote movie and TV folders in seconds without downloading multi-gigabyte video files upfront.</figcaption></figure>
+
+<ul>
+  <li><strong>Metadata-Only Indexing (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/cloud-storage.js"><code>lib/cloud-storage.js</code></a>):</strong> Walks remote SFTP directories (such as <code>/downloads/movies</code> and <code>/downloads/shows</code>) or cloud folders and indexes filenames, sizes, and season/episode structures in seconds without copying video bytes.</li>
+  <li><strong>Zero-Cloud LAN HTTP <code>206 Partial Content</code> Streamer (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/cast-service.js"><code>lib/cast-service.js</code></a>):</strong> When you press Play on desktop or on your Roku TV, Movie Player serves `/cloud-stream/:trackId` with full HTTP byte-range (`Range: bytes=...`) support and a 2 GB LRU disk cache (`~/.cache/robos/movie-player/cloud`), enabling instant scrubbing and hardware decoding on Roku OS, Google TV, and desktop.</li>
+</ul>
+
+<h2 id="architecture">8. Architecture, File Layout &amp; Reproducible CLI</h2>
+
+<figure class="guide-shot"><a href="{{ mp }}movie-player-cinema-architecture.jpg"><img src="{{ mp }}movie-player-cinema-architecture.jpg" alt="RobOS Movie Player technical architecture diagram showing 100k Library Enricher, Cloud Cinema Proxy, Cinema Video Stage, and Zero-Cloud LAN Cast" loading="lazy" width="1600" height="900"></a><figcaption>System architecture of <strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) and its LAN streaming &amp; Smart TV bridge.</figcaption></figure>
+
+<table class="wide">
+<thead><tr><th>Path / Port</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>packages/movie-player/</code></td><td>Electron + React desktop application, worker-thread scanner, public metadata enricher, and LAN stream server.</td></tr>
+<tr><td><code>packages/movie-player/lib/library-index.js</code></td><td>Separates Movies from TV Shows, groups episodes into Show → Season → Episode trees, and computes watch progress.</td></tr>
+<tr><td><code>packages/movie-player/lib/public-metadata.js</code></td><td>Fetches official 2:3 theatrical posters, ratings, networks, cast, and synopses from TVmaze, Wikidata/Wikipedia, and iTunes.</td></tr>
+<tr><td><code>packages/movie-player/lib/cast-service.js</code></td><td>HTTP <code>206</code> byte-range media &amp; poster server (<code>:19215</code>), Google Cast controller, and Roku ECP / Smart TV Studio bridge.</td></tr>
+<tr><td><code>packages/robos-lib/tv-engine.js</code></td><td>Generates the 3-row visual image-card Roku SceneGraph channel (<code>MainScene.xml</code> / <code>MainScene.brs</code>) and serves <code>:19210/movie-player</code>.</td></tr>
+<tr><td><code>~/.config/robos/movie-library.json</code></td><td>Indexed movie &amp; TV episode catalog with public metadata and artwork IDs.</td></tr>
+<tr><td><code>~/.cache/robos/movie-player/art/</code></td><td>Content-addressed SHA-1 JPEG poster cache served at <code>http://&lt;HOST-IP&gt;:19215/art/&lt;artId&gt;.jpg</code>.</td></tr>
+</tbody>
+</table>
+
+<pre><code># Build the renderer bundle and run the 19-test Movie &amp; TV Show verification suite
+cd packages/movie-player &amp;&amp; npm run build &amp;&amp; npm test
+
+# Launch RobOS Movie Player and inspect via the DOM Snapshot server (:19214)
+npx electron packages/movie-player --no-sandbox
+node packages/robos-lib/snapshot-cli.js movie-player --text
+node packages/robos-lib/snapshot-cli.js movie-player --screenshot /tmp/movie-player.png</code></pre>
+
+</article>
+</div></section>

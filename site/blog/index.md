@@ -189,6 +189,7 @@ node packages/robos-lib/snapshot-cli.js movie-player --text
 node packages/robos-lib/snapshot-cli.js movie-player --screenshot /tmp/movie-player.png</div>
     </div>
     <div class="blog-links">
+      <a href="{{ '/movie-player/' | relative_url }}">RobOS Movie &amp; Video Player guide →</a>
       <a href="{{ '/v1/apps/movie-player/' | relative_url }}">RobOS Movie Player docs →</a>
       <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player docs →</a>
       <a href="https://github.com/nddipiazza/robos/tree/main/packages/movie-player">packages/movie-player source →</a>
