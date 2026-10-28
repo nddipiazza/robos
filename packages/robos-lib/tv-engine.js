@@ -1698,6 +1698,7 @@ end sub
 <component name="DashboardTask" extends="Task">
   <interface>
     <field id="apiUrl" type="string" />
+    <field id="progressUrl" type="string" />
     <field id="payloadJson" type="string" />
   </interface>
   <script type="text/brightscript" uri="pkg:/components/DashboardTask.brs" />
@@ -1708,7 +1709,15 @@ end sub
 end sub
 
 sub pollDashboard()
+    lastProgUrl = ""
     while true
+        pUrl = m.top.progressUrl
+        if pUrl <> "" and pUrl <> lastProgUrl
+            lastProgUrl = pUrl
+            pHttp = CreateObject("roUrlTransfer")
+            pHttp.SetUrl(pUrl)
+            pHttp.GetToString()
+        end if
         raw = ""
         url = m.top.apiUrl
         if url <> ""
@@ -1978,32 +1987,41 @@ ${voiceSlide2RowsXml}
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
-    <!-- Interactive 10-Foot Movie Player Library Browser Overlay (Netflix / Plex / Apple TV+ Style, D-Pad Remote Controlled) -->
+    <!-- Interactive 10-Foot Movie Player Library Browser Overlay (Warm Obsidian & Cinema Gold Theater Theme, Separate Movies & TV Shows Tabs, D-Pad Remote Controlled) -->
     <Group id="cinemaLibraryGroup" visible="${initialCinemaLibActive ? 'true' : 'false'}">
-      <!-- Deep Obsidian Theater Backdrop -->
-      <Rectangle width="1920" height="1080" color="0x09080DFF" />
-      <!-- Top Netflix/Plex Navigation Header -->
-      <Rectangle width="1920" height="78" color="0x110E18FF" />
-      <Rectangle translation="[0, 76]" width="1920" height="3" color="0xE50914FF" />
-      <Rectangle translation="[0, 78]" width="680" height="2" color="0xE8A33DFF" />
+      <!-- Warm Obsidian Theater Backdrop (#110E0B) -->
+      <Rectangle width="1920" height="1080" color="0x110E0BFF" />
+      <!-- Top Warm Theater Navigation Header -->
+      <Rectangle width="1920" height="80" color="0x17130FFF" />
+      <Rectangle translation="[0, 77]" width="1920" height="3" color="0xE8A33DFF" />
+      <Rectangle translation="[0, 79]" width="740" height="2" color="0x38BDF8FF" />
 
       <!-- Brand Pill -->
-      <Rectangle translation="[36, 18]" width="196" height="42" color="0xE50914FF" />
-      <Label translation="[50, 26]" scale="[0.66, 0.66]" width="260" height="34" numLines="1" color="0xFFFFFFFF" text="ROBOS CINEMA+" />
-      <Label id="cinemaLibHeader" translation="[250, 24]" scale="[0.74, 0.74]" width="980" height="40" numLines="1" color="0xF8FAFCFF" text="10-Foot Streaming Library &amp; Collections" />
+      <Rectangle translation="[36, 18]" width="196" height="44" color="0xE8A33DFF" />
+      <Label translation="[48, 27]" scale="[0.65, 0.65]" width="265" height="34" numLines="1" color="0x110E0BFF" text="ROBOS CINEMA+" />
 
-      <!-- Active Category Pill & Remote Legend in Header -->
-      <Rectangle translation="[980, 18]" width="330" height="42" color="0x1E1B2EFF" />
-      <Rectangle translation="[980, 18]" width="4" height="42" color="0xE8A33DFF" />
-      <Label id="cinemaActiveCatBadge" translation="[996, 27]" scale="[0.54, 0.54]" width="580" height="30" numLines="1" color="0xFCD34DFF" text="CATEGORY: ALL MOVIES" />
-      <Label id="cinemaLibSubHeader" translation="[1326, 27]" scale="[0.52, 0.52]" width="1060" height="30" numLines="1" horizAlign="right" color="0xCBD5E1FF" text="[LEFT] CATEGORIES  |  [RIGHT] MOVIES  |  [OK] PLAY  |  [BACK] EXIT" />
+      <!-- Separate Top-Level Tab 1: MOVIES -->
+      <Rectangle id="cinemaTabMoviesBg" translation="[248, 16]" width="214" height="48" color="0x2B2114FF" />
+      <Rectangle id="cinemaTabMoviesStripe" translation="[248, 60]" width="214" height="4" color="0xE8A33DFF" />
+      <Label id="cinemaTabMoviesLabel" translation="[264, 27]" scale="[0.58, 0.58]" width="320" height="30" numLines="1" color="0xFCD34DFF" text="MOVIES (FILMS)" />
 
-      <!-- LEFT SIDEBAR: Plex / Netflix Category Rail (x=36, y=94, w=382, h=894) -->
-      <Rectangle id="cinemaCatPaneBg" translation="[36, 94]" width="382" height="894" color="0x12101BFF" />
+      <!-- Separate Top-Level Tab 2: TV SHOWS -->
+      <Rectangle id="cinemaTabShowsBg" translation="[474, 16]" width="246" height="48" color="0x1B1612FF" />
+      <Rectangle id="cinemaTabShowsStripe" translation="[474, 60]" width="246" height="4" color="0x2E261EFF" />
+      <Label id="cinemaTabShowsLabel" translation="[490, 27]" scale="[0.58, 0.58]" width="380" height="30" numLines="1" color="0x94A3B8FF" text="TV SHOWS (SERIES)" />
+
+      <!-- Active Category / Season Pill & Remote Legend in Header -->
+      <Rectangle translation="[736, 18]" width="390" height="44" color="0x211B15FF" />
+      <Rectangle translation="[736, 18]" width="4" height="44" color="0xE8A33DFF" />
+      <Label id="cinemaActiveCatBadge" translation="[752, 28]" scale="[0.53, 0.53]" width="690" height="30" numLines="1" color="0xFCD34DFF" text="MOVIES: ALL FEATURE FILMS" />
+      <Label id="cinemaLibSubHeader" translation="[1142, 28]" scale="[0.50, 0.50]" width="1480" height="30" numLines="1" horizAlign="right" color="0xD6CFC2FF" text="[*] SWITCH TAB  |  [LEFT] CATEGORIES / SEASONS  |  [RIGHT] LIST  |  [OK] SELECT  |  [BACK] EXIT" />
+
+      <!-- LEFT SIDEBAR: Categories or Show Seasons Rail (x=36, y=94, w=382, h=894) -->
+      <Rectangle id="cinemaCatPaneBg" translation="[36, 94]" width="382" height="894" color="0x17130FFF" />
       <Rectangle id="cinemaCatFocusStripe" translation="[36, 94]" width="382" height="5" color="0xE8A33DFF" />
-      <Label id="cinemaCatHeaderLabel" translation="[56, 110]" scale="[0.60, 0.60]" width="560" height="32" numLines="1" color="0xE8A33DFF" text="BROWSE CATEGORIES (D-PAD LEFT)" />
-      <Label translation="[56, 136]" scale="[0.46, 0.46]" width="720" height="24" numLines="1" color="0x94A3B8FF" text="Up/Down filters live  •  Press Right or OK for Movies" />
-      <Rectangle translation="[56, 162]" width="342" height="2" color="0x262136FF" />
+      <Label id="cinemaCatHeaderLabel" translation="[56, 110]" scale="[0.58, 0.58]" width="590" height="32" numLines="1" color="0xE8A33DFF" text="MOVIE CATEGORIES (D-PAD LEFT)" />
+      <Label id="cinemaCatSubHint" translation="[56, 136]" scale="[0.45, 0.45]" width="740" height="24" numLines="1" color="0xA89F91FF" text="Row 1 or [*] switches Movies / TV Shows" />
+      <Rectangle translation="[56, 162]" width="342" height="2" color="0x2E261EFF" />
       <LabelList
         id="cinemaCatList"
         translation="[52, 174]"
@@ -2011,133 +2029,149 @@ ${voiceSlide2RowsXml}
         itemSize="[540, 52]"
         itemSpacing="[0, 8]"
         numRows="12"
-        color="0xE2E8F0FF"
-        focusedColor="0x110E18FF" />
+        color="0xF1E9DCFF"
+        focusedColor="0x110E0BFF" />
 
-      <!-- TOP-RIGHT STAGE: Netflix / Plex Hero Spotlight Billboard (x=436, y=94, w=1448, h=392) -->
-      <Rectangle id="cinemaHeroBg" translation="[436, 94]" width="1448" height="392" color="0x151221FF" />
-      <Rectangle id="cinemaHeroAccentTop" translation="[436, 94]" width="1448" height="4" color="0xE50914FF" />
-      <!-- Atmospheric decorative backdrop glow bars -->
-      <Rectangle id="cinemaHeroGlow1" translation="[1320, 106]" width="540" height="364" color="0x1E1830FF" />
-      <Rectangle id="cinemaHeroGlow2" translation="[1480, 120]" width="360" height="336" color="0x271D3DFF" />
+      <!-- TOP-RIGHT STAGE: Warm Cinema Hero Spotlight Billboard (x=436, y=94, w=1448, h=392) -->
+      <Rectangle id="cinemaHeroBg" translation="[436, 94]" width="1448" height="392" color="0x1B1611FF" />
+      <Rectangle id="cinemaHeroAccentTop" translation="[436, 94]" width="1448" height="4" color="0xE8A33DFF" />
+      <!-- Warm theater ambient glow panels -->
+      <Rectangle id="cinemaHeroGlow1" translation="[1320, 106]" width="540" height="364" color="0x221B14FF" />
+      <Rectangle id="cinemaHeroGlow2" translation="[1480, 120]" width="360" height="336" color="0x2A2017FF" />
 
-      <!-- Hero 1:1 Library Preview Image Card (x=460, y=114, w=352, h=352 — matches 320x320 Library Preview Images) -->
-      <Rectangle id="cinemaHeroPosterFrame" translation="[456, 110]" width="360" height="360" color="0xE8A33DFF" />
-      <Rectangle id="cinemaHeroPosterFallbackBg" translation="[460, 114]" width="352" height="352" color="0x1E1B2EFF" />
-      <Rectangle id="cinemaHeroPosterTopBar" translation="[460, 114]" width="352" height="36" color="0xE50914FF" />
-      <Label id="cinemaHeroPosterRibbon" translation="[474, 122]" scale="[0.50, 0.50]" width="640" height="26" numLines="1" color="0xFFFFFFFF" text="ROBOS CINEMA FEATURE" />
-      <Label id="cinemaHeroPosterMonogram" translation="[460, 212]" scale="[1.85, 1.85]" width="190" height="70" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
-      <Label id="cinemaHeroPosterFallbackTitle" translation="[476, 336]" scale="[0.56, 0.56]" width="560" height="60" numLines="2" horizAlign="center" color="0xF8FAFCFF" text="RobOS Cinema" />
-      <Label id="cinemaHeroPosterFallbackYear" translation="[476, 424]" scale="[0.52, 0.52]" width="560" height="28" numLines="1" horizAlign="center" color="0xE8A33DFF" text="1080p BluRay" />
-      <Poster id="cinemaLibPoster" translation="[460, 114]" width="352" height="352" loadDisplayMode="scaleToFit" />
+      <!-- Hero 2:3 Portrait Theatrical Poster Card (x=460, y=110, w=244, h=360) -->
+      <Rectangle id="cinemaHeroPosterFrame" translation="[456, 106]" width="252" height="368" color="0xE8A33DFF" />
+      <Rectangle id="cinemaHeroPosterFallbackBg" translation="[460, 110]" width="244" height="360" color="0x241D16FF" />
+      <Rectangle id="cinemaHeroPosterTopBar" translation="[460, 110]" width="244" height="32" color="0xE8A33DFF" />
+      <Label id="cinemaHeroPosterRibbon" translation="[470, 117]" scale="[0.46, 0.46]" width="480" height="24" numLines="1" color="0x110E0BFF" text="ROBOS CINEMA" />
+      <Label id="cinemaHeroPosterMonogram" translation="[460, 212]" scale="[1.75, 1.75]" width="140" height="70" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
+      <Label id="cinemaHeroPosterFallbackTitle" translation="[470, 332]" scale="[0.52, 0.52]" width="430" height="60" numLines="2" horizAlign="center" color="0xF8FAFCFF" text="RobOS Cinema" />
+      <Label id="cinemaHeroPosterFallbackYear" translation="[470, 424]" scale="[0.48, 0.48]" width="430" height="28" numLines="1" horizAlign="center" color="0xE8A33DFF" text="1080p HD" />
+      <Poster id="cinemaLibPoster" translation="[460, 110]" width="244" height="360" loadDisplayMode="scaleToZoom" />
+      <Rectangle id="cinemaHeroProgTrack" translation="[460, 462]" width="244" height="8" color="0x090807FF" visible="false" />
+      <Rectangle id="cinemaHeroProgFill" translation="[460, 462]" width="0" height="8" color="0xE8A33DFF" visible="false" />
 
-      <!-- Hero Spotlight Details (x=838, y=114) -->
-      <Rectangle translation="[838, 114]" width="150" height="28" color="0xE50914FF" />
-      <Label translation="[850, 119]" scale="[0.48, 0.48]" width="280" height="24" numLines="1" color="0xFFFFFFFF" text="SPOTLIGHT FEATURE" />
-      <Label id="cinemaHeroEyebrow" translation="[1002, 118]" scale="[0.54, 0.54]" width="1500" height="28" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  •  DIRECT LAN STREAM" />
+      <!-- Hero Spotlight Details (x=730, y=110) -->
+      <Rectangle id="cinemaSpotlightPillBg" translation="[730, 110]" width="166" height="28" color="0xE8A33DFF" />
+      <Label id="cinemaSpotlightPillText" translation="[742, 115]" scale="[0.48, 0.48]" width="310" height="24" numLines="1" color="0x110E0BFF" text="FEATURE FILM" />
+      <Label id="cinemaHeroEyebrow" translation="[910, 114]" scale="[0.54, 0.54]" width="1700" height="28" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  •  DIRECT LAN STREAM" />
 
-      <Label id="cinemaLibDetailTitle" translation="[838, 150]" scale="[0.98, 0.98]" width="1020" height="50" numLines="1" color="0xFFFFFFFF" text="Select a Movie" />
+      <Label id="cinemaLibDetailTitle" translation="[730, 144]" scale="[0.96, 0.96]" width="1150" height="48" numLines="1" color="0xFFFFFFFF" text="Select a Title" />
 
-      <!-- Metadata Badges Row (Year, Quality, Genre, Format) -->
-      <Rectangle translation="[838, 206]" width="104" height="34" color="0x262136FF" />
-      <Rectangle translation="[838, 206]" width="4" height="34" color="0xE8A33DFF" />
-      <Label id="cinemaBadgeYear" translation="[852, 213]" scale="[0.54, 0.54]" width="160" height="28" numLines="1" color="0xFCD34DFF" text="2024" />
+      <!-- 5 Metadata Badges Row (Year/Season, Star Rating/Episodes, Quality/Network, Genre, Watch Status) -->
+      <Rectangle translation="[730, 198]" width="136" height="34" color="0x261F18FF" />
+      <Rectangle translation="[730, 198]" width="4" height="34" color="0xE8A33DFF" />
+      <Label id="cinemaBadgeYear" translation="[742, 205]" scale="[0.52, 0.52]" width="230" height="28" numLines="1" color="0xFCD34DFF" text="2024" />
 
-      <Rectangle translation="[954, 206]" width="210" height="34" color="0x162436FF" />
-      <Rectangle translation="[954, 206]" width="4" height="34" color="0x38BDF8FF" />
-      <Label id="cinemaBadgeQuality" translation="[968, 213]" scale="[0.54, 0.54]" width="360" height="28" numLines="1" color="0x67E8F9FF" text="1080p HD • BluRay" />
+      <Rectangle translation="[876, 198]" width="150" height="34" color="0x2B2112FF" />
+      <Rectangle translation="[876, 198]" width="4" height="34" color="0xF59E0BFF" />
+      <Label id="cinemaBadgeRating" translation="[888, 205]" scale="[0.52, 0.52]" width="260" height="28" numLines="1" color="0xFDE68AFF" text="* 8.5 / 10" />
 
-      <Rectangle translation="[1176, 206]" width="340" height="34" color="0x231836FF" />
-      <Rectangle translation="[1176, 206]" width="4" height="34" color="0xA855F7FF" />
-      <Label id="cinemaBadgeGenre" translation="[1190, 213]" scale="[0.54, 0.54]" width="580" height="28" numLines="1" color="0xD8B4FEFF" text="Sci-Fi &amp; Fantasy" />
+      <Rectangle translation="[1036, 198]" width="218" height="34" color="0x152536FF" />
+      <Rectangle translation="[1036, 198]" width="4" height="34" color="0x38BDF8FF" />
+      <Label id="cinemaBadgeQuality" translation="[1048, 205]" scale="[0.52, 0.52]" width="390" height="28" numLines="1" color="0x67E8F9FF" text="1080p HD • BluRay" />
 
-      <Rectangle translation="[1528, 206]" width="164" height="34" color="0x0F2922FF" />
-      <Rectangle translation="[1528, 206]" width="4" height="34" color="0x10B981FF" />
-      <Label id="cinemaBadgeFormat" translation="[1542, 213]" scale="[0.54, 0.54]" width="260" height="28" numLines="1" color="0x6EE7B7FF" text="INSTANT STREAM" />
+      <Rectangle translation="[1264, 198]" width="300" height="34" color="0x241B2FFF" />
+      <Rectangle translation="[1264, 198]" width="4" height="34" color="0xA855F7FF" />
+      <Label id="cinemaBadgeGenre" translation="[1276, 205]" scale="[0.52, 0.52]" width="540" height="28" numLines="1" color="0xD8B4FEFF" text="Sci-Fi &amp; Fantasy" />
 
-      <!-- Synopsis / Franchise / Audio-Video Stream Description -->
-      <Label id="cinemaLibDetailMeta" translation="[838, 252]" scale="[0.62, 0.62]" width="1600" height="32" numLines="1" color="0xE2E8F0FF" text="1080p WEBRip  |  RobOS Cinema" />
-      <Label id="cinemaLibDetailSub" translation="[838, 284]" scale="[0.54, 0.54]" width="1800" height="30" numLines="1" color="0x94A3B8FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
-      <Label id="cinemaHeroSynopsis" translation="[838, 314]" scale="[0.52, 0.52]" width="1880" height="28" numLines="1" color="0xCBD5E1FF" text="Full HD home theater playback with instant chapter seeking and Roku hardware decoding." />
+      <Rectangle id="cinemaBadgeFormatBg" translation="[1574, 198]" width="284" height="34" color="0x11281EFF" />
+      <Rectangle id="cinemaBadgeFormatStripe" translation="[1574, 198]" width="4" height="34" color="0x22C55EFF" />
+      <Label id="cinemaBadgeFormat" translation="[1586, 205]" scale="[0.52, 0.52]" width="510" height="28" numLines="1" color="0x86EFACFF" text="DIRECT PLAY" />
 
-      <!-- Netflix / Plex Hero Action Buttons -->
-      <Rectangle id="cinemaPlayBtnBg" translation="[838, 356]" width="440" height="58" color="0xE50914FF" />
-      <Label id="cinemaLibPlayPrompt" translation="[862, 373]" scale="[0.64, 0.64]" width="640" height="34" numLines="1" color="0xFFFFFFFF" text="▶  WATCH NOW (PRESS OK)" />
+      <!-- Credits / Network / Season Breakdown + Multi-Line Plot Synopsis -->
+      <Label id="cinemaLibDetailMeta" translation="[730, 240]" scale="[0.56, 0.56]" width="1980" height="30" numLines="1" color="0xF1E9DCFF" text="Director &amp; Cast  |  RobOS Cinema+" />
+      <Label id="cinemaHeroSynopsis" translation="[730, 270]" scale="[0.51, 0.51]" width="2180" height="78" wrap="true" numLines="3" color="0xD6CFC2FF" text="Full HD home theater playback with real public metadata, chapter resume, and Roku hardware decoding." />
+      <Label id="cinemaLibDetailSub" translation="[730, 350]" scale="[0.48, 0.48]" width="2280" height="26" numLines="1" color="0x9C9284FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
 
-      <Rectangle translation="[1294, 356]" width="566" height="58" color="0x1E1B2EFF" />
-      <Rectangle translation="[1294, 356]" width="4" height="58" color="0x38BDF8FF" />
-      <Label id="cinemaHeroNavHint" translation="[1312, 374]" scale="[0.52, 0.52]" width="1020" height="30" numLines="1" color="0x67E8F9FF" text="◀ LEFT: SWITCH CATEGORY   |   ▲/▼: BROWSE PREVIEW CARDS" />
+      <!-- Hero Action Buttons -->
+      <Rectangle id="cinemaPlayBtnBg" translation="[730, 384]" width="484" height="54" color="0xE8A33DFF" />
+      <Label id="cinemaLibPlayPrompt" translation="[750, 399]" scale="[0.60, 0.60]" width="760" height="34" numLines="1" color="0x110E0BFF" text="▶  WATCH NOW (PRESS OK)" />
 
-      <Label translation="[838, 428]" scale="[0.48, 0.48]" width="2040" height="26" numLines="1" color="0x64748BFF" text="During playback: Left/Right seeks 15s  •  Play/Pause toggles  •  Back returns to this Cinema Library" />
+      <Rectangle translation="[1228, 384]" width="630" height="54" color="0x221C16FF" />
+      <Rectangle translation="[1228, 384]" width="4" height="54" color="0x38BDF8FF" />
+      <Label id="cinemaHeroNavHint" translation="[1244, 401]" scale="[0.49, 0.49]" width="1220" height="30" numLines="1" color="0x67E8F9FF" text="[*] SWITCH MOVIES / SHOWS   |   ◀ LEFT: CATEGORIES / SEASONS" />
 
-      <!-- MIDDLE-RIGHT STAGE: 5-Card Visual Library Preview Carousel Shelf (x=436, y=496, w=1448, h=288) -->
-      <Rectangle translation="[436, 496]" width="1448" height="288" color="0x12101BFF" />
+      <Label translation="[730, 448]" scale="[0.46, 0.46]" width="2350" height="24" numLines="1" color="0x787065FF" text="During playback: Left/Right seeks 15s  •  Play/Pause toggles  •  Progress syncs automatically  •  Back returns here" />
+
+      <!-- MIDDLE-RIGHT STAGE: 5-Card 2:3 Portrait Poster Carousel Shelf (x=436, y=496, w=1448, h=288) -->
+      <Rectangle translation="[436, 496]" width="1448" height="288" color="0x17130FFF" />
       <Rectangle id="cinemaShelfAccent" translation="[436, 496]" width="1448" height="3" color="0xE8A33DFF" />
-      <Label id="cinemaShelfTitleLabel" translation="[456, 506]" scale="[0.56, 0.56]" width="1600" height="28" numLines="1" color="0xFCD34DFF" text="POSTER CAROUSEL  •  FEATURED ROW" />
-      <Label id="cinemaShelfPosLabel" translation="[1320, 506]" scale="[0.52, 0.52]" width="1040" height="28" numLines="1" horizAlign="right" color="0x94A3B8FF" text="Showing 5-Poster Window" />
+      <Label id="cinemaShelfTitleLabel" translation="[456, 506]" scale="[0.56, 0.56]" width="1600" height="28" numLines="1" color="0xFCD34DFF" text="2:3 POSTER CAROUSEL  •  FEATURED ROW" />
+      <Label id="cinemaShelfPosLabel" translation="[1320, 506]" scale="[0.52, 0.52]" width="1040" height="28" numLines="1" horizAlign="right" color="0xA89F91FF" text="Showing 5-Poster Window" />
 
-      <!-- 5 Library Preview Cards (i = 0..4, each width=272, height=238, x = 450 + i * 284, y = 536) -->
+      <!-- 5 Library Preview Cards with 2:3 Portrait Posters (112x168) + Rich Metadata Column -->
       <Group id="cinemaPosterShelf">
         <!-- Card 0 -->
-        <Rectangle id="cinemaCardBorder0" translation="[450, 536]" width="272" height="238" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg0" translation="[453, 539]" width="266" height="232" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg0" translation="[502, 546]" width="168" height="168" color="0x2D1B36FF" />
-        <Label id="cinemaCardMono0" translation="[502, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M1" />
-        <Poster id="cinemaCardPoster0" translation="[502, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
-        <Label id="cinemaCardTitle0" translation="[460, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 1" />
-        <Label id="cinemaCardBadge0" translation="[462, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardGenre0" translation="[462, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState0" translation="[602, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#1" />
+        <Rectangle id="cinemaCardBorder0" translation="[450, 536]" width="272" height="238" color="0x2E261EFF" />
+        <Rectangle id="cinemaCardBg0" translation="[453, 539]" width="266" height="232" color="0x1E1914FF" />
+        <Rectangle id="cinemaCardArtBg0" translation="[462, 548]" width="112" height="168" color="0x2D1B36FF" />
+        <Label id="cinemaCardMono0" translation="[462, 614]" scale="[0.90, 0.90]" width="124" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M1" />
+        <Poster id="cinemaCardPoster0" translation="[462, 548]" width="112" height="168" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardProgTrack0" translation="[462, 710]" width="112" height="6" color="0x090807FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill0" translation="[462, 710]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+        <Label id="cinemaCardBadge0" translation="[582, 550]" scale="[0.44, 0.44]" width="295" height="24" numLines="1" color="0x67E8F9FF" text="2024 • * 8.4" />
+        <Label id="cinemaCardTitle0" translation="[582, 576]" scale="[0.48, 0.48]" width="272" height="78" wrap="true" numLines="3" color="0xF8FAFCFF" text="Movie 1" />
+        <Label id="cinemaCardGenre0" translation="[582, 662]" scale="[0.42, 0.42]" width="295" height="22" numLines="1" color="0xE8A33DFF" text="Sci-Fi" />
+        <Label id="cinemaCardState0" translation="[462, 732]" scale="[0.43, 0.43]" width="570" height="22" numLines="1" color="0xA89F91FF" text="#1 • Direct Play" />
 
         <!-- Card 1 -->
-        <Rectangle id="cinemaCardBorder1" translation="[734, 536]" width="272" height="238" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg1" translation="[737, 539]" width="266" height="232" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg1" translation="[786, 546]" width="168" height="168" color="0x1E293BFF" />
-        <Label id="cinemaCardMono1" translation="[786, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M2" />
-        <Poster id="cinemaCardPoster1" translation="[786, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
-        <Label id="cinemaCardTitle1" translation="[744, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 2" />
-        <Label id="cinemaCardBadge1" translation="[746, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardGenre1" translation="[746, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState1" translation="[886, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#2" />
+        <Rectangle id="cinemaCardBorder1" translation="[734, 536]" width="272" height="238" color="0x2E261EFF" />
+        <Rectangle id="cinemaCardBg1" translation="[737, 539]" width="266" height="232" color="0x1E1914FF" />
+        <Rectangle id="cinemaCardArtBg1" translation="[746, 548]" width="112" height="168" color="0x1E293BFF" />
+        <Label id="cinemaCardMono1" translation="[746, 614]" scale="[0.90, 0.90]" width="124" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M2" />
+        <Poster id="cinemaCardPoster1" translation="[746, 548]" width="112" height="168" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardProgTrack1" translation="[746, 710]" width="112" height="6" color="0x090807FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill1" translation="[746, 710]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+        <Label id="cinemaCardBadge1" translation="[866, 550]" scale="[0.44, 0.44]" width="295" height="24" numLines="1" color="0x67E8F9FF" text="2024 • * 8.4" />
+        <Label id="cinemaCardTitle1" translation="[866, 576]" scale="[0.48, 0.48]" width="272" height="78" wrap="true" numLines="3" color="0xF8FAFCFF" text="Movie 2" />
+        <Label id="cinemaCardGenre1" translation="[866, 662]" scale="[0.42, 0.42]" width="295" height="22" numLines="1" color="0xE8A33DFF" text="Action" />
+        <Label id="cinemaCardState1" translation="[746, 732]" scale="[0.43, 0.43]" width="570" height="22" numLines="1" color="0xA89F91FF" text="#2 • Direct Play" />
 
         <!-- Card 2 -->
-        <Rectangle id="cinemaCardBorder2" translation="[1018, 536]" width="272" height="238" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg2" translation="[1021, 539]" width="266" height="232" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg2" translation="[1070, 546]" width="168" height="168" color="0x31102FFF" />
-        <Label id="cinemaCardMono2" translation="[1070, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M3" />
-        <Poster id="cinemaCardPoster2" translation="[1070, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
-        <Label id="cinemaCardTitle2" translation="[1028, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 3" />
-        <Label id="cinemaCardBadge2" translation="[1030, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardGenre2" translation="[1030, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState2" translation="[1170, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#3" />
+        <Rectangle id="cinemaCardBorder2" translation="[1018, 536]" width="272" height="238" color="0x2E261EFF" />
+        <Rectangle id="cinemaCardBg2" translation="[1021, 539]" width="266" height="232" color="0x1E1914FF" />
+        <Rectangle id="cinemaCardArtBg2" translation="[1030, 548]" width="112" height="168" color="0x31102FFF" />
+        <Label id="cinemaCardMono2" translation="[1030, 614]" scale="[0.90, 0.90]" width="124" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M3" />
+        <Poster id="cinemaCardPoster2" translation="[1030, 548]" width="112" height="168" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardProgTrack2" translation="[1030, 710]" width="112" height="6" color="0x090807FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill2" translation="[1030, 710]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+        <Label id="cinemaCardBadge2" translation="[1150, 550]" scale="[0.44, 0.44]" width="295" height="24" numLines="1" color="0x67E8F9FF" text="2024 • * 8.4" />
+        <Label id="cinemaCardTitle2" translation="[1150, 576]" scale="[0.48, 0.48]" width="272" height="78" wrap="true" numLines="3" color="0xF8FAFCFF" text="Movie 3" />
+        <Label id="cinemaCardGenre2" translation="[1150, 662]" scale="[0.42, 0.42]" width="295" height="22" numLines="1" color="0xE8A33DFF" text="Drama" />
+        <Label id="cinemaCardState2" translation="[1030, 732]" scale="[0.43, 0.43]" width="570" height="22" numLines="1" color="0xA89F91FF" text="#3 • Direct Play" />
 
         <!-- Card 3 -->
-        <Rectangle id="cinemaCardBorder3" translation="[1302, 536]" width="272" height="238" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg3" translation="[1305, 539]" width="266" height="232" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg3" translation="[1354, 546]" width="168" height="168" color="0x142E24FF" />
-        <Label id="cinemaCardMono3" translation="[1354, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M4" />
-        <Poster id="cinemaCardPoster3" translation="[1354, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
-        <Label id="cinemaCardTitle3" translation="[1312, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 4" />
-        <Label id="cinemaCardBadge3" translation="[1314, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardGenre3" translation="[1314, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState3" translation="[1454, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#4" />
+        <Rectangle id="cinemaCardBorder3" translation="[1302, 536]" width="272" height="238" color="0x2E261EFF" />
+        <Rectangle id="cinemaCardBg3" translation="[1305, 539]" width="266" height="232" color="0x1E1914FF" />
+        <Rectangle id="cinemaCardArtBg3" translation="[1314, 548]" width="112" height="168" color="0x142E24FF" />
+        <Label id="cinemaCardMono3" translation="[1314, 614]" scale="[0.90, 0.90]" width="124" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M4" />
+        <Poster id="cinemaCardPoster3" translation="[1314, 548]" width="112" height="168" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardProgTrack3" translation="[1314, 710]" width="112" height="6" color="0x090807FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill3" translation="[1314, 710]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+        <Label id="cinemaCardBadge3" translation="[1434, 550]" scale="[0.44, 0.44]" width="295" height="24" numLines="1" color="0x67E8F9FF" text="2024 • * 8.4" />
+        <Label id="cinemaCardTitle3" translation="[1434, 576]" scale="[0.48, 0.48]" width="272" height="78" wrap="true" numLines="3" color="0xF8FAFCFF" text="Movie 4" />
+        <Label id="cinemaCardGenre3" translation="[1434, 662]" scale="[0.42, 0.42]" width="295" height="22" numLines="1" color="0xE8A33DFF" text="Adventure" />
+        <Label id="cinemaCardState3" translation="[1314, 732]" scale="[0.43, 0.43]" width="570" height="22" numLines="1" color="0xA89F91FF" text="#4 • Direct Play" />
 
         <!-- Card 4 -->
-        <Rectangle id="cinemaCardBorder4" translation="[1586, 536]" width="272" height="238" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg4" translation="[1589, 539]" width="266" height="232" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg4" translation="[1638, 546]" width="168" height="168" color="0x3B1D1DFF" />
-        <Label id="cinemaCardMono4" translation="[1638, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M5" />
-        <Poster id="cinemaCardPoster4" translation="[1638, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
-        <Label id="cinemaCardTitle4" translation="[1596, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 5" />
-        <Label id="cinemaCardBadge4" translation="[1598, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardGenre4" translation="[1598, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState4" translation="[1738, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#5" />
+        <Rectangle id="cinemaCardBorder4" translation="[1586, 536]" width="272" height="238" color="0x2E261EFF" />
+        <Rectangle id="cinemaCardBg4" translation="[1589, 539]" width="266" height="232" color="0x1E1914FF" />
+        <Rectangle id="cinemaCardArtBg4" translation="[1598, 548]" width="112" height="168" color="0x3B1D1DFF" />
+        <Label id="cinemaCardMono4" translation="[1598, 614]" scale="[0.90, 0.90]" width="124" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M5" />
+        <Poster id="cinemaCardPoster4" translation="[1598, 548]" width="112" height="168" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardProgTrack4" translation="[1598, 710]" width="112" height="6" color="0x090807FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill4" translation="[1598, 710]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+        <Label id="cinemaCardBadge4" translation="[1718, 550]" scale="[0.44, 0.44]" width="295" height="24" numLines="1" color="0x67E8F9FF" text="2024 • * 8.4" />
+        <Label id="cinemaCardTitle4" translation="[1718, 576]" scale="[0.48, 0.48]" width="272" height="78" wrap="true" numLines="3" color="0xF8FAFCFF" text="Movie 5" />
+        <Label id="cinemaCardGenre4" translation="[1718, 662]" scale="[0.42, 0.42]" width="295" height="22" numLines="1" color="0xE8A33DFF" text="Cinema" />
+        <Label id="cinemaCardState4" translation="[1598, 732]" scale="[0.43, 0.43]" width="570" height="22" numLines="1" color="0xA89F91FF" text="#5 • Direct Play" />
       </Group>
 
-      <!-- BOTTOM-RIGHT STAGE: Scrollable Category Title List (x=436, y=792, w=1448, h=196) -->
-      <Rectangle id="cinemaListPaneBg" translation="[436, 792]" width="1448" height="196" color="0x12101BFF" />
+      <!-- BOTTOM-RIGHT STAGE: Scrollable Movies / TV Series / Season Episode Guide List (x=436, y=792, w=1448, h=196) -->
+      <Rectangle id="cinemaListPaneBg" translation="[436, 792]" width="1448" height="196" color="0x17130FFF" />
       <Rectangle id="cinemaListFocusStripe" translation="[436, 792]" width="1448" height="4" color="0x38BDF8FF" />
-      <Label id="cinemaLibCountLabel" translation="[456, 802]" scale="[0.56, 0.56]" width="2200" height="30" numLines="1" color="0x67E8F9FF" text="TITLES IN CATEGORY (D-PAD UP/DOWN TO BROWSE, OK TO PLAY, LEFT FOR CATEGORIES):" />
+      <Label id="cinemaLibCountLabel" translation="[456, 802]" scale="[0.56, 0.56]" width="2400" height="30" numLines="1" color="0x67E8F9FF" text="MOVIES IN CATEGORY (D-PAD UP/DOWN TO BROWSE, OK TO PLAY, LEFT FOR CATEGORIES):" />
       <LabelList
         id="cinemaLibList"
         translation="[456, 834]"
@@ -2146,12 +2180,12 @@ ${voiceSlide2RowsXml}
         itemSpacing="[0, 5]"
         numRows="3"
         color="0xF1E9DCFF"
-        focusedColor="0x110E18FF" />
+        focusedColor="0x110E0BFF" />
 
       <!-- Footer Status Bar -->
-      <Rectangle translation="[36, 1000]" width="1848" height="56" color="0x110E18FF" />
-      <Rectangle translation="[36, 1000]" width="6" height="56" color="0xE50914FF" />
-      <Label id="cinemaLibFooter" translation="[58, 1016]" scale="[0.56, 0.56]" width="3100" height="32" numLines="1" color="0xF8FAFCFF" text="RobOS Cinema+ Active  •  Use Roku D-Pad Left/Right to switch between Categories &amp; Movies, Up/Down to browse, OK to watch" />
+      <Rectangle translation="[36, 1000]" width="1848" height="56" color="0x17130FFF" />
+      <Rectangle translation="[36, 1000]" width="6" height="56" color="0xE8A33DFF" />
+      <Label id="cinemaLibFooter" translation="[58, 1016]" scale="[0.55, 0.55]" width="3200" height="32" numLines="1" color="0xF1E9DCFF" text="RobOS Cinema+ Active  •  [*] switches Movies / TV Shows  •  In TV Shows: OK opens Seasons &amp; Episodes" />
     </Group>
     <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player Cast -->
     <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="true" />
@@ -2191,46 +2225,67 @@ sub init()
     m.keepAliveVideo = m.top.findNode("keepAliveVideo")
     m.cinemaVideo = m.top.findNode("cinemaVideo")
     m.cinemaLibraryGroup = m.top.findNode("cinemaLibraryGroup")
+    m.cinemaTabMoviesBg = m.top.findNode("cinemaTabMoviesBg")
+    m.cinemaTabMoviesStripe = m.top.findNode("cinemaTabMoviesStripe")
+    m.cinemaTabMoviesLabel = m.top.findNode("cinemaTabMoviesLabel")
+    m.cinemaTabShowsBg = m.top.findNode("cinemaTabShowsBg")
+    m.cinemaTabShowsStripe = m.top.findNode("cinemaTabShowsStripe")
+    m.cinemaTabShowsLabel = m.top.findNode("cinemaTabShowsLabel")
     m.cinemaCatList = m.top.findNode("cinemaCatList")
     m.cinemaCatPaneBg = m.top.findNode("cinemaCatPaneBg")
     m.cinemaCatFocusStripe = m.top.findNode("cinemaCatFocusStripe")
     m.cinemaCatHeaderLabel = m.top.findNode("cinemaCatHeaderLabel")
+    m.cinemaCatSubHint = m.top.findNode("cinemaCatSubHint")
     m.cinemaActiveCatBadge = m.top.findNode("cinemaActiveCatBadge")
     m.cinemaListPaneBg = m.top.findNode("cinemaListPaneBg")
     m.cinemaListFocusStripe = m.top.findNode("cinemaListFocusStripe")
     m.cinemaLibList = m.top.findNode("cinemaLibList")
     m.cinemaLibCountLabel = m.top.findNode("cinemaLibCountLabel")
     m.cinemaLibPoster = m.top.findNode("cinemaLibPoster")
+    m.cinemaHeroProgTrack = m.top.findNode("cinemaHeroProgTrack")
+    m.cinemaHeroProgFill = m.top.findNode("cinemaHeroProgFill")
     m.cinemaHeroPosterFallbackBg = m.top.findNode("cinemaHeroPosterFallbackBg")
     m.cinemaHeroPosterTopBar = m.top.findNode("cinemaHeroPosterTopBar")
     m.cinemaHeroPosterRibbon = m.top.findNode("cinemaHeroPosterRibbon")
     m.cinemaHeroPosterMonogram = m.top.findNode("cinemaHeroPosterMonogram")
     m.cinemaHeroPosterFallbackTitle = m.top.findNode("cinemaHeroPosterFallbackTitle")
     m.cinemaHeroPosterFallbackYear = m.top.findNode("cinemaHeroPosterFallbackYear")
+    m.cinemaSpotlightPillBg = m.top.findNode("cinemaSpotlightPillBg")
+    m.cinemaSpotlightPillText = m.top.findNode("cinemaSpotlightPillText")
     m.cinemaHeroEyebrow = m.top.findNode("cinemaHeroEyebrow")
     m.cinemaLibDetailTitle = m.top.findNode("cinemaLibDetailTitle")
     m.cinemaBadgeYear = m.top.findNode("cinemaBadgeYear")
+    m.cinemaBadgeRating = m.top.findNode("cinemaBadgeRating")
     m.cinemaBadgeQuality = m.top.findNode("cinemaBadgeQuality")
     m.cinemaBadgeGenre = m.top.findNode("cinemaBadgeGenre")
+    m.cinemaBadgeFormatBg = m.top.findNode("cinemaBadgeFormatBg")
+    m.cinemaBadgeFormatStripe = m.top.findNode("cinemaBadgeFormatStripe")
     m.cinemaBadgeFormat = m.top.findNode("cinemaBadgeFormat")
     m.cinemaLibDetailMeta = m.top.findNode("cinemaLibDetailMeta")
     m.cinemaLibDetailSub = m.top.findNode("cinemaLibDetailSub")
     m.cinemaHeroSynopsis = m.top.findNode("cinemaHeroSynopsis")
     m.cinemaPlayBtnBg = m.top.findNode("cinemaPlayBtnBg")
     m.cinemaLibPlayPrompt = m.top.findNode("cinemaLibPlayPrompt")
+    m.cinemaHeroNavHint = m.top.findNode("cinemaHeroNavHint")
     m.cinemaShelfTitleLabel = m.top.findNode("cinemaShelfTitleLabel")
     m.cinemaShelfPosLabel = m.top.findNode("cinemaShelfPosLabel")
     m.cinemaLibFooter = m.top.findNode("cinemaLibFooter")
     m.cinemaLibraryActive = false
+    m.cinemaActiveTab = "movies"
+    m.activeShowGroup = invalid
+    m.activeShowSeasons = []
+    m.activeSeasonIndex = 1
+    m.lastShowGroupIndex = 0
+    m.currentPlayingTrackId = ""
     m.cinemaFocusPane = "movies"
     m.allCinemaItems = []
     m.cinemaLibItems = []
     m.cinemaLibHash = ""
-    m.cinemaCatIndex = 0
-    m.cinemaCategories = [
-        { id: "all", label: "* All Movies & Shows" },
-        { id: "movies_only", label: "Movies (Feature Films)" },
-        { id: "tv", label: "TV Shows & Series" },
+    m.cinemaCatIndex = 1
+    m.movieCategories = [
+        { id: "__switch_shows__", label: "[Switch to TV Shows Tab ->]" },
+        { id: "all", label: "* All Movies" },
+        { id: "continue", label: "Continue Watching" },
         { id: "franchises", label: "Franchises & Box Sets" },
         { id: "scifi", label: "Sci-Fi & Fantasy" },
         { id: "action", label: "Action & Adventure" },
@@ -2242,6 +2297,18 @@ sub init()
         { id: "new", label: "New Releases (2023-2026)" },
         { id: "classics", label: "Classics (Pre-2010)" }
     ]
+    m.showCategories = [
+        { id: "__switch_movies__", label: "[Switch to Movies Tab ->]" },
+        { id: "all", label: "* All TV Shows" },
+        { id: "continue", label: "Continue Watching Series" },
+        { id: "networks", label: "Apple TV+, HBO & Streaming" },
+        { id: "scifi", label: "Sci-Fi & Fantasy Series" },
+        { id: "drama", label: "Drama & Crime Series" },
+        { id: "action", label: "Action & Adventure Series" },
+        { id: "horror", label: "Horror & Supernatural Series" },
+        { id: "comedy", label: "Comedy & Animation Series" }
+    ]
+    m.cinemaCategories = m.movieCategories
     if m.cinemaCatList <> invalid
         m.cinemaCatList.observeField("itemFocused", "onCinemaCatFocused")
         m.cinemaCatList.observeField("itemSelected", "onCinemaCatSelected")
@@ -2284,9 +2351,10 @@ sub init()
         { id: "crpg-realm", title: "4. Realm of Heroes cRPG [Godot 4]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4." },
         { id: "quest-warrior-dragon", title: "5. Quest: Warrior Dragon [2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4." },
         { id: "tabletop-rpg", title: "6. RobOS Tabletop RPG [Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler." },
-        { id: "movie-player", title: "7. RobOS Movie Player [Cinema Library]", desc: "Browse & play your 100k movie library on TV with your remote." },
-        { id: "audio-jukebox", title: "8. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
-        { id: "home-intercom", title: "9. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." }
+        { id: "movie-player", title: "7. RobOS Movies [Feature Films Library]", desc: "Browse & play feature films with 2:3 posters, plot synopses, and watch progress." },
+        { id: "tv-shows", title: "8. RobOS TV Shows [Series, Seasons & Episodes]", desc: "Navigate TV Shows by Series -> Season -> Episode with resume tracking." },
+        { id: "audio-jukebox", title: "9. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
+        { id: "home-intercom", title: "10. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." }
     ]
 
     content = CreateObject("roSGNode", "ContentNode")
@@ -2364,6 +2432,15 @@ sub onClockTick()
         vState = m.keepAliveVideo.state
         if vState = "finished" or vState = "stopped" or vState = "error"
             startKeepAliveVideo()
+        end if
+    end if
+    if m.cinemaVideoActive = true and m.cinemaVideo <> invalid and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
+        if (m.tickCount mod 5) = 0 and m.cinemaVideo.state = "playing"
+            posSec = Int(m.cinemaVideo.position)
+            durSec = Int(m.cinemaVideo.duration)
+            if posSec > 0
+                m.dashTask.progressUrl = "${portalUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+            end if
         end if
     end if
     if m.remainingSec > 0
@@ -2799,16 +2876,29 @@ function cinemaClassifyItem(mv as Object) as Object
 end function
 
 function cinemaItemMatchesCat(mv as Object, catId as String) as Boolean
-    if catId = "all" or catId = "" then return true
     info = cinemaClassifyItem(mv)
-    if catId = "movies_only" then return (not info.isTv)
-    if catId = "tv" then return info.isTv
+    if m.cinemaActiveTab = "shows"
+        if not info.isTv then return false
+    else
+        if info.isTv then return false
+    end if
+    if catId = "all" or catId = "" or catId = "__switch_shows__" or catId = "__switch_movies__" then return true
+    if catId = "continue"
+        if mv.inProgress = true then return true
+        if mv.inProgressCount <> invalid and mv.inProgressCount > 0 then return true
+        return false
+    end if
+    if catId = "networks"
+        if mv.network <> invalid and mv.network <> "" then return true
+        return true
+    end if
+    if catId = "drama" then return (not info.isScifi and not info.isComedy and not info.isHorror)
     if catId = "franchises" then return (info.franchise <> "")
     if catId = "scifi" then return info.isScifi
     if catId = "action" then return info.isAction
     if catId = "horror" then return info.isHorror
     if catId = "family" then return info.isFamily
-    if catId = "comedy" then return info.isComedy
+    if catId = "comedy" then return (info.isComedy or info.isFamily)
     if catId = "thriller" then return info.isThriller
     if catId = "uhd" then return info.isUhd
     if catId = "new" then return info.isNew
@@ -2816,49 +2906,284 @@ function cinemaItemMatchesCat(mv as Object, catId as String) as Boolean
     return true
 end function
 
+sub updateCinemaTabHeaderUi()
+    isShows = (m.cinemaActiveTab = "shows")
+    moviesCnt = 0
+    showsCnt = 0
+    if m.allCinemaItems <> invalid
+        for each mv in m.allCinemaItems
+            info = cinemaClassifyItem(mv)
+            if info.isTv
+                showsCnt = showsCnt + 1
+            else
+                moviesCnt = moviesCnt + 1
+            end if
+        end for
+    end if
+    if m.cinemaTabMoviesBg <> invalid
+        if isShows then m.cinemaTabMoviesBg.color = "0x1B1612FF" else m.cinemaTabMoviesBg.color = "0x2B2114FF"
+    end if
+    if m.cinemaTabMoviesStripe <> invalid
+        if isShows then m.cinemaTabMoviesStripe.color = "0x2E261EFF" else m.cinemaTabMoviesStripe.color = "0xE8A33DFF"
+    end if
+    if m.cinemaTabMoviesLabel <> invalid
+        m.cinemaTabMoviesLabel.text = "MOVIES (" + moviesCnt.ToStr() + ")"
+        if isShows then m.cinemaTabMoviesLabel.color = "0x94A3B8FF" else m.cinemaTabMoviesLabel.color = "0xFCD34DFF"
+    end if
+    if m.cinemaTabShowsBg <> invalid
+        if isShows then m.cinemaTabShowsBg.color = "0x152536FF" else m.cinemaTabShowsBg.color = "0x1B1612FF"
+    end if
+    if m.cinemaTabShowsStripe <> invalid
+        if isShows then m.cinemaTabShowsStripe.color = "0x38BDF8FF" else m.cinemaTabShowsStripe.color = "0x2E261EFF"
+    end if
+    if m.cinemaTabShowsLabel <> invalid
+        m.cinemaTabShowsLabel.text = "TV SHOWS (" + showsCnt.ToStr() + " SERIES)"
+        if isShows then m.cinemaTabShowsLabel.color = "0x67E8F9FF" else m.cinemaTabShowsLabel.color = "0x94A3B8FF"
+    end if
+end sub
+
+sub switchCinemaTab(tabName as String)
+    m.cinemaActiveTab = tabName
+    m.activeShowGroup = invalid
+    m.activeShowSeasons = []
+    if tabName = "shows"
+        m.cinemaCategories = m.showCategories
+    else
+        m.cinemaCategories = m.movieCategories
+    end if
+    m.cinemaCatIndex = 1
+    updateCinemaTabHeaderUi()
+    populateCinemaCatList()
+    if m.cinemaCatList <> invalid then m.cinemaCatList.jumpToItem = 1
+    applyCinemaCategoryFilter(1)
+    updateCinemaPaneFocusUi()
+end sub
+
 sub updateCinemaPaneFocusUi()
     isCat = (m.cinemaFocusPane = "categories")
     if m.cinemaCatFocusStripe <> invalid
-        if isCat then m.cinemaCatFocusStripe.color = "0xE8A33DFF" else m.cinemaCatFocusStripe.color = "0x262136FF"
+        if isCat then m.cinemaCatFocusStripe.color = "0xE8A33DFF" else m.cinemaCatFocusStripe.color = "0x2E261EFF"
     end if
     if m.cinemaListFocusStripe <> invalid
-        if isCat then m.cinemaListFocusStripe.color = "0x262136FF" else m.cinemaListFocusStripe.color = "0xE50914FF"
+        if isCat then m.cinemaListFocusStripe.color = "0x2E261EFF" else m.cinemaListFocusStripe.color = "0x38BDF8FF"
     end if
     if m.cinemaCatHeaderLabel <> invalid
-        if isCat
-            m.cinemaCatHeaderLabel.text = "▶ CATEGORIES ACTIVE (PRESS RIGHT FOR MOVIES)"
-            m.cinemaCatHeaderLabel.color = "0xFCD34DFF"
+        if m.activeShowGroup <> invalid
+            sName = UCase(Left(cleanAscii(m.activeShowGroup.title), 18))
+            if isCat
+                m.cinemaCatHeaderLabel.text = "▶ SEASONS: " + sName
+                m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
+            else
+                m.cinemaCatHeaderLabel.text = "SEASONS: " + sName + " (LEFT)"
+                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
+            end if
+        else if m.cinemaActiveTab = "shows"
+            if isCat
+                m.cinemaCatHeaderLabel.text = "▶ TV SHOW CATEGORIES (PRESS RIGHT)"
+                m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
+            else
+                m.cinemaCatHeaderLabel.text = "TV SHOW CATEGORIES (PRESS LEFT)"
+                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
+            end if
         else
-            m.cinemaCatHeaderLabel.text = "BROWSE CATEGORIES (PRESS LEFT)"
-            m.cinemaCatHeaderLabel.color = "0x94A3B8FF"
+            if isCat
+                m.cinemaCatHeaderLabel.text = "▶ MOVIE CATEGORIES (PRESS RIGHT)"
+                m.cinemaCatHeaderLabel.color = "0xFCD34DFF"
+            else
+                m.cinemaCatHeaderLabel.text = "MOVIE CATEGORIES (PRESS LEFT)"
+                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
+            end if
+        end if
+    end if
+    if m.cinemaCatSubHint <> invalid
+        if m.activeShowGroup <> invalid
+            m.cinemaCatSubHint.text = "[BACK] or Row 1 returns to All TV Shows"
+        else if m.cinemaActiveTab = "shows"
+            m.cinemaCatSubHint.text = "Press OK on any Show to browse Seasons & Episodes"
+        else
+            m.cinemaCatSubHint.text = "Row 1 or [*] switches to TV Shows Tab"
         end if
     end if
     if m.cinemaPlayBtnBg <> invalid
-        if isCat then m.cinemaPlayBtnBg.color = "0x991B1BFF" else m.cinemaPlayBtnBg.color = "0xE50914FF"
+        if isCat then m.cinemaPlayBtnBg.color = "0x9A6B26FF" else m.cinemaPlayBtnBg.color = "0xE8A33DFF"
     end if
 end sub
 
 sub populateCinemaCatList()
-    if m.cinemaCatList = invalid or m.cinemaCategories = invalid then return
+    if m.cinemaCatList = invalid then return
+    if m.activeShowGroup <> invalid and m.activeShowSeasons <> invalid and m.activeShowSeasons.Count() > 0
+        content = CreateObject("roSGNode", "ContentNode")
+        for sIdx = 0 to m.activeShowSeasons.Count() - 1
+            sObj = m.activeShowSeasons[sIdx]
+            item = content.CreateChild("ContentNode")
+            item.title = sObj.label
+        end for
+        m.cinemaCatList.content = content
+        return
+    end if
+    if m.cinemaCategories = invalid then return
     content = CreateObject("roSGNode", "ContentNode")
     for cIdx = 0 to m.cinemaCategories.Count() - 1
         cat = m.cinemaCategories[cIdx]
-        cnt = 0
-        if m.allCinemaItems <> invalid
-            for each mv in m.allCinemaItems
-                if cinemaItemMatchesCat(mv, cat.id) then cnt = cnt + 1
-            end for
+        if cat.id = "__switch_shows__" or cat.id = "__switch_movies__"
+            item = content.CreateChild("ContentNode")
+            item.title = cat.label
+        else
+            cnt = 0
+            if m.allCinemaItems <> invalid
+                for each mv in m.allCinemaItems
+                    if cinemaItemMatchesCat(mv, cat.id) then cnt = cnt + 1
+                end for
+            end if
+            item = content.CreateChild("ContentNode")
+            item.title = cat.label + "  (" + cnt.ToStr() + ")"
         end if
-        item = content.CreateChild("ContentNode")
-        item.title = cat.label + "  (" + cnt.ToStr() + ")"
     end for
     m.cinemaCatList.content = content
 end sub
 
+sub enterShowSeasons(showObj as Object, showIdx as Integer)
+    if showObj = invalid or showObj.episodes = invalid or showObj.episodes.Count() = 0 then return
+    m.lastShowGroupIndex = showIdx
+    m.activeShowGroup = showObj
+    eps = showObj.episodes
+    seasons = []
+    seasons.Push({ id: "__back_shows__", seasonNumber: -1, label: "<- Back to All TV Shows", episodes: [] })
+    seasons.Push({ id: "season_all", seasonNumber: 0, label: "* All Seasons (" + eps.Count().ToStr() + " Eps)", episodes: eps })
+    seenSeasons = {}
+    seasonNums = []
+    for each ep in eps
+        sNum = 1
+        if ep.seasonNumber <> invalid and ep.seasonNumber > 0 then sNum = Int(ep.seasonNumber)
+        sKey = sNum.ToStr()
+        if not seenSeasons.DoesExist(sKey)
+            seenSeasons[sKey] = true
+            seasonNums.Push(sNum)
+        end if
+    end for
+    ' Sort seasonNums ascending
+    if seasonNums.Count() > 1
+        for i = 0 to seasonNums.Count() - 2
+            for j = i + 1 to seasonNums.Count() - 1
+                if seasonNums[j] < seasonNums[i]
+                    tmp = seasonNums[i]
+                    seasonNums[i] = seasonNums[j]
+                    seasonNums[j] = tmp
+                end if
+            end for
+        end for
+    end if
+    for each sNum in seasonNums
+        sEps = []
+        for each ep in eps
+            epS = 1
+            if ep.seasonNumber <> invalid and ep.seasonNumber > 0 then epS = Int(ep.seasonNumber)
+            if epS = sNum then sEps.Push(ep)
+        end for
+        seasons.Push({
+            id: "season_" + sNum.ToStr(),
+            seasonNumber: sNum,
+            label: "Season " + sNum.ToStr() + "  (" + sEps.Count().ToStr() + " Eps)",
+            episodes: sEps
+        })
+    end for
+    m.activeShowSeasons = seasons
+    m.activeSeasonIndex = 1
+    populateCinemaCatList()
+    if m.cinemaCatList <> invalid then m.cinemaCatList.jumpToItem = 1
+    applyShowSeasonFilter(1)
+    m.cinemaFocusPane = "movies"
+    if m.cinemaLibList <> invalid then m.cinemaLibList.setFocus(true)
+    updateCinemaPaneFocusUi()
+end sub
+
+sub exitShowSeasons()
+    if m.activeShowGroup = invalid then return
+    m.activeShowGroup = invalid
+    m.activeShowSeasons = []
+    populateCinemaCatList()
+    if m.cinemaCatList <> invalid then m.cinemaCatList.jumpToItem = m.cinemaCatIndex
+    applyCinemaCategoryFilter(m.cinemaCatIndex)
+    m.cinemaFocusPane = "movies"
+    if m.cinemaLibList <> invalid
+        if m.lastShowGroupIndex >= 0 and m.cinemaLibItems <> invalid and m.lastShowGroupIndex < m.cinemaLibItems.Count()
+            m.cinemaLibList.jumpToItem = m.lastShowGroupIndex
+            updateCinemaLibDetail(m.lastShowGroupIndex)
+            updateCinemaPosterShelf(m.lastShowGroupIndex)
+        end if
+        m.cinemaLibList.setFocus(true)
+    end if
+    updateCinemaPaneFocusUi()
+end sub
+
+sub applyShowSeasonFilter(sIdx as Integer)
+    if m.activeShowGroup = invalid or m.activeShowSeasons = invalid then return
+    if sIdx < 0 or sIdx >= m.activeShowSeasons.Count() then return
+    m.activeSeasonIndex = sIdx
+    sObj = m.activeShowSeasons[sIdx]
+    if sObj.id = "__back_shows__"
+        return
+    end if
+    eps = sObj.episodes
+    m.cinemaLibItems = eps
+    showTitleUpper = UCase(Left(cleanAscii(m.activeShowGroup.title), 26))
+    sLabelUpper = UCase(sObj.label)
+    if m.cinemaActiveCatBadge <> invalid
+        m.cinemaActiveCatBadge.text = showTitleUpper + " • " + sLabelUpper
+    end if
+    if m.cinemaShelfTitleLabel <> invalid
+        m.cinemaShelfTitleLabel.text = showTitleUpper + "  •  " + sLabelUpper + "  (EPISODE GUIDE)"
+    end if
+    if m.cinemaLibCountLabel <> invalid
+        m.cinemaLibCountLabel.text = showTitleUpper + " — " + eps.Count().ToStr() + " EPISODES  (▲/▼ SELECT EPISODE  •  OK PLAY EPISODE  •  ◀ LEFT PICK SEASON  •  BACK SERIES):"
+    end if
+    content = CreateObject("roSGNode", "ContentNode")
+    resumeIdx = 0
+    foundResume = false
+    for i = 0 to eps.Count() - 1
+        ep = eps[i]
+        item = content.CreateChild("ContentNode")
+        epCode = cleanAscii(ep.episodeCode)
+        if epCode = "" then epCode = "EP " + (i + 1).ToStr()
+        epName = cleanAscii(ep.episodeTitle)
+        if epName = "" then epName = cleanAscii(ep.title)
+        progTag = ""
+        if ep.inProgress = true and ep.progressPct <> invalid
+            progTag = "  [RESUME " + ep.progressPct.ToStr() + "%]"
+            if not foundResume
+                resumeIdx = i
+                foundResume = true
+            end if
+        else if ep.completed = true
+            progTag = "  [WATCHED]"
+        end if
+        airTag = ""
+        if ep.airdate <> invalid and ep.airdate <> "" then airTag = "  (" + Left(cleanAscii(ep.airdate), 10) + ")"
+        item.title = epCode + " — " + Left(epName, 44) + airTag + progTag
+    end for
+    if m.cinemaLibList <> invalid
+        m.cinemaLibList.content = content
+        if resumeIdx > 0 and resumeIdx < eps.Count()
+            m.cinemaLibList.jumpToItem = resumeIdx
+        end if
+    end if
+    if eps.Count() > 0
+        updateCinemaLibDetail(resumeIdx)
+        updateCinemaPosterShelf(resumeIdx)
+    end if
+end sub
+
 sub applyCinemaCategoryFilter(catIdx as Integer)
+    if m.activeShowGroup <> invalid
+        applyShowSeasonFilter(catIdx)
+        return
+    end if
     if m.cinemaCategories = invalid or catIdx < 0 or catIdx >= m.cinemaCategories.Count() then return
-    m.cinemaCatIndex = catIdx
     cat = m.cinemaCategories[catIdx]
+    if cat.id = "__switch_shows__" or cat.id = "__switch_movies__"
+        return
+    end if
+    m.cinemaCatIndex = catIdx
     filtered = []
     if m.allCinemaItems <> invalid
         for each mv in m.allCinemaItems
@@ -2869,28 +3194,61 @@ sub applyCinemaCategoryFilter(catIdx as Integer)
     end if
     m.cinemaLibItems = filtered
     catUpper = UCase(cat.label)
+    tabPrefix = "MOVIES: "
+    if m.cinemaActiveTab = "shows" then tabPrefix = "TV SHOWS: "
     if m.cinemaActiveCatBadge <> invalid
-        m.cinemaActiveCatBadge.text = catUpper + " (" + filtered.Count().ToStr() + ")"
+        m.cinemaActiveCatBadge.text = tabPrefix + catUpper + " (" + filtered.Count().ToStr() + ")"
     end if
     if m.cinemaShelfTitleLabel <> invalid
-        m.cinemaShelfTitleLabel.text = "POSTER CAROUSEL  •  " + catUpper + " (" + filtered.Count().ToStr() + " TITLES)"
+        if m.cinemaActiveTab = "shows"
+            m.cinemaShelfTitleLabel.text = "TV SERIES CAROUSEL  •  " + catUpper + " (" + filtered.Count().ToStr() + " SERIES)"
+        else
+            m.cinemaShelfTitleLabel.text = "MOVIE POSTER CAROUSEL  •  " + catUpper + " (" + filtered.Count().ToStr() + " FILMS)"
+        end if
     end if
     if m.cinemaLibCountLabel <> invalid
-        m.cinemaLibCountLabel.text = catUpper + " — " + filtered.Count().ToStr() + " TITLES  (▲/▼ BROWSE  •  OK PLAY FULL-SCREEN  •  ◀ LEFT SWITCH CATEGORY):"
+        if m.cinemaActiveTab = "shows"
+            m.cinemaLibCountLabel.text = catUpper + " — " + filtered.Count().ToStr() + " TV SERIES  (▲/▼ BROWSE  •  OK OPEN SEASONS & EPISODES  •  PLAY RESUME  •  [*] MOVIES TAB):"
+        else
+            m.cinemaLibCountLabel.text = catUpper + " — " + filtered.Count().ToStr() + " MOVIES  (▲/▼ BROWSE  •  OK WATCH FULL-SCREEN  •  ◀ LEFT CATEGORIES  •  [*] TV SHOWS TAB):"
+        end if
     end if
     content = CreateObject("roSGNode", "ContentNode")
     for i = 0 to filtered.Count() - 1
         mv = filtered[i]
         info = cinemaClassifyItem(mv)
         item = content.CreateChild("ContentNode")
-        yrStr = ""
-        if mv.year <> invalid then yrStr = " (" + mv.year.ToStr() + ")"
-        franTag = info.primaryGenre
-        if info.franchise <> "" then franTag = info.franchise + " • " + info.primaryGenre
-        item.title = (i + 1).ToStr() + ". " + Left(cleanAscii(mv.title), 38) + yrStr + "   [" + info.qualBadge + "]   " + franTag
+        if mv.isShowGroup = true
+            sCnt = 1
+            eCnt = 1
+            if mv.seasonCount <> invalid then sCnt = mv.seasonCount
+            if mv.episodeCount <> invalid then eCnt = mv.episodeCount
+            netStr = info.primaryGenre
+            if mv.network <> invalid and mv.network <> "" then netStr = cleanAscii(mv.network) + " • " + info.primaryGenre
+            progStr = ""
+            if mv.inProgressCount <> invalid and mv.inProgressCount > 0
+                progStr = "  [CONTINUE: " + cleanAscii(mv.episodeCode) + "]"
+            else if mv.watchedCount <> invalid and mv.watchedCount > 0
+                progStr = "  [" + mv.watchedCount.ToStr() + "/" + eCnt.ToStr() + " WATCHED]"
+            end if
+            item.title = (i + 1).ToStr() + ". " + Left(cleanAscii(mv.title), 34) + "   [" + sCnt.ToStr() + " Seasons • " + eCnt.ToStr() + " Eps]   " + netStr + progStr
+        else
+            yrStr = ""
+            if mv.year <> invalid then yrStr = " (" + mv.year.ToStr() + ")"
+            rtStr = ""
+            if mv.rating <> invalid and mv.rating > 0 then rtStr = " * " + mv.rating.ToStr()
+            progStr = ""
+            if mv.inProgress = true and mv.progressPct <> invalid
+                progStr = "  [RESUME " + mv.progressPct.ToStr() + "%]"
+            else if mv.completed = true
+                progStr = "  [WATCHED]"
+            end if
+            item.title = (i + 1).ToStr() + ". " + Left(cleanAscii(mv.title), 38) + yrStr + rtStr + "   [" + info.qualBadge + "]   " + info.primaryGenre + progStr
+        end if
     end for
     if m.cinemaLibList <> invalid
         m.cinemaLibList.content = content
+        m.cinemaLibList.jumpToItem = 0
     end if
     if filtered.Count() > 0
         updateCinemaLibDetail(0)
@@ -2906,7 +3264,13 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
     if winStart + 5 > total then winStart = total - 5
     if winStart < 0 then winStart = 0
     if m.cinemaShelfPosLabel <> invalid
-        m.cinemaShelfPosLabel.text = "Title #" + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  •  Press OK to Watch"
+        if m.activeShowGroup <> invalid
+            m.cinemaShelfPosLabel.text = "Episode #" + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  •  Press OK to Watch"
+        else if m.cinemaActiveTab = "shows"
+            m.cinemaShelfPosLabel.text = "Series #" + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  •  Press OK for Seasons & Episodes"
+        else
+            m.cinemaShelfPosLabel.text = "Movie #" + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  •  Press OK to Watch"
+        end if
     end if
     for slot = 0 to 4
         itemIdx = winStart + slot
@@ -2915,6 +3279,8 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
         artBg = m.top.findNode("cinemaCardArtBg" + slot.ToStr())
         mono = m.top.findNode("cinemaCardMono" + slot.ToStr())
         pst = m.top.findNode("cinemaCardPoster" + slot.ToStr())
+        pTrk = m.top.findNode("cinemaCardProgTrack" + slot.ToStr())
+        pFil = m.top.findNode("cinemaCardProgFill" + slot.ToStr())
         bdg = m.top.findNode("cinemaCardBadge" + slot.ToStr())
         ttl = m.top.findNode("cinemaCardTitle" + slot.ToStr())
         gnr = m.top.findNode("cinemaCardGenre" + slot.ToStr())
@@ -2925,11 +3291,11 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
             isFocused = (itemIdx = focusedIdx)
             if bdr <> invalid
                 bdr.visible = true
-                if isFocused then bdr.color = "0xE8A33DFF" else bdr.color = "0x262136FF"
+                if isFocused then bdr.color = "0xE8A33DFF" else bdr.color = "0x2E261EFF"
             end if
             if bg <> invalid
                 bg.visible = true
-                if isFocused then bg.color = "0x27192CFF" else bg.color = "0x181524FF"
+                if isFocused then bg.color = "0x2A2117FF" else bg.color = "0x1E1914FF"
             end if
             if artBg <> invalid
                 artBg.visible = true
@@ -2937,7 +3303,11 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
             end if
             if mono <> invalid
                 mono.visible = true
-                mono.text = info.monogram
+                if mv.episodeCode <> invalid and mv.episodeCode <> "" and m.activeShowGroup <> invalid
+                    mono.text = cleanAscii(mv.episodeCode)
+                else
+                    mono.text = info.monogram
+                end if
             end if
             if pst <> invalid
                 pst.visible = true
@@ -2947,33 +3317,75 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
                     pst.uri = ""
                 end if
             end if
-            yrTxt = "HD"
-            if mv.year <> invalid then yrTxt = mv.year.ToStr()
+            pct = 0
+            if mv.progressPct <> invalid then pct = Int(mv.progressPct)
+            if mv.completed = true then pct = 100
+            if pTrk <> invalid and pFil <> invalid
+                if pct > 0
+                    pTrk.visible = true
+                    pFil.visible = true
+                    w = Int((pct / 100.0) * 112)
+                    if w < 8 then w = 8
+                    if w > 112 then w = 112
+                    pFil.width = w
+                    if mv.completed = true then pFil.color = "0x22C55EFF" else pFil.color = "0xE8A33DFF"
+                else
+                    pTrk.visible = false
+                    pFil.visible = false
+                end if
+            end if
             if bdg <> invalid
                 bdg.visible = true
-                bdg.text = yrTxt + " • " + info.resStr
+                if m.activeShowGroup <> invalid and mv.episodeCode <> invalid
+                    bdg.text = cleanAscii(mv.episodeCode)
+                else if mv.isShowGroup = true and mv.seasonCount <> invalid
+                    bdg.text = mv.seasonCount.ToStr() + " Seasons • " + mv.episodeCount.ToStr() + " Eps"
+                else
+                    yrTxt = "HD"
+                    if mv.year <> invalid then yrTxt = mv.year.ToStr()
+                    if mv.rating <> invalid and mv.rating > 0
+                        bdg.text = yrTxt + " • * " + mv.rating.ToStr()
+                    else
+                        bdg.text = yrTxt + " • " + info.resStr
+                    end if
+                end if
             end if
             if ttl <> invalid
                 ttl.visible = true
-                ttl.text = Left(cleanAscii(mv.title), 26)
+                if m.activeShowGroup <> invalid and mv.episodeTitle <> invalid and mv.episodeTitle <> ""
+                    ttl.text = Left(cleanAscii(mv.episodeTitle), 38)
+                else
+                    ttl.text = Left(cleanAscii(mv.title), 38)
+                end if
                 if isFocused then ttl.color = "0xFCD34DFF" else ttl.color = "0xF8FAFCFF"
             end if
             if gnr <> invalid
                 gnr.visible = true
-                if info.franchise <> ""
-                    gnr.text = Left(info.franchise, 24)
+                if mv.network <> invalid and mv.network <> ""
+                    gnr.text = Left(cleanAscii(mv.network), 22)
+                else if info.franchise <> ""
+                    gnr.text = Left(info.franchise, 22)
                 else
-                    gnr.text = info.primaryGenre
+                    gnr.text = Left(info.primaryGenre, 22)
                 end if
             end if
             if stt <> invalid
                 stt.visible = true
-                if isFocused
-                    stt.text = "▶ SELECTED (#" + (itemIdx + 1).ToStr() + ")"
-                    stt.color = "0x6EE7B7FF"
+                if mv.inProgress = true and mv.progressPct <> invalid
+                    stt.text = "▶ RESUME " + mv.progressPct.ToStr() + "%"
+                    stt.color = "0xFCD34DFF"
+                else if mv.completed = true
+                    stt.text = "WATCHED"
+                    stt.color = "0x86EFACFF"
+                else if mv.isShowGroup = true
+                    stt.text = "OK: Seasons (" + cleanAscii(mv.episodeCode) + ")"
+                    if isFocused then stt.color = "0x67E8F9FF" else stt.color = "0xA89F91FF"
+                else if isFocused
+                    stt.text = "▶ PRESS OK TO WATCH"
+                    stt.color = "0x86EFACFF"
                 else
                     stt.text = "#" + (itemIdx + 1).ToStr() + " • " + info.fmtStr
-                    stt.color = "0x94A3B8FF"
+                    stt.color = "0xA89F91FF"
                 end if
             end if
         else
@@ -2982,6 +3394,8 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
             if artBg <> invalid then artBg.visible = false
             if mono <> invalid then mono.visible = false
             if pst <> invalid then pst.visible = false
+            if pTrk <> invalid then pTrk.visible = false
+            if pFil <> invalid then pFil.visible = false
             if bdg <> invalid then bdg.visible = false
             if ttl <> invalid then ttl.visible = false
             if gnr <> invalid then gnr.visible = false
@@ -3001,7 +3415,9 @@ sub showCinemaLibrary(libObj as Object)
         if m.cinemaLibHash <> newHash
             m.cinemaLibHash = newHash
             m.allCinemaItems = libObj.items
+            updateCinemaTabHeaderUi()
             populateCinemaCatList()
+            if m.cinemaCatList <> invalid then m.cinemaCatList.jumpToItem = m.cinemaCatIndex
             applyCinemaCategoryFilter(m.cinemaCatIndex)
         end if
     end if
@@ -3026,63 +3442,199 @@ sub updateCinemaLibDetail(idx as Integer)
     mv = m.cinemaLibItems[idx]
     info = cinemaClassifyItem(mv)
     titleClean = cleanAscii(mv.title)
-    if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = Left(titleClean, 44)
-    yrStr = "Feature"
-    if mv.year <> invalid then yrStr = mv.year.ToStr()
-    if mv.episodeCode <> invalid and mv.episodeCode <> ""
-        yrStr = cleanAscii(mv.episodeCode)
+    if m.activeShowGroup <> invalid and mv.episodeCode <> invalid and mv.episodeTitle <> invalid
+        titleClean = cleanAscii(mv.episodeCode) + " — " + cleanAscii(mv.episodeTitle)
     end if
+    if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = Left(titleClean, 46)
 
-    if m.cinemaBadgeYear <> invalid then m.cinemaBadgeYear.text = yrStr
-    if m.cinemaBadgeQuality <> invalid then m.cinemaBadgeQuality.text = info.qualBadge
-    if m.cinemaBadgeGenre <> invalid then m.cinemaBadgeGenre.text = info.primaryGenre
-    if m.cinemaBadgeFormat <> invalid then m.cinemaBadgeFormat.text = info.fmtStr + " DIRECT"
-
-    if m.cinemaHeroEyebrow <> invalid
-        if mv.mediaType <> invalid and mv.mediaType = "tv" and mv.seasonNumber <> invalid and mv.episodeNumber <> invalid
-            m.cinemaHeroEyebrow.text = UCase(cleanAscii(mv.showName)) + "  •  SEASON " + mv.seasonNumber.ToStr() + "  •  EPISODE " + mv.episodeNumber.ToStr() + " (" + cleanAscii(mv.episodeCode) + ")"
-        else if info.franchise <> ""
-            m.cinemaHeroEyebrow.text = UCase(info.franchise) + "  •  " + UCase(info.primaryGenre)
+    ' Spotlight Pill & Eyebrow
+    if m.cinemaSpotlightPillBg <> invalid and m.cinemaSpotlightPillText <> invalid
+        if m.activeShowGroup <> invalid
+            m.cinemaSpotlightPillBg.color = "0x38BDF8FF"
+            m.cinemaSpotlightPillText.text = "TV EPISODE"
+        else if mv.isShowGroup = true
+            m.cinemaSpotlightPillBg.color = "0x38BDF8FF"
+            m.cinemaSpotlightPillText.text = "TV SERIES"
         else
-            m.cinemaHeroEyebrow.text = "ROBOS CINEMA+ FEATURE  •  " + UCase(info.primaryGenre)
+            m.cinemaSpotlightPillBg.color = "0xE8A33DFF"
+            m.cinemaSpotlightPillText.text = "FEATURE FILM"
         end if
     end if
 
+    if m.cinemaHeroEyebrow <> invalid
+        if m.activeShowGroup <> invalid
+            sNum = 1
+            eNum = 1
+            if mv.seasonNumber <> invalid then sNum = mv.seasonNumber
+            if mv.episodeNumber <> invalid then eNum = mv.episodeNumber
+            m.cinemaHeroEyebrow.text = UCase(cleanAscii(m.activeShowGroup.title)) + "  •  SEASON " + sNum.ToStr() + "  •  EPISODE " + eNum.ToStr()
+        else if mv.isShowGroup = true
+            netUpper = "TV SERIES"
+            if mv.network <> invalid and mv.network <> "" then netUpper = UCase(cleanAscii(mv.network))
+            m.cinemaHeroEyebrow.text = netUpper + "  •  " + mv.seasonCount.ToStr() + " SEASONS  •  " + mv.episodeCount.ToStr() + " EPISODES"
+        else if info.franchise <> ""
+            m.cinemaHeroEyebrow.text = UCase(info.franchise) + "  •  " + UCase(info.primaryGenre)
+        else
+            m.cinemaHeroEyebrow.text = "ROBOS CINEMA+ FEATURE FILM  •  " + UCase(info.primaryGenre)
+        end if
+    end if
+
+    ' 5 Metadata Badges
+    yrStr = "Feature"
+    if mv.year <> invalid then yrStr = mv.year.ToStr()
+    if m.activeShowGroup <> invalid and mv.episodeCode <> invalid and mv.episodeCode <> ""
+        yrStr = cleanAscii(mv.episodeCode)
+    else if mv.isShowGroup = true and mv.seasonCount <> invalid
+        yrStr = mv.seasonCount.ToStr() + " Seasons"
+    end if
+    if m.cinemaBadgeYear <> invalid then m.cinemaBadgeYear.text = yrStr
+
+    if m.cinemaBadgeRating <> invalid
+        if mv.rating <> invalid and mv.rating > 0
+            m.cinemaBadgeRating.text = "* " + mv.rating.ToStr() + " / 10"
+        else if mv.isShowGroup = true and mv.episodeCount <> invalid
+            m.cinemaBadgeRating.text = mv.episodeCount.ToStr() + " Episodes"
+        else
+            m.cinemaBadgeRating.text = info.resStr
+        end if
+    end if
+
+    if m.cinemaBadgeQuality <> invalid
+        if mv.network <> invalid and mv.network <> ""
+            m.cinemaBadgeQuality.text = Left(cleanAscii(mv.network), 20)
+        else
+            m.cinemaBadgeQuality.text = info.qualBadge
+        end if
+    end if
+
+    if m.cinemaBadgeGenre <> invalid
+        if mv.genre <> invalid and mv.genre <> ""
+            m.cinemaBadgeGenre.text = Left(cleanAscii(mv.genre), 26)
+        else
+            m.cinemaBadgeGenre.text = info.primaryGenre
+        end if
+    end if
+
+    if m.cinemaBadgeFormat <> invalid
+        if mv.inProgress = true and mv.progressPct <> invalid
+            m.cinemaBadgeFormat.text = "RESUME " + mv.progressPct.ToStr() + "%"
+        else if mv.completed = true
+            m.cinemaBadgeFormat.text = "WATCHED"
+        else if mv.isShowGroup = true and mv.watchedCount <> invalid and mv.episodeCount <> invalid and mv.watchedCount > 0
+            m.cinemaBadgeFormat.text = mv.watchedCount.ToStr() + "/" + mv.episodeCount.ToStr() + " WATCHED"
+        else
+            m.cinemaBadgeFormat.text = info.fmtStr + " DIRECT PLAY"
+        end if
+    end if
+
+    ' Hero Poster & Progress Bar
     if m.cinemaHeroPosterFallbackBg <> invalid then m.cinemaHeroPosterFallbackBg.color = info.bgCol
     if m.cinemaHeroPosterTopBar <> invalid then m.cinemaHeroPosterTopBar.color = info.barCol
     if m.cinemaHeroPosterRibbon <> invalid then m.cinemaHeroPosterRibbon.text = UCase(info.primaryGenre)
     if m.cinemaHeroPosterMonogram <> invalid then m.cinemaHeroPosterMonogram.text = info.monogram
-    if m.cinemaHeroPosterFallbackTitle <> invalid then m.cinemaHeroPosterFallbackTitle.text = Left(titleClean, 30)
-    if m.cinemaHeroPosterFallbackYear <> invalid then m.cinemaHeroPosterFallbackYear.text = yrStr + "  •  " + info.qualBadge
+    if m.cinemaHeroPosterFallbackTitle <> invalid then m.cinemaHeroPosterFallbackTitle.text = Left(titleClean, 28)
+    if m.cinemaHeroPosterFallbackYear <> invalid then m.cinemaHeroPosterFallbackYear.text = yrStr + " • " + info.resStr
 
-    if m.cinemaLibDetailMeta <> invalid
-        if mv.mediaType <> invalid and mv.mediaType = "tv" and mv.seasonNumber <> invalid and mv.episodeNumber <> invalid
-            m.cinemaLibDetailMeta.text = "Series: " + cleanAscii(mv.showName) + "   |   Season " + mv.seasonNumber.ToStr() + " • Episode " + mv.episodeNumber.ToStr() + ": " + cleanAscii(mv.episodeTitle) + "   |   Quality: " + info.qualBadge
-        else
-            franStr = "Standalone Feature Film"
-            if info.franchise <> "" then franStr = "Collection: " + info.franchise
-            m.cinemaLibDetailMeta.text = franStr + "   |   Genre: " + info.primaryGenre + "   |   Quality: " + info.qualBadge
-        end if
-    end if
-    if m.cinemaLibDetailSub <> invalid
-        m.cinemaLibDetailSub.text = "Container: " + info.fmtStr + " Direct Stream   |   Source: " + Left(cleanAscii(mv.album), 40) + "   |   Zero-Cloud LAN HTTP 206"
-    end if
-    if m.cinemaHeroSynopsis <> invalid
-        if info.franchise <> ""
-            m.cinemaHeroSynopsis.text = "Part of the " + info.franchise + " in your RobOS Cinema library. Press OK on your Roku remote for instant full-screen playback."
-        else
-            m.cinemaHeroSynopsis.text = "Full HD home theater stream (" + info.qualBadge + ") ready on your LAN. Press OK on your Roku remote for instant full-screen playback."
-        end if
-    end if
     if m.cinemaLibPoster <> invalid
         if mv.artUrl <> invalid and mv.artUrl <> ""
             m.cinemaLibPoster.uri = mv.artUrl
+        else if m.activeShowGroup <> invalid and m.activeShowGroup.artUrl <> invalid and m.activeShowGroup.artUrl <> ""
+            m.cinemaLibPoster.uri = m.activeShowGroup.artUrl
         else
             m.cinemaLibPoster.uri = ""
         end if
     end if
+
+    heroPct = 0
+    if mv.progressPct <> invalid then heroPct = Int(mv.progressPct)
+    if mv.completed = true then heroPct = 100
+    if m.cinemaHeroProgTrack <> invalid and m.cinemaHeroProgFill <> invalid
+        if heroPct > 0
+            m.cinemaHeroProgTrack.visible = true
+            m.cinemaHeroProgFill.visible = true
+            hw = Int((heroPct / 100.0) * 244)
+            if hw < 12 then hw = 12
+            if hw > 244 then hw = 244
+            m.cinemaHeroProgFill.width = hw
+            if mv.completed = true then m.cinemaHeroProgFill.color = "0x22C55EFF" else m.cinemaHeroProgFill.color = "0xE8A33DFF"
+        else
+            m.cinemaHeroProgTrack.visible = false
+            m.cinemaHeroProgFill.visible = false
+        end if
+    end if
+
+    ' Credits / Cast / Season Meta Line
+    if m.cinemaLibDetailMeta <> invalid
+        if m.activeShowGroup <> invalid
+            airStr = ""
+            if mv.airdate <> invalid and mv.airdate <> "" then airStr = "   |   Aired: " + cleanAscii(mv.airdate)
+            m.cinemaLibDetailMeta.text = "Series: " + cleanAscii(m.activeShowGroup.title) + "   |   Episode: " + cleanAscii(mv.episodeCode) + airStr + "   |   " + info.qualBadge
+        else if mv.isShowGroup = true
+            upNextStr = "Up Next: " + cleanAscii(mv.episodeCode)
+            if mv.episodeTitle <> invalid and mv.episodeTitle <> "" then upNextStr = upNextStr + " (" + Left(cleanAscii(mv.episodeTitle), 28) + ")"
+            netInfo = ""
+            if mv.network <> invalid and mv.network <> "" then netInfo = "Network: " + cleanAscii(mv.network) + "   |   "
+            m.cinemaLibDetailMeta.text = netInfo + mv.seasonCount.ToStr() + " Seasons • " + mv.episodeCount.ToStr() + " Episodes   |   " + upNextStr
+        else
+            credParts = []
+            if mv.director <> invalid and mv.director <> "" then credParts.Push("Dir: " + Left(cleanAscii(mv.director), 28))
+            if mv.cast <> invalid and mv.cast <> "" then credParts.Push("Cast: " + Left(cleanAscii(mv.cast), 52))
+            if credParts.Count() > 0
+                credLine = credParts[0]
+                if credParts.Count() > 1 then credLine = credLine + "   |   " + credParts[1]
+                m.cinemaLibDetailMeta.text = credLine
+            else
+                franStr = "Standalone Feature Film"
+                if info.franchise <> "" then franStr = "Collection: " + info.franchise
+                m.cinemaLibDetailMeta.text = franStr + "   |   Genre: " + info.primaryGenre + "   |   Quality: " + info.qualBadge
+            end if
+        end if
+    end if
+
+    ' Multi-line Real Plot Synopsis
+    if m.cinemaHeroSynopsis <> invalid
+        ov = cleanAscii(mv.overview)
+        if ov = "" and m.activeShowGroup <> invalid then ov = cleanAscii(m.activeShowGroup.overview)
+        if ov <> ""
+            m.cinemaHeroSynopsis.text = Left(ov, 310)
+        else if mv.isShowGroup = true
+            m.cinemaHeroSynopsis.text = cleanAscii(mv.title) + " (" + mv.seasonCount.ToStr() + " Seasons, " + mv.episodeCount.ToStr() + " Episodes). Press OK to browse seasons and episodes, or press Play to start " + cleanAscii(mv.episodeCode) + "."
+        else
+            m.cinemaHeroSynopsis.text = "Full HD home theater stream (" + info.qualBadge + ") ready on your LAN. Press OK on your Roku remote for instant full-screen playback."
+        end if
+    end if
+
+    if m.cinemaLibDetailSub <> invalid
+        if mv.isShowGroup = true
+            m.cinemaLibDetailSub.text = "Press [OK] to Open Season & Episode Guide   |   Press [PLAY] to Immediately Start/Resume " + cleanAscii(mv.episodeCode)
+        else if mv.inProgress = true and mv.positionSec <> invalid and mv.positionSec > 0
+            rMin = Int(mv.positionSec / 60)
+            rSec = Int(mv.positionSec) mod 60
+            m.cinemaLibDetailSub.text = "Saved Watch Progress: " + rMin.ToStr() + "m " + rSec.ToStr() + "s (" + heroPct.ToStr() + "%)   |   Container: " + info.fmtStr + " Direct Stream"
+        else
+            m.cinemaLibDetailSub.text = "Container: " + info.fmtStr + " Direct Stream   |   Source: " + Left(cleanAscii(mv.album), 40) + "   |   Zero-Cloud LAN HTTP 206"
+        end if
+    end if
+
+    ' CTA Button Prompt
+    if m.cinemaLibPlayPrompt <> invalid
+        if mv.isShowGroup = true and m.activeShowGroup = invalid
+            m.cinemaLibPlayPrompt.text = "▶  BROWSE SEASONS & EPISODES (OK)"
+        else if mv.inProgress = true and mv.progressPct <> invalid
+            m.cinemaLibPlayPrompt.text = "▶  RESUME (" + mv.progressPct.ToStr() + "%) — PRESS OK"
+        else
+            m.cinemaLibPlayPrompt.text = "▶  WATCH NOW (PRESS OK)"
+        end if
+    end if
+
     if m.cinemaLibFooter <> invalid
-        m.cinemaLibFooter.text = "Selected #" + (idx + 1).ToStr() + " of " + m.cinemaLibItems.Count().ToStr() + ": " + titleClean + " (" + yrStr + ") — Press [OK] to Watch Full-Screen, or [LEFT] for Categories"
+        if m.activeShowGroup <> invalid
+            m.cinemaLibFooter.text = cleanAscii(m.activeShowGroup.title) + " • " + titleClean + " — [OK] Play Episode  •  [LEFT] Switch Season  •  [BACK] Return to All TV Shows"
+        else if mv.isShowGroup = true
+            m.cinemaLibFooter.text = "Series #" + (idx + 1).ToStr() + " of " + m.cinemaLibItems.Count().ToStr() + ": " + titleClean + " — [OK] Open Seasons & Episodes  •  [PLAY] Watch " + cleanAscii(mv.episodeCode) + "  •  [*] Switch to Movies"
+        else
+            m.cinemaLibFooter.text = "Movie #" + (idx + 1).ToStr() + " of " + m.cinemaLibItems.Count().ToStr() + ": " + titleClean + " (" + yrStr + ") — [OK] Watch Full-Screen  •  [LEFT] Categories  •  [*] Switch to TV Shows"
+        end if
     end if
 end sub
 
@@ -3090,12 +3642,39 @@ sub onCinemaCatFocused()
     if m.cinemaCatList = invalid then return
     m.cinemaFocusPane = "categories"
     updateCinemaPaneFocusUi()
-    applyCinemaCategoryFilter(m.cinemaCatList.itemFocused)
+    cIdx = m.cinemaCatList.itemFocused
+    if m.activeShowGroup <> invalid
+        applyShowSeasonFilter(cIdx)
+    else
+        applyCinemaCategoryFilter(cIdx)
+    end if
 end sub
 
 sub onCinemaCatSelected()
     if m.cinemaCatList = invalid then return
-    applyCinemaCategoryFilter(m.cinemaCatList.itemSelected)
+    cIdx = m.cinemaCatList.itemSelected
+    if m.activeShowGroup <> invalid
+        if cIdx = 0
+            exitShowSeasons()
+            return
+        end if
+        applyShowSeasonFilter(cIdx)
+        m.cinemaFocusPane = "movies"
+        if m.cinemaLibList <> invalid then m.cinemaLibList.setFocus(true)
+        updateCinemaPaneFocusUi()
+        return
+    end if
+    if m.cinemaCategories <> invalid and cIdx >= 0 and cIdx < m.cinemaCategories.Count()
+        cat = m.cinemaCategories[cIdx]
+        if cat.id = "__switch_shows__"
+            switchCinemaTab("shows")
+            return
+        else if cat.id = "__switch_movies__"
+            switchCinemaTab("movies")
+            return
+        end if
+    end if
+    applyCinemaCategoryFilter(cIdx)
     m.cinemaFocusPane = "movies"
     if m.cinemaLibList <> invalid then m.cinemaLibList.setFocus(true)
     updateCinemaPaneFocusUi()
@@ -3118,32 +3697,59 @@ sub playCinemaItemAtIndex(idx as Integer)
         m.cinemaLibFooter.text = "Starting full-screen playback: " + cleanAscii(mv.title) + "..."
     end if
     m.localVideoPlaying = true
+    trackId = ""
+    if mv.repTrackId <> invalid and mv.repTrackId <> ""
+        trackId = cleanAscii(mv.repTrackId)
+    else if mv.id <> invalid
+        trackId = cleanAscii(mv.id)
+    end if
+    m.currentPlayingTrackId = trackId
     fmt = "mp4"
     if mv.streamFormat <> invalid and mv.streamFormat <> ""
         fmt = LCase(mv.streamFormat.ToStr())
     else if Instr(1, LCase(mv.streamUrl.ToStr()), ".mkv") > 0
         fmt = "mkv"
     end if
+    resumeSec = 0
+    if mv.inProgress = true and mv.positionSec <> invalid and mv.positionSec > 5
+        resumeSec = Int(mv.positionSec)
+    end if
+    playTitle = cleanAscii(mv.title)
+    if m.activeShowGroup <> invalid and mv.episodeCode <> invalid
+        playTitle = cleanAscii(m.activeShowGroup.title) + " - " + cleanAscii(mv.episodeCode) + " " + cleanAscii(mv.episodeTitle)
+    end if
     playCinemaVideo({
         active: true,
         loadKey: "remote-" + idx.ToStr() + "-" + m.tickCount.ToStr(),
         mediaUrl: mv.streamUrl,
         streamFormat: fmt,
-        title: cleanAscii(mv.title),
-        startAt: 0,
+        title: playTitle,
+        startAt: resumeSec,
         paused: false
     })
 end sub
 
 sub onCinemaLibItemSelected()
     if m.cinemaLibList = invalid or m.cinemaLibItems = invalid then return
-    playCinemaItemAtIndex(m.cinemaLibList.itemSelected)
+    idx = m.cinemaLibList.itemSelected
+    if idx < 0 or idx >= m.cinemaLibItems.Count() then return
+    mv = m.cinemaLibItems[idx]
+    ' In TV Shows tab (Series list), pressing OK drills into that Show's Seasons & Episodes!
+    if m.cinemaActiveTab = "shows" and m.activeShowGroup = invalid and mv <> invalid and mv.isShowGroup = true and mv.episodes <> invalid and mv.episodes.Count() > 0
+        enterShowSeasons(mv, idx)
+        return
+    end if
+    playCinemaItemAtIndex(idx)
 end sub
 
 sub onCinemaVideoState()
     if m.cinemaVideo = invalid or m.cinemaVideoActive <> true then return
     st = m.cinemaVideo.state
     if st = "finished" or st = "error"
+        if st = "finished" and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
+            m.dashTask.progressUrl = "${portalUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&watched=true&seq=" + m.tickCount.ToStr()
+        end if
+        m.currentPlayingTrackId = ""
         m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
         m.localVideoPlaying = false
         stopCinemaVideo()
@@ -3562,12 +4168,17 @@ sub onItemSelected()
     idx = m.tileList.itemSelected
     if idx >= 0 and idx < m.tiles.Count()
         t = m.tiles[idx]
-        if t.id = "movie-player"
+        if t.id = "movie-player" or t.id = "tv-shows"
             m.localLibraryOpened = true
             if m.latestCinemaLibrary <> invalid
                 showCinemaLibrary(m.latestCinemaLibrary)
             else
                 showCinemaLibrary({ active: true, items: [] })
+            end if
+            if t.id = "tv-shows"
+                switchCinemaTab("shows")
+            else
+                switchCinemaTab("movies")
             end if
             return
         end if
@@ -3588,7 +4199,14 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return true
     end if
     if press = true and m.cinemaLibraryActive = true and m.cinemaVideoActive <> true
-        if key = "left"
+        if key = "options" or key = "rewind" or key = "fastforward"
+            if m.cinemaActiveTab = "shows"
+                switchCinemaTab("movies")
+            else
+                switchCinemaTab("shows")
+            end if
+            return true
+        else if key = "left"
             if m.cinemaFocusPane = "movies" and m.cinemaCatList <> invalid
                 m.cinemaFocusPane = "categories"
                 m.cinemaCatList.setFocus(true)
@@ -3611,6 +4229,14 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     end if
     if press = true and key = "back"
         if m.cinemaVideoActive = true
+            if m.cinemaVideo <> invalid and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
+                posSec = Int(m.cinemaVideo.position)
+                durSec = Int(m.cinemaVideo.duration)
+                if posSec > 0
+                    m.dashTask.progressUrl = "${portalUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+                end if
+            end if
+            m.currentPlayingTrackId = ""
             m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
             m.localVideoPlaying = false
             stopCinemaVideo()
@@ -3625,6 +4251,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             return true
         end if
         if m.cinemaLibraryActive = true
+            if m.activeShowGroup <> invalid
+                exitShowSeasons()
+                return true
+            end if
             m.localLibraryOpened = false
             hideCinemaLibrary()
             return true
@@ -4299,6 +4929,50 @@ function createTvEngine({
           return;
         }
 
+        if (u.pathname === '/api/tv-progress') {
+          const trackId = u.searchParams.get('id') || '';
+          const posSec = Number(u.searchParams.get('positionSec') || 0);
+          const durSec = Number(u.searchParams.get('durationSec') || 0);
+          const watchedFlag = u.searchParams.get('watched');
+          if (trackId && Array.isArray(state.moviePlayerLibrarySnapshot)) {
+            const pct = watchedFlag === 'true' ? 100 : durSec > 0 ? Math.min(100, Math.round((posSec / durSec) * 100)) : 0;
+            const completed = watchedFlag === 'true' || pct >= 92;
+            const inProgress = !completed && posSec >= 5;
+            for (const item of state.moviePlayerLibrarySnapshot) {
+              if (item.id === trackId || item.repTrackId === trackId) {
+                item.positionSec = completed ? 0 : Math.floor(posSec);
+                item.progressPct = pct;
+                item.inProgress = inProgress;
+                item.completed = completed;
+              }
+              if (Array.isArray(item.episodes)) {
+                for (const ep of item.episodes) {
+                  if (ep.id === trackId) {
+                    ep.positionSec = completed ? 0 : Math.floor(posSec);
+                    ep.progressPct = pct;
+                    ep.inProgress = inProgress;
+                    ep.completed = completed;
+                  }
+                }
+              }
+            }
+            saveState();
+          }
+          const mpBase = (state.moviePlayerServer && state.moviePlayerServer.baseUrl) || 'http://127.0.0.1:19215';
+          try {
+            const fwdUrl = new URL('/api/tv-progress', mpBase);
+            u.searchParams.forEach((v, k) => fwdUrl.searchParams.set(k, v));
+            http.get(fwdUrl.toString(), () => {}).on('error', () => {});
+          } catch {}
+          const resp = JSON.stringify({ ok: true, id: trackId, positionSec: posSec });
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          });
+          res.end(resp);
+          return;
+        }
+
         if (u.pathname === '/movie-player') {
           const items = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
           const itemsJson = JSON.stringify(items);
@@ -4307,56 +4981,64 @@ function createTvEngine({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RobOS Cinema+ — 10-Foot Smart TV Streaming Library</title>
+  <title>RobOS Cinema+ — 10-Foot Smart TV Streaming Library (Movies &amp; TV Shows)</title>
   <style>
-    :root { --bg: #09080d; --surface: #12101b; --surface2: #191626; --border: #262136; --crimson: #e50914; --accent: #e8a33d; --cyan: #38bdf8; --purple: #a855f7; --text: #f8fafc; --muted: #94a3b8; }
+    :root { --bg: #110e0b; --surface: #17130f; --surface2: #1e1914; --border: #2e261e; --accent: #e8a33d; --cyan: #38bdf8; --purple: #a855f7; --green: #22c55e; --text: #f1e9dc; --muted: #a89f91; }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; user-select: none; }
-    header { height: 74px; background: #110e18; border-bottom: 3px solid var(--crimson); display: flex; align-items: center; justify-content: space-between; padding: 0 36px; }
-    .brand-group { display: flex; align-items: center; gap: 16px; }
-    .brand-pill { background: var(--crimson); color: #fff; font-weight: 800; font-size: 16px; padding: 8px 16px; border-radius: 6px; letter-spacing: 0.05em; }
-    header h1 { margin: 0; font-size: 22px; font-weight: 700; }
-    .cat-pill { background: #1e1b2e; border-left: 4px solid var(--accent); color: #fcd34d; padding: 8px 16px; font-size: 14px; font-weight: 700; border-radius: 4px; }
-    header .sub { color: #cbd5e1; font-size: 13px; font-weight: 600; }
-    .layout { flex: 1; display: grid; grid-template-columns: 340px 1fr; gap: 20px; padding: 18px 36px; overflow: hidden; }
+    header { height: 76px; background: var(--surface); border-bottom: 3px solid var(--accent); display: flex; align-items: center; justify-content: space-between; padding: 0 36px; gap: 18px; }
+    .brand-group { display: flex; align-items: center; gap: 14px; }
+    .brand-pill { background: var(--accent); color: #110e0b; font-weight: 900; font-size: 15px; padding: 8px 16px; border-radius: 6px; letter-spacing: 0.05em; }
+    .top-tabs { display: flex; gap: 10px; }
+    .top-tab { background: #1b1612; border: 1px solid var(--border); border-bottom: 4px solid var(--border); color: var(--muted); font-weight: 800; font-size: 14px; padding: 9px 18px; border-radius: 6px; cursor: pointer; letter-spacing: 0.04em; }
+    .top-tab.active-movies { background: #2b2114; border-color: var(--accent); border-bottom-color: var(--accent); color: #fcd34d; }
+    .top-tab.active-shows { background: #152536; border-color: var(--cyan); border-bottom-color: var(--cyan); color: #67e8f9; }
+    .cat-pill { background: #211b15; border-left: 4px solid var(--accent); color: #fcd34d; padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 4px; }
+    header .sub { color: #d6cfc2; font-size: 12px; font-weight: 600; }
+    .layout { flex: 1; display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 18px 36px; overflow: hidden; }
     .sidebar { background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; overflow: hidden; }
-    .sidebar.dim { border-top-color: var(--border); }
     .pane-title { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     .cat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-    .cat-row { padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; font-size: 15px; cursor: pointer; color: #e2e8f0; }
+    .cat-row { padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; font-size: 14px; cursor: pointer; color: var(--text); }
     .cat-row.active { border-color: var(--accent); background: rgba(232, 163, 61, 0.14); color: #fcd34d; font-weight: 700; }
-    .cat-row.focused { background: var(--accent); color: #110e18; font-weight: 800; }
+    .cat-row.focused { background: var(--accent); color: #110e0b; font-weight: 800; }
     .stage { display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
-    .hero { background: linear-gradient(135deg, #151221 0%, #1e1830 60%, #271d3d 100%); border: 1px solid var(--border); border-top: 4px solid var(--crimson); border-radius: 12px; padding: 20px 24px; display: flex; gap: 24px; align-items: stretch; min-height: 280px; }
-    .hero-poster { width: 180px; height: 256px; border-radius: 8px; border: 2px solid var(--accent); background: #1e1b2e; display: flex; flex-direction: column; align-items: center; justify-content: space-between; overflow: hidden; flex-shrink: 0; position: relative; }
+    .hero { background: linear-gradient(135deg, #1b1611 0%, #221b14 60%, #2a2017 100%); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 12px; padding: 18px 24px; display: flex; gap: 24px; align-items: stretch; min-height: 288px; }
+    .hero-poster { width: 176px; height: 260px; border-radius: 8px; border: 2px solid var(--accent); background: #241d16; display: flex; flex-direction: column; align-items: center; justify-content: space-between; overflow: hidden; flex-shrink: 0; position: relative; }
     .hero-poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .prog-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(0,0,0,0.8); z-index: 3; }
+    .prog-fill { height: 100%; background: var(--accent); }
+    .prog-fill.done { background: var(--green); }
     .hero-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
     .eyebrow-row { display: flex; align-items: center; gap: 12px; }
-    .spotlight-tag { background: var(--crimson); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.06em; }
+    .spotlight-tag { background: var(--accent); color: #110e0b; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.06em; }
+    .spotlight-tag.tv { background: var(--cyan); }
     .eyebrow-text { color: #fcd34d; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-    .detail-title { font-size: 32px; font-weight: 800; margin: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .detail-title { font-size: 30px; font-weight: 800; margin: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .badges-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-    .m-badge { padding: 5px 12px; border-radius: 4px; font-size: 13px; font-weight: 700; background: #262136; border-left: 3px solid var(--accent); color: #fcd34d; }
-    .m-badge.cyan { background: #162436; border-left-color: var(--cyan); color: #67e8f9; }
-    .m-badge.purple { background: #231836; border-left-color: var(--purple); color: #d8b4fe; }
-    .detail-meta { font-size: 15px; color: #e2e8f0; margin-bottom: 4px; }
-    .detail-sub { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+    .m-badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; background: #261f18; border-left: 3px solid var(--accent); color: #fcd34d; }
+    .m-badge.cyan { background: #152536; border-left-color: var(--cyan); color: #67e8f9; }
+    .m-badge.purple { background: #241b2f; border-left-color: var(--purple); color: #d8b4fe; }
+    .m-badge.green { background: #11281e; border-left-color: var(--green); color: #86efac; }
+    .detail-meta { font-size: 14px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
+    .detail-synopsis { font-size: 13px; color: #d6cfc2; line-height: 1.45; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .detail-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
     .cta-row { display: flex; gap: 14px; align-items: center; }
-    .play-cta { background: var(--crimson); color: #fff; font-weight: 800; padding: 12px 26px; border-radius: 6px; font-size: 15px; cursor: pointer; border: none; letter-spacing: 0.03em; }
-    .shelf { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; padding: 14px 18px; }
+    .play-cta { background: var(--accent); color: #110e0b; font-weight: 900; padding: 11px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; letter-spacing: 0.03em; }
+    .shelf { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; padding: 12px 18px; }
     .poster-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 8px; }
     .p-card { background: var(--surface2); border: 2px solid var(--border); border-radius: 8px; padding: 10px; display: flex; gap: 10px; align-items: center; cursor: pointer; }
-    .p-card.focused { border-color: var(--accent); background: #27192c; }
-    .p-art { width: 64px; height: 94px; border-radius: 5px; background: #2d1b36; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fcd34d; font-size: 20px; flex-shrink: 0; overflow: hidden; position: relative; }
+    .p-card.focused { border-color: var(--accent); background: #2a2117; }
+    .p-art { width: 68px; height: 102px; border-radius: 5px; background: #2d1b36; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fcd34d; font-size: 18px; flex-shrink: 0; overflow: hidden; position: relative; }
     .p-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .p-info { min-width: 0; flex: 1; }
     .p-badge { font-size: 11px; color: #67e8f9; font-weight: 700; }
-    .p-title { font-size: 14px; font-weight: 700; color: #fff; margin: 3px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .p-genre { font-size: 11px; color: #d8b4fe; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .p-title { font-size: 13px; font-weight: 700; color: #fff; margin: 3px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .p-genre { font-size: 11px; color: #fcd34d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .list-box { flex: 1; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--cyan); border-radius: 10px; padding: 12px 18px; display: flex; flex-direction: column; overflow: hidden; }
     .movie-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-    .movie-row { padding: 8px 14px; border-radius: 6px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; font-size: 15px; cursor: pointer; }
-    .movie-row.focused { background: var(--accent); color: #110e18; font-weight: 800; }
+    .movie-row { padding: 8px 14px; border-radius: 6px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; font-size: 14px; cursor: pointer; }
+    .movie-row.focused { background: var(--accent); color: #110e0b; font-weight: 800; }
     #video-overlay { position: fixed; inset: 0; background: #000; display: none; z-index: 100; }
     #video-overlay.active { display: flex; flex-direction: column; }
     #tv-video { width: 100%; height: 100%; background: #000; }
@@ -4366,14 +5048,17 @@ function createTvEngine({
   <header>
     <div class="brand-group">
       <span class="brand-pill">ROBOS CINEMA+</span>
-      <h1>10-Foot Streaming Library &amp; Collections</h1>
+      <div class="top-tabs">
+        <button class="top-tab active-movies" id="tab-movies">🎬 MOVIES</button>
+        <button class="top-tab" id="tab-shows">📺 TV SHOWS</button>
+      </div>
     </div>
-    <span class="cat-pill" id="active-cat-pill">CATEGORY: ALL MOVIES</span>
-    <div class="sub">[◀ LEFT] CATEGORIES · [▶ RIGHT] MOVIES · [▲/▼] BROWSE · [OK] PLAY · [BACK] EXIT</div>
+    <span class="cat-pill" id="active-cat-pill">MOVIES: ALL FEATURE FILMS</span>
+    <div class="sub">[TAB] SWITCH MOVIES/SHOWS · [◀ LEFT] CATEGORIES/SEASONS · [▶ RIGHT] LIST · [OK] SELECT · [BACK] EXIT</div>
   </header>
   <div class="layout">
     <div class="sidebar" id="cat-pane">
-      <div class="pane-title">BROWSE CATEGORIES (D-PAD LEFT)</div>
+      <div class="pane-title" id="cat-pane-title">MOVIE CATEGORIES (D-PAD LEFT)</div>
       <div class="cat-list" id="cat-list"></div>
     </div>
     <div class="stage">
@@ -4382,16 +5067,19 @@ function createTvEngine({
         <div class="hero-body">
           <div>
             <div class="eyebrow-row">
-              <span class="spotlight-tag">SPOTLIGHT FEATURE</span>
+              <span class="spotlight-tag" id="spotlight-tag">FEATURE FILM</span>
               <span class="eyebrow-text" id="hero-eyebrow">ROBOS CINEMA+</span>
             </div>
-            <h2 class="detail-title" id="detail-title">Select a Movie</h2>
+            <h2 class="detail-title" id="detail-title">Select a Title</h2>
             <div class="badges-row">
               <span class="m-badge" id="badge-year">2024</span>
+              <span class="m-badge" id="badge-rating">★ 8.5</span>
               <span class="m-badge cyan" id="badge-qual">1080p HD</span>
               <span class="m-badge purple" id="badge-genre">Sci-Fi &amp; Fantasy</span>
+              <span class="m-badge green" id="badge-status">DIRECT PLAY</span>
             </div>
             <div class="detail-meta" id="detail-meta">1080p WEBRip · RobOS Cinema</div>
+            <div class="detail-synopsis" id="detail-synopsis">Full HD home theater playback with real public metadata and watch progress sync.</div>
             <div class="detail-sub" id="detail-sub">Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)</div>
           </div>
           <div class="cta-row">
@@ -4400,7 +5088,7 @@ function createTvEngine({
         </div>
       </div>
       <div class="shelf">
-        <div class="pane-title" id="shelf-title">POSTER CAROUSEL · FEATURED ROW</div>
+        <div class="pane-title" id="shelf-title">2:3 POSTER CAROUSEL · FEATURED ROW</div>
         <div class="poster-row" id="poster-row"></div>
       </div>
       <div class="list-box">
@@ -4413,11 +5101,11 @@ function createTvEngine({
     <video id="tv-video" controls autoplay></video>
   </div>
   <script>
-    const ALL_MOVIES = ${itemsJson};
-    const CATEGORIES = [
-      { id: 'all', label: '★ All Movies & Shows' },
-      { id: 'moviesOnly', label: '🎬 Movies (Feature Films)' },
-      { id: 'tv', label: '📺 TV Shows & Series' },
+    const ALL_ITEMS = ${itemsJson};
+    const MOVIE_CATEGORIES = [
+      { id: '__switch_shows__', label: '📺 Switch to TV Shows Tab →' },
+      { id: 'all', label: '★ All Movies' },
+      { id: 'continue', label: '▶ Continue Watching' },
       { id: 'franchises', label: '🍿 Franchises & Box Sets' },
       { id: 'scifi', label: '⚡ Sci-Fi & Fantasy' },
       { id: 'action', label: '🔥 Action & Adventure' },
@@ -4429,111 +5117,220 @@ function createTvEngine({
       { id: 'new', label: '🆕 New Releases (2023-2026)' },
       { id: 'classics', label: '🎞️ Classics (Pre-2010)' }
     ];
+    const SHOW_CATEGORIES = [
+      { id: '__switch_movies__', label: '🎬 Switch to Movies Tab →' },
+      { id: 'all', label: '★ All TV Shows' },
+      { id: 'continue', label: '▶ Continue Watching Series' },
+      { id: 'networks', label: '📡 Apple TV+, HBO & Streaming' },
+      { id: 'scifi', label: '⚡ Sci-Fi & Fantasy Series' },
+      { id: 'drama', label: '🎭 Drama & Crime Series' },
+      { id: 'action', label: '🔥 Action & Adventure Series' },
+      { id: 'horror', label: '👻 Horror & Mystery Series' },
+      { id: 'comedy', label: '😂 Comedy & Animation Series' }
+    ];
+    let activeTab = 'movies';
+    let activeShowGroup = null;
+    let activeShowSeasons = [];
+    let focusPane = 'movies';
+    let catIdx = 1;
+    let idx = 0;
+    let lastShowIdx = 0;
+    let ITEMS = [];
     function classify(m) {
       const hay = ((m.title || '') + ' ' + (m.album || '') + ' ' + (m.genre || '')).toLowerCase();
       const qHay = ((m.artist || '') + ' ' + (m.qualityBadge || '')).toLowerCase();
-      const franchise = m.franchise || (
-        /harry potter|azkaban|chamber of secrets|sorcerers stone/.test(hay) ? 'Harry Potter Wizarding World' :
-        /lord of the rings|fellowship|two towers|return of the king/.test(hay) ? 'The Lord of the Rings' :
-        /conjuring|annabelle|the nun|nun ii/.test(hay) ? 'The Conjuring Universe' :
-        /insidious/.test(hay) ? 'Insidious Collection' :
-        /scream/.test(hay) ? 'Scream Collection' :
-        /final destination/.test(hay) ? 'Final Destination Collection' :
-        /paranormal activity/.test(hay) ? 'Paranormal Activity Collection' :
-        /avengers|endgame|infinity war/.test(hay) ? 'Marvel & Avengers' :
-        /mortal kombat/.test(hay) ? 'Mortal Kombat Collection' :
-        /scary movie/.test(hay) ? 'Scary Movie Collection' :
-        /wicked|wizard of oz/.test(hay) ? 'Wicked & Wizard of Oz' : ''
-      );
-      const isTv = /s01e|s02e|atypical|tv series/.test(hay);
+      const franchise = m.franchise || '';
+      const isTv = m.mediaType === 'tv' || !!m.isShowGroup || /s01e|s02e|tv series/.test(hay);
       const isScifi = /dune|harry potter|lord of the rings|fellowship|two towers|return of the king|ex machina|serenity|wicked|wizard of oz|willow|ne zha|backrooms|sci-fi|fantasy/.test(hay);
       const isAction = /avengers|endgame|infinity war|mortal kombat|resident evil|dune|lord of the rings|harry potter|willow|hunting games|outpost|serenity|ne zha|action/.test(hay);
       const isHorror = /conjuring|annabelle|insidious|scream|paranormal activity|the nun|nun ii|final destination|friday the 13th|halloween|terrifier|babadook|malignant|it follows|smile|orphan|lights out|five nights at freddy|jennifers body|megan is missing|backrooms|other mommy|hokum|horror/.test(hay);
-      const isFamily = /inside out|rileys first date|tangled|zootopia|super mario|ne zha|matilda|cruella|spirited|wizard of oz|wicked|kpop demon hunters|harry potter|animation|family/.test(hay) || (m.title || '').toLowerCase() === 'home';
+      const isFamily = /inside out|rileys first date|tangled|zootopia|super mario|ne zha|matilda|cruella|spirited|wizard of oz|wicked|kpop demon hunters|harry potter|animation|family/.test(hay);
       const isComedy = /scary movie|anyone but you|ticket to paradise|four rooms|beetlejuice|buddy|spirited|men up|heist before christmas|cruella|matilda|atypical|jennifers body|rileys first date|comedy/.test(hay);
       const isThriller = /ready or not|missing|housemaid|obsession|passenger|orphan|scream|final destination|ex machina|it follows|malignant|hunting games|outpost|thriller/.test(hay);
       const isUhd = /2160p|4k|bluray|brrip/.test(qHay);
       const yr = Number(m.year) || 0;
-      const primaryGenre = isTv ? 'TV Series' : isScifi ? 'Sci-Fi & Fantasy' : isAction ? 'Action & Adventure' : isFamily ? 'Animation & Family' : isComedy ? 'Comedy & Romance' : isHorror ? 'Horror & Supernatural' : isThriller ? 'Thriller & Mystery' : 'Drama & Cinema';
+      const primaryGenre = m.genre ? String(m.genre).split(',')[0].trim() : (isTv ? 'TV Series' : isScifi ? 'Sci-Fi & Fantasy' : isAction ? 'Action & Adventure' : isFamily ? 'Animation & Family' : isComedy ? 'Comedy & Romance' : isHorror ? 'Horror & Supernatural' : isThriller ? 'Thriller & Mystery' : 'Drama & Cinema');
       const qual = /2160p|4k/.test(qHay) ? '4K UHD' : /720p/.test(qHay) ? '720p HD' : '1080p HD';
       return { franchise, primaryGenre, qual, isTv, isScifi, isAction, isHorror, isFamily, isComedy, isThriller, isUhd, isNew: yr >= 2023, isClassic: yr > 0 && yr < 2010 };
     }
     function matchesCat(m, catId) {
-      if (catId === 'all') return true;
       const c = classify(m);
-      if (catId === 'moviesOnly') return !c.isTv;
+      if (activeTab === 'shows' && !c.isTv) return false;
+      if (activeTab === 'movies' && c.isTv) return false;
+      if (catId === 'all' || catId.startsWith('__switch')) return true;
+      if (catId === 'continue') return !!(m.inProgress || m.inProgressCount > 0);
+      if (catId === 'networks') return true;
+      if (catId === 'drama') return !c.isScifi && !c.isComedy && !c.isHorror;
       if (catId === 'franchises') return !!c.franchise;
       return !!c['is' + catId.charAt(0).toUpperCase() + catId.slice(1)];
     }
-    let focusPane = 'movies';
-    let catIdx = 0;
-    let idx = 0;
-    let MOVIES = ALL_MOVIES;
     const catListEl = document.getElementById('cat-list');
     const listEl = document.getElementById('movie-list');
     const posterRowEl = document.getElementById('poster-row');
     const overlay = document.getElementById('video-overlay');
     const videoEl = document.getElementById('tv-video');
+    function switchTab(tab) {
+      activeTab = tab;
+      activeShowGroup = null;
+      activeShowSeasons = [];
+      catIdx = 1;
+      idx = 0;
+      render();
+    }
+    function enterShow(showObj, showIndex) {
+      if (!showObj || !Array.isArray(showObj.episodes) || !showObj.episodes.length) return;
+      lastShowIdx = showIndex;
+      activeShowGroup = showObj;
+      const eps = showObj.episodes;
+      const map = new Map();
+      eps.forEach(ep => {
+        const s = Number(ep.seasonNumber) || 1;
+        if (!map.has(s)) map.set(s, []);
+        map.get(s).push(ep);
+      });
+      const seasons = [
+        { id: '__back_shows__', label: '◀ Back to All TV Shows', episodes: [] },
+        { id: 'all', label: '★ All Seasons (' + eps.length + ' Eps)', episodes: eps }
+      ];
+      Array.from(map.keys()).sort((a, b) => a - b).forEach(s => {
+        seasons.push({ id: 's_' + s, label: 'Season ' + s + ' (' + map.get(s).length + ' Eps)', episodes: map.get(s) });
+      });
+      activeShowSeasons = seasons;
+      catIdx = 1;
+      idx = 0;
+      focusPane = 'movies';
+      render();
+    }
+    function exitShow() {
+      activeShowGroup = null;
+      activeShowSeasons = [];
+      catIdx = 1;
+      idx = lastShowIdx || 0;
+      focusPane = 'movies';
+      render();
+    }
+    document.getElementById('tab-movies').onclick = () => switchTab('movies');
+    document.getElementById('tab-shows').onclick = () => switchTab('shows');
     function render() {
-      const cat = CATEGORIES[catIdx] || CATEGORIES[0];
-      MOVIES = ALL_MOVIES.filter(m => matchesCat(m, cat.id));
-      if (idx >= MOVIES.length) idx = 0;
-      document.getElementById('active-cat-pill').textContent = cat.label.toUpperCase() + ' (' + MOVIES.length + ')';
-      catListEl.innerHTML = CATEGORIES.map((c, i) => {
-        const cnt = ALL_MOVIES.filter(m => matchesCat(m, c.id)).length;
-        const cls = (i === catIdx ? 'active ' : '') + (focusPane === 'categories' && i === catIdx ? 'focused' : '');
-        return '<div class="cat-row ' + cls + '" data-cidx="' + i + '"><span>' + c.label + '</span><span>' + cnt + '</span></div>';
-      }).join('');
-      const winStart = Math.max(0, Math.min(idx - 2, Math.max(0, MOVIES.length - 5)));
-      const shelfItems = MOVIES.slice(winStart, winStart + 5);
+      const moviesTotal = ALL_ITEMS.filter(m => !classify(m).isTv).length;
+      const showsTotal = ALL_ITEMS.filter(m => classify(m).isTv).length;
+      const tabM = document.getElementById('tab-movies');
+      const tabS = document.getElementById('tab-shows');
+      tabM.textContent = '🎬 MOVIES (' + moviesTotal + ')';
+      tabS.textContent = '📺 TV SHOWS (' + showsTotal + ' SERIES)';
+      tabM.className = 'top-tab ' + (activeTab === 'movies' ? 'active-movies' : '');
+      tabS.className = 'top-tab ' + (activeTab === 'shows' ? 'active-shows' : '');
+
+      if (activeShowGroup) {
+        document.getElementById('cat-pane-title').textContent = 'SEASONS: ' + activeShowGroup.title;
+        const sObj = activeShowSeasons[catIdx] || activeShowSeasons[1];
+        ITEMS = sObj.episodes || [];
+        document.getElementById('active-cat-pill').textContent = activeShowGroup.title.toUpperCase() + ' · ' + sObj.label.toUpperCase();
+        catListEl.innerHTML = activeShowSeasons.map((s, i) => {
+          const cls = (i === catIdx ? 'active ' : '') + (focusPane === 'categories' && i === catIdx ? 'focused' : '');
+          return '<div class="cat-row ' + cls + '" data-cidx="' + i + '"><span>' + s.label + '</span><span>' + (s.episodes.length || '') + '</span></div>';
+        }).join('');
+      } else {
+        const cats = activeTab === 'shows' ? SHOW_CATEGORIES : MOVIE_CATEGORIES;
+        document.getElementById('cat-pane-title').textContent = activeTab === 'shows' ? 'TV SHOW CATEGORIES' : 'MOVIE CATEGORIES';
+        const cat = cats[catIdx] || cats[1];
+        ITEMS = ALL_ITEMS.filter(m => matchesCat(m, cat.id));
+        document.getElementById('active-cat-pill').textContent = (activeTab === 'shows' ? 'TV SHOWS: ' : 'MOVIES: ') + cat.label.toUpperCase() + ' (' + ITEMS.length + ')';
+        catListEl.innerHTML = cats.map((c, i) => {
+          const cnt = c.id.startsWith('__switch') ? '' : ALL_ITEMS.filter(m => matchesCat(m, c.id)).length;
+          const cls = (i === catIdx ? 'active ' : '') + (focusPane === 'categories' && i === catIdx ? 'focused' : '');
+          return '<div class="cat-row ' + cls + '" data-cidx="' + i + '"><span>' + c.label + '</span><span>' + cnt + '</span></div>';
+        }).join('');
+      }
+      if (idx >= ITEMS.length) idx = 0;
+      const winStart = Math.max(0, Math.min(idx - 2, Math.max(0, ITEMS.length - 5)));
+      const shelfItems = ITEMS.slice(winStart, winStart + 5);
       posterRowEl.innerHTML = shelfItems.map((m, s) => {
         const realIdx = winStart + s;
         const info = classify(m);
-        const mono = String(m.title || 'M').replace(/^the\\s+/i, '').slice(0, 2).toUpperCase();
+        const mono = String(m.episodeCode || m.title || 'M').replace(/^the\\s+/i, '').slice(0, 4).toUpperCase();
+        const pct = m.completed ? 100 : (m.progressPct || 0);
+        const progHtml = pct > 0 ? '<div class="prog-bar"><div class="prog-fill ' + (m.completed ? 'done' : '') + '" style="width:' + pct + '%"></div></div>' : '';
+        const bdgTxt = activeShowGroup ? (m.episodeCode || 'EP') : m.isShowGroup ? (m.seasonCount + ' Seasons · ' + m.episodeCount + ' Eps') : ((m.year || 'HD') + (m.rating ? ' · ★ ' + m.rating : ' · ' + info.qual));
+        const ttlTxt = activeShowGroup ? (m.episodeTitle || m.title) : m.title;
         return '<div class="p-card ' + (realIdx === idx ? 'focused' : '') + '" data-idx="' + realIdx + '">' +
-          '<div class="p-art">' + mono + (m.artUrl ? '<img src="' + m.artUrl + '" alt="" />' : '') + '</div>' +
-          '<div class="p-info"><div class="p-badge">' + (m.year || 'HD') + ' · ' + info.qual + '</div>' +
-          '<div class="p-title">' + m.title + '</div><div class="p-genre">' + (info.franchise || info.primaryGenre) + '</div></div></div>';
+          '<div class="p-art">' + mono + (m.artUrl ? '<img src="' + m.artUrl + '" alt="" />' : '') + progHtml + '</div>' +
+          '<div class="p-info"><div class="p-badge">' + bdgTxt + '</div>' +
+          '<div class="p-title">' + ttlTxt + '</div><div class="p-genre">' + (m.network || info.franchise || info.primaryGenre) + '</div></div></div>';
       }).join('');
-      listEl.innerHTML = MOVIES.map((m, i) => {
+      listEl.innerHTML = ITEMS.map((m, i) => {
         const info = classify(m);
+        const leftTxt = activeShowGroup ? ((m.episodeCode || ('EP ' + (i + 1))) + ' — ' + (m.episodeTitle || m.title)) : ((i + 1) + '. ' + m.title + (m.year ? ' (' + m.year + ')' : ''));
+        const rightTxt = m.isShowGroup ? ('[' + m.seasonCount + ' Seasons · ' + m.episodeCount + ' Eps] · ' + (m.network || info.primaryGenre)) : ('[' + info.qual + '] · ' + (m.inProgress ? 'RESUME ' + m.progressPct + '%' : info.primaryGenre));
         return '<div class="movie-row ' + (focusPane === 'movies' && i === idx ? 'focused' : '') + '" data-idx="' + i + '">' +
-          '<span>' + (i + 1) + '. ' + m.title + (m.year ? ' (' + m.year + ')' : '') + '</span>' +
-          '<span>[' + info.qual + '] · ' + (info.franchise || info.primaryGenre) + '</span></div>';
+          '<span>' + leftTxt + '</span><span>' + rightTxt + '</span></div>';
       }).join('');
       const activeRow = listEl.querySelector('.movie-row.focused');
       if (activeRow) activeRow.scrollIntoView({ block: 'nearest' });
-      const cur = MOVIES[idx];
+      const cur = ITEMS[idx];
       if (cur) {
         const info = classify(cur);
-        document.getElementById('hero-eyebrow').textContent = (info.franchise || 'ROBOS CINEMA+') + ' · ' + info.primaryGenre.toUpperCase();
-        document.getElementById('detail-title').textContent = cur.title;
-        document.getElementById('badge-year').textContent = cur.year || 'Feature';
-        document.getElementById('badge-qual').textContent = info.qual;
-        document.getElementById('badge-genre').textContent = info.primaryGenre;
-        document.getElementById('detail-meta').textContent = (info.franchise ? 'Collection: ' + info.franchise + ' · ' : '') + (cur.artist || 'Feature Film');
-        document.getElementById('poster-box').innerHTML = (cur.artUrl ? '<img src="' + cur.artUrl + '" alt="" />' : '') + '<div style="margin:auto;font-size:42px;font-weight:800;color:#fcd34d;">' + String(cur.title || 'M').slice(0, 2).toUpperCase() + '</div>';
+        const spTag = document.getElementById('spotlight-tag');
+        spTag.textContent = activeShowGroup ? 'TV EPISODE' : cur.isShowGroup ? 'TV SERIES' : 'FEATURE FILM';
+        spTag.className = 'spotlight-tag ' + ((activeShowGroup || cur.isShowGroup) ? 'tv' : '');
+        document.getElementById('hero-eyebrow').textContent = activeShowGroup ? (activeShowGroup.title + ' · ' + (cur.episodeCode || '')) : cur.isShowGroup ? ((cur.network || 'TV SERIES') + ' · ' + cur.seasonCount + ' SEASONS · ' + cur.episodeCount + ' EPISODES') : ((info.franchise || 'ROBOS CINEMA+') + ' · ' + info.primaryGenre.toUpperCase());
+        document.getElementById('detail-title').textContent = activeShowGroup ? ((cur.episodeCode || '') + ' — ' + (cur.episodeTitle || cur.title)) : cur.title;
+        document.getElementById('badge-year').textContent = activeShowGroup ? (cur.episodeCode || 'Episode') : cur.isShowGroup ? (cur.seasonCount + ' Seasons') : (cur.year || 'Feature');
+        document.getElementById('badge-rating').textContent = cur.rating ? ('★ ' + cur.rating + ' / 10') : cur.isShowGroup ? (cur.episodeCount + ' Episodes') : info.qual;
+        document.getElementById('badge-qual').textContent = cur.network || info.qual;
+        document.getElementById('badge-genre').textContent = cur.genre || info.primaryGenre;
+        document.getElementById('badge-status').textContent = cur.inProgress ? ('RESUME ' + cur.progressPct + '%') : cur.completed ? '✓ WATCHED' : 'DIRECT PLAY';
+        document.getElementById('detail-meta').textContent = cur.isShowGroup ? ('Up Next: ' + (cur.episodeCode || 'S01E01') + ' (' + (cur.episodeTitle || '') + ')') : ([cur.director ? 'Dir: ' + cur.director : '', cur.cast ? 'Cast: ' + cur.cast : ''].filter(Boolean).join(' · ') || cur.artist || 'Feature Film');
+        document.getElementById('detail-synopsis').textContent = cur.overview || (activeShowGroup && activeShowGroup.overview) || 'Full HD home theater stream ready on your LAN.';
+        const pct = cur.completed ? 100 : (cur.progressPct || 0);
+        const progHtml = pct > 0 ? '<div class="prog-bar"><div class="prog-fill ' + (cur.completed ? 'done' : '') + '" style="width:' + pct + '%"></div></div>' : '';
+        document.getElementById('poster-box').innerHTML = (cur.artUrl ? '<img src="' + cur.artUrl + '" alt="" />' : '') + progHtml + '<div style="margin:auto;font-size:42px;font-weight:800;color:#fcd34d;">' + String(cur.title || 'M').slice(0, 2).toUpperCase() + '</div>';
+        document.getElementById('play-btn').textContent = (cur.isShowGroup && !activeShowGroup) ? '▶ BROWSE SEASONS & EPISODES (OK)' : cur.inProgress ? ('▶ RESUME (' + cur.progressPct + '%)') : '▶ WATCH NOW (PRESS OK)';
       }
       catListEl.querySelectorAll('.cat-row').forEach(el => {
-        el.onclick = () => { catIdx = Number(el.dataset.cidx); idx = 0; focusPane = 'movies'; render(); };
+        el.onclick = () => {
+          const ci = Number(el.dataset.cidx);
+          if (activeShowGroup && ci === 0) { exitShow(); return; }
+          const cats = activeTab === 'shows' ? SHOW_CATEGORIES : MOVIE_CATEGORIES;
+          if (!activeShowGroup && cats[ci] && cats[ci].id === '__switch_shows__') { switchTab('shows'); return; }
+          if (!activeShowGroup && cats[ci] && cats[ci].id === '__switch_movies__') { switchTab('movies'); return; }
+          catIdx = ci; idx = 0; focusPane = 'movies'; render();
+        };
       });
       listEl.querySelectorAll('.movie-row').forEach(el => {
-        el.onclick = () => { idx = Number(el.dataset.idx); focusPane = 'movies'; render(); playCurrent(); };
+        el.onclick = () => { idx = Number(el.dataset.idx); focusPane = 'movies'; render(); activateCurrent(); };
       });
     }
+    function activateCurrent() {
+      const cur = ITEMS[idx];
+      if (!cur) return;
+      if (activeTab === 'shows' && !activeShowGroup && cur.isShowGroup && Array.isArray(cur.episodes) && cur.episodes.length) {
+        enterShow(cur, idx);
+        return;
+      }
+      playCurrent();
+    }
     function playCurrent() {
-      const cur = MOVIES[idx];
+      const cur = ITEMS[idx];
       if (!cur || !cur.streamUrl) return;
       overlay.classList.add('active');
       videoEl.src = cur.streamUrl;
+      if (cur.inProgress && cur.positionSec > 5) {
+        videoEl.currentTime = cur.positionSec;
+      }
       videoEl.play().catch(() => {});
     }
     function stopVideo() {
+      const cur = ITEMS[idx];
+      if (cur && videoEl.currentTime > 5) {
+        const tid = cur.repTrackId || cur.id;
+        fetch('/api/tv-progress?id=' + encodeURIComponent(tid) + '&positionSec=' + Math.floor(videoEl.currentTime) + '&durationSec=' + Math.floor(videoEl.duration || 0)).catch(() => {});
+      }
       videoEl.pause();
       videoEl.removeAttribute('src');
       overlay.classList.remove('active');
     }
-    document.getElementById('play-btn').onclick = playCurrent;
+    document.getElementById('play-btn').onclick = activateCurrent;
     document.addEventListener('keydown', (e) => {
       if (overlay.classList.contains('active')) {
         if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') { stopVideo(); e.preventDefault(); }
@@ -4542,19 +5339,32 @@ function createTvEngine({
         else if (e.key === 'Enter' || e.key === ' ') { if (videoEl.paused) videoEl.play(); else videoEl.pause(); e.preventDefault(); }
         return;
       }
-      if (e.key === 'ArrowLeft') { focusPane = 'categories'; render(); e.preventDefault(); }
+      if (e.key === 'Tab') { switchTab(activeTab === 'shows' ? 'movies' : 'shows'); e.preventDefault(); }
+      else if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack') {
+        if (activeShowGroup) { exitShow(); e.preventDefault(); }
+      }
+      else if (e.key === 'ArrowLeft') { focusPane = 'categories'; render(); e.preventDefault(); }
       else if (e.key === 'ArrowRight') { focusPane = 'movies'; render(); e.preventDefault(); }
       else if (e.key === 'ArrowDown') {
-        if (focusPane === 'categories') { catIdx = (catIdx + 1) % CATEGORIES.length; idx = 0; }
-        else { idx = (idx + 1) % Math.max(1, MOVIES.length); }
+        const maxCats = activeShowGroup ? activeShowSeasons.length : (activeTab === 'shows' ? SHOW_CATEGORIES.length : MOVIE_CATEGORIES.length);
+        if (focusPane === 'categories') { catIdx = (catIdx + 1) % maxCats; idx = 0; }
+        else { idx = (idx + 1) % Math.max(1, ITEMS.length); }
         render(); e.preventDefault();
       } else if (e.key === 'ArrowUp') {
-        if (focusPane === 'categories') { catIdx = (catIdx - 1 + CATEGORIES.length) % CATEGORIES.length; idx = 0; }
-        else { idx = (idx - 1 + Math.max(1, MOVIES.length)) % Math.max(1, MOVIES.length); }
+        const maxCats = activeShowGroup ? activeShowSeasons.length : (activeTab === 'shows' ? SHOW_CATEGORIES.length : MOVIE_CATEGORIES.length);
+        if (focusPane === 'categories') { catIdx = (catIdx - 1 + maxCats) % maxCats; idx = 0; }
+        else { idx = (idx - 1 + Math.max(1, ITEMS.length)) % Math.max(1, ITEMS.length); }
         render(); e.preventDefault();
       } else if (e.key === 'Enter') {
-        if (focusPane === 'categories') { focusPane = 'movies'; render(); }
-        else { playCurrent(); }
+        if (focusPane === 'categories') {
+          if (activeShowGroup && catIdx === 0) { exitShow(); }
+          else {
+            const cats = activeTab === 'shows' ? SHOW_CATEGORIES : MOVIE_CATEGORIES;
+            if (!activeShowGroup && cats[catIdx] && cats[catIdx].id === '__switch_shows__') switchTab('shows');
+            else if (!activeShowGroup && cats[catIdx] && cats[catIdx].id === '__switch_movies__') switchTab('movies');
+            else { focusPane = 'movies'; render(); }
+          }
+        } else { activateCurrent(); }
         e.preventDefault();
       }
     });

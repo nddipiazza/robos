@@ -3263,6 +3263,201 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   max-width: 760px;
 }
 
+/* ── Dedicated TV Show & Season Navigator (`tv_navigator`) ────────────────── */
+.lib-nav-shows-jump {
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lib-nav-series-scroll {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.lib-nav-series-item .cover {
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.tv-navigator-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tv-navigator-split {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.tv-navigator-series-list {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 250px);
+  position: sticky;
+  top: 0;
+}
+
+.tv-navigator-series-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tv-series-filter-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.tv-series-filter-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.tv-navigator-series-items {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.tv-series-rail-card {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.tv-series-rail-card:hover {
+  background: rgba(232, 163, 61, 0.08);
+  border-color: rgba(232, 163, 61, 0.25);
+}
+
+.tv-series-rail-card.active {
+  background: rgba(232, 163, 61, 0.16);
+  border-color: var(--accent);
+}
+
+.tv-series-rail-poster {
+  width: 44px;
+  height: 64px;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.tv-series-rail-poster .cover {
+  width: 100%;
+  height: 100%;
+}
+
+.tv-series-rail-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.tv-series-rail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.tv-series-rail-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tv-series-rail-card.active .tv-series-rail-title {
+  color: #fcd34d;
+}
+
+.tv-series-rail-rating {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.tv-series-rail-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tv-series-rail-net {
+  color: #67e8f9;
+  font-weight: 600;
+}
+
+.tv-series-rail-status {
+  font-size: 0.69rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.tv-series-rail-status.resume {
+  background: rgba(232, 163, 61, 0.18);
+  color: #fcd34d;
+  border: 1px solid rgba(232, 163, 61, 0.35);
+}
+
+.tv-series-rail-status.watched {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.tv-navigator-show-stage {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
 
 
 
