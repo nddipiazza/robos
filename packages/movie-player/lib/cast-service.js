@@ -451,8 +451,19 @@ class CastService {
     const stats = this.mediaLibrary.stats || {};
     const allTracks = this.mediaLibrary.tracks;
 
-    const movies = [];
+    const movieBuckets = new Map();
     const showBuckets = new Map();
+    const qualityScore = (t) => {
+      const hay = `${t.artist || ''} ${t.filePath || ''}`;
+      let s = 0;
+      if (/\b(2160p|4k)\b/i.test(hay)) s += 40;
+      else if (/\b1080p\b/i.test(hay)) s += 30;
+      else if (/\b720p\b/i.test(hay)) s += 20;
+      if (/\b(blu-?ray|brrip|bdrip)\b/i.test(hay)) s += 8;
+      else if (/\b(web-?dl|webrip|web)\b/i.test(hay)) s += 6;
+      if (/\b(cam|hdcam|ts|hdts|telesync)\b/i.test(hay)) s -= 25;
+      return s;
+    };
     for (const t of allTracks) {
       if (!t) continue;
       if (t.mediaType === 'tv') {
@@ -460,15 +471,24 @@ class CastService {
         if (!showBuckets.has(key)) showBuckets.set(key, []);
         showBuckets.get(key).push(t);
       } else {
-        movies.push(t);
+        const cleanKey = `${String(t.title || t.album || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()}:${t.year || ''}`;
+        const prev = movieBuckets.get(cleanKey);
+        if (!prev || qualityScore(t) > qualityScore(prev)) {
+          movieBuckets.set(cleanKey, t);
+        }
       }
     }
 
-    const movieItems = movies.map((t, idx) => this._formatTvTrackItem(t, stats, idx));
+    const movieItems = [...movieBuckets.values()].map((t, idx) => this._formatTvTrackItem(t, stats, idx));
     const showItems = [];
 
+    const seasonSortOrder = (s) => {
+      const n = Number(s ?? 1);
+      return n <= 0 ? 9999 : n;
+    };
+
     for (const eps of showBuckets.values()) {
-      eps.sort((a, b) => (a.seasonNumber ?? 1) - (b.seasonNumber ?? 1) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
+      eps.sort((a, b) => seasonSortOrder(a.seasonNumber) - seasonSortOrder(b.seasonNumber) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
       const seasonsSet = new Set(eps.map(e => e.seasonNumber ?? 1));
       const seasonCount = seasonsSet.size || 1;
       const episodeCount = eps.length;
@@ -496,8 +516,8 @@ class CastService {
       const repFormatted = this._formatTvTrackItem(resumeEp, stats, 0);
       const showTitle = String(resumeEp.showName || resumeEp.album || resumeEp.title || 'TV Series').slice(0, 80);
 
-      // Select up to 40 episodes for the interactive Roku season/episode browser
-      const maxEpsPerShow = 40;
+      // Select up to 120 episodes for the interactive Roku season/episode browser
+      const maxEpsPerShow = 120;
       const chosenEps = [];
       const seenEpIds = new Set();
       const pushEp = (e) => {
@@ -520,7 +540,7 @@ class CastService {
         }
       }
       for (const e of eps) pushEp(e);
-      chosenEps.sort((a, b) => (a.seasonNumber ?? 1) - (b.seasonNumber ?? 1) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
+      chosenEps.sort((a, b) => seasonSortOrder(a.seasonNumber) - seasonSortOrder(b.seasonNumber) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
 
       const formattedEpisodes = chosenEps.map((e, eIdx) => {
         const epItem = this._formatTvTrackItem(e, stats, eIdx);
