@@ -102,7 +102,7 @@ function trackFromMetadata(filePath, metadata, parser, coverCache = null) {
   const parentDir = path.basename(path.dirname(filePath));
   const grandParentDir = path.basename(path.dirname(path.dirname(filePath)));
   const isVideo = VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase());
-  const tvInfo = isVideo ? parseVideoMediaInfo(common.title || path.parse(filePath).name, parentDir, grandParentDir) : null;
+  const tvInfo = isVideo ? parseVideoMediaInfo(common.title || path.parse(filePath).name, parentDir, grandParentDir, filePath) : null;
 
   const cleaned = cleanMovieTitle(common.title || path.parse(filePath).name);
   const folderCleaned = cleanMovieTitle(parentDir);
@@ -161,7 +161,7 @@ function fallbackTrack(filePath, err, coverCache = null) {
   const parentDir = path.basename(path.dirname(filePath));
   const grandParentDir = path.basename(path.dirname(path.dirname(filePath)));
   const isVideo = VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase());
-  const tvInfo = isVideo ? parseVideoMediaInfo(path.parse(filePath).name, parentDir, grandParentDir) : null;
+  const tvInfo = isVideo ? parseVideoMediaInfo(path.parse(filePath).name, parentDir, grandParentDir, filePath) : null;
 
   const cleaned = cleanMovieTitle(path.parse(filePath).name);
   const folderCleaned = cleanMovieTitle(parentDir);
@@ -255,34 +255,98 @@ function cleanMovieTitle(raw) {
   };
 }
 
+const NON_SHOW_FOLDER_RE = /^(?:featurettes?|specials?|deleted\s*scenes?|extras?(?:\s*[-–]\s*season\s*\d+)?|s\d{1,2}\s*extras?|season\s*\d+(?:\s*(?:to|and|-)\s*\d+)?|series\s*\d+|book\s*(?:one|two|three|four|\d+).*|subtitles?|subs|samples?|bonus|movies?)$/i;
+
+const SMALL_TITLE_WORDS = new Set(['a', 'an', 'and', 'as', 'at', 'by', 'for', 'from', 'in', 'into', 'nor', 'of', 'on', 'or', 'the', 'to', 'with']);
+
+function toCanonicalShowCase(str) {
+  const words = String(str || '').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '';
+  return words.map((w, idx) => {
+    const lower = w.toLowerCase();
+    if (lower === 'bojack') return 'BoJack';
+    if (lower === 'sg1' || lower === 'sg-1') return 'SG-1';
+    if (lower === 'handmaids') return "Handmaid's";
+    if (/^(?:tv|uk|us|au|md|ii|iii|iv)$/i.test(w)) return w.toUpperCase();
+    if (idx > 0 && SMALL_TITLE_WORDS.has(lower)) return lower;
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ');
+}
+
 /**
  * Cleans a TV Show name from a filename prefix or season folder name:
  * e.g. "Atypical.SEASON.01.S01.COMPLETE.720p..." -> "Atypical"
  * e.g. "Stranger_Things_S04" -> "Stranger Things"
  */
 function cleanShowName(raw) {
-  const cleaned = cleanMovieTitle(raw).title;
-  return String(cleaned || '')
-    .replace(/\b(?:season|series)\s*\d{1,2}\b.*$/i, ' ')
-    .replace(/\bs\d{1,2}(?:\s*[-–]\s*s?\d{1,2})?\b.*$/i, ' ')
-    .replace(/\bcomplete\b.*$/i, ' ')
+  const preCleaned = String(raw || '')
+    .replace(/^www\.[a-z0-9.-]+\s*[-–—:]+\s*/i, ' ')
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/^(?:movie[.\s_-]*\d+|x[m\d]+|\d{1,3})\b\s*[-–—:.]?\s*/i, ' ');
+  const cleaned = cleanMovieTitle(preCleaned).title;
+  let out = String(cleaned || '')
+    .replace(/\b(?:season|series|book)\s*(?:\d{1,2}|one|two|three|four|five)\b.*$/i, ' ')
+    .replace(/\bs\d{1,2}(?:[.\s_-]*e\d{1,3}|\s*[-–]\s*s?\d{1,2})?\b.*$/i, ' ')
+    .replace(/\bcomplete(?:\s*series)?\b.*$/i, ' ')
+    .replace(/\b(?:extras?|featurettes?|specials?|deleted\s*scenes?|bonus)\b.*$/i, ' ')
+    .replace(/\b(?:eng(?:\s*uncut|\s*subs?)?|uncut|dubbed|subbed|multi|repack|proper|sci-?fi|mp4)\b.*$/i, ' ')
     .replace(/^\s*[-–—:._]+\s*/, '')
-    .replace(/\s*[-–—:._]+\s*$/, '')
     .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\s*[-–—:._]+\s*$/, '')
+    .replace(/\s+\b(?:US|UK)\b$/i, '')
     .trim();
+
+  if (NON_SHOW_FOLDER_RE.test(out)) return '';
+
+  // Canonicalize well-known punctuation variants so multi-season folders merge into one show
+  if (/^house(?:,?\s*m\.?\s*d\.?)?$/i.test(out)) return 'House';
+  if (/^avatar\s*[-:]?\s*the\s+last\s+airbender$/i.test(out)) return 'Avatar: The Last Airbender';
+  if (/^stargate\s+sg-?1$/i.test(out)) return 'Stargate SG-1';
+  if (/^bojack\s+horseman$/i.test(out)) return 'BoJack Horseman';
+
+  return toCanonicalShowCase(out);
+}
+
+function parseSeasonFromText(text) {
+  const str = String(text || '');
+  const m = /\b(?:season|series|s)[.\s_-]*0?(\d{1,2})\b/i.exec(str);
+  if (m) return Number(m[1]);
+  const book = /\bbook\s+(one|two|three|four)\b/i.exec(str);
+  if (book) {
+    const map = { one: 1, two: 2, three: 3, four: 4 };
+    return map[book[1].toLowerCase()] || 1;
+  }
+  return null;
 }
 
 /**
  * Distinguishes whether a video file is a TV Show episode or a standalone Movie,
  * and extracts { isTvShow, mediaType, showName, seasonNumber, episodeNumber, episodeCode, episodeTitle, displayTitle }.
  */
-function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '') {
-  const fileStr = String(rawName || '').trim();
+function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '', fullPath = '') {
+  const fileStr = String(rawName || '')
+    .replace(/^www\.[a-z0-9.-]+\s*[-–—:]+\s*/i, '')
+    .trim();
   const parentStr = String(parentDir || '').trim();
   const grandStr = String(grandParentDir || '').trim();
+  const normPath = String(fullPath || '').replace(/\\/g, '/');
+
+  // Detect if file lives inside a /shows/ (or /tv/) directory hierarchy and extract the top-level show folder
+  let topShowDir = '';
+  let inShowsFolder = false;
+  const pathParts = normPath.split('/').filter(Boolean);
+  const showsIdx = pathParts.findIndex(p => /^(?:shows|tv_shows|tv|series)$/i.test(p));
+  if (showsIdx >= 0) {
+    inShowsFolder = true;
+    if (showsIdx + 1 < pathParts.length - 1) {
+      topShowDir = pathParts[showsIdx + 1];
+    }
+  }
+  const isSpecialsPath = pathParts.some(p => /^(?:featurettes?|specials?|deleted\s*scenes?|extras?(?:\s*[-–]\s*season\s*\d+)?|s\d{1,2}\s*extras?)$/i.test(p));
 
   const fileCleaned = cleanMovieTitle(fileStr);
-  const folderCleaned = parentStr && !GENERIC_FOLDERS.has(parentStr.toLowerCase())
+  const folderCleaned = parentStr && !GENERIC_FOLDERS.has(parentStr.toLowerCase()) && !NON_SHOW_FOLDER_RE.test(parentStr)
     ? cleanMovieTitle(parentStr)
     : { title: '', year: null, resolution: null, source: null };
 
@@ -295,8 +359,8 @@ function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '') {
   let beforeMatch = '';
   let afterMatch = '';
 
-  // 1. Standard S01E01 / S1E2 / s01.e02 / S01_E02 pattern
-  const seMatch = /(?:^|[.\s_\-([\]])S(\d{1,2})[.\s_-]*E(\d{1,3})(?:[.\s_-]*E?\d{1,3})?(?=[.\s_\-)\]]|$)/i.exec(fileStr);
+  // 1. Standard S01E01 / S1E2 / s02ep1 / S03E10&E11 / S01E01E02E03 / S01E04Loves pattern
+  const seMatch = /(?:^|[.\s_\-([\]])S(\d{1,2})[.\s_-]*(?:EP|E)(\d{1,3})(?:[.\s_&+-]*(?:EP|E)?\d{1,3})*(?=[.\s_\-)\]]|[A-Z][a-z]|$)/i.exec(fileStr);
   if (seMatch) {
     seasonNumber = Number(seMatch[1]);
     episodeNumber = Number(seMatch[2]);
@@ -304,7 +368,19 @@ function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '') {
     afterMatch = fileStr.slice(seMatch.index + seMatch[0].length);
   }
 
-  // 2. 1x01 / 01x02 pattern (excluding resolutions like 1920x1080 or 720x480)
+  // 2. S01Extra pattern (e.g. "House, M.D. - S01Extra - Casting Session 1")
+  if (seasonNumber == null) {
+    const exMatch = /(?:^|[.\s_\-([\]])S(\d{1,2})[.\s_-]*Extra\b/i.exec(fileStr);
+    if (exMatch) {
+      seasonNumber = 0;
+      const trailNum = /(\d{1,3})\s*$/.exec(fileStr);
+      episodeNumber = trailNum ? Number(trailNum[1]) : 1;
+      beforeMatch = fileStr.slice(0, exMatch.index);
+      afterMatch = fileStr.slice(exMatch.index + exMatch[0].length);
+    }
+  }
+
+  // 3. 1x01 / 01x02 pattern (excluding resolutions like 1920x1080 or 720x480)
   if (seasonNumber == null) {
     const xMatch = /(?:^|[.\s_\-([\]])(0?[1-9]|[1-4]\d)x(\d{2,3})(?=[.\s_\-)\]]|$)/i.exec(fileStr);
     if (xMatch && Number(xMatch[2]) <= 200) {
@@ -315,36 +391,63 @@ function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '') {
     }
   }
 
-  // 3. "Season 1 Episode 2" or folder "Season 1" + filename "Episode 2" / "E02"
+  // 4. "Episode 2" / "Ep.01" / "Ep 01" / "E02" pattern
   if (seasonNumber == null) {
-    const folderSeasonMatch = /\b(?:season|series|s)\s*0?(\d{1,2})\b/i.exec(`${parentStr} ${grandStr}`);
-    const fileSeasonMatch = /\b(?:season|series)\s*0?(\d{1,2})\b/i.exec(fileStr);
-    const epWordMatch = /\b(?:episode|ep)\s*0?(\d{1,3})\b/i.exec(fileStr)
-      || (folderSeasonMatch ? /(?:^|[.\s_\-])E0?(\d{1,3})(?=[.\s_\-]|$)/i.exec(fileStr) : null);
-    if (epWordMatch && (fileSeasonMatch || folderSeasonMatch)) {
-      seasonNumber = Number((fileSeasonMatch || folderSeasonMatch)[1]);
+    const folderSeason = parseSeasonFromText(`${parentStr} ${grandStr} ${topShowDir}`);
+    const fileSeason = parseSeasonFromText(fileStr);
+    const epWordMatch = /\b(?:episode|ep)[.\s_-]*0?(\d{1,3})\b/i.exec(fileStr)
+      || (folderSeason != null ? /(?:^|[.\s_\-])E0?(\d{1,3})(?=[.\s_\-]|$)/i.exec(fileStr) : null);
+    if (epWordMatch) {
+      seasonNumber = fileSeason != null ? fileSeason : (folderSeason != null ? folderSeason : 1);
       episodeNumber = Number(epWordMatch[1]);
-      beforeMatch = fileStr.slice(0, (fileSeasonMatch || epWordMatch).index);
+      beforeMatch = fileStr.slice(0, epWordMatch.index);
       afterMatch = fileStr.slice(epWordMatch.index + epWordMatch[0].length);
     }
   }
 
-  if (seasonNumber != null && episodeNumber != null) {
-    let showName = cleanShowName(beforeMatch);
-    if (!showName && parentStr && !GENERIC_FOLDERS.has(parentStr.toLowerCase())) {
-      showName = cleanShowName(parentStr);
-    }
-    if (!showName && grandStr && !GENERIC_FOLDERS.has(grandStr.toLowerCase())) {
-      showName = cleanShowName(grandStr);
-    }
-    if (!showName) showName = 'TV Series';
+  // 5. Fallback for files inside a /shows/ folder (e.g. Specials/Featurettes, Pilot "00 ...", "X1 ...", or single-file season packs)
+  if (seasonNumber == null && inShowsFolder) {
+    const detectedSeason = parseSeasonFromText(`${fileStr} ${parentStr} ${grandStr} ${topShowDir}`);
+    seasonNumber = isSpecialsPath ? 0 : (detectedSeason != null ? detectedSeason : 1);
+    const leadNum = /^(?:movie[.\s_-]*|x)?0?(\d{1,2})\b/i.exec(fileStr);
+    episodeNumber = leadNum ? Number(leadNum[1]) : 1;
+    beforeMatch = topShowDir || grandStr || parentStr || fileStr;
+    afterMatch = fileStr;
+  }
 
-    let episodeTitle = cleanMovieTitle(afterMatch).title;
-    // Strip redundant show name or S01E01 prefix from episodeTitle
+  if (seasonNumber != null && episodeNumber != null) {
+    if (isSpecialsPath && seasonNumber > 0 && /^(?:deleted\s*scenes?|featurettes?|specials?|extras?)/i.test(parentStr)) {
+      seasonNumber = 0;
+    }
+    const folderShow = (topShowDir ? cleanShowName(topShowDir) : '')
+      || (!NON_SHOW_FOLDER_RE.test(parentStr) && !GENERIC_FOLDERS.has(parentStr.toLowerCase()) ? cleanShowName(parentStr) : '')
+      || (!NON_SHOW_FOLDER_RE.test(grandStr) && !GENERIC_FOLDERS.has(grandStr.toLowerCase()) ? cleanShowName(grandStr) : '');
+
+    let beforeShow = cleanShowName(beforeMatch);
+    let extraEpTitleFromBefore = '';
+    if (folderShow && beforeShow && folderShow.toLowerCase().startsWith(beforeShow.toLowerCase()) && folderShow.length > beforeShow.length) {
+      beforeShow = folderShow;
+    } else if (folderShow && beforeShow && beforeShow.toLowerCase().startsWith(folderShow.toLowerCase() + ' ')) {
+      const rem = beforeShow.slice(folderShow.length).trim();
+      extraEpTitleFromBefore = rem ? rem.charAt(0).toUpperCase() + rem.slice(1) : '';
+      beforeShow = folderShow;
+    }
+
+    const candidates = isSpecialsPath
+      ? [folderShow, beforeShow]
+      : [beforeShow, folderShow];
+
+    const showName = candidates.find(Boolean) || 'TV Series';
+
+    let episodeTitle = cleanMovieTitle(afterMatch).title || extraEpTitleFromBefore;
     if (episodeTitle && episodeTitle.toLowerCase() === showName.toLowerCase()) {
       episodeTitle = '';
     }
+    if (episodeTitle && episodeTitle.toLowerCase().startsWith(showName.toLowerCase() + ' ')) {
+      episodeTitle = episodeTitle.slice(showName.length).trim();
+    }
     episodeTitle = episodeTitle
+      .replace(/^(?:&|\+)?\s*(?:EP|E)?\d{1,3}\b\s*[-–—:.\s]*/i, '')
       .replace(/^[-–—:.\s]+/, '')
       .replace(/[-–—:.\s]+$/, '')
       .trim();
@@ -361,7 +464,7 @@ function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '') {
       seasonNumber,
       episodeNumber,
       episodeCode,
-      episodeTitle: episodeTitle || `Episode ${episodeNumber}`,
+      episodeTitle: episodeTitle || (seasonNumber === 0 ? cleanMovieTitle(fileStr).title || `Special ${episodeNumber}` : `Episode ${episodeNumber}`),
       displayTitle,
       year,
       resolution,
@@ -401,12 +504,12 @@ function upgradeTrackVideoGrouping(track) {
   const grandParentDir = parts.length >= 3 ? parts[parts.length - 3] : '';
 
   // Check raw filename first, then fallback to track.title / track.album
-  let info = parseVideoMediaInfo(rawFile, parentDir, grandParentDir);
+  let info = parseVideoMediaInfo(rawFile, parentDir, grandParentDir, filePath);
   if (!info.isTvShow && track.title) {
-    info = parseVideoMediaInfo(track.title, parentDir, grandParentDir);
+    info = parseVideoMediaInfo(track.title, parentDir, grandParentDir, filePath);
   }
   if (!info.isTvShow && track.album) {
-    info = parseVideoMediaInfo(track.album, parentDir, grandParentDir);
+    info = parseVideoMediaInfo(track.album, parentDir, grandParentDir, filePath);
   }
 
   let changed = false;
@@ -457,7 +560,7 @@ function guessFromRemotePath(remotePath, name = '') {
   const grandParentDir = dirs[dirs.length - 2] || '';
 
   if (isVideo) {
-    const tvInfo = parseVideoMediaInfo(rawName, parentDir, grandParentDir);
+    const tvInfo = parseVideoMediaInfo(rawName, parentDir, grandParentDir, remotePath);
     if (tvInfo.isTvShow) {
       const badge = [tvInfo.resolution, tvInfo.source].filter(Boolean).join(' ');
       return {

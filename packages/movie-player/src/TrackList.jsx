@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useViewport, scrollRootTo } from './virtual.jsx';
 import { Icon } from './Icon.jsx';
-import { formatDuration, inferMovieGenres } from '../lib/library-index.js';
+import { formatDuration, inferMovieGenres, getTrackWatchState } from '../lib/library-index.js';
 import { useLibrary, sameTrack, trackMenuItems, collectionMenuItems, LoveButton, Cover, useStableArray, TRACK_DRAG_TYPE } from './library-ui.jsx';
 import { useColumns } from './resizable.jsx';
 
@@ -269,13 +269,35 @@ function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtis
       return <span key={col} className="tl-cell tl-art"><Cover artId={t.artId} name={t.album} size={32} /></span>;
     case 'title': {
       const showArtist = variant !== 'album' || (t.artist && albumArtist && t.artist !== albumArtist);
+      const ws = getTrackWatchState(t, ctx.stats);
       return (
         <span key={col} className="tl-cell tl-title">
-          <span className="tl-title-text" title={t.title}>{t.title}</span>
-          {showArtist && (
+          <span className="tl-title-text" title={t.title}>
+            {t.title}
+            {ws.inProgress && (
+              <span className="tl-badge resume-pill" title={`Resume at ${formatDuration(ws.positionSec)} (${ws.progressPct}%)`}>
+                ▶ {formatDuration(ws.positionSec)}{ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}
+              </span>
+            )}
+            {ws.completed && (
+              <span className="tl-badge watched-pill" title="Watched">
+                ✓ Watched
+              </span>
+            )}
+          </span>
+          {(showArtist || ws.inProgress) && (
             <span className="tl-sub">
-              <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToArtist(t.artist); }}>{t.artist || 'Feature Film'}</a>
-              {t.cloud && <span className="tl-badge">{t.cloud.cached ? 'Cloud · cached' : 'Cloud'}</span>}
+              {showArtist && (
+                <>
+                  <a className="link" onClick={(e) => { e.stopPropagation(); actions.goToArtist(t.artist); }}>{t.artist || 'Feature Film'}</a>
+                  {t.cloud && <span className="tl-badge">{t.cloud.cached ? 'Cloud · cached' : 'Cloud'}</span>}
+                </>
+              )}
+              {ws.inProgress && ws.progressPct > 0 && (
+                <span className="tl-inline-progress" title={`${ws.progressPct}% watched`}>
+                  <i style={{ width: `${ws.progressPct}%` }} />
+                </span>
+              )}
             </span>
           )}
         </span>

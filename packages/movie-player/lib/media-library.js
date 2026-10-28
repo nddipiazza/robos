@@ -229,6 +229,75 @@ class MediaLibrary {
     return changed;
   }
 
+  saveProgress(trackId, { positionSec = 0, durationSec = 0, completed = false } = {}) {
+    if (!trackId) return null;
+    const entry = this.stats[trackId] || {};
+    const pos = Math.max(0, Math.round(Number(positionSec) || 0));
+    const dur = Math.max(0, Math.round(Number(durationSec) || entry.durationSec || 0));
+    const now = new Date().toISOString();
+
+    if (dur > 0) {
+      entry.durationSec = dur;
+      const track = this._tracks.find(t => t && t.id === trackId);
+      if (track && (!track.duration || track.duration < 10)) {
+        track.duration = dur;
+        this._saveCacheSoon(5000);
+      }
+    }
+
+    const reachedEnd = completed === true
+      || (dur > 60 && (pos / dur >= 0.92 || (dur - pos <= 45 && pos >= 60)));
+
+    if (reachedEnd) {
+      entry.completed = true;
+      entry.inProgress = false;
+      entry.positionSec = 0;
+      entry.progressPct = 100;
+      entry.plays = Math.max(1, entry.plays || 0);
+      entry.lastPlayed = now;
+    } else if (pos < 5) {
+      entry.positionSec = 0;
+      entry.inProgress = false;
+      entry.progressPct = entry.completed ? 100 : 0;
+    } else {
+      entry.positionSec = pos;
+      entry.inProgress = true;
+      entry.completed = false;
+      entry.progressPct = dur > 0 ? Math.min(99, Math.max(1, Math.round((pos / dur) * 100))) : 0;
+      entry.lastPlayed = now;
+    }
+
+    this.stats[trackId] = entry;
+    this._saveStats();
+    return entry;
+  }
+
+  setWatched(trackIds, watched) {
+    const ids = Array.isArray(trackIds) ? trackIds : [trackIds];
+    const now = new Date().toISOString();
+    const changed = {};
+    for (const id of ids.filter(Boolean)) {
+      const entry = this.stats[id] || {};
+      if (watched) {
+        entry.completed = true;
+        entry.inProgress = false;
+        entry.positionSec = 0;
+        entry.progressPct = 100;
+        entry.plays = Math.max(1, entry.plays || 0);
+        entry.lastPlayed = now;
+      } else {
+        entry.completed = false;
+        entry.inProgress = false;
+        entry.positionSec = 0;
+        entry.progressPct = 0;
+      }
+      this.stats[id] = entry;
+      changed[id] = entry;
+    }
+    this._saveStats();
+    return changed;
+  }
+
   // ── Cover art (content-addressed, persisted under artDir) ─────────────────
 
   _rememberArt(artId, art) {
@@ -415,13 +484,15 @@ class MediaLibrary {
     if (descriptor.cached && fs.existsSync(filePath)) {
       const parsed = await this.parseTrack(filePath);
       cloudMeta.tagsRead = true;
-      return {
+      const out = {
         ...parsed,
         id,
         filePath,
         cloud: cloudMeta,
         src: streamUrl || parsed.src,
       };
+      upgradeTrackVideoGrouping(out);
+      return out;
     }
 
     // Tags are read later (lib/cloud-tags); until then, go by the folder names.
@@ -439,8 +510,8 @@ class MediaLibrary {
       genre: guess.genre || null,
       mediaType: guess.mediaType || 'movie',
       showName: guess.showName || null,
-      seasonNumber: guess.seasonNumber || null,
-      episodeNumber: guess.episodeNumber || null,
+      seasonNumber: guess.seasonNumber != null ? guess.seasonNumber : null,
+      episodeNumber: guess.episodeNumber != null ? guess.episodeNumber : null,
       episodeTitle: guess.episodeTitle || null,
       episodeCode: guess.episodeCode || null,
       duration: 0,
