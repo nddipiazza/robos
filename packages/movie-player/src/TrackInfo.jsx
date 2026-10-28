@@ -12,13 +12,19 @@ export default function TrackInfo({ track, onClose }) {
   const cats = inferMovieGenres(track);
   const rows = [
     ['Title', track.title],
-    ['Release Format', track.artist],
     ['Collection / Series', track.album],
+    ['Release Format', track.artist],
+    ['Rating', track.rating ? `★ ${track.rating} / 10` : null],
+    ['Network / Studio', track.network || null],
+    ['Director', track.director || track.composer || null],
+    ['Starring Cast', track.cast || null],
+    ['Air Date', track.airdate || null],
+    ['IMDb ID', track.imdbId || null],
     ['Episode / Part', track.trackNumber ? `${track.trackNumber}${track.trackTotal ? ` of ${track.trackTotal}` : ''}` : null],
     ['Season / Disc', track.discNumber ? `${track.discNumber}${track.discTotal ? ` of ${track.discTotal}` : ''}` : null],
     ['Release Year', track.year],
     ['Categories / Genres', cats.length ? cats.join(', ') : track.genre],
-    ['Studio / Director', track.composer],
+    ['Plot / Synopsis', track.overview || track.showOverview || null],
     ['Runtime', formatDuration(track.duration)],
     ['Video / Audio Codec', [track.codec, track.lossless ? 'lossless' : null].filter(Boolean).join(', ') || null],
     ['Bitrate', track.bitrate ? `${Math.round(track.bitrate / 1000)} kbps` : null],
@@ -43,6 +49,11 @@ export default function TrackInfo({ track, onClose }) {
               <LoveButton track={track} size={16} />
               <button className="btn-chip" onClick={() => { onClose(); actions.playTracks([track], 0); }}><Icon name="play" size={10} /> Play</button>
               <button className="btn-chip" onClick={() => { onClose(); actions.goToAlbumOf(track); }}>View Movie / Show Details</button>
+              {actions.fetchMetadata && (
+                <button id="btn-track-info-fetch-public" className="btn-chip" onClick={() => { onClose(); actions.fetchMetadata([track], { force: true }); }}>
+                  <Icon name="locate" size={10} /> Fetch Poster &amp; Metadata
+                </button>
+              )}
               {actions.fixMetadata && (
                 <button id="btn-track-info-ai-fix" className="btn-chip" onClick={() => { onClose(); actions.fixMetadata([track]); }}>
                   ✦ AI Fix Metadata

@@ -470,6 +470,13 @@ function buildIndex(tracks = []) {
     }
 
     album.artId = artId;
+    album.overview = list.find(t => t.showOverview)?.showOverview || list.find(t => t.overview)?.overview || null;
+    album.rating = list.find(t => t.rating)?.rating || null;
+    album.network = list.find(t => t.network)?.network || null;
+    album.cast = list.find(t => t.cast)?.cast || null;
+    album.director = list.find(t => t.director || t.composer)?.director || list.find(t => t.composer)?.composer || null;
+    album.imdbId = list.find(t => t.imdbId)?.imdbId || null;
+    album.showStatus = list.find(t => t.showStatus)?.showStatus || null;
     album.duration = duration;
     album.discCount = discCount;
     album.addedAt = addedAt;

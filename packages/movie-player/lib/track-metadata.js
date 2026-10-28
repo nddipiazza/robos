@@ -240,6 +240,8 @@ function cleanMovieTitle(raw) {
   head = head
     .replace(/\[[^\]]*\]/g, ' ')
     .replace(/\([^)]*\)/g, ' ')
+    .replace(/\([^)]*$/g, ' ')
+    .replace(/\[[^\]]*$/g, ' ')
     .replace(/\b(camrip|hdcam|ts|hdts|telesync|dvdscr|xvid|x264|x265|hevc|h264|aac|ac3|ddp5|10bit)\b.*$/i, ' ')
     .replace(/[._]+/g, ' ')
     .replace(/^\s*[-–—:]+\s*/, '')
@@ -533,8 +535,13 @@ function upgradeTrackVideoGrouping(track) {
     set('trackNumber', info.episodeNumber);
     set('title', info.displayTitle);
     if (!track.genre || track.genre === 'Movies') set('genre', 'TV Series');
-  } else if (track.mediaType !== 'movie') {
+  } else {
     set('mediaType', 'movie');
+    if (info.displayTitle && (track.title?.includes('(') || !track.title)) {
+      const cleanedTitle = info.displayTitle;
+      set('title', cleanedTitle);
+      set('album', info.year ? `${cleanedTitle} (${info.year})` : cleanedTitle);
+    }
   }
 
   return changed;

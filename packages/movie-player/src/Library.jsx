@@ -75,6 +75,8 @@ export default function Library({
   onAddFolder,
   onAddFiles,
   isScanning,
+  isFetchingMetadata,
+  onFetchMetadata,
   onAiPlaylist,
   onAiFixMetadata,
 }) {
@@ -188,26 +190,26 @@ export default function Library({
         <div className="lib-nav-footer">
           <span>{plural((index.moviesOnly || []).length, 'movie')} · {plural((index.tvShows || []).length, 'show')}</span>
           <span>{plural(index.tracks.length, 'video file')} · {formatLongDuration(index.totalDuration)}</span>
+          {onFetchMetadata && (
+            <button
+              id="btn-fetch-public-metadata"
+              className="btn-accent lib-shuffle-all"
+              disabled={!index.tracks.length || isFetchingMetadata}
+              title="Fetch official posters, plot synopses, cast, ratings & episode guides from public APIs (IMDb, TVmaze, Wikipedia — no AI required)"
+              onClick={() => onFetchMetadata(scopeFolder ? index.tracks : null, { force: true })}
+            >
+              <Icon name="locate" size={14} /> {isFetchingMetadata ? 'Fetching Metadata…' : 'Fetch Posters & Metadata'}
+            </button>
+          )}
           {onAiPlaylist && (
             <button
               id="btn-library-ai-playlist"
-              className="btn-accent ai-btn lib-shuffle-all"
+              className="btn-secondary lib-shuffle-all"
               disabled={!index.tracks.length}
               title="Describe a watchlist and let your RobOS agent build it from your movie library"
               onClick={onAiPlaylist}
             >
               ✦ AI Watchlist
-            </button>
-          )}
-          {onAiFixMetadata && (
-            <button
-              id="btn-library-ai-fix-metadata"
-              className="btn-secondary lib-shuffle-all"
-              disabled={!index.tracks.length}
-              title="Repair scene-release filenames & posters using your RobOS agent and open media tools"
-              onClick={() => onAiFixMetadata(scopeFolder ? index.tracks : [])}
-            >
-              ✦ AI Fix Metadata
             </button>
           )}
           <button
@@ -254,6 +256,18 @@ export default function Library({
           <button id="btn-browse-refresh" className="btn-icon-only" onClick={onRefresh} title="Reload movie & TV library index">
             <Icon name="history" size={15} />
           </button>
+          {onFetchMetadata && (
+            <button
+              id="btn-toolbar-fetch-metadata"
+              className="btn-secondary"
+              disabled={!index.tracks.length || isFetchingMetadata}
+              onClick={() => onFetchMetadata(scopeFolder ? index.tracks : null, { force: true })}
+              title="Fetch official posters, descriptions, ratings & episode guides from public APIs (IMDb / TVmaze / Wikipedia)"
+            >
+              <Icon name="locate" size={14} />
+              <span>{isFetchingMetadata ? 'Fetching…' : 'Fetch Metadata'}</span>
+            </button>
+          )}
           <button id="btn-browse-add-folder" className="btn-accent" onClick={onAddFolder} title="Add a movie or TV show folder">
             <Icon name="plus" size={14} /><span>Add folder</span>
           </button>
@@ -374,8 +388,8 @@ function CinemaHeroSpotlight({ albums, go }) {
   const ctx = useLibrary();
   const [spotIdx, setSpotIdx] = useState(0);
   const featured = useMemo(() => {
-    const withYear = albums.filter(a => a.year >= 2000 || a.franchise);
-    return (withYear.length ? withYear : albums).slice(0, 8);
+    const withRich = albums.filter(a => (a.artId && a.overview) || a.year >= 2000 || a.franchise);
+    return (withRich.length ? withRich : albums).slice(0, 12);
   }, [albums]);
   if (!featured.length) return null;
   const movie = featured[spotIdx % featured.length] || featured[0];
@@ -389,20 +403,31 @@ function CinemaHeroSpotlight({ albums, go }) {
       <div className="cinema-hero-info">
         <div className="cinema-hero-eyebrow-row">
           <span className="cinema-spotlight-pill">ROBOS CINEMA+ SPOTLIGHT</span>
-          <span className="cinema-hero-collection">{movie.franchise || movie.genre || 'Feature Film'}</span>
+          <span className="cinema-hero-collection">
+            {movie.isTvShow ? `TV Series · ${plural(movie.seasonCount || 1, 'Season')}` : (movie.franchise || movie.genre || 'Feature Film')}
+          </span>
         </div>
         <h2 className="cinema-hero-title" onClick={() => go({ section: 'albums', detail: { type: 'album', key: movie.key } })}>{movie.title}</h2>
         <div className="cinema-hero-badges">
           {movie.year && <span className="cinema-meta-pill gold">{movie.year}</span>}
+          {movie.rating && <span className="cinema-meta-pill gold">★ {movie.rating}</span>}
+          {movie.network && <span className="cinema-meta-pill cyan">{movie.network}</span>}
           <span className="cinema-meta-pill cyan">{qualBadge}</span>
           {(movie.genres || [movie.genre]).filter(Boolean).map(g => (
             <span key={g} className="cinema-meta-pill purple" onClick={() => ctx.actions.goToGenre(g)}>{g}</span>
           ))}
         </div>
         <p className="cinema-hero-desc">
-          {movie.franchise ? `Part of the ${movie.franchise} collection. ` : ''}
-          Instant HTTP 206 byte-range streaming to desktop or 10-foot Smart TV with zero-cloud LAN cast.
+          {movie.overview
+            ? (movie.overview.length > 260 ? `${movie.overview.slice(0, 260).trim()}…` : movie.overview)
+            : `${movie.franchise ? `Part of the ${movie.franchise} collection. ` : ''}Instant HTTP 206 byte-range streaming to desktop or 10-foot Smart TV with zero-cloud LAN cast.`}
         </p>
+        {(movie.cast || movie.director) && (
+          <div className="cinema-hero-credits">
+            {movie.director && <span><strong>Director:</strong> {movie.director}</span>}
+            {movie.cast && <span><strong>Starring:</strong> {movie.cast}</span>}
+          </div>
+        )}
         <div className="cinema-hero-actions">
           <button className="btn-cinema-play" onClick={() => ctx.actions.playTracks(movie.tracks, 0)}>
             <Icon name="play" size={14} /> Watch Now
@@ -808,6 +833,7 @@ function AlbumCard({ album, go, showArtist }) {
       <div className="media-card-art movie-poster-art">
         <Cover artId={album.artId} name={album.title} />
         {topBadge && <span className={`poster-badge-top ${album.isTvShow ? 'tv-badge' : ''}`}>{topBadge}</span>}
+        {album.rating && <span className="poster-badge-rating">★ {album.rating}</span>}
         {watchBadge && <span className={`poster-badge-watch ${watchBadge.cls}`}>{watchBadge.text}</span>}
         {bottomBadge && <span className="poster-badge-year">{bottomBadge}</span>}
         {watchProgressPct > 0 && (
@@ -822,7 +848,7 @@ function AlbumCard({ album, go, showArtist }) {
       <span className="media-card-title">{album.title}</span>
       <span className="media-card-sub">
         {album.isTvShow
-          ? <span className="poster-franchise-tag">{plural(album.seasonCount || 1, 'Season')} · {plural(album.episodeCount || album.tracks.length, 'Episode')}{showWatch?.completedCount ? ` · ${showWatch.completedCount}/${showWatch.totalEpisodes} watched` : ''}</span>
+          ? <span className="poster-franchise-tag">{plural(album.seasonCount || 1, 'Season')} · {plural(album.episodeCount || album.tracks.length, 'Episode')}{album.network ? ` · ${album.network}` : ''}{showWatch?.completedCount ? ` · ${showWatch.completedCount}/${showWatch.totalEpisodes} watched` : ''}</span>
           : album.franchise
             ? <span className="poster-franchise-tag">{album.franchise}</span>
             : (album.genre || (showArtist ? album.artist : plural(album.tracks.length, 'title')))}
@@ -952,10 +978,24 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
     <div className="detail-header">
       <div className="detail-cover">{cover}</div>
       <div className="detail-text">
-        <span className="detail-eyebrow">{eyebrow}</span>
+        <span className="detail-eyebrow">
+          {eyebrow}
+          {album?.rating ? ` · ★ ${album.rating}` : ''}
+          {album?.network ? ` · ${album.network}` : ''}
+          {album?.showStatus ? ` · ${album.showStatus}` : ''}
+        </span>
         <h2 className="detail-title">{title}</h2>
         {subtitle && <div className="detail-subtitle">{subtitle}</div>}
         <div className="detail-meta">{meta.filter(Boolean).map((m, i) => <span key={i}>{m}</span>)}</div>
+        {album?.overview && (
+          <p className="detail-overview">{album.overview}</p>
+        )}
+        {(album?.director || album?.cast) && (
+          <div className="detail-credits">
+            {album.director && <span><strong>Director:</strong> {album.director}</span>}
+            {album.cast && <span><strong>Starring:</strong> {album.cast}</span>}
+          </div>
+        )}
         <div className="detail-actions">
           <button id="btn-detail-play" className="btn-accent" disabled={!tracks.length} onClick={handlePrimaryPlay}><Icon name="play" size={13} /> {primaryPlayLabel}</button>
           {showStartOver && (
@@ -990,6 +1030,17 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
               title={allWatched ? 'Mark all as unwatched' : 'Mark as watched'}
             >
               <Icon name="check" size={14} /> {allWatched ? 'Watched ✓' : 'Mark Watched'}
+            </button>
+          )}
+          {actions.fetchMetadata && (
+            <button
+              id="btn-detail-fetch-metadata"
+              className="btn-secondary"
+              disabled={!tracks.length || ctx.isFetchingMetadata}
+              onClick={() => actions.fetchMetadata(tracks, { force: true })}
+              title="Refresh poster, plot synopsis, ratings & episode guide from public APIs (IMDb / TVmaze / Wikipedia)"
+            >
+              <Icon name="locate" size={14} /> Refresh Metadata
             </button>
           )}
           <button className={`btn-icon-only ${allLoved ? 'loved' : ''}`} title={allLoved ? 'Remove from Watchlist' : 'Add to Watchlist'} onClick={() => actions.setLoved(tracks, !allLoved)}>
@@ -1140,6 +1191,7 @@ function TvShowSeasonsBreakdown({ album }) {
                     <div className="tv-episode-info">
                       <span className="tv-episode-title">
                         Episode {epNum}: {epTitle}
+                        {ep.rating && <span className="tv-ep-rating">★ {ep.rating}</span>}
                         {ws.inProgress && (
                           <span className="tv-ep-status-badge resume">
                             ▶ Resume {formatDuration(ws.positionSec)}{ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}
@@ -1153,9 +1205,13 @@ function TvShowSeasonsBreakdown({ album }) {
                       </span>
                       <span className="tv-episode-sub">
                         {album.title} · {season.label}
+                        {ep.airdate ? ` · Aired ${ep.airdate}` : ''}
                         {ep.artist && ep.artist !== album.title ? ` · ${ep.artist}` : ''}
                         {ep.cloud ? ` · ${ep.cloud.cached ? 'Cloud (Cached)' : 'Cloud Stream'}` : ''}
                       </span>
+                      {ep.overview && ep.overview !== album.overview && (
+                        <span className="tv-episode-overview">{ep.overview}</span>
+                      )}
                       {(ws.inProgress || ws.completed) && (
                         <div className="tv-episode-progress-bar">
                           <div

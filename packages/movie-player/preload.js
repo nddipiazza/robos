@@ -35,6 +35,13 @@ contextBridge.exposeInMainWorld('robosAudio', {
   setWatched: (ids, watched) => ipcRenderer.invoke('audio:set-watched', { ids, watched }),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
   aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
+  fetchPublicMetadata: (opts) => ipcRenderer.invoke('audio:fetch-public-metadata', opts || {}),
+  cancelPublicMetadata: () => ipcRenderer.invoke('audio:cancel-public-metadata'),
+  onMetadataFetchProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:metadata-fetch-progress', handler);
+    return () => ipcRenderer.removeListener('audio:metadata-fetch-progress', handler);
+  },
   aiFixMetadataPreview: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-preview', opts || {}),
   aiFixMetadataApply: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-apply', opts || {}),
   onAiProgress: (callback) => {

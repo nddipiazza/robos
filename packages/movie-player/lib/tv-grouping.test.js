@@ -14,6 +14,11 @@ const {
   getShowWatchState,
   inProgressTracks,
 } = require('./library-index');
+const {
+  stripHtml,
+  lookupTvShowPublicMetadata,
+  lookupMoviePublicMetadata,
+} = require('./public-metadata');
 
 test('parseVideoMediaInfo distinguishes Movies from TV Shows and extracts Season & Episode breakdown', () => {
   const tv1 = parseVideoMediaInfo(
@@ -167,4 +172,49 @@ test('getTrackWatchState, getShowWatchState, and inProgressTracks track resume p
   assert.equal(inProg.length, 1);
   assert.equal(inProg[0].id, 'mov1');
 });
+
+test('PublicMetadataService helpers strip HTML, clean titles, and expose overview/rating/cast in buildIndex', async () => {
+  assert.equal(stripHtml('<p>Mark leads a team of <b>office workers</b> &amp; friends.</p>'), 'Mark leads a team of office workers & friends.');
+  const willowInfo = guessFromRemotePath('/downloads/movies/Willow (1988) (Action Fantasy)/Willow.1988.1080p.mp4');
+  assert.equal(willowInfo.title, 'Willow');
+  assert.equal(willowInfo.album, 'Willow (1988)');
+
+  const tracks = [
+    {
+      id: 'sev_1',
+      ...guessFromRemotePath('/downloads/shows/Severance/Season 1/Severance.S01E01.Good.News.About.Hell.mkv'),
+      artId: 'pub_tv_1234',
+      showOverview: 'Mark leads a team of office workers whose memories have been surgically divided.',
+      overview: 'Mark is promoted to lead the Macrodata Refinement team.',
+      rating: 8.7,
+      network: 'Apple TV+',
+      showStatus: 'Running',
+      airdate: '2022-02-18',
+    },
+    {
+      id: 'dune_1',
+      ...guessFromRemotePath('/downloads/movies/Dune.2021.1080p.BluRay.mp4'),
+      artId: 'pub_mov_5678',
+      overview: 'Paul Atreides leads nomadic tribes in a battle to control the desert planet Arrakis.',
+      cast: 'Timothée Chalamet, Rebecca Ferguson',
+      director: 'Denis Villeneuve',
+      imdbId: 'tt1160419',
+    },
+  ];
+
+  const index = buildIndex(tracks);
+  assert.equal(index.tvShows[0].artId, 'pub_tv_1234');
+  assert.equal(index.tvShows[0].overview, 'Mark leads a team of office workers whose memories have been surgically divided.');
+  assert.equal(index.tvShows[0].rating, 8.7);
+  assert.equal(index.tvShows[0].network, 'Apple TV+');
+  assert.equal(index.tvShows[0].seasons[0].episodes[0].overview, 'Mark is promoted to lead the Macrodata Refinement team.');
+  assert.equal(index.tvShows[0].seasons[0].episodes[0].airdate, '2022-02-18');
+
+  assert.equal(index.moviesOnly[0].artId, 'pub_mov_5678');
+  assert.equal(index.moviesOnly[0].overview, 'Paul Atreides leads nomadic tribes in a battle to control the desert planet Arrakis.');
+  assert.equal(index.moviesOnly[0].cast, 'Timothée Chalamet, Rebecca Ferguson');
+  assert.equal(index.moviesOnly[0].director, 'Denis Villeneuve');
+  assert.equal(index.moviesOnly[0].imdbId, 'tt1160419');
+});
+
 

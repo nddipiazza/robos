@@ -84,6 +84,8 @@ export default function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+  const [metadataFetchStatus, setMetadataFetchStatus] = useState(null);
   const [activeCastSession, setActiveCastSession] = useState(null); // { ip, trackId, filePath, isPaused }
   const [statusMsg, setStatusMsg] = useState('');
   const [activeAmbient, setActiveAmbient] = useState(null);
@@ -241,6 +243,19 @@ export default function App() {
         setIsScanningLibrary(false);
         setLibraryScanStatus(null);
         showStatus(`Library scan error: ${err.error}`);
+      }));
+    }
+
+    if (window.robosAudio?.onMetadataFetchProgress) {
+      cleanups.push(window.robosAudio.onMetadataFetchProgress((p) => {
+        if (!p) return;
+        if (p.phase === 'done') {
+          setIsFetchingMetadata(false);
+          setMetadataFetchStatus(null);
+        } else {
+          setIsFetchingMetadata(true);
+          setMetadataFetchStatus(p);
+        }
       }));
     }
 
@@ -1420,11 +1435,55 @@ export default function App() {
     showStatus(`✦ AI updated metadata & artwork for ${res?.updatedCount || 0} track(s)!`);
   };
 
+  const handleFetchPublicMetadata = async (scopedTracks = null, { force = false } = {}) => {
+    if (!window.robosAudio?.fetchPublicMetadata) return;
+    const trackIds = Array.isArray(scopedTracks) && scopedTracks.length > 0
+      ? scopedTracks.map(t => t.id).filter(Boolean)
+      : null;
+    setIsFetchingMetadata(true);
+    setMetadataFetchStatus({
+      phase: 'start',
+      current: 0,
+      total: trackIds ? trackIds.length : library.tracks.length,
+      message: 'Fetching posters, plot descriptions & episode guides from public APIs (IMDb / TVmaze / Wikipedia)…',
+    });
+    showStatus('Fetching posters & descriptions from public APIs…');
+    try {
+      const res = await window.robosAudio.fetchPublicMetadata({ trackIds, force });
+      setIsFetchingMetadata(false);
+      setMetadataFetchStatus(null);
+      if (res && res.library) {
+        setLibrary(res.library);
+      } else {
+        await loadLibrary();
+      }
+      if (res && res.ok) {
+        showStatus(`Fetched posters & descriptions for ${res.showsMatched || 0} TV show(s) and ${res.moviesMatched || 0} movie(s) (${res.updatedTracks || 0} files updated)!`);
+      } else if (res && res.error) {
+        showStatus(`Metadata fetch error: ${res.error}`);
+      }
+    } catch (err) {
+      setIsFetchingMetadata(false);
+      setMetadataFetchStatus(null);
+      showStatus('Error fetching public metadata: ' + err.message);
+    }
+  };
+
+  const handleCancelPublicMetadata = async () => {
+    if (window.robosAudio?.cancelPublicMetadata) {
+      await window.robosAudio.cancelPublicMetadata().catch(() => {});
+    }
+    setIsFetchingMetadata(false);
+    setMetadataFetchStatus(null);
+    showStatus('Canceled metadata fetch.');
+  };
+
   const libraryCtx = {
     artBase: artBase.local,
     stats,
     currentTrack,
     isPlaying,
+    isFetchingMetadata,
     openMenu,
     actions: {
       playTracks,
@@ -1432,6 +1491,7 @@ export default function App() {
       castTracks,
       hasSpeakers: speakers.length > 0,
       addToPlaylist: (tracks) => { setQuickPlaylistName(''); setTracksForPlaylist(tracks); },
+      fetchMetadata: handleFetchPublicMetadata,
       fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
       setLoved: setLovedTracks,
       setWatched: setWatchedTracks,
@@ -1897,6 +1957,35 @@ export default function App() {
             </div>
             <button className="btn-cancel-scan" onClick={handleCancelScan}>
               Cancel Scan
+            </button>
+          </div>
+        )}
+
+        {/* Public Metadata & Poster Indexer Banner */}
+        {isFetchingMetadata && (
+          <div className="scan-progress-banner metadata-fetch-banner">
+            <div className="scan-progress-info">
+              <div className="scan-spinner"></div>
+              <div className="scan-text">
+                <strong>Fetching Posters &amp; Descriptions (IMDb · TVmaze · Wikipedia)</strong>
+                <span className="scan-details">
+                  {metadataFetchStatus?.total > 0
+                    ? `${metadataFetchStatus.current || 0} / ${metadataFetchStatus.total} titles (${Math.round(((metadataFetchStatus.current || 0) / metadataFetchStatus.total) * 100)}%)`
+                    : 'Indexing movies & TV shows...'}
+                  {metadataFetchStatus?.message ? ` — ${metadataFetchStatus.message}` : ''}
+                </span>
+              </div>
+            </div>
+            <div className="scan-bar-container">
+              <div
+                className="scan-bar-fill"
+                style={{
+                  width: `${metadataFetchStatus?.total > 0 ? Math.min(100, Math.round(((metadataFetchStatus.current || 0) / metadataFetchStatus.total) * 100)) : 100}%`
+                }}
+              />
+            </div>
+            <button className="btn-cancel-scan" onClick={handleCancelPublicMetadata}>
+              Cancel
             </button>
           </div>
         )}
@@ -2547,6 +2636,8 @@ export default function App() {
               canGoBack={libNav.length > 1}
               searchInputRef={searchInputRef}
               isScanning={isScanningLibrary}
+              isFetchingMetadata={isFetchingMetadata}
+              onFetchMetadata={(scopedTracks, opts) => handleFetchPublicMetadata(scopedTracks, opts)}
               onAiPlaylist={() => setShowAiPlaylist(true)}
               onAiFixMetadata={(scopedTracks) => setTracksForAiFix(Array.isArray(scopedTracks) ? scopedTracks : [])}
               onAddFolder={handleSelectFolder}
