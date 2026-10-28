@@ -1331,7 +1331,13 @@ export default function App() {
   const libraryNav = libNav[libNav.length - 1];
   const currentShowsNav = showsNav[showsNav.length - 1];
 
-  const movieCount = useMemo(() => (library.tracks || []).filter(t => t && t.mediaType !== 'tv').length, [library.tracks]);
+  const movieCount = useMemo(() => {
+    const set = new Set();
+    for (const t of (library.tracks || [])) {
+      if (t && t.mediaType !== 'tv') set.add(albumKeyOf(t));
+    }
+    return set.size;
+  }, [library.tracks]);
   const tvEpisodeCount = useMemo(() => (library.tracks || []).filter(t => t && t.mediaType === 'tv').length, [library.tracks]);
   const tvShowCount = useMemo(() => {
     const set = new Set();

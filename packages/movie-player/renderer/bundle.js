@@ -14787,17 +14787,34 @@
         if (tv && tv.isTvShow) {
           return `tv:${fold4(tv.showName)}`;
         }
+        if (track.mediaType === "movie") {
+          const cleanTitle = fold4(String(track.title || track.album || UNKNOWN_ALBUM).replace(/\s*\((?:19|20)\d\d\)\s*$/, ""));
+          return `movie:${cleanTitle}:${track.year || ""}`;
+        }
         const title = fold4(track.album || UNKNOWN_ALBUM);
         if (track.albumArtist) return `${title}aa:${fold4(track.albumArtist)}`;
         const dirKey = track.cloud?.remotePath || track.filePath || "";
         if (dirKey) return `${title}dir:${dirOf(dirKey)}`;
         return `${title}ar:${fold4(track.artist)}`;
       }
+      function movieQualityRank(track) {
+        const hay = `${track?.artist || ""} ${track?.cloud?.remotePath || track?.filePath || ""}`;
+        if (/\b(?:camrip|hdcam|cam|telesync|hdts|ts)\b/i.test(hay)) return 3;
+        if (/\b(?:blu-?ray|remux|web-?dl|webrip)\b/i.test(hay)) return 0;
+        return 1;
+      }
       function compareAlbumOrder(a, b) {
+        if (a.mediaType === "movie" && b.mediaType === "movie") {
+          const qa = movieQualityRank(a);
+          const qb = movieQualityRank(b);
+          if (qa !== qb) return qa - qb;
+        }
         const tvA = inferTvShowEpisode2(a);
         const tvB = inferTvShowEpisode2(b);
-        const seasonA = tvA && tvA.seasonNumber != null ? tvA.seasonNumber : a.seasonNumber != null ? a.seasonNumber : a.discNumber || 1;
-        const seasonB = tvB && tvB.seasonNumber != null ? tvB.seasonNumber : b.seasonNumber != null ? b.seasonNumber : b.discNumber || 1;
+        const rawSeasonA = tvA && tvA.seasonNumber != null ? tvA.seasonNumber : a.seasonNumber != null ? a.seasonNumber : a.discNumber ?? 1;
+        const rawSeasonB = tvB && tvB.seasonNumber != null ? tvB.seasonNumber : b.seasonNumber != null ? b.seasonNumber : b.discNumber ?? 1;
+        const seasonA = rawSeasonA === 0 ? 999 : rawSeasonA;
+        const seasonB = rawSeasonB === 0 ? 999 : rawSeasonB;
         const epA = tvA && tvA.episodeNumber != null ? tvA.episodeNumber : a.episodeNumber != null ? a.episodeNumber : a.trackNumber || 9999;
         const epB = tvB && tvB.episodeNumber != null ? tvB.episodeNumber : b.episodeNumber != null ? b.episodeNumber : b.trackNumber || 9999;
         return seasonA - seasonB || epA - epB || compareNames(a.title, b.title);
@@ -14914,7 +14931,7 @@
               season.episodes.push(t);
               season.duration += t.duration || 0;
             }
-            album.seasons = [...seasonMap.values()].sort((a, b) => a.seasonNumber - b.seasonNumber);
+            album.seasons = [...seasonMap.values()].sort((a, b) => (a.seasonNumber === 0 ? 999 : a.seasonNumber) - (b.seasonNumber === 0 ? 999 : b.seasonNumber));
             for (const s of album.seasons) s.episodeCount = s.episodes.length;
             album.seasonCount = album.seasons.length;
             album.episodeCount = list.length;
@@ -14929,7 +14946,8 @@
           album.rating = list.find((t) => t.rating)?.rating || null;
           album.network = list.find((t) => t.network)?.network || null;
           album.cast = list.find((t) => t.cast)?.cast || null;
-          album.director = list.find((t) => t.director || t.composer)?.director || list.find((t) => t.composer)?.composer || null;
+          const rawDirector = list.find((t) => t.director)?.director || (!album.isTvShow ? list.find((t) => t.composer)?.composer : null) || null;
+          album.director = album.isTvShow && rawDirector && album.network && fold4(rawDirector) === fold4(album.network) ? null : rawDirector;
           album.imdbId = list.find((t) => t.imdbId)?.imdbId || null;
           album.showStatus = list.find((t) => t.showStatus)?.showStatus || null;
           album.duration = duration;
@@ -18339,7 +18357,7 @@
     ) : /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
       setEditId(f.id);
       setEditValue(f.label);
-    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react9.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.map((s) => /* @__PURE__ */ import_react9.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react9.default.createElement("strong", null, s.showName), ": ", s.seasons.map((sn) => `Season ${sn.seasonNumber} (${sn.episodeCount} ep${sn.episodeCount === 1 ? "" : "s"})`).join(", ")))))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react9.default.createElement(
+    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react9.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.slice(0, 4).map((s) => /* @__PURE__ */ import_react9.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react9.default.createElement("strong", null, s.showName), ": ", s.seasons.length === 1 ? `Season ${s.seasons[0].seasonNumber} (${s.seasons[0].episodeCount} ep${s.seasons[0].episodeCount === 1 ? "" : "s"})` : `${s.seasons.length} Seasons (${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)} eps)`)), f.shows.length > 4 && /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-show-pill" }, "+", f.shows.length - 4, " more TV series")))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         type: "checkbox",
@@ -18438,10 +18456,10 @@
       }) })).filter((c, i) => !list[i].folders?.length || c.folders.length);
       setConnections(unique);
       if (list.length) {
-        const target = unique.find((c) => c.id === connId && c.browsable) || unique.find((c) => c.browsable);
-        if (target) {
-          setConnId(target.id);
-          browse(target.id, target.startPath || "/", forceRefresh);
+        const preferred = unique.find((c) => folders.some((f) => f.kind === "cloud" && f.connectionId === c.id && f.syncEnabled !== false) && c.browsable) || unique.find((c) => c.id === connId && c.browsable) || unique.find((c) => c.browsable);
+        if (preferred) {
+          setConnId(preferred.id);
+          browse(preferred.id, preferred.startPath || "/", forceRefresh);
         }
       }
       loadCacheStats();
@@ -18516,7 +18534,11 @@
       setCacheStats(res);
       showStatus(`Cleared ${res.removed || 0} cached cloud audio file(s). Tracks will stream on demand when played.`);
     };
-    const usable = (connections || []).filter((c) => c.browsable);
+    const usable = (connections || []).filter((c) => c.browsable).sort((a, b) => {
+      const aSynced = folders.filter((f) => f.kind === "cloud" && f.connectionId === a.id && f.syncEnabled !== false).length;
+      const bSynced = folders.filter((f) => f.kind === "cloud" && f.connectionId === b.id && f.syncEnabled !== false).length;
+      return bSynced - aSynced;
+    });
     const other = (connections || []).filter((c) => !c.browsable);
     const activeConn = usable.find((c) => c.id === connId) || usable[0] || null;
     const currentPath = listing ? listing.path : "/";
@@ -18551,7 +18573,7 @@
             disabled: busy,
             onChange: (e) => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)
           }
-        ), /* @__PURE__ */ import_react10.default.createElement("span", null, /* @__PURE__ */ import_react10.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react10.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react10.default.createElement("small", null, formatFolderMediaSummary(f), " \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f && Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react10.default.createElement("small", { style: { color: "#e8a33d" } }, "\u{1F4FA} ", f.shows.map((s) => `${s.showName}: ${s.seasons.map((sn) => `Season ${sn.seasonNumber} (${sn.episodeCount} eps)`).join(", ")}`).join(" \xB7 ")), f?.syncError && /* @__PURE__ */ import_react10.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react10.default.createElement(
+        ), /* @__PURE__ */ import_react10.default.createElement("span", null, /* @__PURE__ */ import_react10.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react10.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react10.default.createElement("small", null, formatFolderMediaSummary(f), " \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f && Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react10.default.createElement("small", { style: { color: "#e8a33d" } }, "\u{1F4FA} ", f.shows.slice(0, 4).map((s) => `${s.showName} (${s.seasons.length}S \xB7 ${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)}E)`).join(" \xB7 "), f.shows.length > 4 ? ` \xB7 +${f.shows.length - 4} more TV series` : ""), f?.syncError && /* @__PURE__ */ import_react10.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react10.default.createElement(
           "button",
           {
             className: "btn-secondary",
@@ -20038,6 +20060,7 @@
       DetailHeader,
       {
         album: activeShow,
+        compact: true,
         cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: activeShow.artId, name: activeShow.title }),
         eyebrow: "TV Series",
         title: activeShow.title,
@@ -20404,15 +20427,15 @@
     if (!top.length) return null;
     return /* @__PURE__ */ import_react16.default.createElement("div", { className: "chip-row" }, top.map((a) => /* @__PURE__ */ import_react16.default.createElement("button", { key: a.key, className: "artist-chip", onClick: () => go({ section: "artists", detail: { type: "artist", key: a.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: a.artId, name: a.name, round: true, size: 24 }), /* @__PURE__ */ import_react16.default.createElement("span", null, a.name))));
   }
-  function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel, album = null }) {
+  function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel, album = null, compact = false }) {
     const ctx = useLibrary();
     const { actions, stats } = ctx;
     const allLoved = tracks.length > 0 && tracks.every((t) => (stats[t.id] || {}).loved);
     const allWatched = tracks.length > 0 && tracks.every((t) => (0, import_library_index3.getTrackWatchState)(t, stats).completed);
     const showWatch = album && album.isTvShow ? (0, import_library_index3.getShowWatchState)(album, stats) : null;
     const movieWatch = album && !album.isTvShow && tracks.length ? (0, import_library_index3.getTrackWatchState)(tracks[0], stats) : null;
-    let primaryPlayLabel = "Watch Now";
-    let handlePrimaryPlay = () => actions.playTracks(tracks, 0);
+    let primaryPlayLabel = album && album.isTvShow && showWatch ? showWatch.actionLabel : "Watch Now";
+    let handlePrimaryPlay = () => actions.playTracks(tracks, showWatch ? showWatch.resumeIndex : 0);
     let showStartOver = false;
     if (showWatch && showWatch.hasActivity && !showWatch.completed) {
       const epCode = showWatch.resumeTrack?.episodeCode || (showWatch.resumeTrack?.seasonNumber != null ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, "0")}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, "0")}` : "Next Episode");
@@ -20428,7 +20451,7 @@
       showStartOver = true;
       handlePrimaryPlay = () => actions.playTracks(tracks, 0, { startAt: movieWatch.positionSec });
     }
-    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow, album?.rating ? ` \xB7 \u2605 ${album.rating}` : "", album?.network ? ` \xB7 ${album.network}` : "", album?.showStatus ? ` \xB7 ${album.showStatus}` : ""), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), album?.overview && /* @__PURE__ */ import_react16.default.createElement("p", { className: "detail-overview" }, album.overview), (album?.director || album?.cast) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-credits" }, album.director && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Director:"), " ", album.director), album.cast && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Starring:"), " ", album.cast)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: handlePrimaryPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " ", primaryPlayLabel), showStartOver && /* @__PURE__ */ import_react16.default.createElement(
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow, album?.rating ? ` \xB7 \u2605 ${album.rating}` : "", album?.network ? ` \xB7 ${album.network}` : "", album?.showStatus ? ` \xB7 ${album.showStatus}` : ""), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), album?.overview && /* @__PURE__ */ import_react16.default.createElement("p", { className: "detail-overview", title: album.overview }, album.overview), (album?.director || album?.cast) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-credits" }, album.director && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Director:"), " ", album.director), album.cast && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Starring:"), " ", album.cast)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: handlePrimaryPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " ", primaryPlayLabel), showStartOver && /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
         className: "btn-secondary",
@@ -20449,7 +20472,7 @@
       },
       /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cast", size: 14 }),
       " Cast to TV"
-    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-shuffle", className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 }), " Shuffle"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "next") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "playNext", size: 14 }), " Watch next"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "end") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "queueAdd", size: 14 }), " Add to queue"), actions.setWatched && /* @__PURE__ */ import_react16.default.createElement(
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-shuffle", className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.playTracks(tracks, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 }), " Shuffle"), !compact && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "next") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "playNext", size: 14 }), " Watch next"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", disabled: !tracks.length, onClick: () => actions.queueTracks(tracks, "end") }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "queueAdd", size: 14 }), " Add to queue")), actions.setWatched && /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
         className: "btn-secondary",
@@ -20460,7 +20483,7 @@
       /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "check", size: 14 }),
       " ",
       allWatched ? "Watched \u2713" : "Mark Watched"
-    ), actions.fetchMetadata && /* @__PURE__ */ import_react16.default.createElement(
+    ), !compact && actions.fetchMetadata && /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
         id: "btn-detail-fetch-metadata",
@@ -20501,7 +20524,15 @@
     const ctx = useLibrary();
     const { actions, currentTrack, isPlaying, openMenu, stats } = ctx;
     const seasons = album.seasons && album.seasons.length ? album.seasons : [{ seasonNumber: 1, label: "Season 1", code: "S01", episodes: album.tracks, episodeCount: album.tracks.length, duration: album.duration }];
-    const [selectedSeason, setSelectedSeason] = (0, import_react16.useState)("all");
+    const defaultSeason = (0, import_react16.useMemo)(() => {
+      const ws = (0, import_library_index3.getShowWatchState)(album, stats);
+      if (ws.hasActivity && ws.resumeTrack?.seasonNumber != null) {
+        return String(ws.resumeTrack.seasonNumber);
+      }
+      const firstRegular = seasons.find((s) => s.seasonNumber >= 1) || seasons[0];
+      return firstRegular ? String(firstRegular.seasonNumber) : "all";
+    }, [album.key]);
+    const [selectedSeason, setSelectedSeason] = (0, import_react16.useState)(defaultSeason);
     const visibleSeasons = selectedSeason === "all" ? seasons : seasons.filter((s) => String(s.seasonNumber) === String(selectedSeason));
     return /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-seasons-breakdown" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-tabs", role: "tablist", "aria-label": "Seasons" }, /* @__PURE__ */ import_react16.default.createElement(
       "button",
@@ -20535,7 +20566,7 @@
           onClick: () => actions.playTracks(season.episodes, seasonState.resumeIndex, { startAt: seasonState.resumePositionSec })
         },
         /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 12 }),
-        seasonState.hasActivity && !seasonState.completed ? seasonState.resumePositionSec >= 5 ? `Resume E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, "0")} (${(0, import_library_index3.formatDuration)(seasonState.resumePositionSec)})` : `Continue E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, "0")}` : `Watch ${season.label}`
+        seasonState.hasActivity && !seasonState.completed ? seasonState.resumePositionSec >= 5 ? `Resume E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, "0")} (${(0, import_library_index3.formatDuration)(seasonState.resumePositionSec)})` : `Continue E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, "0")}` : `Watch ${season.code}`
       ), actions.setWatched && /* @__PURE__ */ import_react16.default.createElement(
         "button",
         {
@@ -20545,7 +20576,7 @@
         },
         /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "check", size: 12 }),
         " ",
-        allSeasonWatched ? "Season Watched \u2713" : "Mark Season Watched"
+        allSeasonWatched ? "Watched \u2713" : "Mark Watched"
       ), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => actions.playTracks(season.episodes, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 12 }), " Shuffle"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-list" }, season.episodes.map((ep, idx) => {
         const tv = (0, import_library_index3.inferTvShowEpisode)(ep);
         const epNum = tv && tv.episodeNumber || ep.episodeNumber || ep.trackNumber || idx + 1;
@@ -20574,7 +20605,7 @@
             isCurrent && isPlaying ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null)) : /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 })
           ),
           /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-code" }, epCode),
-          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, "Episode ", epNum, ": ", epTitle, ep.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-rating" }, "\u2605 ", ep.rating), ws.inProgress && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge resume" }, "\u25B6 Resume ", (0, import_library_index3.formatDuration)(ws.positionSec), ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ""), ws.completed && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge watched" }, "\u2713 Watched")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.airdate ? ` \xB7 Aired ${ep.airdate}` : "", ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : ""), ep.overview && ep.overview !== album.overview && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-overview" }, ep.overview), (ws.inProgress || ws.completed) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-progress-bar" }, /* @__PURE__ */ import_react16.default.createElement(
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, String(epTitle || "").replace(/^\d{3}\s*[-–—:]\s*/, "") || `Episode ${epNum}`, ep.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-rating" }, "\u2605 ", ep.rating), ws.inProgress && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge resume" }, "\u25B6 Resume ", (0, import_library_index3.formatDuration)(ws.positionSec), ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ""), ws.completed && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge watched" }, "\u2713 Watched")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.airdate ? ` \xB7 Aired ${ep.airdate}` : "", ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : ""), ep.overview && ep.overview !== album.overview && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-overview" }, ep.overview), (ws.inProgress || ws.completed) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-progress-bar" }, /* @__PURE__ */ import_react16.default.createElement(
             "div",
             {
               className: `tv-episode-progress-fill ${ws.completed ? "completed" : ""}`,
@@ -23261,7 +23292,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const libraryNav = libNav[libNav.length - 1];
     const currentShowsNav = showsNav[showsNav.length - 1];
-    const movieCount = (0, import_react24.useMemo)(() => (library.tracks || []).filter((t) => t && t.mediaType !== "tv").length, [library.tracks]);
+    const movieCount = (0, import_react24.useMemo)(() => {
+      const set = /* @__PURE__ */ new Set();
+      for (const t of library.tracks || []) {
+        if (t && t.mediaType !== "tv") set.add((0, import_library_index8.albumKeyOf)(t));
+      }
+      return set.size;
+    }, [library.tracks]);
     const tvEpisodeCount = (0, import_react24.useMemo)(() => (library.tracks || []).filter((t) => t && t.mediaType === "tv").length, [library.tracks]);
     const tvShowCount = (0, import_react24.useMemo)(() => {
       const set = /* @__PURE__ */ new Set();

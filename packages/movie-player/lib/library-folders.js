@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { summarizeMediaBreakdown } = require('./library-index');
-const { upgradeTrackVideoGrouping } = require('./track-metadata');
+const { upgradeTrackVideoGrouping, isSampleVideoPath } = require('./track-metadata');
 
 class LibraryFolders {
   constructor({ mediaLibrary, cloud, castService, configDir }) {
@@ -151,6 +151,14 @@ class LibraryFolders {
         protocol: conn ? conn.driverType : null,
         available: f.kind === 'local' ? fs.existsSync(f.path) : !!conn,
       };
+    }).sort((a, b) => {
+      const aActive = a.syncEnabled !== false ? 1 : 0;
+      const bActive = b.syncEnabled !== false ? 1 : 0;
+      if (aActive !== bActive) return bActive - aActive;
+      const aHasTracks = a.trackCount > 0 ? 1 : 0;
+      const bHasTracks = b.trackCount > 0 ? 1 : 0;
+      if (aHasTracks !== bHasTracks) return bHasTracks - aHasTracks;
+      return 0;
     });
   }
 
@@ -240,13 +248,14 @@ class LibraryFolders {
           cached: fs.existsSync(localPath),
         }));
 
-    const keep = new Set(descriptors.map(d => d.localPath));
+    const filteredDescriptors = descriptors.filter(d => !isSampleVideoPath(d.remotePath || d.localPath));
+    const keep = new Set(filteredDescriptors.map(d => d.localPath));
     const ml = this.mediaLibrary;
     const existingByPath = new Map(ml.tracks.map(t => [t.filePath, t]));
 
     const added = [];
     const seen = new Set();
-    for (const desc of descriptors) {
+    for (const desc of filteredDescriptors) {
       if (seen.has(desc.localPath)) continue;
       seen.add(desc.localPath);
       const existing = existingByPath.get(desc.localPath);

@@ -383,7 +383,8 @@ class PublicMetadataService {
 
     const alreadyHasArt = showAlbum.tracks.every((t) => t.artId && this.mediaLibrary.getArt(t.artId));
     const alreadyHasOverview = showAlbum.tracks.every((t) => t.overview && t.showOverview);
-    if (!force && alreadyHasArt && alreadyHasOverview) {
+    const alreadyHasEpisodeTitles = showAlbum.tracks.every((t) => t.episodeTitle && !/^Episode\s+\d+$/i.test(t.episodeTitle) && !/\b(2160p|4k|1080p|720p|480p|BluRay|WEB|HDTV|x264|x265|HEVC)\b/i.test(t.episodeTitle));
+    if (!force && alreadyHasArt && alreadyHasOverview && alreadyHasEpisodeTitles) {
       return { updated: 0, skipped: true };
     }
 
@@ -416,7 +417,7 @@ class PublicMetadataService {
       } else if (meta.overview && !track.overview) {
         track.overview = meta.overview;
       }
-      if (epMeta?.title && (!track.episodeTitle || /^Episode\s+\d+$/i.test(track.episodeTitle) || /^\d+p\b/i.test(track.episodeTitle))) {
+      if (epMeta?.title && (!track.episodeTitle || /^Episode\s+\d+$/i.test(track.episodeTitle) || /\b(2160p|4k|1080p|720p|480p|BluRay|WEB|HDTV|x264|x265|HEVC|AAC|DTS)\b/i.test(track.episodeTitle))) {
         track.episodeTitle = epMeta.title;
         track.title = `${showAlbum.title} · ${code} · ${epMeta.title}`;
         updated++;
