@@ -2704,7 +2704,7 @@ function cinemaClassifyItem(mv as Object) as Object
         if hasAnyKeyword(hay, ["atypical"]) then franchise = "Atypical (Series)"
     end if
 
-    isTv = hasAnyKeyword(hay, ["s01e", "s02e", "s03e", "atypical", "tv series", "season "])
+    isTv = (mv.mediaType <> invalid and mv.mediaType = "tv") or hasAnyKeyword(hay, ["s01e", "s02e", "s03e", "atypical", "tv series", "season "])
     isScifi = hasAnyKeyword(hay, ["dune", "harry potter", "lord of the rings", "fellowship", "two towers", "return of the king", "ex machina", "serenity", "wicked", "wizard of oz", "willow", "ne zha", "backrooms", "sci-fi", "fantasy"])
     isAction = hasAnyKeyword(hay, ["avengers", "endgame", "infinity war", "mortal kombat", "resident evil", "dune", "lord of the rings", "harry potter", "willow", "hunting games", "outpost", "serenity", "ne zha", "action"])
     isHorror = hasAnyKeyword(hay, ["conjuring", "annabelle", "insidious", "scream", "paranormal activity", "the nun", "nun ii", "final destination", "friday the 13th", "halloween", "terrifier", "babadook", "malignant", "it follows", "smile", "orphan", "lights out", "five nights at freddy", "jennifers body", "megan is missing", "backrooms", "other mommy", "hokum", "horror"])
@@ -3029,6 +3029,9 @@ sub updateCinemaLibDetail(idx as Integer)
     if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = Left(titleClean, 44)
     yrStr = "Feature"
     if mv.year <> invalid then yrStr = mv.year.ToStr()
+    if mv.episodeCode <> invalid and mv.episodeCode <> ""
+        yrStr = cleanAscii(mv.episodeCode)
+    end if
 
     if m.cinemaBadgeYear <> invalid then m.cinemaBadgeYear.text = yrStr
     if m.cinemaBadgeQuality <> invalid then m.cinemaBadgeQuality.text = info.qualBadge
@@ -3036,7 +3039,9 @@ sub updateCinemaLibDetail(idx as Integer)
     if m.cinemaBadgeFormat <> invalid then m.cinemaBadgeFormat.text = info.fmtStr + " DIRECT"
 
     if m.cinemaHeroEyebrow <> invalid
-        if info.franchise <> ""
+        if mv.mediaType <> invalid and mv.mediaType = "tv" and mv.seasonNumber <> invalid and mv.episodeNumber <> invalid
+            m.cinemaHeroEyebrow.text = UCase(cleanAscii(mv.showName)) + "  •  SEASON " + mv.seasonNumber.ToStr() + "  •  EPISODE " + mv.episodeNumber.ToStr() + " (" + cleanAscii(mv.episodeCode) + ")"
+        else if info.franchise <> ""
             m.cinemaHeroEyebrow.text = UCase(info.franchise) + "  •  " + UCase(info.primaryGenre)
         else
             m.cinemaHeroEyebrow.text = "ROBOS CINEMA+ FEATURE  •  " + UCase(info.primaryGenre)
@@ -3051,9 +3056,13 @@ sub updateCinemaLibDetail(idx as Integer)
     if m.cinemaHeroPosterFallbackYear <> invalid then m.cinemaHeroPosterFallbackYear.text = yrStr + "  •  " + info.qualBadge
 
     if m.cinemaLibDetailMeta <> invalid
-        franStr = "Standalone Feature Film"
-        if info.franchise <> "" then franStr = "Collection: " + info.franchise
-        m.cinemaLibDetailMeta.text = franStr + "   |   Genre: " + info.primaryGenre + "   |   Quality: " + info.qualBadge
+        if mv.mediaType <> invalid and mv.mediaType = "tv" and mv.seasonNumber <> invalid and mv.episodeNumber <> invalid
+            m.cinemaLibDetailMeta.text = "Series: " + cleanAscii(mv.showName) + "   |   Season " + mv.seasonNumber.ToStr() + " • Episode " + mv.episodeNumber.ToStr() + ": " + cleanAscii(mv.episodeTitle) + "   |   Quality: " + info.qualBadge
+        else
+            franStr = "Standalone Feature Film"
+            if info.franchise <> "" then franStr = "Collection: " + info.franchise
+            m.cinemaLibDetailMeta.text = franStr + "   |   Genre: " + info.primaryGenre + "   |   Quality: " + info.qualBadge
+        end if
     end if
     if m.cinemaLibDetailSub <> invalid
         m.cinemaLibDetailSub.text = "Container: " + info.fmtStr + " Direct Stream   |   Source: " + Left(cleanAscii(mv.album), 40) + "   |   Zero-Cloud LAN HTTP 206"
