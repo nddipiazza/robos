@@ -15,6 +15,7 @@ const lyrics = require('./lib/lyrics');
 const { LibraryFolders } = require('./lib/library-folders');
 const aiPlaylist = require('./lib/ai-playlist');
 const aiMetadata = require('./lib/ai-metadata');
+const { PublicMetadataService } = require('./lib/public-metadata');
 const { createControlServer } = require('./lib/control-server');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
@@ -91,6 +92,7 @@ const mediaLibrary = new MediaLibrary();
 castService.mediaLibrary = mediaLibrary;
 castService.cloudStorage = cloud;
 const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
+const publicMetadata = new PublicMetadataService({ mediaLibrary, castService });
 
 // Refresh cloud track stream URLs once CastService streamServer allocates its port,
 // and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
@@ -659,11 +661,25 @@ function folderState({ withLibrary = false } = {}) {
   return state;
 }
 
+function maybeAutoFetchPublicMetadata() {
+  const needsSync = mediaLibrary.tracks.some(t => !t.artId || !t.overview);
+  if (!needsSync || publicMetadata._running) return;
+  publicMetadata.syncAll({
+    force: false,
+    onProgress: (p) => sendToWindow('audio:metadata-fetch-progress', p),
+  }).then(() => {
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+  }).catch(() => {});
+}
+
 function scanLocalFolders(folders) {
   const paths = folders.filter(f => f.kind === 'local' && fs.existsSync(f.path)).map(f => f.path);
   if (!paths.length) return;
   mediaLibrary.scanFoldersInBackground(paths, scanUpdates({
-    onDone: () => folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id)),
+    onDone: () => {
+      folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id));
+      maybeAutoFetchPublicMetadata();
+    },
   }));
 }
 
@@ -678,6 +694,7 @@ async function syncCloudFolders(folders) {
     }
   }
   readCloudTagsInBackground();
+  maybeAutoFetchPublicMetadata();
   return results;
 }
 
@@ -816,6 +833,29 @@ ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj, 
   } catch (err) {
     return { ok: false, error: err.message };
   }
+});
+
+ipcMain.handle('audio:fetch-public-metadata', async (_evt, { trackIds = null, force = false } = {}) => {
+  try {
+    const res = await publicMetadata.syncAll({
+      trackIds,
+      force: !!force,
+      onProgress: (p) => sendToWindow('audio:metadata-fetch-progress', p),
+    });
+    const library = mediaLibrary.getLibrary();
+    sendToWindow('audio:library-scan-batch', { library });
+    return {
+      ok: true,
+      ...res,
+      library,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:cancel-public-metadata', async () => {
+  return publicMetadata.cancel();
 });
 
 ipcMain.handle('audio:ai-fix-metadata-preview', async (_evt, { trackIds, scope = 'selected', prompt, agent, enableOpenLookup = true } = {}) => {

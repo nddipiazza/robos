@@ -14925,6 +14925,13 @@
             album.episodeCount = 0;
           }
           album.artId = artId;
+          album.overview = list.find((t) => t.showOverview)?.showOverview || list.find((t) => t.overview)?.overview || null;
+          album.rating = list.find((t) => t.rating)?.rating || null;
+          album.network = list.find((t) => t.network)?.network || null;
+          album.cast = list.find((t) => t.cast)?.cast || null;
+          album.director = list.find((t) => t.director || t.composer)?.director || list.find((t) => t.composer)?.composer || null;
+          album.imdbId = list.find((t) => t.imdbId)?.imdbId || null;
+          album.showStatus = list.find((t) => t.showStatus)?.showStatus || null;
           album.duration = duration;
           album.discCount = discCount;
           album.addedAt = addedAt;
@@ -19170,6 +19177,7 @@
       actions.setWatched ? { label: allWatched ? "Mark as Unwatched" : "Mark as Watched", icon: "check", onClick: () => actions.setWatched(tracks, !allWatched) } : null,
       actions.setWatched && anyProgress && !allWatched ? { label: "Reset watch progress", icon: "history", onClick: () => actions.setWatched(tracks, false) } : null,
       { label: "Add to Watchlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      actions.fetchMetadata ? { label: "Fetch Poster & Metadata (Public API)", icon: "locate", onClick: () => actions.fetchMetadata(tracks, { force: true }) } : null,
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Watchlist" : "Add to My Watchlist", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
       actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
@@ -19208,6 +19216,7 @@
       actions.setWatched ? { label: allWatched ? "Mark as Unwatched" : "Mark as Watched", icon: "check", onClick: () => actions.setWatched(tracks, !allWatched) } : null,
       actions.setWatched && anyProgress && !allWatched ? { label: "Reset watch progress", icon: "history", onClick: () => actions.setWatched(tracks, false) } : null,
       { label: "Add to Watchlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      actions.fetchMetadata ? { label: "Fetch Poster & Metadata (Public API)", icon: "locate", onClick: () => actions.fetchMetadata(tracks, { force: true }) } : null,
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Watchlist" : "Add to My Watchlist", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
       actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
@@ -19561,6 +19570,8 @@
     onAddFolder,
     onAddFiles,
     isScanning,
+    isFetchingMetadata,
+    onFetchMetadata,
     onAiPlaylist,
     onAiFixMetadata
   }) {
@@ -19650,26 +19661,28 @@
         max: 420,
         defaultWidth: NAV_WIDTH
       }
-    ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Browse Cinema"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Watchlist & Activity"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Media Sources"), /* @__PURE__ */ import_react16.default.createElement(NavItem, { item: { id: "folders", label: "Folders & Cloud", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)((index.moviesOnly || []).length, "movie"), " \xB7 ", (0, import_library_index3.plural)((index.tvShows || []).length, "show")), /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)(index.tracks.length, "video file"), " \xB7 ", (0, import_library_index3.formatLongDuration)(index.totalDuration)), onAiPlaylist && /* @__PURE__ */ import_react16.default.createElement(
+    ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Browse Cinema"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Watchlist & Activity"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Media Sources"), /* @__PURE__ */ import_react16.default.createElement(NavItem, { item: { id: "folders", label: "Folders & Cloud", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)((index.moviesOnly || []).length, "movie"), " \xB7 ", (0, import_library_index3.plural)((index.tvShows || []).length, "show")), /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)(index.tracks.length, "video file"), " \xB7 ", (0, import_library_index3.formatLongDuration)(index.totalDuration)), onFetchMetadata && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-fetch-public-metadata",
+        className: "btn-accent lib-shuffle-all",
+        disabled: !index.tracks.length || isFetchingMetadata,
+        title: "Fetch official posters, plot synopses, cast, ratings & episode guides from public APIs (IMDb, TVmaze, Wikipedia \u2014 no AI required)",
+        onClick: () => onFetchMetadata(scopeFolder ? index.tracks : null, { force: true })
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "locate", size: 14 }),
+      " ",
+      isFetchingMetadata ? "Fetching Metadata\u2026" : "Fetch Posters & Metadata"
+    ), onAiPlaylist && /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
         id: "btn-library-ai-playlist",
-        className: "btn-accent ai-btn lib-shuffle-all",
+        className: "btn-secondary lib-shuffle-all",
         disabled: !index.tracks.length,
         title: "Describe a watchlist and let your RobOS agent build it from your movie library",
         onClick: onAiPlaylist
       },
       "\u2726 AI Watchlist"
-    ), onAiFixMetadata && /* @__PURE__ */ import_react16.default.createElement(
-      "button",
-      {
-        id: "btn-library-ai-fix-metadata",
-        className: "btn-secondary lib-shuffle-all",
-        disabled: !index.tracks.length,
-        title: "Repair scene-release filenames & posters using your RobOS agent and open media tools",
-        onClick: () => onAiFixMetadata(scopeFolder ? index.tracks : [])
-      },
-      "\u2726 AI Fix Metadata"
     ), /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
@@ -19704,7 +19717,18 @@
       },
       /* @__PURE__ */ import_react16.default.createElement("option", { value: "" }, "All media sources"),
       folders.map((f) => /* @__PURE__ */ import_react16.default.createElement("option", { key: f.id, value: f.id }, f.label))
-    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-browse-refresh", className: "btn-icon-only", onClick: onRefresh, title: "Reload movie & TV library index" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "history", size: 15 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: onAddFolder, title: "Add a movie or TV show folder" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "plus", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Add folder")), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onAddFiles, title: "Add individual movie or video files" }, /* @__PURE__ */ import_react16.default.createElement("span", null, "Add videos"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-content", ref: contentRef }, /* @__PURE__ */ import_react16.default.createElement(ScrollContainerContext.Provider, { value: contentRef }, body))));
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-browse-refresh", className: "btn-icon-only", onClick: onRefresh, title: "Reload movie & TV library index" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "history", size: 15 })), onFetchMetadata && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-toolbar-fetch-metadata",
+        className: "btn-secondary",
+        disabled: !index.tracks.length || isFetchingMetadata,
+        onClick: () => onFetchMetadata(scopeFolder ? index.tracks : null, { force: true }),
+        title: "Fetch official posters, descriptions, ratings & episode guides from public APIs (IMDb / TVmaze / Wikipedia)"
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "locate", size: 14 }),
+      /* @__PURE__ */ import_react16.default.createElement("span", null, isFetchingMetadata ? "Fetching\u2026" : "Fetch Metadata")
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: onAddFolder, title: "Add a movie or TV show folder" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "plus", size: 14 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Add folder")), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: onAddFiles, title: "Add individual movie or video files" }, /* @__PURE__ */ import_react16.default.createElement("span", null, "Add videos"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-content", ref: contentRef }, /* @__PURE__ */ import_react16.default.createElement(ScrollContainerContext.Provider, { value: contentRef }, body))));
   }
   function NavItem({ item, count, active, onClick }) {
     return /* @__PURE__ */ import_react16.default.createElement("button", { id: `lib-nav-${item.id}`, className: `lib-nav-item ${active ? "active" : ""}`, onClick }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: item.icon, size: 15 }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-label" }, item.label), count != null && /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-count" }, count.toLocaleString()));
@@ -19772,13 +19796,13 @@
     const ctx = useLibrary();
     const [spotIdx, setSpotIdx] = (0, import_react16.useState)(0);
     const featured = (0, import_react16.useMemo)(() => {
-      const withYear = albums.filter((a) => a.year >= 2e3 || a.franchise);
-      return (withYear.length ? withYear : albums).slice(0, 8);
+      const withRich = albums.filter((a) => a.artId && a.overview || a.year >= 2e3 || a.franchise);
+      return (withRich.length ? withRich : albums).slice(0, 12);
     }, [albums]);
     if (!featured.length) return null;
     const movie = featured[spotIdx % featured.length] || featured[0];
     const qualBadge = movie.quality?.badge || movie.artist || "1080p HD";
-    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-billboard" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-poster", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: movie.artId, name: movie.title }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-top" }, qualBadge)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-info" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-eyebrow-row" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-spotlight-pill" }, "ROBOS CINEMA+ SPOTLIGHT"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-hero-collection" }, movie.franchise || movie.genre || "Feature Film")), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "cinema-hero-title", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, movie.title), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-badges" }, movie.year && /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill gold" }, movie.year), /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill cyan" }, qualBadge), (movie.genres || [movie.genre]).filter(Boolean).map((g) => /* @__PURE__ */ import_react16.default.createElement("span", { key: g, className: "cinema-meta-pill purple", onClick: () => ctx.actions.goToGenre(g) }, g))), /* @__PURE__ */ import_react16.default.createElement("p", { className: "cinema-hero-desc" }, movie.franchise ? `Part of the ${movie.franchise} collection. ` : "", "Instant HTTP 206 byte-range streaming to desktop or 10-foot Smart TV with zero-cloud LAN cast."), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-cinema-play", onClick: () => ctx.actions.playTracks(movie.tracks, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 14 }), " Watch Now"), ctx.actions.hasSpeakers && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => ctx.actions.castTracks(movie.tracks) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cast", size: 14 }), " Cast to TV"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "info", size: 14 }), " Details"), featured.length > 1 && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => setSpotIdx((spotIdx + 1) % featured.length), title: "Next Featured Movie" }, "Next Spotlight \u25B8"))));
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-billboard" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-poster", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: movie.artId, name: movie.title }), /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-top" }, qualBadge)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-info" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-eyebrow-row" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-spotlight-pill" }, "ROBOS CINEMA+ SPOTLIGHT"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-hero-collection" }, movie.isTvShow ? `TV Series \xB7 ${(0, import_library_index3.plural)(movie.seasonCount || 1, "Season")}` : movie.franchise || movie.genre || "Feature Film")), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "cinema-hero-title", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, movie.title), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-badges" }, movie.year && /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill gold" }, movie.year), movie.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill gold" }, "\u2605 ", movie.rating), movie.network && /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill cyan" }, movie.network), /* @__PURE__ */ import_react16.default.createElement("span", { className: "cinema-meta-pill cyan" }, qualBadge), (movie.genres || [movie.genre]).filter(Boolean).map((g) => /* @__PURE__ */ import_react16.default.createElement("span", { key: g, className: "cinema-meta-pill purple", onClick: () => ctx.actions.goToGenre(g) }, g))), /* @__PURE__ */ import_react16.default.createElement("p", { className: "cinema-hero-desc" }, movie.overview ? movie.overview.length > 260 ? `${movie.overview.slice(0, 260).trim()}\u2026` : movie.overview : `${movie.franchise ? `Part of the ${movie.franchise} collection. ` : ""}Instant HTTP 206 byte-range streaming to desktop or 10-foot Smart TV with zero-cloud LAN cast.`), (movie.cast || movie.director) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-credits" }, movie.director && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Director:"), " ", movie.director), movie.cast && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Starring:"), " ", movie.cast)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "cinema-hero-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-cinema-play", onClick: () => ctx.actions.playTracks(movie.tracks, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 14 }), " Watch Now"), ctx.actions.hasSpeakers && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => ctx.actions.castTracks(movie.tracks) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "cast", size: 14 }), " Cast to TV"), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => go({ section: "albums", detail: { type: "album", key: movie.key } }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "info", size: 14 }), " Details"), featured.length > 1 && /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => setSpotIdx((spotIdx + 1) % featured.length), title: "Next Featured Movie" }, "Next Spotlight \u25B8"))));
   }
   function AlbumsSection({ index, go, prefs, setPref }) {
     const sortKey = prefs.albumSort || "title";
@@ -20034,9 +20058,9 @@
         },
         title: `${album.title} \u2014 ${album.isTvShow ? `${(0, import_library_index3.plural)(album.seasonCount || 1, "Season")}, ${(0, import_library_index3.plural)(album.episodeCount || album.tracks.length, "Episode")}` : album.genre || album.artist}`
       },
-      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), topBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-top ${album.isTvShow ? "tv-badge" : ""}` }, topBadge), watchBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-watch ${watchBadge.cls}` }, watchBadge.text), bottomBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, bottomBadge), watchProgressPct > 0 && /* @__PURE__ */ import_react16.default.createElement("div", { className: `poster-watch-progress ${watchProgressPct >= 100 ? "completed" : ""}` }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "poster-watch-progress-fill", style: { width: `${Math.min(100, watchProgressPct)}%` } })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: playLabel, onClick: handleCardPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
+      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), topBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-top ${album.isTvShow ? "tv-badge" : ""}` }, topBadge), album.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-rating" }, "\u2605 ", album.rating), watchBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-watch ${watchBadge.cls}` }, watchBadge.text), bottomBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, bottomBadge), watchProgressPct > 0 && /* @__PURE__ */ import_react16.default.createElement("div", { className: `poster-watch-progress ${watchProgressPct >= 100 ? "completed" : ""}` }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "poster-watch-progress-fill", style: { width: `${Math.min(100, watchProgressPct)}%` } })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: playLabel, onClick: handleCardPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, album.title),
-      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.isTvShow ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, (0, import_library_index3.plural)(album.seasonCount || 1, "Season"), " \xB7 ", (0, import_library_index3.plural)(album.episodeCount || album.tracks.length, "Episode"), showWatch?.completedCount ? ` \xB7 ${showWatch.completedCount}/${showWatch.totalEpisodes} watched` : "") : album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index3.plural)(album.tracks.length, "title")))
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.isTvShow ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, (0, import_library_index3.plural)(album.seasonCount || 1, "Season"), " \xB7 ", (0, import_library_index3.plural)(album.episodeCount || album.tracks.length, "Episode"), album.network ? ` \xB7 ${album.network}` : "", showWatch?.completedCount ? ` \xB7 ${showWatch.completedCount}/${showWatch.totalEpisodes} watched` : "") : album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index3.plural)(album.tracks.length, "title")))
     );
   }
   function ArtistGrid({ artists, go, letterOf = null }) {
@@ -20135,7 +20159,7 @@
       showStartOver = true;
       handlePrimaryPlay = () => actions.playTracks(tracks, 0, { startAt: movieWatch.positionSec });
     }
-    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: handlePrimaryPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " ", primaryPlayLabel), showStartOver && /* @__PURE__ */ import_react16.default.createElement(
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-cover" }, cover), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "detail-eyebrow" }, eyebrow, album?.rating ? ` \xB7 \u2605 ${album.rating}` : "", album?.network ? ` \xB7 ${album.network}` : "", album?.showStatus ? ` \xB7 ${album.showStatus}` : ""), /* @__PURE__ */ import_react16.default.createElement("h2", { className: "detail-title" }, title), subtitle && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-subtitle" }, subtitle), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-meta" }, meta.filter(Boolean).map((m, i) => /* @__PURE__ */ import_react16.default.createElement("span", { key: i }, m))), album?.overview && /* @__PURE__ */ import_react16.default.createElement("p", { className: "detail-overview" }, album.overview), (album?.director || album?.cast) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-credits" }, album.director && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Director:"), " ", album.director), album.cast && /* @__PURE__ */ import_react16.default.createElement("span", null, /* @__PURE__ */ import_react16.default.createElement("strong", null, "Starring:"), " ", album.cast)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-detail-play", className: "btn-accent", disabled: !tracks.length, onClick: handlePrimaryPlay }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 }), " ", primaryPlayLabel), showStartOver && /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
         className: "btn-secondary",
@@ -20167,6 +20191,17 @@
       /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "check", size: 14 }),
       " ",
       allWatched ? "Watched \u2713" : "Mark Watched"
+    ), actions.fetchMetadata && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-detail-fetch-metadata",
+        className: "btn-secondary",
+        disabled: !tracks.length || ctx.isFetchingMetadata,
+        onClick: () => actions.fetchMetadata(tracks, { force: true }),
+        title: "Refresh poster, plot synopsis, ratings & episode guide from public APIs (IMDb / TVmaze / Wikipedia)"
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "locate", size: 14 }),
+      " Refresh Metadata"
     ), /* @__PURE__ */ import_react16.default.createElement("button", { className: `btn-icon-only ${allLoved ? "loved" : ""}`, title: allLoved ? "Remove from Watchlist" : "Add to Watchlist", onClick: () => actions.setLoved(tracks, !allLoved) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: allLoved ? "heartFill" : "heart", size: 15 })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only", title: "More", onClick: (e) => ctx.openMenu(e, collectionMenuItems(tracks, ctx, { label: menuLabel })) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 15 })))));
   }
   function NotFound({ go }) {
@@ -20270,7 +20305,7 @@
             isCurrent && isPlaying ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null)) : /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 })
           ),
           /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-code" }, epCode),
-          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, "Episode ", epNum, ": ", epTitle, ws.inProgress && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge resume" }, "\u25B6 Resume ", (0, import_library_index3.formatDuration)(ws.positionSec), ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ""), ws.completed && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge watched" }, "\u2713 Watched")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : ""), (ws.inProgress || ws.completed) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-progress-bar" }, /* @__PURE__ */ import_react16.default.createElement(
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, "Episode ", epNum, ": ", epTitle, ep.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-rating" }, "\u2605 ", ep.rating), ws.inProgress && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge resume" }, "\u25B6 Resume ", (0, import_library_index3.formatDuration)(ws.positionSec), ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ""), ws.completed && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-ep-status-badge watched" }, "\u2713 Watched")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.airdate ? ` \xB7 Aired ${ep.airdate}` : "", ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : ""), ep.overview && ep.overview !== album.overview && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-overview" }, ep.overview), (ws.inProgress || ws.completed) && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-progress-bar" }, /* @__PURE__ */ import_react16.default.createElement(
             "div",
             {
               className: `tv-episode-progress-fill ${ws.completed ? "completed" : ""}`,
@@ -20714,13 +20749,19 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     const cats = (0, import_library_index5.inferMovieGenres)(track);
     const rows = [
       ["Title", track.title],
-      ["Release Format", track.artist],
       ["Collection / Series", track.album],
+      ["Release Format", track.artist],
+      ["Rating", track.rating ? `\u2605 ${track.rating} / 10` : null],
+      ["Network / Studio", track.network || null],
+      ["Director", track.director || track.composer || null],
+      ["Starring Cast", track.cast || null],
+      ["Air Date", track.airdate || null],
+      ["IMDb ID", track.imdbId || null],
       ["Episode / Part", track.trackNumber ? `${track.trackNumber}${track.trackTotal ? ` of ${track.trackTotal}` : ""}` : null],
       ["Season / Disc", track.discNumber ? `${track.discNumber}${track.discTotal ? ` of ${track.discTotal}` : ""}` : null],
       ["Release Year", track.year],
       ["Categories / Genres", cats.length ? cats.join(", ") : track.genre],
-      ["Studio / Director", track.composer],
+      ["Plot / Synopsis", track.overview || track.showOverview || null],
       ["Runtime", (0, import_library_index5.formatDuration)(track.duration)],
       ["Video / Audio Codec", [track.codec, track.lossless ? "lossless" : null].filter(Boolean).join(", ") || null],
       ["Bitrate", track.bitrate ? `${Math.round(track.bitrate / 1e3)} kbps` : null],
@@ -20738,7 +20779,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     } }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 10 }), " Play"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => {
       onClose();
       actions.goToAlbumOf(track);
-    } }, "View Movie / Show Details"), actions.fixMetadata && /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-track-info-ai-fix", className: "btn-chip", onClick: () => {
+    } }, "View Movie / Show Details"), actions.fetchMetadata && /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-track-info-fetch-public", className: "btn-chip", onClick: () => {
+      onClose();
+      actions.fetchMetadata([track], { force: true });
+    } }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "locate", size: 10 }), " Fetch Poster & Metadata"), actions.fixMetadata && /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-track-info-ai-fix", className: "btn-chip", onClick: () => {
       onClose();
       actions.fixMetadata([track]);
     } }, "\u2726 AI Fix Metadata"), track.filePath && !track.cloud && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => actions.showInFolder(track) }, "Show in file manager")))), /* @__PURE__ */ import_react18.default.createElement("dl", { className: "track-info-grid" }, rows.map(([k, v]) => /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, { key: k }, /* @__PURE__ */ import_react18.default.createElement("dt", null, k), /* @__PURE__ */ import_react18.default.createElement("dd", { title: String(v) }, String(v))))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Close"))));
@@ -21822,6 +21866,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const [isScanning, setIsScanning] = (0, import_react24.useState)(false);
     const [isScanningLibrary, setIsScanningLibrary] = (0, import_react24.useState)(false);
     const [libraryScanStatus, setLibraryScanStatus] = (0, import_react24.useState)(null);
+    const [isFetchingMetadata, setIsFetchingMetadata] = (0, import_react24.useState)(false);
+    const [metadataFetchStatus, setMetadataFetchStatus] = (0, import_react24.useState)(null);
     const [activeCastSession, setActiveCastSession] = (0, import_react24.useState)(null);
     const [statusMsg, setStatusMsg] = (0, import_react24.useState)("");
     const [activeAmbient, setActiveAmbient] = (0, import_react24.useState)(null);
@@ -21963,6 +22009,18 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           setIsScanningLibrary(false);
           setLibraryScanStatus(null);
           showStatus(`Library scan error: ${err.error}`);
+        }));
+      }
+      if (window.robosAudio?.onMetadataFetchProgress) {
+        cleanups.push(window.robosAudio.onMetadataFetchProgress((p) => {
+          if (!p) return;
+          if (p.phase === "done") {
+            setIsFetchingMetadata(false);
+            setMetadataFetchStatus(null);
+          } else {
+            setIsFetchingMetadata(true);
+            setMetadataFetchStatus(p);
+          }
         }));
       }
       if (window.robosAudio?.onSpeakerPlaybackStopped) {
@@ -23030,11 +23088,52 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       showStatus(`\u2726 AI updated metadata & artwork for ${res?.updatedCount || 0} track(s)!`);
     };
+    const handleFetchPublicMetadata = async (scopedTracks = null, { force = false } = {}) => {
+      if (!window.robosAudio?.fetchPublicMetadata) return;
+      const trackIds = Array.isArray(scopedTracks) && scopedTracks.length > 0 ? scopedTracks.map((t) => t.id).filter(Boolean) : null;
+      setIsFetchingMetadata(true);
+      setMetadataFetchStatus({
+        phase: "start",
+        current: 0,
+        total: trackIds ? trackIds.length : library.tracks.length,
+        message: "Fetching posters, plot descriptions & episode guides from public APIs (IMDb / TVmaze / Wikipedia)\u2026"
+      });
+      showStatus("Fetching posters & descriptions from public APIs\u2026");
+      try {
+        const res = await window.robosAudio.fetchPublicMetadata({ trackIds, force });
+        setIsFetchingMetadata(false);
+        setMetadataFetchStatus(null);
+        if (res && res.library) {
+          setLibrary(res.library);
+        } else {
+          await loadLibrary();
+        }
+        if (res && res.ok) {
+          showStatus(`Fetched posters & descriptions for ${res.showsMatched || 0} TV show(s) and ${res.moviesMatched || 0} movie(s) (${res.updatedTracks || 0} files updated)!`);
+        } else if (res && res.error) {
+          showStatus(`Metadata fetch error: ${res.error}`);
+        }
+      } catch (err) {
+        setIsFetchingMetadata(false);
+        setMetadataFetchStatus(null);
+        showStatus("Error fetching public metadata: " + err.message);
+      }
+    };
+    const handleCancelPublicMetadata = async () => {
+      if (window.robosAudio?.cancelPublicMetadata) {
+        await window.robosAudio.cancelPublicMetadata().catch(() => {
+        });
+      }
+      setIsFetchingMetadata(false);
+      setMetadataFetchStatus(null);
+      showStatus("Canceled metadata fetch.");
+    };
     const libraryCtx = {
       artBase: artBase.local,
       stats,
       currentTrack,
       isPlaying,
+      isFetchingMetadata,
       openMenu,
       actions: {
         playTracks,
@@ -23045,6 +23144,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           setQuickPlaylistName("");
           setTracksForPlaylist(tracks);
         },
+        fetchMetadata: handleFetchPublicMetadata,
         fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
         setLoved: setLovedTracks,
         setWatched: setWatchedTracks,
@@ -23481,7 +23581,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react24.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react24.default.createElement(
+      )), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), isFetchingMetadata && /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-progress-banner metadata-fetch-banner" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react24.default.createElement("strong", null, "Fetching Posters & Descriptions (IMDb \xB7 TVmaze \xB7 Wikipedia)"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "scan-details" }, metadataFetchStatus?.total > 0 ? `${metadataFetchStatus.current || 0} / ${metadataFetchStatus.total} titles (${Math.round((metadataFetchStatus.current || 0) / metadataFetchStatus.total * 100)}%)` : "Indexing movies & TV shows...", metadataFetchStatus?.message ? ` \u2014 ${metadataFetchStatus.message}` : ""))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react24.default.createElement(
+        "div",
+        {
+          className: "scan-bar-fill",
+          style: {
+            width: `${metadataFetchStatus?.total > 0 ? Math.min(100, Math.round((metadataFetchStatus.current || 0) / metadataFetchStatus.total * 100)) : 100}%`
+          }
+        }
+      )), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelPublicMetadata }, "Cancel")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react24.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react24.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
@@ -23944,6 +24052,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           canGoBack: libNav.length > 1,
           searchInputRef,
           isScanning: isScanningLibrary,
+          isFetchingMetadata,
+          onFetchMetadata: (scopedTracks, opts) => handleFetchPublicMetadata(scopedTracks, opts),
           onAiPlaylist: () => setShowAiPlaylist(true),
           onAiFixMetadata: (scopedTracks) => setTracksForAiFix(Array.isArray(scopedTracks) ? scopedTracks : []),
           onAddFolder: handleSelectFolder,
