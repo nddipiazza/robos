@@ -80,6 +80,14 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
           <p>Sideload a native RobOS TV app via Developer Mode (LG webOS, Samsung Tizen, Google TV/ADB, Roku), navigate the 10-Foot Portal (<code>:19210</code>) with your TV remote D-Pad, and stream 4K 120Hz games.</p>
         </div>
       </a>
+      <a class="card app-card" href="{{ '/movie-player/' | relative_url }}" data-s="robos movie player video player cinema stage tv shows seasons episodes roku smart tv cast subtitles srt vtt ai watchlist virtual cinema host sftp cloud">
+        <img src="{{ '/v1/assets/images/icons/movie-player.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <div>
+          <h3>RobOS Movie &amp; Video Player</h3>
+          <code class="app-pkg">Home Theater Guide · /movie-player/ · /video-player/</code>
+          <p>100,000-film &amp; TV series home theater with TMDB/TVmaze posters, Show &amp; Season Navigator, synced <code>.srt</code>/<code>.vtt</code> subtitles, AI Watchlists, Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku app.</p>
+        </div>
+      </a>
     </div>
   </div>
 

@@ -123,9 +123,9 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, 
         <div class="suite-shot"><img src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="The Chronicler narrating the opening scene of the RobOS Tabletop RPG" width="1280" height="720" loading="lazy"></div>
         <div class="suite-body"><span class="suite-tag">cRPG · Tabletop · RTS</span><h3>Games</h3><p>Realm of Heroes, a HeroQuest-inspired Tabletop RPG and the Starfall Command RTS. Designed from a knowledge graph, written by agents and tested by playing them on camera.</p><span class="go">Choose a game →</span></div>
       </a>
-      <a class="card suite" href="{{ '/v1/apps/audio-player/' | relative_url }}">
-        <div class="suite-shot"><img src="{{ '/assets/audio-player/virtual-dj-volume.jpg' | relative_url }}" alt="RobOS Audio Player Virtual DJ settings, with the AI agent picker and a box to describe your DJ" width="640" height="500" loading="lazy"></div>
-        <div class="suite-body"><span class="suite-tag">Music · Cinema · Home speakers</span><h3>Audio Player, Movie Player &amp; Home Speaker</h3><p>100,000-song and 100,000-movie libraries with zero-cloud Google Cast to your speakers and Smart TVs, plus optional AI Playlists/Watchlists, a Virtual DJ, and a Virtual Cinema Host.</p><span class="go">Read the Audio &amp; Movie Player docs →</span></div>
+      <a class="card suite" href="{{ '/movie-player/' | relative_url }}">
+        <div class="suite-shot"><img src="{{ '/assets/blog/movie-player/02-library-grid.png' | relative_url }}" alt="RobOS Movie Player theater browser with TMDB posters, spotlight hero banner, and Smart TV casting" width="1280" height="720" loading="lazy"></div>
+        <div class="suite-body"><span class="suite-tag">Music · Cinema · Smart TVs</span><h3>Movie Player, Audio Player &amp; Smart TVs</h3><p>100,000-movie &amp; TV series home theater and 100,000-song audio player with zero-cloud Roku &amp; Google Cast streaming, Show &amp; Season Navigator, plus optional AI Watchlists/Playlists and a spoken Virtual Host.</p><span class="go">Tour Movie &amp; Video Player →</span></div>
       </a>
       <a class="card suite" href="#build">
         <div class="suite-shot suite-idea" aria-hidden="true"><div class="prompt">A tracker for our community garden…</div><ul class="nodes"><li><b>app</b> Garden Club</li><li>Plot</li><li>Member</li><li>WateringShift</li><li>Harvest</li><li><b>tests</b> 6</li></ul></div>

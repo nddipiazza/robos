@@ -3,11 +3,13 @@ title: "RobOS Movie Player"
 package: movie-player
 category: core-desktop
 icon: movie-player.svg
-summary: "Open-source cinema & video player sharing the exact warm theater theme of RobOS Audio Player: 100,000-movie library, AI Watchlists, Virtual Cinema Host, synced .srt/.vtt subtitles, FFmpeg poster fixer, and zero-cloud Google TV / Chromecast LAN streaming."
-description: "Desktop cinema stage with HTML5 video playback, synchronized transport deck, .srt/.vtt subtitles, AI Watchlists, RobOS Voice Virtual Cinema Host, cloud byte-range streaming, and local Google Cast TV streaming."
+summary: "Open-source cinema & video player sharing the exact warm theater theme of RobOS Audio Player: 100,000-movie & TV series library, Show & Season Navigator, TMDB/TVmaze posters, AI Watchlists, Virtual Cinema Host, synced .srt/.vtt subtitles, and a 3-row visual image-card Roku & Smart TV app."
+description: "Desktop & Smart TV cinema stage with Movies & TV Shows tabs, Show & Season Navigator, TMDB/TVmaze metadata, .srt/.vtt subtitles, AI Watchlists, RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku OS channel."
 ---
 
-**RobOS Movie Player** (`packages/movie-player`) is the cinema and video companion to [RobOS Audio Player]({{ '/apps/audio-player/' | relative_url }}). It shares the exact same warm dark theater palette (`#15120f`, `#1c1814`, `#26211b`, `#e8a33d`, `#f1e9dc`) and multi-pane architecture, translating every audio player capability—100,000-item virtualized libraries, cloud byte-range streaming, AI playlists, a spoken Virtual Host, open-source metadata/artwork enrichment, procedural soundscapes, and zero-cloud Google Cast streaming—to movies, TV series, and video collections.
+> **Full Interactive Walkthrough & Live Roku TV Tour:** See the flagship landing page at [`/movie-player/`](https://rowbose.com/movie-player/) (or [`/video-player/`](https://rowbose.com/video-player/)).
+
+**RobOS Movie Player** (`packages/movie-player`) is the cinema and video companion to [RobOS Audio Player]({{ '/apps/audio-player/' | relative_url }}). It shares the exact same warm dark theater palette (`#15120f`, `#1c1814`, `#26211b`, `#e8a33d`, `#f1e9dc`) and multi-pane architecture, translating every audio player capability—100,000-item virtualized libraries, cloud byte-range streaming, AI playlists, a spoken Virtual Host, open-source metadata/artwork enrichment, procedural soundscapes, and zero-cloud Smart TV & Roku OS streaming—to movies, TV series, and video collections.
 
 ![RobOS Movie Player — Cinema Stage, 100k Library & Zero-Cloud Cast Architecture](../assets/images/movie-player-cinema-architecture.jpg)
 

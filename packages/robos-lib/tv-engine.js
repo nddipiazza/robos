@@ -1748,19 +1748,35 @@ end sub
 
     let initialCinemaLibActive = false;
     let initialCinemaLibItems = [];
+    const toCleanAsciiObj = (val) => {
+      if (typeof val === 'string') {
+        return val
+          .replace(/[—–·•]/g, '-')
+          .replace(/[^\x20-\x7E]+/g, '')
+          .trim();
+      }
+      if (Array.isArray(val)) return val.map(toCleanAsciiObj);
+      if (val && typeof val === 'object') {
+        const res = {};
+        for (const [k, v] of Object.entries(val)) res[k] = toCleanAsciiObj(v);
+        return res;
+      }
+      return val;
+    };
     const rewriteCinemaItemHost = (item, targetHost) => {
       if (!item || typeof item !== 'object') return item;
       const fixUrl = (u) => {
         if (!u || typeof u !== 'string') return u;
         return u.replace(/^http:\/\/(\d+\.\d+\.\d+\.\d+|localhost|127\.0\.0\.1):(\d+)\//i, `http://${targetHost}:$2/`);
       };
+      const cleaned = toCleanAsciiObj(item);
       const out = {
-        ...item,
-        artUrl: fixUrl(item.artUrl),
-        streamUrl: fixUrl(item.streamUrl),
+        ...cleaned,
+        artUrl: fixUrl(cleaned.artUrl),
+        streamUrl: fixUrl(cleaned.streamUrl),
       };
-      if (Array.isArray(item.episodes)) {
-        out.episodes = item.episodes.map((ep) => ({
+      if (Array.isArray(cleaned.episodes)) {
+        out.episodes = cleaned.episodes.map((ep) => ({
           ...ep,
           artUrl: fixUrl(ep.artUrl) || out.artUrl,
           streamUrl: fixUrl(ep.streamUrl),
@@ -2694,18 +2710,7 @@ end sub
 
 function cleanAscii(s as Dynamic) as String
     if s = invalid then return ""
-    str = s.ToStr()
-    out = ""
-    for i = 0 to Len(str) - 1
-        ch = Mid(str, i + 1, 1)
-        code = Asc(ch)
-        if code >= 32 and code <= 126
-            out = out + ch
-        else if code = 183 or code = 8212
-            out = out + "-"
-        end if
-    end for
-    return out
+    return s.ToStr()
 end function
 
 sub showAppCastFrame(frameUrl as String)
@@ -2896,6 +2901,8 @@ function makeMonogram(titleStr as String) as String
 end function
 
 function cinemaClassifyItem(mv as Object) as Object
+    if mv = invalid then return {}
+    if mv._info <> invalid then return mv._info
     titleStr = cleanAscii(mv.title)
     albumStr = cleanAscii(mv.album)
     artistStr = cleanAscii(mv.artist)
@@ -2997,7 +3004,7 @@ function cinemaClassifyItem(mv as Object) as Object
         fmtStr = "MKV"
     end if
 
-    return {
+    infoObj = {
         franchise: franchise,
         primaryGenre: primaryGenre,
         qualBadge: qualBadge,
@@ -3017,6 +3024,8 @@ function cinemaClassifyItem(mv as Object) as Object
         isNew: isNew,
         isClassic: isClassic
     }
+    mv._info = infoObj
+    return infoObj
 end function
 
 function cinemaItemMatchesCat(mv as Object, catId as String) as Boolean
@@ -3264,8 +3273,6 @@ sub switchCinemaTab(tabName as String)
     m.cinemaCatIndex = 0
     m.cinemaPosterIndex = 0
     applyCinemaCategoryFilter(0)
-    updateCinemaTabHeaderUi()
-    updateCinemaCategoryCardsUi()
     updateCinemaPaneFocusUi()
 end sub
 
