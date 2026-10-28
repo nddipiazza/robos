@@ -213,8 +213,21 @@ const DISC_FOLDER = /^(cd|disc|disk|part|pt)\s*(\d+)$/i;
  * e.g. "Dune (2021) [1080p] [WEBRip] [5.1] [YTS.MX]"
  *   -> { title: "Dune", year: 2021, resolution: "1080p", source: "WEBRip" }
  */
+function isSampleVideoPath(filePath) {
+  if (!filePath) return false;
+  const norm = String(filePath).replace(/\\/g, '/');
+  if (/\/samples?\//i.test(norm)) return true;
+  const base = path.parse(norm).name.trim();
+  if (/^(?:sample|rarbg\.com|etrg)$/i.test(base)) return true;
+  if (/[-._\s]sample$/i.test(base)) return true;
+  return false;
+}
+
 function cleanMovieTitle(raw) {
-  const str = String(raw || '').trim();
+  const str = String(raw || '')
+    .replace(/^(?:\[\s*)?www\.[a-z0-9.-]+(?:\s*\])?\s*[-–—:]+\s*/i, '')
+    .replace(/^\d{1,2}\.\s+(?=[A-Z])/i, '')
+    .trim();
   if (!str) return { title: '', year: null, resolution: null, source: null };
 
   const resMatch = /\b(2160p|4k|1080p|720p|480p)\b/i.exec(str);
@@ -230,9 +243,9 @@ function cleanMovieTitle(raw) {
   let head = str;
   if (yearMatch && yearMatch.index > 0) {
     head = str.slice(0, yearMatch.index);
-  } else if (resMatch && resMatch.index > 0) {
+  } else if (resMatch && resMatch.index >= 0) {
     head = str.slice(0, resMatch.index);
-  } else if (srcMatch && srcMatch.index > 0) {
+  } else if (srcMatch && srcMatch.index >= 0) {
     head = str.slice(0, srcMatch.index);
   }
 
@@ -242,12 +255,22 @@ function cleanMovieTitle(raw) {
     .replace(/\([^)]*\)/g, ' ')
     .replace(/\([^)]*$/g, ' ')
     .replace(/\[[^\]]*$/g, ' ')
-    .replace(/\b(camrip|hdcam|ts|hdts|telesync|dvdscr|xvid|x264|x265|hevc|h264|aac|ac3|ddp5|10bit)\b.*$/i, ' ')
+    .replace(/\b(2160p|4k|1080p|720p|480p|BluRay|BRRip|BDRip|WEBRip|WEB-DL|WEB|HDRip|DVDRip|HDTV|REMUX|camrip|hdcam|ts|hdts|telesync|dvdscr|xvid|x264|x265|hevc|h264|aac|ac3|ddp5|dts|10bit|repack|proper|internal)\b.*$/i, ' ')
     .replace(/[._]+/g, ' ')
+    .replace(/^\d{1,2}\s+(?=(?:The\s+)?Final\s+Destination\b)/i, '')
     .replace(/^\s*[-–—:]+\s*/, '')
     .replace(/\s*[-–—:]+\s*$/, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  if (head && head === head.toLowerCase() && /[a-z]/.test(head)) {
+    head = toCanonicalShowCase(head);
+  }
+  if (/^Avengers\s+End\s+Game$/i.test(head)) {
+    head = 'Avengers: Endgame';
+  } else if (/^Avengers\s+Endgame$/i.test(head)) {
+    head = 'Avengers: Endgame';
+  }
 
   return {
     title: head || str.replace(/[._]+/g, ' ').trim(),
@@ -523,24 +546,42 @@ function upgradeTrackVideoGrouping(track) {
   };
 
   if (info.isTvShow) {
+    const existingEpTitle = String(track.episodeTitle || '').trim();
+    const hasCleanEnrichedEpTitle = existingEpTitle
+      && !/^Episode\s+\d+$/i.test(existingEpTitle)
+      && !/\b(2160p|4k|1080p|720p|480p|BluRay|BRRip|BDRip|WEBRip|WEB-DL|WEB|HDRip|DVDRip|HDTV|x264|x265|hevc|h264|aac|ac3|dts)\b/i.test(existingEpTitle)
+      && (/^Episode\s+\d+$/i.test(info.episodeTitle || '') || track.metadataProvider === 'tvmaze');
+    const finalEpTitle = hasCleanEnrichedEpTitle ? existingEpTitle : info.episodeTitle;
+    const finalDisplayTitle = finalEpTitle
+      ? `${info.showName} · ${info.episodeCode} · ${finalEpTitle}`
+      : info.displayTitle;
+
     set('mediaType', 'tv');
     set('showName', info.showName);
     set('seasonNumber', info.seasonNumber);
     set('episodeNumber', info.episodeNumber);
     set('episodeCode', info.episodeCode);
-    set('episodeTitle', info.episodeTitle);
+    set('episodeTitle', finalEpTitle);
     set('album', info.showName);
     set('albumArtist', info.showName);
     set('discNumber', info.seasonNumber);
     set('trackNumber', info.episodeNumber);
-    set('title', info.displayTitle);
+    set('title', finalDisplayTitle);
     if (!track.genre || track.genre === 'Movies') set('genre', 'TV Series');
   } else {
     set('mediaType', 'movie');
-    if (info.displayTitle && (track.title?.includes('(') || !track.title)) {
-      const cleanedTitle = info.displayTitle;
-      set('title', cleanedTitle);
-      set('album', info.year ? `${cleanedTitle} (${info.year})` : cleanedTitle);
+    if (info.displayTitle) {
+      const needsTitleClean = !track.title
+        || track.title.includes('(')
+        || /^\d{1,2}\s+(?:The\s+)?Final\s+Destination\b/i.test(track.title)
+        || /^Avengers\s+End\s*Game$/i.test(track.title)
+        || (track.title === track.title.toLowerCase() && /[a-z]/.test(track.title));
+      if (needsTitleClean) {
+        const cleanedTitle = info.displayTitle;
+        const yr = info.year || track.year || null;
+        set('title', cleanedTitle);
+        set('album', yr ? `${cleanedTitle} (${yr})` : cleanedTitle);
+      }
     }
   }
 
@@ -656,6 +697,7 @@ function guessFromRemotePath(remotePath, name = '') {
 }
 
 module.exports = {
+  isSampleVideoPath,
   cleanMovieTitle,
   cleanShowName,
   parseVideoMediaInfo,

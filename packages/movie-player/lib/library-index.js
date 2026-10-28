@@ -313,6 +313,10 @@ function albumKeyOf(track) {
   if (tv && tv.isTvShow) {
     return `tv:${fold(tv.showName)}`;
   }
+  if (track.mediaType === 'movie') {
+    const cleanTitle = fold(String(track.title || track.album || UNKNOWN_ALBUM).replace(/\s*\((?:19|20)\d\d\)\s*$/, ''));
+    return `movie:${cleanTitle}:${track.year || ''}`;
+  }
   const title = fold(track.album || UNKNOWN_ALBUM);
   if (track.albumArtist) return `${title}\u0001aa:${fold(track.albumArtist)}`;
   const dirKey = track.cloud?.remotePath || track.filePath || '';
@@ -320,11 +324,25 @@ function albumKeyOf(track) {
   return `${title}\u0001ar:${fold(track.artist)}`;
 }
 
+function movieQualityRank(track) {
+  const hay = `${track?.artist || ''} ${track?.cloud?.remotePath || track?.filePath || ''}`;
+  if (/\b(?:camrip|hdcam|cam|telesync|hdts|ts)\b/i.test(hay)) return 3;
+  if (/\b(?:blu-?ray|remux|web-?dl|webrip)\b/i.test(hay)) return 0;
+  return 1;
+}
+
 function compareAlbumOrder(a, b) {
+  if (a.mediaType === 'movie' && b.mediaType === 'movie') {
+    const qa = movieQualityRank(a);
+    const qb = movieQualityRank(b);
+    if (qa !== qb) return qa - qb;
+  }
   const tvA = inferTvShowEpisode(a);
   const tvB = inferTvShowEpisode(b);
-  const seasonA = (tvA && tvA.seasonNumber != null) ? tvA.seasonNumber : (a.seasonNumber != null ? a.seasonNumber : (a.discNumber || 1));
-  const seasonB = (tvB && tvB.seasonNumber != null) ? tvB.seasonNumber : (b.seasonNumber != null ? b.seasonNumber : (b.discNumber || 1));
+  const rawSeasonA = (tvA && tvA.seasonNumber != null) ? tvA.seasonNumber : (a.seasonNumber != null ? a.seasonNumber : (a.discNumber ?? 1));
+  const rawSeasonB = (tvB && tvB.seasonNumber != null) ? tvB.seasonNumber : (b.seasonNumber != null ? b.seasonNumber : (b.discNumber ?? 1));
+  const seasonA = rawSeasonA === 0 ? 999 : rawSeasonA;
+  const seasonB = rawSeasonB === 0 ? 999 : rawSeasonB;
   const epA = (tvA && tvA.episodeNumber != null) ? tvA.episodeNumber : (a.episodeNumber != null ? a.episodeNumber : (a.trackNumber || 9999));
   const epB = (tvB && tvB.episodeNumber != null) ? tvB.episodeNumber : (b.episodeNumber != null ? b.episodeNumber : (b.trackNumber || 9999));
   return seasonA - seasonB
@@ -458,7 +476,7 @@ function buildIndex(tracks = []) {
         season.episodes.push(t);
         season.duration += t.duration || 0;
       }
-      album.seasons = [...seasonMap.values()].sort((a, b) => a.seasonNumber - b.seasonNumber);
+      album.seasons = [...seasonMap.values()].sort((a, b) => (a.seasonNumber === 0 ? 999 : a.seasonNumber) - (b.seasonNumber === 0 ? 999 : b.seasonNumber));
       for (const s of album.seasons) s.episodeCount = s.episodes.length;
       album.seasonCount = album.seasons.length;
       album.episodeCount = list.length;
@@ -474,7 +492,12 @@ function buildIndex(tracks = []) {
     album.rating = list.find(t => t.rating)?.rating || null;
     album.network = list.find(t => t.network)?.network || null;
     album.cast = list.find(t => t.cast)?.cast || null;
-    album.director = list.find(t => t.director || t.composer)?.director || list.find(t => t.composer)?.composer || null;
+    const rawDirector = list.find(t => t.director)?.director
+      || (!album.isTvShow ? list.find(t => t.composer)?.composer : null)
+      || null;
+    album.director = (album.isTvShow && rawDirector && album.network && fold(rawDirector) === fold(album.network))
+      ? null
+      : rawDirector;
     album.imdbId = list.find(t => t.imdbId)?.imdbId || null;
     album.showStatus = list.find(t => t.showStatus)?.showStatus || null;
     album.duration = duration;

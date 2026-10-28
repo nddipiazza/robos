@@ -74,10 +74,12 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders
     }) })).filter((c, i) => !list[i].folders?.length || c.folders.length);
     setConnections(unique);
     if (list.length) {
-      const target = unique.find(c => c.id === connId && c.browsable) || unique.find(c => c.browsable);
-      if (target) {
-        setConnId(target.id);
-        browse(target.id, target.startPath || '/', forceRefresh);
+      const preferred = unique.find(c => folders.some(f => f.kind === 'cloud' && f.connectionId === c.id && f.syncEnabled !== false) && c.browsable)
+        || unique.find(c => c.id === connId && c.browsable)
+        || unique.find(c => c.browsable);
+      if (preferred) {
+        setConnId(preferred.id);
+        browse(preferred.id, preferred.startPath || '/', forceRefresh);
       }
     }
     loadCacheStats();
@@ -153,7 +155,11 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders
     showStatus(`Cleared ${res.removed || 0} cached cloud audio file(s). Tracks will stream on demand when played.`);
   };
 
-  const usable = (connections || []).filter(c => c.browsable);
+  const usable = (connections || []).filter(c => c.browsable).sort((a, b) => {
+    const aSynced = folders.filter(f => f.kind === 'cloud' && f.connectionId === a.id && f.syncEnabled !== false).length;
+    const bSynced = folders.filter(f => f.kind === 'cloud' && f.connectionId === b.id && f.syncEnabled !== false).length;
+    return bSynced - aSynced;
+  });
   const other = (connections || []).filter(c => !c.browsable);
   const activeConn = usable.find(c => c.id === connId) || usable[0] || null;
   const currentPath = listing ? listing.path : '/';
@@ -200,9 +206,10 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders
                     onChange={e => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)} />
                   <span><strong>{lf.label}</strong><small>{checked ? 'Kept in sync · checks at startup' : 'Sync paused'} · {lf.remotePath}</small>
                     {f && <small>{formatFolderMediaSummary(f)} · {f.lastSynced ? 'Last synced ' + new Date(f.lastSynced).toLocaleString() : 'Not synced yet'}</small>}
-                    {f && Array.isArray(f.shows) && f.shows.length > 0 && (
+                     {f && Array.isArray(f.shows) && f.shows.length > 0 && (
                       <small style={{ color: '#e8a33d' }}>
-                        📺 {f.shows.map(s => `${s.showName}: ${s.seasons.map(sn => `Season ${sn.seasonNumber} (${sn.episodeCount} eps)`).join(', ')}`).join(' · ')}
+                        📺 {f.shows.slice(0, 4).map(s => `${s.showName} (${s.seasons.length}S · ${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)}E)`).join(' · ')}
+                        {f.shows.length > 4 ? ` · +${f.shows.length - 4} more TV series` : ''}
                       </small>
                     )}
                     {f?.syncError && <small className="cloud-error">{f.syncError} · Refresh to retry</small>}

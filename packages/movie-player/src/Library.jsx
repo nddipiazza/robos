@@ -764,6 +764,7 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
             <>
               <DetailHeader
                 album={activeShow}
+                compact
                 cover={<Cover artId={activeShow.artId} name={activeShow.title} />}
                 eyebrow="TV Series"
                 title={activeShow.title}
@@ -1286,7 +1287,7 @@ function ArtistChips({ tracks, index, go, limit = 12 }) {
 
 // ── Detail pages ────────────────────────────────────────────────────────────
 
-function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel, album = null }) {
+function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menuLabel, album = null, compact = false }) {
   const ctx = useLibrary();
   const { actions, stats } = ctx;
   const allLoved = tracks.length > 0 && tracks.every(t => (stats[t.id] || {}).loved);
@@ -1294,8 +1295,8 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
   const showWatch = (album && album.isTvShow) ? getShowWatchState(album, stats) : null;
   const movieWatch = (album && !album.isTvShow && tracks.length) ? getTrackWatchState(tracks[0], stats) : null;
 
-  let primaryPlayLabel = 'Watch Now';
-  let handlePrimaryPlay = () => actions.playTracks(tracks, 0);
+  let primaryPlayLabel = (album && album.isTvShow && showWatch) ? showWatch.actionLabel : 'Watch Now';
+  let handlePrimaryPlay = () => actions.playTracks(tracks, showWatch ? showWatch.resumeIndex : 0);
   let showStartOver = false;
 
   if (showWatch && showWatch.hasActivity && !showWatch.completed) {
@@ -1330,7 +1331,7 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
         {subtitle && <div className="detail-subtitle">{subtitle}</div>}
         <div className="detail-meta">{meta.filter(Boolean).map((m, i) => <span key={i}>{m}</span>)}</div>
         {album?.overview && (
-          <p className="detail-overview">{album.overview}</p>
+          <p className="detail-overview" title={album.overview}>{album.overview}</p>
         )}
         {(album?.director || album?.cast) && (
           <div className="detail-credits">
@@ -1362,8 +1363,12 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
             </button>
           )}
           <button id="btn-detail-shuffle" className="btn-secondary" disabled={!tracks.length} onClick={() => actions.playTracks(tracks, 0, { shuffle: true })}><Icon name="shuffle" size={14} /> Shuffle</button>
-          <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'next')}><Icon name="playNext" size={14} /> Watch next</button>
-          <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'end')}><Icon name="queueAdd" size={14} /> Add to queue</button>
+          {!compact && (
+            <>
+              <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'next')}><Icon name="playNext" size={14} /> Watch next</button>
+              <button className="btn-secondary" disabled={!tracks.length} onClick={() => actions.queueTracks(tracks, 'end')}><Icon name="queueAdd" size={14} /> Add to queue</button>
+            </>
+          )}
           {actions.setWatched && (
             <button
               className="btn-secondary"
@@ -1374,7 +1379,7 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
               <Icon name="check" size={14} /> {allWatched ? 'Watched ✓' : 'Mark Watched'}
             </button>
           )}
-          {actions.fetchMetadata && (
+          {!compact && actions.fetchMetadata && (
             <button
               id="btn-detail-fetch-metadata"
               className="btn-secondary"
@@ -1435,7 +1440,15 @@ function TvShowSeasonsBreakdown({ album }) {
   const seasons = album.seasons && album.seasons.length
     ? album.seasons
     : [{ seasonNumber: 1, label: 'Season 1', code: 'S01', episodes: album.tracks, episodeCount: album.tracks.length, duration: album.duration }];
-  const [selectedSeason, setSelectedSeason] = useState('all');
+  const defaultSeason = useMemo(() => {
+    const ws = getShowWatchState(album, stats);
+    if (ws.hasActivity && ws.resumeTrack?.seasonNumber != null) {
+      return String(ws.resumeTrack.seasonNumber);
+    }
+    const firstRegular = seasons.find(s => s.seasonNumber >= 1) || seasons[0];
+    return firstRegular ? String(firstRegular.seasonNumber) : 'all';
+  }, [album.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [selectedSeason, setSelectedSeason] = useState(defaultSeason);
 
   const visibleSeasons = selectedSeason === 'all'
     ? seasons
@@ -1490,7 +1503,7 @@ function TvShowSeasonsBreakdown({ album }) {
                     ? (seasonState.resumePositionSec >= 5
                       ? `Resume E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, '0')} (${formatDuration(seasonState.resumePositionSec)})`
                       : `Continue E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, '0')}`)
-                    : `Watch ${season.label}`}
+                    : `Watch ${season.code}`}
                 </button>
                 {actions.setWatched && (
                   <button
@@ -1498,7 +1511,7 @@ function TvShowSeasonsBreakdown({ album }) {
                     onClick={() => actions.setWatched(season.episodes, !allSeasonWatched)}
                     title={allSeasonWatched ? `Mark ${season.label} unwatched` : `Mark all episodes in ${season.label} watched`}
                   >
-                    <Icon name="check" size={12} /> {allSeasonWatched ? 'Season Watched ✓' : 'Mark Season Watched'}
+                    <Icon name="check" size={12} /> {allSeasonWatched ? 'Watched ✓' : 'Mark Watched'}
                   </button>
                 )}
                 <button className="btn-secondary" onClick={() => actions.playTracks(season.episodes, 0, { shuffle: true })}>
@@ -1532,7 +1545,7 @@ function TvShowSeasonsBreakdown({ album }) {
                     <span className="tv-episode-code">{epCode}</span>
                     <div className="tv-episode-info">
                       <span className="tv-episode-title">
-                        Episode {epNum}: {epTitle}
+                        {String(epTitle || '').replace(/^\d{3}\s*[-–—:]\s*/, '') || `Episode ${epNum}`}
                         {ep.rating && <span className="tv-ep-rating">★ {ep.rating}</span>}
                         {ws.inProgress && (
                           <span className="tv-ep-status-badge resume">

@@ -92,11 +92,18 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
               </span>
               {Array.isArray(f.shows) && f.shows.length > 0 && (
                 <div className="folder-shows-breakdown">
-                  {f.shows.map(s => (
+                  {f.shows.slice(0, 4).map(s => (
                     <span key={s.showName} className="folder-show-pill">
-                      📺 <strong>{s.showName}</strong>: {s.seasons.map(sn => `Season ${sn.seasonNumber} (${sn.episodeCount} ep${sn.episodeCount === 1 ? '' : 's'})`).join(', ')}
+                      📺 <strong>{s.showName}</strong>: {s.seasons.length === 1
+                        ? `Season ${s.seasons[0].seasonNumber} (${s.seasons[0].episodeCount} ep${s.seasons[0].episodeCount === 1 ? '' : 's'})`
+                        : `${s.seasons.length} Seasons (${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)} eps)`}
                     </span>
                   ))}
+                  {f.shows.length > 4 && (
+                    <span className="folder-show-pill">
+                      +{f.shows.length - 4} more TV series
+                    </span>
+                  )}
                 </div>
               )}
             </div>
