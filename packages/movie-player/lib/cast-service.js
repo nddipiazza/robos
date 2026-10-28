@@ -515,6 +515,18 @@ class CastService {
       const resumeEp = inProgressEp || firstUnwatchedEp || eps[0];
       const repFormatted = this._formatTvTrackItem(resumeEp, stats, 0);
       const showTitle = String(resumeEp.showName || resumeEp.album || resumeEp.title || 'TV Series').slice(0, 80);
+      const bestEpWithGenre = eps.find(e => e.genre && e.genre !== 'TV Series' && e.genre !== 'Movies & TV' && e.genre !== 'Movies') || resumeEp;
+      const bestEpWithOverview = eps.find(e => e.showOverview) || eps.find(e => e.overview) || resumeEp;
+      const bestEpWithRating = eps.find(e => e.rating && Number(e.rating) > 0) || resumeEp;
+      const bestEpWithNetwork = eps.find(e => e.network) || resumeEp;
+      const bestEpWithArt = eps.find(e => e.artId) || resumeEp;
+      const showGenre = String(bestEpWithGenre.genre || repFormatted.genre || 'TV Series').slice(0, 48);
+      const showOverview = String(bestEpWithOverview.showOverview || bestEpWithOverview.overview || repFormatted.overview || '').slice(0, 320);
+      const showRating = bestEpWithRating.rating || repFormatted.rating || null;
+      const showNetwork = String(bestEpWithNetwork.network || repFormatted.network || '').slice(0, 36);
+      const showArtUrl = bestEpWithArt.artId
+        ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(bestEpWithArt.artId)}.jpg`
+        : repFormatted.artUrl;
 
       // Select up to 120 episodes for the interactive Roku season/episode browser
       const maxEpsPerShow = 120;
@@ -548,9 +560,13 @@ class CastService {
         const epCleanTitle = epItem.episodeTitle || epItem.title;
         return {
           ...epItem,
+          artUrl: epItem.artUrl || showArtUrl,
+          genre: (epItem.genre && epItem.genre !== 'TV Series') ? epItem.genre : showGenre,
+          network: epItem.network || showNetwork,
+          rating: epItem.rating || showRating,
           episodeCode: code,
           title: `${code} - ${epCleanTitle}`.slice(0, 80),
-          showOverview: String(e.showOverview || repFormatted.overview || '').slice(0, 280),
+          showOverview: String(e.showOverview || showOverview || '').slice(0, 280),
         };
       });
 
@@ -568,13 +584,17 @@ class CastService {
         repTrackId: repFormatted.id,
         title: showTitle,
         showName: showTitle,
+        artUrl: showArtUrl,
+        genre: showGenre,
+        rating: showRating,
+        network: showNetwork,
         mediaType: 'tv',
         isShowGroup: true,
         seasonCount,
         episodeCount,
         watchedCount,
         inProgressCount,
-        overview: String(resumeEp.showOverview || resumeEp.overview || repFormatted.overview || '').slice(0, 320),
+        overview: showOverview,
         inProgress: showInProgress,
         completed: showCompleted,
         progressPct: showProgressPct,
