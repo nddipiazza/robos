@@ -946,6 +946,25 @@ async function init() {
     };
   }
 
+  const tabloCastRokuBtn = document.getElementById('btn-tablo-cast-roku');
+  if (tabloCastRokuBtn) {
+    tabloCastRokuBtn.onclick = async () => {
+      tabloCastRokuBtn.disabled = true;
+      tabloCastRokuBtn.textContent = 'Opening on 65" Roku TV…';
+      try {
+        const res = await window.robosTv.castTabloToTv({ ip: state.tabloIp });
+        if (res && res.ok) {
+          showBanner(res.message);
+        } else {
+          showBanner((res && res.error) || 'Could not open Tablo tab on Roku TV', true);
+        }
+      } finally {
+        tabloCastRokuBtn.disabled = false;
+        tabloCastRokuBtn.textContent = '📺 Show Tablo Tab on 65" Roku TV';
+      }
+    };
+  }
+
   const filterBar = document.getElementById('tablo-filter-bar');
   if (filterBar) {
     filterBar.querySelectorAll('[data-tablo-filter]').forEach((btn) => {

@@ -23,4 +23,5 @@ contextBridge.exposeInMainWorld('robosTv', {
   getTabloChannels: (opts) => ipcRenderer.invoke('tv:getTabloChannels', opts),
   setTabloDevice: (opts) => ipcRenderer.invoke('tv:setTabloDevice', opts),
   openTabloExternal: (opts) => ipcRenderer.invoke('tv:openTabloExternal', opts),
+  castTabloToTv: (opts) => ipcRenderer.invoke('tv:castTabloToTv', opts),
 });

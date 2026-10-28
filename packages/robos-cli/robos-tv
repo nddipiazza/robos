@@ -109,6 +109,13 @@ async function main() {
     return;
   }
 
+  if (cmd === 'cast-tablo' || cmd === 'roku-tablo') {
+    const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';
+    const res = await engine.castTabloToTv({ ip: tabloIp });
+    console.log(JSON.stringify(res, null, 2));
+    return;
+  }
+
   if (cmd === 'watch') {
     const query = args[1] || '';
     const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';

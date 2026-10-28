@@ -303,6 +303,22 @@ describe('Tablo 4th Gen OTA DVR integration', () => {
     assert.strictEqual(httpImg.status, 200);
     assert.ok(httpImg.buf.equals(fakeJpeg));
     assert.ok(seenAuthHeaders.length > 0);
+
+    const snap = await engine.refreshTabloCinemaSnapshot({ ip: '127.0.0.1', port: tabloPort });
+    assert.strictEqual(snap.ok, true);
+    assert.strictEqual(snap.items.length, 1);
+    assert.strictEqual(snap.items[0].isTablo, true);
+    assert.strictEqual(snap.items[0].mediaType, 'tablo');
+    assert.strictEqual(snap.items[0].pkgThumbUri, 'pkg:/images/tablo-186023.jpg');
+    assert.ok(snap.items[0].artUrl.includes('/api/tablo/image/186023.jpg'));
+
+    const rokuPkg = engine.buildTvPackage({ platformId: 'roku-os', tvId: 'tv-livingroom-tcl-roku', tvIp: '192.168.1.15' });
+    assert.strictEqual(rokuPkg.ok, true);
+    const mainSceneXml = fs.readFileSync(path.join(rokuPkg.targetDir, 'components/MainScene.xml'), 'utf8');
+    const mainSceneBrs = fs.readFileSync(path.join(rokuPkg.targetDir, 'components/MainScene.brs'), 'utf8');
+    assert.ok(mainSceneXml.includes('id="cinemaTabTabloGroup"'), 'Roku MainScene.xml should include the Tablo DVR tab');
+    assert.ok(mainSceneXml.includes('id="cinemaHeroThumbPoster"'), 'Roku MainScene.xml should include the 16:9 Tablo recording thumbnail frame');
+    assert.ok(mainSceneBrs.includes('m.tabloCategories'), 'Roku MainScene.brs should include Tablo DVR categories');
   });
 });
 

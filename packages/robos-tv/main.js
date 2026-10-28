@@ -356,3 +356,7 @@ ipcMain.handle('tv:openTabloExternal', async (_e, opts) => {
   return tvEngine.openTabloExternal(opts || {});
 });
 
+ipcMain.handle('tv:castTabloToTv', async (_e, opts) => {
+  return tvEngine.castTabloToTv(opts || {});
+});
+
