@@ -1757,6 +1757,7 @@ end sub
       : `SINGLE DASHBOARD (Slideshow Off)`;
 
     let initialCinemaLibActive = false;
+    let initialCinemaLibDefaultTab = 'movies';
     let initialCinemaLibItems = [];
     const toCleanAsciiObj = (val) => {
       if (typeof val === 'string') {
@@ -1783,6 +1784,8 @@ end sub
       const out = {
         ...cleaned,
         artUrl: fixUrl(cleaned.artUrl),
+        coverUrl: fixUrl(cleaned.coverUrl),
+        thumbnailUrl: fixUrl(cleaned.thumbnailUrl),
         streamUrl: fixUrl(cleaned.streamUrl),
       };
       if (Array.isArray(cleaned.episodes)) {
@@ -1798,8 +1801,13 @@ end sub
       const cfgFile = path.join(process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos'), 'tv-studio.json');
       if (fs.existsSync(cfgFile)) {
         const stDisk = JSON.parse(fs.readFileSync(cfgFile, 'utf8'));
-        if (Array.isArray(stDisk.moviePlayerLibrarySnapshot)) {
-          initialCinemaLibItems = stDisk.moviePlayerLibrarySnapshot.map((it) => rewriteCinemaItemHost(it, hostIp));
+        const baseMovies = Array.isArray(stDisk.moviePlayerLibrarySnapshot)
+          ? stDisk.moviePlayerLibrarySnapshot.filter((it) => it && !it.isTablo && it.mediaType !== 'tablo')
+          : [];
+        const tabloSnap = Array.isArray(stDisk.tabloCinemaItemsSnapshot) ? stDisk.tabloCinemaItemsSnapshot : [];
+        initialCinemaLibItems = [...baseMovies, ...tabloSnap].map((it) => rewriteCinemaItemHost(it, hostIp));
+        if (stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.defaultTab) {
+          initialCinemaLibDefaultTab = String(stDisk.activeCinemaLibrary.defaultTab);
         }
         if (
           (stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.active !== false) ||
@@ -2017,59 +2025,67 @@ ${voiceSlide2RowsXml}
     <!-- Bottom Status & Visual Image-Card Launcher Bar (Zero LabelList / Zero Text-Only Menus) -->
     <Rectangle id="heroCard" translation="[48, 898]" width="1824" height="142" color="0x111827FF" />
     <Rectangle translation="[48, 898]" width="1824" height="3" color="0x00BCD4FF" />
-    <Label id="heroTitle" scale="[0.66, 0.66]" text="RobOS Live TV Wallboard  |  D-Pad Left/Right &amp; OK Launches Experience" translation="[68, 910]" width="1360" height="32" numLines="1" color="0xF8FAFCFF" />
-    <Label id="heroDesc" scale="[0.52, 0.52]" text="Select a visual card on the right: Movies, TV Shows, Engineering Ops, CI &amp; Popularity, or Voice Chats" translation="[68, 938]" width="1380" height="28" numLines="1" color="0x94A3B8FF" />
-    <Label id="statusFooter" scale="[0.52, 0.52]" text="Connected to ${portalUrl}/dashboard | 100% Image-Card Navigation" translation="[68, 964]" width="1380" height="28" numLines="1" color="0x67E8F9FF" />
-    <!-- 5 Visual Image-Tile Launcher Cards on Wallboard Dock (x=960..1856) -->
+    <Label id="heroTitle" scale="[0.66, 0.66]" text="RobOS Live TV Wallboard  |  D-Pad Left/Right &amp; OK Launches Experience" translation="[68, 910]" width="1160" height="32" numLines="1" color="0xF8FAFCFF" />
+    <Label id="heroDesc" scale="[0.52, 0.52]" text="Select a visual card on the right: Movies, TV Shows, Tablo DVR, Engineering Ops, CI &amp; Popularity, or Voice Chats" translation="[68, 938]" width="1460" height="28" numLines="1" color="0x94A3B8FF" />
+    <Label id="statusFooter" scale="[0.52, 0.52]" text="Connected to ${portalUrl}/dashboard | 100% Image-Card Navigation" translation="[68, 964]" width="1460" height="28" numLines="1" color="0x67E8F9FF" />
+    <!-- 6 Visual Image-Tile Launcher Cards on Wallboard Dock (x=848..1856) -->
     <Group id="wallLauncherGroup">
-      <Rectangle id="wallCardBorder0" translation="[960, 910]" width="172" height="118" color="0xFCD34DFF" />
-      <Rectangle id="wallCardBg0" translation="[964, 914]" width="164" height="110" color="0x2B2114FF" />
-      <Rectangle translation="[972, 922]" width="46" height="64" color="0xE8A33DFF" />
-      <Label translation="[972, 944]" scale="[0.60, 0.60]" width="76" height="28" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
-      <Poster id="wallCardPoster0" translation="[972, 922]" width="46" height="64" loadDisplayMode="scaleToZoom" />
-      <Label id="wallCardTitle0" translation="[1026, 926]" scale="[0.48, 0.48]" width="200" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="MOVIES" />
-      <Label id="wallCardSub0" translation="[972, 994]" scale="[0.42, 0.42]" width="350" height="22" numLines="1" color="0xF1E9DCFF" text="107 Feature Films" />
+      <Rectangle id="wallCardBorder0" translation="[848, 910]" width="162" height="118" color="0xFCD34DFF" />
+      <Rectangle id="wallCardBg0" translation="[852, 914]" width="154" height="110" color="0x2B2114FF" />
+      <Rectangle translation="[860, 922]" width="44" height="64" color="0xE8A33DFF" />
+      <Label translation="[860, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
+      <Poster id="wallCardPoster0" translation="[860, 922]" width="44" height="64" loadDisplayMode="scaleToZoom" />
+      <Label id="wallCardTitle0" translation="[912, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="MOVIES" />
+      <Label id="wallCardSub0" translation="[860, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xF1E9DCFF" text="107 Feature Films" />
 
-      <Rectangle id="wallCardBorder1" translation="[1140, 910]" width="172" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg1" translation="[1144, 914]" width="164" height="110" color="0x132536FF" />
-      <Rectangle translation="[1152, 922]" width="46" height="64" color="0x38BDF8FF" />
-      <Label translation="[1152, 944]" scale="[0.60, 0.60]" width="76" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
-      <Poster id="wallCardPoster1" translation="[1152, 922]" width="46" height="64" loadDisplayMode="scaleToZoom" />
-      <Label id="wallCardTitle1" translation="[1206, 926]" scale="[0.48, 0.48]" width="200" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TV SHOWS" />
-      <Label id="wallCardSub1" translation="[1152, 994]" scale="[0.42, 0.42]" width="350" height="22" numLines="1" color="0xE2E8F0FF" text="48 Series | Seasons" />
+      <Rectangle id="wallCardBorder1" translation="[1016, 910]" width="162" height="118" color="0x1E293BFF" />
+      <Rectangle id="wallCardBg1" translation="[1020, 914]" width="154" height="110" color="0x132536FF" />
+      <Rectangle translation="[1028, 922]" width="44" height="64" color="0x38BDF8FF" />
+      <Label translation="[1028, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
+      <Poster id="wallCardPoster1" translation="[1028, 922]" width="44" height="64" loadDisplayMode="scaleToZoom" />
+      <Label id="wallCardTitle1" translation="[1080, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TV SHOWS" />
+      <Label id="wallCardSub1" translation="[1028, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xE2E8F0FF" text="48 Series | Seasons" />
 
-      <Rectangle id="wallCardBorder2" translation="[1320, 910]" width="172" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg2" translation="[1324, 914]" width="164" height="110" color="0x161F30FF" />
-      <Rectangle translation="[1332, 922]" width="46" height="64" color="0x10B981FF" />
-      <Label translation="[1332, 944]" scale="[0.62, 0.62]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="OPS" />
-      <Label id="wallCardTitle2" translation="[1386, 926]" scale="[0.46, 0.46]" width="205" height="44" wrap="true" numLines="2" color="0x6EE7B7FF" text="ENG &amp; AGENTS" />
-      <Label id="wallCardSub2" translation="[1332, 994]" scale="[0.42, 0.42]" width="350" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 1 Dashboard" />
+      <Rectangle id="wallCardBorder2" translation="[1184, 910]" width="162" height="118" color="0x1E293BFF" />
+      <Rectangle id="wallCardBg2" translation="[1188, 914]" width="154" height="110" color="0x0F2938FF" />
+      <Rectangle translation="[1196, 922]" width="44" height="64" color="0x00BCD4FF" />
+      <Label translation="[1196, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
+      <Poster id="wallCardPoster2" translation="[1196, 922]" width="44" height="64" loadDisplayMode="scaleToZoom" />
+      <Label id="wallCardTitle2" translation="[1248, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TABLO DVR" />
+      <Label id="wallCardSub2" translation="[1196, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xA5F3FCFF" text="OTA Recordings" />
 
-      <Rectangle id="wallCardBorder3" translation="[1500, 910]" width="172" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg3" translation="[1504, 914]" width="164" height="110" color="0x161F30FF" />
-      <Rectangle translation="[1512, 922]" width="46" height="64" color="0xF59E0BFF" />
-      <Label translation="[1512, 944]" scale="[0.62, 0.62]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="CI+" />
-      <Label id="wallCardTitle3" translation="[1566, 926]" scale="[0.46, 0.46]" width="205" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="CI &amp; STARS" />
-      <Label id="wallCardSub3" translation="[1512, 994]" scale="[0.42, 0.42]" width="350" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 2 Dashboard" />
+      <Rectangle id="wallCardBorder3" translation="[1352, 910]" width="162" height="118" color="0x1E293BFF" />
+      <Rectangle id="wallCardBg3" translation="[1356, 914]" width="154" height="110" color="0x161F30FF" />
+      <Rectangle translation="[1364, 922]" width="44" height="64" color="0x10B981FF" />
+      <Label translation="[1364, 944]" scale="[0.60, 0.60]" width="72" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="OPS" />
+      <Label id="wallCardTitle3" translation="[1416, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0x6EE7B7FF" text="ENG &amp; AGENTS" />
+      <Label id="wallCardSub3" translation="[1364, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 1 Dashboard" />
 
-      <Rectangle id="wallCardBorder4" translation="[1680, 910]" width="172" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg4" translation="[1684, 914]" width="164" height="110" color="0x161F30FF" />
-      <Rectangle translation="[1692, 922]" width="46" height="64" color="0xA855F7FF" />
-      <Label translation="[1692, 944]" scale="[0.62, 0.62]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="MIC" />
-      <Label id="wallCardTitle4" translation="[1746, 926]" scale="[0.46, 0.46]" width="205" height="44" wrap="true" numLines="2" color="0xD8B4FEFF" text="VOICE CHATS" />
-      <Label id="wallCardSub4" translation="[1692, 994]" scale="[0.42, 0.42]" width="350" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 3 Dashboard" />
+      <Rectangle id="wallCardBorder4" translation="[1520, 910]" width="162" height="118" color="0x1E293BFF" />
+      <Rectangle id="wallCardBg4" translation="[1524, 914]" width="154" height="110" color="0x161F30FF" />
+      <Rectangle translation="[1532, 922]" width="44" height="64" color="0xF59E0BFF" />
+      <Label translation="[1532, 944]" scale="[0.60, 0.60]" width="72" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="CI+" />
+      <Label id="wallCardTitle4" translation="[1584, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="CI &amp; STARS" />
+      <Label id="wallCardSub4" translation="[1532, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 2 Dashboard" />
+
+      <Rectangle id="wallCardBorder5" translation="[1688, 910]" width="162" height="118" color="0x1E293BFF" />
+      <Rectangle id="wallCardBg5" translation="[1692, 914]" width="154" height="110" color="0x161F30FF" />
+      <Rectangle translation="[1700, 922]" width="44" height="64" color="0xA855F7FF" />
+      <Label translation="[1700, 944]" scale="[0.60, 0.60]" width="72" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="MIC" />
+      <Label id="wallCardTitle5" translation="[1752, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xD8B4FEFF" text="VOICE CHATS" />
+      <Label id="wallCardSub5" translation="[1700, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 3 Dashboard" />
     </Group>
 
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
-    <!-- Interactive 10-Foot Movie Player Library Browser Overlay (3-Row 100% Visual Image-Card Architecture: Row 0 Tabs <-> Row 1 Category/Season Image Cards <-> Row 2 Large 2:3 Poster Cards) -->
+    <!-- Interactive 10-Foot Movie Player & Tablo DVR Library Browser Overlay (3-Row 100% Visual Image-Card Architecture: Row 0 Tabs <-> Row 1 Category/Season Image Cards <-> Row 2 Large Poster Cards) -->
     <Group id="cinemaLibraryGroup" visible="${initialCinemaLibActive ? 'true' : 'false'}">
       <!-- Warm Obsidian Theater Backdrop (#110E0B) -->
       <Rectangle width="1920" height="1080" color="0x110E0BFF" />
 
       <!-- ============================================================================== -->
-      <!-- ROW 0 (TOP BAR, y=0..94): VISUAL IMAGE TAB CARDS (MOVIES | TV SHOWS | <- BACK) -->
+      <!-- ROW 0 (TOP BAR, y=0..94): VISUAL IMAGE TAB CARDS (MOVIES | TV SHOWS | TABLO DVR) -->
       <!-- D-Pad UP from Row 1 lands here; LEFT/RIGHT switches tabs; DOWN enters Row 1    -->
       <!-- ============================================================================== -->
       <Rectangle width="1920" height="94" color="0x17130FFF" />
@@ -2081,41 +2097,55 @@ ${voiceSlide2RowsXml}
       <Rectangle translation="[48, 24]" width="44" height="46" color="0xE8A33DFF" />
       <Label translation="[48, 36]" scale="[0.64, 0.64]" width="68" height="28" numLines="1" horizAlign="center" color="0x110E0BFF" text="RC+" />
       <Label translation="[102, 24]" scale="[0.54, 0.54]" width="230" height="26" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+" />
-      <Label translation="[102, 48]" scale="[0.42, 0.42]" width="290" height="22" numLines="1" color="0xD6CFC2FF" text="10-FOOT HOME THEATER" />
+      <Label translation="[102, 48]" scale="[0.42, 0.42]" width="290" height="22" numLines="1" color="0xD6CFC2FF" text="MOVIES | TV | TABLO" />
 
-      <!-- Focusable Visual Image Tab Card 0: MOVIES (x=258, y=10, w=384, h=74) -->
-      <Rectangle id="cinemaTabMoviesBorder" translation="[258, 10]" width="384" height="74" color="0xE8A33DFF" />
-      <Rectangle id="cinemaTabMoviesBg" translation="[262, 14]" width="376" height="66" color="0x2B2114FF" />
-      <Rectangle id="cinemaTabMoviesStripe" translation="[262, 74]" width="376" height="6" color="0xFCD34DFF" />
-      <Rectangle id="cinemaTabMoviesArtBg" translation="[272, 18]" width="42" height="56" color="0xE8A33DFF" />
-      <Label translation="[272, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
-      <Poster id="cinemaTabMoviesPoster" translation="[272, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
-      <Label id="cinemaTabMoviesLabel" translation="[326, 20]" scale="[0.62, 0.62]" width="360" height="30" numLines="1" color="0xFCD34DFF" text="MOVIES" />
-      <Label id="cinemaTabMoviesSub" translation="[326, 48]" scale="[0.45, 0.45]" width="460" height="24" numLines="1" color="0xF1E9DCFF" text="107 Feature Films  |  4K &amp; BluRay" />
-      <Rectangle id="cinemaTabMoviesPillBg" translation="[542, 22]" width="86" height="26" color="0xE8A33DFF" />
-      <Label id="cinemaTabMoviesPillTxt" translation="[542, 27]" scale="[0.42, 0.42]" width="204" height="22" numLines="1" horizAlign="center" color="0x110E0BFF" text="ACTIVE TAB" />
+      <!-- Focusable Visual Image Tab Card 0: MOVIES (x=254, y=10, w=350, h=74) -->
+      <Rectangle id="cinemaTabMoviesBorder" translation="[254, 10]" width="350" height="74" color="0xE8A33DFF" />
+      <Rectangle id="cinemaTabMoviesBg" translation="[258, 14]" width="342" height="66" color="0x2B2114FF" />
+      <Rectangle id="cinemaTabMoviesStripe" translation="[258, 74]" width="342" height="6" color="0xFCD34DFF" />
+      <Rectangle id="cinemaTabMoviesArtBg" translation="[266, 18]" width="42" height="56" color="0xE8A33DFF" />
+      <Label translation="[266, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
+      <Poster id="cinemaTabMoviesPoster" translation="[266, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
+      <Label id="cinemaTabMoviesLabel" translation="[318, 20]" scale="[0.58, 0.58]" width="320" height="30" numLines="1" color="0xFCD34DFF" text="MOVIES" />
+      <Label id="cinemaTabMoviesSub" translation="[318, 48]" scale="[0.43, 0.43]" width="430" height="24" numLines="1" color="0xF1E9DCFF" text="107 Feature Films  |  4K &amp; BluRay" />
+      <Rectangle id="cinemaTabMoviesPillBg" translation="[508, 22]" width="84" height="26" color="0xE8A33DFF" />
+      <Label id="cinemaTabMoviesPillTxt" translation="[508, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0x110E0BFF" text="ACTIVE" />
 
-      <!-- Focusable Visual Image Tab Card 1: TV SHOWS (x=656, y=10, w=396, h=74) -->
-      <Rectangle id="cinemaTabShowsBorder" translation="[656, 10]" width="396" height="74" color="0x2E261EFF" />
-      <Rectangle id="cinemaTabShowsBg" translation="[660, 14]" width="388" height="66" color="0x1B1612FF" />
-      <Rectangle id="cinemaTabShowsStripe" translation="[660, 74]" width="388" height="6" color="0x2E261EFF" />
-      <Rectangle id="cinemaTabShowsArtBg" translation="[670, 18]" width="42" height="56" color="0x38BDF8FF" />
-      <Label translation="[670, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
-      <Poster id="cinemaTabShowsPoster" translation="[670, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
-      <Label id="cinemaTabShowsLabel" translation="[724, 20]" scale="[0.62, 0.62]" width="380" height="30" numLines="1" color="0x94A3B8FF" text="TV SHOWS" />
-      <Label id="cinemaTabShowsSub" translation="[724, 48]" scale="[0.45, 0.45]" width="480" height="24" numLines="1" color="0xA89F91FF" text="48 Series  |  Seasons &amp; Episodes" />
-      <Rectangle id="cinemaTabShowsPillBg" translation="[952, 22]" width="86" height="26" color="0x261F18FF" />
-      <Label id="cinemaTabShowsPillTxt" translation="[952, 27]" scale="[0.42, 0.42]" width="204" height="22" numLines="1" horizAlign="center" color="0xA89F91FF" text="RIGHT &gt;" />
+      <!-- Focusable Visual Image Tab Card 1: TV SHOWS (x=616, y=10, w=356, h=74) -->
+      <Rectangle id="cinemaTabShowsBorder" translation="[616, 10]" width="356" height="74" color="0x2E261EFF" />
+      <Rectangle id="cinemaTabShowsBg" translation="[620, 14]" width="348" height="66" color="0x1B1612FF" />
+      <Rectangle id="cinemaTabShowsStripe" translation="[620, 74]" width="348" height="6" color="0x2E261EFF" />
+      <Rectangle id="cinemaTabShowsArtBg" translation="[628, 18]" width="42" height="56" color="0x38BDF8FF" />
+      <Label translation="[628, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
+      <Poster id="cinemaTabShowsPoster" translation="[628, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
+      <Label id="cinemaTabShowsLabel" translation="[680, 20]" scale="[0.58, 0.58]" width="330" height="30" numLines="1" color="0x94A3B8FF" text="TV SHOWS" />
+      <Label id="cinemaTabShowsSub" translation="[680, 48]" scale="[0.43, 0.43]" width="430" height="24" numLines="1" color="0xA89F91FF" text="48 Series  |  Seasons &amp; Episodes" />
+      <Rectangle id="cinemaTabShowsPillBg" translation="[876, 22]" width="84" height="26" color="0x261F18FF" />
+      <Label id="cinemaTabShowsPillTxt" translation="[876, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0xA89F91FF" text="TAB &gt;" />
 
-      <!-- Focusable Visual Image Tab Card 2: <- ALL TV SHOWS (x=1066, y=10, w=332, h=74, visible when inside a Show's Seasons) -->
+      <!-- Focusable Visual Image Tab Card 2: TABLO DVR (x=984, y=10, w=416, h=74) -->
+      <Group id="cinemaTabTabloGroup" visible="true">
+        <Rectangle id="cinemaTabTabloBorder" translation="[984, 10]" width="416" height="74" color="0x00BCD4FF" />
+        <Rectangle id="cinemaTabTabloBg" translation="[988, 14]" width="408" height="66" color="0x0F2938FF" />
+        <Rectangle id="cinemaTabTabloStripe" translation="[988, 74]" width="408" height="6" color="0x00BCD4FF" />
+        <Rectangle id="cinemaTabTabloArtBg" translation="[996, 18]" width="56" height="56" color="0x00BCD4FF" />
+        <Label translation="[996, 36]" scale="[0.52, 0.52]" width="106" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
+        <Poster id="cinemaTabTabloPoster" translation="[996, 18]" width="56" height="56" loadDisplayMode="scaleToZoom" />
+        <Label id="cinemaTabTabloLabel" translation="[1062, 20]" scale="[0.58, 0.58]" width="400" height="30" numLines="1" color="0x67E8F9FF" text="TABLO DVR" />
+        <Label id="cinemaTabTabloSub" translation="[1062, 48]" scale="[0.43, 0.43]" width="520" height="24" numLines="1" color="0xA5F3FCFF" text="192.168.1.55  |  OTA Recordings" />
+        <Rectangle id="cinemaTabTabloPillBg" translation="[1304, 22]" width="84" height="26" color="0x00BCD4FF" />
+        <Label id="cinemaTabTabloPillTxt" translation="[1304, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0x07131AFF" text="TABLO &gt;" />
+      </Group>
+
+      <!-- Focusable Visual Image Tab Card 2 Alternate: <- ALL TV SHOWS (x=984, y=10, w=416, h=74, visible when inside a Show's Seasons) -->
       <Group id="cinemaTabBackGroup" visible="false">
-        <Rectangle id="cinemaTabBackBorder" translation="[1066, 10]" width="332" height="74" color="0x38BDF8FF" />
-        <Rectangle id="cinemaTabBackBg" translation="[1070, 14]" width="324" height="66" color="0x132536FF" />
-        <Rectangle translation="[1080, 18]" width="42" height="56" color="0x38BDF8FF" />
-        <Label translation="[1080, 36]" scale="[0.56, 0.56]" width="74" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="ALL" />
-        <Poster id="cinemaTabBackPoster" translation="[1080, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaTabBackLabel" translation="[1134, 20]" scale="[0.56, 0.56]" width="420" height="28" numLines="1" color="0x67E8F9FF" text="ALL TV SHOWS" />
-        <Label id="cinemaTabBackSub" translation="[1134, 48]" scale="[0.44, 0.44]" width="480" height="22" numLines="1" color="0xE2E8F0FF" text="Back to 48 Series Grid" />
+        <Rectangle id="cinemaTabBackBorder" translation="[984, 10]" width="416" height="74" color="0x38BDF8FF" />
+        <Rectangle id="cinemaTabBackBg" translation="[988, 14]" width="408" height="66" color="0x132536FF" />
+        <Rectangle translation="[996, 18]" width="42" height="56" color="0x38BDF8FF" />
+        <Label translation="[996, 36]" scale="[0.56, 0.56]" width="74" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="ALL" />
+        <Poster id="cinemaTabBackPoster" translation="[996, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
+        <Label id="cinemaTabBackLabel" translation="[1050, 20]" scale="[0.56, 0.56]" width="420" height="28" numLines="1" color="0x67E8F9FF" text="ALL TV SHOWS" />
+        <Label id="cinemaTabBackSub" translation="[1050, 48]" scale="[0.44, 0.44]" width="480" height="22" numLines="1" color="0xE2E8F0FF" text="Back to 48 Series Grid" />
       </Group>
 
       <!-- Right Header Visual D-Pad Zone Indicator (x=1414, y=14, w=470, h=66) -->
@@ -2126,7 +2156,7 @@ ${voiceSlide2RowsXml}
 
       <!-- ============================================================================== -->
       <!-- HERO SPOTLIGHT BILLBOARD (x=36, y=104, w=1848, h=288)                          -->
-      <!-- Live preview of focused Movie / TV Series / Episode                            -->
+      <!-- Live preview of focused Movie / TV Series / Tablo DVR Recording                -->
       <!-- ============================================================================== -->
       <Rectangle id="cinemaHeroBg" translation="[36, 104]" width="1848" height="288" color="0x1B1611FF" />
       <Rectangle id="cinemaHeroAccentTop" translation="[36, 104]" width="1848" height="4" color="0xE8A33DFF" />
@@ -2148,9 +2178,9 @@ ${voiceSlide2RowsXml}
       <!-- Hero Spotlight Details (x=256, y=116) -->
       <Rectangle id="cinemaSpotlightPillBg" translation="[256, 116]" width="156" height="26" color="0xE8A33DFF" />
       <Label id="cinemaSpotlightPillText" translation="[266, 120]" scale="[0.45, 0.45]" width="300" height="22" numLines="1" color="0x110E0BFF" text="FEATURE FILM" />
-      <Label id="cinemaHeroEyebrow" translation="[424, 119]" scale="[0.50, 0.50]" width="2400" height="26" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  |  DIRECT LAN STREAM" />
+      <Label id="cinemaHeroEyebrow" translation="[424, 119]" scale="[0.50, 0.50]" width="1920" height="26" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  |  DIRECT LAN STREAM" />
 
-      <Label id="cinemaLibDetailTitle" translation="[256, 146]" scale="[0.88, 0.88]" width="1600" height="42" numLines="1" color="0xFFFFFFFF" text="Select a Title" />
+      <Label id="cinemaLibDetailTitle" translation="[256, 146]" scale="[0.86, 0.86]" width="1310" height="42" numLines="1" color="0xFFFFFFFF" text="Select a Title" />
 
       <!-- 5 Metadata Badges Row (Year/Season, Star Rating/Episodes, Quality/Network, Genre, Watch Status) -->
       <Rectangle translation="[256, 194]" width="136" height="32" color="0x261F18FF" />
@@ -2174,16 +2204,26 @@ ${voiceSlide2RowsXml}
       <Label id="cinemaBadgeFormat" translation="[1112, 200]" scale="[0.50, 0.50]" width="520" height="26" numLines="1" color="0x86EFACFF" text="DIRECT PLAY" />
 
       <!-- Credits / Network / Season Breakdown + Multi-Line Plot Synopsis -->
-      <Label id="cinemaLibDetailMeta" translation="[256, 234]" scale="[0.52, 0.52]" width="2900" height="28" numLines="1" color="0xF1E9DCFF" text="Director &amp; Cast  |  RobOS Cinema+" />
-      <Label id="cinemaHeroSynopsis" translation="[256, 262]" scale="[0.49, 0.49]" width="3150" height="68" wrap="true" numLines="2" color="0xD6CFC2FF" text="Full HD home theater playback with real public metadata, chapter resume, and Roku hardware decoding." />
-      <Label id="cinemaLibDetailSub" translation="[256, 316]" scale="[0.46, 0.46]" width="3200" height="24" numLines="1" color="0x9C9284FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
+      <Label id="cinemaLibDetailMeta" translation="[256, 234]" scale="[0.52, 0.52]" width="2160" height="28" numLines="1" color="0xF1E9DCFF" text="Director &amp; Cast  |  RobOS Cinema+" />
+      <Label id="cinemaHeroSynopsis" translation="[256, 262]" scale="[0.49, 0.49]" width="2280" height="68" wrap="true" numLines="2" color="0xD6CFC2FF" text="Full HD home theater playback with real public metadata, chapter resume, and Roku hardware decoding." />
+      <Label id="cinemaLibDetailSub" translation="[256, 316]" scale="[0.46, 0.46]" width="2420" height="24" numLines="1" color="0x9C9284FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
 
       <!-- Hero Action Banner -->
       <Rectangle id="cinemaPlayBtnBg" translation="[256, 344]" width="520" height="38" color="0xE8A33DFF" />
       <Label id="cinemaLibPlayPrompt" translation="[274, 352]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x110E0BFF" text="&gt;&gt;  WATCH NOW (PRESS OK)" />
-      <Rectangle translation="[790, 344]" width="1070" height="38" color="0x221C16FF" />
+      <Rectangle translation="[790, 344]" width="594" height="38" color="0x221C16FF" />
       <Rectangle translation="[790, 344]" width="4" height="38" color="0x38BDF8FF" />
-      <Label id="cinemaHeroNavHint" translation="[806, 353]" scale="[0.46, 0.46]" width="2200" height="24" numLines="1" color="0x67E8F9FF" text="[UP] CATEGORIES &amp; TABS   |   [LEFT/RIGHT] BROWSE CARDS   |   [OK] SELECT   |   [BACK] RETURN" />
+      <Label id="cinemaHeroNavHint" translation="[806, 353]" scale="[0.44, 0.44]" width="1300" height="24" numLines="1" color="0x67E8F9FF" text="[UP] CATEGORIES &amp; TABS  |  [LEFT/RIGHT] BROWSE  |  [OK] PLAY" />
+
+      <!-- 16:9 Acquired Tablo Recording Thumbnail Preview Frame (x=1400, y=112, w=472, h=268) -->
+      <Group id="cinemaHeroThumbGroup" visible="false">
+        <Rectangle id="cinemaHeroThumbBorder" translation="[1400, 112]" width="472" height="268" color="0x00BCD4FF" />
+        <Rectangle translation="[1404, 116]" width="464" height="260" color="0x090D16FF" />
+        <Label translation="[1404, 224]" scale="[0.58, 0.58]" width="800" height="30" numLines="1" horizAlign="center" color="0x38BDF8FF" text="TABLO DVR RECORDING THUMBNAIL" />
+        <Poster id="cinemaHeroThumbPoster" translation="[1404, 116]" width="464" height="260" loadDisplayMode="scaleToZoom" />
+        <Rectangle translation="[1404, 344]" width="464" height="32" color="0x090D16D8" />
+        <Label id="cinemaHeroThumbCaption" translation="[1414, 350]" scale="[0.43, 0.43]" width="1040" height="22" numLines="1" color="0x67E8F9FF" text="TABLO RECORDING THUMBNAIL | 192.168.1.55" />
+      </Group>
 
       <!-- ============================================================================== -->
       <!-- ROW 1 (MIDDLE SHELF, y=402..546): 6 VISUAL CATEGORY / SEASON IMAGE CARDS       -->
@@ -2418,12 +2458,25 @@ sub init()
     m.cinemaTabShowsSub = m.top.findNode("cinemaTabShowsSub")
     m.cinemaTabShowsPillBg = m.top.findNode("cinemaTabShowsPillBg")
     m.cinemaTabShowsPillTxt = m.top.findNode("cinemaTabShowsPillTxt")
+    m.cinemaTabTabloGroup = m.top.findNode("cinemaTabTabloGroup")
+    m.cinemaTabTabloBorder = m.top.findNode("cinemaTabTabloBorder")
+    m.cinemaTabTabloBg = m.top.findNode("cinemaTabTabloBg")
+    m.cinemaTabTabloStripe = m.top.findNode("cinemaTabTabloStripe")
+    m.cinemaTabTabloPoster = m.top.findNode("cinemaTabTabloPoster")
+    m.cinemaTabTabloLabel = m.top.findNode("cinemaTabTabloLabel")
+    m.cinemaTabTabloSub = m.top.findNode("cinemaTabTabloSub")
+    m.cinemaTabTabloPillBg = m.top.findNode("cinemaTabTabloPillBg")
+    m.cinemaTabTabloPillTxt = m.top.findNode("cinemaTabTabloPillTxt")
     m.cinemaTabBackGroup = m.top.findNode("cinemaTabBackGroup")
     m.cinemaTabBackBorder = m.top.findNode("cinemaTabBackBorder")
     m.cinemaTabBackBg = m.top.findNode("cinemaTabBackBg")
     m.cinemaTabBackPoster = m.top.findNode("cinemaTabBackPoster")
     m.cinemaTabBackLabel = m.top.findNode("cinemaTabBackLabel")
     m.cinemaTabBackSub = m.top.findNode("cinemaTabBackSub")
+    m.cinemaHeroThumbGroup = m.top.findNode("cinemaHeroThumbGroup")
+    m.cinemaHeroThumbBorder = m.top.findNode("cinemaHeroThumbBorder")
+    m.cinemaHeroThumbPoster = m.top.findNode("cinemaHeroThumbPoster")
+    m.cinemaHeroThumbCaption = m.top.findNode("cinemaHeroThumbCaption")
     m.cinemaZoneCompassBar = m.top.findNode("cinemaZoneCompassBar")
     m.cinemaActiveCatBadge = m.top.findNode("cinemaActiveCatBadge")
     m.cinemaLibSubHeader = m.top.findNode("cinemaLibSubHeader")
@@ -2503,6 +2556,15 @@ sub init()
         { id: "horror", tag: "GENRE", mono: "HOR", label: "Horror & Supernatural" },
         { id: "comedy", tag: "GENRE", mono: "COM", label: "Comedy & Animation" }
     ]
+    m.tabloCategories = [
+        { id: "all", tag: "TABLO 192.168.1.55", mono: "DVR", label: "All Recordings" },
+        { id: "sports", tag: "LIVE SPORTS", mono: "SPT", label: "NFL & MLB Sports" },
+        { id: "series", tag: "TV SHOWS", mono: "TV", label: "Series & Episodes" },
+        { id: "news", tag: "LOCAL OTA", mono: "NWS", label: "Local News" },
+        { id: "fox", tag: "CH 47.1 FOX", mono: "FOX", label: "47.1 WMSNFOX" },
+        { id: "nbc", tag: "CH 15.1 NBC", mono: "NBC", label: "15.1 WMTVNBC" }
+    ]
+    m.lastAppliedDefaultTab = ""
     m.cinemaCategories = m.movieCategories
     m.cinemaVideoActive = false
     m.lastCinemaLoadKey = ""
@@ -2534,6 +2596,7 @@ sub init()
     m.wallCards = [
         { id: "movie-player", title: "RobOS Cinema+ Movies", desc: "Browse & play 107 feature films with 2:3 posters, plot synopses, and watch progress." },
         { id: "tv-shows", title: "RobOS Cinema+ TV Shows", desc: "Browse 48 TV Series by Season & Episode with visual poster cards and resume tracking." },
+        { id: "tablo-dvr", title: "Tablo OTA DVR Recordings", desc: "Browse & play your Tablo DVR (192.168.1.55) recordings with acquired broadcast thumbnails." },
         { id: "daily-engineering-ops", title: "Daily Engineering & Agent Ops", desc: "Slide 1: GitHub Releases & Commits + Music + Dual Calendars + Tailed Agents." },
         { id: "github-ci-popularity", title: "GitHub CI Status & App Popularity", desc: "Slide 2: CI Status in main + Stars & Forks + 14-Day Clones & Release Downloads." },
         { id: "robos-voice-dictation", title: "RobOS Voice Dictation Chats", desc: "Slide 3: Live RobOS Voice dictation dialogue bubbles, commands, and skill badges." }
@@ -2942,7 +3005,8 @@ function cinemaClassifyItem(mv as Object) as Object
         if hasAnyKeyword(hay, ["atypical"]) then franchise = "Atypical (Series)"
     end if
 
-    isTv = (mv.mediaType <> invalid and mv.mediaType = "tv") or (mv.isShowGroup = true) or hasAnyKeyword(hay, ["s01e", "s02e", "s03e", "atypical", "tv series", "season "])
+    isTablo = (mv.mediaType <> invalid and mv.mediaType = "tablo") or (mv.isTablo = true)
+    isTv = (not isTablo) and ((mv.mediaType <> invalid and mv.mediaType = "tv") or (mv.isShowGroup = true) or hasAnyKeyword(hay, ["s01e", "s02e", "s03e", "atypical", "tv series", "season "]))
     isScifi = hasAnyKeyword(hay, ["dune", "harry potter", "lord of the rings", "fellowship", "two towers", "return of the king", "ex machina", "serenity", "wicked", "wizard of oz", "willow", "ne zha", "backrooms", "sci-fi", "science-fiction", "science fiction", "fantasy", "fallout", "firefly", "foundation", "game of thrones", "house of the dragon", "rick and morty", "severance", "silo", "stranger things", "the last of us", "mandalorian", "westworld", "avatar", "arcane", "doctor who", "black mirror", "andor", "loki"])
     isAction = hasAnyKeyword(hay, ["avengers", "endgame", "infinity war", "mortal kombat", "resident evil", "dune", "lord of the rings", "harry potter", "willow", "hunting games", "outpost", "serenity", "ne zha", "action", "adventure", "archer", "avatar", "fallout", "firefly", "game of thrones", "house of the dragon", "the boys", "the last of us", "mandalorian", "peacemaker", "reacher", "shogun", "vikings", "daredevil"])
     isHorror = hasAnyKeyword(hay, ["conjuring", "annabelle", "insidious", "scream", "paranormal activity", "the nun", "nun ii", "final destination", "friday the 13th", "halloween", "terrifier", "babadook", "malignant", "it follows", "smile", "orphan", "lights out", "five nights at freddy", "jennifers body", "megan is missing", "backrooms", "other mommy", "hokum", "horror", "supernatural", "stranger things", "the last of us", "wednesday", "yellowjackets", "walking dead", "haunting", "from", "evil", "penny dreadful"])
@@ -2954,7 +3018,22 @@ function cinemaClassifyItem(mv as Object) as Object
     primaryGenre = "Drama & Cinema"
     bgCol = "0x1E293BFF"
     barCol = "0x38BDF8FF"
-    if isTv
+    if isTablo
+        primaryGenre = cleanAscii(mv.genre)
+        if primaryGenre = "" then primaryGenre = "Tablo OTA DVR"
+        bgCol = "0x0F2938FF"
+        barCol = "0x00BCD4FF"
+        if m.fs = invalid then m.fs = CreateObject("roFileSystem")
+        if m.fs <> invalid
+            if mv.pkgThumbUri <> invalid and mv.pkgThumbUri <> "" and m.fs.Exists(mv.pkgThumbUri)
+                mv.artUrl = mv.pkgThumbUri
+                mv.thumbnailUrl = mv.pkgThumbUri
+            end if
+            if mv.pkgCoverUri <> invalid and mv.pkgCoverUri <> "" and m.fs.Exists(mv.pkgCoverUri)
+                mv.coverUrl = mv.pkgCoverUri
+            end if
+        end if
+    else if isTv
         primaryGenre = "TV Series"
         bgCol = "0x1E1B4BFF"
         barCol = "0x818CF8FF"
@@ -3008,7 +3087,9 @@ function cinemaClassifyItem(mv as Object) as Object
     isClassic = (yrNum > 0 and yrNum < 2010)
 
     fmtStr = "MP4"
-    if mv.streamFormat <> invalid and LCase(mv.streamFormat.ToStr()) = "mkv"
+    if isTablo
+        fmtStr = "HLS DVR"
+    else if mv.streamFormat <> invalid and LCase(mv.streamFormat.ToStr()) = "mkv"
         fmtStr = "MKV"
     else if mv.streamUrl <> invalid and Instr(1, LCase(mv.streamUrl.ToStr()), ".mkv") > 0
         fmtStr = "MKV"
@@ -3023,6 +3104,7 @@ function cinemaClassifyItem(mv as Object) as Object
         monogram: makeMonogram(titleStr),
         bgCol: bgCol,
         barCol: barCol,
+        isTablo: isTablo,
         isTv: isTv,
         isScifi: isScifi,
         isAction: isAction,
@@ -3040,10 +3122,22 @@ end function
 
 function cinemaItemMatchesCat(mv as Object, catId as String) as Boolean
     info = cinemaClassifyItem(mv)
-    if m.cinemaActiveTab = "shows"
-        if not info.isTv then return false
+    if m.cinemaActiveTab = "tablo"
+        if not info.isTablo then return false
+        if catId = "all" or catId = "" then return true
+        tKind = ""
+        if mv.tabloKind <> invalid then tKind = LCase(cleanAscii(mv.tabloKind))
+        netHay = LCase(cleanAscii(mv.network) + " " + cleanAscii(mv.title) + " " + cleanAscii(mv.genre))
+        if catId = "sports" then return (tKind = "sports" or Instr(1, netHay, "nfl") > 0 or Instr(1, netHay, "mlb") > 0 or Instr(1, netHay, "football") > 0 or Instr(1, netHay, "baseball") > 0)
+        if catId = "series" then return (tKind = "series" and Instr(1, netHay, "news") = 0)
+        if catId = "news" then return (Instr(1, netHay, "news") > 0)
+        if catId = "fox" then return (Instr(1, netHay, "47.1") > 0 or Instr(1, netHay, "fox") > 0)
+        if catId = "nbc" then return (Instr(1, netHay, "15.1") > 0 or Instr(1, netHay, "nbc") > 0)
+        return true
+    else if m.cinemaActiveTab = "shows"
+        if not info.isTv or info.isTablo then return false
     else
-        if info.isTv then return false
+        if info.isTv or info.isTablo then return false
     end if
     if catId = "all" or catId = "" or catId = "__switch_shows__" or catId = "__switch_movies__" then return true
     if catId = "continue"
@@ -3072,23 +3166,23 @@ end function
 sub updateWallLauncherUi()
     firstMovieArt = ""
     firstShowArt = ""
+    firstTabloArt = ""
     moviesCnt = 0
     showsCnt = 0
+    tabloCnt = 0
+    srcItems = invalid
     if m.allCinemaItems <> invalid and m.allCinemaItems.Count() > 0
-        for each mv in m.allCinemaItems
-            info = cinemaClassifyItem(mv)
-            if info.isTv
-                showsCnt = showsCnt + 1
-                if firstShowArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstShowArt = mv.artUrl
-            else
-                moviesCnt = moviesCnt + 1
-                if firstMovieArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstMovieArt = mv.artUrl
-            end if
-        end for
+        srcItems = m.allCinemaItems
     else if m.latestCinemaLibrary <> invalid and m.latestCinemaLibrary.items <> invalid
-        for each mv in m.latestCinemaLibrary.items
+        srcItems = m.latestCinemaLibrary.items
+    end if
+    if srcItems <> invalid
+        for each mv in srcItems
             info = cinemaClassifyItem(mv)
-            if info.isTv
+            if info.isTablo
+                tabloCnt = tabloCnt + 1
+                if firstTabloArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstTabloArt = mv.artUrl
+            else if info.isTv
                 showsCnt = showsCnt + 1
                 if firstShowArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstShowArt = mv.artUrl
             else
@@ -3099,28 +3193,32 @@ sub updateWallLauncherUi()
     end if
     wp0 = m.top.findNode("wallCardPoster0")
     wp1 = m.top.findNode("wallCardPoster1")
+    wp2 = m.top.findNode("wallCardPoster2")
     ws0 = m.top.findNode("wallCardSub0")
     ws1 = m.top.findNode("wallCardSub1")
+    ws2 = m.top.findNode("wallCardSub2")
     if wp0 <> invalid and firstMovieArt <> "" then wp0.uri = firstMovieArt
     if wp1 <> invalid and firstShowArt <> "" then wp1.uri = firstShowArt
+    if wp2 <> invalid and firstTabloArt <> "" then wp2.uri = firstTabloArt
     if ws0 <> invalid and moviesCnt > 0 then ws0.text = moviesCnt.ToStr() + " Feature Films"
     if ws1 <> invalid and showsCnt > 0 then ws1.text = showsCnt.ToStr() + " Series | Seasons"
-    for i = 0 to 4
+    if ws2 <> invalid and tabloCnt > 0 then ws2.text = tabloCnt.ToStr() + " DVR Recordings"
+    for i = 0 to 5
         bdr = m.top.findNode("wallCardBorder" + i.ToStr())
         bg = m.top.findNode("wallCardBg" + i.ToStr())
         isF = (i = m.wallCardIndex)
         if bdr <> invalid
             if isF
-                if i = 0 then bdr.color = "0xFCD34DFF" else if i = 1 then bdr.color = "0x38BDF8FF" else bdr.color = "0x10B981FF"
+                if i = 0 then bdr.color = "0xFCD34DFF" else if i = 1 then bdr.color = "0x38BDF8FF" else if i = 2 then bdr.color = "0x00BCD4FF" else bdr.color = "0x10B981FF"
             else
                 bdr.color = "0x1E293BFF"
             end if
         end if
         if bg <> invalid
             if isF
-                if i = 0 then bg.color = "0x362816FF" else if i = 1 then bg.color = "0x16324AFF" else bg.color = "0x1E293BFF"
+                if i = 0 then bg.color = "0x362816FF" else if i = 1 then bg.color = "0x16324AFF" else if i = 2 then bg.color = "0x14384CFF" else bg.color = "0x1E293BFF"
             else
-                if i = 0 then bg.color = "0x241B11FF" else if i = 1 then bg.color = "0x112233FF" else bg.color = "0x141C2BFF"
+                if i = 0 then bg.color = "0x241B11FF" else if i = 1 then bg.color = "0x112233FF" else if i = 2 then bg.color = "0x0F2938FF" else bg.color = "0x141C2BFF"
             end if
         end if
     end for
@@ -3132,16 +3230,23 @@ sub updateWallLauncherUi()
 end sub
 
 sub updateCinemaTabHeaderUi()
+    isMovies = (m.cinemaActiveTab = "movies")
     isShows = (m.cinemaActiveTab = "shows")
+    isTablo = (m.cinemaActiveTab = "tablo")
     inTabsZone = (m.cinemaFocusZone = "tabs")
     moviesCnt = 0
     showsCnt = 0
+    tabloCnt = 0
     firstMovieArt = ""
     firstShowArt = ""
+    firstTabloArt = ""
     if m.allCinemaItems <> invalid
         for each mv in m.allCinemaItems
             info = cinemaClassifyItem(mv)
-            if info.isTv
+            if info.isTablo
+                tabloCnt = tabloCnt + 1
+                if firstTabloArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstTabloArt = mv.artUrl
+            else if info.isTv
                 showsCnt = showsCnt + 1
                 if firstShowArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstShowArt = mv.artUrl
             else
@@ -3156,14 +3261,18 @@ sub updateCinemaTabHeaderUi()
     if m.cinemaTabShowsPoster <> invalid and firstShowArt <> ""
         m.cinemaTabShowsPoster.uri = firstShowArt
     end if
+    if m.cinemaTabTabloPoster <> invalid and firstTabloArt <> ""
+        m.cinemaTabTabloPoster.uri = firstTabloArt
+    end if
     isMoviesTabFocused = (inTabsZone and m.cinemaTabCol = 0)
     isShowsTabFocused = (inTabsZone and m.cinemaTabCol = 1)
-    isBackTabFocused = (inTabsZone and m.cinemaTabCol = 2)
+    isTabloTabFocused = (inTabsZone and m.cinemaTabCol = 2 and m.activeShowGroup = invalid)
+    isBackTabFocused = (inTabsZone and m.cinemaTabCol = 2 and m.activeShowGroup <> invalid)
 
     if m.cinemaTabMoviesBorder <> invalid
         if isMoviesTabFocused
             m.cinemaTabMoviesBorder.color = "0xFFFFFFFF"
-        else if not isShows
+        else if isMovies
             m.cinemaTabMoviesBorder.color = "0xE8A33DFF"
         else
             m.cinemaTabMoviesBorder.color = "0x2E261EFF"
@@ -3172,18 +3281,18 @@ sub updateCinemaTabHeaderUi()
     if m.cinemaTabMoviesBg <> invalid
         if isMoviesTabFocused
             m.cinemaTabMoviesBg.color = "0x3D2E1AFF"
-        else if not isShows
+        else if isMovies
             m.cinemaTabMoviesBg.color = "0x2B2114FF"
         else
             m.cinemaTabMoviesBg.color = "0x1B1612FF"
         end if
     end if
     if m.cinemaTabMoviesStripe <> invalid
-        if not isShows or isMoviesTabFocused then m.cinemaTabMoviesStripe.color = "0xFCD34DFF" else m.cinemaTabMoviesStripe.color = "0x2E261EFF"
+        if isMovies or isMoviesTabFocused then m.cinemaTabMoviesStripe.color = "0xFCD34DFF" else m.cinemaTabMoviesStripe.color = "0x2E261EFF"
     end if
     if m.cinemaTabMoviesLabel <> invalid
         m.cinemaTabMoviesLabel.text = "MOVIES (" + moviesCnt.ToStr() + ")"
-        if not isShows or isMoviesTabFocused then m.cinemaTabMoviesLabel.color = "0xFCD34DFF" else m.cinemaTabMoviesLabel.color = "0x94A3B8FF"
+        if isMovies or isMoviesTabFocused then m.cinemaTabMoviesLabel.color = "0xFCD34DFF" else m.cinemaTabMoviesLabel.color = "0x94A3B8FF"
     end if
     if m.cinemaTabMoviesSub <> invalid
         m.cinemaTabMoviesSub.text = moviesCnt.ToStr() + " Feature Films  |  4K & BluRay"
@@ -3193,7 +3302,7 @@ sub updateCinemaTabHeaderUi()
             m.cinemaTabMoviesPillBg.color = "0xFFFFFFFF"
             m.cinemaTabMoviesPillTxt.color = "0x110E0BFF"
             m.cinemaTabMoviesPillTxt.text = "DOWN v"
-        else if not isShows
+        else if isMovies
             m.cinemaTabMoviesPillBg.color = "0xE8A33DFF"
             m.cinemaTabMoviesPillTxt.color = "0x110E0BFF"
             m.cinemaTabMoviesPillTxt.text = "ACTIVE"
@@ -3226,7 +3335,7 @@ sub updateCinemaTabHeaderUi()
         if isShows or isShowsTabFocused then m.cinemaTabShowsStripe.color = "0x38BDF8FF" else m.cinemaTabShowsStripe.color = "0x2E261EFF"
     end if
     if m.cinemaTabShowsLabel <> invalid
-        m.cinemaTabShowsLabel.text = "TV SHOWS (" + showsCnt.ToStr() + " SERIES)"
+        m.cinemaTabShowsLabel.text = "TV SHOWS (" + showsCnt.ToStr() + ")"
         if isShows or isShowsTabFocused then m.cinemaTabShowsLabel.color = "0x67E8F9FF" else m.cinemaTabShowsLabel.color = "0x94A3B8FF"
     end if
     if m.cinemaTabShowsSub <> invalid
@@ -3244,7 +3353,54 @@ sub updateCinemaTabHeaderUi()
         else
             m.cinemaTabShowsPillBg.color = "0x261F18FF"
             m.cinemaTabShowsPillTxt.color = "0xA89F91FF"
-            m.cinemaTabShowsPillTxt.text = "TAB >"
+            m.cinemaTabShowsPillTxt.text = "TAB"
+        end if
+    end if
+
+    if m.cinemaTabTabloGroup <> invalid
+        m.cinemaTabTabloGroup.visible = (m.activeShowGroup = invalid)
+    end if
+    if m.cinemaTabTabloBorder <> invalid
+        if isTabloTabFocused
+            m.cinemaTabTabloBorder.color = "0xFFFFFFFF"
+        else if isTablo
+            m.cinemaTabTabloBorder.color = "0x00BCD4FF"
+        else
+            m.cinemaTabTabloBorder.color = "0x2E261EFF"
+        end if
+    end if
+    if m.cinemaTabTabloBg <> invalid
+        if isTabloTabFocused
+            m.cinemaTabTabloBg.color = "0x16425BFF"
+        else if isTablo
+            m.cinemaTabTabloBg.color = "0x0F2938FF"
+        else
+            m.cinemaTabTabloBg.color = "0x1B1612FF"
+        end if
+    end if
+    if m.cinemaTabTabloStripe <> invalid
+        if isTablo or isTabloTabFocused then m.cinemaTabTabloStripe.color = "0x00BCD4FF" else m.cinemaTabTabloStripe.color = "0x2E261EFF"
+    end if
+    if m.cinemaTabTabloLabel <> invalid
+        m.cinemaTabTabloLabel.text = "TABLO DVR (" + tabloCnt.ToStr() + ")"
+        if isTablo or isTabloTabFocused then m.cinemaTabTabloLabel.color = "0x67E8F9FF" else m.cinemaTabTabloLabel.color = "0x94A3B8FF"
+    end if
+    if m.cinemaTabTabloSub <> invalid
+        m.cinemaTabTabloSub.text = "192.168.1.55  |  " + tabloCnt.ToStr() + " OTA Recordings"
+    end if
+    if m.cinemaTabTabloPillBg <> invalid and m.cinemaTabTabloPillTxt <> invalid
+        if isTabloTabFocused
+            m.cinemaTabTabloPillBg.color = "0xFFFFFFFF"
+            m.cinemaTabTabloPillTxt.color = "0x07131AFF"
+            m.cinemaTabTabloPillTxt.text = "DOWN v"
+        else if isTablo
+            m.cinemaTabTabloPillBg.color = "0x00BCD4FF"
+            m.cinemaTabTabloPillTxt.color = "0x07131AFF"
+            m.cinemaTabTabloPillTxt.text = "ACTIVE"
+        else
+            m.cinemaTabTabloPillBg.color = "0x261F18FF"
+            m.cinemaTabTabloPillTxt.color = "0xA89F91FF"
+            m.cinemaTabTabloPillTxt.text = "TABLO >"
         end if
     end if
 
@@ -3273,10 +3429,14 @@ sub switchCinemaTab(tabName as String)
     m.cinemaActiveTab = tabName
     m.activeShowGroup = invalid
     m.activeShowSeasons = []
-    if tabName = "shows"
+    if tabName = "tablo"
+        m.cinemaCategories = m.tabloCategories
+        m.cinemaTabCol = 2
+    else if tabName = "shows"
         m.cinemaCategories = m.showCategories
         m.cinemaTabCol = 1
     else
+        m.cinemaActiveTab = "movies"
         m.cinemaCategories = m.movieCategories
         m.cinemaTabCol = 0
     end if
@@ -3293,14 +3453,14 @@ sub updateCinemaPaneFocusUi()
     isPosters = (zone = "posters")
 
     if m.cinemaHeaderAccent <> invalid
-        if isTabs then m.cinemaHeaderAccent.color = "0xFFFFFFFF" else if m.cinemaActiveTab = "shows" then m.cinemaHeaderAccent.color = "0x38BDF8FF" else m.cinemaHeaderAccent.color = "0xE8A33DFF"
+        if isTabs then m.cinemaHeaderAccent.color = "0xFFFFFFFF" else if m.cinemaActiveTab = "tablo" then m.cinemaHeaderAccent.color = "0x00BCD4FF" else if m.cinemaActiveTab = "shows" then m.cinemaHeaderAccent.color = "0x38BDF8FF" else m.cinemaHeaderAccent.color = "0xE8A33DFF"
     end if
     if m.cinemaCatFocusStripe <> invalid
         if isCat then m.cinemaCatFocusStripe.color = "0xFCD34DFF" else m.cinemaCatFocusStripe.color = "0x2E261EFF"
     end if
     if m.cinemaListFocusStripe <> invalid
         if isPosters
-            if m.cinemaActiveTab = "shows" then m.cinemaListFocusStripe.color = "0x38BDF8FF" else m.cinemaListFocusStripe.color = "0xE8A33DFF"
+            if m.cinemaActiveTab = "tablo" then m.cinemaListFocusStripe.color = "0x00BCD4FF" else if m.cinemaActiveTab = "shows" then m.cinemaListFocusStripe.color = "0x38BDF8FF" else m.cinemaListFocusStripe.color = "0xE8A33DFF"
         else
             m.cinemaListFocusStripe.color = "0x2E261EFF"
         end if
@@ -3310,8 +3470,8 @@ sub updateCinemaPaneFocusUi()
         if isTabs
             m.cinemaZoneCompassBar.color = "0xFFFFFFFF"
             m.cinemaActiveCatBadge.color = "0xFFFFFFFF"
-            m.cinemaActiveCatBadge.text = "ROW 1 OF 3: MOVIES & TV SHOWS TABS"
-            m.cinemaLibSubHeader.text = "[LEFT/RIGHT] SWITCH MOVIES / TV SHOWS TAB   |   [DOWN] CATEGORIES   |   [OK] SELECT"
+            m.cinemaActiveCatBadge.text = "ROW 1 OF 3: MOVIES | TV SHOWS | TABLO DVR TABS"
+            m.cinemaLibSubHeader.text = "[LEFT/RIGHT] SWITCH MOVIES / SHOWS / TABLO TAB   |   [DOWN] CATEGORIES   |   [OK] SELECT"
         else if isCat
             m.cinemaZoneCompassBar.color = "0xFCD34DFF"
             m.cinemaActiveCatBadge.color = "0xFCD34DFF"
@@ -3320,14 +3480,17 @@ sub updateCinemaPaneFocusUi()
                 m.cinemaLibSubHeader.text = "[LEFT/RIGHT] PICK SEASON   |   [UP] TABS   |   [DOWN / OK] EPISODE POSTERS"
             else
                 m.cinemaActiveCatBadge.text = "ROW 2 OF 3: CATEGORY IMAGE CARDS"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] FILTER CATEGORY   |   [UP] MOVIES/SHOWS TABS   |   [DOWN / OK] POSTERS"
+                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] FILTER CATEGORY   |   [UP] MOVIES/SHOWS/TABLO TABS   |   [DOWN / OK] POSTERS"
             end if
         else
-            if m.cinemaActiveTab = "shows" then m.cinemaZoneCompassBar.color = "0x38BDF8FF" else m.cinemaZoneCompassBar.color = "0xE8A33DFF"
+            if m.cinemaActiveTab = "tablo" then m.cinemaZoneCompassBar.color = "0x00BCD4FF" else if m.cinemaActiveTab = "shows" then m.cinemaZoneCompassBar.color = "0x38BDF8FF" else m.cinemaZoneCompassBar.color = "0xE8A33DFF"
             m.cinemaActiveCatBadge.color = "0x67E8F9FF"
             if m.activeShowGroup <> invalid
                 m.cinemaActiveCatBadge.text = "ROW 3 OF 3: EPISODE POSTER CARDS"
                 m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE EPISODES   |   [OK] WATCH   |   [UP] SEASONS   |   [UP x2] TABS"
+            else if m.cinemaActiveTab = "tablo"
+                m.cinemaActiveCatBadge.text = "ROW 3 OF 3: TABLO DVR RECORDING THUMBNAIL CARDS"
+                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE RECORDINGS   |   [OK] WATCH DVR   |   [UP] CATEGORIES & TABS"
             else if m.cinemaActiveTab = "shows"
                 m.cinemaActiveCatBadge.text = "ROW 3 OF 3: TV SERIES POSTER CARDS"
                 m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE SERIES   |   [OK] OPEN SEASONS   |   [UP] CATEGORIES & TABS"
@@ -3349,12 +3512,20 @@ sub updateCinemaPaneFocusUi()
                 m.cinemaCatHeaderLabel.text = "ROW 2  |  " + sName + " SEASONS  (PRESS [UP] FROM POSTERS TO SWITCH SEASON OR RETURN TO ALL SHOWS)"
                 m.cinemaCatHeaderLabel.color = "0xA89F91FF"
             end if
-        else if m.cinemaActiveTab = "shows"
+        else if m.cinemaActiveTab = "tablo"
             if isCat
-                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  TV SHOW CATEGORIES  ([LEFT/RIGHT] FILTER SERIES  |  [UP] MOVIES/SHOWS TABS  |  [DOWN] POSTERS)"
+                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  TABLO DVR CHANNELS & CATEGORIES  ([LEFT/RIGHT] FILTER  |  [UP] TABS  |  [DOWN] RECORDINGS)"
                 m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
             else
-                m.cinemaCatHeaderLabel.text = "ROW 2  |  TV SHOW CATEGORIES  (1 [UP] FROM POSTERS  |  2 [UP] TO MOVIES / TV SHOWS TABS)"
+                m.cinemaCatHeaderLabel.text = "ROW 2  |  TABLO DVR CATEGORIES (192.168.1.55)  (1 [UP] FROM RECORDINGS  |  2 [UP] TO MOVIES / SHOWS / TABLO TABS)"
+                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
+            end if
+        else if m.cinemaActiveTab = "shows"
+            if isCat
+                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  TV SHOW CATEGORIES  ([LEFT/RIGHT] FILTER SERIES  |  [UP] MOVIES/SHOWS/TABLO TABS  |  [DOWN] POSTERS)"
+                m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
+            else
+                m.cinemaCatHeaderLabel.text = "ROW 2  |  TV SHOW CATEGORIES  (1 [UP] FROM POSTERS  |  2 [UP] TO MOVIES / TV SHOWS / TABLO TABS)"
                 m.cinemaCatHeaderLabel.color = "0xA89F91FF"
             end if
         else
@@ -3539,7 +3710,7 @@ sub updateCinemaCategoryCardsUi()
             end if
             if artBg <> invalid
                 artBg.visible = true
-                if m.cinemaActiveTab = "shows" then artBg.color = "0x172554FF" else artBg.color = "0x3B2314FF"
+                if m.cinemaActiveTab = "tablo" then artBg.color = "0x0F2938FF" else if m.cinemaActiveTab = "shows" then artBg.color = "0x172554FF" else artBg.color = "0x3B2314FF"
             end if
             if mono <> invalid
                 mono.visible = true
@@ -3560,7 +3731,9 @@ sub updateCinemaCategoryCardsUi()
             end if
             if cnt <> invalid
                 cnt.visible = true
-                if m.cinemaActiveTab = "shows"
+                if m.cinemaActiveTab = "tablo"
+                    cnt.text = matchCnt.ToStr() + " Recordings"
+                else if m.cinemaActiveTab = "shows"
                     cnt.text = matchCnt.ToStr() + " Series"
                 else
                     cnt.text = matchCnt.ToStr() + " Films"
@@ -3744,7 +3917,9 @@ sub applyCinemaCategoryFilter(catIdx as Integer)
     m.cinemaPosterIndex = 0
     catUpper = UCase(cat.label)
     if m.cinemaShelfTitleLabel <> invalid
-        if m.cinemaActiveTab = "shows"
+        if m.cinemaActiveTab = "tablo"
+            m.cinemaShelfTitleLabel.text = "ROW 3  |  TABLO DVR RECORDINGS: " + catUpper + " (" + filtered.Count().ToStr() + " RECORDINGS  |  [LEFT/RIGHT] MOVE  |  [OK] WATCH DVR  |  [UP] CATEGORIES & TABS)"
+        else if m.cinemaActiveTab = "shows"
             m.cinemaShelfTitleLabel.text = "ROW 3  |  TV SERIES POSTERS: " + catUpper + " (" + filtered.Count().ToStr() + " SERIES  |  [LEFT/RIGHT] MOVE  |  [OK] OPEN SEASONS  |  [UP] CATEGORIES & TABS)"
         else
             m.cinemaShelfTitleLabel.text = "ROW 3  |  MOVIE POSTERS: " + catUpper + " (" + filtered.Count().ToStr() + " FILMS  |  [LEFT/RIGHT] MOVE  |  [DOWN] NEXT 6  |  [OK] WATCH  |  [UP] CATEGORIES & TABS)"
@@ -3771,6 +3946,8 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
     if m.cinemaShelfPosLabel <> invalid
         if m.activeShowGroup <> invalid
             m.cinemaShelfPosLabel.text = "Episode " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [DOWN] +6  |  [OK] Play"
+        else if m.cinemaActiveTab = "tablo"
+            m.cinemaShelfPosLabel.text = "Recording " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [OK] Play DVR"
         else if m.cinemaActiveTab = "shows"
             m.cinemaShelfPosLabel.text = "Series " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [DOWN] +6  |  [OK] Seasons"
         else
@@ -3929,13 +4106,26 @@ sub showCinemaLibrary(libObj as Object)
     m.cinemaLibraryActive = true
     m.cinemaLibraryGroup.visible = true
     if libObj <> invalid and libObj.items <> invalid and libObj.items.Count() > 0
-        newHash = libObj.items.Count().ToStr() + ":" + cleanAscii(libObj.items[0].id)
+        lastId = cleanAscii(libObj.items[libObj.items.Count() - 1].id)
+        newHash = libObj.items.Count().ToStr() + ":" + cleanAscii(libObj.items[0].id) + ":" + lastId
         if m.cinemaLibHash <> newHash
             m.cinemaLibHash = newHash
             m.allCinemaItems = libObj.items
-            applyCinemaCategoryFilter(m.cinemaCatIndex)
-            updateCinemaTabHeaderUi()
+            if libObj.defaultTab <> invalid and libObj.defaultTab <> "" and m.lastAppliedDefaultTab = ""
+                m.lastAppliedDefaultTab = cleanAscii(libObj.defaultTab)
+                switchCinemaTab(m.lastAppliedDefaultTab)
+            else
+                applyCinemaCategoryFilter(m.cinemaCatIndex)
+                updateCinemaTabHeaderUi()
+            end if
             updateWallLauncherUi()
+        end if
+    end if
+    if libObj <> invalid and libObj.defaultTab <> invalid and libObj.defaultTab <> ""
+        dTab = cleanAscii(libObj.defaultTab)
+        if m.lastAppliedDefaultTab <> dTab
+            m.lastAppliedDefaultTab = dTab
+            switchCinemaTab(dTab)
         end if
     end if
     if wasActive <> true and m.cinemaVideoActive <> true
@@ -3967,7 +4157,10 @@ sub updateCinemaLibDetail(idx as Integer)
 
     ' Spotlight Pill & Eyebrow
     if m.cinemaSpotlightPillBg <> invalid and m.cinemaSpotlightPillText <> invalid
-        if m.activeShowGroup <> invalid
+        if info.isTablo
+            m.cinemaSpotlightPillBg.color = "0x00BCD4FF"
+            m.cinemaSpotlightPillText.text = "TABLO DVR"
+        else if m.activeShowGroup <> invalid
             m.cinemaSpotlightPillBg.color = "0x38BDF8FF"
             m.cinemaSpotlightPillText.text = "TV EPISODE"
         else if mv.isShowGroup = true
@@ -3980,7 +4173,11 @@ sub updateCinemaLibDetail(idx as Integer)
     end if
 
     if m.cinemaHeroEyebrow <> invalid
-        if m.activeShowGroup <> invalid
+        if info.isTablo
+            netUpper = "OTA CHANNEL"
+            if mv.network <> invalid and mv.network <> "" then netUpper = UCase(cleanAscii(mv.network))
+            m.cinemaHeroEyebrow.text = "TABLO 4G DVR (192.168.1.55)  |  " + netUpper + "  |  " + UCase(cleanAscii(mv.qualityBadge))
+        else if m.activeShowGroup <> invalid
             sNum = 1
             eNum = 1
             if mv.seasonNumber <> invalid then sNum = mv.seasonNumber
@@ -4054,12 +4251,26 @@ sub updateCinemaLibDetail(idx as Integer)
     if m.cinemaHeroPosterFallbackYear <> invalid then m.cinemaHeroPosterFallbackYear.text = yrStr + " | " + info.resStr
 
     if m.cinemaLibPoster <> invalid
-        if mv.artUrl <> invalid and mv.artUrl <> ""
+        if info.isTablo and mv.coverUrl <> invalid and mv.coverUrl <> ""
+            m.cinemaLibPoster.uri = mv.coverUrl
+        else if mv.artUrl <> invalid and mv.artUrl <> ""
             m.cinemaLibPoster.uri = mv.artUrl
         else if m.activeShowGroup <> invalid and m.activeShowGroup.artUrl <> invalid and m.activeShowGroup.artUrl <> ""
             m.cinemaLibPoster.uri = m.activeShowGroup.artUrl
         else
             m.cinemaLibPoster.uri = ""
+        end if
+    end if
+
+    if m.cinemaHeroThumbGroup <> invalid
+        if info.isTablo and mv.artUrl <> invalid and mv.artUrl <> ""
+            m.cinemaHeroThumbGroup.visible = true
+            if m.cinemaHeroThumbPoster <> invalid then m.cinemaHeroThumbPoster.uri = mv.artUrl
+            if m.cinemaHeroThumbCaption <> invalid
+                m.cinemaHeroThumbCaption.text = "TABLO THUMBNAIL  |  " + Left(cleanAscii(mv.network), 22) + "  |  " + Left(cleanAscii(mv.qualityBadge), 18)
+            end if
+        else
+            m.cinemaHeroThumbGroup.visible = false
         end if
     end if
 
@@ -4610,14 +4821,16 @@ end sub
 sub launchWallCard(idx as Integer)
     if m.wallCards = invalid or idx < 0 or idx >= m.wallCards.Count() then return
     t = m.wallCards[idx]
-    if t.id = "movie-player" or t.id = "tv-shows"
+    if t.id = "movie-player" or t.id = "tv-shows" or t.id = "tablo-dvr"
         m.localLibraryOpened = true
         if m.latestCinemaLibrary <> invalid
             showCinemaLibrary(m.latestCinemaLibrary)
         else
             showCinemaLibrary({ active: true, items: [] })
         end if
-        if t.id = "tv-shows"
+        if t.id = "tablo-dvr"
+            switchCinemaTab("tablo")
+        else if t.id = "tv-shows"
             switchCinemaTab("shows")
         else
             switchCinemaTab("movies")
@@ -4673,10 +4886,12 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     ' 2. 3-Row Visual Image-Card Cinema Library Navigation (Row 0: Tabs <-> Row 1: Category/Season Cards <-> Row 2: Poster Cards)
     if m.cinemaLibraryActive = true
         if key = "options"
-            if m.cinemaActiveTab = "shows"
-                switchCinemaTab("movies")
-            else
+            if m.cinemaActiveTab = "movies"
                 switchCinemaTab("shows")
+            else if m.cinemaActiveTab = "shows"
+                switchCinemaTab("tablo")
+            else
+                switchCinemaTab("movies")
             end if
             return true
         else if key = "play"
@@ -4715,8 +4930,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         end if
 
         if m.cinemaFocusZone = "tabs"
-            maxTab = 1
-            if m.activeShowGroup <> invalid then maxTab = 2
+            maxTab = 2
             if key = "left"
                 nextCol = m.cinemaTabCol - 1
                 if nextCol < 0 then nextCol = maxTab
@@ -4729,6 +4943,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                     switchCinemaTab("shows")
                     m.cinemaFocusZone = "tabs"
                     m.cinemaTabCol = 1
+                else if m.cinemaTabCol = 2 and m.activeShowGroup = invalid and m.cinemaActiveTab <> "tablo"
+                    switchCinemaTab("tablo")
+                    m.cinemaFocusZone = "tabs"
+                    m.cinemaTabCol = 2
                 end if
                 updateCinemaPaneFocusUi()
                 return true
@@ -4744,6 +4962,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                     switchCinemaTab("shows")
                     m.cinemaFocusZone = "tabs"
                     m.cinemaTabCol = 1
+                else if m.cinemaTabCol = 2 and m.activeShowGroup = invalid and m.cinemaActiveTab <> "tablo"
+                    switchCinemaTab("tablo")
+                    m.cinemaFocusZone = "tabs"
+                    m.cinemaTabCol = 2
                 end if
                 updateCinemaPaneFocusUi()
                 return true
@@ -4752,14 +4974,18 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                 updateCinemaPaneFocusUi()
                 return true
             else if key = "up"
-                if m.cinemaActiveTab = "shows"
-                    switchCinemaTab("movies")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 0
-                else
+                if m.cinemaActiveTab = "movies"
                     switchCinemaTab("shows")
                     m.cinemaFocusZone = "tabs"
                     m.cinemaTabCol = 1
+                else if m.cinemaActiveTab = "shows"
+                    switchCinemaTab("tablo")
+                    m.cinemaFocusZone = "tabs"
+                    m.cinemaTabCol = 2
+                else
+                    switchCinemaTab("movies")
+                    m.cinemaFocusZone = "tabs"
+                    m.cinemaTabCol = 0
                 end if
                 updateCinemaPaneFocusUi()
                 return true
@@ -4771,6 +4997,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                     switchCinemaTab("movies")
                 else if m.cinemaTabCol = 1 and m.cinemaActiveTab <> "shows"
                     switchCinemaTab("shows")
+                else if m.cinemaTabCol = 2 and m.cinemaActiveTab <> "tablo"
+                    switchCinemaTab("tablo")
                 end if
                 m.cinemaFocusZone = "posters"
                 updateCinemaPaneFocusUi()
@@ -4808,6 +5036,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             else if key = "up"
                 m.cinemaFocusZone = "tabs"
                 if m.activeShowGroup <> invalid and m.activeSeasonIndex = 0
+                    m.cinemaTabCol = 2
+                else if m.cinemaActiveTab = "tablo"
                     m.cinemaTabCol = 2
                 else if m.cinemaActiveTab = "shows"
                     m.cinemaTabCol = 1
@@ -4879,13 +5109,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return true
     end if
 
-    ' 3. Main Wallboard Bottom Visual Image-Card Launcher (wallCard0..4)
+    ' 3. Main Wallboard Bottom Visual Image-Card Launcher (wallCard0..5)
     if key = "left"
-        m.wallCardIndex = (m.wallCardIndex + 4) mod 5
+        m.wallCardIndex = (m.wallCardIndex + 5) mod 6
         updateWallLauncherUi()
         return true
     else if key = "right"
-        m.wallCardIndex = (m.wallCardIndex + 1) mod 5
+        m.wallCardIndex = (m.wallCardIndex + 1) mod 6
         updateWallLauncherUi()
         return true
     else if key = "OK" or key = "play"
@@ -4921,12 +5151,29 @@ end function
       filesCreated.push(keepAliveFull);
     }
 
+    const imagesDir = path.join(targetDir, 'images');
+    fs.mkdirSync(imagesDir, { recursive: true });
+    try {
+      const tabloCacheDir = path.join(os.homedir(), '.cache', 'robos', 'tablo-images');
+      if (fs.existsSync(tabloCacheDir)) {
+        for (const f of fs.readdirSync(tabloCacheDir)) {
+          const m = f.match(/-(\d+)\.jpg$/i);
+          if (m) {
+            const destImg = path.join(imagesDir, `tablo-${m[1]}.jpg`);
+            fs.copyFileSync(path.join(tabloCacheDir, f), destImg);
+            filesCreated.push(destImg);
+          }
+        }
+      }
+    } catch {}
+
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
     write(
       'source/cinema-library.json',
       JSON.stringify({
         active: initialCinemaLibActive,
+        defaultTab: initialCinemaLibDefaultTab,
         items: initialCinemaLibItems,
       })
     );
@@ -4943,7 +5190,7 @@ ROKU_USER="\${ROKU_DEV_USER:-rokudev}"
 ROKU_PASS="\${ROKU_DEV_PASS:-robos}"
 
 rm -f robos-tv-roku.zip
-zip -r -q robos-tv-roku.zip manifest source components
+zip -r -q robos-tv-roku.zip manifest source components images
 echo "[RobOS TV] Uploading robos-tv-roku.zip to Roku ($TV_IP) as $ROKU_USER..."
 curl --user "$ROKU_USER:$ROKU_PASS" --digest -s -S \\
   -F "mysubmit=Install" \\
@@ -4956,7 +5203,7 @@ echo "[RobOS TV] Sideload complete! RobOS TV is now open on your Roku screen."
 
     // Also pre-build the zip archive if zip is installed so user can even upload via browser if desired
     try {
-      spawnSync('zip', ['-r', '-q', 'robos-tv-roku.zip', 'manifest', 'source', 'components'], {
+      spawnSync('zip', ['-r', '-q', 'robos-tv-roku.zip', 'manifest', 'source', 'components', 'images'], {
         cwd: targetDir,
         timeout: 4000,
       });
@@ -5127,13 +5374,16 @@ function createTvEngine({
     }
   }
 
-  function saveState() {
+  function saveState({ overwriteCinemaState = false } = {}) {
     try {
       fs.mkdirSync(resolvedConfigDir, { recursive: true });
       if (fs.existsSync(stateFile)) {
         try {
           const onDisk = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-          for (const k of ['activeCinemaCast', 'activeCinemaLibrary', 'moviePlayerServer', 'moviePlayerLibrarySnapshot']) {
+          const preserveKeys = overwriteCinemaState
+            ? ['moviePlayerServer', 'moviePlayerLibrarySnapshot']
+            : ['activeCinemaCast', 'activeCinemaLibrary', 'moviePlayerServer', 'moviePlayerLibrarySnapshot', 'tabloCinemaItemsSnapshot'];
+          for (const k of preserveKeys) {
             if (onDisk[k] !== undefined) {
               state[k] = onDisk[k];
             }
@@ -5475,10 +5725,17 @@ function createTvEngine({
           const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
             ? { ...state.activeCinemaCast, mediaUrl: fixHostUrl(state.activeCinemaCast.mediaUrl), active: true }
             : null;
-          const rawCinemaItems = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
+          const rawCinemaItems = [
+            ...(Array.isArray(state.moviePlayerLibrarySnapshot)
+              ? state.moviePlayerLibrarySnapshot.filter((it) => it && !it.isTablo && it.mediaType !== 'tablo')
+              : []),
+            ...(Array.isArray(state.tabloCinemaItemsSnapshot) ? state.tabloCinemaItemsSnapshot : []),
+          ];
           const cinemaLibItems = rawCinemaItems.map((it) => ({
             ...it,
             artUrl: fixHostUrl(it.artUrl),
+            coverUrl: fixHostUrl(it.coverUrl),
+            thumbnailUrl: fixHostUrl(it.thumbnailUrl),
             streamUrl: fixHostUrl(it.streamUrl),
             episodes: Array.isArray(it.episodes)
               ? it.episodes.map((ep) => ({
@@ -5490,6 +5747,7 @@ function createTvEngine({
           }));
           const cinemaLibrary = {
             active: Boolean(state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
+            defaultTab: state.activeCinemaLibrary?.defaultTab || null,
             tvIp: state.activeCinemaLibrary?.tvIp || null,
             tvName: state.activeCinemaLibrary?.tvName || null,
             server: state.moviePlayerServer || null,
@@ -5646,8 +5904,13 @@ function createTvEngine({
           return;
         }
 
-        if (u.pathname === '/movie-player') {
-          const rawItems = Array.isArray(state.moviePlayerLibrarySnapshot) ? state.moviePlayerLibrarySnapshot : [];
+        if (u.pathname === '/movie-player' || u.pathname === '/cinema-library') {
+          const rawItems = [
+            ...(Array.isArray(state.moviePlayerLibrarySnapshot)
+              ? state.moviePlayerLibrarySnapshot.filter((it) => it && !it.isTablo && it.mediaType !== 'tablo')
+              : []),
+            ...(Array.isArray(state.tabloCinemaItemsSnapshot) ? state.tabloCinemaItemsSnapshot : []),
+          ];
           const fixUrl = (val) => {
             if (!val || typeof val !== 'string') return val;
             return val.replace(/^http:\/\/(\d+\.\d+\.\d+\.\d+|localhost|127\.0\.0\.1):(\d+)\//i, `http://${hostIp}:$2/`);
@@ -5655,7 +5918,9 @@ function createTvEngine({
           const items = rawItems.map((it) => ({
             ...it,
             artUrl: fixUrl(it.artUrl),
-            streamUrl: fixUrl(it.streamUrl),
+            coverUrl: fixUrl(it.coverUrl),
+            thumbnailUrl: fixUrl(it.thumbnailUrl),
+            streamUrl: fixUrl(it.browserStreamUrl || it.streamUrl),
             episodes: Array.isArray(it.episodes)
               ? it.episodes.map((ep) => ({
                   ...ep,
@@ -5665,6 +5930,7 @@ function createTvEngine({
               : undefined,
           }));
           const itemsJson = JSON.stringify(items);
+          const defaultTabInit = JSON.stringify(u.searchParams.get('tab') || state.activeCinemaLibrary?.defaultTab || 'movies');
           const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5774,6 +6040,13 @@ function createTvEngine({
             <div class="tab-sub" id="tab-shows-sub">Series · Seasons &amp; Episodes</div>
           </div>
         </div>
+        <div class="top-tab-card" id="tab-tablo">
+          <div class="tab-thumb shows" id="tab-tablo-thumb" style="background:#00bcd4;">DVR</div>
+          <div class="tab-meta">
+            <div class="tab-title" id="tab-tablo-title" style="color:#67e8f9;">TABLO DVR</div>
+            <div class="tab-sub" id="tab-tablo-sub">192.168.1.55 · OTA Recordings</div>
+          </div>
+        </div>
         <div class="top-tab-card" id="tab-back" style="display:none;width:250px;">
           <div class="tab-thumb shows" id="tab-back-thumb">ALL</div>
           <div class="tab-meta">
@@ -5858,7 +6131,15 @@ function createTvEngine({
       { id: 'horror', tag: 'GENRE', mono: 'HOR', label: 'Horror & Supernatural' },
       { id: 'comedy', tag: 'GENRE', mono: 'COM', label: 'Comedy & Animation' }
     ];
-    let activeTab = 'movies';
+    const TABLO_CATEGORIES = [
+      { id: 'all', tag: 'TABLO DVR', mono: 'DVR', label: 'All Recordings' },
+      { id: 'sports', tag: 'LIVE SPORTS', mono: 'SPT', label: 'NFL & MLB Sports' },
+      { id: 'series', tag: 'TV SHOWS', mono: 'SER', label: 'Series & Episodes' },
+      { id: 'news', tag: 'LOCAL NEWS', mono: 'NWS', label: 'Local News' },
+      { id: 'fox', tag: 'CHANNEL 47.1', mono: 'FOX', label: '47.1 WMSNFOX' },
+      { id: 'nbc', tag: 'CHANNEL 15.1', mono: 'NBC', label: '15.1 WMTVNBC' }
+    ];
+    let activeTab = ${defaultTabInit};
     let activeShowGroup = null;
     let activeShowSeasons = [];
     let focusZone = 'posters'; // 'tabs' | 'categories' | 'posters'
@@ -5871,7 +6152,8 @@ function createTvEngine({
       const hay = ((m.title || '') + ' ' + (m.album || '') + ' ' + (m.genre || '')).toLowerCase();
       const qHay = ((m.artist || '') + ' ' + (m.qualityBadge || '')).toLowerCase();
       const franchise = m.franchise || '';
-      const isTv = m.mediaType === 'tv' || !!m.isShowGroup || /s01e|s02e|tv series/.test(hay);
+      const isTablo = m.mediaType === 'tablo' || !!m.isTablo;
+      const isTv = !isTablo && (m.mediaType === 'tv' || !!m.isShowGroup || /s01e|s02e|tv series/.test(hay));
       const isScifi = /dune|harry potter|lord of the rings|fellowship|two towers|return of the king|ex machina|serenity|wicked|wizard of oz|willow|ne zha|backrooms|sci-fi|science-fiction|science fiction|fantasy|fallout|firefly|foundation|game of thrones|house of the dragon|rick and morty|severance|silo|stranger things|the last of us|mandalorian|westworld|avatar/.test(hay);
       const isAction = /avengers|endgame|infinity war|mortal kombat|resident evil|dune|lord of the rings|harry potter|willow|hunting games|outpost|serenity|ne zha|action|adventure|archer|avatar|fallout|firefly|game of thrones|house of the dragon|the boys|the last of us|mandalorian/.test(hay);
       const isHorror = /conjuring|annabelle|insidious|scream|paranormal activity|the nun|nun ii|final destination|friday the 13th|halloween|terrifier|babadook|malignant|it follows|smile|orphan|lights out|five nights at freddy|jennifers body|megan is missing|backrooms|other mommy|hokum|horror|supernatural|stranger things|the last of us|wednesday|yellowjackets/.test(hay);
@@ -5882,12 +6164,23 @@ function createTvEngine({
       const yr = Number(m.year) || 0;
       const primaryGenre = m.genre ? String(m.genre).split(',')[0].trim() : (isTv ? 'TV Series' : isScifi ? 'Sci-Fi & Fantasy' : isAction ? 'Action & Adventure' : isFamily ? 'Animation & Family' : isComedy ? 'Comedy & Romance' : isHorror ? 'Horror & Supernatural' : isThriller ? 'Thriller & Mystery' : 'Drama & Cinema');
       const qual = /2160p|4k/.test(qHay) ? '4K UHD' : /720p/.test(qHay) ? '720p HD' : '1080p HD';
-      return { franchise, primaryGenre, qual, isTv, isScifi, isAction, isHorror, isFamily, isComedy, isThriller, isUhd, isNew: yr >= 2023, isClassic: yr > 0 && yr < 2010 };
+      return { franchise, primaryGenre, qual, isTablo, isTv, isScifi, isAction, isHorror, isFamily, isComedy, isThriller, isUhd, isNew: yr >= 2023, isClassic: yr > 0 && yr < 2010 };
     }
     function matchesCat(m, catId) {
       const c = classify(m);
-      if (activeTab === 'shows' && !c.isTv) return false;
-      if (activeTab === 'movies' && c.isTv) return false;
+      if (activeTab === 'tablo') {
+        if (!c.isTablo) return false;
+        if (catId === 'all') return true;
+        const hay = ((m.title || '') + ' ' + (m.network || '') + ' ' + (m.genre || '')).toLowerCase();
+        if (catId === 'sports') return m.tabloKind === 'sports' || /nfl|mlb|football|baseball/.test(hay);
+        if (catId === 'series') return m.tabloKind === 'series' && !/news/.test(hay);
+        if (catId === 'news') return /news/.test(hay);
+        if (catId === 'fox') return /47\.1|fox/.test(hay);
+        if (catId === 'nbc') return /15\.1|nbc/.test(hay);
+        return true;
+      }
+      if (activeTab === 'shows' && (!c.isTv || c.isTablo)) return false;
+      if (activeTab === 'movies' && (c.isTv || c.isTablo)) return false;
       if (catId === 'all') return true;
       if (catId === 'continue') return !!(m.inProgress || m.inProgressCount > 0);
       if (catId === 'networks') return true;
@@ -5903,7 +6196,7 @@ function createTvEngine({
       activeTab = tab;
       activeShowGroup = null;
       activeShowSeasons = [];
-      tabCol = tab === 'shows' ? 1 : 0;
+      tabCol = tab === 'tablo' ? 2 : tab === 'shows' ? 1 : 0;
       catIdx = 0;
       idx = 0;
       render();
@@ -5951,26 +6244,35 @@ function createTvEngine({
     }
     document.getElementById('tab-movies').onclick = () => { switchTab('movies'); focusZone = 'posters'; render(); };
     document.getElementById('tab-shows').onclick = () => { switchTab('shows'); focusZone = 'posters'; render(); };
+    document.getElementById('tab-tablo').onclick = () => { switchTab('tablo'); focusZone = 'posters'; render(); };
     document.getElementById('tab-back').onclick = () => exitShow();
     function render() {
-      const moviesList = ALL_ITEMS.filter(m => !classify(m).isTv);
+      const moviesList = ALL_ITEMS.filter(m => !classify(m).isTv && !classify(m).isTablo);
       const showsList = ALL_ITEMS.filter(m => classify(m).isTv);
+      const tabloList = ALL_ITEMS.filter(m => classify(m).isTablo);
       const firstMovieArt = (moviesList.find(m => m.artUrl) || {}).artUrl || '';
       const firstShowArt = (showsList.find(m => m.artUrl) || {}).artUrl || '';
+      const firstTabloArt = (tabloList.find(m => m.artUrl) || {}).artUrl || '';
       document.getElementById('tab-movies-title').textContent = 'MOVIES (' + moviesList.length + ')';
       document.getElementById('tab-shows-title').textContent = 'TV SHOWS (' + showsList.length + ' SERIES)';
+      document.getElementById('tab-tablo-title').textContent = 'TABLO DVR (' + tabloList.length + ')';
       if (firstMovieArt) document.getElementById('tab-movies-thumb').innerHTML = '<img src="' + firstMovieArt + '" alt="" />';
       if (firstShowArt) {
         document.getElementById('tab-shows-thumb').innerHTML = '<img src="' + firstShowArt + '" alt="" />';
         document.getElementById('tab-back-thumb').innerHTML = '<img src="' + firstShowArt + '" alt="" />';
       }
+      if (firstTabloArt) {
+        document.getElementById('tab-tablo-thumb').innerHTML = '<img src="' + firstTabloArt + '" alt="" />';
+      }
       const tabM = document.getElementById('tab-movies');
       const tabS = document.getElementById('tab-shows');
+      const tabT = document.getElementById('tab-tablo');
       const tabB = document.getElementById('tab-back');
       tabM.className = 'top-tab-card ' + (activeTab === 'movies' ? 'active-movies ' : '') + (focusZone === 'tabs' && tabCol === 0 ? 'focused' : '');
       tabS.className = 'top-tab-card ' + (activeTab === 'shows' ? 'active-shows ' : '') + (focusZone === 'tabs' && tabCol === 1 ? 'focused' : '');
+      tabT.className = 'top-tab-card ' + (activeTab === 'tablo' ? 'active-shows ' : '') + (focusZone === 'tabs' && tabCol === 2 ? 'focused' : '');
       tabB.style.display = activeShowGroup ? 'flex' : 'none';
-      tabB.className = 'top-tab-card active-shows ' + (focusZone === 'tabs' && tabCol === 2 ? 'focused' : '');
+      tabB.className = 'top-tab-card active-shows ' + (focusZone === 'tabs' && tabCol === 3 ? 'focused' : '');
       document.getElementById('cat-pane').className = 'cat-shelf ' + (focusZone === 'categories' ? 'zone-active' : '');
 
       if (activeShowGroup) {
@@ -5988,8 +6290,8 @@ function createTvEngine({
             '<div class="c-info"><div class="c-tag">' + s.tag + '</div><div class="c-title">' + s.label + '</div><div class="c-count">' + s.countText + '</div></div></div>';
         }).join('');
       } else {
-        const cats = activeTab === 'shows' ? SHOW_CATEGORIES : MOVIE_CATEGORIES;
-        document.getElementById('cat-pane-title').textContent = activeTab === 'shows' ? 'ROW 2 · TV SHOW CATEGORY CARDS (◀/▶ FILTER · ▲ UP TO TABS · ▼ DOWN TO POSTERS)' : 'ROW 2 · MOVIE CATEGORY CARDS (◀/▶ FILTER · ▲ UP TO TABS · ▼ DOWN TO POSTERS)';
+        const cats = activeTab === 'tablo' ? TABLO_CATEGORIES : activeTab === 'shows' ? SHOW_CATEGORIES : MOVIE_CATEGORIES;
+        document.getElementById('cat-pane-title').textContent = activeTab === 'tablo' ? 'ROW 2 · TABLO DVR RECORDING CATEGORIES (◀/▶ FILTER · ▲ UP TO TABS · ▼ DOWN TO RECORDINGS)' : activeTab === 'shows' ? 'ROW 2 · TV SHOW CATEGORY CARDS (◀/▶ FILTER · ▲ UP TO TABS · ▼ DOWN TO POSTERS)' : 'ROW 2 · MOVIE CATEGORY CARDS (◀/▶ FILTER · ▲ UP TO TABS · ▼ DOWN TO POSTERS)';
         const cat = cats[catIdx] || cats[0];
         ITEMS = ALL_ITEMS.filter(m => matchesCat(m, cat.id));
         document.getElementById('cat-pos-label').textContent = 'Category ' + (catIdx + 1) + ' of ' + cats.length;
@@ -6250,6 +6552,27 @@ function createTvEngine({
               'Access-Control-Allow-Origin': '*',
             });
             res.end(img.buffer);
+          });
+          return;
+        }
+
+        if (u.pathname === '/api/tablo/roku.m3u8') {
+          const itemPath = u.searchParams.get('path') || '';
+          const ip = u.searchParams.get('ip') || state.tabloIp || tabloClient.DEFAULT_TABLO_IP;
+          const port = Number(u.searchParams.get('port') || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+          tabloClient.fetchRokuTabloPlaylist({ ip, port, itemPath }).then((pl) => {
+            if (!pl.ok || !pl.body) {
+              res.writeHead(pl.status || 502, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+              res.end(pl.error || 'Could not load Tablo HLS playlist');
+              return;
+            }
+            res.writeHead(200, {
+              'Content-Type': 'application/vnd.apple.mpegurl',
+              'Content-Length': String(Buffer.byteLength(pl.body)),
+              'Cache-Control': 'no-store',
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(pl.body);
           });
           return;
         }
@@ -7265,6 +7588,61 @@ function createTvEngine({
     return tabloClient.openTabloExternalPlayer({ ip: targetIp, port: targetPort, itemPath, title });
   }
 
+  async function refreshTabloCinemaSnapshot({ ip, port } = {}) {
+    loadState();
+    const targetIp = String(ip || state.tabloIp || tabloClient.DEFAULT_TABLO_IP).trim();
+    const targetPort = Number(port || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+    const hostIp = detectLanIp();
+    const portalPortToUse = boundPort || DEFAULT_PORTAL_PORT;
+    const res = await tabloClient.listTabloCinemaItems({
+      ip: targetIp,
+      port: targetPort,
+      hostIp,
+      portalPort: portalPortToUse,
+    });
+    if (res.ok && Array.isArray(res.items)) {
+      state.tabloCinemaItemsSnapshot = res.items;
+      saveState({ overwriteCinemaState: true });
+    }
+    return res;
+  }
+
+  async function castTabloToTv({ tvId, ip, port } = {}) {
+    loadState();
+    const tv = state.tvs.find((t) => t.id === tvId) || state.tvs.find((t) => t.platformId === 'roku-os') || state.tvs[0];
+    if (!tv) return { ok: false, error: 'No Smart TV found in paired TV list' };
+    const snap = await refreshTabloCinemaSnapshot({ ip, port });
+    const hostIp = detectLanIp();
+    const portalPortToUse = boundPort || DEFAULT_PORTAL_PORT;
+    state.activeCinemaCast = { active: false };
+    state.activeCinemaLibrary = {
+      active: true,
+      defaultTab: 'tablo',
+      tvId: tv.id,
+      tvName: tv.name,
+      tvIp: tv.ip,
+      platformId: tv.platformId,
+      castAt: new Date().toISOString(),
+    };
+    state.lastRemoteKey = `OPEN TABLO DVR TAB (${snap.items?.length || 0} recordings) → ${tv.name}`;
+    saveState({ overwriteCinemaState: true });
+
+    let launchResult = null;
+    if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      launchResult = await launchRokuChannel(tv);
+    }
+    return {
+      ok: true,
+      tv,
+      tabloIp: snap.ip,
+      recordingsCount: snap.items?.length || 0,
+      items: snap.items || [],
+      portalUrl: `http://${hostIp}:${portalPortToUse}`,
+      launchResult,
+      message: `Opened Tablo DVR Tab (${snap.items?.length || 0} recordings with thumbnails) on ${tv.name} (${tv.ip}).`,
+    };
+  }
+
   return {
     startPortalServer,
     stopPortalServer,
@@ -7296,6 +7674,8 @@ function createTvEngine({
     getTabloOverview,
     getTabloChannels,
     openTabloExternal,
+    refreshTabloCinemaSnapshot,
+    castTabloToTv,
   };
 }
 

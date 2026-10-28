@@ -13,6 +13,9 @@
 
 const http = require('node:http');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
 const { spawn, spawnSync } = require('node:child_process');
 
 const DEFAULT_TABLO_IP = process.env.ROBOS_TABLO_IP || '192.168.1.55';
@@ -257,10 +260,10 @@ function normalizeRecording(raw, parentMap, { ip, port, portalBaseUrl = '' }) {
 
   const base = String(portalBaseUrl || '').replace(/\/$/, '');
   const imageUrl = snapshotImageId
-    ? `${base}/api/tablo/image/${snapshotImageId}?ip=${encodeURIComponent(ip)}&port=${port}`
+    ? `${base}/api/tablo/image/${snapshotImageId}.jpg?ip=${encodeURIComponent(ip)}&port=${port}`
     : '';
   const coverUrl = coverImageId
-    ? `${base}/api/tablo/image/${coverImageId}?ip=${encodeURIComponent(ip)}&port=${port}`
+    ? `${base}/api/tablo/image/${coverImageId}.jpg?ip=${encodeURIComponent(ip)}&port=${port}`
     : imageUrl;
   const streamUrl = `${base}/api/tablo/stream?path=${encodeURIComponent(itemPath)}&ip=${encodeURIComponent(ip)}&port=${port}`;
 
@@ -414,8 +417,8 @@ async function listTabloChannels({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_P
   };
 }
 
-async function watchTabloPath({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, itemPath } = {}) {
-  const cleanPath = String(itemPath || '').trim();
+async function watchTabloPath({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, itemPath, path: altPath } = {}) {
+  const cleanPath = String(itemPath || altPath || '').trim();
   if (!cleanPath.startsWith('/')) {
     return { ok: false, error: 'Invalid Tablo item path' };
   }
@@ -466,15 +469,37 @@ async function watchTabloPath({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT
 async function fetchTabloImage({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, imageId } = {}) {
   const id = String(imageId || '').replace(/[^\d]/g, '');
   if (!id) return { ok: false, status: 400, error: 'Invalid image ID' };
+  const cacheDir = path.join(os.homedir(), '.cache', 'robos', 'tablo-images');
+  const cacheFile = path.join(cacheDir, `${String(ip).replace(/[^0-9a-zA-Z._-]/g, '_')}-${id}.jpg`);
+  try {
+    if (fs.existsSync(cacheFile)) {
+      const buf = fs.readFileSync(cacheFile);
+      if (buf && buf.length > 200) {
+        return {
+          ok: true,
+          status: 200,
+          contentType: 'image/jpeg',
+          buffer: buf,
+          cachedOnDisk: true,
+          cacheFile,
+        };
+      }
+    }
+  } catch {}
   const res = await tabloRequest(ip, port, 'GET', `/images/${id}`, { rawBuffer: true, timeoutMs: 4000 });
   if (!res.ok || !res.buffer || !res.buffer.length) {
     return { ok: false, status: res.status || 404, error: res.error || 'Image not found' };
   }
+  try {
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(cacheFile, res.buffer);
+  } catch {}
   return {
     ok: true,
     status: 200,
     contentType: res.headers?.['content-type'] || 'image/jpeg',
     buffer: res.buffer,
+    cacheFile,
   };
 }
 
@@ -585,6 +610,152 @@ async function openTabloExternalPlayer({ ip = DEFAULT_TABLO_IP, port = DEFAULT_T
   };
 }
 
+function recordingToCinemaItem(r, { hostIp = '127.0.0.1', portalPort = 19210 } = {}) {
+  if (!r || typeof r !== 'object') return null;
+  const ip = r.ip || DEFAULT_TABLO_IP;
+  const port = Number(r.port) || DEFAULT_TABLO_PORT;
+  const portalBase = `http://${hostIp}:${portalPort}`;
+  const snapId = r.snapshotImageId || r.coverImageId || null;
+  const covId = r.coverImageId || r.snapshotImageId || null;
+  const thumbUrl = snapId
+    ? `${portalBase}/api/tablo/image/${snapId}.jpg?ip=${encodeURIComponent(ip)}&port=${port}`
+    : r.imageUrl || '';
+  const coverUrl = covId
+    ? `${portalBase}/api/tablo/image/${covId}.jpg?ip=${encodeURIComponent(ip)}&port=${port}`
+    : thumbUrl;
+  const chNum = r.channel?.number || '';
+  const chLabel = r.channel?.label || (chNum ? `CH ${chNum}` : 'Tablo OTA DVR');
+  const epCode = r.episodeCode || (chNum ? `CH ${chNum}` : 'OTA DVR');
+  const isSports = r.kind === 'sports' || /nfl|mlb|nba|nhl|football|baseball/i.test(r.fullTitle || '');
+  const isNews = /news/i.test(r.fullTitle || '');
+  const genre = isSports ? 'Live Sports DVR' : isNews ? 'Local News DVR' : 'TV Series DVR';
+  const durSec = Number(r.durationSec || 0);
+  const posSec = Number(r.positionSec || 0);
+  const pct = r.watched ? 100 : durSec > 0 && posSec > 0 ? Math.min(100, Math.round((posSec / durSec) * 100)) : 0;
+
+  return {
+    id: `tablo-${r.id}`,
+    repTrackId: `tablo-${r.id}`,
+    tabloId: r.id,
+    tabloPath: r.path,
+    tabloIp: ip,
+    tabloPort: port,
+    mediaType: 'tablo',
+    isTablo: true,
+    isShowGroup: false,
+    tabloKind: r.kind || 'programs',
+    title: r.fullTitle || r.title || 'Tablo Recording',
+    showName: r.title || '',
+    episodeTitle: r.episodeTitle || r.subtitle || '',
+    episodeCode: epCode,
+    seasonNumber: r.seasonNumber || null,
+    episodeNumber: r.episodeNumber || null,
+    artist: `${r.resolution || '1080i HD'} | ${r.durationFormatted || 'DVR'}`,
+    album: `Tablo DVR (${ip}) | ${r.sizeFormatted || ''}`,
+    network: chLabel,
+    channelNumber: chNum,
+    channelCallSign: r.channel?.callSign || '',
+    genre,
+    genres: [genre],
+    franchise: `Tablo DVR (${ip})`,
+    qualityBadge: `${r.resolution || 'HD'} | ${r.durationFormatted || ''}`,
+    year: r.airDate ? String(r.airDate).slice(0, 10) : '2026',
+    airdate: r.airDate ? String(r.airDate).slice(0, 10) : '',
+    rating: null,
+    overview:
+      r.description ||
+      `Recorded on Tablo OTA DVR (${ip}) from ${chLabel}. Duration: ${r.durationFormatted || 'N/A'} (${r.sizeFormatted || 'HD'}).`,
+    cast: r.channel?.callSign ? `Channel ${chLabel}` : 'Tablo OTA Broadcast',
+    director: `Tablo DVR ${ip}`,
+    duration: durSec,
+    positionSec: posSec,
+    progressPct: pct,
+    inProgress: Boolean(posSec > 15 && !r.watched),
+    completed: Boolean(r.watched),
+    snapshotImageId: snapId,
+    coverImageId: covId,
+    pkgThumbUri: snapId ? `pkg:/images/tablo-${snapId}.jpg` : '',
+    pkgCoverUri: covId ? `pkg:/images/tablo-${covId}.jpg` : '',
+    artUrl: thumbUrl,
+    coverUrl,
+    thumbnailUrl: thumbUrl,
+    streamFormat: 'hls',
+    streamUrl: `${portalBase}/api/tablo/roku.m3u8?path=${encodeURIComponent(r.path)}&ip=${encodeURIComponent(ip)}&port=${port}`,
+    browserStreamUrl: `${portalBase}/api/tablo/stream?path=${encodeURIComponent(r.path)}&ip=${encodeURIComponent(ip)}&port=${port}`,
+  };
+}
+
+async function listTabloCinemaItems({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, hostIp = '127.0.0.1', portalPort = 19210 } = {}) {
+  const portalBaseUrl = `http://${hostIp}:${portalPort}`;
+  const recRes = await listTabloRecordings({ ip, port, portalBaseUrl });
+  if (!recRes.ok) {
+    return { ok: false, ip, port, items: [], recordings: [], error: recRes.error };
+  }
+  const imageIds = Array.from(
+    new Set(
+      recRes.recordings
+        .flatMap((r) => [r.snapshotImageId, r.coverImageId])
+        .filter(Boolean)
+    )
+  );
+  await mapConcurrent(imageIds, 4, async (imgId) => {
+    await fetchTabloImage({ ip, port, imageId: imgId });
+  });
+  const items = recRes.recordings
+    .map((r) => recordingToCinemaItem({ ...r, ip, port }, { hostIp, portalPort }))
+    .filter(Boolean);
+  return {
+    ok: true,
+    ip,
+    port,
+    count: items.length,
+    recordings: recRes.recordings,
+    items,
+  };
+}
+
+async function fetchRokuTabloPlaylist({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, itemPath } = {}) {
+  const watch = await watchTabloPath({ ip, port, itemPath });
+  if (!watch.ok || !watch.playlistUrl) {
+    return { ok: false, error: watch.error || 'Could not obtain Tablo HLS playlist URL' };
+  }
+  const u = new URL(watch.playlistUrl);
+  const origin = u.origin;
+  return new Promise((resolve) => {
+    const req = http.get(
+      watch.playlistUrl,
+      { timeout: 5000, agent: false, headers: { Connection: 'close' } },
+      (res) => {
+        let raw = '';
+        res.on('data', (c) => (raw += c));
+        res.on('end', () => {
+          if ((res.statusCode || 500) >= 400 || !raw.includes('#EXTM3U')) {
+            return resolve({
+              ok: false,
+              status: res.statusCode || 502,
+              playlistUrl: watch.playlistUrl,
+              error: `Tablo playlist returned HTTP ${res.statusCode}`,
+            });
+          }
+          const rewritten = raw
+            .replace(/^(\/[^\r\n]+)$/gm, `${origin}$1`)
+            .replace(/URI="(\/[^"]+)"/g, `URI="${origin}$1"`);
+          resolve({
+            ok: true,
+            playlistUrl: watch.playlistUrl,
+            body: rewritten,
+          });
+        });
+      }
+    );
+    req.on('error', (err) => resolve({ ok: false, error: err.message }));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ ok: false, error: 'timeout' });
+    });
+  });
+}
+
 module.exports = {
   DEFAULT_TABLO_IP,
   DEFAULT_TABLO_PORT,
@@ -597,4 +768,7 @@ module.exports = {
   fetchTabloImage,
   streamTabloViaFfmpeg,
   openTabloExternalPlayer,
+  recordingToCinemaItem,
+  listTabloCinemaItems,
+  fetchRokuTabloPlaylist,
 };
