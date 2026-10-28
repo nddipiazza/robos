@@ -125,7 +125,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, 
       </a>
       <a class="card suite" href="{{ '/v1/apps/audio-player/' | relative_url }}">
         <div class="suite-shot"><img src="{{ '/assets/audio-player/virtual-dj-volume.jpg' | relative_url }}" alt="RobOS Audio Player Virtual DJ settings, with the AI agent picker and a box to describe your DJ" width="640" height="500" loading="lazy"></div>
-        <div class="suite-body"><span class="suite-tag">Music · Home speakers</span><h3>Audio Player &amp; Home Speaker</h3><p>A large music library with casting to the speakers around your home, plus optional AI Playlists and a Virtual DJ.</p><span class="go">Read the Audio Player docs →</span></div>
+        <div class="suite-body"><span class="suite-tag">Music · Cinema · Home speakers</span><h3>Audio Player, Movie Player &amp; Home Speaker</h3><p>100,000-song and 100,000-movie libraries with zero-cloud Google Cast to your speakers and Smart TVs, plus optional AI Playlists/Watchlists, a Virtual DJ, and a Virtual Cinema Host.</p><span class="go">Read the Audio &amp; Movie Player docs →</span></div>
       </a>
       <a class="card suite" href="#build">
         <div class="suite-shot suite-idea" aria-hidden="true"><div class="prompt">A tracker for our community garden…</div><ul class="nodes"><li><b>app</b> Garden Club</li><li>Plot</li><li>Member</li><li>WateringShift</li><li>Harvest</li><li><b>tests</b> 6</li></ul></div>
