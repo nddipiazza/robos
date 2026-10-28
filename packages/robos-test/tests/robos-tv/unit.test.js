@@ -208,3 +208,101 @@ describe('TV portal shutdown handshake', () => {
     assert.strictEqual(legacy.listening, true);
   });
 });
+
+describe('Tablo 4th Gen OTA DVR integration', () => {
+  it('signs requests with HMAC-MD5 tablo:<device_key>:<sig> and serves /api/tablo/recordings and /api/tablo/image/:id', async () => {
+    const tabloPort = await freePort();
+    const portalPort = await freePort();
+    const seenAuthHeaders = [];
+    const fakeJpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
+
+    const mockTablo = http.createServer((req, res) => {
+      seenAuthHeaders.push(req.headers.authorization || '');
+      if (!String(req.headers.authorization || '').startsWith('tablo:ljpg6ZkwShVv8aI12E2LP55Ep8vq1uYDPvX0DdTB:')) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: { code: 'unauthorized', description: 'Authentication failure' } }));
+        return;
+      }
+      if (req.url === '/server/info') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          server_id: 'SID_5087B8556EE5',
+          name: 'Tablo',
+          version: '2.2.58',
+          build_number: 2612800,
+          availability: 'ready',
+          setup_completed: true,
+          model: { name: 'Tablo 4G DUAL 128GB', type: 't4g2', tuners: 2, wifi: true },
+        }));
+        return;
+      }
+      if (req.url === '/server/harddrives') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify([{ name: 'Sabrent SSD 1.00 (1000 GB)', usage: 71568179200, free: 911781167104 }]));
+        return;
+      }
+      if (req.url === '/server/tuners') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify([{ in_use: false }, { in_use: false }]));
+        return;
+      }
+      if (req.url === '/settings/info') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ led: 'on' }));
+        return;
+      }
+      if (req.url === '/recordings/airings') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(['/recordings/sports/events/186022']));
+        return;
+      }
+      if (req.url === '/recordings/sports/events/186022') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          object_id: 186022,
+          path: '/recordings/sports/events/186022',
+          snapshot_image: { image_id: 186023 },
+          airing_details: {
+            datetime: '2026-10-25T20:25Z',
+            duration: 11100,
+            show_title: 'NFL Football',
+            channel: { channel: { call_sign: 'WMSNFOX', major: 47, minor: 1, network: 'FOX', resolution: 'hd_720' } },
+          },
+          video_details: { state: 'finished', duration: 18315, size: 18523795456, width: 1280, height: 720, container_format: 'mpeg2', audio: 'ac3' },
+          event: { title: 'Green Bay Packers at Detroit Lions', description: 'NFC North matchup at Ford Field.' },
+        }));
+        return;
+      }
+      if (req.url === '/images/186023') {
+        res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+        res.end(fakeJpeg);
+        return;
+      }
+      res.writeHead(404);
+      res.end();
+    });
+
+    await new Promise((r) => mockTablo.listen(tabloPort, '127.0.0.1', r));
+    cleanups.push(() => new Promise((r) => mockTablo.close(r)));
+
+    const engine = makeEngine(portalPort, { appName: 'robos-tv' });
+    engine.setTabloDevice({ ip: '127.0.0.1', port: tabloPort });
+    await engine.startPortalServer();
+
+    const ov = await engine.getTabloOverview({ ip: '127.0.0.1', port: tabloPort });
+    assert.strictEqual(ov.ok, true);
+    assert.strictEqual(ov.status.serverId, 'SID_5087B8556EE5');
+    assert.strictEqual(ov.recordings.length, 1);
+    assert.strictEqual(ov.recordings[0].fullTitle, 'NFL Football: Green Bay Packers at Detroit Lions');
+
+    const httpRecs = await request(portalPort, { pathname: `/api/tablo/recordings?ip=127.0.0.1&port=${tabloPort}` });
+    assert.strictEqual(httpRecs.status, 200);
+    assert.strictEqual(httpRecs.json.count, 1);
+
+    const httpImg = await request(portalPort, { pathname: `/api/tablo/image/186023?ip=127.0.0.1&port=${tabloPort}` });
+    assert.strictEqual(httpImg.status, 200);
+    assert.ok(httpImg.buf.equals(fakeJpeg));
+    assert.ok(seenAuthHeaders.length > 0);
+  });
+});
+

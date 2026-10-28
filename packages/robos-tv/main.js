@@ -219,8 +219,19 @@ function createMainWindow() {
 }
 
 app.whenReady?.().then(async () => {
-  const srv = await tvEngine.startPortalServer();
+  let srv = await tvEngine.startPortalServer();
   portalPortBound = srv?.port || 19210;
+  if (srv?.reused) {
+    try {
+      const own = await tvEngine.getPortalOwnership(portalPortBound);
+      if (own && own.stale && own.canRestart) {
+        const restarted = await tvEngine.restartPortal({ port: portalPortBound });
+        if (restarted && restarted.ok) {
+          srv = restarted;
+        }
+      }
+    } catch {}
+  }
   createMainWindow();
 });
 
@@ -328,3 +339,20 @@ ipcMain.handle('tv:openPortalExternal', async () => {
   }
   return { ok: true, portalUrl: info.portalUrl };
 });
+
+ipcMain.handle('tv:getTabloOverview', async (_e, opts) => {
+  return tvEngine.getTabloOverview(opts || {});
+});
+
+ipcMain.handle('tv:getTabloChannels', async (_e, opts) => {
+  return tvEngine.getTabloChannels(opts || {});
+});
+
+ipcMain.handle('tv:setTabloDevice', async (_e, opts) => {
+  return tvEngine.setTabloDevice(opts || {});
+});
+
+ipcMain.handle('tv:openTabloExternal', async (_e, opts) => {
+  return tvEngine.openTabloExternal(opts || {});
+});
+

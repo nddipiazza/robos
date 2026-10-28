@@ -90,6 +90,41 @@ async function main() {
     return;
   }
 
+  if (cmd === 'tablo' || cmd === 'recordings') {
+    const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';
+    const ov = await engine.getTabloOverview({ ip: tabloIp });
+    if (!ov.ok) {
+      console.error(`Could not connect to Tablo at ${tabloIp}: ${ov.error}`);
+      process.exit(1);
+    }
+    console.log(`Tablo: ${ov.status.model?.name || ov.status.name} (${ov.status.serverId}) @ ${ov.ip}:${ov.port}`);
+    if (ov.status.harddrives?.[0]) {
+      const hd = ov.status.harddrives[0];
+      console.log(`Drive: ${hd.name} — ${Math.round((hd.usage || 0) / 1e9)} GB used / ${Math.round((hd.free || 0) / 1e9)} GB free`);
+    }
+    console.log(`\nRecordings (${ov.recordings.length}):`);
+    for (const r of ov.recordings) {
+      console.log(`  [${r.id}] ${r.fullTitle} | ${r.channel?.label || ''} | ${r.durationFormatted} | ${r.sizeFormatted} | ${r.path}`);
+    }
+    return;
+  }
+
+  if (cmd === 'watch') {
+    const query = args[1] || '';
+    const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';
+    const ov = await engine.getTabloOverview({ ip: tabloIp });
+    const match =
+      ov.recordings.find((r) => String(r.id) === query || r.path === query || r.fullTitle.toLowerCase().includes(query.toLowerCase())) ||
+      ov.recordings[0];
+    if (!match) {
+      console.error('No matching Tablo recording found.');
+      process.exit(1);
+    }
+    const res = await engine.openTabloExternal({ ip: tabloIp, itemPath: match.path, title: match.fullTitle });
+    console.log(JSON.stringify(res, null, 2));
+    return;
+  }
+
   if (cmd === 'status' || cmd === 'check') {
     const st = await engine.queryRokuPowerMode(ip);
     console.log(JSON.stringify(st, null, 2));
@@ -157,7 +192,9 @@ async function main() {
   robos-tv check [--ip 192.168.1.15]
   robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute>
   robos-tv launch <ps5|youtube|netflix|plex|disney|hulu|max|spotify|appId>
-  robos-tv list`);
+  robos-tv list
+  robos-tv recordings [--ip 192.168.1.55]
+  robos-tv watch <recordingId|title> [--ip 192.168.1.55]`);
 }
 
 main().catch((err) => {
