@@ -19,4 +19,8 @@ contextBridge.exposeInMainWorld('robosTv', {
   getPortalOwnership: () => ipcRenderer.invoke('tv:getPortalOwnership'),
   restartPortal: () => ipcRenderer.invoke('tv:restartPortal'),
   onPortalChanged: (cb) => ipcRenderer.on('tv:portalChanged', () => cb()),
+  getTabloOverview: (opts) => ipcRenderer.invoke('tv:getTabloOverview', opts),
+  getTabloChannels: (opts) => ipcRenderer.invoke('tv:getTabloChannels', opts),
+  setTabloDevice: (opts) => ipcRenderer.invoke('tv:setTabloDevice', opts),
+  openTabloExternal: (opts) => ipcRenderer.invoke('tv:openTabloExternal', opts),
 });

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*; frame-src *;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*; media-src 'self' blob: http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*; img-src 'self' data: http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*; frame-src *;" />
   <title>RobOS Smart TV Studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -67,15 +67,94 @@
 
     <!-- Navigation Tabs -->
     <nav class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="tab-devices" role="tab">Paired Smart TVs &amp; Remote</button>
+      <button type="button" class="tab-btn active" data-tab="tab-tablo" role="tab">📡 Tablo DVR &amp; Recordings (192.168.1.55)</button>
+      <button type="button" class="tab-btn" data-tab="tab-devices" role="tab">Paired Smart TVs &amp; Remote</button>
       <button type="button" class="tab-btn" data-tab="tab-checklist" role="tab">TV Setup Checklists (All Brands)</button>
       <button type="button" class="tab-btn" data-tab="tab-sideload" role="tab">Developer Mode Sideloader (webOS / Tizen / ADB / Roku)</button>
       <button type="button" class="tab-btn" data-tab="tab-portal" role="tab">10-Foot TV Portal &amp; Big-Screen Launcher</button>
     </nav>
 
     <main class="main">
+      <!-- TAB 0: Tablo OTA DVR & Live TV Player -->
+      <section id="tab-tablo" class="tab-pane active">
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header" style="margin-bottom:8px;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="dot online" id="tablo-status-dot"></span>
+              <h2 class="card-title" id="tablo-device-title">Tablo 4th Gen OTA DVR (192.168.1.55:8887)</h2>
+              <span class="badge badge-green" id="tablo-sid-badge">SID_5087B8556EE5</span>
+              <span class="badge" id="tablo-drive-badge">Sabrent SSD 1TB</span>
+              <span class="badge" id="tablo-tuners-badge">Tuners Ready</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <input type="text" id="input-tablo-ip" class="input" style="width:140px;padding:4px 8px;font-size:12px;" value="192.168.1.55" placeholder="192.168.1.55" />
+              <button type="button" class="btn btn-sm" id="btn-tablo-refresh">↻ Refresh Recordings</button>
+              <button type="button" class="btn btn-sm" id="btn-tablo-load-channels">📺 Load Live OTA Channels</button>
+            </div>
+          </div>
+          <div id="tablo-device-meta" class="item-sub">Connecting to Tablo DVR on 192.168.1.55:8887 via HMAC-MD5 device auth…</div>
+        </div>
+
+        <div class="tablo-layout">
+          <!-- Left: Built-in HD Video Player + Scrubbing & Commercial Skip -->
+          <div class="card tablo-player-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title" id="tablo-now-playing-title">Select a Recording to Watch</h3>
+                <div class="item-sub" id="tablo-now-playing-meta">Click any recording on the right to start streaming immediately</div>
+              </div>
+              <span class="badge" id="tablo-now-playing-badge">MPEG-2 / AC-3 → H.264 Live</span>
+            </div>
+
+            <div class="tablo-video-wrap">
+              <video id="tablo-video-player" controls autoplay playsinline></video>
+            </div>
+
+            <!-- Timeline Seek Scrubber (handles full recording duration across FFmpeg seeks) -->
+            <div class="tablo-scrubber-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#94a3b8;margin-bottom:4px;">
+                <span id="tablo-time-current">0:00:00</span>
+                <span id="tablo-seek-hint">Drag slider to jump anywhere in recording</span>
+                <span id="tablo-time-total">0:00:00</span>
+              </div>
+              <input type="range" id="tablo-seek-slider" min="0" max="100" value="0" step="5" style="width:100%;accent-color:#00bcd4;cursor:pointer;" />
+            </div>
+
+            <div class="tablo-controls-row">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm" id="btn-tablo-Restart" title="Restart from beginning">⏮ Start</button>
+                <button type="button" class="btn btn-sm" id="btn-tablo-back-30" title="Rewind 30 seconds">↺ -30s</button>
+                <button type="button" class="btn btn-sm" id="btn-tablo-back-15" title="Rewind 15 seconds">↺ -15s</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btn-tablo-fwd-30" title="Skip commercial (+30 seconds)">+30s Skip ↻</button>
+                <button type="button" class="btn btn-sm" id="btn-tablo-fwd-120" title="Skip 2 minutes">+2m ⏭</button>
+                <button type="button" class="btn btn-sm" id="btn-tablo-fwd-300" title="Skip 5 minutes">+5m ⏭</button>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm" id="btn-tablo-external" title="Open raw MPEG-2/AC-3 HLS stream in MPV/VLC/FFplay">↗ Open in External Player</button>
+              </div>
+            </div>
+
+            <p id="tablo-now-playing-desc" class="muted-text" style="margin-top:10px;margin-bottom:0;line-height:1.5;"></p>
+          </div>
+
+          <!-- Right: Recordings & Live OTA Channels Browser -->
+          <div class="card">
+            <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+              <h3 class="card-title">Tablo Library</h3>
+              <div class="tablo-filter-pills" id="tablo-filter-bar">
+                <button type="button" class="btn btn-sm btn-primary" data-tablo-filter="all">All Recordings</button>
+                <button type="button" class="btn btn-sm" data-tablo-filter="sports">🏈 Sports</button>
+                <button type="button" class="btn btn-sm" data-tablo-filter="series">📺 TV Series</button>
+                <button type="button" class="btn btn-sm" data-tablo-filter="channels">📡 Live OTA Channels</button>
+              </div>
+            </div>
+            <div id="tablo-recordings-list" class="list tablo-recordings-scroll"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- TAB 1: Paired TVs, Add TV & Live Remote Control -->
-      <section id="tab-devices" class="tab-pane active">
+      <section id="tab-devices" class="tab-pane">
         <div class="columns">
           <div class="card">
             <div class="card-header">

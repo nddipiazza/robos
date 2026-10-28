@@ -25,6 +25,7 @@ const http = require('node:http');
 const net = require('node:net');
 const crypto = require('node:crypto');
 const { spawnSync, exec } = require('node:child_process');
+const tabloClient = require('./tablo-client');
 
 const DEFAULT_PORTAL_PORT = 19210;
 
@@ -317,6 +318,15 @@ const TEN_FOOT_LAUNCH_TILES = [
     description: 'An AI host face runs survey-powered mini games about your guests; phones are the controllers.',
     packageId: 'party-game',
     shortcutKey: '9',
+  },
+  {
+    id: 'tablo-dvr',
+    title: 'Tablo OTA DVR & Live TV',
+    category: 'Live TV & DVR',
+    badge: '192.168.1.55',
+    description: 'Watch recorded NFL/MLB games, TV series, and 55 live OTA antenna channels from your Tablo 4th Gen DVR.',
+    packageId: 'robos-tv',
+    shortcutKey: '0',
   },
 ];
 
@@ -5048,6 +5058,8 @@ function createTvEngine({
     webosLastRenewedAt: '2026-10-26T09:00:00.000Z',
     webosSessionRemainingHours: 998,
     sunshineEnabled: true,
+    tabloIp: tabloClient.DEFAULT_TABLO_IP,
+    tabloPort: tabloClient.DEFAULT_TABLO_PORT,
     lastRemoteKey: null,
     tvs: [],
     generatedPackages: [],
@@ -5138,6 +5150,7 @@ function createTvEngine({
   let boundPort = state.portalPort || DEFAULT_PORTAL_PORT;
   let _liveDashboardFrameBuf = null;
   let _liveDashboardFrameUpdatedAt = 0;
+  const _tabloImageCache = new Map();
   // Set when another process already serves the portal and this engine reuses it.
   let reusedOwner = null;
   let releasedAt = 0;
@@ -6171,6 +6184,109 @@ function createTvEngine({
           return;
         }
 
+        if (u.pathname === '/api/tablo/status') {
+          const ip = u.searchParams.get('ip') || state.tabloIp || tabloClient.DEFAULT_TABLO_IP;
+          const port = Number(u.searchParams.get('port') || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+          tabloClient.getTabloStatus({ ip, port }).then((st) => {
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify(st));
+          });
+          return;
+        }
+
+        if (u.pathname === '/api/tablo/recordings') {
+          const ip = u.searchParams.get('ip') || state.tabloIp || tabloClient.DEFAULT_TABLO_IP;
+          const port = Number(u.searchParams.get('port') || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+          const portalBaseUrl = `http://${hostIp}:${boundPort}`;
+          tabloClient.listTabloRecordings({ ip, port, portalBaseUrl }).then((recs) => {
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify(recs));
+          });
+          return;
+        }
+
+        if (u.pathname === '/api/tablo/channels') {
+          const ip = u.searchParams.get('ip') || state.tabloIp || tabloClient.DEFAULT_TABLO_IP;
+          const port = Number(u.searchParams.get('port') || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+          const portalBaseUrl = `http://${hostIp}:${boundPort}`;
+          tabloClient.listTabloChannels({ ip, port, portalBaseUrl }).then((chs) => {
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify(chs));
+          });
+          return;
+        }
+
+        if (u.pathname.startsWith('/api/tablo/image/')) {
+          const imageId = u.pathname.slice('/api/tablo/image/'.length).replace(/[^\d]/g, '');
+          const ip = u.searchParams.get('ip') || state.tabloIp || tabloClient.DEFAULT_TABLO_IP;
+          const port = Number(u.searchParams.get('port') || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+          const cacheKey = `${ip}:${port}:${imageId}`;
+          if (_tabloImageCache.has(cacheKey)) {
+            const cached = _tabloImageCache.get(cacheKey);
+            res.writeHead(200, {
+              'Content-Type': cached.contentType,
+              'Content-Length': String(cached.buffer.length),
+              'Cache-Control': 'public, max-age=86400',
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(cached.buffer);
+            return;
+          }
+          tabloClient.fetchTabloImage({ ip, port, imageId }).then((img) => {
+            if (!img.ok || !img.buffer) {
+              res.writeHead(img.status || 404, { 'Content-Type': 'text/plain' });
+              res.end('Image not found');
+              return;
+            }
+            if (_tabloImageCache.size > 80) {
+              const oldest = _tabloImageCache.keys().next().value;
+              if (oldest) _tabloImageCache.delete(oldest);
+            }
+            _tabloImageCache.set(cacheKey, img);
+            res.writeHead(200, {
+              'Content-Type': img.contentType,
+              'Content-Length': String(img.buffer.length),
+              'Cache-Control': 'public, max-age=86400',
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(img.buffer);
+          });
+          return;
+        }
+
+        if (u.pathname === '/api/tablo/stream') {
+          const itemPath = u.searchParams.get('path') || '';
+          const seekSec = Number(u.searchParams.get('seek') || 0);
+          const ip = u.searchParams.get('ip') || state.tabloIp || tabloClient.DEFAULT_TABLO_IP;
+          const port = Number(u.searchParams.get('port') || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+          tabloClient.watchTabloPath({ ip, port, itemPath }).then((watch) => {
+            if (!watch.ok || !watch.playlistUrl) {
+              res.writeHead(502, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+              res.end(JSON.stringify({ ok: false, error: watch.error || 'Could not start Tablo stream' }));
+              return;
+            }
+            tabloClient.streamTabloViaFfmpeg({
+              playlistUrl: watch.playlistUrl,
+              seekSec,
+              req,
+              res,
+            });
+          });
+          return;
+        }
+
+        if (u.pathname === '/tablo') {
+          const tabloHtml = renderTabloTenFootHtml({
+            hostIp,
+            portalPort: boundPort,
+            tabloIp: state.tabloIp || tabloClient.DEFAULT_TABLO_IP,
+            tabloPort: state.tabloPort || tabloClient.DEFAULT_TABLO_PORT,
+          });
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(tabloHtml);
+          return;
+        }
+
         if (u.pathname === '/api/activate-tile' && req.method === 'POST') {
           let raw = '';
           req.on('data', (c) => (raw += c));
@@ -6356,6 +6472,9 @@ function createTvEngine({
       webosLastRenewedAt: state.webosLastRenewedAt,
       webosSessionRemainingHours: state.webosSessionRemainingHours,
       sunshineEnabled: state.sunshineEnabled,
+      tabloIp: state.tabloIp || tabloClient.DEFAULT_TABLO_IP,
+      tabloPort: state.tabloPort || tabloClient.DEFAULT_TABLO_PORT,
+      tabloPortalUrl: `http://${hostIp}:${boundPort}/tablo`,
       lastRemoteKey: state.lastRemoteKey,
       tooling: detectToolingStatus(),
       platforms: TV_PLATFORMS,
@@ -7092,6 +7211,60 @@ function createTvEngine({
     };
   }
 
+  function setTabloDevice({ ip, port } = {}) {
+    loadState();
+    if (ip) state.tabloIp = String(ip).trim();
+    if (port) state.tabloPort = Number(port) || tabloClient.DEFAULT_TABLO_PORT;
+    saveState();
+    return {
+      ok: true,
+      tabloIp: state.tabloIp,
+      tabloPort: state.tabloPort,
+    };
+  }
+
+  async function getTabloOverview({ ip, port } = {}) {
+    loadState();
+    const targetIp = String(ip || state.tabloIp || tabloClient.DEFAULT_TABLO_IP).trim();
+    const targetPort = Number(port || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+    if (ip && ip !== state.tabloIp) {
+      state.tabloIp = targetIp;
+      saveState();
+    }
+    const hostIp = detectLanIp();
+    const portalBaseUrl = `http://${hostIp}:${boundPort || DEFAULT_PORTAL_PORT}`;
+    const status = await tabloClient.getTabloStatus({ ip: targetIp, port: targetPort });
+    const recordingsRes = status.ok
+      ? await tabloClient.listTabloRecordings({ ip: targetIp, port: targetPort, portalBaseUrl })
+      : { ok: false, recordings: [] };
+    return {
+      ok: status.ok,
+      ip: targetIp,
+      port: targetPort,
+      portalBaseUrl,
+      status,
+      recordings: recordingsRes.recordings || [],
+      recordingsCount: (recordingsRes.recordings || []).length,
+      error: status.error || recordingsRes.error || null,
+    };
+  }
+
+  async function getTabloChannels({ ip, port } = {}) {
+    loadState();
+    const targetIp = String(ip || state.tabloIp || tabloClient.DEFAULT_TABLO_IP).trim();
+    const targetPort = Number(port || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+    const hostIp = detectLanIp();
+    const portalBaseUrl = `http://${hostIp}:${boundPort || DEFAULT_PORTAL_PORT}`;
+    return tabloClient.listTabloChannels({ ip: targetIp, port: targetPort, portalBaseUrl });
+  }
+
+  async function openTabloExternal({ ip, port, itemPath, title } = {}) {
+    loadState();
+    const targetIp = String(ip || state.tabloIp || tabloClient.DEFAULT_TABLO_IP).trim();
+    const targetPort = Number(port || state.tabloPort || tabloClient.DEFAULT_TABLO_PORT);
+    return tabloClient.openTabloExternalPlayer({ ip: targetIp, port: targetPort, itemPath, title });
+  }
+
   return {
     startPortalServer,
     stopPortalServer,
@@ -7119,7 +7292,126 @@ function createTvEngine({
     stopAppCast,
     listAppCasts,
     setAppCastFrame,
+    setTabloDevice,
+    getTabloOverview,
+    getTabloChannels,
+    openTabloExternal,
   };
+}
+
+function renderTabloTenFootHtml({ hostIp, portalPort, tabloIp, tabloPort }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RobOS TV — Tablo OTA DVR &amp; Live TV (${tabloIp})</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #070b12; color: #e6edf3; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 18px 28px; background: #0d131f; border-bottom: 1px solid #1e293b; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .pill { background: #131c2e; border: 1px solid #00bcd4; color: #67e8f9; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .container { display: grid; grid-template-columns: 1.25fr 1fr; gap: 22px; padding: 24px 28px; max-width: 1760px; margin: 0 auto; }
+    .player-card, .list-card { background: #111827; border: 1px solid #263248; border-radius: 12px; padding: 18px; }
+    video { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; border: 1px solid #1e293b; }
+    .rec-item { display: flex; gap: 14px; background: #0b101b; border: 1px solid #1e293b; border-radius: 9px; padding: 12px; margin-bottom: 10px; cursor: pointer; align-items: center; }
+    .rec-item:hover, .rec-item.active { border-color: #00bcd4; background: rgba(0, 188, 212, 0.1); }
+    .rec-thumb { width: 128px; height: 72px; border-radius: 6px; object-fit: cover; background: #1e293b; flex-shrink: 0; }
+    .btn { background: #00bcd4; color: #041217; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer; }
+    .btn-sec { background: #1e293b; color: #e6edf3; border: 1px solid #334155; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1 style="margin:0;font-size:21px;">RobOS TV · Tablo OTA DVR &amp; Live Channels</h1>
+      <span class="pill" id="dev-pill">Tablo @ ${tabloIp}:${tabloPort}</span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <a href="/" class="btn btn-sec" style="text-decoration:none;">← Back to 10-Foot Portal</a>
+    </div>
+  </header>
+  <div class="container">
+    <div class="player-card">
+      <video id="player" controls autoplay></video>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div>
+          <div id="now-title" style="font-size:18px;font-weight:700;">Select a Recording to Play</div>
+          <div id="now-sub" style="font-size:13px;color:#94a3b8;margin-top:2px;">Transcoding MPEG-2 + Dolby AC-3 to H.264/AAC via RobOS FFmpeg Engine</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-sec" id="btn-back-15">↺ -15s</button>
+          <button class="btn btn-sec" id="btn-fwd-30">+30s ↻</button>
+          <button class="btn btn-sec" id="btn-fwd-300">+5m ⏭</button>
+        </div>
+      </div>
+      <p id="now-desc" style="color:#cbd5e1;font-size:13.5px;margin-top:10px;"></p>
+    </div>
+    <div class="list-card">
+      <h2 style="margin:0 0 12px;font-size:17px;">Recorded Shows &amp; Sports on Tablo</h2>
+      <div id="rec-list">Loading Tablo recordings from ${tabloIp}…</div>
+    </div>
+  </div>
+  <script>
+    let recordings = [];
+    let currentRec = null;
+    let baseSeek = 0;
+    const video = document.getElementById('player');
+
+    function playAtSeek(rec, seekSec) {
+      currentRec = rec;
+      baseSeek = Math.max(0, Math.floor(seekSec || 0));
+      document.getElementById('now-title').textContent = rec.fullTitle;
+      document.getElementById('now-sub').textContent = [rec.channel?.label, rec.durationFormatted, rec.sizeFormatted, rec.resolution].filter(Boolean).join(' · ');
+      document.getElementById('now-desc').textContent = rec.description || '';
+      video.src = rec.streamUrl + '&seek=' + baseSeek;
+      video.play().catch(() => {});
+      renderList();
+    }
+
+    document.getElementById('btn-back-15').onclick = () => {
+      if (!currentRec) return;
+      playAtSeek(currentRec, baseSeek + Math.floor(video.currentTime || 0) - 15);
+    };
+    document.getElementById('btn-fwd-30').onclick = () => {
+      if (!currentRec) return;
+      playAtSeek(currentRec, baseSeek + Math.floor(video.currentTime || 0) + 30);
+    };
+    document.getElementById('btn-fwd-300').onclick = () => {
+      if (!currentRec) return;
+      playAtSeek(currentRec, baseSeek + Math.floor(video.currentTime || 0) + 300);
+    };
+
+    function renderList() {
+      const el = document.getElementById('rec-list');
+      if (!recordings.length) {
+        el.textContent = 'No recordings found.';
+        return;
+      }
+      el.innerHTML = recordings.map((r, i) => \`
+        <div class="rec-item \${currentRec && currentRec.id === r.id ? 'active' : ''}" data-idx="\${i}">
+          <img class="rec-thumb" src="\${r.imageUrl}" alt="" onerror="this.style.display='none'" />
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:14.5px;">\${r.fullTitle}</div>
+            <div style="font-size:12.5px;color:#67e8f9;margin-top:2px;">\${r.channel?.label || ''} · \${r.durationFormatted} · \${r.sizeFormatted}</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">\${r.description || ''}</div>
+          </div>
+          <button class="btn">▶ Play</button>
+        </div>
+      \`).join('');
+      el.querySelectorAll('.rec-item').forEach((row) => {
+        row.onclick = () => playAtSeek(recordings[Number(row.dataset.idx)], 0);
+      });
+    }
+
+    fetch('/api/tablo/recordings').then(r => r.json()).then(data => {
+      recordings = data.recordings || [];
+      renderList();
+      if (recordings[0]) playAtSeek(recordings[0], 0);
+    });
+  </script>
+</body>
+</html>`;
 }
 
 module.exports = {
@@ -7133,6 +7425,8 @@ module.exports = {
   detectToolingStatus,
   renderDevCentralWallboardHtml,
   renderTenFootPortalHtml,
+  renderTabloTenFootHtml,
   generateSideloadPackage,
   createTvEngine,
+  tabloClient,
 };
