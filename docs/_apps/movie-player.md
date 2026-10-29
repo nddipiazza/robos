@@ -3,8 +3,8 @@ title: "RobOS Movie Player"
 package: movie-player
 category: core-desktop
 icon: movie-player.svg
-summary: "Open-source cinema & video player sharing the exact warm theater theme of RobOS Audio Player: 100,000-movie & TV series library, Show & Season Navigator, TMDB/TVmaze posters, AI Watchlists, Virtual Cinema Host, synced .srt/.vtt subtitles, and a 3-row visual image-card Roku & Smart TV app."
-description: "Desktop & Smart TV cinema stage with Movies & TV Shows tabs, Show & Season Navigator, TMDB/TVmaze metadata, .srt/.vtt subtitles, AI Watchlists, RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku OS channel."
+summary: "Open-source cinema, TV series & Tablo OTA DVR player sharing the warm theater theme of RobOS Audio Player: 100,000-movie & TV series library, Show & Season Navigator, Tablo 4th Gen OTA DVR live & recorded broadcast streaming, TMDB/TVmaze posters, AI Watchlists, Virtual Cinema Host, synced .srt/.vtt subtitles, and a 3-row visual image-card Roku & Smart TV app."
+description: "Desktop & Smart TV cinema stage with Movies, TV Shows & Tablo OTA DVR tabs, Show & Season Navigator, live & recorded Tablo DVR streaming with broadcast thumbnails, TMDB/TVmaze metadata, .srt/.vtt subtitles, AI Watchlists, RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku OS channel."
 ---
 
 > **Full Interactive Walkthrough & Live Roku TV Tour:** See the flagship landing page at [`/movie-player/`](https://rowbose.com/movie-player/) (or [`/video-player/`](https://rowbose.com/video-player/)).
@@ -92,6 +92,11 @@ flowchart TD
 ### 6. Cloud Cinema Storage & Zero-Cloud Smart TV Cast
 - **Metadata-Only Cloud Indexing (`lib/cloud-storage.js`)**: Indexes movies across Google Drive, Microsoft OneDrive, Dropbox, and S3 without downloading video bodies. On play or Cast, streams video on demand through a local HTTP `206 Partial Content` proxy (`/cloud-stream/:trackId`) backed by a configurable 2 GB LRU disk cache.
 - **Zero-Cloud LAN Smart TV Streaming (`lib/cast-service.js`)**: Discovers Google TV, Chromecast, and Nest Hub displays via mDNS (`_googlecast._tcp.local`) and streams local or cloud movies directly over the LAN. Also includes the **Theater Lobby Clock Display** and **Cast Theater Ambient Soundscape** cards.
+
+### 7. Tablo 4th Gen OTA DVR & 3-Row Roku OS Channel
+- **Tablo 4th Gen LAN Client (`packages/robos-lib/tablo-client.js`)**: Discovers Tablo 4th Gen OTA DVR appliances on the LAN (`:8887`), signs REST requests with `HMAC-MD5` (`Authorization: tablo:<key>:<sig>`), and fetches sports events, series episodes, movies, and local news recordings alongside OTA guide channels (`47.1 WMSNFOX`, `15.1 WMTVNBC`, `27.1 WKOWABC`, `3.1 WISC-TV`).
+- **Broadcast Recording Thumbnails + Live Frame Capture**: Caches 16:9 broadcast recording snapshots (`~/.cache/robos/tablo-images/`) and automatically captures a live 640×360 JPEG frame via `ffmpeg -frames:v 1` for active in-progress (`state: "recording"`) broadcasts.
+- **Dual-Path Streaming & 3rd Roku Top Tab (`TABLO DVR`)**: Adds a 3rd top-level `TABLO DVR` tab to the 3-row Roku OS SceneGraph channel and `:19210/movie-player` portal, serving real-time `H.264/AAC` fragmented MP4 streams (`/api/tablo/stream`) to desktop players and rewritten native 60fps `MPEG-2/AC-3` HLS playlists (`/api/tablo/roku.m3u8`) to Roku TVs.
 
 ## Files & Configuration
 
