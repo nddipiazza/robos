@@ -1003,15 +1003,22 @@ async function startGoogleBrowserOAuth(params = {}, options = {}) {
           }
 
           let googleEmail = loginHint || 'user@gmail.com';
-          try {
-            const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
-              headers: { Authorization: `Bearer ${tokenData.access_token}` },
-            });
-            if (aboutRes.ok) {
-              const aboutData = await aboutRes.json();
-              if (aboutData?.user?.emailAddress) googleEmail = aboutData.user.emailAddress;
-            }
-          } catch {}
+          // The shared OAuth client often hits Drive's per-project quota (403
+          // rateLimitExceeded). Retry, or the account is saved under the placeholder email.
+          for (let attempt = 0; attempt < 8; attempt++) {
+            try {
+              const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
+                headers: { Authorization: `Bearer ${tokenData.access_token}` },
+              });
+              if (aboutRes.ok) {
+                const aboutData = await aboutRes.json();
+                if (aboutData?.user?.emailAddress) googleEmail = aboutData.user.emailAddress;
+                break;
+              }
+              if (aboutRes.status !== 403 && aboutRes.status !== 429 && aboutRes.status < 500) break;
+            } catch {}
+            await new Promise(r => setTimeout(r, Math.min(500 * 2 ** attempt, 8000)));
+          }
 
           const grantedScopes = normalizeScopes(tokenData.scope || scopeParam, 'google', true);
           const saved = saveAccount({

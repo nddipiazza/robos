@@ -133,13 +133,26 @@ function googleTokenProvider(accountId, { homeDir } = {}) {
 }
 
 class DriveError extends Error {
-  constructor(message, status) { super(message); this.status = status; }
+  constructor(message, status, reason = '') { super(message); this.status = status; this.reason = reason; }
 }
 
-function createDriveClient({ tokens, fetchImpl = fetch }) {
+// Drive answers quota and per-user throttling with 403 rateLimitExceeded /
+// userRateLimitExceeded (or 429), and transient faults with 5xx. Those are retried with
+// exponential backoff; every other 403 is a real permission problem.
+const RATE_LIMIT_REASONS = new Set(['rateLimitExceeded', 'userRateLimitExceeded', 'RATE_LIMIT_EXCEEDED']);
+const RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+function driveRetryDelayMs(attempt, retryAfter) {
+  const seconds = Number(retryAfter);
+  if (Number.isFinite(seconds) && seconds > 0) return Math.min(seconds, 60) * 1000;
+  const base = Number(process.env.ROBOS_GDRIVE_RETRY_BASE_MS || 500);
+  return Math.min(base * 2 ** attempt, 32000) + Math.floor(Math.random() * base);
+}
+
+function createDriveClient({ tokens, fetchImpl = fetch, maxRetries = Number(process.env.ROBOS_GDRIVE_MAX_RETRIES || 8) }) {
   const base = driveApiBase();
 
-  async function call(method, url, { body, headers = {}, raw = false, retried = false } = {}) {
+  async function call(method, url, { body, headers = {}, raw = false, retried = false, attempt = 0 } = {}) {
     const token = await tokens.get();
     const res = await fetchImpl(url.startsWith('http') ? url : base + url, {
       method,
@@ -149,14 +162,24 @@ function createDriveClient({ tokens, fetchImpl = fetch }) {
     });
     if (res.status === 401 && !retried && tokens.refresh) {
       await tokens.refresh();
-      return call(method, url, { body, headers, raw, retried: true });
+      return call(method, url, { body, headers, raw, retried: true, attempt });
     }
     if (!res.ok) {
-      let detail = '';
-      try { detail = (await res.json())?.error?.message || ''; } catch {}
-      if (res.status === 404) throw new DriveError(`Google Drive could not find that folder, or this account cannot see it. ${detail}`.trim(), 404);
-      if (res.status === 403) throw new DriveError(`This Google account does not have access. Ask the owner to share the folder with you. ${detail}`.trim(), 403);
-      throw new DriveError(`Google Drive ${method} failed (HTTP ${res.status}) ${detail}`.trim(), res.status);
+      let err = {};
+      try { err = (await res.json())?.error || {}; } catch {}
+      const detail = err.message || '';
+      const reason = err.errors?.[0]?.reason || err.details?.find(d => d.reason)?.reason || '';
+      const rateLimited = res.status === 429 || (res.status === 403 && RATE_LIMIT_REASONS.has(reason));
+      if ((rateLimited || RETRY_STATUSES.has(res.status)) && attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, driveRetryDelayMs(attempt, res.headers?.get?.('retry-after'))));
+        return call(method, url, { body, headers, raw, retried, attempt: attempt + 1 });
+      }
+      if (rateLimited) throw new DriveError(`Google Drive is rate-limiting requests right now. Try again in a minute. ${detail}`.trim(), res.status, reason);
+      if (res.status === 404) throw new DriveError(`Google Drive could not find that folder, or this account cannot see it. Ask the owner to share it with this account. ${detail}`.trim(), 404, reason);
+      if (res.status === 403 && reason === 'storageQuotaExceeded') throw new DriveError(`This Google account's Drive storage is full. ${detail}`.trim(), 403, reason);
+      if (res.status === 403 && /insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/.test(reason)) throw new DriveError(`This Google sign-in does not include Drive access. Sign in with Google again in Preferences → Cloud Suite Accounts. ${detail}`.trim(), 403, reason);
+      if (res.status === 403) throw new DriveError(`This Google account does not have access. Ask the owner to share the folder with you. ${detail}`.trim(), 403, reason);
+      throw new DriveError(`Google Drive ${method} failed (HTTP ${res.status}) ${detail}`.trim(), res.status, reason);
     }
     if (raw) return Buffer.from(await res.arrayBuffer());
     if (res.status === 204) return null;
@@ -246,6 +269,14 @@ async function createDriveFolder({ accountId, name, parentId, homeDir, fetchImpl
   return { kind: 'gdrive', folderId: folder.id, name: folder.name, url: driveFolderUrl(folder.id) };
 }
 
+// Access a share grants to files inside the folder reaches the recipient a few seconds
+// after the folder itself, so a listing can briefly miss files the manifest names.
+function consistencyWaitsMs() {
+  const base = Number(process.env.ROBOS_GDRIVE_CONSISTENCY_BASE_MS || 1000);
+  return [1, 2, 4, 8, 15].map(n => n * base);
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 function createGDriveBackend({ folderId, accountId, homeDir, fetchImpl, tokens }) {
   if (!folderId) throw new Error('Google Drive folder ID is required.');
   const drive = createDriveClient({ tokens: tokens || googleTokenProvider(accountId, { homeDir }), fetchImpl });
@@ -253,6 +284,7 @@ function createGDriveBackend({ folderId, accountId, homeDir, fetchImpl, tokens }
   let blobFolderId = null;
   let blobIndex = null; // name → fileId
   let manifestFileId;
+  let readOnly = false; // a share someone else owns: an empty listing means "not visible yet"
 
   async function blobFolder(create) {
     if (blobFolderId) return blobFolderId;
@@ -278,10 +310,16 @@ function createGDriveBackend({ folderId, accountId, homeDir, fetchImpl, tokens }
       const meta = await drive.getFile(folderId);
       if (meta.mimeType && meta.mimeType !== FOLDER_MIME) throw new Error(`"${meta.name}" is a file, not a folder.`);
       folderName = meta.name;
+      readOnly = meta.capabilities?.canEdit === false;
       return meta;
     },
     async readManifest() {
-      const found = await drive.listChildren(folderId, { name: MANIFEST_NAME });
+      let found = await drive.listChildren(folderId, { name: MANIFEST_NAME });
+      for (const wait of readOnly ? consistencyWaitsMs() : []) {
+        if (found.length) break;
+        await sleep(wait);
+        found = await drive.listChildren(folderId, { name: MANIFEST_NAME });
+      }
       manifestFileId = found[0]?.id || null;
       return manifestFileId ? drive.download(manifestFileId) : null;
     },
@@ -294,7 +332,13 @@ function createGDriveBackend({ folderId, accountId, homeDir, fetchImpl, tokens }
       return new Set((await index()).keys());
     },
     async readBlob(id) {
-      const fileId = (await index()).get(id);
+      let fileId = (await index()).get(id);
+      for (const wait of consistencyWaitsMs()) {
+        if (fileId) break;
+        await sleep(wait);
+        blobIndex = null;
+        fileId = (await index()).get(id);
+      }
       if (!fileId) throw new Error(`The vault is missing a file body (${id.slice(0, 12)}…). Push again from a machine that has it.`);
       return drive.download(fileId);
     },
