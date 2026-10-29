@@ -18,6 +18,7 @@ const path = require('node:path');
 const os = require('node:os');
 const http = require('node:http');
 const crypto = require('node:crypto');
+const { driveFetch, driveFetchJson, readDriveError } = require('./google-drive-fetch');
 
 // Built-in desktop OAuth 2.0 clients:
 // 1. Drive desktop client (used by Data Sources & Audio Player)
@@ -877,14 +878,16 @@ async function verifyCloudAccount(accountId, options = {}) {
   let token = acc.accessToken;
   let refreshed = false;
 
+  // driveFetch retries the 403 rateLimitExceeded the shared OAuth client gets most
+  // minutes, so a healthy account is not reported as failing.
   const fetchAbout = async (bearer) => {
-    return fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress,photoLink),storageQuota(limit,usage)', {
+    return driveFetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress,photoLink),storageQuota(limit,usage)', {
       headers: { Authorization: `Bearer ${bearer}` },
-      signal: AbortSignal.timeout(12000),
-    });
+    }, { timeoutMs: 12000, maxRetries: Number(process.env.ROBOS_GDRIVE_MAX_RETRIES || 4) });
   };
 
   let driveOk = false;
+  let driveRateLimited = false;
   let driveDetail = 'Not checked';
   let displayName = '';
   let verifiedEmail = acc.email;
@@ -908,7 +911,11 @@ async function verifyCloudAccount(accountId, options = {}) {
           : 'Connected';
         driveDetail = `Google Drive API v3 active (${verifiedEmail}${displayName ? ` — ${displayName}` : ''}, ${usedGb})`;
       } else {
-        driveDetail = `HTTP ${res.status} from Google Drive API`;
+        const err = await readDriveError(res);
+        driveDetail = err.kind === 'rate_limited'
+          ? `Google Drive is rate-limiting requests right now (HTTP ${res.status} ${err.reason || 'rateLimitExceeded'}); the sign-in itself may be fine. Try again in a minute.`
+          : `HTTP ${res.status} from Google Drive API${err.reason ? ` (${err.reason})` : ''}${err.message ? `: ${err.message}` : ''}`;
+        driveRateLimited = err.kind === 'rate_limited';
       }
     } catch (err) {
       driveDetail = err.message;
@@ -966,7 +973,7 @@ async function verifyCloudAccount(accountId, options = {}) {
     email: verifiedEmail,
     account: saved.account,
     checks: {
-      drive: { ok: driveOk, detail: driveDetail },
+      drive: { ok: driveOk, detail: driveDetail, ...(driveRateLimited ? { rateLimited: true } : {}) },
       calendar: {
         ok: true,
         directApi: calendarApiOk,
@@ -1042,20 +1049,12 @@ async function startGoogleBrowserOAuth(params = {}, options = {}) {
           let googleEmail = loginHint || 'user@gmail.com';
           // The shared OAuth client often hits Drive's per-project quota (403
           // rateLimitExceeded). Retry, or the account is saved under the placeholder email.
-          for (let attempt = 0; attempt < 8; attempt++) {
-            try {
-              const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
-                headers: { Authorization: `Bearer ${tokenData.access_token}` },
-              });
-              if (aboutRes.ok) {
-                const aboutData = await aboutRes.json();
-                if (aboutData?.user?.emailAddress) googleEmail = aboutData.user.emailAddress;
-                break;
-              }
-              if (aboutRes.status !== 403 && aboutRes.status !== 429 && aboutRes.status < 500) break;
-            } catch {}
-            await new Promise(r => setTimeout(r, Math.min(500 * 2 ** attempt, 8000)));
-          }
+          try {
+            const aboutData = await driveFetchJson('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
+              headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            }, { timeoutMs: 15000, maxRetries: 8 });
+            if (aboutData?.user?.emailAddress) googleEmail = aboutData.user.emailAddress;
+          } catch {}
 
           const grantedScopes = normalizeScopes(tokenData.scope || scopeParam, 'google', true);
           const saved = saveAccount({

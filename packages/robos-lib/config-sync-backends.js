@@ -21,14 +21,11 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { driveFetch, readDriveError, DriveError } = require('./google-drive-fetch');
 
 const MANIFEST_NAME = 'robos-config.json';
 const BLOBS_DIR = 'blobs';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
-
-function driveApiBase() {
-  return (process.env.ROBOS_GDRIVE_API_BASE || 'https://www.googleapis.com').replace(/\/+$/, '');
-}
 
 function driveFolderUrl(folderId) {
   const web = (process.env.ROBOS_GDRIVE_WEB_BASE || 'https://drive.google.com').replace(/\/+$/, '');
@@ -132,54 +129,25 @@ function googleTokenProvider(accountId, { homeDir } = {}) {
   };
 }
 
-class DriveError extends Error {
-  constructor(message, status, reason = '') { super(message); this.status = status; this.reason = reason; }
-}
-
-// Drive answers quota and per-user throttling with 403 rateLimitExceeded /
-// userRateLimitExceeded (or 429), and transient faults with 5xx. Those are retried with
-// exponential backoff; every other 403 is a real permission problem.
-const RATE_LIMIT_REASONS = new Set(['rateLimitExceeded', 'userRateLimitExceeded', 'RATE_LIMIT_EXCEEDED']);
-const RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
-
-function driveRetryDelayMs(attempt, retryAfter) {
-  const seconds = Number(retryAfter);
-  if (Number.isFinite(seconds) && seconds > 0) return Math.min(seconds, 60) * 1000;
-  const base = Number(process.env.ROBOS_GDRIVE_RETRY_BASE_MS || 500);
-  return Math.min(base * 2 ** attempt, 32000) + Math.floor(Math.random() * base);
-}
-
-function createDriveClient({ tokens, fetchImpl = fetch, maxRetries = Number(process.env.ROBOS_GDRIVE_MAX_RETRIES || 8) }) {
-  const base = driveApiBase();
-
-  async function call(method, url, { body, headers = {}, raw = false, retried = false, attempt = 0 } = {}) {
+function createDriveClient({ tokens, fetchImpl, maxRetries = Number(process.env.ROBOS_GDRIVE_MAX_RETRIES || 8) }) {
+  async function call(method, url, { body, headers = {}, raw = false, retried = false } = {}) {
     const token = await tokens.get();
-    const res = await fetchImpl(url.startsWith('http') ? url : base + url, {
-      method,
-      headers: { Authorization: `Bearer ${token}`, ...headers },
-      body,
-      signal: AbortSignal.timeout(60000),
-    });
+    // driveFetch retries 403 rateLimitExceeded / userRateLimitExceeded, 429 and 5xx;
+    // every other 403 is a real permission problem.
+    const res = await driveFetch(url, { method, headers: { Authorization: `Bearer ${token}`, ...headers }, body }, { fetchImpl, maxRetries, timeoutMs: 60000 });
     if (res.status === 401 && !retried && tokens.refresh) {
       await tokens.refresh();
-      return call(method, url, { body, headers, raw, retried: true, attempt });
+      return call(method, url, { body, headers, raw, retried: true });
     }
     if (!res.ok) {
-      let err = {};
-      try { err = (await res.json())?.error || {}; } catch {}
-      const detail = err.message || '';
-      const reason = err.errors?.[0]?.reason || err.details?.find(d => d.reason)?.reason || '';
-      const rateLimited = res.status === 429 || (res.status === 403 && RATE_LIMIT_REASONS.has(reason));
-      if ((rateLimited || RETRY_STATUSES.has(res.status)) && attempt < maxRetries) {
-        await new Promise(r => setTimeout(r, driveRetryDelayMs(attempt, res.headers?.get?.('retry-after'))));
-        return call(method, url, { body, headers, raw, retried, attempt: attempt + 1 });
-      }
-      if (rateLimited) throw new DriveError(`Google Drive is rate-limiting requests right now. Try again in a minute. ${detail}`.trim(), res.status, reason);
-      if (res.status === 404) throw new DriveError(`Google Drive could not find that folder, or this account cannot see it. Ask the owner to share it with this account. ${detail}`.trim(), 404, reason);
-      if (res.status === 403 && reason === 'storageQuotaExceeded') throw new DriveError(`This Google account's Drive storage is full. ${detail}`.trim(), 403, reason);
-      if (res.status === 403 && /insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/.test(reason)) throw new DriveError(`This Google sign-in does not include Drive access. Sign in with Google again in Preferences → Cloud Suite Accounts. ${detail}`.trim(), 403, reason);
-      if (res.status === 403) throw new DriveError(`This Google account does not have access. Ask the owner to share the folder with you. ${detail}`.trim(), 403, reason);
-      throw new DriveError(`Google Drive ${method} failed (HTTP ${res.status}) ${detail}`.trim(), res.status, reason);
+      const { status, reason, message: detail, kind } = await readDriveError(res);
+      const fail = msg => new DriveError(`${msg} ${detail}`.trim(), status, reason, kind);
+      if (kind === 'rate_limited') throw fail('Google Drive is rate-limiting requests right now. Try again in a minute.');
+      if (status === 404) throw fail('Google Drive could not find that folder, or this account cannot see it. Ask the owner to share it with this account.');
+      if (kind === 'storage_full') throw fail("This Google account's Drive storage is full.");
+      if (kind === 'scope') throw fail('This Google sign-in does not include Drive access. Sign in with Google again in Preferences → Cloud Suite Accounts.');
+      if (status === 403) throw fail('This Google account does not have access. Ask the owner to share the folder with you.');
+      throw fail(`Google Drive ${method} failed (HTTP ${status})`);
     }
     if (raw) return Buffer.from(await res.arrayBuffer());
     if (res.status === 204) return null;
