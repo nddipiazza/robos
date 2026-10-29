@@ -13,8 +13,10 @@
  *     rateLimitExceeded); no access to a file is a 404, not a 403.
  *   - `inheritDelayMs`: access a share grants reaches files inside the folder after the
  *     folder itself, so a recipient's listing can briefly miss them.
- *   - `failNext(n, { status, reason })`: the next n API calls fail, e.g. with the
- *     403 rateLimitExceeded Drive returns when the OAuth client's quota is used up.
+ *   - `failNext(n, { status, reason, retryAfter })`: the next n API calls fail, e.g. with
+ *     the 403 rateLimitExceeded (domain usageLimits, status PERMISSION_DENIED) Drive
+ *     returns when the OAuth client's quota is used up. `retryAfter` sets Retry-After.
+ *   - GET /drive/v3/about returns the signed-in user and a storage quota.
  *
  *   const drive = await startMockDrive({ users: { 'tok-alex': 'alex@example.com' } });
  *   process.env.ROBOS_GDRIVE_API_BASE = drive.url;
@@ -100,9 +102,10 @@ function startMockDrive({ users = {}, port = 0, inheritDelayMs = 0 } = {}) {
   }
   const REASON = { 401: 'authError', 403: 'insufficientFilePermissions', 404: 'notFound', 500: 'backendError' };
   const STATUS = { 401: 'UNAUTHENTICATED', 403: 'PERMISSION_DENIED', 404: 'NOT_FOUND', 429: 'RESOURCE_EXHAUSTED' };
-  const fail = (res, status, message, reason = REASON[status] || 'error') => send(res, status, {
-    error: { code: status, message, errors: [{ message, domain: 'global', reason }], ...(STATUS[status] ? { status: STATUS[status] } : {}) },
-  });
+  const QUOTA_REASONS = new Set(['rateLimitExceeded', 'userRateLimitExceeded', 'dailyLimitExceeded']);
+  const fail = (res, status, message, reason = REASON[status] || 'error', headers = {}) => send(res, status, {
+    error: { code: status, message, errors: [{ message, domain: QUOTA_REASONS.has(reason) ? 'usageLimits' : 'global', reason }], ...(STATUS[status] ? { status: STATUS[status] } : {}) },
+  }, headers);
 
   function create(email, { name, mimeType, parents = [] }, content) {
     const parentIds = (parents.length ? parents : ['root']).map(p => p === 'root' ? ensureRoot(email) : p);
@@ -125,7 +128,12 @@ function startMockDrive({ users = {}, port = 0, inheritDelayMs = 0 } = {}) {
       let m;
       if (injected.length) {
         const e = injected.shift();
-        return fail(res, e.status, e.message || "Quota exceeded for quota metric 'Queries' and limit 'Queries per minute' of service 'drive.googleapis.com'.", e.reason);
+        return fail(res, e.status, e.message || "Quota exceeded for quota metric 'Queries' and limit 'Queries per minute' of service 'drive.googleapis.com'.", e.reason, e.retryAfter != null ? { 'Retry-After': String(e.retryAfter) } : {});
+      }
+
+      if (req.method === 'GET' && p === '/drive/v3/about') {
+        const used = [...files.values()].filter(f => f.owner === email && f.content).reduce((n, f) => n + f.content.length, 0);
+        return send(res, 200, { user: { kind: 'drive#user', displayName: email.split('@')[0], emailAddress: email, me: true }, storageQuota: { limit: String(15 * 1024 ** 3), usage: String(used) } });
       }
 
       if (req.method === 'GET' && p === '/drive/v3/files') {
@@ -186,7 +194,8 @@ function startMockDrive({ users = {}, port = 0, inheritDelayMs = 0 } = {}) {
       const url = `http://127.0.0.1:${server.address().port}`;
       resolve({
         url, files, notifications,
-        failNext(count = 1, { status = 403, reason = 'rateLimitExceeded', message } = {}) { for (let i = 0; i < count; i++) injected.push({ status, reason, message }); },
+        failNext(count = 1, { status = 403, reason = 'rateLimitExceeded', message, retryAfter } = {}) { for (let i = 0; i < count; i++) injected.push({ status, reason, message, retryAfter }); },
+        pendingFailures: () => injected.length,
         addUser(token, email) { tokenToEmail[token] = email; ensureRoot(email); },
         rootId,
         filesOwnedBy: email => [...files.values()].filter(f => f.owner === email && !f.id.startsWith('root-')),
