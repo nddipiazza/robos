@@ -3,7 +3,7 @@ title: "RobOS Preferences"
 package: robos-preferences
 category: core-desktop
 icon: robos-preferences.svg
-summary: "Settings window for RobOS apps: optional AI API mode, agent tiers, prompt security, GitHub accounts, IDE, notifications, journal and theme."
+summary: "Settings window for RobOS apps: Config Sync & Sharing (cloud backup and shared configs), optional AI API mode, agent tiers, prompt security, GitHub accounts, IDE, notifications, journal and theme."
 description: "Edits ~/.config/robos/settings.json, which other RobOS apps read. It also has selectors for the GitHub CLI accounts used by the git client and by Copilot."
 ---
 
@@ -13,6 +13,7 @@ RobOS Preferences is one form, grouped into sections, that writes `~/.config/rob
 
 | Section | Settings |
 |---|---|
+| Config Sync & Sharing | A backup vault on Google Drive or a synced folder that every machine you own syncs with, shares for family, new teammates or coworkers, the shares you joined, and restore points. See [Config Sync & Sharing](#config-sync--sharing) below. |
 | GitHub accounts | Choose the saved GitHub CLI account for the git client and a separate one for the Copilot agent (see below). |
 | Code Review | Default code reviewer group, chosen from the groups the review library knows about. |
 | AI Agents & API Mode | Off by default. **Use direct model APIs for quick requests**, the API provider (Anthropic, OpenAI, Gemini, Ollama), model and server URL, API keys (saved to `pass`), semantic Knowledge Graph search and its embeddings provider, and **Install API packages**. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}). The default agent CLI is chosen in RobOS Agents, not here. |
@@ -30,6 +31,17 @@ API keys in the AI section are saved straight to `pass` (`robos/ai/<provider>-ke
 
 {: .warning }
 The GitHub personal token is shown in a password field but saved as plain text in `settings.json`. Prefer the GitHub CLI credential store (**Use gh CLI for auth**) or `pass` (see [Pass Manager]({{ '/apps/pass-manager/' | relative_url }})).
+
+## Config Sync & Sharing
+
+Keeps `~/.config/robos` and `~/.robos` in a private cloud folder and lets you share parts of it. The engine is `packages/robos-lib/config-sync.js`; the same operations are available from the terminal with `node packages/robos-lib/config-sync-cli.js`.
+
+- **Backup vault**: **Create a new vault** (a Google Drive folder through a Cloud Suite Accounts sign-in, or a folder on this computer such as a Dropbox, OneDrive or Nextcloud folder), or **Use an existing vault** by pasting its folder link. The first sync asks whether to load the vault onto this machine, upload this machine, or choose file by file; nothing is deleted on a first sync. After that, **Review changes** and **Sync now** run a three-way compare (this machine, the vault, and the last sync), and a file changed on both sides is a conflict you resolve. Choose which categories are backed up under **What is backed up**.
+- **Share**: pick a template (Family & friends, New teammate onboarding, Coworker handoff, Custom), the categories, the people (Google accounts), and an optional passphrase. **Preview** lists what goes out and which credentials were removed; **Publish share** creates the folder and gives the people read access. **Publish update** sends a new version.
+- **Shared with me**: paste a share link to preview it, then **Join and apply**. Your own items stay: lists merge by id. **Check for updates**, **Apply update** and **Leave** (which removes only what the share added).
+- **Restore points**: saved before any of the above changes a file on this machine. Restore one file or all of them.
+
+Credentials (tokens, passwords, API keys, the Private Network machine key) never leave the machine, and paths in your home directory are stored as `${HOME}`. The full guide is at [rowbose.com/config-management]({{ '/config-management/' | relative_url }}).
 
 ## GitHub accounts
 

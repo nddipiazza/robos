@@ -13,7 +13,7 @@ async function init() {
   _settings = await window.api.loadSettings();
   renderSidebar();
   renderSections();
-  await Promise.all([loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
+  await Promise.all([loadConfigSync(), loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
 }
 
 function renderSidebar() {
@@ -58,6 +58,7 @@ function renderSidebar() {
 function renderSections() {
   const el = document.getElementById('sections');
   el.innerHTML = _schema.sections.map(section => {
+    if (section.id === 'config_sync') return configSyncSection();
     if (section.id === 'cloud_accounts') return cloudAccountSection();
     if (section.id === 'github_accounts') return githubAccountSection();
     if (section.id === 'ovpn_accounts') return ovpnAccountSection();
