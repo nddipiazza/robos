@@ -338,6 +338,38 @@ async function getServiceAccountToken(saJson) {
   return data.access_token;
 }
 
+// Shared Drive fetch with retries for 403 rateLimitExceeded / 429 / 5xx (robos-lib).
+// Falls back to a single plain fetch if robos-lib is not installed next to this app.
+let _driveFetchLib;
+function loadDriveFetchLib() {
+  if (_driveFetchLib !== undefined) return _driveFetchLib;
+  _driveFetchLib = null;
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'google-drive-fetch'),
+    path.resolve(__dirname, '..', '..', 'robos-lib', 'google-drive-fetch'),
+    '/usr/local/share/robos/robos-lib/google-drive-fetch',
+  ].filter(Boolean)) {
+    try { _driveFetchLib = require(p); break; } catch {}
+  }
+  return _driveFetchLib;
+}
+
+function driveFetch(url, init = {}, opts = {}) {
+  const lib = loadDriveFetchLib();
+  if (lib) return lib.driveFetch(url, init, opts);
+  const signal = init.signal || (opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined);
+  return fetch(url, signal ? { ...init, signal } : init);
+}
+
+/** Error text for a failed Drive response; says "rate-limiting" for quota 403/429 so it is not read as no access. */
+async function gdriveErrorText(res) {
+  const body = await res.text().catch(() => '');
+  const lib = loadDriveFetchLib();
+  const info = lib ? lib.classifyDriveError(res.status, body) : { rateLimited: res.status === 429 };
+  const prefix = info.rateLimited ? 'Google Drive is rate-limiting requests right now, try again in a minute. ' : '';
+  return { body, rateLimited: Boolean(info.rateLimited), text: `${prefix}${body.slice(0, 240)}`.trim() };
+}
+
 function loadCloudAccountsLib() {
   for (const p of [
     process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'cloud-accounts'),
@@ -650,47 +682,32 @@ async function gdriveFetchJson(url, auth, options = {}) {
       headers.Authorization = `Bearer ${auth.token}`;
     }
 
-    const maxRetries = 4;
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      // Gentle request pacing to avoid per-second burst rate limits
-      const now = Date.now();
-      const elapsed = now - _lastGDriveRequestMs;
-      if (elapsed < 65) {
-        await new Promise(r => setTimeout(r, 65 - elapsed));
-      }
-      _lastGDriveRequestMs = Date.now();
-
-      const res = await fetch(fullUrl, {
-        ...options,
-        headers,
-        signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (isGet) {
-          _gdriveUrlCache.set(cacheKey, { ts: Date.now(), data });
-        }
-        return data;
-      }
-
-      const body = await res.text().catch(() => '');
-      const isRateLimit = res.status === 429 || (
-        res.status === 403 &&
-        /rateLimitExceeded|userRateLimitExceeded|quotaExceeded|Queries per minute|requests per minute/i.test(body)
-      );
-
-      if (isRateLimit && attempt < maxRetries) {
-        const retryAfterHeader = Number(res.headers.get('retry-after'));
-        const backoffMs = (Number.isFinite(retryAfterHeader) && retryAfterHeader > 0)
-          ? retryAfterHeader * 1000
-          : Math.min(12000, 1200 * Math.pow(2, attempt) + Math.floor(Math.random() * 400));
-        await new Promise(r => setTimeout(r, backoffMs));
-        continue;
-      }
-
-      throw new Error(`Google Drive API HTTP ${res.status}: ${body.slice(0, 240)}`);
+    // Gentle request pacing to avoid per-second burst rate limits
+    const elapsed = Date.now() - _lastGDriveRequestMs;
+    if (elapsed < 65) {
+      await new Promise(r => setTimeout(r, 65 - elapsed));
     }
+    _lastGDriveRequestMs = Date.now();
+
+    const { noCache, ...init } = options;
+    const res = await driveFetch(fullUrl, { ...init, headers }, {
+      timeoutMs: CONNECT_TIMEOUT_MS,
+      onRetry: () => { _lastGDriveRequestMs = Date.now(); },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (isGet) {
+        _gdriveUrlCache.set(cacheKey, { ts: Date.now(), data });
+      }
+      return data;
+    }
+
+    const err = await gdriveErrorText(res);
+    const e = new Error(`Google Drive API HTTP ${res.status}: ${err.text}`);
+    e.status = res.status;
+    e.rateLimited = err.rateLimited;
+    throw e;
   };
 
   if (isGet && !options.noCache) {
@@ -1083,7 +1100,7 @@ async function openGDriveMediaStream(ds, { remoteFile = '', driveId = '', range 
     if (currentAuth.type === 'bearer') headers.Authorization = `Bearer ${currentAuth.token}`;
     else if (currentAuth.type === 'api_key') downloadUrl.searchParams.set('key', currentAuth.apiKey);
     if (range) headers.Range = range;
-    return await fetch(downloadUrl.toString(), { headers });
+    return await driveFetch(downloadUrl.toString(), { headers });
   };
 
   let res = await doFetch(auth);
@@ -1093,8 +1110,11 @@ async function openGDriveMediaStream(ds, { remoteFile = '', driveId = '', range 
   }
 
   if (!res.ok && res.status !== 206) {
-    const errText = await res.text().catch(() => '');
-    throw new Error(`Google Drive stream failed (HTTP ${res.status}): ${errText.slice(0, 200)}`);
+    const err = await gdriveErrorText(res);
+    const e = new Error(`Google Drive stream failed (HTTP ${res.status}): ${err.text.slice(0, 300)}`);
+    e.status = res.status;
+    e.rateLimited = err.rateLimited;
+    throw e;
   }
 
   return {
@@ -1134,10 +1154,7 @@ async function downloadGDriveFile(ds, auth, remoteFile, localFile, driveId = '')
     const headers = {};
     if (currentAuth.type === 'bearer') headers.Authorization = `Bearer ${currentAuth.token}`;
     else if (currentAuth.type === 'api_key') downloadUrl.searchParams.set('key', currentAuth.apiKey);
-    return await fetch(downloadUrl.toString(), {
-      headers,
-      signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS * 6),
-    });
+    return await driveFetch(downloadUrl.toString(), { headers }, { timeoutMs: CONNECT_TIMEOUT_MS * 6 });
   };
 
   let res = await doDownload(auth);
@@ -1147,7 +1164,8 @@ async function downloadGDriveFile(ds, auth, remoteFile, localFile, driveId = '')
   }
 
   if (!res.ok) {
-    throw new Error(`Failed to download ${fileName} from Google Drive (HTTP ${res.status})`);
+    const err = await gdriveErrorText(res);
+    throw new Error(`Failed to download ${fileName} from Google Drive (HTTP ${res.status})${err.rateLimited ? `: ${err.text}` : ''}`);
   }
   const buf = Buffer.from(await res.arrayBuffer());
   fs.mkdirSync(path.dirname(localFile), { recursive: true });
@@ -2029,18 +2047,17 @@ async function upload(ds, localFile, remoteDir) {
       const multipartFooter = Buffer.from(`\r\n--${boundary}--`);
       const bodyBuf = Buffer.concat([multipartHeader, fileBuf, multipartFooter]);
 
-      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
+      const res = await driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${auth.token}`,
           'Content-Type': `multipart/related; boundary=${boundary}`,
         },
         body: bodyBuf,
-        signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS * 2),
-      });
+      }, { timeoutMs: CONNECT_TIMEOUT_MS * 2 });
       if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        throw new Error(`Google Drive upload failed (HTTP ${res.status}): ${txt}`);
+        const err = await gdriveErrorText(res);
+        throw new Error(`Google Drive upload failed (HTTP ${res.status}): ${err.text}`);
       }
       invalidateDsListingCache(ds, normDir);
     }
@@ -2371,6 +2388,8 @@ function findDuplicateGoogleSource(list, candidate) {
 }
 
 module.exports = {
+  driveFetch,
+  gdriveFetchJson,
   findDuplicateGoogleSource,
   DEFAULT_GDRIVE_CLIENT_ID,
   getDefaultGDriveClientSecret,

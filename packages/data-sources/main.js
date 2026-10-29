@@ -848,9 +848,10 @@ async function startGoogleBrowserLogin(params = {}) {
           // Fetch the authenticated user's real Google email address from Drive v3 about endpoint
           let googleEmail = defaultEmail;
           try {
-            const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
+            // driveFetch retries the 403 rateLimitExceeded the shared OAuth client often gets.
+            const aboutRes = await remoteStorage.driveFetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
               headers: { Authorization: `Bearer ${tokenData.access_token}` },
-            });
+            }, { timeoutMs: 15000, maxRetries: 8 });
             if (aboutRes.ok) {
               const aboutData = await aboutRes.json();
               if (aboutData?.user?.emailAddress) {
