@@ -181,6 +181,7 @@ function csPlanView(plan) {
       </div>
       <p class="cs-muted cs-small">Nothing is deleted on the first sync. A restore point is saved before any file on this machine changes.</p>
     </div>` : '';
+  const skipped = plan.local.skipped?.length ? `<p class="cs-hint" id="cs-skipped">Not backed up because they are too large: ${plan.local.skipped.map(s => `<code>${csEsc(s.rel)}</code>`).join(', ')}.</p>` : '';
   const c = plan.counts;
   const chips = [
     c.pull && `<span class="cs-chip cs-act-pull">↓ ${c.pull} from vault</span>`,
@@ -188,12 +189,12 @@ function csPlanView(plan) {
     (c['delete-local'] || c['delete-remote']) && `<span class="cs-chip cs-act-del">✕ ${(c['delete-local'] || 0) + (c['delete-remote'] || 0)} deleted</span>`,
     c.conflict && `<span class="cs-chip cs-act-conflict">⚠ ${c.conflict} conflict${c.conflict > 1 ? 's' : ''}</span>`,
   ].filter(Boolean).join('');
-  if (!plan.actions.length) return `${first}<div class="cs-uptodate" id="cs-uptodate">✓ This machine and the vault are in sync.</div>`;
+  if (!plan.actions.length) return `${first}${skipped}<div class="cs-uptodate" id="cs-uptodate">✓ This machine and the vault are in sync.</div>`;
   const byCat = new Map();
   for (const a of plan.actions) { if (!byCat.has(a.category)) byCat.set(a.category, []); byCat.get(a.category).push(a); }
   const label = id => cs.status.categories.find(x => x.id === id)?.label || id;
   const unresolved = plan.actions.filter(a => a.action === 'conflict' && !cs.resolutions[a.rel]).length;
-  return `${first}
+  return `${first}${skipped}
     <div class="cs-plan-head"><div class="cs-chips">${chips}</div>
       <button type="button" class="btn btn-primary" id="cs-apply" ${unresolved ? 'disabled' : ''}>${unresolved ? `Resolve ${unresolved} conflict${unresolved > 1 ? 's' : ''} first` : `Apply ${plan.actions.length} change${plan.actions.length > 1 ? 's' : ''}`}</button></div>
     <div class="cs-table" id="cs-plan-table">
