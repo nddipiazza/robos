@@ -63,9 +63,10 @@ var editor_session: Dictionary = {}
 var match_state: Dictionary = {}
 var battle_scenario: Dictionary = {}
 var battle_stats = preload("res://scripts/engine/RTSBattleStats.gd").new()
+var unit_avoidance = preload("res://scripts/engine/RTSUnitAvoidance.gd").new()
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
-var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
+var profile_usec: Dictionary = {"navigation": 0, "crowd_navigation": 0, "orders": 0, "steering": 0, "ai": 0}
 var _static_structures: Array[Dictionary] = []
 var _max_unit_radius: float = 4.5
 var _town_halls: Array[Dictionary] = []
@@ -136,6 +137,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	match_state.clear()
 	battle_scenario.clear()
 	battle_stats.reset()
+	unit_avoidance.reset()
 	_accum_time = 0.0
 	sim_speed = 1.0
 	manual_step_requests = 0
@@ -644,6 +646,12 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"attributes": def.get("attributes", []).duplicate(),
 		"orders": [],
 		"path": [],
+		"crowd_path": [],
+		"crowd_goal": Vector2.INF,
+		"crowd_until": 0,
+		"crowd_retry_tick": 0,
+		"crowd_blocker": 0,
+		"crowd_blocker_pos": Vector2.ZERO,
 		"home_pos": pos,
 		"has_home_pos": true,
 		"pushed_timer": 0.0,
@@ -1222,10 +1230,8 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			_approach_target(u, s_unit["pos"], dt)
 
 func _approach_target(u: Dictionary, target_pos: Vector2, dt: float) -> void:
-	if water_cells.is_empty():
-		_move_toward_point(u, target_pos, dt)
-	else:
-		_follow_order_path(u, target_pos, dt)
+	# Dry-map chases also need routes around cliffs and structures.
+	_follow_order_path(u, target_pos, dt)
 
 func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float) -> void:
 	# Spire Walker has Cliff-Walk ("Massive" attribute walks directly over cliffs!)
@@ -1252,7 +1258,10 @@ func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 	if u["is_immobile"]:
 		u["vel"] = Vector2.ZERO
 		return
-	var dir = (wp - u["pos"])
+	var crowd_started = Time.get_ticks_usec()
+	var local_goal = unit_avoidance.waypoint(self, u, wp)
+	profile_usec.crowd_navigation += Time.get_ticks_usec() - crowd_started
+	var dir = (local_goal - u["pos"])
 	if dir.length_squared() < 0.001:
 		u["vel"] = Vector2.ZERO
 		return
@@ -1361,9 +1370,9 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 			if dist < min_dist:
 				var nrm = diff / dist if dist > 0.001 else Vector2.RIGHT
 				var pen = min_dist - dist
-				if n["is_structure"] or n["is_immobile"]:
+				if n["is_structure"] or n["is_immobile"] or (not n.orders.is_empty() and n.orders[0].type == "hold_position"):
 					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * pen, u["radius"], u["unit_type"] == "spire_walker")
-				elif u["is_immobile"]:
+				elif u["is_immobile"] or (not u.orders.is_empty() and u.orders[0].type == "hold_position"):
 					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * pen, n["radius"], n["unit_type"] == "spire_walker")
 				else:
 					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * (pen * 0.5), u["radius"], u["unit_type"] == "spire_walker")
@@ -1441,6 +1450,7 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 	return best
 
 func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
+	u.crowd_path.clear()
 	u["vel"] = Vector2.ZERO
 	u["facing"] = (target["pos"] - u["pos"]).angle()
 	if u["weapon_cooldown"] > 0.0:
@@ -1666,6 +1676,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if not queue:
 			u["orders"].clear()
 			u["path"].clear()
+			u.crowd_path.clear()
+			u.crowd_retry_tick = 0
 
 		if ctype == "move":
 			u["orders"].append({

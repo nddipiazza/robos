@@ -67,6 +67,14 @@ python tests/e2e/battle_walkthrough.py
 
 The backend scenario checks mirrored full-health squads, combat elimination, command rejection after completion, a frozen result and identical replay after reset. The rendered walkthrough clicks the Fight button, pauses, overrides blue with a right-click, resets with F9, runs a complete fight on the live frame clock, and checks fullscreen/windowed switching. It uses zero `/step` requests. Outputs include MP4, WebVTT, screenshots and JSON proof under `tests/e2e/reports/battle/` and `~/.robos/development/walkthroughs/rts-riflemen-vs-riflemen/`. The walkthrough requires Python `behave` and ffmpeg (on PATH or via `imageio-ffmpeg`).
 
+### Moving around teammates
+
+Units trying to reach an enemy now detect blocking allies ahead and plan a short route around their bodies. A separate local A* grid includes body radii and static terrain; the global terrain grid remains unchanged. Units cache the detour, discard it when the blocker moves away, and stop detouring once they have a shot. Higher-priority vehicles can still ask idle workers to yield, while hold-position teammates stay planted. Manual movement replaces the cached route. Enemy pursuit uses the terrain navigator on dry maps too, so cliffs and structures do not trap a chasing unit against their near edge.
+
+Local planning is bounded to a 31×31 neighborhood, with at most one rebuild per owner per simulation tick and cooldowns between retries. This avoids giving one side all the planning slots and limits work during crowded fights. Collision steering still handles immediate separation. The results screen records successful allied detour plans under **Weapons & Micro** and in each unit's record; `/performance` reports their cost as `profile_usec.crowd_navigation`.
+
+`allied-crowd-flank.jsonld` is an isolated navigation fixture: one rear Rifleman must get around nine hold-position teammates and shoot a durable target. Its public-API scenarios cover both orientations, require crossing beyond the line's end, and verify that every holding unit stayed put. `tests/test_unit_crowd_navigation.gd` also checks deterministic replay and pursuit around a dry-map cliff. The narrated rendered walkthrough shows the detour before the standard 10-versus-10 battle, which retains normal health and combat rules.
+
 ### Rifle attack cycle and presentation
 
 Rifle damage lands instantly at the damage point, independently of the cosmetic tracer. A move command before that point cancels the shot; after it, movement cancels the recovery animation while the weapon cooldown continues. The period measures the complete interval between shots, including wind-up. Fractional tick remainders carry between cycles rather than adding a wind-up or rounding delay to every shot. Surge advances the attack clock at 1.5×, affecting both wind-up and recovery without letting move commands bypass cooldown. Armor subtracts from a hit with a 0.5 minimum.

@@ -127,7 +127,7 @@ func show_report(data: Dictionary) -> void:
 		["Direct damage", "direct_damage"], ["Splash damage", "splash_damage"], ["Overkill damage wasted", "overkill"], ["Overkill % of post-armor output", "overkill_percent"],
 		["Damage prevented by enemy armor", "armor_blocked"], ["HP healed", "hp_healed"], ["Shields regenerated", "shields_regenerated"],
 		["Weapon attacks started", "attack_starts"], ["Shots fired", "shots"], ["Effective damage / shot", "damage_per_shot"],
-		["Wind-ups canceled (commands / lost target)", "windup_cancels"], ["Recoveries canceled by commands", "recovery_cancels"],
+		["Wind-ups canceled (commands / lost target)", "windup_cancels"], ["Recoveries canceled by commands", "recovery_cancels"], ["Routes planned around blocking allies", "allied_detours"],
 		["First shot at (seconds)", "first_shot_seconds"], ["Peak bucket DPS", "peak_dps"], ["Peak bucket starts (seconds)", "peak_from"], ["Peak bucket ends (seconds)", "peak_to"],
 		["Surge uses", "surge_uses"], ["HP spent on Surge", "self_damage"], ["Total distance displaced (world units)", "distance"],
 		["Moving time (sum across units)", "moving_seconds"], ["Wind-up time (sum across units)", "windup_seconds"], ["Recovery time (sum across units)", "recovery_seconds"]])

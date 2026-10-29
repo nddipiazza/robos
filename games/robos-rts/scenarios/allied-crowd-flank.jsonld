@@ -1,0 +1,110 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:allied-crowd-flank",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Rear Rifleman routes around an allied holding line",
+  "seed": 42,
+  "paused": true,
+  "decor": false,
+  "map": {
+    "width": 96,
+    "height": 64,
+    "obstacles": []
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 0,
+      "aether": 0
+    },
+    "2": {
+      "faction": "humans",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "units": [
+    {
+      "id": "rear",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 30,
+      "y": 32
+    },
+    {
+      "id": "enemy",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 60,
+      "y": 32,
+      "hp": 10000
+    },
+    {
+      "id": "holder_0",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 24
+    },
+    {
+      "id": "holder_1",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 26
+    },
+    {
+      "id": "holder_2",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 28
+    },
+    {
+      "id": "holder_3",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 30
+    },
+    {
+      "id": "holder_4",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 32
+    },
+    {
+      "id": "holder_5",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 34
+    },
+    {
+      "id": "holder_6",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 36
+    },
+    {
+      "id": "holder_7",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 38
+    },
+    {
+      "id": "holder_8",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 36,
+      "y": 40
+    }
+  ],
+  "directives": []
+}

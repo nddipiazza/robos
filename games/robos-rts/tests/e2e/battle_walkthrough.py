@@ -102,6 +102,43 @@ def main():
             assert clean_performance["game_seconds_per_wall_second"] > .9, clean_performance
             assert client.battle("reset")["ok"]
             started = time.monotonic()
+            assert client.load_scenario_slug("allied-crowd-flank")["ok"]
+            crowd_opening = client.get_observation()
+            rear = next(u for u in crowd_opening["units"] if u["id"] == "rear")
+            enemy = next(u for u in crowd_opening["units"] if u["id"] == "enemy")
+            holders = {u["tag"]: u["pos"] for u in crowd_opening["units"] if u["tag"] != rear["tag"]}
+            assert client.command("hold_position", tags=list(holders))["accepted"] == 10
+            client.select(tags=[u["tag"] for u in crowd_opening["units"] if u["owner"] == 1])
+            client.focus_camera(45, 34, height=46)
+            event("Blocked by allies", "Nine Riflemen hold position. A rear Rifleman must route around them to a durable target dummy.")
+            time.sleep(.5)
+            assert client.command("attack_target", tags=[rear["tag"]], target_tag=enemy["tag"])["accepted"] == 1
+            client.set_playback(paused=False, speed=1)
+            event("Find a route around allies", "Local navigation finds a clear firing position without shoving the holding line.")
+            crowd_deadline = time.monotonic()+15
+            crossing = None
+            while time.monotonic() < crowd_deadline:
+                capture()
+                crowd_final = client.get_observation()
+                moving = next(u for u in crowd_final["units"] if u["tag"] == rear["tag"])
+                if crossing is None and moving["pos"]["x"] > 36:
+                    crossing = moving["pos"]["y"]
+                if any(e["type"] == "weapon_fire" and e["attacker_tag"] == rear["tag"] for e in crowd_final["recent_events"]):
+                    break
+                time.sleep(.05)
+            else:
+                raise AssertionError("The rear Rifleman never found a firing position")
+            assert crossing is not None and abs(crossing-32) > 9.5, crossing
+            for unit in crowd_final["units"]:
+                if unit["tag"] in holders:
+                    before = holders[unit["tag"]]
+                    assert abs(unit["pos"]["x"]-before["x"]) < .05 and abs(unit["pos"]["y"]-before["y"]) < .05
+            client.pause(True)
+            event("Flanking route complete", "The rear Rifleman cleared the end of the allied line and fired. All holding units stayed in place.")
+            client.screenshot((output / "allied-detour.png").as_posix())
+            crowd_trial = {"opening": crowd_opening, "final": crowd_final, "crossing_y": crossing}
+            time.sleep(.4)
+            assert client.load_scenario_slug("riflemen-vs-riflemen")["ok"]
             event("10 Riflemen versus 10 Riflemen", "Mirrored squads, 45 HP each. Press Fight or Enter to engage.")
             time.sleep(.6)
             # The Fight button is visible at this canvas position; exercise its GUI signal.
@@ -171,6 +208,7 @@ def main():
             assert health["manual_step_requests"] == 0
             (output / "proof.json").write_text(json.dumps({"status": "passed", "events": events,
                 "display": ui, "performance_without_capture": clean_performance,
+                "crowd_navigation": crowd_trial,
                 "final_battle": obs, "health": health}, indent=2), encoding="utf-8")
         finally:
             proc.terminate()
