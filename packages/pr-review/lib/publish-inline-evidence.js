@@ -7,12 +7,14 @@ function servicePath(){
  if(!file)throw Error('Configure RobOS Cloud File Provider to publish screenshots. Your draft is saved.');return file;
 }
 function service(){return require(servicePath());}
+// Retries Drive's 403 rateLimitExceeded / 429 / 5xx (robos-lib); plain fetch if robos-lib is absent.
+function driveFetch(url,init,opts){let lib=null;for(const p of [path.resolve(__dirname,'../../robos-lib/google-drive-fetch'),'/usr/local/share/robos/robos-lib/google-drive-fetch']){try{lib=require(p);break;}catch{}}return lib?lib.driveFetch(url,init,opts):fetch(url,{...init,signal:AbortSignal.timeout(opts.timeoutMs)});}
 
 async function shareUnlisted(connection,id){
  const {credentials}=require(path.join(path.dirname(servicePath()),'transfer.js'));
  const {token}=await credentials(connection.remote);
  const endpoint='https://www.googleapis.com/drive/v3/files/'+id+'/permissions';
- const request=async(suffix,options={})=>{const r=await fetch(endpoint+suffix,{...options,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('Could not configure unlisted screenshot access (HTTP '+r.status+').');return r.json();};
+ const request=async(suffix,options={})=>{const r=await driveFetch(endpoint+suffix,{...options,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}},{timeoutMs:30000});if(!r.ok)throw Error('Could not configure unlisted screenshot access (HTTP '+r.status+(r.driveError?.rateLimited?', Google Drive is rate-limiting requests, try again in a minute':'')+').');return r.json();};
  let permissions=(await request('?fields=permissions(id,type,role,allowFileDiscovery)')).permissions||[];
  const existing=permissions.find(p=>p.type==='anyone');
  if(!existing)await request('',{method:'POST',body:JSON.stringify({type:'anyone',role:'reader',allowFileDiscovery:false})});
