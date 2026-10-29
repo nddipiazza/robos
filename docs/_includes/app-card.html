@@ -9,6 +9,6 @@
   <div class="robos-app-body">
     <div class="robos-app-name">{{ include.app.title }}</div>
     <span class="robos-app-pkg">{{ include.app.package }}</span>
-    <p class="robos-app-desc">{{ include.app.summary }}</p>
+    <p class="robos-app-desc">{{ include.app.summary | escape }}</p>
   </div>
 </a>
