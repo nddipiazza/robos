@@ -86,7 +86,7 @@ const BUILTIN_SKILLS = [
 
   // Media & Audio
   { id: 'fix-media-metadata',     name: 'Open-Source Media Metadata & Artwork', category: 'Media & Audio', tags: ['audio','media','metadata','ffmpeg','musicbrainz','artwork','id3','flac'], command: 'ffprobe -v quiet -print_format json -show_format -show_streams "$FILE"', description: 'Inspect, extract, enrich, and write media metadata and cover art across all known formats (MP3, FLAC, M4A, OGG, Opus, WAV, MKV, WebM) using music-metadata, FFmpeg, MusicBrainz CC0, Cover Art Archive, and LRCLIB', source: 'builtin' },
-  { id: 'robos-blog',             name: 'Publish RobOS Engineering Blog Post', category: 'Development',   tags: ['blog','docs','site','screenshots','e2e'], command: 'node packages/robos-lib/snapshot-cli.js "$APP_ID" --screenshot > "site/assets/blog/$SLUG/hero.png"', description: 'Write and publish a new Engineering Blog entry (/blog, /robos-blog) in site/blog/index.md with E2E screenshots, reproducible CLI commands, and commit links', source: 'builtin' },
+  { id: 'robos-blog',             name: 'Publish RobOS Engineering Blog Post', category: 'Development',   tags: ['blog','docs','site','screenshots','e2e'], command: 'node packages/robos-lib/snapshot-cli.js "$APP_ID" --screenshot > "site/assets/blog/$SLUG/hero.png"', description: 'Write and publish a new Engineering Blog post (/blog, /robos-blog) as its own page in site/_blog/<slug>.html with E2E screenshots, reproducible CLI commands, and commit links', source: 'builtin' },
 ];
 
 module.exports = { BUILTIN_SKILLS };

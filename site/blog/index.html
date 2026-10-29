@@ -1,0 +1,51 @@
+---
+layout: default
+title: Engineering Blog
+description: "What changed in RobOS and why, newest first, with links to the docs and commits."
+permalink: /blog/
+extra_css: /assets/blog.css
+og_image: /assets/hero/poster.jpg
+og_image_alt: "RobOS Engineering Blog — What changed in RobOS and why"
+schema_type: Blog
+keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party game on Roku, OBD-II Auto Center, Audio Player Virtual DJ, Quest Warrior Dragon AI playthrough, KGraph updates"
+---
+{%- comment -%} Posts live in ../_blog/, one file each. See ../README.md. {%- endcomment -%}
+{%- assign posts = site.blog | sort: 'date' | reverse -%}
+<section class="blog-hero">
+  <div class="wrap">
+    <p class="eyebrow">RobOS</p>
+    <h1>Engineering log</h1>
+    <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
+  </div>
+  <nav class="blog-jump" aria-label="Blog posts">
+    {%- for post in posts %}
+    <a href="{{ post.url | relative_url }}">{{ post.nav_label | default: post.title | escape }}</a>
+    {%- endfor %}
+  </nav>
+</section>
+
+<div class="blog-feed">
+  {%- for post in posts %}
+  <article class="blog-entry" id="{{ post.slug }}">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="{{ post.date | date: '%Y-%m-%d' }}">{% if post.date_label %}{{ post.date_label }}{% else %}{{ post.date | date: '%b %-d, %Y' }}{% endif %}</time>
+      {%- for tag in post.tags %}
+      <span class="blog-tag">{{ tag }}</span>
+      {%- endfor %}
+    </div>
+    <h2><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></h2>
+    <p class="blog-summary">{{ post.summary }}</p>
+    <div class="blog-links"><a href="{{ post.url | relative_url }}">Read the post →</a></div>
+  </article>
+  {%- endfor %}
+</div>
+
+<script>
+// Old links pointed at #<slug> on this page; send them to the post's own page.
+(function () {
+  var slug = location.hash.slice(1);
+  if (slug && /^[a-z0-9-]+$/.test(slug) && document.getElementById(slug)) {
+    location.replace({{ '/blog/' | relative_url | jsonify }} + slug + '/');
+  }
+})();
+</script>

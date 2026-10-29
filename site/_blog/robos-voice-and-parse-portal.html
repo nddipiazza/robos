@@ -1,0 +1,38 @@
+---
+title: "RobOS Voice Assistant, KGraph Parse Portal with Luxir Search, and Role-Based Training"
+nav_label: "RobOS Voice & Luxir"
+date: 2026-09-30
+date_label: "Sep 22 – Sep 30, 2026"
+tags:
+  - "RobOS Voice"
+  - "KGraph Parse Portal"
+  - "E-Learning"
+summary: "Delivered a bi-directional neural voice assistant wired to all RobOS skills, a high-throughput KGraph Parse Portal fronting the Luxir C++ search engine and Tika 4.0, and interactive training tracks."
+description: "Delivered a bi-directional neural voice assistant wired to all RobOS skills, a high-throughput KGraph Parse Portal fronting the Luxir C++ search engine and Tika 4.0, and interactive training tracks."
+og_image: /v1/assets/images/kgraph-parse-portal-architecture.jpg
+og_image_alt: "KGraph Parse Portal and Luxir search index architecture"
+---
+<div class="blog-body">
+  <p>To make the desktop environment and Knowledge Graph accessible by voice and capable of indexing massive enterprise document stores, we shipped three major subsystems in late September:</p>
+  <ul>
+    <li><strong>RobOS Voice (<code>packages/voice-prompt</code>):</strong> Bi-directional voice assistant combining natural Kokoro-82M / Edge-TTS neural speech with offline Whisper STT, Rhasspy/whisper_streaming adaptive energy VAD, suffix-prefix utterance stitching, PipeWire live waveform preview, and real-time voice execution of RobOS skills.</li>
+    <li><strong>KGraph Parse Portal &amp; Luxir C++ Search (<code>packages/kgraph-parse-portal</code>):</strong> Built the ingestion gateway fronting Apache Tika 4.0 gRPC connectors, contextual MIME disambiguation, and the built-in Luxir C++ search index (alongside Solr, Elasticsearch, and OpenSearch schemas).</li>
+    <li><strong>The Gig Bandit (<code>getemgigs.com</code>) &amp; E-Learning Tracks:</strong> Shipped the production Next.js live-music discovery app and <code>nextjs-vercel-web</code> App Wizard template, plus interactive <strong>RobOS eLearning</strong> courses and role-based training tracks for Non-Developers, Systems Architects, Agent Harness Engineers, and Senior Reviewers.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/v1/assets/images/kgraph-parse-portal-architecture.jpg' | relative_url }}" alt="KGraph Parse Portal and Luxir search index architecture" loading="lazy">
+      <figcaption>KGraph Parse Portal ingestion pipeline with Apache Tika 4.0 and Luxir search indexing.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/v1/assets/images/elearning-creation-ux-architecture.jpg' | relative_url }}" alt="RobOS eLearning curriculum and certificate architecture" loading="lazy">
+      <figcaption>Interactive eLearning player, quiz engine, and Knowledge Graph certificate issuance.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/v1/voice-prompt.html' | relative_url }}">RobOS Voice docs →</a>
+  <a href="{{ '/v1/kgraph-parse-portal.html' | relative_url }}">KGraph Parse Portal docs →</a>
+  <a href="{{ '/v1/training.html' | relative_url }}">Role-Based Training tracks →</a>
+  <span class="blog-commits">Commits: a2402d57 · c5848ef8 · 1ab57468 · 42fe48e5 · f4e37446</span>
+</div>

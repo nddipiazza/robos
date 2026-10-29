@@ -1,0 +1,36 @@
+---
+title: "RobOS Auto Center: Complete Repair Shop Operations and Vehicle Owner Records"
+nav_label: "Auto Center"
+date: 2026-10-19 12:00:00 +0000
+date_label: "Oct 15 – Oct 19, 2026"
+tags:
+  - "Auto Center"
+  - "Small Business"
+  - "Cucumber E2E"
+summary: "Built an end-to-end automotive repair shop and vehicle owner suite covering Shop Admin, Front Desk intake, Mechanic Bench timing and parts ordering, Checkout guards, and job profit reporting."
+description: "Built an end-to-end automotive repair shop and vehicle owner suite covering Shop Admin, Front Desk intake, Mechanic Bench timing and parts ordering, Checkout guards, and job profit reporting."
+og_image: /assets/auto-center/shots/02-front-desk-intake--prepare-the-estimate-and-record-approval-from-the-front-desk-5.jpg
+og_image_alt: "Front desk estimate preparation and customer approval in RobOS Auto Center"
+---
+<div class="blog-body">
+  <p>Backed by public vehicle Knowledge Graph schemas, <strong>RobOS Auto Center</strong> (<code>packages/auto-center</code>) serves both individual vehicle owners (repair history backups, invoice OCR, bulk safety recall checks) and independent repair shops across four dedicated workspaces:</p>
+  <ul>
+    <li><strong>Shop Admin &amp; Catalog Import:</strong> Configure shop details, default hourly labor rates, team roles, supplier parts price lists, and validated bulk customer/vehicle CSV imports.</li>
+    <li><strong>Front Desk Intake &amp; Estimates:</strong> Look up returning customers by phone, walk through structured multi-choice service intake questions, type-ahead vehicle makes/models/years/OBD-II trouble codes, and record customer estimate approvals.</li>
+    <li><strong>Mechanic Bench &amp; Checkout Guards:</strong> Mechanics claim tickets, time labor with a built-in stopwatch, log diagnostic findings, and order/receive parts (blocking job completion while parts remain on order). Checkout enforces customer re-approval if charges exceed the estimate and prevents releasing keys with an unpaid balance.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/auto-center/shots/02-front-desk-intake--prepare-the-estimate-and-record-approval-from-the-front-desk-5.jpg' | relative_url }}" alt="Front desk estimate preparation and customer approval in RobOS Auto Center" loading="lazy">
+      <figcaption>Front Desk intake preparing an itemized repair estimate and recording customer approval.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/auto-center/shots/03-mechanic-bench--time-the-job-with-a-stopwatch-5.jpg' | relative_url }}" alt="Mechanic bench job timing and parts status in RobOS Auto Center" loading="lazy">
+      <figcaption>Mechanic Bench tracking labor time, diagnostic notes, and received parts.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/auto-center/' | relative_url }}">Read the 9-part Auto Center shop &amp; owner guide →</a>
+  <span class="blog-commits">Commits: 71fd657c · d77642e2 · fbceb6db · d0a6e4d2 · 465a9fd4</span>
+</div>

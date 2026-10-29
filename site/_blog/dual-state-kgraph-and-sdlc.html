@@ -1,0 +1,38 @@
+---
+title: "Modular Dual-State Knowledge Graph, 16-Step SDLC Tool Suite, and the RobOS foundation release"
+nav_label: "Dual-State KGraph foundations"
+date: 2026-09-18
+date_label: "Aug 25 – Sep 18, 2026"
+tags:
+  - "Knowledge Graph"
+  - "SDLC Platform"
+  - "Foundation release"
+summary: "Laid the foundation of RobOS: a multi-package JSON-LD Knowledge Graph validated by W3C SHACL shapes, a complete desktop SDLC suite from C4 topology modeling to Kind Kubernetes auto-deploy, and the foundation release."
+description: "Laid the foundation of RobOS: a multi-package JSON-LD Knowledge Graph validated by W3C SHACL shapes, a complete desktop SDLC suite from C4 topology modeling to Kind Kubernetes auto-deploy, and the foundation release."
+og_image: /v1/assets/images/dual-state-blast-radius.jpg
+og_image_alt: "Dual-State Knowledge Graph semantic blast radius diffing"
+---
+<div class="blog-body">
+  <p>The first month of this two-month sprint established the core thesis of RobOS—that the <strong>Knowledge Graph is the product</strong>—and delivered the <strong>foundation</strong> release across the desktop appliance VM and native app suite:</p>
+  <ul>
+    <li><strong>Modular Dual-State Knowledge Graph (<code>.robos/kgraphs/</code>):</strong> Replaced monolithic config files with namespaced JSON-LD packages validated by W3C SHACL shapes and aligned with Schema.org, backed by <strong>Knowledge Graph Explorer</strong> (with an embedded Swagger-UI OpenAPI console and reviewed workspace imports), <strong>Schema Studio</strong>, and the <code>kgraph-*</code> skills CLI for semantic blast-radius diffing between <code>main</code> and feature branches.</li>
+    <li><strong>16-Step Verified SDLC &amp; Cloud-Init Onboarding:</strong> Automated first-boot QEMU/KVM provisioning with <code>robos-splash</code> and unified GitHub onboarding; verified the 16-step Acme Petshop lifecycle across <strong>Task Planner</strong>, <strong>System Topology Studio</strong> (C4 + OpenAPI 3.1 synthesis), <strong>Git Projects</strong>, <strong>Bruno REST API Client</strong>, and <strong>Kube Studio</strong> (with real local Kind Kubernetes clusters and zero-click KGraph auto-deployment).</li>
+    <li><strong>IDE Debugging Bridges, UHP Agent Routing &amp; Prompt Security:</strong> Shipped the <strong>IntelliJ IDEA</strong> (port 63343 IPC) and <strong>VS Code</strong> breakpoint reproduction and PR review bridges, <strong>Agents Manager</strong> &amp; <strong>Agent Chat</strong> with UHP <code>HarnessRouter</code>, MCP OAuth, Caveman prompt compression, DSPy optimization, <strong>Remote Execution Studio</strong> (Bazel/Buck2/REAPI), and the zero-dependency <strong>Prompt Security Guard</strong>.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/v1/assets/images/dual-state-blast-radius.jpg' | relative_url }}" alt="Dual-State Knowledge Graph semantic blast radius diffing" loading="lazy">
+      <figcaption>Dual-State Knowledge Graph comparing production main against a feature branch before merge.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/v1/assets/images/agent-tier-dispatch-algorithm.jpg' | relative_url }}" alt="Context-efficient agent tier routing and UHP harness dispatch" loading="lazy">
+      <figcaption>Context-efficient routing across frontier and cheap/local models via the Unified Harness Protocol.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/v1/knowledge-graph.html' | relative_url }}">Knowledge Graph architecture →</a>
+  <a href="{{ '/v1/walkthroughs.html' | relative_url }}">16-Step SDLC walkthroughs →</a>
+  <a href="{{ '/download/' | relative_url }}">Download RobOS {{ site.data.release.tag }} →</a>
+  <span class="blog-commits">Commits: 73cb6441 · 194e2c8a · a90ae3f7 · 6f0e1605 · 1143d01c</span>
+</div>
