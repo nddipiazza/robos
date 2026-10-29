@@ -336,9 +336,22 @@ function readBody(req) {
  *   GET  /events/drain   — return+clear buffered events since last drain
  *   GET  /events/stop    — stop recorder, return all remaining events
  *
- *   GET  /health         — { ok, appId, title }
+ *   GET  /health         — { ok, appId, title, instance }
+ *
+ * ROBOS_DEBUG_PORT_REMAP="19116:40123,..." moves the server off its fixed port, so the
+ * e2e harness can run several copies of an app at once. ROBOS_DEBUG_INSTANCE is echoed
+ * by /health so the harness knows it reached the copy it launched.
  */
+function remapDebugPort(port) {
+  for (const pair of (process.env.ROBOS_DEBUG_PORT_REMAP || '').split(',')) {
+    const [from, to] = pair.split(':').map(n => parseInt(n, 10));
+    if (from === port && to > 0) return to;
+  }
+  return port;
+}
+
 function startDebugServer(win, port, appId) {
+  port = remapDebugPort(port);
   const server = http.createServer(async (req, res) => {
     const url = req.url.split('?')[0];
     try {
@@ -440,7 +453,7 @@ function startDebugServer(win, port, appId) {
       } else if (url === '/health' && req.method === 'GET') {
         const title = (win && typeof win.getTitle === 'function') ? win.getTitle() : '';
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, appId, title }));
+        res.end(JSON.stringify({ ok: true, appId, title, instance: process.env.ROBOS_DEBUG_INSTANCE || undefined }));
 
       } else {
         res.writeHead(404);
