@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: app-mesh
+  title: RobOS App Mesh
+  description: Provider-agnostic Zero-Trust App & IPC Port Mesh for connecting RobOS applications across machines (mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard).
+  tags:
+    - electron
+    - zero-trust
+    - mtls
+    - openziti
+    - wireguard
+spec:
+  type: desktop-app
+  lifecycle: production
+  owner: security-platform

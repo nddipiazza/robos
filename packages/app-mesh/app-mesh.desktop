@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS App Mesh
+Comment=Zero-Trust App & IPC Port Mesh for connecting RobOS applications across machines (mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard)
+Exec=/usr/bin/electron /usr/local/share/robos/app-mesh/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/app-mesh/icon.svg
+Terminal=false
+Categories=Network;Security;
+X-RobOS-Category=Security
+StartupWMClass=robos-app-mesh
