@@ -515,9 +515,15 @@ function renderCloudAccountsSection(state) {
               Account: <code>${esc(acc.email || acc.user)}</code> · Active Suites: <strong>${esc(suiteBadges.join(', ') || 'Drive')}</strong>
             </div>
           </div>
-          <div style="display:flex;gap:6px;flex:none;">
+          <div class="cloud-account-actions" style="display:flex;gap:6px;flex:none;">
             ${acc.provider === 'google' ? `<button type="button" class="btn" data-cloud-tb="${esc(acc.id)}">Sync to Thunderbird</button>` : ''}
             <button type="button" class="btn" data-cloud-verify="${esc(acc.id)}">Verify</button>
+            <button type="button" class="btn" data-cloud-remove="${esc(acc.id)}">Remove</button>
+          </div>
+          <div class="cloud-account-confirm" data-cloud-confirm="${esc(acc.id)}" style="display:none;align-items:center;gap:6px;flex:none;">
+            <span style="font-size:12px;color:#f87171;">Remove ${esc(acc.email || acc.label)}${acc.linkedDataSourceIds?.length ? ' and its Data Sources connection' : ''}?</span>
+            <button type="button" class="btn" data-cloud-remove-confirm="${esc(acc.id)}" style="border-color:#7f1d1d;color:#fca5a5;">Remove</button>
+            <button type="button" class="btn" data-cloud-remove-cancel="${esc(acc.id)}">Cancel</button>
           </div>
         </div>
       `;
@@ -562,6 +568,37 @@ function renderCloudAccountsSection(state) {
       }
       const fresh = await window.api.cloudAccounts();
       if (fresh.ok) renderCloudAccountsSection(fresh);
+    };
+  });
+  // Removing asks first: the row's actions swap for an inline "Remove …? Remove / Cancel".
+  const showRemoveConfirm = (id, show) => {
+    const row = [...listWrap.querySelectorAll('.cloud-account-row')].find(r => r.dataset.cloudId === id);
+    if (!row) return;
+    row.querySelector('[data-cloud-confirm]').style.display = show ? 'flex' : 'none';
+    row.querySelector('.cloud-account-actions').style.display = show ? 'none' : 'flex';
+  };
+  listWrap.querySelectorAll('[data-cloud-remove]').forEach(btn => {
+    btn.onclick = () => showRemoveConfirm(btn.dataset.cloudRemove, true);
+  });
+  listWrap.querySelectorAll('[data-cloud-remove-cancel]').forEach(btn => {
+    btn.onclick = () => showRemoveConfirm(btn.dataset.cloudRemoveCancel, false);
+  });
+  listWrap.querySelectorAll('[data-cloud-remove-confirm]').forEach(btn => {
+    btn.onclick = async () => {
+      const statusEl = document.getElementById('cloud-accounts-status');
+      const id = btn.dataset.cloudRemoveConfirm;
+      const acc = accounts.find(a => a.id === id);
+      btn.disabled = true;
+      btn.textContent = 'Removing…';
+      const res = await window.api.deleteCloudAccount(id);
+      if (!res.ok) {
+        btn.disabled = false;
+        btn.textContent = 'Remove';
+        if (statusEl) statusEl.textContent = `Could not remove account: ${res.error}`;
+        return;
+      }
+      renderCloudAccountsSection(res);
+      if (statusEl) statusEl.textContent = `✓ Removed ${acc?.email || acc?.label || id}.`;
     };
   });
 }
