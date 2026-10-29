@@ -251,6 +251,7 @@ function normalizeRecording(raw, parentMap, { ip, port, portalBaseUrl = '' }) {
     raw.snapshot_image?.image_id ||
     parent?.series?.thumbnail_image?.image_id ||
     parent?.series?.cover_image?.image_id ||
+    objectId ||
     null;
   const coverImageId =
     parent?.series?.cover_image?.image_id ||
@@ -466,7 +467,7 @@ async function watchTabloPath({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT
   };
 }
 
-async function fetchTabloImage({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, imageId } = {}) {
+async function fetchTabloImage({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_PORT, imageId, itemPath = '' } = {}) {
   const id = String(imageId || '').replace(/[^\d]/g, '');
   if (!id) return { ok: false, status: 400, error: 'Invalid image ID' };
   const cacheDir = path.join(os.homedir(), '.cache', 'robos', 'tablo-images');
@@ -487,20 +488,59 @@ async function fetchTabloImage({ ip = DEFAULT_TABLO_IP, port = DEFAULT_TABLO_POR
     }
   } catch {}
   const res = await tabloRequest(ip, port, 'GET', `/images/${id}`, { rawBuffer: true, timeoutMs: 4000 });
-  if (!res.ok || !res.buffer || !res.buffer.length) {
-    return { ok: false, status: res.status || 404, error: res.error || 'Image not found' };
+  if (res.ok && res.buffer && res.buffer.length) {
+    try {
+      fs.mkdirSync(cacheDir, { recursive: true });
+      fs.writeFileSync(cacheFile, res.buffer);
+    } catch {}
+    return {
+      ok: true,
+      status: 200,
+      contentType: res.headers?.['content-type'] || 'image/jpeg',
+      buffer: res.buffer,
+      cacheFile,
+    };
   }
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile, res.buffer);
-  } catch {}
-  return {
-    ok: true,
-    status: 200,
-    contentType: res.headers?.['content-type'] || 'image/jpeg',
-    buffer: res.buffer,
-    cacheFile,
-  };
+
+  // Fallback for active in-progress recordings where Tablo has not generated /images/<id> yet:
+  // capture a live 16:9 broadcast frame directly from the recording's HLS stream via ffmpeg.
+  const candidatePaths = itemPath
+    ? [itemPath]
+    : [
+        `/recordings/sports/events/${id}`,
+        `/recordings/series/episodes/${id}`,
+        `/recordings/programs/airings/${id}`,
+        `/recordings/movies/airings/${id}`,
+      ];
+  for (const p of candidatePaths) {
+    const watch = await watchTabloPath({ ip, port, itemPath: p });
+    if (watch.ok && watch.playlistUrl) {
+      try {
+        fs.mkdirSync(cacheDir, { recursive: true });
+        spawnSync(
+          'ffmpeg',
+          ['-y', '-hide_banner', '-loglevel', 'error', '-i', watch.playlistUrl, '-frames:v', '1', '-vf', 'scale=640:360', '-q:v', '3', cacheFile],
+          { timeout: 7000 }
+        );
+        if (fs.existsSync(cacheFile)) {
+          const buf = fs.readFileSync(cacheFile);
+          if (buf && buf.length > 200) {
+            return {
+              ok: true,
+              status: 200,
+              contentType: 'image/jpeg',
+              buffer: buf,
+              capturedLiveFrame: true,
+              cacheFile,
+            };
+          }
+        }
+      } catch {}
+      break;
+    }
+  }
+
+  return { ok: false, status: res.status || 404, error: res.error || 'Image not found' };
 }
 
 function streamTabloViaFfmpeg({ playlistUrl, seekSec = 0, req, res }) {
@@ -625,10 +665,11 @@ function recordingToCinemaItem(r, { hostIp = '127.0.0.1', portalPort = 19210 } =
     : thumbUrl;
   const chNum = r.channel?.number || '';
   const chLabel = r.channel?.label || (chNum ? `CH ${chNum}` : 'Tablo OTA DVR');
-  const epCode = r.episodeCode || (chNum ? `CH ${chNum}` : 'OTA DVR');
-  const isSports = r.kind === 'sports' || /nfl|mlb|nba|nhl|football|baseball/i.test(r.fullTitle || '');
+  const isRecordingNow = r.state === 'recording';
+  const epCode = isRecordingNow ? `LIVE CH ${chNum || 'DVR'}` : r.episodeCode || (chNum ? `CH ${chNum}` : 'OTA DVR');
+  const isSports = r.kind === 'sports' || /nfl|mlb|nba|nhl|football|baseball|world series/i.test(r.fullTitle || '');
   const isNews = /news/i.test(r.fullTitle || '');
-  const genre = isSports ? 'Live Sports DVR' : isNews ? 'Local News DVR' : 'TV Series DVR';
+  const genre = isRecordingNow ? 'RECORDING LIVE NOW' : isSports ? 'Live Sports DVR' : isNews ? 'Local News DVR' : 'TV Series DVR';
   const durSec = Number(r.durationSec || 0);
   const posSec = Number(r.positionSec || 0);
   const pct = r.watched ? 100 : durSec > 0 && posSec > 0 ? Math.min(100, Math.round((posSec / durSec) * 100)) : 0;
@@ -642,9 +683,10 @@ function recordingToCinemaItem(r, { hostIp = '127.0.0.1', portalPort = 19210 } =
     tabloPort: port,
     mediaType: 'tablo',
     isTablo: true,
+    isRecordingNow,
     isShowGroup: false,
     tabloKind: r.kind || 'programs',
-    title: r.fullTitle || r.title || 'Tablo Recording',
+    title: isRecordingNow ? `[LIVE REC] ${r.fullTitle || r.title}` : r.fullTitle || r.title || 'Tablo Recording',
     showName: r.title || '',
     episodeTitle: r.episodeTitle || r.subtitle || '',
     episodeCode: epCode,
