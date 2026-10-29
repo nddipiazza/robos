@@ -67,6 +67,30 @@ python tests/e2e/battle_walkthrough.py
 
 The backend scenario checks mirrored full-health squads, combat elimination, command rejection after completion, a frozen result and identical replay after reset. The rendered walkthrough clicks the Fight button, pauses, overrides blue with a right-click, resets with F9, runs a complete fight on the live frame clock, and checks fullscreen/windowed switching. It uses zero `/step` requests. Outputs include MP4, WebVTT, screenshots and JSON proof under `tests/e2e/reports/battle/` and `~/.robos/development/walkthroughs/rts-riflemen-vs-riflemen/`. The walkthrough requires Python `behave` and ffmpeg (on PATH or via `imageio-ffmpeg`).
 
+### Unit and ability outcome contracts
+
+Run the registry-wide behavioral and balance suites in parallel:
+
+```bash
+cd games/robos-rts
+python run_balance_tests.py --jobs=3
+python run_balance_tests.py --suite=combat --jobs=1
+```
+
+Each suite owns an isolated headless Godot process and control port. Windows test processes use below-normal scheduling priority; the runner does not attach to or change an open game. `GODOT_BIN` selects the engine. Logs and a machine-readable `summary.json` live in timestamped folders under `tests/e2e/reports/balance/`. A timeout, failed assertion, engine error, missing result or uncovered registry entry fails the run. Coverage auditing always runs, including when selecting one suite.
+
+`test_unit_contracts.gd` checks every unit and morph: spawned durability, shields, per-hit armor, movement distance, supply behavior, weapon range/dead zones, damage, attribute bonuses and cadence. Each mobile type also has a natural-health duel with a specified winner, surviving-health interval and completion-time window. Structures have durability, supply and production contracts rather than invented offensive victories.
+
+`test_combat_abilities.gd` tests Surge on both Riflemen and Breachers: ten HP cost, 1.5× movement and attack rate, expiration, invalid use, and boosted mirror-duel victories on either side. Other contracts cover Phase Step distance/cooldown/rejected-command side effects; Sunblade Rush speed and duration; Emplace/Mobilize identity, radius, mobility and damage; silo gate transitions; shield regeneration, concussive slow, cliff-walking, splash boundaries, and multi-hit/per-strike armor with no duplicate kill credit.
+
+`test_economy_abilities.gd` covers every declared training and construction command, all workers' harvesting, and shared commands. It checks actual paid costs, full match-mode completion times within two ticks, supply, queue capacity, prerequisites, invalid casters/placement/resources, finite deposit conservation, owned aether extraction, rally movement, and worker-dependent construction versus autonomous Mote summoning. Explicit mechanic dummies may isolate damage or timing; expected-win duels retain natural unit stats.
+
+`test_matchup_matrix.gd` tests every unordered combat-unit pair, including mirrors. Units start at full HP/shields on open ground, with centers twenty world units apart, seed 42 and active abilities off. Types swap between the left/owner-one and right/owner-two positions; same-type mirrors repeat identically to verify determinism. Each duel must end through combat elimination with the declared winner, exactly one survivor, one credited kill/loss, and duration and remaining-health bounds from `tests/data/matchup_expectations.json`. These envelopes pin this fixture's balance; they are not claims about other army sizes, terrain, spacing or micro.
+
+Expectations are reviewed values, separate from the registry under test. New roster/ability entries fail coverage until they receive behavioral contracts. Balance changes require reviewing the winning matchups and thresholds; do not widen bounds or regenerate expectations just to hide a regression. `--probe-matchups` on the matrix script writes observations only and never edits or approves the expectation file. The coverage audit rejects missing, stale or duplicate pairs.
+
+The suites exposed and now guard fixes for ignored second strikes, splash beyond its center-distance radius, morphs retaining the previous collision radius, rejected Phase Step commands canceling attacks, stale teleport routes, invalid movement/harvest/rally casters, and construction starting with ten percent of its duration already complete. A weapon volley still emits a single fire signal, preserving the audio/visual event boundary.
+
 ### Moving around teammates
 
 Units trying to reach an enemy now detect blocking allies ahead and plan a short route around their bodies. A separate local A* grid includes body radii and static terrain; the global terrain grid remains unchanged. Units cache the detour, discard it when the blocker moves away, and stop detouring once they have a shot. Higher-priority vehicles can still ask idle workers to yield, while hold-position teammates stay planted. Manual movement replaces the cached route. Enemy pursuit uses the terrain navigator on dry maps too, so cliffs and structures do not trap a chasing unit against their near edge.

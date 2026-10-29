@@ -1192,7 +1192,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			if p["crystal"] >= m_cost and p["aether"] >= v_cost:
 				p["crystal"] -= m_cost
 				p["aether"] -= v_cost
-				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.1)
+				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.0)
 				order["structure_tag"] = s_unit["tag"]
 				# Alien Motes summon in structures automatically and are immediately free!
 				if u["unit_type"] == "mote":
@@ -1477,18 +1477,24 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 	var splash_rad = float(wpn.get("splash_radius", 0.0))
 	var slow_factor = float(wpn.get("concussive_slow", 0.0))
 
-	_apply_damage_to_target(attacker, primary_target, base_dmg, bonus_dict, 1.0)
-	if slow_factor > 0.0 and not primary_target["is_structure"]:
-		primary_target["slow_timer"] = 2.0
-
+	var splashed: Array = []
 	if splash_rad > 0.0:
-		var splashed = query_units_in_radius(primary_target["pos"], splash_rad)
+		splashed = query_units_in_radius(primary_target["pos"], splash_rad)
+	# A volley can contain multiple strikes. Resolve armor/shields per strike,
+	# preserving one fire event (and audio cue) for the complete weapon attack.
+	for _hit in range(maxi(1, int(wpn.get("attacks", 1)))):
+		if primary_target["hp"] > 0.0:
+			_apply_damage_to_target(attacker, primary_target, base_dmg, bonus_dict, 1.0)
+			if slow_factor > 0.0 and not primary_target["is_structure"]:
+				primary_target["slow_timer"] = 2.0
 		for s in splashed:
 			if s["tag"] == primary_target["tag"] or s["hp"] <= 0.0:
 				continue
 			if s["owner"] == attacker["owner"]:
 				continue
 			var d = primary_target["pos"].distance_to(s["pos"])
+			if d > splash_rad:
+				continue
 			var mult = 0.5 if d <= splash_rad * 0.5 else 0.25
 			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult, true)
 
@@ -1509,6 +1515,8 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 	emit_signal("projectile_fired", attacker["pos"], primary_target["pos"], str(wpn.get("name", "")), splash_rad > 0.0, attacker["owner"])
 
 func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float, splash: bool = false) -> void:
+	if target["hp"] <= 0.0:
+		return
 	var before_hp: float = target["hp"]
 	var before_shields: float = target["shields"]
 	var dmg = base_dmg
@@ -1571,6 +1579,19 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		# Reject unavailable special abilities before canceling attack animations.
+		if ctype == "phase_step" and (u.unit_type != "skirmisher" or u.phase_cooldown > 0.0):
+			continue
+		if ctype == "surge" and (u.unit_type not in ["rifleman", "breacher"] or u.hp <= 10.0):
+			continue
+		if ctype == "charge" and u.unit_type != "sunblade":
+			continue
+		if ctype == "move" and (u.is_structure or u.is_immobile):
+			continue
+		if ctype == "harvest" and not u.is_worker:
+			continue
+		if ctype == "rally" and RTSData.get_unit_def(u.unit_type).get("trains", []).is_empty():
+			continue
 		if ctype.begins_with("build_") or ctype == "build":
 			var stype_check = ctype.trim_prefix("build_") if ctype != "build" else extra
 			if not _can_build(u, stype_check, target_pos):
@@ -1615,6 +1636,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				u["phase_cooldown"] = 7.0
 				u["orders"].clear()
 				u["path"].clear()
+				u.crowd_path.clear()
+				u.crowd_retry_tick = 0
 				if players.has(u["owner"]):
 					players[u["owner"]]["phase_steps_executed"] += 1
 				emit_signal("unit_phased", old_pos, dest, u["tag"])
@@ -1762,11 +1785,20 @@ func _morph_unit_in_place(u: Dictionary, new_type: String) -> void:
 	u["unit_type"] = new_type
 	u["name"] = str(def.get("name", new_type))
 	u["speed"] = float(def.get("speed", 0.0))
+	u["radius"] = float(def.get("radius", u.radius))
 	u["sight_range"] = float(def.get("sight_range", u["sight_range"]))
 	u["push_priority"] = int(def.get("push_priority", u["push_priority"]))
 	u["is_immobile"] = bool(def.get("is_immobile", false))
 	u["is_walkable_structure"] = bool(def.get("is_walkable_structure", false))
+	# A mode switch cannot turn an unfinished old-gun wind-up into an early
+	# shot from the new weapon. Preserve cooldown debt, cancel the animation.
+	u["attack_state"] = "idle"
+	u["attack_state_timer"] = 0.0
+	u["attack_cycle_elapsed"] = 0.0
 	u["orders"].clear()
+	u["path"].clear()
+	u.crowd_path.clear()
+	u.crowd_retry_tick = 0
 	u["vel"] = Vector2.ZERO
 	if u["is_structure"]:
 		nav_dirty = true

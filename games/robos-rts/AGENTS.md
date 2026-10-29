@@ -53,6 +53,8 @@ Keep network reads/writes nonblocking in the frame loop. Real-time catch-up yiel
 
 ## View layer and tooling
 
+- Registry-wide outcome tests: `python run_balance_tests.py --jobs=3` runs isolated headless unit, combat ability, economy, coverage and matchup suites. Independent numeric contracts specify damage/cadence/movement/cost/time thresholds and actual natural-health duel winners. `tests/data/matchup_expectations.json` covers all combat pairs in both type/owner placements; never auto-regenerate it to bless a failure. Coverage must fail when a new unit/ability lacks a behavioral test. Probe mode is observation-only, never a passing balance suite. Preserve one fire event per volley, apply armor to each declared strike, and keep audio work separate from these test changes.
+
 - Individual crowd routing: `RTSUnitAvoidance.gd` caches bounded local body/terrain detours, with at most one plan per owner per tick and retry cooldowns. Keep mobile bodies out of the global terrain grid. Release stale routes when the blocker moves or a new command replaces them; stop routing when a unit can fire. Preserve hold-position allies and priority yielding for idle workers. Pursuit must honor dry-map terrain as well as water. Verify `test_unit_crowd_navigation.gd`, `06_crowd_navigation.feature`, existing push/micro/navigation checks and the rendered walkthrough's allied-line proof. `allied_detours` is measured telemetry; the durable-target fixture does not alter ordinary battle health.
 
 - Fullscreen startup uses the active display and a 1920×1080 scaled canvas. `RTSDisplay.gd` fits explicit `--windowed` and test launches to the desktop; Alt+Enter toggles modes. Bot mouse coordinates are canvas coordinates, consistent with `/ui` projection, even in scaled windows.
