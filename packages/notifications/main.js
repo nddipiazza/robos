@@ -172,8 +172,22 @@ ipcMain.handle('save-prefs', (_, prefs) => {
   return { ok: true };
 });
 
+// Hands "open at this place" (action.open, e.g. Preferences → Config Sync → Backup vault)
+// to the app being launched; see robos-lib/open-request.js.
+function writeOpenRequest(action) {
+  if (!action || !action.open || !action.app) return;
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'open-request'),
+    path.resolve(__dirname, '..', 'robos-lib', 'open-request'),
+    '/usr/local/share/robos/robos-lib/open-request',
+  ].filter(Boolean)) {
+    try { require(p).writeOpenRequest(action.app, action.open); return; } catch {}
+  }
+}
+
 ipcMain.handle('open-app-context', (_, action) => {
   if (action && action.app) {
+    writeOpenRequest(action);
     const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
     try {
       const client = net.connect(sockPath, () => {

@@ -417,6 +417,27 @@ function startPassLockMonitor() {
   }, 15000);
 }
 
+// ── Config Sync background sync ─────────────────────────────────────────────
+// Keeps the backup vault (robos-lib/config-sync) mirrored at login, on an interval and
+// after edits. Conflicts are never applied here: they become a notification.
+
+let configSyncAuto = null;
+
+function startConfigSyncAuto() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'config-sync-auto'),
+    path.resolve(__dirname, '..', 'robos-lib', 'config-sync-auto'),
+    '/usr/local/share/robos/robos-lib/config-sync-auto',
+  ].filter(Boolean)) {
+    try {
+      configSyncAuto = require(p).startAutoSync({ log: msg => console.log(`[dm] config-sync ${msg}`) });
+      return;
+    } catch (err) {
+      if (err.code !== 'MODULE_NOT_FOUND') { console.error('[dm] config-sync auto failed to start:', err.message); return; }
+    }
+  }
+}
+
 // ── Tray ────────────────────────────────────────────────────────────────────
 
 let tray;
@@ -455,6 +476,7 @@ app.whenReady().then(() => {
 
   watchNotifications();
   startSocketServer();
+  startConfigSyncAuto();
   // Windows uses its native launcher and session, rather than GNOME panel daemons.
   if (process.platform === 'win32') return;
   startPassLockMonitor();
@@ -575,6 +597,7 @@ function startSocketServer() {
         else if (msg.kill)            res = killApp(msg.kill);
         else if (msg.notify)          res = handleNotify(msg.notify);
         else if (msg.status)          res = { status: getStatus() };
+        else if (msg.configSyncNow)   res = configSyncAuto ? await configSyncAuto.runNow('request') : { outcome: 'unavailable' };
         else if (msg.listDesktops)    res = { desktops: listDesktops() };
         else if (msg.pauseKeepAlive)  { pausedKeepAlive.add(msg.pauseKeepAlive); res = { ok: true, paused: msg.pauseKeepAlive }; }
         else if (msg.resumeKeepAlive) { pausedKeepAlive.delete(msg.resumeKeepAlive); res = { ok: true, resumed: msg.resumeKeepAlive }; }

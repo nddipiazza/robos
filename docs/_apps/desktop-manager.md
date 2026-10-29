@@ -17,6 +17,7 @@ At the current commit `node --check packages/desktop-manager/main.js` fails: lin
 - **App registry and launcher.** `main.js` lists the apps (id, label, description, category) and how to start each one: `electron <APP_BASE>/<id>` with `--no-sandbox --disable-gpu --disable-dev-shm-usage`. `APP_BASE` defaults to `/usr/local/share/robos` and can be set with `ROBOS_APP_BASE`.
 - **Watchdog.** Every 3 seconds it checks the apps marked `keepAlive` (`notifications`, `robos-toast`, `desktop-widgets`, `git-login-manager` and `robos-desktop`) and restarts any that stopped. A client can pause and resume this per app.
 - **Tray icon.** The tooltip shows the unread count from `~/.config/robos/notifications.json`. Clicking the icon opens the [Notifications Center]({{ '/apps/notifications/' | relative_url }}).
+- **Config Sync in the background.** When a [Config Sync]({{ '/config-management/#auto-sync' | relative_url }}) backup vault is connected and **Sync automatically** is on, it syncs the vault about 20 seconds after login, every 5 minutes (the vault's `auto.intervalMinutes`), and about 15 seconds after a backed-up file under `~/.config/robos` or `~/.robos` changes. It applies only plans with no conflicts; a conflict, a missing vault key or a vault it cannot open becomes one sticky "Config Sync needs you" notification that opens Preferences on the Backup vault tab. The logic is `robos-lib/config-sync-auto.js`.
 - **Pass-lock reminder.** After onboarding is complete, it checks the GPG agent every 15 seconds and posts a sticky "Pass store locked" notification when the password store locks.
 - **Socket server.** One JSON message per connection.
 
@@ -31,6 +32,7 @@ The socket is at `$ROBOS_DM_SOCKET` if set, otherwise `$XDG_RUNTIME_DIR/robos-dm
 | `launch`, `kill` | Start or stop an app by id |
 | `notify` | Add a notification (`title`, `body`, `icon`, `source`, `sticky`, `action`, `category`, `tier`) |
 | `pauseKeepAlive`, `resumeKeepAlive` | Control the watchdog for one app id |
+| `configSyncNow` | Run a background Config Sync now; replies with its outcome (`synced`, `up-to-date`, `conflicts`, …) |
 | `getVoicePrompts`, `getAppContext`, `voiceDictate` | Hooks used by [RobOS Voice]({{ '/voice-prompt.html' | relative_url }}) |
 
 Example, the same call the built-in "Restart RobOS Taskbar" skill uses:

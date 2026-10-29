@@ -27,7 +27,7 @@ keywords: "RobOS config backup, RobOS settings sync, sync settings across machin
 <li><a href="#concepts"><b>How it works</b><span>A vault, shares, and what moves</span></a></li>
 <li><a href="#vault"><b>Back up this machine</b><span>Create a vault on Google Drive</span></a></li>
 <li><a href="#second-machine"><b>Set up another machine</b><span>Paste the link, load everything</span></a></li>
-<li><a href="#sync"><b>Sync and conflicts</b><span>Day to day, both directions</span></a></li>
+<li><a href="#sync"><b>Sync and conflicts</b><span>Day to day, in the background</span></a></li>
 <li><a href="#restore"><b>Restore points</b><span>Undo any change Config Sync made</span></a></li>
 <li><a href="#share"><b>Share with someone</b><span>Templates, people, passphrase</span></a></li>
 <li><a href="#family"><b>Family &amp; friends</b><span>Network, movies, lights, TV</span></a></li>
@@ -135,7 +135,22 @@ flowchart LR
 <figure class="guide-shot"><a href="{{ cm }}07-conflict.png"><img src="{{ cm }}07-conflict.png" alt="Review on the desktop: one file from the vault (movie-playlists.json from alex-laptop) and one conflict, settings.json, Changed on both, with the choices Keep this machine's or Take the vault's from alex-laptop; the button reads Resolve 1 conflict first" loading="lazy" width="1280" height="900"></a><figcaption>The laptop added a playlist and changed the IDE; the desktop changed the IDE too. The playlist just comes over. <code>settings.json</code> waits for a decision, and says which machine wrote the vault's version.</figcaption></figure>
 <figure class="guide-shot"><a href="{{ cm }}08-conflict-resolved.png"><img src="{{ cm }}08-conflict-resolved.png" alt="The same review with Take the vault's selected; the button now reads Apply 2 changes" loading="lazy" width="1280" height="900"></a><figcaption><strong>Take the vault's</strong> is chosen; Apply is enabled.</figcaption></figure>
 <p>If another machine syncs while you are reviewing, Apply refuses with <em>Another machine synced while you were reviewing</em> and shows the new list. Nothing is half-written.</p>
-<p>Sync runs when you click it, in Preferences or from the <a href="#cli">command line</a>. To sync on a schedule, run <code>config-sync-cli.js vault sync --watch 300</code>, or add it as a job in Agent Scheduler.</p>
+
+<h3 id="auto-sync">Sync automatically</h3>
+<p>You do not have to open Preferences to keep machines in step. Once the first sync is done, RobOS syncs the vault in the background, with Preferences closed:</p>
+<ul>
+<li><strong>at login</strong>, about twenty seconds after the desktop starts;</li>
+<li><strong>every 5 minutes</strong> (or 1, 15, 30 or 60);</li>
+<li><strong>soon after a change</strong>: about fifteen seconds after you edit a backed-up file under <code>~/.config/robos</code> or <code>~/.robos</code>, so an edit is usually in the vault before you walk to the other machine.</li>
+</ul>
+<p>The settings are on the <strong>Backup vault</strong> tab, under the vault's name. <strong>Sync automatically</strong> is on for every vault; untick it and that machine syncs only when you click <strong>Sync now</strong>. The line under the settings says when the last background sync ran and what it did.</p>
+<figure class="guide-shot"><a href="{{ cm }}20-sync-automatically.png"><img src="{{ cm }}20-sync-automatically.png" alt="The Backup vault tab on Alex's laptop: under the vault's name and link, Sync automatically is ticked, every 5 min is selected, and and soon after a change is ticked, followed by a note that RobOS syncs at login and in the background" loading="lazy" width="1280" height="900"></a><figcaption>Background sync on the laptop: every 5 minutes and soon after a change.</figcaption></figure>
+<p>A background sync applies a change on its own only when one side changed: the same <strong>↑</strong>, <strong>↓</strong> and <strong>✕</strong> rows as above, with a restore point saved before any local file changes. It never picks a side for you. If any file is <strong>⚠ Changed on both</strong>, it writes nothing at all, on this machine or in the vault, and shows a notification:</p>
+<figure class="guide-shot"><a href="{{ cm }}22-conflict-toast.png"><img src="{{ cm }}22-conflict-toast.png" alt="A RobOS toast in the top-right corner of the screen: System, Warning, Config Sync needs you: 1 conflict. settings.json changed on this machine and in your backup vault. Background sync is paused until you choose which version to keep. Review in Preferences" loading="lazy" width="440" height="130"></a><figcaption>The laptop was off while both machines changed the IDE. At login, background sync found the conflict, wrote nothing, and showed this.</figcaption></figure>
+<p><strong>Review in Preferences</strong> opens Preferences on the Backup vault tab with the conflicts already listed. Choose a version for each and click <strong>Apply</strong>; the notification clears and background sync carries on. The same conflict is announced once, not every five minutes.</p>
+<figure class="guide-shot"><a href="{{ cm }}21-conflict-from-notification.png"><img src="{{ cm }}21-conflict-from-notification.png" alt="Preferences opened from the notification: a yellow banner reads Background sync is paused: 1 conflict, and below it the review lists settings.json as Changed on both with Keep this machine's and Take the vault's" loading="lazy" width="1280" height="900"></a><figcaption>Opened from the notification. The banner stays until the conflict is resolved.</figcaption></figure>
+<p>Two other situations also pause background sync with a <em>Config Sync needs you</em> notification: an encrypted vault whose key is not on this machine (<em>vault passphrase</em>; disconnect and connect again with the passphrase), and a vault the Google account can no longer open (<em>cannot open the vault</em>; sign in again under Cloud Suite Accounts). Being offline is not one of them: the sync is retried on the next interval.</p>
+<p>Background sync runs in <strong>Desktop Manager</strong>, the RobOS service that starts at login, so it needs no extra daemon. Preferences and the background never sync at the same moment: if you click <strong>Sync now</strong> while a background sync is running, Preferences asks you to try again in a moment. On a machine without the RobOS desktop, run <code>config-sync-cli.js vault auto run</code> from cron or a systemd timer (see <a href="#cli">Command line</a>).</p>
 
 <h2 id="restore">Restore points</h2>
 <p>Every action that changes files on this machine (a sync that downloads, joining, updating or leaving a share) first copies the files it is about to change into a restore point. The <strong>Restore points</strong> tab lists them, newest first.</p>
@@ -242,7 +257,7 @@ flowchart LR
 <li><strong>Access is the cloud folder's access.</strong> A vault is a folder in your Drive that only you can open. A share is readable by the people you add, and Drive enforces it: someone with the link but no access gets <em>could not find that folder, or this account cannot see it</em>. Everyone can only read a share; only you can publish to it.</li>
 <li><strong>Optional encryption.</strong> With a passphrase, the manifest (including file names) and every file are encrypted with AES-256-GCM, using a key derived from the passphrase with scrypt. File bodies are named by a keyed hash, so not even equal files can be recognized. The derived key is kept in <code>~/.config/robos/config-sync/keys.json</code> (mode 600) so you are not asked again on that machine. A wrong passphrase is reported as wrong, not as corrupt data.</li>
 <li><strong>Integrity.</strong> Every file body is checked against the SHA-256 in the manifest after download.</li>
-<li><strong>Nothing is written silently.</strong> Every change to local files is listed before you apply it and saved in a restore point first.</li>
+<li><strong>Nothing is decided for you.</strong> Every change to local files is saved in a restore point first. A background sync applies only changes made on one side; when a file changed on both, it writes nothing and asks you.</li>
 </ul>
 
 <h2 id="storage">Storage options</h2>
@@ -268,7 +283,11 @@ $CFG vault sync --use-vault
 $CFG status
 $CFG vault sync                      # stops and lists conflicts if there are any
 $CFG vault sync --keep remote        # resolve every conflict with the vault's version
-$CFG vault sync --watch 300          # keep syncing every five minutes
+$CFG vault auto                      # show background sync settings and the last run
+$CFG vault auto on --every 15 --watch on
+$CFG vault auto off                  # this machine syncs only when asked
+$CFG vault auto run                  # one background sync: applies only if nothing conflicts
+$CFG vault sync --watch 300          # keep syncing every five minutes in this terminal
 
 # shares
 $CFG share publish --name "Acme Platform onboarding" --template onboarding \
@@ -295,7 +314,8 @@ $CFG restore &lt;restore-point-id&gt;</code></pre>
 <table>
 <thead><tr><th>Path</th><th>Holds</th></tr></thead>
 <tbody>
-<tr><td><code>~/.config/robos/config-sync/state.json</code></td><td>This machine's id, the connected vault and its last-sync base, published shares, joined shares and the items each one added</td></tr>
+<tr><td><code>~/.config/robos/config-sync/state.json</code></td><td>This machine's id, the connected vault and its last-sync base, background sync settings and last run (<code>vault.auto</code>), published shares, joined shares and the items each one added</td></tr>
+<tr><td><code>~/.config/robos/config-sync/sync.lock</code></td><td>Present while a vault sync is running, so Preferences and the background never sync at once</td></tr>
 <tr><td><code>~/.config/robos/config-sync/keys.json</code></td><td>Derived encryption keys for encrypted vaults and shares (mode 600)</td></tr>
 <tr><td><code>~/.config/robos/config-sync/restore-points/</code></td><td>Restore points</td></tr>
 </tbody>
@@ -305,10 +325,11 @@ $CFG restore &lt;restore-point-id&gt;</code></pre>
 <li><code>packages/robos-lib/config-sync.js</code>: the engine (vault, shares, restore points)</li>
 <li><code>packages/robos-lib/config-sync-catalog.js</code>: categories, exclusions, machine-local keys, templates</li>
 <li><code>packages/robos-lib/config-sync-backends.js</code>: Google Drive and local folder storage</li>
+<li><code>packages/robos-lib/config-sync-auto.js</code>: background sync (login, interval, file watch, notifications), started by Desktop Manager</li>
 <li><code>packages/robos-lib/config-sync-cli.js</code>: the command line</li>
 <li><code>packages/robos-preferences/renderer/config-sync.js</code>: the Preferences section</li>
 <li><code>packages/robos-lib/config-sync.test.cjs</code>: engine tests</li>
-<li><code>packages/robos-test/tests/robos-preferences/config-sync-e2e.test.js</code>: the six scenarios on this page, through the real app</li>
+<li><code>packages/robos-test/tests/robos-preferences/config-sync-e2e.test.js</code>: the scenarios on this page, through the real apps (Preferences, Desktop Manager and the toast daemon)</li>
 </ul>
 <pre><code>cd packages/robos-test
 Xvfb :99 &amp;
@@ -327,6 +348,8 @@ ROBOS_TEST=1 DISPLAY=:99 ROBOS_SHOT_DIR=../../site/assets/config-management \
 <tr><td><em>Another machine synced while you were reviewing</em></td><td>Review the new list and apply again.</td></tr>
 <tr><td><em>N file(s) changed on both this machine and the vault</em></td><td>Choose <strong>Keep this machine's</strong> or <strong>Take the vault's</strong> for each, or use <code>--keep</code> on the command line.</td></tr>
 <tr><td>A movie folder shows <em>no matching sign-in</em> after joining</td><td>Add a data source of that kind (for example SFTP) in Data Sources, or watch over the publisher's private network.</td></tr>
+<tr><td><em>Config Sync needs you: N conflicts</em> (notification)</td><td>Click <strong>Review in Preferences</strong>, choose a version for each file and apply. Background sync is paused until then.</td></tr>
+<tr><td><em>Another sync is running on this machine</em></td><td>A background sync was running when you clicked. Try again in a moment.</td></tr>
 <tr><td>Something looks wrong after a sync</td><td><strong>Restore points</strong> › restore the file or the whole point.</td></tr>
 </tbody>
 </table>

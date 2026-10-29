@@ -38,6 +38,10 @@ const FORMAT = 'robos-config/1';
 const HOME_TOKEN = '${HOME}';
 const HISTORY_LIMIT = 30;
 const RESTORE_POINT_LIMIT = 15;
+// Background sync (config-sync-auto.js) is on by default once a vault is connected.
+const AUTO_DEFAULTS = { enabled: true, intervalMinutes: 5, watch: true };
+const AUTO_INTERVALS = [1, 5, 15, 30, 60];
+const LOCK_STALE_MS = 10 * 60 * 1000;
 
 class ConfigSyncError extends Error {
   constructor(message, code, extra = {}) { super(message); this.code = code; Object.assign(this, extra); }
@@ -91,6 +95,28 @@ function loadKey(home, remoteId) {
 function forgetKey(home, remoteId) {
   const keys = readJson(keyFile(home), {});
   if (keys[remoteId]) { delete keys[remoteId]; writeJson(keyFile(home), keys, 0o600); }
+}
+
+/**
+ * One vault sync at a time per machine: the background sync in Desktop Manager and
+ * "Sync now" in Preferences can otherwise both write the same files and state.json.
+ */
+async function withSyncLock(home, fn) {
+  const lock = path.join(syncDir(home), 'sync.lock');
+  fs.mkdirSync(path.dirname(lock), { recursive: true });
+  const take = () => fs.writeFileSync(lock, String(process.pid), { flag: 'wx' });
+  try { take(); } catch (err) {
+    if (err.code !== 'EEXIST') throw err;
+    let stale = true;
+    try {
+      const pid = Number(fs.readFileSync(lock, 'utf8'));
+      if (Date.now() - fs.statSync(lock).mtimeMs < LOCK_STALE_MS && pid) { process.kill(pid, 0); stale = false; }
+    } catch {}
+    if (!stale) throw new ConfigSyncError('Another sync is running on this machine. Try again in a moment.', 'BUSY');
+    fs.rmSync(lock, { force: true });
+    take();
+  }
+  try { return await fn(); } finally { fs.rmSync(lock, { force: true }); }
 }
 
 function machineName() { return process.env.ROBOS_MACHINE_NAME || os.hostname(); }
@@ -476,6 +502,19 @@ function publicVault(v) {
     name: v.ref.name, kind: v.ref.kind, url: v.ref.url, folderId: v.ref.folderId || null, path: v.ref.path || null,
     accountId: v.ref.accountId || null, id: v.id, encrypted: Boolean(v.encrypted), categories: v.categories,
     lastSyncAt: v.lastSyncAt || null, lastGeneration: v.lastGeneration || 0, connectedAt: v.connectedAt, trackedFiles: Object.keys(v.base || {}).length,
+    auto: autoOf(v),
+  };
+}
+
+/** Background sync settings and what the last background run did. */
+function autoOf(v) {
+  const a = v?.auto || {};
+  return {
+    enabled: a.enabled ?? AUTO_DEFAULTS.enabled,
+    intervalMinutes: a.intervalMinutes || AUTO_DEFAULTS.intervalMinutes,
+    watch: a.watch ?? AUTO_DEFAULTS.watch,
+    lastRunAt: a.lastRunAt || null, lastOutcome: a.lastOutcome || null, lastError: a.lastError || null,
+    attention: a.attention || null,
   };
 }
 
@@ -508,6 +547,9 @@ function getStatus(opts = {}) {
     restorePoints: listRestorePoints({ homeDir: home }).slice(0, 10),
   };
 }
+
+/** The connected vault as the UI sees it (null when none), without scanning local files. */
+function getVault(opts = {}) { return publicVault(loadState(homeOf(opts)).vault); }
 
 function countOwned(owned = {}) { return Object.values(owned).reduce((n, o) => n + (o.items?.length || 0) + (o.file ? 1 : 0), 0); }
 
@@ -582,6 +624,36 @@ function setVaultCategories(opts = {}) {
   return { ok: true, vault: publicVault(state.vault) };
 }
 
+/** Turns background sync on or off and sets how often it runs. */
+function setAutoSync(opts = {}) {
+  const home = homeOf(opts);
+  const state = loadState(home);
+  if (!state.vault) throw new ConfigSyncError('Connect a backup vault first.', 'NO_VAULT');
+  const a = { ...(state.vault.auto || {}) };
+  if (opts.enabled !== undefined) a.enabled = Boolean(opts.enabled);
+  if (opts.watch !== undefined) a.watch = Boolean(opts.watch);
+  if (opts.intervalMinutes !== undefined) {
+    const n = Number(opts.intervalMinutes);
+    if (!AUTO_INTERVALS.includes(n)) throw new ConfigSyncError(`Choose an interval of ${AUTO_INTERVALS.join(', ')} minutes.`, 'BAD_INTERVAL');
+    a.intervalMinutes = n;
+  }
+  state.vault.auto = a;
+  saveState(home, state);
+  return { ok: true, vault: publicVault(state.vault) };
+}
+
+/** Records the result of a background run (used by config-sync-auto). Returns the new auto view. */
+function recordAutoRun(opts = {}) {
+  const home = homeOf(opts);
+  const state = loadState(home);
+  if (!state.vault || (opts.vaultId && state.vault.id !== opts.vaultId)) return null;
+  const a = { ...(state.vault.auto || {}) };
+  for (const k of ['lastRunAt', 'lastOutcome', 'lastError', 'attention']) if (k in opts.patch) a[k] = opts.patch[k];
+  state.vault.auto = a;
+  saveState(home, state);
+  return autoOf(state.vault);
+}
+
 /**
  * Compares this machine with the vault.
  * strategy only matters on the first sync, when there is no shared history:
@@ -648,6 +720,10 @@ async function planVaultSync(opts = {}) {
  * pushed in between (plan again and retry).
  */
 async function applyVaultSync(opts = {}) {
+  return withSyncLock(homeOf(opts), () => applyVaultSyncLocked(opts));
+}
+
+async function applyVaultSyncLocked(opts) {
   const home = homeOf(opts);
   const state = loadState(home);
   if (!state.vault) throw new ConfigSyncError('Connect a backup vault first.', 'NO_VAULT');
@@ -1145,11 +1221,11 @@ function leaveShare(opts = {}) {
 }
 
 module.exports = {
-  ConfigSyncError, FORMAT, HOME_TOKEN,
+  ConfigSyncError, FORMAT, HOME_TOKEN, AUTO_DEFAULTS, AUTO_INTERVALS,
   // status
-  getStatus, describeCategories, listLocalFiles, categoryOf, isExcluded,
+  getStatus, getVault, describeCategories, listLocalFiles, categoryOf, isExcluded,
   // vault
-  connectVault, disconnectVault, setVaultCategories, planVaultSync, applyVaultSync,
+  connectVault, disconnectVault, setVaultCategories, setAutoSync, recordAutoRun, planVaultSync, applyVaultSync,
   // shares
   previewShare, publishShare, updateShare, grantShare, forgetShare,
   previewJoin, joinShare, checkSubscriptions, updateSubscription, leaveShare,

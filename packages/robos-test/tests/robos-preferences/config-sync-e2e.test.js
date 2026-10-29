@@ -16,6 +16,9 @@
  *   5. Onboarding      Alex onboards Jordan, a new hire; publishes an update; Jordan applies it.
  *   6. Coworker        Alex hands a project to Priya; Eve (not invited) is refused; Priya leaves
  *                      and only the shared items go.
+ *   7. Background      With Preferences closed, Desktop Manager syncs at login, after an edit and on
+ *                      its interval; an edit on both machines becomes a notification, not a write,
+ *                      and the notification opens Preferences on the conflict.
  *
  * Screenshots: set ROBOS_SHOT_DIR (for example site/assets/config-management) to save them.
  *
@@ -30,6 +33,7 @@ const os = require('node:os');
 const path = require('node:path');
 const http = require('node:http');
 const zlib = require('node:zlib');
+const { execFileSync, execFile } = require('node:child_process');
 
 const { launchApp, killApp, setupHome } = require('../../lib/harness');
 const { evalJS, httpPost } = require('../../lib/snapshot');
@@ -136,6 +140,41 @@ function getPng(port) {
 }
 
 let drive;
+
+const CLI = path.resolve(__dirname, '../../../robos-lib/config-sync-cli.js');
+/** The config-sync CLI as another machine (the same engine Desktop Manager runs). Async: the mock Drive runs in this process. */
+const cli = (home, machine, ...args) => new Promise((resolve, reject) => execFile(process.execPath, [CLI, ...args], {
+  encoding: 'utf8', env: { ...process.env, HOME: home, ROBOS_GDRIVE_API_BASE: drive.url, ROBOS_MACHINE_NAME: machine },
+}, (err, stdout, stderr) => (err ? reject(new Error(`${err.message}\n${stderr}`)) : resolve(stdout))));
+
+/** Logs a machine in: Desktop Manager starts and runs background Config Sync (short timers for the test). */
+function loginDesktopManager(home, machine, intervalMs) {
+  return launchApp('desktop-manager', {
+    name: 'config-sync-background', home,
+    env: {
+      ROBOS_TEST: '1', ROBOS_GDRIVE_API_BASE: drive.url, ROBOS_MACHINE_NAME: machine,
+      ROBOS_CONFIG_SYNC_LOGIN_DELAY_MS: '300', ROBOS_CONFIG_SYNC_DEBOUNCE_MS: '700', ROBOS_CONFIG_SYNC_INTERVAL_MS: String(intervalMs),
+    },
+  });
+}
+
+/** Saves the top-right corner of the X display (where robos-toast shows toasts), when ffmpeg is there. */
+function screenCorner(name) {
+  if (!SHOTS) return;
+  try {
+    execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'x11grab', '-i', process.env.DISPLAY || ':99', '-frames:v', '1', '-vf', 'crop=440:130:iw-440:0', path.join(SHOTS, `${name}.png`)], { timeout: 15000 });
+  } catch (err) { console.log(`# screen capture skipped: ${err.message.split('\n')[0]}`); }
+}
+
+async function waitFor(fn, what, detail = () => '', ms = 30000) {
+  const start = Date.now();
+  for (;;) {
+    let v; try { v = fn(); } catch { v = false; }
+    if (v) return v;
+    if (Date.now() - start > ms) { let d = ''; try { d = detail(); } catch {} throw new Error(`Timed out waiting for ${what}${d ? `\n${d}` : ''}`); }
+    await sleep(150);
+  }
+}
 
 async function open(home, machine) {
   const app = await launchApp('robos-preferences', {
@@ -481,5 +520,107 @@ describe('Config Sync & Sharing — full backup, second machine, family, onboard
       assert.deepStrictEqual(readJson(homes.priya, '.config/robos/git-projects.json').projects.map(p => p.id), ['priya-notes']);
       await shot(app.port, '19-coworker-left', '#section-config_sync');
     } finally { await killApp(app); }
+  });
+
+  it('7. Background sync: with Preferences closed, edits reach the other machine; a conflict becomes a notification, not a write', async () => {
+    const D = homes.desktop, L = homes.laptop;
+    const vaultOf = home => readJson(home, '.config/robos/config-sync/state.json').vault;
+    const notes = home => { try { return readJson(home, '.config/robos/notifications.json').filter(n => n.source === 'robos-config-sync'); } catch { return []; } };
+    const editJson = (home, rel, fn) => fs.writeFileSync(path.join(home, rel), JSON.stringify(fn(readJson(home, rel)), null, 2));
+    const why = (home, dm) => () => `background sync: ${JSON.stringify(vaultOf(home).auto)}\n${dm?.stderr?.().slice(-2000) || ''}`;
+
+    // The Backup vault tab: "Sync automatically" is on, every 5 minutes, and soon after a change.
+    let app = await open(L, 'alex-laptop');
+    try {
+      await until(app.port, `Boolean(document.getElementById('cs-auto-enabled'))`);
+      assert.deepStrictEqual(await evalJS(app.port, `[document.getElementById('cs-auto-enabled').checked, document.getElementById('cs-auto-interval').value, document.getElementById('cs-auto-watch').checked]`), [true, '5', true]);
+      await fill(app.port, '#cs-auto-interval', '15');
+      await until(app.port, `/every 15 min/.test(document.getElementById('cs-status').textContent)`);
+      assert.strictEqual(vaultOf(L).auto.intervalMinutes, 15, 'stored in state.json (vault.auto)');
+      await fill(app.port, '#cs-auto-interval', '5');
+      await until(app.port, `/every 5 min/.test(document.getElementById('cs-status').textContent)`);
+      await shot(app.port, '20-sync-automatically', '#section-config_sync');
+    } finally { await killApp(app); }
+
+    // The desktop logs in. Desktop Manager pushes the project Alex added in scenario 5, then a
+    // playlist edited a moment later (the file watcher; the interval is far away).
+    const before = vaultOf(D).lastGeneration;
+    let dm = await loginDesktopManager(D, 'alex-desktop', 600000);
+    try {
+      await waitFor(() => vaultOf(D).lastGeneration > before && vaultOf(D).auto.lastOutcome === 'synced', 'the desktop login sync', why(D, dm));
+      const afterLogin = vaultOf(D).lastGeneration;
+      await sleep(1700);
+      editJson(D, '.config/robos/movie-playlists.json', l => [...l, { id: 'pl-matinee', name: 'Sunday Matinee', items: ['wall-e'] }]);
+      await waitFor(() => vaultOf(D).lastGeneration > afterLogin, 'the desktop pushing the edited playlist', why(D, dm));
+    } finally { await killApp(dm); }
+
+    // The laptop logs in: everything arrives without opening Preferences or clicking Sync.
+    dm = await loginDesktopManager(L, 'alex-laptop', 2500);
+    try {
+      await waitFor(() => readJson(L, '.config/robos/movie-playlists.json').some(p => p.id === 'pl-matinee'), 'the playlist reaching the laptop', why(L, dm));
+      assert.ok(readJson(L, '.config/robos/git-projects.json').projects.some(p => p.id === 'acme-billing-svc'));
+      assert.strictEqual(readJson(L, '.config/robos/settings.json').default_ide, 'zed', 'the setting restored on the desktop in scenario 3');
+      assert.strictEqual(readJson(L, '.config/robos/cloud-accounts.json').accounts[0].accessToken, PEOPLE.alex.token, 'the laptop stays signed in');
+
+      // While the laptop is on, the desktop syncs again; the laptop's interval picks it up.
+      editJson(D, '.config/robos/audio-playlists.json', l => [...l, { id: 'ap-rainy', name: 'Rainy Day', tracks: 12 }]);
+      assert.match(await cli(D, 'alex-desktop', 'vault', 'auto', 'run'), /Background sync: synced ↑1 ↓0/);
+      await waitFor(() => readJson(L, '.config/robos/audio-playlists.json').some(p => p.id === 'ap-rainy'), 'the laptop interval sync', why(L, dm));
+      assert.strictEqual(notes(L).length, 0, 'nothing needed Alex');
+    } finally { await killApp(dm); }
+
+    // Both machines change the IDE while the laptop is off.
+    editJson(D, '.config/robos/settings.json', x => ({ ...x, default_ide: 'emacs' }));
+    assert.match(await cli(D, 'alex-desktop', 'vault', 'auto', 'run'), /synced ↑1/);
+    editJson(L, '.config/robos/settings.json', x => ({ ...x, default_ide: 'helix' }));
+    const vaultGeneration = vaultOf(D).lastGeneration;
+
+    dm = await loginDesktopManager(L, 'alex-laptop', 2500);
+    const toast = await launchApp('robos-toast', { name: 'config-sync-toast', home: L, env: { ROBOS_TEST: '1' } });
+    let action;
+    try {
+      await waitFor(() => notes(L).length === 1, 'the conflict notification', why(L, dm));
+      const [n] = notes(L);
+      assert.strictEqual(n.title, 'Config Sync needs you: 1 conflict');
+      assert.match(n.body, /settings\.json changed on this machine and in your backup vault/);
+      assert.deepStrictEqual(n.action, { type: 'open-app', app: 'robos-preferences', label: 'Review in Preferences', open: { section: 'config_sync', tab: 'vault', reason: 'conflicts' } });
+      assert.strictEqual(readJson(L, '.config/robos/settings.json').default_ide, 'helix', 'the laptop edit is not overwritten');
+      assert.deepStrictEqual(vaultOf(L).auto.attention.rels, ['config/settings.json']);
+      await until(toast.port, `window.toast.getActiveToasts().then(t => t.some(x => x.title === 'Config Sync needs you: 1 conflict'))`);
+      screenCorner('22-conflict-toast');
+
+      // More interval runs go by: still one notification, and the vault still has the desktop's version.
+      const runAt = vaultOf(L).auto.lastRunAt;
+      await waitFor(() => vaultOf(L).auto.lastRunAt !== runAt, 'another interval run', why(L, dm));
+      assert.strictEqual(notes(L).length, 1, 'the same conflict is announced once');
+      assert.strictEqual(vaultOf(L).auto.lastOutcome, 'conflicts');
+      assert.match(await cli(D, 'alex-desktop', 'vault', 'plan'), /Up to date/);
+      assert.strictEqual(vaultOf(D).lastGeneration, vaultGeneration);
+
+      // "Review in Preferences" on the toast.
+      action = n.action;
+      await evalJS(toast.port, `setTimeout(() => window.toast.action(${JSON.stringify(action)}), 50); true`);
+      await waitFor(() => fs.existsSync(path.join(L, '.config/robos/open-requests/robos-preferences.json')), 'the toast asking Preferences to open Config Sync');
+    } finally { await killApp(toast); await killApp(dm); }
+
+    // Preferences opens on Backup vault with the conflict listed.
+    app = await open(L, 'alex-laptop');
+    try {
+      await until(app.port, `cs.tab === 'vault' && cs.plan && cs.plan.counts.conflict === 1`);
+      assert.ok(!fs.existsSync(path.join(L, '.config/robos/open-requests/robos-preferences.json')), 'the request is used once');
+      assert.match(await evalJS(app.port, `document.getElementById('cs-attention').textContent`), /Background sync is paused: 1 conflict/);
+      await shot(app.port, '21-conflict-from-notification', '#section-config_sync');
+      await click(app.port, `input[data-cs-res="config/settings.json"][value="local"]`);
+      await until(app.port, `!document.getElementById('cs-apply').disabled`);
+      await click(app.port, '#cs-apply');
+      await until(app.port, `document.getElementById('cs-status').textContent.startsWith('✓ Synced')`);
+      await until(app.port, `!document.getElementById('cs-attention')`);
+      assert.strictEqual(notes(L)[0].read, true, 'the notification is cleared');
+      assert.strictEqual(vaultOf(L).auto.attention, null);
+    } finally { await killApp(app); }
+
+    // The desktop's next background run takes the version Alex kept.
+    assert.match(await cli(D, 'alex-desktop', 'vault', 'auto', 'run'), /synced ↑0 ↓1/);
+    assert.strictEqual(readJson(D, '.config/robos/settings.json').default_ide, 'helix');
   });
 });

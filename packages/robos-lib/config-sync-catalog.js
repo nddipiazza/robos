@@ -150,7 +150,7 @@ const CATEGORIES = [
  * engine's own state. Matching is on the root-relative path.
  */
 const EXCLUDE = [
-  'config/config-sync/**',
+  'config/config-sync/**', 'config/open-requests/**',
   'config/electron/**', 'config/logs/**', 'config/voice-cache/**', 'config/search-index/**',
   'config/tv-packages/**', 'config/tv-studio-packages/**', 'config/agent-sessions/**', 'config/agentd/**',
   'config/profiled/**', 'config/ovpn/**', 'config/vectors/**', 'config/events/**', 'config/event-log/**',
