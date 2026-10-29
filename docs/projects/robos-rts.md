@@ -45,13 +45,19 @@ The window opens with match setup. Choose Easy, Normal or Hard AI, its Rush, Bal
 
 The game starts fullscreen on the active display with a **1920×1080 interface canvas** that scales while preserving its aspect ratio. **Alt+Enter** switches to a centered 1600×900 window, reduced to fit smaller desktops, and back to fullscreen. `--windowed` and automated test launches use the fitted window.
 
+Move the pointer to an edge of the game view to scroll the camera, including diagonally at corners. **F8 → Mouse scroll speed** adjusts this independently of arrow-key speed; 0 disables it. The preference is saved in `~/.config/robos/rts/controls.cfg`. Scrolling stops outside the focused game window and while a menu, briefing, help overlay or results screen is open. Double-click a unit or structure to select **all your matching entities across the map**, including those outside the current view; Shift adds them to the existing selection.
+
+When multiple production buildings are selected, the command card combines all their trainable units. Each has a button and a unique displayed hotkey, including selections containing different kinds of building. One press trains one unit at a compatible completed building with the shortest queue. Hold the hotkey to train immediately, wait **350 ms**, then repeat every **75 ms**; releasing it, changing selection, opening a menu or losing focus stops the repeat. Full queues, supply and resource limits still apply. The combined production list shows every selected building, active progress and queued unit types; scroll it to inspect additional rows.
+
+Selecting a constructing worker leaves its build order running. Use **Stop / Halt (S)** to interrupt it; the unfinished structure retains its paid progress. Select a compatible worker and right-click that structure to resume. This reuses the same foundation without another charge. An actively assigned builder must be halted before another worker can take over. Queued follow-up tasks run after construction finishes.
+
 ## Campaign: First Strike
 
 Choose **Campaign: First Strike** from the F8 menu, or run `games/robos-rts/play.ps1 -Mission` on Windows (`-Windowed` is optional). Other platforms can use `games/robos-rts/play.sh -- --scenario=campaign-first-strike`.
 
 You begin with a Colony Hub, 12 gathering Pioneers, 150 crystal and no army. Build Provision Silos and Muster Halls, train roughly **40 Riflemen (40 army supply)**, then attack the eastern stronghold through the canyon. With the original workers that means 52 total supply; five Silos raise capacity to 55. There is ample finite crystal and no time limit. The enemy garrison guards its base, without free reinforcements or attacks during your buildup. Destroy the Brood Nest **and every defender** to win; losing your army allows another attempt, while losing all your structures ends the mission.
 
-The briefing explains the build order; the live objective panel shows Riflemen, surviving defenders and the nest's status. **Enter** begins, **P** pauses, **F9** restarts at the briefing and **R** reopens the end-of-mission statistics. The results retain newly trained units and measure each unit's lifetime from its creation. The 40-supply recommendation is a combat balance target, not a victory gate: strong micro, different units or multiple assaults can change the number required.
+The briefing explains the build order; the live objective panel shows Riflemen, surviving defenders and the nest's status. Click **Hide objectives** to collapse it to a small **Show objectives** button; click again to restore it. **Enter** begins, **P** pauses, **F9** restarts at the briefing and **R** reopens the end-of-mission statistics. The results retain newly trained units and measure each unit's lifetime from its creation. The 40-supply recommendation is a combat balance target, not a victory gate: strong micro, different units or multiple assaults can change the number required.
 
 `scenarios/campaign-first-strike.jsonld` contains the map, economy, fixed garrison and mission metadata. `POST /mission {"action":"start"}` / `{"action":"restart"}` use the same engine operations as the interface. A normal straight assault without Surge is checked with 28 and 36 Riflemen losing and 40 winning within survivor/time thresholds. A separate end-to-end controller pays for all construction and all 40 Riflemen through ordinary player commands, then wins the actual mission. The rendered recording uses the live frame clock and keyboard Begin/Restart inputs:
 
@@ -400,7 +406,7 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Input | Action |
 |:---|:---|
 | Left click or drag | Select; drag for a box |
-| Double click | Select all of that type on screen |
+| Double click | Select all your units or structures of that type across the map |
 | Right click | Move, attack, gather, or set a rally point |
 | Shift | Queue orders; add to or remove from the selection |
 | Mouse wheel, middle drag | Zoom, pan |
@@ -445,6 +451,8 @@ c.command("attack_move", tags=riflemen, x=70.0, y=40.0)
 Scenarios are JSON-LD files in `games/robos-rts/scenarios`. Besides units, resources and map obstacles, a scenario can set `paused` and `decor`; the two roster scenarios use both.
 
 ## Tests
+
+`python run_balance_tests.py --suite controls --suite economy --jobs=1` checks class selection, camera speed, mixed production, held-key timing and construction Stop/resume contracts. `python tests/e2e/player_controls_walkthrough.py` verifies the rendered controls with native input in isolated fixtures and archives a narrated screenshot walkthrough to `~/.robos/development/walkthroughs/rts-player-controls/`.
 
 `games/robos-rts/tests/e2e/features/engine` covers combat mechanics, paid skirmish builds and map authoring. `features/realtime` plays editor-authored matches on the live clock and checks frame responsiveness during control traffic and capture. Full build orders take longer than isolated mechanics fixtures.
 

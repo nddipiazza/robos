@@ -22,6 +22,12 @@ var hud: Node2D
 var match_menu: CanvasLayer
 var battle_lab: CanvasLayer
 var campaign: CanvasLayer
+var mouse_scroll_speed := 50.0
+const TRAIN_REPEAT_DELAY := 0.35
+const TRAIN_REPEAT_INTERVAL := 0.075
+var train_repeat_key := 0
+var train_repeat_ability := ""
+var train_repeat_clock := 0.0
 
 var local_player: int = 1
 var selected_tags: Array[int] = []
@@ -47,6 +53,7 @@ var _attack_msg_cd: float = 0.0
 var _last_group_press: Dictionary = {}
 
 func _ready() -> void:
+	_load_control_settings()
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 	SimEngine.notice.connect(_on_notice)
 	SimEngine.unit_damaged.connect(_on_unit_damaged)
@@ -75,6 +82,7 @@ func _ready() -> void:
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
+	_clear_training_repeat()
 	if match_menu:
 		match_menu.panel.hide()
 	if not SimEngine.match_state.is_empty():
@@ -136,13 +144,61 @@ func focus_on_base() -> void:
 func _handle_camera_pan(delta: float) -> void:
 	if not world_3d or not world_3d.camera_3d:
 		return
+	if not get_window().has_focus() or _camera_modal_open():
+		return
 	var v := Vector2.ZERO
 	if Input.is_key_pressed(KEY_LEFT): v.x -= 1.0
 	if Input.is_key_pressed(KEY_RIGHT): v.x += 1.0
 	if Input.is_key_pressed(KEY_UP): v.y -= 1.0
 	if Input.is_key_pressed(KEY_DOWN): v.y += 1.0
-	if v != Vector2.ZERO:
-		world_3d.pan(v.normalized() * 46.0 * (world_3d.cam_height / 50.0) * delta)
+	var mouse_direction := Vector2.ZERO
+	if not mm_dragging and not mid_dragging:
+		mouse_direction = _edge_scroll_direction(get_viewport().get_mouse_position(), get_viewport_rect())
+	var offset := _camera_pan_delta(v, mouse_direction, world_3d.cam_height, delta)
+	if offset != Vector2.ZERO:
+		world_3d.pan(offset)
+
+func _camera_modal_open() -> bool:
+	return show_help or (match_menu != null and match_menu.panel.visible) \
+		or (campaign != null and (campaign.briefing.visible or campaign.results.is_open())) \
+		or (battle_lab != null and battle_lab.results.is_open())
+
+func _edge_scroll_direction(mouse: Vector2, bounds: Rect2) -> Vector2:
+	if not bounds.has_point(mouse):
+		return Vector2.ZERO
+	var direction := Vector2.ZERO
+	var margin := 16.0
+	if mouse.x < bounds.position.x + margin: direction.x = -1.0
+	elif mouse.x >= bounds.end.x - margin: direction.x = 1.0
+	if mouse.y < bounds.position.y + margin: direction.y = -1.0
+	elif mouse.y >= bounds.end.y - margin: direction.y = 1.0
+	return direction
+
+func _camera_pan_delta(keys: Vector2, mouse: Vector2, height: float, delta: float) -> Vector2:
+	# Arrow keys retain their speed. Mouse scrolling has its own percentage slider.
+	var direction := keys if keys != Vector2.ZERO else mouse
+	var speed := 46.0 if keys != Vector2.ZERO else 46.0 * mouse_scroll_speed / 50.0
+	return direction.normalized() * speed * (height / 50.0) * delta
+
+func _control_settings_path() -> String:
+	var folder = OS.get_environment("USERPROFILE") if OS.get_name() == "Windows" else OS.get_environment("HOME")
+	return folder.path_join(".config/robos/rts/controls.cfg")
+
+func _load_control_settings() -> void:
+	var config := ConfigFile.new()
+	if config.load(_control_settings_path()) == OK:
+		mouse_scroll_speed = clampf(float(config.get_value("camera", "mouse_scroll_speed", 50.0)), 0.0, 100.0)
+
+func set_mouse_scroll_speed(value: float) -> void:
+	if not is_finite(value):
+		return
+	mouse_scroll_speed = clampf(value, 0.0, 100.0)
+	var config := ConfigFile.new()
+	config.set_value("camera", "mouse_scroll_speed", mouse_scroll_speed)
+	var path := _control_settings_path()
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	if config.save(path) != OK:
+		push_warning("Could not save camera controls")
 
 func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
 	if world_3d and world_3d.camera_3d:
@@ -170,6 +226,10 @@ func hover_pos() -> Vector2:
 # Frame loop
 # ---------------------------------------------------------------------------
 func _process(delta: float) -> void:
+	if not get_window().has_focus() or _camera_modal_open():
+		_clear_training_repeat()
+	else:
+		_advance_training_repeat(delta)
 	_handle_camera_pan(delta)
 	_attack_msg_cd = maxf(0.0, _attack_msg_cd - delta)
 	banner_ttl = maxf(0.0, banner_ttl - delta)
@@ -243,6 +303,18 @@ func selected_owned() -> Array[Dictionary]:
 			out.append(u)
 	return out
 
+func selected_producers() -> Array[Dictionary]:
+	var producers: Array[Dictionary] = []
+	for u in selected_owned():
+		if u.is_structure and not RTSData.get_unit_def(u.unit_type).get("trains", []).is_empty():
+			producers.append(u)
+	return producers
+
+func is_production_selection() -> bool:
+	var own := selected_owned()
+	return own.size() > 1 and own.size() == selected_tags.size() \
+		and own.all(func(u): return u.is_structure) and not selected_producers().is_empty()
+
 func _unit_at_screen(spos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d := 1e9
@@ -257,6 +329,7 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 	return best
 
 func _select_tags(tags: Array, add: bool = false) -> void:
+	_clear_training_repeat()
 	if not add:
 		selected_tags.clear()
 	for t in tags:
@@ -288,6 +361,35 @@ func _select_next_idle_worker() -> void:
 # ---------------------------------------------------------------------------
 # Input
 # ---------------------------------------------------------------------------
+func _input(event: InputEvent) -> void:
+	# Receive releases even when a GUI control consumes the event.
+	if event is InputEventKey and not event.pressed and event.keycode == train_repeat_key:
+		_clear_training_repeat()
+
+func _clear_training_repeat() -> void:
+	train_repeat_key = 0
+	train_repeat_ability = ""
+	train_repeat_clock = 0.0
+
+func _advance_training_repeat(delta: float) -> void:
+	if train_repeat_ability == "":
+		return
+	train_repeat_clock -= minf(delta, 0.25)
+	for _attempt in range(4):
+		if train_repeat_clock > 0.000001:
+			break
+		var found := false
+		for button in get_card_buttons():
+			if button.ability_id == train_repeat_ability:
+				found = true
+				if button.blocked == "":
+					_train_on_best(train_repeat_ability)
+				break
+		if not found:
+			_clear_training_repeat()
+			break
+		train_repeat_clock += TRAIN_REPEAT_INTERVAL
+
 func _unhandled_input(event: InputEvent) -> void:
 	if match_menu and match_menu.panel.visible:
 		if event is InputEventKey and event.pressed and event.keycode == KEY_F8:
@@ -336,6 +438,11 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		if pending_ability != "":
 			_execute_pending_ability_at(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
 			return
+		if mb.double_click:
+			# Godot marks the second press, not the following release, as double-click.
+			is_box_selecting = false
+			_complete_box_selection(mpos, mpos, mb.shift_pressed, true)
+			return
 		is_box_selecting = true
 		box_start_screen = mpos
 		box_end_screen = mpos
@@ -343,7 +450,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		if pending_ability != "":
 			pending_ability = ""
 			return
-		_issue_smart_right_click(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
+		_issue_smart_right_click(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT), _unit_at_screen(mpos))
 
 # Returns true when the click landed on a HUD element.
 func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
@@ -387,6 +494,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	return mpos.y >= HUD_TOP
 
 func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_double_click: bool) -> void:
+	_clear_training_repeat()
 	if not add_shift:
 		selected_tags.clear()
 	active_type = ""
@@ -399,10 +507,8 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 		if is_double_click and clicked["owner"] == local_player:
 			for u in SimEngine.units.values():
 				if u["owner"] == clicked["owner"] and u["unit_type"] == clicked["unit_type"]:
-					var sp := world_to_screen(u["pos"])
-					if sp.y < HUD_TOP and sp.y > 0.0 and sp.x > 0.0 and sp.x < 1920.0:
-						if not selected_tags.has(u["tag"]):
-							selected_tags.append(u["tag"])
+					if not selected_tags.has(u["tag"]):
+						selected_tags.append(u["tag"])
 		elif add_shift and selected_tags.has(clicked["tag"]):
 			selected_tags.erase(clicked["tag"])
 		elif not selected_tags.has(clicked["tag"]):
@@ -426,7 +532,7 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 func _spawn_marker(pos: Vector2, kind: String) -> void:
 	click_markers.append({"pos": pos, "kind": kind, "ttl": 0.7, "max": 0.7})
 
-func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
+func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = {}) -> void:
 	var own := selected_owned()
 	if own.is_empty():
 		return
@@ -451,7 +557,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 				_spawn_marker(r["pos"], "gather")
 				return
 
-	var target := _unit_at_screen(world_to_screen(wpos, 1.2))
+	var target := clicked if not clicked.is_empty() else _unit_at_screen(world_to_screen(wpos, 1.2))
 	if target.is_empty():
 		for u in SimEngine.units.values():
 			if wpos.distance_to(u["pos"]) <= float(u["radius"]) + 1.0:
@@ -461,6 +567,15 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 		if target["owner"] != local_player:
 			SimEngine.issue_command(tags, "attack_target", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "attack")
+			return
+		elif target.is_structure and target.build_progress < 1.0:
+			var workers := own.filter(func(u): return u.is_worker)
+			workers.sort_custom(func(a, b): return a.pos.distance_squared_to(target.pos) < b.pos.distance_squared_to(target.pos))
+			for worker in workers:
+				var result = SimEngine.issue_command([worker.tag], "resume_build", target.pos, target.tag, "", queue)
+				if result.accepted > 0:
+					_spawn_marker(target.pos, "build")
+					return
 			return
 		elif target["unit_type"] == "aether_tap":
 			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
@@ -592,6 +707,8 @@ func ability_cost(adef: Dictionary) -> Dictionary:
 func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
+	if adef.has("unit") and pu.production_queue.size() >= 5:
+		return "Production queue is full."
 	var p: Dictionary = SimEngine.players.get(local_player, {})
 	var cost := ability_cost(adef)
 	if not cost.is_empty():
@@ -618,23 +735,53 @@ func get_card_buttons() -> Array[Dictionary]:
 	var pu := primary_unit()
 	if pu.is_empty() or pu["owner"] != local_player:
 		return buttons
-	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
+	var sources: Array[Dictionary] = []
+	if is_production_selection():
+		sources = selected_owned()
+	else:
+		sources.append(pu)
+	var abils: Array = []
+	var reserved_hotkeys := {}
+	for source in sources:
+		for ability in RTSData.get_unit_def(source.unit_type).get("abilities", []):
+			if not abils.has(ability):
+				abils.append(ability)
+			if not str(ability).begins_with("train_"):
+				reserved_hotkeys[RTSData.get_ability_def(str(ability)).get("hotkey", "")] = true
 	for i in range(mini(15, abils.size())):
 		var row := i / 5
 		var col := i % 5
 		var abil_id := str(abils[i])
-		var adef := RTSData.get_ability_def(abil_id)
+		var adef := RTSData.get_ability_def(abil_id).duplicate()
+		var reason := ""
+		for source in sources:
+			if RTSData.get_unit_def(source.unit_type).get("abilities", []).has(abil_id):
+				reason = _block_reason(adef, source)
+				if reason == "":
+					break
+		if abil_id.begins_with("train_"):
+			var hotkey := str(adef.get("hotkey", ""))
+			if reserved_hotkeys.has(hotkey):
+				var name_chars := str(RTSData.get_unit_def(str(adef.unit)).get("name", "")).to_upper() + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+				for letter in name_chars:
+					if letter >= "A" and letter <= "Z" and not reserved_hotkeys.has(letter):
+						hotkey = letter
+						break
+			adef["hotkey"] = hotkey
+			reserved_hotkeys[hotkey] = true
 		buttons.append({
 			"ability_id": abil_id,
 			"def": adef,
 			"rect": Rect2(CARD_ORIGIN + Vector2(col * (CARD_BTN + CARD_GAP), row * (CARD_BTN + CARD_GAP)), Vector2(CARD_BTN, CARD_BTN)),
-			"blocked": _block_reason(adef, pu),
+			"blocked": reason,
 			"cost": ability_cost(adef)
 		})
 	return buttons
 
 func _trigger_card_button(btn: Dictionary) -> void:
 	var abil_id: String = btn["ability_id"]
+	if abil_id != train_repeat_ability:
+		_clear_training_repeat()
 	var adef: Dictionary = btn["def"]
 	if str(btn["blocked"]) != "":
 		push_message(str(btn["blocked"]), "error")
@@ -659,6 +806,8 @@ func _train_on_best(abil_id: String) -> void:
 		if not RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id):
 			continue
 		if float(u["build_progress"]) < 1.0:
+			continue
+		if u.production_queue.size() >= 5:
 			continue
 		var q: int = u["production_queue"].size()
 		if q < best_q:
@@ -785,6 +934,10 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		return
 	for btn in get_card_buttons():
 		if str(btn["def"].get("hotkey", "")) == hk:
+			if str(btn.ability_id).begins_with("train_"):
+				train_repeat_key = ke.keycode
+				train_repeat_ability = btn.ability_id
+				train_repeat_clock = TRAIN_REPEAT_DELAY
 			_trigger_card_button(btn)
 			return
 
@@ -845,7 +998,18 @@ func ui_state() -> Dictionary:
 	var f: Vector2 = world_3d.get_focus() if world_3d else Vector2.ZERO
 	var window = get_window() if is_inside_tree() else null
 	var canvas = get_viewport_rect().size if window else Vector2.ZERO
+	var production: Array = []
+	for producer in selected_producers():
+		production.append({"tag": producer.tag, "name": producer.name, "unit_type": producer.unit_type, "queue": producer.production_queue.duplicate(true)})
+	var commands: Array = []
+	for button in get_card_buttons():
+		commands.append({"ability": button.ability_id, "hotkey": button.def.get("hotkey", ""), "blocked": button.blocked,
+			"rect": [button.rect.position.x, button.rect.position.y, button.rect.size.x, button.rect.size.y]})
 	return {
+		"production": production,
+		"command_card": commands,
+		"production_scroll_rect": _control_rect(hud.production_scroll) if hud else [],
+		"production_scroll_vertical": hud.production_scroll.scroll_vertical if hud else 0,
 		"display_mode": window.mode if window else -1,
 		"window_size": [window.size.x, window.size.y] if window else [0, 0],
 		"canvas_size": [canvas.x, canvas.y],
@@ -855,6 +1019,11 @@ func ui_state() -> Dictionary:
 		"campaign_briefing_visible": campaign != null and campaign.briefing.visible,
 		"campaign_objectives": campaign.status_label.text if campaign else "",
 		"campaign_results_visible": campaign != null and campaign.results.is_open(),
+		"campaign_objectives_collapsed": campaign != null and campaign.objectives_collapsed,
+		"campaign_objectives_visible": campaign != null and campaign.objective_details.is_visible_in_tree(),
+		"campaign_objective_toggle_rect": _control_rect(campaign.objective_toggle) if campaign else [],
+		"mouse_scroll_speed": mouse_scroll_speed,
+		"mouse_scroll_speed_rect": _control_rect(match_menu.mouse_scroll) if match_menu else [],
 		"rifle_fx_warm": world_3d != null and world_3d.rifle_fx.warmup_complete,
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"local_player": local_player,
@@ -866,6 +1035,10 @@ func ui_state() -> Dictionary:
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
 		"control_groups": control_groups.keys().size()
 	}
+
+func _control_rect(control: Control) -> Array:
+	var rect := control.get_global_rect()
+	return [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
 
 # Synthetic input for scripted demos and UI tests: goes through the same handlers as real input.
 func inject_input(d: Dictionary) -> void:
@@ -920,7 +1093,7 @@ func _draw() -> void:
 	_draw_click_markers()
 	if show_names:
 		_draw_name_labels(font)
-	if is_box_selecting:
+	if is_box_selecting and box_start_screen.distance_to(box_end_screen) >= 10.0:
 		var sel_rect := Rect2(
 			Vector2(minf(box_start_screen.x, box_end_screen.x), minf(box_start_screen.y, box_end_screen.y)),
 			Vector2(absf(box_end_screen.x - box_start_screen.x), absf(box_end_screen.y - box_start_screen.y))
@@ -963,9 +1136,13 @@ func _draw_rally_and_orders() -> void:
 		if u.is_empty() or u["owner"] != local_player:
 			continue
 		var sp := world_to_screen(u["pos"], 0.2)
+		if not Rect2(0, 0, 1920, HUD_TOP).grow(64).has_point(sp):
+			continue
 		if u["is_structure"]:
 			if u["unit_type"] != "silo" and u["unit_type"] != "silo_retracted" and RTSData.get_unit_def(u["unit_type"]).has("trains"):
 				var rp := world_to_screen(u["rally_pos"], 0.2)
+				if not Rect2(0, 0, 1920, HUD_TOP).grow(64).has_point(rp):
+					continue
 				draw_dashed_line(sp, rp, Color(0.98, 0.8, 0.25, 0.8), 1.5, 6.0)
 				draw_line(rp, rp + Vector2(0, -26), Color("#fbbf24"), 2.0)
 				draw_colored_polygon(PackedVector2Array([rp + Vector2(0, -26), rp + Vector2(16, -21), rp + Vector2(0, -15)]), Color("#fbbf24"))

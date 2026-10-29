@@ -3,6 +3,9 @@ extends CanvasLayer
 var briefing: PanelContainer
 var objectives: PanelContainer
 var status_label: Label
+var objective_toggle: Button
+var objective_details: VBoxContainer
+var objectives_collapsed := false
 var results: CanvasLayer
 var results_shown := false
 var update_time := 0.0
@@ -23,10 +26,20 @@ func _ready() -> void:
 	var live = VBoxContainer.new()
 	live.add_theme_constant_override("separation", 6)
 	objectives.add_child(live)
-	status_label = _label(live, "", 18)
+	objective_toggle = Button.new()
+	objective_toggle.focus_mode = Control.FOCUS_NONE
+	objective_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	objective_toggle.pressed.connect(func():
+		objectives_collapsed = not objectives_collapsed
+		_refresh())
+	live.add_child(objective_toggle)
+	objective_details = VBoxContainer.new()
+	objective_details.add_theme_constant_override("separation", 6)
+	live.add_child(objective_details)
+	status_label = _label(objective_details, "", 18)
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	live.add_child(row)
+	objective_details.add_child(row)
 	_button(row, "Select Riflemen", _select_army)
 	_button(row, "Enemy base", _show_enemy)
 	_button(row, "Results [R]", func(): results.reopen())
@@ -112,6 +125,13 @@ func _refresh() -> void:
 	var active = SimEngine.match_state.get("mode", "") == "campaign"
 	briefing.visible = active and SimEngine.match_state.get("status", "") == "briefing"
 	objectives.visible = active and not briefing.visible
+	objective_details.visible = not objectives_collapsed
+	objective_toggle.text = "Show objectives  [+]" if objectives_collapsed else "Hide objectives  [−]"
+	var width := 0.0 if objectives_collapsed else 620.0
+	if objectives.custom_minimum_size.x != width:
+		objectives.custom_minimum_size.x = width
+		# Containers otherwise retain the expanded width after their children hide.
+		objectives.size = Vector2.ZERO
 	if not active:
 		return
 	var rifles = 0

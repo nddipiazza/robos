@@ -1616,6 +1616,28 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "halt":
+			ctype = "stop"
+		if ctype == "resume_build" and target_tag > 0 and u.orders.any(func(order): return order.type == "build" and int(order.get("structure_tag", 0)) == target_tag):
+			accepted += 1
+			continue
+		if u.is_worker and not u.orders.is_empty() and u.orders[0].type == "build" and (not queue or ctype == "hold_position") and ctype != "stop":
+			emit_signal("notice", u.owner, "Worker is building. Use Stop / Halt before assigning another task.", "info")
+			continue
+		if ctype == "resume_build":
+			var site: Dictionary = units.get(target_tag, {})
+			if not u.is_worker or site.is_empty() or not site.is_structure or site.owner != u.owner or site.build_progress >= 1.0 or bool(site.get("auto_summon", false)):
+				continue
+			if not RTSData.get_unit_def(u.unit_type).get("abilities", []).has("build_" + str(site.unit_type)):
+				continue
+			var occupied := false
+			for worker in units.values():
+				if worker.tag != u.tag and worker.orders.any(func(order): return order.type == "build" and int(order.get("structure_tag", 0)) == target_tag):
+					occupied = true
+					break
+			if occupied:
+				emit_signal("notice", u.owner, "That structure already has a builder.", "info")
+				continue
 		# Reject unavailable special abilities before canceling attack animations.
 		if ctype == "phase_step" and (u.unit_type != "skirmisher" or u.phase_cooldown > 0.0):
 			continue
@@ -1777,6 +1799,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			})
 			accepted += 1
 
+		elif ctype == "resume_build":
+			var site: Dictionary = units[target_tag]
+			u.orders.append({"type": "build", "structure_type": site.unit_type, "target_pos": site.pos, "structure_tag": site.tag})
+			accepted += 1
 		elif ctype.begins_with("build_"):
 			var stype = ctype.replace("build_", "")
 			u["orders"].append({

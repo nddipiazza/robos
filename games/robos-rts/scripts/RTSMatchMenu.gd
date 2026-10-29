@@ -4,6 +4,7 @@ var panel: PanelContainer
 var difficulty: OptionButton
 var strategy: OptionButton
 var speed: OptionButton
+var mouse_scroll: HSlider
 var was_paused: bool = false
 
 func _ready() -> void:
@@ -35,6 +36,28 @@ func _ready() -> void:
 	difficulty = _option(box, "AI difficulty", ["Easy", "Normal", "Hard"], 1)
 	strategy = _option(box, "AI strategy", ["Rush", "Balanced", "Economy", "Siege"], 1)
 	speed = _option(box, "Game speed", ["1×", "2×", "4×", "8×"], 0)
+	var mouse_row = HBoxContainer.new()
+	var mouse_label = Label.new()
+	mouse_label.text = "Mouse scroll speed"
+	mouse_label.custom_minimum_size.x = 210
+	mouse_row.add_child(mouse_label)
+	mouse_scroll = HSlider.new()
+	mouse_scroll.min_value = 0
+	mouse_scroll.max_value = 100
+	mouse_scroll.step = 5
+	mouse_scroll.value = get_parent().mouse_scroll_speed
+	mouse_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mouse_scroll.tooltip_text = "Camera speed at the screen edges. 0 disables mouse scrolling. Arrow key speed stays unchanged."
+	mouse_row.add_child(mouse_scroll)
+	var mouse_value = Label.new()
+	mouse_value.custom_minimum_size.x = 50
+	mouse_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	mouse_value.text = "%d%%" % mouse_scroll.value if mouse_scroll.value > 0 else "Off"
+	mouse_row.add_child(mouse_value)
+	mouse_scroll.value_changed.connect(func(value):
+		get_parent().set_mouse_scroll_speed(value)
+		mouse_value.text = "%d%%" % value if value > 0 else "Off")
+	box.add_child(mouse_row)
 	var start = Button.new()
 	start.text = "Start new match"
 	start.pressed.connect(_start)

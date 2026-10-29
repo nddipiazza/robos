@@ -660,7 +660,7 @@ var units: Dictionary = {
 
 var abilities: Dictionary = {
 	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point", "desc": "Move to a location. Units do not stop for enemies on the way."},
-	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none", "desc": "Cancel the current order."},
+	"stop": {"id": "stop", "name": "Stop / Halt", "hotkey": "S", "target": "none", "desc": "Stop and clear orders. Builders pause construction; right-click the unfinished structure to resume."},
 	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies that come into range."},
 	"attack": {"id": "attack", "name": "Attack", "hotkey": "A", "target": "point_or_unit", "desc": "Attack-move to a point, engaging anything met on the way, or focus a single target."},
 	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},

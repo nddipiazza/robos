@@ -179,9 +179,14 @@ func _construction() -> void:
 			if u.unit_type == row[0]:
 				structure = u
 		var before: float = structure.build_progress
-		sim.issue_command([worker.tag], "move", Vector2(20,40))
+		var move_result = sim.issue_command([worker.tag], "move", Vector2(20,40))
 		sim.step_ticks(64)
-		_check(structure.build_progress > before+0.04 if row[1] == "mote" else absf(structure.build_progress-before) < 0.0001, "Mote summons continue independently; Pioneer work stops after order replacement", structure.build_progress-before)
+		_check(move_result.accepted == 1 if row[1] == "mote" else move_result.accepted == 0, "Motes are free after summoning; active builders require explicit Halt before replacement")
+		_check(structure.build_progress > before+0.04, "Selecting or reassigning a builder does not silently stop construction", structure.build_progress-before)
+		sim.issue_command([worker.tag], "halt")
+		before = structure.build_progress
+		sim.step_ticks(64)
+		_check(structure.build_progress > before+0.04 if row[1] == "mote" else absf(structure.build_progress-before) < 0.0001, "Mote summons continue independently; Halt explicitly pauses Pioneer construction", structure.build_progress-before)
 
 func _harvesting() -> void:
 	for faction in ["humans", "monsters", "aliens"]:

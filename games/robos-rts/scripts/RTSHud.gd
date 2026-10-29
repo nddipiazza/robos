@@ -12,6 +12,41 @@ var main: Node2D
 var font: Font
 var draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
+var production_scroll: ScrollContainer
+var production_list: ProductionQueueList
+
+class ProductionQueueList extends Control:
+	var hud: Node2D
+	var producers: Array[Dictionary] = []
+	const ROW_HEIGHT := 72.0
+	func _draw() -> void:
+		var font := ThemeDB.fallback_font
+		var first := maxi(0, int(get_parent().scroll_vertical / ROW_HEIGHT))
+		var last := mini(producers.size(), first + 4)
+		for row in range(first, last):
+			var u: Dictionary = producers[row]
+			var y := row * ROW_HEIGHT
+			draw_rect(Rect2(0, y, size.x, ROW_HEIGHT - 3), Color("#151e29"))
+			draw_string(font, Vector2(10, y + 23), "%s #%d" % [u.name, u.tag], HORIZONTAL_ALIGNMENT_LEFT, 230, 17, Color("#e9eef4"))
+			var queue: Array = u.production_queue
+			var status := "Idle" if u.build_progress >= 1.0 else "Under construction"
+			if not queue.is_empty():
+				status = "Training · %d%%   |   %d queued" % [int(100.0 * queue[0].progress / maxf(0.1, queue[0].total_time)), queue.size() - 1]
+			draw_string(font, Vector2(10, y + 48), status, HORIZONTAL_ALIGNMENT_LEFT, 230, 15, Color("#95a2b3"))
+			for i in range(queue.size()):
+				var item: Dictionary = queue[i]
+				var x := 255.0 + i * 114.0
+				var icon := Rect2(x + 26, y + 4, 44, 44)
+				var tex: Texture2D = hud._icon_for(str(item.unit_type))
+				if tex:
+					draw_texture_rect(tex, icon, false)
+				draw_rect(icon, Color("#e6b83e") if i == 0 else Color("#5b687b"), false, 1.0)
+				var label := str(RTSData.get_unit_def(str(item.unit_type)).name)
+				draw_string(font, Vector2(x, y + 65), label, HORIZONTAL_ALIGNMENT_CENTER, 100, 13, Color("#e9eef4"))
+				if i == 0:
+					var progress := clampf(float(item.progress) / maxf(0.1, item.total_time), 0.0, 1.0)
+					if progress > 0:
+						draw_rect(Rect2(icon.position + Vector2(0, 46), Vector2(44 * progress, 3)), Color("#4ade80"))
 
 class MinimapTerrain extends Node2D:
 	var hud: Node2D
@@ -20,6 +55,17 @@ class MinimapTerrain extends Node2D:
 
 func _ready() -> void:
 	SimEngine.scenario_loaded.connect(_invalidate_minimap)
+	production_scroll = ScrollContainer.new()
+	production_scroll.position = main.SEL_PANEL.position + Vector2(290, 38)
+	production_scroll.size = Vector2(926, 160)
+	production_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	production_scroll.hide()
+	add_child(production_scroll)
+	production_list = ProductionQueueList.new()
+	production_list.hud = self
+	production_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	production_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	production_scroll.add_child(production_list)
 
 func _invalidate_minimap(_scenario_name: String = "") -> void:
 	if _minimap_viewport:
@@ -363,6 +409,8 @@ func selection_cells() -> Array:
 		return ta < tb
 	)
 	var cols := 14
+	if main.is_production_selection():
+		cols = 3
 	for i in range(mini(tags.size(), cols * 2)):
 		var rx: float = main.SEL_PANEL.position.x + 16.0 + float(i % cols) * 86.0
 		var ry: float = main.SEL_PANEL.position.y + 16.0 + float(i / cols) * 86.0
@@ -370,6 +418,12 @@ func selection_cells() -> Array:
 	return cells
 
 func _draw_selection_panel() -> void:
+	var production: bool = main.is_production_selection()
+	production_scroll.visible = production
+	if production:
+		production_list.producers = main.selected_producers()
+		production_list.custom_minimum_size = Vector2(900, production_list.producers.size() * ProductionQueueList.ROW_HEIGHT)
+		production_list.queue_redraw()
 	var sp: Rect2 = main.SEL_PANEL
 	var tags: Array = main.selected_tags
 	if tags.is_empty():
@@ -381,6 +435,11 @@ func _draw_selection_panel() -> void:
 			_draw_single(u)
 		return
 	_draw_multi()
+	if production:
+		var count := 0
+		for producer in production_list.producers:
+			count += producer.production_queue.size()
+		_text(Vector2(main.SEL_PANEL.position.x + 300, main.SEL_PANEL.position.y + 24), "PRODUCTION · %d buildings · %d units training / queued · Scroll to see every queue" % [production_list.producers.size(), count], 17, C_TEXT)
 
 func _draw_multi() -> void:
 	var cells := selection_cells()
@@ -402,7 +461,8 @@ func _draw_multi() -> void:
 			_bar(Rect2(r.position.x + 4, r.end.y - 11, r.size.x - 8, 3), clampf(u["shields"] / u["max_shields"], 0.0, 1.0), Color("#5ab8f5"))
 		_bar(Rect2(r.position.x + 4, r.end.y - 7, r.size.x - 8, 4), ratio, col)
 	if main.selected_tags.size() > cells.size():
-		_text_r(main.SEL_PANEL.end.x - 14, main.SEL_PANEL.end.y - 14, "+%d more" % (main.selected_tags.size() - cells.size()), 15, C_MUTED)
+		var right: float = main.SEL_PANEL.position.x + 272 if main.is_production_selection() else main.SEL_PANEL.end.x - 14
+		_text_r(right, main.SEL_PANEL.end.y - 14, "+%d more" % (main.selected_tags.size() - cells.size()), 15, C_MUTED)
 
 func _order_label(u: Dictionary) -> String:
 	if u["orders"].is_empty():
@@ -729,7 +789,7 @@ func _draw_help() -> void:
 	draw_line(r.position + Vector2(28, 64), r.position + Vector2(r.size.x - 28, 64), C_EDGE_HI, 1.0)
 	var left := [
 		["Left click / drag", "Select units, drag a box for a squad"],
-		["Double click", "Select every unit of that type on screen"],
+		["Double click", "Select all your units or structures of that type"],
 		["Right click", "Move, attack, gather or set a rally point"],
 		["Shift + click", "Queue orders, add to or remove from selection"],
 		["Mouse wheel", "Zoom"],
@@ -738,7 +798,7 @@ func _draw_help() -> void:
 		["Command card", "Click, or press the letter in the corner"],
 	]
 	var right := [
-		["Arrow keys", "Pan the camera"],
+		["Arrow keys / screen edges", "Pan camera; mouse scroll speed in F8 menu"],
 		["Ctrl + 1-9", "Set a control group; press 1-9 to recall"],
 		["Tab", "Cycle the active unit type in a mixed selection"],
 		[".", "Select the next idle worker"],
