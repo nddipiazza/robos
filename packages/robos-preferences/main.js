@@ -529,6 +529,11 @@ ipcMain.handle('cloud-accounts-delete', async (_, accountId) => {
   catch (error) { return { ok: false, error: error.message }; }
 });
 
+ipcMain.handle('cloud-accounts-sign-out', async (_, accountId) => {
+  try { return { ok: true, ...cloudAccountsLib().signOutAccount(accountId) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
 ipcMain.handle('cloud-accounts-set-default', async (_, accountId) => {
   try { return { ok: true, ...cloudAccountsLib().setDefaultAccount(accountId) }; }
   catch (error) { return { ok: false, error: error.message }; }

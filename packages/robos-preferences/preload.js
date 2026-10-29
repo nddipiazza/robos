@@ -3,6 +3,7 @@ contextBridge.exposeInMainWorld('api', {
   cloudAccounts: () => ipcRenderer.invoke('cloud-accounts-list'),
   saveCloudAccount: account => ipcRenderer.invoke('cloud-accounts-save', account),
   deleteCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-delete', accountId),
+  signOutCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-sign-out', accountId),
   setDefaultCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-set-default', accountId),
   verifyCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-verify', accountId),
   startGoogleOAuth: params => ipcRenderer.invoke('cloud-accounts-oauth-google', params),
