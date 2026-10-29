@@ -24,7 +24,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 
 const APP_ID = 'app-mesh';
-const DEBUG_PORT = 19215;
+const DEBUG_PORT = 19216;
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config', 'robos');
 

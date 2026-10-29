@@ -17,7 +17,8 @@ test('getAppPortCatalog returns all registered RobOS IPC and service ports', () 
   assert.ok(catalog.length >= 90, `expected >= 90 ports, got ${catalog.length}`);
   assert.ok(catalog.some(c => c.appId === 'dev-central' && c.port === 19101));
   assert.ok(catalog.some(c => c.appId === 'point-of-sale-register' && c.port === 3410));
-  assert.ok(catalog.some(c => c.appId === 'app-mesh' && c.port === 19215));
+  assert.ok(catalog.some(c => c.appId === 'movie-player-stream' && c.port === 19215));
+  assert.ok(catalog.some(c => c.appId === 'app-mesh' && c.port === 19216));
 });
 
 test('AppMeshEngine runs mTLS 1.3 gateway, rejects untrusted certs, and tunnels IPC ports across two distinct nodes', async () => {
