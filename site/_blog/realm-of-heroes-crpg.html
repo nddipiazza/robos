@@ -1,0 +1,31 @@
+---
+title: "Realm of Heroes cRPG Engine and the Unified RobOS cRPG Editor"
+nav_label: "Realm of Heroes cRPG"
+date: 2026-10-02
+date_label: "Sep 22 – Oct 2, 2026"
+tags:
+  - "Realm of Heroes cRPG"
+  - "Godot 4"
+  - "cRPG Editor"
+summary: "Built an Infinity Engine-inspired tactical cRPG in Godot 4 with 3D miniature combat, socketed equipment, a 22-spell VFX suite, and a unified Electron authoring studio with topological quest trees."
+description: "Built an Infinity Engine-inspired tactical cRPG in Godot 4 with 3D miniature combat, socketed equipment, a 22-spell VFX suite, and a unified Electron authoring studio with topological quest trees."
+og_image: /assets/games/crpg-bg-poster.jpg
+og_image_alt: "Realm of Heroes cRPG tactical party combat in Godot 4"
+---
+<div class="blog-body">
+  <p>We built <strong>Realm of Heroes cRPG</strong> (<code>games/crpg-realm</code>) and consolidated all campaign authoring tools into the unified <strong>RobOS cRPG Editor</strong> (<code>packages/crpg-editor</code>):</p>
+  <ul>
+    <li><strong>Unified cRPG Editor &amp; Topological Quest DAGs:</strong> Features Campaign Studio, a topological Quest Scenario Tree DAG editor with choice-anchored curves and transition triggers, a Story Flow page turner, Spells/Abilities/Item Studios, a first-class Enemies Bestiary, graphical drag-and-drop inventory bags with encumbrance meters, and exported Player Cartridges.</li>
+    <li><strong>3D Miniatures, Equipment Sockets &amp; 22-Spell BDD Suite:</strong> Upgraded characters and monsters to 3D models with dynamic weapon, armor, and shield socket attachment and real-time AC recalculation. Added 3D particle VFX and BDD verification for 22 spells including 8d6 Fireball, Magic Missile, Blizzard (with ground ice and prone slipping), Stinking Cloud, and Invisibility.</li>
+    <li><strong>Elevation, Pathfinding &amp; Playable Campaigns:</strong> Implemented AStarGrid2D pathfinding with string-pulling funnel smoothing, multi-tier house porch and stairs elevation transitions, Infinity Engine social aggro and trap detection, and playable <em>Dragon Warrior 1</em> and <em>Rescue the Princess</em> campaigns.</li>
+  </ul>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/games/crpg-bg-poster.jpg' | relative_url }}" alt="Realm of Heroes cRPG tactical party combat in Godot 4" loading="lazy">
+    <figcaption>Realm of Heroes cRPG in Godot 4 with tactical party formations, 3D miniatures, and spell VFX.</figcaption>
+  </figure>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/crpg/' | relative_url }}">Visit the Realm of Heroes cRPG page →</a>
+  <a href="{{ '/games/crpg/docs/' | relative_url }}">Read the cRPG Creator Guide →</a>
+  <span class="blog-commits">Commits: fe1aeac1 · 9c1f4e3a · 5c683003 · 4c0e52ea · 8d6b7a58</span>
+</div>

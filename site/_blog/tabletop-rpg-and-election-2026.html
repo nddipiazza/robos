@@ -1,0 +1,38 @@
+---
+title: "Tabletop RPG Engine, Two-Layer Map Studio, and the \"Midterm Elections 2026\" Campaign"
+nav_label: "Tabletop RPG & Election 2026"
+date: 2026-10-20 12:00:00 +0000
+date_label: "Oct 1 – Oct 20, 2026"
+tags:
+  - "Godot 4"
+  - "Tabletop RPG"
+  - "Game Authoring"
+summary: "Built a HeroQuest-inspired tactical dungeon crawler in Godot 4, a two-layer blockmap and quest authoring suite, autonomous Mentor-vs-Zargon AI playthrough verification, and a voiced satirical Midterm Elections 2026 campaign pack."
+description: "Built a HeroQuest-inspired tactical dungeon crawler in Godot 4, a two-layer blockmap and quest authoring suite, autonomous Mentor-vs-Zargon AI playthrough verification, and a voiced satirical Midterm Elections 2026 campaign pack."
+og_image: /assets/games/tabletop-bg-poster.jpg
+og_image_alt: "RobOS Tabletop RPG dungeon board with tactical miniatures and HUD"
+---
+<div class="blog-body">
+  <p>To make classic grid-based tabletop dungeon crawlers fast to author and verify, we split level design into two distinct layers and paired them with a deterministic Godot 4 tactical engine (<code>games/tabletop-rpg</code>) and <strong>RobOS Tabletop Studio</strong> (<code>packages/robos-tabletop</code>):</p>
+  <ul>
+    <li><strong>Layer 1 — Tabletop Blockmap Creator (<code>packages/tabletop-blockmap-creator</code>):</strong> Calibrates tile size and X/Y offsets over any board artwork, supports freeform contiguous room painting and corridor geometry, and saves reusable static blockmaps.</li>
+    <li><strong>Layer 2 — Tabletop Quest Map Editor (<code>packages/tabletop-quest-editor</code>):</strong> Places single and 2×1/1×2 double doors, monsters, furniture, traps, secret doors, border stairs, and recursive event/action dialogue triggers. Exports playable <code>.cartridge</code> bundles as well as high-resolution PNG and printable PDF quest sheets.</li>
+    <li><strong>Tactical Rules, Raycasted Fog of War &amp; GPU Optimization:</strong> Implemented authentic raycasted line-of-sight room reveals, permanently visible unreachable non-room tiles, A* monster pathfinding, skull-and-shield combat dice trays, Dwarf trap disarming, parchment treasure cards, and KGraph save-state telemetry—while eliminating a 4-second GPU frame readback stall on turn transitions.</li>
+    <li><strong>Autonomous Playthroughs &amp; Midterm Elections 2026 Pack:</strong> Built an autonomous Mentor Party vs. Zargon AI harness that plays full quests end-to-end and emits an HTML Proof of Viability ledger. Topped it off with the <em>Midterm Elections 2026</em> campaign featuring a Capitol Oval Office blockmap, 24 satirical enemies and spells, multi-headed Hydra bosses, Oval Office intro and victory movies, custom hero tokens, and 40+ situation-specific voice lines across turn start, movement, attack, reaction, and death triggers.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/games/tabletop-bg-poster.jpg' | relative_url }}" alt="RobOS Tabletop RPG dungeon board with tactical miniatures and HUD" loading="lazy">
+      <figcaption>Tactical dungeon crawl in the Godot 4 Tabletop RPG engine with raycasted fog of war.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/games/proof-of-viability/m06_boss_room_breach.jpg' | relative_url }}" alt="Boss room breach captured during an autonomous Mentor vs Zargon playthrough" loading="lazy">
+      <figcaption>Turn-by-turn screenshot evidence from the autonomous Proof of Viability playthrough.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/tabletop-rpg/' | relative_url }}">Explore Tabletop RPG →</a>
+  <a href="{{ '/games/tabletop-rpg/proof-of-viability.html' | relative_url }}">View Proof of Viability report →</a>
+  <span class="blog-commits">Commits: 77aa08b4 · fc5b3838 · 0f14c618 · fe838029 · 8db1de00</span>
+</div>

@@ -1,0 +1,94 @@
+---
+title: "Tablo 4th Gen OTA DVR Integration: HMAC-MD5 LAN Discovery, Live & Recorded Broadcast Thumbnails, Desktop FFmpeg Transcoding, and 65\" Roku TV Playback"
+nav_label: "Tablo OTA DVR & Roku TV"
+date: 2026-10-28
+date_label: "Oct 28, 2026"
+tags:
+  - "RobOS Smart TV Studio (<code>packages/robos-tv</code>)"
+  - "RobOS Movie Player (<code>packages/movie-player</code>)"
+  - "Tablo 4th Gen OTA DVR (<code>192.168.1.55:8887</code>)"
+  - "HMAC-MD5 LAN Auth &amp; Broadcast Thumbnails"
+  - "65&quot; Roku OS SceneGraph &amp; Live FFmpeg Transcoding"
+summary: "<strong>RobOS Smart TV Studio</strong> (<code>packages/robos-tv</code>) and <strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) now integrate natively with <strong>Tablo 4th Gen Over-The-Air (OTA) DVR</strong> appliances (<code>packages/robos-lib/tablo-client.js</code>). Because Tablo provides no official Linux or desktop client and locks its port <code>8887</code> REST API behind per-request <code>HMAC-MD5</code> cryptographic signatures while streaming raw ATSC <code>MPEG-2</code> video and <code>Dolby AC-3</code> audio, RobOS introduces a zero-cloud LAN client and dual-stream bridge on port <code>19210</code>: real-time <code>H.264/AAC</code> fragmented-MP4 transcoding (<code>/api/tablo/stream</code>) for instant desktop playback (including active in-progress recordings like the 2026 World Series), automatic broadcast recording thumbnail acquisition with live <code>ffmpeg</code> frame fallback, and a dedicated 3rd top-level <strong>TABLO DVR</strong> tab on the <strong>65&quot; TCL Roku TV</strong> (<code>192.168.1.15</code>) with direct 60fps hardware HLS playback (<code>/api/tablo/roku.m3u8</code>)."
+description: "RobOS Smart TV Studio (packages/robos-tv) and RobOS Movie Player (packages/movie-player) now integrate natively with Tablo 4th Gen Over-The-Air (OTA) DVR appliances (packages/robos-lib/tablo-client.js). Because Tablo provides no official Linux or desktop client and locks its port 8887 REST API behind per-request HMAC-MD5 cryptographic signatures while streaming raw ATSC MPEG-2 video and Dolby AC-3 audio, RobOS introduces a zero-cloud LAN client and dual-stream bridge on port 19210: real-time H.264/AAC fragmented-MP4 transcoding (/api/tablo/stream) for instant desktop playback (including active in-progress recordings like the 2026 World Series), automatic broadcast recording thumbnail acquisition with live ffmpeg frame fallback, and a dedicated 3rd top-level TABLO DVR tab on the 65\" TCL Roku TV (192.168.1.15) with direct 60fps hardware HLS playback (/api/tablo/roku.m3u8)."
+og_image: /assets/blog/tablo-dvr-roku/tablo-dvr-roku-architecture.jpg
+og_image_alt: "RobOS TV and Movie Player Tablo 4th Gen OTA DVR and 65-inch Roku TV Technical Architecture"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/tablo-dvr-roku/tablo-dvr-roku-architecture.jpg' | relative_url }}" alt="RobOS TV and Movie Player Tablo 4th Gen OTA DVR and 65-inch Roku TV Technical Architecture" loading="lazy">
+    <figcaption><strong>RobOS Tablo 4th Gen OTA DVR &amp; 65&quot; Roku TV architecture:</strong> <code>packages/robos-lib/tablo-client.js</code> signs REST calls to <code>192.168.1.55:8887</code> via <code>HMAC-MD5</code>, caches 16:9 broadcast snapshots (falling back to live <code>ffmpeg -frames:v 1</code> capture for active recordings), and serves both browser-compatible <code>H.264/AAC</code> fMP4 streams and rewritten native Roku <code>MPEG-2/AC-3</code> HLS playlists on port <code>19210</code>.</figcaption>
+  </figure>
+
+  <pre class="mermaid">
+flowchart LR
+  subgraph Tablo["1. Tablo 4th Gen OTA DVR (192.168.1.55:8887)"]
+REST["HMAC-MD5 Signed REST API<br/>/server/info, /recordings/airings, /guide/channels"]
+IMG["Broadcast Image Server (/images/:id)<br/>16:9 Recording Snapshots &amp; Series Cover Art"]
+HLS["OTA Tuner HLS Server (:80/stream/pl.m3u8)<br/>MPEG-2 Video + Dolby AC-3 Audio"]
+  end
+
+  subgraph Engine["2. RobOS Tablo &amp; TV Engine (packages/robos-lib)"]
+TC["tablo-client.js<br/>HMAC-MD5 Auth &amp; Recording Catalog"]
+SNAP["Thumbnail Cache + Live Frame Fallback<br/>~/.cache/robos/tablo-images/ + ffmpeg -frames:v 1"]
+PROXY["Dual Stream Bridge (:19210)<br/>/api/tablo/stream (H.264/AAC fMP4) &amp;<br/>/api/tablo/roku.m3u8 (Native HLS Rewriter)"]
+  end
+
+  subgraph Desktop["3. Desktop Players"]
+STUDIO["RobOS Smart TV Studio (:19206)<br/>Built-in HD Player &amp; Commercial Skip (-15s/+30s/+5m)"]
+MPV["External MPV / VLC<br/>Direct Zero-Transcode HLS"]
+  end
+
+  subgraph LivingRoom["4. 65-Inch TCL Roku TV (192.168.1.15:8060)"]
+ROKUTAB["Row 1 Top Image Tab: TABLO DVR (8)<br/>+ 16:9 Broadcast Thumbnail Hero Frame"]
+ROKUVID["Native Roku SceneGraph Video Node<br/>Direct 60fps MPEG-2 / AC-3 HLS Playback"]
+  end
+
+  REST --> TC
+  IMG --> SNAP
+  HLS --> SNAP
+  HLS --> PROXY
+  TC --> STUDIO
+  TC --> ROKUTAB
+  SNAP --> STUDIO
+  SNAP --> ROKUTAB
+  PROXY --> STUDIO
+  HLS --> MPV
+  PROXY --> ROKUVID
+  </pre>
+
+  <div class="blog-grid-2">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/tablo-dvr-roku/robos-tv-tablo-live-stream.png' | relative_url }}" alt="RobOS Smart TV Studio streaming an active in-progress Tablo DVR recording of the 2026 World Series on 47.1 WMSNFOX alongside 8 DVR recordings with broadcast thumbnails" loading="lazy">
+      <figcaption><strong>RobOS Smart TV Studio — Live &amp; Recorded Tablo OTA DVR:</strong> Streaming an active in-progress broadcast (<em>[LIVE REC] 2026 World Series: Milwaukee Brewers at Tampa Bay Rays</em> on <code>47.1 WMSNFOX</code>) in the built-in HD player with commercial-skip controls (<code>-15s</code>, <code>+30s</code>, <code>+5m</code>), while displaying all 8 DVR recordings with acquired broadcast thumbnails on the right.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/tablo-dvr-roku/roku-cinema-tablo-dvr.png' | relative_url }}" alt="10-Foot Smart TV Cinema+ and Roku TV interface on the TABLO DVR (8) tab showing broadcast recording thumbnails, category cards, and live World Series spotlight" loading="lazy">
+      <figcaption><strong>10-Foot Cinema+ &amp; 65&quot; Roku TV — <code>TABLO DVR (8)</code> Tab:</strong> The 3rd top-level image tab alongside <code>MOVIES (107)</code> and <code>TV SHOWS (48 SERIES)</code>, filtering OTA recordings across <em>All Recordings</em>, <em>NFL &amp; MLB Sports</em>, <em>Series &amp; Episodes</em>, <em>Local News</em>, <em>47.1 WMSNFOX</em>, and <em>15.1 WMTVNBC</em>.</figcaption>
+    </figure>
+  </div>
+
+  <h3>What We Built &amp; Why</h3>
+  <ul>
+    <li><strong>Zero-Cloud <code>HMAC-MD5</code> Tablo 4th Gen Client (<code>packages/robos-lib/tablo-client.js</code>):</strong> Tablo 4th Gen DVRs (model <code>TF1282B-01</code>, firmware <code>2.2.54</code>) expose an HTTP API on port <code>8887</code> that rejects unsigned requests. <code>tablo-client.js</code> implements the canonical 4-line <code>HMAC-MD5</code> request signature (<code>METHOD\nPATH\nMD5(BODY)\nDATE</code>), discovers Tablo units on the LAN, batch-fetches all recording categories (<code>/recordings/sports/events</code>, <code>/recordings/series/episodes</code>, <code>/recordings/movies/airings</code>) and OTA guide channels (<code>/guide/channels</code>), and requests fresh playback tokens via <code>POST /recordings/.../watch</code>.</li>
+    <li><strong>Broadcast Recording Thumbnail Acquisition + Live Frame Capture for Active Recordings:</strong> Completed recordings expose a 16:9 broadcast snapshot (<code>video_details.snapshot_image.image_id</code>) on the Tablo, which RobOS downloads and caches in <code>~/.cache/robos/tablo-images/</code> and bundles as <code>pkg:/images/tablo-&lt;id&gt;.jpg</code> inside the Roku SceneGraph channel. For <strong>in-progress recordings</strong> (<code>state: "recording"</code>, where Tablo sets <code>snapshot_image: null</code> until the broadcast ends), <code>fetchTabloImage()</code> automatically opens the recording's live HLS stream and captures a 640×360 JPEG frame via <code>ffmpeg -frames:v 1</code> so active sports and news recordings immediately display a real broadcast thumbnail on both desktop and the 65&quot; Roku TV.</li>
+    <li><strong>Desktop H.264/AAC Live Transcoding &amp; Electron CSP Fix (<code>packages/robos-lib/tv-engine.js</code>, <code>packages/robos-tv/renderer/index.html</code>):</strong> Over-the-air ATSC broadcasts use <code>MPEG-2</code> video and <code>Dolby AC-3</code> audio, which Chromium's HTML5 <code>&lt;video&gt;</code> element cannot decode natively. The portal server's <code>GET /api/tablo/stream</code> endpoint spawns an ultra-low-latency <code>ffmpeg</code> pipeline (<code>-c:v libx264 -preset ultrafast -tune zerolatency -c:a aac -f mp4 -movflags frag_keyframe+empty_moov+default_base_moof</code>) with seek offset support (<code>?startSec=</code>), and we fixed the renderer's Content-Security-Policy (replacing the invalid <code>http://192.168.*</code> wildcard with standard <code>http: https:</code> scheme sources) so local playback starts immediately.</li>
+    <li><strong>65&quot; Roku OS SceneGraph <code>TABLO DVR</code> Tab &amp; Native 60fps HLS Rewriter (<code>/api/tablo/roku.m3u8</code>):</strong> We expanded Row 1 of the Roku SceneGraph channel (<code>MainScene.xml</code> / <code>MainScene.brs</code>) and the <code>:19210/movie-player</code> portal to 3 top-level image tabs (<code>MOVIES</code>, <code>TV SHOWS</code>, <code>TABLO DVR</code>), added a dedicated 16:9 broadcast thumbnail frame in the Hero Spotlight banner, and built <code>GET /api/tablo/roku.m3u8</code> to dynamically fetch a fresh Tablo watch lease and rewrite relative <code>/stream/seg.ts</code> and <code>/stream/pl_iframe.m3u8</code> URIs to absolute LAN URLs on <code>192.168.1.55:80</code>—allowing the Roku TV's hardware decoder to play 60fps OTA broadcasts directly with zero transcoding.</li>
+  </ul>
+
+  <pre><code># Verify the 22-test Smart TV Studio, Tablo DVR &amp; Roku SceneGraph test suite
+node --test packages/robos-test/tests/robos-tv/unit.test.js
+
+# Query the live Tablo 4th Gen DVR catalog and stream endpoints on :19210
+curl -s http://127.0.0.1:19210/api/tablo | jq '{name: .device.name, ip: .device.ip, recordingsCount: .recordingsCount}'
+curl -sI "http://127.0.0.1:19210/api/tablo/image/205443.jpg?ip=192.168.1.55&amp;port=8887"
+curl -s "http://127.0.0.1:19210/api/tablo/roku.m3u8?path=/recordings/sports/events/205443&amp;ip=192.168.1.55&amp;port=8887"</code></pre>
+
+  <p class="blog-links">
+    <a href="{{ '/movie-player/#tablo-dvr' | relative_url }}">RobOS Movie Player — Tablo OTA DVR Guide →</a>
+    <a href="{{ '/tv/' | relative_url }}">RobOS Smart TV Studio →</a>
+    <a href="https://github.com/nddipiazza/robos/commit/daa42c55">Commit <code>daa42c55</code> (Tablo 4th Gen client &amp; studio UI) →</a>
+    <a href="https://github.com/nddipiazza/robos/commit/0bd051f4">Commit <code>0bd051f4</code> (Roku TV Tablo DVR tab &amp; thumbnails) →</a>
+    <a href="https://github.com/nddipiazza/robos/commit/d4d3db4c">Commit <code>d4d3db4c</code> (Live recording streaming &amp; CSP fix) →</a>
+  </p>
+</div>
