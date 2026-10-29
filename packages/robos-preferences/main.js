@@ -139,6 +139,7 @@ function syncSettingsToKGraph(settings) {
 // Settings schema with defaults and sections
 const SETTINGS_SCHEMA = {
   sections: [
+    { id: 'config_sync', label: 'Config Sync & Sharing', fields: [] },
     { id: 'cloud_accounts', label: 'Cloud Suite Accounts', fields: [] },
     { id: 'github_accounts', label: 'GitHub accounts', fields: [] },
     { id: 'ovpn_accounts', label: 'OpenVPN & VPN Accounts', fields: [] },
@@ -266,8 +267,8 @@ app.whenReady().then(() => {
   try { migrateSettingsFile(); } catch {}
   win = new BrowserWindow({
     title: 'RobOS Preferences',
-    width: 900,
-    height: 620,
+    width: 1180,
+    height: 800,
     minWidth: 600,
     minHeight: 400,
     backgroundColor: '#0d1117',
@@ -441,6 +442,36 @@ function cloudAccountsLib() {
     try { return require(p); } catch {}
   }
   throw new Error('cloud-accounts library is not available.');
+}
+
+// ── Config Sync & Sharing (robos-lib/config-sync) ───────────────────────────
+function configSyncLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'config-sync'),
+    path.resolve(__dirname, '..', 'robos-lib', 'config-sync'),
+    '/usr/local/share/robos/robos-lib/config-sync',
+  ].filter(Boolean)) {
+    try { return require(p); } catch (error) { if (error.code !== 'MODULE_NOT_FOUND') throw error; }
+  }
+  throw new Error('config-sync library is not available.');
+}
+
+// Errors keep their code (CONFLICTS, PASSPHRASE_REQUIRED, WRONG_KIND, ...) so the page can react.
+const CONFIG_SYNC_CALLS = [
+  'getStatus', 'connectVault', 'disconnectVault', 'setVaultCategories', 'planVaultSync', 'applyVaultSync',
+  'previewShare', 'publishShare', 'updateShare', 'grantShare', 'forgetShare',
+  'previewJoin', 'joinShare', 'checkSubscriptions', 'updateSubscription', 'leaveShare',
+  'listRestorePoints', 'restoreRestorePoint',
+];
+for (const name of CONFIG_SYNC_CALLS) {
+  ipcMain.handle(`config-sync:${name}`, async (_, opts) => {
+    try {
+      const result = await configSyncLib()[name](opts || {});
+      return Array.isArray(result) ? { ok: true, items: result } : result;
+    } catch (error) {
+      return { ok: false, error: error.message, code: error.code || null, conflicts: error.conflicts || null };
+    }
+  });
 }
 
 function thunderbirdGoogleLib() {

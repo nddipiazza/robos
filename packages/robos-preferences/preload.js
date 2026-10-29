@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   addOvpnProvider: provider => ipcRenderer.invoke('ovpn-providers-add', provider),
   syncOvpnProfiles: providerId => ipcRenderer.invoke('ovpn-profiles-sync', providerId),
   testOvpnAccount: payload => ipcRenderer.invoke('ovpn-accounts-test', payload),
+  configSync: (call, opts) => ipcRenderer.invoke(`config-sync:${call}`, opts),
   getSchema:     ()        => ipcRenderer.invoke('get-schema'),
   loadSettings:  ()        => ipcRenderer.invoke('load-settings'),
   saveSettings:  (data)    => ipcRenderer.invoke('save-settings', data),

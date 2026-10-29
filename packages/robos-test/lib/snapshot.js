@@ -211,6 +211,7 @@ module.exports = {
   getAllText,
   flatText,
   evalJS,
+  httpPost,
   maximizeWindow,
   evalClick,
   evalType,

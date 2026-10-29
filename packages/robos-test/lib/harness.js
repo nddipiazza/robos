@@ -268,8 +268,10 @@ async function launchApp(appId, scenarioConfig) {
   } catch {}
 
   fs.mkdirSync(RUN_DIR, { recursive: true });
-  const sandboxHome = path.join(RUN_DIR, `test-${appId}-${Date.now()}`);
-  setupHome(sandboxHome, scenarioConfig);
+  // `home` reuses a sandbox home prepared by the test (for example two "machines" that
+  // are opened more than once); `keepHome` leaves it in place when the app is killed.
+  const sandboxHome = scenarioConfig.home || path.join(RUN_DIR, `test-${appId}-${Date.now()}`);
+  if (!scenarioConfig.home) setupHome(sandboxHome, scenarioConfig);
 
   const display = process.env.ROBOS_DISPLAY || process.env.XVFB_DISPLAY || (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1' ? ':99' : (process.env.DISPLAY || ':99'));
   const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', ...(scenarioConfig.electronArgs || [])];
@@ -303,7 +305,7 @@ async function launchApp(appId, scenarioConfig) {
   let stderr = '';
   proc.stderr.on('data', d => stderr += d.toString());
 
-  const app = { proc, port, sandboxHome, pid: proc.pid, stderr: () => stderr };
+  const app = { proc, port, sandboxHome, pid: proc.pid, stderr: () => stderr, keepHome: Boolean(scenarioConfig.home || scenarioConfig.keepHome) };
   _activeApps.add(app);
 
   try {
@@ -347,7 +349,7 @@ async function killApp(app) {
   });
 
   // Clean up sandbox home
-  try { fs.rmSync(app.sandboxHome, { recursive: true, force: true }); } catch {}
+  if (!app.keepHome) try { fs.rmSync(app.sandboxHome, { recursive: true, force: true }); } catch {}
 }
 
 module.exports = { launchApp, killApp, testDelay, setupHome, PORT_MAP, PACKAGES_DIR };
