@@ -470,6 +470,19 @@ ipcMain.on('dismiss-toast', (event) => {
   if (win && !win.isDestroyed()) win.close();
 });
 
+// Hands "open at this place" (action.open, e.g. Preferences → Config Sync → Backup vault)
+// to the app being launched; see robos-lib/open-request.js.
+function writeOpenRequest(action) {
+  if (!action || !action.open || !action.app) return;
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'open-request'),
+    path.resolve(__dirname, '..', 'robos-lib', 'open-request'),
+    '/usr/local/share/robos/robos-lib/open-request',
+  ].filter(Boolean)) {
+    try { require(p).writeOpenRequest(action.app, action.open); return; } catch {}
+  }
+}
+
 ipcMain.on('toast-action', (event, action) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   logTelemetry('TOAST_ACTION', { title: action?.label || 'Action Clicked' }, 'ACTION_EXECUTED', JSON.stringify(action));
@@ -484,6 +497,7 @@ ipcMain.on('toast-action', (event, action) => {
         fs.mkdirSync(path.dirname(reqFile), { recursive: true });
         fs.writeFileSync(reqFile, JSON.stringify({ ...action, timestamp: Date.now() }), 'utf8');
       }
+      writeOpenRequest(action);
       const client = net.connect(sockPath, () => {
         client.write(JSON.stringify({ launch: action.app }));
         client.end();

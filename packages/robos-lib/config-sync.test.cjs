@@ -242,6 +242,123 @@ test('shares over Google Drive: access is enforced, items merge by id, updates a
   }
 });
 
+test('background sync applies one-sided changes, and a conflict or missing key notifies instead of writing', async () => {
+  const auto = require('./config-sync-auto');
+  const vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-auto-'));
+  const m1 = makeHome('auto1', alexFiles(os.tmpdir()));
+  const m2 = makeHome('auto2');
+  const notes = home => { try { return read(home, '.config/robos/notifications.json').filter(n => n.source === auto.SOURCE); } catch { return []; } };
+  const ref = path.join(vaultDir, 'RobOS Config Vault');
+  await sync.connectVault({ homeDir: m1, create: { kind: 'folder', path: vaultDir, name: 'RobOS Config Vault' } });
+  assert.equal((await auto.runAutoSync({ homeDir: m1 })).outcome, 'first-sync-pending', 'the first sync is the user’s choice');
+  await sync.applyVaultSync({ homeDir: m1, strategy: 'use-local' });
+  await sync.connectVault({ homeDir: m2, ref });
+  await sync.applyVaultSync({ homeDir: m2, strategy: 'use-vault' });
+
+  assert.deepEqual(
+    (({ enabled, intervalMinutes, watch }) => ({ enabled, intervalMinutes, watch }))(sync.getVault({ homeDir: m2 }).auto),
+    { enabled: true, intervalMinutes: 5, watch: true }, 'on by default, every 5 minutes');
+  assert.equal((await auto.runAutoSync({ homeDir: m2 })).outcome, 'up-to-date');
+
+  // An edit on machine 1 reaches machine 2 with no one clicking Sync.
+  fs.writeFileSync(path.join(m1, '.config/robos/movie-playlists.json'), JSON.stringify([{ id: 'pl1', name: 'Friday night' }, { id: 'pl2', name: 'Road trip' }]));
+  const pushed = await auto.runAutoSync({ homeDir: m1 });
+  assert.equal(pushed.outcome, 'synced');
+  assert.deepEqual(pushed.pushed, ['config/movie-playlists.json']);
+  const pulled = await auto.runAutoSync({ homeDir: m2 });
+  assert.deepEqual([pulled.outcome, pulled.pulled], ['synced', ['config/movie-playlists.json']]);
+  assert.ok(pulled.restorePointId, 'background pulls save a restore point too');
+  assert.equal(read(m2, '.config/robos/movie-playlists.json')[1].name, 'Road trip');
+
+  // Both machines change settings.json: machine 2 writes nothing and gets one notification.
+  fs.writeFileSync(path.join(m1, '.config/robos/settings.json'), JSON.stringify({ default_ide: 'zed' }));
+  assert.equal((await auto.runAutoSync({ homeDir: m1 })).outcome, 'synced');
+  fs.writeFileSync(path.join(m2, '.config/robos/settings.json'), JSON.stringify({ default_ide: 'helix' }));
+  fs.writeFileSync(path.join(m1, '.config/robos/ai-provider.json'), JSON.stringify({ active: 'codex' }));
+  assert.equal((await auto.runAutoSync({ homeDir: m1 })).outcome, 'synced');
+  const conflict = await auto.runAutoSync({ homeDir: m2 });
+  assert.equal(conflict.outcome, 'conflicts');
+  assert.equal(read(m2, '.config/robos/settings.json').default_ide, 'helix', 'the local edit is untouched');
+  assert.equal(exists(m2, '.config/robos/ai-provider.json') && read(m2, '.config/robos/ai-provider.json').active, false, 'nothing else is applied while a conflict is open');
+  assert.deepEqual((await sync.planVaultSync({ homeDir: m1 })).actions, [], 'the vault is not overwritten');
+  let n = notes(m2);
+  assert.equal(n.length, 1);
+  assert.equal(n[0].title, 'Config Sync needs you: 1 conflict');
+  assert.match(n[0].body, /settings\.json/);
+  assert.deepEqual(n[0].action, { type: 'open-app', app: 'robos-preferences', label: 'Review in Preferences', open: { section: 'config_sync', tab: 'vault', reason: 'conflicts' } });
+  assert.equal(sync.getVault({ homeDir: m2 }).auto.attention.kind, 'conflicts');
+  assert.equal((await auto.runAutoSync({ homeDir: m2 })).notified, false, 'the same conflict is not announced twice');
+  assert.equal(notes(m2).length, 1);
+
+  // Resolving in Preferences clears it.
+  await sync.applyVaultSync({ homeDir: m2, resolutions: { 'config/settings.json': 'local' } });
+  assert.deepEqual(auto.clearAttention({ homeDir: m2 }), { ok: true, cleared: true });
+  assert.equal(notes(m2)[0].read, true);
+  assert.equal(sync.getVault({ homeDir: m2 }).auto.attention, null);
+  assert.equal(read(m2, '.config/robos/ai-provider.json').active, 'codex');
+
+  // Machine 1 picks up the version Alex kept.
+  assert.deepEqual((await auto.runAutoSync({ homeDir: m1 })).pulled, ['config/settings.json']);
+  assert.equal(read(m1, '.config/robos/settings.json').default_ide, 'helix');
+
+  // Off means off; intervals are a fixed set.
+  sync.setAutoSync({ homeDir: m2, enabled: false });
+  fs.writeFileSync(path.join(m1, '.config/robos/settings.json'), JSON.stringify({ default_ide: 'vscode' }));
+  assert.equal((await auto.runAutoSync({ homeDir: m1 })).outcome, 'synced');
+  assert.equal((await auto.runAutoSync({ homeDir: m2 })).outcome, 'disabled');
+  assert.equal(read(m2, '.config/robos/settings.json').default_ide, 'helix');
+  assert.throws(() => sync.setAutoSync({ homeDir: m2, intervalMinutes: 7 }), err => err.code === 'BAD_INTERVAL');
+  sync.setAutoSync({ homeDir: m2, enabled: true, intervalMinutes: 15 });
+  assert.equal(sync.getVault({ homeDir: m2 }).auto.intervalMinutes, 15);
+
+  // Preferences and the background never sync at the same time.
+  fs.writeFileSync(path.join(m2, '.config/robos/config-sync/sync.lock'), String(process.pid));
+  assert.equal((await auto.runAutoSync({ homeDir: m2 })).outcome, 'busy');
+  await assert.rejects(sync.applyVaultSync({ homeDir: m2 }), err => err.code === 'BUSY');
+  fs.writeFileSync(path.join(m2, '.config/robos/config-sync/sync.lock'), '999999999');
+  assert.equal((await auto.runAutoSync({ homeDir: m2 })).outcome, 'synced', 'a lock left by a dead process is taken over');
+  assert.equal(read(m2, '.config/robos/settings.json').default_ide, 'vscode');
+});
+
+test('background sync of an encrypted vault without a stored key asks for the passphrase', async () => {
+  const auto = require('./config-sync-auto');
+  const vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-auto-enc-'));
+  const m1 = makeHome('autoenc', { '.config/robos/settings.json': { a: 1 } });
+  await sync.connectVault({ homeDir: m1, create: { kind: 'folder', path: vaultDir, name: 'v' }, passphrase: 'pw' });
+  await sync.applyVaultSync({ homeDir: m1 });
+  fs.rmSync(path.join(m1, '.config/robos/config-sync/keys.json'));
+  const r = await auto.runAutoSync({ homeDir: m1 });
+  assert.equal(r.outcome, 'locked');
+  const n = read(m1, '.config/robos/notifications.json');
+  assert.equal(n[0].title, 'Config Sync needs you: vault passphrase');
+  assert.equal(n[0].action.open.reason, 'locked');
+});
+
+test('startAutoSync syncs at login and soon after a backed-up file changes', async () => {
+  const auto = require('./config-sync-auto');
+  const vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-loop-'));
+  const m1 = makeHome('loop', { '.config/robos/settings.json': { a: 1 }, '.config/robos/movie-playlists.json': [] });
+  await sync.connectVault({ homeDir: m1, create: { kind: 'folder', path: vaultDir, name: 'v' } });
+  await sync.applyVaultSync({ homeDir: m1 });
+  fs.writeFileSync(path.join(m1, '.config/robos/settings.json'), JSON.stringify({ a: 2 }));
+  const gen = () => sync.getVault({ homeDir: m1 }).lastGeneration;
+  const until = async (fn, ms = 5000) => { const t = Date.now(); while (!fn()) { if (Date.now() - t > ms) throw new Error('timed out'); await new Promise(r => setTimeout(r, 25)); } };
+  const loop = auto.startAutoSync({ homeDir: m1, loginDelayMs: 50, debounceMs: 150, intervalMs: 60000 });
+  try {
+    await until(() => gen() === 2);
+    assert.equal(sync.getVault({ homeDir: m1 }).auto.lastOutcome, 'synced', 'the login run pushed the pending edit');
+    await new Promise(r => setTimeout(r, 1600)); // past the quiet period after our own writes
+    fs.writeFileSync(path.join(m1, '.config/robos/movie-playlists.json'), JSON.stringify([{ id: 'x' }]));
+    await until(() => gen() === 3);
+    // Files that are never backed up (logs, caches, notifications) do not start a sync.
+    const runs = sync.getVault({ homeDir: m1 }).auto.lastRunAt;
+    fs.writeFileSync(path.join(m1, '.config/robos/notifications.json'), '[]');
+    fs.writeFileSync(path.join(m1, '.config/robos/x-cache.json'), '{}');
+    await new Promise(r => setTimeout(r, 500));
+    assert.equal(sync.getVault({ homeDir: m1 }).auto.lastRunAt, runs);
+  } finally { loop.stop(); }
+});
+
 test('the catalog puts unknown app files in "other" and excludes caches, logs and machine identity', () => {
   assert.equal(sync.categoryOf('config/brand-new-app.json'), 'other');
   assert.equal(sync.categoryOf('config/git-projects.json'), 'developer');

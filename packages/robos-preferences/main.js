@@ -297,9 +297,25 @@ app.on('second-instance', () => {
     if (win.isMinimized?.()) win.restore();
     win.show();
     win.focus();
-    win.webContents?.send('show-github-accounts');
+    // A notification that opened Preferences at a place (open-request) wins over the default.
+    if (hasOpenRequest()) win.webContents?.send('open-request');
+    else win.webContents?.send('show-github-accounts');
   }
 });
+
+// ── Open requests (robos-lib/open-request): "open Config Sync → Backup vault" ──
+function openRequestLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'open-request'),
+    path.resolve(__dirname, '..', 'robos-lib', 'open-request'),
+    '/usr/local/share/robos/robos-lib/open-request',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
+function hasOpenRequest() { return fs.existsSync(path.join(CONFIG_DIR, 'open-requests', 'robos-preferences.json')); }
+ipcMain.handle('take-open-request', () => openRequestLib()?.takeOpenRequest('robos-preferences') || null);
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
@@ -456,9 +472,20 @@ function configSyncLib() {
   throw new Error('config-sync library is not available.');
 }
 
+function configSyncAutoLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'config-sync-auto'),
+    path.resolve(__dirname, '..', 'robos-lib', 'config-sync-auto'),
+    '/usr/local/share/robos/robos-lib/config-sync-auto',
+  ].filter(Boolean)) {
+    try { return require(p); } catch (error) { if (error.code !== 'MODULE_NOT_FOUND') throw error; }
+  }
+  return null;
+}
+
 // Errors keep their code (CONFLICTS, PASSPHRASE_REQUIRED, WRONG_KIND, ...) so the page can react.
 const CONFIG_SYNC_CALLS = [
-  'getStatus', 'connectVault', 'disconnectVault', 'setVaultCategories', 'planVaultSync', 'applyVaultSync',
+  'getStatus', 'connectVault', 'disconnectVault', 'setVaultCategories', 'setAutoSync', 'planVaultSync', 'applyVaultSync',
   'previewShare', 'publishShare', 'updateShare', 'grantShare', 'forgetShare',
   'previewJoin', 'joinShare', 'checkSubscriptions', 'updateSubscription', 'leaveShare',
   'listRestorePoints', 'restoreRestorePoint',
@@ -467,6 +494,8 @@ for (const name of CONFIG_SYNC_CALLS) {
   ipcMain.handle(`config-sync:${name}`, async (_, opts) => {
     try {
       const result = await configSyncLib()[name](opts || {});
+      // A sync from here settles what background sync was waiting on ("Config Sync needs you").
+      if (name === 'applyVaultSync') { try { configSyncAutoLib()?.clearAttention({}); } catch {} }
       return Array.isArray(result) ? { ok: true, items: result } : result;
     } catch (error) {
       return { ok: false, error: error.message, code: error.code || null, conflicts: error.conflicts || null };

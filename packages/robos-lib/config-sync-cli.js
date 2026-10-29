@@ -10,6 +10,8 @@
  *   node config-sync-cli.js vault connect <drive-folder-url|id|path> [--account <id>]
  *   node config-sync-cli.js vault plan [--use-vault|--use-local|--merge]
  *   node config-sync-cli.js vault sync [--use-vault|--use-local|--merge] [--keep local|remote] [--watch <seconds>]
+ *   node config-sync-cli.js vault auto [on|off] [--every 1|5|15|30|60] [--watch on|off]
+ *   node config-sync-cli.js vault auto run        one background pass: applies only a plan without conflicts
  *   node config-sync-cli.js vault disconnect
  *   node config-sync-cli.js share publish --name <n> --template family|onboarding|coworker|custom
  *                                         [--categories a,b] [--to a@x.com,b@y.com] (--account <id> | --folder <dir>)
@@ -24,6 +26,7 @@
  */
 
 const sync = require('./config-sync');
+const auto = require('./config-sync-auto');
 const { SHARE_TEMPLATES } = require('./config-sync-catalog');
 
 function parseArgs(argv) {
@@ -98,6 +101,27 @@ async function main() {
         try { await run(); } catch (err) { console.error(`${new Date().toISOString()} ${err.code || 'ERROR'}: ${err.message}`); }
         await new Promise(r => setTimeout(r, every));
       }
+    }
+    if (sub === 'auto') {
+      if (arg === 'run') {
+        const r = await auto.runAutoSync({ force: true });
+        return out(r, () => {
+          console.log(`Background sync: ${r.outcome}${r.outcome === 'synced' ? ` ↑${r.pushed.length} ↓${r.pulled.length} ✕${r.deleted.length}` : ''}${r.error ? ` — ${r.error}` : ''}`);
+          for (const c of r.conflicts || []) console.log(`  ⚠ ${c.rel} — run "vault sync --keep local|remote" or review in Preferences`);
+        });
+      }
+      const patch = {};
+      if (arg === 'on' || arg === 'off') patch.enabled = arg === 'on';
+      if (flags.every) patch.intervalMinutes = Number(flags.every);
+      if (flags.watch === 'on' || flags.watch === 'off') patch.watch = flags.watch === 'on';
+      const v = Object.keys(patch).length ? sync.setAutoSync(patch).vault : sync.getVault();
+      if (!v) throw new Error('Connect a backup vault first.');
+      return out(v.auto, () => {
+        const a = v.auto;
+        console.log(a.enabled ? `Sync automatically: on, every ${a.intervalMinutes} min${a.watch ? ' and soon after a change' : ''}.` : 'Sync automatically: off.');
+        if (a.lastRunAt) console.log(`Last background sync ${a.lastRunAt}: ${a.lastOutcome}${a.lastError ? ` — ${a.lastError}` : ''}`);
+        if (a.attention) console.log(`Needs you: ${a.attention.kind}${a.attention.rels.length ? ` (${a.attention.rels.join(', ')})` : ''}`);
+      });
     }
     if (sub === 'disconnect') return out(sync.disconnectVault(), () => console.log('Disconnected. The vault folder was left as it is.'));
   }

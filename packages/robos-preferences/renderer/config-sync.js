@@ -62,6 +62,22 @@ async function loadConfigSync() {
   document.querySelectorAll('[data-cs-tab]').forEach(b => { b.onclick = () => csShowTab(b.dataset.csTab); });
   await csRefresh();
   csSay('');
+  window.api.onOpenRequest?.(() => csTakeOpenRequest());
+  await csTakeOpenRequest();
+}
+
+// A notification ("Config Sync needs you") opened Preferences here: show that tab, and the conflicts.
+async function csTakeOpenRequest() {
+  const req = await window.api.takeOpenRequest?.();
+  if (!req || req.section !== 'config_sync') return;
+  cs.tab = req.tab || 'vault';
+  await csRefresh();
+  document.getElementById('sidebar-item-config_sync')?.click();
+  document.getElementById('section-config_sync')?.scrollIntoView({ block: 'start' });
+  if (cs.tab === 'vault' && cs.status.vault?.auto?.attention?.kind === 'conflicts') {
+    await csLoadPlan();
+    csSay('Background sync stopped because these files changed on this machine and in the vault. Choose which version to keep, then apply.', 'error');
+  }
 }
 
 async function csRefresh() {
@@ -147,6 +163,7 @@ function csVaultPanel() {
         <button type="button" class="btn" id="cs-disconnect">${cs.armed === 'disconnect' ? 'Click again to disconnect' : 'Disconnect'}</button>
       </div>
     </div>
+    ${csAutoView(v)}
     <div id="cs-plan">${cs.plan ? csPlanView(cs.plan) : ''}</div>
     <details class="cs-cats" ${cs.plan ? '' : 'open'}>
       <summary>What is backed up — ${enabled.size} of ${cats.length} categories</summary>
@@ -156,6 +173,31 @@ function csVaultPanel() {
       </div>
       <p class="cs-muted cs-small">Never copied: sign-in tokens, passwords and API keys, the Private Network machine key, caches, logs and downloaded media.</p>
     </details>`;
+}
+
+const CS_OUTCOME = {
+  'up-to-date': 'up to date', synced: 'synced', conflicts: 'paused for conflicts', locked: 'needs the vault passphrase',
+  access: 'could not open the vault', error: 'failed, will retry', 'first-sync-pending': 'waiting for the first sync',
+};
+
+function csAutoView(v) {
+  const a = v.auto || {};
+  const att = a.attention;
+  const headline = !att ? '' : att.kind === 'conflicts' ? `Background sync is paused: ${att.count} conflict${att.count > 1 ? 's' : ''}`
+    : att.kind === 'locked' ? 'Background sync is paused: the vault needs its passphrase' : 'Background sync is paused: the vault cannot be opened';
+  const detail = !att ? '' : att.kind === 'conflicts' ? `${att.rels.map(r => r.split('/').pop()).join(', ')} changed on this machine and in the vault. Review changes, choose which version to keep and apply; background sync then resumes.`
+    : att.kind === 'locked' ? 'This machine has no key for the encrypted vault. Disconnect and connect again with the passphrase.' : att.message;
+  const last = !a.enabled ? 'Off: this machine syncs only when you click Sync now.'
+    : !v.lastSyncAt ? 'Starts after the first sync.'
+    : a.lastRunAt ? `Last background sync ${csAgo(a.lastRunAt)}: ${CS_OUTCOME[a.lastOutcome] || a.lastOutcome}${a.lastOutcome === 'error' && a.lastError ? ` (${a.lastError})` : ''}.` : 'No background sync yet.';
+  return `${att ? `<div class="cs-attention" id="cs-attention" role="alert"><strong>${csEsc(headline)}</strong><span class="cs-small">${csEsc(detail)}</span></div>` : ''}
+    <div class="cs-auto" id="cs-auto">
+      <label><input type="checkbox" id="cs-auto-enabled" ${a.enabled ? 'checked' : ''}> <strong>Sync automatically</strong></label>
+      <label>every <select id="cs-auto-interval" class="select-input" ${a.enabled ? '' : 'disabled'}>${[1, 5, 15, 30, 60].map(n => `<option value="${n}" ${a.intervalMinutes === n ? 'selected' : ''}>${n === 60 ? '1 hour' : `${n} min`}</option>`).join('')}</select></label>
+      <label><input type="checkbox" id="cs-auto-watch" ${a.watch ? 'checked' : ''} ${a.enabled ? '' : 'disabled'}> and soon after a change</label>
+      <div class="cs-muted cs-small cs-auto-note" id="cs-auto-last">${csEsc(last)}</div>
+      <p class="cs-muted cs-small">RobOS syncs at login and in the background, even with Preferences closed. Changes made on one side only are applied for you; when a file changed both here and in the vault, nothing is overwritten and you get a notification.</p>
+    </div>`;
 }
 
 const CS_ACTION = {
@@ -292,6 +334,17 @@ const csBind = {
       await csCall('disconnectVault'); cs.plan = null; await csRefresh(); csSay('Disconnected. The vault folder is still in your cloud storage.');
     });
     document.getElementById('cs-apply')?.addEventListener('click', csApply);
+    const setAuto = async patch => {
+      const r = await csCall('setAutoSync', patch);
+      if (!r.ok) return csSay(r.error, 'error');
+      cs.status.vault = r.vault;
+      csRender();
+      const a = r.vault.auto;
+      csSay(a.enabled ? `✓ Syncs automatically every ${a.intervalMinutes === 60 ? 'hour' : `${a.intervalMinutes} min`}${a.watch ? ' and soon after a change' : ''}.` : 'Automatic sync is off.', 'good');
+    };
+    document.getElementById('cs-auto-enabled').onchange = e => setAuto({ enabled: e.target.checked });
+    document.getElementById('cs-auto-interval').onchange = e => setAuto({ intervalMinutes: Number(e.target.value) });
+    document.getElementById('cs-auto-watch').onchange = e => setAuto({ watch: e.target.checked });
     document.querySelectorAll('input[name="cs-strategy"]').forEach(r => { r.onchange = () => { cs.resolutions = {}; csLoadPlan(r.value); }; });
     document.querySelectorAll('[data-cs-res]').forEach(r => { r.onchange = () => { cs.resolutions[r.dataset.csRes] = r.value; csRender(); }; });
     document.querySelectorAll('[data-cs-vault-cat]').forEach(cb => {

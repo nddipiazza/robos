@@ -16,7 +16,7 @@ The Toast Daemon turns entries in `~/.config/robos/notifications.json` into on-s
 - **Stack.** Up to 5 toasts are visible (default), 380 px wide, in a corner chosen in settings (default `top-right`).
 - **Do Not Disturb.** Non-critical toasts are suppressed. Critical, security and sticky ones are queued and shown when DND ends.
 - **Quiet hours** (default 22:00 to 07:00, off by default) and an **anti-spam** limiter: a 30 second cooldown for repeats, at most 4 toasts per 10 seconds, and dropping exact duplicates. Critical and security alerts bypass the limiter by default.
-- A toast with an `open-app` action asks the desktop manager to launch that app, through the socket named by `ROBOS_DM_SOCKET` or `/tmp/robos-dm-<uid>.sock`.
+- A toast with an `open-app` action asks the desktop manager to launch that app, through the socket named by `ROBOS_DM_SOCKET` or `/tmp/robos-dm-<uid>.sock`. If the action has an `open` object (for example `{ "section": "config_sync", "tab": "vault" }`), it is first written to `~/.config/robos/open-requests/<app>.json` (`robos-lib/open-request.js`) so the app opens at that place; RobOS Preferences reads it when it starts or comes to the front.
 
 The delivery-mode setting (**Smart Dual**, **RobOS Rich Toasts Only**, **Ubuntu GNOME Native Only**, **Both Always**) only controls whether this daemon shows its overlay. In native-only mode it suppresses overlay toasts. The daemon does not itself send GNOME notifications; `robos-notify` does that with `notify-send` when it is installed.
 
