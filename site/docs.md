@@ -59,8 +59,8 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
         <p><a href="{{ '/v1/agent-review-development.html' | relative_url }}">Overview</a>, <a href="{{ '/code-review/' | relative_url }}">Code Review guide</a>, <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater reference</a>, <a href="{{ '/v1/walkthroughs.html' | relative_url }}">Walkthroughs and proof of work</a>, <a href="{{ '/v1/agent-tiers.html' | relative_url }}">Agent tiers</a>, <a href="{{ '/security/' | relative_url }}">Security &amp; isolation proofs</a></p>
       </div>
       <div class="h-index-row">
-        <h3>Security &amp; VPN isolation</h3>
-        <p><a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Zero-Leak OpenVPN App Sandbox &amp; Kill-Switch Proof</a>, <a href="{{ '/v1/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox</a>, <a href="{{ '/v1/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers</a>, <a href="{{ '/v1/apps/pass-manager/' | relative_url }}">Pass Manager Vault</a></p>
+        <h3>Security, P2P Mesh &amp; VPN isolation</h3>
+        <p><a href="{{ '/p2p/' | relative_url }}">Zero-Trust P2P App Mesh &amp; Cross-PC Movie Streaming</a>, <a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Zero-Leak OpenVPN App Sandbox &amp; Kill-Switch Proof</a>, <a href="{{ '/v1/apps/app-mesh/' | relative_url }}">RobOS App Mesh</a>, <a href="{{ '/v1/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox</a>, <a href="{{ '/v1/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers</a>, <a href="{{ '/v1/apps/pass-manager/' | relative_url }}">Pass Manager Vault</a></p>
       </div>
       <div class="h-index-row">
         <h3>Build on RobOS</h3>

@@ -88,6 +88,14 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
           <p>100,000-film &amp; TV series home theater with TMDB/TVmaze posters, Show &amp; Season Navigator, synced <code>.srt</code>/<code>.vtt</code> subtitles, AI Watchlists, Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku app.</p>
         </div>
       </a>
+      <a class="card app-card" href="{{ '/p2p/' | relative_url }}" data-s="robos app mesh p2p zero trust mtls openziti tailscale headscale netbird wireguard cross machine ipc bridge movie streaming">
+        <img src="{{ '/v1/assets/images/icons/app-mesh.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <div>
+          <h3>RobOS App Mesh (Zero-Trust P2P)</h3>
+          <code class="app-pkg">P2P &amp; Streaming Guide · /p2p/</code>
+          <p>Provider-agnostic Zero-Trust App &amp; IPC Port Mesh (built-in mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard) to bridge RobOS app ports and stream 1080p/4K movies across PCs.</p>
+        </div>
+      </a>
     </div>
   </div>
 
