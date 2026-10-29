@@ -875,22 +875,36 @@ function createAppMeshEngine(options = {}) {
       const onOutput = (chunk) => {
         const text = chunk.toString('utf8');
         const match = text.match(/https:\/\/([a-z0-9-]+\.lhr\.life)/i);
-        if (match && !settled) {
-          settled = true;
-          clearTimeout(timer);
-          wanRelayUrl = `wss://${match[1]}`;
-          recordAudit({
-            type: 'WAN_RELAY_STARTED',
-            severity: 'success',
-            detail: `Cross-Network Zero-Trust WAN Relay active at ${wanRelayUrl} -> 127.0.0.1:${gatewayListeningPort} (Mutual TLS 1.3)`,
-          });
-          resolve({ ok: true, relayUrl: wanRelayUrl, upgradePort: upgradeBridgePort });
+        if (match) {
+          const nextRelayUrl = `wss://${match[1]}`;
+          const changed = wanRelayUrl !== nextRelayUrl;
+          wanRelayUrl = nextRelayUrl;
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            recordAudit({
+              type: 'WAN_RELAY_STARTED',
+              severity: 'success',
+              detail: `Cross-Network Zero-Trust WAN Relay active at ${wanRelayUrl} -> 127.0.0.1:${gatewayListeningPort} (Mutual TLS 1.3)`,
+            });
+            resolve({ ok: true, relayUrl: wanRelayUrl, upgradePort: upgradeBridgePort });
+          } else if (changed) {
+            recordAudit({
+              type: 'WAN_RELAY_ROTATED',
+              severity: 'info',
+              detail: `Cross-Network WAN Relay rotated to ${wanRelayUrl}`,
+            });
+            if (typeof opts.onRelayUpdate === 'function') {
+              try { opts.onRelayUpdate(wanRelayUrl); } catch {}
+            }
+          }
         }
       };
 
       proc.stdout.on('data', onOutput);
       proc.stderr.on('data', onOutput);
       proc.once('exit', () => {
+        const shouldRespawn = settled && wanRelayProc === proc && opts.autoRespawn !== false;
         if (wanRelayProc === proc) {
           wanRelayProc = null;
           wanRelayUrl = null;
@@ -899,6 +913,16 @@ function createAppMeshEngine(options = {}) {
           settled = true;
           clearTimeout(timer);
           reject(new Error('SSH WAN Relay process exited unexpectedly'));
+        } else if (shouldRespawn) {
+          setTimeout(() => {
+            if (!wanRelayProc && upgradeBridgeServer && upgradeBridgeServer.listening) {
+              startWanRelay(opts).then((info) => {
+                if (info && info.relayUrl && typeof opts.onRelayUpdate === 'function') {
+                  try { opts.onRelayUpdate(info.relayUrl); } catch {}
+                }
+              }).catch(() => {});
+            }
+          }, 1500);
         }
       });
       proc.once('error', (err) => {

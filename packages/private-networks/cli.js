@@ -68,7 +68,8 @@ async function ensureLocalVideoStreamServer(customVideoPath) {
     return { startedStandalone: false, port: 19215 };
   }
 
-  const CastService = require('../movie-player/lib/cast-service');
+  const CastServiceMod = require('../movie-player/lib/cast-service');
+  const CastService = CastServiceMod.CastService || CastServiceMod;
   const tracks = findSampleVideos(customVideoPath);
   const cast = new CastService(() => tracks);
   for (const t of tracks) {
@@ -94,21 +95,60 @@ function fetchJson(url, timeoutMs = 4000) {
 }
 
 async function runHost(args) {
+  let customVideo = null;
+  const vIdx = args.indexOf('--video');
+  if (vIdx !== -1 && args[vIdx + 1]) {
+    customVideo = args[vIdx + 1];
+  }
+
+  const streamSrv = await ensureLocalVideoStreamServer(customVideo);
+  if (streamSrv.startedStandalone) {
+    console.log(`[RobOS Private Networks] Started local Movie Player stream server on 127.0.0.1:${streamSrv.port} (${streamSrv.tracksCount} video(s) ready)`);
+  } else {
+    console.log(`[RobOS Private Networks] Detected running RobOS Movie Player stream server on 127.0.0.1:19215`);
+  }
+
   const mesh = createAppMeshEngine({ configDir: CONFIG_DIR });
   await mesh.startGateway();
+
+  const saveLiveInvite = async (relayUrl) => {
+    try {
+      const s = await mesh.getStatusSnapshot();
+      fs.mkdirSync(MOVIE_CFG_DIR, { recursive: true });
+      fs.writeFileSync(path.join(CONFIG_DIR, 'app-mesh', 'live-invite.json'), JSON.stringify({
+        updatedAt: new Date().toISOString(),
+        nodeId: s.identity.nodeId,
+        nodeName: s.identity.nodeName,
+        fingerprint: s.identity.fingerprint,
+        relayUrl: relayUrl || s.wanRelay?.relayUrl || null,
+        netToken: s.enrollment.netToken,
+      }, null, 2));
+      return s;
+    } catch {
+      return null;
+    }
+  };
 
   const noWan = args.includes('--lan-only');
   let relayInfo = null;
   if (!noWan) {
     console.log('[RobOS Private Networks] Allocating Cross-Network Zero-Trust WAN Relay (mTLS 1.3 over SSH Upgrade)...');
     try {
-      relayInfo = await mesh.startWanRelay();
+      relayInfo = await mesh.startWanRelay({
+        onRelayUpdate: async (newRelayUrl) => {
+          const updatedSnap = await saveLiveInvite(newRelayUrl);
+          if (updatedSnap) {
+            console.log(`\n[RobOS Private Networks] WAN Relay refreshed: ${newRelayUrl}`);
+            console.log(`  Updated Invite Token:\n  ${updatedSnap.enrollment.netToken}\n`);
+          }
+        },
+      });
     } catch (err) {
       console.warn('[RobOS Private Networks] WAN relay warning (falling back to LAN/Overlay IP):', err.message);
     }
   }
 
-  const snap = await mesh.getStatusSnapshot();
+  const snap = (await saveLiveInvite(relayInfo ? relayInfo.relayUrl : null)) || (await mesh.getStatusSnapshot());
   const netToken = snap.enrollment.netToken;
 
   console.log('\n================================================================================');
@@ -124,31 +164,28 @@ async function runHost(args) {
   console.log('  PRIVATE NETWORK INVITE TOKEN (robos-net://):');
   console.log(`\n  ${netToken}\n`);
   console.log('--------------------------------------------------------------------------------');
-  console.log('  RUN THIS COMMAND ON BOX A TO LINK NETWORK A <-> NETWORK B & STREAM VIDEO:');
+  console.log('  RUN THIS COMMAND ON REMOTE PEER TO LINK NETWORK A <-> NETWORK B & STREAM VIDEO:');
   console.log(`\n  node packages/private-networks/cli.js join "${netToken}"\n`);
   console.log('================================================================================\n');
-
-  try {
-    fs.mkdirSync(MOVIE_CFG_DIR, { recursive: true });
-    fs.writeFileSync(path.join(CONFIG_DIR, 'app-mesh', 'live-invite.json'), JSON.stringify({
-      updatedAt: new Date().toISOString(),
-      nodeId: snap.identity.nodeId,
-      nodeName: snap.identity.nodeName,
-      fingerprint: snap.identity.fingerprint,
-      relayUrl: relayInfo ? relayInfo.relayUrl : null,
-      netToken,
-    }, null, 2));
-  } catch {}
 
   const bridgedPeers = new Map();
   setInterval(async () => {
     try {
       const current = await mesh.getStatusSnapshot();
       for (const peer of current.peers) {
-        if (!bridgedPeers.has(peer.nodeId) && (peer.reverseMuxActive || peer.host)) {
-          // Prefer binding local port 19225 if local 19215 is busy, or 19215 if free
-          const port19215Busy = await probeLocalPort(19215, '127.0.0.1', 200);
-          const preferredPort = port19215Busy ? 19225 : 19215;
+        if (bridgedPeers.has(peer.nodeId)) continue;
+        let peerLive = Boolean(peer.reverseMuxActive);
+        if (!peerLive && peer.host && peer.host !== '127.0.0.1') {
+          try {
+            const pong = await mesh.requestPeerGateway(peer, { op: 'ping' }, 1800);
+            peerLive = Boolean(pong && pong.ok);
+          } catch {
+            peerLive = false;
+          }
+        }
+        if (peerLive) {
+          const port19225Busy = await probeLocalPort(19225, '127.0.0.1', 150);
+          const preferredPort = port19225Busy ? 0 : 19225;
           const tunnel = await mesh.startLocalBridgeTunnel({
             peerId: peer.id,
             remoteAppId: 'movie-player-stream',
@@ -208,10 +245,27 @@ async function runJoin(args) {
 
   const mesh = createAppMeshEngine({ configDir: CONFIG_DIR });
   console.log('[RobOS Private Networks] Dialing remote Private Network over Mutual TLS 1.3...');
+  const port19225Busy = await probeLocalPort(19225, '127.0.0.1', 150);
   const res = await mesh.joinPrivateNetwork(tokenArg, {
     reverseMux: true,
     bridgeMoviePlayer: true,
+    localMoviePort: port19225Busy ? 0 : 19225,
   });
+
+  const endpoint = res.movieBridge ? `http://127.0.0.1:${res.movieBridge.localPort}` : null;
+  if (res.movieBridge && endpoint) {
+    try {
+      fs.mkdirSync(MOVIE_CFG_DIR, { recursive: true });
+      fs.writeFileSync(ACTIVE_BRIDGE_FILE, JSON.stringify({
+        updatedAt: new Date().toISOString(),
+        peerId: res.peer.id,
+        peerNodeId: res.peer.nodeId,
+        peerName: res.peer.name,
+        endpoint,
+        localPort: res.movieBridge.localPort,
+      }, null, 2));
+    } catch {}
+  }
 
   console.log('\n================================================================================');
   console.log('  ROBOS PRIVATE NETWORKS — LINK ESTABLISHED (NETWORK A <-> NETWORK B)');
@@ -222,12 +276,26 @@ async function runJoin(args) {
   console.log(`  Mutual TLS 1.3   : VERIFIED (Zero-Trust Certificate Pinning)`);
   console.log(`  Reverse-Mux Link : ${res.reverseMuxActive ? 'ACTIVE (Bidirectional Port Tunneling Ready)' : 'DIRECT'}`);
   if (res.movieBridge) {
-    console.log(`  Remote Video URL : http://127.0.0.1:${res.movieBridge.localPort}/api/tv-library?all=1`);
+    console.log(`  Remote Video URL : ${endpoint}/api/tv-library?all=1`);
   }
   console.log('--------------------------------------------------------------------------------');
   console.log('  Your local RobOS Video Player stream (:19215) is now securely accessible to');
   console.log(`  ${res.peer.name} over Mutual TLS 1.3. Keep this process running while streaming.`);
   console.log('================================================================================\n');
+
+  if (endpoint) {
+    try {
+      const cat = await fetchJson(`${endpoint}/api/tv-library?all=1`);
+      const items = cat.items || [];
+      console.log(`[RobOS Private Networks] Discovered ${items.length} streamable video(s) on ${res.peer.name}:`);
+      for (const item of items) {
+        console.log(`  - "${item.title}" -> ${item.streamUrl}`);
+      }
+    } catch {}
+  }
+
+  // Keep process alive so Reverse-Mux and local bridge tunnels stay open
+  setInterval(() => {}, 30000);
 }
 
 async function runStatus() {
