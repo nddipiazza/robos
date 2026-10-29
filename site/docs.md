@@ -63,6 +63,10 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
         <p><a href="{{ '/p2p/' | relative_url }}">Zero-Trust P2P App Mesh &amp; Cross-PC Movie Streaming</a>, <a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Zero-Leak OpenVPN App Sandbox &amp; Kill-Switch Proof</a>, <a href="{{ '/v1/apps/app-mesh/' | relative_url }}">RobOS App Mesh</a>, <a href="{{ '/v1/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox</a>, <a href="{{ '/v1/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers</a>, <a href="{{ '/v1/apps/pass-manager/' | relative_url }}">Pass Manager Vault</a></p>
       </div>
       <div class="h-index-row">
+        <h3>Config management</h3>
+        <p><a href="{{ '/config-management/' | relative_url }}">Back up, move and share your RobOS setup</a>, <a href="{{ '/config-management/#second-machine' | relative_url }}">Set up another machine</a>, <a href="{{ '/config-management/#family' | relative_url }}">Share with family</a>, <a href="{{ '/config-management/#onboarding' | relative_url }}">Onboard a new teammate</a>, <a href="{{ '/config-management/#coworker' | relative_url }}">Coworker handoff</a>, <a href="{{ '/config-management/#cli' | relative_url }}">Command line</a>, <a href="{{ '/v1/apps/robos-preferences/' | relative_url }}">RobOS Preferences</a></p>
+      </div>
+      <div class="h-index-row">
         <h3>Build on RobOS</h3>
         <p><a href="{{ '/v1/build-on-robos.html' | relative_url }}">Overview</a>, <a href="{{ '/v1/knowledge-graph.html' | relative_url }}">Knowledge graph</a>, <a href="{{ '/v1/new-app-wizard.html' | relative_url }}">New app wizard</a>, <a href="{{ '/v1/schemas.html' | relative_url }}">Schemas</a>, <a href="{{ '/v1/robos-skills.html' | relative_url }}">Skills</a>, <a href="{{ '/v1/architecture.html' | relative_url }}">Architecture</a></p>
       </div>

@@ -16,6 +16,7 @@ keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party gam
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#config-sync-and-sharing">Config Sync &amp; Sharing</a>
     <a href="#private-networks-and-app-mesh">Private Networks &amp; App Mesh</a>
     <a href="#tablo-dvr-smart-tv-and-roku">Tablo OTA DVR &amp; Roku TV</a>
     <a href="#castable-smart-dashboards">Castable Smart Dashboards</a>
@@ -44,6 +45,77 @@ keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party gam
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="config-sync-and-sharing">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-29">Oct 29, 2026</time>
+      <span class="blog-tag">RobOS Preferences</span>
+      <span class="blog-tag"><code>robos-lib/config-sync</code></span>
+      <span class="blog-tag">Google Drive</span>
+      <span class="blog-tag">Six-scenario E2E</span>
+    </div>
+    <h2><a href="#config-sync-and-sharing">Config Sync &amp; Sharing: one RobOS setup on every machine, and in the hands of the people who need it</a></h2>
+    <p class="blog-summary">Setting up RobOS a second time used to mean doing it all again: movie folders, playlists, lights, the private network, every repository and MCP server. Now RobOS Preferences keeps <code>~/.config/robos</code> and <code>~/.robos</code> in a private Google Drive folder that every machine you own syncs with, and lets you hand chosen parts of it to someone else: your family, a new hire on day one, a coworker taking over a project. This post is about the decisions behind it, and the three things the end-to-end runs caught that a design review would not have. The how-to is the <a href="{{ '/config-management/' | relative_url }}">Config management guide</a>.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/config-management/05-laptop-first-sync.png' | relative_url }}" alt="RobOS Preferences on a new laptop: first sync with the vault, Load the vault onto this machine recommended, 23 files coming from the vault grouped by category" loading="lazy">
+        <figcaption>A new laptop meets the vault for the first time. RobOS sees that the laptop has much less configuration than the vault and recommends loading it. Every file is listed before anything is written.</figcaption>
+      </figure>
+
+      <p><strong>Two kinds of folder, on purpose.</strong> The obvious design is one sync mechanism with permissions on top. We tried describing it that way and it got confusing fast: is my coworker editing my config? Does leaving a share delete my files? So there are two things with different rules. A <em>vault</em> is yours: one private folder, every machine reads and writes it, and it behaves like the IntelliJ settings repository, a per-file three-way compare between this machine, the vault, and the two as they were at the last sync. A <em>share</em> goes one way: you publish, they apply, and applying merges into their lists instead of replacing their files. Both use the same folder format (<code>robos-config.json</code> plus content-addressed <code>blobs/</code>), so the engine is one module. Only the merge rules differ.</p>
+
+      <p><strong>The first sync is the dangerous one.</strong> With no shared history there is no way to tell which side changed a file, so RobOS asks: load the vault onto this machine, upload this machine, or choose file by file. Whichever you pick, files that exist on one side only are copied, and nothing is deleted. Every change to local files is preceded by a restore point. Deletions only happen after a common history exists, when the three-way compare can prove the other side deleted the file and this side did not touch it.</p>
+
+      <p><strong>Credentials never travel, and pulling never signs you out.</strong> Credentials are stripped by key name (<code>accessToken</code>, <code>password</code>, <code>keyPem</code>, <code>*_TOKEN</code>…) before anything is uploaded, and references like <code>pass</code> paths are kept. The subtle part is the way back: a pulled <code>cloud-accounts.json</code> has no tokens, so writing it as-is would sign the machine out of the very Google account it is syncing through. On pull, RobOS puts this machine's credentials back into the incoming file, matching list items by id. A sign-in that exists only on this machine is kept and uploaded next time without its token. The one exception to "never travels" is opt-in: the Private Network join secret can ride inside a share encrypted with a passphrase, so family can join the home network without a separate invite.</p>
+
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/config-management/07-conflict.png' | relative_url }}" alt="Review on the desktop: movie-playlists.json comes from the vault, settings.json changed on both machines with Keep this machine's and Take the vault's from alex-laptop" loading="lazy"><figcaption>Both machines changed the default IDE. The playlist the laptop added just comes over; <code>settings.json</code> waits for a decision and says which machine wrote the other version.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/config-management/12-family-join-preview.png' | relative_url }}" alt="Sam's preview of the Rivera family home share: files marked New or Merge per category, and the storage section mapping Alex's Google Drive to Sam's own sign-in" loading="lazy"><figcaption>Sam's preview of the family share. <strong>Merge</strong> means Sam's own rooms and playlists stay. Storage is honest: the movie files stay in Alex's Drive.</figcaption></figure>
+      </div>
+
+      <p><strong>What the end-to-end runs caught.</strong> The scenarios run through the real Preferences window, each person and machine in their own home directory, against an in-memory Google Drive that enforces sharing the way Drive does. Three findings changed the design:</p>
+      <ul>
+        <li><strong>A config file that changes every time it is read.</strong> Cloud Accounts rewrites <code>cloud-accounts.json</code> with fresh <code>updatedAt</code> timestamps and recomputed login state on every read. Two machines would conflict on every sync forever. The fix is a per-file list of <em>machine-local keys</em>: login status, last-checked times, live TV casts, the mesh listen port. They are left out of the stored copy and always kept from the local one. A regression test now refreshes Cloud Accounts between syncs and asserts there is nothing to do.</li>
+        <li><strong>A fresh machine is not empty.</strong> The first heuristic for recommending "load the vault" was "this machine has almost no files". Then the laptop scenario recommended the cautious file-by-file option: launching Preferences on a new machine scaffolds the default KGraph packages, so a brand-new install already had eleven files. The recommendation now ignores sign-in, profile and KGraph packages the vault also has, and compares the rest with the vault's size.</li>
+        <li><strong>"Restore" was too blunt.</strong> A restore point covers everything one sync changed. When the test took back only the IDE setting, it also took back the playlist the laptop had added. Restore points now restore one file or all of them.</li>
+      </ul>
+
+      <p><strong>Shares remember what they added.</strong> Joining a share merges list items by <code>id</code> (rooms, lights, playlists, repositories, peers) and records each item it added. Leaving removes exactly those, plus any file the share created that you have not edited since. Priya's own <code>notes</code> project survives leaving Alex's handoff share, while the three projects the share brought are removed. Items you already had are never removed, even if the share updated them. Data sources are rebound to the recipient's own sign-in of the same kind, and the preview says plainly that the files themselves stay in the publisher's storage.</p>
+
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/config-management/16-onboarding-update-available.png' | relative_url }}" alt="Jordan's Shared with me tab: Acme Platform onboarding from Alex Rivera with Update available version 2 and an Apply update button" loading="lazy"><figcaption>Onboarding is not one-shot. The team adds a service, Alex publishes version 2, Jordan applies it.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/config-management/17-not-shared-with-you.png' | relative_url }}" alt="Eve's Shared with me tab: Google Drive could not find that folder, or this account cannot see it" loading="lazy"><figcaption>A forwarded link is not access. Eve was never added, so Drive refuses her account and nothing is written.</figcaption></figure>
+      </div>
+
+      <p><strong>What is not done yet.</strong> Sync runs when you click it, or on an interval with the CLI's <code>--watch</code>; there is no background daemon. Google Drive and local (synced) folders are the two storage options; direct OneDrive, Dropbox and S3 backends would follow the same interface in <code>config-sync-backends.js</code>. Removing someone's access is done in Drive, not yet from RobOS. A conflict is resolved per file; merging two edits inside the same JSON file is a future step.</p>
+
+      <div class="blog-log"># Engine tests and the six end-to-end scenarios
+cd packages/robos-test
+Xvfb :99 &amp;
+ROBOS_TEST=1 DISPLAY=:99 npm run test:config-sync
+
+✔ exportBuffer removes credentials and writes the home directory as ${HOME}; importBuffer reverses it
+✔ vault: machine 1 seeds a folder vault, machine 2 does a full load, then changes flow both ways
+✔ an encrypted vault rejects a wrong passphrase and stores no plaintext
+✔ shares over Google Drive: access is enforced, items merge by id, updates arrive, leaving removes only shared items
+✔ 1. Full backup: Alex creates a Google Drive vault from the desktop and uploads everything except secrets and caches
+✔ 2. Second machine: the laptop pastes the vault link, reviews, and loads the whole setup
+✔ 3. Two-way sync: laptop edits reach the desktop, a both-sides edit is a conflict, and a restore point undoes it
+✔ 4. Family: Alex shares the home network, movies and smart home with Sam; Sam keeps their own setup
+✔ 5. Onboarding: Jordan joins the team share, sees what to sign in to, and later applies an update
+✔ 6. Coworker handoff: Eve cannot open it, Priya joins and later leaves, keeping only her own projects
+
+# Full load of a headless machine
+node packages/robos-lib/config-sync-cli.js vault connect https://drive.google.com/drive/folders/&lt;id&gt; --account &lt;google-account-id&gt;
+node packages/robos-lib/config-sync-cli.js vault sync --use-vault</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/config-management/' | relative_url }}">Config management guide →</a>
+      <a href="{{ '/v1/apps/robos-preferences/' | relative_url }}">RobOS Preferences docs →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/config-sync.js"><code>robos-lib/config-sync.js</code> →</a>
+      <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/e480435c">e480435c</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="private-networks-and-app-mesh">
     <div class="blog-meta">
