@@ -891,6 +891,21 @@
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
     },
     {
+      "@id": "urn:robos:desktop-app:app-mesh",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS App Mesh",
+      "dcterms:description": "Provider-agnostic Zero-Trust App & IPC Port Mesh that securely bridges RobOS application IPC/snapshot ports (19100–19231) and service ports (:3410, :19210, :19213, :63343) across machines on the same or different networks using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "packages/app-mesh",
+      "robos:technology": "Electron 28 / Mutual TLS 1.3 / OpenZiti / Tailscale / NetBird / WireGuard",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
       "@id": "urn:robos:desktop-app:robos-tv",
       "@type": [
         "oslc_am:Resource",

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS App Mesh</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <div class="title-row">
+          <h1 class="title">RobOS App Mesh</h1>
+          <span class="badge-pill" id="gateway-status-pill">Gateway Active</span>
+        </div>
+        <p class="subtitle">Provider-agnostic Zero-Trust IPC &amp; Service Mesh between RobOS applications across machines.</p>
+      </div>
+      <div class="header-right">
+        <div class="node-box" title="Cryptographic X.509 P-256 Node Identity">
+          <span class="node-label">Node ID</span>
+          <strong id="node-id-value">—</strong>
+          <span class="fp-chip" id="node-fp-short">—</span>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-run-zt-proof" title="Run a live cryptographic proof: verify unpinned rogue certs are rejected and authorized IPC requests tunnel over TLS 1.3">Verify Zero-Trust Proof</button>
+        <button type="button" class="btn" id="btn-refresh">Refresh</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
+
+    <main class="main">
+      <!-- Top Control Bar: Pluggable Zero-Trust Transport Driver + Enrollment Token -->
+      <section class="top-bar">
+        <div class="field" style="min-width:260px;">
+          <label for="select-driver">Zero-Trust Transport Fabric</label>
+          <select id="select-driver" class="select"></select>
+          <div class="field-hint" id="driver-hint">—</div>
+        </div>
+
+        <div class="field" style="flex:1;">
+          <label for="input-my-token">This Machine's Zero-Trust Enrollment Token (Share with Peer RobOS Machine)</label>
+          <div class="input-row">
+            <input type="text" id="input-my-token" class="input mono" readonly />
+            <button type="button" class="btn" id="btn-copy-token">Copy Token</button>
+          </div>
+          <div class="field-hint" id="net-endpoints-hint">LAN / Overlay Endpoints: —</div>
+        </div>
+
+        <div class="field-action">
+          <label class="toggle-label">
+            <input type="checkbox" id="chk-share-all" checked />
+            <span>Expose All RobOS App IPC Ports to Trusted Peers</span>
+          </label>
+        </div>
+      </section>
+
+      <div class="columns-3">
+        <!-- Column 1: Trusted RobOS Peer Machines -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">1. Trusted RobOS Peers</h2>
+            <span class="count-pill" id="peers-count">0 peers</span>
+          </div>
+
+          <div class="sub-label">Enroll Peer via Token or Host</div>
+          <div class="field">
+            <label for="input-peer-token">Paste Peer Enrollment Token (<code>robos-mesh://…</code>)</label>
+            <input type="text" id="input-peer-token" class="input mono" placeholder="robos-mesh://eyJ2IjoxLCJub2RlSWQiOi..." />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="input-peer-name">Override Name (optional)</label>
+              <input type="text" id="input-peer-name" class="input" placeholder="e.g. Lab Workstation" />
+            </div>
+            <div class="field">
+              <label for="input-peer-host">Override Host/IP (optional)</label>
+              <input type="text" id="input-peer-host" class="input" placeholder="e.g. 100.64.0.8 or 192.168.1.50" />
+            </div>
+          </div>
+          <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="btn-enroll-peer">Pin &amp; Trust Peer</button>
+            <button type="button" class="btn" id="btn-enroll-loopback" title="Add this machine's own identity as a loopback peer to test IPC port bridging locally">Add Self-Test Peer</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="sub-label">Pinned Zero-Trust Nodes</div>
+          <div id="peers-list" class="list"></div>
+        </section>
+
+        <!-- Column 2: Active Cross-Machine IPC Port Bridges -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">2. Cross-Machine IPC Bridges</h2>
+            <span class="count-pill" id="tunnels-count">0 active</span>
+          </div>
+
+          <div class="sub-label">Mount Remote RobOS App IPC Port Locally</div>
+          <div class="field">
+            <label for="select-bridge-peer">Target RobOS Peer</label>
+            <select id="select-bridge-peer" class="select"></select>
+          </div>
+          <div class="field">
+            <label for="select-bridge-app">Remote RobOS App IPC / Service Port</label>
+            <select id="select-bridge-app" class="select"></select>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="input-local-port">Local Bind Port (<code>0</code> = auto)</label>
+              <input type="number" id="input-local-port" class="input" value="0" min="0" max="65535" />
+            </div>
+            <div class="field" style="justify-content:flex-end;">
+              <button type="button" class="btn btn-primary" id="btn-create-bridge" style="margin-top:18px;">Bridge IPC Port</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="sub-label">Mounted Local IPC Tunnels</div>
+          <div id="tunnels-list" class="list"></div>
+
+          <div class="divider"></div>
+          <div class="sub-label">Zero-Trust Security Audit Log</div>
+          <div id="audit-list" class="list audit-log"></div>
+        </section>
+
+        <!-- Column 3: RobOS App IPC Port Catalog & Driver Provisioning -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">3. RobOS App IPC Port Catalog</h2>
+            <span class="count-pill" id="catalog-count">0 ports</span>
+          </div>
+
+          <div class="field-row">
+            <input type="text" id="input-filter-ports" class="input" placeholder="Filter apps or ports (e.g. dev-central, 19101, pos)…" />
+          </div>
+
+          <div id="catalog-list" class="list catalog-scroll"></div>
+
+          <div class="divider"></div>
+          <div class="card-header">
+            <span class="sub-label" style="margin:0;">Overlay Provisioning Manifest (<span id="manifest-driver-label">mTLS</span>)</span>
+            <button type="button" class="btn btn-sm" id="btn-copy-manifest">Copy Config</button>
+          </div>
+          <pre id="manifest-preview" class="manifest-box"></pre>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

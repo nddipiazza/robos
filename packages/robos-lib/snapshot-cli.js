@@ -133,6 +133,7 @@ const PORT_REGISTRY = {
   'robos-dashboards':  19211,
   'party-game':        19212,
   'movie-player':      19214,
+  'app-mesh':          19215,
 };
 
 
