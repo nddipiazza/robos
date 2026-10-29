@@ -7,6 +7,8 @@ summary: "Settings window for RobOS apps: Config Sync & Sharing (cloud backup an
 description: "Edits ~/.config/robos/settings.json, which other RobOS apps read. It also has selectors for the GitHub CLI accounts used by the git client and by Copilot."
 ---
 
+> **Moving to a new machine or sharing your setup?** See [rowbose.com/config-management](https://rowbose.com/config-management/) for Config Sync & Sharing: back up to Google Drive, load a second machine, and share with family, new teammates or coworkers.
+
 RobOS Preferences is one form, grouped into sections, that writes `~/.config/robos/settings.json`. Many RobOS apps read that file; this app does not apply settings to anything itself, except as noted for the knowledge graph.
 
 ## Sections
@@ -41,7 +43,7 @@ Keeps `~/.config/robos` and `~/.robos` in a private cloud folder and lets you sh
 - **Shared with me**: paste a share link to preview it, then **Join and apply**. Your own items stay: lists merge by id. **Check for updates**, **Apply update** and **Leave** (which removes only what the share added).
 - **Restore points**: saved before any of the above changes a file on this machine. Restore one file or all of them.
 
-Credentials (tokens, passwords, API keys, the Private Network machine key) never leave the machine, and paths in your home directory are stored as `${HOME}`. The full guide is at [rowbose.com/config-management]({{ '/config-management/' | relative_url }}).
+Credentials (tokens, passwords, API keys, the Private Network machine key) never leave the machine, and paths in your home directory are stored as `${HOME}`. The full guide, with screenshots from the end-to-end tests, is at [rowbose.com/config-management](https://rowbose.com/config-management/).
 
 ## GitHub accounts
 
