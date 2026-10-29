@@ -67,6 +67,7 @@ const EXTRA_APP_PORTS = {
   'point-of-sale-register': { port: 3410, label: 'Point of Sale Register & Checkout API', category: 'Retail', kind: 'service' },
   'smart-tv-portal':        { port: 19210, label: 'Smart TV & 10-Foot Dashboard Portal', category: 'System', kind: 'service' },
   'party-game-server':      { port: 19213, label: 'Party Game Phone Controller Server', category: 'Party Games', kind: 'service' },
+  'movie-player-stream':    { port: 19215, label: 'RobOS Movie Player HTTP Range Stream & Cinema Library Server', category: 'Tools', kind: 'service' },
   'intellij-ipc-bridge':    { port: 63343, label: 'IntelliJ IDEA / IDE IPC Bridge', category: 'Dev', kind: 'ipc' },
 };
 
