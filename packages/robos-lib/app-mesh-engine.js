@@ -301,6 +301,18 @@ function computeCertFingerprint(certOrPem) {
 }
 
 function detectNetworkAddresses() {
+  if (process.env.ROBOS_DEMO_LAN_IP || process.env.ROBOS_DEMO_OVERLAY_IP) {
+    const lanIp = process.env.ROBOS_DEMO_LAN_IP || '10.10.1.10';
+    const overlayIp = process.env.ROBOS_DEMO_OVERLAY_IP || '100.64.0.10';
+    return {
+      lanIp,
+      overlayIp,
+      addresses: [
+        { iface: 'eth0', address: lanIp },
+        { iface: 'tailscale0', address: overlayIp },
+      ],
+    };
+  }
   const ifaces = os.networkInterfaces() || {};
   const addresses = [];
   let lanIp = '127.0.0.1';
@@ -382,8 +394,8 @@ function createAppMeshEngine(options = {}) {
       }
     } catch {}
 
-    const hostname = os.hostname() || 'robos-node';
-    const nodeId = `robos-${hostname.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12)}-${crypto.randomBytes(3).toString('hex')}`;
+    const hostname = options.nodeName || process.env.ROBOS_NODE_NAME || os.hostname() || 'robos-node';
+    const nodeId = options.nodeId || process.env.ROBOS_NODE_ID || `robos-node-${crypto.randomBytes(4).toString('hex')}`;
     const creds = generateIdentityCredentials(nodeId, hostname);
     const identity = {
       nodeId,
@@ -462,30 +474,68 @@ function createAppMeshEngine(options = {}) {
   const reverseMuxClients = new Map();   // peerNodeId -> { close, timer }
   const auditLog = [];
 
-  function computeRendezvousSig(enrollToken, nodeId, relayUrl, fingerprint) {
+  function deriveRendezvousTopic(enrollToken, nodeId) {
     return crypto
       .createHmac('sha256', String(enrollToken || 'robos-rv'))
-      .update(`${nodeId}:${relayUrl}:${fingerprint}`)
-      .digest('hex');
+      .update(`robos-rv-topic:${nodeId}`)
+      .digest('hex')
+      .slice(0, 32);
+  }
+
+  function deriveRendezvousKey(enrollToken, fingerprint) {
+    return crypto
+      .createHash('sha256')
+      .update(`robos-rv-aes256gcm:${enrollToken}:${fingerprint}`)
+      .digest();
+  }
+
+  function encryptRendezvousBeacon(enrollToken, nodeId, relayUrl, fingerprint) {
+    const key = deriveRendezvousKey(enrollToken, fingerprint);
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    cipher.setAAD(Buffer.from(String(nodeId), 'utf8'));
+    const plaintext = JSON.stringify({
+      relayUrl,
+      issuedAt: new Date().toISOString(),
+    });
+    const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return JSON.stringify({
+      v: 2,
+      iv: iv.toString('base64url'),
+      tag: tag.toString('base64url'),
+      ct: ct.toString('base64url'),
+    });
+  }
+
+  function decryptRendezvousBeacon(rawEnvelope, enrollToken, nodeId, fingerprint) {
+    const env = typeof rawEnvelope === 'string' ? JSON.parse(rawEnvelope) : rawEnvelope;
+    if (!env || env.v !== 2 || !env.iv || !env.tag || !env.ct) return null;
+    const key = deriveRendezvousKey(enrollToken, fingerprint);
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      key,
+      Buffer.from(env.iv, 'base64url')
+    );
+    decipher.setAAD(Buffer.from(String(nodeId), 'utf8'));
+    decipher.setAuthTag(Buffer.from(env.tag, 'base64url'));
+    const dec = Buffer.concat([
+      decipher.update(Buffer.from(env.ct, 'base64url')),
+      decipher.final(),
+    ]);
+    return JSON.parse(dec.toString('utf8'));
   }
 
   function publishRendezvousBeacon(relayUrl) {
     if (!relayUrl || !identity.nodeId) return;
     try {
       const enrollToken = computeEnrollToken();
-      const payload = JSON.stringify({
-        v: 1,
-        nodeId: identity.nodeId,
-        name: identity.nodeName,
-        relayUrl,
-        fingerprint: identity.fingerprint,
-        issuedAt: new Date().toISOString(),
-        sig: computeRendezvousSig(enrollToken, identity.nodeId, relayUrl, identity.fingerprint),
-      });
+      const topic = deriveRendezvousTopic(enrollToken, identity.nodeId);
+      const payload = encryptRendezvousBeacon(enrollToken, identity.nodeId, relayUrl, identity.fingerprint);
       const req = https.request({
         hostname: 'ntfy.sh',
         port: 443,
-        path: `/robos-rv-${ encodeURIComponent(identity.nodeId) }`,
+        path: `/robos-zt-${topic}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -502,7 +552,7 @@ function createAppMeshEngine(options = {}) {
   }
 
   function resolveLatestRendezvousRelay(peer, timeoutMs = 4000) {
-    if (!peer || !peer.nodeId) return Promise.resolve(null);
+    if (!peer || !peer.nodeId || !peer.enrollToken || !peer.fingerprint) return Promise.resolve(null);
     return new Promise((resolve) => {
       let settled = false;
       const done = (val) => {
@@ -510,10 +560,11 @@ function createAppMeshEngine(options = {}) {
         settled = true;
         resolve(val);
       };
+      const topic = deriveRendezvousTopic(peer.enrollToken, peer.nodeId);
       const req = https.get({
         hostname: 'ntfy.sh',
         port: 443,
-        path: `/robos-rv-${encodeURIComponent(peer.nodeId)}/json?poll=1&since=12h`,
+        path: `/robos-zt-${topic}/json?poll=1&since=12h`,
         timeout: timeoutMs,
       }, (res) => {
         let body = '';
@@ -524,14 +575,10 @@ function createAppMeshEngine(options = {}) {
             try {
               const outer = JSON.parse(line);
               if (!outer || outer.event !== 'message' || !outer.message) continue;
-              const msg = JSON.parse(outer.message);
-              if (!msg || msg.nodeId !== peer.nodeId || !msg.relayUrl) continue;
-              if (peer.fingerprint && msg.fingerprint && msg.fingerprint !== peer.fingerprint) continue;
-              if (peer.enrollToken && msg.sig) {
-                const expected = computeRendezvousSig(peer.enrollToken, peer.nodeId, msg.relayUrl, peer.fingerprint || msg.fingerprint);
-                if (msg.sig !== expected) continue;
+              const dec = decryptRendezvousBeacon(outer.message, peer.enrollToken, peer.nodeId, peer.fingerprint);
+              if (dec && dec.relayUrl) {
+                return done(String(dec.relayUrl).trim());
               }
-              return done(String(msg.relayUrl).trim());
             } catch {}
           }
           done(null);
@@ -905,7 +952,6 @@ function createAppMeshEngine(options = {}) {
         res.end(JSON.stringify({
           ok: true,
           service: 'RobOS Zero-Trust Mutual TLS 1.3 Relay Ingress',
-          nodeId: identity.nodeId,
           tlsVersion: 'TLSv1.3',
         }));
       });
