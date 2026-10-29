@@ -1,0 +1,46 @@
+---
+title: "Frontier Hunters: a bigger battlefield, a reusable editor, and tests that play to victory"
+nav_label: "RTS: Frontier Hunters & Map Editor"
+date: 2026-10-23 13:00:00 +0000
+date_label: "Oct 23, 2026"
+tags:
+  - "Starfall Command RTS"
+  - "Map Editor"
+  - "Live Gameplay Tests"
+summary: "Starfall Command now opens with one player against one AI on a 256×256 battlefield inspired by Big Game Hunters. Two commanders draw distinct starting sites from eight perimeter bases, each with a Colony Hub and 12 workers. Deposits never run out. Everything you build still costs resources, takes time and uses supply. The match ends when one side has no structures left."
+description: "Starfall Command now opens with one player against one AI on a 256×256 battlefield inspired by Big Game Hunters. Two commanders draw distinct starting sites from eight perimeter bases, each with a Colony Hub and 12 workers. Deposits never run out. Everything you build still costs resources, takes time and uses supply. The match ends when one side has no structures left."
+og_image: /assets/games/rts/frontier-hunters-live.jpg
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <video poster="{{ '/assets/games/rts/frontier-hunters-live.jpg' | relative_url }}" controls playsinline preload="metadata" width="1920" height="1080">
+      <source src="{{ '/assets/games/rts/frontier-hunters-live.mp4' | relative_url }}" type="video/mp4">
+      <track kind="captions" src="{{ '/assets/games/rts/frontier-hunters-live.vtt' | relative_url }}" srclang="en" label="English walkthrough" default>
+    </video>
+    <figcaption>A complete recorded Rush build against Hard Siege AI, seed 29: gathering, construction, army production, combat and structure-elimination victory. The engine advances on its live frame clock; the controller made zero manual step requests. Capture is 1080p at 10 frames per second.</figcaption>
+  </figure>
+  <p><strong>The map is something you can edit and play.</strong> Waterways divide the outer bases and interior expansions, with land crossings connecting them. The Godot 4 editor paints terrain, fills regions, places starts and expansions, authors resources and units, and supports undo, validation and atomic saves. F5 plays the current document; F10 returns to it with undo history intact. The bounded fill and brush cores reuse MIT-licensed code from <a href="https://github.com/saman-mb/crusade-rts">Crusade RTS</a>, credited at a pinned revision in the repository.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig"><img src="{{ '/assets/games/rts/frontier-hunters-map.png' | relative_url }}" alt="The complete Frontier Hunters battlefield, with waterways, crossings and eight perimeter starting bases" loading="lazy"><figcaption>The full 256×256 battlefield.</figcaption></figure>
+    <figure class="blog-fig"><img src="{{ '/assets/games/rts/frontier-map-editor.png' | relative_url }}" alt="Frontier Hunters in the Godot map editor with terrain tools and numbered starting sites" loading="lazy"><figcaption>The same map in the reusable editor.</figcaption></figure>
+  </div>
+  <p><strong>The tests build an economy before they fight.</strong> Each live case edits, saves and reloads its map, checks the standard opening, then runs a paid Rush, Siege or Economy build against the independent opponent. Easy, Normal and Hard change the AI's decisions and production targets; they use the same starting resources, prices and combat statistics. Tests must reach an actual win condition. An unattended player must also lose. Unfinished expansions keep their owner alive after the main base falls.</p>
+  <p><strong>The hiccups had measurable causes.</strong> Synchronous PNG encoding could stall the frame thread for roughly 800 ms, and incomplete HTTP requests could make it wait another 50–100 ms. Capture encoding now runs on a worker, socket handling buffers partial messages without waiting, and accelerated simulation yields between ticks. Static geometry is batched, human unit bodies share MultiMesh instances, the minimap caches its terrain, and harvesting and targeting reuse spatial data.</p>
+  <p>On a local GTX 1050 Ti with Godot 4.7.2's compatibility renderer at 1920×1080, a paid army of roughly 80 units ran at an observed 49–60 FPS at normal speed after a 180-game-second warm-up. The final rolling frame sample measured 26.952 ms at the 95th percentile and a 72.047 ms maximum, passing the probe's 33.34 ms and 100 ms budgets. These are measurements on this machine. In the recorded match, requested 8× playback achieved 2.58 game seconds per wall second under rendering and recording load; fast-forward adapts to available CPU time.</p>
+  <p>Verification on October 23: the complete backend suite passed <strong>20 scenarios and 128 steps</strong>; the live frame-clock suite passed <strong>6 scenarios and 40 steps</strong>; the rendered match and responsiveness checks passed <strong>2 scenarios and 13 steps</strong>. Navigation, spatial-query, editor-document and render-batching regressions also passed. Each live run retains its authored map, paid action log, observations, frame timings and result; recorded runs add video and WebVTT captions.</p>
+  <div class="blog-log"># From games/robos-rts; set GODOT_BIN to your Godot executable
+python run_cucumber_tests.py --backend
+python run_cucumber_tests.py --realtime-headless --speed=8
+python run_cucumber_tests.py --realtime --speed=8 --record
+python run_cucumber_tests.py --realtime --show-window --keep-open --speed=4 --name="@1.4"
+python tests/e2e/performance_probe.py --warmup=180 --duration=20 --speed=1 --p95-ms=33.34 --max-frame-ms=100</div>
+  <p>The current playable focus is one human versus one AI, using the Meridian Guard roster for both sides. The editor preserves campaign and future multiplayer metadata through save and reload; campaign scripting and network multiplayer still need engine work. The older three-faction canyon remains a mechanics showcase.</p>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/robos-rts/' | relative_url }}">Game &amp; walkthrough →</a>
+  <a href="{{ '/v1/projects/robos-rts/#map-editor' | relative_url }}">Map editor guide →</a>
+  <a href="{{ '/v1/projects/robos-rts/#live-gameplay-and-frame-performance-tests' | relative_url }}">Reproduce the tests →</a>
+  <a href="{{ '/assets/games/rts/frontier-hunters-live-proof.json' | relative_url }}">Recorded match proof →</a>
+  <a href="{{ '/assets/games/rts/frontier-hunters-performance.json' | relative_url }}">Normal-speed frame samples →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/4725429d">4725429d</a> · <a href="https://github.com/nddipiazza/robos/commit/94ef6410">94ef6410</a></span>
+</div>

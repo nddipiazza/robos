@@ -19,6 +19,21 @@ plugins:
 collections:
   apps:
     output: false
+  # Engineering blog posts: one file per post in _blog/, published at /blog/<file name>/.
+  # /blog/ lists them newest first by `date`.
+  blog:
+    output: true
+    permalink: /blog/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: blog
+    values:
+      layout: blog-post
+      extra_css: /assets/blog.css
+      og_type: article
+      schema_type: BlogPosting
 
 exclude:
   - README.md

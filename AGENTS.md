@@ -270,7 +270,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `test-container` — Run containerized headless E2E tests in Docker + Xvfb
 - `update-app-icon` — Update an app's SVG icon
 - `vpn-sandbox` — Configure OpenVPN accounts/servers, launch apps inside isolated `ip netns` namespaces, and run the live 5-step E2E mid-session VPN drop kill-switch proof
-- `publish-blog-post`, `robos-blog` (`/blog`) — Write and publish a new Engineering Blog entry in `site/blog/index.md` with jump navigation, E2E visual evidence, docs links, and commit hashes
+- `publish-blog-post`, `robos-blog` (`/blog`) — Write and publish a new Engineering Blog post as its own page, `site/_blog/<slug>.html`, with E2E visual evidence, docs links, and commit hashes
 - `fix-media-metadata` — Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB)
 
 See [plugins/README.md](plugins/README.md) for full installation and usage instructions across Claude, Codex, Antigravity, Copilot, and Gemini.

@@ -111,7 +111,7 @@ keywords: "Quest Warrior Dragon, RobOS 2D JRPG, Dragon Warrior clean-room RPG, G
       </div>
       <div class="cta" style="justify-content:flex-start;margin-top:24px">
         <a class="btn" href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">Read the AI Playthrough docs &amp; see the full screenshot gallery →</a>
-        <a class="btn btn-ghost" href="{{ '/blog/' | relative_url }}#ai-playthrough-quest-warrior-dragon">Blog post</a>
+        <a class="btn btn-ghost" href="{{ '/blog/ai-playthrough-quest-warrior-dragon/' | relative_url }}">Blog post</a>
       </div>
     </div>
   </div>

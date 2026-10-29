@@ -1,0 +1,36 @@
+---
+title: "RobOS Household: Full-Year Family Accounting and Open-Source Tax Preparation"
+nav_label: "Household & Tax Prep"
+date: 2026-10-19 14:00:00 +0000
+date_label: "Oct 19, 2026"
+tags:
+  - "RobOS Household"
+  - "Personal Finance"
+  - "Tax Engine"
+summary: "Defined the public Household and Tax KGraph schema package and built RobOS Household to take a family from twelve months of bank and card CSV statements through W-2 PDF verification and local federal tax estimation."
+description: "Defined the public Household and Tax KGraph schema package and built RobOS Household to take a family from twelve months of bank and card CSV statements through W-2 PDF verification and local federal tax estimation."
+og_image: /assets/family-finances/02-accounts.png
+og_image_alt: "Six reconciled family accounts and net worth summary in RobOS Household"
+---
+<div class="blog-body">
+  <p>Personal finance and tax preparation software usually locks family records inside proprietary cloud silos. We defined the <code>robos:Household</code> and public tax schema package and built <strong>RobOS Household</strong> (<code>packages/household</code>) around five recurring workspaces: <em>Family</em>, <em>Accounts</em>, <em>Spending</em>, <em>Taxes</em>, and <em>Privacy</em>.</p>
+  <ul>
+    <li><strong>Reconciled Multi-Account Ledger:</strong> Tested against a full synthetic family financial year across checking, savings, credit card, auto loan, investment, and cash CSV statements (318 transactions), verifying closing balances, idempotent re-imports, category corrections, and split purchases.</li>
+    <li><strong>Side-by-Side PDF Field Review:</strong> Uses PDF.js to extract text and page coordinates from W-2 and 1099-INT forms, highlighting source fields side-by-side and blocking tax calculation until ambiguous OCR/text fields are human-reviewed and approved.</li>
+    <li><strong>Local TenForty + OpenTaxSolver Calculation:</strong> Computes federal taxable income, standard deductions, and child tax credit supplements locally via TenForty and OpenTaxSolver while enforcing strict privacy and non-filing boundaries.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="Six reconciled family accounts and net worth summary in RobOS Household" loading="lazy">
+      <figcaption>Six reconciled accounts and 318 imported transactions in the Household sandbox.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/family-finances/05-field-review.png' | relative_url }}" alt="Side-by-side W-2 PDF inspection and critical field verification" loading="lazy">
+      <figcaption>Side-by-side W-2 source field highlighting and human verification before tax calculation.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/family-finances/' | relative_url }}">Read the Family Finances walkthrough →</a>
+  <span class="blog-commits">Commits: 336fa2f2 · 6163f44e · 96650d32 · 53b8c941</span>
+</div>

@@ -1,0 +1,37 @@
+---
+title: "Starfall Command: Deterministic 2.5D Real-Time Strategy Engine"
+nav_label: "Starfall Command RTS"
+date: 2026-10-15
+date_label: "Oct 15, 2026"
+tags:
+  - "Starfall Command"
+  - "RTS Engine"
+  - "Games"
+summary: "Created a SnowPlay and StarCraft II-inspired deterministic RTS engine featuring three asymmetric factions, a 2.5D angled perspective renderer, and an automated 1080p 4-act battle recorder."
+description: "Created a SnowPlay and StarCraft II-inspired deterministic RTS engine featuring three asymmetric factions, a 2.5D angled perspective renderer, and an automated 1080p 4-act battle recorder."
+og_image: /assets/games/rts/24-howitzer-splash-volley.jpg
+og_image_alt: "Meridian Guard howitzer line firing a splash volley in Starfall Command"
+---
+<div class="blog-body">
+  <p>To test how far KGraph-driven game architecture stretches into high-unit-count real-time simulation, we built <strong>Starfall Command</strong> (<code>games/robos-rts</code>), a deterministic real-time strategy game with a custom 2.5D angled 3D perspective renderer:</p>
+  <ul>
+    <li><strong>Three Asymmetric Factions:</strong> Command the <em>Meridian Guard</em> (human terran-style infantry, siege howitzer splash lines, and retractable silo gates), the <em>Gnarl Brood</em> (swarming bio-monsters), or the <em>Aurelian Concord</em> (high-tech phase-stepping walkers and cliff-striding Spire Walkers).</li>
+    <li><strong>Classic RTS Economy &amp; Controls:</strong> Full crystal and aether tap harvesting, build-grid placement validation, production queues, control groups, idle-worker alerts, supply caps, and kiting micro-management.</li>
+    <li><strong>Programmatic Capture &amp; 4-Act Demo:</strong> Exposed HTTP/IPC camera, selection, and screenshot control endpoints to drive a deterministic 4-act 1080p battle showcase.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/games/rts/24-howitzer-splash-volley.jpg' | relative_url }}" alt="Meridian Guard howitzer line firing a splash volley in Starfall Command" loading="lazy">
+      <figcaption>Emplaced Meridian Guard howitzers firing splash volleys across Starfall Canyon.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/games/rts/33-three-way-battle.jpg' | relative_url }}" alt="Three-way battle between Meridian Guard, Gnarl Brood, and Aurelian Concord" loading="lazy">
+      <figcaption>Three-faction clash between the Meridian Guard, Gnarl Brood, and Aurelian Concord.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/robos-rts/' | relative_url }}">Visit the Starfall Command page →</a>
+  <a href="{{ '/games/robos-rts/docs/' | relative_url }}">Read the RTS engine docs →</a>
+  <span class="blog-commits">Commits: f061446b · ac778e9c · ec1ec177 · 2c5f2eef · be7b70a5</span>
+</div>

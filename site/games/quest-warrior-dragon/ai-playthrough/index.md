@@ -299,7 +299,7 @@ npx electron --no-sandbox . --select 44 --snapshot out.png   # open milestone 44
       <div class="cta" style="justify-content:flex-start;margin-top:22px">
         <a class="btn" href="{{ '/v1/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; Architecture Guide</a>
         <a class="btn btn-ghost" href="{{ '/games/quest-warrior-dragon/proof-of-viability.html' | relative_url }}">BFS Proof of Viability</a>
-        <a class="btn btn-ghost" href="{{ '/blog/' | relative_url }}#ai-playthrough-quest-warrior-dragon">Read the blog post</a>
+        <a class="btn btn-ghost" href="{{ '/blog/ai-playthrough-quest-warrior-dragon/' | relative_url }}">Read the blog post</a>
         <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/quest-warrior-dragon" target="_blank" rel="noopener">Source on GitHub</a>
       </div>
     </div>
