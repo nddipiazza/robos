@@ -16,16 +16,99 @@ keywords: "RobOS P2P, RobOS App Mesh, Zero-Trust App Mesh, Mutual TLS 1.3 peer p
     <p class="lead">Connect any two or more RobOS computers—on the same LAN or across the internet—without opening unauthenticated ports or locking yourself into a single VPN vendor. <strong>RobOS App Mesh</strong> (<code>packages/app-mesh</code>) and <code>robos-lib/app-mesh-engine.js</code> bridge all 95+ RobOS application IPC and service ports over a cryptographic <strong>Zero-Trust Mesh</strong> using built-in <strong>Mutual TLS 1.3 + X.509 SHA-256 Peer Pinning</strong>, <strong>OpenZiti</strong>, <strong>Tailscale / Headscale</strong>, <strong>NetBird P2P</strong>, or <strong>Native WireGuard</strong>.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to P2P guide section">
-    <a href="#architecture">1. Zero-Trust App Mesh Architecture</a>
-    <a href="#pluggable-fabrics">2. 5 Pluggable Transport Fabrics</a>
-    <a href="#pairing-and-bridging">3. Pairing Machines &amp; Bridging IPC Ports</a>
-    <a href="#movie-streaming">4. Streaming Movies Across RobOS PCs</a>
-    <a href="#multi-app-workflows">5. POS, Smart TVs, Dashboards &amp; IDE Bridges</a>
-    <a href="#live-zt-proof">6. Live E2E Zero-Trust Cryptographic Proof</a>
+    <a href="#private-networks-cross-net">1. RobOS Private Networks (Cross-Network P2P)</a>
+    <a href="#architecture">2. Zero-Trust App Mesh Architecture</a>
+    <a href="#pluggable-fabrics">3. 5 Pluggable Transport Fabrics</a>
+    <a href="#pairing-and-bridging">4. Pairing Machines &amp; Bridging IPC Ports</a>
+    <a href="#movie-streaming">5. Streaming Movies Across RobOS PCs</a>
+    <a href="#multi-app-workflows">6. POS, Smart TVs, Dashboards &amp; IDE Bridges</a>
+    <a href="#live-zt-proof">7. Live E2E Zero-Trust Cryptographic Proof</a>
   </nav>
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="private-networks-cross-net">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-29">Oct 29, 2026</time>
+      <span class="blog-tag">RobOS Private Networks (<code>packages/private-networks</code>)</span>
+      <span class="blog-tag">1-Command <code>robos-net://</code> Link</span>
+      <span class="blog-tag">AES-256-GCM Zero-Knowledge Rendezvous</span>
+      <span class="blog-tag">Bidirectional Reverse-Mux &amp; HTTP 206 Video</span>
+    </div>
+    <h2><a href="#private-networks-cross-net">1. RobOS Private Networks: 1-Command Cross-Network P2P Linking Across Separate Subnets, NAT &amp; CGNAT</a></h2>
+    <p class="blog-summary">When two RobOS machines sit on completely separate networks (for example, <code>10.10.1.0/24</code> and <code>10.20.2.0/24</code> behind home routers or carrier-grade NAT) without a shared VPN or port-forwarding, <strong>RobOS Private Networks</strong> (<code>packages/private-networks</code>, debug port <code>:19217</code>) links them in one step with a single <code>robos-net://</code> invite token—establishing end-to-end <strong>Mutual TLS 1.3</strong> with <strong>ECDSA P-256 SHA-256 certificate pinning</strong>, a <strong>Self-Healing WAN Relay + Zero-Knowledge AES-256-GCM Rendezvous</strong>, a <strong>Bidirectional Reverse-Mux</strong> multiplexer, and instant <strong>RobOS Movie Player</strong> (<code>:19215</code> &rarr; <code>:19225</code>) video streaming.</p>
+
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/private-networks/private-networks-architecture.jpg' | relative_url }}" alt="RobOS Private Networks &amp; Zero-Trust mTLS 1.3 Cross-Network P2P Architecture showing Network A, the Cross-Network Zero-Trust Fabric with Self-Healing WAN Relay, AES-256-GCM Rendezvous, and Bidirectional Reverse-Mux, and Network B" loading="lazy">
+        <figcaption><strong>RobOS Private Networks Cross-Network Architecture:</strong> Box A (<code>robos-workstation-alpha</code>) and Box B (<code>robos-media-vault-beta</code>) link across separate networks over an HTTP 101 Upgrade WAN Relay that forwards raw encrypted TLS 1.3 bytes, backed by AES-256-GCM encrypted rendezvous beacons and a bidirectional Reverse-Mux stream multiplexer.</figcaption>
+      </figure>
+
+      <pre class="mermaid">
+flowchart LR
+  subgraph NetA["Network A — Box A (robos-workstation-alpha | 10.10.1.10)"]
+    direction TB
+    MPA["RobOS Movie Player (:19214)<br/>&amp; Local Stream Server (127.0.0.1:19215)"]
+    TUN["Local Bridge Tunnel (127.0.0.1:19225)<br/>Mounts Box B :19215 [HTTP 206 Byte-Range]"]
+    GWA["App Mesh mTLS 1.3 Gateway (:19290)<br/>ECDSA P-256 Pinning &amp; Reverse-Mux Client"]
+    MPA --> TUN
+    TUN --> GWA
+  end
+
+  subgraph Fabric["Cross-Network Zero-Trust Fabric (NAT / CGNAT Traversal)"]
+    direction TB
+    RELAY["Self-Healing WAN Relay Ingress<br/>wss://&lt;relay-id&gt;.lhr.life &rarr; HTTP 101 Upgrade<br/>Forwards Raw Encrypted TLS 1.3 Bytes"]
+    RV["Zero-Knowledge Rendezvous Discovery<br/>HMAC-SHA256 Opaque Topic + AES-256-GCM Beacon<br/>+ 20s Active Relay Health Probe"]
+    MUX["Bidirectional Reverse-Mux Multiplexer<br/>Multiplexes Inbound &amp; Outbound Streams<br/>Over Single Authenticated mTLS 1.3 Socket"]
+  end
+
+  subgraph NetB["Network B — Box B (robos-media-vault-beta | 10.20.2.20)"]
+    direction TB
+    UPG["HTTP 101 Upgrade Bridge +<br/>App Mesh mTLS 1.3 Gateway (:19290)"]
+    MPB["RobOS Movie Player Stream Server (127.0.0.1:19215)<br/>Cinema Catalog (/api/tv-library) + HTTP 206 Media"]
+    IPCB["95+ Shared RobOS App IPC &amp; Service Ports<br/>19100–19231, :3410 POS, :19210 Smart TV, :63343 IDE"]
+    UPG --> MPB
+    UPG --> IPCB
+  end
+
+  GWA <-->|End-to-End Mutual TLS 1.3| RELAY
+  RELAY <-->|Raw TLS 1.3 Passthrough| UPG
+  GWA <.->|Decrypts Rotated Relay URL| RV
+  UPG <.->|Publishes AES-256-GCM Beacon| RV
+  GWA <-->|Bidirectional Stream Framing| MUX
+  MUX <-->|Reverse-Dial Across CGNAT| UPG
+      </pre>
+
+      <div class="blog-grid-2">
+        <figure class="blog-fig">
+          <img src="{{ '/assets/blog/private-networks/private-networks-live.png' | relative_url }}" alt="RobOS Private Networks desktop app showing mTLS 1.3 Gateway Ready, active WAN Relay, connected peer robos-media-vault-beta with Reverse-Mux Active, local bridge tunnel 127.0.0.1:19225, and discovered remote peer video catalog" loading="lazy">
+          <figcaption><strong>RobOS Private Networks (<code>packages/private-networks</code>):</strong> Shows the local Zero-Trust identity, 1-line <code>robos-net://</code> join command, connected peer with <code>Reverse-Mux Active</code>, local bridge <code>127.0.0.1:19225 &rarr; :19215</code>, and discovered remote peer video streams.</figcaption>
+        </figure>
+        <figure class="blog-fig">
+          <img src="{{ '/assets/blog/private-networks/app-mesh-live.png' | relative_url }}" alt="RobOS App Mesh desktop app showing 5 pluggable Zero-Trust transport fabrics, pinned Zero-Trust peer registry, Cross-Machine IPC Bridges, and 103 RobOS App IPC ports" loading="lazy">
+          <figcaption><strong>RobOS App Mesh (<code>packages/app-mesh</code>):</strong> Fine-grained IPC port control across 103 registered RobOS app and service ports with 5 pluggable fabrics (<code>mtls</code>, <code>openziti</code>, <code>tailscale</code>, <code>netbird</code>, <code>wireguard</code>).</figcaption>
+        </figure>
+      </div>
+
+      <h3>How 1-Step Cross-Network Linking Works</h3>
+      <ul>
+        <li><strong>Single-Token Mutual Enrollment (<code>joinPrivateNetwork</code>):</strong> Instead of manually copying tokens in both directions, Box B runs <code>node packages/private-networks/cli.js host</code> (or clicks <strong>Enable Cross-Network WAN Relay</strong> in the GUI) to generate a <code>robos-net://</code> token. When Box A runs <code>node packages/private-networks/cli.js join "robos-net://..."</code>, Box A pins Box B's certificate and presents an <code>HMAC-SHA256</code> <code>enrollProof</code> over TLS 1.3 so Box B automatically pins Box A's client certificate in a single handshake.</li>
+        <li><strong>Self-Healing WAN Relay &amp; Zero-Knowledge <code>AES-256-GCM</code> Rendezvous:</strong> Free SSH HTTP 101 Upgrade relays periodically rotate their ephemeral <code>wss://&lt;id&gt;.lhr.life</code> subdomains. <code>startWanRelay()</code> runs a 20-second health probe (<code>probeRelayHttpAlive</code>), automatically respawns a fresh relay if the upstream returns <code>HTTP 502</code>, and publishes an <strong>authenticated <code>AES-256-GCM</code> encrypted beacon</strong> (keyed by <code>SHA-256(enrollToken + ":" + fingerprint)</code> with <code>nodeId</code> as AAD) to an unguessable <code>HMAC-SHA256</code> rendezvous topic. No IPs, hostnames, or plaintext relay URLs are ever exposed on the internet.</li>
+        <li><strong>Bidirectional <code>Reverse-Mux</code> Across Double NAT/CGNAT:</strong> Immediately after joining, Box A opens a persistent multiplexed stream session (<code>attachStreamMux</code>) over its outbound TLS 1.3 socket so Box B can also bridge and stream Box A's local ports (<code>:19215</code> Movie Player, <code>19100–19231</code> App IPC) without Box A opening any inbound port.</li>
+      </ul>
+
+      <div class="blog-log"># 1. On Box B (Host on Network B): Start Gateway, local :19215 video server, and WAN Relay
+node packages/private-networks/cli.js host
+
+# 2. On Box A (Peer on Network A): Link to Box B and mount Box B's video stream server on 127.0.0.1:19225
+node packages/private-networks/cli.js join "robos-net://&lt;INVITE_TOKEN&gt;"
+
+# 3. Verify Box B's video catalog and HTTP 206 Partial Content byte-range streaming on Box A
+curl -s "http://127.0.0.1:19225/api/tv-library?all=1" | jq .
+curl -I -H "Range: bytes=0-65535" "http://127.0.0.1:19225/media/f_1_stream.webm"</div>
+    </div>
+  </article>
 
   <article class="blog-entry" id="architecture">
     <div class="blog-meta">

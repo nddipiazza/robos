@@ -109,6 +109,10 @@ function renderState(state) {
       [${new Date(a.timestamp).toLocaleTimeString()}] <strong>${a.type}</strong> — ${a.detail}
     </div>
   `).join('');
+
+  if (Array.isArray(state.remoteVideoCatalog) && state.remoteVideoCatalog.length > 0) {
+    renderDiscoveredVideos(state.remoteVideoCatalog, state.remoteVideoEndpoint || (lastVideoBridgePort ? `http://127.0.0.1:${lastVideoBridgePort}` : ''));
+  }
 }
 
 function renderDiscoveredVideos(items, endpoint) {

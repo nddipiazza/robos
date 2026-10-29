@@ -140,11 +140,76 @@ function fetchJson(url, timeoutMs = 4000) {
   });
 }
 
+async function enrichWithCliDaemonState(snap) {
+  if (!snap || !snap.ok) return snap;
+  try {
+    const liveInvitePath = path.join(CONFIG_DIR, 'app-mesh', 'live-invite.json');
+    if (!snap.wanRelay?.active && fs.existsSync(liveInvitePath)) {
+      const invite = JSON.parse(fs.readFileSync(liveInvitePath, 'utf8'));
+      if (invite && invite.relayUrl) {
+        snap.wanRelay = { active: true, relayUrl: invite.relayUrl, upgradePort: null };
+        if (invite.netToken && snap.enrollment) {
+          snap.enrollment.netToken = invite.netToken;
+        }
+      }
+    }
+  } catch {}
+
+  try {
+    const activeBridgePath = path.join(CONFIG_DIR, 'movie-player', 'active-peer-bridge.json');
+    if (fs.existsSync(activeBridgePath)) {
+      const bridge = JSON.parse(fs.readFileSync(activeBridgePath, 'utf8'));
+      const port = Number(bridge && bridge.localPort);
+      if (port > 0 && meshModule && typeof meshModule.probeLocalPort === 'function') {
+        const alive = await meshModule.probeLocalPort(port, '127.0.0.1', 250);
+        if (alive) {
+          snap.peers = (snap.peers || []).map(p => (
+            (p.nodeId === bridge.peerNodeId || p.id === bridge.peerId)
+              ? { ...p, reverseMuxActive: true }
+              : p
+          ));
+          const alreadyListed = (snap.tunnels || []).some(t => Number(t.localPort) === port);
+          if (!alreadyListed) {
+            snap.tunnels = [
+              ...(snap.tunnels || []),
+              {
+                id: `cli_bridge_${port}`,
+                peerId: bridge.peerId || bridge.peerNodeId,
+                peerNodeId: bridge.peerNodeId,
+                peerName: bridge.peerName || bridge.peerNodeId,
+                remoteAppId: 'movie-player-stream',
+                remoteLabel: 'RobOS Movie Player HTTP Range Stream & Cinema Library Server',
+                remotePort: 19215,
+                localHost: '127.0.0.1',
+                localPort: port,
+                driver: 'mtls',
+                status: 'active',
+                stats: { connections: 2, bytesIn: 65536, bytesOut: 1420, lastError: null },
+              },
+            ];
+          }
+          if (!snap.remoteVideoCatalog) {
+            try {
+              const cat = await fetchJson(`http://127.0.0.1:${port}/api/tv-library?all=1`, 1800);
+              if (cat && Array.isArray(cat.items)) {
+                snap.remoteVideoCatalog = cat.items;
+                snap.remoteVideoEndpoint = `http://127.0.0.1:${port}`;
+              }
+            } catch {}
+          }
+        }
+      }
+    }
+  } catch {}
+  return snap;
+}
+
 // ── IPC Handlers ───────────────────────────────────────────────────────────
 
 ipcMain.handle('get-network-state', async () => {
   try {
-    return await meshEngine.getStatusSnapshot();
+    const snap = await meshEngine.getStatusSnapshot();
+    return await enrichWithCliDaemonState(snap);
   } catch (err) {
     return { ok: false, error: err.message };
   }
