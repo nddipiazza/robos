@@ -84,11 +84,11 @@ function migrateSettingsFile() {
 
 let SDLCKnowledgeGraphStore = null;
 try {
-  const mod = require('../robos-graph');
+  const mod = require('../robos-graph/lib/graph-store');
   SDLCKnowledgeGraphStore = mod.SDLCKnowledgeGraphStore;
 } catch {
   try {
-    const mod = require('/usr/local/share/robos/robos-graph');
+    const mod = require('/usr/local/share/robos/robos-graph/lib/graph-store');
     SDLCKnowledgeGraphStore = mod.SDLCKnowledgeGraphStore;
   } catch {}
 }

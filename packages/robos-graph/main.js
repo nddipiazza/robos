@@ -1,4 +1,12 @@
 'use strict';
+// `electron packages/robos-graph` starts KGraph Explorer from this file, so package.json
+// "main" has to point here. Other apps that require('robos-graph') for the store would then
+// start a second Explorer inside their own process. Give them the library instead.
+// (require.main is unset for an Electron app entry, so check how the process was started.)
+if (module.parent && !process.argv.some(a => [__filename, __dirname].includes(require('path').resolve(a)))) {
+  module.exports = require('./index');
+  return;
+}
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { SDLCKnowledgeGraphStore, SAMPLE_GHERKIN_FEATURE } = require('./lib/graph-store');
