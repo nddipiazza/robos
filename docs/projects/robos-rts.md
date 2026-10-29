@@ -45,6 +45,25 @@ The window opens with match setup. Choose Easy, Normal or Hard AI, its Rush, Bal
 
 The game starts fullscreen on the active display with a **1920×1080 interface canvas** that scales while preserving its aspect ratio. **Alt+Enter** switches to a centered 1600×900 window, reduced to fit smaller desktops, and back to fullscreen. `--windowed` and automated test launches use the fitted window.
 
+## Campaign: First Strike
+
+Choose **Campaign: First Strike** from the F8 menu, or run `games/robos-rts/play.ps1 -Mission` on Windows (`-Windowed` is optional). Other platforms can use `games/robos-rts/play.sh -- --scenario=campaign-first-strike`.
+
+You begin with a Colony Hub, 12 gathering Pioneers, 150 crystal and no army. Build Provision Silos and Muster Halls, train roughly **40 Riflemen (40 army supply)**, then attack the eastern stronghold through the canyon. With the original workers that means 52 total supply; five Silos raise capacity to 55. There is ample finite crystal and no time limit. The enemy garrison guards its base, without free reinforcements or attacks during your buildup. Destroy the Brood Nest **and every defender** to win; losing your army allows another attempt, while losing all your structures ends the mission.
+
+The briefing explains the build order; the live objective panel shows Riflemen, surviving defenders and the nest's status. **Enter** begins, **P** pauses, **F9** restarts at the briefing and **R** reopens the end-of-mission statistics. The results retain newly trained units and measure each unit's lifetime from its creation. The 40-supply recommendation is a combat balance target, not a victory gate: strong micro, different units or multiple assaults can change the number required.
+
+`scenarios/campaign-first-strike.jsonld` contains the map, economy, fixed garrison and mission metadata. `POST /mission {"action":"start"}` / `{"action":"restart"}` use the same engine operations as the interface. A normal straight assault without Surge is checked with 28 and 36 Riflemen losing and 40 winning within survivor/time thresholds. A separate end-to-end controller pays for all construction and all 40 Riflemen through ordinary player commands, then wins the actual mission. The rendered recording uses the live frame clock and keyboard Begin/Restart inputs:
+
+```bash
+cd games/robos-rts
+python run_balance_tests.py --suite campaign --jobs=1
+python tests/e2e/campaign_walkthrough.py
+python tests/e2e/campaign_walkthrough.py --record
+```
+
+The narrated MP4, captions, screenshots and progression proof are archived under `~/.robos/development/walkthroughs/rts-first-strike/`.
+
 ## Battle Lab: Riflemen versus Riflemen
 
 Choose **Battle Lab: 10 Riflemen vs 10 Riflemen** from the F8 menu, or launch directly:

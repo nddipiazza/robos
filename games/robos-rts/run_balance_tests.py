@@ -19,6 +19,7 @@ SUITES = {
     "combat": "test_combat_abilities.gd",
     "economy": "test_economy_abilities.gd",
     "matchups": "test_matchup_matrix.gd",
+    "campaign": "test_campaign.gd",
 }
 
 

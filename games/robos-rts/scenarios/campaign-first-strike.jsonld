@@ -1,0 +1,157 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:campaign-first-strike",
+  "@type": "robos:RTSTestScenario",
+  "name": "First Strike \u2014 Canyon Stronghold",
+  "mode": "campaign",
+  "seed": 42,
+  "paused": true,
+  "decor": true,
+  "mission": {
+    "id": "first-strike",
+    "title": "FIRST STRIKE",
+    "subtitle": "Mission 01 \u00b7 Canyon Stronghold",
+    "target_riflemen": 40,
+    "briefing": "The Gnarl Brood holds the eastern canyon. Establish a base, assemble your Riflemen, and clear the stronghold. The garrison will defend its territory while you prepare.",
+    "objective": "Destroy the Brood Nest and every defender. Protect your base."
+  },
+  "map": {
+    "width": 160,
+    "height": 112,
+    "obstacles": [
+      {
+        "x": 78,
+        "y": 0,
+        "w": 12,
+        "h": 40
+      },
+      {
+        "x": 78,
+        "y": 72,
+        "w": 12,
+        "h": 40
+      }
+    ]
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 150,
+      "aether": 0
+    },
+    "2": {
+      "faction": "monsters",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "resources": [
+    {
+      "type": "crystal_field",
+      "x": 12,
+      "y": 40,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 16,
+      "y": 40,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 12,
+      "y": 49,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 16,
+      "y": 49,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 12,
+      "y": 58,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 16,
+      "y": 58,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 12,
+      "y": 67,
+      "amount": 5000
+    },
+    {
+      "type": "crystal_field",
+      "x": 16,
+      "y": 67,
+      "amount": 5000
+    }
+  ],
+  "directives": [
+    {
+      "player": 2,
+      "mode": "guard_area",
+      "target_x": 128,
+      "target_y": 56,
+      "guard_radius": 28
+    }
+  ],
+  "units": [
+    {
+      "type": "colony_hub",
+      "owner": 1,
+      "x": 28,
+      "y": 56
+    },
+    {
+      "type": "pioneer",
+      "owner": 1,
+      "x": 21,
+      "y": 45,
+      "count": 12,
+      "spread": 2.5,
+      "auto_harvest": true
+    },
+    {
+      "type": "brood_nest",
+      "owner": 2,
+      "x": 132,
+      "y": 56
+    },
+    {
+      "type": "bile_crawler",
+      "owner": 2,
+      "x": 117,
+      "y": 47,
+      "count": 22,
+      "spread": 3.2
+    },
+    {
+      "type": "skitterling",
+      "owner": 2,
+      "x": 109,
+      "y": 48,
+      "count": 8,
+      "spread": 3.2
+    },
+    {
+      "type": "blight_hurler",
+      "owner": 2,
+      "x": 127,
+      "y": 49,
+      "count": 2,
+      "spread": 9
+    }
+  ]
+}

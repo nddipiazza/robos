@@ -272,6 +272,12 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				var res = SimEngine.load_scenario_dict(body_dict)
 				_send_json(client, 200, res)
 
+		"/mission":
+			match str(body_dict.get("action", "start")):
+				"start": _send_json(client, 200, SimEngine.start_campaign())
+				"restart": _send_json(client, 200, SimEngine.restart_campaign())
+				_: _send_json(client, 200, {"ok": false, "error": "Unknown mission action"})
+
 		"/battle":
 			match str(body_dict.get("action", "start")):
 				"start": _send_json(client, 200, SimEngine.start_unit_battle())

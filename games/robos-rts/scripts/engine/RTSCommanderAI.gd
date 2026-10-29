@@ -36,6 +36,7 @@ func configure_from_scenario(directives: Array) -> void:
 			"enabled": bool(d.get("enabled", true)),
 			"mode": mode,
 			"target_pos": Vector2(tx, ty),
+			"guard_radius": float(d.get("guard_radius", 24.0)),
 			"use_surge": bool(d.get("use_surge", true))
 		}
 
@@ -67,6 +68,30 @@ func step_ai(_dt: float) -> void:
 				_run_stutter_step_kite(pid, true)
 			"emplace_defend":
 				_run_emplace_defend(pid)
+			"guard_area":
+				_run_guard_area(pid, cfg.target_pos, float(cfg.get("guard_radius", 24.0)))
+
+func _run_guard_area(pid: int, center: Vector2, radius: float) -> void:
+	# A finite garrison: no production, resource gifts or attacks on the player's base.
+	var intruders: Array = []
+	for u in SimEngine.units.values():
+		if u.owner != pid and u.hp > 0 and u.pos.distance_to(center) <= radius:
+			intruders.append(u)
+	for u in SimEngine.units.values():
+		if u.owner != pid or u.is_structure or u.hp <= 0:
+			continue
+		if not intruders.is_empty():
+			var target: Dictionary = intruders[0]
+			for enemy in intruders:
+				if u.pos.distance_squared_to(enemy.pos) < u.pos.distance_squared_to(target.pos):
+					target = enemy
+			if u.orders.is_empty() or u.orders[0].get("target_tag", 0) != target.tag:
+				SimEngine.issue_command([u.tag], "attack_target", target.pos, target.tag)
+		elif u.pos.distance_to(u.home_pos) > 1.5:
+			if u.orders.is_empty() or u.orders[0].type != "move":
+				SimEngine.issue_command([u.tag], "move", u.home_pos)
+		elif u.orders.is_empty() or u.orders[0].type != "hold_position":
+			SimEngine.issue_command([u.tag], "hold_position")
 
 func _run_stutter_step_kite(pid: int, use_surge: bool) -> void:
 	var enemies: Array[Dictionary] = []

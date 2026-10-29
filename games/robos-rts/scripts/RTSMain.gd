@@ -21,6 +21,7 @@ var icons: Node
 var hud: Node2D
 var match_menu: CanvasLayer
 var battle_lab: CanvasLayer
+var campaign: CanvasLayer
 
 var local_player: int = 1
 var selected_tags: Array[int] = []
@@ -69,6 +70,8 @@ func _ready() -> void:
 	add_child(match_menu)
 	battle_lab = preload("res://scripts/RTSBattleLab.gd").new()
 	add_child(battle_lab)
+	campaign = preload("res://scripts/RTSCampaign.gd").new()
+	add_child(campaign)
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
@@ -849,6 +852,9 @@ func ui_state() -> Dictionary:
 		"battle_lab_visible": battle_lab != null and battle_lab.panel.visible,
 		"battle_results_visible": battle_lab != null and battle_lab.results.is_open(),
 		"battle_results": battle_lab.results.ui_state() if battle_lab else {},
+		"campaign_briefing_visible": campaign != null and campaign.briefing.visible,
+		"campaign_objectives": campaign.status_label.text if campaign else "",
+		"campaign_results_visible": campaign != null and campaign.results.is_open(),
 		"rifle_fx_warm": world_3d != null and world_3d.rifle_fx.warmup_complete,
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"local_player": local_player,

@@ -9,7 +9,7 @@ var was_paused: bool = false
 func _ready() -> void:
 	layer = 10
 	panel = PanelContainer.new()
-	panel.position = Vector2(670, 260)
+	panel.position = Vector2(670, 180)
 	panel.custom_minimum_size = Vector2(580, 500)
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color("#111b27")
@@ -39,6 +39,12 @@ func _ready() -> void:
 	start.text = "Start new match"
 	start.pressed.connect(_start)
 	box.add_child(start)
+	var mission = Button.new()
+	mission.text = "Campaign: First Strike · Build a 40-supply army"
+	mission.pressed.connect(func():
+		SimEngine.load_scenario_file("campaign-first-strike")
+		panel.hide())
+	box.add_child(mission)
 	var battle = Button.new()
 	battle.text = "Battle Lab: 10 Riflemen vs 10 Riflemen"
 	battle.pressed.connect(func():

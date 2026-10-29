@@ -1,5 +1,6 @@
 param(
     [switch]$BattleLab,
+    [switch]$Mission,
     [switch]$Windowed
 )
 $ErrorActionPreference = 'Stop'
@@ -20,4 +21,6 @@ if (-not $taskGodot -or -not (Test-Path -LiteralPath $taskGodot)) {
 $launchArgs = @('--path', $PSScriptRoot)
 if ($Windowed) { $launchArgs += '--windowed' }
 if ($BattleLab) { $launchArgs += @('--', '--scenario=riflemen-vs-riflemen') }
+if ($Mission -and $BattleLab) { throw 'Choose either -Mission or -BattleLab.' }
+if ($Mission) { $launchArgs += @('--', '--scenario=campaign-first-strike') }
 & $taskGodot @launchArgs

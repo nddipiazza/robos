@@ -80,6 +80,9 @@ func show_report(data: Dictionary) -> void:
 	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
 	var title = "DRAW" if report.winner == 0 else ("BLUE VICTORY" if report.winner == 1 else "RED VICTORY")
+	var campaign = report.get("mode", "") == "campaign"
+	if campaign:
+		title = "MISSION COMPLETE" if report.winner == 1 else "MISSION FAILED"
 	var header = _label(box, title + "   /   BATTLE RESULTS", 32)
 	header.add_theme_color_override("font_color", Color("#8ecaff") if report.winner == 1 else Color("#ffaaa1"))
 	_label(box, "%s   ·   %.3f seconds   ·   %d ticks at 64 Hz   ·   Seed %d   ·   %s" % [report.scenario, report.duration, report.ticks, report.seed, report.reason.replace("_", " ")], 17)
@@ -111,8 +114,8 @@ func show_report(data: Dictionary) -> void:
 	_fill(economy, [
 		["Units deployed", "started"], ["Surviving units", "survivors"], ["Units lost", "lost"], ["Enemy units killed", "kills"],
 		["Survival %", "survival_percent"], ["Kill / loss ratio", "kill_loss_ratio"],
-		["Starting supply", "starting_supply"], ["Surviving supply", "surviving_supply"], ["Supply destroyed", "supply_destroyed"],
-		["Starting crystal value", "starting_crystal"], ["Starting aether value", "starting_aether"],
+		["Deployed supply", "starting_supply"], ["Surviving supply", "surviving_supply"], ["Supply destroyed", "supply_destroyed"],
+		["Deployed crystal value", "starting_crystal"], ["Deployed aether value", "starting_aether"],
 		["Crystal lost", "crystal_lost"], ["Aether lost", "aether_lost"], ["Enemy crystal destroyed", "crystal_destroyed"], ["Enemy aether destroyed", "aether_destroyed"],
 		["Surviving crystal value", "surviving_crystal"], ["Surviving aether value", "surviving_aether"],
 		["Resource trade ratio (equal crystal/aether weight)", "trade_ratio"], ["Initial HP", "initial_hp"], ["Remaining HP", "hp"],
@@ -137,7 +140,10 @@ func show_report(data: Dictionary) -> void:
 	footer.add_theme_constant_override("separation", 16)
 	box.add_child(footer)
 	_button(footer, "View battlefield  [Esc]", dismiss)
-	_button(footer, "Reset armies  [F9]", func(): SimEngine.reset_unit_battle())
+	if campaign:
+		_button(footer, "Restart mission  [F9]", func(): SimEngine.restart_campaign())
+	else:
+		_button(footer, "Reset armies  [F9]", func(): SimEngine.reset_unit_battle())
 	save_button = _button(footer, "Save full JSON report", _save)
 	saved = _label(box, "Select a unit for its complete record, including destroyed units. R reopens these results after closing.", 15)
 	saved.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -242,7 +248,7 @@ func _type_tab() -> void:
 	var box = VBoxContainer.new()
 	box.name = "Unit Type Efficiency"
 	tabs.add_child(box)
-	_label(box, "Costs use starting crystal + aether with equal weighting. MVP type = most kills per 100 resources; lowlight = least damage per 100.", 16)
+	_label(box, "Costs use deployed crystal + aether with equal weighting. MVP type = most kills per 100 resources; lowlight = least damage per 100.", 16)
 	var tree = Tree.new()
 	tree.columns = 8
 	tree.hide_root = true
@@ -251,7 +257,7 @@ func _type_tab() -> void:
 	tree.add_theme_font_size_override("font_size", 18)
 	tree.add_theme_constant_override("v_separation", 8)
 	box.add_child(tree)
-	var titles = ["Type / Side", "Deployed", "Lost", "Kills", "Damage", "Starting value", "Kills / 100", "Damage / 100"]
+	var titles = ["Type / Side", "Deployed", "Lost", "Kills", "Damage", "Deployed value", "Kills / 100", "Damage / 100"]
 	for i in range(titles.size()):
 		tree.set_column_title(i, titles[i])
 	var root = tree.create_item()

@@ -1,6 +1,6 @@
 extends RefCounted
 
-# Battle-only telemetry. Dead-unit records survive removal from the live sim.
+# Battle/mission telemetry. Dead-unit records survive removal from the live sim.
 var active := false
 var records: Dictionary = {}
 var timeline: Array = []
@@ -22,19 +22,25 @@ func begin(units: Dictionary, at_tick: int) -> void:
 	last_sample_tick = at_tick
 	active = true
 	for u in units.values():
-		var def = RTSData.get_unit_def(u.unit_type)
-		records[u.tag] = {"tag": u.tag, "name": u.name, "unit_type": u.unit_type, "owner": u.owner,
-			"crystal": def.get("crystal_cost", 0), "aether": def.get("aether_cost", 0), "supply": def.get("supply_cost", 0),
-			"initial_hp": u.hp, "initial_shields": u.shields, "hp": u.hp, "shields": u.shields,
-			"kills": 0, "shots": 0, "attack_starts": 0, "windup_cancels": 0, "recovery_cancels": 0,
-			"allied_detours": 0,
-			"hp_damage": 0.0, "shield_damage": 0.0, "damage_taken": 0.0, "overkill": 0.0,
-			"armor_blocked": 0.0, "direct_damage": 0.0, "splash_damage": 0.0,
-			"hp_healed": 0.0, "shields_regenerated": 0.0, "self_damage": 0.0, "surge_uses": 0,
-			"crystal_destroyed": 0, "aether_destroyed": 0, "supply_destroyed": 0,
-			"distance": 0.0, "moving_seconds": 0.0, "windup_seconds": 0.0, "recovery_seconds": 0.0,
-			"first_shot_tick": -1, "last_shot_tick": -1, "death_tick": -1, "alive": true,
-			"last_position": u.pos}
+		register_unit(u, at_tick)
+
+func register_unit(u: Dictionary, at_tick: int) -> void:
+	if not active or records.has(u.tag):
+		return
+	var def = RTSData.get_unit_def(u.unit_type)
+	records[u.tag] = {"tag": u.tag, "name": u.name, "unit_type": u.unit_type, "owner": u.owner,
+		"crystal": def.get("crystal_cost", 0), "aether": def.get("aether_cost", 0), "supply": def.get("supply_cost", 0),
+		"initial_hp": u.hp, "initial_shields": u.shields, "hp": u.hp, "shields": u.shields,
+		"kills": 0, "shots": 0, "attack_starts": 0, "windup_cancels": 0, "recovery_cancels": 0,
+		"allied_detours": 0,
+		"hp_damage": 0.0, "shield_damage": 0.0, "damage_taken": 0.0, "overkill": 0.0,
+		"armor_blocked": 0.0, "direct_damage": 0.0, "splash_damage": 0.0,
+		"hp_healed": 0.0, "shields_regenerated": 0.0, "self_damage": 0.0, "surge_uses": 0,
+		"crystal_destroyed": 0, "aether_destroyed": 0, "supply_destroyed": 0,
+		"distance": 0.0, "moving_seconds": 0.0, "windup_seconds": 0.0, "recovery_seconds": 0.0,
+		"first_shot_tick": -1, "last_shot_tick": -1, "death_tick": -1, "alive": true,
+		"last_position": u.pos}
+	records[u.tag]["spawn_tick"] = at_tick
 
 func count(tag: int, metric: String, amount: float = 1.0) -> void:
 	if active and records.has(tag):
@@ -128,7 +134,7 @@ func finish(units: Dictionary, at_tick: int, seed_value: int) -> Dictionary:
 			var r = original.duplicate(true)
 			r.erase("last_position")
 			r.damage = r.hp_damage + r.shield_damage
-			r.alive_seconds = float((r.death_tick if r.death_tick >= 0 else at_tick) - start_tick) / 64.0
+			r.alive_seconds = float((r.death_tick if r.death_tick >= 0 else at_tick) - int(r.get("spawn_tick", start_tick))) / 64.0
 			r.dps = r.damage / maxf(1.0 / 64.0, r.alive_seconds)
 			r.mean_shot_interval = float(r.last_shot_tick - r.first_shot_tick) / 64.0 / float(r.shots - 1) if r.shots > 1 else null
 			roster.append(r)

@@ -258,6 +258,12 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 		battle_scenario = data.duplicate(true)
 		paused = true
 		match_state = {"mode": "unit_battle", "status": "ready", "winner": 0, "reason": ""}
+	if str(data.get("mode", "")) == "campaign":
+		players.erase(3)
+		battle_scenario = data.duplicate(true)
+		paused = true
+		match_state = {"mode": "campaign", "status": "briefing", "winner": 0, "reason": "",
+			"mission": data.get("mission", {}).duplicate(true)}
 
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(
@@ -423,13 +429,42 @@ func start_unit_battle() -> Dictionary:
 	return {"ok": true, "match": match_state.duplicate(true)}
 
 func reset_unit_battle() -> Dictionary:
-	if battle_scenario.is_empty():
+	if match_state.get("mode", "") != "unit_battle" or battle_scenario.is_empty():
 		return {"ok": false, "error": "No unit battle is loaded"}
 	# Copy before reset_state clears the stored scenario.
 	return load_scenario_dict(battle_scenario.duplicate(true))
 
+func start_campaign() -> Dictionary:
+	if match_state.get("mode", "") != "campaign" or match_state.get("status", "") != "briefing":
+		return {"ok": false, "error": "Load or restart a campaign mission first"}
+	match_state["status"] = "playing"
+	battle_stats.begin(units, tick)
+	_accum_time = 0.0
+	paused = false
+	return {"ok": true, "match": match_state.duplicate(true)}
+
+func restart_campaign() -> Dictionary:
+	if match_state.get("mode", "") != "campaign" or battle_scenario.is_empty():
+		return {"ok": false, "error": "No campaign mission is loaded"}
+	return load_scenario_dict(battle_scenario.duplicate(true))
+
 func _check_match_result() -> void:
 	if match_state.get("status", "") != "playing":
+		return
+	if match_state.get("mode", "") == "campaign":
+		var player_structures = 0
+		var enemies = 0
+		for u in units.values():
+			if u.hp <= 0:
+				continue
+			if u.owner == 1 and u.is_structure:
+				player_structures += 1
+			elif u.owner == 2:
+				enemies += 1
+		if player_structures == 0:
+			_finish_match(2, "base_destroyed")
+		elif enemies == 0:
+			_finish_match(1, "stronghold_cleared")
 		return
 	var remaining = {1: 0, 2: 0}
 	for u in units.values():
@@ -450,11 +485,12 @@ func _finish_match(winner: int, reason: String) -> void:
 	match_state["winner"] = winner
 	match_state["reason"] = reason
 	match_state["finished_tick"] = tick
-	if match_state.get("mode", "") == "unit_battle":
+	if match_state.get("mode", "") in ["unit_battle", "campaign"]:
 		match_state["results"] = battle_stats.finish(units, tick, rng_seed)
 		match_state.results["winner"] = winner
 		match_state.results["reason"] = reason
 		match_state.results["scenario"] = scenario_name
+		match_state.results["mode"] = match_state.mode
 	emit_signal("notice", 1, "Victory" if winner == 1 else ("Draw" if winner == 0 else "Defeat"), "info")
 
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
@@ -676,6 +712,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"damage_dealt": 0.0
 	}
 	units[tag] = u
+	battle_stats.register_unit(u, tick)
 	if u["is_structure"]:
 		nav_dirty = true
 	_recompute_supplies()
@@ -693,7 +730,7 @@ func get_elevation_at(pos: Vector2) -> float:
 	return 0.0
 
 func step_ticks(count: int = 1) -> void:
-	if match_state.get("status", "") == "ready":
+	if match_state.get("status", "") in ["ready", "briefing"]:
 		return
 	last_step_count = count
 	if paused:
