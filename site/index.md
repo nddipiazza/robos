@@ -164,7 +164,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, 
         <h3>Create a Virtual DJ</h3>
         <p>Describe a host, and the agent writes a short intro for each song a few songs ahead. RobOS Voice speaks it between songs, on your desk or on a Google Cast speaker. The same player can build an AI Playlist from a description of a mood.</p>
         <ul class="ticks"><li>Off unless you turn it on</li><li>Pick the agent, the voice and how often it talks</li><li>Works from your own library, not a streaming catalog</li></ul>
-        <p style="margin-top:22px"><a style="color:var(--accent);font-weight:600" href="{{ '/blog/#audio-player-virtual-dj' | relative_url }}">Read how we built it →</a></p>
+        <p style="margin-top:22px"><a style="color:var(--accent);font-weight:600" href="{{ '/blog/audio-player-virtual-dj/' | relative_url }}">Read how we built it →</a></p>
       </div>
       <div class="l-shots">
         <figure><img src="{{ '/assets/audio-player/virtual-dj-volume.jpg' | relative_url }}" alt="Virtual DJ dialog with the AI agent set to Antigravity, the DJ described as a big loud radio host, a voice, how often the DJ talks and a DJ volume slider at 150% of the music" width="640" height="500" loading="lazy"><figcaption>The Virtual DJ dialog: pick an agent, describe your DJ, choose a voice.</figcaption></figure>

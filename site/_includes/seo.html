@@ -123,6 +123,9 @@
         "name": {{ seo_title | jsonify }},
         "headline": {{ page.title | default: seo_title | jsonify }},
         "description": {{ seo_description | jsonify }},
+        {%- if page.date %}
+        "datePublished": {{ page.date | date_to_xmlschema | jsonify }},
+        {%- endif %}
         "inLanguage": "en-US",
         "isPartOf": { "@id": "{{ '/' | absolute_url }}#website" },
         "about": { "@id": "{{ '/' | absolute_url }}#organization" },

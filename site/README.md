@@ -15,6 +15,13 @@ both EXEs, checksums and source provenance. It runs on version tags; its manual 
 can add EXEs to an existing release matching `VERSION`. These EXEs are separate from
 the Linux-distro USB flasher built by `release.yml`.
 
+## Engineering blog (`/blog/`)
+
+Each post is its own file, `_blog/<slug>.html`, published at `/blog/<slug>/` with the `blog-post` layout.
+`blog/index.html` lists the posts newest first by their `date` front matter (a time of day orders posts
+from the same day) and has no post content of its own. Old `/blog/#<slug>` links are forwarded to the
+post's page by a script on the index. The `robos-blog` skill describes the front matter.
+
 ## Hero video
 
 The hero on the home page is a recording of the real apps. Regenerate it with the steps in

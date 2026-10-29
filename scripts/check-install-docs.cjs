@@ -86,6 +86,10 @@ const seoCheckedPages = [
   'v1/system-documentation/index.html',
   'v1/projects/crpg-realm/elearning/index.html',
 ];
+// Every blog post has its own page at /blog/<slug>/ (site/_blog/<slug>.html).
+const blogPosts = fs.readdirSync(path.resolve(__dirname, '../site/_blog')).filter((f) => f.endsWith('.html'));
+assert.ok(blogPosts.length > 0, 'No blog posts in site/_blog');
+for (const file of blogPosts) seoCheckedPages.push(`blog/${file.replace(/\.html$/, '')}/index.html`);
 
 for (const rel of seoCheckedPages) {
   const fullPath = path.join(output, rel);

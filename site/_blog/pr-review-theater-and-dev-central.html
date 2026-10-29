@@ -1,0 +1,36 @@
+---
+title: "Local-First PR Review Theater, Live Demo Steering, and Autonomous CI Recovery"
+nav_label: "PR Review Theater"
+date: 2026-10-12
+date_label: "Sep 30 – Oct 12, 2026"
+tags:
+  - "PR Review Theater"
+  - "Dev Central v2"
+  - "CI &amp; Governance"
+summary: "Turned code review into a two-stage local and peer workflow with syntax-aware diffs, steerable agent walkthrough checkpoints, evidence-backed PR descriptions, and live Buildkite/GitHub CI failure recovery."
+description: "Turned code review into a two-stage local and peer workflow with syntax-aware diffs, steerable agent walkthrough checkpoints, evidence-backed PR descriptions, and live Buildkite/GitHub CI failure recovery."
+og_image: /assets/shots/review-evidence.jpg
+og_image_alt: "Before and after visual evidence inside PR Review Theater"
+---
+<div class="blog-body">
+  <p>Agents shouldn't open noisy pull requests before a developer has inspected the work. We restructured the delivery workflow across <strong>Task Implementer</strong>, <strong>Dev Central v2</strong>, and <strong>PR Review Theater</strong> (<code>packages/pr-review</code>) so agents push a feature branch first and hand off to a local review stage:</p>
+  <ul>
+    <li><strong>Changes, Evidence &amp; Steerable Walkthroughs:</strong> Developers inspect syntax-highlighted diffs, before/after screenshot evidence, and editable multi-checkpoint walkthroughs—and can send live steering messages in the side-pane chat to refine code, evidence, or demo steps in place.</li>
+    <li><strong>Factual PR Descriptions &amp; Team Handoff:</strong> When ready, developers create a draft PR with Markdown descriptions grounded in real walkthrough screenshots, monitor live GitHub Actions and Buildkite logs, trigger guided local CI repair on failed checks, and undraft with prefilled reviewers and Slack mentions.</li>
+    <li><strong>Desktop Polish:</strong> Shipped the <strong>RobOS GNOME Desktop App Installer</strong> (<code>packages/gnome-desktop-installer</code>) with background worker-thread shortcut repair, plus a built-in skill browser in <code>&lt;robos-ai-textarea&gt;</code>.</li>
+  </ul>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/shots/review-evidence.jpg' | relative_url }}" alt="Before and after visual evidence inside PR Review Theater" loading="lazy">
+      <figcaption>PR Review Theater comparing before-and-after visual evidence alongside the agent chat pane.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/hero/slides/24-ready-dialog.jpg' | relative_url }}" alt="Promoting a passing draft PR to Ready for Review with team notifications" loading="lazy">
+      <figcaption>Promoting a verified draft PR after CI passes, with reviewer selection and team notification.</figcaption>
+    </figure>
+  </div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">Read the PR Review Theater documentation →</a>
+  <span class="blog-commits">Commits: 334dce83 · 2132b1b9 · cea112ea · 1e338aca · aedb5135</span>
+</div>

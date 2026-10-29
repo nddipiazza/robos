@@ -21,7 +21,7 @@ It is free and open source under the [Apache License 2.0](LICENSE). The current 
 2. **Customize any app.** Describe the change. It becomes an edit to the app's KGraph, an agent implements it on a branch, and tests plus a narrated walkthrough show the result before you keep it.
 3. **Build a new app.** Describe it, or import the repositories, APIs and docs you already have. RobOS models it in the KGraph and routed agents build it the same way the suites were built.
 
-Separately, AI-powered features inside the apps are optional extras you switch on, grounded in your own data. The Audio Player's [Virtual DJ and AI Playlists](https://rowbose.com/blog/#audio-player-virtual-dj) are the reference example.
+Separately, AI-powered features inside the apps are optional extras you switch on, grounded in your own data. The Audio Player's [Virtual DJ and AI Playlists](https://rowbose.com/blog/audio-player-virtual-dj/) are the reference example.
 
 ## What is in this repository
 

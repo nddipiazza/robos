@@ -1,0 +1,30 @@
+---
+title: "Cloud Storage & Data Sources Overhaul, RobOS Audio Player, and Home Speaker"
+nav_label: "Cloud Storage & Audio"
+date: 2026-10-20 13:00:00 +0000
+date_label: "Oct 14 – Oct 20, 2026"
+tags:
+  - "Data Sources"
+  - "Audio Player"
+  - "Smart Home"
+summary: "Unified local, FTP, SFTP, and live Google Drive OAuth 2.0 folder mounting in Data Sources, and built a desktop Audio Player and Home Speaker intercom suite with zero-cloud Google Cast streaming."
+description: "Unified local, FTP, SFTP, and live Google Drive OAuth 2.0 folder mounting in Data Sources, and built a desktop Audio Player and Home Speaker intercom suite with zero-cloud Google Cast streaming."
+og_image: /v1/assets/images/audio-player-playlist-architecture.jpg
+og_image_alt: "RobOS Audio Player and Home Speaker playlist and Cast streaming architecture"
+---
+<div class="blog-body">
+  <p>Connecting external storage and media libraries across desktop apps required too much manual form entry. We overhauled <strong>Cloud Storage &amp; Data Sources</strong> (<code>packages/data-sources</code>) around a guided 3-step connection wizard with real Google OAuth 2.0 browser sign-in, live Google Drive API folder mounting, top-right authentication status toasts, and native FTP/SFTP storage drivers alongside PostgreSQL schema inspection.</p>
+  <ul>
+    <li><strong>Managed Library Folders:</strong> <strong>RobOS Audio Player</strong> (<code>packages/audio-player</code>) mounts local directories, FTP servers, and SFTP shares as managed libraries with one-click sync, rename, and removal. Folder scanning runs on a background worker thread so large music libraries never stall the UI.</li>
+    <li><strong>Playlists, Synced Lyrics &amp; Amber Library View:</strong> Added a sortable, list-based library view with a warm amber palette, synced lyric display, M3U playlist import/export, and Howler.js + H5AudioPlayer playback.</li>
+    <li><strong>Local Cast &amp; Home Speaker Intercom:</strong> Built zero-cloud Google Home / Cast discovery and streaming directly from the Now Playing deck, plus the companion <strong>RobOS Home Speaker</strong> app (<code>packages/home-speaker</code>) for push-to-talk intercom broadcasts, neural TTS announcements, and scheduled chimes.</li>
+  </ul>
+  <figure class="blog-fig">
+    <img src="{{ '/v1/assets/images/audio-player-playlist-architecture.jpg' | relative_url }}" alt="RobOS Audio Player and Home Speaker playlist and Cast streaming architecture" loading="lazy">
+    <figcaption>RobOS Audio Player library management, background metadata worker, and local Cast streaming pipeline.</figcaption>
+  </figure>
+</div>
+<div class="blog-links">
+  <a href="{{ '/apps/' | relative_url }}">Browse Audio &amp; Data Sources apps →</a>
+  <span class="blog-commits">Commits: f8bbcede · 073d9bc1 · 87319217 · 426eaad4 · 7af920a2</span>
+</div>

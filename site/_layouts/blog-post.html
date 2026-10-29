@@ -1,0 +1,35 @@
+---
+layout: default
+---
+{%- assign posts = site.blog | sort: 'date' | reverse -%}
+{%- for p in posts -%}
+  {%- if p.url == page.url -%}
+    {%- assign i = forloop.index0 -%}
+    {%- assign newer_i = i | minus: 1 -%}
+    {%- assign older_i = i | plus: 1 -%}
+    {%- if i > 0 %}{% assign newer = posts[newer_i] %}{% endif -%}
+    {%- assign older = posts[older_i] -%}
+  {%- endif -%}
+{%- endfor -%}
+<div class="blog-feed blog-single">
+  <a class="blog-back" href="{{ '/blog/' | relative_url }}">← Engineering log</a>
+  <article class="blog-entry">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="{{ page.date | date: '%Y-%m-%d' }}">{% if page.date_label %}{{ page.date_label }}{% else %}{{ page.date | date: '%b %-d, %Y' }}{% endif %}</time>
+      {%- for tag in page.tags %}
+      <span class="blog-tag">{{ tag }}</span>
+      {%- endfor %}
+    </div>
+    <h1>{{ page.title | escape }}</h1>
+    <p class="blog-summary">{{ page.summary }}</p>
+{{ content }}
+  </article>
+  <nav class="blog-pager" aria-label="More posts">
+    {%- if newer %}
+    <a class="newer" href="{{ newer.url | relative_url }}"><span>Newer</span>{{ newer.title | escape }}</a>
+    {%- endif %}
+    {%- if older %}
+    <a class="older" href="{{ older.url | relative_url }}"><span>Older</span>{{ older.title | escape }}</a>
+    {%- endif %}
+  </nav>
+</div>

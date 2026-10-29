@@ -1,0 +1,119 @@
+---
+title: "Quest: Warrior Dragon Plays Itself: From the King's Throne Room to the Dragonlord's True Form"
+nav_label: "Quest: Warrior Dragon AI"
+date: 2026-10-23 12:00:00 +0000
+date_label: "Oct 23, 2026"
+tags:
+  - "Quest: Warrior Dragon"
+  - "Game AI"
+  - "Godot 4"
+summary: "Start Quest: Warrior Dragon with <code>--demo</code> and nobody touches the controller. The in-engine AI picks New Quest, listens to King Lorik, opens the treasure chest, takes the Magic Key to the locked door, walks down through Tantegel Castle and out into Alefgard, then fights whatever jumps out of the grass. Point it at the Dragonlord and it wins that fight too. Everything below was recorded from the game running headless on a virtual display, with no human input."
+description: "Start Quest: Warrior Dragon with --demo and nobody touches the controller. The in-engine AI picks New Quest, listens to King Lorik, opens the treasure chest, takes the Magic Key to the locked door, walks down through Tantegel Castle and out into Alefgard, then fights whatever jumps out of the grass. Point it at the Dragonlord and it wins that fight too. Everything below was recorded from the game running headless on a virtual display, with no human input."
+og_image: /assets/blog/quest-warrior-dragon-ai/king-lorik.png
+---
+<div class="blog-body">
+  <figure class="blog-fig video-embed">
+    <iframe src="https://www.youtube-nocookie.com/embed/o6RHKMKD2AU" title="Quest: Warrior Dragon: the RobOS AI plays the whole game, throne room to Dragonlord" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    <figcaption>The whole game in one uninterrupted run: all 74 milestones from King Lorik's throne room to the Dragonlord, hero level 21, 2,621 battles, 6 deaths. Chapters in the description jump to each milestone. Recorded with the full-game play mode, which goes further than the <code>--demo</code> run below. <a href="https://www.youtube.com/watch?v=o6RHKMKD2AU">Watch on YouTube</a></figcaption>
+  </figure>
+  <figure class="blog-fig pixel">
+    <video poster="{{ '/assets/blog/quest-warrior-dragon-ai/king-lorik.png' | relative_url }}" autoplay muted loop playsinline controls preload="metadata" width="512" height="480">
+      <source src="{{ '/assets/blog/quest-warrior-dragon-ai/ai-walkthrough.webm' | relative_url }}" type="video/webm">
+      <source src="{{ '/assets/blog/quest-warrior-dragon-ai/ai-walkthrough.mp4' | relative_url }}" type="video/mp4">
+    </video>
+    <figcaption>42 seconds, real time, no human input: King Lorik, the Magic Key, the throne-room door, Tantegel Castle, the overworld and the first Slime and Drakee fights.</figcaption>
+  </figure>
+  <div class="blog-stats">
+    <div><b>~12 s</b><span>New Quest to the overworld</span></div>
+    <div><b>0</b><span>human button presses</span></div>
+    <div><b>5 / 6</b><span>boss-tier battle tests won</span></div>
+    <div><b>36 / 220</b><span>HP left after the Dragonlord</span></div>
+  </div>
+  <p><strong>It plays with the same buttons you do.</strong> <code>AIEngine.gd</code> is an autoload inside the Godot game. It can only send the input actions a player can (<code>move_up</code>, <code>move_down</code>, <code>move_left</code>, <code>move_right</code>, <code>ui_accept</code>, <code>ui_cancel</code>, <code>cmd_menu</code>), so it opens the command window and moves the cursor to <em>TAKE</em> or <em>DOOR</em> like a person would. It never teleports and never sets the game state directly. Each tick it reads the same JSON the game's HTTP control server publishes (<code>/state</code> for the hero, dialog, menus and battle, <code>/screen</code> for a walkable map of the visible tiles with every chest, door and staircase marked). It runs a breadth-first search to its next goal and walks there in <strong>strides</strong>: on a straight run it holds the direction down across several tiles and lets go as the hero steps onto the last one, instead of tapping once per tile.</p>
+  <p>A run from New Quest reads like this (taken from the state log the capture script recorded):</p>
+  <div class="blog-log">SaveSelect   ▶ BEGIN A NEW QUEST
+ThroneRoom   King Lorik: "Then speak with the guards, for they have much knowledge…"
+ThroneRoom   cmd_menu → TAKE         "Thou dost find Magic Key!"
+ThroneRoom   cmd_menu → DOOR         "The door clicks open."
+ThroneRoom   stride → stairs (9,9)  cmd_menu → STAIRS
+Castle1F     stride → south gate (11,30)
+WorldMap     (44,45)  ⚔ Slime        HP 15 → 12
+WorldMap     (44,45)  ⚔ Red Slime
+WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
+  <div class="blog-fig-grid three">
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/save-select.png' | relative_url }}" alt="Save select screen with BEGIN A NEW QUEST highlighted above seven checkpoint saves" loading="lazy" width="512" height="480">
+      <figcaption>The AI picks <em>Begin a New Quest</em>.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/king-lorik.png' | relative_url }}" alt="Throne room with King Lorik speaking: Then speak with the guards, for they have much knowledge that may aid thee." loading="lazy" width="512" height="480">
+      <figcaption>King Lorik gives his speech; the AI reads every page.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/magic-key.png' | relative_url }}" alt="Throne room with the dialog: Thou dost find Magic Key!" loading="lazy" width="512" height="480">
+      <figcaption>TAKE on the chest: <em>Thou dost find Magic Key!</em></figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/castle-1f.png' | relative_url }}" alt="Tantegel Castle first floor with the hero walking toward the south gate" loading="lazy" width="512" height="480">
+      <figcaption>Down the stairs and through Tantegel Castle.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/overworld.png' | relative_url }}" alt="Alefgard overworld with the hero just outside Tantegel Castle by the river" loading="lazy" width="512" height="480">
+      <figcaption>Out into Alefgard.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/slime-battle.png' | relative_url }}" alt="Battle screen: a Slime, with the message The Slime takes 3 damage!" loading="lazy" width="512" height="480">
+      <figcaption>First blood: <em>The Slime takes 3 damage!</em></figcaption>
+    </figure>
+  </div>
+  <p><strong>The bug it found for us.</strong> The first time we ran it this week, the hero opened the chest, unlocked the door and then walked into the throne-room counter forever. Yesterday's tile audit (85c4559f) made tile 8 the counter around King Lorik, and a floor tile in every town, but the control server still listed tiles 8 and 21 as staircases in <code>/screen</code>. The AI treated the counter at (5,3) as the nearest staircase. Only tiles 33 and 34 are staircases; mapped stairs come from <code>stair_registry.json</code>. With that fixed in 4f6bbe3d, the same run gets from New Quest to the overworld in about twelve seconds. No test caught this; an AI player did, just by trying to play.</p>
+  <p><strong>Boss fights.</strong> The <em>Enemy AI</em> side of demo mode is the game's normal monster logic: attack patterns, spells and fire breath from <code>monsters.json</code>. To show the <em>Player AI</em> against the strongest monsters we used the debug launcher's battle test, which starts a fight against any of the 40 monsters with whatever hero stats you give it:</p>
+  <div class="blog-log">./launch.sh --demo --scene BattleTest --monster dragonlord_form1 \
+  --hero-level 30 --hero-hp 220 --hero-hp-max 220 --hero-atk 150 --hero-def 170</div>
+  <p>A level-15 hero with 90 HP lost to the <strong>Golem</strong>. At level 20 the AI beat it twice, and at level 30 it beat the <strong>Green Dragon</strong>, the Dragonlord's final form on its own (<code>dragonlord_form2</code>) and the full two-stage <strong>Dragonlord</strong> fight. That last fight is below, about seven seconds from <em>A Dragonlord draws near!</em> to the final blow:</p>
+  <figure class="blog-fig pixel">
+    <video poster="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-true-form.png' | relative_url }}" autoplay muted loop playsinline controls preload="metadata" width="512" height="480">
+      <source src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-fight.webm' | relative_url }}" type="video/webm">
+      <source src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-fight.mp4' | relative_url }}" type="video/mp4">
+    </video>
+    <figcaption>The AI against both stages of the Dragonlord: HURTMORE, “Foolish hero…”, the transformation, fire breath, and a win with 36 of 220 HP left.</figcaption>
+  </figure>
+  <div class="blog-fig-grid three">
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-hurtmore.png' | relative_url }}" alt="Battle screen: The Dragonlord casts HURTMORE!" loading="lazy" width="512" height="480">
+      <figcaption>The wizard opens with HURTMORE: 34 damage.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-foolish-hero.png' | relative_url }}" alt="Battle screen with the Dragonlord fading: Foolish hero... You cannot defeat me that easily!" loading="lazy" width="512" height="480">
+      <figcaption>“Foolish hero… You cannot defeat me that easily!”</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-true-form.png' | relative_url }}" alt="Battle screen with the winged dragon form: BEHOLD MY TRUE FORM!" loading="lazy" width="512" height="480">
+      <figcaption><em>BEHOLD MY TRUE FORM!</em></figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-breathes-fire.png' | relative_url }}" alt="Battle screen: The Dragonlord breathes fire! with hero HP 149 of 220" loading="lazy" width="512" height="480">
+      <figcaption>Fire breath: 66 damage a time.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/hero-at-36-hp.png' | relative_url }}" alt="Battle screen with hero HP at 36 of 220 in red: ERDRICK takes 47 damage!" loading="lazy" width="512" height="480">
+      <figcaption>Down to 36 HP. The AI keeps swinging.</figcaption>
+    </figure>
+    <figure class="blog-fig pixel">
+      <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-final-blow.png' | relative_url }}" alt="Battle screen: The Dragonlord takes 41 damage!" loading="lazy" width="512" height="480">
+      <figcaption>The final blow: 41 damage, and Alefgard is safe.</figcaption>
+    </figure>
+  </div>
+  <p><strong>What the <code>--demo</code> mode can't do yet</strong>, which is the to-do list. The full-game play mode in the video above does all of it: it routes across Alefgard, casts spells and earns its level before Charlock (<a href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">how that mode works</a>).</p>
+  <ul>
+    <li><strong>The overworld has no goal.</strong> The AI has routes for the throne room and the castle's first floor. Outside, it walks a right, down, left, up loop next to the castle, which is enough to trigger random encounters but not to reach Brecconary. It wanders back through the castle gate now and then, and the castle logic walks it straight back out.</li>
+  <li><strong>It never casts spells.</strong> In battle it chooses FIGHT, or ITEM to use a Herb when HP falls under 35%. The hero in the Dragonlord fight had 190 MP and HEALMORE but no Herb, so at 36 HP it attacked again. It got lucky.</li>
+    <li><strong>Boss fights start from the debug launcher.</strong> The new-game run can't reach Charlock yet, so the boss footage uses a hand-picked hero level, not one the AI earned.</li>
+  </ul>
+  <p><strong>Watch it yourself.</strong> From <code>games/quest-warrior-dragon</code>, run <code>./launch.sh --demo</code>, or set <code>DW_DEMO=1</code>. In a running game, <code>POST /command</code> with <code>start_demo</code> or <code>stop_demo</code> switches the AI on or off, and <code>capture_screenshot</code> saves the frame exactly as the game draws it, which is how the stills above were taken. The videos are an <code>ffmpeg</code> recording of the Xvfb display the game ran on.</p>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}">Play Quest: Warrior Dragon →</a>
+  <a href="{{ '/games/quest-warrior-dragon/docs/' | relative_url }}">Read the game docs →</a>
+  <span class="blog-commits">Commits: 4f6bbe3d · 5591ffe1 · 85c4559f</span>
+</div>
