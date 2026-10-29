@@ -1,28 +1,29 @@
 ---
 layout: default
-title: RobOS Movie & Video Player — Home Theater, TV Shows, AI Host & Roku Smart TV App
+title: RobOS Movie & Video Player — Home Theater, TV Shows, Tablo OTA DVR, AI Host & Roku Smart TV App
 permalink: /movie-player/
 body_class: guide
 extra_css: /assets/code-review.css
-description: "RobOS Movie Player (packages/movie-player): an open-source 100,000-movie and TV series home theater player with TMDB/TVmaze posters, Show & Season Navigator, synced .srt/.vtt subtitles, AI Watchlists, a RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku & Smart TV app."
+description: "RobOS Movie Player (packages/movie-player): an open-source 100,000-movie, TV series, and Tablo 4th Gen OTA DVR home theater player with TMDB/TVmaze posters, Show & Season Navigator, live & recorded Tablo DVR streaming with broadcast thumbnails, synced .srt/.vtt subtitles, AI Watchlists, a RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku & Smart TV app."
 og_image: /assets/blog/movie-player/02-library-grid.png
 og_image_alt: "RobOS Movie Player Movies (107) Library Poster Grid with real TMDB theatrical posters, ratings, and Spotlight Hero Banner"
 og_type: article
 schema_type: TechArticle
-keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, home theater software, Roku OS cinema app, Smart TV casting, TV show season navigator, TMDB TVmaze metadata, AI Watchlists, Virtual Cinema Host, HTTP 206 SFTP cloud streaming"
+keywords: "RobOS Movie Player, RobOS Video Player, Tablo 4th Gen OTA DVR, Roku Tablo DVR app, open-source video player, home theater software, Roku OS cinema app, Smart TV casting, TV show season navigator, TMDB TVmaze metadata, AI Watchlists, Virtual Cinema Host, HTTP 206 SFTP cloud streaming"
 ---
 {%- assign mp = '/assets/blog/movie-player/' | relative_url -%}
 <section class="cr-page"><div class="wrap">
 <article class="guide-body cr-body">
 
 <header class="cr-hero">
-<p class="eyebrow">App Suite · Home Theater, TV Series &amp; Big-Screen Casting</p>
+<p class="eyebrow">App Suite · Home Theater, TV Series, Tablo OTA DVR &amp; Big-Screen Casting</p>
 <h1>RobOS Movie &amp; Video Player</h1>
-<p class="lead">Your movies and TV shows, on your desktop and on your living-room TV. <strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) shares the warm dark theater theme and multi-pane architecture of <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a>, scaled for 100,000 films and multi-season TV series — with automatic scene-filename cleaning, official TMDB &amp; TVmaze posters, a dedicated <strong>TV Shows &amp; Season Navigator</strong>, synced <code>.srt</code> / <code>.vtt</code> subtitles, SFTP &amp; cloud byte-range streaming, optional <strong>✦ AI Watchlists</strong> and a spoken <strong>Virtual Cinema Host</strong>, plus a native 3-row visual image-card app for <strong>Roku OS</strong> and Smart TVs.</p>
+<p class="lead">Your movies, TV shows, and live/recorded over-the-air DVR broadcasts — on your desktop and on your living-room TV. <strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) shares the warm dark theater theme and multi-pane architecture of <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a>, scaled for 100,000 films, multi-season TV series, and <strong>Tablo 4th Gen OTA DVR</strong> appliances — with automatic scene-filename cleaning, official TMDB &amp; TVmaze posters, a dedicated <strong>TV Shows &amp; Season Navigator</strong>, live &amp; recorded <strong>Tablo DVR</strong> streaming with broadcast recording thumbnails, synced <code>.srt</code> / <code>.vtt</code> subtitles, SFTP &amp; cloud byte-range streaming, optional <strong>✦ AI Watchlists</strong> and a spoken <strong>Virtual Cinema Host</strong>, plus a native 3-row visual image-card app for <strong>Roku OS</strong> and Smart TVs.</p>
 <div class="cta" style="margin-top:6px">
   <a class="btn" href="#movies">Tour the Movies Theater</a>
   <a class="btn btn-ghost" href="#tv-shows">TV Shows &amp; Seasons</a>
   <a class="btn btn-ghost" href="#roku-tv">Roku &amp; Smart TV App</a>
+  <a class="btn btn-ghost" href="#tablo-dvr">Tablo 4th Gen OTA DVR</a>
   <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/movie-player">Source code</a>
 </div>
 </header>
@@ -32,12 +33,13 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
 <ul class="cr-nav">
 <li><a href="#movies"><b>1. Movies Theater</b><span>2:3 posters, spotlight hero, franchises, genres &amp; 4K/BluRay filters</span></a></li>
 <li><a href="#tv-shows"><b>2. TV Shows &amp; Seasons</b><span>48 series &amp; 2,641 episodes grouped by Show → Season → Episode</span></a></li>
-<li><a href="#roku-tv"><b>3. Roku &amp; Smart TV App</b><span>100% visual image-card 3-row TV interface with D-Pad navigation</span></a></li>
-<li><a href="#cinema-stage"><b>4. Cinema Stage &amp; Subtitles</b><span>16:9 HTML5 video, synced .srt/.vtt dialogue, PiP &amp; frame capture</span></a></li>
-<li><a href="#ai-host"><b>5. AI Watchlists &amp; Host</b><span>Optional AI movie marathons &amp; spoken RobOS Voice introductions</span></a></li>
-<li><a href="#metadata"><b>6. Poster &amp; Metadata Fixer</b><span>TMDB, TVmaze, Wikidata, .nfo sidecars, ffprobe &amp; ffmpeg</span></a></li>
-<li><a href="#cloud-sftp"><b>7. SFTP &amp; Cloud Streaming</b><span>Zero-download indexing + HTTP 206 byte-range streaming</span></a></li>
-<li><a href="#architecture"><b>8. Architecture &amp; CLI</b><span>System diagram, file layout, and reproducible test commands</span></a></li>
+<li><a href="#roku-tv"><b>3. Roku &amp; Smart TV App</b><span>3 top tabs (Movies, TV Shows, Tablo DVR) &amp; 3-row image-card D-Pad UX</span></a></li>
+<li><a href="#tablo-dvr"><b>4. Tablo 4th Gen OTA DVR</b><span>HMAC-MD5 LAN auth, broadcast thumbnails &amp; live/recorded HLS streaming</span></a></li>
+<li><a href="#cinema-stage"><b>5. Cinema Stage &amp; Subtitles</b><span>16:9 HTML5 video, synced .srt/.vtt dialogue, PiP &amp; frame capture</span></a></li>
+<li><a href="#ai-host"><b>6. AI Watchlists &amp; Host</b><span>Optional AI movie marathons &amp; spoken RobOS Voice introductions</span></a></li>
+<li><a href="#metadata"><b>7. Poster &amp; Metadata Fixer</b><span>TMDB, TVmaze, Wikidata, .nfo sidecars, ffprobe &amp; ffmpeg</span></a></li>
+<li><a href="#cloud-sftp"><b>8. SFTP &amp; Cloud Streaming</b><span>Zero-download indexing + HTTP 206 byte-range streaming</span></a></li>
+<li><a href="#architecture"><b>9. Architecture &amp; CLI</b><span>System diagrams, file layout, and reproducible test commands</span></a></li>
 </ul>
 
 <blockquote><p><strong>Works 100% without AI.</strong> Like every app in RobOS, Movie Player is a complete, fast local and LAN home theater out of the box. Public poster and plot enrichment uses open public APIs (TMDB/TVmaze/Wikidata) and local <code>ffprobe</code>/<code>ffmpeg</code> inspection. AI features (<strong>✦ AI Watchlist</strong>, <strong>Virtual Cinema Host</strong>, and agentic <strong>✦ AI Fix Metadata</strong>) are optional buttons that use the coding-agent CLI you already signed in to.</p></blockquote>
@@ -69,29 +71,82 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
 </tbody>
 </table>
 
-<h2 id="roku-tv">3. Roku OS &amp; Smart TV App: 3-Row 100% Visual Image-Card UX</h2>
-<p>When you sit 10 feet from a 65-inch TV with a directional remote, plain text menus feel dated and slow. <strong>RobOS Movie Player</strong> pairs with <a href="{{ '/tv/' | relative_url }}">RobOS Smart TV Studio</a> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js"><code>packages/robos-lib/tv-engine.js</code></a>) to sideload a native <strong>Roku OS SceneGraph channel</strong> (and serve an identical 10-foot web portal at <code>:19210/movie-player</code> for LG webOS, Samsung Tizen, and Google TV / Android TV) where <strong>every selectable item in every row is an image card with text</strong>.</p>
+<h2 id="roku-tv">3. Roku OS &amp; Smart TV App: 3 Top Tabs (Movies, TV Shows, Tablo DVR) &amp; 3-Row Image-Card UX</h2>
+<p>When you sit 10 feet from a 65-inch TV with a directional remote, plain text menus feel dated and slow. <strong>RobOS Movie Player</strong> pairs with <a href="{{ '/tv/' | relative_url }}">RobOS Smart TV Studio</a> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js"><code>packages/robos-lib/tv-engine.js</code></a>) to sideload a native <strong>Roku OS SceneGraph channel</strong> (and serve an identical 10-foot web portal at <code>:19210/movie-player</code> for LG webOS, Samsung Tizen, and Google TV / Android TV) where <strong>every selectable item in every row is an image card with text</strong> across three top-level image tabs: <strong>Movies (107)</strong>, <strong>TV Shows (48 Series)</strong>, and <strong>Tablo DVR (OTA Recordings)</strong>.</p>
 
 <div class="cr-pair">
-<figure class="guide-shot"><a href="{{ mp }}roku-cinema-library.jpg"><img src="{{ mp }}roku-cinema-library.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing the 3-row visual image-card Movies browser with Annabelle, Anyone But You, and Avengers posters" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — Movies (107)</strong>: Row 1 Movie/TV Show image tabs, Hero Spotlight banner, Row 2 Category image cards, and Row 3 theatrical poster cards.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ mp }}roku-cinema-library.jpg"><img src="{{ mp }}roku-cinema-library.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing the 3-row visual image-card Movies browser with Annabelle, Anyone But You, and Avengers posters" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — Movies (107)</strong>: Row 1 Movie/TV Show/Tablo DVR image tabs, Hero Spotlight banner, Row 2 Category image cards, and Row 3 theatrical poster cards.</figcaption></figure>
 <figure class="guide-shot"><a href="{{ mp }}roku-cinema-tv-shows.jpg"><img src="{{ mp }}roku-cinema-tv-shows.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing the TV Shows (48 Series) browser with Archer, Atypical, Avatar, Big Brother, Bluey, and BoJack Horseman posters" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — TV Shows (48 Series)</strong>: switch to the TV Shows tab to browse series posters, network badges, and season/episode counts.</figcaption></figure>
 </div>
 
+<div class="cr-pair">
 <figure class="guide-shot"><a href="{{ mp }}roku-cinema-seasons.jpg"><img src="{{ mp }}roku-cinema-seasons.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing Archer Season cards in Row 2 and Episode cards in Row 3" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — Series Season &amp; Episode Drill-Down</strong>: pressing <strong>OK</strong> on any TV series turns Row 2 into visual <strong>Season Image Cards</strong> (<code>All All Episodes</code>, <code>S01 Season 1</code>, <code>S02 Season 2</code>…) and Row 3 into <strong>Episode Cards</strong> (<code>S01E01 Mole Hunt</code>, <code>S01E02 Training Day</code>…).</figcaption></figure>
+<figure class="guide-shot"><a href="{{ mp }}roku-cinema-tablo-dvr.png"><img src="{{ mp }}roku-cinema-tablo-dvr.png" alt="10-foot Smart TV Cinema & Tablo DVR browser on the TABLO DVR (8) tab showing live 2026 World Series recording, NFL/MLB/Series/Channel category cards, and broadcast recording thumbnails" loading="lazy" width="1920" height="1080"></a><figcaption><strong>10-Foot Cinema+ — TABLO DVR (8) Tab</strong>: select the third top tab to browse live and recorded OTA broadcasts from your Tablo DVR (<code>192.168.1.55</code>) with acquired broadcast recording thumbnails and 1-click direct playback.</figcaption></figure>
+</div>
 
 <h3>Thoughtful 2D Remote D-Pad Navigation</h3>
-<p>The entire 10-foot TV experience is organized into <strong>3 visual rows</strong> so you can reach the <strong>Movies</strong> and <strong>TV Shows</strong> tabs in at most two presses of <code>[UP]</code> from anywhere on screen, and move <code>[LEFT]</code> / <code>[RIGHT]</code> smoothly across whichever row is focused:</p>
+<p>The entire 10-foot TV experience is organized into <strong>3 visual rows</strong> so you can reach the <strong>Movies</strong>, <strong>TV Shows</strong>, and <strong>Tablo DVR</strong> tabs in at most two presses of <code>[UP]</code> from anywhere on screen, and move <code>[LEFT]</code> / <code>[RIGHT]</code> smoothly across whichever row is focused:</p>
 
 <table class="wide">
 <thead><tr><th>Row</th><th>What is in the row</th><th><code>[LEFT]</code> / <code>[RIGHT]</code> behavior</th><th><code>[UP]</code> / <code>[DOWN]</code> &amp; <code>[OK]</code> behavior</th></tr></thead>
 <tbody>
-<tr><td><strong>Row 1: Top Image Tabs</strong></td><td><strong>Movies (107)</strong> image tab card, <strong>TV Shows (48 Series)</strong> image tab card, and contextual <strong>All TV Shows</strong> back-card when viewing a show's seasons.</td><td>Instant live-switch between the <strong>Movies</strong> theater and <strong>TV Shows</strong> library (wrapping cleanly at ends).</td><td><code>[DOWN]</code> or <code>[OK]</code> drops into Row 2 Category/Season cards.</td></tr>
-<tr><td><strong>Row 2: Category &amp; Season Image Cards</strong></td><td>6-card sliding shelf of visual category cards (each with a representative thumbnail poster, category title, and live film/series count) — or <strong>Season Image Cards</strong> (`All Seasons`, `Season 1`, `Season 2`…) when inside a TV series.</td><td>Slides the 6-card window across all 12 Movie categories, 8 TV Show categories, or all Seasons of the active show, live-filtering Row 3 posters as you move.</td><td><code>[UP]</code> jumps straight to Row 1 Tabs; <code>[DOWN]</code> or <code>[OK]</code> drops into Row 3 Poster cards.</td></tr>
-<tr><td><strong>Row 3: Poster &amp; Episode Cards</strong></td><td>6-card sliding shelf of large 2:3 Movie posters, TV Series posters, or Episode cards, synchronized with the Hero Spotlight banner above.</td><td>Moves across posters one by one (wrapping around the collection) and updates the Hero Spotlight title, ratings, cast, and synopsis in real time.</td><td><code>[UP]</code> moves to Row 2 Categories/Seasons (and one more <code>[UP]</code> reaches Row 1 Tabs); <code>[DOWN]</code> pages ahead <code>+6</code> posters; <code>[OK]</code> starts hardware video playback (or opens a TV show's seasons).</td></tr>
+<tr><td><strong>Row 1: Top Image Tabs</strong></td><td><strong>Movies (107)</strong> image tab card, <strong>TV Shows (48 Series)</strong> image tab card, <strong>Tablo DVR (OTA Recordings)</strong> image tab card, and contextual <strong>All TV Shows</strong> back-card when viewing a show's seasons.</td><td>Instant live-switch between the <strong>Movies</strong> theater, <strong>TV Shows</strong> library, and <strong>Tablo DVR</strong> OTA recordings (wrapping cleanly at ends).</td><td><code>[DOWN]</code> or <code>[OK]</code> drops into Row 2 Category/Season cards.</td></tr>
+<tr><td><strong>Row 2: Category &amp; Season Image Cards</strong></td><td>6-card sliding shelf of visual category cards (each with a representative thumbnail poster, category title, and live film/series/recording count) — or <strong>Season Image Cards</strong> (<code>All Seasons</code>, <code>Season 1</code>, <code>Season 2</code>…) when inside a TV series.</td><td>Slides the 6-card window across all 12 Movie categories, 8 TV Show categories, 6 Tablo DVR categories (<em>All Recordings</em>, <em>NFL &amp; MLB Sports</em>, <em>Series &amp; Episodes</em>, <em>Local News</em>, <em>47.1 WMSNFOX</em>, <em>15.1 WMTVNBC</em>), or all Seasons of the active show.</td><td><code>[UP]</code> jumps straight to Row 1 Tabs; <code>[DOWN]</code> or <code>[OK]</code> drops into Row 3 Poster cards.</td></tr>
+<tr><td><strong>Row 3: Poster, Episode &amp; DVR Cards</strong></td><td>6-card sliding shelf of large 2:3 Movie posters, TV Series posters, Episode cards, or Tablo DVR recording cards (with 16:9 broadcast recording snapshots in the Hero Spotlight), synchronized with the Hero banner above.</td><td>Moves across cards one by one (wrapping around the collection) and updates the Hero Spotlight title, broadcast channel, ratings, cast, synopsis, and 16:9 recording thumbnail in real time.</td><td><code>[UP]</code> moves to Row 2 Categories/Seasons (and one more <code>[UP]</code> reaches Row 1 Tabs); <code>[DOWN]</code> pages ahead <code>+6</code> cards; <code>[OK]</code> starts hardware video playback (or opens a TV show's seasons).</td></tr>
 </tbody>
 </table>
 
-<h2 id="cinema-stage">4. Cinema Stage, Synced Subtitles &amp; Smart TV Output</h2>
+<h2 id="tablo-dvr">4. Tablo 4th Gen OTA DVR: Live &amp; Recorded Broadcast Streaming</h2>
+<p><strong>Tablo 4th Gen OTA DVR</strong> appliances record uncompressed over-the-air ATSC 1.0 broadcasts (<code>MPEG-2</code> video + <code>Dolby AC-3</code> audio in MPEG-TS HLS segments) on your local network (`:8887` REST API + `:80` HLS streamer), but Tablo provides no official Linux/desktop client and its REST API requires per-request <code>HMAC-MD5</code> cryptographic signing. <strong>RobOS Movie Player</strong> and <a href="{{ '/tv/' | relative_url }}">RobOS Smart TV Studio</a> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tablo-client.js"><code>packages/robos-lib/tablo-client.js</code></a>) integrate directly with your Tablo DVR on the LAN:</p>
+
+<figure class="guide-shot"><a href="{{ mp }}09-tablo-dvr-live-stream.png"><img src="{{ mp }}09-tablo-dvr-live-stream.png" alt="RobOS Smart TV Studio streaming an active in-progress Tablo 4th Gen OTA DVR recording of the 2026 World Series on 47.1 WMSNFOX alongside 8 DVR recordings with broadcast thumbnails" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Tablo 4th Gen OTA DVR Live &amp; Recorded Streaming</strong>: watching an active in-progress OTA recording (<em>[LIVE REC] 2026 World Series: Milwaukee Brewers at Tampa Bay Rays</em> on <code>47.1 WMSNFOX</code>) in the built-in HD player with commercial-skip controls (<code>-15s</code>, <code>+30s</code>, <code>+5m</code>), while browsing all 8 DVR recordings and their acquired broadcast thumbnails on the right and casting to the <strong>65&quot; TCL Roku TV</strong>.</figcaption></figure>
+
+<figure class="guide-shot"><a href="{{ mp }}tablo-dvr-roku-architecture.jpg"><img src="{{ mp }}tablo-dvr-roku-architecture.jpg" alt="Technical architecture diagram of RobOS Tablo 4th Gen OTA DVR integration with HMAC-MD5 REST signing, live FFmpeg frame thumbnail fallback, Dual Stream Bridge (:19210), Desktop Players, and 65-inch Roku TV" loading="lazy" width="1600" height="900"></a><figcaption><strong>Tablo 4th Gen OTA DVR &amp; 65&quot; Roku TV Architecture</strong>: <code>packages/robos-lib/tablo-client.js</code> authenticates against Tablo's <code>:8887</code> REST API using <code>HMAC-MD5</code>, caches 16:9 broadcast snapshots (and captures live frames via <code>ffmpeg</code> for in-progress recordings), and serves both browser-ready <code>H.264/AAC</code> fMP4 streams and native Roku <code>MPEG-2/AC-3</code> HLS playlists on <code>:19210</code>.</figcaption></figure>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph Tablo["1. Tablo 4th Gen OTA DVR (192.168.1.55:8887)"]
+    REST["HMAC-MD5 Signed REST API<br/>/server/info, /recordings/airings, /guide/channels"]
+    IMG["Broadcast Image Server (/images/:id)<br/>16:9 Recording Snapshots &amp; Series Cover Art"]
+    HLS["OTA Tuner HLS Server (:80/stream/pl.m3u8)<br/>MPEG-2 Video + Dolby AC-3 Audio"]
+  end
+
+  subgraph Engine["2. RobOS Tablo &amp; TV Engine (packages/robos-lib)"]
+    TC["tablo-client.js<br/>HMAC-MD5 Auth &amp; Recording Catalog"]
+    SNAP["Thumbnail Cache + Live Frame Fallback<br/>~/.cache/robos/tablo-images/ + ffmpeg -frames:v 1"]
+    PROXY["Dual Stream Bridge (:19210)<br/>/api/tablo/stream (H.264/AAC fMP4) &amp;<br/>/api/tablo/roku.m3u8 (Native HLS Rewriter)"]
+  end
+
+  subgraph Desktop["3. Desktop Players"]
+    STUDIO["RobOS Smart TV Studio (:19206)<br/>Built-in HD Player &amp; Commercial Skip (-15s/+30s/+5m)"]
+    MPV["External MPV / VLC<br/>Direct Zero-Transcode HLS"]
+  end
+
+  subgraph LivingRoom["4. 65-Inch TCL Roku TV (192.168.1.15:8060)"]
+    ROKUTAB["Row 1 Top Image Tab: TABLO DVR (8)<br/>+ 16:9 Broadcast Thumbnail Hero Frame"]
+    ROKUVID["Native Roku SceneGraph Video Node<br/>Direct 60fps MPEG-2 / AC-3 HLS Playback"]
+  end
+
+  REST --> TC
+  IMG --> SNAP
+  HLS --> SNAP
+  HLS --> PROXY
+  TC --> STUDIO
+  TC --> ROKUTAB
+  SNAP --> STUDIO
+  SNAP --> ROKUTAB
+  PROXY --> STUDIO
+  HLS --> MPV
+  PROXY --> ROKUVID
+</pre>
+
+<ul>
+  <li><strong>Zero-Cloud <code>HMAC-MD5</code> Device Discovery &amp; Signing (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tablo-client.js"><code>packages/robos-lib/tablo-client.js</code></a>):</strong> Automatically probes your LAN for Tablo 4th Gen DVRs on port <code>8887</code>, signs every REST request (`Authorization: tablo:&lt;key&gt;:&lt;signature&gt;`), and batch-resolves `/recordings/airings` (sports events, series episodes, movies, and local news) along with `/guide/channels` (`47.1 WMSNFOX`, `15.1 WMTVNBC`, `27.1 WKOWABC`, `3.1 WISC-TV`) and live tuner availability.</li>
+  <li><strong>Broadcast Recording Thumbnail Acquisition + Live Frame Capture:</strong> Acquires every finished recording's 16:9 broadcast snapshot (`video_details.snapshot_image.image_id`) and series cover art from the Tablo and caches them locally in <code>~/.cache/robos/tablo-images/</code>. When a broadcast is <strong>actively recording live right now</strong> (`state: "recording"`, where Tablo has not yet generated a post-recording snapshot), RobOS automatically requests a lease on the live HLS stream (`POST /recordings/.../watch`) and captures a crisp 640×360 JPEG frame from the live broadcast via <code>ffmpeg -frames:v 1</code>.</li>
+  <li><strong>Dual-Path Streaming (Desktop H.264/AAC Transcode + Native Roku 60fps HLS):</strong> Because Chromium/Electron `<video>` elements do not natively decode OTA `MPEG-2` video or `Dolby AC-3` audio, `GET :19210/api/tablo/stream` performs real-time ultra-low-latency `ffmpeg` transcoding to fragmented MP4 (`libx264 -preset ultrafast` + `aac`) with seek support (`?startSec=`). Meanwhile, when playing on your <strong>65&quot; Roku TV</strong> (which has hardware MPEG-2 and AC-3 decoders), `GET :19210/api/tablo/roku.m3u8` fetches the fresh Tablo watch token and rewrites relative `.ts` segment and I-frame trickplay URIs into absolute LAN URLs so Roku's native `<Video>` node streams 60fps OTA broadcasts directly with zero CPU transcoding.</li>
+</ul>
+
+<h2 id="cinema-stage">5. Cinema Stage, Synced Subtitles &amp; Smart TV Output</h2>
 <p>Clicking any movie or episode (or switching to the <strong>Cinema Stage</strong> tab) opens the 16:9 theater viewport and synchronized transport deck:</p>
 
 <figure class="guide-shot"><a href="{{ mp }}01-cinema-stage.png"><img src="{{ mp }}01-cinema-stage.png" alt="RobOS Movie Player Cinema Stage screening Dune (2021) while casting live to a 65-inch TCL Roku TV" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Cinema Stage</strong>: 16:9 HTML5 <code>&lt;video&gt;</code> viewport with letterbox/cover aspect controls, Picture-in-Picture (<code>PiP</code>), one-click <strong>Cast to 65&quot; TCL Roku TV</strong> and <strong>TV Library (Remote UI)</strong> buttons, synchronized transport bar, and the <strong>Subtitles &amp; Dialogue</strong> transcript panel below.</figcaption></figure>
@@ -106,7 +161,7 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
   <li><strong>Playback Speed, Aspect Fit, PiP &amp; Frame Snapshots:</strong> Cycle speed (`0.5x`–`2x`), aspect fit (`Letterbox`, `Cover`, `Fill`), float the stage in an always-on-top Picture-in-Picture window, or capture native-resolution PNG stills to <code>~/Pictures/RobOS Movie Snapshots/</code>.</li>
 </ul>
 
-<h2 id="ai-host">5. Optional AI Watchlists &amp; Spoken Virtual Cinema Host</h2>
+<h2 id="ai-host">6. Optional AI Watchlists &amp; Spoken Virtual Cinema Host</h2>
 <p>Just like <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player</a> offers AI Playlists and a Virtual DJ, <strong>RobOS Movie Player</strong> includes optional AI curation grounded in your own library:</p>
 
 <div class="cr-pair">
@@ -119,7 +174,7 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
   <li><strong>Virtual Cinema Host (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/useVirtualDj.js"><code>src/useVirtualDj.js</code></a>):</strong> Writes short 1–2 sentence TCM-style presenter intros ahead of each film in your queue and speaks them aloud via <strong>RobOS Voice</strong> (locally or over your Smart TV).</li>
 </ul>
 
-<h2 id="metadata">6. Public TMDB / TVmaze Enrichment &amp; AI Metadata Fixer</h2>
+<h2 id="metadata">7. Public TMDB / TVmaze Enrichment &amp; AI Metadata Fixer</h2>
 <p>Clicking <strong>Fetch Posters &amp; Metadata</strong> in the library sidebar (or <strong>Fetch Metadata</strong> in the toolbar) runs <a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/public-metadata.js"><code>lib/public-metadata.js</code></a> across your movies and TV series:</p>
 
 <figure class="guide-shot"><a href="{{ mp }}ai-fix-metadata-modal.png"><img src="{{ mp }}ai-fix-metadata-modal.png" alt="AI Fix Metadata and Artwork modal in RobOS Movie Player" loading="lazy" width="1920" height="1040"></a><figcaption><strong>✦ AI Fix Metadata &amp; Artwork</strong>: combines scene filename cleaning, <code>.nfo</code> sidecar parsing, <code>ffprobe</code> stream inspection, public poster lookup, and <code>ffmpeg</code> frame extraction.</figcaption></figure>
@@ -130,7 +185,7 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
   <li><strong>Local Sidecars &amp; <code>ffprobe</code> / <code>ffmpeg</code> Fallback:</strong> Parses Kodi/Jellyfin <code>.nfo</code> XML files, inspects container streams via <code>ffprobe</code>, and extracts a real video frame at 10% runtime via <code>ffmpeg</code> whenever a personal home video has no public poster.</li>
 </ol>
 
-<h2 id="cloud-sftp">7. SFTP Data Sources &amp; Cloud HTTP 206 Byte-Range Streaming</h2>
+<h2 id="cloud-sftp">8. SFTP Data Sources &amp; Cloud HTTP 206 Byte-Range Streaming</h2>
 <p>Your video library doesn't have to fit on your laptop's internal SSD. <strong>RobOS Movie Player</strong> connects directly to <strong>RobOS Data Sources</strong> (SSH/SFTP servers) and <strong>RobOS Cloud Accounts</strong> (Google Drive, Microsoft OneDrive, Dropbox, S3):</p>
 
 <figure class="guide-shot"><a href="{{ mp }}07-cloud-storage.png"><img src="{{ mp }}07-cloud-storage.png" alt="Cloud Storage and SFTP sources tab in RobOS Movie Player" loading="lazy" width="1920" height="1040"></a><figcaption><strong>Cloud Storage &amp; SFTP Sources</strong>: index remote movie and TV folders in seconds without downloading multi-gigabyte video files upfront.</figcaption></figure>
@@ -140,7 +195,7 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
   <li><strong>Zero-Cloud LAN HTTP <code>206 Partial Content</code> Streamer (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/cast-service.js"><code>lib/cast-service.js</code></a>):</strong> When you press Play on desktop or on your Roku TV, Movie Player serves `/cloud-stream/:trackId` with full HTTP byte-range (`Range: bytes=...`) support and a 2 GB LRU disk cache (`~/.cache/robos/movie-player/cloud`), enabling instant scrubbing and hardware decoding on Roku OS, Google TV, and desktop.</li>
 </ul>
 
-<h2 id="architecture">8. Architecture, File Layout &amp; Reproducible CLI</h2>
+<h2 id="architecture">9. Architecture, File Layout &amp; Reproducible CLI</h2>
 
 <figure class="guide-shot"><a href="{{ mp }}movie-player-cinema-architecture.jpg"><img src="{{ mp }}movie-player-cinema-architecture.jpg" alt="RobOS Movie Player technical architecture diagram showing 100k Library Enricher, Cloud Cinema Proxy, Cinema Video Stage, and Zero-Cloud LAN Cast" loading="lazy" width="1600" height="900"></a><figcaption>System architecture of <strong>RobOS Movie Player</strong> (<code>packages/movie-player</code>) and its LAN streaming &amp; Smart TV bridge.</figcaption></figure>
 
@@ -151,14 +206,19 @@ keywords: "RobOS Movie Player, RobOS Video Player, open-source video player, hom
 <tr><td><code>packages/movie-player/lib/library-index.js</code></td><td>Separates Movies from TV Shows, groups episodes into Show → Season → Episode trees, and computes watch progress.</td></tr>
 <tr><td><code>packages/movie-player/lib/public-metadata.js</code></td><td>Fetches official 2:3 theatrical posters, ratings, networks, cast, and synopses from TVmaze, Wikidata/Wikipedia, and iTunes.</td></tr>
 <tr><td><code>packages/movie-player/lib/cast-service.js</code></td><td>HTTP <code>206</code> byte-range media &amp; poster server (<code>:19215</code>), Google Cast controller, and Roku ECP / Smart TV Studio bridge.</td></tr>
-<tr><td><code>packages/robos-lib/tv-engine.js</code></td><td>Generates the 3-row visual image-card Roku SceneGraph channel (<code>MainScene.xml</code> / <code>MainScene.brs</code>) and serves <code>:19210/movie-player</code>.</td></tr>
+<tr><td><code>packages/robos-lib/tablo-client.js</code></td><td>Tablo 4th Gen OTA DVR client (`HMAC-MD5` request signing, recording catalog, broadcast thumbnail cache, live `ffmpeg` frame capture, and HLS stream resolver).</td></tr>
+<tr><td><code>packages/robos-lib/tv-engine.js</code></td><td>Generates the 3-row visual image-card Roku SceneGraph channel (`Movies`, `TV Shows`, and `Tablo DVR` tabs) and serves `:19210/movie-player`, `/api/tablo/stream`, and `/api/tablo/roku.m3u8`.</td></tr>
 <tr><td><code>~/.config/robos/movie-library.json</code></td><td>Indexed movie &amp; TV episode catalog with public metadata and artwork IDs.</td></tr>
 <tr><td><code>~/.cache/robos/movie-player/art/</code></td><td>Content-addressed SHA-1 JPEG poster cache served at <code>http://&lt;HOST-IP&gt;:19215/art/&lt;artId&gt;.jpg</code>.</td></tr>
+<tr><td><code>~/.cache/robos/tablo-images/</code></td><td>Cached Tablo 4th Gen 16:9 broadcast recording snapshots and live `ffmpeg` capture frames served at <code>http://&lt;HOST-IP&gt;:19210/api/tablo/image/&lt;id&gt;.jpg</code>.</td></tr>
 </tbody>
 </table>
 
-<pre><code># Build the renderer bundle and run the 19-test Movie &amp; TV Show verification suite
+<pre><code># Build the renderer bundle and run the Movie &amp; TV Show verification suite
 cd packages/movie-player &amp;&amp; npm run build &amp;&amp; npm test
+
+# Run the Tablo 4th Gen OTA DVR + Roku TV SceneGraph verification suite
+node --test packages/robos-test/tests/robos-tv/unit.test.js
 
 # Launch RobOS Movie Player and inspect via the DOM Snapshot server (:19214)
 npx electron packages/movie-player --no-sandbox
