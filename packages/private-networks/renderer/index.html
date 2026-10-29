@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RobOS Private Networks</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="14" r="5" />
+          <circle cx="36" cy="14" r="5" />
+          <circle cx="24" cy="36" r="5" />
+          <path d="M16.5 16.5L21 31.5" />
+          <path d="M31.5 16.5L27 31.5" />
+          <path d="M17 14h14" stroke-dasharray="2 2" />
+        </svg>
+      </div>
+      <div>
+        <h1>RobOS Private Networks</h1>
+        <p class="subtitle">Cross-Network Zero-Trust P2P Mesh, CGNAT Relay &amp; Video Player (:19215) Tunneling</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="gateway-badge" class="badge badge-online">mTLS 1.3 Gateway Ready</span>
+      <span id="relay-badge" class="badge badge-muted">WAN Relay Idle</span>
+      <button id="btn-enable-relay" class="btn btn-primary">Enable Cross-Network WAN Relay</button>
+      <button id="btn-zt-proof" class="btn btn-secondary">Verify Zero-Trust mTLS</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Left Column: Box Identity, Cross-Network Invite Token & Join Remote Network -->
+    <section class="col">
+      <div class="card">
+        <div class="card-header">
+          <h2>1. This Machine's Zero-Trust Identity &amp; Invite</h2>
+          <span id="node-id-pill" class="mono-pill">robos-node</span>
+        </div>
+        <div class="kv-grid">
+          <div>
+            <span class="label">Hostname / LAN IP</span>
+            <div id="node-lan" class="value mono">--</div>
+          </div>
+          <div>
+            <span class="label">Overlay IP (Tailscale/WG)</span>
+            <div id="node-overlay" class="value mono">--</div>
+          </div>
+          <div>
+            <span class="label">Cross-Network WAN Relay</span>
+            <div id="node-relay" class="value mono highlight">Not active (click Enable Cross-Network WAN Relay)</div>
+          </div>
+          <div>
+            <span class="label">Pinned X.509 SHA-256 Cert</span>
+            <div id="node-fp" class="value mono small">--</div>
+          </div>
+        </div>
+
+        <div class="token-box">
+          <div class="token-box-header">
+            <span class="label">Private Network Invite Token (<code>robos-net://</code>)</span>
+            <div class="btn-row">
+              <button id="btn-copy-token" class="btn btn-sm">Copy Invite Token</button>
+              <button id="btn-copy-cmd" class="btn btn-sm btn-primary">Copy Box A Join Command</button>
+            </div>
+          </div>
+          <textarea id="invite-token" readonly rows="3"></textarea>
+          <div class="cmd-preview">
+            <span class="label">1-Line Command for Remote Box (Box A):</span>
+            <code id="join-cmd-preview">node packages/private-networks/cli.js join "robos-net://..."</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>2. Join a Remote Private Network (Link Box A &harr; Box B)</h2>
+        </div>
+        <p class="help-text">
+          Paste a <code>robos-net://</code> or <code>robos-mesh://</code> invite token from another RobOS machine on any network.
+          This performs Mutual TLS 1.3 certificate pinning, opens a bidirectional Reverse-Mux tunnel, and bridges Movie Player (<code>:19215</code>).
+        </p>
+        <div class="join-form">
+          <input id="join-token-input" type="text" placeholder="Paste robos-net://... token from remote machine" />
+          <button id="btn-join-network" class="btn btn-primary">Join &amp; Bridge Video (:19215)</button>
+        </div>
+        <div id="join-status" class="status-banner hidden"></div>
+      </div>
+    </section>
+
+    <!-- Right Column: Linked Peers, Video Stream Bridges (:19215), and Audit Log -->
+    <section class="col">
+      <div class="card">
+        <div class="card-header">
+          <h2>3. Connected Peers &amp; Cross-Network Video Streaming (<code>:19215</code>)</h2>
+          <button id="btn-launch-player" class="btn btn-sm btn-primary">Open RobOS Video Player</button>
+        </div>
+        <div id="peers-list" class="list-container">
+          <div class="empty-state">No remote peers linked yet. Share the invite command above with Box A or paste Box A's token.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>4. Active Local Bridge Tunnels &amp; Discovered Remote Videos</h2>
+        </div>
+        <div id="tunnels-list" class="list-container">
+          <div class="empty-state">No active port bridges. Click "Bridge Video (:19215)" on any peer above.</div>
+        </div>
+        <div id="remote-videos-box" class="remote-videos hidden">
+          <h3>Discovered Remote Peer Video Catalog</h3>
+          <div id="remote-videos-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Zero-Trust Mutual TLS 1.3 Security Audit Log</h2>
+        </div>
+        <div id="audit-list" class="audit-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

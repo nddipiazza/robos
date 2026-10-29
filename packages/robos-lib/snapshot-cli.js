@@ -134,6 +134,7 @@ const PORT_REGISTRY = {
   'party-game':        19212,
   'movie-player':      19214,
   'app-mesh':          19216,
+  'private-networks':  19217,
 };
 
 

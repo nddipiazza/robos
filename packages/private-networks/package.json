@@ -1,0 +1,17 @@
+{
+  "name": "robos-private-networks",
+  "version": "0.1.0",
+  "description": "RobOS Private Networks — Cross-Network Zero-Trust P2P & Relay Mesh for linking machines across separate networks/CGNAT and streaming RobOS Video Player (:19215) & IPC ports",
+  "main": "main.js",
+  "bin": {
+    "robos-private-networks": "./cli.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "host": "node cli.js host",
+    "join": "node cli.js join"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

@@ -477,7 +477,7 @@
       exports.useTransition = function() {
         return ReactSharedInternals.H.useTransition();
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -931,7 +931,7 @@
       exports.useFormStatus = function() {
         return ReactSharedInternals.H.useHostTransitionStatus();
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -14407,12 +14407,12 @@
         }
       };
       var isomorphicReactPackageVersion$jscomp$inline_2043 = React20.version;
-      if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
+      if ("19.3.1" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
             527,
             isomorphicReactPackageVersion$jscomp$inline_2043,
-            "19.3.0"
+            "19.3.1"
           )
         );
       ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -14430,10 +14430,10 @@
       };
       var internals$jscomp$inline_2586 = {
         bundleType: 0,
-        version: "19.3.0",
+        version: "19.3.1",
         rendererPackageName: "react-dom",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0"
+        reconcilerVersion: "19.3.1"
       };
       if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
         hook$jscomp$inline_2587 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14501,7 +14501,7 @@
         listenToAllSupportedEvents(container2);
         return new ReactDOMHydrationRoot(initialChildren);
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -18310,6 +18310,7 @@
   };
   var providerLabel = (protocol) => {
     const p = (protocol || "").toLowerCase();
+    if (p === "p2p") return "RobOS P2P mTLS 1.3";
     if (p === "gdrive") return "Google Drive";
     if (p === "onedrive") return "OneDrive";
     if (p === "dropbox") return "Dropbox";
@@ -18331,16 +18332,65 @@
     }
     return parts.join(" \xB7 ");
   }
-  function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
+  function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onAddPeer, onRescan, onRename, onRemove, onEnabled, busyId }) {
     const [confirmId, setConfirmId] = (0, import_react9.useState)(null);
     const [alsoTracks, setAlsoTracks] = (0, import_react9.useState)(true);
     const [editId, setEditId] = (0, import_react9.useState)(null);
     const [editValue, setEditValue] = (0, import_react9.useState)("");
+    const [showPeerForm, setShowPeerForm] = (0, import_react9.useState)(false);
+    const [peerEndpoint, setPeerEndpoint] = (0, import_react9.useState)("http://127.0.0.1:19225");
+    const [peerLabel, setPeerLabel] = (0, import_react9.useState)("");
     const commitRename = (id) => {
       if (editValue.trim()) onRename(id, editValue);
       setEditId(null);
     };
-    return /* @__PURE__ */ import_react9.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name" }, "All Movies & Shows"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, "Combined view across all library folders"))), folders.length === 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder or link folders in RobOS Data Sources (Google Drive, OneDrive, SFTP, FTP)."), folders.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: f.kind === "cloud" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react9.default.createElement(
+    const openPeerForm = async () => {
+      if (!showPeerForm && window.robosAudio?.getActivePeerBridge) {
+        try {
+          const active = await window.robosAudio.getActivePeerBridge();
+          if (active && active.endpoint) {
+            setPeerEndpoint(active.endpoint);
+            if (active.label) setPeerLabel(active.label);
+          }
+        } catch {
+        }
+      }
+      setShowPeerForm((v) => !v);
+    };
+    const submitPeerForm = async (e) => {
+      e.preventDefault();
+      if (!onAddPeer) return;
+      await onAddPeer(peerEndpoint.trim(), peerLabel.trim() || void 0);
+      setShowPeerForm(false);
+    };
+    return /* @__PURE__ */ import_react9.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), onAddPeer && /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
+        className: "row-btn",
+        style: { color: "#00bcd4", borderColor: "rgba(0,188,212,0.45)" },
+        title: "Stream movies & shows from a remote RobOS Private Network peer (Box A)",
+        onClick: openPeerForm
+      },
+      "+ P2P Peer"
+    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), showPeerForm && /* @__PURE__ */ import_react9.default.createElement("form", { className: "folder-confirm", onSubmit: submitPeerForm, style: { margin: "8px", padding: "10px", border: "1px solid rgba(0,188,212,0.4)", borderRadius: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("div", { style: { fontSize: "12px", fontWeight: 600, color: "#00bcd4", marginBottom: "6px" } }, "Link RobOS Private Network Peer Stream (:19215)"), /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        className: "folder-edit",
+        style: { width: "100%", marginBottom: "6px" },
+        placeholder: "http://127.0.0.1:19225 or robos-net://...",
+        value: peerEndpoint,
+        onChange: (e) => setPeerEndpoint(e.target.value)
+      }
+    ), /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        className: "folder-edit",
+        style: { width: "100%", marginBottom: "8px" },
+        placeholder: "Optional label (e.g. Box A Cinema)",
+        value: peerLabel,
+        onChange: (e) => setPeerLabel(e.target.value)
+      }
+    ), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { type: "button", className: "btn-secondary", onClick: () => setShowPeerForm(false) }, "Cancel"), /* @__PURE__ */ import_react9.default.createElement("button", { type: "submit", className: "btn-accent" }, "Connect & Sync Peer"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name" }, "All Movies & Shows"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, "Combined view across all library folders"))), folders.length === 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder, link a P2P Peer via RobOS Private Networks, or link Cloud Storage."), folders.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: f.kind === "cloud" || f.kind === "peer" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         className: "folder-edit",
@@ -18357,7 +18407,7 @@
     ) : /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
       setEditId(f.id);
       setEditValue(f.label);
-    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react9.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.slice(0, 4).map((s) => /* @__PURE__ */ import_react9.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react9.default.createElement("strong", null, s.showName), ": ", s.seasons.length === 1 ? `Season ${s.seasons[0].seasonNumber} (${s.seasons[0].episodeCount} ep${s.seasons[0].episodeCount === 1 ? "" : "s"})` : `${s.seasons.length} Seasons (${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)} eps)`)), f.shows.length > 4 && /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-show-pill" }, "+", f.shows.length - 4, " more TV series")))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react9.default.createElement(
+    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" || f.kind === "peer" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "peer" ? `RobOS P2P mTLS 1.3 \xB7 ${f.endpoint || f.path}` : f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react9.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.slice(0, 4).map((s) => /* @__PURE__ */ import_react9.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react9.default.createElement("strong", null, s.showName), ": ", s.seasons.length === 1 ? `Season ${s.seasons[0].seasonNumber} (${s.seasons[0].episodeCount} ep${s.seasons[0].episodeCount === 1 ? "" : "s"})` : `${s.seasons.length} Seasons (${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)} eps)`)), f.shows.length > 4 && /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-show-pill" }, "+", f.shows.length - 4, " more TV series")))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         type: "checkbox",
@@ -22263,6 +22313,20 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         }).catch(() => {
         });
       }
+      if (window.robosAudio?.getActivePeerBridge && window.robosAudio?.addPeerFolder) {
+        window.robosAudio.getActivePeerBridge().then((bridge) => {
+          if (bridge && bridge.endpoint) {
+            window.robosAudio.addPeerFolder(bridge.endpoint, bridge.label).then((res) => {
+              if (res && res.ok) {
+                applyFolderState(res);
+                showStatus(`Connected to ${bridge.label || "RobOS Private Network Peer"} over mTLS 1.3!`);
+              }
+            }).catch(() => {
+            });
+          }
+        }).catch(() => {
+        });
+      }
       const cleanups = [];
       if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
       if (window.robosAudio?.onLibraryScanDiscovered) {
@@ -22498,6 +22562,20 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         }
       } catch (err) {
         showStatus("Error adding folder: " + err.message);
+      }
+    };
+    const handleAddPeerFolder = async (endpoint, label) => {
+      showStatus("Connecting to RobOS Private Network peer stream over mTLS 1.3...");
+      try {
+        const res = await window.robosAudio.addPeerFolder(endpoint, label);
+        applyFolderState(res);
+        if (res && res.ok) {
+          showStatus(`Synced ${res.total ?? res.added ?? 0} video(s) from RobOS Private Network peer!`);
+        } else {
+          showStatus(`P2P peer sync failed: ${res?.error || "Unreachable"}`);
+        }
+      } catch (err) {
+        showStatus("P2P peer error: " + err.message);
       }
     };
     const handleCancelScan = async () => {
@@ -22825,7 +22903,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const libraryById = (0, import_react24.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
     const resolveSrc = (t) => {
       if (!t) return "";
-      if (t.cloud) {
+      if (t.cloud || t.peerStream) {
         const fresh = libraryById.get(t.id);
         if (fresh && fresh.src) return fresh.src;
       }
@@ -24412,6 +24490,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           folderProps: {
             onAddLocal: handleSelectFolder,
             onAddCloud: () => setActiveTab("cloud"),
+            onAddPeer: handleAddPeerFolder,
             onRescan: handleRescanFolder,
             onEnabled: handleFolderEnabled,
             onRename: handleRenameFolder,

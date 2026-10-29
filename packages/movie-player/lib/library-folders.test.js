@@ -98,3 +98,38 @@ test('My Drive root is scoped per account, distinct Google folder IDs stay separ
   connections[1].user = 'two@example.test'; connections[1].folders[0].folderId = 'root';
   assert.equal(folders.list().length, 2);
 });
+
+test('P2P peer folder syncs remote Movie Player catalog and rewrites streamUrl to local bridge endpoint', async t => {
+  const http = require('http');
+  const { folders, mediaLibrary } = fixture(t);
+
+  const srv = http.createServer((req, res) => {
+    const host = req.headers.host || '127.0.0.1:19215';
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      nodeName: 'box-a-cinema',
+      items: [
+        {
+          id: 'vid-frontier',
+          title: 'Frontier Hunters Live',
+          mediaType: 'movie',
+          streamFormat: 'mp4',
+          streamUrl: `http://${host}/media/f_1.mp4`,
+          year: 2026,
+        },
+      ],
+    }));
+  });
+  await new Promise(r => srv.listen(0, '127.0.0.1', r));
+  t.after(() => srv.close());
+  const port = srv.address().port;
+
+  const peerFolder = folders.add({ kind: 'peer', endpoint: `http://127.0.0.1:${port}` });
+  const syncRes = await folders.syncPeer(peerFolder.id);
+  assert.equal(syncRes.added, 1);
+  assert.equal(mediaLibrary.tracks.length, 1);
+  assert.equal(mediaLibrary.tracks[0].title, 'Frontier Hunters Live');
+  assert.equal(mediaLibrary.tracks[0].src, `http://127.0.0.1:${port}/media/f_1.mp4`);
+});
+
