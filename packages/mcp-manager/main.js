@@ -73,11 +73,11 @@ let _kgraphStore = null;
 function getKGraphStore() {
   if (!_kgraphStore) {
     try {
-      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph/lib/graph-store');
       _kgraphStore = new SDLCKnowledgeGraphStore();
     } catch {
       try {
-        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph/lib/graph-store');
         _kgraphStore = new SDLCKnowledgeGraphStore();
       } catch {}
     }
