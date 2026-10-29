@@ -44,6 +44,7 @@
         <button class="btn btn-secondary" id="btn-open-devops-modal">☁️ DevOps Integrations</button>
         <button class="btn btn-secondary" id="btn-open-packages-modal">📦 Packages & Repos</button>
         <button class="btn btn-secondary" id="btn-open-elearning-modal">🎓 Generate eLearning</button>
+        <button class="btn btn-secondary" id="btn-open-pages-site">🌍 Pages Site</button>
         <button class="btn btn-secondary" id="btn-run-diff">⚖️ Semantic Diff</button>
         <button class="btn btn-primary" id="btn-validate-shacl">🛡️ Validate SHACL</button>
       </div>
@@ -188,6 +189,50 @@
           <button class="btn btn-primary btn-elearning-generate" id="btn-submit-elearning">⚡ Generate & Save Course</button>
         </div>
         <div id="elearning-modal-status" class="elearning-modal-status" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub Pages KGraph viewer builder (pages-site-view.js) -->
+  <div id="pages-site-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="pages-site-title">
+    <div class="modal-card pages-site-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🌍</span>
+          <div>
+            <h2 id="pages-site-title">GitHub Pages KGraph Viewer</h2>
+            <div class="modal-subtitle">Build a static viewer from any kgraph folder &middot; own renderer, then parent type's, then generic</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-pages-site" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="pages-row">
+          <label for="pages-graph-dir">Kgraph folder</label>
+          <input id="pages-graph-dir" type="text" spellcheck="false" placeholder="Folder that contains .robos/">
+          <button class="btn btn-secondary" id="btn-pages-choose-graph">Browse…</button>
+        </div>
+        <div class="pages-row">
+          <label for="pages-out-dir">Site folder</label>
+          <input id="pages-out-dir" type="text" spellcheck="false" placeholder="Default: <kgraph folder>/docs">
+        </div>
+        <div class="pages-row">
+          <label for="pages-title">Site title</label>
+          <input id="pages-title" type="text" placeholder="Default: the graph's title">
+        </div>
+        <div class="pages-row pages-options">
+          <label><input type="checkbox" id="pages-workflow" checked> Add the GitHub Pages workflow</label>
+        </div>
+        <div class="pages-actions">
+          <button class="btn btn-secondary" id="btn-pages-agent">🤖 Ask the robos agent for missing renderers</button>
+          <button class="btn btn-secondary" id="btn-pages-preview" disabled>Preview</button>
+          <button class="btn btn-primary" id="btn-pages-build">Build site</button>
+        </div>
+        <div id="pages-status" class="pages-status" role="status"></div>
+        <table class="pages-resolution" id="pages-resolution" hidden>
+          <thead><tr><th>Type</th><th>Nodes</th><th>Renderer</th><th>Chosen because</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -664,5 +709,7 @@
   <link rel="stylesheet" href="workspace-review.css">
   <script src="workspace-presentation.js"></script>
   <script src="workspace-review.js"></script>
+  <link rel="stylesheet" href="pages-site-view.css">
+  <script src="pages-site-view.js"></script>
 </body>
 </html>

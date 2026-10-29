@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>JRPG Parse Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">⚔️</span>
+      <div>
+        <h1>JRPG Parse Portal</h1>
+        <div class="subtitle">Rebuild a classic JRPG from fan resources: maps, sprites, enemies, menus, rules and story, as a knowledge graph</div>
+      </div>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="games" aria-label="Games">
+      <h2>Games</h2>
+      <div id="profile-list" role="listbox" aria-label="Game profiles"></div>
+    </aside>
+    <main>
+      <section class="game-head" id="game-head"></section>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" role="tab" data-tab="plan" id="tab-plan">1 · Plan</button>
+        <button class="tab" role="tab" data-tab="discover" id="tab-discover">2 · Discover with agent</button>
+        <button class="tab" role="tab" data-tab="acquire" id="tab-acquire">3 · Acquire</button>
+        <button class="tab" role="tab" data-tab="publish" id="tab-publish">4 · Publish site</button>
+      </nav>
+
+      <section class="panel" data-panel="plan" id="panel-plan">
+        <p class="hint">Every asset type a remake needs, and the fan resources this game's profile reads for it.</p>
+        <div id="plan-grid" class="asset-grid"></div>
+      </section>
+
+      <section class="panel" data-panel="discover" id="panel-discover" hidden>
+        <p class="hint">The robos agent (your active coding agent in RobOS Agents) suggests more fan sites. Each suggestion is probed; nothing it says is run.</p>
+        <button class="btn primary" id="btn-discover">Ask the robos agent for fan resources</button>
+        <div id="discover-status" class="status"></div>
+        <table class="data" id="discover-table" hidden>
+          <thead><tr><th>Source</th><th>Kind</th><th>Covers</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="panel" data-panel="acquire" id="panel-acquire" hidden>
+        <div class="row">
+          <label for="out-dir">Kgraph folder</label>
+          <input id="out-dir" type="text" spellcheck="false">
+          <button class="btn" id="btn-choose-out">Browse…</button>
+        </div>
+        <div class="row options">
+          <label><input type="checkbox" id="opt-measure" checked> Measure maps (download to the local cache)</label>
+          <label><input type="checkbox" id="opt-images"> Cache sprite images locally</label>
+          <label><input type="checkbox" id="opt-discovery" checked> Record the agent's suggestions as sources</label>
+        </div>
+        <button class="btn primary" id="btn-acquire">Acquire</button>
+        <div id="acquire-status" class="status"></div>
+        <div id="coverage-grid" class="asset-grid"></div>
+        <ul id="acquire-notes" class="notes"></ul>
+      </section>
+
+      <section class="panel" data-panel="publish" id="panel-publish" hidden>
+        <p class="hint">KGraph Explorer's Pages builder turns the kgraph folder into a static viewer in <code>docs/</code>. Each element uses its own renderer, its parent type's, or the generic one.</p>
+        <div class="row options">
+          <label><input type="checkbox" id="opt-workflow" checked> Add the GitHub Pages workflow</label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btn-build-site">Build Pages site</button>
+          <button class="btn" id="btn-agent-renderers">Ask the agent for missing renderers</button>
+          <button class="btn" id="btn-preview" disabled>Preview</button>
+          <button class="btn" id="btn-open-folder" disabled>Open folder</button>
+        </div>
+        <div id="publish-status" class="status"></div>
+        <table class="data" id="resolution-table" hidden>
+          <thead><tr><th>Type</th><th>Nodes</th><th>Renderer</th><th>Chosen because</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <details class="log" open>
+        <summary>Activity</summary>
+        <pre id="log"></pre>
+      </details>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

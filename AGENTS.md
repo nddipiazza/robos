@@ -122,9 +122,10 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **GraphQL Client** | GraphiQL & Altair-inspired GraphQL schema explorer, query editor, and variables runner |
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
 | **Agent Code Review Platform** | Autonomous AI pull request auditor, semantic diffs, security audits, and IDE review bridge (IntelliJ IDEA & VS Code PR plugins) |
-| **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, and living documentation sync |
+| **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, living documentation sync, and a GitHub Pages viewer builder for any kgraph folder (per-element renderers: own type, then parent type, then generic; the robos agent can write missing ones) (`packages/robos-graph/lib/pages-site`) |
 | **Schema Studio & Registry** | Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL shape generation, and live JSON-LD validator |
 | **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, contextual MIME disambiguation, and Tika 4.0 gRPC |
+| **JRPG Parse Portal** | Rebuilds a classic JRPG from fan resources (wikis, map atlases, walkthroughs, fan music) found with the robos agent: maps, sprites, enemies, menus, rules, shops, story milestones and music as a kgraph folder, published as a GitHub Pages viewer. Profiles: Dragon Warrior (NES), Final Fantasy (NES) (`packages/jrpg-parse-portal`) |
 | **Remote Execution Studio** | REAPI v2 distributed build clusters, Bazel (`.bazelrc`), Buck2 (`.buckconfig`), and Buildbarn / NativeLink configuration manager |
 | **RobOS eLearning** | Interactive eLearning player, hands-on lab runner, and Knowledge Graph completion certificate hub |
 | **RobOS Documentation** | Living documentation hub, selective KGraph asset discovery, persistent artifact maintainer, and static site exporter |

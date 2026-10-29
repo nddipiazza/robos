@@ -44,6 +44,14 @@ Commands:
   recover                       Complete an interrupted write
 
 Global: --graph-root <workspace> (or ROBOS_GRAPH_ROOT), --require-evidence
+
+  site build --graph <dir>       Build a GitHub Pages viewer for a kgraph folder (default site: <dir>/docs)
+                                 Options: --out <dir>, --title <text>, --renderers <dir>[,<dir>], --workflow, --json
+  site renderers --graph <dir>   Which renderer each type gets (own type, parent type or generic)
+  site agent-renderers --graph <dir>
+                                 Ask the robos agent to write renderers for types on the generic one
+                                 Options: --types a,b, --provider <cli id>
+  site serve --out <dir>         Serve a built site locally (--port <n>)
   search <query>                 Full-text and semantic search across all packages
                                  Options: --type <type>, --package <pkg>, --team <team>, --engine <luxir|memory|semantic>, --json
                                  semantic needs API mode and semantic search on in RobOS Preferences
@@ -108,6 +116,8 @@ async function main() {
     catch (error) { console.error(JSON.stringify({ error: error.message })); process.exitCode = 1; }
     return;
   }
+
+  if (command === 'site') return siteCommand(_[1], flags);
 
   const store = new SDLCKnowledgeGraphStore({ graphRoot: flags['graph-root'] });
   const isJson = flags.json === true;
@@ -491,3 +501,35 @@ async function main() {
 }
 
 main();
+
+async function siteCommand(sub, flags) {
+  const site = require('../lib/pages-site');
+  const graphDir = flags.graph || flags['graph-root'];
+  const renderers = flags.renderers ? String(flags.renderers).split(',') : [];
+  const json = flags.json === true;
+  const describe = t => `${t.type.padEnd(32)} ${String(t.count).padStart(5)}  ${String(t.renderer).padEnd(26)} ${t.via === 'parent' ? `parent ${t.viaType}` : t.via}`;
+  try {
+    if (sub === 'build') {
+      if (!graphDir) throw new Error('site build needs --graph <kgraph folder>');
+      const res = site.buildKgraphSite({ graphDir, outDir: flags.out, title: flags.title, rendererDirs: renderers, workflow: flags.workflow === true, log: m => !json && console.error(m) });
+      console.log(json ? JSON.stringify(res, null, 2) : `${res.resolution.types.map(describe).join('\n')}\n\nSite: ${res.outDir}${res.workflow ? `\nWorkflow: ${res.workflow}` : ''}`);
+    } else if (sub === 'renderers') {
+      if (!graphDir) throw new Error('site renderers needs --graph <kgraph folder>');
+      const graph = site.loadKgraphFolder(graphDir);
+      const table = site.resolutionTable(graph, site.collectRenderers(graph, renderers));
+      console.log(json ? JSON.stringify(table, null, 2) : table.types.map(describe).join('\n'));
+    } else if (sub === 'agent-renderers') {
+      if (!graphDir) throw new Error('site agent-renderers needs --graph <kgraph folder>');
+      const res = await site.authorRenderersWithAgent({ graphDir, types: flags.types ? String(flags.types).split(',') : null, providerId: flags.provider, rendererDirs: renderers, log: m => console.error(m) });
+      console.log(json ? JSON.stringify(res, null, 2) : res.results.map(r => `${r.ok ? '✓' : '✗'} ${r.type}${r.ok ? ` → ${r.file}` : `: ${r.errors.join('; ')}`}`).join('\n') || 'Every type already has a renderer.');
+    } else if (sub === 'serve') {
+      const { url } = await site.serveSite(flags.out || (graphDir ? require('path').join(graphDir, 'docs') : 'docs'), { port: Number(flags.port) || 8080 });
+      console.log(`Serving ${url} (Ctrl+C to stop)`);
+    } else {
+      console.log('Usage: kgraph site <build|renderers|agent-renderers|serve> --graph <kgraph folder>');
+    }
+  } catch (error) {
+    console.error(json ? JSON.stringify({ error: error.message }) : error.message);
+    process.exitCode = 1;
+  }
+}

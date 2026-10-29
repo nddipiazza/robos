@@ -1,0 +1,186 @@
+{
+  "brief": "You are helping remake the classic JRPG \"Final Fantasy\" (NES, USA release, 1990).\nFind fan resources on the public web that document what a faithful remake needs. Prefer sources with structured data (wiki tables, MediaWiki APIs, map atlases, FAQs with tables), and say which ones refuse automated clients if you know.\n\nAsset types needed:\n- world-map: World map (typical sources: map atlas (VGMaps, NESMaps); ROM map documentation)\n- area-maps: Town, castle & dungeon maps (typical sources: map atlas (VGMaps); walkthrough maps)\n- places: Places & regions (typical sources: fan wiki location lists)\n- character-sprites: Playable classes & character sprites (typical sources: fan wiki job pages; sprite archives)\n- npcs: NPCs (typical sources: fan wiki character list; walkthrough)\n- enemies: Enemies & enemy sprites (typical sources: fan wiki bestiary; enemy FAQ)\n- bosses: Bosses (typical sources: fan wiki boss pages; boss FAQ)\n- formations: Encounter formations (typical sources: enemy formation tables; ROM data)\n- weapons: Weapons (typical sources: fan wiki weapon tables)\n- armor: Armor (typical sources: fan wiki armor tables)\n- items: Items & key items (typical sources: fan wiki item tables)\n- spells: Spells (typical sources: fan wiki magic pages; magic FAQ)\n- shops: Shops & inns (typical sources: fan wiki town pages; shop lists)\n- menus: Menu screens (menu type) (typical sources: fan wiki menu page; screenshots)\n- rule-engine: Rule engine (formulas, stats, statuses, elements, levels) (typical sources: battle mechanics guides; fan wiki stat pages; disassembly notes)\n- story: Story milestones & progression (typical sources: walkthroughs; fan wiki story section)\n- music: Music themes (typical sources: soundtrack pages)\n\nAlready known (do not repeat): https://finalfantasy.fandom.com/wiki/Final_Fantasy, https://finalfantasy.fandom.com/wiki/Walkthrough:Final_Fantasy/Apoqliphoth, https://strategywiki.org/wiki/Final_Fantasy/Gameplay, https://shrines.rpgclassics.com/nes/ff1/, https://datacrystal.tcrf.net/wiki/Final_Fantasy, https://www.vgmaps.com/Atlas/NES/index.htm#F, https://archive.rpgamer.com/games/ff/ff1/ff1mid.html, https://gamefaqs.gamespot.com/nes/522595-final-fantasy/faqs, https://www.spriters-resource.com/nes/ff/\n\nAnswer with JSON only: an array of objects\n{\"title\": string, \"url\": \"https://...\", \"assetTypes\": [asset type ids], \"kind\": \"wiki|map-atlas|walkthrough|faq|sprite-archive|rom-map|fan-site\", \"license\": string, \"notes\": string}.\nUse only real URLs you are confident exist. No commentary outside the JSON.",
+  "suggestions": [
+    {
+      "title": "NESMaps – Final Fantasy",
+      "url": "https://www.nesmaps.com/maps/FinalFantasy/FinalFantasy.html",
+      "assetTypes": [
+        "world-map",
+        "area-maps",
+        "places"
+      ],
+      "kind": "map-atlas",
+      "license": "Fan-ripped maps; game assets © Square Enix; no explicit license",
+      "notes": "A ripped world map plus town, castle and dungeon maps. Some pages also note treasure locations. Static HTML with PNG images, so it scrapes easily.",
+      "connector": null,
+      "status": "unreachable (HTTP 404)"
+    },
+    {
+      "title": "Mike's RPG Center – Final Fantasy",
+      "url": "https://mikesrpgcenter.com/ffantasy/",
+      "assetTypes": [
+        "area-maps",
+        "enemies",
+        "bosses",
+        "formations",
+        "weapons",
+        "armor",
+        "items",
+        "spells",
+        "shops",
+        "places",
+        "story"
+      ],
+      "kind": "fan-site",
+      "license": "Fan site, all rights reserved by author; game content © Square Enix",
+      "notes": "Clean HTML tables covering monsters (stats, gil, EXP), weapons, armor, items, magic, and shop inventories and prices by town. Encounters are listed by area, and there are dungeon maps and a walkthrough. Good for structured scraping.",
+      "connector": null,
+      "status": "reachable"
+    },
+    {
+      "title": "Final Fantasy Wiki (Fandom) MediaWiki API",
+      "url": "https://finalfantasy.fandom.com/api.php",
+      "assetTypes": [
+        "places",
+        "npcs",
+        "enemies",
+        "bosses",
+        "weapons",
+        "armor",
+        "items",
+        "spells",
+        "shops",
+        "story",
+        "music",
+        "character-sprites"
+      ],
+      "kind": "wiki",
+      "license": "CC BY-SA 3.0 (text); images © Square Enix (fair use)",
+      "notes": "A MediaWiki API (action=parse / action=query) for the already-known wiki. Use it to pull wikitext tables instead of HTML. The HTML pages sit behind Cloudflare and often return 403 to automated clients without a browser-like UA. The API is more tolerant but rate-limited.",
+      "connector": "mediawiki",
+      "status": "reachable"
+    },
+    {
+      "title": "Final Fantasy Wiki – Final Fantasy enemies",
+      "url": "https://finalfantasy.fandom.com/wiki/Final_Fantasy_enemies",
+      "assetTypes": [
+        "enemies",
+        "bosses"
+      ],
+      "kind": "wiki",
+      "license": "CC BY-SA 3.0",
+      "notes": "A bestiary index that links to individual enemy pages with infobox stats, weaknesses and sprites. Separate NES/PS/GBA/PSP stats are shown. Use the NES/original values.",
+      "connector": "mediawiki",
+      "status": "unreachable (HTTP 403)"
+    },
+    {
+      "title": "StrategyWiki – Final Fantasy",
+      "url": "https://strategywiki.org/wiki/Final_Fantasy",
+      "assetTypes": [
+        "story",
+        "enemies",
+        "bosses",
+        "weapons",
+        "armor",
+        "items",
+        "spells",
+        "shops",
+        "places",
+        "character-sprites"
+      ],
+      "kind": "wiki",
+      "license": "CC BY-SA 4.0",
+      "notes": "The guide root, with walkthrough chapters, a bestiary, equipment and magic subpages. The MediaWiki API is at https://strategywiki.org/w/api.php. It generally allows automated clients with a descriptive User-Agent.",
+      "connector": "mediawiki",
+      "status": "reachable"
+    },
+    {
+      "title": "The Cutting Room Floor – Final Fantasy (NES)",
+      "url": "https://tcrf.net/Final_Fantasy_(NES)",
+      "assetTypes": [
+        "rule-engine",
+        "items",
+        "menus",
+        "enemies"
+      ],
+      "kind": "wiki",
+      "license": "CC BY 3.0",
+      "notes": "Covers unused content, debug features and regional differences (Japan vs. USA). It also documents known bugs (e.g. ineffective spells, weapon crit bug) that a faithful USA remake must decide whether to reproduce.",
+      "connector": null,
+      "status": "unreachable (HTTP 403)"
+    },
+    {
+      "title": "FF1 Randomizer (FiendsOfTheElements) source",
+      "url": "https://github.com/FiendsOfTheElements/FF1Randomizer",
+      "assetTypes": [
+        "formations",
+        "enemies",
+        "weapons",
+        "armor",
+        "items",
+        "spells",
+        "shops",
+        "rule-engine",
+        "world-map",
+        "area-maps"
+      ],
+      "kind": "rom-map",
+      "license": "AGPL-3.0 (code); no ROM data included",
+      "notes": "C# code with ROM offsets and data structures for enemies, formations, shops, spells, equipment, maps and the battle engine. Its bug-fix flags list and explain vanilla mechanics bugs. Use the GitHub API or a raw clone.",
+      "connector": null,
+      "status": "reachable"
+    },
+    {
+      "title": "Final Fantasy Randomizer site",
+      "url": "https://finalfantasyrandomizer.com/",
+      "assetTypes": [
+        "rule-engine"
+      ],
+      "kind": "fan-site",
+      "license": "Fan project; see repository",
+      "notes": "The randomizer's web frontend. Its flag descriptions summarize vanilla engine quirks. It is a JS app, so use the GitHub source above for data.",
+      "connector": null,
+      "status": "reachable"
+    },
+    {
+      "title": "Wikipedia – Final Fantasy (video game)",
+      "url": "https://en.wikipedia.org/wiki/Final_Fantasy_(video_game)",
+      "assetTypes": [
+        "story",
+        "music",
+        "places"
+      ],
+      "kind": "wiki",
+      "license": "CC BY-SA 4.0",
+      "notes": "A high-level plot, development and soundtrack overview. The API is open to automated clients with a proper User-Agent.",
+      "connector": null,
+      "status": "reachable"
+    },
+    {
+      "title": "Zophar's Domain – Final Fantasy NSF",
+      "url": "https://www.zophar.net/music/nintendo-nes-nsf/final-fantasy",
+      "assetTypes": [
+        "music"
+      ],
+      "kind": "fan-site",
+      "license": "Ripped game music © Square Enix; reference only",
+      "notes": "The NSF rip with a track list. Use it to identify themes and track order for reference. Do not redistribute the audio.",
+      "connector": null,
+      "status": "reachable"
+    },
+    {
+      "title": "VGMusic – NES MIDI archive",
+      "url": "https://www.vgmusic.com/music/console/nintendo/nes/",
+      "assetTypes": [
+        "music"
+      ],
+      "kind": "fan-site",
+      "license": "Fan-sequenced MIDIs; compositions © Square Enix",
+      "notes": "Fan MIDI transcriptions of Final Fantasy tracks (search the page for 'Final Fantasy'). They are useful as editable note data for re-orchestration.",
+      "connector": null,
+      "status": "reachable"
+    }
+  ],
+  "rejected": [],
+  "via": "cli"
+}

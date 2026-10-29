@@ -1,0 +1,17 @@
+{
+  "name": "robos-jrpg-parse-portal",
+  "version": "0.1.0",
+  "description": "RobOS JRPG Parse Portal: acquire everything needed to remake a classic JRPG (maps, sprites, enemies, menus, rules, story) from fan resources into a kgraph folder, and publish it as a GitHub Pages viewer.",
+  "main": "main.js",
+  "bin": {
+    "jrpg-portal": "./bin/jrpg-portal.js"
+  },
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test ../robos-test/tests/jrpg-parse-portal/"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

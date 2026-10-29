@@ -135,6 +135,7 @@ const PORT_REGISTRY = {
   'movie-player':      19214,
   'app-mesh':          19216,
   'private-networks':  19217,
+  'jrpg-parse-portal': 19218,
 };
 
 

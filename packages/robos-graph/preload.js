@@ -76,6 +76,13 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   generateMermaid: (options) => ipcRenderer.invoke('graph-generate-mermaid', options),
   exportGraph: (format, packageId) => ipcRenderer.invoke('graph-export', { format, packageId }),
   searchNodes: (query, filter) => ipcRenderer.invoke('graph-search-nodes', { query, filter }),
+
+  // GitHub Pages KGraph viewer
+  pagesSiteDefaults: () => ipcRenderer.invoke('pages-site-defaults'),
+  choosePagesGraph: current => ipcRenderer.invoke('pages-site-choose-graph', current),
+  buildPagesSite: options => ipcRenderer.invoke('pages-site-build', options),
+  pagesAgentRenderers: options => ipcRenderer.invoke('pages-site-agent-renderers', options),
+  previewPagesSite: siteDir => ipcRenderer.invoke('pages-site-preview', siteDir),
 });
 
 // Default answer for the textarea's quick-ask button (robos-lib/quick-ask).

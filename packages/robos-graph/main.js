@@ -216,3 +216,26 @@ ipcMain.handle('graph-get-impact', async (_, { id, depth } = {}) => store.findDe
 ipcMain.handle('graph-generate-mermaid', async (_, opts = {}) => store.generateMermaidGraph(opts));
 ipcMain.handle('graph-export', async (_, { format, packageId } = {}) => store.exportGraph(format, packageId));
 ipcMain.handle('graph-search-nodes', async (_, { query, filter } = {}) => store.searchNodes(query, filter));
+
+// ── GitHub Pages KGraph viewer ───────────────────────────────────────────────
+const pagesSite = require('./lib/pages-site');
+let pagesPreview = null;
+ipcMain.handle('pages-site-defaults', () => ({ graphDir: store.workspace ? path.dirname(store.workspace.root) : '' }));
+ipcMain.handle('pages-site-choose-graph', async (_, current) => {
+  const res = await dialog.showOpenDialog(win, { properties: ['openDirectory'], defaultPath: current || undefined, title: 'Choose a kgraph folder (contains .robos)' });
+  return res.canceled ? null : res.filePaths[0];
+});
+ipcMain.handle('pages-site-build', (_, options = {}) => {
+  const res = pagesSite.buildKgraphSite({ graphDir: options.graphDir, outDir: options.outDir || undefined, title: options.title || undefined, workflow: !!options.workflow });
+  return { outDir: res.outDir, nodeCount: res.nodeCount, resolution: res.resolution, renderers: res.renderers, workflow: res.workflow };
+});
+ipcMain.handle('pages-site-agent-renderers', async (_, options = {}) => {
+  const res = await pagesSite.authorRenderersWithAgent({ graphDir: options.graphDir, types: options.types });
+  return res.results.map(r => ({ type: r.type, ok: r.ok, file: r.file ? path.basename(r.file) : null, errors: r.errors || [] }));
+});
+ipcMain.handle('pages-site-preview', async (_, siteDir) => {
+  if (pagesPreview) pagesPreview.server.close();
+  pagesPreview = await pagesSite.serveSite(siteDir);
+  await shell.openExternal(pagesPreview.url);
+  return pagesPreview.url;
+});

@@ -17,7 +17,9 @@
     "test:topology:e2e": "node --test tests/sdlc-graph/topology.e2e.js",
     "test:inspector": "node --test tests/sdlc-graph/inspector-capabilities.test.js tests/sdlc-graph/inspector-groups.test.js tests/sdlc-graph/inspector-property-groups.test.js tests/sdlc-graph/mcp-schema.test.js tests/sdlc-graph/navigation.test.js tests/sdlc-graph/try-it-runner.test.js",
     "test:inspector:e2e": "node --test tests/sdlc-graph/inspector.e2e.js tests/sdlc-graph/inspector-groups.e2e.js tests/sdlc-graph/explorer-navigation.e2e.js",
-    "test:config-sync": "node --test ../robos-lib/config-sync.test.cjs && node --test tests/robos-preferences/config-sync-e2e.test.js"
+    "test:config-sync": "node --test ../robos-lib/config-sync.test.cjs && node --test tests/robos-preferences/config-sync-e2e.test.js",
+    "test:jrpg-portal": "node --test tests/jrpg-parse-portal/unit.test.js tests/sdlc-graph/pages-site.test.js",
+    "test:jrpg-portal:e2e": "node --test --test-concurrency=1 tests/jrpg-parse-portal/portal.e2e.js"
   },
   "dependencies": {
     "electron": "^30.5.1",

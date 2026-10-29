@@ -383,6 +383,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
   },
   {
+    appId: 'jrpg-parse-portal',
+    label: 'JRPG Parse Portal',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39 27 21"/><path d="m27 21 4-10 8-4-4 8-10 4"/><path d="m12 30 6 6"/><path d="M7 41l3-3"/><circle cx="33" cy="33" r="3"/><circle cx="15" cy="13" r="3"/><circle cx="39" cy="22" r="2"/><path d="M15 16v6m3-6 7 7m11 7-2-6"/></svg>'
+  },
+  {
     appId: 'kgraph-parse-portal',
     label: 'KGraph Parse Portal',
     category: 'Development',

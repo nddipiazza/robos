@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>__SITE_TITLE__</title>
+  <meta name="description" content="__SITE_DESCRIPTION__">
+  <meta name="generator" content="RobOS KGraph Explorer — Pages site builder">
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <header class="site-header">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Show navigation" aria-expanded="false">☰</button>
+    <a class="site-title" href="#/" id="site-title">__SITE_TITLE__</a>
+    <form class="search" id="search-form" role="search">
+      <input type="search" id="search-input" placeholder="Search the graph…" aria-label="Search the graph" autocomplete="off">
+    </form>
+  </header>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Types"></nav>
+    <main class="content" id="content" tabindex="-1"><p class="loading">Loading graph…</p></main>
+  </div>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="registry.js"></script>
+  <script src="viewer.js"></script>
+  <script src="renderers/manifest.js"></script>
+</body>
+</html>

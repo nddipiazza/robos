@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS JRPG Parse Portal
+Comment=Rebuild a classic JRPG from fan resources: maps, sprites, enemies, menus, rules and story as a knowledge graph, published as a GitHub Pages viewer
+Exec=/usr/bin/electron /usr/local/share/robos/jrpg-parse-portal/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/jrpg-parse-portal/icon.svg
+Terminal=false
+Categories=Development;Game;
+X-RobOS-Category=Dev
+StartupWMClass=robos-jrpg-parse-portal

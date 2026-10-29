@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: jrpg-parse-portal
+  title: RobOS JRPG Parse Portal
+  description: Rebuilds a classic JRPG from fan resources into a kgraph folder (maps, sprites, enemies, menus, rules, story) and publishes it as a GitHub Pages viewer.
+  tags:
+    - electron
+    - knowledge-graph
+    - jrpg
+    - fan-resources
+    - github-pages
+spec:
+  type: desktop-app
+  lifecycle: experimental
+  owner: core-platform
