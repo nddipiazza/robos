@@ -14,8 +14,11 @@
 
 const path = require('path');
 const fs   = require('fs');
+const os   = require('os');
+const net  = require('net');
 const { spawn, execSync } = require('child_process');
 const http = require('http');
+const crypto = require('crypto');
 
 const REPO_ROOT    = path.resolve(__dirname, '../../..');
 // On the VM, apps are installed as siblings of robos-test under /usr/local/share/robos/.
@@ -27,6 +30,8 @@ const PACKAGES_DIR = fs.existsSync(_computedPkgDir)
 const SANDBOX_BIN  = path.join(__dirname, '..', 'sandbox', 'bin');
 const HOME_TMPL    = path.join(__dirname, '..', 'sandbox', 'home-template');
 const RUN_DIR      = path.join(__dirname, '..', 'run');
+// One lock file per port in use by a test run, shared by every checkout on this machine.
+const PORT_LOCK_DIR = path.join(os.tmpdir(), 'robos-test-ports');
 
 const PORT_MAP = {
   'agents-manager': 19104,
@@ -113,6 +118,7 @@ process.on('exit', () => {
   for (const app of _activeApps) {
     try { process.kill(app.proc.pid, 'SIGKILL'); } catch {}
     try { _killTree(app.proc.pid); } catch {}
+    _releasePort(app.port);
   }
 });
 // Also handle SIGINT/SIGTERM so Ctrl-C cleans up
@@ -219,16 +225,115 @@ function httpGet(url, timeoutMs = 3000) {
   });
 }
 
-async function waitForHealth(port, timeoutMs = 15000) {
+async function waitForHealth(port, timeoutMs = 15000, instance) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
+    let health = null;
     try {
       const res = await httpGet(`http://localhost:${port}/health`, 2000);
-      if (res.status === 200) return JSON.parse(res.data);
+      if (res.status === 200) health = JSON.parse(res.data);
     } catch {}
+    // Another process answering on our port means our app could not bind it.
+    if (health && instance && health.instance && health.instance !== instance) {
+      throw new Error(`port ${port} is answered by another app instance (${health.appId || 'unknown'})`);
+    }
+    if (health) return health;
     await new Promise(r => setTimeout(r, 300));
   }
   throw new Error(`App on port ${port} did not become healthy within ${timeoutMs}ms`);
+}
+
+// ── Port allocation ──────────────────────────────────────────────────────────
+// Several test runs (often from different checkouts) can launch the same app at once.
+// Each launch claims its port with a lock file, so runs never share or kill each other's
+// apps. Port order: scenarioConfig.port, then PORT_MAP + ROBOS_TEST_PORT_OFFSET (skipped
+// when ROBOS_TEST_PORT=ephemeral), then a free ephemeral port.
+
+function _pidAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+
+function _claimPort(port) {
+  fs.mkdirSync(PORT_LOCK_DIR, { recursive: true });
+  const lock = path.join(PORT_LOCK_DIR, `${port}.pid`);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      fs.writeFileSync(lock, String(process.pid), { flag: 'wx' });
+      return true;
+    } catch (e) {
+      if (e.code !== 'EEXIST') return false;
+      let owner = 0;
+      try { owner = parseInt(fs.readFileSync(lock, 'utf8'), 10); } catch {}
+      if (owner && _pidAlive(owner)) return false;
+      try { fs.unlinkSync(lock); } catch {}  // left by a run that died
+    }
+  }
+  return false;
+}
+
+function _releasePort(port) {
+  const lock = path.join(PORT_LOCK_DIR, `${port}.pid`);
+  try { if (parseInt(fs.readFileSync(lock, 'utf8'), 10) === process.pid) fs.unlinkSync(lock); } catch {}
+}
+
+function _listenerPids(port) {
+  try {
+    return execSync(`lsof -nP -ti tcp:${port} -sTCP:LISTEN 2>/dev/null`, { encoding: 'utf8' })
+      .split('\n').filter(Boolean).map(Number);
+  } catch { return []; }
+}
+
+/**
+ * The test runner pid a launch was tagged with. Chromium wipes /proc/<pid>/environ once it
+ * starts (and rewrites cmdline as one space-joined string), so the tag is a switch.
+ */
+function _testOwner(pid) {
+  try {
+    const m = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').match(/--robos-test-owner=(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  } catch { return 0; }
+}
+
+/** A listener we may kill: an app this harness launched whose test run has exited. */
+function _isOrphanedTestApp(pid) {
+  const owner = _testOwner(pid);
+  if (!owner) return false;  // the user's own app (or one an older harness launched): never killed
+  if (owner === process.pid) return ![..._activeApps].some(a => a.proc.pid === pid);
+  return !_pidAlive(owner);
+}
+
+function _ephemeralPort() {
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.unref();
+    srv.on('error', reject);
+    srv.listen(0, '0.0.0.0', () => { const { port } = srv.address(); srv.close(() => resolve(port)); });
+  });
+}
+
+/** Claim a port for appId that nothing else is listening on. */
+async function _allocatePort(appId, scenarioConfig) {
+  const offset = parseInt(process.env.ROBOS_TEST_PORT_OFFSET || '0', 10) || 0;
+  const fixed = scenarioConfig.port || (process.env.ROBOS_TEST_PORT === 'ephemeral' ? null : PORT_MAP[appId] + offset);
+  const candidates = fixed ? [fixed] : [];
+  if (!scenarioConfig.port) for (let i = 0; i < 5; i++) candidates.push(null);
+
+  const busy = [];
+  for (let port of candidates) {
+    if (!port) port = await _ephemeralPort();
+    if (!_claimPort(port)) { busy.push(`${port} (claimed by another test run)`); continue; }
+    let pids = _listenerPids(port);
+    const orphans = pids.filter(p => p !== process.pid && _isOrphanedTestApp(p));
+    if (orphans.length) {
+      for (const p of orphans) _killTree(p);
+      await new Promise(r => setTimeout(r, 500));
+      pids = _listenerPids(port);
+    }
+    if (!pids.length) return port;
+    _releasePort(port);
+    busy.push(`${port} (listening: pid ${pids.join(', ')})`);
+  }
+  throw new Error(`No free test port for ${appId}; tried ${busy.join('; ')}`);
 }
 
 /** Kill a process and all its children */
@@ -250,22 +355,10 @@ async function launchApp(appId, scenarioConfig) {
     throw new Error(`App not found: ${appDir}/main.js`);
   }
 
-  const port = PORT_MAP[appId];
-  if (!port) throw new Error(`No port registered for app: ${appId}`);
-
-  // Ensure no leftover process is using our port
-  try {
-    const pids = execSync(`lsof -ti :${port} 2>/dev/null`, { encoding: 'utf8' }).trim();
-    if (pids) {
-      for (const pid of pids.split('\n').filter(Boolean)) {
-        const p = parseInt(pid);
-        if (p !== process.pid && p !== process.ppid) {
-          try { process.kill(p, 'SIGKILL'); } catch {}
-        }
-      }
-      await new Promise(r => setTimeout(r, 500));
-    }
-  } catch {}
+  const basePort = PORT_MAP[appId];
+  if (!basePort) throw new Error(`No port registered for app: ${appId}`);
+  const port = await _allocatePort(appId, scenarioConfig);
+  const instance = crypto.randomBytes(8).toString('hex');
 
   fs.mkdirSync(RUN_DIR, { recursive: true });
   // `home` reuses a sandbox home prepared by the test (for example two "machines" that
@@ -274,7 +367,7 @@ async function launchApp(appId, scenarioConfig) {
   if (!scenarioConfig.home) setupHome(sandboxHome, scenarioConfig);
 
   const display = process.env.ROBOS_DISPLAY || process.env.XVFB_DISPLAY || (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1' ? ':99' : (process.env.DISPLAY || ':99'));
-  const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', ...(scenarioConfig.electronArgs || [])];
+  const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', `--robos-test-owner=${process.pid}`, ...(scenarioConfig.electronArgs || [])];
 
   const useRealBinaries = scenarioConfig.useRealBinaries || process.env.ROBOS_REAL_BINARIES === '1';
   const pathEnv = useRealBinaries ? process.env.PATH : `${SANDBOX_BIN}:${process.env.PATH}`;
@@ -297,6 +390,10 @@ async function launchApp(appId, scenarioConfig) {
       PASSWORD_STORE_DIR: path.join(sandboxHome, '.password-store'),
       REAL_HOME: process.env.HOME || '/home/ndipiazza',
       ROBOS_HOST_HOME: process.env.HOME || '/home/ndipiazza',
+      // The app's debug server moves from basePort to the port claimed above.
+      ROBOS_DEBUG_PORT_REMAP: `${basePort}:${port}`,
+      ROBOS_DEBUG_INSTANCE: instance,
+      ...(appId === 'voice-prompt' ? { ROBOS_VOICE_PORT: String(port) } : {}),
       ...(scenarioConfig.env || {}),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -309,7 +406,7 @@ async function launchApp(appId, scenarioConfig) {
   _activeApps.add(app);
 
   try {
-    await waitForHealth(port);
+    await waitForHealth(port, 15000, instance);
     // Give the renderer time to complete async initialization (IPC calls, DOM updates)
     await new Promise(r => setTimeout(r, 1500));
   } catch (e) {
@@ -347,6 +444,7 @@ async function killApp(app) {
       resolve();
     }
   });
+  _releasePort(app.port);
 
   // Clean up sandbox home
   if (!app.keepHome) try { fs.rmSync(app.sandboxHome, { recursive: true, force: true }); } catch {}
