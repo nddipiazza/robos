@@ -455,11 +455,123 @@ function createAppMeshEngine(options = {}) {
   let upgradeBridgePort = null;
   let wanRelayProc = null;
   let wanRelayUrl = null;
+  let wanRelayHealthTimer = null;
   const activeGatewaySockets = new Set();
   const activeTunnelServers = new Map(); // tunnelId -> { server, sockets, stats, ... }
   const reverseMuxSessions = new Map();  // peerNodeId -> { proxyPort, close, connectedAt, direction }
   const reverseMuxClients = new Map();   // peerNodeId -> { close, timer }
   const auditLog = [];
+
+  function computeRendezvousSig(enrollToken, nodeId, relayUrl, fingerprint) {
+    return crypto
+      .createHmac('sha256', String(enrollToken || 'robos-rv'))
+      .update(`${nodeId}:${relayUrl}:${fingerprint}`)
+      .digest('hex');
+  }
+
+  function publishRendezvousBeacon(relayUrl) {
+    if (!relayUrl || !identity.nodeId) return;
+    try {
+      const enrollToken = computeEnrollToken();
+      const payload = JSON.stringify({
+        v: 1,
+        nodeId: identity.nodeId,
+        name: identity.nodeName,
+        relayUrl,
+        fingerprint: identity.fingerprint,
+        issuedAt: new Date().toISOString(),
+        sig: computeRendezvousSig(enrollToken, identity.nodeId, relayUrl, identity.fingerprint),
+      });
+      const req = https.request({
+        hostname: 'ntfy.sh',
+        port: 443,
+        path: `/robos-rv-${ encodeURIComponent(identity.nodeId) }`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+        timeout: 4000,
+      }, (res) => {
+        res.resume();
+      });
+      req.on('error', () => {});
+      req.on('timeout', () => { try { req.destroy(); } catch {} });
+      req.end(payload);
+    } catch {}
+  }
+
+  function resolveLatestRendezvousRelay(peer, timeoutMs = 4000) {
+    if (!peer || !peer.nodeId) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      let settled = false;
+      const done = (val) => {
+        if (settled) return;
+        settled = true;
+        resolve(val);
+      };
+      const req = https.get({
+        hostname: 'ntfy.sh',
+        port: 443,
+        path: `/robos-rv-${encodeURIComponent(peer.nodeId)}/json?poll=1&since=12h`,
+        timeout: timeoutMs,
+      }, (res) => {
+        let body = '';
+        res.on('data', (c) => { body += c.toString('utf8'); });
+        res.on('end', () => {
+          const lines = body.trim().split('\n').filter(Boolean).reverse();
+          for (const line of lines) {
+            try {
+              const outer = JSON.parse(line);
+              if (!outer || outer.event !== 'message' || !outer.message) continue;
+              const msg = JSON.parse(outer.message);
+              if (!msg || msg.nodeId !== peer.nodeId || !msg.relayUrl) continue;
+              if (peer.fingerprint && msg.fingerprint && msg.fingerprint !== peer.fingerprint) continue;
+              if (peer.enrollToken && msg.sig) {
+                const expected = computeRendezvousSig(peer.enrollToken, peer.nodeId, msg.relayUrl, peer.fingerprint || msg.fingerprint);
+                if (msg.sig !== expected) continue;
+              }
+              return done(String(msg.relayUrl).trim());
+            } catch {}
+          }
+          done(null);
+        });
+      });
+      req.on('error', () => done(null));
+      req.on('timeout', () => {
+        try { req.destroy(); } catch {}
+        done(null);
+      });
+    });
+  }
+
+  function probeRelayHttpAlive(relayUrl, timeoutMs = 4000) {
+    if (!relayUrl) return Promise.resolve(false);
+    return new Promise((resolve) => {
+      try {
+        const httpUrl = String(relayUrl).replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://');
+        const parsed = new URL(httpUrl);
+        const mod = parsed.protocol === 'https:' ? https : http;
+        const req = mod.get({
+          hostname: parsed.hostname,
+          port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+          path: '/',
+          timeout: timeoutMs,
+        }, (res) => {
+          res.resume();
+          // Our upgradeBridgeServer returns 200 JSON on GET /; localhost.run returns 502 when tunnel is dead
+          resolve(res.statusCode >= 200 && res.statusCode < 500);
+        });
+        req.on('error', () => resolve(false));
+        req.on('timeout', () => {
+          try { req.destroy(); } catch {}
+          resolve(false);
+        });
+      } catch {
+        resolve(false);
+      }
+    });
+  }
 
   function recordAudit(event) {
     const entry = {
@@ -839,6 +951,7 @@ function createAppMeshEngine(options = {}) {
     await ensureUpgradeBridgeServer();
     if (opts.customRelayUrl) {
       wanRelayUrl = String(opts.customRelayUrl).trim();
+      publishRendezvousBeacon(wanRelayUrl);
       recordAudit({
         type: 'WAN_RELAY_STARTED',
         severity: 'success',
@@ -852,6 +965,10 @@ function createAppMeshEngine(options = {}) {
     if (wanRelayProc) {
       try { wanRelayProc.kill(); } catch {}
       wanRelayProc = null;
+    }
+    if (wanRelayHealthTimer) {
+      clearInterval(wanRelayHealthTimer);
+      wanRelayHealthTimer = null;
     }
 
     return new Promise((resolve, reject) => {
@@ -872,6 +989,24 @@ function createAppMeshEngine(options = {}) {
         }
       }, opts.timeoutMs || 12000);
 
+      const startHealthWatch = () => {
+        if (wanRelayHealthTimer) clearInterval(wanRelayHealthTimer);
+        if (opts.autoRespawn === false) return;
+        wanRelayHealthTimer = setInterval(async () => {
+          if (wanRelayProc !== proc || !wanRelayUrl) return;
+          const ok = await probeRelayHttpAlive(wanRelayUrl, 4000);
+          if (!ok && wanRelayProc === proc) {
+            recordAudit({
+              type: 'WAN_RELAY_HEALING',
+              severity: 'warn',
+              detail: `WAN Relay ${wanRelayUrl} returned HTTP 502/unreachable; respawning fresh tunnel`,
+            });
+            try { proc.kill(); } catch {}
+          }
+        }, 20000);
+        if (wanRelayHealthTimer.unref) wanRelayHealthTimer.unref();
+      };
+
       const onOutput = (chunk) => {
         const text = chunk.toString('utf8');
         const match = text.match(/https:\/\/([a-z0-9-]+\.lhr\.life)/i);
@@ -879,9 +1014,13 @@ function createAppMeshEngine(options = {}) {
           const nextRelayUrl = `wss://${match[1]}`;
           const changed = wanRelayUrl !== nextRelayUrl;
           wanRelayUrl = nextRelayUrl;
+          if (changed) {
+            publishRendezvousBeacon(wanRelayUrl);
+          }
           if (!settled) {
             settled = true;
             clearTimeout(timer);
+            startHealthWatch();
             recordAudit({
               type: 'WAN_RELAY_STARTED',
               severity: 'success',
@@ -908,6 +1047,10 @@ function createAppMeshEngine(options = {}) {
         if (wanRelayProc === proc) {
           wanRelayProc = null;
           wanRelayUrl = null;
+          if (wanRelayHealthTimer) {
+            clearInterval(wanRelayHealthTimer);
+            wanRelayHealthTimer = null;
+          }
         }
         if (!settled) {
           settled = true;
@@ -936,6 +1079,10 @@ function createAppMeshEngine(options = {}) {
   }
 
   function stopWanRelay() {
+    if (wanRelayHealthTimer) {
+      clearInterval(wanRelayHealthTimer);
+      wanRelayHealthTimer = null;
+    }
     if (wanRelayProc) {
       try { wanRelayProc.kill(); } catch {}
       wanRelayProc = null;
@@ -1002,7 +1149,7 @@ function createAppMeshEngine(options = {}) {
   /**
    * Open an authenticated Mutual TLS 1.3 socket to `peer`, automatically routing via:
    *   1. Active Reverse-Mux Session (`reverseMuxSessions.get(peer.nodeId)`) if connected
-   *   2. Cross-Network WAN Relay (`peer.relayUrl`) if configured and direct LAN is unreachable
+   *   2. Cross-Network WAN Relay (`peer.relayUrl` + automatic signed rendezvous rotation lookup) if configured and direct LAN is unreachable
    *   3. Direct TCP (`peer.host:peer.port`)
    */
   async function openPeerTlsSocket(peer, timeoutMs = 6000) {
@@ -1026,7 +1173,31 @@ function createAppMeshEngine(options = {}) {
         ? await probeLocalPort(Number(peer.port || DEFAULT_MESH_PORT), peer.host, 350)
         : false;
       if (!directReachable) {
-        const transportStream = await dialRelayUpgradeStream(peer.relayUrl, timeoutMs);
+        let transportStream = null;
+        try {
+          transportStream = await dialRelayUpgradeStream(peer.relayUrl, timeoutMs);
+        } catch (relayErr) {
+          // If the static relayUrl in the invite token rotated (HTTP 502), query signed rendezvous channel for peer.nodeId
+          const rotatedRelayUrl = await resolveLatestRendezvousRelay(peer, 4000);
+          if (rotatedRelayUrl && rotatedRelayUrl !== peer.relayUrl) {
+            peer.relayUrl = rotatedRelayUrl;
+            const stored = state.peers.find(p => p.nodeId === peer.nodeId || p.id === peer.id);
+            if (stored) {
+              stored.relayUrl = rotatedRelayUrl;
+              saveState();
+            }
+            recordAudit({
+              type: 'WAN_RELAY_RESOLVED',
+              severity: 'info',
+              peerId: peer.nodeId,
+              peerName: peer.name,
+              detail: `Resolved latest rotated WAN Relay for ${peer.name}: ${rotatedRelayUrl}`,
+            });
+            transportStream = await dialRelayUpgradeStream(rotatedRelayUrl, timeoutMs);
+          } else {
+            throw relayErr;
+          }
+        }
         return tls.connect({
           socket: transportStream,
           key: identity.keyPem,
