@@ -48,7 +48,7 @@ async function acquire({ profileId, outDir, cacheDir, copyAssets = true, downloa
   log(`Acquiring ${profile.title} (${profile.platform} ${profile.region})`);
   const result = await profile.acquire({ http, log, outDir, copyAssets, downloadImages, measureMaps, cacheDir: cacheBase });
   const sources = [...result.sources, ...extraSources];
-  const written = writeKgraphFolder(outDir, { game: result.game, nodes: result.nodes, sources, warnings: result.warnings });
+  const written = writeKgraphFolder(outDir, { game: result.game, nodes: result.nodes, sources, warnings: result.warnings, profileId });
   written.renderers = installSiteRenderers(outDir);
   log(`Wrote ${written.nodeCount} nodes in ${written.packages.length} packages to ${outDir} (${((Date.now() - started) / 1000).toFixed(1)}s, ${http.stats.network} requests, ${http.stats.cached} cached)`);
   return { ...written, http: http.stats };

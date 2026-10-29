@@ -33,7 +33,7 @@ function stableJson(value) {
   return JSON.stringify(value, null, 2) + '\n';
 }
 
-function writeKgraphFolder(outDir, { game, nodes, sources = [], warnings = [], namespace, generator = 'jrpg-parse-portal' }) {
+function writeKgraphFolder(outDir, { game, nodes, sources = [], warnings = [], namespace, generator = 'jrpg-parse-portal', profileId }) {
   if (!game || !game['@id']) throw new Error('writeKgraphFolder needs a game node');
   const all = [game, ...sources, ...nodes];
   const ids = new Set();
@@ -91,13 +91,13 @@ function writeKgraphFolder(outDir, { game, nodes, sources = [], warnings = [], n
 
   const cov = coverage(all);
   fs.writeFileSync(path.join(outDir, 'coverage.json'), stableJson({ game: game['@id'], nodeCount: all.length, assetTypes: cov, warnings }));
-  fs.writeFileSync(path.join(outDir, 'README.md'), readme(game, catalog, cov, sources, warnings));
+  fs.writeFileSync(path.join(outDir, 'README.md'), readme(game, catalog, cov, sources, warnings, profileId));
   const gi = path.join(outDir, '.gitignore');
   if (!fs.existsSync(gi)) fs.writeFileSync(gi, 'cache/\nnode_modules/\n');
   return { outDir, nodeCount: all.length, packages: catalog, coverage: cov, warnings };
 }
 
-function readme(game, catalog, cov, sources, warnings) {
+function readme(game, catalog, cov, sources, warnings, profileId) {
   const title = game['dcterms:title'];
   const lines = [
     `# ${title} Knowledge Graph`,
@@ -126,6 +126,19 @@ function readme(game, catalog, cov, sources, warnings) {
     '.robos/kgraphs/<package>/package.jsonld',
     'coverage.json                        asset-type coverage',
     'site/renderers/                      custom renderers for the Pages viewer',
+    '```',
+    '',
+    '## Viewer',
+    '',
+    '`docs/` is a static viewer built by RobOS KGraph Explorer (Pages site). Each element is drawn by its own renderer, else its parent type\'s (Boss → Enemy, Weapon → Equipment → Item, Town → Place), else a generic one; the renderers live in `site/renderers/`. Files named `agent-*.js` were written by the robos agent for types that had no renderer. Every page ends with a note naming the renderer it used.',
+    '',
+    '## Rebuild it',
+    '',
+    'From a RobOS checkout:',
+    '',
+    '```bash',
+    `node packages/jrpg-parse-portal/bin/jrpg-portal.js acquire ${profileId || '<profile>'} --out <this folder>${sources.some(x => /^agent-suggested/.test(x['jrpg:status'] || '')) ? ' --suggestions <this folder>/agent-discovery.json' : ''}`,
+    'node packages/robos-graph/bin/kgraph-cli.js site build --graph <this folder> --workflow',
     '```',
     '',
     '## Sources and credit',
