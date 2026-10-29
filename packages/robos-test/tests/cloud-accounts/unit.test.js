@@ -124,4 +124,27 @@ describe('Cloud Accounts: logged-in state comes from stored credentials', () => 
     assert.ok(saveCall.includes('window.robos.saveAccount('), 'save handler found');
     assert.doesNotMatch(saveCall, /loggedIn:\s*true/);
   });
+
+  it('Sign out clears tokens on the account and its data source, and stays signed out on the next read', () => {
+    const id = 'google-drive-gmail-example';
+    assert.ok(find(ca.listAccounts(OPTS), id), 'the account imported from ds-drive exists');
+    const res = ca.signOutAccount(id, OPTS);
+    assert.deepStrictEqual(res.signedOutDataSourceIds, ['ds-drive']);
+    assert.strictEqual(find(res, id).loggedIn, false);
+
+    const again = find(ca.listAccounts(OPTS), id);
+    assert.strictEqual(again.loggedIn, false, 'syncFromDataSources must not sign it back in');
+    assert.strictEqual(again.hasRefreshToken, false);
+    const ds = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'data-sources.json'), 'utf8')).find((d) => d.id === 'ds-drive');
+    assert.strictEqual(ds.accessToken, '');
+    assert.strictEqual(ds.refreshToken, '');
+    assert.strictEqual(ds.loggedIn, false);
+    assert.ok(find(ca.listAccounts(OPTS), 'google-mount-gmail-example').loggedIn, 'other accounts are untouched');
+  });
+
+  it('saving new tokens after a sign-out signs the account back in', () => {
+    const { account } = ca.saveAccount({ id: 'google-drive-gmail-example', provider: 'google', accessToken: 'ya29.fresh', refreshToken: '1//fresh' }, OPTS);
+    assert.strictEqual(account.loggedIn, true);
+    assert.strictEqual(account.status, 'Connected');
+  });
 });

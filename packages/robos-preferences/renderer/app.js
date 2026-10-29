@@ -518,6 +518,7 @@ function renderCloudAccountsSection(state) {
           <div class="cloud-account-actions" style="display:flex;gap:6px;flex:none;">
             ${acc.provider === 'google' ? `<button type="button" class="btn" data-cloud-tb="${esc(acc.id)}">Sync to Thunderbird</button>` : ''}
             <button type="button" class="btn" data-cloud-verify="${esc(acc.id)}">Verify</button>
+            ${acc.loggedIn ? `<button type="button" class="btn" data-cloud-signout="${esc(acc.id)}">Sign out</button>` : ''}
             <button type="button" class="btn" data-cloud-remove="${esc(acc.id)}">Remove</button>
           </div>
           <div class="cloud-account-confirm" data-cloud-confirm="${esc(acc.id)}" style="display:none;align-items:center;gap:6px;flex:none;">
@@ -568,6 +569,25 @@ function renderCloudAccountsSection(state) {
       }
       const fresh = await window.api.cloudAccounts();
       if (fresh.ok) renderCloudAccountsSection(fresh);
+    };
+  });
+  // Signing out keeps the account; signing in again with Google reconnects it.
+  listWrap.querySelectorAll('[data-cloud-signout]').forEach(btn => {
+    btn.onclick = async () => {
+      const statusEl = document.getElementById('cloud-accounts-status');
+      const id = btn.dataset.cloudSignout;
+      const acc = accounts.find(a => a.id === id);
+      btn.disabled = true;
+      btn.textContent = 'Signing out…';
+      const res = await window.api.signOutCloudAccount(id);
+      if (!res.ok) {
+        btn.disabled = false;
+        btn.textContent = 'Sign out';
+        if (statusEl) statusEl.textContent = `Could not sign out: ${res.error}`;
+        return;
+      }
+      renderCloudAccountsSection(res);
+      if (statusEl) statusEl.textContent = `✓ Signed out ${acc?.email || acc?.label || id}. Sign in again to reconnect it.`;
     };
   });
   // Removing asks first: the row's actions swap for an inline "Remove …? Remove / Cancel".
