@@ -6,6 +6,9 @@ var score: Label
 var hint: Label
 var fight: Button
 var pause_button: Button
+var results: CanvasLayer
+var results_button: Button
+var results_shown := false
 
 func _ready() -> void:
 	layer = 5
@@ -38,6 +41,9 @@ func _ready() -> void:
 	pause_button = _button(row, "Pause  [P]", _pause)
 	_button(row, "Reset  [F9]", func(): SimEngine.reset_unit_battle())
 	_button(row, "Frame armies", _frame_armies)
+	results = preload("res://scripts/RTSBattleResults.gd").new()
+	add_child(results)
+	results_button = _button(row, "Results  [R]", func(): results.reopen())
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 	_on_scenario_loaded("")
 
@@ -51,6 +57,10 @@ func _button(row: HBoxContainer, text: String, action: Callable) -> Button:
 	return button
 
 func _on_scenario_loaded(_label: String) -> void:
+	results_shown = false
+	if results:
+		results.dismiss()
+		results.report = {}
 	panel.visible = SimEngine.match_state.get("mode", "") == "unit_battle"
 	if panel.visible:
 		call_deferred("_frame_armies")
@@ -83,6 +93,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			SimEngine.reset_unit_battle()
 		KEY_P:
 			_pause()
+		KEY_R:
+			results.reopen()
 		_:
 			return
 	get_viewport().set_input_as_handled()
@@ -96,6 +108,10 @@ func _process(_delta: float) -> void:
 			counts[u.owner] += 1
 	score.text = "BATTLE LAB     BLUE  %d    —    %d  RED     |     %.1f s" % [counts[1], counts[2], SimEngine.sim_time]
 	var status = SimEngine.match_state.get("status", "")
+	results_button.disabled = status != "finished"
+	if status == "finished" and not results_shown:
+		results_shown = true
+		results.show_report(SimEngine.match_state.results)
 	var warm = get_parent().world_3d.rifle_fx.warmup_complete
 	fight.disabled = status != "ready" or not warm
 	pause_button.disabled = status != "playing"

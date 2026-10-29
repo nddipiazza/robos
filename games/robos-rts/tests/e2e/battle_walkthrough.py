@@ -139,8 +139,28 @@ def main():
             frozen = obs["tick"]
             assert client.get_observation()["tick"] == frozen
             client.screenshot((output / "result.png").as_posix())
+            results_ui = client.ui()["state"]["battle_results"]
+            assert results_ui["visible"] and len(results_ui["tabs"]) == 4, results_ui
+            for index, tab in enumerate(results_ui["tabs"]):
+                x,y,w,h = tab["rect"]
+                client.mouse(x+w/2, y+h/2, pressed=True)
+                client.mouse(x+w/2, y+h/2, pressed=False)
+                assert client.ui()["state"]["battle_results"]["current_tab"] == index
+                client.screenshot((output / f"results-tab-{index}.png").as_posix())
+            x,y,w,h = results_ui["save_rect"]
+            client.mouse(x+w/2, y+h/2, pressed=True)
+            client.mouse(x+w/2, y+h/2, pressed=False)
+            saved = client.ui()["state"]["battle_results"]["saved"]
+            assert saved.startswith("Saved: "), saved
+            exported = json.loads(Path(saved.removeprefix("Saved: ")).read_text(encoding="utf-8"))
+            assert exported["ticks"] == obs["tick"] and len(exported["units"]) == 20
+            key("Escape")
+            assert not client.ui()["state"]["battle_results_visible"]
+            key("R")
+            assert client.ui()["state"]["battle_results_visible"]
             key("F9")
             assert client.get_observation()["match"]["status"] == "ready"
+            assert not client.ui()["state"]["battle_results_visible"]
             key("Enter", alt=True)
             time.sleep(.4)
             assert client.ui()["state"]["display_mode"] == 3

@@ -847,6 +847,8 @@ func ui_state() -> Dictionary:
 		"window_size": [window.size.x, window.size.y] if window else [0, 0],
 		"canvas_size": [canvas.x, canvas.y],
 		"battle_lab_visible": battle_lab != null and battle_lab.panel.visible,
+		"battle_results_visible": battle_lab != null and battle_lab.results.is_open(),
+		"battle_results": battle_lab.results.ui_state() if battle_lab else {},
 		"rifle_fx_warm": world_3d != null and world_3d.rifle_fx.warmup_complete,
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"local_player": local_player,

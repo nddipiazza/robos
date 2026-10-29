@@ -37,6 +37,22 @@ def resolve(context):
             assert min(counts.values()) == 0
             assert winner in (1, 2) and counts[winner] > 0
             assert sum(p["units_killed"] for p in obs["players"].values()) == 20-len(obs["units"])
+            report = obs["match"]["results"]
+            assert len(report["units"]) == 20, "Destroyed units must remain in the report"
+            assert report["ticks"] == obs["tick"] and abs(report["duration"]-obs["tick"]/64) < .001
+            blue, red = report["sides"]["1"], report["sides"]["2"]
+            for pid, side, enemy in ((1, blue, red), (2, red, blue)):
+                assert side["started"] == 10 and side["survivors"] == counts[pid]
+                assert side["lost"] == 10-counts[pid] and side["kills"] == enemy["lost"]
+                assert side["crystal_lost"] == side["lost"]*50 and side["aether_lost"] == 0
+                assert side["crystal_destroyed"] == enemy["crystal_lost"]
+                assert side["supply_destroyed"] == enemy["lost"]
+                assert side["damage"] == enemy["damage_taken"]
+                assert side["damage"] == side["direct_damage"] and side["splash_damage"] == 0
+                assert side["damage"] == enemy["initial_hp"]-enemy["hp"]
+                assert side["shots"]*6 == side["damage"]+side["overkill"]
+                assert side["mvp"]["tag"] in [u["tag"] for u in report["units"] if u["owner"] == pid]
+            assert abs(sum((b["to"]-b["from"])*b["blue_dps"] for b in report["timeline"])-blue["damage"]) < .001
             return {"match": obs["match"], "units": obs["units"], "tick": obs["tick"]}
     raise AssertionError("Arena failed to reach elimination within 60 game seconds")
 

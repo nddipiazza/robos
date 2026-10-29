@@ -62,6 +62,7 @@ var _accum_time: float = 0.0
 var editor_session: Dictionary = {}
 var match_state: Dictionary = {}
 var battle_scenario: Dictionary = {}
+var battle_stats = preload("res://scripts/engine/RTSBattleStats.gd").new()
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
 var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
@@ -134,6 +135,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	command_history.clear()
 	match_state.clear()
 	battle_scenario.clear()
+	battle_stats.reset()
 	_accum_time = 0.0
 	sim_speed = 1.0
 	manual_step_requests = 0
@@ -405,6 +407,7 @@ func start_unit_battle() -> Dictionary:
 	if match_state.get("mode", "") != "unit_battle" or match_state.get("status", "") != "ready":
 		return {"ok": false, "error": "Reset the arena before starting a new fight"}
 	match_state["status"] = "playing"
+	battle_stats.begin(units, tick)
 	# Identical one-shot orders: normal targeting and movement resolve the fight.
 	# No scripted micro, free reinforcements or forced result. The player can override blue.
 	for pid in [1, 2]:
@@ -445,6 +448,11 @@ func _finish_match(winner: int, reason: String) -> void:
 	match_state["winner"] = winner
 	match_state["reason"] = reason
 	match_state["finished_tick"] = tick
+	if match_state.get("mode", "") == "unit_battle":
+		match_state["results"] = battle_stats.finish(units, tick, rng_seed)
+		match_state.results["winner"] = winner
+		match_state.results["reason"] = reason
+		match_state.results["scenario"] = scenario_name
 	emit_signal("notice", 1, "Victory" if winner == 1 else ("Draw" if winner == 0 else "Defeat"), "info")
 
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
@@ -721,6 +729,7 @@ func _step_single_tick() -> void:
 	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT)
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
+	battle_stats.sample(units, tick)
 	_check_match_result()
 	emit_signal("simulation_ticked", tick)
 
@@ -965,7 +974,9 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	# Aegis Shield Regeneration (2.0 shields/sec after 3.5s out of combat)
 	u["out_of_combat_timer"] += dt
 	if u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] and u["out_of_combat_timer"] >= 3.5:
+		var before_shields: float = u["shields"]
 		u["shields"] = min(u["max_shields"], u["shields"] + 6.0 * dt)
+		battle_stats.restored(u, 0.0, u["shields"] - before_shields)
 
 	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	if u["weapon_cooldown"] > 0.0:
@@ -984,6 +995,7 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		u["attack_cycle_elapsed"] += dt * attack_rate
 		var target = units.get(u["attack_target_tag"], {})
 		if target.is_empty() or target["hp"] <= 0.0:
+			battle_stats.count(u.tag, "windup_cancels")
 			u["attack_state"] = "idle"
 		else:
 			u["attack_state_timer"] -= dt * attack_rate
@@ -1438,6 +1450,7 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 	if wpn.is_empty():
 		return
 	u["attack_state"] = "windup"
+	battle_stats.count(u.tag, "attack_starts")
 	u["attack_target_tag"] = target["tag"]
 	u["attack_cycle_elapsed"] = 0.0
 	u["attack_state_timer"] = float(wpn.get("damage_point", 0.08))
@@ -1449,6 +1462,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 		return
 
 	var base_dmg = float(wpn.get("damage", 6.0))
+	battle_stats.shot(attacker, tick)
 	var bonus_dict: Dictionary = wpn.get("bonus", {})
 	var splash_rad = float(wpn.get("splash_radius", 0.0))
 	var slow_factor = float(wpn.get("concussive_slow", 0.0))
@@ -1466,7 +1480,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 				continue
 			var d = primary_target["pos"].distance_to(s["pos"])
 			var mult = 0.5 if d <= splash_rad * 0.5 else 0.25
-			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult)
+			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult, true)
 
 	var evt = {
 		"tick": tick,
@@ -1484,7 +1498,9 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 		recent_events.pop_front()
 	emit_signal("projectile_fired", attacker["pos"], primary_target["pos"], str(wpn.get("name", "")), splash_rad > 0.0, attacker["owner"])
 
-func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float) -> void:
+func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float, splash: bool = false) -> void:
+	var before_hp: float = target["hp"]
+	var before_shields: float = target["shields"]
 	var dmg = base_dmg
 	var attrs: Array = target.get("attributes", [])
 	for attr in bonus_dict.keys():
@@ -1500,6 +1516,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		if target["shields"] >= dmg:
 			target["shields"] -= dmg
 			attacker["damage_dealt"] += dmg
+			battle_stats.damage(attacker, target, 0.0, dmg, 0.0, 0.0, splash, tick)
 			return
 		else:
 			var overflow = dmg - target["shields"]
@@ -1510,6 +1527,8 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	var hp_dmg = max(0.5, dmg - float(target.get("armor", 0.0)))
 	target["hp"] = max(0.0, target["hp"] - hp_dmg)
 	attacker["damage_dealt"] += hp_dmg
+	battle_stats.damage(attacker, target, before_hp - target["hp"], before_shields - target["shields"],
+		maxf(0.0, hp_dmg - before_hp), maxf(0.0, dmg - hp_dmg), splash, tick)
 
 	if target["hp"] <= 0.0:
 		attacker["kills"] += 1
@@ -1548,17 +1567,21 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				continue
 
 		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "phase_step"]:
+			battle_stats.count(u.tag, "recovery_cancels")
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 			if players.has(u["owner"]):
 				players[u["owner"]]["stutter_step_cancels"] += 1
 		elif u["attack_state"] == "windup" and ctype in ["move", "stop", "phase_step"]:
+			battle_stats.count(u.tag, "windup_cancels")
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 
 		if ctype == "surge":
 			if u["unit_type"] in ["rifleman", "breacher"] and u["hp"] > 10.0:
 				u["hp"] -= 10.0
+				battle_stats.count(u.tag, "self_damage", 10.0)
+				battle_stats.count(u.tag, "surge_uses")
 				u["surge_timer"] = 11.0
 				accepted += 1
 			continue
