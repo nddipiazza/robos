@@ -8,6 +8,14 @@
  * enforces access per signed-in user, so a share is invisible to a recipient until the
  * owner grants it, like the real Drive.
  *
+ * Real-Drive behaviour it reproduces (checked against www.googleapis.com):
+ *   - errors carry `error.errors[0].reason` (notFound, insufficientFilePermissions,
+ *     rateLimitExceeded); no access to a file is a 404, not a 403.
+ *   - `inheritDelayMs`: access a share grants reaches files inside the folder after the
+ *     folder itself, so a recipient's listing can briefly miss them.
+ *   - `failNext(n, { status, reason })`: the next n API calls fail, e.g. with the
+ *     403 rateLimitExceeded Drive returns when the OAuth client's quota is used up.
+ *
  *   const drive = await startMockDrive({ users: { 'tok-alex': 'alex@example.com' } });
  *   process.env.ROBOS_GDRIVE_API_BASE = drive.url;
  *   ...
@@ -19,8 +27,9 @@ const crypto = require('node:crypto');
 
 const FOLDER = 'application/vnd.google-apps.folder';
 
-function startMockDrive({ users = {}, port = 0 } = {}) {
+function startMockDrive({ users = {}, port = 0, inheritDelayMs = 0 } = {}) {
   const files = new Map();
+  const injected = [];
   const notifications = [];
   const tokenToEmail = { ...users };
 
@@ -35,7 +44,7 @@ function startMockDrive({ users = {}, port = 0 } = {}) {
   function access(file, email, depth = 0) {
     if (!file || depth > 50) return null;
     if (file.owner === email) return 'owner';
-    const p = file.perms.find(x => x.emailAddress === email);
+    const p = file.perms.find(x => x.emailAddress === email && (depth === 0 || Date.now() - x.grantedAt >= inheritDelayMs));
     if (p) return p.role;
     for (const parent of file.parents) {
       const a = access(files.get(parent), email, depth + 1);
@@ -89,7 +98,11 @@ function startMockDrive({ users = {}, port = 0 } = {}) {
     res.writeHead(status, { 'Content-Type': 'application/json', ...headers });
     res.end(body === undefined ? '' : JSON.stringify(body));
   }
-  const fail = (res, status, message) => send(res, status, { error: { code: status, message } });
+  const REASON = { 401: 'authError', 403: 'insufficientFilePermissions', 404: 'notFound', 500: 'backendError' };
+  const STATUS = { 401: 'UNAUTHENTICATED', 403: 'PERMISSION_DENIED', 404: 'NOT_FOUND', 429: 'RESOURCE_EXHAUSTED' };
+  const fail = (res, status, message, reason = REASON[status] || 'error') => send(res, status, {
+    error: { code: status, message, errors: [{ message, domain: 'global', reason }], ...(STATUS[status] ? { status: STATUS[status] } : {}) },
+  });
 
   function create(email, { name, mimeType, parents = [] }, content) {
     const parentIds = (parents.length ? parents : ['root']).map(p => p === 'root' ? ensureRoot(email) : p);
@@ -110,6 +123,10 @@ function startMockDrive({ users = {}, port = 0 } = {}) {
       ensureRoot(email);
       const p = url.pathname;
       let m;
+      if (injected.length) {
+        const e = injected.shift();
+        return fail(res, e.status, e.message || "Quota exceeded for quota metric 'Queries' and limit 'Queries per minute' of service 'drive.googleapis.com'.", e.reason);
+      }
 
       if (req.method === 'GET' && p === '/drive/v3/files') {
         const filter = parseQ(url.searchParams.get('q') || '', email);
@@ -137,13 +154,14 @@ function startMockDrive({ users = {}, port = 0 } = {}) {
       if ((m = p.match(/^\/drive\/v3\/files\/([^/]+)\/permissions$/))) {
         const f = files.get(m[1]);
         if (!canRead(f, email)) return fail(res, 404, `File not found: ${m[1]}.`);
-        if (req.method === 'GET') return send(res, 200, { permissions: [{ id: 'owner', emailAddress: f.owner, role: 'owner', type: 'user' }, ...f.perms] });
+        const out = ({ grantedAt, ...rest }) => rest;
+        if (req.method === 'GET') return send(res, 200, { permissions: [{ id: 'owner', emailAddress: f.owner, role: 'owner', type: 'user' }, ...f.perms.map(out)] });
         if (!canWrite(f, email)) return fail(res, 403, 'The user does not have sufficient permissions for this file.');
         const body = JSON.parse((await readBody(req)).toString('utf8'));
-        const perm = { id: crypto.randomBytes(6).toString('hex'), type: body.type, role: body.role, emailAddress: String(body.emailAddress).toLowerCase() };
+        const perm = { id: crypto.randomBytes(6).toString('hex'), type: body.type, role: body.role, emailAddress: String(body.emailAddress).toLowerCase(), grantedAt: Date.now() };
         f.perms = f.perms.filter(x => x.emailAddress !== perm.emailAddress).concat(perm);
         if (url.searchParams.get('sendNotificationEmail') !== 'false') notifications.push({ to: perm.emailAddress, from: email, fileId: f.id, fileName: f.name, message: url.searchParams.get('emailMessage') || '' });
-        return send(res, 200, perm);
+        return send(res, 200, out(perm));
       }
       if ((m = p.match(/^\/drive\/v3\/files\/([^/]+)$/))) {
         const id = m[1] === 'root' ? rootId(email) : m[1];
@@ -168,6 +186,7 @@ function startMockDrive({ users = {}, port = 0 } = {}) {
       const url = `http://127.0.0.1:${server.address().port}`;
       resolve({
         url, files, notifications,
+        failNext(count = 1, { status = 403, reason = 'rateLimitExceeded', message } = {}) { for (let i = 0; i < count; i++) injected.push({ status, reason, message }); },
         addUser(token, email) { tokenToEmail[token] = email; ensureRoot(email); },
         rootId,
         filesOwnedBy: email => [...files.values()].filter(f => f.owner === email && !f.id.startsWith('root-')),
