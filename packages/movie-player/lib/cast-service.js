@@ -66,18 +66,74 @@ function normalizeStatus(st, conn) {
 }
 
 class CastService {
-  constructor() {
+  constructor(getTracksFn = null) {
     this.speakers = new Map(); // ip -> speaker info
     this.loadCounter = 0;
     this.activeConnections = new Map(); // ip -> { client, player, currentMedia, mediaServer }
     this.mediaRegistry = new Map(); // id -> { filePath, buffer, contentType, length }
+    this.fileToMediaId = new Map(); // filePath -> id
     this.nextMediaId = 1;
     this.streamServer = null;
     this.streamPort = 0;
     this.hostIp = this._detectHostIp();
+    if (typeof getTracksFn === 'function') {
+      this.mediaLibrary = {
+        get tracks() { return getTracksFn(); },
+        stats: {},
+      };
+    }
 
     this._initStreamServer();
     this._loadRobosSmartTvs();
+  }
+
+  startStreamServer(customPort = 19215) {
+    if (this.streamPort > 0) {
+      return Promise.resolve({ port: this.streamPort });
+    }
+    return new Promise((resolve) => {
+      const check = () => {
+        if (this.streamPort > 0) return resolve({ port: this.streamPort });
+        setTimeout(check, 25);
+      };
+      check();
+    });
+  }
+
+  _getEffectiveTracks() {
+    const libTracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
+    if (libTracks.length > 0) return libTracks;
+    if (this._fallbackSampleTracks) return this._fallbackSampleTracks;
+    const samples = [];
+    const addSample = (fp, title) => {
+      try {
+        if (fp && fs.existsSync(fp) && fs.statSync(fp).isFile()) {
+          samples.push({
+            id: `sample_${Buffer.from(fp).toString('base64url').slice(-16)}`,
+            title: title || path.basename(fp, path.extname(fp)).replace(/[-_]+/g, ' '),
+            artist: os.hostname(),
+            album: 'RobOS Private Network Stream',
+            mediaType: 'movie',
+            filePath: path.resolve(fp),
+            year: 2026,
+            overview: `Streamed directly from ${os.hostname()} over RobOS Private Network Zero-Trust mTLS 1.3.`,
+          });
+        }
+      } catch {}
+    };
+    try {
+      const vidDir = path.join(os.homedir(), 'Videos');
+      if (fs.existsSync(vidDir)) {
+        for (const f of fs.readdirSync(vidDir)) {
+          if (/\.(mp4|mkv|webm|mov|m4v)$/i.test(f)) addSample(path.join(vidDir, f));
+        }
+      }
+    } catch {}
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    addSample(path.join(repoRoot, 'site', 'assets', 'games', 'rts', 'frontier-hunters-live.mp4'), 'Frontier Hunters Live (P2P Stream)');
+    addSample(path.join(repoRoot, 'site', 'assets', 'games', 'rts', 'gameplay-preview.mp4'), 'RobOS RTS Gameplay Preview (P2P Stream)');
+    this._fallbackSampleTracks = samples;
+    return samples;
   }
 
   _loadRobosSmartTvs() {
@@ -143,13 +199,15 @@ class CastService {
 
   _initStreamServer() {
     this.streamServer = http.createServer((req, res) => {
-      const parsedUrl = new URL(req.url, `http://${this.hostIp}:${this.streamPort}`);
+      const reqHost = (req.headers && req.headers.host) || `${this.hostIp}:${this.streamPort}`;
+      const parsedUrl = new URL(req.url, `http://${reqHost}`);
 
       if (parsedUrl.pathname === '/api/tv-library') {
-        const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
-        const items = this._buildTvLibraryItems(500);
+        const tracks = this._getEffectiveTracks();
+        const items = this._buildTvLibraryItems(500, reqHost);
         const body = JSON.stringify({
           ok: true,
+          nodeName: os.hostname(),
           hostIp: this.hostIp,
           streamPort: this.streamPort,
           totalCount: tracks.length,
@@ -168,7 +226,7 @@ class CastService {
         const trackId = parsedUrl.searchParams.get('id') || '';
         const tvIp = parsedUrl.searchParams.get('tvIp') || '';
         const explicitStart = parsedUrl.searchParams.get('startAt');
-        const tracks = (this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)) ? this.mediaLibrary.tracks : [];
+        const tracks = this._getEffectiveTracks();
         const track = tracks.find(t => t.id === trackId) || tracks[0];
         if (!track) {
           res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -179,9 +237,9 @@ class CastService {
         const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
         let streamUrl = '';
         if (track.cloud) {
-          streamUrl = `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(track.id)}.${streamFormat}`;
+          streamUrl = `http://${reqHost}/cloud-stream/${encodeURIComponent(track.id)}.${streamFormat}`;
         } else if (track.filePath && fs.existsSync(track.filePath)) {
-          streamUrl = this.registerFile(track.filePath);
+          streamUrl = this.registerFile(track.filePath, null, reqHost);
         }
         const st = (this.mediaLibrary && this.mediaLibrary.stats && this.mediaLibrary.stats[track.id]) || {};
         const startAt = explicitStart != null
@@ -291,24 +349,18 @@ class CastService {
         return;
       }
 
-      // Handle Cloud Track on-demand streaming + LRU cache route (/cloud-stream/:trackId)
-      if (parsedUrl.pathname.startsWith('/cloud-stream/')) {
-        const trackId = decodeURIComponent(parsedUrl.pathname.replace(/^\/cloud-stream\//, '').replace(/\.[^.]+$/, ''));
-        const track = this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)
-          ? this.mediaLibrary.tracks.find(t => t.id === trackId)
-          : null;
+      // Handle Cloud Track or P2P Track on-demand streaming (/cloud-stream/:trackId or /stream/:trackId)
+      if (parsedUrl.pathname.startsWith('/cloud-stream/') || parsedUrl.pathname.startsWith('/stream/')) {
+        const trackId = decodeURIComponent(
+          parsedUrl.pathname.replace(/^\/(cloud-stream|stream)\//, '').replace(/\.[^.]+$/, '')
+        );
+        const tracks = this._getEffectiveTracks();
+        const track = tracks.find(t => t.id === trackId) || null;
 
-        if (!track || !track.cloud) {
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.end('Cloud track not found');
-          return;
-        }
-
-        if (this.cloudStorage && typeof this.cloudStorage.streamCloudTrackToHttp === 'function') {
+        if (track && track.cloud && this.cloudStorage && typeof this.cloudStorage.streamCloudTrackToHttp === 'function') {
           this.cloudStorage.streamCloudTrackToHttp(req, res, track.cloud, (cachedFile) => {
             if (cachedFile && fs.existsSync(cachedFile)) {
               track.cloud.cached = true;
-              // The full file is here now: let the app re-read its tags from disk.
               if (typeof this.onCloudTrackCached === 'function') this.onCloudTrackCached(track);
             }
           }).catch((err) => {
@@ -322,6 +374,40 @@ class CastService {
           });
           return;
         }
+
+        if (track && track.filePath && fs.existsSync(track.filePath)) {
+          const stat = fs.statSync(track.filePath);
+          const total = stat.size;
+          const contentType = sniffAudioType(track.filePath);
+          const range = req.headers.range;
+          if (range) {
+            const parts = range.replace(/bytes=/, '').split('-');
+            const start = parseInt(parts[0], 10) || 0;
+            const end = parts[1] ? parseInt(parts[1], 10) : total - 1;
+            const chunksize = (end - start) + 1;
+            res.writeHead(206, {
+              'Content-Range': `bytes ${start}-${end}/${total}`,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': chunksize,
+              'Content-Type': contentType,
+              'Access-Control-Allow-Origin': '*',
+            });
+            fs.createReadStream(track.filePath, { start, end }).pipe(res);
+          } else {
+            res.writeHead(200, {
+              'Content-Length': total,
+              'Accept-Ranges': 'bytes',
+              'Content-Type': contentType,
+              'Access-Control-Allow-Origin': '*',
+            });
+            fs.createReadStream(track.filePath).pipe(res);
+          }
+          return;
+        }
+
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Cloud track not found');
+        return;
       }
 
       const mediaId = parsedUrl.pathname.replace(/^\/media\//, '').replace(/\.[^.]+$/, '');
@@ -396,7 +482,8 @@ class CastService {
     this.streamServer.listen(preferredPort, '0.0.0.0', onStreamListen);
   }
 
-  _formatTvTrackItem(t, stats = {}, idx = 0) {
+  _formatTvTrackItem(t, stats = {}, idx = 0, hostOverride = null) {
+    const baseHost = hostOverride || `${this.hostIp}:${this.streamPort}`;
     const ext = path.extname(String(t.filePath || t.cloud?.remotePath || '')).toLowerCase();
     const streamFormat = ext === '.mkv' ? 'mkv' : 'mp4';
     const inferredGenres = inferMovieGenres(t);
@@ -438,18 +525,19 @@ class CastService {
       progressPct,
       inProgress,
       completed,
-      artUrl: t.artId ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(t.artId)}.jpg` : '',
+      artUrl: t.artId ? `http://${baseHost}/art/${encodeURIComponent(t.artId)}.jpg` : '',
       streamFormat,
       streamUrl: t.cloud
-        ? `http://${this.hostIp}:${this.streamPort}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`
-        : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath) : (t.src || '')),
+        ? `http://${baseHost}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`
+        : (t.filePath && fs.existsSync(t.filePath) ? this.registerFile(t.filePath, null, baseHost) : (t.src || '')),
     };
   }
 
-  _buildTvLibraryItems(maxItems = 500) {
-    if (!this.mediaLibrary || !Array.isArray(this.mediaLibrary.tracks)) return [];
-    const stats = this.mediaLibrary.stats || {};
-    const allTracks = this.mediaLibrary.tracks;
+  _buildTvLibraryItems(maxItems = 500, hostOverride = null) {
+    const baseHost = hostOverride || `${this.hostIp}:${this.streamPort}`;
+    const allTracks = this._getEffectiveTracks();
+    if (!allTracks || allTracks.length === 0) return [];
+    const stats = (this.mediaLibrary && this.mediaLibrary.stats) || {};
 
     const movieBuckets = new Map();
     const showBuckets = new Map();
@@ -479,7 +567,7 @@ class CastService {
       }
     }
 
-    const movieItems = [...movieBuckets.values()].map((t, idx) => this._formatTvTrackItem(t, stats, idx));
+    const movieItems = [...movieBuckets.values()].map((t, idx) => this._formatTvTrackItem(t, stats, idx, baseHost));
     const showItems = [];
 
     const seasonSortOrder = (s) => {
@@ -513,7 +601,7 @@ class CastService {
       }
 
       const resumeEp = inProgressEp || firstUnwatchedEp || eps[0];
-      const repFormatted = this._formatTvTrackItem(resumeEp, stats, 0);
+      const repFormatted = this._formatTvTrackItem(resumeEp, stats, 0, baseHost);
       const showTitle = String(resumeEp.showName || resumeEp.album || resumeEp.title || 'TV Series').slice(0, 80);
       const bestEpWithGenre = eps.find(e => e.genre && e.genre !== 'TV Series' && e.genre !== 'Movies & TV' && e.genre !== 'Movies') || resumeEp;
       const bestEpWithOverview = eps.find(e => e.showOverview) || eps.find(e => e.overview) || resumeEp;
@@ -525,7 +613,7 @@ class CastService {
       const showRating = bestEpWithRating.rating || repFormatted.rating || null;
       const showNetwork = String(bestEpWithNetwork.network || repFormatted.network || '').slice(0, 36);
       const showArtUrl = bestEpWithArt.artId
-        ? `http://${this.hostIp}:${this.streamPort}/art/${encodeURIComponent(bestEpWithArt.artId)}.jpg`
+        ? `http://${baseHost}/art/${encodeURIComponent(bestEpWithArt.artId)}.jpg`
         : repFormatted.artUrl;
 
       // Select up to 120 episodes for the interactive Roku season/episode browser
@@ -555,7 +643,7 @@ class CastService {
       chosenEps.sort((a, b) => seasonSortOrder(a.seasonNumber) - seasonSortOrder(b.seasonNumber) || (a.episodeNumber ?? 1) - (b.episodeNumber ?? 1));
 
       const formattedEpisodes = chosenEps.map((e, eIdx) => {
-        const epItem = this._formatTvTrackItem(e, stats, eIdx);
+        const epItem = this._formatTvTrackItem(e, stats, eIdx, baseHost);
         const code = epItem.episodeCode || `S${String(epItem.seasonNumber || 1).padStart(2, '0')}E${String(epItem.episodeNumber || 1).padStart(2, '0')}`;
         const epCleanTitle = epItem.episodeTitle || epItem.title;
         return {
@@ -637,11 +725,16 @@ class CastService {
   }
 
   // The real type matters: speakers may refuse a WAV (e.g. a DJ voice clip) sent as MP3.
-  registerFile(filePath, contentType = null) {
-    const id = `f_${this.nextMediaId++}_${Date.now()}`;
+  registerFile(filePath, contentType = null, hostOverride = null) {
+    const baseHost = hostOverride || `${this.hostIp}:${this.streamPort}`;
     const type = contentType || sniffAudioType(filePath);
-    this.mediaRegistry.set(id, { filePath, contentType: type });
-    return `http://${this.hostIp}:${this.streamPort}/media/${id}.${EXT_FOR_MIME[type] || 'mp3'}`;
+    let id = this.fileToMediaId.get(filePath);
+    if (!id || !this.mediaRegistry.has(id)) {
+      id = `f_${this.nextMediaId++}_${Date.now()}`;
+      this.mediaRegistry.set(id, { filePath, contentType: type });
+      this.fileToMediaId.set(filePath, id);
+    }
+    return `http://${baseHost}/media/${id}.${EXT_FOR_MIME[type] || 'mp3'}`;
   }
 
   registerBuffer(buffer, contentType = 'audio/mp3') {

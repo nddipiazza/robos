@@ -62,6 +62,8 @@ contextBridge.exposeInMainWorld('robosAudio', {
   },
   addLocalFolder: () => ipcRenderer.invoke('audio:folders-add-local'),
   addCloudFolder: (connectionId, path, label) => ipcRenderer.invoke('audio:folders-add-cloud', { connectionId, path, label }),
+  addPeerFolder: (endpoint, label) => ipcRenderer.invoke('audio:folders-add-peer', { endpoint, label }),
+  getActivePeerBridge: () => ipcRenderer.invoke('audio:get-active-peer-bridge'),
   rescanFolders: (id) => ipcRenderer.invoke('audio:folders-rescan', id),
   renameFolder: (id, label) => ipcRenderer.invoke('audio:folders-rename', { id, label }),
   removeFolder: (id, removeTracks) => ipcRenderer.invoke('audio:folders-remove', { id, removeTracks }),

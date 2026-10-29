@@ -22,12 +22,128 @@ const os = require('node:os');
 const net = require('node:net');
 const tls = require('node:tls');
 const http = require('node:http');
+const https = require('node:https');
+const { Duplex } = require('node:stream');
 const crypto = require('node:crypto');
 const cp = require('node:child_process');
 
 const { PORT_REGISTRY } = require('./snapshot-cli');
 
 const DEFAULT_MESH_PORT = 19290;
+
+/**
+ * Decouple an outer socket/stream (e.g. an HTTPS Upgrade socket or Mux channel)
+ * so Node.js `tls.connect({ socket })` can run an inner Mutual TLS 1.3 session over it cleanly.
+ */
+function detachStream(sock) {
+  const dup = new Duplex({
+    read() {},
+    write(chunk, enc, cb) {
+      if (sock.destroyed) return cb(new Error('Underlying transport socket destroyed'));
+      sock.write(chunk, enc, cb);
+    },
+    final(cb) {
+      try { sock.end(); } catch {}
+      cb();
+    },
+    destroy(err, cb) {
+      try { sock.destroy(); } catch {}
+      cb(err);
+    },
+  });
+  sock.on('data', (d) => dup.push(d));
+  sock.on('end', () => dup.push(null));
+  sock.on('close', () => dup.destroy());
+  sock.on('error', (e) => dup.destroy(e));
+  return dup;
+}
+
+/**
+ * 9-byte binary stream multiplexer (`[type:1][channelId:4][len:4]`) allowing a single
+ * outbound NAT-traversing connection between Network A and Network B to carry any number
+ * of concurrent Mutual TLS 1.3 sockets (e.g., HTTP 206 byte-range video requests, catalog queries, pings).
+ */
+function attachStreamMux(stream, getTargetPort, onClose) {
+  const channels = new Map();
+  let nextChanId = 1;
+  let rxBuf = Buffer.alloc(0);
+
+  function sendFrame(type, id, payload = Buffer.alloc(0)) {
+    if (stream.destroyed) return;
+    const hdr = Buffer.allocUnsafe(9);
+    hdr.writeUInt8(type, 0);
+    hdr.writeUInt32BE(id >>> 0, 1);
+    hdr.writeUInt32BE(payload.length >>> 0, 5);
+    try {
+      stream.write(Buffer.concat([hdr, payload]));
+    } catch {}
+  }
+
+  stream.on('data', (chunk) => {
+    rxBuf = Buffer.concat([rxBuf, chunk]);
+    while (rxBuf.length >= 9) {
+      const type = rxBuf.readUInt8(0);
+      const id = rxBuf.readUInt32BE(1);
+      const len = rxBuf.readUInt32BE(5);
+      if (rxBuf.length < 9 + len) break;
+      const payload = Buffer.from(rxBuf.subarray(9, 9 + len));
+      rxBuf = rxBuf.subarray(9 + len);
+
+      if (type === 1) { // OPEN channel to local Gateway port
+        const sock = net.connect(getTargetPort(), '127.0.0.1');
+        channels.set(id, sock);
+        sock.on('data', (d) => sendFrame(2, id, d));
+        sock.on('end', () => sendFrame(3, id));
+        sock.on('close', () => { channels.delete(id); });
+        sock.on('error', () => { channels.delete(id); sendFrame(4, id); });
+      } else if (type === 2) { // DATA
+        const sock = channels.get(id);
+        if (sock && !sock.destroyed) sock.write(payload);
+      } else if (type === 3) { // END
+        const sock = channels.get(id);
+        if (sock && !sock.destroyed) sock.end();
+      } else if (type === 4) { // RESET
+        const sock = channels.get(id);
+        if (sock) { channels.delete(id); sock.destroy(); }
+      }
+    }
+  });
+
+  const proxyServer = net.createServer((clientSock) => {
+    const id = (nextChanId += 2);
+    channels.set(id, clientSock);
+    sendFrame(1, id);
+    clientSock.on('data', (d) => sendFrame(2, id, d));
+    clientSock.on('end', () => sendFrame(3, id));
+    clientSock.on('close', () => { channels.delete(id); });
+    clientSock.on('error', () => { channels.delete(id); sendFrame(4, id); });
+  });
+
+  const cleanup = () => {
+    for (const s of channels.values()) {
+      try { s.destroy(); } catch {}
+    }
+    channels.clear();
+    try { proxyServer.close(); } catch {}
+    if (typeof onClose === 'function') onClose();
+  };
+
+  stream.once('close', cleanup);
+  stream.once('error', cleanup);
+
+  return new Promise((resolve, reject) => {
+    proxyServer.once('error', reject);
+    proxyServer.listen(0, '127.0.0.1', () => {
+      resolve({
+        proxyPort: proxyServer.address().port,
+        close: () => {
+          try { stream.destroy(); } catch {}
+          cleanup();
+        },
+      });
+    });
+  });
+}
 
 const TRANSPORT_DRIVERS = [
   {
@@ -283,6 +399,8 @@ function createAppMeshEngine(options = {}) {
 
   const defaultPolicy = () => ({
     activeDriver: 'mtls',
+    networkName: 'RobOS Private Network',
+    networkSecret: crypto.randomBytes(32).toString('hex'),
     listenHost: '0.0.0.0',
     listenPort: options.listenPort || DEFAULT_MESH_PORT,
     shareAllIpcPorts: true,
@@ -301,13 +419,19 @@ function createAppMeshEngine(options = {}) {
         return {
           ...def,
           ...raw,
+          networkSecret: raw.networkSecret || def.networkSecret,
           peers: Array.isArray(raw.peers) ? raw.peers : [],
           tunnels: Array.isArray(raw.tunnels) ? raw.tunnels : [],
           sharedAppIds: Array.isArray(raw.sharedAppIds) ? raw.sharedAppIds : def.sharedAppIds,
         };
       }
     } catch {}
-    return defaultPolicy();
+    const initial = defaultPolicy();
+    try {
+      fs.mkdirSync(meshDir, { recursive: true, mode: 0o700 });
+      fs.writeFileSync(stateFile, JSON.stringify(initial, null, 2), { mode: 0o600 });
+    } catch {}
+    return initial;
   }
 
   let state = loadState();
@@ -316,11 +440,25 @@ function createAppMeshEngine(options = {}) {
     fs.writeFileSync(stateFile, JSON.stringify(state, null, 2), { mode: 0o600 });
   }
 
+  function computeEnrollToken() {
+    return crypto.createHmac('sha256', state.networkSecret || 'robos-net').update('robos-net-enroll-v1').digest('hex');
+  }
+
+  function computeEnrollProof(enrollToken, nodeId, fingerprint) {
+    return crypto.createHmac('sha256', String(enrollToken || '')).update(`${nodeId}:${fingerprint}`).digest('hex');
+  }
+
   // Runtime state
   let gatewayServer = null;
   let gatewayListeningPort = null;
+  let upgradeBridgeServer = null;
+  let upgradeBridgePort = null;
+  let wanRelayProc = null;
+  let wanRelayUrl = null;
   const activeGatewaySockets = new Set();
   const activeTunnelServers = new Map(); // tunnelId -> { server, sockets, stats, ... }
+  const reverseMuxSessions = new Map();  // peerNodeId -> { proxyPort, close, connectedAt, direction }
+  const reverseMuxClients = new Map();   // peerNodeId -> { close, timer }
   const auditLog = [];
 
   function recordAudit(event) {
@@ -355,17 +493,28 @@ function createAppMeshEngine(options = {}) {
     return null;
   }
 
+  function rejectUntrustedSocket(tlsSocket, peerFp) {
+    recordAudit({
+      type: 'REJECT_UNTRUSTED_PEER',
+      severity: 'error',
+      peerFingerprint: peerFp || 'none',
+      remoteAddress: tlsSocket.remoteAddress,
+      detail: 'Rejected connection: peer certificate fingerprint is not in trusted Zero-Trust peer registry.',
+    });
+    try {
+      tlsSocket.end(JSON.stringify({ ok: false, error: 'UNTRUSTED_PEER_CERTIFICATE', peerFingerprint: peerFp }) + '\n');
+    } catch {}
+  }
+
   /**
    * Handle an incoming mTLS connection on the Zero-Trust Mesh Gateway.
    * Protocol:
    *   Client sends a single newline-delimited JSON header:
    *     { "op": "ping" }
    *     { "op": "catalog" }
+   *     { "op": "join-network", "nodeId": "...", "enrollProof": "..." }
+   *     { "op": "reverse-mux" }
    *     { "op": "connect", "appId": "dev-central", "port": 19101 }
-   *   Gateway verifies peer certificate SHA-256 fingerprint against trusted `state.peers`
-   *   (and allows loopback self-identity for local/E2E verification when enabled),
-   *   replies with a JSON line `{ "ok": true, ... }`, and for `connect` immediately
-   *   pipes bidirectional bytes to `127.0.0.1:<targetPort>`.
    */
   function handleGatewayConnection(tlsSocket) {
     activeGatewaySockets.add(tlsSocket);
@@ -385,18 +534,20 @@ function createAppMeshEngine(options = {}) {
       };
     }
 
-    if (!peerFp || !matchedPeer) {
-      recordAudit({
-        type: 'REJECT_UNTRUSTED_PEER',
-        severity: 'error',
-        peerFingerprint: peerFp || 'none',
-        remoteAddress: tlsSocket.remoteAddress,
-        detail: 'Rejected connection: peer certificate fingerprint is not in trusted Zero-Trust peer registry.',
-      });
-      try {
-        tlsSocket.end(JSON.stringify({ ok: false, error: 'UNTRUSTED_PEER_CERTIFICATE', peerFingerprint: peerFp }) + '\n');
-      } catch {}
+    if (!peerFp) {
+      rejectUntrustedSocket(tlsSocket, peerFp);
       return;
+    }
+
+    // If not yet pinned, allow 1200ms only for a cryptographically signed `join-network` handshake;
+    // any other op or timeout is immediately rejected as UNTRUSTED_PEER_CERTIFICATE.
+    let unpinnedTimer = null;
+    if (!matchedPeer) {
+      unpinnedTimer = setTimeout(() => {
+        if (!matchedPeer && !tlsSocket.destroyed) {
+          rejectUntrustedSocket(tlsSocket, peerFp);
+        }
+      }, 1200);
     }
 
     let headerBuf = '';
@@ -408,6 +559,10 @@ function createAppMeshEngine(options = {}) {
         return;
       }
 
+      if (unpinnedTimer) {
+        clearTimeout(unpinnedTimer);
+        unpinnedTimer = null;
+      }
       tlsSocket.removeListener('data', onData);
       const line = headerBuf.slice(0, nlIdx).trim();
       const remaining = Buffer.from(headerBuf.slice(nlIdx + 1), 'utf8');
@@ -416,8 +571,101 @@ function createAppMeshEngine(options = {}) {
       try {
         req = JSON.parse(line);
       } catch {
+        if (!matchedPeer) {
+          rejectUntrustedSocket(tlsSocket, peerFp);
+          return;
+        }
         tlsSocket.write(JSON.stringify({ ok: false, error: 'INVALID_HANDSHAKE_JSON' }) + '\n');
         tlsSocket.destroy();
+        return;
+      }
+
+      if (!matchedPeer) {
+        const expectedProof = req && req.nodeId
+          ? computeEnrollProof(computeEnrollToken(), req.nodeId, peerFp)
+          : null;
+        if (req && req.op === 'join-network' && expectedProof && req.enrollProof === expectedProof) {
+          matchedPeer = addOrUpdatePeer({
+            nodeId: req.nodeId,
+            name: req.nodeName || req.nodeId,
+            host: req.host || '127.0.0.1',
+            port: req.port || DEFAULT_MESH_PORT,
+            relayUrl: req.relayUrl || null,
+            fingerprint: peerFp,
+          });
+        } else {
+          rejectUntrustedSocket(tlsSocket, peerFp);
+          return;
+        }
+      }
+
+      if (req.op === 'join-network') {
+        if (req.relayUrl || req.host) {
+          matchedPeer = addOrUpdatePeer({
+            nodeId: req.nodeId || matchedPeer.nodeId,
+            name: req.nodeName || matchedPeer.name,
+            host: req.host || matchedPeer.host || '127.0.0.1',
+            port: req.port || matchedPeer.port || DEFAULT_MESH_PORT,
+            relayUrl: req.relayUrl || matchedPeer.relayUrl || null,
+            fingerprint: peerFp,
+          });
+        }
+        recordAudit({
+          type: 'PRIVATE_NETWORK_JOINED',
+          severity: 'success',
+          peerId: matchedPeer.nodeId,
+          peerName: matchedPeer.name,
+          detail: `Mutually enrolled ${matchedPeer.name} (${matchedPeer.nodeId}) into ${state.networkName}`,
+        });
+        const netInfo = detectNetworkAddresses();
+        tlsSocket.end(JSON.stringify({
+          ok: true,
+          enrolled: true,
+          networkName: state.networkName,
+          nodeId: identity.nodeId,
+          nodeName: identity.nodeName,
+          host: netInfo.overlayIp || netInfo.lanIp || '127.0.0.1',
+          port: gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT,
+          relayUrl: wanRelayUrl || null,
+          fingerprint: identity.fingerprint,
+          timestamp: new Date().toISOString(),
+        }) + '\n');
+        return;
+      }
+
+      if (req.op === 'reverse-mux') {
+        tlsSocket.write(JSON.stringify({
+          ok: true,
+          op: 'reverse-mux-ready',
+          nodeId: identity.nodeId,
+          nodeName: identity.nodeName,
+        }) + '\n');
+        const detached = detachStream(tlsSocket);
+        if (remaining.length > 0) detached.push(remaining);
+        const mux = await attachStreamMux(detached, () => gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT, () => {
+          const cur = reverseMuxSessions.get(matchedPeer.nodeId);
+          if (cur && cur.proxyPort === mux.proxyPort) {
+            reverseMuxSessions.delete(matchedPeer.nodeId);
+          }
+        });
+        const prev = reverseMuxSessions.get(matchedPeer.nodeId);
+        if (prev && prev.close) {
+          try { prev.close(); } catch {}
+        }
+        reverseMuxSessions.set(matchedPeer.nodeId, {
+          proxyPort: mux.proxyPort,
+          close: mux.close,
+          connectedAt: new Date().toISOString(),
+          direction: 'inbound',
+          peerName: matchedPeer.name,
+        });
+        recordAudit({
+          type: 'REVERSE_MUX_ESTABLISHED',
+          severity: 'success',
+          peerId: matchedPeer.nodeId,
+          peerName: matchedPeer.name,
+          detail: `Bidirectional Cross-Network Reverse-Mux active with ${matchedPeer.name} (local mux :${mux.proxyPort})`,
+        });
         return;
       }
 
@@ -461,7 +709,7 @@ function createAppMeshEngine(options = {}) {
 
       if (req.op === 'connect') {
         const entry = findCatalogEntryByAppOrPort(req.appId, req.port);
-        const targetPort = entry ? entry.port : Number(req.port);
+        const targetPort = Number(req.port) || (entry ? entry.port : 0);
         const targetAppId = entry ? entry.appId : String(req.appId || `port-${targetPort}`);
 
         if (!targetPort || !isAppPortAllowedForPeer(targetAppId, targetPort, matchedPeer)) {
@@ -524,7 +772,256 @@ function createAppMeshEngine(options = {}) {
     };
 
     tlsSocket.on('data', onData);
-    tlsSocket.on('error', () => {});
+    tlsSocket.on('error', () => {
+      if (unpinnedTimer) clearTimeout(unpinnedTimer);
+    });
+  }
+
+  /**
+   * Ensure local HTTP 101 Upgrade bridge server is running in front of `gatewayServer`
+   * so cross-network HTTPS/WSS relays can forward raw encrypted TLS 1.3 streams.
+   */
+  async function ensureUpgradeBridgeServer() {
+    await startGateway();
+    if (upgradeBridgeServer && upgradeBridgeServer.listening) {
+      return upgradeBridgePort;
+    }
+    return new Promise((resolve, reject) => {
+      const upgradeSockets = new Set();
+      const srv = http.createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: true,
+          service: 'RobOS Zero-Trust Mutual TLS 1.3 Relay Ingress',
+          nodeId: identity.nodeId,
+          tlsVersion: 'TLSv1.3',
+        }));
+      });
+      srv.on('upgrade', (req, socket, head) => {
+        upgradeSockets.add(socket);
+        socket.once('close', () => upgradeSockets.delete(socket));
+        const key = req.headers['sec-websocket-key'] || '';
+        const accept = crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+        socket.write(
+          'HTTP/1.1 101 Switching Protocols\r\n' +
+          'Upgrade: websocket\r\n' +
+          'Connection: Upgrade\r\n' +
+          `Sec-WebSocket-Accept: ${accept}\r\n\r\n`
+        );
+        const upstream = net.connect(gatewayListeningPort, '127.0.0.1', () => {
+          if (head && head.length > 0) upstream.write(head);
+          socket.pipe(upstream);
+          upstream.pipe(socket);
+        });
+        socket.on('error', () => upstream.destroy());
+        upstream.on('error', () => socket.destroy());
+      });
+      srv.once('close', () => {
+        for (const s of upgradeSockets) {
+          try { s.destroy(); } catch {}
+        }
+        upgradeSockets.clear();
+      });
+      srv.once('error', reject);
+      srv.listen(0, '127.0.0.1', () => {
+        upgradeBridgeServer = srv;
+        upgradeBridgePort = srv.address().port;
+        resolve(upgradeBridgePort);
+      });
+    });
+  }
+
+  /**
+   * Start a Cross-Network WAN Relay Ingress (`wss://<id>.lhr.life` or custom relay URL)
+   * so peers on completely separate networks / behind CGNAT can dial our Mutual TLS 1.3 Gateway.
+   */
+  async function startWanRelay(opts = {}) {
+    await ensureUpgradeBridgeServer();
+    if (opts.customRelayUrl) {
+      wanRelayUrl = String(opts.customRelayUrl).trim();
+      recordAudit({
+        type: 'WAN_RELAY_STARTED',
+        severity: 'success',
+        detail: `Configured custom Cross-Network WAN Relay: ${wanRelayUrl}`,
+      });
+      return { ok: true, relayUrl: wanRelayUrl, upgradePort: upgradeBridgePort };
+    }
+    if (wanRelayProc && wanRelayUrl) {
+      return { ok: true, relayUrl: wanRelayUrl, upgradePort: upgradeBridgePort };
+    }
+    if (wanRelayProc) {
+      try { wanRelayProc.kill(); } catch {}
+      wanRelayProc = null;
+    }
+
+    return new Promise((resolve, reject) => {
+      const proc = cp.spawn('ssh', [
+        '-T',
+        '-o', 'StrictHostKeyChecking=no',
+        '-o', 'ServerAliveInterval=15',
+        '-o', 'ExitOnForwardFailure=yes',
+        '-R', `80:127.0.0.1:${upgradeBridgePort}`,
+        'nokey@localhost.run',
+      ]);
+      wanRelayProc = proc;
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('WAN Relay allocation timed out'));
+        }
+      }, opts.timeoutMs || 12000);
+
+      const onOutput = (chunk) => {
+        const text = chunk.toString('utf8');
+        const match = text.match(/https:\/\/([a-z0-9-]+\.lhr\.life)/i);
+        if (match && !settled) {
+          settled = true;
+          clearTimeout(timer);
+          wanRelayUrl = `wss://${match[1]}`;
+          recordAudit({
+            type: 'WAN_RELAY_STARTED',
+            severity: 'success',
+            detail: `Cross-Network Zero-Trust WAN Relay active at ${wanRelayUrl} -> 127.0.0.1:${gatewayListeningPort} (Mutual TLS 1.3)`,
+          });
+          resolve({ ok: true, relayUrl: wanRelayUrl, upgradePort: upgradeBridgePort });
+        }
+      };
+
+      proc.stdout.on('data', onOutput);
+      proc.stderr.on('data', onOutput);
+      proc.once('exit', () => {
+        if (wanRelayProc === proc) {
+          wanRelayProc = null;
+          wanRelayUrl = null;
+        }
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(new Error('SSH WAN Relay process exited unexpectedly'));
+        }
+      });
+      proc.once('error', (err) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(err);
+        }
+      });
+    });
+  }
+
+  function stopWanRelay() {
+    if (wanRelayProc) {
+      try { wanRelayProc.kill(); } catch {}
+      wanRelayProc = null;
+    }
+    wanRelayUrl = null;
+    recordAudit({
+      type: 'WAN_RELAY_STOPPED',
+      severity: 'info',
+      detail: 'Stopped Cross-Network WAN Relay ingress',
+    });
+    return { ok: true, relayUrl: null };
+  }
+
+  /**
+   * Dial an HTTP/HTTPS 101 Upgrade relay URL (`wss://...` or `ws://...` or `https://...`)
+   * and return a detached raw stream ready for `tls.connect({ socket })` Mutual TLS 1.3.
+   */
+  function dialRelayUpgradeStream(relayUrl, timeoutMs = 6000) {
+    return new Promise((resolve, reject) => {
+      const normalized = String(relayUrl).replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://');
+      const parsed = new URL(normalized);
+      const isHttps = parsed.protocol === 'https:';
+      const mod = isHttps ? https : http;
+      const wsKey = crypto.randomBytes(16).toString('base64');
+
+      const req = mod.request({
+        hostname: parsed.hostname,
+        port: parsed.port || (isHttps ? 443 : 80),
+        path: parsed.pathname && parsed.pathname !== '/' ? parsed.pathname : '/robos-mtls',
+        headers: {
+          Host: parsed.host,
+          Connection: 'Upgrade',
+          Upgrade: 'websocket',
+          'Sec-WebSocket-Key': wsKey,
+          'Sec-WebSocket-Version': '13',
+        },
+        timeout: timeoutMs,
+      });
+
+      let settled = false;
+      const fail = (err) => {
+        if (settled) return;
+        settled = true;
+        try { req.destroy(); } catch {}
+        reject(err instanceof Error ? err : new Error(String(err)));
+      };
+
+      req.once('timeout', () => fail(new Error('RELAY_UPGRADE_TIMEOUT')));
+      req.once('error', fail);
+      req.once('upgrade', (_res, rawSock, head) => {
+        if (settled) return;
+        settled = true;
+        const detached = detachStream(rawSock);
+        if (head && head.length > 0) detached.push(head);
+        resolve(detached);
+      });
+      req.once('response', (res) => {
+        fail(new Error(`RELAY_UPGRADE_REJECTED: HTTP ${res.statusCode}`));
+      });
+      req.end();
+    });
+  }
+
+  /**
+   * Open an authenticated Mutual TLS 1.3 socket to `peer`, automatically routing via:
+   *   1. Active Reverse-Mux Session (`reverseMuxSessions.get(peer.nodeId)`) if connected
+   *   2. Cross-Network WAN Relay (`peer.relayUrl`) if configured and direct LAN is unreachable
+   *   3. Direct TCP (`peer.host:peer.port`)
+   */
+  async function openPeerTlsSocket(peer, timeoutMs = 6000) {
+    // 1. Check active Reverse-Mux session for this peer
+    const revMux = peer.nodeId && reverseMuxSessions.get(peer.nodeId);
+    if (revMux && revMux.proxyPort) {
+      return tls.connect({
+        host: '127.0.0.1',
+        port: revMux.proxyPort,
+        key: identity.keyPem,
+        cert: identity.certPem,
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.3',
+      });
+    }
+
+    // 2. If peer has a Cross-Network relayUrl, use it unless peer.host is a non-loopback LAN IP that is directly reachable
+    if (peer.relayUrl) {
+      const isLoopback = !peer.host || peer.host === '127.0.0.1' || peer.host === 'localhost';
+      const directReachable = (!peer.preferRelay && !isLoopback)
+        ? await probeLocalPort(Number(peer.port || DEFAULT_MESH_PORT), peer.host, 350)
+        : false;
+      if (!directReachable) {
+        const transportStream = await dialRelayUpgradeStream(peer.relayUrl, timeoutMs);
+        return tls.connect({
+          socket: transportStream,
+          key: identity.keyPem,
+          cert: identity.certPem,
+          rejectUnauthorized: false,
+          minVersion: 'TLSv1.3',
+        });
+      }
+    }
+
+    // 3. Direct TCP Mutual TLS 1.3
+    return tls.connect({
+      host: peer.host || '127.0.0.1',
+      port: Number(peer.port || DEFAULT_MESH_PORT),
+      key: identity.keyPem,
+      cert: identity.certPem,
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.3',
+    });
   }
 
   /**
@@ -579,6 +1076,24 @@ function createAppMeshEngine(options = {}) {
 
   function stopGateway() {
     return new Promise(resolve => {
+      stopWanRelay();
+      for (const tunnelId of Array.from(activeTunnelServers.keys())) {
+        stopLocalBridgeTunnel(tunnelId);
+      }
+      for (const client of reverseMuxClients.values()) {
+        try { client.close(); } catch {}
+      }
+      reverseMuxClients.clear();
+      for (const sess of reverseMuxSessions.values()) {
+        try { sess.close(); } catch {}
+      }
+      reverseMuxSessions.clear();
+      if (upgradeBridgeServer) {
+        try { upgradeBridgeServer.closeAllConnections?.(); } catch {}
+        try { upgradeBridgeServer.close(); } catch {}
+        upgradeBridgeServer = null;
+        upgradeBridgePort = null;
+      }
       if (!gatewayServer) return resolve({ ok: true, listening: false });
       const srv = gatewayServer;
       gatewayServer = null;
@@ -601,59 +1116,157 @@ function createAppMeshEngine(options = {}) {
   /**
    * Perform an outbound mTLS request to a remote peer gateway.
    */
-  function requestPeerGateway(peer, payload, timeoutMs = 4000) {
+  function requestPeerGateway(peer, payload, timeoutMs = 6000) {
     return new Promise((resolve, reject) => {
-      const sock = tls.connect({
-        host: peer.host || '127.0.0.1',
-        port: Number(peer.port || DEFAULT_MESH_PORT),
-        key: identity.keyPem,
-        cert: identity.certPem,
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.3',
-      });
-
       let settled = false;
+      let sock = null;
       const fail = (err) => {
         if (settled) return;
         settled = true;
-        try { sock.destroy(); } catch {}
+        try { if (sock) sock.destroy(); } catch {}
         reject(err instanceof Error ? err : new Error(String(err)));
       };
 
-      sock.setTimeout(timeoutMs, () => fail(new Error('GATEWAY_TIMEOUT')));
-      sock.once('error', fail);
+      const timer = setTimeout(() => fail(new Error('GATEWAY_TIMEOUT')), timeoutMs);
 
-      sock.once('secureConnect', () => {
-        const serverCert = sock.getPeerCertificate(true);
-        const serverFp = computeCertFingerprint(serverCert);
-        if (peer.fingerprint && serverFp !== peer.fingerprint) {
-          return fail(new Error(`SERVER_FINGERPRINT_MISMATCH: expected ${peer.fingerprint}, got ${serverFp}`));
+      openPeerTlsSocket(peer, timeoutMs).then((tlsSock) => {
+        if (settled) {
+          try { tlsSock.destroy(); } catch {}
+          return;
         }
-        sock.write(JSON.stringify(payload) + '\n');
-      });
+        sock = tlsSock;
+        sock.once('error', fail);
 
-      let buf = '';
-      sock.on('data', chunk => {
-        buf += chunk.toString('utf8');
-        const nl = buf.indexOf('\n');
-        if (nl !== -1 && !settled) {
-          settled = true;
-          const line = buf.slice(0, nl).trim();
-          try { sock.destroy(); } catch {}
-          try {
-            resolve(JSON.parse(line));
-          } catch {
-            reject(new Error('INVALID_PEER_RESPONSE'));
+        const onSecure = () => {
+          const serverCert = sock.getPeerCertificate(true);
+          const serverFp = computeCertFingerprint(serverCert);
+          if (peer.fingerprint && serverFp !== peer.fingerprint) {
+            return fail(new Error(`SERVER_FINGERPRINT_MISMATCH: expected ${peer.fingerprint}, got ${serverFp}`));
           }
+          sock.write(JSON.stringify(payload) + '\n');
+        };
+
+        if (sock.authorized !== undefined && sock.encrypted && sock.getPeerCertificate(true)?.raw) {
+          onSecure();
+        } else {
+          sock.once('secureConnect', onSecure);
         }
-      });
+
+        let buf = '';
+        sock.on('data', chunk => {
+          buf += chunk.toString('utf8');
+          const nl = buf.indexOf('\n');
+          if (nl !== -1 && !settled) {
+            settled = true;
+            clearTimeout(timer);
+            const line = buf.slice(0, nl).trim();
+            try { sock.destroy(); } catch {}
+            try {
+              resolve(JSON.parse(line));
+            } catch {
+              reject(new Error('INVALID_PEER_RESPONSE'));
+            }
+          }
+        });
+      }).catch(fail);
     });
+  }
+
+  /**
+   * Establish an outbound persistent Reverse-Mux mTLS 1.3 connection to `peer`
+   * so `peer` can also dial our local Gateway ports across NAT/CGNAT without requiring
+   * us to open an inbound port!
+   */
+  async function startReverseMuxClient(peer) {
+    await startGateway();
+    const existing = reverseMuxClients.get(peer.nodeId);
+    if (existing && existing.close) {
+      try { existing.close(); } catch {}
+    }
+
+    let closed = false;
+    let activeSock = null;
+    let activeMux = null;
+
+    const connectOnce = async () => {
+      if (closed) return null;
+      const tlsSock = await openPeerTlsSocket(peer, 8000);
+      return new Promise((resolve, reject) => {
+        let settled = false;
+        const fail = (err) => {
+          if (settled) return;
+          settled = true;
+          try { tlsSock.destroy(); } catch {}
+          reject(err);
+        };
+        tlsSock.once('error', fail);
+        tlsSock.once('secureConnect', () => {
+          const srvFp = computeCertFingerprint(tlsSock.getPeerCertificate(true));
+          if (peer.fingerprint && srvFp !== peer.fingerprint) {
+            return fail(new Error('SERVER_FINGERPRINT_MISMATCH'));
+          }
+          tlsSock.write(JSON.stringify({ op: 'reverse-mux' }) + '\n');
+        });
+
+        let hdrBuf = '';
+        const onData = async (chunk) => {
+          hdrBuf += chunk.toString('utf8');
+          const nl = hdrBuf.indexOf('\n');
+          if (nl === -1) return;
+          tlsSock.removeListener('data', onData);
+          const line = hdrBuf.slice(0, nl).trim();
+          const rest = Buffer.from(hdrBuf.slice(nl + 1), 'utf8');
+          let resp;
+          try { resp = JSON.parse(line); } catch {}
+          if (!resp || !resp.ok) {
+            return fail(new Error((resp && resp.error) || 'REVERSE_MUX_REJECTED'));
+          }
+          settled = true;
+          activeSock = tlsSock;
+          const detached = detachStream(tlsSock);
+          if (rest.length > 0) detached.push(rest);
+          const mux = await attachStreamMux(detached, () => gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT, () => {
+            const cur = reverseMuxSessions.get(peer.nodeId);
+            if (cur && cur.proxyPort === mux.proxyPort) {
+              reverseMuxSessions.delete(peer.nodeId);
+            }
+          });
+          activeMux = mux;
+          reverseMuxSessions.set(peer.nodeId, {
+            proxyPort: mux.proxyPort,
+            close: mux.close,
+            connectedAt: new Date().toISOString(),
+            direction: 'outbound',
+            peerName: peer.name,
+          });
+          recordAudit({
+            type: 'REVERSE_MUX_CLIENT_CONNECTED',
+            severity: 'success',
+            peerId: peer.nodeId,
+            peerName: peer.name,
+            detail: `Connected persistent bidirectional mTLS 1.3 Reverse-Mux to ${peer.name}`,
+          });
+          resolve(mux);
+        };
+        tlsSock.on('data', onData);
+      });
+    };
+
+    const mux = await connectOnce();
+    reverseMuxClients.set(peer.nodeId, {
+      close: () => {
+        closed = true;
+        try { if (activeMux) activeMux.close(); } catch {}
+        try { if (activeSock) activeSock.destroy(); } catch {}
+      },
+    });
+    return mux;
   }
 
   /**
    * Create a local TCP listener on `localBindPort` (127.0.0.1) that tunnels every
    * incoming socket over mTLS 1.3 to `peer` for `remoteAppId` / `remotePort`.
-   * This allows local RobOS tools (`snapshot-cli.js`, `Agent Chat`, browsers, etc.)
+   * This allows local RobOS tools (`snapshot-cli.js`, `Agent Chat`, browsers, Movie Player, etc.)
    * to talk to a remote machine's RobOS app IPC port as if it were local.
    */
   function startLocalBridgeTunnel({ peerId, remoteAppId, remotePort, localPort = 0 }) {
@@ -673,8 +1286,18 @@ function createAppMeshEngine(options = {}) {
     }
 
     const entry = findCatalogEntryByAppOrPort(remoteAppId, remotePort);
-    const targetPort = entry ? entry.port : Number(remotePort);
+    const targetPort = Number(remotePort) || (entry ? entry.port : 0);
     const targetAppId = entry ? entry.appId : String(remoteAppId || `port-${targetPort}`);
+
+    // If a tunnel for the exact same localPort > 0 is already active, close it before rebinding
+    if (Number(localPort) > 0) {
+      for (const [existingId, item] of activeTunnelServers.entries()) {
+        if (item.record.localPort === Number(localPort)) {
+          stopLocalBridgeTunnel(existingId);
+        }
+      }
+    }
+
     const tunnelId = `tun_${peer.nodeId}_${targetAppId}_${Date.now().toString(36)}`;
 
     return new Promise((resolve, reject) => {
@@ -689,80 +1312,90 @@ function createAppMeshEngine(options = {}) {
         stats.connections += 1;
         const pendingClientChunks = [];
         let tunnelReady = false;
+        let tlsSock = null;
 
         clientSock.on('data', d => {
           stats.bytesOut += d.length;
-          if (tunnelReady) {
+          if (tunnelReady && tlsSock) {
             tlsSock.write(d);
           } else {
             pendingClientChunks.push(d);
           }
         });
 
-        const tlsSock = tls.connect({
-          host: peer.host || '127.0.0.1',
-          port: Number(peer.port || DEFAULT_MESH_PORT),
-          key: identity.keyPem,
-          cert: identity.certPem,
-          rejectUnauthorized: false,
-          minVersion: 'TLSv1.3',
-        });
+        // Always look up latest peer metadata (in case relayUrl or reverseMux updated)
+        const latestPeer = peerId === 'self-loopback'
+          ? peer
+          : (state.peers.find(p => p.id === peer.id || p.nodeId === peer.nodeId) || peer);
 
-        tlsSock.once('secureConnect', () => {
-          const srvFp = computeCertFingerprint(tlsSock.getPeerCertificate(true));
-          if (peer.fingerprint && srvFp !== peer.fingerprint) {
-            stats.lastError = 'SERVER_FINGERPRINT_MISMATCH';
-            clientSock.destroy();
-            tlsSock.destroy();
-            return;
-          }
-          tlsSock.write(JSON.stringify({
-            op: 'connect',
-            appId: targetAppId,
-            port: targetPort,
-          }) + '\n');
-        });
+        openPeerTlsSocket(latestPeer, 8000).then((connectedTls) => {
+          tlsSock = connectedTls;
 
-        let headerParsed = false;
-        let headerBuf = '';
-        const onTlsData = (chunk) => {
-          if (!headerParsed) {
-            headerBuf += chunk.toString('utf8');
-            const nl = headerBuf.indexOf('\n');
-            if (nl === -1) return;
-            headerParsed = true;
-            const line = headerBuf.slice(0, nl).trim();
-            const rest = Buffer.from(headerBuf.slice(nl + 1), 'utf8');
-            let resp;
-            try { resp = JSON.parse(line); } catch {}
-            if (!resp || !resp.ok) {
-              stats.lastError = (resp && resp.error) || 'TUNNEL_HANDSHAKE_FAILED';
+          const onSecure = () => {
+            const srvFp = computeCertFingerprint(tlsSock.getPeerCertificate(true));
+            if (latestPeer.fingerprint && srvFp !== latestPeer.fingerprint) {
+              stats.lastError = 'SERVER_FINGERPRINT_MISMATCH';
               clientSock.destroy();
               tlsSock.destroy();
               return;
             }
-            tunnelReady = true;
-            while (pendingClientChunks.length > 0) {
-              tlsSock.write(pendingClientChunks.shift());
-            }
-            if (rest.length > 0) {
-              stats.bytesIn += rest.length;
-              clientSock.write(rest);
-            }
-            clientSock.once('end', () => tlsSock.end());
-            tlsSock.once('end', () => clientSock.end());
-          } else {
-            stats.bytesIn += chunk.length;
-            clientSock.write(chunk);
-          }
-        };
+            tlsSock.write(JSON.stringify({
+              op: 'connect',
+              appId: targetAppId,
+              port: targetPort,
+            }) + '\n');
+          };
 
-        tlsSock.on('data', onTlsData);
-        tlsSock.once('error', (err) => {
+          if (tlsSock.encrypted && tlsSock.getPeerCertificate(true)?.raw) {
+            onSecure();
+          } else {
+            tlsSock.once('secureConnect', onSecure);
+          }
+
+          let headerParsed = false;
+          let headerBuf = '';
+          const onTlsData = (chunk) => {
+            if (!headerParsed) {
+              headerBuf += chunk.toString('utf8');
+              const nl = headerBuf.indexOf('\n');
+              if (nl === -1) return;
+              headerParsed = true;
+              const line = headerBuf.slice(0, nl).trim();
+              const rest = Buffer.from(headerBuf.slice(nl + 1), 'utf8');
+              let resp;
+              try { resp = JSON.parse(line); } catch {}
+              if (!resp || !resp.ok) {
+                stats.lastError = (resp && resp.error) || 'TUNNEL_HANDSHAKE_FAILED';
+                clientSock.destroy();
+                tlsSock.destroy();
+                return;
+              }
+              tunnelReady = true;
+              while (pendingClientChunks.length > 0) {
+                tlsSock.write(pendingClientChunks.shift());
+              }
+              if (rest.length > 0) {
+                stats.bytesIn += rest.length;
+                clientSock.write(rest);
+              }
+              clientSock.once('end', () => tlsSock.end());
+              tlsSock.once('end', () => clientSock.end());
+            } else {
+              stats.bytesIn += chunk.length;
+              clientSock.write(chunk);
+            }
+          };
+
+          tlsSock.on('data', onTlsData);
+          tlsSock.once('error', (err) => {
+            stats.lastError = err.message;
+            clientSock.destroy();
+          });
+          clientSock.once('error', () => tlsSock.destroy());
+        }).catch((err) => {
           stats.lastError = err.message;
           clientSock.destroy();
         });
-        clientSock.once('error', () => tlsSock.destroy());
       });
 
       tcpServer.once('error', reject);
@@ -773,7 +1406,7 @@ function createAppMeshEngine(options = {}) {
           peerId: peer.id,
           peerNodeId: peer.nodeId,
           peerName: peer.name,
-          peerHost: peer.host,
+          peerHost: peer.relayUrl || peer.host,
           remoteAppId: targetAppId,
           remoteLabel: entry ? entry.label : targetAppId,
           remotePort: targetPort,
@@ -820,33 +1453,39 @@ function createAppMeshEngine(options = {}) {
   }
 
   /**
-   * Generate a shareable Zero-Trust Enrollment Token (`robos-mesh://...`)
-   * containing this machine's nodeId, host/overlay IP, port, and certificate SHA-256 fingerprint.
+   * Generate a shareable Zero-Trust Enrollment Token (`robos-mesh://...` and `robos-net://...`)
+   * containing this machine's nodeId, host/overlay IP, port, WAN relay URL (if active),
+   * and certificate SHA-256 fingerprint.
    */
-  function generateEnrollmentToken(customHost) {
+  function generateEnrollmentToken(customHost, customRelayUrl) {
     const netInfo = detectNetworkAddresses();
     const host = customHost || netInfo.overlayIp || netInfo.lanIp || '127.0.0.1';
     const port = gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT;
     const payload = {
       v: 1,
+      networkName: state.networkName || 'RobOS Private Network',
       nodeId: identity.nodeId,
       name: identity.nodeName,
       host,
       port,
+      relayUrl: customRelayUrl || wanRelayUrl || null,
       fingerprint: identity.fingerprint,
+      enrollToken: computeEnrollToken(),
       driver: state.activeDriver,
       issuedAt: new Date().toISOString(),
     };
     const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
     return {
       token: `robos-mesh://${encoded}`,
+      netToken: `robos-net://${encoded}`,
+      privateNetToken: `robos-net://${encoded}`,
       payload,
     };
   }
 
   function parseEnrollmentToken(tokenStr) {
     const raw = String(tokenStr || '').trim();
-    const b64 = raw.replace(/^robos-mesh:\/\//i, '');
+    const b64 = raw.replace(/^robos-(mesh|net):\/\//i, '');
     const decoded = JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'));
     if (!decoded.nodeId || !decoded.fingerprint) {
       throw new Error('Invalid enrollment token: missing nodeId or certificate fingerprint');
@@ -876,6 +1515,9 @@ function createAppMeshEngine(options = {}) {
       name: String(parsed.name || nodeId).trim(),
       host: String(parsed.host || '127.0.0.1').trim(),
       port: Number(parsed.port || DEFAULT_MESH_PORT),
+      relayUrl: parsed.relayUrl !== undefined ? parsed.relayUrl : (existingIdx >= 0 ? state.peers[existingIdx].relayUrl : null),
+      preferRelay: Boolean(parsed.preferRelay),
+      enrollToken: parsed.enrollToken || (existingIdx >= 0 ? state.peers[existingIdx].enrollToken : null),
       fingerprint,
       driver: parsed.driver || state.activeDriver,
       allowAllApps: parsed.allowAllApps !== undefined ? Boolean(parsed.allowAllApps) : true,
@@ -896,10 +1538,80 @@ function createAppMeshEngine(options = {}) {
       severity: 'info',
       peerId: peerRecord.nodeId,
       peerName: peerRecord.name,
-      detail: `Pinned Zero-Trust peer ${peerRecord.name} (${peerRecord.host}:${peerRecord.port}) [${peerRecord.fingerprint.slice(0, 23)}…]`,
+      detail: `Pinned Zero-Trust peer ${peerRecord.name} (${peerRecord.relayUrl || `${peerRecord.host}:${peerRecord.port}`}) [${peerRecord.fingerprint.slice(0, 23)}…]`,
     });
 
     return peerRecord;
+  }
+
+  /**
+   * Join a remote Private Network (`robos-net://...` or `robos-mesh://...`) in one step:
+   *   1. Pins the remote peer's X.509 certificate fingerprint locally.
+   *   2. Performs a Mutual TLS 1.3 `join-network` handshake so the remote peer automatically pins our certificate.
+   *   3. Opens a persistent bidirectional `reverse-mux` mTLS 1.3 channel so both Network A and Network B can bridge ports.
+   *   4. Optionally bridges `movie-player-stream` (:19215) locally.
+   */
+  async function joinPrivateNetwork(input, opts = {}) {
+    await startGateway();
+    const peer = addOrUpdatePeer(input);
+    const netInfo = detectNetworkAddresses();
+    const enrollProof = peer.enrollToken
+      ? computeEnrollProof(peer.enrollToken, identity.nodeId, identity.fingerprint)
+      : null;
+
+    const joinRes = await requestPeerGateway(peer, {
+      op: 'join-network',
+      nodeId: identity.nodeId,
+      nodeName: identity.nodeName,
+      host: netInfo.overlayIp || netInfo.lanIp || '127.0.0.1',
+      port: gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT,
+      relayUrl: wanRelayUrl || null,
+      fingerprint: identity.fingerprint,
+      enrollProof,
+    }, 10000);
+
+    if (!joinRes || !joinRes.ok) {
+      throw new Error((joinRes && joinRes.error) || 'Failed to join remote Private Network');
+    }
+
+    // Start persistent Reverse-Mux so the remote peer can also dial our ports (e.g. :19215 Movie Player) across NAT
+    let reverseMuxConnected = false;
+    if (opts.reverseMux !== false) {
+      try {
+        await startReverseMuxClient(peer);
+        reverseMuxConnected = true;
+      } catch {}
+    }
+
+    let movieBridge = null;
+    if (opts.bridgeMoviePlayer) {
+      try {
+        movieBridge = await startLocalBridgeTunnel({
+          peerId: peer.id,
+          remoteAppId: 'movie-player-stream',
+          remotePort: 19215,
+          localPort: opts.localMoviePort !== undefined ? opts.localMoviePort : 0,
+        });
+      } catch {}
+    }
+
+    return {
+      ok: true,
+      peer,
+      joinRes,
+      mutualEnrolled: Boolean(joinRes.enrolled),
+      reverseMuxConnected,
+      reverseMuxActive: reverseMuxConnected,
+      movieBridge,
+    };
+  }
+
+  function listPeers() {
+    return state.peers.map(p => ({
+      ...p,
+      reverseMuxActive: reverseMuxSessions.has(p.nodeId),
+      reverseMuxConnected: reverseMuxSessions.has(p.nodeId),
+    }));
   }
 
   function removePeer(peerId) {
@@ -1140,9 +1852,17 @@ function createAppMeshEngine(options = {}) {
     const catalog = await getLocalCatalogStatus();
     const enrollment = generateEnrollmentToken();
     const manifest = generateDriverManifest(state.activeDriver);
+    const activeMuxList = Array.from(reverseMuxSessions.entries()).map(([peerNodeId, s]) => ({
+      peerNodeId,
+      peerName: s.peerName,
+      proxyPort: s.proxyPort,
+      direction: s.direction,
+      connectedAt: s.connectedAt,
+    }));
 
     return {
       ok: true,
+      networkName: state.networkName || 'RobOS Private Network',
       identity: {
         nodeId: identity.nodeId,
         nodeName: identity.nodeName,
@@ -1154,7 +1874,15 @@ function createAppMeshEngine(options = {}) {
         host: state.listenHost,
         port: gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT,
         activeDriver: state.activeDriver,
+        wanRelayUrl: wanRelayUrl || null,
+        upgradePort: upgradeBridgePort || null,
       },
+      wanRelay: {
+        active: Boolean(wanRelayUrl),
+        relayUrl: wanRelayUrl || null,
+        upgradePort: upgradeBridgePort || null,
+      },
+      reverseMuxSessions: activeMuxList,
       netInfo,
       drivers,
       policy: {
@@ -1164,7 +1892,10 @@ function createAppMeshEngine(options = {}) {
         zitiControllerUrl: state.zitiControllerUrl,
       },
       enrollment,
-      peers: state.peers,
+      peers: state.peers.map(p => ({
+        ...p,
+        reverseMuxActive: reverseMuxSessions.has(p.nodeId),
+      })),
       tunnels: listActiveTunnels(),
       catalog,
       manifest,
@@ -1176,11 +1907,17 @@ function createAppMeshEngine(options = {}) {
     identity,
     startGateway,
     stopGateway,
+    startWanRelay,
+    stopWanRelay,
+    ensureUpgradeBridgeServer,
+    startReverseMuxClient,
+    joinPrivateNetwork,
     getStatusSnapshot,
     getLocalCatalogStatus,
     generateEnrollmentToken,
     parseEnrollmentToken,
     addOrUpdatePeer,
+    listPeers,
     removePeer,
     requestPeerGateway,
     startLocalBridgeTunnel,
@@ -1202,5 +1939,7 @@ module.exports = {
   computeCertFingerprint,
   detectNetworkAddresses,
   detectInstalledDrivers,
+  detachStream,
+  attachStreamMux,
   createAppMeshEngine,
 };

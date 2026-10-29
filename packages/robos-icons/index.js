@@ -639,6 +639,12 @@ const BUILTIN_APPS = [
     label: 'RobOS Movie Player',
     category: 'Tools',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2.5" fill="#e8a33d" fill-opacity="0.12" stroke="#e8a33d"/><line x1="6.5" y1="3" x2="6.5" y2="21"/><line x1="17.5" y1="3" x2="17.5" y2="21"/><line x1="2" y1="8" x2="6.5" y2="8"/><line x1="2" y1="12" x2="6.5" y2="12"/><line x1="2" y1="16" x2="6.5" y2="16"/><line x1="17.5" y1="8" x2="22" y2="8"/><line x1="17.5" y1="12" x2="22" y2="12"/><line x1="17.5" y1="16" x2="22" y2="16"/><polygon points="10.2,9.2 10.2,14.8 15,12" fill="#e8a33d" stroke="#e8a33d" stroke-width="1.2"/></svg>'
+  },
+  {
+    appId: 'private-networks',
+    label: 'RobOS Private Networks',
+    category: 'Infrastructure & Cloud',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="5"/><circle cx="36" cy="14" r="5"/><circle cx="24" cy="36" r="5"/><path d="M16.5 16.5L21 31.5"/><path d="M31.5 16.5L27 31.5"/><path d="M17 14h14" stroke-dasharray="2 2"/><rect x="20" y="9" width="8" height="7" rx="1.5" fill="#0d1117"/><path d="M22 9V7a2 2 0 0 1 4 0v2"/></svg>'
   }
 ];
 

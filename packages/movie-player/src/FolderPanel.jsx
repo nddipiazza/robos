@@ -9,6 +9,7 @@ const when = (iso) => {
 
 const providerLabel = (protocol) => {
   const p = (protocol || '').toLowerCase();
+  if (p === 'p2p') return 'RobOS P2P mTLS 1.3';
   if (p === 'gdrive') return 'Google Drive';
   if (p === 'onedrive') return 'OneDrive';
   if (p === 'dropbox') return 'Dropbox';
@@ -32,15 +33,38 @@ export function formatFolderMediaSummary(f) {
   return parts.join(' · ');
 }
 
-export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
+export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onAddPeer, onRescan, onRename, onRemove, onEnabled, busyId }) {
   const [confirmId, setConfirmId] = useState(null);
   const [alsoTracks, setAlsoTracks] = useState(true);
   const [editId, setEditId] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [showPeerForm, setShowPeerForm] = useState(false);
+  const [peerEndpoint, setPeerEndpoint] = useState('http://127.0.0.1:19225');
+  const [peerLabel, setPeerLabel] = useState('');
 
   const commitRename = (id) => {
     if (editValue.trim()) onRename(id, editValue);
     setEditId(null);
+  };
+
+  const openPeerForm = async () => {
+    if (!showPeerForm && window.robosAudio?.getActivePeerBridge) {
+      try {
+        const active = await window.robosAudio.getActivePeerBridge();
+        if (active && active.endpoint) {
+          setPeerEndpoint(active.endpoint);
+          if (active.label) setPeerLabel(active.label);
+        }
+      } catch {}
+    }
+    setShowPeerForm(v => !v);
+  };
+
+  const submitPeerForm = async (e) => {
+    e.preventDefault();
+    if (!onAddPeer) return;
+    await onAddPeer(peerEndpoint.trim(), peerLabel.trim() || undefined);
+    setShowPeerForm(false);
   };
 
   return (
@@ -50,9 +74,45 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
         <div className="folder-head-actions">
           <button className="row-btn" title="Add a folder from this computer" onClick={onAddLocal}>+ Local</button>
           <button className="row-btn" title="Browse Cloud Storage folders" onClick={onAddCloud}>+ Cloud</button>
+          {onAddPeer && (
+            <button
+              className="row-btn"
+              style={{ color: '#00bcd4', borderColor: 'rgba(0,188,212,0.45)' }}
+              title="Stream movies & shows from a remote RobOS Private Network peer (Box A)"
+              onClick={openPeerForm}
+            >
+              + P2P Peer
+            </button>
+          )}
           <button className="row-btn" title="Refresh folders marked Keep synced" onClick={() => onRescan(null)} disabled={!folders.length || !!busyId}>Refresh all</button>
         </div>
       </div>
+
+      {showPeerForm && (
+        <form className="folder-confirm" onSubmit={submitPeerForm} style={{ margin: '8px', padding: '10px', border: '1px solid rgba(0,188,212,0.4)', borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#00bcd4', marginBottom: '6px' }}>
+            Link RobOS Private Network Peer Stream (:19215)
+          </div>
+          <input
+            className="folder-edit"
+            style={{ width: '100%', marginBottom: '6px' }}
+            placeholder="http://127.0.0.1:19225 or robos-net://..."
+            value={peerEndpoint}
+            onChange={(e) => setPeerEndpoint(e.target.value)}
+          />
+          <input
+            className="folder-edit"
+            style={{ width: '100%', marginBottom: '8px' }}
+            placeholder="Optional label (e.g. Box A Cinema)"
+            value={peerLabel}
+            onChange={(e) => setPeerLabel(e.target.value)}
+          />
+          <div className="folder-confirm-actions">
+            <button type="button" className="btn-secondary" onClick={() => setShowPeerForm(false)}>Cancel</button>
+            <button type="submit" className="btn-accent">Connect &amp; Sync Peer</button>
+          </div>
+        </form>
+      )}
 
       <div className={`folder-row ${activeId === null ? 'active' : ''}`} onClick={() => onSelect(null)}>
         <Icon name="library" size={15} />
@@ -63,13 +123,13 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
       </div>
 
       {folders.length === 0 && (
-        <p className="folder-empty">No folders linked yet. Add a local folder or link folders in RobOS Data Sources (Google Drive, OneDrive, SFTP, FTP).</p>
+        <p className="folder-empty">No folders linked yet. Add a local folder, link a P2P Peer via RobOS Private Networks, or link Cloud Storage.</p>
       )}
 
       {folders.map(f => (
         <div key={f.id} className={`folder-item ${activeId === f.id ? 'active' : ''} ${f.available ? '' : 'unavailable'}`}>
           <div className="folder-row" onClick={() => onSelect(f.id)}>
-            <Icon name={f.kind === 'cloud' ? 'cloud' : 'folder'} size={15} />
+            <Icon name={f.kind === 'cloud' || f.kind === 'peer' ? 'cloud' : 'folder'} size={15} />
             <div className="folder-text">
               {editId === f.id ? (
                 <input className="folder-edit" autoFocus value={editValue}
@@ -82,10 +142,12 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
                   {f.label}
                 </span>
               )}
-              <span className="folder-sub" title={f.kind === 'cloud' ? `${providerLabel(f.protocol)} · ${f.connectionName || ''} (${f.path})` : f.path}>
-                {f.kind === 'cloud'
-                  ? (f.connectionMissing ? 'Connection removed from Data Sources' : `${providerLabel(f.protocol)} · ${f.connectionName}`)
-                  : (f.available ? f.path : `${f.path} (not found)`)}
+              <span className="folder-sub" title={f.kind === 'cloud' || f.kind === 'peer' ? `${providerLabel(f.protocol)} · ${f.connectionName || ''} (${f.path})` : f.path}>
+                {f.kind === 'peer'
+                  ? `RobOS P2P mTLS 1.3 · ${f.endpoint || f.path}`
+                  : f.kind === 'cloud'
+                    ? (f.connectionMissing ? 'Connection removed from Data Sources' : `${providerLabel(f.protocol)} · ${f.connectionName}`)
+                    : (f.available ? f.path : `${f.path} (not found)`)}
               </span>
               <span className="folder-sub">
                 <strong>{formatFolderMediaSummary(f)}</strong> · {when(f.lastSynced)}

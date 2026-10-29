@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=RobOS Private Networks
+Comment=Cross-Network Zero-Trust P2P Mesh & Video Streaming Tunnel Manager
+Exec=electron /usr/local/share/robos/private-networks --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/private-networks/icon.svg
+Terminal=false
+Categories=Development;Network;Security;
+X-RobOS-Category=Infrastructure & Cloud
+X-RobOS-Order=66

@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: private-networks
+  title: RobOS Private Networks
+  description: Cross-Network Zero-Trust P2P & Relay Mesh for linking RobOS machines across separate networks/CGNAT and streaming RobOS Video Player (:19215) & IPC ports.
+  tags:
+    - robos
+    - networking
+    - zero-trust
+    - mtls
+    - p2p
+    - video-streaming
+spec:
+  type: desktop-app
+  lifecycle: production
+  owner: platform-team
+  system: robos-platform

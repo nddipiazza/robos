@@ -570,8 +570,8 @@ ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
     cloud.touchCacheFile(filePath);
     return true;
   }
-  const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
-  if (cloudTrack) return true; // Will be streamed on demand via /cloud-stream/:trackId
+  const remoteTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && (t.cloud || t.peerStream));
+  if (remoteTrack) return true; // Streamed on demand via /cloud-stream/:trackId or P2P /media/:id
   return ensureFileAccessible(filePath);
 });
 
@@ -693,12 +693,44 @@ async function syncCloudFolders(folders) {
       results.push({ id: f.id, error: err.message });
     }
   }
+  for (const f of folders.filter(x => x.kind === 'peer')) {
+    try {
+      results.push({ id: f.id, ...(await libraryFolders.syncPeer(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
+    } catch (err) {
+      f.syncError = err.message;
+      results.push({ id: f.id, error: err.message });
+    }
+  }
   readCloudTagsInBackground();
   maybeAutoFetchPublicMetadata();
   return results;
 }
 
+function getActivePeerBridgeInfo() {
+  if (process.env.ROBOS_PEER_STREAM_URL) {
+    return { endpoint: process.env.ROBOS_PEER_STREAM_URL, label: 'RobOS Private Network Peer' };
+  }
+  try {
+    const bridgeFile = path.join(CONFIG_DIR, 'movie-player', 'active-peer-bridge.json');
+    if (fs.existsSync(bridgeFile)) {
+      const data = JSON.parse(fs.readFileSync(bridgeFile, 'utf8'));
+      if (data && data.endpoint) {
+        return {
+          endpoint: data.endpoint,
+          label: data.peerName ? `${data.peerName} (P2P Stream)` : 'RobOS Private Network Peer',
+          peerNodeId: data.peerNodeId,
+        };
+      }
+    }
+  } catch {}
+  return null;
+}
+
 ipcMain.handle('audio:folders-list', async () => folderState());
+
+ipcMain.handle('audio:get-active-peer-bridge', async () => {
+  return getActivePeerBridgeInfo();
+});
 
 ipcMain.handle('audio:folders-set-enabled', async (_evt, { id, enabled }) => {
   try {
@@ -726,6 +758,41 @@ ipcMain.handle('audio:folders-add-local', async () => {
 ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: remotePath, label }) => {
   try {
     const folder = libraryFolders.add({ kind: 'cloud', connectionId, path: remotePath, label });
+    const [result] = await syncCloudFolders([folder]);
+    if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
+    return { ok: true, ...result, ...folderState({ withLibrary: true }) };
+  } catch (err) {
+    return { ok: false, error: err.message, ...folderState() };
+  }
+});
+
+ipcMain.handle('audio:folders-add-peer', async (_evt, { endpoint, label } = {}) => {
+  try {
+    let targetEndpoint = String(endpoint || '').trim();
+    let targetLabel = label;
+
+    if (!targetEndpoint) {
+      const activeBridge = getActivePeerBridgeInfo();
+      targetEndpoint = activeBridge ? activeBridge.endpoint : 'http://127.0.0.1:19225';
+      if (!targetLabel && activeBridge?.label) targetLabel = activeBridge.label;
+    }
+
+    if (/^robos-(net|mesh):\/\//i.test(targetEndpoint)) {
+      const appMeshMod = requireShared('robos-lib/app-mesh-engine');
+      if (!appMeshMod) throw new Error('RobOS Private Networks engine not available');
+      const engine = appMeshMod.createAppMeshEngine({ configDir: CONFIG_DIR });
+      const joined = await engine.joinPrivateNetwork(targetEndpoint, {
+        reverseMux: true,
+        bridgeMoviePlayer: true,
+      });
+      if (!joined.movieBridge) {
+        throw new Error('Joined Private Network, but could not bridge peer port 19215');
+      }
+      targetEndpoint = `http://127.0.0.1:${joined.movieBridge.localPort}`;
+      targetLabel = targetLabel || `${joined.peer.name} (P2P Stream)`;
+    }
+
+    const folder = libraryFolders.add({ kind: 'peer', endpoint: targetEndpoint, label: targetLabel });
     const [result] = await syncCloudFolders([folder]);
     if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
     return { ok: true, ...result, ...folderState({ withLibrary: true }) };

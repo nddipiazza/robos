@@ -189,6 +189,19 @@ export default function App() {
       }).catch(() => {});
     }
 
+    if (window.robosAudio?.getActivePeerBridge && window.robosAudio?.addPeerFolder) {
+      window.robosAudio.getActivePeerBridge().then((bridge) => {
+        if (bridge && bridge.endpoint) {
+          window.robosAudio.addPeerFolder(bridge.endpoint, bridge.label).then((res) => {
+            if (res && res.ok) {
+              applyFolderState(res);
+              showStatus(`Connected to ${bridge.label || 'RobOS Private Network Peer'} over mTLS 1.3!`);
+            }
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
+
     const cleanups = [];
     if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
 
@@ -438,6 +451,21 @@ export default function App() {
       }
     } catch (err) {
       showStatus('Error adding folder: ' + err.message);
+    }
+  };
+
+  const handleAddPeerFolder = async (endpoint, label) => {
+    showStatus('Connecting to RobOS Private Network peer stream over mTLS 1.3...');
+    try {
+      const res = await window.robosAudio.addPeerFolder(endpoint, label);
+      applyFolderState(res);
+      if (res && res.ok) {
+        showStatus(`Synced ${res.total ?? res.added ?? 0} video(s) from RobOS Private Network peer!`);
+      } else {
+        showStatus(`P2P peer sync failed: ${res?.error || 'Unreachable'}`);
+      }
+    } catch (err) {
+      showStatus('P2P peer error: ' + err.message);
     }
   };
 
@@ -805,7 +833,7 @@ export default function App() {
   // so always prefer the library's fresh URL for cloud tracks.
   const resolveSrc = (t) => {
     if (!t) return '';
-    if (t.cloud) {
+    if (t.cloud || t.peerStream) {
       const fresh = libraryById.get(t.id);
       if (fresh && fresh.src) return fresh.src;
     }
@@ -2696,6 +2724,7 @@ export default function App() {
               folderProps={{
                 onAddLocal: handleSelectFolder,
                 onAddCloud: () => setActiveTab('cloud'),
+                onAddPeer: handleAddPeerFolder,
                 onRescan: handleRescanFolder,
                 onEnabled: handleFolderEnabled,
                 onRename: handleRenameFolder,
