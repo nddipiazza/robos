@@ -727,13 +727,49 @@ function updateAccountSuites(accountId, suitesPatch = {}, options = {}) {
   return saveAccount({ ...acc, suites: nextSuites }, options);
 }
 
+/**
+ * Removes the Data Sources entries that `syncFromDataSources` would merge into `account`
+ * (linked by id, same provider + email, or the same derived account id). Without this the
+ * next read recreates a deleted account from `~/.config/robos/data-sources.json`.
+ */
+function removeLinkedDataSources(account, otherAccounts = [], options = {}) {
+  const dsFile = getDataSourcesFilePath(options);
+  if (!fs.existsSync(dsFile)) return [];
+  let dsList;
+  try { dsList = JSON.parse(fs.readFileSync(dsFile, 'utf8')); } catch { return []; }
+  if (!Array.isArray(dsList)) return [];
+
+  const linkedIds = Array.isArray(account.linkedDataSourceIds) ? account.linkedDataSourceIds : [];
+  const accountEmail = String(account.email || '').toLowerCase();
+  const linkedElsewhere = new Set(otherAccounts.flatMap(a => a.linkedDataSourceIds || []));
+  const removed = [];
+  const kept = dsList.filter(ds => {
+    if (!ds || typeof ds !== 'object') return true;
+    if (linkedElsewhere.has(ds.id) && !linkedIds.includes(ds.id)) return true;
+    const provider = mapDriverToProvider(ds.driverType);
+    const email = String(ds.user || ds.email || '').trim();
+    const matches = linkedIds.includes(ds.id) || (provider === account.provider && (
+      (email && accountEmail && email.toLowerCase() === accountEmail) ||
+      slugifyAccountId(provider, email || ds.name || ds.id) === account.id
+    ));
+    if (matches) removed.push(ds.id);
+    return !matches;
+  });
+  if (removed.length) {
+    fs.writeFileSync(dsFile, JSON.stringify(kept, null, 2), { encoding: 'utf8', mode: 0o600 });
+  }
+  return removed;
+}
+
 function deleteAccount(accountId, options = {}) {
   const state = syncFromDataSources(options);
-  const before = state.accounts.length;
-  state.accounts = state.accounts.filter(a => a.id !== accountId);
-  if (state.accounts.length === before) {
+  const target = state.accounts.find(a => a.id === accountId);
+  if (!target) {
     throw new Error(`Cloud account "${accountId}" not found.`);
   }
+  const others = state.accounts.filter(a => a.id !== accountId);
+  const removedDataSourceIds = removeLinkedDataSources(target, others, options);
+  state.accounts = state.accounts.filter(a => a.id !== accountId);
   if (state.defaultAccountId === accountId) {
     state.defaultAccountId = state.accounts[0]?.id || null;
   }
@@ -742,6 +778,7 @@ function deleteAccount(accountId, options = {}) {
     providers: Object.values(CLOUD_PROVIDERS),
     defaultAccountId: persisted.defaultAccountId,
     accounts: persisted.accounts.map(sanitizeAccountForRenderer),
+    removedDataSourceIds,
   };
 }
 
