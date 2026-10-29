@@ -181,7 +181,7 @@ static func _rifleman(root: Node3D, team: Material) -> void:
 	box(root, Vector3(0.28, 0.55, 0.4), dark, Vector3(-0.28, 0.95, 0))
 	box(root, Vector3(1.15, 0.12, 0.12), dark, Vector3(0.58, 1.02, 0.18))
 	box(root, Vector3(0.3, 0.2, 0.14), armor, Vector3(0.28, 0.98, 0.18))
-	box(root, Vector3(0.12, 0.08, 0.1), mat("h_muzzle", Color("#ffe29a"), Color("#ffcc55"), 1.5), Vector3(1.2, 1.02, 0.18))
+	box(root, Vector3(0.12, 0.08, 0.1), dark, Vector3(1.2, 1.02, 0.18))
 
 static func _breacher(root: Node3D, team: Material) -> void:
 	var armor := mat("h_armor_heavy", Color("#6f7b8a"), Color.BLACK, 1.0, 0.45, 0.5)

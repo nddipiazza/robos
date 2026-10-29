@@ -53,6 +53,10 @@ Keep network reads/writes nonblocking in the frame loop. Real-time catch-up yiel
 
 ## View layer and tooling
 
+- Fullscreen startup uses the active display and a 1920×1080 scaled canvas. `RTSDisplay.gd` fits explicit `--windowed` and test launches to the desktop; Alt+Enter toggles modes. Bot mouse coordinates are canvas coordinates, consistent with `/ui` projection, even in scaled windows.
+- **Battle Lab**: `riflemen-vs-riflemen` is the first unit-battle fixture (10 vs 10, mirrored formations). F8 opens it; Enter/Fight starts, P pauses, F9 resets. `RTSBattleLab.gd` shows live counts and frames/selects blue. `SimEngine` owns ready/playing/finished state, one-shot attack-move orders and army-elimination victory; do not substitute scripted outcomes. `POST /battle` starts/resets it. Run `--backend --tags=@unit_battle` and `python tests/e2e/battle_walkthrough.py` for backend replay and rendered live-clock/input proof.
+- Rifle periods include wind-up; carry fractional cooldown remainders across shots. Surge scales the attack clock, including recovery. `test_rifle_attack.gd` verifies hitscan timing and move cancellation. `RTSRifleFX.gd` is cosmetic only: bounded preallocated batches and shared shadow-free lights, no per-shot scene/resource allocation. `test_rifle_fx.gd` checks pooling and interpolated display positions; run it rendered. Measure performance separately from GPU readback/recording and do not run heavy backend matches while the user playtests.
+
 - `scripts/RTSMain.gd` input, selection, commands, in-world overlays; `scripts/RTSHud.gd` screen-space HUD; `scripts/RTSWorld3D.gd` terrain, entities and effects; `scripts/RTSModels.gd` procedural models (also used by `scripts/RTSIcons.gd` to render HUD portraits). Headless runs skip all of it.
 - HUD rule: show only live, useful RTS information (resources, selection, queues, costs). No decorative stat boxes or summary counters.
 - Control server extras: `/ui`, `/input`, `/pause`, `/camera` focus mode, `/scenario` slug `default`. Scenarios may set `paused` and `decor`.

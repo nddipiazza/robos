@@ -48,6 +48,10 @@ class RTSClient:
     def load_scenario_slug(self, slug: str) -> Dict[str, Any]:
         return self._request("POST", "/scenario", {"slug": slug})
 
+    def battle(self, action: str = "start") -> Dict[str, Any]:
+        """Start or reset a loaded unit battle through the normal simulation engine."""
+        return self._request("POST", "/battle", {"action": action})
+
     def new_match(self, difficulty: str = "normal", strategy: str = "balanced", seed: Optional[int] = None) -> Dict[str, Any]:
         payload = {"difficulty": difficulty, "strategy": strategy}
         if seed is not None:

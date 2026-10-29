@@ -61,6 +61,7 @@ var _accum_time: float = 0.0
 # Map Editor <-> playtest handoff: holds the editor document while RTSMain playtests it.
 var editor_session: Dictionary = {}
 var match_state: Dictionary = {}
+var battle_scenario: Dictionary = {}
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
 var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
@@ -132,6 +133,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
+	battle_scenario.clear()
 	_accum_time = 0.0
 	sim_speed = 1.0
 	manual_step_requests = 0
@@ -247,6 +249,11 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	if data.get("victory", "") == "all_structures":
 		players.erase(3)
 		match_state = {"mode": "annihilation_fixture", "status": "playing", "winner": 0, "reason": ""}
+	if str(data.get("mode", "")) == "unit_battle":
+		players.erase(3)
+		battle_scenario = data.duplicate(true)
+		paused = true
+		match_state = {"mode": "unit_battle", "status": "ready", "winner": 0, "reason": ""}
 
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(
@@ -394,16 +401,38 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "match": match_state.duplicate(true)}
 
+func start_unit_battle() -> Dictionary:
+	if match_state.get("mode", "") != "unit_battle" or match_state.get("status", "") != "ready":
+		return {"ok": false, "error": "Reset the arena before starting a new fight"}
+	match_state["status"] = "playing"
+	# Identical one-shot orders: normal targeting and movement resolve the fight.
+	# No scripted micro, free reinforcements or forced result. The player can override blue.
+	for pid in [1, 2]:
+		var tags: Array[int] = []
+		for u in units.values():
+			if u.owner == pid:
+				tags.append(u.tag)
+		issue_command(tags, "attack_move", Vector2(map_width * 0.5, map_height * 0.5))
+	_accum_time = 0.0
+	paused = false
+	return {"ok": true, "match": match_state.duplicate(true)}
+
+func reset_unit_battle() -> Dictionary:
+	if battle_scenario.is_empty():
+		return {"ok": false, "error": "No unit battle is loaded"}
+	# Copy before reset_state clears the stored scenario.
+	return load_scenario_dict(battle_scenario.duplicate(true))
+
 func _check_match_result() -> void:
 	if match_state.get("status", "") != "playing":
 		return
 	var remaining = {1: 0, 2: 0}
 	for u in units.values():
-		if u.is_structure and u.hp > 0 and remaining.has(u.owner):
+		if (u.is_structure or match_state.get("mode", "") == "unit_battle") and u.hp > 0 and remaining.has(u.owner):
 			remaining[u.owner] += 1
 	if remaining[1] == 0 or remaining[2] == 0:
 		var winner = 0 if remaining[1] == 0 and remaining[2] == 0 else (2 if remaining[1] == 0 else 1)
-		_finish_match(winner, "all_structures_destroyed")
+		_finish_match(winner, "army_eliminated" if match_state.get("mode", "") == "unit_battle" else "all_structures_destroyed")
 
 func surrender(player_id: int) -> Dictionary:
 	if match_state.get("status", "") != "playing" or not player_id in [1, 2]:
@@ -612,6 +641,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"pushed_timer": 0.0,
 		"attack_state": "idle",
 		"attack_state_timer": 0.0,
+		"attack_cycle_elapsed": 0.0,
 		"attack_target_tag": 0,
 		"weapon_cooldown": 0.0,
 		"surge_timer": 0.0,
@@ -647,6 +677,8 @@ func get_elevation_at(pos: Vector2) -> float:
 	return 0.0
 
 func step_ticks(count: int = 1) -> void:
+	if match_state.get("status", "") == "ready":
+		return
 	last_step_count = count
 	if paused:
 		emit_signal("paused_step")
@@ -937,7 +969,9 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 
 	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	if u["weapon_cooldown"] > 0.0:
-		u["weapon_cooldown"] = max(0.0, u["weapon_cooldown"] - dt * atk_speed_mult)
+		# Retain the fractional tick remainder so repeated shots do not drift to
+		# the next whole tick on every cycle.
+		u["weapon_cooldown"] -= dt * atk_speed_mult
 
 	if u["pushed_timer"] > 0.0:
 		u["pushed_timer"] = max(0.0, u["pushed_timer"] - dt)
@@ -946,23 +980,27 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	u["vel"] = Vector2.ZERO
 
 	if u["attack_state"] == "windup":
+		var attack_rate = 1.5 if u["surge_timer"] > 0.0 else 1.0
+		u["attack_cycle_elapsed"] += dt * attack_rate
 		var target = units.get(u["attack_target_tag"], {})
 		if target.is_empty() or target["hp"] <= 0.0:
 			u["attack_state"] = "idle"
 		else:
-			u["attack_state_timer"] -= dt
+			u["attack_state_timer"] -= dt * attack_rate
 			u["facing"] = (target["pos"] - u["pos"]).angle()
 			if u["attack_state_timer"] <= 0.0:
 				_execute_weapon_hit(u, target)
 				var def = RTSData.get_unit_def(u["unit_type"])
 				var wpn = def.get("weapon", {})
-				u["weapon_cooldown"] = float(wpn.get("period", 0.8))
+				# Period is the complete shot-to-shot interval, including wind-up.
+				# Hitscan damage occurs now; rendering cannot delay or repeat it.
+				u["weapon_cooldown"] += maxf(0.0, float(wpn.get("period", 0.8)) - float(u["attack_cycle_elapsed"]))
 				u["attack_state"] = "backswing"
 				u["attack_state_timer"] = float(wpn.get("backswing", 0.25))
 			return
 
 	elif u["attack_state"] == "backswing":
-		u["attack_state_timer"] -= dt
+		u["attack_state_timer"] -= dt * (1.5 if u["surge_timer"] > 0.0 else 1.0)
 		if u["attack_state_timer"] <= 0.0:
 			u["attack_state"] = "idle"
 		if u["orders"].size() > 0 and u["orders"][0]["type"] != "move":
@@ -1399,10 +1437,10 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 	var wpn = def.get("weapon", {})
 	if wpn.is_empty():
 		return
-	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	u["attack_state"] = "windup"
 	u["attack_target_tag"] = target["tag"]
-	u["attack_state_timer"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
+	u["attack_cycle_elapsed"] = 0.0
+	u["attack_state_timer"] = float(wpn.get("damage_point", 0.08))
 
 func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> void:
 	var def = RTSData.get_unit_def(attacker["unit_type"])

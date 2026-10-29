@@ -39,6 +39,12 @@ func _ready() -> void:
 	start.text = "Start new match"
 	start.pressed.connect(_start)
 	box.add_child(start)
+	var battle = Button.new()
+	battle.text = "Battle Lab: 10 Riflemen vs 10 Riflemen"
+	battle.pressed.connect(func():
+		SimEngine.load_scenario_file("riflemen-vs-riflemen")
+		panel.hide())
+	box.add_child(battle)
 	var resume = Button.new()
 	resume.text = "Resume (F8)"
 	resume.pressed.connect(toggle)

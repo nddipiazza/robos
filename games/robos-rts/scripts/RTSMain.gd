@@ -20,6 +20,7 @@ var world_3d: Node3D
 var icons: Node
 var hud: Node2D
 var match_menu: CanvasLayer
+var battle_lab: CanvasLayer
 
 var local_player: int = 1
 var selected_tags: Array[int] = []
@@ -66,6 +67,8 @@ func _ready() -> void:
 	add_child(hud)
 	match_menu = preload("res://scripts/RTSMatchMenu.gd").new()
 	add_child(match_menu)
+	battle_lab = preload("res://scripts/RTSBattleLab.gd").new()
+	add_child(battle_lab)
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
@@ -678,6 +681,17 @@ func _recall_group(g: int) -> void:
 	_last_group_press[g] = now
 
 func _handle_hotkey(ke: InputEventKey) -> void:
+	if ke.alt_pressed and ke.keycode == KEY_ENTER:
+		var window = get_window()
+		if window.mode == Window.MODE_FULLSCREEN:
+			window.mode = Window.MODE_WINDOWED
+			var available = DisplayServer.screen_get_usable_rect(window.current_screen)
+			var scale_factor = minf(1.0, minf((available.size.x - 80.0) / 1600.0, (available.size.y - 80.0) / 900.0))
+			window.size = Vector2i(Vector2(1600, 900) * scale_factor)
+			window.position = available.position + (available.size - window.size) / 2
+		else:
+			window.mode = Window.MODE_FULLSCREEN
+		return
 	if ke.keycode >= KEY_1 and ke.keycode <= KEY_9:
 		var grp: int = ke.keycode - KEY_0
 		if ke.ctrl_pressed:
@@ -826,7 +840,14 @@ func ui_state() -> Dictionary:
 	for t in selected_tags:
 		tags.append(t)
 	var f: Vector2 = world_3d.get_focus() if world_3d else Vector2.ZERO
+	var window = get_window() if is_inside_tree() else null
+	var canvas = get_viewport_rect().size if window else Vector2.ZERO
 	return {
+		"display_mode": window.mode if window else -1,
+		"window_size": [window.size.x, window.size.y] if window else [0, 0],
+		"canvas_size": [canvas.x, canvas.y],
+		"battle_lab_visible": battle_lab != null and battle_lab.panel.visible,
+		"rifle_fx_warm": world_3d != null and world_3d.rifle_fx.warmup_complete,
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"local_player": local_player,
 		"selected": tags,
@@ -854,7 +875,8 @@ func inject_input(d: Dictionary) -> void:
 		if DisplayServer.get_name() == "headless":
 			_unhandled_input(mb)
 		else:
-			get_viewport().push_input(mb)
+			# The bot API uses the same 1920x1080 canvas coordinates as /ui project.
+			get_viewport().push_input(mb, true)
 	elif kind == "mouse_motion":
 		var mm := InputEventMouseMotion.new()
 		mm.position = pos
@@ -863,13 +885,14 @@ func inject_input(d: Dictionary) -> void:
 		if DisplayServer.get_name() == "headless":
 			_unhandled_input(mm)
 		else:
-			get_viewport().push_input(mm)
+			get_viewport().push_input(mm, true)
 	elif kind == "key":
 		var ke := InputEventKey.new()
 		ke.keycode = OS.find_keycode_from_string(str(d.get("key", "")))
 		ke.pressed = bool(d.get("pressed", true))
 		ke.shift_pressed = bool(d.get("shift", false))
 		ke.ctrl_pressed = bool(d.get("ctrl", false))
+		ke.alt_pressed = bool(d.get("alt", false))
 		if DisplayServer.get_name() == "headless":
 			_unhandled_input(ke)
 		else:
@@ -939,6 +962,8 @@ func _draw_rally_and_orders() -> void:
 				draw_line(rp, rp + Vector2(0, -26), Color("#fbbf24"), 2.0)
 				draw_colored_polygon(PackedVector2Array([rp + Vector2(0, -26), rp + Vector2(16, -21), rp + Vector2(0, -15)]), Color("#fbbf24"))
 			continue
+		if SimEngine.match_state.get("mode", "") == "unit_battle" and not Input.is_key_pressed(KEY_SHIFT):
+			continue
 		var prev := sp
 		for ord in u["orders"]:
 			var tp := Vector2.ZERO
@@ -967,9 +992,9 @@ func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var hurt: bool = u["hp"] < u["max_hp"] - 0.5 or (u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] - 0.5)
 	var building: bool = u["is_structure"] and u["build_progress"] < 1.0
 	var producing: bool = u["is_structure"] and u["production_queue"].size() > 0 and is_sel
-	if not (is_sel or hurt or building or producing):
+	if not (is_sel or hurt or building or producing or SimEngine.match_state.get("mode", "") == "unit_battle"):
 		return
-	var sp_head := world_to_screen(u["pos"], unit_height(u) + 0.6)
+	var sp_head := world_to_screen(world_3d.display_position(u), unit_height(u) + 0.6)
 	if sp_head.y > HUD_TOP - 6.0 or sp_head.y < 10.0 or sp_head.x < -40.0 or sp_head.x > 1960.0:
 		return
 	var is_own: bool = u["owner"] == local_player

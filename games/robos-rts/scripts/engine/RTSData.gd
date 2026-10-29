@@ -71,9 +71,11 @@ var units: Dictionary = {
 			"bonus": {},
 			"attacks": 1,
 			"range": 12.5,
-			"period": 0.61,
-			"damage_point": 0.05,
-			"backswing": 0.30,
+			# Reference timings converted from normal-time catalog units to faster
+			# playback seconds. Our world distances use a separate 2.5x scale.
+			"period": 0.8608 / 1.4,
+			"damage_point": 0.05 / 1.4,
+			"backswing": 0.75 / 1.4,
 			"splash_radius": 0.0
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "surge"]

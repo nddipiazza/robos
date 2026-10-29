@@ -1,0 +1,174 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:riflemen-vs-riflemen",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Battle Lab \u2014 10 Riflemen vs 10 Riflemen",
+  "mode": "unit_battle",
+  "seed": 42,
+  "paused": true,
+  "decor": false,
+  "map": {
+    "width": 96,
+    "height": 64,
+    "obstacles": []
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 0,
+      "aether": 0
+    },
+    "2": {
+      "faction": "humans",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "resources": [],
+  "directives": [],
+  "units": [
+    {
+      "id": "squad_1_0_0",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 30.0,
+      "y": 27.0
+    },
+    {
+      "id": "squad_1_0_1",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 32.5,
+      "y": 27.0
+    },
+    {
+      "id": "squad_1_1_0",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 30.0,
+      "y": 29.5
+    },
+    {
+      "id": "squad_1_1_1",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 32.5,
+      "y": 29.5
+    },
+    {
+      "id": "squad_1_2_0",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 30.0,
+      "y": 32.0
+    },
+    {
+      "id": "squad_1_2_1",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 32.5,
+      "y": 32.0
+    },
+    {
+      "id": "squad_1_3_0",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 30.0,
+      "y": 34.5
+    },
+    {
+      "id": "squad_1_3_1",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 32.5,
+      "y": 34.5
+    },
+    {
+      "id": "squad_1_4_0",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 30.0,
+      "y": 37.0
+    },
+    {
+      "id": "squad_1_4_1",
+      "type": "rifleman",
+      "owner": 1,
+      "x": 32.5,
+      "y": 37.0
+    },
+    {
+      "id": "squad_2_0_0",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 66.0,
+      "y": 27.0
+    },
+    {
+      "id": "squad_2_0_1",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 63.5,
+      "y": 27.0
+    },
+    {
+      "id": "squad_2_1_0",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 66.0,
+      "y": 29.5
+    },
+    {
+      "id": "squad_2_1_1",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 63.5,
+      "y": 29.5
+    },
+    {
+      "id": "squad_2_2_0",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 66.0,
+      "y": 32.0
+    },
+    {
+      "id": "squad_2_2_1",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 63.5,
+      "y": 32.0
+    },
+    {
+      "id": "squad_2_3_0",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 66.0,
+      "y": 34.5
+    },
+    {
+      "id": "squad_2_3_1",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 63.5,
+      "y": 34.5
+    },
+    {
+      "id": "squad_2_4_0",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 66.0,
+      "y": 37.0
+    },
+    {
+      "id": "squad_2_4_1",
+      "type": "rifleman",
+      "owner": 2,
+      "x": 63.5,
+      "y": 37.0
+    }
+  ]
+}

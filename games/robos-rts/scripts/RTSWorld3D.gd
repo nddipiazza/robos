@@ -35,6 +35,7 @@ var mat_cache: Dictionary = {}
 var _last_pos: Dictionary = {}
 var _unit_mesh_cache: Dictionary = {}
 var _unit_batches: Dictionary = {}
+var rifle_fx: Node3D
 
 func _ready() -> void:
 	_setup_environment_and_camera()
@@ -47,6 +48,8 @@ func _ready() -> void:
 	resources_root = get_node("ResourcesRoot")
 	units_root = get_node("UnitsRoot")
 	fx_root = get_node("FXRoot")
+	rifle_fx = preload("res://scripts/RTSRifleFX.gd").new()
+	add_child(rifle_fx)
 
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 	SimEngine.projectile_fired.connect(_on_projectile_fired)
@@ -211,6 +214,8 @@ func _subtract_rect(r: Rect2, hole: Rect2) -> Array[Rect2]:
 	return out
 
 func _rebuild_static_3d_map() -> void:
+	if rifle_fx:
+		rifle_fx.clear()
 	_clear_children(terrain_root)
 	_clear_children(decor_root)
 	_clear_children(resources_root)
@@ -515,7 +520,8 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		if not u_node.visible:
 			continue
 
-		var elev := SimEngine.get_elevation_at(u["pos"])
+		var draw_pos := display_position(u)
+		var elev := SimEngine.get_elevation_at(draw_pos)
 		var moving := false
 		if _last_pos.has(u_tag):
 			moving = (u["pos"] - _last_pos[u_tag]).length() > 0.004
@@ -525,7 +531,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		var ut := str(u["unit_type"])
 		if moving and not u["is_structure"] and ut != "howitzer" and ut != "spire_walker" and ut != "mote":
 			bob = absf(sin(anim_time * 13.0 + float(u_tag))) * 0.09
-		u_node.position = Vector3(u["pos"].x, elev + bob, u["pos"].y)
+		u_node.position = Vector3(draw_pos.x, elev + bob, draw_pos.y)
 		u_node.rotation.y = -float(u["facing"])
 
 		if u["is_structure"]:
@@ -692,6 +698,8 @@ func _skip_transient_fx() -> bool:
 	return SimEngine.paused and SimEngine.last_step_count > 6
 
 func _on_paused_step() -> void:
+	if rifle_fx:
+		rifle_fx.clear()
 	for i in range(active_fx.size() - 1, -1, -1):
 		if active_fx[i]["kind"] != "scorch":
 			if is_instance_valid(active_fx[i]["node"]):
@@ -727,8 +735,12 @@ func _weapon_color(owner_id: int, is_splash: bool) -> Color:
 		2: return Color("#a3e635")
 		_: return Color("#ffe27a")
 
-func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: String, is_splash: bool, owner_id: int) -> void:
+func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, owner_id: int) -> void:
 	if _skip_transient_fx() or active_fx.size() >= MAX_ACTIVE_FX or (not _effect_near_view(from_pos) and not _effect_near_view(to_pos)):
+		return
+	if weapon_name == "R-9 Carbine":
+		rifle_fx.fire(Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos), from_pos.y),
+			Vector3(to_pos.x, SimEngine.get_elevation_at(to_pos), to_pos.y), owner_id)
 		return
 	var p1 := Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos) + 1.3, from_pos.y)
 	var p2 := Vector3(to_pos.x, SimEngine.get_elevation_at(to_pos) + 1.0, to_pos.y)
@@ -779,6 +791,14 @@ func _effect_near_view(pos: Vector2) -> bool:
 # ---------------------------------------------------------------------------
 # Projection helpers
 # ---------------------------------------------------------------------------
+func display_position(unit: Dictionary) -> Vector2:
+	if SimEngine.paused or SimEngine.rts_mode == "backend" or SimEngine.match_state.get("status", "") == "finished":
+		return unit.pos
+	# Render one tick behind the sim, smoothly covering the fractional remainder.
+	# The authoritative position and all combat/pathfinding remain unchanged.
+	var alpha = clampf(SimEngine._accum_time / SimEngine.TICK_DT, 0.0, 1.0)
+	return Vector2(unit.get("prev_pos", unit.pos)).lerp(unit.pos, alpha)
+
 func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
 	var elev := SimEngine.get_elevation_at(wpos) + y_offset
 	return camera_3d.unproject_position(Vector3(wpos.x, elev, wpos.y))

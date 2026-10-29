@@ -21,6 +21,7 @@ extends Node
 # - POST /playback     -> Live speed/pause; never manually advances ticks
 # - GET  /performance  -> Frame percentiles, simulation sections and rendering cost
 # - GET|POST /editor   -> Map Editor state / actions (only while scenes/MapEditor.tscn is active)
+# - POST /battle      -> Unit battle start/reset (load its scenario with /scenario)
 
 var server: TCPServer = TCPServer.new()
 var active_port: int = 18095
@@ -270,6 +271,12 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			else:
 				var res = SimEngine.load_scenario_dict(body_dict)
 				_send_json(client, 200, res)
+
+		"/battle":
+			match str(body_dict.get("action", "start")):
+				"start": _send_json(client, 200, SimEngine.start_unit_battle())
+				"reset": _send_json(client, 200, SimEngine.reset_unit_battle())
+				_: _send_json(client, 200, {"ok": false, "error": "Unknown battle action"})
 
 		"/match":
 			if str(body_dict.get("action", "new")) == "surrender":

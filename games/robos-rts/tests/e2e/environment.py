@@ -60,6 +60,13 @@ def before_all(context) -> None:
     godot_bin = _find_godot()
     if os.name == "nt" and godot_bin.endswith("_console.exe"):
         godot_bin = godot_bin.replace("_console.exe", ".exe")
+    # A fresh checkout has no global class cache. Import before editor scenarios
+    # reference class_name scripts such as RTSMapDocument.
+    if not (PROJECT_DIR / ".godot/global_script_class_cache.cfg").exists():
+        imported = subprocess.run([godot_bin, "--headless", "--editor", "--path", str(PROJECT_DIR),
+                                   "--import", "--quit"], capture_output=True, text=True, timeout=60)
+        if imported.returncode or "SCRIPT ERROR:" in imported.stdout + imported.stderr:
+            raise RuntimeError(f"Godot project import failed:\n{imported.stdout}\n{imported.stderr}")
     env = os.environ.copy()
     env["RTS_MODE"] = context.rts_mode
     env["RTS_WEB_SERVICE_PORT"] = str(context.port)

@@ -57,9 +57,10 @@ func _draw() -> void:
 	if main == null:
 		return
 	font = ThemeDB.fallback_font
-	_draw_resource_bar()
-	_draw_faction_label()
-	_draw_banner()
+	if SimEngine.match_state.get("mode", "") != "unit_battle":
+		_draw_resource_bar()
+		_draw_faction_label()
+		_draw_banner()
 	_draw_messages()
 	_draw_idle_worker_button()
 	_draw_group_tabs()
@@ -80,7 +81,7 @@ func _text(pos: Vector2, s: String, size: int, col: Color = C_TEXT, align: int =
 
 func _draw_match_status() -> void:
 	var state: Dictionary = SimEngine.match_state
-	if state.is_empty():
+	if state.is_empty() or state.get("mode", "") == "unit_battle":
 		return
 	_text(Vector2(32, 55), "1 vs AI · %s · %s · %.0f×   |   F8 Match menu" % [str(state.get("difficulty", "normal")).capitalize(), str(state.get("strategy", "balanced")).capitalize(), SimEngine.sim_speed], 17, C_MUTED)
 	if state.status == "finished":

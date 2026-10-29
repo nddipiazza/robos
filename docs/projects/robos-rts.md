@@ -43,6 +43,40 @@ cd games/robos-rts
 
 The window opens with match setup. Choose Easy, Normal or Hard AI, its Rush, Balanced, Economy or Siege strategy, and a speed from 1× to 8×. Press **F8** during play to resume, start a new match, or surrender; **F1** opens the controls overlay.
 
+The game starts fullscreen on the active display with a **1920×1080 interface canvas** that scales while preserving its aspect ratio. **Alt+Enter** switches to a centered 1600×900 window, reduced to fit smaller desktops, and back to fullscreen. `--windowed` and automated test launches use the fitted window.
+
+## Battle Lab: Riflemen versus Riflemen
+
+Choose **Battle Lab: 10 Riflemen vs 10 Riflemen** from the F8 menu, or launch directly:
+
+```bash
+games/robos-rts/play.sh -- --scenario=riflemen-vs-riflemen
+```
+
+On Windows, use `games/robos-rts/play.ps1 -BattleLab` (optionally `-Windowed`). The launcher accepts `GODOT_BIN` or Godot on PATH; it also recognizes the local cached Godot 4.3 runtime.
+
+Two mirrored formations start with ten full-health Riflemen each on open ground. No economy, upgrades, reinforcements or AI micro affect this comparison. **Fight / Enter** sends both squads toward the center using the engine's ordinary attack-move commands. The blue squad starts selected: watch, or take over with right-click movement/targeting and **A + click** attack-move. **P** pauses/resumes; **F9 / Reset** restores both squads, their health and the deterministic seed. **Frame armies** recenters the view. Live survivor counts and elapsed game time remain visible; elimination freezes the result. This first matchup establishes the reusable unit-battle mode; other matchups can supply their own scenario formations.
+
+`scenarios/riflemen-vs-riflemen.jsonld` is the source-backed `robos:RTSTestScenario`. `POST /battle {"action":"start"}` and `{"action":"reset"}` expose the same operations as the buttons; observations report `match.mode=unit_battle`, ready/playing/finished status, winner and `army_eliminated` reason. The winner comes from normal combat; the fixture does not force a draw or prescribe a winner.
+
+```bash
+cd games/robos-rts
+python run_cucumber_tests.py --backend --tags=@unit_battle --format=progress
+python tests/e2e/battle_walkthrough.py
+```
+
+The backend scenario checks mirrored full-health squads, combat elimination, command rejection after completion, a frozen result and identical replay after reset. The rendered walkthrough clicks the Fight button, pauses, overrides blue with a right-click, resets with F9, runs a complete fight on the live frame clock, and checks fullscreen/windowed switching. It uses zero `/step` requests. Outputs include MP4, WebVTT, screenshots and JSON proof under `tests/e2e/reports/battle/` and `~/.robos/development/walkthroughs/rts-riflemen-vs-riflemen/`. The walkthrough requires Python `behave` and ffmpeg (on PATH or via `imageio-ffmpeg`).
+
+### Rifle attack cycle and presentation
+
+Rifle damage lands instantly at the damage point, independently of the cosmetic tracer. A move command before that point cancels the shot; after it, movement cancels the recovery animation while the weapon cooldown continues. The period measures the complete interval between shots, including wind-up. Fractional tick remainders carry between cycles rather than adding a wind-up or rounding delay to every shot. Surge advances the attack clock at 1.5×, affecting both wind-up and recovery without letting move commands bypass cooldown. Armor subtracts from a hit with a 0.5 minimum.
+
+The reference catalog uses a 0.8608 period, 0.05 damage point and 0.75 recovery for its rifle. RobOS converts these timing values by 1.4 to match faster playback seconds; its existing 2.5× world-distance scale remains separate. Sources: [exported game weapon data](https://github.com/Ahli/sc2xml/blob/master/mods/liberty.sc2mod/base.sc2data/gamedata/weapondata.xml), [Blizzard's fixed-loop and game-speed documentation](https://github.com/Blizzard/s2client-proto/blob/master/docs/protocol.md#game-speed). The fixture retains fixed attack timing; it adds no random attack jitter.
+
+Rifle visuals use a soft directional barrel-tip flash, warm ground glow, a moving tracer capped at 0.28 world units, and small impact sparks. Four preallocated MultiMesh batches hold these cosmetics; three shared lights illuminate firing groups with shadows disabled. Firing allocates no new scene nodes, meshes or materials. The render variants warm before Fight becomes available, avoiding first-shot shader compilation during combat. Paused captures retain effects; reset clears them. Hold Shift to show squad order lines in the arena. The renderer interpolates positions between the deterministic simulation ticks so a 60 Hz display does not show the uneven stepping of a 64 Hz simulation. None of these visual effects decides whether a shot hits.
+
+`tests/test_rifle_attack.gd` checks shot intervals with and without Surge, instant six-damage hits, cancellation before firing, movement during recovery and minimum damage. `tests/test_rifle_fx.gd` checks the bounded effect pool, expiry/reset and movement interpolation. Run the latter with a rendered Godot instance. The walkthrough first measures a whole fight **without recording**, enforcing a frame p95 below 33.34 ms, a maximum below 100 ms and at least 0.9 game seconds per wall second; its JSON keeps those measurements separate from capture overhead. Close heavy background test runs before interactive play.
+
 ## Frontier Hunters
 
 This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two distinct starting sites are selected randomly from the map's eight perimeter bases. Each commander starts with one Colony Hub, **12 Pioneers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are **inexhaustible**. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.

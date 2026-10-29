@@ -13,6 +13,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+RTSDisplay="*res://scripts/RTSDisplay.gd"
 RTSData="*res://scripts/engine/RTSData.gd"
 SimEngine="*res://scripts/engine/SimEngine.gd"
 RTSCommanderAI="*res://scripts/engine/RTSCommanderAI.gd"
@@ -22,8 +23,9 @@ GameControlServer="*res://scripts/GameControlServer.gd"
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/size/window_width_override=1920
-window/size/window_height_override=1080
+window/size/window_width_override=1600
+window/size/window_height_override=900
+window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
