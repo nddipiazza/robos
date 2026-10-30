@@ -95,6 +95,7 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
+  const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
     width: 1180,
     height: 780,
@@ -102,7 +103,7 @@ app.whenReady().then(() => {
     minHeight: 620,
     title: 'RobOS Hardware Keys',
     backgroundColor: '#0d1117',
-    icon: path.join(__dirname, 'icon.svg'),
+    icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
