@@ -60,7 +60,7 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
       </div>
       <div class="h-index-row">
         <h3>Security, P2P Mesh &amp; VPN isolation</h3>
-        <p><a href="{{ '/p2p/' | relative_url }}">Zero-Trust P2P App Mesh &amp; Cross-PC Movie Streaming</a>, <a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Zero-Leak OpenVPN App Sandbox &amp; Kill-Switch Proof</a>, <a href="{{ '/v1/apps/app-mesh/' | relative_url }}">RobOS App Mesh</a>, <a href="{{ '/v1/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox</a>, <a href="{{ '/v1/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers</a>, <a href="{{ '/v1/apps/pass-manager/' | relative_url }}">Pass Manager Vault</a></p>
+        <p><a href="{{ '/physical-keys/' | relative_url }}">Physical Push Keys (YubiKey &amp; FIDO2)</a>, <a href="{{ '/p2p/' | relative_url }}">Zero-Trust P2P App Mesh &amp; Cross-PC Movie Streaming</a>, <a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Zero-Leak OpenVPN App Sandbox &amp; Kill-Switch Proof</a>, <a href="{{ '/v1/apps/hardware-keys/' | relative_url }}">RobOS Hardware Keys</a>, <a href="{{ '/v1/apps/app-mesh/' | relative_url }}">RobOS App Mesh</a>, <a href="{{ '/v1/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox</a>, <a href="{{ '/v1/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers</a>, <a href="{{ '/v1/apps/pass-manager/' | relative_url }}">Pass Manager Vault</a></p>
       </div>
       <div class="h-index-row">
         <h3>Config management</h3>
