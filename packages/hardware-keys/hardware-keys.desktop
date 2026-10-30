@@ -7,6 +7,6 @@ Comment=YubiKey & FIDO2 physical push keys, touch verification, ed25519-sk SSH k
 Exec=/usr/bin/electron /usr/local/share/robos/hardware-keys/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
 Icon=/usr/local/share/robos/hardware-keys/icon.svg
 Terminal=false
-Categories=Utility;Security;
+Categories=Utility;System;Security;
 X-RobOS-Category=Security
 StartupWMClass=robos-hardware-keys
