@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('robos', {
   configureGitSigning: (opts) => ipcRenderer.invoke('hk:configure-git-signing', opts),
   savePolicies: (policies) => ipcRenderer.invoke('hk:save-policies', policies),
   copyText: (text) => ipcRenderer.invoke('hk:copy-text', text),
+  unlockKeystore: (opts) => ipcRenderer.invoke('hk:unlock-keystore', opts),
+  lockKeystore: () => ipcRenderer.invoke('hk:lock-keystore'),
+  openPassManager: () => ipcRenderer.invoke('hk:open-pass-manager'),
   onTouchStatus: (cb) => {
     const handler = (_, data) => cb(data);
     ipcRenderer.on('hk:touch-status', handler);

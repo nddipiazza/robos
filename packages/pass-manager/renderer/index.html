@@ -3,29 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
-  <title>RobOS Pass Manager</title>
+  <title>RobOS Pass Manager — KeePassXC (.kdbx) &amp; Physical Key Studio</title>
   <link rel="stylesheet" href="style.css">
   <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
+    <!-- Top Header -->
     <div id="header">
-      <span class="app-logo" id="app-logo-icon"></span>
-      <span id="header-title">RobOS Pass Manager</span>
+      <div class="header-left">
+        <span class="app-logo" id="app-logo-icon">🔐</span>
+        <div>
+          <span id="header-title">RobOS KeePassXC Vault</span>
+          <span id="active-kdbx-pill" class="kdbx-pill" title="Active .kdbx single-file archive">robos-passwords.kdbx</span>
+        </div>
+      </div>
+
       <div id="header-actions">
+        <button id="btn-open-kdbx" class="btn-top" title="Open an existing .kdbx archive">📂 Open .kdbx</button>
+        <button id="btn-new-kdbx" class="btn-top" title="Create a new .kdbx archive">➕ New .kdbx</button>
+        <span id="fido-badge" class="fido-badge" title="Physical YubiKey FIDO2 hmac-secret status">🔑 Checking Key...</span>
         <span id="lock-badge" class="lock-badge locked">🔒 Locked</span>
-        <button id="btn-lock" class="btn-lock hidden" title="Lock pass store now">🔒 Lock</button>
+        <button id="btn-lock" class="btn-lock hidden" title="Lock .kdbx keystore now">🔒 Lock</button>
         <input id="search" type="text" placeholder="Search entries…">
         <button id="btn-add" class="btn-icon" title="New entry">+</button>
+        <button id="btn-db-info" class="btn-icon" title="KeePassXC Database Info &amp; YubiKey Binding">⚙</button>
         <button id="btn-refresh" class="btn-icon" title="Refresh">↺</button>
       </div>
     </div>
 
+    <!-- Live YubiKey Touch Banner -->
+    <div id="touch-banner" class="touch-banner hidden">
+      <span class="pulse-dot"></span>
+      <span id="touch-banner-text">Touch the flashing gold contact on your YubiKey now...</span>
+    </div>
+
     <!-- Main layout -->
     <div id="main">
-      <!-- Sidebar: tree -->
+      <!-- Sidebar: group & entry tree -->
       <div id="sidebar">
+        <div class="sidebar-header">
+          <span>GROUPS &amp; ENTRIES</span>
+        </div>
         <div id="tree-container"></div>
       </div>
 
@@ -33,72 +52,229 @@
 
       <!-- Right panel -->
       <div id="panel">
-        <div id="panel-empty">
-          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <div class="empty-text">Select an entry to view</div>
+        <!-- Empty state -->
+        <div id="panel-empty" class="hidden">
+          <div class="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="empty-text">KeePassXC Keystore Unlocked — Select an entry or click <strong>+</strong> to add one</div>
         </div>
 
-        <!-- Not initialized: setup panel -->
-        <div id="panel-setup" class="hidden">
-          <div class="setup-wrap">
-            <div class="setup-icon">🔐</div>
-            <h2 class="setup-title">Set Up Your Password Store</h2>
-            <p class="setup-desc">Your pass store isn't initialized yet. Create a GPG key to get started.</p>
-            <div class="form-row"><label>Your Name</label><input id="setup-name" type="text" placeholder="Jane Smith"></div>
-            <div class="form-row"><label>Email</label><input id="setup-email" type="email" placeholder="you@example.com"></div>
-            <div class="form-row"><label>Passphrase</label><input id="setup-pw" type="password" placeholder="Leave blank for no passphrase"></div>
-            <div class="form-row"><label>Confirm Passphrase</label><input id="setup-pw2" type="password" placeholder="Confirm passphrase"></div>
-            <div id="setup-error" class="error hidden"></div>
-            <div id="setup-progress" class="setup-progress hidden">⏳ Generating GPG key… this may take 15–30 seconds.</div>
-            <button id="btn-setup-init" class="btn-primary setup-btn">🔑 Initialize Password Store</button>
+        <!-- UNLOCK PANEL (when .kdbx exists but is locked) -->
+        <div id="panel-unlock" class="hidden">
+          <div class="unlock-card">
+            <div class="unlock-header">
+              <div class="unlock-icon">🔐</div>
+              <div>
+                <h2 class="setup-title">Unlock KeePassXC Keystore</h2>
+                <div id="unlock-db-path" class="unlock-path">~/.config/robos/vault/robos-passwords.kdbx</div>
+              </div>
+            </div>
+
+            <!-- Physical Key 1-Touch Unlock Box -->
+            <div id="unlock-hw-section" class="hw-unlock-box">
+              <div class="hw-disc-mini" id="unlock-touch-disc" title="Click and touch your physical YubiKey">
+                <span>TOUCH</span>
+              </div>
+              <div class="hw-unlock-info">
+                <div class="hw-unlock-title" id="unlock-hw-title">Physical Key (YubiKey FIDO2 <code>hmac-secret</code>)</div>
+                <div class="hw-unlock-sub" id="unlock-hw-desc">
+                  Touch your YubiKey's gold contact to unwrap the 256-bit AES-GCM vault key directly from hardware.
+                </div>
+                <div class="hw-btn-row">
+                  <button id="btn-unlock-hw" class="btn-gold">
+                    👆 Touch YubiKey to Unlock Keystore
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider-label"><span>OR UNLOCK WITH MASTER PASSWORD</span></div>
+
+            <div class="form-row">
+              <label for="unlock-pw">Master Password</label>
+              <input id="unlock-pw" type="password" placeholder="Enter KeePassXC Master Password">
+            </div>
+            <div id="unlock-pin-wrap" class="form-row hidden">
+              <label for="unlock-pin">FIDO2 PIN (Only if PIN is set on YubiKey)</label>
+              <input id="unlock-pin" type="password" placeholder="Optional FIDO2 PIN">
+            </div>
+            <div id="unlock-error" class="error hidden"></div>
+
+            <div class="btn-row-spread">
+              <button id="btn-unlock-pw" class="btn-primary">🔓 Unlock with Password</button>
+            </div>
           </div>
         </div>
 
-        <!-- Entry view -->
+        <!-- SETUP PANEL (Create New .kdbx Archive) -->
+        <div id="panel-setup" class="hidden">
+          <div class="setup-wrap">
+            <div class="setup-icon">🗄️</div>
+            <h2 class="setup-title">Create KeePassXC (<code>.kdbx</code>) Keystore</h2>
+            <p class="setup-desc">
+              Creates a standard single-file encrypted <strong>KeePassXC <code>.kdbx</code></strong> archive (AES-256 / Argon2id) that can be unlocked with your <strong>Physical YubiKey</strong> (`FIDO2 hmac-secret`), a Master Password, or both.
+            </p>
+
+            <div class="form-row">
+              <label for="setup-dbpath">Keystore Archive Path (<code>.kdbx</code>)</label>
+              <input id="setup-dbpath" type="text" placeholder="~/.config/robos/vault/robos-passwords.kdbx">
+            </div>
+
+            <div class="hw-setup-box">
+              <label class="checkbox-line">
+                <input type="checkbox" id="setup-enroll-hw" checked>
+                <span><strong>Bind Physical Security Key (YubiKey FIDO2 <code>hmac-secret</code>)</strong> — allow unlocking this <code>.kdbx</code> archive by physically touching your YubiKey</span>
+              </label>
+
+              <div id="setup-hw-modes" class="hw-modes-group">
+                <label class="radio-line">
+                  <input type="radio" name="setup-hw-mode" value="either" checked>
+                  <span><strong>1-Touch Physical Key OR Master Password</strong> (Recommended: unlock with a single YubiKey touch, keep password as backup)</span>
+                </label>
+                <label class="radio-line">
+                  <input type="radio" name="setup-hw-mode" value="hw-only">
+                  <span><strong>Physical YubiKey Touch ONLY</strong> (Zero master password — only your physical key's hardware secret can open this archive)</span>
+                </label>
+                <label class="radio-line">
+                  <input type="radio" name="setup-hw-mode" value="2fa">
+                  <span><strong>2FA Composite Key (Master Password + Physical YubiKey Touch)</strong> (Requires both password and physical touch)</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="setup-pw-fields">
+              <div class="form-row">
+                <label for="setup-pw">Master Password</label>
+                <input id="setup-pw" type="password" placeholder="Enter Master Password">
+              </div>
+              <div class="form-row">
+                <label for="setup-pw2">Confirm Master Password</label>
+                <input id="setup-pw2" type="password" placeholder="Confirm Master Password">
+              </div>
+            </div>
+
+            <div id="setup-error" class="error hidden"></div>
+            <div id="setup-progress" class="setup-progress hidden">⏳ Creating .kdbx archive &amp; enrolling YubiKey…</div>
+            <button id="btn-setup-init" class="btn-primary setup-btn">🔑 Create KeePassXC Keystore</button>
+          </div>
+        </div>
+
+        <!-- ENTRY VIEW -->
         <div id="panel-entry" class="hidden">
           <div id="entry-path-bar">
-            <span id="entry-path"></span>
+            <div>
+              <span id="entry-path"></span>
+              <div id="entry-uuid" class="entry-uuid"></div>
+            </div>
             <div id="entry-actions">
-              <button id="btn-copy-pw" class="btn-sm">📋 Copy Secret</button>
+              <button id="btn-copy-user" class="btn-sm">👤 Copy User</button>
+              <button id="btn-copy-pw" class="btn-sm">📋 Copy Password</button>
               <button id="btn-edit" class="btn-sm">✏️ Edit</button>
               <button id="btn-delete" class="btn-sm btn-danger">🗑 Delete</button>
             </div>
           </div>
-          <div id="password-row">
-            <label>Secret Value</label>
-            <input id="pw-display" type="password" readonly>
-            <button id="btn-toggle-pw" class="btn-icon-sm">👁</button>
+
+          <div class="entry-grid">
+            <div class="field-block">
+              <label>Username / Login</label>
+              <input id="user-display" type="text" readonly placeholder="(none)">
+            </div>
+            <div class="field-block">
+              <label>URL / Endpoint</label>
+              <input id="url-display" type="text" readonly placeholder="(none)">
+            </div>
           </div>
+
+          <div id="password-row">
+            <label>Password / Secret Value</label>
+            <div id="pw-wrap">
+              <input id="pw-display" type="password" readonly>
+              <button id="btn-toggle-pw" class="btn-icon-sm" title="Show / Hide Password">👁</button>
+            </div>
+          </div>
+
           <div id="meta-row">
-            <label>Notes / Additional fields</label>
+            <label>Notes &amp; Additional Attributes</label>
             <pre id="meta-display"></pre>
           </div>
         </div>
 
-        <!-- Add/Edit form -->
+        <!-- ADD / EDIT ENTRY FORM -->
         <div id="panel-form" class="hidden">
-          <div id="form-title">New Entry</div>
-          <div class="form-row"><label>Path (e.g. work/github)</label><input id="form-path" type="text" placeholder="folder/entry-name"></div>
-          <div class="form-row form-row-radio">
-            <label>Type</label>
-            <label><input type="radio" name="form-type" value="simple" checked> Simple (secret value only)</label>
-            <label><input type="radio" name="form-type" value="multiline"> Multiline (password + notes)</label>
-            <label><input type="radio" name="form-type" value="generate"> Generate random</label>
+          <div id="form-title">New KeePassXC Entry</div>
+          <div class="form-row">
+            <label for="form-path">Group / Entry Path (e.g. <code>work/github</code> or <code>cloud/aws-prod</code>)</label>
+            <input id="form-path" type="text" placeholder="folder/entry-name">
           </div>
-          <div id="form-simple-wrap">
-            <div class="form-row"><label>Secret Value</label><input id="form-pw" type="password" placeholder="Enter secret value"></div>
-            <div class="form-row"><label>Confirm</label><input id="form-pw2" type="password" placeholder="Confirm secret value"></div>
+
+          <div class="entry-grid">
+            <div class="form-row">
+              <label for="form-username">Username / Login</label>
+              <input id="form-username" type="text" placeholder="user@example.com">
+            </div>
+            <div class="form-row">
+              <label for="form-url">URL</label>
+              <input id="form-url" type="text" placeholder="https://github.com">
+            </div>
           </div>
-          <div id="form-multi-wrap" class="hidden">
-            <div class="form-row"><label>Content (first line = secret value)</label><textarea id="form-multi" rows="6" placeholder="mysecretpassword&#10;login: user@example.com&#10;url: https://example.com"></textarea></div>
+
+          <div class="form-row">
+            <div class="pw-label-row">
+              <label for="form-pw">Password / Secret</label>
+              <div class="gen-inline">
+                <span>Len:</span>
+                <input id="form-gen-len" type="number" value="32" min="8" max="128" class="len-input">
+                <button type="button" id="btn-gen-inline" class="btn-sm">🎲 Generate Password</button>
+              </div>
+            </div>
+            <div id="pw-wrap">
+              <input id="form-pw" type="password" placeholder="Enter or generate password">
+              <button type="button" id="btn-toggle-form-pw" class="btn-icon-sm">👁</button>
+            </div>
+            <div id="form-entropy" class="entropy-hint"></div>
           </div>
-          <div id="form-gen-wrap" class="hidden">
-            <div class="form-row"><label>Length</label><input id="form-gen-len" type="number" value="32" min="8" max="128"></div>
+
+          <div class="form-row">
+            <label for="form-pw2">Confirm Password</label>
+            <input id="form-pw2" type="password" placeholder="Confirm password">
           </div>
+
+          <div class="form-row">
+            <label for="form-notes">Notes</label>
+            <textarea id="form-notes" rows="4" placeholder="Optional notes, recovery codes, or custom metadata..."></textarea>
+          </div>
+
           <div id="form-error" class="error hidden"></div>
           <div id="form-btns">
-            <button id="btn-form-save" class="btn-primary">Save</button>
+            <button id="btn-form-save" class="btn-primary">💾 Save to .kdbx</button>
             <button id="btn-form-cancel" class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+
+        <!-- DATABASE INFO & PHYSICAL KEY BINDING PANEL -->
+        <div id="panel-dbinfo" class="hidden">
+          <div class="setup-wrap" style="max-width: 620px;">
+            <h2 class="setup-title" style="text-align:left;">KeePassXC Database Info &amp; YubiKey Binding</h2>
+            <p class="setup-desc" style="text-align:left; margin-bottom:14px;">
+              Inspect cryptographic parameters of the active <code>.kdbx</code> single-file archive and bind your physical YubiKey.
+            </p>
+            <pre id="dbinfo-pre" class="meta-box"></pre>
+
+            <div class="hw-setup-box" style="margin-top:16px;">
+              <h3 style="font-size:14px; color:#e6edf3; margin-bottom:6px;">🔑 Bind / Re-Bind Physical Security Key (FIDO2 <code>hmac-secret</code>)</h3>
+              <p style="font-size:12px; color:#8b949e; margin-bottom:10px;">
+                Enrolling your connected YubiKey generates a hardware-bound FIDO2 credential and wraps the <code>.kdbx</code> vault key with AES-256-GCM under the YubiKey's 256-bit <code>hmac-secret</code> output.
+              </p>
+              <label class="checkbox-line">
+                <input type="checkbox" id="bind-2fa">
+                <span>Require <strong>BOTH Master Password + Physical YubiKey Touch (2FA)</strong> on unlock</span>
+              </label>
+              <div class="btn-row-spread" style="margin-top:10px;">
+                <button id="btn-bind-hw-now" class="btn-gold">👆 Enroll Connected YubiKey on This .kdbx (Touch Key)</button>
+              </div>
+              <div id="bind-status" class="setup-progress hidden"></div>
+            </div>
           </div>
         </div>
       </div>

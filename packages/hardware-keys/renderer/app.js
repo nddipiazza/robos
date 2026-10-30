@@ -288,6 +288,31 @@ function renderGuardTab(state) {
   $('pol-agent-guard').checked = Boolean(pol.requireTouchForHighRiskAgent);
   $('pol-unplug-lock').checked = Boolean(pol.lockSessionOnUnplug);
   $('pol-git-sign').checked = Boolean(pol.requireTouchForGitSign || (systemStatus && systemStatus.gitSigning && systemStatus.gitSigning.enabled));
+
+  // KeePassXC .kdbx Keystore status
+  const kdbx = state.kdbxStatus;
+  const kdbxBadge = $('kdbx-status-badge');
+  const kdbxBox = $('kdbx-info-box');
+  if (kdbxBadge && kdbxBox) {
+    if (!kdbx || !kdbx.exists) {
+      kdbxBadge.className = 'badge badge-muted';
+      kdbxBadge.textContent = 'No .kdbx Keystore Yet';
+      kdbxBox.innerHTML = `<div class="empty-hint">No <code>.kdbx</code> archive created yet. Click <strong>Open RobOS KeePassXC Vault</strong> to create a single-file <code>.kdbx</code> keystore bound to your YubiKey.</div>`;
+    } else {
+      kdbxBadge.className = kdbx.unlocked ? 'badge badge-green' : 'badge badge-gold';
+      kdbxBadge.textContent = kdbx.unlocked ? '🔓 Keystore Unlocked' : '🔒 Keystore Locked';
+      const enrollment = kdbx.fido2Enrollment;
+      kdbxBox.innerHTML = `
+        <div><strong>Archive File:</strong> <code>${escapeHtml(kdbx.dbPath)}</code> (${(kdbx.sizeBytes / 1024).toFixed(1)} KB)</div>
+        <div><strong>Hardware Binding:</strong> ${kdbx.hasFido2Binding
+          ? `<span class="status-ok">✓ Bound to ${escapeHtml(enrollment.deviceName || 'YubiKey')} (${escapeHtml(enrollment.usbId || 'FIDO2 hmac-secret')}) — Mode: ${escapeHtml(enrollment.mode || 'hardware-unlock')}</span>`
+          : `<span class="badge badge-muted">Master Password Only (Bind YubiKey inside Vault)</span>`}</div>
+        <div><strong>Session State:</strong> ${kdbx.unlocked
+          ? `<span class="status-ok">Unlocked via ${escapeHtml(kdbx.unlockedVia)} at ${escapeHtml(new Date(kdbx.unlockedAt).toLocaleTimeString())}</span>`
+          : 'Locked (volatile session key cleared)'}</div>
+      `;
+    }
+  }
 }
 
 function renderAll(state) {
@@ -508,6 +533,44 @@ window.addEventListener('DOMContentLoaded', async () => {
       msgEl.textContent = `✗ ${res.error}`;
     }
   });
+
+  // KeePassXC .kdbx Keystore actions
+  if ($('btn-hk-unlock-kdbx')) {
+    $('btn-hk-unlock-kdbx').addEventListener('click', async () => {
+      const msgEl = $('kdbx-guard-msg');
+      msgEl.className = 'status-msg';
+      msgEl.textContent = 'Touch the flashing gold contact on your YubiKey to unlock the .kdbx keystore...';
+      const res = await window.robos.unlockKeystore({});
+      if (res.ok) {
+        msgEl.className = 'status-msg status-ok mt-8';
+        msgEl.textContent = `✓ Unlocked ${res.dbPath} via Physical Key in ${res.latencyMs} ms!`;
+        currentState.kdbxStatus = res.kdbxStatus;
+        renderGuardTab(currentState);
+      } else {
+        msgEl.className = 'status-msg status-err mt-8';
+        msgEl.textContent = `✗ ${res.error}`;
+      }
+    });
+  }
+
+  if ($('btn-hk-lock-kdbx')) {
+    $('btn-hk-lock-kdbx').addEventListener('click', async () => {
+      const res = await window.robos.lockKeystore();
+      const msgEl = $('kdbx-guard-msg');
+      if (res.ok) {
+        msgEl.className = 'status-msg status-ok mt-8';
+        msgEl.textContent = '🔒 Keystore locked and session key wiped from memory.';
+        currentState.kdbxStatus = res.kdbxStatus;
+        renderGuardTab(currentState);
+      }
+    });
+  }
+
+  if ($('btn-hk-open-vault')) {
+    $('btn-hk-open-vault').addEventListener('click', async () => {
+      await window.robos.openPassManager();
+    });
+  }
 
   // Live IPC status events
   window.robos.onTouchStatus((st) => {
