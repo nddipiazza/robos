@@ -1,0 +1,158 @@
+---
+layout: default
+title: Physical Push Keys — YubiKey, FIDO2 SSH Keys & PAM U2F in RobOS
+permalink: /physical-keys/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "Reference guide for RobOS Hardware Keys (packages/hardware-keys): inspect YubiKey & FIDO2 authenticators over USB/HID and CTAP2, verify physical capacitive touch, generate non-exportable ed25519-sk SSH keys, manage FIDO2 PINs and resident passkeys, and bind physical push approval to Linux PAM sudo, Git commit signing, and the RobOS Pass Store."
+og_image: /assets/physical-keys/01-hardware-inspector.png
+og_image_alt: "RobOS Hardware Keys showing a connected YubiKey Security Key C NFC (5.7.1) on /dev/hidraw0 with FIDO2 AAGUID, COSE algorithms, and CTAP2 extensions"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS Hardware Keys, YubiKey Linux GUI, FIDO2 ed25519-sk SSH key, CTAP2 touch verification, pamu2fcfg sudo touch, Git SSH hardware commit signing, resident passkeys ykman, Security Key C NFC"
+---
+{%- assign pk = '/assets/physical-keys/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">Guide · Security › RobOS Hardware Keys (<code>packages/hardware-keys</code>)</p>
+<h1>Physical push keys</h1>
+<p class="lead"><strong>RobOS Hardware Keys</strong> connects physical FIDO2 and U2F authenticators—such as the <strong>YubiKey 5 Series</strong>, <strong>Security Key C NFC</strong>, <strong>SoloKey</strong>, and <strong>Nitrokey</strong>—directly to your Linux desktop, SSH keys, Git commits, <code>sudo</code> prompts, and the RobOS Pass Store. Private keys stay locked inside the hardware token's secure element and require a physical finger press on the capacitive gold contact before any signature is produced.</p>
+</header>
+
+<figure class="guide-shot"><a href="{{ pk }}01-hardware-inspector.png"><img src="{{ pk }}01-hardware-inspector.png" alt="RobOS Hardware Keys open on the Hardware Inspector tab showing a connected Security Key C NFC (Firmware 5.7.1) on /dev/hidraw0" width="1180" height="780"></a><figcaption><strong>Hardware Inspector</strong> displaying a live YubiKey Security Key C NFC (Firmware 5.7.1, USB ID <code>1050:0402</code>) on <code>/dev/hidraw0</code>.</figcaption></figure>
+
+<ul class="cr-nav">
+<li><a href="#architecture"><b>Architecture</b><span>USB HID, CTAP2.1 &amp; 4 protection targets</span></a></li>
+<li><a href="#inspector"><b>Hardware Inspector</b><span>AAGUID, firmware, COSE algorithms &amp; udev ACLs</span></a></li>
+<li><a href="#touch-verifier"><b>Physical Touch Tester</b><span>Live CTAP2/U2F challenge-response &amp; latency</span></a></li>
+<li><a href="#ssh-sk"><b>FIDO2 SSH Keys (<code>-sk</code>)</b><span><code>ed25519-sk</code>, <code>ecdsa-sk</code> &amp; <code>SSHSIG</code></span></a></li>
+<li><a href="#fido2-passkeys"><b>FIDO2 PIN &amp; Passkeys</b><span>PIN management &amp; discoverable credentials</span></a></li>
+<li><a href="#pam-and-guards"><b>PAM &amp; RobOS Guards</b><span><code>pamu2fcfg</code>, Git signing &amp; unplug auto-lock</span></a></li>
+<li><a href="#cli-reference"><b>CLI &amp; Config Reference</b><span>Files, IPC channels &amp; debug port <code>:19218</code></span></a></li>
+</ul>
+
+<h2 id="architecture">Architecture</h2>
+<p>RobOS Hardware Keys combines three local Linux inspection layers—<code>/sys/class/hidraw</code> udev attributes, YubiKey Manager (<code>ykman</code>), and direct <code>python3-fido2</code> CTAP2/CTAP1 HID frames—so every hardware capability can be inspected and exercised without cloud services or browser extensions.</p>
+
+<figure class="guide-shot"><a href="{{ pk }}hardware-keys-architecture.png"><img src="{{ pk }}hardware-keys-architecture.png" alt="RobOS Hardware Keys Physical Push-to-Approve Architecture Diagram showing Physical Security Key Hardware, RobOS Hardware Keys Engine, and 4 Protected Targets" width="1280" height="720"></a><figcaption>End-to-end schematic of <strong>RobOS Hardware Keys</strong> from physical capacitive touch (<code>UP=1</code>) on <code>/dev/hidraw0</code> to OpenSSH, Git, Linux PAM U2F, and RobOS security gates.</figcaption></figure>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph HW["Physical Security Key (USB 1050:0402 / NFC)"]
+    TOUCH["Gold Capacitive Touch Disc<br/>Hardware User Presence (UP=1)"]
+    SE["Secure Element (Firmware 5.7.1)<br/>FIDO2 CTAP2.1 + FIDO U2F CTAP1<br/>COSE: EdDSA (-8), ES256 (-7), ES384 (-35)"]
+    HID["Linux Kernel HID Node<br/>/dev/hidraw0 (udev ACL crw-rw----+)"]
+    TOUCH --> SE --> HID
+  end
+
+  subgraph ENGINE["RobOS Hardware Keys Studio (packages/hardware-keys :19218)"]
+    INSP["Hardware Inspector<br/>sysfs + ykman + python3-fido2 Ctap2.get_info()"]
+    CHAL["Physical Touch Verifier<br/>SHA-256 Challenge -> Touch -> Signature Proof"]
+    HOTPLUG["USB Hotplug Monitor (3.5s poll)<br/>Auto-Lock on Unplug (gpgconf --kill gpg-agent)"]
+    HID --> INSP
+    HID --> CHAL
+    HID --> HOTPLUG
+  end
+
+  subgraph TARGETS["Protected Workstation &amp; RobOS Targets"]
+    SSH["OpenSSH 10.2 FIDO2 Keys<br/>~/.ssh/id_ed25519_sk &amp; ssh-keygen -Y sign"]
+    GIT["Git Commit Signing<br/>gpg.format = ssh &amp; commit.gpgsign = true"]
+    PAM["Linux PAM U2F<br/>pamu2fcfg -> ~/.config/Yubico/u2f_keys"]
+    GUARD["RobOS Pass Store &amp; Agent Gate<br/>~/.config/robos/hardware-keys.json"]
+  end
+
+  ENGINE --> SSH
+  SSH --> GIT
+  ENGINE --> PAM
+  ENGINE --> GUARD
+</pre>
+
+<table class="wide">
+<thead><tr><th>Subsystem</th><th>Underlying Interface</th><th>What It Controls</th></tr></thead>
+<tbody>
+<tr><td><strong>Hardware Inspector</strong></td><td><code>/sys/class/hidraw/hidraw*/device/uevent</code>, <code>ykman info</code>, <code>Ctap2.get_info()</code></td><td>Detects model, firmware, USB/NFC applet state, AAGUID, COSE algorithms, CTAP2 extensions, and <code>/dev/hidraw</code> write permissions</td></tr>
+<tr><td><strong>Physical Touch Tester</strong></td><td><code>fido2.ctap2.Ctap2.make_credential</code> &amp; <code>fido2.ctap1.Ctap1.register</code></td><td>Verifies physical finger presence (<code>UP=1</code>), measures touch response latency in milliseconds, and records cryptographic signatures</td></tr>
+<tr><td><strong>FIDO2 SSH Keys</strong></td><td><code>ssh-keygen -t ed25519-sk</code> / <code>ecdsa-sk</code>, <code>ssh-keygen -Y sign</code>, <code>gh ssh-key add</code></td><td>Generates hardware-bound SSH keys, tests <code>SSHSIG</code> payload signatures, and uploads public keys to GitHub</td></tr>
+<tr><td><strong>FIDO2 PIN &amp; Passkeys</strong></td><td><code>ykman fido access change-pin</code>, <code>ykman fido credentials list/delete</code></td><td>Sets or rotates the FIDO2 PIN and lists or prunes discoverable resident credentials (passkeys) stored in key flash</td></tr>
+<tr><td><strong>PAM &amp; RobOS Guard</strong></td><td><code>pamu2fcfg</code>, <code>git config --global</code>, <code>~/.config/robos/hardware-keys.json</code></td><td>Enrolls U2F handles for <code>pam_u2f.so</code>, enables SSH-signed Git commits, and enforces touch gates for Pass Store &amp; agents</td></tr>
+</tbody>
+</table>
+
+<h2 id="inspector">1. Hardware Inspector</h2>
+<p>When you open <strong>RobOS Hardware Keys</strong> or plug a key into USB, the <strong>Hardware Inspector</strong> tab queries the device and displays:</p>
+<ul>
+<li><strong>Model &amp; Firmware:</strong> Decodes both the <code>ykman</code> descriptor and the integer CTAP2 firmware version (for example, <code>329473</code> &rarr; <code>0x050701</code> &rarr; <code>5.7.1</code>).</li>
+<li><strong>FIDO2 AAGUID Lookup:</strong> Formats the 16-byte Authenticator Attestation GUID (such as <code>e77e3c64-05e3-428b-8824-0cbeb04b829d</code>) and matches it against known Yubico, SoloKeys, Nitrokey, and Titan hardware profiles.</li>
+<li><strong>COSE Algorithms &amp; Extensions:</strong> Lists hardware-supported public-key algorithms (<code>ES256 / ECDSA P-256</code>, <code>EdDSA / Ed25519</code>, <code>ES384 / ECDSA P-384</code>) alongside CTAP2 extensions (<code>credProtect</code>, <code>hmac-secret</code>, <code>largeBlobKey</code>, <code>credBlob</code>, <code>minPinLength</code>).</li>
+<li><strong>Linux <code>/dev/hidraw</code> Permissions:</strong> Confirms that systemd-logind / udev ACLs grant read+write access (<code>crw-rw----+</code>) to your desktop user so FIDO2 operations never require running Electron as root.</li>
+</ul>
+
+<h2 id="touch-verifier">2. Physical Touch Tester</h2>
+<p>Switch to <strong>Physical Touch Tester</strong> (or click <strong>● Test Physical Push</strong> in the top bar) to run a live challenge-response against your key:</p>
+
+<figure class="guide-shot"><a href="{{ pk }}02-physical-touch-verified.png"><img src="{{ pk }}02-physical-touch-verified.png" alt="Physical Touch Tester tab showing the interactive YubiKey touch disc, verified latency badge, and cryptographic assertion proof" width="1180" height="780"></a><figcaption><strong>Physical Touch Tester</strong> after confirming user presence: shows touch latency, authenticator flags (<code>UP=1</code>), challenge SHA-256, credential handle, and signature hex.</figcaption></figure>
+
+<ol>
+<li>Set an optional <strong>Relying Party ID</strong> (defaults to <code>robos.local</code>) and optional <strong>FIDO2 PIN</strong>.</li>
+<li>Click <strong>👆 Start Physical Touch Challenge</strong>. The app generates a 32-byte random nonce, hashes it with SHA-256, and sends a CTAP2 request to <code>/dev/hidraw0</code>.</li>
+<li>Touch the flashing gold contact on your physical YubiKey.</li>
+<li>The right-hand <strong>Cryptographic Assertion Proof</strong> panel displays the measured touch latency (ms), protocol used (<code>FIDO2 / CTAP2</code> or <code>FIDO U2F / CTAP1</code>), COSE algorithm, <code>UP</code>/<code>UV</code> flags, and raw signature bytes.</li>
+</ol>
+
+<h2 id="ssh-sk">3. Hardware-Backed FIDO2 SSH Keys (<code>-sk</code>)</h2>
+<p>Standard SSH private keys (<code>~/.ssh/id_ed25519</code>) sit as files on disk that could be copied if a workstation is compromised. With OpenSSH FIDO2 keys (<code>ed25519-sk</code> and <code>ecdsa-sk</code>), the private key file in <code>~/.ssh/id_ed25519_sk</code> contains only an encrypted key handle that is useless without your physical YubiKey attached.</p>
+
+<figure class="guide-shot"><a href="{{ pk }}03-fido2-ssh-keys.png"><img src="{{ pk }}03-fido2-ssh-keys.png" alt="FIDO2 SSH Keys tab showing the hardware SSH key generator form and list of ~/.ssh keys" width="1180" height="780"></a><figcaption><strong>FIDO2 SSH Keys (<code>-sk</code>)</strong> tab: generate <code>ed25519-sk</code> or <code>ecdsa-sk</code> keys, test hardware signatures with <code>ssh-keygen -Y sign</code>, and upload public keys to GitHub.</figcaption></figure>
+
+<ul>
+<li><strong>Require Physical Touch (Default):</strong> Every <code>ssh</code> login, <code>scp</code> transfer, or <code>git commit -S</code> blinks the YubiKey LED and waits for your finger touch.</li>
+<li><strong>Require FIDO2 PIN (<code>verify-required</code>):</strong> Adds user verification (<code>UV=1</code>) so OpenSSH prompts for your FIDO2 PIN in addition to your physical touch.</li>
+<li><strong>Resident Key (<code>-O resident</code>):</strong> Stores the credential inside one of the YubiKey's 100 discoverable slots so you can run <code>ssh-add -K</code> or <code>ssh-keygen -K</code> on any new RobOS machine to pull the key stub straight from the key.</li>
+<li><strong>Live <code>SSHSIG</code> Verification:</strong> Click <strong>👆 Sign Test</strong> next to any key in the list to sign a test payload via <code>ssh-keygen -Y sign -n robos.auth</code> and inspect the resulting <code>-----BEGIN SSH SIGNATURE-----</code> block.</li>
+</ul>
+
+<h2 id="fido2-passkeys">4. FIDO2 PIN &amp; Resident Passkeys</h2>
+<p>The <strong>FIDO2 PIN &amp; Passkeys</strong> tab wraps <code>ykman fido</code> for managing on-device credentials:</p>
+
+<figure class="guide-shot"><a href="{{ pk }}04-fido2-pin-passkeys.png"><img src="{{ pk }}04-fido2-pin-passkeys.png" alt="FIDO2 PIN and Passkeys tab showing PIN configuration and 100 slots free badge" width="1180" height="780"></a><figcaption><strong>FIDO2 PIN &amp; Passkeys</strong> tab: set or change the FIDO2 PIN and inspect or delete discoverable passkeys stored on the YubiKey.</figcaption></figure>
+
+<ul>
+<li><strong>Set or Change PIN:</strong> Configures an initial FIDO2 PIN (minimum 4 characters, up to 63 characters) or rotates an existing PIN via <code>ykman fido access change-pin</code>.</li>
+<li><strong>Remaining Slot Counter:</strong> Displays exact remaining discoverable credential slots reported by CTAP2 <code>remaining_disc_creds</code> (100 slots on YubiKey Firmware 5.7+).</li>
+<li><strong>Inspect &amp; Prune Passkeys:</strong> Enter your FIDO2 PIN and click <strong>Load Passkeys</strong> to list every discoverable credential by Relying Party ID, username, and credential ID, with a one-click <strong>Delete</strong> action to reclaim slots.</li>
+</ul>
+
+<h2 id="pam-and-guards">5. Linux PAM U2F &amp; RobOS Push-to-Approve Guards</h2>
+<p>The <strong>PAM &amp; RobOS Guard</strong> tab integrates your YubiKey with OS-level authentication and RobOS security policies:</p>
+
+<figure class="guide-shot"><a href="{{ pk }}05-pam-robos-guard.png"><img src="{{ pk }}05-pam-robos-guard.png" alt="PAM and RobOS Guard tab showing pamu2fcfg enrollment, /etc/pam.d/sudo snippet, and RobOS security policies" width="1180" height="780"></a><figcaption><strong>PAM &amp; RobOS Guard</strong> tab: enroll <code>~/.config/Yubico/u2f_keys</code> via <code>pamu2fcfg</code>, copy the <code>pam_u2f.so</code> rule, configure Git hardware commit signing, and toggle RobOS Pass Store &amp; Agent guards.</figcaption></figure>
+
+<ol>
+<li><strong>Enroll Linux PAM U2F (<code>pamu2fcfg</code>):</strong> Clicking <strong>👆 Enroll YubiKey with pamu2fcfg</strong> prompts you to touch your YubiKey and writes the resulting U2F key handle to <code>~/.config/Yubico/u2f_keys</code> (mode <code>0600</code>). Add the provided snippet to <code>/etc/pam.d/sudo</code> or <code>/etc/pam.d/gdm-password</code>:
+<pre><code>auth sufficient pam_u2f.so cue [cue_prompt=Touch your YubiKey to approve]</code></pre>
+</li>
+<li><strong>Git Hardware SSH Commit Signing:</strong> Clicking <strong>Configure Git Signing Now</strong> sets:
+<pre><code>git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519_sk.pub
+git config --global commit.gpgsign true</code></pre>
+Every <code>git commit</code> then requires a physical touch on your YubiKey and produces a GitHub-verified <code>SSHSIG</code> commit signature.</li>
+<li><strong>Auto-Lock Pass Store on Unplug:</strong> When <strong>Auto-Lock Pass Store on Unplug</strong> is enabled, the background USB hotplug watcher immediately runs <code>gpgconf --kill gpg-agent</code> the moment your YubiKey is unplugged from USB—clearing cached passphrases from memory.</li>
+</ol>
+
+<h2 id="cli-reference">CLI &amp; Configuration Reference</h2>
+<table class="wide">
+<thead><tr><th>Path / Command</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>packages/hardware-keys/main.js</code></td><td>Electron main process, USB/HID hotplug watcher, and IPC handlers (debug port <code>19218</code>)</td></tr>
+<tr><td><code>packages/hardware-keys/lib/hardware-keys-core.js</code></td><td>Core library for <code>detectHardwareKeys()</code>, <code>runPhysicalTouchChallenge()</code>, <code>generateHardwareSshKey()</code>, and PAM/Git setup</td></tr>
+<tr><td><code>~/.config/robos/hardware-keys.json</code></td><td>Persisted security policies, registered hardware key fingerprints, and recent touch verification audit log</td></tr>
+<tr><td><code>~/.config/Yubico/u2f_keys</code></td><td>Standard Yubico PAM U2F key handle mapping generated by <code>pamu2fcfg</code></td></tr>
+<tr><td><code>node packages/robos-lib/snapshot-cli.js hardware-keys --text</code></td><td>Inspect the live DOM snapshot of RobOS Hardware Keys over port <code>19218</code></td></tr>
+<tr><td><code>node --test packages/hardware-keys/test/hardware-keys.test.js</code></td><td>Run the automated unit and hardware detection test suite</td></tr>
+</tbody>
+</table>
+
+</article>
+</div></section>

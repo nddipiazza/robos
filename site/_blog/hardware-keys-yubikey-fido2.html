@@ -1,0 +1,71 @@
+---
+title: "RobOS Hardware Keys: Putting a Physical Capacitive Touch Gate Between Autonomous Agents and Your Keys"
+nav_label: "Hardware Keys (YubiKey & FIDO2)"
+date: 2026-10-30 12:00:00 +0000
+date_label: "Oct 30, 2026"
+tags:
+  - "RobOS Hardware Keys"
+  - "YubiKey &amp; FIDO2 CTAP2"
+  - "OpenSSH ed25519-sk"
+  - "PAM U2F &amp; Agent Guard"
+summary: "Why software prompts aren't enough when autonomous coding agents share your workstation: how we built <strong>RobOS Hardware Keys</strong> (<code>packages/hardware-keys</code>) on top of <code>/dev/hidraw</code>, <code>python3-fido2</code> CTAP2.1, OpenSSH <code>ed25519-sk</code>, and Linux <code>pam_u2f</code> so high-stakes operations require a physical finger press on a YubiKey."
+description: "Why software prompts aren't enough when autonomous coding agents share your workstation: how we built RobOS Hardware Keys (packages/hardware-keys) on top of /dev/hidraw, python3-fido2 CTAP2.1, OpenSSH ed25519-sk, and Linux pam_u2f so high-stakes operations require a physical finger press on a YubiKey."
+og_image: /assets/physical-keys/02-physical-touch-verified.png
+og_image_alt: "RobOS Hardware Keys Physical Touch Tester verifying a FIDO2/CTAP2.1 Ed25519 touch assertion with latency and hardware signature proof"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/physical-keys/02-physical-touch-verified.png' | relative_url }}" alt="RobOS Hardware Keys Physical Touch Tester verifying a FIDO2/CTAP2.1 Ed25519 touch assertion" loading="lazy">
+    <figcaption><strong>RobOS Hardware Keys</strong> (<code>packages/hardware-keys</code>, debug port <code>:19218</code>) connected to a live <strong>YubiKey Security Key C NFC</strong> (Firmware 5.7.1, USB ID <code>1050:0402</code>): the interactive touch verifier issues a 32-byte SHA-256 nonce over CTAP2, waits for physical user presence (<code>UP=1</code>), and records latency and the hardware signature.</figcaption>
+  </figure>
+
+  <p><strong>The problem with software-only approvals on an agent workstation.</strong> When you run autonomous coding agents locally—spawning shells, pushing branches, and reading development secrets—any private key sitting unencrypted in <code>~/.ssh/id_ed25519</code> or any unlocked agent socket in user-space is reachable by the same UID. A modal dialog in an Electron window can be clicked by a script, and an environment variable can be inherited by a child process. A physical FIDO2 security key changes the physics of that boundary: the private key lives inside an isolated secure element on the USB bus, and the chip refuses to sign a single byte until a human finger closes the capacitive circuit on the key's gold contact (<code>UP=1</code>).</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/physical-keys/hardware-keys-architecture.png' | relative_url }}" alt="RobOS Hardware Keys Architecture Diagram" loading="lazy">
+    <figcaption>Three-stage flow inside <code>packages/hardware-keys</code>: raw USB HID &amp; CTAP2 frames on the left, the inspection/challenge/hotplug engine in the center, and four protected workstation targets on the right.</figcaption>
+  </figure>
+
+  <p><strong>Talking directly to <code>/dev/hidraw</code>, <code>ykman</code>, and CTAP2.1.</strong> Rather than relying on a browser WebAuthn origin prompt, <a href="https://github.com/nddipiazza/robos/blob/main/packages/hardware-keys/lib/hardware-keys-core.js"><code>packages/hardware-keys/lib/hardware-keys-core.js</code></a> correlates three local Linux sources: kernel <code>/sys/class/hidraw/hidraw*/device/uevent</code> descriptors (confirming <code>udev</code> ACL write access on <code>/dev/hidraw0</code>), <code>ykman info</code> / <code>ykman fido info</code>, and direct <code>python3-fido2</code> <code>Ctap2.get_info()</code> calls. On our plugged-in <strong>Security Key C NFC (Firmware 5.7.1)</strong>, the inspector immediately decodes integer firmware <code>329473</code> (<code>0x050701</code>), maps AAGUID <code>e77e3c64-05e3-428b-8824-0cbeb04b829d</code>, enumerates hardware COSE algorithms (<code>ES256 / P-256</code>, <code>EdDSA / Ed25519</code>, <code>ES384 / P-384</code>), and reports all <code>100</code> remaining discoverable passkey slots.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/physical-keys/01-hardware-inspector.png' | relative_url }}" alt="Hardware Inspector tab showing YubiKey Security Key C NFC 5.7.1 details" loading="lazy">
+      <figcaption><strong>Hardware Inspector:</strong> Live USB/NFC applet matrix, AAGUID lookup, COSE algorithms, CTAP2 extensions, and <code>/dev/hidraw0</code> udev ACL verification.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/physical-keys/03-fido2-ssh-keys.png' | relative_url }}" alt="FIDO2 SSH Keys tab for generating ed25519-sk and ecdsa-sk keys" loading="lazy">
+      <figcaption><strong>FIDO2 SSH Keys (<code>-sk</code>):</strong> One-click generation of <code>ed25519-sk</code> and <code>ecdsa-sk</code> keys, live <code>ssh-keygen -Y sign</code> testing, and GitHub public key upload.</figcaption>
+    </figure>
+  </div>
+
+  <p><strong>Zero-PIN physical touch challenges via <code>makeCredUvNotRqd</code> and CTAP1 fallback.</strong> One subtle annoyance with FIDO2 tools on Linux is that testing whether a key's touch sensor works often fails if the user hasn't configured a FIDO2 PIN yet—or conversely, demands a PIN when all you want is a fast User Presence (<code>UP=1</code>) push check. In <code>runPhysicalTouchChallenge()</code>, we inspect the authenticator's CTAP 2.1 options map first: when <code>makeCredUvNotRqd: true</code> is advertised and no PIN is set, we issue an ephemeral non-resident (<code>rk: false</code>) <code>EdDSA (-8)</code> credential challenge directly over CTAP2; if a PIN is set on the token but omitted by the caller, we transparently fall back to a raw <code>Ctap1.register()</code> polling loop (catching <code>0x6985 SW_CONDITIONS_NOT_SATISFIED</code> every 150 ms until you touch the blinking key). That gives RobOS a universal "push-to-approve" primitive that works out of the box on any FIDO2 or U2F key.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/physical-keys/04-fido2-pin-passkeys.png' | relative_url }}" alt="FIDO2 PIN and Resident Passkeys tab" loading="lazy">
+      <figcaption><strong>FIDO2 PIN &amp; Passkeys:</strong> Set or rotate your FIDO2 PIN and unlock/prune discoverable resident credentials stored on the key.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/physical-keys/05-pam-robos-guard.png' | relative_url }}" alt="PAM U2F and RobOS Push-to-Approve Guards tab" loading="lazy">
+      <figcaption><strong>PAM &amp; RobOS Guard:</strong> Enroll <code>~/.config/Yubico/u2f_keys</code> via <code>pamu2fcfg</code>, configure Git SSH commit signing, and auto-lock <code>gpg-agent</code> when the key is unplugged.</figcaption>
+    </figure>
+  </div>
+
+  <p><strong>Binding the key to SSH, Git, <code>sudo</code>, and unplug auto-lock.</strong> Beyond hardware inspection and touch testing, the studio wires your physical key into four daily developer workflows: generating non-exportable <code>id_ed25519_sk</code> SSH keys (with optional <code>-O resident</code> and <code>-O verify-required</code> flags), configuring global Git SSH commit signing (<code>gpg.format = ssh</code>), enrolling Linux PAM U2F handles into <code>~/.config/Yubico/u2f_keys</code> via <code>pamu2fcfg</code>, and running a 3.5-second USB hotplug loop in the Electron main process that executes <code>gpgconf --kill gpg-agent</code> the instant you pull your YubiKey out of the USB port.</p>
+
+  <div class="blog-log"># Launch RobOS Hardware Keys
+./packages/task-planner/node_modules/electron/dist/electron packages/hardware-keys --no-sandbox --disable-gpu --disable-dev-shm-usage
+
+# Inspect live hardware detection from the CLI
+node -e "console.log(JSON.stringify(require('./packages/hardware-keys/lib/hardware-keys-core').detectHardwareKeys(), null, 2))"
+
+# Run the unit & hardware integration test suite
+node --test packages/hardware-keys/test/hardware-keys.test.js</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/physical-keys/' | relative_url }}">Physical Push Keys reference guide →</a>
+  <a href="{{ '/v1/apps/hardware-keys/' | relative_url }}">RobOS Hardware Keys app page →</a>
+  <a href="https://github.com/nddipiazza/robos/tree/main/packages/hardware-keys">Source (<code>packages/hardware-keys</code>) →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/3eda8351">3eda8351</a></span>
+</div>
