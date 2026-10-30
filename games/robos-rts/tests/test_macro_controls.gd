@@ -16,50 +16,6 @@ func _run() -> void:
 	var sim = root.get_node("SimEngine")
 	var main = load("res://scripts/RTSMain.gd").new()
 	root.add_child(main)
-	var catalog: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/improvement-backlog.json"))
-	var ids: Array = []
-	var completed: Array = []
-	for task in catalog.tasks:
-		check(not ids.has(task.id) and not str(task.id).is_empty(), "Backlog IDs must be unique")
-		ids.append(task.id)
-		check(task.status in ["todo", "done"] and task.priority in ["P0", "P1", "P2"] and task.acceptance.size() > 0, "Every todo needs status, priority and completion checks")
-		if task.status == "done":
-			completed.append(task.id)
-			check(not task.evidence.is_empty(), "Completed work must have verification")
-			for file in task.evidence:
-				check(FileAccess.file_exists("res://" + file), "Completed evidence must exist: " + file)
-	check(ids.size() >= 20 and ids.has("frame-budget") and ids.has("fog-of-war") and ids.has("save-resume"), "Backlog covers foundational gaps, not only cosmetic work")
-	for id in ["army-selection", "queue-cancel", "resource-rallies"]:
-		check(completed.has(id), "The first batch must actually ship: " + id)
-	var backlog = load("res://scripts/RTSImprovementBacklog.gd").new()
-	main.backlog = backlog
-	main.add_child(backlog)
-	check(backlog.filtered.size() == catalog.tasks.size(), "Empty search shows the entire backlog")
-	backlog._set_status(2)
-	check(backlog.filtered.size() == completed.size(), "Done filter shows only shipped work")
-	backlog.search.text = "refund"
-	backlog._rebuild()
-	check(backlog.filtered.size() == 1 and backlog.filtered[0].id == "queue-cancel", "Search finds completion criteria as well as titles")
-	backlog.search.text = "no-such-feature-xyz"
-	backlog._rebuild()
-	check(backlog.filtered.is_empty(), "Empty filter results do not retain a stale task")
-	backlog.search.text = ""
-	backlog._set_status(1)
-	check(backlog.filtered.size() == catalog.tasks.size() - completed.size(), "Todo filter excludes shipped work")
-	for i in range(backlog.category.item_count):
-		if backlog.category.get_item_text(i) == "Performance":
-			backlog.category.select(i)
-	backlog._rebuild()
-	check(backlog.filtered.size() == 1 and backlog.filtered[0].id == "frame-budget", "Area filter isolates the relevant next work")
-	sim.paused = false
-	backlog.open()
-	check(sim.paused, "Backlog pauses normal play")
-	backlog.close()
-	check(not sim.paused, "Closing backlog restores normal play")
-	sim.paused = true
-	backlog.open()
-	backlog.close()
-	check(sim.paused, "Backlog does not unpause a previously paused mission")
 	sim.load_scenario_dict({"paused": true, "map": {"width": 256, "height": 256}, "units": [
 		{"type": "rifleman", "owner": 1, "x": 20, "y": 20},
 		{"type": "pioneer", "owner": 1, "x": 25, "y": 20},
@@ -75,7 +31,7 @@ func _run() -> void:
 	check(main.selected_tags == [1001, 1003] and main.pending_ability == "", "F3 selects living owned combat units, including offscreen siege, but not workers/buildings/enemies")
 	_cancel(sim, main)
 	_rallies(sim, main)
-	print(JSON.stringify({"suite": "improvement_backlog", "checks": checks, "failures": failures}))
+	print(JSON.stringify({"suite": "macro_controls", "checks": checks, "failures": failures}))
 	main.queue_free()
 	quit(0 if failures.is_empty() else 1)
 

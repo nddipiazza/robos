@@ -1,0 +1,25 @@
+{
+  "kind": "Headless selection-layout component microbenchmark; not whole-game FPS",
+  "method": "Five rounds of 200 repeated layouts for unchanged 100/200-unit selections; median microseconds per call. Same machine and engine, before and after caching.",
+  "engine": "Godot 4.3",
+  "before": [
+    {
+      "selected": 100,
+      "median_us": 312.94
+    },
+    {
+      "selected": 200,
+      "median_us": 731.92
+    }
+  ],
+  "after": [
+    {
+      "selected": 100,
+      "median_us": 62.305
+    },
+    {
+      "selected": 200,
+      "median_us": 121.925
+    }
+  ]
+}

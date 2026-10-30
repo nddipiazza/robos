@@ -23,7 +23,6 @@ var hud: Node2D
 var match_menu: CanvasLayer
 var battle_lab: CanvasLayer
 var campaign: CanvasLayer
-var backlog: CanvasLayer
 var mouse_scroll_speed := 50.0
 const TRAIN_REPEAT_DELAY := 0.35
 const TRAIN_REPEAT_INTERVAL := 0.075
@@ -81,8 +80,6 @@ func _ready() -> void:
 	add_child(battle_lab)
 	campaign = preload("res://scripts/RTSCampaign.gd").new()
 	add_child(campaign)
-	backlog = preload("res://scripts/RTSImprovementBacklog.gd").new()
-	add_child(backlog)
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
@@ -163,7 +160,7 @@ func _handle_camera_pan(delta: float) -> void:
 		world_3d.pan(offset)
 
 func _camera_modal_open() -> bool:
-	return show_help or (backlog != null and backlog.panel.visible) or (match_menu != null and match_menu.panel.visible) \
+	return show_help or (match_menu != null and match_menu.panel.visible) \
 		or (campaign != null and (campaign.briefing.visible or campaign.results.is_open())) \
 		or (battle_lab != null and battle_lab.results.is_open())
 
@@ -416,13 +413,9 @@ func _advance_training_repeat(delta: float) -> void:
 		train_repeat_clock += TRAIN_REPEAT_INTERVAL
 
 func _unhandled_input(event: InputEvent) -> void:
-	if backlog and backlog.panel.visible:
-		return
 	if match_menu and match_menu.panel.visible:
 		if event is InputEventKey and event.pressed and event.keycode == KEY_F8:
 			match_menu.toggle()
-		elif event is InputEventKey and event.pressed and event.keycode == KEY_F4 and backlog:
-			backlog.open()
 		return
 	if event is InputEventMouseButton:
 		_on_mouse_button(event as InputEventMouseButton)
@@ -901,10 +894,6 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		return
 
 	match ke.keycode:
-		KEY_F4:
-			if backlog:
-				backlog.open()
-			return
 		KEY_F8:
 			if match_menu:
 				match_menu.toggle()
@@ -1058,9 +1047,9 @@ func ui_state() -> Dictionary:
 		commands.append({"ability": button.ability_id, "hotkey": button.def.get("hotkey", ""), "blocked": button.blocked,
 			"rect": [button.rect.position.x, button.rect.position.y, button.rect.size.x, button.rect.size.y]})
 	return {
+		"selection_layout_builds": hud.selection_layout_builds if hud else 0,
 		"army_count": army_tags().size(),
 		"army_rect": [ARMY_BTN.position.x, ARMY_BTN.position.y, ARMY_BTN.size.x, ARMY_BTN.size.y],
-		"backlog": backlog.ui_state() if backlog else {},
 		"production": production,
 		"command_card": commands,
 		"production_scroll_rect": _control_rect(hud.production_scroll) if hud else [],

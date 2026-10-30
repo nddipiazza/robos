@@ -70,20 +70,8 @@ def main():
                 raise RuntimeError("Engine startup timed out")
             assert client.ui()["state"]["mouse_scroll_speed"] == 80
             client.mission()
-            key("F4")
-            assert client.ui()["state"]["backlog"]["visible"] and client.health()["paused"]
-            assert client.ui()["state"]["backlog"]["done"] >= 3
-            key("P")
-            assert client.health()["paused"], "Backlog must block campaign hotkeys behind the modal"
-            proof("backlog","Improvement backlog inside the game","F4 opens prioritized todos with completion checks. The first three macro improvements are shipped and verified.")
-            click(client.ui()["state"]["backlog"]["done_rect"])
-            done_view = client.ui()["state"]["backlog"]
-            assert {"army-selection","queue-cancel","resource-rallies"}.issubset(set(done_view["shown"]))
-            assert len(done_view["shown"]) == done_view["done"]
-            proof("backlog-done","First batch completed","Army selection, queue cancellation and worker resource rallies each list their acceptance checks and verification.")
-            key("Escape")
-            assert not client.ui()["state"]["backlog"]["visible"] and not client.health()["paused"]
             client.pause(True)
+            assert "backlog" not in client.ui()["state"]
             time.sleep(.2)
             click(client.ui()["state"]["campaign_objective_toggle_rect"])
             time.sleep(.2)
@@ -209,13 +197,24 @@ def main():
             assert client.get_observation()["players"]["1"]["crystal_collected"]>=5
             client.select(tags=[worker["tag"]])
             proof("resource-rally","Rally new workers straight to crystal","A normal producer right-click stores the resource rally; the paid new worker gathers and delivers real income.")
+            client.load_scenario({"paused":True,"decor":False,"units":[
+                {"type":"rifleman","owner":1,"x":20,"y":20,"count":200,"spread":1.8}]})
+            client.focus_camera(32,32,height=64)
+            key("F3")
+            time.sleep(.4)
+            state = client.ui()["state"]
+            assert len(state["selected"])==200
+            layouts = state["selection_layout_builds"]
+            time.sleep(.4)
+            assert client.ui()["state"]["selection_layout_builds"]==layouts
+            proof("large-selection","Keep large selections responsive","A 200-unit rendering fixture reuses the same portrait layout across frames instead of sorting it each frame.")
         finally:
             proc.terminate()
             proc.wait(timeout=10)
     engine_log = (output/"engine.log").read_text(encoding="utf-8")
     assert "ERROR:" not in engine_log, engine_log
     (output/"proof.json").write_text(json.dumps({"passed":True,"events":events,"queued_units":10,"producers":6,
-        "backlog_filter_and_pause":True,"army_selection":True,"queue_refunds_both_views":True,"resource_rally_income":True},indent=2))
+        "army_selection":True,"queue_refunds_both_views":True,"resource_rally_income":True},indent=2))
     import imageio_ffmpeg
     ffmpeg = shutil.which("ffmpeg") or imageio_ffmpeg.get_ffmpeg_exe()
     listing = output/"frames.txt"
@@ -237,7 +236,7 @@ def main():
     for name in ["walkthrough.mp4","walkthrough.vtt","walkthrough.md","proof.json"]:
         shutil.copy2(output/name,history/name)
         shutil.copy2(output/name,archive/name)
-    print("PASS: rendered backlog, army selection, queue refunds, worker rallies and player controls. " + str(output))
+    print("PASS: rendered army selection, queue refunds, worker rallies and player controls. " + str(output))
 
 
 if __name__ == "__main__":

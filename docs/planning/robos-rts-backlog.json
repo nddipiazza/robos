@@ -24,7 +24,7 @@
         "Workers, buildings and opponents stay out of the selection."
       ],
       "evidence": [
-        "tests/test_improvement_backlog.gd",
+        "tests/test_macro_controls.gd",
         "tests/e2e/improvements_walkthrough.py"
       ]
     },
@@ -41,7 +41,7 @@
         "Preserve all other queue entries and their progress."
       ],
       "evidence": [
-        "tests/test_improvement_backlog.gd",
+        "tests/test_macro_controls.gd",
         "tests/e2e/improvements_walkthrough.py"
       ]
     },
@@ -58,7 +58,7 @@
         "A destroyed/depleted resource target falls back safely; soldiers never harvest."
       ],
       "evidence": [
-        "tests/test_improvement_backlog.gd",
+        "tests/test_macro_controls.gd",
         "tests/e2e/improvements_walkthrough.py"
       ]
     },
@@ -74,7 +74,8 @@
         "At normal speed target 60 FPS, p95 frame time under 16.7 ms and no stalls over 100 ms.",
         "Report simulation, navigation, HUD, rendering and capture costs separately."
       ],
-      "evidence": []
+      "evidence": [],
+      "progress": "Large-selection HUD layout caching is shipped. Full paid-army frame-budget targets remain unverified."
     },
     {
       "id": "fog-of-war",
@@ -397,6 +398,25 @@
         "Measure latency and keep a reproducible two-client test before claiming multiplayer support."
       ],
       "evidence": []
+    },
+    {
+      "id": "selection-layout-cache",
+      "priority": "P0",
+      "category": "Performance",
+      "title": "Reuse stable large-army HUD selection layouts",
+      "status": "done",
+      "why": "Unchanged army selections were being sorted and laid out every rendered frame.",
+      "acceptance": [
+        "Repeated layouts reuse cached geometry.",
+        "Selection, unit-type and production ownership changes invalidate the cache.",
+        "Health, movement and construction progress keep using live unit data."
+      ],
+      "evidence": [
+        "tests/test_selection_layout.gd",
+        "tests/data/selection-layout-benchmark.json",
+        "tests/e2e/improvements_walkthrough.py"
+      ]
     }
-  ]
+  ],
+  "evidence_root": "games/robos-rts"
 }

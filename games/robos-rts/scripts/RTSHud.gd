@@ -14,6 +14,11 @@ var draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
 var production_scroll: ScrollContainer
 var production_list: ProductionQueueList
+var _selection_cache_tags: Array = []
+var _selection_cache_types := PackedStringArray()
+var _selection_cache_production := false
+var _selection_cells_cache: Array = []
+var selection_layout_builds := 0
 
 class ProductionQueueList extends Control:
 	var hud: Node2D
@@ -417,6 +422,24 @@ func selection_cells() -> Array:
 	var cells: Array = []
 	if main.selected_tags.size() < 2:
 		return cells
+	var production: bool = main.is_production_selection()
+	var same: bool = main.selected_tags == _selection_cache_tags and production == _selection_cache_production
+	if same:
+		for i in range(main.selected_tags.size()):
+			var unit: Dictionary = SimEngine.units.get(main.selected_tags[i], {})
+			if str(unit.get("unit_type", "")) != _selection_cache_types[i]:
+				same = false
+				break
+	if same:
+		return _selection_cells_cache
+	# Layout depends on selection/type, not health, build progress or camera position.
+	# Keep live data in the draw path, but avoid sorting the same army every frame.
+	_selection_cache_tags = main.selected_tags.duplicate()
+	_selection_cache_types.clear()
+	for tag in main.selected_tags:
+		_selection_cache_types.append(str(SimEngine.units.get(tag, {}).get("unit_type", "")))
+	_selection_cache_production = production
+	selection_layout_builds += 1
 	var tags: Array = main.selected_tags.duplicate()
 	tags.sort_custom(func(a, b):
 		var ua: Dictionary = SimEngine.units.get(a, {})
@@ -428,13 +451,14 @@ func selection_cells() -> Array:
 		return ta < tb
 	)
 	var cols := 14
-	if main.is_production_selection():
+	if production:
 		cols = 3
 	for i in range(mini(tags.size(), cols * 2)):
 		var rx: float = main.SEL_PANEL.position.x + 16.0 + float(i % cols) * 86.0
 		var ry: float = main.SEL_PANEL.position.y + 16.0 + float(i / cols) * 86.0
 		cells.append({"tag": tags[i], "rect": Rect2(rx, ry, 80.0, 80.0)})
-	return cells
+	_selection_cells_cache = cells
+	return _selection_cells_cache
 
 func production_queue_cells() -> Array:
 	var cells: Array = []

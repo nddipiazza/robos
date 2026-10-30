@@ -21,7 +21,8 @@ SUITES = {
     "matchups": "test_matchup_matrix.gd",
     "campaign": "test_campaign.gd",
     "controls": "test_player_controls.gd",
-    "improvements": "test_improvement_backlog.gd",
+    "improvements": "test_macro_controls.gd",
+    "selection": "test_selection_layout.gd",
 }
 
 
