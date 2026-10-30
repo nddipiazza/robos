@@ -742,7 +742,7 @@ func _draw_help() -> void:
 		["Tab", "Cycle the active unit type in a mixed selection"],
 		[".", "Select the next idle worker"],
 		["Space", "Jump to the last attack alert, or home"],
-		["Esc", "Cancel placement or targeting"],
+		["Esc / Ctrl+M", "Cancel targeting · Mute or unmute sound"],
 		["F2", "Switch the viewed faction"],
 		["F5  F6  F7", "Toggle the built-in AI for each faction"],
 	]

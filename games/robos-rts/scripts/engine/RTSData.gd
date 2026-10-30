@@ -35,6 +35,8 @@ var units: Dictionary = {
 		"push_priority": 1,
 		"weapon": {
 			"name": "Arc Welder",
+			"sfx": "arc_welder",
+			"attack_type": "melee",
 			"damage": 5.0,
 			"bonus": {},
 			"attacks": 1,
@@ -67,6 +69,8 @@ var units: Dictionary = {
 		"push_priority": 2,
 		"weapon": {
 			"name": "R-9 Carbine",
+			"sfx": "rifle_fire",
+			"attack_type": "ranged",
 			"damage": 6.0,
 			"bonus": {},
 			"attacks": 1,
@@ -99,6 +103,8 @@ var units: Dictionary = {
 		"push_priority": 3,
 		"weapon": {
 			"name": "Breach Charges",
+			"sfx": "breach_charge",
+			"attack_type": "ranged",
 			"damage": 10.0,
 			"bonus": {"Armored": 10.0},
 			"attacks": 1,
@@ -132,6 +138,8 @@ var units: Dictionary = {
 		"push_priority": 4,
 		"weapon": {
 			"name": "Twin Autocannon",
+			"sfx": "autocannon_fire",
+			"attack_type": "ranged",
 			"damage": 15.0,
 			"bonus": {"Armored": 10.0},
 			"attacks": 1,
@@ -165,6 +173,9 @@ var units: Dictionary = {
 		"push_priority": 10,
 		"weapon": {
 			"name": "Emplaced Mortar",
+			"sfx": "mortar_fire",
+			"impact_sfx": "explosion_splash",
+			"attack_type": "ranged",
 			"damage": 40.0,
 			"bonus": {"Armored": 30.0},
 			"attacks": 1,
@@ -337,7 +348,9 @@ var units: Dictionary = {
 			"period": 1.07,
 			"damage_point": 0.12,
 			"backswing": 0.25,
-			"splash_radius": 0.0
+			"splash_radius": 0.0,
+			"sfx": "mandible_bite",
+			"attack_type": "melee"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "harvest"]
 	},
@@ -369,7 +382,9 @@ var units: Dictionary = {
 			"period": 0.49,
 			"damage_point": 0.08,
 			"backswing": 0.20,
-			"splash_radius": 0.0
+			"splash_radius": 0.0,
+			"sfx": "claw_slash",
+			"attack_type": "melee"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
@@ -401,7 +416,9 @@ var units: Dictionary = {
 			"period": 1.43,
 			"damage_point": 0.12,
 			"backswing": 0.30,
-			"splash_radius": 0.0
+			"splash_radius": 0.0,
+			"sfx": "acid_spit",
+			"attack_type": "ranged"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
@@ -433,7 +450,10 @@ var units: Dictionary = {
 			"period": 1.14,
 			"damage_point": 0.10,
 			"backswing": 0.28,
-			"splash_radius": 2.0
+			"splash_radius": 2.0,
+			"sfx": "corrosive_lob",
+			"impact_sfx": "explosion_splash",
+			"attack_type": "ranged"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
@@ -491,7 +511,9 @@ var units: Dictionary = {
 			"period": 1.07,
 			"damage_point": 0.10,
 			"backswing": 0.22,
-			"splash_radius": 0.0
+			"splash_radius": 0.0,
+			"sfx": "mote_spark",
+			"attack_type": "melee"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_heartstone", "build_resonator", "build_waystone"]
 	},
@@ -523,7 +545,9 @@ var units: Dictionary = {
 			"period": 0.86,
 			"damage_point": 0.08,
 			"backswing": 0.25,
-			"splash_radius": 0.0
+			"splash_radius": 0.0,
+			"sfx": "light_blade_strike",
+			"attack_type": "melee"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "charge"]
 	},
@@ -555,7 +579,9 @@ var units: Dictionary = {
 			"period": 1.34,
 			"damage_point": 0.09,
 			"backswing": 0.26,
-			"splash_radius": 0.0
+			"splash_radius": 0.0,
+			"sfx": "needler_fire",
+			"attack_type": "ranged"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "phase_step"]
 	},
@@ -587,7 +613,10 @@ var units: Dictionary = {
 			"period": 1.07,
 			"damage_point": 0.10,
 			"backswing": 0.25,
-			"splash_radius": 2.8
+			"splash_radius": 2.8,
+			"sfx": "prism_beam",
+			"impact_sfx": "explosion_splash",
+			"attack_type": "ranged"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
@@ -662,13 +691,13 @@ var abilities: Dictionary = {
 	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies that come into range."},
 	"attack": {"id": "attack", "name": "Attack", "hotkey": "A", "target": "point_or_unit", "desc": "Attack-move to a point, engaging anything met on the way, or focus a single target."},
 	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},
-	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5},
-	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0},
-	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5},
-	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31 with splash, minimum range 5. Cannot move while emplaced.", "morph_to": "howitzer_emplaced"},
-	"mobilize": {"id": "mobilize", "name": "Mobilize", "hotkey": "D", "target": "none", "desc": "Pack up so the howitzer can move again.", "morph_to": "howitzer"},
-	"retract_silo": {"id": "retract_silo", "name": "Retract Silo", "hotkey": "R", "target": "none", "desc": "Lower into the ground so units can walk over it.", "morph_to": "silo_retracted"},
-	"extend_silo": {"id": "extend_silo", "name": "Extend Silo", "hotkey": "R", "target": "none", "desc": "Raise the silo again to block the path.", "morph_to": "silo"},
+	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},
+	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0, "sfx": "phase_step"},
+	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5, "sfx": "charge_activate"},
+	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31 with splash, minimum range 5. Cannot move while emplaced.", "morph_to": "howitzer_emplaced", "sfx": "siege_transform"},
+	"mobilize": {"id": "mobilize", "name": "Mobilize", "hotkey": "D", "target": "none", "desc": "Pack up so the howitzer can move again.", "morph_to": "howitzer", "sfx": "siege_transform"},
+	"retract_silo": {"id": "retract_silo", "name": "Retract Silo", "hotkey": "R", "target": "none", "desc": "Lower into the ground so units can walk over it.", "morph_to": "silo_retracted", "sfx": "silo_gate"},
+	"extend_silo": {"id": "extend_silo", "name": "Extend Silo", "hotkey": "R", "target": "none", "desc": "Raise the silo again to block the path.", "morph_to": "silo", "sfx": "silo_gate"},
 	"train_pioneer": {"id": "train_pioneer", "name": "Train Pioneer", "hotkey": "S", "target": "none", "unit": "pioneer"},
 	"train_rifleman": {"id": "train_rifleman", "name": "Train Rifleman", "hotkey": "A", "target": "none", "unit": "rifleman"},
 	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},

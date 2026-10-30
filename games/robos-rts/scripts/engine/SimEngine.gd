@@ -15,6 +15,11 @@ signal scenario_loaded(scenario_name: String)
 signal paused_step
 signal notice(owner_id: int, text: String, kind: String)
 signal unit_damaged(owner_id: int, pos: Vector2)
+signal weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, hit_shields: bool)
+signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
+signal resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2)
+signal unit_production_finished(unit: Dictionary, structure: Dictionary)
+signal structure_construction_finished(structure: Dictionary)
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
@@ -902,6 +907,7 @@ func _update_structures(dt: float) -> void:
 				if u.build_progress >= 1.0:
 					players[u.owner].structures_built += 1
 					_recompute_supplies()
+					emit_signal("structure_construction_finished", u)
 			continue
 		var queue: Array = u["production_queue"]
 		if queue.size() > 0:
@@ -915,6 +921,8 @@ func _update_structures(dt: float) -> void:
 					spawn_dir = Vector2.RIGHT if u["owner"] == 1 else Vector2.LEFT
 				var spawn_pos = u["pos"] + spawn_dir * (u["radius"] + 1.8)
 				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
+				if not new_unit.is_empty():
+					emit_signal("unit_production_finished", new_unit, u)
 				if new_unit.get("is_worker", false) and not match_state.is_empty():
 					issue_SmartHarvest(new_unit.tag)
 				elif not new_unit.is_empty() and u["rally_pos"].distance_to(u["pos"]) > u["radius"] + 1.5:
@@ -1113,6 +1121,8 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			if resources.has(source_tag) and not unlimited_resources:
 				u.cargo_amount = mini(u.cargo_amount, int(resources[source_tag].amount))
 				resources[source_tag].amount -= u.cargo_amount
+			if u["cargo_amount"] > 0:
+				emit_signal("resource_gathered", u, str(u["cargo_type"]), u["pos"])
 	else:
 		_approach_target(u, target_entity["pos"], dt)
 
@@ -1154,6 +1164,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			players[u["owner"]]["structures_built"] += 1
 			_recompute_supplies()
 			emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
+			emit_signal("structure_construction_finished", s_unit)
 			u["orders"].pop_front()
 			return
 		var dist = _edge_distance(u, s_unit)
@@ -1167,6 +1178,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				players[u["owner"]]["structures_built"] += 1
 				_recompute_supplies()
 				emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
+				emit_signal("structure_construction_finished", s_unit)
 				u["orders"].pop_front()
 		else:
 			_approach_target(u, s_unit["pos"], dt)
@@ -1414,6 +1426,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 	var bonus_dict: Dictionary = wpn.get("bonus", {})
 	var splash_rad = float(wpn.get("splash_radius", 0.0))
 	var slow_factor = float(wpn.get("concussive_slow", 0.0))
+	var hit_shields: bool = float(primary_target.get("shields", 0.0)) > 0.0
 
 	_apply_damage_to_target(attacker, primary_target, base_dmg, bonus_dict, 1.0)
 	if slow_factor > 0.0 and not primary_target["is_structure"]:
@@ -1444,6 +1457,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 	recent_events.append(evt)
 	if recent_events.size() > 80:
 		recent_events.pop_front()
+	emit_signal("weapon_attack", attacker, primary_target, wpn, hit_shields)
 	emit_signal("projectile_fired", attacker["pos"], primary_target["pos"], str(wpn.get("name", "")), splash_rad > 0.0, attacker["owner"])
 
 func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float) -> void:
@@ -1522,12 +1536,14 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if u["unit_type"] in ["rifleman", "breacher"] and u["hp"] > 10.0:
 				u["hp"] -= 10.0
 				u["surge_timer"] = 11.0
+				emit_signal("ability_triggered", u, "surge", u["pos"])
 				accepted += 1
 			continue
 
 		elif ctype == "charge":
 			if u["unit_type"] == "sunblade":
 				u["charge_timer"] = 3.5
+				emit_signal("ability_triggered", u, "charge", u["pos"])
 				accepted += 1
 			continue
 
@@ -1547,30 +1563,35 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				if players.has(u["owner"]):
 					players[u["owner"]]["phase_steps_executed"] += 1
 				emit_signal("unit_phased", old_pos, dest, u["tag"])
+				emit_signal("ability_triggered", u, "phase_step", dest)
 				accepted += 1
 			continue
 
 		elif ctype in ["emplace", "emplace"]:
 			if u["unit_type"] == "howitzer":
 				_morph_unit_in_place(u, "howitzer_emplaced")
+				emit_signal("ability_triggered", u, "emplace", u["pos"])
 				accepted += 1
 			continue
 
 		elif ctype in ["mobilize", "mobile_mode"]:
 			if u["unit_type"] == "howitzer_emplaced":
 				_morph_unit_in_place(u, "howitzer")
+				emit_signal("ability_triggered", u, "mobilize", u["pos"])
 				accepted += 1
 			continue
 
 		elif ctype == "retract_silo":
 			if u["unit_type"] == "silo":
 				_morph_unit_in_place(u, "silo_retracted")
+				emit_signal("ability_triggered", u, "retract_silo", u["pos"])
 				accepted += 1
 			continue
 
 		elif ctype == "extend_silo":
 			if u["unit_type"] == "silo_retracted":
 				_morph_unit_in_place(u, "silo")
+				emit_signal("ability_triggered", u, "extend_silo", u["pos"])
 				accepted += 1
 			continue
 

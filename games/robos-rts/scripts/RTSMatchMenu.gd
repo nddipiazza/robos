@@ -4,6 +4,7 @@ var panel: PanelContainer
 var difficulty: OptionButton
 var strategy: OptionButton
 var speed: OptionButton
+var volume: OptionButton
 var was_paused: bool = false
 
 func _ready() -> void:
@@ -35,6 +36,8 @@ func _ready() -> void:
 	difficulty = _option(box, "AI difficulty", ["Easy", "Normal", "Hard"], 1)
 	strategy = _option(box, "AI strategy", ["Rush", "Balanced", "Economy", "Siege"], 1)
 	speed = _option(box, "Game speed", ["1×", "2×", "4×", "8×"], 0)
+	volume = _option(box, "Sound volume", ["100%", "70%", "40%", "Muted"], 0)
+	volume.item_selected.connect(_on_volume_selected)
 	var start = Button.new()
 	start.text = "Start new match"
 	start.pressed.connect(_start)
@@ -77,10 +80,16 @@ func _option(box: VBoxContainer, label_text: String, choices: Array, selected: i
 	box.add_child(row)
 	return option
 
+func _on_volume_selected(idx: int) -> void:
+	var levels := [100, 70, 40, 0]
+	if RTSAudio and idx >= 0 and idx < levels.size():
+		RTSAudio.set_volume_percent(levels[idx])
+
 func toggle() -> void:
 	if panel.visible:
 		panel.hide()
 		SimEngine.sim_speed = float(1 << speed.selected)
+		_on_volume_selected(volume.selected)
 		SimEngine.paused = was_paused
 	else:
 		was_paused = SimEngine.paused
@@ -93,5 +102,6 @@ func _start() -> void:
 	data["strategy"] = ["rush", "balanced", "economy", "siege"][strategy.selected]
 	SimEngine.load_scenario_dict(data)
 	SimEngine.sim_speed = float(1 << speed.selected)
+	_on_volume_selected(volume.selected)
 	panel.hide()
 	SimEngine.paused = false
