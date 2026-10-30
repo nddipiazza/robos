@@ -1,0 +1,413 @@
+{
+  "pioneer": {
+    "unit_name": "Pioneer",
+    "voice": "en-US-BrianMultilingualNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "pioneer_select_1",
+          "text": "What's up, Commander?",
+          "path": "res://assets/audio/voice/pioneer_select_1.wav"
+        },
+        {
+          "id": "pioneer_select_2",
+          "text": "Talk to me, boss. Welding rig's hot.",
+          "path": "res://assets/audio/voice/pioneer_select_2.wav"
+        },
+        {
+          "id": "pioneer_select_3",
+          "text": "Pioneer here. Whatcha need built?",
+          "path": "res://assets/audio/voice/pioneer_select_3.wav"
+        },
+        {
+          "id": "pioneer_select_4",
+          "text": "Yeah? Clock's ticking, point me at a job.",
+          "path": "res://assets/audio/voice/pioneer_select_4.wav"
+        },
+        {
+          "id": "pioneer_select_5",
+          "text": "Arc torch is charged and ready. What's the plan?",
+          "path": "res://assets/audio/voice/pioneer_select_5.wav"
+        },
+        {
+          "id": "pioneer_select_6",
+          "text": "Need something bolted together, or taken apart?",
+          "path": "res://assets/audio/voice/pioneer_select_6.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "pioneer_move_1",
+          "text": "On my way.",
+          "path": "res://assets/audio/voice/pioneer_move_1.wav"
+        },
+        {
+          "id": "pioneer_move_2",
+          "text": "You got it, chief.",
+          "path": "res://assets/audio/voice/pioneer_move_2.wav"
+        },
+        {
+          "id": "pioneer_move_3",
+          "text": "Hauling gear over there now.",
+          "path": "res://assets/audio/voice/pioneer_move_3.wav"
+        },
+        {
+          "id": "pioneer_move_4",
+          "text": "Copy that, rolling out.",
+          "path": "res://assets/audio/voice/pioneer_move_4.wav"
+        },
+        {
+          "id": "pioneer_move_5",
+          "text": "Heading to the site.",
+          "path": "res://assets/audio/voice/pioneer_move_5.wav"
+        }
+      ],
+      "job_done": [
+        {
+          "id": "pioneer_job_done_1",
+          "text": "Job's done! Not a bad weld if I say so myself.",
+          "path": "res://assets/audio/voice/pioneer_job_done_1.wav"
+        },
+        {
+          "id": "pioneer_job_done_2",
+          "text": "All finished up, boss. What's next?",
+          "path": "res://assets/audio/voice/pioneer_job_done_2.wav"
+        },
+        {
+          "id": "pioneer_job_done_3",
+          "text": "Structure's online and solid as bedrock.",
+          "path": "res://assets/audio/voice/pioneer_job_done_3.wav"
+        },
+        {
+          "id": "pioneer_job_done_4",
+          "text": "Construction complete. That'll hold through an orbital drop.",
+          "path": "res://assets/audio/voice/pioneer_job_done_4.wav"
+        },
+        {
+          "id": "pioneer_job_done_5",
+          "text": "Another masterpiece off the checklist.",
+          "path": "res://assets/audio/voice/pioneer_job_done_5.wav"
+        },
+        {
+          "id": "pioneer_job_done_6",
+          "text": "Wrapped it up! Ready for the next blueprint.",
+          "path": "res://assets/audio/voice/pioneer_job_done_6.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "pioneer_attack_1",
+          "text": "Guess this arc welder does overtime on hostiles!",
+          "path": "res://assets/audio/voice/pioneer_attack_1.wav"
+        },
+        {
+          "id": "pioneer_attack_2",
+          "text": "Hold still, I'm gonna spot-weld your armor shut!",
+          "path": "res://assets/audio/voice/pioneer_attack_2.wav"
+        },
+        {
+          "id": "pioneer_attack_3",
+          "text": "Nobody messes with the union! Eat plasma sparks!",
+          "path": "res://assets/audio/voice/pioneer_attack_3.wav"
+        },
+        {
+          "id": "pioneer_attack_4",
+          "text": "This wasn't in my job description, but here we go!",
+          "path": "res://assets/audio/voice/pioneer_attack_4.wav"
+        },
+        {
+          "id": "pioneer_attack_5",
+          "text": "Consider this an unscheduled demolition!",
+          "path": "res://assets/audio/voice/pioneer_attack_5.wav"
+        }
+      ]
+    }
+  },
+  "rifleman": {
+    "unit_name": "Rifleman",
+    "voice": "en-US-AndrewMultilingualNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "rifleman_select_1",
+          "text": "Rifle squad standing by. Where's the trouble?",
+          "path": "res://assets/audio/voice/rifleman_select_1.wav"
+        },
+        {
+          "id": "rifleman_select_2",
+          "text": "Magazines full, safeties off. Give the word.",
+          "path": "res://assets/audio/voice/rifleman_select_2.wav"
+        },
+        {
+          "id": "rifleman_select_3",
+          "text": "Meridian Guard reporting. What's up, Commander?",
+          "path": "res://assets/audio/voice/rifleman_select_3.wav"
+        },
+        {
+          "id": "rifleman_select_4",
+          "text": "Eyes sharp, rifle ready.",
+          "path": "res://assets/audio/voice/rifleman_select_4.wav"
+        },
+        {
+          "id": "rifleman_select_5",
+          "text": "Just point us toward the target.",
+          "path": "res://assets/audio/voice/rifleman_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "rifleman_move_1",
+          "text": "Moving up, double time!",
+          "path": "res://assets/audio/voice/rifleman_move_1.wav"
+        },
+        {
+          "id": "rifleman_move_2",
+          "text": "Advancing to position.",
+          "path": "res://assets/audio/voice/rifleman_move_2.wav"
+        },
+        {
+          "id": "rifleman_move_3",
+          "text": "Boots on the move, copy that.",
+          "path": "res://assets/audio/voice/rifleman_move_3.wav"
+        },
+        {
+          "id": "rifleman_move_4",
+          "text": "Pushing forward!",
+          "path": "res://assets/audio/voice/rifleman_move_4.wav"
+        },
+        {
+          "id": "rifleman_move_5",
+          "text": "Solid copy, relocating now.",
+          "path": "res://assets/audio/voice/rifleman_move_5.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "rifleman_attack_1",
+          "text": "Say hello to three-round burst diplomacy!",
+          "path": "res://assets/audio/voice/rifleman_attack_1.wav"
+        },
+        {
+          "id": "rifleman_attack_2",
+          "text": "Free lead delivery, no signature required!",
+          "path": "res://assets/audio/voice/rifleman_attack_2.wav"
+        },
+        {
+          "id": "rifleman_attack_3",
+          "text": "Keep your heads down, or don't, makes my job easier!",
+          "path": "res://assets/audio/voice/rifleman_attack_3.wav"
+        },
+        {
+          "id": "rifleman_attack_4",
+          "text": "Target locked! Let's ventilate 'em!",
+          "path": "res://assets/audio/voice/rifleman_attack_4.wav"
+        },
+        {
+          "id": "rifleman_attack_5",
+          "text": "Hope they brought an umbrella for this hailstorm!",
+          "path": "res://assets/audio/voice/rifleman_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "rifleman_ready_1",
+          "text": "Rifleman locked and loaded!",
+          "path": "res://assets/audio/voice/rifleman_ready_1.wav"
+        },
+        {
+          "id": "rifleman_ready_2",
+          "text": "Fresh boots on the ground, Commander.",
+          "path": "res://assets/audio/voice/rifleman_ready_2.wav"
+        }
+      ]
+    }
+  },
+  "breacher": {
+    "unit_name": "Breacher",
+    "voice": "en-US-ChristopherNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "breacher_select_1",
+          "text": "Breacher suit online. Point me at a wall, or a face.",
+          "path": "res://assets/audio/voice/breacher_select_1.wav"
+        },
+        {
+          "id": "breacher_select_2",
+          "text": "Heavy armor here. What needs smashing?",
+          "path": "res://assets/audio/voice/breacher_select_2.wav"
+        },
+        {
+          "id": "breacher_select_3",
+          "text": "Concussion shells primed. What's the call?",
+          "path": "res://assets/audio/voice/breacher_select_3.wav"
+        },
+        {
+          "id": "breacher_select_4",
+          "text": "You rang, Commander? Ready to crack some shells.",
+          "path": "res://assets/audio/voice/breacher_select_4.wav"
+        },
+        {
+          "id": "breacher_select_5",
+          "text": "Standing by with the big boomers.",
+          "path": "res://assets/audio/voice/breacher_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "breacher_move_1",
+          "text": "Heavy boots rolling out.",
+          "path": "res://assets/audio/voice/breacher_move_1.wav"
+        },
+        {
+          "id": "breacher_move_2",
+          "text": "Stomping over there now.",
+          "path": "res://assets/audio/voice/breacher_move_2.wav"
+        },
+        {
+          "id": "breacher_move_3",
+          "text": "Clear the lane, Breacher moving!",
+          "path": "res://assets/audio/voice/breacher_move_3.wav"
+        },
+        {
+          "id": "breacher_move_4",
+          "text": "Copy that, advancing.",
+          "path": "res://assets/audio/voice/breacher_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "breacher_attack_1",
+          "text": "Knock knock! I brought my own door!",
+          "path": "res://assets/audio/voice/breacher_attack_1.wav"
+        },
+        {
+          "id": "breacher_attack_2",
+          "text": "Let's slow their roll, permanently!",
+          "path": "res://assets/audio/voice/breacher_attack_2.wav"
+        },
+        {
+          "id": "breacher_attack_3",
+          "text": "Catch this concussion charge, ugly!",
+          "path": "res://assets/audio/voice/breacher_attack_3.wav"
+        },
+        {
+          "id": "breacher_attack_4",
+          "text": "Armor plating? Cute. Watch this!",
+          "path": "res://assets/audio/voice/breacher_attack_4.wav"
+        },
+        {
+          "id": "breacher_attack_5",
+          "text": "Time for a little high-velocity attitude adjustment!",
+          "path": "res://assets/audio/voice/breacher_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "breacher_ready_1",
+          "text": "Breacher suited up and ready to wreck!",
+          "path": "res://assets/audio/voice/breacher_ready_1.wav"
+        },
+        {
+          "id": "breacher_ready_2",
+          "text": "Heavy shock trooper reporting for duty.",
+          "path": "res://assets/audio/voice/breacher_ready_2.wav"
+        }
+      ]
+    }
+  },
+  "howitzer": {
+    "unit_name": "Howitzer",
+    "voice": "en-US-EmmaMultilingualNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "howitzer_select_1",
+          "text": "Artillery crew online. Give us coordinates.",
+          "path": "res://assets/audio/voice/howitzer_select_1.wav"
+        },
+        {
+          "id": "howitzer_select_2",
+          "text": "Howitzer standing by. Want it loud or extra loud?",
+          "path": "res://assets/audio/voice/howitzer_select_2.wav"
+        },
+        {
+          "id": "howitzer_select_3",
+          "text": "Ballistics computer ready. What's on the menu?",
+          "path": "res://assets/audio/voice/howitzer_select_3.wav"
+        },
+        {
+          "id": "howitzer_select_4",
+          "text": "One-fifty-five millimeter problem solver at your service.",
+          "path": "res://assets/audio/voice/howitzer_select_4.wav"
+        },
+        {
+          "id": "howitzer_select_5",
+          "text": "Reading you five-by-five, Commander.",
+          "path": "res://assets/audio/voice/howitzer_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "howitzer_move_1",
+          "text": "Rolling the big gun into position.",
+          "path": "res://assets/audio/voice/howitzer_move_1.wav"
+        },
+        {
+          "id": "howitzer_move_2",
+          "text": "Relocating artillery.",
+          "path": "res://assets/audio/voice/howitzer_move_2.wav"
+        },
+        {
+          "id": "howitzer_move_3",
+          "text": "Adjusting firing vector.",
+          "path": "res://assets/audio/voice/howitzer_move_3.wav"
+        },
+        {
+          "id": "howitzer_move_4",
+          "text": "On the move, Commander.",
+          "path": "res://assets/audio/voice/howitzer_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "howitzer_attack_1",
+          "text": "Sending very warm regards from thirty meters away!",
+          "path": "res://assets/audio/voice/howitzer_attack_1.wav"
+        },
+        {
+          "id": "howitzer_attack_2",
+          "text": "Forecast for their grid square: one hundred percent shrapnel!",
+          "path": "res://assets/audio/voice/howitzer_attack_2.wav"
+        },
+        {
+          "id": "howitzer_attack_3",
+          "text": "Special delivery! Catch it with your teeth!",
+          "path": "res://assets/audio/voice/howitzer_attack_3.wav"
+        },
+        {
+          "id": "howitzer_attack_4",
+          "text": "Deleting that coordinate in three, two, one!",
+          "path": "res://assets/audio/voice/howitzer_attack_4.wav"
+        },
+        {
+          "id": "howitzer_attack_5",
+          "text": "Nothing personal, just high-explosive physics!",
+          "path": "res://assets/audio/voice/howitzer_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "howitzer_ready_1",
+          "text": "Howitzer crew rolled out and ready for fire missions!",
+          "path": "res://assets/audio/voice/howitzer_ready_1.wav"
+        },
+        {
+          "id": "howitzer_ready_2",
+          "text": "Siege artillery online, Commander.",
+          "path": "res://assets/audio/voice/howitzer_ready_2.wav"
+        }
+      ]
+    }
+  }
+}

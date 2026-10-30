@@ -58,6 +58,8 @@ func _ready() -> void:
 	if RTSAudio:
 		RTSAudio.world_3d = world_3d
 		RTSAudio.local_player_id = local_player
+		if not RTSAudio.dialogue_spoken.is_connected(_on_dialogue_spoken):
+			RTSAudio.dialogue_spoken.connect(_on_dialogue_spoken)
 
 	icons = RTSIconsScript.new()
 	icons.name = "RTSIcons"
@@ -91,6 +93,13 @@ func _on_scenario_loaded(_name: String) -> void:
 func _on_notice(owner_id: int, text: String, kind: String) -> void:
 	if owner_id == local_player:
 		push_message(text, kind)
+
+func _on_dialogue_spoken(unit_type: String, _category: String, _line_id: String, text: String) -> void:
+	if text == "":
+		return
+	var u_def: Dictionary = RTSData.get_unit_def(unit_type)
+	var u_name: String = str(u_def.get("name", unit_type.capitalize()))
+	push_message("%s: \"%s\"" % [u_name, text], "info")
 
 func _on_unit_damaged(owner_id: int, pos: Vector2) -> void:
 	if owner_id != local_player:
@@ -267,6 +276,9 @@ func _select_tags(tags: Array, add: bool = false) -> void:
 	active_type = ""
 	if not selected_tags.is_empty() and RTSAudio:
 		RTSAudio.play_ui("ui_select")
+		var pu := primary_unit()
+		if not pu.is_empty() and int(pu.get("owner", 0)) == local_player:
+			RTSAudio.play_unit_dialogue(str(pu.get("unit_type", "")), "select")
 
 func idle_workers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -412,6 +424,9 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 			selected_tags.append(clicked["tag"])
 		if not selected_tags.is_empty() and RTSAudio:
 			RTSAudio.play_ui("ui_select")
+			var pu := primary_unit()
+			if not pu.is_empty() and int(pu.get("owner", 0)) == local_player:
+				RTSAudio.play_unit_dialogue(str(pu.get("unit_type", "")), "select")
 		return
 
 	var box_units: Array[Dictionary] = []
@@ -429,14 +444,23 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 			selected_tags.append(u["tag"])
 	if not selected_tags.is_empty() and RTSAudio:
 		RTSAudio.play_ui("ui_select")
+		var pu2 := primary_unit()
+		if not pu2.is_empty() and int(pu2.get("owner", 0)) == local_player:
+			RTSAudio.play_unit_dialogue(str(pu2.get("unit_type", "")), "select")
 
 func _spawn_marker(pos: Vector2, kind: String) -> void:
 	click_markers.append({"pos": pos, "kind": kind, "ttl": 0.7, "max": 0.7})
 	if RTSAudio:
+		var pu := primary_unit()
+		var utype := str(pu.get("unit_type", "")) if not pu.is_empty() and int(pu.get("owner", 0)) == local_player else ""
 		if kind == "attack":
 			RTSAudio.play_ui("ui_command_attack")
+			if utype != "":
+				RTSAudio.play_unit_dialogue(utype, "attack")
 		elif kind in ["move", "gather", "rally"]:
 			RTSAudio.play_ui("ui_command_move")
+			if utype != "" and kind in ["move", "gather"]:
+				RTSAudio.play_unit_dialogue(utype, "move")
 
 func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	var own := selected_owned()
