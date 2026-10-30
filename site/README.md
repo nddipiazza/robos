@@ -56,6 +56,48 @@ flowchart LR
 `assets/og.png` (1200×630) is rendered from `scripts/site-og-card.html`: copy it into the built site, open it
 in a 1200×630 viewport (it loads `/assets/logo-mark.png`) and screenshot it.
 
+## Quick start wizard (`/using-robos-wizard/`)
+
+The home page hero links here ("New here? Click here for a quick start"), and so does the footer. A short
+decision tree ends in a guide built for the visitor: the RobOS feature most likely to impress them, install
+steps for their OS (plain words for non-technical visitors, source and agent setup for developers), the apps
+to try first, the app suites, and what to read next. Every path includes the suites and how to install them.
+
+All questions, personas, app cards and links live in `_data/quickstart.yml`; `assets/quickstart.js` only
+walks the tree and renders. Answers are kept in the URL hash (`#tech=0&dev_goal=0&...`), so the back button
+works and a finished guide can be shared. When you add or rename an app or page, update its entry there and
+keep "Preview" on apps that still show sample data.
+
+```mermaid
+flowchart TD
+  T{"Do you work in tech?"}
+  T -- "I write software" --> DG{"What should RobOS do for you?"}
+  T -- "I run systems" --> OPS["Which consoles do you juggle? (multi)"]
+  T -- "Handy, but I don't code" --> G{"What brings you here?"}
+  T -- "Keep it simple" --> G
+  DG -- "Ship code with agents" --> AG{"Which coding agent?"}
+  DG -- "Bring agents to my team" --> AG
+  DG -- "Make games" --> CR{"How do you want to make it?"}
+  DG -- "Play games" --> GK["What do you play? (multi)"]
+  AG --> TM{"Alone or with a team?"}
+  G -- "Home and family" --> HA["What do you need help with? (multi)"]
+  G -- "Shop or business" --> BK{"What kind of business?"}
+  G -- "Games to play" --> GK
+  G -- "Make my own game" --> CR
+  TM --> OS{"Which computer?"}
+  OPS --> OS
+  HA --> OS
+  BK --> OS
+  GK --> OS
+  CR --> OS
+  OS --> R["Guide: highlight, install, apps for you, suites, read next"]
+```
+
+![The quick start decision tree](assets/quickstart/decision-tree.jpg)
+
+Personas at the end: `dev` (SDLC workflow), `lead` (governed agents), `ops` (consolidated consoles), `home`,
+`business`, `gamer` and `creator`.
+
 ## Hero video
 
 The hero on the home page is a recording of the real apps. Regenerate it with the steps in

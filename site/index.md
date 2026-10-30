@@ -22,6 +22,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
         <li><b>Customize</b> any app by describing the change</li>
         <li><b>Reuse</b> what AI built once, instead of asking it again</li>
       </ul>
+      <a class="l-quick" href="{{ '/using-robos-wizard/' | relative_url }}"><span class="l-quick-ic" aria-hidden="true">?</span><span><b>New here? Click here for a quick start</b><small>A few questions, then a guide made for you: install steps, the apps to try first, what to read next</small></span><span class="l-quick-go" aria-hidden="true">→</span></a>
       <div class="cta">
         <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> <span data-dl-label>Download RobOS</span></a>
         <a class="btn btn-ghost" href="#vision">See the plan</a>

@@ -1,0 +1,389 @@
+# Quick start wizard (rowbose.com/using-robos-wizard/).
+#
+# The page asks the questions below as a decision tree, then builds a guide from
+# the blocks further down. assets/quickstart.js reads this file as JSON, so the
+# wizard is edited here, not in the script. See site/README.md for the tree diagram.
+#
+#   questions.<id>   one screen. `multi: true` lets the visitor tick several options.
+#     options[].icon      an icon name from assets/icons/ (without .svg).
+#     options[].next      the next question id; `os` is always the last question.
+#     options[].set       answers to record: level (basic | savvy | tech) and persona.
+#     options[].apps      (multi questions) app ids added to the "Apps for you" list.
+#   personas.<id>   the headline, the feature that should wow this visitor and what to read next.
+#   apps.<id>       one card in "Apps for you". `preview: true` marks a demo with sample data.
+#
+# Links are site paths. Pages under /v1/ are the classic docs built from ../docs.
+
+start: tech
+
+questions:
+  tech:
+    title: "First things first: do you work in tech?"
+    help: "There are no wrong answers. This only decides how much detail we show you."
+    options:
+      - label: "Yes, I write software"
+        sub: "Developer, engineer, tech lead"
+        icon: tools
+        set: { level: tech }
+        next: dev_goal
+      - label: "Yes, I run systems"
+        sub: "DevOps, SRE, platform, IT admin"
+        icon: gear
+        set: { level: tech, persona: ops }
+        next: ops_consoles
+      - label: "I'm handy with computers, but I don't code"
+        sub: "I install things and tweak settings"
+        icon: desktop
+        set: { level: savvy }
+        next: goal
+      - label: "No. Keep it simple, please"
+        sub: "I just want apps that work"
+        icon: check
+        set: { level: basic }
+        next: goal
+
+  dev_goal:
+    title: "What do you want RobOS to do for you?"
+    help: "Every path still includes the app suites and how to install them."
+    options:
+      - label: "Ship code with AI agents, with proof it works"
+        sub: "Plan, implement, review, merge"
+        icon: robot
+        set: { persona: dev }
+        next: dev_agent
+      - label: "Bring AI agents to my team safely"
+        sub: "Tech lead, manager, evaluator"
+        icon: building
+        set: { persona: lead }
+        next: dev_agent
+      - label: "Make games"
+        sub: "Godot 4, a knowledge graph and AI agents"
+        icon: map
+        set: { persona: creator }
+        next: creator_how
+      - label: "Play games"
+        sub: "I just want to play"
+        icon: gamepad
+        set: { persona: gamer }
+        next: gamer_kind
+
+  dev_agent:
+    title: "Which coding agent do you use today?"
+    help: "RobOS runs the agent you already signed in to. It does not resell one."
+    options:
+      - { label: "Claude Code", set: { agent: claude }, next: dev_team }
+      - { label: "OpenAI Codex", set: { agent: codex }, next: dev_team }
+      - { label: "GitHub Copilot CLI", set: { agent: copilot }, next: dev_team }
+      - { label: "Gemini CLI or Antigravity", set: { agent: gemini }, next: dev_team }
+      - { label: "Local models with Ollama", set: { agent: ollama }, next: dev_team }
+      - { label: "None yet", sub: "Show me how to pick one", set: { agent: none }, next: dev_team }
+
+  dev_team:
+    title: "Are you working alone or with a team?"
+    options:
+      - { label: "On my own", sub: "Side projects, freelance, solo product", set: { team: solo }, next: os }
+      - { label: "With a team", sub: "Shared repos, reviewers, a task server", set: { team: team }, next: os }
+
+  ops_consoles:
+    title: "Which consoles do you juggle in browser tabs today?"
+    help: "Tick all that apply. We'll show the RobOS app that brings each one into a single window."
+    multi: true
+    options:
+      - { label: "Kubernetes and cloud", apps: [kube-studio, remote-execution-studio] }
+      - { label: "CI pipelines and deploys", apps: [ci-monitor, deploy-tracker, manager-dashboard] }
+      - { label: "Logs and dashboards", apps: [robos-logs, robos-dashboards] }
+      - { label: "Databases and APIs", apps: [data-sources, db-manager, nosql-manager, rest-client, grpc-client, graphql-client] }
+      - { label: "Secrets, keys and access", apps: [pass-manager, hardware-keys, vpn-sandbox] }
+      - { label: "Networks between machines", apps: [app-mesh] }
+      - { label: "AI agents and MCP servers", apps: [agents-manager, mcp-manager] }
+    next: os
+
+  goal:
+    title: "What brings you to RobOS?"
+    options:
+      - label: "Useful apps for home and family"
+        sub: "Music, movies, money, lights, TV"
+        icon: film
+        set: { persona: home }
+        next: home_apps
+      - label: "Software for my shop or business"
+        sub: "Café, bar, store, auto repair"
+        icon: money
+        set: { persona: business }
+        next: business_kind
+      - label: "Games to play"
+        sub: "Party games, RPGs, strategy"
+        icon: gamepad
+        set: { persona: gamer }
+        next: gamer_kind
+      - label: "I want to make my own game"
+        sub: "Maps, quests and heroes, no code needed to start"
+        icon: map
+        set: { persona: creator }
+        next: creator_how
+
+  home_apps:
+    title: "What would you like help with?"
+    help: "Tick all that apply."
+    multi: true
+    options:
+      - { label: "Music and movies, on the TV too", apps: [audio-player, movie-player, robos-tv] }
+      - { label: "Family money and taxes", apps: [household] }
+      - { label: "Smart lights and speakers", apps: [smart-light, home-speaker] }
+      - { label: "Calendar, contacts and cloud files", apps: [cloud-accounts, google-calendar] }
+      - { label: "My car's upkeep and repairs", apps: [auto-center] }
+      - { label: "A game night with friends", apps: [party-game] }
+    next: os
+
+  business_kind:
+    title: "What kind of business do you run?"
+    options:
+      - { label: "Café or coffee shop", set: { business: coffee }, next: os }
+      - { label: "Bar or restaurant", set: { business: bar }, next: os }
+      - { label: "Retail store", set: { business: retail }, next: os }
+      - { label: "Auto repair shop", set: { business: auto }, next: os }
+      - { label: "Something else", set: { business: other }, next: os }
+
+  gamer_kind:
+    title: "What do you like to play?"
+    help: "Tick all that apply."
+    multi: true
+    options:
+      - { label: "Party games with friends, on the TV", apps: [party-game] }
+      - { label: "Story RPGs with a party of heroes", apps: [crpg] }
+      - { label: "Board-game style dungeon crawls", apps: [tabletop-rpg] }
+      - { label: "Real-time strategy", apps: [robos-rts] }
+      - { label: "Retro console RPGs", apps: [quest-warrior-dragon] }
+    next: os
+
+  creator_how:
+    title: "How would you like to make your game?"
+    options:
+      - label: "With editors, no code"
+        sub: "Draw maps, place monsters, write quests"
+        icon: blockmap
+        set: { create: editors }
+        next: os
+      - label: "In Godot, with AI agents writing the code"
+        sub: "Model the game as data, let agents build it"
+        icon: robot
+        set: { create: code }
+        next: os
+      - label: "A mini game for the Party Game"
+        sub: "One JavaScript file from a template"
+        icon: dice
+        set: { create: party }
+        next: os
+
+  os:
+    title: "Last one: which computer will you use?"
+    options:
+      - { label: "Windows", set: { os: win } }
+      - { label: "Mac", set: { os: mac } }
+      - { label: "Linux", set: { os: linux } }
+      - { label: "I'm not sure", sub: "We'll check for you", set: { os: detect } }
+
+personas:
+  dev:
+    eyebrow: "Your guide · Software developer"
+    title: "Plan it, let an agent build it, review the proof."
+    wow_title: "What will impress you: the whole development lifecycle in one place"
+    wow: "Describe a task in Task Planner and it becomes GitHub or Jira issues. Task Implementer runs Claude Code on one issue with a developer persona: it branches, tests, commits and pushes. Code Review Theater then puts the diff beside before-and-after evidence and the agent's walkthrough of the running app, so you review proof before anything becomes a pull request. A knowledge graph shows which services a change touches."
+    wow_links:
+      - { label: "Watch one change go from idea to merged PR", url: "/#build" }
+      - { label: "Build apps guide", url: "/build-apps/" }
+      - { label: "Code Review Theater, tab by tab", url: "/code-review/" }
+    apps: [task-planner, task-implementer, pr-review, dev-central, git-projects, agents-manager]
+    read:
+      - { label: "A day with RobOS: one task from plan to merge", url: "/v1/day-in-the-life.html" }
+      - { label: "Task Planner", url: "/task-planner/" }
+      - { label: "Task Implementer", url: "/task-implementer/" }
+      - { label: "The knowledge graph (KGraph)", url: "/v1/knowledge-graph.html" }
+      - { label: "Build a new app with the App Wizard", url: "/v1/new-app-wizard.html" }
+      - { label: "Security: sandboxes and the prompt guard", url: "/security/" }
+  lead:
+    eyebrow: "Your guide · Tech lead or evaluator"
+    title: "Let agents do the labor. Keep humans on the decisions."
+    wow_title: "What will impress you: every agent change arrives with evidence"
+    wow: "Agents work in throwaway sandboxes with a prompt security guard in front of them. Agent branches come back to Code Review Theater with before-and-after evidence and a walkthrough, so reviewers judge what happened instead of guessing. Dev Central and the Manager Dashboard show the team's tasks, pull requests and cycle time in one place."
+    wow_links:
+      - { label: "RobOS for Teams", url: "/v1/robos-for-teams.html" }
+      - { label: "Build apps as a team", url: "/build-apps/teams/" }
+      - { label: "Why RobOS, and its limits", url: "/v1/why-robos.html" }
+    apps: [pr-review, dev-central, manager-dashboard, task-planner, agents-manager, ci-monitor]
+    read:
+      - { label: "Set up a team from an existing company", url: "/v1/existing-company-setup.html" }
+      - { label: "Developer personas for agents", url: "/v1/personas.html" }
+      - { label: "Code Review Theater", url: "/code-review/" }
+      - { label: "Security and isolation proofs", url: "/security/" }
+      - { label: "Share settings with new teammates", url: "/config-management/" }
+  ops:
+    eyebrow: "Your guide · DevOps and operations"
+    title: "Close the browser tabs. Your consoles live here now."
+    wow_title: "What will impress you: one window for the data you chase across a dozen tabs"
+    wow: "Clusters, CI runs, deployments, logs, secrets and network links usually mean a browser window per vendor. RobOS brings them into native desktop apps on your own machine, signed in once and backed by one knowledge graph. RobOS Dashboards then puts widgets from any of them on one wall, and can cast it to a TV in the team room."
+    wow_links:
+      - { label: "RobOS Dashboards", url: "/v1/apps/robos-dashboards/" }
+      - { label: "Zero-trust app mesh between machines", url: "/p2p/" }
+      - { label: "Security and isolation proofs", url: "/security/" }
+    apps: [kube-studio, ci-monitor, deploy-tracker, robos-logs, robos-dashboards, pass-manager]
+    read:
+      - { label: "Architecture", url: "/v1/architecture.html" }
+      - { label: "Back up and share your RobOS settings", url: "/config-management/" }
+      - { label: "Physical keys (YubiKey, FIDO2)", url: "/physical-keys/" }
+      - { label: "AI agents and API mode", url: "/v1/ai-providers.html" }
+      - { label: "Every app in the directory", url: "/apps/" }
+  home:
+    eyebrow: "Your guide · Home and family"
+    title: "Free apps for your home. No subscriptions, no ads."
+    wow_title: "What you'll like: your music, movies and money, on your own computer"
+    wow: "RobOS replaces apps you would otherwise pay for. Play your own music and movies and send them to the TV or a speaker in the kitchen, keep track of family money, and turn the lights down for movie night. Everything stays on your computer. AI features are optional extras; the apps work fine without them."
+    wow_links:
+      - { label: "Movie & Video Player tour", url: "/movie-player/" }
+      - { label: "A family's year in Household", url: "/family-finances/" }
+      - { label: "RobOS on your TV", url: "/tv/" }
+    apps: []
+    read:
+      - { label: "Back up your settings to Google Drive", url: "/config-management/" }
+      - { label: "Every app in the directory", url: "/apps/" }
+      - { label: "Ask a question on Discord", url: "https://discord.gg/6PjxzkHujE" }
+  business:
+    eyebrow: "Your guide · Small business"
+    title: "Run your shop on software you own."
+    wow_title: "What you'll like: a real register or shop system, with no monthly fee"
+    wow: "RobOS Point of Sale is a touchscreen register for cafés, bars and stores, with self-checkout, barcode scanning, tabs and tips, and cash drawer reports. RobOS Auto Center runs a repair shop from the front desk to the mechanic's bench. Your sales and customers stay on your own computer, and you can ask for changes that fit how you work."
+    wow_links: []
+    apps: []
+    read:
+      - { label: "Back up and share your settings", url: "/config-management/" }
+      - { label: "Start a business on top of RobOS", url: "/#make-money" }
+      - { label: "Ask a question on Discord", url: "https://discord.gg/6PjxzkHujE" }
+  gamer:
+    eyebrow: "Your guide · Player"
+    title: "Games built by AI, tested by playing them on camera."
+    wow_title: "What you'll like: free games, from party nights to long RPGs"
+    wow: "Every RobOS game was designed in a knowledge graph, written by AI agents and checked by a test harness that plays it on video. The Party Game turns your TVs into a game show about your guests, with phones as controllers. The others are full Godot 4 games you run on your own computer."
+    wow_links:
+      - { label: "All games", url: "/games/" }
+    apps: []
+    read:
+      - { label: "All games", url: "/games/" }
+      - { label: "RobOS on your TV", url: "/tv/" }
+      - { label: "Ask a question on Discord", url: "https://discord.gg/6PjxzkHujE" }
+  creator:
+    eyebrow: "Your guide · Game creator"
+    title: "The game is data. The agents are the studio."
+    wow_title: "What will impress you: describe the world, and it becomes a playable game"
+    wow: "In RobOS, heroes, monsters, maps, quests and rules are validated data in a knowledge graph. Editors let you draw maps and place monsters without code. AI agents write the Godot engine code from that model, and a test harness plays the result and records it to video, so you see proof that your quest can be finished."
+    wow_links:
+      - { label: "How RobOS does game development", url: "/v1/game-development.html" }
+      - { label: "All games", url: "/games/" }
+    apps: []
+    read:
+      - { label: "Game development overview", url: "/v1/game-development.html" }
+      - { label: "Ask a question on Discord", url: "https://discord.gg/6PjxzkHujE" }
+
+# Extra content chosen by a single answer.
+extras:
+  business:
+    coffee: { apps: [point-of-sale], links: [{ label: "Point of Sale: the coffee shop", url: "/point-of-sale/coffee/" }] }
+    bar: { apps: [point-of-sale], links: [{ label: "Point of Sale: the bar", url: "/point-of-sale/bar/" }] }
+    retail: { apps: [point-of-sale], links: [{ label: "Point of Sale: the retail store", url: "/point-of-sale/retail/" }] }
+    auto: { apps: [auto-center], links: [{ label: "Auto Center guide, step 1: before you start", url: "/auto-center/1-before-you-start/" }, { label: "Switch your shop over", url: "/auto-center/9-switch-over/" }] }
+    other: { apps: [point-of-sale, auto-center, household], links: [{ label: "Build an app for your business", url: "/#build" }, { label: "Every app in the directory", url: "/apps/" }] }
+  create:
+    editors:
+      apps: [robos-tabletop, tabletop-blockmap-creator, tabletop-quest-editor, crpg-editor]
+      links:
+        - { label: "Make your own Tabletop quest", url: "/games/tabletop-rpg/#build" }
+        - { label: "cRPG campaign editor tutorial", url: "/v1/projects/crpg-realm/campaign-editor-tutorial.html" }
+    code:
+      apps: [crpg-builder, crpg-editor, game-playthrough, agents-manager]
+      links:
+        - { label: "Create your own game (cRPG)", url: "/v1/projects/crpg-realm/create-your-own-game.html" }
+        - { label: "Starfall Command: map editor and gameplay tests", url: "/games/robos-rts/" }
+        - { label: "Quest: Warrior Dragon AI playthrough", url: "/games/quest-warrior-dragon/#ai-playthrough" }
+    party:
+      apps: [party-game]
+      links:
+        - { label: "Party Game docs", url: "/games/party-game/docs/" }
+        - { label: "The mini game template", url: "https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/minigames/template.js" }
+  agent:
+    claude: { label: "Connect Claude Code", url: "/v1/getting-started.html#set-up-an-ai-agent" }
+    codex: { label: "Connect OpenAI Codex", url: "/v1/getting-started.html#set-up-an-ai-agent" }
+    copilot: { label: "Connect GitHub Copilot CLI", url: "/v1/getting-started.html#set-up-an-ai-agent" }
+    gemini: { label: "Connect Gemini CLI or Antigravity", url: "/v1/getting-started.html#set-up-an-ai-agent" }
+    ollama: { label: "Use local Ollama models (optional API mode)", url: "/v1/ai-providers.html#optional-api-mode" }
+    none: { label: "Pick and install a coding agent", url: "/v1/ai-providers.html" }
+  team:
+    solo: { label: "Build apps on your own: step by step", url: "/build-apps/solo/" }
+    team: { label: "Build apps as a team: step by step", url: "/build-apps/teams/" }
+
+# Games a player can pick, with how to start each one.
+games:
+  party-game: "Install it from App Manager (Games & game tools). It needs a TV paired in Smart TV Studio and an AI agent signed in, because the AI hosts the show."
+  crpg: "Runs from source with Godot 4.3: clone the repository, then run games/crpg-realm/play.sh."
+  tabletop-rpg: "Install Tabletop Studio from App Manager, or run games/tabletop-rpg/play.sh from source. Needs Godot 4.3."
+  robos-rts: "Runs from source with Godot 4.3 or newer: run games/robos-rts/play.sh. Press F1 for controls."
+  quest-warrior-dragon: "Runs from source with Godot 4. Game Playthrough in App Manager can run and replay the AI playthrough."
+
+# The app suites every technical guide also shows.
+suites:
+  - { label: "Point of Sale", url: "/point-of-sale/", text: "Register for cafés, bars and stores" }
+  - { label: "Auto Center", url: "/auto-center/", text: "Repair shop and vehicle care" }
+  - { label: "Household", url: "/family-finances/", text: "Family money and a tax estimate" }
+  - { label: "Audio & Movie Player", url: "/movie-player/", text: "Your library, cast to TVs and speakers" }
+  - { label: "Smart home & TV", url: "/tv/", text: "Lights, speakers and Smart TV apps" }
+  - { label: "Games", url: "/games/", text: "RPGs, strategy and a party game" }
+
+apps:
+  # Developer suite
+  task-planner: { name: "Task Planner", url: "/task-planner/", text: "Turn a description into epics and tasks on GitHub or Jira." }
+  task-implementer: { name: "Task Implementer", url: "/task-implementer/", text: "Run Claude Code on one issue: it branches, tests, commits and pushes." }
+  pr-review: { name: "Code Review Theater", url: "/code-review/", text: "Diff, before-and-after evidence and the agent's walkthrough for every branch." }
+  dev-central: { name: "Dev Central", url: "/v1/apps/dev-central/", text: "Your daily task list, with buttons to start agents." }
+  git-projects: { name: "Git Projects", url: "/v1/apps/git-projects/", text: "Clone, pull and open all your repositories in an IDE." }
+  agents-manager: { name: "Agents Manager", url: "/v1/apps/agents-manager/", text: "Sessions, logins, models and MCP servers for each agent CLI." }
+  manager-dashboard: { name: "Manager Dashboard", url: "/v1/apps/manager-dashboard/", text: "Issues, merged PRs, cycle time and deploy frequency for a repo." }
+  # Operations
+  kube-studio: { name: "Kube Studio", url: "/v1/apps/kube-studio/", text: "Browse a local Kind or Minikube cluster with real kubectl. Remote, Helm and ArgoCD panels are previews." }
+  remote-execution-studio: { name: "Remote Execution Studio", url: "/v1/apps/remote-execution-studio/", text: "Bazel and Buck2 remote build clusters and their config." }
+  ci-monitor: { name: "CI Monitor", url: "/v1/apps/ci-monitor/", text: "GitHub Actions and Buildkite runs, failed-job logs and re-runs." }
+  deploy-tracker: { name: "Deploy Tracker", url: "/v1/apps/deploy-tracker/", text: "Deployments, releases and merged PRs for a repository." }
+  robos-logs: { name: "System Logs Viewer", url: "/v1/apps/robos-logs/", text: "Search and filter the structured logs every RobOS app writes." }
+  robos-dashboards: { name: "RobOS Dashboards", url: "/v1/apps/robos-dashboards/", text: "Compose any RobOS widget into one wall and cast it to a TV." }
+  data-sources: { name: "Data Sources", url: "/v1/apps/data-sources/", text: "Google Drive, OneDrive, SFTP, FTP and local folders in one catalog." }
+  db-manager: { name: "Relational DB Manager", url: "/v1/apps/db-manager/", text: "SQL studio with a schema tree and console.", preview: true }
+  nosql-manager: { name: "NoSQL DB Manager", url: "/v1/apps/nosql-manager/", text: "MongoDB documents and Redis keys.", preview: true }
+  rest-client: { name: "REST API Client", url: "/v1/apps/rest-client/", text: "Request editor and collection runner.", preview: true }
+  grpc-client: { name: "gRPC Client", url: "/v1/apps/grpc-client/", text: "Browse protobuf services.", preview: true }
+  graphql-client: { name: "GraphQL Client", url: "/v1/apps/graphql-client/", text: "Query editor, variables and schema.", preview: true }
+  pass-manager: { name: "Pass Manager", url: "/v1/apps/pass-manager/", text: "The standard Unix password store, encrypted with GPG." }
+  hardware-keys: { name: "Hardware Keys", url: "/physical-keys/", text: "YubiKey and FIDO2 keys for SSH, signing and approvals." }
+  vpn-sandbox: { name: "VPN Sandbox", url: "/security/", text: "Run any app inside an isolated network with a kill switch." }
+  app-mesh: { name: "App Mesh & Private Networks", url: "/p2p/", text: "Link RobOS machines across networks with mutual TLS." }
+  mcp-manager: { name: "MCP Manager", url: "/v1/apps/mcp-manager/", text: "See, test and assign the MCP servers on this machine." }
+  # Everyday and business
+  point-of-sale: { name: "Point of Sale", url: "/point-of-sale/", text: "Touchscreen register with self-checkout, scanning, tabs and tips." }
+  auto-center: { name: "Auto Center", url: "/auto-center/", text: "Front desk, mechanic bench with OBD-II, estimates and checkout." }
+  household: { name: "Household", url: "/family-finances/", text: "Import statements, sort spending and estimate your taxes." }
+  audio-player: { name: "Audio Player", url: "/v1/apps/audio-player/", text: "Your music library, lyrics, and casting to Google speakers." }
+  movie-player: { name: "Movie Player", url: "/movie-player/", text: "Your movies and shows with posters, subtitles and TV casting." }
+  robos-tv: { name: "Smart TV Studio", url: "/tv/", text: "Pair your TV and put RobOS apps on the big screen." }
+  smart-light: { name: "Smart Light", url: "/v1/apps/smart-light/", text: "Wi-Fi lights by room, scenes and a daylight schedule." }
+  home-speaker: { name: "Home Speaker", url: "/v1/apps/home-speaker/", text: "Intercom, voice notes and announcements on your speakers." }
+  cloud-accounts: { name: "Cloud Accounts", url: "/v1/apps/cloud-accounts/", text: "Sign in to Google, Microsoft and others once, for every app." }
+  google-calendar: { name: "Google Calendar", url: "/v1/apps/google-calendar/", text: "Sets up your Google calendar, contacts and mail in Thunderbird." }
+  # Games
+  party-game: { name: "Party Game", url: "/games/party-game/", text: "An AI host runs mini games about your guests on your TVs." }
+  crpg: { name: "Realm of Heroes", url: "/games/crpg/", text: "Party-based RPG with real-time-with-pause combat." }
+  tabletop-rpg: { name: "Tabletop RPG", url: "/games/tabletop-rpg/", text: "A board-game style dungeon crawler with quests and fog of war." }
+  robos-rts: { name: "Starfall Command", url: "/games/robos-rts/", text: "One player against the AI on a huge strategy map." }
+  quest-warrior-dragon: { name: "Quest: Warrior Dragon", url: "/games/quest-warrior-dragon/", text: "A retro console RPG across 29 maps." }
+  # Game tools
+  robos-tabletop: { name: "Tabletop Studio", url: "/v1/apps/robos-tabletop/", text: "Quests, heroes, monsters and boards, then launch the game." }
+  tabletop-blockmap-creator: { name: "Blockmap Creator", url: "/v1/apps/tabletop-blockmap-creator/", text: "Line a grid up with a board image and mark the rooms." }
+  tabletop-quest-editor: { name: "Quest Map Editor", url: "/v1/apps/tabletop-quest-editor/", text: "Place doors, monsters, traps and stairs on a map." }
+  crpg-editor: { name: "cRPG Editor", url: "/v1/apps/crpg-editor/", text: "Campaigns, characters, items, spells and battle maps." }
+  crpg-builder: { name: "cRPG Builder", url: "/v1/apps/crpg-builder/", text: "Turn the game's knowledge graph into a Godot 4 project." }
+  game-playthrough: { name: "Game Playthrough", url: "/v1/apps/game-playthrough/", text: "Watch an AI play the game end to end, with videos per milestone." }

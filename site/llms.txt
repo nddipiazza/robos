@@ -4,6 +4,7 @@
 
 ## Main Site Sections
 - [Home](https://rowbose.com/): The vision (replace everything, then need less AI), product overview, app suites, context-engineering customization, and SDLC workflow
+- [Quick start wizard](https://rowbose.com/using-robos-wizard/): A short decision tree (developer, DevOps, home, small business, player, game creator) that ends in a tailored guide: install steps for the visitor's OS, the apps to try first, and what to read next
 - [App Directory](https://rowbose.com/apps/): Searchable catalog of all RobOS desktop applications, domain sandboxes, game studios, and MCP servers
 - [Build Apps](https://rowbose.com/build-apps/): Overview of the Task Planner, Task Implementer, and Agent Code Review loop
 - [Code Review](https://rowbose.com/code-review/): The Code Review Theater tab by tab: diff, before-and-after evidence, agent walkthrough beside the running app, required/optional/hidden review steps, reviewer mode
