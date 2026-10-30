@@ -22,6 +22,40 @@ Each post is its own file, `_blog/<slug>.html`, published at `/blog/<slug>/` wit
 from the same day) and has no post content of its own. Old `/blog/#<slug>` links are forwarded to the
 post's page by a script on the index. The `robos-blog` skill describes the front matter.
 
+## Home page vision (`/#vision`) and share card
+
+The home page leads with the two-move plan: **Move 1**, one open-source suite that replaces the apps people
+pay for, one at a time (ships today); **Move 2**, keep and reuse what AI produces so each new app needs less
+AI and less electricity (the Skill Commons proposal on `/future/`, not built yet). Keep that split honest in
+copy: Move 2 claims must say what exists today. App counts come from `site.apps | size`, so they track
+`docs/_apps` automatically.
+
+`assets/landing/vision-roadmap.jpg` is an AI-generated illustration in the same style as the `/future/`
+figures. Its exact content, for regenerating or redrawing it:
+
+```mermaid
+flowchart LR
+  subgraph M1["Move 1 · Replace everything, slowly"]
+    P1[Paid app] --> POS[Point of Sale]
+    P2[Paid app] --> AC[Auto Center]
+    P3[Paid app] --> HH[Household finances]
+    P4[Paid app] --> AMP["Audio & Movie Player"]
+    P5[Paid app] --> DEV[Developer tools]
+    NEXT["+ the next app you describe"]
+  end
+  subgraph M2["Move 2 · Need less AI over time"]
+    S1["1. AI solves a task once"] --> S2["2. Output is stored: code, graph, tests"]
+    S2 --> S3["3. Next time, reuse it, no AI call"]
+    S3 --> S4["4. AI only for what is truly new"]
+    S4 --> S1
+    LOCAL["Small AI on your own computer"]
+  end
+  M1 -- "every app built once, kept forever" --> M2
+```
+
+`assets/og.png` (1200×630) is rendered from `scripts/site-og-card.html`: copy it into the built site, open it
+in a 1200×630 viewport (it loads `/assets/logo-mark.png`) and screenshot it.
+
 ## Hero video
 
 The hero on the home page is a recording of the real apps. Regenerate it with the steps in

@@ -1,9 +1,9 @@
 # RobOS (rowbose.com / www.rowbose.com)
 
-> RobOS is an open-source app suite built on one knowledge graph (KGraph). Users do three things with it: use the ready-made suites (Point of Sale, Auto Center, Household, Games, Audio Player & Home Speaker, and Developer Tools), customize any existing app by describing the change, and build new apps from context engineering principles with automated tests and narrated video walkthroughs. AI features inside the apps are optional.
+> RobOS is one open-source app suite built to replace the apps people pay for, one at a time, on one knowledge graph (KGraph): Point of Sale, Auto Center, Household, Games, Audio & Movie Player, smart home, and Developer Tools. Users use the apps, customize any of them by describing the change, and build new apps from context engineering principles with automated tests and narrated video walkthroughs. The long-term plan (see /future/) is to keep and reuse what AI produces, code, KGraph nodes, skills and tests, so each new app needs less AI and less electricity. AI features inside the apps are optional.
 
 ## Main Site Sections
-- [Home](https://rowbose.com/): Product overview, app suites, context-engineering customization, and SDLC workflow
+- [Home](https://rowbose.com/): The vision (replace everything, then need less AI), product overview, app suites, context-engineering customization, and SDLC workflow
 - [App Directory](https://rowbose.com/apps/): Searchable catalog of all RobOS desktop applications, domain sandboxes, game studios, and MCP servers
 - [Build Apps](https://rowbose.com/build-apps/): Overview of the Task Planner, Task Implementer, and Agent Code Review loop
 - [Code Review](https://rowbose.com/code-review/): The Code Review Theater tab by tab: diff, before-and-after evidence, agent walkthrough beside the running app, required/optional/hidden review steps, reviewer mode
