@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "title": "Starfall Command improvement backlog",
+  "references": [
+    {
+      "title": "Blizzard: Game Guide - Buildings",
+      "url": "https://news.blizzard.com/en-us/article/4488317/game-guide-buildings"
+    },
+    {
+      "title": "Frost Giant: Stormgate early-access overview",
+      "url": "https://a-us.storyblok.com/f/1017471/x/9f689f18cc/stormgate-early-access-now-live-and-free-to-play.pdf"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "army-selection",
+      "priority": "P1",
+      "category": "Controls",
+      "title": "Select the entire army with F3",
+      "status": "done",
+      "why": "Reinforcements should be easy to collect without dragging workers into combat.",
+      "acceptance": [
+        "F3 and the Army button select owned combat units across the map.",
+        "Workers, buildings and opponents stay out of the selection."
+      ],
+      "evidence": [
+        "tests/test_improvement_backlog.gd",
+        "tests/e2e/improvements_walkthrough.py"
+      ]
+    },
+    {
+      "id": "queue-cancel",
+      "priority": "P1",
+      "category": "Production",
+      "title": "Cancel queued units with a full refund",
+      "status": "done",
+      "why": "Misclicks and supply blocks need an immediate, predictable recovery action.",
+      "acceptance": [
+        "Right-click an active or waiting unit in single or combined production queues to cancel it.",
+        "Refund exactly the paid crystal/aether and release its reserved supply.",
+        "Preserve all other queue entries and their progress."
+      ],
+      "evidence": [
+        "tests/test_improvement_backlog.gd",
+        "tests/e2e/improvements_walkthrough.py"
+      ]
+    },
+    {
+      "id": "resource-rallies",
+      "priority": "P1",
+      "category": "Economy",
+      "title": "Rally newly trained workers onto resources",
+      "status": "done",
+      "why": "The economy should obey a deliberate rally target instead of ignoring it.",
+      "acceptance": [
+        "Right-click crystal or a friendly Aether Tap with a selected producer to set a resource rally.",
+        "New workers harvest that target; a ground rally moves them to the chosen position.",
+        "A destroyed/depleted resource target falls back safely; soldiers never harvest."
+      ],
+      "evidence": [
+        "tests/test_improvement_backlog.gd",
+        "tests/e2e/improvements_walkthrough.py"
+      ]
+    },
+    {
+      "id": "frame-budget",
+      "priority": "P0",
+      "category": "Performance",
+      "title": "Prove smooth full-army battles",
+      "status": "todo",
+      "why": "Responsiveness is the first quality bar; additional effects must fit the frame budget.",
+      "acceptance": [
+        "Benchmark paid 100- and 200-supply armies at 1080p on documented hardware.",
+        "At normal speed target 60 FPS, p95 frame time under 16.7 ms and no stalls over 100 ms.",
+        "Report simulation, navigation, HUD, rendering and capture costs separately."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "fog-of-war",
+      "priority": "P0",
+      "category": "Visibility",
+      "title": "Add authoritative fog of war and scouting",
+      "status": "todo",
+      "why": "Both player and enemy currently see too much; reconnaissance needs to matter.",
+      "acceptance": [
+        "Track unexplored, explored and currently visible areas per player.",
+        "Use the same sight rules for targeting, rendering, minimap and built-in AI.",
+        "Last-seen structures persist; hidden moving enemies do not leak through bars or commands."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "formation-navigation",
+      "priority": "P0",
+      "category": "Combat",
+      "title": "Keep large armies moving through real chokepoints",
+      "status": "todo",
+      "why": "Local detours exist; whole-army arrival and narrow passages need stress-tested behavior.",
+      "acceptance": [
+        "Test mixed 40/100/200-unit formations in both travel directions.",
+        "Units reach usable firing positions without jams, oscillation or pushing held units.",
+        "Preserve explicit move, attack-move and retreat intentions."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "save-resume",
+      "priority": "P0",
+      "category": "Campaign",
+      "title": "Save and resume missions exactly",
+      "status": "todo",
+      "why": "A computer sleeping or a game restart should not discard an army-building session.",
+      "acceptance": [
+        "Versioned manual saves and rotating autosaves restore resources, orders, queues, AI and RNG.",
+        "A resumed run matches an uninterrupted run at deterministic checkpoints.",
+        "Recover safely from interrupted writes and incompatible save versions."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "input-reliability",
+      "priority": "P0",
+      "category": "Controls",
+      "title": "Harden every command across focus and UI changes",
+      "status": "todo",
+      "why": "Selection, held keys and modals already have regression tests; broader input coverage is needed.",
+      "acceptance": [
+        "Cover windowed/fullscreen scaling, letterboxing, modifiers, focus loss and stuck buttons.",
+        "Repeated selection, production and placement inputs never issue unintended orders.",
+        "Keep a reproducible rendered input walkthrough for each regression."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "minimap-readability",
+      "priority": "P1",
+      "category": "Visibility",
+      "title": "Make the minimap a reliable tactical tool",
+      "status": "todo",
+      "why": "Threats, rallies and objectives should be recognizable without moving the camera.",
+      "acceptance": [
+        "Distinct friendly/enemy/structure/resource markers remain readable at every map size.",
+        "Add timed player pings, objective markers and useful attack alerts.",
+        "Minimap honors fog, camera bounds and left/right-click commands."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "combat-readability",
+      "priority": "P1",
+      "category": "Presentation",
+      "title": "Read units and attacks at gameplay zoom",
+      "status": "todo",
+      "why": "Original silhouettes and restrained effects should communicate who is firing at what.",
+      "acceptance": [
+        "Differentiate infantry, armor, siege and support by silhouette and animation.",
+        "Tune muzzle flashes, impacts, trails, deaths and selection colors at common zoom levels.",
+        "Keep pooled effects within the measured frame budget."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "audio-integration",
+      "priority": "P1",
+      "category": "Presentation",
+      "title": "Integrate and mix the concurrent audio work",
+      "status": "todo",
+      "why": "Audio cues are being developed separately and need an integration pass.",
+      "acceptance": [
+        "Coordinate with the audio changes before editing their files.",
+        "Selection, acknowledgement, attack and warning cues have distinct priorities and volume controls.",
+        "Limit overlapping voices and provide visual equivalents for critical warnings."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "healthbar-options",
+      "priority": "P1",
+      "category": "Accessibility",
+      "title": "Offer readable health bars and team colors",
+      "status": "todo",
+      "why": "Dense fights need clear damage and ownership without relying only on red/green.",
+      "acceptance": [
+        "Options for always/selected/damaged health and shield bars persist.",
+        "Use shape/outline and colorblind-friendly palettes for ownership and warnings.",
+        "Keep text and bars legible on scaled and small displays."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "worker-saturation",
+      "priority": "P1",
+      "category": "Economy",
+      "title": "Show worker allocation and resource saturation",
+      "status": "todo",
+      "why": "Players need to see why income is weak and where extra workers should go.",
+      "acceptance": [
+        "Show assigned versus useful crystal/aether workers at each base.",
+        "Select idle workers and depleted sites reliably.",
+        "Explain supply reservation and income in focused tooltips."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "production-overview",
+      "priority": "P1",
+      "category": "Production",
+      "title": "Add a global production and supply overview",
+      "status": "todo",
+      "why": "Combined selection queues exist; macro should also be readable while the army is selected.",
+      "acceptance": [
+        "Optional compact strip shows active production, idle producers and supply warning.",
+        "Clicking an entry selects or centers its producer without losing control groups.",
+        "Avoid covering the battlefield with decorative counters."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "hotkey-profiles",
+      "priority": "P1",
+      "category": "Controls",
+      "title": "Allow custom hotkeys and camera speeds",
+      "status": "todo",
+      "why": "A fixed layout should not be the only way to play comfortably.",
+      "acceptance": [
+        "Remap unit, structure, control-group and camera actions with conflict validation.",
+        "Provide default and grid layouts; support keyboard layouts and reset-to-default.",
+        "Persist mouse speed and repeat timing without changing simulation speed."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "control-group-tools",
+      "priority": "P1",
+      "category": "Controls",
+      "title": "Complete control-group and camera-location tools",
+      "status": "todo",
+      "why": "Basic groups exist; splitting armies and returning to bases needs fewer steps.",
+      "acceptance": [
+        "Add/remove/steal membership with clear modifier semantics.",
+        "Save/recall camera locations and cycle owned bases.",
+        "Death and selection changes do not leave stale or duplicate tags."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "attack-feedback",
+      "priority": "P1",
+      "category": "Combat",
+      "title": "Explain target and command failures clearly",
+      "status": "todo",
+      "why": "A rejected order should be understandable without opening logs.",
+      "acceptance": [
+        "Show contextual feedback for range, terrain, minimum range, cooldown and invalid targets.",
+        "Display queued waypoints and destination feedback without visual spam.",
+        "Prioritize attack alerts and allow jumping to the relevant location."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "tech-upgrades",
+      "priority": "P1",
+      "category": "Combat",
+      "title": "Build coherent faction tech and upgrade choices",
+      "status": "todo",
+      "why": "Unit abilities exist, but army progression needs explicit strategic tradeoffs.",
+      "acceptance": [
+        "Define original upgrade paths, prerequisites, costs and research durations.",
+        "Expose the tech tree and unmet requirements in tooltips.",
+        "Prove paid research, stat effects and intended matchup shifts with thresholds."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "enemy-ai",
+      "priority": "P1",
+      "category": "AI",
+      "title": "Make the opponent scout and adapt honestly",
+      "status": "todo",
+      "why": "Paid skirmish AI is a foundation; strategic choices should depend on available information.",
+      "acceptance": [
+        "Scout, expand, defend and retreat using visible evidence.",
+        "Difficulty changes decisions rather than granting resources or hidden vision.",
+        "Run multiple paid build orders and seeds against each faction with outcome/time bounds."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "battle-lab-matrix",
+      "priority": "P1",
+      "category": "Testing",
+      "title": "Expose the full matchup matrix in Battle Lab",
+      "status": "todo",
+      "why": "Automated roster/ability duels exist; players need accessible squad comparisons too.",
+      "acceptance": [
+        "Choose both unit types, counts, upgrades, abilities and formations.",
+        "Run mirrored equal-supply/equal-cost fixtures with seeded replay.",
+        "Display win/loss thresholds, survivors, time-to-kill and trade efficiency."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "campaign-objectives",
+      "priority": "P1",
+      "category": "Campaign",
+      "title": "Add mission variety and clear objective states",
+      "status": "todo",
+      "why": "First Strike proves the build-and-assault loop; a campaign needs more than one static garrison.",
+      "acceptance": [
+        "Add defense, escort and timed optional objectives with original maps and briefings.",
+        "Explain failure and recovery conditions; retain collapsible objectives and results.",
+        "Prove normal paid build paths for every mission without injected wins."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "onboarding",
+      "priority": "P1",
+      "category": "Campaign",
+      "title": "Teach the core loop through playable steps",
+      "status": "todo",
+      "why": "New players should learn gathering, supply, production and attack-move in context.",
+      "acceptance": [
+        "Highlight the relevant worker, button and target for each tutorial step.",
+        "Advance from observed outcomes instead of timers or forced state changes.",
+        "Allow skipping, replaying and practicing without an external AI service."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "replay",
+      "priority": "P2",
+      "category": "Testing",
+      "title": "Record deterministic replays and desync checks",
+      "status": "todo",
+      "why": "A bug or surprising result should be replayable from its actual inputs.",
+      "acceptance": [
+        "Persist seed, version and ordered commands with checkpoint checksums.",
+        "Support playback speed, pause, timeline markers and an end report.",
+        "Detect incompatible versions and diverging state with useful diagnostics."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "map-pool",
+      "priority": "P2",
+      "category": "Campaign",
+      "title": "Develop a small, tested tactical map pool",
+      "status": "todo",
+      "why": "Terrain and expansions should create meaningful choices instead of accidental path failures.",
+      "acceptance": [
+        "Author original maps with distinct rush distances, chokes and expansion tradeoffs.",
+        "Validate worker routes, army passages, high-ground access and resource fairness.",
+        "Ensure editor round-trips preserve campaign metadata and playable geometry."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "results-progression",
+      "priority": "P2",
+      "category": "Testing",
+      "title": "Extend results to macro decisions and match history",
+      "status": "todo",
+      "why": "Battle combat statistics exist; economy and decision timing should also be inspectable.",
+      "acceptance": [
+        "Track income, worker count, supply blocks, idle production and army value over time.",
+        "Keep resource accounting distinct from damage and production completion.",
+        "Save browsable match history with scenario/version/seed provenance."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "distribution",
+      "priority": "P2",
+      "category": "Platform",
+      "title": "Package and validate desktop builds",
+      "status": "todo",
+      "why": "A polished game needs predictable startup, settings and recoverable failures.",
+      "acceptance": [
+        "Build reproducible Windows/Linux packages with original assets and licenses.",
+        "Test startup, fullscreen/windowed changes, alt-tab, device changes and offline play.",
+        "Provide useful crash diagnostics and keep saved games across upgrades."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "multiplayer",
+      "priority": "P2",
+      "category": "Platform",
+      "title": "Design multiplayer only after deterministic foundations",
+      "status": "todo",
+      "why": "Networking must preserve command responsiveness and fair information rules.",
+      "acceptance": [
+        "Prototype command synchronization, checksums, lobby flow and disconnect recovery.",
+        "Apply authoritative fog and validate commands for the issuing player.",
+        "Measure latency and keep a reproducible two-client test before claiming multiplayer support."
+      ],
+      "evidence": []
+    }
+  ]
+}

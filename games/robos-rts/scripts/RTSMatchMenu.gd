@@ -74,6 +74,10 @@ func _ready() -> void:
 		SimEngine.load_scenario_file("riflemen-vs-riflemen")
 		panel.hide())
 	box.add_child(battle)
+	var backlog_button = Button.new()
+	backlog_button.text = "Improvement backlog  [F4]"
+	backlog_button.pressed.connect(func(): get_parent().backlog.open())
+	box.add_child(backlog_button)
 	var resume = Button.new()
 	resume.text = "Resume (F8)"
 	resume.pressed.connect(toggle)

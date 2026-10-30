@@ -83,6 +83,7 @@ class RTSClient:
         owner: int = 1,
         structure_type: str = "",
         queue: bool = False,
+        queue_index: int = 0,
     ) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
             "command": command,
@@ -98,6 +99,8 @@ class RTSClient:
             payload["unit_type"] = unit_type
         if structure_type:
             payload["structure_type"] = structure_type
+        if command == "cancel_train":
+            payload["queue_index"] = queue_index
         return self._request("POST", "/action", payload)
 
     def set_directive(self, player: int, mode: str, enabled: bool = True, target_x: float = 64.0, target_y: float = 48.0) -> Dict[str, Any]:

@@ -242,6 +242,8 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			var ty = float(body_dict.get("y", body_dict.get("target_pos", {}).get("y", 0.0) if typeof(body_dict.get("target_pos")) == TYPE_DICTIONARY else 0.0))
 			var t_tag = int(body_dict.get("target_tag", 0))
 			var extra = str(body_dict.get("structure_type", body_dict.get("extra", "")))
+			if cmd == "cancel_train":
+				extra = str(body_dict.get("queue_index", 0))
 			var queue = bool(body_dict.get("queue", false))
 			var res = SimEngine.issue_command(tags, cmd, Vector2(tx, ty), t_tag, extra, queue)
 			_send_json(client, 200, res)

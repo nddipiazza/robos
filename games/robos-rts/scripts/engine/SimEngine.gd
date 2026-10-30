@@ -708,6 +708,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
 		"rally_pos": pos + (Vector2(8.0, 0.0) if owner_id == 1 else Vector2(-8.0, 0.0)),
+		"rally_target_tag": 0,
+		"rally_explicit": false,
 		"kills": 0,
 		"damage_dealt": 0.0
 	}
@@ -1001,10 +1003,29 @@ func _update_structures(dt: float) -> void:
 					spawn_dir = Vector2.RIGHT if u["owner"] == 1 else Vector2.LEFT
 				var spawn_pos = u["pos"] + spawn_dir * (u["radius"] + 1.8)
 				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
-				if new_unit.get("is_worker", false) and not match_state.is_empty():
+				var harvest_target = _rally_harvest_target(u) if new_unit.is_worker else 0
+				if new_unit.is_worker and harvest_target > 0:
+					issue_command([new_unit.tag], "harvest", u.rally_pos, harvest_target)
+				elif new_unit.is_worker and (int(u.get("rally_target_tag", 0)) > 0 or (not bool(u.get("rally_explicit", false)) and not match_state.is_empty())):
 					issue_SmartHarvest(new_unit.tag)
 				elif not new_unit.is_empty() and u["rally_pos"].distance_to(u["pos"]) > u["radius"] + 1.5:
 					issue_command([new_unit["tag"]], "move", u["rally_pos"])
+
+func _rally_harvest_target(producer: Dictionary) -> int:
+	var tag = int(producer.get("rally_target_tag", 0))
+	if units.has(tag):
+		var tap: Dictionary = units[tag]
+		return tag if tap.unit_type == "aether_tap" and tap.owner == producer.owner and tap.build_progress >= 1.0 else 0
+	if resources.has(tag):
+		var resource: Dictionary = resources[tag]
+		if resource.amount <= 0 and not unlimited_resources:
+			return 0
+		if resource.resource_type == "crystal_field":
+			return tag
+		for tap in units.values():
+			if tap.unit_type == "aether_tap" and tap.owner == producer.owner and tap.build_progress >= 1.0 and tap.pos.distance_to(resource.pos) < 1.0:
+				return int(tap.tag)
+	return 0
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u["surge_timer"] > 0.0:
@@ -1616,6 +1637,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "cancel_train":
+			if extra == "" or extra.is_valid_int():
+				if _cancel_production(u, int(extra) if extra != "" else 0):
+					accepted += 1
+			continue
 		if ctype == "halt":
 			ctype = "stop"
 		if ctype == "resume_build" and target_tag > 0 and u.orders.any(func(order): return order.type == "build" and int(order.get("structure_tag", 0)) == target_tag):
@@ -1736,6 +1762,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype == "rally":
 			if u["is_structure"]:
 				u["rally_pos"] = target_pos
+				u["rally_target_tag"] = target_tag
+				u["rally_explicit"] = true
 				accepted += 1
 			continue
 
@@ -1896,10 +1924,26 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	p["aether"] -= v_cost
 	structure["production_queue"].append({
 		"unit_type": unit_type,
+		"paid_crystal": m_cost,
+		"paid_aether": v_cost,
 		"progress": 0.0,
 		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * _build_time_scale())
 	})
 	_recompute_supplies()
+	return true
+
+func _cancel_production(structure: Dictionary, index: int) -> bool:
+	if not structure.is_structure or not players.has(structure.owner) or index < 0 or index >= structure.production_queue.size():
+		return false
+	var item: Dictionary = structure.production_queue[index]
+	var def := RTSData.get_unit_def(str(item.unit_type))
+	var crystal := int(item.get("paid_crystal", def.get("crystal_cost", 0)))
+	var aether := int(item.get("paid_aether", def.get("aether_cost", 0)))
+	structure.production_queue.remove_at(index)
+	players[structure.owner].crystal += crystal
+	players[structure.owner].aether += aether
+	_recompute_supplies()
+	emit_signal("notice", structure.owner, "Cancelled %s · refunded %d crystal / %d aether" % [def.name, crystal, aether], "info")
 	return true
 
 func _build_time_scale() -> float:

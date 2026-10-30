@@ -51,6 +51,24 @@ When multiple production buildings are selected, the command card combines all t
 
 Selecting a constructing worker leaves its build order running. Use **Stop / Halt (S)** to interrupt it; the unfinished structure retains its paid progress. Select a compatible worker and right-click that structure to resume. This reuses the same foundation without another charge. An actively assigned builder must be halted before another worker can take over. Queued follow-up tasks run after construction finishes.
 
+## Improvement backlog
+
+Press **F4** or choose **Improvement backlog** in F8 to inspect the development todos inside the game. Search by title or completion criteria, filter by area, and switch between **All tasks**, **To do** and **Done**. Opening the backlog pauses play; closing restores the previous pause state. Priorities separate foundations (P0), play quality (P1) and expansion (P2). Each item explains why it matters and what must be demonstrated before it is complete. Planned items explicitly say they are not implemented. The source catalog is `games/robos-rts/data/improvement-backlog.json`; completed entries include verification evidence.
+
+The first batch adds **F3 / Army** selection (all living owned combat units, including offscreen, excluding workers/buildings), **production cancellation** (right-click an active or waiting queue icon for a full refund of its paid crystal/aether and reserved supply) and **worker resource rallies** (right-click crystal or a friendly Aether Tap with a producer selected). Cancellation works in both single-building and combined queue views, preserving other entries and current progress. An explicit ground rally moves new workers to that point; depleted or destroyed resource rallies fall back to harvesting usable resources. Military units never harvest.
+
+The remaining backlog covers measured large-army performance, authoritative fog/scouting, chokepoint movement, exact save/resume, input reliability, minimap and combat readability, accessibility, worker saturation, global production, configurable hotkeys, control groups, faction tech, honest enemy AI, Battle Lab squad comparisons, campaign variety, onboarding, replays, map validation, macro results and distribution. Audio work has an explicit integration item to coordinate with changes developed separately. Network multiplayer remains a future item with deterministic simulation and visibility prerequisites.
+
+Reference points include [Blizzard's building and rally guide](https://news.blizzard.com/en-us/article/4488317/game-guide-buildings) and [Frost Giant's Stormgate overview](https://a-us.storyblok.com/f/1017471/x/9f689f18cc/stormgate-early-access-now-live-and-free-to-play.pdf); implementation keeps original names and assets. This backlog is a development plan, not a claim of feature parity.
+
+```bash
+cd games/robos-rts
+python run_balance_tests.py --suite improvements --suite controls --suite economy --jobs=1
+python tests/e2e/improvements_walkthrough.py
+```
+
+The tests prove refunds, supply release, queue continuity, actual resource income, ground/aether/depleted rallies, army ownership and backlog filtering/pause behavior. The rendered walkthrough exercises F4, Done filtering, F3, native queue cancellation in both views and worker resource rallies; proof and captions are archived under `~/.robos/development/walkthroughs/rts-player-controls/`.
+
 ## Campaign: First Strike
 
 Choose **Campaign: First Strike** from the F8 menu, or run `games/robos-rts/play.ps1 -Mission` on Windows (`-Windowed` is optional). Other platforms can use `games/robos-rts/play.sh -- --scenario=campaign-first-strike`.

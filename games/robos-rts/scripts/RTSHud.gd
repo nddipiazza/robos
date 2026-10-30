@@ -19,6 +19,16 @@ class ProductionQueueList extends Control:
 	var hud: Node2D
 	var producers: Array[Dictionary] = []
 	const ROW_HEIGHT := 72.0
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+			var row := int(event.position.y / ROW_HEIGHT)
+			if row < 0 or row >= producers.size():
+				return
+			for i in range(producers[row].production_queue.size()):
+				if Rect2(281 + i * 114, row * ROW_HEIGHT + 4, 44, 44).has_point(event.position):
+					hud.main.cancel_selected_production(producers[row].tag, i)
+					accept_event()
+					return
 	func _draw() -> void:
 		var font := ThemeDB.fallback_font
 		var first := maxi(0, int(get_parent().scroll_vertical / ROW_HEIGHT))
@@ -64,7 +74,7 @@ func _ready() -> void:
 	production_list = ProductionQueueList.new()
 	production_list.hud = self
 	production_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	production_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	production_list.mouse_filter = Control.MOUSE_FILTER_PASS
 	production_scroll.add_child(production_list)
 
 func _invalidate_minimap(_scenario_name: String = "") -> void:
@@ -109,6 +119,7 @@ func _draw() -> void:
 		_draw_banner()
 	_draw_messages()
 	_draw_idle_worker_button()
+	_draw_army_button()
 	_draw_group_tabs()
 	_draw_bottom_panel()
 	_draw_tooltip()
@@ -295,6 +306,14 @@ func _draw_idle_worker_button() -> void:
 		draw_texture_rect(tex, Rect2(r.position + Vector2(4, 3), Vector2(40, 40)), false)
 	_text(Vector2(r.position.x + 52, r.position.y + 31), str(idle.size()), 24, C_GOLD)
 
+func _draw_army_button() -> void:
+	var count: int = main.army_tags().size()
+	if count == 0:
+		return
+	var rect: Rect2 = main.ARMY_BTN
+	_frame(rect, 0.92)
+	_text(rect.position + Vector2(10, 28), "Army  %d  [F3]" % count, 18, C_TEXT)
+
 func group_tab_rects() -> Dictionary:
 	var out := {}
 	var keys: Array = main.control_groups.keys()
@@ -417,6 +436,17 @@ func selection_cells() -> Array:
 		cells.append({"tag": tags[i], "rect": Rect2(rx, ry, 80.0, 80.0)})
 	return cells
 
+func production_queue_cells() -> Array:
+	var cells: Array = []
+	if main.selected_tags.size() != 1:
+		return cells
+	var unit: Dictionary = SimEngine.units.get(main.selected_tags[0], {})
+	if unit.is_empty() or not unit.is_structure or unit.owner != main.local_player:
+		return cells
+	for i in range(unit.production_queue.size()):
+		cells.append({"tag": unit.tag, "index": i, "rect": Rect2(main.SEL_PANEL.position + Vector2(600 + i * 72, 42), Vector2(66, 66))})
+	return cells
+
 func _draw_selection_panel() -> void:
 	var production: bool = main.is_production_selection()
 	production_scroll.visible = production
@@ -439,7 +469,7 @@ func _draw_selection_panel() -> void:
 		var count := 0
 		for producer in production_list.producers:
 			count += producer.production_queue.size()
-		_text(Vector2(main.SEL_PANEL.position.x + 300, main.SEL_PANEL.position.y + 24), "PRODUCTION · %d buildings · %d units training / queued · Scroll to see every queue" % [production_list.producers.size(), count], 17, C_TEXT)
+		_text(Vector2(main.SEL_PANEL.position.x + 300, main.SEL_PANEL.position.y + 24), "PRODUCTION · %d buildings · %d units · Scroll queues / right-click unit to refund" % [production_list.producers.size(), count], 17, C_TEXT)
 
 func _draw_multi() -> void:
 	var cells := selection_cells()
@@ -554,7 +584,7 @@ func _draw_single(u: Dictionary) -> void:
 		_bar(Rect2(rx, ry + 24, 420, 18), float(u["build_progress"]), C_GOLD, "%d%%" % int(float(u["build_progress"]) * 100.0))
 		ry += 62.0
 	elif def.has("trains") and is_own:
-		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
+		_text(Vector2(rx, ry + 12), "Production · Right-click unit to cancel / refund", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
 		for i in range(5):
 			var qr := Rect2(rx + float(i) * 72.0, ry + 20.0, 66.0, 66.0)
@@ -795,7 +825,7 @@ func _draw_help() -> void:
 		["Mouse wheel", "Zoom"],
 		["Middle drag", "Pan the camera"],
 		["Minimap", "Left click jumps there, right click orders"],
-		["Command card", "Click, or press the letter in the corner"],
+		["F3 / production queues", "Select army / right-click a queued unit to refund"],
 	]
 	var right := [
 		["Arrow keys / screen edges", "Pan camera; mouse scroll speed in F8 menu"],

@@ -15,6 +15,7 @@ const CARD_ORIGIN := Vector2(1560.0, 862.0)
 const CARD_BTN := 64.0
 const CARD_GAP := 6.0
 const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
+const ARMY_BTN := Rect2(26.0, 730.0, 150.0, 44.0)
 
 var world_3d: Node3D
 var icons: Node
@@ -22,6 +23,7 @@ var hud: Node2D
 var match_menu: CanvasLayer
 var battle_lab: CanvasLayer
 var campaign: CanvasLayer
+var backlog: CanvasLayer
 var mouse_scroll_speed := 50.0
 const TRAIN_REPEAT_DELAY := 0.35
 const TRAIN_REPEAT_INTERVAL := 0.075
@@ -79,6 +81,8 @@ func _ready() -> void:
 	add_child(battle_lab)
 	campaign = preload("res://scripts/RTSCampaign.gd").new()
 	add_child(campaign)
+	backlog = preload("res://scripts/RTSImprovementBacklog.gd").new()
+	add_child(backlog)
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
@@ -159,7 +163,7 @@ func _handle_camera_pan(delta: float) -> void:
 		world_3d.pan(offset)
 
 func _camera_modal_open() -> bool:
-	return show_help or (match_menu != null and match_menu.panel.visible) \
+	return show_help or (backlog != null and backlog.panel.visible) or (match_menu != null and match_menu.panel.visible) \
 		or (campaign != null and (campaign.briefing.visible or campaign.results.is_open())) \
 		or (battle_lab != null and battle_lab.results.is_open())
 
@@ -181,6 +185,9 @@ func _camera_pan_delta(keys: Vector2, mouse: Vector2, height: float, delta: floa
 	return direction.normalized() * speed * (height / 50.0) * delta
 
 func _control_settings_path() -> String:
+	var override_dir := OS.get_environment("RTS_CONTROL_SETTINGS_DIR")
+	if override_dir != "":
+		return override_dir.path_join("controls.cfg")
 	var folder = OS.get_environment("USERPROFILE") if OS.get_name() == "Windows" else OS.get_environment("HOME")
 	return folder.path_join(".config/robos/rts/controls.cfg")
 
@@ -310,6 +317,24 @@ func selected_producers() -> Array[Dictionary]:
 			producers.append(u)
 	return producers
 
+func army_tags() -> Array[int]:
+	var tags: Array[int] = []
+	for unit in SimEngine.units.values():
+		if unit.owner == local_player and unit.hp > 0 and not unit.is_worker and not unit.is_structure:
+			tags.append(unit.tag)
+	return tags
+
+func select_army() -> void:
+	_select_tags(army_tags())
+	pending_ability = ""
+
+func cancel_selected_production(tag: int, index: int) -> void:
+	var producer: Dictionary = SimEngine.units.get(tag, {})
+	if not selected_tags.has(tag) or producer.is_empty() or producer.owner != local_player:
+		return
+	_clear_training_repeat()
+	SimEngine.issue_command([tag], "cancel_train", Vector2.ZERO, 0, str(index))
+
 func is_production_selection() -> bool:
 	var own := selected_owned()
 	return own.size() > 1 and own.size() == selected_tags.size() \
@@ -391,9 +416,13 @@ func _advance_training_repeat(delta: float) -> void:
 		train_repeat_clock += TRAIN_REPEAT_INTERVAL
 
 func _unhandled_input(event: InputEvent) -> void:
+	if backlog and backlog.panel.visible:
+		return
 	if match_menu and match_menu.panel.visible:
 		if event is InputEventKey and event.pressed and event.keycode == KEY_F8:
 			match_menu.toggle()
+		elif event is InputEventKey and event.pressed and event.keycode == KEY_F4 and backlog:
+			backlog.open()
 		return
 	if event is InputEventMouseButton:
 		_on_mouse_button(event as InputEventMouseButton)
@@ -429,7 +458,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 			_complete_box_selection(box_start_screen, box_end_screen, Input.is_key_pressed(KEY_SHIFT), mb.double_click)
 		return
 
-	if mpos.y >= HUD_TOP - 40.0 and _hud_hit(mb, mpos):
+	if mpos.y >= ARMY_BTN.position.y and _hud_hit(mb, mpos):
 		return
 	if mpos.y >= HUD_TOP:
 		return
@@ -458,6 +487,14 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 		return false
 	var left := mb.button_index == MOUSE_BUTTON_LEFT
 	var right := mb.button_index == MOUSE_BUTTON_RIGHT
+	if left and ARMY_BTN.has_point(mpos) and not army_tags().is_empty():
+		select_army()
+		return true
+	if right:
+		for cell in hud.production_queue_cells():
+			if cell.rect.has_point(mpos):
+				cancel_selected_production(cell.tag, cell.index)
+				return true
 
 	if MINIMAP.grow(6.0).has_point(mpos):
 		if left:
@@ -542,7 +579,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		SimEngine.issue_command(tags, "rally", wpos)
+		SimEngine.issue_command(tags, "rally", wpos, _rally_target_at(wpos, clicked))
 		_spawn_marker(wpos, "rally")
 		return
 
@@ -585,6 +622,14 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
 
+func _rally_target_at(pos: Vector2, clicked: Dictionary = {}) -> int:
+	if not clicked.is_empty() and clicked.unit_type == "aether_tap" and clicked.owner == local_player:
+		return int(clicked.tag)
+	for resource in SimEngine.resources.values():
+		if pos.distance_to(resource.pos) <= float(resource.radius) + 1.6:
+			return int(resource.tag)
+	return 0
+
 func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 	var own := selected_owned()
 	if own.is_empty():
@@ -613,7 +658,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 		_spawn_marker(wpos, "move")
 	elif abil == "rally":
 		pending_ability = ""
-		SimEngine.issue_command(tags, "rally", wpos)
+		SimEngine.issue_command(tags, "rally", wpos, _rally_target_at(wpos, _unit_at_screen(world_to_screen(wpos, 1.2))))
 		_spawn_marker(wpos, "rally")
 	elif abil == "harvest":
 		pending_ability = ""
@@ -856,6 +901,10 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		return
 
 	match ke.keycode:
+		KEY_F4:
+			if backlog:
+				backlog.open()
+			return
 		KEY_F8:
 			if match_menu:
 				match_menu.toggle()
@@ -890,6 +939,9 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			selected_tags.clear()
 			pending_ability = ""
 			focus_on_base()
+			return
+		KEY_F3:
+			select_army()
 			return
 		KEY_SPACE:
 			if alerts.size() > 0:
@@ -1006,6 +1058,9 @@ func ui_state() -> Dictionary:
 		commands.append({"ability": button.ability_id, "hotkey": button.def.get("hotkey", ""), "blocked": button.blocked,
 			"rect": [button.rect.position.x, button.rect.position.y, button.rect.size.x, button.rect.size.y]})
 	return {
+		"army_count": army_tags().size(),
+		"army_rect": [ARMY_BTN.position.x, ARMY_BTN.position.y, ARMY_BTN.size.x, ARMY_BTN.size.y],
+		"backlog": backlog.ui_state() if backlog else {},
 		"production": production,
 		"command_card": commands,
 		"production_scroll_rect": _control_rect(hud.production_scroll) if hud else [],
