@@ -55,6 +55,9 @@ func _ready() -> void:
 	world_3d = RTSWorld3DScript.new()
 	world_3d.name = "RTSWorld3D"
 	add_child(world_3d)
+	if RTSAudio:
+		RTSAudio.world_3d = world_3d
+		RTSAudio.local_player_id = local_player
 
 	icons = RTSIconsScript.new()
 	icons.name = "RTSIcons"
@@ -73,6 +76,8 @@ func _on_scenario_loaded(_name: String) -> void:
 		match_menu.panel.hide()
 	if not SimEngine.match_state.is_empty():
 		local_player = 1
+	if RTSAudio:
+		RTSAudio.local_player_id = local_player
 	selected_tags.clear()
 	pending_ability = ""
 	control_groups.clear()
@@ -96,6 +101,8 @@ func _on_unit_damaged(owner_id: int, pos: Vector2) -> void:
 	alerts.append({"pos": pos, "ttl": 4.0, "max": 4.0})
 	if _attack_msg_cd <= 0.0:
 		push_message("Your forces are under attack!", "warn")
+		if RTSAudio:
+			RTSAudio.play_ui("alert_under_attack")
 		_attack_msg_cd = 10.0
 
 func push_message(text: String, kind: String = "info") -> void:
@@ -258,6 +265,8 @@ func _select_tags(tags: Array, add: bool = false) -> void:
 		if not selected_tags.has(ti):
 			selected_tags.append(ti)
 	active_type = ""
+	if not selected_tags.is_empty() and RTSAudio:
+		RTSAudio.play_ui("ui_select")
 
 func idle_workers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -401,6 +410,8 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 			selected_tags.erase(clicked["tag"])
 		elif not selected_tags.has(clicked["tag"]):
 			selected_tags.append(clicked["tag"])
+		if not selected_tags.is_empty() and RTSAudio:
+			RTSAudio.play_ui("ui_select")
 		return
 
 	var box_units: Array[Dictionary] = []
@@ -416,9 +427,16 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 			continue
 		if not selected_tags.has(u["tag"]):
 			selected_tags.append(u["tag"])
+	if not selected_tags.is_empty() and RTSAudio:
+		RTSAudio.play_ui("ui_select")
 
 func _spawn_marker(pos: Vector2, kind: String) -> void:
 	click_markers.append({"pos": pos, "kind": kind, "ttl": 0.7, "max": 0.7})
+	if RTSAudio:
+		if kind == "attack":
+			RTSAudio.play_ui("ui_command_attack")
+		elif kind in ["move", "gather", "rally"]:
+			RTSAudio.play_ui("ui_command_move")
 
 func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	var own := selected_owned()
@@ -507,6 +525,8 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 		var placement := placement_for(sdef_id, wpos)
 		if not placement["ok"]:
 			push_message(str(placement["reason"]), "error")
+			if RTSAudio:
+				RTSAudio.play_ui("ui_error")
 			return
 		pending_ability = ""
 		var best: Dictionary = {}
@@ -519,6 +539,8 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 					best = u
 		if not best.is_empty():
 			SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue)
+			if RTSAudio:
+				RTSAudio.play_ui("ui_build_place")
 			_spawn_marker(placement["pos"], "move")
 
 # Validates a structure placement for the local player and snaps aether taps to vents.
@@ -632,13 +654,19 @@ func _trigger_card_button(btn: Dictionary) -> void:
 	var adef: Dictionary = btn["def"]
 	if str(btn["blocked"]) != "":
 		push_message(str(btn["blocked"]), "error")
+		if RTSAudio:
+			RTSAudio.play_ui("ui_error")
 		return
 	var target_mode := str(adef.get("target", "none"))
 	if target_mode in ["point", "point_or_unit", "resource"]:
 		pending_ability = abil_id
+		if RTSAudio:
+			RTSAudio.play_ui("ui_select")
 		return
 	if abil_id.begins_with("train_"):
 		_train_on_best(abil_id)
+		if RTSAudio:
+			RTSAudio.play_ui("ui_select")
 		return
 	var tags: Array = []
 	for u in selected_owned():
@@ -678,6 +706,12 @@ func _recall_group(g: int) -> void:
 	_last_group_press[g] = now
 
 func _handle_hotkey(ke: InputEventKey) -> void:
+	if ke.ctrl_pressed and ke.keycode == KEY_M:
+		if RTSAudio:
+			var is_muted: bool = RTSAudio.toggle_mute()
+			push_message("Audio %s." % ("muted" if is_muted else "unmuted"), "info")
+		return
+
 	if ke.keycode >= KEY_1 and ke.keycode <= KEY_9:
 		var grp: int = ke.keycode - KEY_0
 		if ke.ctrl_pressed:
@@ -721,6 +755,8 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			if not SimEngine.match_state.is_empty():
 				return
 			local_player = local_player % 3 + 1
+			if RTSAudio:
+				RTSAudio.local_player_id = local_player
 			selected_tags.clear()
 			pending_ability = ""
 			focus_on_base()
