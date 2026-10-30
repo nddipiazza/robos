@@ -1,0 +1,117 @@
+---
+layout: default
+title: Pass Manager — KeePassXC (.kdbx) Single-Archive Vault & YubiKey FIDO2 Unlock in RobOS
+permalink: /pass-manager/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "Reference guide for RobOS Pass Manager (packages/pass-manager) and kdbx-vault.js: store all workspace credentials in a single encrypted KeePassXC .kdbx 4.1 archive and unlock it with a single physical touch on your YubiKey via the FIDO2 CTAP2.1 hmac-secret extension."
+og_image: /assets/pass-manager/01-unlock-yubikey.png
+og_image_alt: "RobOS Pass Manager showing 1-Touch Physical Key Unlock bound to a Yubico YubiKey FIDO for robos-passwords.kdbx"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS Pass Manager, KeePassXC .kdbx Linux, YubiKey FIDO2 hmac-secret unlock, keepassxc-cli KDBX 4.1 Argon2id, hardware key password manager, Security Key C NFC keystore unlock"
+---
+{%- assign pm = '/assets/pass-manager/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">Guide · Security › RobOS Pass Manager (<code>packages/pass-manager</code>)</p>
+<h1>KeePassXC (<code>.kdbx</code>) vault &amp; YubiKey unlock</h1>
+<p class="lead"><strong>RobOS Pass Manager</strong> stores your credentials, API tokens, database URLs, and notes inside a single portable <strong>KeePassXC <code>.kdbx</code> 4.1</strong> archive (<code>AES-256</code> / <code>Argon2id</code>) and binds it to your physical <strong>YubiKey / FIDO2 Security Key</strong> using the CTAP2.1 <code>hmac-secret</code> extension—so you can unlock your entire keystore with a single finger press on the key's gold contact.</p>
+</header>
+
+<figure class="guide-shot"><a href="{{ pm }}01-unlock-yubikey.png"><img src="{{ pm }}01-unlock-yubikey.png" alt="RobOS Pass Manager unlock screen showing Physical Key Bound: Yubico YubiKey FIDO with a 1-Touch Unlock button for robos-passwords.kdbx" width="900" height="620"></a><figcaption><strong>1-Touch Physical Key Unlock</strong> in RobOS Pass Manager (<code>:19113</code>): press the gold touch button on your YubiKey to unwrap and unlock <code>robos-passwords.kdbx</code>.</figcaption></figure>
+
+<ul class="cr-nav">
+<li><a href="#architecture"><b>Architecture</b><span>KDBX 4.1 archive, FIDO2 <code>hmac-secret</code> &amp; <code>/dev/shm</code> session</span></a></li>
+<li><a href="#protection-modes"><b>3 Hardware Modes</b><span>1-Touch OR Password, Touch-Only &amp; 2FA Composite</span></a></li>
+<li><a href="#vault-studio"><b>Entry Studio &amp; Generator</b><span>Groups, structured fields &amp; entropy estimation</span></a></li>
+<li><a href="#db-settings"><b>KDBX Cipher &amp; Binding</b><span><code>keepassxc-cli db-info</code> &amp; FIDO2 key enrollment</span></a></li>
+<li><a href="#hardware-keys-guard"><b>Hardware Keys Guard</b><span>Cross-app unlock &amp; USB unplug auto-lock</span></a></li>
+<li><a href="#cli-reference"><b>CLI &amp; API Reference</b><span><code>kdbx-vault.js</code>, files &amp; debug port <code>:19113</code></span></a></li>
+</ul>
+
+<h2 id="architecture">Architecture</h2>
+<p>Instead of scattering folder trees and filenames in plain view on disk (as traditional <code>pass</code> stores do with <code>~/.password-store/**/*.gpg</code>), RobOS Pass Manager uses the standard single-file <strong>KeePassXC KDBX 4.1</strong> container format backed by <code>keepassxc-cli</code> and the shared engine in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/kdbx-vault.js"><code>packages/robos-lib/kdbx-vault.js</code></a>. Group names, entry titles, usernames, passwords, URLs, and notes are all encrypted inside one <code>.kdbx</code> file (`~/.config/robos/vault/robos-passwords.kdbx` by default).</p>
+
+<figure class="guide-shot"><a href="{{ pm }}kdbx-yubikey-architecture.png"><img src="{{ pm }}kdbx-yubikey-architecture.png" alt="RobOS Pass Manager KeePassXC .kdbx and YubiKey FIDO2 hmac-secret Technical Architecture Diagram" width="1280" height="720"></a><figcaption>End-to-end schematic of <strong>RobOS Pass Manager</strong> and <code>packages/robos-lib/kdbx-vault.js</code>: physical YubiKey FIDO2 <code>hmac-secret</code> derivation on the left, AES-256-GCM envelope &amp; volatile <code>/dev/shm</code> session cache in the center, and KDBX 4.1 archive consumers on the right.</figcaption></figure>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph YK["Physical Security Key (/dev/hidraw0 • 1050:0402)"]
+    TOUCH["Capacitive Gold Touch Disc<br/>User Presence (UP=1)"]
+    ECDH["CTAP2.1 ClientPin ECDH<br/>PinProtocolV2 Shared Secret"]
+    HMAC["FIDO2 hmac-secret Extension<br/>32-Byte Salt -> 256-Bit Hardware Secret"]
+    TOUCH --> ECDH --> HMAC
+  end
+
+  subgraph ENGINE["RobOS Keystore Engine (packages/robos-lib/kdbx-vault.js)"]
+    WRAP["AES-256-GCM Key Envelope<br/>robos-passwords.kdbx.fido2.json<br/>(1-Touch / Touch-Only / 2FA PBKDF2)"]
+    SHM["Volatile RAM Session Cache<br/>/dev/shm/robos-kdbx-session-UID.json (0600)<br/>Wiped on Lock or USB Unplug"]
+    CLI["keepassxc-cli Bridge<br/>db-create / ls / show / add / edit / rm / db-info"]
+    HMAC --> WRAP --> SHM --> CLI
+  end
+
+  subgraph CONSUMERS["Single-File Archive &amp; RobOS Apps"]
+    KDBX[("robos-passwords.kdbx<br/>KDBX 4.1 • AES-256 • Argon2id")]
+    PM["RobOS Pass Manager (:19113)<br/>Entry Tree, Editor &amp; Generator"]
+    HK["RobOS Hardware Keys (:19218)<br/>Keystore Guard &amp; Unplug Auto-Lock"]
+    PU["RobOS Pass Unlock (:19122)<br/>Daily Desktop Unlock Prompt"]
+    CLI --> KDBX
+    SHM --> PM
+    SHM --> HK
+    SHM --> PU
+  end
+</pre>
+
+<h2 id="protection-modes">1. Three Hardware Key Protection Modes</h2>
+<p>When creating a new <code>.kdbx</code> archive (<strong>New…</strong>) or binding a YubiKey to an existing database (<strong>⚙</strong>), RobOS supports three cryptographic binding modes:</p>
+
+<table class="wide">
+<thead><tr><th>Protection Mode</th><th>How Unlock Works</th><th>Best For</th></tr></thead>
+<tbody>
+<tr><td><strong>1-Touch Physical Key OR Master Password</strong> <em>(Recommended)</em></td><td>Touch your YubiKey for instant 1-touch unlock over FIDO2 <code>hmac-secret</code>, or type your Master Password if your key is not with you</td><td>Daily workstation convenience with full password recovery backup</td></tr>
+<tr><td><strong>Physical YubiKey Touch ONLY</strong></td><td>Zero master password—the <code>.kdbx</code> archive is encrypted directly by the 256-bit hardware <code>hmac-secret</code> output of your YubiKey</td><td>Maximum hardware isolation where no memorizable password exists</td></tr>
+<tr><td><strong>2FA Composite Key (Password + YubiKey Touch)</strong></td><td>Derives the AES-256-GCM wrapping key via <code>PBKDF2-HMAC-SHA256(masterPassword, yubikeyHmacSecret, 100000)</code>—requiring both knowledge and physical possession</td><td>High-security production or infrastructure vaults</td></tr>
+</tbody>
+</table>
+
+<h2 id="vault-studio">2. Entry Studio &amp; Password Generator</h2>
+<p>Once unlocked, <strong>RobOS Pass Manager</strong> presents a collapsible group/entry tree on the left and a structured credential inspector on the right:</p>
+
+<figure class="guide-shot"><a href="{{ pm }}02-vault-entries.png"><img src="{{ pm }}02-vault-entries.png" alt="RobOS Pass Manager showing an unlocked .kdbx archive with work, cloud, and infra groups and the selected work/github-pat entry" width="900" height="620"></a><figcaption><strong>Unlocked KeePassXC Keystore:</strong> Hierarchical groups (<code>work/</code>, <code>cloud/</code>, <code>infra/</code>), UUID tracking, 1-click username/password clipboard copy (auto-cleared after 30s), URLs, and notes.</figcaption></figure>
+
+<ul>
+<li><strong>Auto-Clearing Clipboard:</strong> Clicking <strong>👤 Copy User</strong> or <strong>📋 Copy Password</strong> copies the field to the system clipboard and automatically wipes it after 30 seconds if unchanged.</li>
+<li><strong>Inline KeePassXC Password Generator:</strong> Click <strong>+</strong> in the top toolbar to add a new entry or <strong>✏️ Edit</strong> to update an existing one. The inline generator invokes <code>keepassxc-cli generate</code> and <code>keepassxc-cli estimate</code> to produce high-entropy secrets of any length (8–128 chars).</li>
+</ul>
+
+<figure class="guide-shot"><a href="{{ pm }}03-add-entry-generator.png"><img src="{{ pm }}03-add-entry-generator.png" alt="New Entry and Password Generator form inside RobOS Pass Manager" width="900" height="620"></a><figcaption><strong>New Entry &amp; Password Generator:</strong> Create nested groups automatically (e.g. <code>cloud/cloudflare-dns</code>) and generate high-entropy passwords backed by <code>keepassxc-cli generate</code>.</figcaption></figure>
+
+<h2 id="db-settings">3. KDBX Cipher Inspector &amp; Physical Key Enrollment</h2>
+<p>Click the <strong>⚙</strong> button in the top toolbar to inspect the underlying KDBX 4.1 header parameters (<code>keepassxc-cli db-info</code>) and bind or re-bind a physical security key at any time:</p>
+
+<figure class="guide-shot"><a href="{{ pm }}04-db-info-fido2.png"><img src="{{ pm }}04-db-info-fido2.png" alt="KeePassXC Database Settings and Physical Key Binding panel showing AES 256-bit, Argon2d KDF, and Yubico YubiKey FIDO binding" width="900" height="620"></a><figcaption><strong>Database Settings (<code>⚙</code>):</strong> Displays KDBX 4.1 cipher metadata, active FIDO2 <code>hmac-secret</code> binding, and one-click migration from legacy <code>~/.password-store</code> directories.</figcaption></figure>
+
+<h2 id="hardware-keys-guard">4. Cross-App Hardware Keys Guard &amp; Auto-Lock on Unplug</h2>
+<p>Your <code>.kdbx</code> keystore is also integrated directly into <a href="{{ '/physical-keys/' | relative_url }}"><strong>RobOS Hardware Keys</strong></a> (<code>packages/hardware-keys</code>, port <code>:19218</code>):</p>
+
+<figure class="guide-shot"><a href="{{ pm }}05-hardware-keys-kdbx-guard.png"><img src="{{ pm }}05-hardware-keys-kdbx-guard.png" alt="RobOS Hardware Keys PAM and RobOS Guard tab showing the KeePassXC Single-Archive Keystore (.kdbx) Hardware Unlock card" width="1180" height="780"></a><figcaption><strong>RobOS Hardware Keys → PAM &amp; RobOS Guard:</strong> Unlock or lock your <code>.kdbx</code> archive directly from the hardware security studio, and automatically wipe volatile session keys when the YubiKey is unplugged from USB.</figcaption></figure>
+
+<h2 id="cli-reference">5. CLI &amp; Programmatic Reference</h2>
+<table class="wide">
+<thead><tr><th>Path / Interface</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>~/.config/robos/vault/robos-passwords.kdbx</code></td><td>Default encrypted KeePassXC 4.1 single-file password archive</td></tr>
+<tr><td><code>~/.config/robos/vault/robos-passwords.kdbx.fido2.json</code></td><td>FIDO2 <code>hmac-secret</code> credential ID, 32-byte salt, and AES-256-GCM wrapped vault key</td></tr>
+<tr><td><code>/dev/shm/robos-kdbx-session-&lt;uid&gt;.json</code></td><td>Volatile in-RAM (`tmpfs`, `0600`) unlocked session state; wiped on Lock, reboot, or USB unplug</td></tr>
+<tr><td><code>packages/robos-lib/kdbx-vault.js</code></td><td>Shared Node.js engine (`initDatabase`, `unlockWithHardwareKey`, `unlockWithPassword`, `listEntries`, `getEntry`, `saveEntry`)</td></tr>
+<tr><td><code>http://127.0.0.1:19113</code></td><td>RobOS DOM Snapshot &amp; E2E debug server for <code>pass-manager</code></td></tr>
+</tbody>
+</table>
+
+<p style="margin-top:2rem"><a href="{{ '/physical-keys/' | relative_url }}">&larr; Physical Push Keys (YubiKey &amp; FIDO2)</a> &nbsp;|&nbsp; <a href="{{ '/blog/keepassxc-yubikey-fido2-unlock/' | relative_url }}">Read the Engineering Blog post &rarr;</a></p>
+
+</article>
+</div></section>
