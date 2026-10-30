@@ -36,7 +36,58 @@ try {
   }
 } catch {}
 
+function requireShared(rel) {
+  for (const p of [path.resolve(__dirname, '..', rel), `/usr/local/share/robos/${rel}`]) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
+const agentProviders = requireShared('robos-agent-client/providers');
+const agentRunner = requireShared('robos-agent-client/work-task/runner');
+
 // ── Settings ──────────────────────────────────────────────────────────────────
+const AGENT_PREF_FILE = path.join(os.homedir(), '.config', 'robos', 'task-implementer-agent.json');
+
+function readAgentPref() {
+  try { return JSON.parse(fs.readFileSync(AGENT_PREF_FILE, 'utf8')); }
+  catch { return {}; }
+}
+
+function saveAgentPref({ provider = '', model = '', effort = '' } = {}) {
+  try {
+    fs.mkdirSync(path.dirname(AGENT_PREF_FILE), { recursive: true });
+    fs.writeFileSync(AGENT_PREF_FILE, JSON.stringify({ provider, model, effort }, null, 2));
+  } catch {}
+}
+
+// Resolves the agent, model and reasoning effort from the request, the saved selector
+// preference, or the first installed and signed-in agent (falling back to Claude Code).
+async function resolveAgent(selection = {}) {
+  const saved = readAgentPref();
+  let provider = selection.provider || saved.provider || '';
+  const model = selection.model !== undefined ? selection.model : (saved.model || '');
+  const effort = selection.effort !== undefined ? selection.effort : (saved.effort || '');
+  if (!provider && agentProviders) {
+    try {
+      const list = await agentProviders.options({ refresh: false });
+      provider = (list.find(p => p.available) || list[0])?.id || '';
+    } catch {}
+  }
+  return { provider: provider || 'claude', model: model || '', effort: effort || '' };
+}
+
+function formatRunnerEvent(event) {
+  const text = String(event.text || '');
+  if (!text) return null;
+  if (event.role === 'stderr' || event.role === 'error') {
+    return { text: text.endsWith('\n') ? text : text + '\n', stream: 'stderr' };
+  }
+  if (event.role === 'tool') {
+    const label = event.name ? `[${event.name}] ` : '';
+    return { text: `${label}${text.replace(/\s+/g, ' ').slice(0, 240)}\n`, stream: 'stderr' };
+  }
+  return { text: text.endsWith('\n') ? text : text + '\n', stream: 'stdout' };
+}
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); }
   catch { return {}; }
@@ -253,9 +304,24 @@ ipcMain.handle('reset-agent-personas', () => {
   return { ok: false, error: 'agent-personas library not available' };
 });
 
-ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, customPrompt, customDirectives }) => {
+ipcMain.handle('agent-providers', async (_, options) => {
+  if (!agentProviders) return [];
+  return agentProviders.options({ refresh: options?.refresh === true });
+});
+
+ipcMain.handle('get-agent-pref', () => readAgentPref());
+
+ipcMain.handle('save-agent-pref', (_, pref) => {
+  saveAgentPref(pref);
+  return { ok: true };
+});
+
+ipcMain.handle('start-agent', async (event, { taskKey, task, extraContext, persona, customPrompt, customDirectives, provider, model, effort }) => {
   if (activeAgents.has(taskKey)) {
     return { ok: false, error: 'Agent already running for this task' };
+  }
+  if (!agentRunner) {
+    return { ok: false, error: 'The RobOS agent runner (robos-agent-client) is not installed.' };
   }
 
   let prompt = '';
@@ -273,6 +339,13 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
     }
     prompt = buildAgentPrompt(task, extraContext, effectivePersona);
   }
+  // Scan the task and developer text before attaching the built-in system instructions,
+  // whose wording ("do not mention ...") can otherwise trigger the injection detector.
+  if (agentRunner) {
+    const scan = require('../robos-agent-client/one-shot').guard(prompt);
+    if (scan.blocked) return { ok: false, error: scan.summary };
+    prompt = scan.text;
+  }
 
   prompt += '\n\n'+require('../robos-lib/engineering-writing').instructions;
   prompt += '\n\n'+require('../robos-lib/commit-completion').instructions;
@@ -289,62 +362,38 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
     ROBOS_AGENT_MODE: effectivePersona?.executionMode || 'headless',
   };
 
-  // Claude Code CLI: stream-json outputs one JSON object per line.
-  // Each line may be { type:'text', text:'...' } or { type:'result', ... }
-  const child = cp.spawn('claude', [
-    '-p', prompt,
-    '--output-format', 'stream-json',
-    '--verbose',
-    '--dangerously-skip-permissions',
-  ], { encoding: 'utf8', env: childEnv });
+  const agent = await resolveAgent({ provider, model, effort });
+  if (provider) saveAgentPref(agent);
 
-  activeAgents.set(taskKey, child);
-
-  let stdoutBuf = '';
-  child.stdout.on('data', d => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    stdoutBuf += d.toString();
-    const lines = stdoutBuf.split('\n');
-    stdoutBuf = lines.pop(); // keep partial last line
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      let text = line;
-      try {
-        const obj = JSON.parse(line);
-        // stream-json: content delta events have type 'assistant' with content array
-        if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
-          text = obj.message.content
-            .filter(b => b.type === 'text')
-            .map(b => b.text)
-            .join('');
-        } else if (obj.type === 'text') {
-          text = obj.text;
-        } else if (obj.type === 'result') {
-          text = obj.result || '';
-        } else {
-          continue; // skip tool_use, tool_result, etc.
+  let run;
+  try {
+    run = agentRunner.start({
+      provider: agent.provider,
+      model: agent.model,
+      effort: agent.effort,
+      mode: 'implement',
+      autoApprove: true,
+      prompt,
+      guard: text => ({ blocked: false, text }),
+      env: childEnv,
+      onEvent: evt => {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        const formatted = formatRunnerEvent(evt);
+        if (formatted) mainWindow.webContents.send('agent-stream', { taskKey, ...formatted });
+      },
+      onExit: ({ code, error }) => {
+        activeAgents.delete(taskKey);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('agent-done', { taskKey, code, error, provider: agent.provider });
         }
-      } catch {
-        text = line;
-      }
-      if (text) {
-        mainWindow.webContents.send('agent-stream', { taskKey, text, stream: 'stdout' });
-      }
-    }
-  });
-  child.stderr.on('data', d => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('agent-stream', { taskKey, text: d.toString(), stream: 'stderr' });
-    }
-  });
-  child.on('close', code => {
-    activeAgents.delete(taskKey);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('agent-done', { taskKey, code });
-    }
-  });
+      },
+    });
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 
-  return { ok: true };
+  activeAgents.set(taskKey, run.child);
+  return { ok: true, provider: run.provider, label: run.label };
 });
 
 ipcMain.handle('open-local-review', async (_, task) => {
@@ -536,7 +585,10 @@ ipcMain.handle('ti-list-path', (_, prefix) => {
 // ── Plan generation ───────────────────────────────────────────────────────────
 const activePlanProcs = new Map(); // runId → child
 
-ipcMain.handle('generate-plan', (event, { tasks, context, serverId }) => {
+ipcMain.handle('generate-plan', async (event, { tasks, context, serverId, provider, model, effort }) => {
+  if (!agentRunner) {
+    return { ok: false, error: 'The RobOS agent runner (robos-agent-client) is not installed.' };
+  }
   const runId = Date.now().toString();
 
   // Compact task representation for the prompt
@@ -554,61 +606,39 @@ ipcMain.handle('generate-plan', (event, { tasks, context, serverId }) => {
   }));
 
   const prompt = buildPlanPrompt(taskSummary, context);
-  const child = cp.spawn('claude', [
-    '-p', prompt,
-    '--output-format', 'stream-json',
-  ], { encoding: 'utf8', env: { ...process.env, DISPLAY: ':0' } });
+  const agent = await resolveAgent({ provider, model, effort });
+  if (provider) saveAgentPref(agent);
 
-  activePlanProcs.set(runId, child);
-
-  let stdoutBuf = '';
   let fullText = '';
+  let run;
+  try {
+    run = agentRunner.start({
+      provider: agent.provider,
+      model: agent.model,
+      effort: agent.effort,
+      mode: 'plan',
+      prompt,
+      env: { ...process.env, DISPLAY: ':0' },
+      onEvent: evt => {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        const formatted = formatRunnerEvent(evt);
+        if (!formatted) return;
+        if (evt.role === 'assistant' || evt.role === 'log') fullText += evt.text + '\n';
+        mainWindow.webContents.send('plan-stream', { runId, text: formatted.text, isErr: formatted.stream === 'stderr' });
+      },
+      onExit: ({ code, text, error }) => {
+        activePlanProcs.delete(runId);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('plan-done', { runId, code, fullText: text || fullText, error });
+        }
+      },
+    });
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 
-  child.stdout.on('data', d => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    stdoutBuf += d.toString();
-    const lines = stdoutBuf.split('\n');
-    stdoutBuf = lines.pop();
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      let text = '';
-      try {
-        const obj = JSON.parse(line);
-        if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
-          text = obj.message.content.filter(b => b.type === 'text').map(b => b.text).join('');
-        } else if (obj.type === 'text') {
-          text = obj.text;
-        } else if (obj.type === 'result') {
-          text = obj.result || '';
-        } else { continue; }
-      } catch { continue; }
-      if (text) {
-        fullText += text;
-        mainWindow.webContents.send('plan-stream', { runId, text });
-      }
-    }
-  });
-
-  child.stderr.on('data', d => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('plan-stream', { runId, text: d.toString(), isErr: true });
-    }
-  });
-
-  child.on('error', error => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('plan-stream', { runId, text: error.message, isErr: true });
-    }
-  });
-
-  child.on('close', code => {
-    activePlanProcs.delete(runId);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('plan-done', { runId, code, fullText });
-    }
-  });
-
-  return { ok: true, runId };
+  activePlanProcs.set(runId, run.child);
+  return { ok: true, runId, provider: run.provider, label: run.label };
 });
 
 ipcMain.handle('stop-plan', (_, { runId }) => {

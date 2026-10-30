@@ -27,13 +27,13 @@ Four lessons on the path from an idea to a pushed branch: split the work into is
 flowchart LR
     A["Task Planner"] -->|creates issues| B[("GitHub Issues or Jira")]
     B -->|lists tasks| C["Task Implementer"]
-    C -->|starts| D["claude CLI"]
+    C -->|starts| D["Coding-agent CLI"]
     D -->|pushes| E["Feature branch on origin"]
     E -->|Review branch| F["PR Review"]
     F -->|Create PR| G["Pull request"]
 ```
 
-Task Planner and Task Implementer both read the active task server from `~/.config/robos/settings.json`, which you edit in the Task Servers app. The agent in the middle is the Claude Code CLI. Task Implementer starts it and streams its output. It does not create a sandbox, clone the repository or open the pull request. [Run an agent on a task]({{ '/training/agent-tasks/run-an-agent.html' | relative_url }}) lists exactly what it does.
+Task Planner and Task Implementer both read the active task server from `~/.config/robos/settings.json`, which you edit in the Task Servers app. Task Implementer starts the coding-agent CLI you pick in `<robos-agent-selector>` (Codex, AGY, Claude Code or GitHub Copilot) and streams its output. It does not create a sandbox, clone the repository or open the pull request. [Run an agent on a task]({{ '/training/agent-tasks/run-an-agent.html' | relative_url }}) lists exactly what it does.
 
 ## Lessons
 

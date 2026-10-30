@@ -4,12 +4,12 @@ title: Task Implementer
 permalink: /task-implementer/
 body_class: guide
 extra_css: /assets/build-guide.css
-description: "RobOS Task Implementer picks a GitHub or Jira issue, gives it a developer persona, and runs the Claude Code CLI on it. The agent creates a branch, implements and tests the task, commits and pushes, without opening a pull request. Requirements, safety, every tab, personas and the hand-off to Agent Code Review."
+description: "RobOS Task Implementer picks a GitHub or Jira issue, gives it a developer persona, and runs the coding agent you choose (Codex, AGY, Claude Code or GitHub Copilot). The agent creates a branch, implements and tests the task, commits and pushes, without opening a pull request. Requirements, safety, every tab, personas and the hand-off to Agent Code Review."
 og_image: /assets/build-apps/shots/implementer-2-done.jpg
 og_image_alt: "RobOS Task Implementer after the agent created branch codex/42, ran the tests, committed and pushed"
 og_type: article
 schema_type: TechArticle
-keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with AI, Jira tasks, Claude Code CLI, developer personas, feature branch, Agent Code Review, task dependencies, implementation plan"
+keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with AI, Jira tasks, Codex, AGY, Claude Code, GitHub Copilot, developer personas, feature branch, Agent Code Review, task dependencies, implementation plan"
 ---
 {%- assign shots = '/assets/build-apps/shots/' | relative_url -%}
 <section class="auto-intro" aria-labelledby="task-implementer-title">
@@ -39,7 +39,8 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 <table>
 <thead><tr><th>You want to</th><th>Use</th></tr></thead>
 <tbody>
-<tr><td>Let an agent implement one issue</td><td><strong>Tasks</strong>, select it, <strong>Start Agent</strong></td></tr>
+<tr><td>Let an agent implement one issue</td><td><strong>Tasks</strong>, select it, pick the agent and model, <strong>Start Agent</strong></td></tr>
+<tr><td>Choose the coding agent, model and reasoning effort</td><td>The <strong>AI agent</strong>, <strong>Model</strong> and <strong>Effort</strong> picker</td></tr>
 <tr><td>Change the role or guidance for this run</td><td>The persona drop-down and <strong>Directives</strong></td></tr>
 <tr><td>Tell the agent something the issue does not say</td><td>The extra-context box</td></tr>
 <tr><td>Read the result before it becomes a pull request</td><td><strong>Review branch…</strong></td></tr>
@@ -50,13 +51,11 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 </table>
 
 <h2 id="safety">Read this first</h2>
-<blockquote><p><strong>The agent runs as you, with permission prompts turned off.</strong> Task Implementer starts</p>
-<pre><code>claude -p &lt;prompt&gt; --output-format stream-json --verbose --dangerously-skip-permissions</code></pre>
-<p>in the folder the app was started from. The agent can read and write files, run commands and push without asking. The app does not create a sandbox, a separate account or a virtual display. Use it only on repositories and machines where that is acceptable.</p></blockquote>
+<blockquote><p><strong>The agent runs as you, with permission prompts turned off.</strong> Task Implementer starts the chosen coding-agent CLI (<code>codex</code>, <code>agy</code>, <code>claude</code> or <code>copilot</code>) in non-interactive implementation mode in the folder the app was started from. The agent can read and write files, run commands and push without asking. The app does not create a sandbox, a separate account or a virtual display. Use it only on repositories and machines where that is acceptable.</p></blockquote>
 
 <h2 id="before">Before you start</h2>
 <ul>
-<li class="check"><span class="box"></span><span>The Claude Code CLI, <code>claude</code>, on your <code>PATH</code> and signed in. It is the only agent this app runs; the active provider in RobOS Agents does not change it.</span></li>
+<li class="check"><span class="box"></span><span>At least one supported coding-agent CLI on your <code>PATH</code> and signed in: <strong>Codex</strong> (<code>codex</code>), <strong>AGY / Antigravity</strong> (<code>agy</code>), <strong>Claude Code</strong> (<code>claude</code>) or <strong>GitHub Copilot</strong> (<code>copilot</code>). You pick the agent, model and reasoning effort in the window.</span></li>
 <li class="check"><span class="box"></span><span>A <strong>task server</strong> in <strong>RobOS Task Servers</strong>. For GitHub, the GitHub CLI <code>gh</code>, signed in. For Jira, the <code>robos-task-client</code> package and your API token in <code>pass</code> at the server's <code>token_pass_path</code>. Without one, the window shows <strong>Open Task Servers</strong>.</span></li>
 <li class="check"><span class="box"></span><span>A local clone of the repository, with <code>origin</code> pointing at it, and push access.</span></li>
 <li class="check"><span class="box"></span><span>Issues to work on. <a href="{{ '/task-planner/' | relative_url }}">Task Planner</a> creates them, or use ones you already have.</span></li>
@@ -72,7 +71,7 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 <ol>
 <li><strong>Load the tasks.</strong> In <strong>Tasks</strong>, choose <strong>Open</strong>, <strong>Closed</strong> or <strong>All</strong>. GitHub lists up to 50 issues with <code>gh issue list</code>; Jira runs a search for up to 50. Each row shows the persona the app picked, and a lock if the task is blocked by unfinished work.</li>
 <li><strong>Select one.</strong> Start with a task nothing else depends on. The header shows its key, the persona and <strong>Open</strong>, which opens the issue in your browser. A blocked task shows <em>Blocked by</em> with links to the blockers.</li>
-<li><strong>Check the persona.</strong> Change it in the drop-down if it is wrong. <strong>Directives</strong> shows the guidance the agent gets for that persona. Edit it for this run, or <strong>Reset to Role Default</strong>.</li>
+<li><strong>Check the persona and the agent.</strong> Change the persona in the drop-down if it is wrong, and choose the <strong>AI agent</strong>, <strong>Model</strong> and (when supported) <strong>Effort</strong> beneath the header. <strong>Directives</strong> shows the guidance the agent gets for that persona. Edit it for this run, or <strong>Reset to Role Default</strong>.</li>
 <li><strong>Add hints</strong> in the extra-context box: files to look at, the command that runs the tests, things not to touch, the branch name you want.</li>
 </ol>
 <figure class="guide-shot"><a href="{{ shots }}implementer-1-task.jpg"><img src="{{ shots }}implementer-1-task.jpg" alt="Task Implementer with issue 42 selected: the Backend Systems Developer persona, Directives, the extra-context box, the task description and the Start Agent and Review branch buttons" loading="lazy" width="1600" height="1067"></a><figcaption>Issue #42, with the persona from its <code>role:</code> label and an empty box for extra context.</figcaption></figure>
@@ -118,16 +117,17 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 <p>The <strong>AI Plan Generator</strong> suggests an order for the tasks you loaded in <strong>Tasks</strong>.</p>
 <ol>
 <li>Write anything the order should respect in <strong>Context &amp; Suggestions</strong>: a deadline, a task to do first, work to leave for later.</li>
-<li>Click <strong>Generate Plan</strong>. The app runs <code>claude -p</code> with each task's key, title, status, priority, type, labels, parent, blockers and the start of its description. The agent's progress shows under <strong>Generation Log</strong>.</li>
+<li>Click <strong>Generate Plan</strong>. The app runs the selected agent in read-only / plan mode with each task's key, title, status, priority, type, labels, parent, blockers and the start of its description. The agent's progress shows under <strong>Generation Log</strong>.</li>
 <li><strong>Implementation Plan</strong> lists every task once, first to last, with one sentence on why it sits there.</li>
 </ol>
-<p>The prompt is written for Jira, where priority, issue types, parents and blockers are available. On GitHub it has only titles, labels and descriptions to go on. The plan is saved per task server and shown again the next time you open the tab. This run does not use <code>--dangerously-skip-permissions</code>.</p>
+<p>The prompt is written for Jira, where priority, issue types, parents and blockers are available. On GitHub it has only titles, labels and descriptions to go on. The plan is saved per task server and shown again the next time you open the tab. Plan generation runs the agent in read-only / plan mode, without write or shell permissions.</p>
 
 <h2 id="files">Where things are saved</h2>
 <table>
 <thead><tr><th>What</th><th>Where</th></tr></thead>
 <tbody>
 <tr><td>Task servers and the active one</td><td><code>~/.config/robos/settings.json</code></td></tr>
+<tr><td>Chosen agent, model and effort</td><td><code>~/.config/robos/task-implementer-agent.json</code></td></tr>
 <tr><td>Edited and custom personas</td><td><code>~/.config/robos/agent-personas.json</code></td></tr>
 <tr><td>Generated plans</td><td><code>~/.config/robos/plans/&lt;server-id&gt;.json</code></td></tr>
 <tr><td>The code</td><td>Your clone, and the branch the agent pushed to <code>origin</code></td></tr>
@@ -137,7 +137,7 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 <h2 id="limits">Limits and fixes</h2>
 <ul>
 <li><strong>The agent works in the wrong folder.</strong> Start the app from your clone, as in <a href="#launch">Start it in your clone</a>, or give the full path in the extra-context box.</li>
-<li><strong>Nothing happens on Start Agent.</strong> Run <code>claude --version</code> in a terminal and sign in. Another agent may already be running on the same task.</li>
+<li><strong>Nothing happens on Start Agent.</strong> Make sure the selected CLI (<code>codex</code>, <code>agy</code>, <code>claude</code> or <code>copilot</code>) is installed and signed in. Another agent may already be running on the same task.</li>
 <li><strong>"No task server configured."</strong> Click <strong>Open Task Servers</strong>, add one and save, then reopen Task Implementer.</li>
 <li><strong>The wrong persona is chosen.</strong> Pick the right one in the drop-down, and add a <code>role:</code> label to the issue so it is chosen next time.</li>
 <li><strong>The push fails.</strong> The agent pushes with your Git credentials. Check <code>git push</code> works from the clone.</li>

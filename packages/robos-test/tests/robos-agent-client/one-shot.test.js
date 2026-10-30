@@ -73,3 +73,29 @@ test('requires a chosen agent and surfaces sign-in problems', async () => {
   const res = await oneShot.ask({ provider: 'agy', prompt: 'p', authenticate: () => { throw new Error('AGY login unavailable.'); } });
   assert.deepStrictEqual([res.ok, res.error], [false, 'AGY login unavailable.']);
 });
+
+test('runs Claude Code in plan mode with the chosen model', async () => {
+  const { spawnCLI, calls } = fakeSpawn([{ stdout: '[{"key":"A"}]\n' }]);
+  const res = await oneShot.ask({ provider: 'claude', model: 'sonnet', prompt: 'order tasks', spawnCLI, authenticate: noAuth, binary: '/opt/claude' });
+  assert.deepStrictEqual(res, { ok: true, text: '[{"key":"A"}]', error: null, provider: 'claude' });
+  assert.strictEqual(calls[0].bin, '/opt/claude');
+  const args = calls[0].args;
+  assert.deepStrictEqual(args.slice(0, 6), ['-p', '--output-format', 'text', '--permission-mode', 'plan', '--model']);
+  assert.strictEqual(args[6], 'sonnet');
+  assert.strictEqual(args[args.indexOf('--') + 1].endsWith('order tasks'), true);
+});
+
+test('runs GitHub Copilot without write or shell tools, and retries without optional flags', async () => {
+  const { spawnCLI, calls } = fakeSpawn([
+    { code: 1, stderr: 'error: unknown option --model' },
+    { stdout: 'answer\n' },
+  ]);
+  const res = await oneShot.ask({ provider: 'copilot', model: 'gpt-5', prompt: 'explain', spawnCLI, authenticate: noAuth, binary: '/opt/copilot' });
+  assert.deepStrictEqual(res, { ok: true, text: 'answer', error: null, provider: 'copilot' });
+  assert.strictEqual(calls.length, 2);
+  assert.deepStrictEqual(calls[0].args.slice(0, 2), ['--model', 'gpt-5']);
+  assert.ok(calls[0].args.includes('-s'));
+  assert.ok(calls[1].args.includes('--allow-all-tools'));
+  assert.deepStrictEqual(calls[1].args.slice(-4), ['--deny-tool', 'write', '--deny-tool', 'shell']);
+  assert.ok(!calls[1].args.includes('--model'));
+});

@@ -1,14 +1,15 @@
 {
   "name": "robos-agent-client",
   "version": "0.2.0",
-  "description": "RobOS Agent Client — agent CLI provider catalogs (Codex, AGY) and the work-task backend invocations used by Dev Central and PR Review",
+  "description": "RobOS Agent Client — agent CLI provider catalogs (Codex, AGY, Claude Code, GitHub Copilot) and the work-task backend invocations and runner used by Task Implementer, Dev Central and PR Review",
   "main": "providers.js",
   "keywords": [
     "robos",
     "agent-cli",
     "claude-code",
     "codex",
-    "antigravity"
+    "antigravity",
+    "github-copilot"
   ],
   "license": "Apache-2.0"
 }

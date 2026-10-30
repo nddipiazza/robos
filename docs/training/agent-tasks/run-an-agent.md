@@ -7,13 +7,13 @@ nav_order: 3
 permalink: /training/agent-tasks/run-an-agent.html
 redirect_from:
   - /training/for-non-developers/04-task-implementer-and-sandboxes.html
-description: "Task Implementer (packages/task-implementer) lists the issues on your task server, builds a prompt from the issue and a persona, and starts the Claude Code CLI on it."
+description: "Task Implementer (packages/task-implementer) lists the issues on your task server, builds a prompt from the issue and a persona, and starts the coding-agent CLI you choose on it."
 ---
 
 # Run an agent on a task
 {: .no_toc }
 
-Task Implementer (`packages/task-implementer`) lists the issues on your task server, builds a prompt from the issue and a persona, and starts the Claude Code CLI on it. This lesson covers one run from issue to a pushed branch, and what the app does and does not do for you.
+Task Implementer (`packages/task-implementer`) lists the issues on your task server, builds a prompt from the issue and a persona, and starts the coding-agent CLI you choose in `<robos-agent-selector>` (Codex, AGY, Claude Code or GitHub Copilot). This lesson covers one run from issue to a pushed branch, and what the app does and does not do for you.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -25,13 +25,7 @@ Task Implementer (`packages/task-implementer`) lists the issues on your task ser
 
 ## What it does and does not do
 
-Task Implementer is a task picker and prompt builder around one command:
-
-```text
-claude -p <prompt> --output-format stream-json --verbose --dangerously-skip-permissions
-```
-
-It streams the agent's text into the window. Everything else is up to the agent and your machine.
+Task Implementer is a task picker and prompt builder around the shared work-task runner (`robos-agent-client/work-task/runner.js`), which starts `codex`, `agy`, `claude` or `copilot` with the model and reasoning effort you select and streams the agent's output into the window. Everything else is up to the agent and your machine.
 
 {: .warning }
 Task Implementer does not clone the repository, create a sandbox, mount a RAM disk or set a working directory. The agent runs as your user in the directory the app was launched from, with permission prompts turned off. Start the app from a checkout you are willing to let an agent edit, and keep secrets out of that environment.
@@ -39,7 +33,7 @@ Task Implementer does not clone the repository, create a sandbox, mount a RAM di
 ## Prerequisites
 
 - A task server in the Task Servers app. For GitHub the app runs `gh issue list --repo <repo> --limit 50`, so `gh` must be signed in. For Jira it reads the API token from `pass`. With no server it shows "No task server configured." and an **Open Task Servers** button.
-- The `claude` CLI on your `PATH`, already logged in.
+- At least one supported coding-agent CLI (`codex`, `agy`, `claude` or `copilot`) on your `PATH`, already logged in.
 - A local checkout of the repository the issues belong to, on a clean working tree.
 
 ## Run one task
@@ -52,7 +46,7 @@ Task Implementer does not clone the repository, create a sandbox, mount a RAM di
    ```
 
 2. In the **Tasks** tab, pick **Open**, **Closed** or **All** and optionally search by title or key. Click an issue. The task list shows the persona each issue resolves to.
-3. Check the persona in the dropdown above the output. Click **Directives** to read or edit the text that will be added to the prompt. Both are covered in [Choose and customize agent personas]({{ '/training/agent-tasks/agent-personas.html' | relative_url }}).
+3. Check the persona in the dropdown above the output, and choose the **AI agent**, **Model** and (when supported) **Effort** in the agent selector. Click **Directives** to read or edit the text that will be added to the prompt. Personas are covered in [Choose and customize agent personas]({{ '/training/agent-tasks/agent-personas.html' | relative_url }}).
 4. Optionally type notes in the context box, such as the path of the repository or constraints. The box has `@` completion for files.
 5. Click **Start Agent**. Output appears under **Agent Output**. The status line ends with "Agent finished successfully." or "Agent exited with code N." Click **Stop** to kill the process.
 
@@ -86,7 +80,7 @@ The prompt never asks for a PR. Creating one is a separate, manual step.
 ## The other tabs
 
 - **Dependencies** shows tasks as a tree by parent issue. Jira supplies parent and blocking links. GitHub issues carry none, so the tree is flat.
-- **Plan** has a context box and **Generate Plan**. It asks `claude -p` to order the loaded tasks and returns a rationale for each position. The result is saved to `~/.config/robos/plans/<server id>.json`. **Implement** on a row opens that task on the **Tasks** tab.
+- **Plan** has an agent selector, a context box and **Generate Plan**. It asks the selected agent (in read-only / plan mode) to order the loaded tasks and returns a rationale for each position. The result is saved to `~/.config/robos/plans/<server id>.json`. **Implement** on a row opens that task on the **Tasks** tab.
 
 ## Persona display and isolation
 

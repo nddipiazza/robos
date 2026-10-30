@@ -8,9 +8,27 @@ function codexBinary() {
   const candidates=[process.env.ROBOS_CODEX_PATH,process.env.CODEX_CLI_PATH,'/usr/lib/chatgpt/resources/codex','/Applications/Codex.app/Contents/Resources/codex'];
   return candidates.find(p=>p && fs.existsSync(p)) || 'codex';
 }
-function invocation(backend,mode,prompt) {
-  if(backend==='codex')return {bin:codexBinary(),args:['exec','--json','--sandbox',mode==='plan'?'read-only':'workspace-write',...(mode==='implement'?['-c','sandbox_workspace_write.network_access=true']:[]),'--',prompt]};
-  if(backend==='claude')return {bin:'claude',args:['-p','--verbose','--output-format','stream-json',...(mode==='plan'?['--permission-mode','plan']:[]),'--',prompt]};
+// Resolves a CLI through the provider catalog; falls back to the bare name so PATH lookup still applies.
+function providerBinary(name) {
+  try { return require('../providers').binary(name); } catch { return name; }
+}
+/**
+ * invocation(backend, mode, prompt, options) -> { bin, args, format }
+ * backend: 'codex' | 'claude' | 'copilot' | 'agy' (the agents in <robos-agent-selector>)
+ * mode:    'plan' (read-only) | 'implement' (edits files, runs commands)
+ * options: model, effort (reasoning effort), bin (resolved executable), autoApprove (implement
+ *          without per-tool approval, for runs nobody can answer prompts in)
+ * format:  'jsonl' (one JSON event per line, read with decode()) or 'text' (plain output)
+ */
+function invocation(backend,mode,prompt,{model='',effort='',bin='',autoApprove=false}={}) {
+  const plan=mode==='plan';
+  if(backend==='codex')return {bin:bin||codexBinary(),format:'jsonl',args:['exec','--json','--sandbox',plan?'read-only':'workspace-write',...(mode==='implement'?['-c','sandbox_workspace_write.network_access=true']:[]),...(model?['--model',model]:[]),...(effort?['-c',`model_reasoning_effort="${effort}"`]:[]),'--',prompt]};
+  if(backend==='claude')return {bin:bin||providerBinary('claude'),format:'jsonl',args:['-p','--verbose','--output-format','stream-json',...(plan?['--permission-mode','plan']:autoApprove?['--dangerously-skip-permissions']:[]),...(model?['--model',model]:[]),'--',prompt]};
+  // Copilot needs --allow-all-tools to run tools without a terminal; --deny-tool wins over it, which keeps plan read-only.
+  if(backend==='copilot')return {bin:bin||providerBinary('copilot'),format:'text',args:[...(model?['--model',model]:[]),'-p',prompt,'--allow-all-tools',...(plan?['--deny-tool','write','--deny-tool','shell']:[])]};
+  // AGY: --print takes the next token as the prompt, so it goes last. Plan runs in the default
+  // mode, where print mode denies tools that need approval.
+  if(backend==='agy')return {bin:bin||providerBinary('agy'),format:'jsonl',args:[...(model?['--model',model]:[]),...(effort?['--effort',effort]:[]),'--output-format','stream-json',...(plan?[]:autoApprove?['--dangerously-skip-permissions']:['--mode','accept-edits']),'--print',prompt]};
   throw Error(`Unsupported agent backend: ${backend}`);
 }
 function decode(obj) {

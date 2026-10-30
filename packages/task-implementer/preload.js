@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('robos', {
   stopPlan:        (p)   => ipcRenderer.invoke('stop-plan', p),
   savePlan:        (p)   => ipcRenderer.invoke('save-plan', p),
   loadPlan:        (p)   => ipcRenderer.invoke('load-plan', p),
+  getAgentPref:    ()    => ipcRenderer.invoke('get-agent-pref'),
+  saveAgentPref:   (p)   => ipcRenderer.invoke('save-agent-pref', p),
 
   onAgentStream: (cb) => ipcRenderer.on('agent-stream', (_, data) => cb(data)),
   onAgentDone:   (cb) => ipcRenderer.on('agent-done',   (_, data) => cb(data)),
@@ -32,4 +34,8 @@ contextBridge.exposeInMainWorld('robos', {
     ipcRenderer.removeAllListeners('plan-stream');
     ipcRenderer.removeAllListeners('plan-done');
   },
+});
+
+contextBridge.exposeInMainWorld('robosProviders', {
+  list: (options) => ipcRenderer.invoke('agent-providers', options),
 });

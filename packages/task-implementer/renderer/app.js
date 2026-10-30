@@ -110,6 +110,7 @@ function getDefaultPersonasFallback() {
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function init() {
+  initAgentSelectors();
   await loadAgentPersonas();
   setupAgentPersonasModal();
 
@@ -470,15 +471,66 @@ function selectTask(task) {
   setAgentStatus('', '');
 }
 
+// ── Agent selector (<robos-agent-selector>) ───────────────────────────────────
+let agentSelection = { provider: '', model: '', effort: '' };
+let syncingSelectors = false;
+
+function initAgentSelectors() {
+  if (typeof customElements === 'undefined') return;
+  customElements.whenDefined('robos-agent-selector').then(async () => {
+    const selectors = ['ws-agent-selector', 'plan-agent-selector']
+      .map(id => document.getElementById(id))
+      .filter(Boolean);
+    if (!selectors.length || !window.robosProviders) return;
+    let providers = [], saved = {};
+    try {
+      [providers, saved] = await Promise.all([
+        window.robosProviders.list(),
+        window.robos.getAgentPref ? window.robos.getAgentPref() : {},
+      ]);
+    } catch (_) { return; }
+    const pick = saved?.provider && providers.some(p => p.id === saved.provider && p.available) ? saved : {};
+    await Promise.all(selectors.map(el => el.load({
+      providers,
+      provider: pick.provider,
+      model: pick.model,
+      effort: pick.effort,
+    })));
+    if (selectors[0]?.value) agentSelection = { ...selectors[0].value };
+    selectors.forEach(el => {
+      el.addEventListener('change', () => {
+        if (syncingSelectors) return;
+        const val = el.value || {};
+        agentSelection = { provider: val.provider || '', model: val.model || '', effort: val.effort || '' };
+        if (window.robos.saveAgentPref) window.robos.saveAgentPref(agentSelection);
+        syncingSelectors = true;
+        Promise.all(selectors.filter(other => other !== el && other.providers).map(other => other.load({
+          providers: other.providers,
+          provider: agentSelection.provider,
+          model: agentSelection.model,
+          effort: agentSelection.effort,
+        }))).finally(() => { syncingSelectors = false; });
+      });
+    });
+  }).catch(() => {});
+}
+
+function readSelectorValue(id) {
+  const el = document.getElementById(id);
+  const val = el && el.value ? el.value : agentSelection;
+  return { provider: val?.provider || '', model: val?.model || '', effort: val?.effort || '' };
+}
+
 // ── Agent ─────────────────────────────────────────────────────────────────────
 function setupAgentListeners() {
   window.robos.onAgentStream(({ taskKey, text, stream }) => {
     if (selectedTask && selectedTask.key === taskKey) appendOutput(text, stream);
   });
-  window.robos.onAgentDone(({ taskKey, code }) => {
+  window.robos.onAgentDone(({ taskKey, code, error }) => {
     agentRunning = false;
     setAgentBusy(false);
-    setAgentStatus(code === 0 ? 'Agent finished successfully.' : `Agent exited with code ${code}.`, code === 0 ? 'done-ok' : 'done-err');
+    const failMsg = error ? `Agent failed: ${error}` : `Agent exited with code ${code}.`;
+    setAgentStatus(code === 0 ? 'Agent finished successfully.' : failMsg, code === 0 ? 'done-ok' : 'done-err');
   });
 }
 
@@ -491,6 +543,7 @@ async function handleStartAgent() {
   const customDirectives = document.getElementById('persona-prompt-preview')
     ? document.getElementById('persona-prompt-preview').value.trim()
     : '';
+  const agent = readSelectorValue('ws-agent-selector');
 
   document.getElementById('agent-output').innerHTML = '';
   setAgentStatus(`Starting AI agent as ${currentTaskPersona ? currentTaskPersona.role : 'Specialist'}…`, 'running');
@@ -503,6 +556,7 @@ async function handleStartAgent() {
     extraContext,
     persona: currentTaskPersona,
     customDirectives,
+    ...agent,
   });
 
   if (!result.ok) {
@@ -704,7 +758,7 @@ function setupPlanListeners() {
       return;
     }
 
-    // Extract JSON array from Claude's response
+    // Extract JSON array from the agent's response
     let parsed = null;
     try {
       // Try direct parse first
@@ -743,6 +797,7 @@ async function handleGeneratePlan() {
 
   const ctxEl = document.getElementById('plan-context');
   const context = ctxEl ? (ctxEl.value || '').trim() : '';
+  const agent = readSelectorValue('plan-agent-selector');
 
   document.getElementById('plan-log').textContent = '';
   document.getElementById('plan-log-wrap').style.display = 'flex';
@@ -752,6 +807,7 @@ async function handleGeneratePlan() {
     tasks: allTasks,
     context,
     serverId: serverInfo?.id || 'default',
+    ...agent,
   });
 
   if (!result.ok) {

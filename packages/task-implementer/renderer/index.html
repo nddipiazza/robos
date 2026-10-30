@@ -99,6 +99,10 @@
               </div>
             </div>
 
+            <div class="agent-selector-row">
+              <robos-agent-selector id="ws-agent-selector"></robos-agent-selector>
+            </div>
+
             <!-- Role Prompt & Directives Expandable Drawer -->
           <div class="persona-directives-box" id="persona-directives-box" style="display:none">
             <div class="directives-header">
@@ -156,6 +160,9 @@
         <div class="plan-controls">
           <div class="plan-controls-header">
             <span class="panel-title">AI Plan Generator</span>
+          </div>
+          <div class="plan-agent-wrap">
+            <robos-agent-selector id="plan-agent-selector"></robos-agent-selector>
           </div>
           <div class="plan-context-wrap">
             <div class="plan-label">Context &amp; Suggestions</div>
@@ -249,6 +256,18 @@
     </div>
   </div>
 
+  <script>
+    (function () {
+      const a = document.createElement('script');
+      a.src = '../../robos-lib/agent-selector.js';
+      a.onerror = () => {
+        const a2 = document.createElement('script');
+        a2.src = '/usr/local/share/robos/robos-lib/agent-selector.js';
+        document.head.appendChild(a2);
+      };
+      document.head.appendChild(a);
+    })();
+  </script>
   <script src="../../robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>

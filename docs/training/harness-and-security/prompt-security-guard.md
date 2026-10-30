@@ -50,7 +50,7 @@ The text box is separate code. It has its own, smaller rule list (secrets, SSNs,
 
 These do not call the guard:
 
-- Task Implementer and Task Planner. They start `claude` and `gh copilot` directly from their main process.
+- Task Planner, which starts `gh copilot` directly from its main process (Task Implementer scans the task and context text through `robos-agent-client` before starting its agent CLI).
 - Files an agent opens on its own, and the agent's output.
 
 ## Choose a mode
