@@ -127,8 +127,12 @@ describe('task-implementer E2E', () => {
     it('Start Agent button + extras are wired on the active workspace', async () => {
       const snap = await getSnapshot(app.port);
       assert.ok(findById(snap, 'btn-start-agent'), 'Start Agent button visible');
+      assert.ok(findById(snap, 'ws-agent-selector'), 'Shared <robos-agent-selector> visible');
       assert.ok(findById(snap, 'extra-context'),   'Extra context textarea');
       assert.ok(findById(snap, 'agent-output'),    'Agent output box');
+      const selectedProvider = await evalJS(app.port,
+        `document.getElementById('ws-agent-selector').value.provider`);
+      assert.ok(selectedProvider, 'Agent selector picked an available agent');
       // Stop Agent is intentionally display:none until Start is clicked,
       // so it should NOT be in the snapshot yet — but the element must exist.
       const stopExists = await evalJS(app.port,

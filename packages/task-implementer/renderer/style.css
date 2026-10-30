@@ -66,6 +66,8 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .link-btn { font-size: 12px; color: var(--accent); text-decoration: none; padding: 4px 8px; border: 1px solid #3b82f633; border-radius: 4px; }
 .link-btn:hover { background: #3b82f611; }
 
+.agent-selector-row { padding: 8px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg-card); }
+.plan-agent-wrap { padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .context-row { padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg-card); }
 .task-description-box { border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg-card2); }
 .desc-toggle { padding: 8px 16px; cursor: pointer; font-size: 12px; color: var(--text-muted); user-select: none; }
@@ -196,6 +198,8 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .link-btn { font-size: 12px; color: var(--accent); text-decoration: none; padding: 4px 8px; border: 1px solid #3b82f633; border-radius: 4px; }
 .link-btn:hover { background: #3b82f611; }
 
+.agent-selector-row { padding: 8px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg-card); }
+.plan-agent-wrap { padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .context-row { padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg-card); }
 .context-input { width: 100%; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 8px 10px; font-family: inherit; font-size: 13px; resize: none; outline: none; }
 .context-input:focus { border-color: var(--accent); }

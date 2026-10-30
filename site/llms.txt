@@ -11,7 +11,7 @@
 - [Build Apps on Your Own (Solo Guide)](https://rowbose.com/build-apps/solo/): Step-by-step solo developer guide with real app screenshots
 - [Build Apps as a Team (Team Guide)](https://rowbose.com/build-apps/teams/): Step-by-step team workflow guide with Dev Central and Reviewer mode
 - [Task Planner](https://rowbose.com/task-planner/): Turn a description or one of 67 templates into epics and tasks, edit them, and create GitHub or Jira issues; developer personas and KGraph project plans
-- [Task Implementer](https://rowbose.com/task-implementer/): Run the Claude Code CLI on one GitHub or Jira issue with a developer persona; it branches, tests, commits and pushes without opening a pull request
+- [Task Implementer](https://rowbose.com/task-implementer/): Pick a GitHub or Jira issue, choose a developer persona and coding agent (Codex, AGY, Claude Code or GitHub Copilot), and let it branch, test, commit and push without opening a pull request
 - [Documentation Hub](https://rowbose.com/docs/): Entry point to RobOS user guides, architecture, schemas, and reference docs
 - [RobOS on Your Smart TV](https://rowbose.com/tv/): Developer Mode sideloading (LG webOS, Samsung Tizen, Google TV / Android TV ADB, Roku OS), 10-Foot Big-Screen Portal (:19210), and Moonlight/Sunshine 4K game streaming
 - [RobOS Zero-Trust P2P App Mesh](https://rowbose.com/p2p/): Provider-agnostic Zero-Trust App & IPC Port Mesh (`packages/app-mesh`, `robos-lib/app-mesh-engine.js`) using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard to bridge RobOS app IPC ports and stream 1080p/4K movies across RobOS PCs

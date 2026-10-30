@@ -119,7 +119,7 @@ Two limits to know about:
 
 ## Agents
 
-Apps start the coding-agent CLIs themselves; there is no router process in between. Task Implementer runs `claude`. Dev Central runs `codex` or `claude` with the invocations in `robos-agent-client/work-task/backend.js`. PR Review's CI recovery reads the Codex and AGY model catalogs from `robos-agent-client/providers.js`.
+Apps start the coding-agent CLIs themselves; there is no router process in between. Task Implementer runs the agent chosen in `<robos-agent-selector>` (`codex`, `agy`, `claude` or `copilot`) through `robos-agent-client/work-task/runner.js`. Dev Central runs `codex` or `claude` with the invocations in `robos-agent-client/work-task/backend.js`. The shared `<robos-agent-selector>` reads the Codex, AGY, Claude Code and GitHub Copilot model catalogs from `robos-agent-client/providers.js`.
 
 One-shot requests (generate buttons, the text box quick-ask, the Knowledge Graph AI Co-Pilot and Import & Refine) use `robos-lib/ai-agent`, which runs the active CLI from `~/.config/robos/ai-provider.json` (Copilot, Claude Code, Codex or Gemini CLI). If the user turned on API mode, the request goes to `robos-llm` first and falls back to that CLI when the call fails. Agent tasks never use API mode. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 

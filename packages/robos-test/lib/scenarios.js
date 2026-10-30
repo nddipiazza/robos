@@ -337,6 +337,10 @@ module.exports = {
       }],
       active_task_server: 'jira-acme-1',
     },
+    files: {
+      '.claude/.credentials.json': { claudeAiOauth: { accessToken: 'stub' } },
+      '.config/robos/task-implementer-agent.json': { provider: 'claude', model: '', effort: '' },
+    },
   },
 
   'task-implementer-github': {
@@ -357,6 +361,10 @@ module.exports = {
         repos: [{ org: 'acme-corp', repo: 'buildbarn-forms' }],
       }],
       active_task_server: 'gh-1',
+    },
+    files: {
+      '.claude/.credentials.json': { claudeAiOauth: { accessToken: 'stub' } },
+      '.config/robos/task-implementer-agent.json': { provider: 'claude', model: '', effort: '' },
     },
   },
 
