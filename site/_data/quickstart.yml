@@ -188,7 +188,7 @@ personas:
     eyebrow: "Your guide · Software developer"
     title: "Plan it, let an agent build it, review the proof."
     wow_title: "What will impress you: the whole development lifecycle in one place"
-    wow: "Describe a task in Task Planner and it becomes GitHub or Jira issues. Task Implementer runs Claude Code on one issue with a developer persona: it branches, tests, commits and pushes. Code Review Theater then puts the diff beside before-and-after evidence and the agent's walkthrough of the running app, so you review proof before anything becomes a pull request. A knowledge graph shows which services a change touches."
+    wow: "Describe a task in Task Planner and it becomes GitHub or Jira issues. Task Implementer hands one issue to a coding agent with a developer persona: it branches, tests, commits and pushes. Code Review Theater then puts the diff beside before-and-after evidence and the agent's walkthrough of the running app, so you review proof before anything becomes a pull request. A knowledge graph shows which services a change touches."
     wow_links:
       - { label: "Watch one change go from idea to merged PR", url: "/#build" }
       - { label: "Build apps guide", url: "/build-apps/" }
@@ -339,7 +339,7 @@ suites:
 apps:
   # Developer suite
   task-planner: { name: "Task Planner", url: "/task-planner/", text: "Turn a description into epics and tasks on GitHub or Jira." }
-  task-implementer: { name: "Task Implementer", url: "/task-implementer/", text: "Run Claude Code on one issue: it branches, tests, commits and pushes." }
+  task-implementer: { name: "Task Implementer", url: "/task-implementer/", text: "Hand one issue to a coding agent: it branches, tests, commits and pushes." }
   pr-review: { name: "Code Review Theater", url: "/code-review/", text: "Diff, before-and-after evidence and the agent's walkthrough for every branch." }
   dev-central: { name: "Dev Central", url: "/v1/apps/dev-central/", text: "Your daily task list, with buttons to start agents." }
   git-projects: { name: "Git Projects", url: "/v1/apps/git-projects/", text: "Clone, pull and open all your repositories in an IDE." }
