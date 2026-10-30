@@ -4,9 +4,21 @@ const { app, BrowserWindow, ipcMain, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 
 const hk = require('./lib/hardware-keys-core');
+
+let kdbx = null;
+try {
+  const kdbxPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'kdbx-vault'),
+    path.resolve(__dirname, '..', 'robos-lib', 'kdbx-vault'),
+    '/usr/local/share/robos/robos-lib/kdbx-vault',
+  ].filter(Boolean);
+  for (const p of kdbxPaths) {
+    try { kdbx = require(p); break; } catch {}
+  }
+} catch {}
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -84,6 +96,7 @@ function getFullState() {
     sshKeys,
     systemStatus,
     config,
+    kdbxStatus: kdbx ? kdbx.getVaultStatus() : null,
   };
 }
 
@@ -140,6 +153,7 @@ app.whenReady().then(() => {
           const cfg = hk.loadConfig();
           if (cfg.policies && cfg.policies.lockSessionOnUnplug) {
             try { execFileSync('gpgconf', ['--kill', 'gpg-agent'], { timeout: 3000 }); } catch {}
+            try { if (kdbx) kdbx.lockDatabase(); } catch {}
           }
         }
         mainWindow.webContents.send('hk:hotplug-changed', getFullState());
@@ -291,4 +305,42 @@ ipcMain.handle('hk:save-policies', async (_, policies = {}) => {
 ipcMain.handle('hk:copy-text', async (_, text) => {
   clipboard.writeText(String(text || ''));
   return { ok: true };
+});
+
+ipcMain.handle('hk:unlock-keystore', async (_, opts = {}) => {
+  if (!kdbx) return { ok: false, error: 'kdbx-vault library not available' };
+  const res = await kdbx.unlockWithHardwareKey({
+    ...opts,
+    onStatus: (st) => sendStatus(st),
+  });
+  if (res.ok) {
+    sendStatus({ state: 'verified', message: `KeePassXC .kdbx Keystore unlocked via Physical Key (${res.latencyMs} ms)!` });
+  } else {
+    sendStatus({ state: 'error', message: res.error || 'Failed to unlock keystore' });
+  }
+  return { ...res, kdbxStatus: kdbx.getVaultStatus() };
+});
+
+ipcMain.handle('hk:lock-keystore', async () => {
+  if (!kdbx) return { ok: false, error: 'kdbx-vault library not available' };
+  const res = kdbx.lockDatabase();
+  return { ...res, kdbxStatus: kdbx.getVaultStatus() };
+});
+
+ipcMain.handle('hk:open-pass-manager', async () => {
+  try {
+    const passMgrDir = path.resolve(__dirname, '..', 'pass-manager');
+    const localBin = path.join(os.homedir(), '.local', 'bin', 'robos-pass-manager');
+    if (fs.existsSync(localBin)) {
+      spawn(localBin, [], { detached: true, stdio: 'ignore' }).unref();
+    } else {
+      spawn(process.execPath, [passMgrDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
+        detached: true,
+        stdio: 'ignore',
+      }).unref();
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 });

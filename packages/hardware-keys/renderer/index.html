@@ -371,6 +371,31 @@
               <div id="guard-status-msg" class="status-msg mt-8"></div>
             </div>
           </div>
+
+          <div class="card mt-16">
+            <div class="card-header">
+              <div>
+                <h3>KeePassXC Single-Archive Keystore (<code>.kdbx</code>) Hardware Unlock</h3>
+                <p class="card-desc">Unlock or lock your encrypted RobOS KeePassXC <code>.kdbx</code> password archive using your physical YubiKey FIDO2 <code>hmac-secret</code> binding.</p>
+              </div>
+              <span id="kdbx-status-badge" class="badge badge-muted">Checking .kdbx...</span>
+            </div>
+
+            <div id="kdbx-info-box" class="proof-box mt-12"></div>
+
+            <div class="btn-row mt-12">
+              <button id="btn-hk-unlock-kdbx" class="btn btn-gold">
+                👆 Unlock .kdbx Keystore with Physical Key
+              </button>
+              <button id="btn-hk-lock-kdbx" class="btn btn-secondary">
+                🔒 Lock Keystore Now
+              </button>
+              <button id="btn-hk-open-vault" class="btn btn-primary">
+                🗄️ Open RobOS KeePassXC Vault
+              </button>
+            </div>
+            <div id="kdbx-guard-msg" class="status-msg mt-8"></div>
+          </div>
         </section>
       </main>
     </div>

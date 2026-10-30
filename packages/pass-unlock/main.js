@@ -9,6 +9,18 @@ const ACCESS_LOG      = path.join(CACHE_DIR, 'pass-access.log');
 const PASS_STORE      = path.join(process.env.HOME, '.password-store');
 const PRESET_BIN      = '/usr/lib/gnupg/gpg-preset-passphrase';
 
+let kdbx = null;
+try {
+  const kdbxPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'kdbx-vault'),
+    path.resolve(__dirname, '..', 'robos-lib', 'kdbx-vault'),
+    '/usr/local/share/robos/robos-lib/kdbx-vault',
+  ].filter(Boolean);
+  for (const p of kdbxPaths) {
+    try { kdbx = require(p); break; } catch {}
+  }
+} catch {}
+
 // Debug server (optional) — checks env override, local dev path, then VM install path
 var _debugServer = null;
 try {
@@ -98,18 +110,18 @@ function readAccessLog() {
 
 // ── IPC ──────────────────────────────────────────────────────────────────────
 ipcMain.handle('get-status', () => {
-  const passReady = fs.existsSync(path.join(PASS_STORE, '.gpg-id'));
+  const kdbxStatus = kdbx ? kdbx.getVaultStatus() : null;
+  const passReady = Boolean((kdbxStatus && kdbxStatus.exists) || fs.existsSync(path.join(PASS_STORE, '.gpg-id')));
   const keygrips  = getKeygrips();
   const log       = readAccessLog();
   const hour      = new Date().getHours();
   const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  // Check if already unlocked today — requires BOTH a today timestamp AND live GPG cache.
-  // If the store was reinitialized (new keys, old timestamp), the cache check returns false
-  // and we correctly prompt for the passphrase again.
-  let alreadyUnlocked = false;
-  let unlockTime = null;
-  if (fs.existsSync(UNLOCK_TIME_FILE) && isCacheActive()) {
+  let alreadyUnlocked = Boolean(kdbxStatus && kdbxStatus.unlocked);
+  let unlockTime = kdbxStatus && kdbxStatus.unlockedAt
+    ? new Date(kdbxStatus.unlockedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
+  if (!alreadyUnlocked && fs.existsSync(UNLOCK_TIME_FILE) && isCacheActive()) {
     const ts = parseInt(fs.readFileSync(UNLOCK_TIME_FILE, 'utf8').trim());
     const d  = new Date(ts * 1000);
     if (d.toISOString().slice(0, 10) === todayISO()) {
@@ -118,28 +130,50 @@ ipcMain.handle('get-status', () => {
     }
   }
 
-  return { passReady, keygrips: keygrips.length, greeting, log, alreadyUnlocked, unlockTime };
+  return { passReady, kdbxStatus, keygrips: keygrips.length, greeting, log, alreadyUnlocked, unlockTime };
+});
+
+ipcMain.handle('unlock-hardware', async (_, opts = {}) => {
+  if (!kdbx) return { ok: false, error: 'kdbx-vault library not available' };
+  const res = await kdbx.unlockWithHardwareKey(opts);
+  if (res.ok) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    fs.writeFileSync(UNLOCK_TIME_FILE, Math.floor(Date.now() / 1000).toString());
+    const ts = new Date().toISOString();
+    fs.appendFileSync(ACCESS_LOG, `${ts}|user|unlock-yubikey|<kdbx-hardware-unlock>\n`);
+  }
+  return res;
 });
 
 ipcMain.handle('unlock', async (_, passphrase) => {
+  if (kdbx) {
+    const st = kdbx.getVaultStatus();
+    if (st.exists) {
+      const res = kdbx.unlockWithPassword({ password: passphrase });
+      if (res.ok) {
+        fs.mkdirSync(CACHE_DIR, { recursive: true });
+        fs.writeFileSync(UNLOCK_TIME_FILE, Math.floor(Date.now() / 1000).toString());
+        const ts = new Date().toISOString();
+        fs.appendFileSync(ACCESS_LOG, `${ts}|user|unlock|<kdbx-password-unlock>\n`);
+      }
+      return res;
+    }
+  }
   const keygrips = getKeygrips();
-  if (!keygrips.length) return { ok: false, error: 'No GPG keys found. Run GPG Pass Initializer first.' };
+  if (!keygrips.length) return { ok: false, error: 'No KeePassXC .kdbx database found. Open RobOS Pass Manager to create one.' };
   if (!passphrase) return { ok: false, error: 'Passphrase is required.' };
 
   try {
     for (const kg of keygrips) {
       presetPassphrase(kg, passphrase);
     }
-    // Record unlock time
     fs.mkdirSync(CACHE_DIR, { recursive: true });
     fs.writeFileSync(UNLOCK_TIME_FILE, Math.floor(Date.now() / 1000).toString());
-    // Log the unlock event
     const ts = new Date().toISOString();
     fs.appendFileSync(ACCESS_LOG, `${ts}|user|unlock|<daily-unlock>\n`);
     return { ok: true };
   } catch (e) {
-    // Likely wrong passphrase
-    return { ok: false, error: 'Wrong passphrase or GPG error: ' + e.message };
+    return { ok: false, error: 'Wrong passphrase or error: ' + e.message };
   }
 });
 

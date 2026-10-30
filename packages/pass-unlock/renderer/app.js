@@ -21,6 +21,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('btn-unlock').addEventListener('click', doUnlock);
+  const hwBtn = document.getElementById('btn-unlock-hw');
+  if (hwBtn) {
+    if (status.kdbxStatus && !status.kdbxStatus.hasFido2Binding) {
+      hwBtn.style.display = 'none';
+    }
+    hwBtn.addEventListener('click', doHardwareUnlock);
+  }
   document.getElementById('btn-skip').addEventListener('click', () => window.api.skip());
   document.getElementById('btn-close').addEventListener('click', () => window.api.skip());
 
@@ -73,6 +80,34 @@ function renderStats(containerId, log) {
       <span class="lbl">By You</span>
     </div>
   `;
+}
+
+async function doHardwareUnlock() {
+  const hwBtn = document.getElementById('btn-unlock-hw');
+  const errEl = document.getElementById('error-msg');
+  const passphrase = document.getElementById('passphrase').value;
+  hwBtn.disabled = true;
+  hwBtn.textContent = '👆 Touch flashing YubiKey now…';
+  errEl.classList.add('hidden');
+
+  const res = await window.api.unlockHardware({ password: passphrase });
+  if (res.ok) {
+    document.getElementById('passphrase').value = '';
+    document.getElementById('state-locked').classList.add('hidden');
+    document.getElementById('state-success').classList.remove('hidden');
+    let n = 3;
+    const cd = document.getElementById('countdown');
+    const iv = setInterval(() => {
+      n--;
+      cd.textContent = n;
+      if (n <= 0) { clearInterval(iv); window.api.skip(); }
+    }, 1000);
+  } else {
+    hwBtn.disabled = false;
+    hwBtn.textContent = '👆 Touch Physical Key (YubiKey) to Unlock';
+    errEl.textContent = res.error || 'Hardware key unlock failed.';
+    errEl.classList.remove('hidden');
+  }
 }
 
 async function doUnlock() {

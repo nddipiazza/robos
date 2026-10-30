@@ -18,18 +18,22 @@
     <!-- Locked state -->
     <div id="state-locked">
       <div id="lock-icon">🔒</div>
-      <div id="lock-msg">Your pass store is locked.<br>Enter your GPG passphrase to unlock for the day.</div>
+      <div id="lock-msg">Your KeePassXC <code>.kdbx</code> keystore is locked.<br>Touch your Physical Key or enter your Master Password.</div>
 
       <div id="stats-yesterday" class="hidden">
         <div class="stats-label">Yesterday's secret access</div>
         <div id="stats-row"></div>
       </div>
 
+      <button id="btn-unlock-hw" class="btn-primary" style="background:linear-gradient(135deg,#eab308,#ca8a04);color:#0d1117;font-weight:700;margin-bottom:10px;">
+        👆 Touch Physical Key (YubiKey) to Unlock
+      </button>
+
       <div id="pw-wrap">
-        <input id="passphrase" type="password" placeholder="GPG passphrase…" autocomplete="off">
+        <input id="passphrase" type="password" placeholder="Master Password (.kdbx)…" autocomplete="off">
       </div>
       <div id="error-msg" class="error hidden"></div>
-      <button id="btn-unlock" class="btn-primary">Unlock for Today</button>
+      <button id="btn-unlock" class="btn-primary">Unlock with Password</button>
       <button id="btn-skip" class="btn-skip">Skip — remind me later</button>
     </div>
 
