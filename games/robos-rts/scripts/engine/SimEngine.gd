@@ -1109,7 +1109,11 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	if dist <= 1.2:
 		u["vel"] = Vector2.ZERO
 		u["facing"] = (target_entity["pos"] - u["pos"]).angle()
+		var prev_timer: float = float(u["harvest_timer"])
 		u["harvest_timer"] += dt
+		if not is_gas and prev_timer <= 0.0 and u["harvest_timer"] > 0.0:
+			if not resources.has(source_tag) or int(resources[source_tag].amount) > 0 or unlimited_resources:
+				emit_signal("resource_gathered", u, "crystal", target_entity["pos"])
 		if u["harvest_timer"] >= 1.75:
 			u["harvest_timer"] = 0.0
 			if is_gas:
@@ -1121,8 +1125,6 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			if resources.has(source_tag) and not unlimited_resources:
 				u.cargo_amount = mini(u.cargo_amount, int(resources[source_tag].amount))
 				resources[source_tag].amount -= u.cargo_amount
-			if u["cargo_amount"] > 0:
-				emit_signal("resource_gathered", u, str(u["cargo_type"]), u["pos"])
 	else:
 		_approach_target(u, target_entity["pos"], dt)
 

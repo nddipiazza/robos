@@ -145,3 +145,22 @@ func _test_economy_and_ui_sfx() -> void:
 	for ui_key in ["ui_select", "ui_command_move", "ui_command_attack", "ui_build_place", "ui_error", "alert_under_attack", "match_victory", "match_defeat"]:
 		assert(audio.play_ui(ui_key), "Expected play_ui('%s') to succeed" % ui_key)
 		assert(int(audio.sfx_counts.get(ui_key, 0)) == 1, "Expected count 1 for %s" % ui_key)
+
+	# Verify quiet crystal drill sizzle on contact, and NO sound when returning minerals/gas
+	sim.reset_state(303, 64.0, 64.0)
+	audio.reset_stats()
+	var _hub: Dictionary = sim.spawn_unit("colony_hub", 1, Vector2(12.0, 20.0))
+	var crystal: Dictionary = sim.spawn_resource("crystal_field", Vector2(30.0, 20.0), 1500)
+	var worker: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(27.8, 20.0))
+	sim.issue_command([worker["tag"]], "harvest", crystal["pos"], crystal["tag"])
+	# Step a few ticks so the worker's drill contacts the crystal
+	sim.step_ticks(8)
+	assert(int(audio.sfx_counts.get("harvest_hit", 0)) == 1, "Expected harvest_hit when drill first hits crystal")
+	# Step until the worker finishes drilling and walks back to return the crystal to hub
+	audio.reset_stats()
+	for _i in range(240):
+		sim.step_ticks(1)
+		if int(sim.players[1]["crystal_collected"]) >= 5:
+			break
+	assert(int(sim.players[1]["crystal_collected"]) >= 5, "Expected worker to have returned crystal to hub")
+	assert(audio.sfx_counts.is_empty(), "Expected NO sound when finishing & returning minerals/gas (got: %s)" % str(audio.sfx_counts))

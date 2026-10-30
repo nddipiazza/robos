@@ -628,15 +628,21 @@ def gen_structure_destroyed() -> list[float]:
 # ---------------------------------------------------------------------------
 
 def gen_harvest_hit() -> list[float]:
-    """Crystal / Aether harvest collection chime."""
-    dur = 0.14
+    """Very quiet sizzle of a mining drill contacting crystal."""
+    dur = 0.22
     n = int(dur * SAMPLE_RATE)
+    noise = _make_noise(n, 601)
+    # Soft high-frequency fizz/sizzle (band-limited 2.4kHz - 6.2kHz) with gentle rapid flutter
+    sizzle = _one_pole_hp(_one_pole_lp(noise, 6200.0), 2400.0)
+    shimmer = _one_pole_hp(_one_pole_lp(noise, 3800.0), 1500.0)
     out = [0.0] * n
     for i in range(n):
         t = i / SAMPLE_RATE
-        env = _env_ad(t, 0.001, 0.13, 2.4)
-        tone = math.sin(2.0 * math.pi * 1320.0 * t) * 0.65 + math.sin(2.0 * math.pi * 1980.0 * t) * 0.35
-        out[i] = tone * env
+        # Smooth fade-in and gentle taper so there is no click or chime
+        env = math.sin(math.pi * min(1.0, t / dur)) ** 1.4
+        flutter = 0.65 + 0.35 * math.sin(2.0 * math.pi * 58.0 * t)
+        grain = sizzle[i] * 0.75 + shimmer[i] * 0.25
+        out[i] = grain * env * flutter * 0.35
     return out
 
 
@@ -828,7 +834,7 @@ GENERATORS = {
     "unit_death_alien": (gen_unit_death_alien, 0.86),
     "structure_destroyed": (gen_structure_destroyed, 0.95),
     # Economy, Production & Tactical UI
-    "harvest_hit": (gen_harvest_hit, 0.65),
+    "harvest_hit": (gen_harvest_hit, 0.16),
     "structure_complete": (gen_structure_complete, 0.82),
     "unit_ready": (gen_unit_ready, 0.78),
     "ui_select": (gen_ui_select, 0.65),

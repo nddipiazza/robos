@@ -117,7 +117,7 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"unit_death_monster": -1.0,
 	"unit_death_alien": -1.0,
 	"structure_destroyed": 2.0,
-	"harvest_hit": -5.5,
+	"harvest_hit": -16.0,
 	"structure_complete": -1.0,
 	"unit_ready": -2.0,
 	"ui_select": -4.0,
@@ -147,7 +147,7 @@ const SOUND_MIN_INTERVAL_SEC: Dictionary = {
 	"melee_hit": 0.035,
 	"shield_hit": 0.04,
 	"explosion_splash": 0.055,
-	"harvest_hit": 0.14,
+	"harvest_hit": 0.45,
 	"ui_select": 0.04,
 	"ui_command_move": 0.045,
 	"ui_command_attack": 0.045
@@ -582,9 +582,9 @@ func _on_unit_destroyed(dead: Dictionary) -> void:
 		_:
 			play_at("unit_death_human", pos, 0.0, 0.05)
 
-func _on_resource_gathered(unit: Dictionary, _resource_type: String, pos: Vector2) -> void:
-	if int(unit.get("owner", 0)) == local_player_id:
-		play_at("harvest_hit", pos, -2.0, 0.06)
+func _on_resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2) -> void:
+	if int(unit.get("owner", 0)) == local_player_id and resource_type in ["crystal", "crystal_field"]:
+		play_at("harvest_hit", pos, -4.0, 0.06)
 
 func _on_unit_production_finished(unit: Dictionary, _structure: Dictionary) -> void:
 	if int(unit.get("owner", 0)) == local_player_id:
