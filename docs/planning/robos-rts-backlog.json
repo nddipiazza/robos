@@ -166,14 +166,18 @@
       "priority": "P1",
       "category": "Presentation",
       "title": "Integrate and mix the concurrent audio work",
-      "status": "todo",
+      "status": "done",
       "why": "Audio cues are being developed separately and need an integration pass.",
       "acceptance": [
         "Coordinate with the audio changes before editing their files.",
         "Selection, acknowledgement, attack and warning cues have distinct priorities and volume controls.",
         "Limit overlapping voices and provide visual equivalents for critical warnings."
       ],
-      "evidence": []
+      "evidence": [
+        "games/robos-rts/scripts/RTSAudio.gd",
+        "games/robos-rts/tests/test_audio_sfx.gd"
+      ],
+      "progress": "Integrated the audio assets pushed to origin/main in a9719a8d. Pooled world/UI voices, event signals, separate cosmetic RNG, F8 volume and F11 mute. Verified actual WASAPI device activation separately from silent automation."
     },
     {
       "id": "healthbar-options",
@@ -415,6 +419,54 @@
         "tests/test_selection_layout.gd",
         "tests/data/selection-layout-benchmark.json",
         "tests/e2e/improvements_walkthrough.py"
+      ]
+    },
+    {
+      "id": "shift-build-gather",
+      "priority": "P1",
+      "category": "Controls",
+      "title": "Queue worker buildings then return to gathering",
+      "status": "done",
+      "acceptance": [
+        "Shift placement stays active and distributes group work.",
+        "Gathering yields after one delivery; one worker can complete multiple queued buildings.",
+        "Native live-clock input constructs three paid halls then returns all workers to crystal."
+      ],
+      "evidence": [
+        "games/robos-rts/tests/test_shift_commands.gd",
+        "games/robos-rts/tests/e2e/shift_walkthrough.py"
+      ]
+    },
+    {
+      "id": "cancel-construction",
+      "priority": "P1",
+      "category": "Economy",
+      "title": "Cancel a foundation from its active worker",
+      "status": "done",
+      "acceptance": [
+        "N / Cancel Construction removes a foundation and refunds 75% of paid costs, rounded down.",
+        "Selecting the worker preserves construction; Halt remains distinct.",
+        "No double refund or combat-death accounting on cancellation."
+      ],
+      "evidence": [
+        "games/robos-rts/tests/test_shift_commands.gd",
+        "games/robos-rts/tests/e2e/features/engine/07_shift_commands.feature"
+      ]
+    },
+    {
+      "id": "campaign-canyon-route",
+      "priority": "P1",
+      "category": "Campaign",
+      "title": "Gas economy and a winding three-pass assault",
+      "status": "done",
+      "acceptance": [
+        "Mine campaign gas and pay for a Breacher, Workshop and Howitzer.",
+        "Clear two sentry posts before the final stronghold.",
+        "28 Riflemen lose; an assembled army of roughly 40 wins with meaningful losses."
+      ],
+      "evidence": [
+        "games/robos-rts/tests/test_campaign.gd",
+        "games/robos-rts/tests/e2e/campaign_walkthrough.py"
       ]
     }
   ],

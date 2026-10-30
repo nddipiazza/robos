@@ -71,11 +71,11 @@ The tests prove refunds, supply release, queue continuity, actual resource incom
 
 Choose **Campaign: First Strike** from the F8 menu, or run `games/robos-rts/play.ps1 -Mission` on Windows (`-Windowed` is optional). Other platforms can use `games/robos-rts/play.sh -- --scenario=campaign-first-strike`.
 
-You begin with a Colony Hub, 12 gathering Pioneers, 150 crystal and no army. Build Provision Silos and Muster Halls, train roughly **40 Riflemen (40 army supply)**, then attack the eastern stronghold through the canyon. With the original workers that means 52 total supply; five Silos raise capacity to 55. There is ample finite crystal and no time limit. The enemy garrison guards its base, without free reinforcements or attacks during your buildup. Destroy the Brood Nest **and every defender** to win; losing your army allows another attempt, while losing all your structures ends the mission.
+You begin with a Colony Hub, 12 gathering Pioneers, 150 crystal and no army. Build Provision Silos and Muster Halls, train roughly **40 Riflemen (40 army supply)**, then attack the eastern stronghold through the canyon. With the original workers that means 52 total supply; five Silos raise capacity to 55. There is ample finite crystal and no time limit. The enemy garrison holds its posts, without free reinforcements or attacks during your buildup. Three staggered canyon passes lead south, north, then south through the Western sentries and Northern ambush before the final stronghold. An aether vent northeast of the player base supports a paid Aether Tap, Breachers and Howitzers. Destroy the Brood Nest **and every defender** to win; losing your army allows another attempt, while losing all your structures ends the mission.
 
 The briefing explains the build order; the live objective panel shows Riflemen, surviving defenders and the nest's status. Click **Hide objectives** to collapse it to a small **Show objectives** button; click again to restore it. **Enter** begins, **P** pauses, **F9** restarts at the briefing and **R** reopens the end-of-mission statistics. The results retain newly trained units and measure each unit's lifetime from its creation. The 40-supply recommendation is a combat balance target, not a victory gate: strong micro, different units or multiple assaults can change the number required.
 
-`scenarios/campaign-first-strike.jsonld` contains the map, economy, fixed garrison and mission metadata. `POST /mission {"action":"start"}` / `{"action":"restart"}` use the same engine operations as the interface. A normal straight assault without Surge is checked with 28 and 36 Riflemen losing and 40 winning within survivor/time thresholds. A separate end-to-end controller pays for all construction and all 40 Riflemen through ordinary player commands, then wins the actual mission. The rendered recording uses the live frame clock and keyboard Begin/Restart inputs:
+`scenarios/campaign-first-strike.jsonld` contains the map, economy, fixed garrison and mission metadata. `POST /mission {"action":"start"}` / `{"action":"restart"}` use the same engine operations as the interface. Normal rallied assaults without Surge are checked with 28 Riflemen losing and assembled armies of 36–40 winning within survivor/time thresholds. Formation and army assembly affect the result. A separate end-to-end controller pays for all construction and all 40 Riflemen through ordinary player commands, then wins the actual mission. The rendered recording uses the live frame clock and keyboard Begin/Restart inputs:
 
 ```bash
 cd games/robos-rts
@@ -424,7 +424,7 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Left click or drag | Select; drag for a box |
 | Double click | Select all your units or structures of that type across the map |
 | Right click | Move, attack, gather, or set a rally point |
-| Shift | Queue orders; add to or remove from the selection |
+| Shift | Queue orders; add/remove selection; Shift-click training queues a paid batch of five |
 | Mouse wheel, middle drag | Zoom, pan |
 | Arrow keys | Pan |
 | Letter in a button's corner | Use that command |
@@ -433,10 +433,18 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | **.** | Select the next idle worker |
 | Space | Jump to the last attack alert, or home |
 | Esc | Cancel placement or targeting |
+| N on a builder/foundation | Cancel unfinished construction; refund 75% of paid cost, rounded down |
+| F11 | Toggle sound; F8 also offers volume levels |
 | F1 | Controls overlay |
 | F8 | Match menu: settings, new game, surrender and map editor |
 | F2 | Switch the viewed faction in showcase scenarios |
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
+
+A successful resource right-click pulses cyan brackets around the crystal or Aether Tap and shows **GATHER** (or **GATHER QUEUED**) with the number of workers that accepted it. Hold Shift while placing multiple structures, then Shift-right-click crystal: builders finish their assigned jobs and resume gathering. An existing harvest loop yields after its next delivery. Selecting a builder keeps construction running; **S / Halt** pauses it for resumption, while **N / Cancel Construction** removes the unfinished foundation and refunds 75%.
+
+## Sound
+
+Procedural combat, ability, selection, command, gathering, construction, production and result sounds use bounded playback pools and cosmetic pitch variation. F8 offers volume levels and F11 toggles mute. The integration includes Antigravity's audio commit from main; weapon timing and damage remain deterministic. Automated recordings use a silent driver. Interactive launches use the Windows sound device.
 
 ## Scripting and bots
 
@@ -471,6 +479,10 @@ Scenarios are JSON-LD files in `games/robos-rts/scenarios`. Besides units, resou
 `python run_balance_tests.py --suite controls --suite economy --jobs=1` checks class selection, camera speed, mixed production, held-key timing and construction Stop/resume contracts. `python tests/e2e/player_controls_walkthrough.py` verifies the rendered controls with native input in isolated fixtures and archives a narrated screenshot walkthrough to `~/.robos/development/walkthroughs/rts-player-controls/`.
 
 `games/robos-rts/tests/e2e/features/engine` covers combat mechanics, paid skirmish builds and map authoring. `features/realtime` plays editor-authored matches on the live clock and checks frame responsiveness during control traffic and capture. Full build orders take longer than isolated mechanics fixtures.
+
+`python run_balance_tests.py --suite shift --suite audio --suite campaign --jobs=1` checks queue outcomes, refunds, sound-event wiring, the paid gas chain and campaign balance. `python run_cucumber_tests.py --backend --tags=@shift_commands` covers queued construction, cancellation, waypoint order, enemy target order, selection modifiers and paid production batches. `python tests/e2e/shift_walkthrough.py` records native mouse/keyboard construction and gather completion on the live clock, without manual stepping. Its MP4, VTT and proof JSON archive to `~/.robos/development/walkthroughs/rts-shift-workers/`.
+
+Run one engine workload at a time during interactive development. Close test-owned engines before handing the game back for playtesting; silent fast-forward recordings must not compete with the playable instance.
 
 ## Regenerating these screenshots
 

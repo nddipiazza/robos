@@ -30,6 +30,7 @@ class CampaignBuildBot(FrontierBuildBot):
         self.peak_army = 0
         self.attack_time = None
         self.attack_tags = []
+        self.assembly_started = None
 
     def on_step(self, obs):
         self.busy_builders = set()
@@ -37,6 +38,7 @@ class CampaignBuildBot(FrontierBuildBot):
         army = [u for u in mine if u["unit_type"] == "rifleman"]
         self.peak_army = max(self.peak_army, len(army))
         if self.attacking:
+            assert army, "The paid 40-Rifleman army was defeated"
             idle = [u["tag"] for u in army if not u["orders"]]
             enemies = [u for u in obs["units"] if u["owner"] == 2]
             if idle and enemies:
@@ -44,6 +46,14 @@ class CampaignBuildBot(FrontierBuildBot):
                 self.client.command("attack_move", tags=idle, x=target["pos"]["x"], y=target["pos"]["y"])
             return
         if len(army) == 40:
+            # Finish rallying the last reinforcements before committing the army.
+            # These are ordinary move orders, not formation/state injection.
+            if self.assembly_started is None:
+                assert self.client.command("move",tags=[u["tag"] for u in army],x=38,y=58)["accepted"]==40
+                self.assembly_started = obs["sim_time"]
+                return
+            if obs["sim_time"]-self.assembly_started < 30 or any(self.distance(u["pos"],{"x":38,"y":58})>12 for u in army):
+                return
             self.attack_tags = [u["tag"] for u in army]
             result = self.client.command("attack_move", tags=self.attack_tags, x=132, y=56)
             assert result["accepted"] == 40, result
@@ -73,7 +83,7 @@ class CampaignBuildBot(FrontierBuildBot):
             if hall["build_progress"] < 1:
                 continue
             if hall["tag"] not in self.rallied:
-                assert self.client.command("rally", tags=[hall["tag"]], x=57, y=56)["accepted"] == 1
+                assert self.client.command("rally", tags=[hall["tag"]], x=38, y=58)["accepted"] == 1
                 self.rallied.add(hall["tag"])
             if not hall["production_queue_len"] and len(army) + queued < 40:
                 result = self.client.command("train_rifleman", tags=[hall["tag"]])
@@ -184,7 +194,9 @@ def main():
                               "Pioneers gather crystal. Build Provision Silos and Muster Halls; train Riflemen up to 40 army supply.")
                     narrate(stage, detail)
                     if bot.attacking and args.realtime:
-                        client.focus_camera(120, 56, height=60)
+                        army = [u for u in obs["units"] if u["owner"]==1 and u["unit_type"]=="rifleman"]
+                        if army:
+                            client.focus_camera(sum(u["pos"]["x"] for u in army)/len(army),sum(u["pos"]["y"] for u in army)/len(army),height=66)
                 if args.realtime:
                     if time.monotonic() >= next_capture:
                         capture()
@@ -198,9 +210,10 @@ def main():
             assert not any(u["owner"]==2 for u in obs["units"])
             assert bot.peak_army == 40 and len(bot.attack_tags) == 40
             assert 180 <= bot.attack_time <= 800, bot.attack_time
+            (output/"final-observation.json").write_text(json.dumps(obs,indent=2),encoding="utf-8")
             p = obs["players"]["1"]
             assert p["crystal_collected"] >= 2950 and p["supply_cap"] >= 55, p
-            assert 150+p["crystal_collected"]-p["crystal"] == 3100, "Must pay 2000 for Riflemen, 600 for halls and 500 for Silos"
+            assert 150+p["crystal_collected"]-p["crystal"] == 3100, f"Must pay 2000 for Riflemen, 600 for halls and 500 for Silos: {p}"
             assert p["structures_built"] == 9
             produced = [u for u in obs["match"]["results"]["units"] if u["owner"]==1 and u["unit_type"]=="rifleman"]
             assert len(produced)==40 and all(0<u["alive_seconds"]<obs["sim_time"] for u in produced)

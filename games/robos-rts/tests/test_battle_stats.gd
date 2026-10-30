@@ -42,5 +42,17 @@ func _run() -> void:
 	sim._update_unit_timers(target, 1.0)
 	if sim.battle_stats.records[target.tag].shields_regenerated != 6.0:
 		failures.append("Shield restoration was not measured")
-	print(JSON.stringify({"failures": failures, "checked": ["overkill", "armor", "HP", "shields", "splash", "resource values", "freeze", "reset", "regeneration"]}))
+	# A cancelled paid foundation is neither a combat casualty nor surviving value.
+	sim.load_scenario_dict({"paused":true,"victory":"all_structures","players":{"1":{"crystal":500}},"units":[
+		{"type":"pioneer","owner":1,"x":35,"y":35},{"type":"silo","owner":1,"x":20,"y":50},
+		{"type":"brood_nest","owner":2,"x":100,"y":80}]})
+	sim.battle_stats.begin(sim.units,sim.tick)
+	sim.issue_command([1001],"build_muster_hall",Vector2(40,35))
+	sim.step_ticks(2*64)
+	sim.issue_command([1001],"cancel_build")
+	report = sim.battle_stats.finish(sim.units,sim.tick,42)
+	blue = report.sides["1"]
+	if blue.cancelled != 1 or blue.refunded_crystal != 112 or blue.lost != 0 or blue.crystal_lost != 0 or blue.surviving_crystal != 150:
+		failures.append("Cancelled construction polluted combat loss/refund/survivor accounting")
+	print(JSON.stringify({"suite":"battle_stats", "failures": failures, "checked": ["overkill", "armor", "HP", "shields", "splash", "resource values", "freeze", "reset", "regeneration", "construction refunds"]}))
 	quit(0 if failures.is_empty() else 1)

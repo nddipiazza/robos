@@ -17,6 +17,7 @@ RTSDisplay="*res://scripts/RTSDisplay.gd"
 RTSData="*res://scripts/engine/RTSData.gd"
 SimEngine="*res://scripts/engine/SimEngine.gd"
 RTSCommanderAI="*res://scripts/engine/RTSCommanderAI.gd"
+RTSAudio="*res://scripts/RTSAudio.gd"
 GameControlServer="*res://scripts/GameControlServer.gd"
 
 [display]

@@ -15,24 +15,87 @@
     "title": "FIRST STRIKE",
     "subtitle": "Mission 01 \u00b7 Canyon Stronghold",
     "target_riflemen": 40,
-    "briefing": "The Gnarl Brood holds the eastern canyon. Establish a base, assemble your Riflemen, and clear the stronghold. The garrison will defend its territory while you prepare.",
-    "objective": "Destroy the Brood Nest and every defender. Protect your base."
+    "briefing": "Build an army, clear two sentry posts, and fight through three narrow canyon passes before breaking the Gnarl Brood stronghold.",
+    "objective": "Destroy the Brood Nest and every defender. Protect your base.",
+    "route": [
+      {
+        "x": 50,
+        "y": 74
+      },
+      {
+        "x": 76,
+        "y": 74
+      },
+      {
+        "x": 76,
+        "y": 26
+      },
+      {
+        "x": 102,
+        "y": 26
+      },
+      {
+        "x": 102,
+        "y": 71
+      },
+      {
+        "x": 126,
+        "y": 71
+      },
+      {
+        "x": 132,
+        "y": 56
+      }
+    ],
+    "staging": {
+      "x": 38,
+      "y": 58
+    },
+    "encounters": [
+      "Western sentries",
+      "Northern ambush",
+      "Brood stronghold"
+    ]
   },
   "map": {
     "width": 160,
     "height": 112,
     "obstacles": [
       {
-        "x": 78,
+        "x": 60,
         "y": 0,
-        "w": 12,
-        "h": 40
+        "w": 8,
+        "h": 66
       },
       {
-        "x": 78,
-        "y": 72,
-        "w": 12,
-        "h": 40
+        "x": 60,
+        "y": 82,
+        "w": 8,
+        "h": 30
+      },
+      {
+        "x": 88,
+        "y": 0,
+        "w": 8,
+        "h": 18
+      },
+      {
+        "x": 88,
+        "y": 34,
+        "w": 8,
+        "h": 78
+      },
+      {
+        "x": 110,
+        "y": 0,
+        "w": 8,
+        "h": 62
+      },
+      {
+        "x": 110,
+        "y": 80,
+        "w": 8,
+        "h": 32
       }
     ]
   },
@@ -96,6 +159,13 @@
       "x": 16,
       "y": 67,
       "amount": 5000
+    },
+    {
+      "id": "base_aether",
+      "type": "aether_vent",
+      "x": 40,
+      "y": 35,
+      "amount": 10000
     }
   ],
   "directives": [
@@ -130,28 +200,88 @@
       "y": 56
     },
     {
+      "type": "skitterling",
+      "owner": 2,
+      "count": 4,
+      "x": 74,
+      "y": 70,
+      "spread": 2.5,
+      "guard_x": 76,
+      "guard_y": 74,
+      "guard_radius": 14,
+      "encounter": "Western sentries"
+    },
+    {
       "type": "bile_crawler",
       "owner": 2,
-      "x": 117,
-      "y": 47,
-      "count": 22,
-      "spread": 3.2
+      "count": 1,
+      "x": 80,
+      "y": 77,
+      "spread": 2,
+      "guard_x": 76,
+      "guard_y": 74,
+      "guard_radius": 14,
+      "encounter": "Western sentries"
     },
     {
       "type": "skitterling",
       "owner": 2,
-      "x": 109,
-      "y": 48,
+      "count": 3,
+      "x": 100,
+      "y": 25,
+      "spread": 2.5,
+      "guard_x": 102,
+      "guard_y": 27,
+      "guard_radius": 12,
+      "encounter": "Northern ambush"
+    },
+    {
+      "type": "bile_crawler",
+      "owner": 2,
+      "count": 2,
+      "x": 104,
+      "y": 30,
+      "spread": 3,
+      "guard_x": 102,
+      "guard_y": 27,
+      "guard_radius": 12,
+      "encounter": "Northern ambush"
+    },
+    {
+      "type": "bile_crawler",
+      "owner": 2,
+      "count": 26,
+      "x": 123,
+      "y": 45,
+      "spread": 3.1,
+      "guard_x": 132,
+      "guard_y": 56,
+      "guard_radius": 18,
+      "encounter": "Brood stronghold"
+    },
+    {
+      "type": "skitterling",
+      "owner": 2,
       "count": 8,
-      "spread": 3.2
+      "x": 120,
+      "y": 62,
+      "spread": 2.6,
+      "guard_x": 132,
+      "guard_y": 56,
+      "guard_radius": 18,
+      "encounter": "Brood stronghold"
     },
     {
       "type": "blight_hurler",
       "owner": 2,
-      "x": 127,
+      "count": 1,
+      "x": 133,
       "y": 49,
-      "count": 2,
-      "spread": 9
+      "spread": 7,
+      "guard_x": 132,
+      "guard_y": 56,
+      "guard_radius": 18,
+      "encounter": "Brood stronghold"
     }
   ]
 }

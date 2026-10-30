@@ -768,6 +768,8 @@ func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, _tag: int) -> void:
 		_spawn_burst(Vector3(p.x, SimEngine.get_elevation_at(p) + 1.3, p.y), Color(0.4, 0.85, 1.0, 0.9), 0.9, 0.4, 2.6)
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
+	if bool(dead.get("cancelled", false)):
+		return
 	var p: Vector2 = dead["pos"]
 	if not _effect_near_view(p):
 		return

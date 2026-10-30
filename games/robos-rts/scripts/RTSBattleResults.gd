@@ -113,6 +113,7 @@ func show_report(data: Dictionary) -> void:
 	var economy = _table(overview)
 	_fill(economy, [
 		["Units deployed", "started"], ["Surviving units", "survivors"], ["Units lost", "lost"], ["Enemy units killed", "kills"],
+		["Construction cancelled", "cancelled"], ["Construction crystal refunded", "refunded_crystal"], ["Construction aether refunded", "refunded_aether"],
 		["Survival %", "survival_percent"], ["Kill / loss ratio", "kill_loss_ratio"],
 		["Deployed supply", "starting_supply"], ["Surviving supply", "surviving_supply"], ["Supply destroyed", "supply_destroyed"],
 		["Deployed crystal value", "starting_crystal"], ["Deployed aether value", "starting_aether"],
@@ -194,7 +195,7 @@ func _value(value: Variant, key: String = "") -> String:
 	if key == "first_shot_seconds" and float(value) < 0:
 		return "—"
 	if typeof(value) == TYPE_BOOL:
-		return "Survived" if value else "Destroyed"
+		return ("Survived" if value else "Destroyed") if key == "alive" else ("Yes" if value else "No")
 	if typeof(value) in [TYPE_INT, TYPE_FLOAT]:
 		return "%.2f×" % value if key in ["trade_ratio", "kill_loss_ratio"] else ("%.2f" % value if absf(float(value) - roundf(float(value))) > 0.001 else "%.0f" % value)
 	return str(value)
@@ -231,7 +232,8 @@ func _roster_tab() -> void:
 	for unit in report.units:
 		var item = tree.create_item(root)
 		item.set_metadata(0, unit)
-		var values = ["%s #%d" % [unit.name, unit.tag], "Blue" if unit.owner == 1 else "Red", "Survived" if unit.alive else "Destroyed", unit.kills, unit.damage, unit.shots, unit.hp, unit.dps]
+		var outcome := "Cancelled" if bool(unit.get("cancelled", false)) else ("Survived" if unit.alive else "Destroyed")
+		var values = ["%s #%d" % [unit.name, unit.tag], "Blue" if unit.owner == 1 else "Red", outcome, unit.kills, unit.damage, unit.shots, unit.hp, unit.dps]
 		for i in range(values.size()):
 			item.set_text(i, _value(values[i]))
 			item.set_custom_color(i, Color("#8bc6ff") if unit.owner == 1 else Color("#ff9e94"))

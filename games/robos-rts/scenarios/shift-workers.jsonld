@@ -1,0 +1,17 @@
+{
+  "@context": {"robos": "https://robos.dev/ns/kgraph#"},
+  "@id": "urn:robos:rts:scenario:shift-workers",
+  "@type": "robos:RTSTestScenario",
+  "name": "Shift: three builders then gather",
+  "paused": true,
+  "decor": false,
+  "victory": "all_structures",
+  "players": {"1": {"crystal": 1500, "aether": 500}},
+  "resources": [{"type": "crystal_field", "x": 12, "y": 40, "amount": 5000}],
+  "units": [
+    {"type": "colony_hub", "owner": 1, "x": 20, "y": 48},
+    {"type": "silo", "owner": 1, "x": 25, "y": 62},
+    {"type": "pioneer", "owner": 1, "x": 15, "y": 40, "count": 3, "spread": 2, "auto_harvest": true},
+    {"type": "brood_nest", "owner": 2, "x": 110, "y": 80}
+  ]
+}

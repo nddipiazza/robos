@@ -23,6 +23,9 @@ SUITES = {
     "controls": "test_player_controls.gd",
     "improvements": "test_macro_controls.gd",
     "selection": "test_selection_layout.gd",
+    "shift": "test_shift_commands.gd",
+    "audio": "test_audio_sfx.gd",
+    "statistics": "test_battle_stats.gd",
 }
 
 

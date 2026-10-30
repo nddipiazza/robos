@@ -45,6 +45,8 @@ var pending_ability: String = ""
 var messages: Array[Dictionary] = []
 var alerts: Array[Dictionary] = []
 var click_markers: Array[Dictionary] = []
+var command_feedback: Dictionary = {}
+var feedback_serial := 0
 var hover_override: Variant = null
 var show_help: bool = false
 var show_names: bool = false
@@ -65,6 +67,8 @@ func _ready() -> void:
 	world_3d = RTSWorld3DScript.new()
 	world_3d.name = "RTSWorld3D"
 	add_child(world_3d)
+	RTSAudio.world_3d = world_3d
+	RTSAudio.local_player_id = local_player
 
 	icons = RTSIconsScript.new()
 	icons.name = "RTSIcons"
@@ -88,12 +92,14 @@ func _on_scenario_loaded(_name: String) -> void:
 		match_menu.panel.hide()
 	if not SimEngine.match_state.is_empty():
 		local_player = 1
+	RTSAudio.local_player_id = local_player
 	selected_tags.clear()
 	pending_ability = ""
 	control_groups.clear()
 	messages.clear()
 	alerts.clear()
 	click_markers.clear()
+	command_feedback.clear()
 	active_type = ""
 	banner_ttl = 4.5
 	focus_on_base()
@@ -110,6 +116,7 @@ func _on_unit_damaged(owner_id: int, pos: Vector2) -> void:
 			return
 	alerts.append({"pos": pos, "ttl": 4.0, "max": 4.0})
 	if _attack_msg_cd <= 0.0:
+		RTSAudio.play_ui("alert_under_attack")
 		push_message("Your forces are under attack!", "warn")
 		_attack_msg_cd = 10.0
 
@@ -359,6 +366,8 @@ func _select_tags(tags: Array, add: bool = false) -> void:
 		if not selected_tags.has(ti):
 			selected_tags.append(ti)
 	active_type = ""
+	if not selected_tags.is_empty():
+		RTSAudio.play_ui("ui_select")
 
 func idle_workers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -448,7 +457,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		mm_dragging = false
 		if is_box_selecting:
 			is_box_selecting = false
-			_complete_box_selection(box_start_screen, box_end_screen, Input.is_key_pressed(KEY_SHIFT), mb.double_click)
+			_complete_box_selection(box_start_screen, box_end_screen, mb.shift_pressed, mb.double_click)
 		return
 
 	if mpos.y >= ARMY_BTN.position.y and _hud_hit(mb, mpos):
@@ -458,7 +467,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 
 	if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 		if pending_ability != "":
-			_execute_pending_ability_at(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
+			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed)
 			return
 		if mb.double_click:
 			# Godot marks the second press, not the following release, as double-click.
@@ -469,10 +478,15 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		box_start_screen = mpos
 		box_end_screen = mpos
 	elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+		var resource := _resource_at_screen(mpos)
+		var target := _unit_at_screen(mpos)
+		var pos: Vector2 = resource.pos if not resource.is_empty() else screen_to_world(mpos)
 		if pending_ability != "":
+			var build_to_gather: bool = pending_ability.begins_with("build_") and mb.shift_pressed and (not resource.is_empty() or target.get("unit_type", "") == "aether_tap")
 			pending_ability = ""
-			return
-		_issue_smart_right_click(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT), _unit_at_screen(mpos))
+			if not build_to_gather:
+				return
+		_issue_smart_right_click(pos, mb.shift_pressed, target)
 
 # Returns true when the click landed on a HUD element.
 func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
@@ -483,7 +497,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if left and ARMY_BTN.has_point(mpos) and not army_tags().is_empty():
 		select_army()
 		return true
-	if right:
+	if right and hud:
 		for cell in hud.production_queue_cells():
 			if cell.rect.has_point(mpos):
 				cancel_selected_production(cell.tag, cell.index)
@@ -494,7 +508,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 			mm_dragging = true
 			world_3d.set_focus(minimap_to_world(mpos))
 		elif right:
-			_issue_smart_right_click(minimap_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
+			_issue_smart_right_click(minimap_to_world(mpos), mb.shift_pressed)
 		return true
 
 	if left and idle_workers().size() > 0 and IDLE_BTN.has_point(mpos):
@@ -502,23 +516,24 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 		return true
 
 	if left:
-		for g in hud.group_tab_rects().keys():
-			if hud.group_tab_rects()[g].has_point(mpos):
-				_recall_group(int(g))
-				return true
-		var cells: Array = hud.selection_cells()
+		if hud:
+			for g in hud.group_tab_rects().keys():
+				if hud.group_tab_rects()[g].has_point(mpos):
+					_recall_group(int(g))
+					return true
+		var cells: Array = hud.selection_cells() if hud else []
 		for c in cells:
 			if c["rect"].has_point(mpos):
-				if Input.is_key_pressed(KEY_SHIFT):
+				if mb.shift_pressed:
 					selected_tags.erase(c["tag"])
-				elif Input.is_key_pressed(KEY_CTRL):
+				elif mb.ctrl_pressed:
 					active_type = str(SimEngine.units.get(c["tag"], {}).get("unit_type", ""))
 				else:
 					_select_tags([c["tag"]])
 				return true
 		for btn in get_card_buttons():
 			if btn["rect"].has_point(mpos):
-				_trigger_card_button(btn)
+				_trigger_card_button(btn, mb.shift_pressed)
 				return true
 
 	return mpos.y >= HUD_TOP
@@ -543,6 +558,8 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 			selected_tags.erase(clicked["tag"])
 		elif not selected_tags.has(clicked["tag"]):
 			selected_tags.append(clicked["tag"])
+		if not selected_tags.is_empty():
+			RTSAudio.play_ui("ui_select")
 		return
 
 	var box_units: Array[Dictionary] = []
@@ -558,9 +575,33 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 			continue
 		if not selected_tags.has(u["tag"]):
 			selected_tags.append(u["tag"])
+	if not selected_tags.is_empty():
+		RTSAudio.play_ui("ui_select")
 
-func _spawn_marker(pos: Vector2, kind: String) -> void:
-	click_markers.append({"pos": pos, "kind": kind, "ttl": 0.7, "max": 0.7})
+func _spawn_marker(pos: Vector2, kind: String, label: String = "") -> void:
+	RTSAudio.play_ui("ui_command_attack" if kind == "attack" else ("ui_build_place" if kind == "build" else "ui_command_move"))
+	var duration := 1.4 if kind == "gather" else 0.7
+	click_markers.append({"pos": pos, "kind": kind, "label": label, "ttl": duration, "max": duration})
+	if click_markers.size() > 24:
+		click_markers.pop_front()
+
+func _resource_at_screen(pos: Vector2) -> Dictionary:
+	var best: Dictionary = {}
+	var distance := 99999.0
+	for resource in SimEngine.resources.values():
+		var center := world_to_screen(resource.pos, 1.7)
+		var d := center.distance_to(pos)
+		if d < 34.0 and d < distance:
+			best = resource
+			distance = d
+	return best
+
+func _gather_feedback(pos: Vector2, target_tag: int, result: Dictionary, queued: bool) -> void:
+	if int(result.get("accepted", 0)) <= 0:
+		return
+	feedback_serial += 1
+	command_feedback = {"kind": "gather", "target_tag": target_tag, "accepted": result.accepted, "queued": queued, "serial": feedback_serial}
+	_spawn_marker(pos, "gather", "%s · %d workers" % ["GATHER QUEUED" if queued else "GATHER", result.accepted])
 
 func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = {}) -> void:
 	var own := selected_owned()
@@ -583,8 +624,8 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 				if u["is_worker"]:
 					workers.append(u["tag"])
 			if not workers.is_empty():
-				SimEngine.issue_command(workers, "harvest", r["pos"], r["tag"], "", queue)
-				_spawn_marker(r["pos"], "gather")
+				var result = SimEngine.issue_command(workers, "harvest", r["pos"], r["tag"], "", queue)
+				_gather_feedback(r.pos, r.tag, result, queue)
 				return
 
 	var target := clicked if not clicked.is_empty() else _unit_at_screen(world_to_screen(wpos, 1.2))
@@ -608,8 +649,8 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 					return
 			return
 		elif target["unit_type"] == "aether_tap":
-			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
-			_spawn_marker(target["pos"], "gather")
+			var result = SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
+			_gather_feedback(target.pos, target.tag, result, queue)
 			return
 
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
@@ -657,8 +698,8 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 		pending_ability = ""
 		for r in SimEngine.resources.values():
 			if wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
-				SimEngine.issue_command(tags, "harvest", r["pos"], r["tag"], "", queue)
-				_spawn_marker(r["pos"], "gather")
+				var result = SimEngine.issue_command(tags, "harvest", r["pos"], r["tag"], "", queue)
+				_gather_feedback(r.pos, r.tag, result, queue)
 				return
 		push_message("Select a crystal field or aether vent.", "warn")
 	elif abil.begins_with("build_"):
@@ -667,18 +708,23 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 		if not placement["ok"]:
 			push_message(str(placement["reason"]), "error")
 			return
-		pending_ability = ""
+		pending_ability = abil if queue else ""
 		var best: Dictionary = {}
 		var best_d := 1e9
 		for u in own:
 			if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil):
-				var d: float = u["pos"].distance_to(placement["pos"])
+				var jobs := 0
+				for order in u.orders:
+					if order.type == "build":
+						jobs += 1
+				var d: float = u["pos"].distance_to(placement["pos"]) + jobs * 10000.0
 				if d < best_d:
 					best_d = d
 					best = u
 		if not best.is_empty():
-			SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue)
-			_spawn_marker(placement["pos"], "move")
+			var result = SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue)
+			if result.accepted > 0:
+				_spawn_marker(placement["pos"], "build", "BUILD QUEUED" if queue else "BUILD")
 
 # Validates a structure placement for the local player and snaps aether taps to vents.
 func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
@@ -743,6 +789,8 @@ func ability_cost(adef: Dictionary) -> Dictionary:
 	}
 
 func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
+	if adef.get("id", "") == "cancel_build":
+		return "" if SimEngine.can_cancel_construction(pu) else "No construction to cancel."
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
 	if adef.has("unit") and pu.production_queue.size() >= 5:
@@ -786,12 +834,16 @@ func get_card_buttons() -> Array[Dictionary]:
 				abils.append(ability)
 			if not str(ability).begins_with("train_"):
 				reserved_hotkeys[RTSData.get_ability_def(str(ability)).get("hotkey", "")] = true
+	if own_selection_can_cancel() and not abils.has("cancel_build"):
+		abils.append("cancel_build")
 	for i in range(mini(15, abils.size())):
 		var row := i / 5
 		var col := i % 5
 		var abil_id := str(abils[i])
 		var adef := RTSData.get_ability_def(abil_id).duplicate()
 		var reason := ""
+		if abil_id == "cancel_build":
+			reason = "" if own_selection_can_cancel() else "No construction to cancel."
 		for source in sources:
 			if RTSData.get_unit_def(source.unit_type).get("abilities", []).has(abil_id):
 				reason = _block_reason(adef, source)
@@ -816,7 +868,10 @@ func get_card_buttons() -> Array[Dictionary]:
 		})
 	return buttons
 
-func _trigger_card_button(btn: Dictionary) -> void:
+func own_selection_can_cancel() -> bool:
+	return selected_owned().any(func(u): return SimEngine.can_cancel_construction(u))
+
+func _trigger_card_button(btn: Dictionary, batch: bool = false) -> void:
 	var abil_id: String = btn["ability_id"]
 	if abil_id != train_repeat_ability:
 		_clear_training_repeat()
@@ -829,15 +884,17 @@ func _trigger_card_button(btn: Dictionary) -> void:
 		pending_ability = abil_id
 		return
 	if abil_id.begins_with("train_"):
-		_train_on_best(abil_id)
+		for _i in range(5 if batch else 1):
+			if not _train_on_best(abil_id):
+				break
 		return
 	var tags: Array = []
 	for u in selected_owned():
-		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id):
+		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id) or (abil_id == "cancel_build" and SimEngine.can_cancel_construction(u)):
 			tags.append(u["tag"])
 	SimEngine.issue_command(tags, abil_id)
 
-func _train_on_best(abil_id: String) -> void:
+func _train_on_best(abil_id: String) -> bool:
 	var best: Dictionary = {}
 	var best_q := 99
 	for u in selected_owned():
@@ -852,7 +909,8 @@ func _train_on_best(abil_id: String) -> void:
 			best_q = q
 			best = u
 	if not best.is_empty():
-		SimEngine.issue_command([best["tag"]], abil_id)
+		return SimEngine.issue_command([best["tag"]], abil_id).accepted > 0
+	return false
 
 func _hotkey_char(ke: InputEventKey) -> String:
 	var s := OS.get_keycode_string(ke.keycode)
@@ -932,6 +990,10 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		KEY_F3:
 			select_army()
 			return
+		KEY_F11:
+			var muted := RTSAudio.toggle_mute()
+			push_message("Sound muted" if muted else "Sound enabled", "info")
+			return
 		KEY_SPACE:
 			if alerts.size() > 0:
 				world_3d.set_focus(alerts[alerts.size() - 1]["pos"])
@@ -979,7 +1041,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				train_repeat_key = ke.keycode
 				train_repeat_ability = btn.ability_id
 				train_repeat_clock = TRAIN_REPEAT_DELAY
-			_trigger_card_button(btn)
+			_trigger_card_button(btn, ke.shift_pressed)
 			return
 
 # External state hook used by the control server (screenshots, scripted demos)
@@ -1047,6 +1109,10 @@ func ui_state() -> Dictionary:
 		commands.append({"ability": button.ability_id, "hotkey": button.def.get("hotkey", ""), "blocked": button.blocked,
 			"rect": [button.rect.position.x, button.rect.position.y, button.rect.size.x, button.rect.size.y]})
 	return {
+		"command_feedback": command_feedback.duplicate(),
+		"audio": {"muted": RTSAudio.muted, "volume": RTSAudio.volume_percent, "counts": RTSAudio.sfx_counts.duplicate(), "loaded_streams": RTSAudio.sound_streams.size(),
+			"output_enabled": RTSAudio._should_output_audio(), "output_device": AudioServer.output_device,
+			"output_devices": AudioServer.get_output_device_list(), "peak_db": AudioServer.get_bus_peak_volume_left_db(0,0)},
 		"selection_layout_builds": hud.selection_layout_builds if hud else 0,
 		"army_count": army_tags().size(),
 		"army_rect": [ARMY_BTN.position.x, ARMY_BTN.position.y, ARMY_BTN.size.x, ARMY_BTN.size.y],
@@ -1172,7 +1238,21 @@ func _draw_click_markers() -> void:
 			"gather": col = Color("#5eead4")
 			"rally": col = Color("#fbbf24")
 		col.a = 1.0 - t
-		_ellipse(sp, lerpf(26.0, 8.0, t), col, 2.5)
+		_ellipse(sp, lerpf(48.0, 30.0, t) if m.kind == "gather" else lerpf(26.0, 8.0, t), col, 4.0 if m.kind == "gather" else 2.5)
+		if m.kind == "gather":
+			var center := world_to_screen(m.pos, 1.7)
+			for sx in [-1.0, 1.0]:
+				for sy in [-1.0, 1.0]:
+					var corner := center + Vector2(sx * 29, sy * 24)
+					draw_line(corner, corner - Vector2(sx * 12, 0), col, 3.0)
+					draw_line(corner, corner - Vector2(0, sy * 12), col, 3.0)
+		var label := str(m.get("label", ""))
+		if label != "":
+			var font := ThemeDB.fallback_font
+			var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+			var at := sp + Vector2(-width * 0.5, -66)
+			draw_rect(Rect2(at - Vector2(9, 22), Vector2(width + 18, 32)), Color(0.02, 0.07, 0.1, 0.85 * (1.0 - t)))
+			draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, col)
 
 func _draw_rally_and_orders() -> void:
 	for t in selected_tags:

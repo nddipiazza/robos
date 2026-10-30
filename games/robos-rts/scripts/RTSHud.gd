@@ -711,6 +711,10 @@ func _glyph(id: String, r: Rect2) -> void:
 		"stop":
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color("#e06a5e"))
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color(0, 0, 0, 0.5), false, 1.0)
+		"cancel_build":
+			draw_arc(c, 20.0 * u, 0.0, TAU, 32, Color("#ee806c"), 3.0 * u, true)
+			draw_line(c + Vector2(-12, -12) * u, c + Vector2(12, 12) * u, Color("#ee806c"), 5.0 * u)
+			draw_line(c + Vector2(-12, 12) * u, c + Vector2(12, -12) * u, Color("#ee806c"), 5.0 * u)
 		"hold_position":
 			draw_colored_polygon(P.call([[-16, -17], [16, -17], [16, 3], [0, 19], [-16, 3]]), Color("#8aa0b8"))
 			draw_colored_polygon(P.call([[-10, -11], [10, -11], [10, 1], [0, 12], [-10, 1]]), Color("#3a4a5e"))

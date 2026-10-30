@@ -15,6 +15,11 @@ signal scenario_loaded(scenario_name: String)
 signal paused_step
 signal notice(owner_id: int, text: String, kind: String)
 signal unit_damaged(owner_id: int, pos: Vector2)
+signal weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, hit_shields: bool)
+signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
+signal resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2)
+signal unit_production_finished(unit: Dictionary, structure: Dictionary)
+signal structure_construction_finished(structure: Dictionary)
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
@@ -324,6 +329,10 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 				spawned["shields"] = float(u.get("shields"))
 			if bool(u.get("auto_harvest", false)):
 				issue_SmartHarvest(spawned["tag"])
+			if u.has("guard_radius"):
+				spawned["guard_center"] = Vector2(float(u.get("guard_x", base_x)), float(u.get("guard_y", base_y)))
+				spawned["guard_radius"] = float(u.guard_radius)
+				spawned["encounter"] = str(u.get("encounter", "stronghold"))
 
 	_rebuild_astar_grid()
 	_recompute_supplies()
@@ -989,6 +998,7 @@ func _update_structures(dt: float) -> void:
 				u.hp = minf(u.max_hp, u.hp + u.max_hp * rate)
 				if u.build_progress >= 1.0:
 					players[u.owner].structures_built += 1
+					emit_signal("structure_construction_finished", u)
 					_recompute_supplies()
 			continue
 		var queue: Array = u["production_queue"]
@@ -1003,6 +1013,7 @@ func _update_structures(dt: float) -> void:
 					spawn_dir = Vector2.RIGHT if u["owner"] == 1 else Vector2.LEFT
 				var spawn_pos = u["pos"] + spawn_dir * (u["radius"] + 1.8)
 				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
+				emit_signal("unit_production_finished", new_unit, u)
 				var harvest_target = _rally_harvest_target(u) if new_unit.is_worker else 0
 				if new_unit.is_worker and harvest_target > 0:
 					issue_command([new_unit.tag], "harvest", u.rally_pos, harvest_target)
@@ -1178,6 +1189,9 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 				players[u["owner"]]["crystal_collected"] += u["cargo_amount"]
 			u["cargo_amount"] = 0
 			u["cargo_type"] = ""
+			# A queued job follows one complete gather/deliver cycle, not an endless loop.
+			if u.orders.size() > 1:
+				u.orders.pop_front()
 		else:
 			_approach_target(u, th["pos"], dt)
 		return
@@ -1191,6 +1205,9 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		target_entity = units[res_tag]
 		is_gas = true
 	else:
+		if u.orders.size() > 1:
+			u.orders.pop_front()
+			return
 		var nearest_res = _find_nearest_crystal(u["pos"])
 		if nearest_res.is_empty():
 			u["orders"].pop_front()
@@ -1212,7 +1229,8 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		source_tag = int(_gas_source_by_tap.get(tap_tag, res_tag))
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
 		u.orders.pop_front()
-		issue_SmartHarvest(u.tag)
+		if u.orders.is_empty():
+			issue_SmartHarvest(u.tag)
 		return
 	if dist <= 1.2:
 		u["vel"] = Vector2.ZERO
@@ -1220,6 +1238,7 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		u["harvest_timer"] += dt
 		if u["harvest_timer"] >= 1.75:
 			u["harvest_timer"] = 0.0
+			emit_signal("resource_gathered", u, "aether" if is_gas else "crystal", u.pos)
 			if is_gas:
 				u["cargo_type"] = "aether"
 				u["cargo_amount"] = 4
@@ -1251,6 +1270,8 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				p["crystal"] -= m_cost
 				p["aether"] -= v_cost
 				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.0)
+				s_unit["paid_crystal"] = m_cost
+				s_unit["paid_aether"] = v_cost
 				order["structure_tag"] = s_unit["tag"]
 				# Alien Motes summon in structures automatically and are immediately free!
 				if u["unit_type"] == "mote":
@@ -1281,6 +1302,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			s_unit["hp"] = min(s_unit["max_hp"], s_unit["hp"] + s_unit["max_hp"] * rate)
 			if s_unit["build_progress"] >= 1.0:
 				players[u["owner"]]["structures_built"] += 1
+				emit_signal("structure_construction_finished", s_unit)
 				_recompute_supplies()
 				emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
 				u["orders"].pop_front()
@@ -1528,6 +1550,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 	var wpn = def.get("weapon", {})
 	if wpn.is_empty():
 		return
+	emit_signal("weapon_attack", attacker, primary_target, wpn, float(primary_target.get("shields", 0.0)) > 0.0)
 
 	var base_dmg = float(wpn.get("damage", 6.0))
 	battle_stats.shot(attacker, tick)
@@ -1637,6 +1660,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "cancel_build":
+			if _cancel_construction(u):
+				accepted += 1
+			continue
 		if ctype == "cancel_train":
 			if extra == "" or extra.is_valid_int():
 				if _cancel_production(u, int(extra) if extra != "" else 0):
@@ -1681,6 +1708,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			var stype_check = ctype.trim_prefix("build_") if ctype != "build" else extra
 			if not _can_build(u, stype_check, target_pos):
 				continue
+			if not _build_reservation_free(stype_check, target_pos):
+				continue
 
 		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "phase_step"]:
 			battle_stats.count(u.tag, "recovery_cancels")
@@ -1699,12 +1728,14 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				battle_stats.count(u.tag, "self_damage", 10.0)
 				battle_stats.count(u.tag, "surge_uses")
 				u["surge_timer"] = 11.0
+				emit_signal("ability_triggered", u, "surge", u.pos)
 				accepted += 1
 			continue
 
 		elif ctype == "charge":
 			if u["unit_type"] == "sunblade":
 				u["charge_timer"] = 3.5
+				emit_signal("ability_triggered", u, "charge", u.pos)
 				accepted += 1
 			continue
 
@@ -1732,24 +1763,28 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype in ["emplace", "emplace"]:
 			if u["unit_type"] == "howitzer":
 				_morph_unit_in_place(u, "howitzer_emplaced")
+				emit_signal("ability_triggered", u, "emplace", u.pos)
 				accepted += 1
 			continue
 
 		elif ctype in ["mobilize", "mobile_mode"]:
 			if u["unit_type"] == "howitzer_emplaced":
 				_morph_unit_in_place(u, "howitzer")
+				emit_signal("ability_triggered", u, "mobilize", u.pos)
 				accepted += 1
 			continue
 
 		elif ctype == "retract_silo":
 			if u["unit_type"] == "silo":
 				_morph_unit_in_place(u, "silo_retracted")
+				emit_signal("ability_triggered", u, "retract_silo", u.pos)
 				accepted += 1
 			continue
 
 		elif ctype == "extend_silo":
 			if u["unit_type"] == "silo_retracted":
 				_morph_unit_in_place(u, "silo")
+				emit_signal("ability_triggered", u, "extend_silo", u.pos)
 				accepted += 1
 			continue
 
@@ -1948,6 +1983,57 @@ func _cancel_production(structure: Dictionary, index: int) -> bool:
 
 func _build_time_scale() -> float:
 	return 1.0 if not match_state.is_empty() else 0.25
+
+func _build_reservation_free(kind: String, pos: Vector2) -> bool:
+	var radius := float(RTSData.get_unit_def(kind).get("radius", 2.0))
+	for worker in units.values():
+		for order in worker.orders:
+			if order.type == "build" and int(order.get("structure_tag", 0)) == 0:
+				var other_radius := float(RTSData.get_unit_def(str(order.structure_type)).get("radius", 2.0))
+				if pos.distance_to(order.target_pos) < radius + other_radius + 1.0:
+					return false
+	return true
+
+func can_cancel_construction(actor: Dictionary) -> bool:
+	if actor.is_structure:
+		return actor.build_progress < 1.0
+	return actor.is_worker and not actor.orders.is_empty() and actor.orders[0].type == "build"
+
+func _cancel_construction(actor: Dictionary) -> bool:
+	if not can_cancel_construction(actor):
+		return false
+	var tag: int = actor.tag if actor.is_structure else int(actor.orders[0].get("structure_tag", 0))
+	if tag == 0:
+		actor.orders.pop_front()
+		actor.path.clear()
+		actor.vel = Vector2.ZERO
+		emit_signal("notice", actor.owner, "Planned construction cancelled · no resources spent", "info")
+		return true
+	var site: Dictionary = units.get(tag, {})
+	if site.is_empty() or site.owner != actor.owner or not site.is_structure or site.build_progress >= 1.0:
+		return false
+	var def := RTSData.get_unit_def(str(site.unit_type))
+	var crystal := int(floor(float(site.get("paid_crystal", def.get("crystal_cost", 0))) * 0.75))
+	var aether := int(floor(float(site.get("paid_aether", def.get("aether_cost", 0))) * 0.75))
+	players[actor.owner].crystal += crystal
+	players[actor.owner].aether += aether
+	for worker in units.values():
+		if worker.is_worker:
+			var active: bool = not worker.orders.is_empty() and worker.orders[0].type == "build" and int(worker.orders[0].get("structure_tag", 0)) == tag
+			worker.orders = worker.orders.filter(func(order): return not (order.type == "build" and int(order.get("structure_tag", 0)) == tag))
+			if active:
+				worker.path.clear()
+				worker.crowd_path.clear()
+				worker.vel = Vector2.ZERO
+	battle_stats.cancelled(tag, tick, crystal, aether)
+	var cancelled_site: Dictionary = site.duplicate(true)
+	cancelled_site["cancelled"] = true
+	units.erase(tag)
+	nav_dirty = true
+	_recompute_supplies()
+	emit_signal("unit_destroyed", cancelled_site)
+	emit_signal("notice", actor.owner, "Construction cancelled · refunded %d crystal / %d aether (75%%)" % [crystal, aether], "info")
+	return true
 
 func _recompute_supplies() -> void:
 	for pid in players.keys():

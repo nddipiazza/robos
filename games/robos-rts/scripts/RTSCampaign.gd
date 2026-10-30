@@ -18,9 +18,9 @@ func _ready() -> void:
 	briefing.add_child(box)
 	_label(box, "FIRST STRIKE", 38)
 	_label(box, "Mission 01 · Canyon Stronghold", 23)
-	_label(box, "The Gnarl Brood holds the eastern canyon. Build your base,\nassemble an army, then clear the enemy stronghold.", 21)
-	_label(box, "1. Your 12 Pioneers are already gathering crystal.\n2. Build Provision Silos and Muster Halls with a Pioneer.\n3. Train about 40 Riflemen (40 army supply).\n4. Attack east: destroy the Brood Nest AND all its defenders.", 22)
-	_label(box, "40 Riflemen + 12 workers = 52 total supply; aim for 55 capacity.\nThe garrison stays near its base. There is no time limit.\nSelect workers to build. Select halls to train. A + click attacks.\nF1 controls · F8 menu · P pause · F9 restart mission", 18)
+	_label(box, "Build your base, clear two sentry posts, then break through\nthe winding canyon to the Gnarl Brood stronghold.", 21)
+	_label(box, "1. Your 12 Pioneers are already gathering crystal.\n2. Build Provision Silos and Muster Halls with a Pioneer.\n3. Assemble about 40 Riflemen (40 army supply).\n4. Follow the passes south, north, then south; clear every enemy.", 22)
+	_label(box, "40 Riflemen + 12 workers = 52 total supply; aim for 55 capacity.\nBuild an Aether Tap on the vent northeast of your base for gas units.\nThe defenders hold their posts. There is no time limit.\nA + click attacks · F1 controls · F8 menu · P pause · F9 restart", 18)
 	_button(box, "Begin mission  [Enter]", func(): SimEngine.start_campaign())
 	objectives = _panel(Vector2(28, 72), Vector2(620, 0))
 	var live = VBoxContainer.new()
@@ -137,17 +137,20 @@ func _refresh() -> void:
 	var rifles = 0
 	var defenders = 0
 	var nest = false
+	var posts: Dictionary = {}
 	for u in SimEngine.units.values():
 		if u.owner == 1 and u.unit_type == "rifleman":
 			rifles += 1
 		if u.owner == 2:
+			if not str(u.get("encounter", "")).is_empty():
+				posts[u.encounter] = true
 			if u.is_structure:
 				nest = true
 			else:
 				defenders += 1
 	var state = SimEngine.match_state.status
 	var heading = "FIRST STRIKE" if state != "finished" else ("MISSION COMPLETE" if SimEngine.match_state.winner == 1 else "MISSION FAILED · F9 to retry")
-	status_label.text = "%s   %s\nArmy: %d Riflemen / ~40 recommended army supply\nClear the stronghold: %d defenders · Brood Nest %s\nProtect your base · Build Silos and Muster Halls · Attack east" % [heading, "[PAUSED]" if SimEngine.paused else "", rifles, defenders, "standing" if nest else "destroyed"]
+	status_label.text = "%s   %s\nArmy: %d Riflemen / ~40 recommended army supply\nSentry posts: %s · %s\nClear all enemies: %d defenders · Brood Nest %s\nProtect your base · Follow the canyon passes" % [heading, "[PAUSED]" if SimEngine.paused else "", rifles, "West standing" if posts.has("Western sentries") else "West cleared", "North standing" if posts.has("Northern ambush") else "North cleared", defenders, "standing" if nest else "destroyed"]
 	if state == "finished" and not results_shown:
 		results_shown = true
 		results.show_report(SimEngine.match_state.results)

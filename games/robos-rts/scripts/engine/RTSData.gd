@@ -659,6 +659,7 @@ var units: Dictionary = {
 }
 
 var abilities: Dictionary = {
+	"cancel_build": {"id": "cancel_build", "name": "Cancel Construction", "hotkey": "N", "target": "none", "desc": "Remove the unfinished foundation and refund 75% of its paid cost. Stop / Halt only pauses construction."},
 	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point", "desc": "Move to a location. Units do not stop for enemies on the way."},
 	"stop": {"id": "stop", "name": "Stop / Halt", "hotkey": "S", "target": "none", "desc": "Stop and clear orders. Builders pause construction; right-click the unfinished structure to resume."},
 	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies that come into range."},
@@ -705,6 +706,12 @@ var player_colors: Dictionary = {
 	2: Color("#e0453a"),
 	3: Color("#f0c43c")
 }
+
+func _ready() -> void:
+	var sounds := {"pioneer": "arc_welder", "rifleman": "rifle_fire", "breacher": "breach_charge", "howitzer": "autocannon_fire", "howitzer_emplaced": "mortar_fire", "forager": "mandible_bite", "skitterling": "claw_slash", "bile_crawler": "acid_spit", "blight_hurler": "corrosive_lob", "mote": "mote_spark", "sunblade": "light_blade_strike", "skirmisher": "needler_fire", "spire_walker": "prism_beam"}
+	for kind in sounds:
+		units[kind].weapon["sfx"] = sounds[kind]
+		units[kind].weapon["attack_type"] = "melee" if float(units[kind].weapon.range) <= 2.5 else "ranged"
 
 func get_faction_name(faction_id: String) -> String:
 	return str(faction_info.get(faction_id, {}).get("name", faction_id.capitalize()))

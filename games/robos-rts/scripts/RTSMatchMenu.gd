@@ -5,6 +5,7 @@ var difficulty: OptionButton
 var strategy: OptionButton
 var speed: OptionButton
 var mouse_scroll: HSlider
+var volume: OptionButton
 var was_paused: bool = false
 
 func _ready() -> void:
@@ -58,6 +59,10 @@ func _ready() -> void:
 		get_parent().set_mouse_scroll_speed(value)
 		mouse_value.text = "%d%%" % value if value > 0 else "Off")
 	box.add_child(mouse_row)
+	volume = _option(box, "Sound volume · F11 mute", ["100%", "70%", "40%", "Muted"], 0)
+	volume.item_selected.connect(func(index):
+		RTSAudio.set_volume_percent([100, 70, 40, 0][index])
+		RTSAudio.play_ui("ui_select"))
 	var start = Button.new()
 	start.text = "Start new match"
 	start.pressed.connect(_start)
@@ -120,6 +125,7 @@ func toggle() -> void:
 	else:
 		was_paused = SimEngine.paused
 		SimEngine.paused = true
+		volume.selected = 3 if RTSAudio.muted else ([100, 70, 40].find(RTSAudio.volume_percent))
 		panel.show()
 
 func _start() -> void:

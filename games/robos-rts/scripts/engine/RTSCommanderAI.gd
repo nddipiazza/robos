@@ -73,13 +73,20 @@ func step_ai(_dt: float) -> void:
 
 func _run_guard_area(pid: int, center: Vector2, radius: float) -> void:
 	# A finite garrison: no production, resource gifts or attacks on the player's base.
-	var intruders: Array = []
-	for u in SimEngine.units.values():
-		if u.owner != pid and u.hp > 0 and u.pos.distance_to(center) <= radius:
-			intruders.append(u)
+	var zones: Dictionary = {}
 	for u in SimEngine.units.values():
 		if u.owner != pid or u.is_structure or u.hp <= 0:
 			continue
+		var guard_center: Vector2 = u.get("guard_center", center)
+		var guard_radius: float = float(u.get("guard_radius", radius))
+		var zone := Vector3(guard_center.x, guard_center.y, guard_radius)
+		if not zones.has(zone):
+			var nearby: Array = []
+			for enemy in SimEngine.units.values():
+				if enemy.owner != pid and enemy.hp > 0 and enemy.pos.distance_squared_to(guard_center) <= guard_radius * guard_radius:
+					nearby.append(enemy)
+			zones[zone] = nearby
+		var intruders: Array = zones[zone]
 		if not intruders.is_empty():
 			var target: Dictionary = intruders[0]
 			for enemy in intruders:

@@ -46,6 +46,17 @@ func count(tag: int, metric: String, amount: float = 1.0) -> void:
 	if active and records.has(tag):
 		records[tag][metric] += amount
 
+func cancelled(tag: int, at_tick: int, crystal: int, aether: int) -> void:
+	if active and records.has(tag):
+		var record: Dictionary = records[tag]
+		record["cancelled"] = true
+		record["refunded_crystal"] = crystal
+		record["refunded_aether"] = aether
+		record.alive = false
+		record.death_tick = at_tick
+		record.hp = 0.0
+		record.shields = 0.0
+
 func shot(unit: Dictionary, at_tick: int) -> void:
 	if not active or not records.has(unit.tag):
 		return
@@ -121,6 +132,8 @@ func finish(units: Dictionary, at_tick: int, seed_value: int) -> Dictionary:
 	var roster: Array = []
 	for pid in [1, 2]:
 		var side = {"started": 0, "survivors": 0, "lost": 0, "starting_crystal": 0, "starting_aether": 0,
+			"cancelled": 0, "refunded_crystal": 0, "refunded_aether": 0,
+			"surviving_crystal": 0, "surviving_aether": 0,
 			"crystal_lost": 0, "aether_lost": 0, "starting_supply": 0, "surviving_supply": 0,
 			"initial_hp": 0.0, "initial_shields": 0.0, "hp": 0.0, "shields": 0.0,
 			"peak_dps": 0.0, "peak_from": 0.0, "peak_to": 0.0, "first_shot_seconds": -1.0,
@@ -140,13 +153,19 @@ func finish(units: Dictionary, at_tick: int, seed_value: int) -> Dictionary:
 			roster.append(r)
 			side.started += 1
 			side.survivors += int(r.alive)
-			side.lost += int(not r.alive)
+			var was_cancelled := bool(r.get("cancelled", false))
+			side.lost += int(not r.alive and not was_cancelled)
+			side.cancelled += int(was_cancelled)
+			side.refunded_crystal += int(r.get("refunded_crystal", 0))
+			side.refunded_aether += int(r.get("refunded_aether", 0))
 			side.starting_crystal += r.crystal
 			side.starting_aether += r.aether
 			side.starting_supply += r.supply
 			side.surviving_supply += r.supply if r.alive else 0
-			side.crystal_lost += 0 if r.alive else r.crystal
-			side.aether_lost += 0 if r.alive else r.aether
+			side.crystal_lost += 0 if r.alive or was_cancelled else r.crystal
+			side.aether_lost += 0 if r.alive or was_cancelled else r.aether
+			side.surviving_crystal += r.crystal if r.alive else 0
+			side.surviving_aether += r.aether if r.alive else 0
 			for key in r:
 				if side.has(key) and key not in ["kills", "shots"] and typeof(side[key]) == TYPE_FLOAT and typeof(r[key]) in [TYPE_FLOAT, TYPE_INT]:
 					side[key] += r[key]
@@ -166,7 +185,7 @@ func finish(units: Dictionary, at_tick: int, seed_value: int) -> Dictionary:
 			type.kills += r.kills
 			type.damage += r.damage
 			type.cost += r.crystal + r.aether
-			type.lost += int(not r.alive)
+			type.lost += int(not r.alive and not was_cancelled)
 			type.count += 1
 		for bin in timeline:
 			var dps: float = bin["blue_dps" if pid == 1 else "red_dps"]
@@ -179,8 +198,6 @@ func finish(units: Dictionary, at_tick: int, seed_value: int) -> Dictionary:
 		side.damage_per_shot = side.damage / side.shots if side.shots > 0 else 0.0
 		side.survival_percent = 100.0 * side.survivors / maxf(1.0, side.started)
 		side.kill_loss_ratio = side.kills / side.lost if side.lost > 0 else null
-		side.surviving_crystal = side.starting_crystal - side.crystal_lost
-		side.surviving_aether = side.starting_aether - side.aether_lost
 		side.best_type = {}
 		side.least_effective_type = {}
 		for type in side.types.values():
