@@ -13,18 +13,15 @@
     <div id="header">
       <div class="header-left">
         <span class="app-logo" id="app-logo-icon">🔐</span>
-        <div>
-          <span id="header-title">RobOS KeePassXC Vault</span>
-          <span id="active-kdbx-pill" class="kdbx-pill" title="Active .kdbx single-file archive">robos-passwords.kdbx</span>
-        </div>
+        <span id="header-title">Pass Manager</span>
+        <span class="header-sep">/</span>
+        <span id="active-kdbx-pill" class="kdbx-filename" title="Active .kdbx single-file archive">robos-passwords.kdbx</span>
       </div>
 
       <div id="header-actions">
-        <button id="btn-open-kdbx" class="btn-top" title="Open an existing .kdbx archive">📂 Open .kdbx</button>
-        <button id="btn-new-kdbx" class="btn-top" title="Create a new .kdbx archive">➕ New .kdbx</button>
-        <span id="fido-badge" class="fido-badge" title="Physical YubiKey FIDO2 hmac-secret status">🔑 Checking Key...</span>
-        <span id="lock-badge" class="lock-badge locked">🔒 Locked</span>
-        <button id="btn-lock" class="btn-lock hidden" title="Lock .kdbx keystore now">🔒 Lock</button>
+        <button id="btn-open-kdbx" class="btn-top" title="Open an existing .kdbx archive">Open…</button>
+        <button id="btn-new-kdbx" class="btn-top" title="Create a new .kdbx archive">New…</button>
+        <button id="btn-lock" class="btn-top hidden" title="Lock .kdbx keystore now">Lock</button>
         <input id="search" type="text" placeholder="Search entries…">
         <button id="btn-add" class="btn-icon" title="New entry">+</button>
         <button id="btn-db-info" class="btn-icon" title="KeePassXC Database Info &amp; YubiKey Binding">⚙</button>

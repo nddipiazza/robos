@@ -20,12 +20,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   $('btn-refresh').addEventListener('click', loadEntries);
   $('btn-add').addEventListener('click', openAddForm);
   $('btn-db-info').addEventListener('click', openDbInfoPanel);
-  $('fido-badge').addEventListener('click', openDbInfoPanel);
   $('search').addEventListener('input', onSearch);
   $('btn-lock').addEventListener('click', doLock);
-  $('lock-badge').addEventListener('click', () => {
-    if (vaultStatus && vaultStatus.locked) showPanel('unlock');
-  });
 
   // Open / Create .kdbx archive buttons
   $('btn-open-kdbx').addEventListener('click', async () => {
@@ -142,29 +138,10 @@ function updateHeaderStatus(st) {
   $('setup-dbpath').value = st.dbPath || '';
   $('unlock-db-path').textContent = st.dbPath || '';
 
-  const fidoBadge = $('fido-badge');
-  if (st.fido2Enrolled) {
-    const dev = (st.fido2Binding && st.fido2Binding.deviceName) || 'YubiKey';
-    fidoBadge.textContent = `🔑 ${dev} Bound`;
-  } else if (st.hardwareKeyConnected) {
-    fidoBadge.textContent = `⚡ ${st.hardwareKeyName || 'YubiKey'} Ready (Click to Bind)`;
-  } else {
-    fidoBadge.textContent = '🔑 No Key Bound';
-  }
-
-  const badge = $('lock-badge');
   const lockBtn = $('btn-lock');
-  if (!st.initialized) {
-    badge.className = 'lock-badge locked';
-    badge.textContent = 'Not Initialized';
-    lockBtn.classList.add('hidden');
-  } else if (st.locked) {
-    badge.className = 'lock-badge locked clickable';
-    badge.textContent = '🔒 Locked';
+  if (!st.initialized || st.locked) {
     lockBtn.classList.add('hidden');
   } else {
-    badge.className = 'lock-badge unlocked';
-    badge.textContent = st.unlockedVia === 'hardware-key' ? '🔓 Unlocked via YubiKey' : '🔓 Unlocked';
     lockBtn.classList.remove('hidden');
   }
 }
@@ -234,6 +211,7 @@ async function doUnlockHardwareKey() {
   btn.textContent = '👆 Touch Your YubiKey Now…';
 
   const res = await window.api.unlockWithHardwareKey({ masterPassword, pin });
+  $('touch-banner').classList.add('hidden');
   btn.disabled = false;
   btn.textContent = '👆 Touch YubiKey to Unlock Keystore';
 
@@ -536,6 +514,7 @@ async function doInitStore() {
 
   btn.disabled = false;
   progress.classList.add('hidden');
+  $('touch-banner').classList.add('hidden');
 
   if (res.ok) {
     await loadEntries();
@@ -572,6 +551,7 @@ async function doBindHardwareKeyNow() {
   statusEl.textContent = '👆 Touch your flashing YubiKey (Step 1/2, then Step 2/2) to bind this .kdbx keystore…';
   const requireBoth2FA = $('bind-2fa').checked;
   const res = await window.api.enrollHardwareKey({ requireBoth2FA });
+  $('touch-banner').classList.add('hidden');
   if (res.ok) {
     statusEl.textContent = '✓ Physical YubiKey bound! You can now unlock this .kdbx archive with a single touch.';
     await openDbInfoPanel();
