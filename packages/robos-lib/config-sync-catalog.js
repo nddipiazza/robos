@@ -201,6 +201,7 @@ const LOCAL_KEYS = {
   'config/dashboards.json': ['lastCastTvId', 'lastCastAt'],
   'config/app-mesh/mesh-state.json': ['listenHost', 'listenPort', 'tunnels'],
   'config/home-speakers.json': ['updatedAt'],
+  'config/hardware-keys.json': ['touchHistory', 'lastSeenAt'],
 };
 
 /** Keys that identify an item in a list, in priority order, used to merge shared lists. */

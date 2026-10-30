@@ -350,4 +350,10 @@ packages:
     type: "robos:Library"
     repository: "packages/robos-ui"
     technology: "Vanilla JS Custom Elements (<robos-dashboard>, <robos-dashboard-widget>)"
+  - id: "urn:robos:desktop-app:hardware-keys"
+    title: "RobOS Hardware Keys"
+    type: "robos:DesktopApp"
+    repository: "packages/hardware-keys"
+    technology: "Electron 30 / YubiKey Manager (ykman) / python3-fido2 CTAP2 / OpenSSH FIDO2 (-sk) / PAM U2F"
+
 
