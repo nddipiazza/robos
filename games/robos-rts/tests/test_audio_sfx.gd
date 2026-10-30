@@ -20,7 +20,8 @@ func _run() -> void:
 	_test_melee_attack_strike_sfx()
 	_test_abilities_and_deaths_sfx()
 	_test_economy_and_ui_sfx()
-	print("PASS test_audio_sfx (all 36 WAV streams + gunfire, melee, abilities, deaths, economy & UI verified)")
+	_test_human_unit_dialogues_and_voices()
+	print("PASS test_audio_sfx (all 36 SFX + 71 human voice dialogue WAV streams verified)")
 	quit(0)
 
 func _test_all_wav_files_loaded() -> void:
@@ -164,3 +165,58 @@ func _test_economy_and_ui_sfx() -> void:
 			break
 	assert(int(sim.players[1]["crystal_collected"]) >= 5, "Expected worker to have returned crystal to hub")
 	assert(audio.sfx_counts.is_empty(), "Expected NO sound when finishing & returning minerals/gas (got: %s)" % str(audio.sfx_counts))
+
+func _test_human_unit_dialogues_and_voices() -> void:
+	# Verify all 71 voice dialogue WAVs exist on disk and are loaded into RTSAudio.voice_streams
+	assert(audio.voice_streams.size() == 71, "Expected 71 voice dialogue streams loaded, got %d" % audio.voice_streams.size())
+	for line_id in audio.voice_streams.keys():
+		var wav_path := "res://assets/audio/voice/%s.wav" % line_id
+		assert(FileAccess.file_exists(wav_path), "Missing voice WAV file: %s" % wav_path)
+		var stream: AudioStreamWAV = audio.voice_streams[line_id]
+		assert(stream != null and stream.data.size() > 2000, "Invalid voice stream for %s" % line_id)
+		assert(str(audio.voice_texts.get(line_id, "")) != "", "Missing subtitle text for %s" % line_id)
+
+	# Verify Pioneer worker has >= 5 varieties for select, move, job_done, and attack, and cycles through all of them
+	var pioneer_select: Array = data.get_unit_dialogues("pioneer", "select")
+	var pioneer_job_done: Array = data.get_unit_dialogues("pioneer", "job_done")
+	var pioneer_attack: Array = data.get_unit_dialogues("pioneer", "attack")
+	assert(pioneer_select.size() >= 5, "Expected >= 5 pioneer select lines")
+	assert(pioneer_job_done.size() >= 5, "Expected >= 5 pioneer job_done lines")
+	assert(pioneer_attack.size() >= 5, "Expected >= 5 pioneer attack lines")
+
+	audio.reset_stats()
+	var seen_select: Dictionary = {}
+	for _i in range(pioneer_select.size()):
+		var res: Dictionary = audio.play_unit_dialogue("pioneer", "select", true)
+		assert(not res.is_empty(), "Expected pioneer select dialogue to play")
+		seen_select[res["id"]] = true
+	assert(seen_select.size() == pioneer_select.size(), "Expected all %d pioneer select varieties to cycle" % pioneer_select.size())
+
+	# Verify Rifleman, Breacher, and Howitzer each have >= 5 select and >= 5 witty attack dialogues
+	for utype in ["rifleman", "breacher", "howitzer"]:
+		var sel_lines: Array = data.get_unit_dialogues(utype, "select")
+		var atk_lines: Array = data.get_unit_dialogues(utype, "attack")
+		assert(sel_lines.size() >= 5, "Expected >= 5 select lines for %s" % utype)
+		assert(atk_lines.size() >= 5, "Expected >= 5 witty attack lines for %s" % utype)
+		var seen_atk: Dictionary = {}
+		for _i in range(atk_lines.size()):
+			var res_atk: Dictionary = audio.play_unit_dialogue(utype, "attack", true)
+			seen_atk[res_atk["id"]] = true
+		assert(seen_atk.size() == atk_lines.size(), "Expected all %d %s attack varieties to cycle" % [atk_lines.size(), utype])
+
+	# Verify completing construction triggers pioneer job_done dialogue with 5+ varieties
+	sim.reset_state(404, 64.0, 64.0)
+	audio.reset_stats()
+	var seen_jobs: Dictionary = {}
+	for i in range(5):
+		var worker: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(16.0 + i * 8.0, 20.0))
+		var silo: Dictionary = sim.spawn_unit("silo", 1, Vector2(16.0 + i * 8.0, 22.2), "", 0.99)
+		worker["orders"] = [{
+			"type": "build",
+			"structure_type": "silo",
+			"target_pos": silo["pos"],
+			"structure_tag": silo["tag"]
+		}]
+		sim.step_ticks(4)
+		seen_jobs[audio.last_spoken_line_id] = true
+	assert(seen_jobs.size() == 5, "Expected 5 distinct pioneer job_done lines across 5 completed builds, got %s" % str(seen_jobs))

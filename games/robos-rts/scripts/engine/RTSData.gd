@@ -46,7 +46,39 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop"]
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop"],
+		"dialogues": {
+			"select": [
+				{"id": "pioneer_select_1", "text": "What's up, Commander?"},
+				{"id": "pioneer_select_2", "text": "Talk to me, boss. Welding rig's hot."},
+				{"id": "pioneer_select_3", "text": "Pioneer here. Whatcha need built?"},
+				{"id": "pioneer_select_4", "text": "Yeah? Clock's ticking, point me at a job."},
+				{"id": "pioneer_select_5", "text": "Arc torch is charged and ready. What's the plan?"},
+				{"id": "pioneer_select_6", "text": "Need something bolted together, or taken apart?"}
+			],
+			"move": [
+				{"id": "pioneer_move_1", "text": "On my way."},
+				{"id": "pioneer_move_2", "text": "You got it, chief."},
+				{"id": "pioneer_move_3", "text": "Hauling gear over there now."},
+				{"id": "pioneer_move_4", "text": "Copy that, rolling out."},
+				{"id": "pioneer_move_5", "text": "Heading to the site."}
+			],
+			"job_done": [
+				{"id": "pioneer_job_done_1", "text": "Job's done! Not a bad weld if I say so myself."},
+				{"id": "pioneer_job_done_2", "text": "All finished up, boss. What's next?"},
+				{"id": "pioneer_job_done_3", "text": "Structure's online and solid as bedrock."},
+				{"id": "pioneer_job_done_4", "text": "Construction complete. That'll hold through an orbital drop."},
+				{"id": "pioneer_job_done_5", "text": "Another masterpiece off the checklist."},
+				{"id": "pioneer_job_done_6", "text": "Wrapped it up! Ready for the next blueprint."}
+			],
+			"attack": [
+				{"id": "pioneer_attack_1", "text": "Guess this arc welder does overtime on hostiles!"},
+				{"id": "pioneer_attack_2", "text": "Hold still, I'm gonna spot-weld your armor shut!"},
+				{"id": "pioneer_attack_3", "text": "Nobody messes with the union! Eat plasma sparks!"},
+				{"id": "pioneer_attack_4", "text": "This wasn't in my job description, but here we go!"},
+				{"id": "pioneer_attack_5", "text": "Consider this an unscheduled demolition!"}
+			]
+		}
 	},
 	"rifleman": {
 		"id": "rifleman",
@@ -80,7 +112,34 @@ var units: Dictionary = {
 			"backswing": 0.30,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "surge"]
+		"abilities": ["move", "stop", "hold_position", "attack", "surge"],
+		"dialogues": {
+			"select": [
+				{"id": "rifleman_select_1", "text": "Rifle squad standing by. Where's the trouble?"},
+				{"id": "rifleman_select_2", "text": "Magazines full, safeties off. Give the word."},
+				{"id": "rifleman_select_3", "text": "Meridian Guard reporting. What's up, Commander?"},
+				{"id": "rifleman_select_4", "text": "Eyes sharp, rifle ready."},
+				{"id": "rifleman_select_5", "text": "Just point us toward the target."}
+			],
+			"move": [
+				{"id": "rifleman_move_1", "text": "Moving up, double time!"},
+				{"id": "rifleman_move_2", "text": "Advancing to position."},
+				{"id": "rifleman_move_3", "text": "Boots on the move, copy that."},
+				{"id": "rifleman_move_4", "text": "Pushing forward!"},
+				{"id": "rifleman_move_5", "text": "Solid copy, relocating now."}
+			],
+			"attack": [
+				{"id": "rifleman_attack_1", "text": "Say hello to three-round burst diplomacy!"},
+				{"id": "rifleman_attack_2", "text": "Free lead delivery, no signature required!"},
+				{"id": "rifleman_attack_3", "text": "Keep your heads down, or don't, makes my job easier!"},
+				{"id": "rifleman_attack_4", "text": "Target locked! Let's ventilate 'em!"},
+				{"id": "rifleman_attack_5", "text": "Hope they brought an umbrella for this hailstorm!"}
+			],
+			"ready": [
+				{"id": "rifleman_ready_1", "text": "Rifleman locked and loaded!"},
+				{"id": "rifleman_ready_2", "text": "Fresh boots on the ground, Commander."}
+			]
+		}
 	},
 	"breacher": {
 		"id": "breacher",
@@ -115,7 +174,33 @@ var units: Dictionary = {
 			"splash_radius": 0.0,
 			"concussive_slow": 0.5
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "surge"]
+		"abilities": ["move", "stop", "hold_position", "attack", "surge"],
+		"dialogues": {
+			"select": [
+				{"id": "breacher_select_1", "text": "Breacher suit online. Point me at a wall, or a face."},
+				{"id": "breacher_select_2", "text": "Heavy armor here. What needs smashing?"},
+				{"id": "breacher_select_3", "text": "Concussion shells primed. What's the call?"},
+				{"id": "breacher_select_4", "text": "You rang, Commander? Ready to crack some shells."},
+				{"id": "breacher_select_5", "text": "Standing by with the big boomers."}
+			],
+			"move": [
+				{"id": "breacher_move_1", "text": "Heavy boots rolling out."},
+				{"id": "breacher_move_2", "text": "Stomping over there now."},
+				{"id": "breacher_move_3", "text": "Clear the lane, Breacher moving!"},
+				{"id": "breacher_move_4", "text": "Copy that, advancing."}
+			],
+			"attack": [
+				{"id": "breacher_attack_1", "text": "Knock knock! I brought my own door!"},
+				{"id": "breacher_attack_2", "text": "Let's slow their roll, permanently!"},
+				{"id": "breacher_attack_3", "text": "Catch this concussion charge, ugly!"},
+				{"id": "breacher_attack_4", "text": "Armor plating? Cute. Watch this!"},
+				{"id": "breacher_attack_5", "text": "Time for a little high-velocity attitude adjustment!"}
+			],
+			"ready": [
+				{"id": "breacher_ready_1", "text": "Breacher suited up and ready to wreck!"},
+				{"id": "breacher_ready_2", "text": "Heavy shock trooper reporting for duty."}
+			]
+		}
 	},
 	"howitzer": {
 		"id": "howitzer",
@@ -149,7 +234,33 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "emplace"]
+		"abilities": ["move", "stop", "hold_position", "attack", "emplace"],
+		"dialogues": {
+			"select": [
+				{"id": "howitzer_select_1", "text": "Artillery crew online. Give us coordinates."},
+				{"id": "howitzer_select_2", "text": "Howitzer standing by. Want it loud or extra loud?"},
+				{"id": "howitzer_select_3", "text": "Ballistics computer ready. What's on the menu?"},
+				{"id": "howitzer_select_4", "text": "One-fifty-five millimeter problem solver at your service."},
+				{"id": "howitzer_select_5", "text": "Reading you five-by-five, Commander."}
+			],
+			"move": [
+				{"id": "howitzer_move_1", "text": "Rolling the big gun into position."},
+				{"id": "howitzer_move_2", "text": "Relocating artillery."},
+				{"id": "howitzer_move_3", "text": "Adjusting firing vector."},
+				{"id": "howitzer_move_4", "text": "On the move, Commander."}
+			],
+			"attack": [
+				{"id": "howitzer_attack_1", "text": "Sending very warm regards from thirty meters away!"},
+				{"id": "howitzer_attack_2", "text": "Forecast for their grid square: one hundred percent shrapnel!"},
+				{"id": "howitzer_attack_3", "text": "Special delivery! Catch it with your teeth!"},
+				{"id": "howitzer_attack_4", "text": "Deleting that coordinate in three, two, one!"},
+				{"id": "howitzer_attack_5", "text": "Nothing personal, just high-explosive physics!"}
+			],
+			"ready": [
+				{"id": "howitzer_ready_1", "text": "Howitzer crew rolled out and ready for fire missions!"},
+				{"id": "howitzer_ready_2", "text": "Siege artillery online, Commander."}
+			]
+		}
 	},
 	"howitzer_emplaced": {
 		"id": "howitzer_emplaced",
@@ -186,7 +297,23 @@ var units: Dictionary = {
 			"backswing": 0.30,
 			"splash_radius": 3.5
 		},
-		"abilities": ["stop", "attack", "mobilize"]
+		"abilities": ["stop", "attack", "mobilize"],
+		"dialogues": {
+			"select": [
+				{"id": "howitzer_select_1", "text": "Artillery crew online. Give us coordinates."},
+				{"id": "howitzer_select_2", "text": "Howitzer standing by. Want it loud or extra loud?"},
+				{"id": "howitzer_select_3", "text": "Ballistics computer ready. What's on the menu?"},
+				{"id": "howitzer_select_4", "text": "One-fifty-five millimeter problem solver at your service."},
+				{"id": "howitzer_select_5", "text": "Reading you five-by-five, Commander."}
+			],
+			"attack": [
+				{"id": "howitzer_attack_1", "text": "Sending very warm regards from thirty meters away!"},
+				{"id": "howitzer_attack_2", "text": "Forecast for their grid square: one hundred percent shrapnel!"},
+				{"id": "howitzer_attack_3", "text": "Special delivery! Catch it with your teeth!"},
+				{"id": "howitzer_attack_4", "text": "Deleting that coordinate in three, two, one!"},
+				{"id": "howitzer_attack_5", "text": "Nothing personal, just high-explosive physics!"}
+			]
+		}
 	},
 	"colony_hub": {
 		"id": "colony_hub",
@@ -744,3 +871,8 @@ func get_unit_def(unit_type: String) -> Dictionary:
 
 func get_ability_def(ability_id: String) -> Dictionary:
 	return abilities.get(ability_id.to_lower(), {})
+
+func get_unit_dialogues(unit_type: String, category: String) -> Array:
+	var u_def: Dictionary = get_unit_def(unit_type)
+	var dlgs: Dictionary = u_def.get("dialogues", {})
+	return dlgs.get(category.to_lower(), [])

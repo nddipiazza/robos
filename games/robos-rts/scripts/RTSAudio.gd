@@ -5,6 +5,7 @@ extends Node
 # and connects to SimEngine combat, melee, ability, production, harvesting, and UI events.
 
 signal sfx_triggered(sfx_key: String, world_pos: Vector2, is_ui: bool)
+signal dialogue_spoken(unit_type: String, category: String, line_id: String, text: String)
 
 const DEFAULT_SAMPLE_RATE: int = 22050
 const WORLD_PLAYER_POOL_SIZE: int = 16
@@ -155,9 +156,12 @@ const SOUND_MIN_INTERVAL_SEC: Dictionary = {
 
 var sound_effects: Dictionary = {}
 var sound_streams: Dictionary = {}
+var voice_streams: Dictionary = {}
+var voice_texts: Dictionary = {}
 
 var _world_players: Array[AudioStreamPlayer] = []
 var _ui_players: Array[AudioStreamPlayer] = []
+var _voice_player: AudioStreamPlayer = null
 var _world_player_cursor: int = 0
 var _ui_player_cursor: int = 0
 
@@ -170,6 +174,9 @@ var cooldown_enabled: bool = true
 var force_headless_playback: bool = false
 
 var _last_play_time_sec: Dictionary = {}
+var _last_voice_time_sec: float = -999.0
+var _last_auto_attack_voice_sec: float = -999.0
+var _dialogue_cursors: Dictionary = {}
 var _pitch_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _last_weapon_attack_tick: int = -1
 var _last_weapon_attack_pos: Vector2 = Vector2.INF
@@ -178,10 +185,15 @@ var _last_match_outcome_tick: int = -1
 var sfx_counts: Dictionary = {}
 var last_played_sfx: String = ""
 var recent_sfx: Array[Dictionary] = []
+var dialogue_counts: Dictionary = {}
+var last_spoken_line_id: String = ""
+var last_spoken_text: String = ""
+var recent_dialogues: Array[Dictionary] = []
 
 func _ready() -> void:
 	_pitch_rng.seed = 9001
 	_init_sound_catalog()
+	_init_voice_catalog()
 	_init_player_pools()
 	_connect_sim_signals()
 
@@ -198,6 +210,29 @@ func _init_sound_catalog() -> void:
 		if sound_streams.has(target_key):
 			sound_streams[alias_key] = sound_streams[target_key]
 
+func _init_voice_catalog() -> void:
+	voice_streams.clear()
+	voice_texts.clear()
+	if RTSData == null:
+		return
+	for utype in RTSData.units.keys():
+		var u_def: Dictionary = RTSData.units[utype]
+		var dlgs: Dictionary = u_def.get("dialogues", {})
+		for category in dlgs.keys():
+			var lines: Array = dlgs[category]
+			for item in lines:
+				var line_id: String = str(item.get("id", "")).strip_edges().to_lower()
+				var text: String = str(item.get("text", ""))
+				if line_id == "":
+					continue
+				var wav_path: String = "res://assets/audio/voice/%s.wav" % line_id
+				voice_texts[line_id] = text
+				sound_effects[line_id] = wav_path
+				if not voice_streams.has(line_id):
+					var stream := _load_wav_stream(wav_path, line_id)
+					voice_streams[line_id] = stream
+					sound_streams[line_id] = stream
+
 func _init_player_pools() -> void:
 	for p in _world_players:
 		if is_instance_valid(p):
@@ -205,6 +240,8 @@ func _init_player_pools() -> void:
 	for p in _ui_players:
 		if is_instance_valid(p):
 			p.queue_free()
+	if _voice_player != null and is_instance_valid(_voice_player):
+		_voice_player.queue_free()
 	_world_players.clear()
 	_ui_players.clear()
 
@@ -221,6 +258,11 @@ func _init_player_pools() -> void:
 		player.bus = "Master"
 		add_child(player)
 		_ui_players.append(player)
+
+	_voice_player = AudioStreamPlayer.new()
+	_voice_player.name = "UnitVoicePlayer"
+	_voice_player.bus = "Master"
+	add_child(_voice_player)
 
 func _connect_sim_signals() -> void:
 	if SimEngine == null:
@@ -347,9 +389,70 @@ func reset_stats() -> void:
 	sfx_counts.clear()
 	last_played_sfx = ""
 	recent_sfx.clear()
+	dialogue_counts.clear()
+	last_spoken_line_id = ""
+	last_spoken_text = ""
+	recent_dialogues.clear()
 	_last_play_time_sec.clear()
+	_last_voice_time_sec = -999.0
+	_last_auto_attack_voice_sec = -999.0
 	_last_weapon_attack_tick = -1
 	_last_weapon_attack_pos = Vector2.INF
+
+func play_unit_dialogue(unit_type: String, category: String, force: bool = false) -> Dictionary:
+	if RTSData == null:
+		return {}
+	var utype: String = unit_type.to_lower()
+	var cat: String = category.to_lower()
+	var lines: Array = RTSData.get_unit_dialogues(utype, cat)
+	if lines.is_empty():
+		return {}
+
+	var now_sec: float = float(Time.get_ticks_msec()) * 0.001
+	if cooldown_enabled and not force and (now_sec - _last_voice_time_sec < 0.22):
+		return {}
+
+	var cursor_key: String = "%s:%s" % [utype, cat]
+	var idx: int = int(_dialogue_cursors.get(cursor_key, 0)) % lines.size()
+	_dialogue_cursors[cursor_key] = (idx + 1) % lines.size()
+
+	var item: Dictionary = lines[idx]
+	var line_id: String = str(item.get("id", "")).strip_edges().to_lower()
+	var text: String = str(item.get("text", ""))
+	if line_id == "" or not voice_streams.has(line_id):
+		return {}
+
+	_last_voice_time_sec = now_sec
+	sfx_counts[line_id] = int(sfx_counts.get(line_id, 0)) + 1
+	dialogue_counts[line_id] = int(dialogue_counts.get(line_id, 0)) + 1
+	dialogue_counts[cursor_key] = int(dialogue_counts.get(cursor_key, 0)) + 1
+	last_played_sfx = line_id
+	last_spoken_line_id = line_id
+	last_spoken_text = text
+
+	var entry := {
+		"unit_type": utype,
+		"category": cat,
+		"id": line_id,
+		"text": text,
+		"tick": SimEngine.tick if SimEngine != null else 0
+	}
+	recent_dialogues.append(entry)
+	if recent_dialogues.size() > MAX_RECENT_SFX:
+		recent_dialogues.pop_front()
+
+	emit_signal("dialogue_spoken", utype, cat, line_id, text)
+
+	if _should_output_audio() and _voice_player != null:
+		var stream: AudioStreamWAV = voice_streams[line_id]
+		if stream != null:
+			_voice_player.stop()
+			_voice_player.stream = stream
+			_voice_player.volume_db = clampf(master_volume_db + 1.5, -60.0, 6.0)
+			_voice_player.pitch_scale = 1.0
+			_voice_player.play()
+
+	return entry
 
 func play_ui(sfx_key: String, volume_offset_db: float = 0.0, pitch_scale: float = 1.0) -> bool:
 	var resolved := resolve_sfx_key(sfx_key)
@@ -536,6 +639,13 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	if hit_shields or float(target.get("shields", 0.0)) > 0.0:
 		play_at("shield_hit", target_pos, -2.0, 0.05)
 
+	if int(attacker.get("owner", 0)) == local_player_id and str(attacker.get("faction", "")) == RTSData.FACTION_HUMANS:
+		var now_sec: float = float(Time.get_ticks_msec()) * 0.001
+		if not cooldown_enabled or (now_sec - _last_auto_attack_voice_sec >= 7.0 and now_sec - _last_voice_time_sec >= 2.5):
+			if _compute_spatial_db(attacker_pos) > -79.0:
+				_last_auto_attack_voice_sec = now_sec
+				play_unit_dialogue(unit_type, "attack", true)
+
 func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, _owner_id: int) -> void:
 	if SimEngine != null and _last_weapon_attack_tick == SimEngine.tick and _last_weapon_attack_pos.distance_squared_to(from_pos) < 0.05:
 		return
@@ -589,10 +699,14 @@ func _on_resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2
 func _on_unit_production_finished(unit: Dictionary, _structure: Dictionary) -> void:
 	if int(unit.get("owner", 0)) == local_player_id:
 		play_at("unit_ready", unit.get("pos", Vector2.ZERO), -1.0, 0.03)
+		if str(unit.get("faction", "")) == RTSData.FACTION_HUMANS:
+			play_unit_dialogue(str(unit.get("unit_type", "")), "ready")
 
 func _on_structure_construction_finished(structure: Dictionary) -> void:
 	if int(structure.get("owner", 0)) == local_player_id:
 		play_at("structure_complete", structure.get("pos", Vector2.ZERO), 0.0, 0.02)
+		if str(structure.get("faction", "")) == RTSData.FACTION_HUMANS:
+			play_unit_dialogue("pioneer", "job_done", true)
 
 func _on_sim_notice(owner_id: int, text: String, kind: String) -> void:
 	var lower_text: String = text.to_lower()
