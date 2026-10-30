@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Hardware Keys</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="../icon.svg" alt="Hardware Keys" class="brand-icon" />
+        <div>
+          <h1 class="brand-title">RobOS Hardware Keys</h1>
+          <div class="brand-subtitle">YubiKey &amp; FIDO2 Physical Push-to-Approve Security Studio</div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div id="connection-pill" class="conn-pill conn-disconnected">
+          <span class="conn-dot"></span>
+          <span id="connection-label">Scanning USB/HID...</span>
+        </div>
+        <button id="btn-quick-touch" class="btn btn-gold" title="Trigger a live physical touch check on your YubiKey">
+          ● Test Physical Push
+        </button>
+        <button id="btn-rescan" class="btn btn-secondary" title="Rescan USB, HID &amp; CTAP2 devices">
+          ↻ Rescan USB
+        </button>
+      </div>
+    </header>
+
+    <!-- Live Touch Banner (shown when waiting for physical touch) -->
+    <div id="touch-banner" class="touch-banner hidden">
+      <div class="touch-pulse-ring"></div>
+      <div class="touch-banner-text" id="touch-banner-message">
+        Touch the flashing gold contact on your YubiKey now...
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <nav class="nav-list">
+          <button class="nav-item active" data-tab="inspector" id="nav-inspector">
+            <span class="nav-icon">🔑</span>
+            <span>Hardware Inspector</span>
+          </button>
+          <button class="nav-item" data-tab="touch" id="nav-touch">
+            <span class="nav-icon">👆</span>
+            <span>Physical Touch Tester</span>
+          </button>
+          <button class="nav-item" data-tab="ssh" id="nav-ssh">
+            <span class="nav-icon">🛡️</span>
+            <span>FIDO2 SSH Keys (-sk)</span>
+          </button>
+          <button class="nav-item" data-tab="fido" id="nav-fido">
+            <span class="nav-icon">🔐</span>
+            <span>FIDO2 PIN &amp; Passkeys</span>
+          </button>
+          <button class="nav-item" data-tab="guard" id="nav-guard">
+            <span class="nav-icon">⚡</span>
+            <span>PAM &amp; RobOS Guard</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-stat-label">Registered Hardware Keys</div>
+          <div id="registered-count" class="sidebar-stat-val">0 Keys</div>
+          <div id="hidraw-status" class="sidebar-hint">Checking /dev/hidraw...</div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="content-area">
+        <!-- TAB 1: HARDWARE INSPECTOR -->
+        <section id="tab-inspector" class="tab-pane active">
+          <div class="section-header">
+            <div>
+              <h2>Connected Physical Security Keys</h2>
+              <p>Live USB/HID, YubiKey Manager (<code>ykman</code>), and CTAP2 hardware capabilities.</p>
+            </div>
+          </div>
+
+          <div id="devices-container" class="devices-grid"></div>
+
+          <div class="card mt-16">
+            <div class="card-header">
+              <h3>Known &amp; Registered Keys on This Workstation</h3>
+              <span class="badge badge-cyan" id="known-devices-badge">0 registered</span>
+            </div>
+            <div id="registered-devices-list" class="table-wrap"></div>
+          </div>
+        </section>
+
+        <!-- TAB 2: PHYSICAL TOUCH TESTER -->
+        <section id="tab-touch" class="tab-pane">
+          <div class="section-header">
+            <div>
+              <h2>Physical Push / Capacitive Touch Verifier</h2>
+              <p>Perform a live FIDO2/U2F cryptographic challenge-response by physically touching the gold contact on your YubiKey.</p>
+            </div>
+          </div>
+
+          <div class="touch-studio-grid">
+            <div class="card touch-visualizer-card">
+              <h3>Interactive YubiKey Touch Pad</h3>
+              <div class="yubikey-device-graphic" id="yubikey-graphic">
+                <div class="yk-usb-connector">
+                  <div class="yk-usb-pins"></div>
+                </div>
+                <div class="yk-body">
+                  <div class="yk-brand-label" id="yk-graphic-model">YUBICO SECURITY KEY</div>
+                  <div class="yk-gold-disc" id="touch-disc" title="Touch physical YubiKey or click to start challenge">
+                    <div class="yk-led-ring" id="yk-led-ring"></div>
+                    <div class="yk-gold-inner">TOUCH</div>
+                  </div>
+                  <div class="yk-nfc-waves">))) NFC</div>
+                  <div class="yk-keyhole"></div>
+                </div>
+              </div>
+
+              <div id="touch-state-text" class="touch-state-label">
+                Ready for physical touch verification
+              </div>
+
+              <div class="form-row mt-12">
+                <div class="form-group">
+                  <label for="touch-rpid">Relying Party ID (RP ID)</label>
+                  <input type="text" id="touch-rpid" value="robos.local" class="input" />
+                </div>
+                <div class="form-group">
+                  <label for="touch-pin">FIDO2 PIN (Optional for U2F / UV-discouraged)</label>
+                  <input type="password" id="touch-pin" placeholder="Leave blank if no PIN set" class="input" />
+                </div>
+              </div>
+
+              <div class="btn-row mt-12">
+                <button id="btn-touch-real" class="btn btn-gold btn-lg">
+                  👆 Start Physical Touch Challenge
+                </button>
+                <button id="btn-touch-sim" class="btn btn-secondary">
+                  ⚡ Run Simulated Touch
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Cryptographic Assertion Proof</h3>
+                <span id="proof-status-badge" class="badge badge-muted">Awaiting Touch</span>
+              </div>
+              <div id="touch-proof-box" class="proof-box">
+                <div class="empty-hint">
+                  Click <strong>Start Physical Touch Challenge</strong> and press the flashing gold circle on your YubiKey to inspect the hardware signature, latency, and authenticator flags.
+                </div>
+              </div>
+
+              <h3 class="mt-16">Recent Touch Verification Audit Log</h3>
+              <div id="touch-history-list" class="history-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: HARDWARE-BACKED SSH KEYS (-sk) -->
+        <section id="tab-ssh" class="tab-pane">
+          <div class="section-header">
+            <div>
+              <h2>Hardware-Backed FIDO2 SSH Keys (<code>ed25519-sk</code> &amp; <code>ecdsa-sk</code>)</h2>
+              <p>Private keys never leave your YubiKey. OpenSSH requires a physical finger touch on the key before every SSH connection or Git signature.</p>
+            </div>
+          </div>
+
+          <div class="two-col-grid">
+            <div class="card">
+              <h3>Generate New Hardware SSH Key</h3>
+              <div class="form-group mt-12">
+                <label for="ssh-key-type">Hardware Key Algorithm</label>
+                <select id="ssh-key-type" class="input">
+                  <option value="ed25519-sk">ed25519-sk (EdDSA on YubiKey — Recommended, Firmware 5.2.3+)</option>
+                  <option value="ecdsa-sk">ecdsa-sk (NIST P-256 on any FIDO2/U2F Security Key)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="ssh-filename">Filename in <code>~/.ssh/</code></label>
+                  <input type="text" id="ssh-filename" value="id_ed25519_sk" class="input" />
+                </div>
+                <div class="form-group">
+                  <label for="ssh-app">FIDO Application String</label>
+                  <input type="text" id="ssh-app" value="ssh:robos" class="input" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="ssh-comment">Key Comment</label>
+                <input type="text" id="ssh-comment" value="robos-hardware-key" class="input" />
+              </div>
+
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ssh-require-touch" checked />
+                  <span><strong>Require Physical Touch</strong> on every SSH login &amp; signature (recommended)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ssh-verify-required" />
+                  <span><strong>Require FIDO2 PIN (`verify-required`)</strong> on every operation</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ssh-resident" />
+                  <span><strong>Resident Key (`-O resident`)</strong> — store key directly inside YubiKey flash slot</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ssh-overwrite" />
+                  <span>Overwrite if key file already exists</span>
+                </label>
+              </div>
+
+              <div class="btn-row mt-12">
+                <button id="btn-generate-ssh" class="btn btn-primary">
+                  🔑 Generate &amp; Touch YubiKey
+                </button>
+              </div>
+              <div id="ssh-gen-status" class="status-msg mt-8"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>SSH Keys in <code>~/.ssh</code></h3>
+                <span id="ssh-count-badge" class="badge badge-cyan">0 keys</span>
+              </div>
+              <div id="ssh-keys-list" class="ssh-list"></div>
+
+              <div id="ssh-sign-output" class="proof-box mt-12 hidden"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: FIDO2 PIN & PASSKEYS -->
+        <section id="tab-fido" class="tab-pane">
+          <div class="section-header">
+            <div>
+              <h2>FIDO2 PIN &amp; Resident Passkeys</h2>
+              <p>Manage your YubiKey's FIDO2 PIN and inspect discoverable WebAuthn / SSH resident credentials stored on the hardware token.</p>
+            </div>
+          </div>
+
+          <div class="two-col-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>FIDO2 PIN Configuration</h3>
+                <span id="fido-pin-badge" class="badge badge-muted">Checking...</span>
+              </div>
+              <p class="card-desc">
+                A FIDO2 PIN protects resident passkeys (`rk=true`) and `verify-required` operations. Non-resident U2F/FIDO2 touch operations work even without a PIN.
+              </p>
+
+              <div class="form-group mt-12">
+                <label for="fido-current-pin">Current FIDO2 PIN (leave empty if setting PIN for the first time)</label>
+                <input type="password" id="fido-current-pin" placeholder="Current PIN (if already set)" class="input" />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="fido-new-pin">New FIDO2 PIN (min 4 chars)</label>
+                  <input type="password" id="fido-new-pin" placeholder="New PIN" class="input" />
+                </div>
+                <div class="form-group">
+                  <label for="fido-confirm-pin">Confirm New PIN</label>
+                  <input type="password" id="fido-confirm-pin" placeholder="Confirm PIN" class="input" />
+                </div>
+              </div>
+
+              <button id="btn-save-pin" class="btn btn-primary mt-8">
+                🔐 Set / Update FIDO2 PIN
+              </button>
+              <div id="fido-pin-status" class="status-msg mt-8"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Discoverable Resident Keys (Passkeys)</h3>
+                <span id="rk-remaining-badge" class="badge badge-cyan">100 slots free</span>
+              </div>
+              <div class="form-row mt-8">
+                <div class="form-group">
+                  <input type="password" id="rk-query-pin" placeholder="Enter FIDO2 PIN to unlock passkey list" class="input" />
+                </div>
+                <button id="btn-load-passkeys" class="btn btn-secondary">
+                  Load Passkeys
+                </button>
+              </div>
+              <div id="passkeys-list" class="mt-12">
+                <div class="empty-hint">Enter your FIDO2 PIN and click <strong>Load Passkeys</strong> to inspect discoverable credentials on this YubiKey.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: PAM & ROBOS GUARD -->
+        <section id="tab-guard" class="tab-pane">
+          <div class="section-header">
+            <div>
+              <h2>Linux PAM U2F &amp; RobOS Push-to-Approve Guards</h2>
+              <p>Bind your physical YubiKey to Linux <code>sudo</code>, desktop login, Git commit signing, and RobOS Pass Store / Agent security gates.</p>
+            </div>
+          </div>
+
+          <div class="two-col-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>Linux PAM U2F (<code>pamu2fcfg</code>)</h3>
+                <span id="pam-status-badge" class="badge badge-muted">Not Enrolled</span>
+              </div>
+              <p class="card-desc">
+                Enroll your YubiKey into <code>~/.config/Yubico/u2f_keys</code> so Linux <code>pam_u2f.so</code> can approve <code>sudo</code> and desktop login with a physical touch.
+              </p>
+
+              <div id="pam-keys-box" class="proof-box mt-12"></div>
+
+              <div class="btn-row mt-12">
+                <button id="btn-enroll-pam" class="btn btn-gold">
+                  👆 Enroll YubiKey with pamu2fcfg (Touch Required)
+                </button>
+              </div>
+
+              <div class="form-group mt-16">
+                <label><code>/etc/pam.d/sudo</code> Touch-to-Approve Snippet</label>
+                <div class="code-copy-row">
+                  <code id="pam-snippet-code">auth sufficient pam_u2f.so cue [cue_prompt=Touch your YubiKey to approve]</code>
+                  <button id="btn-copy-pam" class="btn btn-sm btn-secondary">Copy</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>RobOS Push-to-Approve Security Policies</h3>
+                <span class="badge badge-cyan">hardware-keys.json</span>
+              </div>
+
+              <div class="checkbox-group mt-12">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pol-pass-unlock" />
+                  <span><strong>Pass Store Hardware Gate</strong> — require physical YubiKey touch before unlocking RobOS Pass Store</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pol-agent-guard" />
+                  <span><strong>High-Risk Agent Push Confirmation</strong> — require physical YubiKey touch for destructive agent commands</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pol-unplug-lock" />
+                  <span><strong>Auto-Lock Pass Store on Unplug</strong> — kill <code>gpg-agent</code> cache immediately when YubiKey is removed from USB</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pol-git-sign" />
+                  <span><strong>Git Hardware SSH Commit Signing</strong> — sign commits with your <code>-sk</code> hardware SSH key</span>
+                </label>
+              </div>
+
+              <div class="btn-row mt-12">
+                <button id="btn-save-policies" class="btn btn-primary">
+                  Save Security Policies
+                </button>
+                <button id="btn-enable-git-sign" class="btn btn-secondary">
+                  Configure Git Signing Now
+                </button>
+              </div>
+              <div id="guard-status-msg" class="status-msg mt-8"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
