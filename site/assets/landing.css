@@ -103,6 +103,16 @@
 .l-three li{padding-left:26px;position:relative;color:var(--muted)}
 .l-three li:before{content:'✓';position:absolute;left:0;color:var(--accent);font-weight:700}
 .l-three b{color:var(--fg)}
+/* hero: the quick start wizard link (/using-robos-wizard/) */
+.l-quick{display:flex;align-items:center;gap:14px;max-width:560px;margin:-8px 0 26px;padding:14px 16px;border:1px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 7%,var(--card));color:var(--fg);transition:transform .15s,box-shadow .15s}
+.l-quick:hover{transform:translateY(-2px);box-shadow:0 6px 20px -10px var(--accent)}
+.l-quick:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.l-quick > span:nth-child(2){display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.l-quick b{font-weight:600}
+.l-quick small{font-size:.84rem;color:var(--muted)}
+.l-quick-ic{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--btn-fg);font-weight:700;font-size:1.05rem}
+.l-quick-go{color:var(--accent);font-size:1.2rem;transition:transform .15s}
+.l-quick:hover .l-quick-go{transform:translateX(3px)}
 /* hero: a mosaic of the suite's apps, with an empty tile for yours */
 .l-mosaic{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .l-mosaic a{position:relative;display:block;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2);transition:border-color .2s,transform .2s}

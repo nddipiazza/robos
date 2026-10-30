@@ -1,0 +1,40 @@
+---
+layout: default
+title: Quick start
+permalink: /using-robos-wizard/
+description: "Answer a few questions and get a RobOS guide made for you: how to install it on your computer, the apps worth trying first, and what to read next. For developers, DevOps, families, small businesses, players and game creators."
+extra_css: /assets/quickstart.css
+og_image: /assets/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "RobOS — One open-source app suite to replace them all. Then need less AI."
+keywords: "RobOS quick start, RobOS install guide, getting started with RobOS, RobOS for developers, RobOS for DevOps, RobOS games, RobOS Point of Sale install, open-source app suite setup"
+---
+<div class="page-h wrap qs-head">
+  <p class="eyebrow">Quick start</p>
+  <h1>Find your way into RobOS</h1>
+  <p>Answer a few questions, under a minute, and get a guide made for you: how to install RobOS on your computer, the apps worth trying first, and what to read next.</p>
+</div>
+
+<section class="qs-section" id="quickstart">
+  <div class="wrap qs-wrap">
+    <div id="qs-app" aria-live="polite" data-version="{{ site.data.release.version }}" data-download="{{ site.data.release.download }}" data-release-url="{{ site.data.release.url }}">
+      <noscript>
+        <div class="qs-card">
+          <h2 class="qs-title">Pick the guide that fits you</h2>
+          <ul class="qs-read">
+            <li><a href="{{ '/download/' | relative_url }}">Install RobOS</a>: App Manager for Windows, Mac and Linux</li>
+            <li><a href="{{ '/build-apps/' | relative_url }}">Software developers</a>: plan, implement and review with AI agents</li>
+            <li><a href="{{ '/v1/robos-for-teams.html' | relative_url }}">Tech leads</a>: RobOS for Teams</li>
+            <li><a href="{{ '/apps/' | relative_url }}">DevOps</a>: Kube Studio, CI Monitor, Deploy Tracker and every other app</li>
+            <li><a href="{{ '/family-finances/' | relative_url }}">Families</a> and <a href="{{ '/point-of-sale/' | relative_url }}">small businesses</a></li>
+            <li><a href="{{ '/games/' | relative_url }}">Players</a> and <a href="{{ '/v1/game-development.html' | relative_url }}">game creators</a></li>
+          </ul>
+        </div>
+      </noscript>
+    </div>
+  </div>
+</section>
+
+<script type="application/json" id="qs-data">{{ site.data.quickstart | jsonify }}</script>
+<script src="{{ '/assets/quickstart.js' | relative_url }}" defer></script>
