@@ -1,30 +1,30 @@
 ---
 layout: default
 title: RobOS
-description: "RobOS is an open-source app suite built on one knowledge graph. Use the apps as they are, customize any of them, or describe a new app and have it built. AI features inside the apps are optional, like the Audio Player's Virtual DJ."
+description: "RobOS is one open-source app suite built to replace the apps you pay for, one at a time, on one knowledge graph. Then it keeps and reuses what AI makes, so every new app needs less AI and less electricity."
 permalink: /
 body_class: landing
 extra_css: /assets/landing.css
 og_image: /assets/og.png
 og_image_width: 1200
 og_image_height: 630
-og_image_alt: "RobOS — One app suite. Make it yours."
-keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, KGraph, context engineering, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, Godot 4 AI games, developer tools, coding agents"
+og_image_alt: "RobOS — One open-source app suite to replace them all. Then need less AI."
+keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps, open-source alternatives, knowledge graph, KGraph, context engineering, AI energy use, reuse AI output, Skill Commons, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, Godot 4 AI games, developer tools, coding agents"
 ---
 <section class="l-hero">
   <div class="wrap l-hero-grid">
     <div>
-      <a class="pill" href="{{ '/blog/' | relative_url }}"><b>New</b> · OBD-II in Auto Center, a Virtual DJ in Audio Player →</a>
-      <h1>One app suite. <em>Make it yours.</em></h1>
-      <p class="lead">RobOS is a suite of desktop apps, from a point of sale and an auto shop to household finances, games, music and developer tools, all built on one knowledge graph. Use the apps as they are, customize any of them to fit how you work, or describe a new app and RobOS builds it.</p>
+      <a class="pill" href="#vision"><b>The plan</b> · Replace everything, then need less AI →</a>
+      <h1>One open-source app suite <em>to replace them all.</em></h1>
+      <p class="lead">Free desktop apps for shops, homes, players and developers, all on one knowledge graph. First RobOS replaces the apps you pay for, one at a time. Then it keeps and reuses what AI makes, so each new app needs less AI, and less electricity.</p>
       <ul class="l-three">
-        <li><b>Use</b> ready-made app suites, free and local</li>
+        <li><b>Replace</b> paid apps with free, local ones ({{ site.apps | size }} so far)</li>
         <li><b>Customize</b> any app by describing the change</li>
-        <li><b>Build</b> new apps from context, with proof they work</li>
+        <li><b>Reuse</b> what AI built once, instead of asking it again</li>
       </ul>
       <div class="cta">
         <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> <span data-dl-label>Download RobOS</span></a>
-        <a class="btn btn-ghost" href="#suites">Browse the suites</a>
+        <a class="btn btn-ghost" href="#vision">See the plan</a>
       </div>
       <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>
     </div>
@@ -42,6 +42,46 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, 
 </section>
 
 <div class="logos"><div class="wrap">Optional AI features use the agent you already have, or none at all<div><span>Claude Code</span><span>OpenAI Codex</span><span>GitHub Copilot</span><span>Gemini CLI · Antigravity</span><span>Local models via Ollama</span></div></div></div>
+
+<section id="vision">
+  <div class="wrap">
+    <p class="eyebrow">The vision</p>
+    <h2 class="h2">One suite to replace them all. Then less AI, not more.</h2>
+    <p class="sec-p">Most of us pay for dozens of apps that don't talk to each other, and each new one gets written from scratch again, more and more often by a giant AI model in a data center. RobOS takes the other road, in two moves.</p>
+    <div class="l-moves">
+      <div class="card l-move">
+        <span class="l-move-tag is-now">Move 1 · Happening now</span>
+        <h3>Replace everything, slowly</h3>
+        <p>One open-source suite on one knowledge graph, growing app by app until it covers the software you rely on. Each replacement is free, keeps your data on your machine and can be reshaped by describing the change.</p>
+        <ul class="l-swaps" aria-label="Examples of what RobOS replaces">
+          <li><span>Subscription cash registers</span><a href="{{ '/point-of-sale/' | relative_url }}">Point of Sale</a></li>
+          <li><span>Repair-shop management software</span><a href="{{ '/auto-center/' | relative_url }}">Auto Center</a></li>
+          <li><span>Budgeting and tax-prep apps</span><a href="{{ '/family-finances/' | relative_url }}">Household</a></li>
+          <li><span>Locked-in music and movie apps</span><a href="{{ '/movie-player/' | relative_url }}">Audio &amp; Movie Player</a></li>
+          <li><span>Vendor smart-home and TV apps</span><a href="{{ '/v1/apps/smart-light/' | relative_url }}">Smart Light &amp; Smart TV</a></li>
+          <li><span>Per-seat developer tools</span><a href="{{ '/build-apps/' | relative_url }}">Developer suite</a></li>
+        </ul>
+        <a class="go" href="{{ '/apps/' | relative_url }}">Browse all {{ site.apps | size }} apps →</a>
+      </div>
+      <div class="card l-move">
+        <span class="l-move-tag is-next">Move 2 · The future</span>
+        <h3>Need less AI over time</h3>
+        <p>Every time AI solves a problem, the answer costs electricity, and today the same problems get solved again and again. RobOS keeps what AI produces, the code, the knowledge graph and the tests, so the next person reuses it instead of asking again. Built once, an app runs with no AI at all.</p>
+        <ol class="l-loop" aria-label="The reuse loop">
+          <li><b>Solve once.</b> AI builds a piece that does not exist yet.</li>
+          <li><b>Keep it.</b> Code, graph and tests are stored and shared.</li>
+          <li><b>Reuse it.</b> The next app snaps it in, with no AI call.</li>
+          <li><b>AI only for what is new,</b> on a small model on your own computer.</li>
+        </ol>
+        <a class="go" href="{{ '/future/' | relative_url }}">See the future: The Skill Commons →</a>
+      </div>
+    </div>
+    <figure class="l-vision-fig">
+      <img src="{{ '/assets/landing/vision-roadmap.jpg' | relative_url }}" alt="The RobOS plan in two moves. Move 1, replace everything, slowly: paid apps are swapped one by one for RobOS apps such as Point of Sale, Auto Center, Household finances, Audio and Movie Player and developer tools, plus the next app you describe. Every app is built once and kept. Move 2, need less AI over time: AI solves a task once, the output is stored as code, graph and tests, the next time it is reused with no AI call, and AI is used only for what is truly new. AI calls, and electricity, per task fall over time, with a small AI on your own computer." width="1376" height="768" loading="lazy">
+    </figure>
+    <p class="l-note">Move 1 ships today. Move 2 is a proposal: RobOS already keeps AI's work as code, KGraph nodes, skills and tests, and runs local models through Ollama, but the shared catalog and the small-model assembler are not built yet. <a href="{{ '/future/#is-this-real' | relative_url }}">What exists today, and what doesn't →</a></p>
+  </div>
+</section>
 
 <section class="alt" id="product">
   <div class="wrap">
@@ -183,7 +223,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, 
   <div class="wrap">
     <p class="eyebrow">Build new apps from context</p>
     <h2 class="h2">Describe it once. The graph does the remembering.</h2>
-    <p class="sec-p">Behind every RobOS app is a KGraph: a standard description of what exists, how it behaves and how to verify it. That is context engineering made durable. With the context written down, building and rebuilding is cheap work that routed, lower-cost models can carry, and every change comes back with proof.</p>
+    <p class="sec-p">Behind every RobOS app is a KGraph: a standard description of what exists, how it behaves and how to verify it. That is context engineering made durable. With the context written down, building and rebuilding is cheap work that routed, lower-cost models can carry, every change comes back with proof, and the result is kept, so the same work never has to be generated twice.</p>
     <ol class="l-steps">
       <li><b>Describe</b><span>A sentence, a sketch, or an import of the repos, APIs, databases and docs you already have.</span></li>
       <li><b>Model</b><span>RobOS turns it into KGraph nodes: entities, screens, rules and the tests that define "working".</span></li>
@@ -300,7 +340,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, 
 
 <section class="final alt">
   <div class="wrap">
-    <h2 class="h2">Use it, change it, or build your own.</h2>
+    <h2 class="h2">Replace one app today. Need less AI tomorrow.</h2>
     <div class="cta" style="margin-top:30px"><a class="btn btn-accent" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> Download RobOS</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener"><img class="btn-ic" src="/assets/icons/star.svg" alt="" width="18" height="18"> Star on GitHub</a></div>
   </div>
 </section>
