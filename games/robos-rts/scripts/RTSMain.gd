@@ -467,7 +467,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 
 	if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 		if pending_ability != "":
-			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed)
+			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed, _unit_at_screen(mpos))
 			return
 		if mb.double_click:
 			# Godot marks the second press, not the following release, as double-click.
@@ -617,6 +617,30 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 		SimEngine.issue_command(tags, "rally", wpos, _rally_target_at(wpos, clicked))
 		_spawn_marker(wpos, "rally")
 		return
+	var target := clicked if not clicked.is_empty() else _unit_at_screen(world_to_screen(wpos, 1.2))
+	if target.is_empty():
+		for u in SimEngine.units.values():
+			if wpos.distance_to(u.pos)<=float(u.radius)+1.0:
+				target=u
+				break
+	if not target.is_empty() and target.owner==local_player:
+		# An unfinished extractor is construction, and a damaged completed one
+		# is repair. Both take precedence over the vent underneath it.
+		if target.is_structure and target.build_progress<1.0:
+			var workers := own.filter(func(u):return u.is_worker)
+			workers.sort_custom(func(a,b):return a.pos.distance_squared_to(target.pos)<b.pos.distance_squared_to(target.pos))
+			for worker in workers:
+				var resumed=SimEngine.issue_command([worker.tag],"resume_build",target.pos,target.tag,"",queue)
+				if resumed.accepted>0:
+					_spawn_marker(target.pos,"build")
+					break
+			return
+		var repairers: Array = []
+		for u in own:
+			if SimEngine.can_repair(u,target): repairers.append(u.tag)
+		if not repairers.is_empty():
+			_repair_feedback(target,SimEngine.issue_command(repairers,"repair",target.pos,target.tag,"",queue),queue)
+			return
 
 	for r in SimEngine.resources.values():
 		if r.amount<=0 and not SimEngine.unlimited_resources: continue
@@ -630,25 +654,10 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 				_gather_feedback(r.pos, r.tag, result, queue)
 				return
 
-	var target := clicked if not clicked.is_empty() else _unit_at_screen(world_to_screen(wpos, 1.2))
-	if target.is_empty():
-		for u in SimEngine.units.values():
-			if wpos.distance_to(u["pos"]) <= float(u["radius"]) + 1.0:
-				target = u
-				break
 	if not target.is_empty():
 		if target["owner"] != local_player:
 			SimEngine.issue_command(tags, "attack_target", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "attack")
-			return
-		elif target.is_structure and target.build_progress < 1.0:
-			var workers := own.filter(func(u): return u.is_worker)
-			workers.sort_custom(func(a, b): return a.pos.distance_squared_to(target.pos) < b.pos.distance_squared_to(target.pos))
-			for worker in workers:
-				var result = SimEngine.issue_command([worker.tag], "resume_build", target.pos, target.tag, "", queue)
-				if result.accepted > 0:
-					_spawn_marker(target.pos, "build")
-					return
 			return
 		elif target["unit_type"] == "aether_tap":
 			var result = SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
@@ -658,6 +667,12 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
 
+func _repair_feedback(target: Dictionary, result: Dictionary, queued: bool) -> void:
+	if int(result.get("accepted",0))<=0: return
+	feedback_serial+=1
+	command_feedback={"kind":"repair","target_tag":target.tag,"accepted":result.accepted,"queued":queued,"serial":feedback_serial}
+	_spawn_marker(target.pos,"repair","REPAIR QUEUED" if queued else "REPAIR")
+
 func _rally_target_at(pos: Vector2, clicked: Dictionary = {}) -> int:
 	if not clicked.is_empty() and clicked.unit_type == "aether_tap" and clicked.owner == local_player:
 		return int(clicked.tag)
@@ -666,7 +681,7 @@ func _rally_target_at(pos: Vector2, clicked: Dictionary = {}) -> int:
 			return int(resource.tag)
 	return 0
 
-func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
+func _execute_pending_ability_at(wpos: Vector2, queue: bool, clicked: Dictionary = {}) -> void:
 	var own := selected_owned()
 	if own.is_empty():
 		pending_ability = ""
@@ -684,6 +699,12 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 		else:
 			SimEngine.issue_command(tags, "attack_move", wpos, 0, "", queue)
 			_spawn_marker(wpos, "attack")
+	elif abil == "repair":
+		pending_ability=""
+		var target := clicked if not clicked.is_empty() else _unit_at_screen(world_to_screen(wpos,1.2))
+		var result=SimEngine.issue_command(tags,"repair",wpos,int(target.get("tag",0)),"",queue)
+		if result.accepted>0: _repair_feedback(target,result,queue)
+		else: push_message("Select a damaged friendly mechanical unit or completed structure.","warn")
 	elif abil == "move" or abil == "phase_step":
 		pending_ability = ""
 		var ability_tags: Array = []
@@ -1239,6 +1260,7 @@ func _draw_click_markers() -> void:
 			"attack": col = Color("#f87171")
 			"gather": col = Color("#5eead4")
 			"rally": col = Color("#fbbf24")
+			"repair": col = Color("#f6c66a")
 		col.a = 1.0 - t
 		_ellipse(sp, lerpf(48.0, 30.0, t) if m.kind == "gather" else lerpf(26.0, 8.0, t), col, 4.0 if m.kind == "gather" else 2.5)
 		if m.kind == "gather":

@@ -1,0 +1,21 @@
+{
+  "@context": {"robos": "https://robos.dev/ns/kgraph#"},
+  "@id": "urn:robos:rts:scenario:pioneer-repair",
+  "@type": "robos:RTSTestScenario",
+  "name": "Pioneer repair practice",
+  "description": "Explicit paused mechanics fixture: right-click damaged friendly machines or buildings, or press E then click. Repairs spend resources as work progresses. Automated tests control pause and time through the public API.",
+  "paused": true,
+  "decor": false,
+  "victory": "all_structures",
+  "map": {"width": 128, "height": 96},
+  "players": {"1": {"faction": "humans", "crystal": 100, "aether": 100}, "2": {"faction": "monsters", "crystal": 0, "aether": 0}},
+  "resources": [{"type": "aether_vent", "x": 50, "y": 30, "amount": 2250}],
+  "units": [
+    {"type": "colony_hub", "owner": 1, "x": 20, "y": 40},
+    {"type": "pioneer", "owner": 1, "x": 36.5, "y": 40},
+    {"type": "howitzer", "owner": 1, "x": 40, "y": 40, "hp": 35},
+    {"type": "silo", "owner": 1, "x": 50, "y": 48, "hp": 200},
+    {"type": "aether_tap", "owner": 1, "x": 50, "y": 30, "hp": 250},
+    {"type": "brood_nest", "owner": 2, "x": 110, "y": 80}
+  ]
+}

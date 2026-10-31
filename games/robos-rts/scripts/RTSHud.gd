@@ -528,6 +528,7 @@ func _order_label(u: Dictionary) -> String:
 		"harvest":
 			return "Waiting for mining slot" if u.get("harvest_state","")=="waiting" else ("Returning cargo" if int(u.cargo_amount)>0 else "Gathering")
 		"build": return "Constructing"
+		"repair": return "Repair paused: resources" if u.get("repair_state","")=="resources" else ("Moving to repair" if u.get("repair_state","")=="moving" else "Repairing")
 		"hold_position": return "Holding position"
 	return "Active"
 
@@ -715,6 +716,10 @@ func _glyph(id: String, r: Rect2) -> void:
 		"stop":
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color("#e06a5e"))
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color(0, 0, 0, 0.5), false, 1.0)
+		"repair":
+			draw_line(c+Vector2(-15,15)*u,c+Vector2(11,-11)*u,Color("#f6c66a"),7.0*u,true)
+			draw_arc(c+Vector2(12,-12)*u,10.0*u,deg_to_rad(-20),deg_to_rad(250),20,Color("#dbe4ee"),5.0*u,true)
+			draw_circle(c+Vector2(-15,15)*u,4.0*u,Color("#dbe4ee"))
 		"cancel_build":
 			draw_arc(c, 20.0 * u, 0.0, TAU, 32, Color("#ee806c"), 3.0 * u, true)
 			draw_line(c + Vector2(-12, -12) * u, c + Vector2(12, 12) * u, Color("#ee806c"), 5.0 * u)

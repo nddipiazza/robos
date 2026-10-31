@@ -20,11 +20,14 @@ signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
 signal resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2)
 signal unit_production_finished(unit: Dictionary, structure: Dictionary)
 signal structure_construction_finished(structure: Dictionary)
+signal unit_repaired(worker: Dictionary, target: Dictionary, amount: float)
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
+const REPAIR_COST_FRACTION: float = 0.25
+const REPAIR_RANGE: float = 1.6
 
 var tick: int = 0
 var sim_time: float = 0.0
@@ -1168,6 +1171,72 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 
 		"build":
 			_process_worker_build_order(u, order, dt)
+		"repair":
+			_process_worker_repair_order(u, order, dt)
+
+func can_repair(worker: Dictionary, target: Dictionary) -> bool:
+	return not worker.is_empty() and not target.is_empty() and worker.unit_type=="pioneer" \
+		and worker.tag!=target.tag and worker.owner==target.owner and worker.hp>0 and target.hp>0 \
+		and worker.build_progress>=1.0 and target.build_progress>=1.0 \
+		and "Mechanical" in target.get("attributes",[]) and target.hp < target.max_hp
+
+func _process_worker_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> void:
+	var target: Dictionary = units.get(int(order.get("target_tag",0)),{})
+	if not can_repair(worker,target):
+		worker.orders.pop_front()
+		worker["repair_state"]=""
+		worker.path.clear()
+		worker.crowd_path.clear()
+		return
+	if _edge_distance(worker,target)>REPAIR_RANGE:
+		worker["repair_state"]="moving"
+		_approach_target(worker,target.pos,dt)
+		return
+	worker.vel=Vector2.ZERO
+	worker.facing=(target.pos-worker.pos).angle()
+	var def: Dictionary = RTSData.get_unit_def(target.unit_type)
+	var crystal_per_hp: float = float(def.get("crystal_cost",0))*REPAIR_COST_FRACTION/float(target.max_hp)
+	var aether_per_hp: float = float(def.get("aether_cost",0))*REPAIR_COST_FRACTION/float(target.max_hp)
+	var repaired: float = float(target.get("repair_hp_total",0.0))
+	var paid_crystal: int = int(target.get("repair_crystal_paid",0))
+	var paid_aether: int = int(target.get("repair_aether_paid",0))
+	var player: Dictionary = players[worker.owner]
+	var amount: float = minf(float(target.max_hp)-float(target.hp),float(target.max_hp)/maxf(1.0,float(def.get("build_time",1.0)))*dt)
+	# Prices stay integral. Charge the ceiling of cumulative fractional work,
+	# shared by all repairers and retained across Stop/requeue and later damage.
+	# Paid rounding credit is therefore never charged a second time.
+	if crystal_per_hp>0:
+		amount=minf(amount,maxf(0.0,float(paid_crystal+int(player.crystal))/crystal_per_hp-repaired))
+	if aether_per_hp>0:
+		amount=minf(amount,maxf(0.0,float(paid_aether+int(player.aether))/aether_per_hp-repaired))
+	if amount<=0.00000001:
+		if worker.get("repair_state","")!="resources":
+			emit_signal("notice",worker.owner,"Repair paused: not enough resources.","warn")
+		worker["repair_state"]="resources"
+		return
+	var total: float = repaired+amount
+	var crystal: int = maxi(0,int(ceil(total*crystal_per_hp-0.00000001))-paid_crystal)
+	var aether: int = maxi(0,int(ceil(total*aether_per_hp-0.00000001))-paid_aether)
+	if crystal>int(player.crystal) or aether>int(player.aether): return
+	player.crystal-=crystal
+	player.aether-=aether
+	target["repair_hp_total"]=total
+	target["repair_crystal_paid"]=paid_crystal+crystal
+	target["repair_aether_paid"]=paid_aether+aether
+	target.hp=minf(target.max_hp,target.hp+amount)
+	worker["repair_state"]="working"
+	battle_stats.restored(target,amount,0.0)
+	battle_stats.count(worker.tag,"hp_repaired",amount)
+	battle_stats.count(worker.tag,"repair_crystal_spent",crystal)
+	battle_stats.count(worker.tag,"repair_aether_spent",aether)
+	if tick>=int(worker.get("repair_sound_tick",0)):
+		emit_signal("unit_repaired",worker,target,amount)
+		worker["repair_sound_tick"]=tick+32
+	if target.max_hp-target.hp<0.00000001:
+		target.hp=target.max_hp
+		worker.orders.pop_front()
+		worker["repair_state"]=""
+		worker.path.clear()
 
 func _harvest_source(tag: int) -> int:
 	return tag if resources.has(tag) else int(_gas_source_by_tap.get(tag,0))
@@ -1774,6 +1843,16 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "harvest" and not u.is_worker:
 			continue
+		if ctype == "repair" and not can_repair(u,units.get(target_tag,{})):
+			continue
+		if ctype == "repair" and not queue:
+			if u.attack_state == "windup":
+				battle_stats.count(u.tag, "windup_cancels")
+			elif u.attack_state == "backswing":
+				battle_stats.count(u.tag, "recovery_cancels")
+			u.attack_state="idle"
+			u.attack_state_timer=0.0
+			u.attack_target_tag=0
 		if ctype == "harvest" and not unlimited_resources:
 			var source := _harvest_source(target_tag)
 			if resources.has(source) and resources[source].amount<=0: continue
@@ -1878,6 +1957,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "stop":
+			u["repair_state"]=""
 			_release_mining_claim(u)
 			u["orders"].clear()
 			u["path"].clear()
@@ -1887,6 +1967,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "hold_position":
+			u["repair_state"]=""
 			_release_mining_claim(u)
 			u["orders"] = [{"type": "hold_position"}]
 			u["path"].clear()
@@ -1896,6 +1977,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		if not queue:
+			u["repair_state"]=""
 			_release_mining_claim(u)
 			u["orders"].clear()
 			u["path"].clear()
@@ -1942,6 +2024,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				"target_tag": harvest_tag
 			})
 			accepted += 1
+		elif ctype == "repair":
+			u.orders.append({"type":"repair","target_tag":target_tag})
+			u.has_home_pos=false
+			accepted+=1
 
 		elif ctype == "resume_build":
 			var site: Dictionary = units[target_tag]
@@ -2201,6 +2287,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"orders": u["orders"].duplicate(true),
 			"production_queue_len": u["production_queue"].size(),
 			"assigned_workers": int(u.get("assigned_workers",0)), "harvest_state": str(u.get("harvest_state","")),
+			"repair_state": str(u.get("repair_state","")),
+			"repair_hp_total": float(u.get("repair_hp_total",0.0)),
+			"repair_crystal_paid": int(u.get("repair_crystal_paid",0)), "repair_aether_paid": int(u.get("repair_aether_paid",0)),
 			"kills": u["kills"]
 		})
 

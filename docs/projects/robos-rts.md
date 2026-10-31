@@ -67,6 +67,31 @@ python tests/e2e/improvements_walkthrough.py
 
 The tests prove refunds, supply release, queue continuity, actual resource income, ground/aether/depleted rallies and army ownership. The rendered walkthrough exercises native queue cancellation in both views and worker resource rallies; proof and captions are archived under `~/.robos/development/walkthroughs/rts-player-controls/`.
 
+## Pioneer repair
+
+Select Pioneers and **right-click a damaged friendly mechanical unit or completed building** to repair it. **E**, then a target click, does the same thing. A gold repair marker acknowledges the command; the worker panel shows whether it is approaching, repairing, or paused for resources. **S / Halt** stops work. Shift queues repair and subsequent moves or gathering. A damaged Aether Tap is repaired before gathering from its vent; right-clicking a healthy Tap still gathers gas. Unfinished buildings retain the existing resume-construction behavior.
+
+Each Pioneer restores one full health bar over the target's construction time. Restoring a full bar costs **25% of the target's crystal and aether price**, prorated by actual HP restored. Integral costs round up cumulatively on the target, so multiple repairers, interruption, and later damage share paid fractional credit. Extra Pioneers increase speed without increasing total cost. Workers spend nothing while approaching or after completion; insufficient resources pause work until funds arrive. Pioneers cannot repair themselves, enemies, biological targets, or unfinished foundations.
+
+| Target and damage | One Pioneer, already in range | Total repair cost |
+|---|---|---|
+| Howitzer, 35 → 175 HP | 25.6 seconds, within one simulation tick | 30 crystal, 25 aether |
+| Provision Silo, 200 → 400 HP | 10.5 seconds | 13 crystal, no aether |
+| Aether Tap, 250 → 500 HP | 10.5 seconds | 10 crystal, no aether |
+
+Battle results include HP restored by repairers and repair spending, with each worker's contribution in its full record. Work uses the pooled welder sound independently of combat hits.
+
+![Pioneer accepting a right-click repair order on a damaged Howitzer](/assets/images/robos-rts/37-pioneer-repair.png){: .robos-zoomable-img }
+
+```bash
+cd games/robos-rts
+python run_balance_tests.py --suite repair --suite economy --suite controls --suite shift --suite audio --suite statistics --jobs=1
+python run_cucumber_tests.py --backend --tags=@pioneer_repair
+python tests/e2e/repair_walkthrough.py
+```
+
+The tests assert numeric healing rates, exact resource debits, budget caps, pause/resume, multiple workers, mode changes, moving targets, invalid targets, Halt, Shift follow-ups, gas-building priority, audio wiring and telemetry. The rendered walkthrough exercises actual mouse/key handlers on a paused, manually stepped fixture. Its captioned screenshot video, proof JSON and summary archive to `~/.robos/development/walkthroughs/rts-pioneer-repair/`; it is not a live-play performance or audibility measurement. The fixture is `scenarios/pioneer-repair.jsonld`.
+
 ## Campaign: First Strike
 
 Choose **Campaign: First Strike** from the F8 menu, or run `games/robos-rts/play.ps1 -Mission` on Windows (`-Windowed` is optional). Other platforms can use `games/robos-rts/play.sh -- --scenario=campaign-first-strike`.

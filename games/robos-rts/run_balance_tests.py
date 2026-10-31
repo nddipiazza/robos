@@ -27,6 +27,7 @@ SUITES = {
     "audio": "test_audio_sfx.gd",
     "statistics": "test_battle_stats.gd",
     "resources": "test_resource_economy.gd",
+    "repair": "test_pioneer_repair.gd",
 }
 
 

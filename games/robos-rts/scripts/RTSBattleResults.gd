@@ -114,6 +114,7 @@ func show_report(data: Dictionary) -> void:
 	_fill(economy, [
 		["Units deployed", "started"], ["Surviving units", "survivors"], ["Units lost", "lost"], ["Enemy units killed", "kills"],
 		["Construction cancelled", "cancelled"], ["Construction crystal refunded", "refunded_crystal"], ["Construction aether refunded", "refunded_aether"],
+		["HP restored by repairers", "hp_repaired"], ["Repair crystal spent", "repair_crystal_spent"], ["Repair aether spent", "repair_aether_spent"],
 		["Survival %", "survival_percent"], ["Kill / loss ratio", "kill_loss_ratio"],
 		["Deployed supply", "starting_supply"], ["Surviving supply", "surviving_supply"], ["Supply destroyed", "supply_destroyed"],
 		["Deployed crystal value", "starting_crystal"], ["Deployed aether value", "starting_aether"],

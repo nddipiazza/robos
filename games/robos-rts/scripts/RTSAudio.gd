@@ -241,6 +241,8 @@ func _connect_sim_signals() -> void:
 		SimEngine.unit_production_finished.connect(_on_unit_production_finished)
 	if not SimEngine.structure_construction_finished.is_connected(_on_structure_construction_finished):
 		SimEngine.structure_construction_finished.connect(_on_structure_construction_finished)
+	if not SimEngine.unit_repaired.is_connected(_on_unit_repaired):
+		SimEngine.unit_repaired.connect(_on_unit_repaired)
 	if not SimEngine.notice.is_connected(_on_sim_notice):
 		SimEngine.notice.connect(_on_sim_notice)
 	if not SimEngine.scenario_loaded.is_connected(_on_scenario_loaded):
@@ -606,6 +608,9 @@ func _on_resource_gathered(unit: Dictionary, _resource_type: String, pos: Vector
 func _on_unit_production_finished(unit: Dictionary, _structure: Dictionary) -> void:
 	if int(unit.get("owner", 0)) == local_player_id:
 		play_at("unit_ready", unit.get("pos", Vector2.ZERO), -1.0, 0.03)
+
+func _on_unit_repaired(worker: Dictionary, _target: Dictionary, _amount: float) -> void:
+	play_at("arc_welder",worker.pos,-5.0,0.03)
 
 func _on_structure_construction_finished(structure: Dictionary) -> void:
 	if int(structure.get("owner", 0)) == local_player_id:

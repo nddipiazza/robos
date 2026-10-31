@@ -36,6 +36,7 @@ func register_unit(u: Dictionary, at_tick: int) -> void:
 		"hp_damage": 0.0, "shield_damage": 0.0, "damage_taken": 0.0, "overkill": 0.0,
 		"armor_blocked": 0.0, "direct_damage": 0.0, "splash_damage": 0.0,
 		"hp_healed": 0.0, "shields_regenerated": 0.0, "self_damage": 0.0, "surge_uses": 0,
+		"hp_repaired": 0.0, "repair_crystal_spent": 0.0, "repair_aether_spent": 0.0,
 		"crystal_destroyed": 0, "aether_destroyed": 0, "supply_destroyed": 0,
 		"distance": 0.0, "moving_seconds": 0.0, "windup_seconds": 0.0, "recovery_seconds": 0.0,
 		"first_shot_tick": -1, "last_shot_tick": -1, "death_tick": -1, "alive": true,
@@ -139,6 +140,7 @@ func finish(units: Dictionary, at_tick: int, seed_value: int) -> Dictionary:
 			"peak_dps": 0.0, "peak_from": 0.0, "peak_to": 0.0, "first_shot_seconds": -1.0,
 			"mvp": {}, "lowest_damage_unit": {}, "types": {}}
 		side["allied_detours"] = 0.0
+		for key in ["hp_repaired","repair_crystal_spent","repair_aether_spent"]: side[key]=0.0
 		for key in ["kills", "shots", "attack_starts", "windup_cancels", "recovery_cancels", "hp_damage", "shield_damage", "damage_taken", "overkill", "armor_blocked", "direct_damage", "splash_damage", "hp_healed", "shields_regenerated", "self_damage", "surge_uses", "crystal_destroyed", "aether_destroyed", "supply_destroyed", "distance", "moving_seconds", "windup_seconds", "recovery_seconds"]:
 			side[key] = 0.0
 		for original in records.values():
