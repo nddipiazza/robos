@@ -510,7 +510,7 @@ static func _waystone(root: Node3D, r: float, team: Material) -> void:
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
-static func build_resource(res_type: String, seed_val: int) -> Node3D:
+static func build_resource(res_type: String, seed_val: int, rich: bool = false) -> Node3D:
 	var root := Node3D.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_val
@@ -519,6 +519,9 @@ static func build_resource(res_type: String, seed_val: int) -> Node3D:
 			mat("res_crystal_a", Color("#2dd4bf"), Color("#14b8a6"), 1.6, 0.0, 0.2, 0.95),
 			mat("res_crystal_b", Color("#38bdf8"), Color("#0ea5e9"), 1.6, 0.0, 0.2, 0.95),
 		]
+		if rich:
+			cm = [mat("res_gold_a", Color("#f5cc54"), Color("#d99816"), 1.6, 0.0, 0.2, 0.95),
+				mat("res_gold_b", Color("#ffe391"), Color("#e7b548"), 1.6, 0.0, 0.2, 0.95)]
 		var rock := mat("res_rock", Color("#4a4540"), Color.BLACK, 1.0, 0.1, 0.95)
 		for i in range(3):
 			var a := rng.randf() * TAU

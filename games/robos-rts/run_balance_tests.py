@@ -26,6 +26,7 @@ SUITES = {
     "shift": "test_shift_commands.gd",
     "audio": "test_audio_sfx.gd",
     "statistics": "test_battle_stats.gd",
+    "resources": "test_resource_economy.gd",
 }
 
 

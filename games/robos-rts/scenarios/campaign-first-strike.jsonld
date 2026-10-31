@@ -113,59 +113,84 @@
   },
   "resources": [
     {
+      "id": "base_crystal_0",
       "type": "crystal_field",
-      "x": 12,
-      "y": 40,
-      "amount": 5000
+      "x": 22.416,
+      "y": 66.959,
+      "amount": 900,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_1",
       "type": "crystal_field",
-      "x": 16,
-      "y": 40,
-      "amount": 5000
+      "x": 17.888,
+      "y": 66.112,
+      "amount": 1800,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_2",
       "type": "crystal_field",
-      "x": 12,
-      "y": 49,
-      "amount": 5000
+      "x": 17.041,
+      "y": 61.584,
+      "amount": 900,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_3",
       "type": "crystal_field",
-      "x": 16,
-      "y": 49,
-      "amount": 5000
+      "x": 13.876,
+      "y": 58.237,
+      "amount": 1800,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_4",
       "type": "crystal_field",
-      "x": 12,
-      "y": 58,
-      "amount": 5000
+      "x": 15.851,
+      "y": 54.076,
+      "amount": 900,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_5",
       "type": "crystal_field",
-      "x": 16,
-      "y": 58,
-      "amount": 5000
+      "x": 15.259,
+      "y": 49.508,
+      "amount": 1800,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_6",
       "type": "crystal_field",
-      "x": 12,
-      "y": 67,
-      "amount": 5000
+      "x": 19.303,
+      "y": 47.303,
+      "amount": 900,
+      "site_id": "base"
     },
     {
+      "id": "base_crystal_7",
       "type": "crystal_field",
-      "x": 16,
-      "y": 67,
-      "amount": 5000
+      "x": 21.508,
+      "y": 43.259,
+      "amount": 1800,
+      "site_id": "base"
     },
     {
-      "id": "base_aether",
+      "id": "base_aether_-1",
       "type": "aether_vent",
-      "x": 40,
-      "y": 35,
-      "amount": 10000
+      "x": 28,
+      "y": 69.1,
+      "amount": 2250,
+      "site_id": "base"
+    },
+    {
+      "id": "base_aether_1",
+      "type": "aether_vent",
+      "x": 28,
+      "y": 42.9,
+      "amount": 2250,
+      "site_id": "base"
     }
   ],
   "directives": [

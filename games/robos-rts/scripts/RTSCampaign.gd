@@ -20,7 +20,7 @@ func _ready() -> void:
 	_label(box, "Mission 01 · Canyon Stronghold", 23)
 	_label(box, "Build your base, clear two sentry posts, then break through\nthe winding canyon to the Gnarl Brood stronghold.", 21)
 	_label(box, "1. Your 12 Pioneers are already gathering crystal.\n2. Build Provision Silos and Muster Halls with a Pioneer.\n3. Assemble about 40 Riflemen (40 army supply).\n4. Follow the passes south, north, then south; clear every enemy.", 22)
-	_label(box, "40 Riflemen + 12 workers = 52 total supply; aim for 55 capacity.\nBuild an Aether Tap on the vent northeast of your base for gas units.\nThe defenders hold their posts. There is no time limit.\nA + click attacks · F1 controls · F8 menu · P pause · F9 restart", 18)
+	_label(box, "40 Riflemen + 12 workers = 52 total supply; aim for 55 capacity.\nBuild an Aether Tap on either flank vent to support gas units.\nThe defenders hold their posts. There is no time limit.\nA + click attacks · F1 controls · F8 menu · P pause · F9 restart", 18)
 	_button(box, "Begin mission  [Enter]", func(): SimEngine.start_campaign())
 	objectives = _panel(Vector2(28, 72), Vector2(620, 0))
 	var live = VBoxContainer.new()

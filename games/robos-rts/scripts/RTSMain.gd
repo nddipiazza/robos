@@ -589,6 +589,7 @@ func _resource_at_screen(pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var distance := 99999.0
 	for resource in SimEngine.resources.values():
+		if resource.amount<=0 and not SimEngine.unlimited_resources: continue
 		var center := world_to_screen(resource.pos, 1.7)
 		var d := center.distance_to(pos)
 		if d < 34.0 and d < distance:
@@ -618,6 +619,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, clicked: Dictionary = 
 		return
 
 	for r in SimEngine.resources.values():
+		if r.amount<=0 and not SimEngine.unlimited_resources: continue
 		if wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
 			var workers: Array = []
 			for u in own:

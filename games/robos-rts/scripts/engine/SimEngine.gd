@@ -77,6 +77,8 @@ var _max_unit_radius: float = 4.5
 var _town_halls: Array[Dictionary] = []
 var _gas_source_by_tap: Dictionary = {}
 var _gas_tap_by_vent: Dictionary = {}
+var _harvest_workers: Dictionary = {}
+var _mining_active: Dictionary = {}
 
 func _ready() -> void:
 	var env_mode = OS.get_environment("RTS_MODE")
@@ -128,6 +130,12 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	next_tag = 1001
 	units.clear()
 	resources.clear()
+	_harvest_workers.clear()
+	_mining_active.clear()
+	_town_halls.clear()
+	_static_structures.clear()
+	_gas_source_by_tap.clear()
+	_gas_tap_by_vent.clear()
 	spatial_grid.clear()
 	terrain_obstacles.clear()
 	high_ground_zones.clear()
@@ -307,7 +315,7 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 			str(res.get("type", "crystal_field")),
 			Vector2(float(res.get("x", 20.0)), float(res.get("y", 20.0))),
 			int(res.get("amount", 1500)),
-			str(res.get("id", ""))
+			str(res.get("id", "")), bool(res.get("rich", false)), str(res.get("site_id", ""))
 		)
 
 	for u in data.get("units", []):
@@ -386,21 +394,14 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		"assigned_starts": {"1": slots[0], "2": slots[1]}}
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(float(obs.x), float(obs.y), float(obs.w), float(obs.h)))
-	var resource_sites = starts + map_cfg.get("expansions", [])
-	for slot in range(resource_sites.size()):
-		var site: Dictionary = resource_sites[slot]
-		var base = Vector2(float(site.x), float(site.y))
-		var outward = (base - Vector2(map_width, map_height) * 0.5).normalized()
-		var tangent = Vector2(-outward.y, outward.x)
-		for i in range(8):
-			spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), 50000, "start_%d_crystal_%d" % [slot, i])
-		for side in [-1, 1]:
-			spawn_resource("aether_vent", _resource_land_position(base + tangent * side * 17.0), 50000, "start_%d_aether_%d" % [slot, side])
 	if data.has("resources"):
 		resources.clear()
 		next_tag = 1001
 		for resource in data.resources:
-			spawn_resource(str(resource.type), Vector2(float(resource.x), float(resource.y)), int(resource.get("amount", 1500)), str(resource.get("id", "")))
+			spawn_resource(str(resource.type), Vector2(float(resource.x), float(resource.y)), int(resource.get("amount", 1500)), str(resource.get("id", "")), bool(resource.get("rich",false)), str(resource.get("site_id","")))
+	else:
+		for resource in preload("res://scripts/engine/RTSResourceLayout.gd").for_map(map_cfg):
+			spawn_resource(str(resource.type),Vector2(resource.x,resource.y),int(resource.amount),str(resource.id),bool(resource.get("rich",false)),str(resource.get("site_id","")))
 	for pid in [1, 2]:
 		players[pid]["faction"] = "humans"
 		players[pid]["name"] = "Commander" if pid == 1 else "AI Commander"
@@ -624,17 +625,7 @@ func is_water_at(pos: Vector2, radius: float = 0.0) -> bool:
 					return true
 	return false
 
-func _resource_land_position(pos: Vector2) -> Vector2:
-	if not is_water_at(pos, 3.0):
-		return pos
-	for radius in range(2, 24, 2):
-		for i in range(16):
-			var candidate = pos + Vector2.from_angle(TAU * float(i) / 16.0) * radius
-			if candidate.x > 4 and candidate.y > 4 and candidate.x < map_width - 4 and candidate.y < map_height - 4 and not is_water_at(candidate, 3.0):
-				return candidate
-	return pos
-
-func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_id: String = "") -> Dictionary:
+func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_id: String = "", rich: bool = false, site_id: String = "") -> Dictionary:
 	var tag = next_tag
 	next_tag += 1
 	var r = {
@@ -643,6 +634,9 @@ func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_i
 		"resource_type": res_type,
 		"pos": pos,
 		"amount": amount,
+		"rich": rich and res_type == "crystal_field",
+		"site_id": site_id,
+		"yield_per_trip": (7 if rich else 5) if res_type == "crystal_field" else 4,
 		"radius": 1.8 if res_type == "crystal_field" else 2.6,
 		"harvesters": []
 	}
@@ -770,6 +764,7 @@ func _step_single_tick() -> void:
 
 	var all_tags = units.keys()
 	all_tags.sort()
+	_prepare_harvesting(all_tags)
 	var orders_started = Time.get_ticks_usec()
 	for tag in all_tags:
 		if not units.has(tag):
@@ -1174,9 +1169,58 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"build":
 			_process_worker_build_order(u, order, dt)
 
+func _harvest_source(tag: int) -> int:
+	return tag if resources.has(tag) else int(_gas_source_by_tap.get(tag,0))
+
+func _prepare_harvesting(tags: Array) -> void:
+	# One linear pass per tick; never scan the army once per miner.
+	_harvest_workers.clear()
+	for resource in resources.values(): resource.harvesters.clear()
+	for tag in tags:
+		var worker: Dictionary = units[tag]
+		if not worker.is_worker or worker.orders.is_empty() or worker.orders[0].type != "harvest": continue
+		var source := _harvest_source(int(worker.orders[0].get("target_tag",0)))
+		if source == 0: continue
+		var key := Vector2i(worker.owner,source)
+		if not _harvest_workers.has(key): _harvest_workers[key]=[]
+		_harvest_workers[key].append(tag)
+		if resources.has(source): resources[source].harvesters.append(tag)
+	for tag in _gas_source_by_tap:
+		if units.has(tag):
+			units[tag]["assigned_workers"] = _harvest_workers.get(Vector2i(units[tag].owner,_gas_source_by_tap[tag]),[]).size()
+
+func _balanced_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionary:
+	var counts: Dictionary = {}
+	for other in units.values():
+		if other.tag==worker.tag or other.owner!=worker.owner or not other.is_worker or other.orders.is_empty(): continue
+		if other.orders[0].type=="harvest":
+			var tag := int(other.orders[0].get("target_tag",0))
+			counts[tag]=int(counts.get(tag,0))+1
+	var best: Dictionary = preferred
+	var score := INF
+	for r in resources.values():
+		if r.resource_type!="crystal_field" or (r.amount<=0 and not unlimited_resources): continue
+		if not str(preferred.get("site_id","")).is_empty() and r.get("site_id","")!=preferred.site_id: continue
+		if r.pos.distance_squared_to(preferred.pos)>24.0*24.0 or bool(r.get("rich",false))!=bool(preferred.get("rich",false)): continue
+		var assigned := int(counts.get(r.tag,0))
+		# Fill two per patch before assigning a third; excess workers can wait.
+		var tier := 0 if assigned<2 else (1 if assigned<3 else 2)
+		var candidate: float = tier*100000.0 + assigned*1000.0 + worker.pos.distance_squared_to(r.pos)
+		if candidate<score:
+			score=candidate
+			best=r
+	return best
+
+func _release_mining_claim(worker: Dictionary) -> void:
+	if not worker.orders.is_empty() and worker.orders[0].type=="harvest":
+		var source := _harvest_source(int(worker.orders[0].get("target_tag",0)))
+		if int(_mining_active.get(source,0))==int(worker.tag): _mining_active.erase(source)
+	worker.harvest_timer=0.0
+
 func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
+		u["harvest_state"] = "returning"
 		var th = _find_nearest_town_hall(u["owner"], u["pos"])
 		if th.is_empty():
 			return
@@ -1213,6 +1257,7 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			u["orders"].pop_front()
 			return
 		order["target_tag"] = nearest_res["tag"]
+		res_tag = int(nearest_res.tag)
 		u["harvest_target_tag"] = nearest_res["tag"]
 		target_entity = nearest_res
 
@@ -1227,28 +1272,55 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			u.orders.pop_front()
 			return
 		source_tag = int(_gas_source_by_tap.get(tap_tag, res_tag))
+		if not resources.has(source_tag):
+			u.orders.pop_front()
+			return
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
 		u.orders.pop_front()
 		if u.orders.is_empty():
 			issue_SmartHarvest(u.tag)
 		return
+	var assigned: Array = _harvest_workers.get(Vector2i(u.owner,source_tag),[])
+	var assignment := assigned.find(u.tag)
+	if assignment>=3:
+		u["harvest_state"]="waiting"
+		if u.orders.size()>1:
+			u.orders.pop_front()
+			return
+		# Keep excess workers behind the node, clear of the delivery lane.
+		var home := _find_nearest_town_hall(u.owner,u.pos)
+		if not home.is_empty():
+			var away: Vector2 = (target_entity.pos-home.pos).normalized()
+			var waiting: Vector2 = target_entity.pos + away * (float(target_entity.radius)+float(u.radius)+3.0) + Vector2(-away.y,away.x)*float(assignment-3)*2.0
+			if u.pos.distance_to(waiting)>1.0: _approach_target(u,waiting,dt)
+		return
 	if dist <= 1.2:
 		u["vel"] = Vector2.ZERO
 		u["facing"] = (target_entity["pos"] - u["pos"]).angle()
+		if not is_gas:
+			var active: Dictionary = units.get(int(_mining_active.get(source_tag,0)),{})
+			var occupied: bool = not active.is_empty() and active.tag!=u.tag and active.cargo_amount==0 and not active.orders.is_empty() and active.orders[0].type=="harvest" and _harvest_source(int(active.orders[0].target_tag))==source_tag and active.pos.distance_to(target_entity.pos)<=active.radius+float(target_entity.radius)+1.2
+			if occupied:
+				u["harvest_state"]="waiting"
+				return
+			_mining_active[source_tag]=u.tag
+		u["harvest_state"]="mining"
 		u["harvest_timer"] += dt
 		if u["harvest_timer"] >= 1.75:
 			u["harvest_timer"] = 0.0
+			_mining_active.erase(source_tag)
 			emit_signal("resource_gathered", u, "aether" if is_gas else "crystal", u.pos)
 			if is_gas:
 				u["cargo_type"] = "aether"
 				u["cargo_amount"] = 4
 			else:
 				u["cargo_type"] = "crystal"
-				u["cargo_amount"] = 5
+				u["cargo_amount"] = int(target_entity.get("yield_per_trip", 5))
 			if resources.has(source_tag) and not unlimited_resources:
 				u.cargo_amount = mini(u.cargo_amount, int(resources[source_tag].amount))
 				resources[source_tag].amount -= u.cargo_amount
 	else:
+		u["harvest_state"]="travel"
 		_approach_target(u, target_entity["pos"], dt)
 
 func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) -> void:
@@ -1702,6 +1774,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "harvest" and not u.is_worker:
 			continue
+		if ctype == "harvest" and not unlimited_resources:
+			var source := _harvest_source(target_tag)
+			if resources.has(source) and resources[source].amount<=0: continue
 		if ctype == "rally" and RTSData.get_unit_def(u.unit_type).get("trains", []).is_empty():
 			continue
 		if ctype.begins_with("build_") or ctype == "build":
@@ -1803,6 +1878,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "stop":
+			_release_mining_claim(u)
 			u["orders"].clear()
 			u["path"].clear()
 			u["vel"] = Vector2.ZERO
@@ -1811,6 +1887,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "hold_position":
+			_release_mining_claim(u)
 			u["orders"] = [{"type": "hold_position"}]
 			u["path"].clear()
 			u["vel"] = Vector2.ZERO
@@ -1819,6 +1896,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		if not queue:
+			_release_mining_claim(u)
 			u["orders"].clear()
 			u["path"].clear()
 			u.crowd_path.clear()
@@ -1855,10 +1933,13 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 
 		elif ctype == "harvest":
-			u["harvest_target_tag"] = target_tag
+			var harvest_tag := target_tag
+			if resources.has(target_tag) and resources[target_tag].resource_type=="crystal_field":
+				harvest_tag = int(_balanced_crystal(u,resources[target_tag]).tag)
+			u["harvest_target_tag"] = harvest_tag
 			u["orders"].append({
 				"type": "harvest",
-				"target_tag": target_tag
+				"target_tag": harvest_tag
 			})
 			accepted += 1
 
@@ -1900,7 +1981,17 @@ func issue_SmartHarvest(worker_tag: int) -> void:
 	if not units.has(worker_tag):
 		return
 	var u = units[worker_tag]
-	var nearest = _find_nearest_crystal(u["pos"])
+	var anchor: Vector2 = u.pos
+	var distance := INF
+	# Newly spawned workers can be on the far side of their hub, closer to a
+	# neighboring expansion's crystals. Choose the owned base's line first.
+	for hall in units.values():
+		if hall.owner!=u.owner or hall.build_progress<1.0 or not bool(RTSData.get_unit_def(hall.unit_type).get("is_town_hall",false)): continue
+		var d: float = u.pos.distance_squared_to(hall.pos)
+		if d<distance:
+			distance=d
+			anchor=hall.pos
+	var nearest = _find_nearest_crystal(anchor)
 	if not nearest.is_empty():
 		issue_command([worker_tag], "harvest", nearest["pos"], nearest["tag"])
 
@@ -2071,7 +2162,7 @@ func _find_nearest_crystal(pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d: float = 999999.0
 	for r in resources.values():
-		if r["resource_type"] == "crystal_field" and r["amount"] > 0:
+		if r["resource_type"] == "crystal_field" and (r["amount"] > 0 or unlimited_resources):
 			var d = pos.distance_to(r["pos"])
 			if d < best_d:
 				best_d = d
@@ -2109,6 +2200,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"cargo_amount": u["cargo_amount"],
 			"orders": u["orders"].duplicate(true),
 			"production_queue_len": u["production_queue"].size(),
+			"assigned_workers": int(u.get("assigned_workers",0)), "harvest_state": str(u.get("harvest_state","")),
 			"kills": u["kills"]
 		})
 
@@ -2120,6 +2212,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"resource_type": r["resource_type"],
 			"pos": {"x": r["pos"].x, "y": r["pos"].y, "z": snappedf(get_elevation_at(r["pos"]), 0.01)},
 			"amount": r["amount"],
+			"rich": bool(r.get("rich", false)), "yield_per_trip": int(r.get("yield_per_trip", 5)),
+			"site_id": str(r.get("site_id","")),
+			"assigned_workers": r.harvesters.size(), "mining_worker": int(_mining_active.get(r.tag,0)),
 			"unlimited": unlimited_resources
 		})
 

@@ -525,7 +525,8 @@ func _order_label(u: Dictionary) -> String:
 		"move": return "Moving"
 		"attack_move": return "Attack-moving"
 		"attack_target": return "Attacking"
-		"harvest": return "Gathering"
+		"harvest":
+			return "Waiting for mining slot" if u.get("harvest_state","")=="waiting" else ("Returning cargo" if int(u.cargo_amount)>0 else "Gathering")
 		"build": return "Constructing"
 		"hold_position": return "Holding position"
 	return "Active"
@@ -626,6 +627,9 @@ func _draw_single(u: Dictionary) -> void:
 		ry += 4.0
 
 	var status: Array = []
+	if is_own and u.unit_type=="aether_tap" and not building:
+		status.append("Gas workers %d / 3" % int(u.get("assigned_workers",0)))
+		if int(u.get("assigned_workers",0))>3: status.append("Excess workers wait")
 	if is_own and not u["is_structure"]:
 		status.append(_order_label(u))
 		if int(u["cargo_amount"]) > 0:

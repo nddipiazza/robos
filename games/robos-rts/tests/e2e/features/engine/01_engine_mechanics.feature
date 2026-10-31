@@ -38,7 +38,7 @@ Feature: Deterministic RTS engine mechanics (Humans, Monsters, Aliens)
     When player 1 orders a worker to build "silo" at (28.0, 28.0)
     And player 1 issues "train_rifleman" to all "muster_hall" units
     And player 1 issues "train_rifleman" to all "muster_hall" units
-    And the simulation advances 640 ticks
+    And the simulation advances 768 ticks
     Then player 1 has collected at least 40 crystal
     And player 1 has supply cap of at least 31
     And player 1 has at least 2 surviving "rifleman" units

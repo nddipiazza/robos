@@ -44,7 +44,8 @@ def deposits(context):
         resources = [r for r in obs["resources"] if r["id"].startswith(f"start_{slot}_")]
         assert sum(r["resource_type"] == "crystal_field" for r in resources) == 8
         assert sum(r["resource_type"] == "aether_vent" for r in resources) == 2
-        assert all(r["amount"] == 50000 for r in resources)
+        assert sorted(r["amount"] for r in resources if r["resource_type"]=="crystal_field")==[900]*4+[1800]*4
+        assert all(r["amount"]==2250 for r in resources if r["resource_type"]=="aether_vent")
         assert all(r["unlimited"] for r in resources)
 
 

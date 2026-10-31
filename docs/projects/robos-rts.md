@@ -71,7 +71,7 @@ The tests prove refunds, supply release, queue continuity, actual resource incom
 
 Choose **Campaign: First Strike** from the F8 menu, or run `games/robos-rts/play.ps1 -Mission` on Windows (`-Windowed` is optional). Other platforms can use `games/robos-rts/play.sh -- --scenario=campaign-first-strike`.
 
-You begin with a Colony Hub, 12 gathering Pioneers, 150 crystal and no army. Build Provision Silos and Muster Halls, train roughly **40 Riflemen (40 army supply)**, then attack the eastern stronghold through the canyon. With the original workers that means 52 total supply; five Silos raise capacity to 55. There is ample finite crystal and no time limit. The enemy garrison holds its posts, without free reinforcements or attacks during your buildup. Three staggered canyon passes lead south, north, then south through the Western sentries and Northern ambush before the final stronghold. An aether vent northeast of the player base supports a paid Aether Tap, Breachers and Howitzers. Destroy the Brood Nest **and every defender** to win; losing your army allows another attempt, while losing all your structures ends the mission.
+You begin with a Colony Hub, 12 gathering Pioneers, 150 crystal and no army. Build Provision Silos and Muster Halls, train roughly **40 Riflemen (40 army supply)**, then attack the eastern stronghold through the canyon. With the original workers that means 52 total supply; five Silos raise capacity to 55. There is ample finite crystal and no time limit. The enemy garrison holds its posts, without free reinforcements or attacks during your buildup. Three staggered canyon passes lead south, north, then south through the Western sentries and Northern ambush before the final stronghold. Two aether vents on the flanks of the player base support paid Aether Taps, Breachers and Howitzers. Destroy the Brood Nest **and every defender** to win; losing your army allows another attempt, while losing all your structures ends the mission.
 
 The briefing explains the build order; the live objective panel shows Riflemen, surviving defenders and the nest's status. Click **Hide objectives** to collapse it to a small **Show objectives** button; click again to restore it. **Enter** begins, **P** pauses, **F9** restarts at the briefing and **R** reopens the end-of-mission statistics. The results retain newly trained units and measure each unit's lifetime from its creation. The 40-supply recommendation is a combat balance target, not a victory gate: strong micro, different units or multiple assaults can change the number required.
 
@@ -306,6 +306,15 @@ Select a Pioneer, press the build hotkey and place the structure. The footprint 
 
 Pioneers gather **crystal** from fields and **aether** through an Aether Tap built on a vent, and carry it back to the nearest main base. Supply comes from main bases and Provision Silos; units and queued units count against it.
 
+Standard bases now have **eight crystal fields in an inward-facing crescent**, alternating four close fields with 900 crystal and four farther fields with 1800. **Two aether vents** flank the arc on cardinal axes, clear of the return lanes. The editor and game share the same template; entire pockets rotate around terrain without scattering individual patches. Three Frontier Hunters expansion sites were repositioned to fit full resource pockets. That mode retains unlimited income through its resource rule.
+
+![The campaign's eight-patch crescent and two flanking gas vents]({{ '/assets/images/robos-rts/36-resource-crescent.png' | relative_url }}){: .robos-zoomable-img }
+
+Workers carry **5 crystal**, **7 from gold fields**, or **4 aether** per trip. Right-clicking a mineral line balances two workers per patch before adding a third. A crystal patch has one active mining spot, so extra workers queue and produce diminishing returns. Each Aether Tap supports three productive workers; a fourth waits behind it without adding throughput. Select a tap to see its assigned worker count. Completed trips credit income at the main base; empty finite deposits never pay out, and depleted crystal meshes disappear.
+
+Gold resource variants use the same crescent and gold-colored meshes. Set `rich: true` on an authored crystal field, or `rich_crystal: true` on a generated resource site. `site_id` keeps worker balancing within that base's mineral line. The reference values follow [Blizzard's resource guide](https://news.blizzard.com/en-us/article/4488900/game-guide-resources); the [editor placement guide](https://s2editor-guides.readthedocs.io/New_Tutorials/07_Lessons/086_Resource_Placement_for_Competitive_Play/) explains resource pockets, symmetry and cardinal gas placement.
+
+
 ![Pioneers mining crystal beside the Colony Hub]({{ '/assets/images/robos-rts/02-gathering-crystal.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ![An Aether Tap on a vent beside the Workshop]({{ '/assets/images/robos-rts/22-aether-tap.jpg' | relative_url }}){: .robos-zoomable-img }
@@ -483,6 +492,8 @@ Scenarios are JSON-LD files in `games/robos-rts/scenarios`. Besides units, resou
 `python run_balance_tests.py --suite shift --suite audio --suite campaign --jobs=1` checks queue outcomes, refunds, sound-event wiring, the paid gas chain and campaign balance. `python run_cucumber_tests.py --backend --tags=@shift_commands` covers queued construction, cancellation, waypoint order, enemy target order, selection modifiers and paid production batches. `python tests/e2e/shift_walkthrough.py` records native mouse/keyboard construction and gather completion on the live clock, without manual stepping. Its MP4, VTT and proof JSON archive to `~/.robos/development/walkthroughs/rts-shift-workers/`.
 
 Run one engine workload at a time during interactive development. Close test-owned engines before handing the game back for playtesting; silent fast-forward recordings must not compete with the playable instance.
+
+`python run_balance_tests.py --suite resources --suite economy --suite shift --jobs=1` checks resource geometry, editor/runtime parity, gold yield, conservation, saturation and worker queues. `python tests/e2e/resource_walkthrough.py` archives a captioned screenshot walkthrough of blue/gold crescents and two paid gas extractors under `~/.robos/development/walkthroughs/rts-resource-economy/`. It uses explicit paused fixtures and manual stepping, so its recording is not a frame-performance measurement.
 
 ## Regenerating these screenshots
 

@@ -347,7 +347,7 @@ func _rebuild_static_3d_map() -> void:
 			var resource: Dictionary = SimEngine.resources[tag]
 			if resource.resource_type != "crystal_field":
 				continue
-			var node = Models.build_resource(resource.resource_type, tag)
+			var node = Models.build_resource(resource.resource_type, tag, bool(resource.get("rich",false)))
 			resources_root.add_child(node)
 			node.position = Vector3(resource.pos.x, SimEngine.get_elevation_at(resource.pos), resource.pos.y)
 			resource_nodes[tag] = node
@@ -398,7 +398,12 @@ func _scatter_decor() -> void:
 	rng.seed = 424242 + int(SimEngine.map_width) * 31 + int(SimEngine.map_height)
 	var keep_out: Array[Vector3] = []
 	for u in SimEngine.units.values():
-		keep_out.append(Vector3(u["pos"].x, u["pos"].y, float(u["radius"]) + 4.5))
+		var radius: float = 20.0 if bool(RTSData.get_unit_def(u.unit_type).get("is_town_hall",false)) else float(u.radius)+4.5
+		keep_out.append(Vector3(u.pos.x,u.pos.y,radius))
+	# Reserve empty expansion pockets too: scenery must not obscure the arc or
+	# the delivery lanes when a player later establishes a base here.
+	for site in SimEngine.match_state.get("starts",[]) + SimEngine.match_state.get("expansions",[]):
+		keep_out.append(Vector3(float(site.x),float(site.y),20.0))
 	for r in SimEngine.resources.values():
 		keep_out.append(Vector3(r["pos"].x, r["pos"].y, float(r["radius"]) + 3.5))
 
@@ -408,7 +413,7 @@ func _scatter_decor() -> void:
 	var rock_m := _get_mat("decor_rock", Color("#6e665c"), Color.BLACK, 0.05, 0.95)
 	var rock_d := _get_mat("decor_rock_dark", Color("#4d463f"), Color.BLACK, 0.05, 0.95)
 	var shrub := _get_mat("shrub", Color("#46602f"), Color.BLACK, 0.0, 0.9)
-	var glow := Models.mat("decor_crystal", Color("#4fd1ff"), Color("#38bdf8"), 1.0, 0.0, 0.2, 0.92)
+	var glow := Models.mat("decor_crystal", Color("#b3a0cf"), Color("#775393"), 0.5, 0.0, 0.2, 0.92)
 
 	var attempts := int(SimEngine.map_width * SimEngine.map_height / 10.0)
 	var max_decor := int(SimEngine.map_width * SimEngine.map_height / 75.0)
@@ -480,12 +485,13 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 	for r_tag in SimEngine.resources.keys():
 		var r: Dictionary = SimEngine.resources[r_tag]
 		if not resource_nodes.has(r_tag):
-			var node := Models.build_resource(str(r["resource_type"]), int(r_tag))
+			var node := Models.build_resource(str(r["resource_type"]), int(r_tag), bool(r.get("rich",false)))
 			resources_root.add_child(node)
 			resource_nodes[r_tag] = node
 		var rn: Node3D = resource_nodes[r_tag]
 		rn.position = Vector3(r["pos"].x, SimEngine.get_elevation_at(r["pos"]), r["pos"].y)
 		if r["resource_type"] == "crystal_field":
+			rn.visible = SimEngine.unlimited_resources or int(r.amount)>0
 			var frac := clampf(float(r["amount"]) / 1500.0, 0.25, 1.0)
 			rn.scale = Vector3(1.0, 0.45 + 0.55 * frac, 1.0)
 		else:

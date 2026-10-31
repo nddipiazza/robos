@@ -5,7 +5,7 @@ Feature: Reusable RTS map authoring
   Scenario: A real mouse stroke survives save, playtest and editor return with undo history
     Given the Frontier Hunters map is open in the editor
     Then the editor preserves the 256 square map, waterways, unlimited resources and eight starts
-    When a mouse stroke paints water from (96.0, 112.0) to (112.0, 112.0)
+    When a mouse stroke paints water from (96.0, 212.0) to (112.0, 212.0)
     Then the editor has 5 painted terrain cells
     When the editor undoes the last edit
     Then the editor has 0 painted terrain cells

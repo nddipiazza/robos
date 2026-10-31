@@ -1,4 +1,5 @@
 from ast import literal_eval
+import time
 from behave import given, when, then
 
 
@@ -11,8 +12,21 @@ def click(context, x, y, **mods):
     context.client.mouse(x,y,pressed=False,**mods)
 
 
+def play_scene(context):
+    # Earlier authoring scenarios intentionally leave the map editor open.
+    if "command_card" in context.client.ui().get("state",{}):
+        return
+    assert context.client.editor("playtest")["ok"]
+    for _ in range(100):
+        if "command_card" in context.client.ui().get("state",{}):
+            return
+        time.sleep(.02)
+    raise AssertionError("The gameplay input scene did not open")
+
+
 @given("the three-worker Shift construction scenario")
 def fixture(context):
+    play_scene(context)
     assert context.client.load_scenario_slug("shift-workers")["ok"]
 
 
@@ -70,6 +84,7 @@ def refund(context):
 
 @given("one Rifleman with two waypoints and a final attack-move")
 def waypoints(context):
+    play_scene(context)
     context.client.load_scenario({"paused":True,"units":[{"type":"rifleman","owner":1,"x":20,"y":20}]})
     for i,(command,x,y) in enumerate([("move",35,20),("move",35,45),("attack_move",55,45)]):
         assert context.client.command(command,tags=[1001],x=x,y=y,queue=i>0)["accepted"]==1
@@ -93,6 +108,7 @@ def arrived(context):
 
 @given("a Rifleman with two queued enemy targets")
 def targets(context):
+    play_scene(context)
     context.client.load_scenario({"paused":True,"units":[{"type":"rifleman","owner":1,"x":40,"y":40},
         {"type":"pioneer","owner":2,"x":60,"y":40},{"type":"pioneer","owner":2,"x":80,"y":40}]})
     context.client.command("hold_position",tags=[1002,1003])
@@ -117,6 +133,7 @@ def target_outcomes(context):
 
 @given("two nearby owned Riflemen")
 def selectable(context):
+    play_scene(context)
     context.client.load_scenario({"paused":True,"units":[{"type":"rifleman","owner":1,"x":40,"y":40},
         {"type":"rifleman","owner":1,"x":48,"y":40}]})
     context.client.focus_camera(44,40,height=50)
@@ -138,6 +155,7 @@ def selection_outcomes(context):
 
 @given("a supplied Muster Hall with 500 crystal")
 def producer(context):
+    play_scene(context)
     context.client.load_scenario({"paused":True,"players":{"1":{"crystal":500,"aether":0}},"units":[
         {"type":"colony_hub","owner":1,"x":20,"y":20},{"type":"muster_hall","owner":1,"x":40,"y":40}]})
     context.client.select(tags=[1002])

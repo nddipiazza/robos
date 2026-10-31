@@ -163,31 +163,12 @@ func _cell_key(cell: Vector2i) -> String:
 	return "%d,%d" % [cell.x, cell.y]
 
 func _generate_site_resources() -> void:
-	var sites: Array = data.starts + data.expansions
-	for index in range(sites.size()):
-		var site: Dictionary = sites[index]
-		var base = Vector2(float(site.x), float(site.y))
-		var outward = (base - Vector2(float(data.width), float(data.height)) * 0.5).normalized()
-		var tangent = Vector2(-outward.y, outward.x)
-		for i in range(8):
-			var pos = _resource_land(base + outward * 13 + tangent * (float(i) - 3.5) * 3.6)
-			data.resources.append({"id": "start_%d_crystal_%d" % [index, i], "type": "crystal_field", "x": pos.x, "y": pos.y, "amount": 50000})
-		for side in [-1, 1]:
-			var pos = _resource_land(base + tangent * side * 17)
-			data.resources.append({"id": "start_%d_aether_%d" % [index, side], "type": "aether_vent", "x": pos.x, "y": pos.y, "amount": 50000})
-
-func _resource_land(pos: Vector2) -> Vector2:
-	for radius in range(0, 24, 2):
-		for i in range(16):
-			var point = pos + Vector2.from_angle(TAU * float(i) / 16.0) * radius
-			var clear = point.x > 4 and point.y > 4 and point.x < float(data.width) - 4 and point.y < float(data.height) - 4
-			for offset in [Vector2.ZERO, Vector2.LEFT * 4, Vector2.RIGHT * 4, Vector2.UP * 4, Vector2.DOWN * 4]:
-				var sample: Vector2 = point + offset
-				if terrain_at(Vector2i(int(sample.x / TERRAIN_CELL_SIZE), int(sample.y / TERRAIN_CELL_SIZE))) in ["water", "cliff"]:
-					clear = false
-			if clear:
-				return point
-	return pos
+	var map := {"width":data.width,"height":data.height,"starts":data.starts,"expansions":data.expansions,
+		"water_channels":data.water_channels,"bridges":data.bridges,"obstacles":data.obstacles,"terrain_tiles":[]}
+	for key in data.terrain_tiles:
+		var cell := str(key).split(",")
+		map.terrain_tiles.append({"x":int(cell[0])*4,"y":int(cell[1])*4,"terrain":data.terrain_tiles[key]})
+	data.resources.append_array(preload("res://scripts/engine/RTSResourceLayout.gd").for_map(map))
 
 func terrain_at(cell: Vector2i) -> String:
 	var key = _cell_key(cell)
