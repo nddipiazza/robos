@@ -28,6 +28,8 @@ const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
 const REPAIR_COST_FRACTION: float = 0.25
 const REPAIR_RANGE: float = 1.6
+const AUTO_REPAIR_RADIUS: float = 10.0
+const AUTO_REPAIR_SCAN_TICKS: int = 16
 
 var tick: int = 0
 var sim_time: float = 0.0
@@ -701,6 +703,9 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"attack_state_timer": 0.0,
 		"attack_cycle_elapsed": 0.0,
 		"attack_target_tag": 0,
+		"auto_repair_enabled": false,
+		"auto_repair_origin": Vector2.INF,
+		"auto_repair_next_scan": 0,
 		"weapon_cooldown": 0.0,
 		"surge_timer": 0.0,
 		"charge_timer": 0.0,
@@ -1094,6 +1099,8 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			return
 
 	if u["orders"].is_empty():
+		_try_auto_repair(u)
+	if u["orders"].is_empty():
 		var enemy = _find_best_attack_target(u, false)
 		if not enemy.is_empty():
 			var wpn_range = _get_weapon_range(u)
@@ -1180,9 +1187,58 @@ func can_repair(worker: Dictionary, target: Dictionary) -> bool:
 		and worker.build_progress>=1.0 and target.build_progress>=1.0 \
 		and "Mechanical" in target.get("attributes",[]) and target.hp < target.max_hp
 
+func _toggle_auto_repair(candidates: Array[Dictionary], state: String) -> Dictionary:
+	if state not in ["", "on", "off"]:
+		return {"ok": false, "accepted": 0, "error": "Auto Repair state must be on or off"}
+	var pioneers := candidates.filter(func(u): return u.unit_type == "pioneer" and u.hp > 0 and u.build_progress >= 1.0)
+	var enabled: bool = state == "on" or (state == "" and not pioneers.all(func(u): return u.auto_repair_enabled))
+	for worker in pioneers:
+		if worker.auto_repair_enabled != enabled:
+			worker.auto_repair_enabled = enabled
+			worker.auto_repair_origin = Vector2.INF
+			worker.auto_repair_next_scan = tick
+		if not enabled:
+			_cancel_automatic_repair(worker)
+	return {"ok": not pioneers.is_empty(), "accepted": pioneers.size(), "enabled": enabled}
+
+func _cancel_automatic_repair(worker: Dictionary) -> void:
+	if worker.orders.is_empty() or not bool(worker.orders[0].get("automatic", false)):
+		return
+	worker.orders.pop_front()
+	worker["repair_state"] = ""
+	worker.path.clear()
+	worker.crowd_path.clear()
+	worker.crowd_retry_tick = 0
+	worker.vel = Vector2.ZERO
+
+func _within_auto_repair_area(worker: Dictionary, target: Dictionary) -> bool:
+	return worker.auto_repair_origin.distance_to(target.pos) <= AUTO_REPAIR_RADIUS + worker.radius + target.radius
+
+func _try_auto_repair(worker: Dictionary) -> void:
+	if worker.unit_type != "pioneer" or not worker.auto_repair_enabled or worker.attack_state != "idle" \
+		or worker.hp <= 0 or worker.build_progress < 1.0 or tick < worker.auto_repair_next_scan:
+		return
+	# Stagger bounded local searches; enabled idle workers never scan the army
+	# every frame. Keep the original idle area through successive auto repairs.
+	worker.auto_repair_next_scan = tick + AUTO_REPAIR_SCAN_TICKS + int(worker.tag) % 4
+	if worker.auto_repair_origin == Vector2.INF:
+		worker.auto_repair_origin = worker.pos
+	var best: Dictionary = {}
+	var distance := INF
+	for target in query_units_in_radius(worker.auto_repair_origin, AUTO_REPAIR_RADIUS + worker.radius):
+		if not can_repair(worker, target):
+			continue
+		var candidate_distance := _edge_distance(worker, target)
+		if candidate_distance < distance or (is_equal_approx(candidate_distance, distance) and (best.is_empty() or target.tag < best.tag)):
+			best = target
+			distance = candidate_distance
+	if not best.is_empty():
+		worker.orders.append({"type": "repair", "target_tag": best.tag, "automatic": true})
+		worker.has_home_pos = false
+
 func _process_worker_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> void:
 	var target: Dictionary = units.get(int(order.get("target_tag",0)),{})
-	if not can_repair(worker,target):
+	if not can_repair(worker,target) or (bool(order.get("automatic", false)) and (not worker.auto_repair_enabled or not _within_auto_repair_area(worker, target))):
 		worker.orders.pop_front()
 		worker["repair_state"]=""
 		worker.path.clear()
@@ -1795,6 +1851,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	if valid_units.is_empty():
 		return {"ok": false, "accepted": 0, "error": "No valid unit tags"}
+	# A stance toggle changes future idle behavior without replacing paid work,
+	# queued commands, or an explicitly ordered repair (including builders).
+	if cmd_type.to_lower() == "auto_repair":
+		return _toggle_auto_repair(valid_units, extra)
 
 	var group_size = valid_units.size()
 	var dynamic_arrival = clampf(0.85 + sqrt(float(group_size)) * 0.65, 0.85, 5.5)
@@ -1957,6 +2017,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "stop":
+			u.auto_repair_enabled = false
+			u.auto_repair_origin = Vector2.INF
 			u["repair_state"]=""
 			_release_mining_claim(u)
 			u["orders"].clear()
@@ -1967,6 +2029,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "hold_position":
+			u.auto_repair_origin = Vector2.INF
 			u["repair_state"]=""
 			_release_mining_claim(u)
 			u["orders"] = [{"type": "hold_position"}]
@@ -1976,6 +2039,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 			continue
 
+		if ctype in ["move", "attack", "attack_move", "attack_target", "harvest", "repair", "build", "resume_build"] or ctype.begins_with("build_"):
+			_cancel_automatic_repair(u)
+			u.auto_repair_origin = Vector2.INF
 		if not queue:
 			u["repair_state"]=""
 			_release_mining_claim(u)
@@ -2288,6 +2354,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"production_queue_len": u["production_queue"].size(),
 			"assigned_workers": int(u.get("assigned_workers",0)), "harvest_state": str(u.get("harvest_state","")),
 			"repair_state": str(u.get("repair_state","")),
+			"auto_repair_enabled": bool(u.auto_repair_enabled),
 			"repair_hp_total": float(u.get("repair_hp_total",0.0)),
 			"repair_crystal_paid": int(u.get("repair_crystal_paid",0)), "repair_aether_paid": int(u.get("repair_aether_paid",0)),
 			"kills": u["kills"]

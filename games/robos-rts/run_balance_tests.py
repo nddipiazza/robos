@@ -28,6 +28,7 @@ SUITES = {
     "statistics": "test_battle_stats.gd",
     "resources": "test_resource_economy.gd",
     "repair": "test_pioneer_repair.gd",
+    "auto_repair": "test_auto_repair.gd",
 }
 
 

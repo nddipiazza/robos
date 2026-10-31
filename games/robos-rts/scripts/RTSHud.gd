@@ -639,6 +639,8 @@ func _draw_single(u: Dictionary) -> void:
 			status.append("Surge  %.0fs" % float(u["surge_timer"]))
 		if float(u["phase_cooldown"]) > 0.0:
 			status.append("Phase Step  %.0fs" % float(u["phase_cooldown"]))
+		if u.unit_type == "pioneer":
+			status.append("Auto Repair: " + ("On" if u.auto_repair_enabled else "Off"))
 	if u["is_structure"] and not building:
 		var prov := int(def.get("supply_provided", 0))
 		if prov > 0:
@@ -693,7 +695,14 @@ func _draw_command_card() -> void:
 		if pending:
 			border = C_GOLD
 			bw = 3.0
+		var toggle_state := str(btn.get("toggle_state", ""))
+		if toggle_state in ["On", "Mixed"]:
+			border = C_GOLD if toggle_state == "On" else C_MUTED
+			bw = 3.0
 		draw_rect(r, border, false, bw)
+		if toggle_state != "":
+			draw_rect(Rect2(r.position.x + 4, r.end.y - 17, r.size.x - 8, 15), Color(0, 0, 0, 0.85))
+			_text(Vector2(r.position.x, r.end.y - 5), toggle_state.to_upper(), 12, C_GOLD if toggle_state == "On" else C_MUTED, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
 		var hk := str(adef.get("hotkey", ""))
 		if hk != "":
 			var badge := Rect2(r.position + Vector2(3, 3), Vector2(19, 19))
@@ -716,10 +725,12 @@ func _glyph(id: String, r: Rect2) -> void:
 		"stop":
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color("#e06a5e"))
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color(0, 0, 0, 0.5), false, 1.0)
-		"repair":
+		"repair", "auto_repair":
 			draw_line(c+Vector2(-15,15)*u,c+Vector2(11,-11)*u,Color("#f6c66a"),7.0*u,true)
 			draw_arc(c+Vector2(12,-12)*u,10.0*u,deg_to_rad(-20),deg_to_rad(250),20,Color("#dbe4ee"),5.0*u,true)
 			draw_circle(c+Vector2(-15,15)*u,4.0*u,Color("#dbe4ee"))
+			if id == "auto_repair":
+				draw_arc(c, 23.0*u, deg_to_rad(160), deg_to_rad(350), 20, accent, 2.0*u, true)
 		"cancel_build":
 			draw_arc(c, 20.0 * u, 0.0, TAU, 32, Color("#ee806c"), 3.0 * u, true)
 			draw_line(c + Vector2(-12, -12) * u, c + Vector2(12, 12) * u, Color("#ee806c"), 5.0 * u)

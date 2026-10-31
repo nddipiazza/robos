@@ -71,6 +71,12 @@ The tests prove refunds, supply release, queue continuity, actual resource incom
 
 Select Pioneers and **right-click a damaged friendly mechanical unit or completed building** to repair it. **E**, then a target click, does the same thing. A gold repair marker acknowledges the command; the worker panel shows whether it is approaching, repairing, or paused for resources. **S / Halt** stops work. Shift queues repair and subsequent moves or gathering. A damaged Aether Tap is repaired before gathering from its vent; right-clicking a healthy Tap still gathers gas. Unfinished buildings retain the existing resume-construction behavior.
 
+**Auto Repair (T)** is a separate toggle, initially **Off**. Enabled idle Pioneers repair the nearest eligible target within ten range of their idle position, then look for the next damaged target in that area. The button shows **On**, **Off**, or **Mixed** for the selection; an enabled toggle has a gold outline. Clicking a mixed selection enables all selected Pioneers, while clicking an enabled group disables them all. Automatic repair uses the same paid work and pauses when resources run out.
+
+Player orders take priority over automatic work, including Shift-clicked moves. Gathering, construction, Hold Position, and queued jobs keep running when you enable the toggle. After a manual move finishes, the Pioneer can repair around its new idle position. Automatic work stays within its original local area rather than chasing a moving target across the map. Toggling off stops automatic repair while preserving a directly ordered repair; **Halt** clears all work and turns Auto Repair off.
+
+![Enabled Auto Repair: the Pioneer heals a nearby Howitzer while the command card and worker panel show On](/assets/images/robos-rts/38-auto-repair.png){: .robos-zoomable-img }
+
 Each Pioneer restores one full health bar over the target's construction time. Restoring a full bar costs **25% of the target's crystal and aether price**, prorated by actual HP restored. Integral costs round up cumulatively on the target, so multiple repairers, interruption, and later damage share paid fractional credit. Extra Pioneers increase speed without increasing total cost. Workers spend nothing while approaching or after completion; insufficient resources pause work until funds arrive. Pioneers cannot repair themselves, enemies, biological targets, or unfinished foundations.
 
 | Target and damage | One Pioneer, already in range | Total repair cost |
@@ -85,12 +91,12 @@ Battle results include HP restored by repairers and repair spending, with each w
 
 ```bash
 cd games/robos-rts
-python run_balance_tests.py --suite repair --suite economy --suite controls --suite shift --suite audio --suite statistics --jobs=1
+python run_balance_tests.py --suite auto_repair --suite repair --suite economy --suite controls --suite shift --suite audio --suite statistics --jobs=1
 python run_cucumber_tests.py --backend --tags=@pioneer_repair
 python tests/e2e/repair_walkthrough.py
 ```
 
-The tests assert numeric healing rates, exact resource debits, budget caps, pause/resume, multiple workers, mode changes, moving targets, invalid targets, Halt, Shift follow-ups, gas-building priority, audio wiring and telemetry. The rendered walkthrough exercises actual mouse/key handlers on a paused, manually stepped fixture. Its captioned screenshot video, proof JSON and summary archive to `~/.robos/development/walkthroughs/rts-pioneer-repair/`; it is not a live-play performance or audibility measurement. The fixture is `scenarios/pioneer-repair.jsonld`.
+The tests assert numeric healing rates, exact resource debits, budget caps, pause/resume, multiple workers, mode changes, moving targets, invalid targets, Halt, Shift follow-ups, gas-building priority, audio wiring and telemetry. Auto Repair tests also prove default-off behavior, nearest-target selection, local range, successive targets, group toggle states, busy-worker preservation and manual order priority. The rendered walkthrough exercises actual mouse/key handlers, including T and the toggle button, on a paused, manually stepped fixture. Its captioned screenshot video, proof JSON and summary archive to `~/.robos/development/walkthroughs/rts-pioneer-repair/`; it is not a live-play performance or audibility measurement. The fixture is `scenarios/pioneer-repair.jsonld`.
 
 ## Campaign: First Strike
 

@@ -16,6 +16,7 @@ func _run() -> void:
 	covered_abilities.append_array(economy_constants.COVERED_ABILITIES)
 	covered_abilities.append_array(load("res://tests/test_shift_commands.gd").get_script_constant_map().COVERED_ABILITIES)
 	covered_abilities.append_array(load("res://tests/test_pioneer_repair.gd").get_script_constant_map().COVERED_ABILITIES)
+	covered_abilities.append_array(load("res://tests/test_auto_repair.gd").get_script_constant_map().COVERED_ABILITIES)
 	for kind in data.units:
 		if not covered_units.has(kind):
 			failures.append("Unit missing behavioral contracts: " + kind)

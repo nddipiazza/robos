@@ -864,6 +864,12 @@ func get_card_buttons() -> Array[Dictionary]:
 		var col := i % 5
 		var abil_id := str(abils[i])
 		var adef := RTSData.get_ability_def(abil_id).duplicate()
+		var toggle_state := ""
+		if abil_id == "auto_repair":
+			var pioneers := selected_owned().filter(func(u): return u.unit_type == "pioneer")
+			var enabled_count := pioneers.filter(func(u): return u.auto_repair_enabled).size()
+			toggle_state = "On" if enabled_count == pioneers.size() else ("Mixed" if enabled_count > 0 else "Off")
+			adef["name"] = "Auto Repair: " + toggle_state
 		var reason := ""
 		if abil_id == "cancel_build":
 			reason = "" if own_selection_can_cancel() else "No construction to cancel."
@@ -884,6 +890,7 @@ func get_card_buttons() -> Array[Dictionary]:
 			reserved_hotkeys[hotkey] = true
 		buttons.append({
 			"ability_id": abil_id,
+			"toggle_state": toggle_state,
 			"def": adef,
 			"rect": Rect2(CARD_ORIGIN + Vector2(col * (CARD_BTN + CARD_GAP), row * (CARD_BTN + CARD_GAP)), Vector2(CARD_BTN, CARD_BTN)),
 			"blocked": reason,
@@ -1130,6 +1137,7 @@ func ui_state() -> Dictionary:
 	var commands: Array = []
 	for button in get_card_buttons():
 		commands.append({"ability": button.ability_id, "hotkey": button.def.get("hotkey", ""), "blocked": button.blocked,
+			"name": button.def.get("name", ""), "toggle_state": button.get("toggle_state", ""),
 			"rect": [button.rect.position.x, button.rect.position.y, button.rect.size.x, button.rect.size.y]})
 	return {
 		"command_feedback": command_feedback.duplicate(),

@@ -44,7 +44,7 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "repair", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop"]
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "repair", "auto_repair", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop"]
 	},
 	"rifleman": {
 		"id": "rifleman",
@@ -660,6 +660,7 @@ var units: Dictionary = {
 
 var abilities: Dictionary = {
 	"repair": {"id":"repair", "name":"Repair", "hotkey":"E", "target":"point_or_unit", "desc":"Repair a friendly mechanical unit or completed structure. A full health bar costs one quarter of its price, prorated as health is restored. Pauses when resources run out."},
+	"auto_repair": {"id": "auto_repair", "name": "Auto Repair: Off", "hotkey": "T", "target": "none", "desc": "Toggle paid automatic repair while idle. Repairs the nearest damaged friendly machine or completed mechanical building within 10 range of the idle position. Player orders take priority. Halt turns Auto Repair off."},
 	"cancel_build": {"id": "cancel_build", "name": "Cancel Construction", "hotkey": "N", "target": "none", "desc": "Remove the unfinished foundation and refund 75% of its paid cost. Stop / Halt only pauses construction."},
 	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point", "desc": "Move to a location. Units do not stop for enemies on the way."},
 	"stop": {"id": "stop", "name": "Stop / Halt", "hotkey": "S", "target": "none", "desc": "Stop and clear orders. Builders pause construction; right-click the unfinished structure to resume."},

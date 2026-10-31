@@ -26,3 +26,28 @@ Feature: Pioneers repair damaged friendly machines with paid work
     When the Pioneer right-clicks the damaged Aether Tap
     Then the Tap reaches 500 HP for 10 crystal and zero aether
     And right-clicking the healthy Tap orders gas gathering
+
+  @auto_repair
+  Scenario: Idle automatic repair has the same healing and price as a direct order
+    Given the paused Pioneer repair fixture with 100 crystal and 100 aether
+    When the player enables Auto Repair with T
+    Then one second restores exactly 5.46875 HP and spends 2 crystal and 1 aether
+    And completing the repair restores 140 HP for exactly 30 crystal and 25 aether
+    And the Auto Repair button remains On while the Pioneer is idle
+
+  @auto_repair
+  Scenario: The Auto Repair button stops automatic work immediately
+    Given the paused Pioneer repair fixture with 100 crystal and 100 aether
+    When the player enables Auto Repair with T
+    Then one second restores exactly 5.46875 HP and spends 2 crystal and 1 aether
+    When the player clicks the Auto Repair toggle off and five seconds pass
+    Then the Howitzer stays at 40.46875 HP and the resource balances stay at 98 and 99
+    And the Auto Repair button shows Off
+
+  @auto_repair
+  Scenario: Shift movement takes priority over automatic repair
+    Given the paused Pioneer repair fixture with 100 crystal and 100 aether
+    When the player enables Auto Repair with T
+    Then one second restores exactly 5.46875 HP and spends 2 crystal and 1 aether
+    When the Pioneer receives a Shift-right-click move during automatic repair
+    Then the Pioneer moves without more healing or spending and keeps Auto Repair enabled

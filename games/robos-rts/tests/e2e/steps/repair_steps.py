@@ -105,3 +105,55 @@ def tap_outcome(context):
 def tap_gather(context):
     click_repair_target(context, "aether_tap")
     assert repair_unit(context, "pioneer")["orders"][0]["type"] == "harvest"
+
+
+def auto_repair_button(context):
+    return next(b for b in context.client.ui()["state"]["command_card"] if b["ability"] == "auto_repair")
+
+
+@when("the player enables Auto Repair with T")
+def enable_auto_repair(context):
+    assert auto_repair_button(context)["toggle_state"] == "Off"
+    context.client.key("T", True)
+    context.client.key("T", False)
+    assert auto_repair_button(context)["toggle_state"] == "On"
+    assert repair_unit(context, "pioneer")["auto_repair_enabled"]
+
+
+@then("the Auto Repair button remains On while the Pioneer is idle")
+def enabled_after_completion(context):
+    assert auto_repair_button(context)["toggle_state"] == "On"
+    worker = repair_unit(context, "pioneer")
+    assert worker["auto_repair_enabled"] and not worker["orders"]
+
+
+@when("the player clicks the Auto Repair toggle off and five seconds pass")
+def disable_auto_repair(context):
+    x, y, w, h = auto_repair_button(context)["rect"]
+    context.client.mouse(x + w / 2, y + h / 2, pressed=True)
+    context.client.mouse(x + w / 2, y + h / 2, pressed=False)
+    context.client.step(5 * 64)
+
+
+@then("the Auto Repair button shows Off")
+def disabled_card(context):
+    assert auto_repair_button(context)["toggle_state"] == "Off"
+    assert not repair_unit(context, "pioneer")["auto_repair_enabled"]
+
+
+@when("the Pioneer receives a Shift-right-click move during automatic repair")
+def override_auto_repair(context):
+    x, y = context.client.project((25, 50, 0))[0]
+    context.client.mouse(x, y, button=2, pressed=True, shift=True)
+    context.client.mouse(x, y, button=2, pressed=False, shift=True)
+    assert [o["type"] for o in repair_unit(context, "pioneer")["orders"]] == ["move"]
+
+
+@then("the Pioneer moves without more healing or spending and keeps Auto Repair enabled")
+def manual_priority(context):
+    obs = context.client.step(64)
+    worker = repair_unit(context, "pioneer")
+    assert worker["pos"]["x"] < 33 and worker["auto_repair_enabled"]
+    assert worker["orders"][0]["type"] == "move"
+    assert abs(repair_unit(context, "howitzer")["repair_hp_total"] - 5.46875) < .00001
+    assert (obs["players"]["1"]["crystal"], obs["players"]["1"]["aether"]) == (98, 99)

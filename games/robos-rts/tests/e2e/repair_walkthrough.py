@@ -128,6 +128,40 @@ def main():
             assert unit("pioneer")["repair_state"] == "resources"
             assert (obs["players"]["1"]["crystal"], obs["players"]["1"]["aether"]) == (0, 0)
             proof("no-funds", "Repair pauses when resources run out", "With zero resources, the Howitzer remains at 35 HP and the Pioneer keeps its paused repair order. No free healing or negative balances.")
+            fresh()
+            client.key("T", True)
+            client.key("T", False)
+            button = next(b for b in client.ui()["state"]["command_card"] if b["ability"] == "auto_repair")
+            assert button["toggle_state"] == "On"
+            obs = client.step(64)
+            assert unit("pioneer")["orders"][0]["automatic"]
+            assert abs(unit("howitzer")["repair_hp_total"] - 5.46875) < .00001
+            assert (obs["players"]["1"]["crystal"], obs["players"]["1"]["aether"]) == (98, 99)
+            proof("auto-on", "Auto Repair: On", "Pressing T enables idle repair. The Pioneer acquires the nearby Howitzer itself and restores 5.46875 HP in one second for 2 crystal and 1 aether.")
+            x, y, w, h = button["rect"]
+            client.mouse(x + w / 2, y + h / 2, pressed=True)
+            client.mouse(x + w / 2, y + h / 2, pressed=False)
+            obs = client.step(5 * 64)
+            assert not unit("pioneer")["auto_repair_enabled"] and not unit("pioneer")["orders"]
+            assert abs(unit("howitzer")["repair_hp_total"] - 5.46875) < .00001
+            assert (obs["players"]["1"]["crystal"], obs["players"]["1"]["aether"]) == (98, 99)
+            proof("auto-off", "Toggle off stops automatic work", "Clicking the toggle turns it Off and clears only the automatic repair order. Five seconds pass with no further healing or spending.")
+            client.key("T", True)
+            client.key("T", False)
+            client.step(1)
+            assert unit("pioneer")["orders"][0]["automatic"]
+            hp_before_move = unit("howitzer")["repair_hp_total"]
+            balance_before_move = client.get_observation()["players"]["1"]
+            client.focus_camera(40, 43, height=64)
+            x, y = client.project((25, 50, 0))[0]
+            client.mouse(x, y, button=2, pressed=True, shift=True)
+            client.mouse(x, y, button=2, pressed=False, shift=True)
+            assert [o["type"] for o in unit("pioneer")["orders"]] == ["move"]
+            obs = client.step(64)
+            assert unit("pioneer")["auto_repair_enabled"] and unit("pioneer")["pos"]["x"] < 33
+            assert unit("howitzer")["repair_hp_total"] == hp_before_move
+            assert (obs["players"]["1"]["crystal"], obs["players"]["1"]["aether"]) == (balance_before_move["crystal"], balance_before_move["aether"])
+            proof("auto-move", "Player orders take priority", "Shift-right-click interrupts automatic work immediately. The Pioneer moves with Auto Repair still On, ready for its next idle position; travel costs nothing.")
         finally:
             proc.terminate()
             try:
@@ -140,6 +174,7 @@ def main():
     (output / "proof.json").write_text(json.dumps({"passed": True, "manual_step_fixture": True,
         "howitzer_hp_restored": 140, "howitzer_cost": [30, 25], "silo_hp_restored": 200, "silo_cost": [13, 0],
         "native_input": True, "halt_resume": True, "shift_followup": True, "tap_priority": True, "no_free_healing": True,
+        "auto_repair_hotkey": True, "auto_repair_button_off": True, "manual_override": True,
         "events": events}, indent=2), encoding="utf-8")
     import imageio_ffmpeg
     ffmpeg = shutil.which("ffmpeg") or imageio_ffmpeg.get_ffmpeg_exe()
@@ -162,7 +197,7 @@ def main():
     for name in ["walkthrough.mp4", "walkthrough.vtt", "walkthrough.md", "proof.json", *[e["file"] for e in events]]:
         shutil.copy2(output / name, history / name)
         shutil.copy2(output / name, archive / name)
-    print("PASS: native repair, exact costs, Halt, Shift, Tap priority and zero funds. " + str(output), flush=True)
+    print("PASS: native repair, exact costs, Halt, Shift, Tap priority, zero funds and Auto Repair toggle/override. " + str(output), flush=True)
 
 
 if __name__ == "__main__":
