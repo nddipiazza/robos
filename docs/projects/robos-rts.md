@@ -141,13 +141,37 @@ The layout follows RTS convention: resources top-right, minimap bottom-left, the
 
 ### Selecting units
 
-Drag a box to select a squad. In a mixed selection the gold-bordered type is the active subgroup, which owns the command card; press **Tab** to cycle it. Double click selects every unit of that type on screen. Ctrl+1 to 9 sets a control group and the number recalls it; double press to center the camera.
+Drag a box to select a squad. In a mixed selection the gold-bordered type is the active subgroup, which owns the command card; press **Tab** to cycle it. Double click selects every unit of that type on screen.
+
+The numbered slots above the selection panel save your own living units and structures. Hover a slot for instructions; its gold border indicates that its members match the current selection. Use the keyboard or the same modifiers while clicking a slot:
+
+| Controls | Result |
+|:---|:---|
+| Ctrl + 1–9 / Ctrl + click | Replace the group with the current selection. An empty selection clears it. Command also works on macOS. |
+| Ctrl + Shift + 1–9 / Ctrl + Shift + click | Add the selected units to the group without duplicates. |
+| 1–9 / click | Recall the group, replacing the selection. An empty group preserves the selection. |
+| Shift + 1–9 / Shift + click | Add the group to the current selection. |
+| Double tap a number / double click a slot | Recall and center the camera on the first surviving member. |
+
+Destroyed units are removed from groups. Groups reset when a new scenario loads or the viewed faction changes. F1 also lists the shortcuts.
+
+Control-group regression checks run through the same input handlers as play:
+
+```bash
+cd games/robos-rts
+godot --headless --path . --script res://tests/test_control_groups.gd
+python run_cucumber_tests.py --backend --tags=@control_groups
+python run_cucumber_tests.py --human --tags=@control_groups
+RTS_MODE=human python -m behave tests/e2e/features/ui
+```
+
+The direct checks cover all slots, box selection, structures, ownership, destroyed members, clearing, key repeat and player/scenario resets. Cucumber checks use mouse selection and keyboard input through the public API; the rendered HUD feature verifies modifier clicks, additive recall and double-click camera focus, and saves `tests/e2e/reports/control-groups.png`.
 
 ![Eight units box-selected: six Riflemen, a Breacher and a Howitzer]({{ '/assets/images/robos-rts/06-squad-selection.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ![Control group tabs above the selection panel and the idle worker button at the left]({{ '/assets/images/robos-rts/12-control-groups-idle-workers.jpg' | relative_url }}){: .robos-zoomable-img }
 
-*Control group tabs sit above the selection panel. The idle worker button at the left appears only while a Pioneer has nothing to do; **.** selects the next one.*
+*Control group slots sit above the selection panel. The idle worker button at the left appears only while a Pioneer has nothing to do; **.** selects the next one.*
 
 ### Commands, costs and tooltips
 

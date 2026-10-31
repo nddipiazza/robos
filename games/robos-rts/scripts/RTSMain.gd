@@ -76,6 +76,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	selected_tags.clear()
 	pending_ability = ""
 	control_groups.clear()
+	_last_group_press.clear()
 	messages.clear()
 	alerts.clear()
 	click_markers.clear()
@@ -180,17 +181,7 @@ func _process(delta: float) -> void:
 		if click_markers[i]["ttl"] <= 0.0:
 			click_markers.remove_at(i)
 
-	var alive: Array[int] = []
-	for t in selected_tags:
-		if SimEngine.units.has(t):
-			alive.append(t)
-	selected_tags = alive
-	for g in control_groups.keys():
-		var kept: Array = []
-		for t in control_groups[g]:
-			if SimEngine.units.has(t):
-				kept.append(t)
-		control_groups[g] = kept
+	_prune_control_groups()
 
 	if world_3d:
 		world_3d.sync_3d_entities(selected_tags, delta, local_player)
@@ -251,6 +242,7 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 	return best
 
 func _select_tags(tags: Array, add: bool = false) -> void:
+	_last_group_press.clear()
 	if not add:
 		selected_tags.clear()
 	for t in tags:
@@ -318,7 +310,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		mm_dragging = false
 		if is_box_selecting:
 			is_box_selecting = false
-			_complete_box_selection(box_start_screen, box_end_screen, Input.is_key_pressed(KEY_SHIFT), mb.double_click)
+			_complete_box_selection(box_start_screen, box_end_screen, mb.shift_pressed, mb.double_click)
 		return
 
 	if mpos.y >= HUD_TOP - 40.0 and _hud_hit(mb, mpos):
@@ -347,6 +339,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	var right := mb.button_index == MOUSE_BUTTON_RIGHT
 
 	if MINIMAP.grow(6.0).has_point(mpos):
+		_last_group_press.clear()
 		if left:
 			mm_dragging = true
 			world_3d.set_focus(minimap_to_world(mpos))
@@ -361,8 +354,9 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if left:
 		for g in hud.group_tab_rects().keys():
 			if hud.group_tab_rects()[g].has_point(mpos):
-				_recall_group(int(g))
+				_handle_group_input(int(g), mb.ctrl_pressed or mb.meta_pressed, mb.shift_pressed)
 				return true
+		_last_group_press.clear()
 		var cells: Array = hud.selection_cells()
 		for c in cells:
 			if c["rect"].has_point(mpos):
@@ -381,6 +375,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	return mpos.y >= HUD_TOP
 
 func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_double_click: bool) -> void:
+	_last_group_press.clear()
 	if not add_shift:
 		selected_tags.clear()
 	active_type = ""
@@ -665,29 +660,88 @@ func _hotkey_char(ke: InputEventKey) -> String:
 	var s := OS.get_keycode_string(ke.keycode)
 	return s.to_upper() if s.length() == 1 else ""
 
-func _recall_group(g: int) -> void:
+func _living_tags(tags: Array, owned_only: bool = false) -> Array[int]:
+	var out: Array[int] = []
+	var seen := {}
+	for tag in tags:
+		var t := int(tag)
+		var u: Dictionary = SimEngine.units.get(t, {})
+		if u.is_empty() or float(u.get("hp", 0.0)) <= 0.0:
+			continue
+		if owned_only and int(u["owner"]) != local_player:
+			continue
+		if not seen.has(t):
+			out.append(t)
+			seen[t] = true
+	return out
+
+func _prune_control_groups() -> void:
+	selected_tags = _living_tags(selected_tags)
+	for g in control_groups.keys():
+		var kept := _living_tags(control_groups[g], true)
+		if kept.is_empty():
+			control_groups.erase(g)
+		else:
+			control_groups[g] = kept
+
+func _set_control_group(g: int, tags: Array, append: bool = false) -> void:
+	if g < 1 or g > 9:
+		return
+	var members := _living_tags(tags, true)
+	if append:
+		var existing := _living_tags(control_groups.get(g, []), true)
+		for t in members:
+			if not existing.has(t):
+				existing.append(t)
+		members = existing
+	if members.is_empty():
+		control_groups.erase(g)
+	else:
+		control_groups[g] = members
+	_last_group_press.clear()
+	push_message("Control group %d: %d units." % [g, members.size()], "info")
+
+func _handle_group_input(g: int, assign: bool, add: bool) -> void:
+	if assign:
+		_set_control_group(g, selected_tags, add)
+	else:
+		_recall_group(g, add)
+
+func _recall_group(g: int, add: bool = false) -> void:
+	_prune_control_groups()
 	if not control_groups.has(g) or control_groups[g].is_empty():
+		_last_group_press.clear()
 		return
 	var now := Time.get_ticks_msec()
 	var last: int = int(_last_group_press.get(g, -10000))
-	_select_tags(control_groups[g])
-	if now - last < 400:
-		var first: Dictionary = SimEngine.units.get(selected_tags[0], {})
-		if not first.is_empty():
-			world_3d.set_focus(first["pos"])
-	_last_group_press[g] = now
+	_select_tags(control_groups[g], add)
+	pending_ability = ""
+	if not add and now - last < 400 and world_3d:
+		var first: Dictionary = SimEngine.units[control_groups[g][0]]
+		world_3d.set_focus(first["pos"])
+	_last_group_press.clear()
+	if not add:
+		_last_group_press[g] = now
+
+func _set_local_player(player: int) -> void:
+	if player == local_player:
+		return
+	local_player = player
+	selected_tags.clear()
+	control_groups.clear()
+	_last_group_press.clear()
+	active_type = ""
+	pending_ability = ""
 
 func _handle_hotkey(ke: InputEventKey) -> void:
 	if ke.keycode >= KEY_1 and ke.keycode <= KEY_9:
+		if ke.alt_pressed:
+			_last_group_press.clear()
+			return
 		var grp: int = ke.keycode - KEY_0
-		if ke.ctrl_pressed:
-			control_groups[grp] = selected_tags.duplicate()
-			push_message("Control group %d set." % grp, "info")
-		elif ke.shift_pressed and control_groups.has(grp):
-			_select_tags(control_groups[grp], true)
-		else:
-			_recall_group(grp)
+		_handle_group_input(grp, ke.ctrl_pressed or ke.meta_pressed, ke.shift_pressed)
 		return
+	_last_group_press.clear()
 
 	match ke.keycode:
 		KEY_F8:
@@ -720,9 +774,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		KEY_F2:
 			if not SimEngine.match_state.is_empty():
 				return
-			local_player = local_player % 3 + 1
-			selected_tags.clear()
-			pending_ability = ""
+			_set_local_player(local_player % 3 + 1)
 			focus_on_base()
 			return
 		KEY_SPACE:
@@ -774,7 +826,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 # External state hook used by the control server (screenshots, scripted demos)
 func apply_ui_state(d: Dictionary) -> Dictionary:
 	if d.has("local_player"):
-		local_player = int(d["local_player"])
+		_set_local_player(int(d["local_player"]))
 	if d.has("hover"):
 		var h = d["hover"]
 		if typeof(h) == TYPE_ARRAY and h.size() >= 2:
@@ -797,11 +849,7 @@ func apply_ui_state(d: Dictionary) -> Dictionary:
 		active_type = str(d["active_type"])
 	if d.has("control_group"):
 		var cg: Dictionary = d["control_group"]
-		var tags: Array = cg.get("tags", [])
-		var arr: Array = []
-		for t in tags:
-			arr.append(int(t))
-		control_groups[int(cg.get("id", 1))] = arr
+		_set_control_group(int(cg.get("id", 1)), cg.get("tags", []))
 	if d.has("clear_messages") and bool(d["clear_messages"]):
 		messages.clear()
 	if d.has("message"):
@@ -819,6 +867,7 @@ func apply_ui_state(d: Dictionary) -> Dictionary:
 	return st
 
 func ui_state() -> Dictionary:
+	_prune_control_groups()
 	var msgs: Array = []
 	for m in messages:
 		msgs.append(m["text"])
@@ -835,7 +884,8 @@ func ui_state() -> Dictionary:
 		"messages": msgs,
 		"camera_focus": [f.x, f.y],
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
-		"control_groups": control_groups.keys().size()
+		"control_groups": control_groups.keys().size(),
+		"control_group_members": control_groups.duplicate(true)
 	}
 
 # Synthetic input for scripted demos and UI tests: goes through the same handlers as real input.
@@ -851,6 +901,7 @@ func inject_input(d: Dictionary) -> void:
 		mb.double_click = bool(d.get("double", false))
 		mb.shift_pressed = bool(d.get("shift", false))
 		mb.ctrl_pressed = bool(d.get("ctrl", false))
+		mb.meta_pressed = bool(d.get("meta", false))
 		if DisplayServer.get_name() == "headless":
 			_unhandled_input(mb)
 		else:
@@ -870,6 +921,8 @@ func inject_input(d: Dictionary) -> void:
 		ke.pressed = bool(d.get("pressed", true))
 		ke.shift_pressed = bool(d.get("shift", false))
 		ke.ctrl_pressed = bool(d.get("ctrl", false))
+		ke.meta_pressed = bool(d.get("meta", false))
+		ke.alt_pressed = bool(d.get("alt", false))
 		if DisplayServer.get_name() == "headless":
 			_unhandled_input(ke)
 		else:
