@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-24.04, macos-15-intel, macos-15]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
@@ -75,6 +75,24 @@ jobs:
         env:
           ROBOS_UBUNTU_VERSION: '24.04'
         run: scripts/app-manager/test-ubuntu-install.sh
+      - name: Start every app the way App Manager does
+        timeout-minutes: 40
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            sudo apt-get update && sudo apt-get install -y xvfb xdotool x11-utils desktop-file-utils
+            xvfb-run -a -s "-screen 0 1440x900x24" node scripts/app-manager/audit-apps.cjs
+          else
+            node scripts/app-manager/audit-apps.cjs
+          fi
+      - name: Upload app audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-audit-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            run/app-audit/*.json
+            run/app-audit/*.png
       - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
