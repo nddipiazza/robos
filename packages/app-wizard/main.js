@@ -402,7 +402,6 @@ ipcMain.handle('app-wizard:ingest-resources', async (_, payload = {}) => {
       companyName = 'Acme Global',
       companySlug = 'acme-global',
       defaultTeam = 'urn:robos:team:platform-team',
-      defaultProject = 'urn:robos:project:enterprise-core',
       validateSHACL = true,
     } = payload;
 
@@ -423,14 +422,12 @@ ipcMain.handle('app-wizard:ingest-resources', async (_, payload = {}) => {
       companyName,
       companySlug,
       defaultTeam,
-      defaultProject,
     });
 
     const importResult = await importer.importResources(resources, {
       companyName,
       companySlug,
       defaultTeam,
-      defaultProject,
       validateSHACL,
     });
 
@@ -442,7 +439,6 @@ ipcMain.handle('app-wizard:ingest-resources', async (_, payload = {}) => {
           companyName,
           companySlug,
           defaultTeam,
-          defaultProject,
           validateSHACL,
         });
         docSyncPrompt = storeRes.docSyncPrompt;
