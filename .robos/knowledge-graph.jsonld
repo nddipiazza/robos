@@ -5120,6 +5120,26 @@
       "robos:schemaOrgType": "https://schema.org/DataStore"
     },
     {
+      "@id": "urn:robos:desktop-app:app-manager",
+      "@type": [
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Shared cross-platform launcher and selective app installer with grouped checkboxes, independent verified downloads, native menu entries, and uninstall cleanup.",
+      "dcterms:title": "RobOS App Manager",
+      "robos:apiPort": 19207,
+      "robos:desktopFramework": "Electron",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:localPath": "packages/app-manager",
+      "robos:namespace": "robos.apps",
+      "robos:package": "applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron / Vanilla JavaScript / NSIS / AppImage / macOS DMG"
+    },
+    {
       "@id": "urn:robos:desktop-app:app-mesh",
       "@type": [
         "oslc_am:Resource",
@@ -23079,6 +23099,26 @@
       "robos:package": "core-platform",
       "robos:port": 5432,
       "robos:schemaOrgType": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:desktop-app:app-manager",
+      "@type": [
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Shared cross-platform launcher and selective app installer with grouped checkboxes, independent verified downloads, native menu entries, and uninstall cleanup.",
+      "dcterms:title": "RobOS App Manager",
+      "robos:apiPort": 19207,
+      "robos:desktopFramework": "Electron",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:localPath": "packages/app-manager",
+      "robos:namespace": "robos.apps",
+      "robos:package": "applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron / Vanilla JavaScript / NSIS / AppImage / macOS DMG"
     },
     {
       "@id": "urn:robos:desktop-app:app-mesh",
