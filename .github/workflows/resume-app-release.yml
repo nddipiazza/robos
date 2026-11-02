@@ -5,6 +5,10 @@ on:
       run_id:
         description: 'Modular RobOS apps run whose build and regression jobs all passed'
         required: true
+      publish:
+        description: 'Make the release public. Leave off to verify the drafts only.'
+        type: boolean
+        default: false
 permissions:
   actions: read
   contents: write
@@ -44,4 +48,4 @@ jobs:
       - name: Resume uploads and publish verified release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/app-manager/publish-release.cjs release/publish
+        run: node scripts/app-manager/publish-release.cjs release/publish ${{ inputs.publish && ' ' || '--draft-only' }}
