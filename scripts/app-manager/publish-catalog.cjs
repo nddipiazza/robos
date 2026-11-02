@@ -5,7 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const repo = path.resolve(__dirname, '../..');
-const { ID, ORIGIN, validateCatalog } = require('../../packages/app-manager/lib/catalog.cjs');
+const { ID, ORIGIN, packagesTag, validateCatalog } = require('../../packages/app-manager/lib/catalog.cjs');
 const { validateArchive } = require('../../packages/app-manager/lib/download.cjs');
 const tools = name => require(path.join(repo, 'packages/app-manager/node_modules', name));
 const ignored = new Set(['node_modules', '.git', '.godot', '__pycache__', 'run', 'test', 'tests', 'demos', 'coverage']);
@@ -134,7 +134,7 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
       // Publish only what the manager will accept when a user installs it.
       await validateArchive(file, Math.max(1, unpackedBytes));
       const hash = crypto.createHash('sha256'); for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
-      components.push({ ...item, version, bytes: fs.statSync(file).size, unpackedBytes: Math.max(1, unpackedBytes), sha256: hash.digest('hex'), url: `${ORIGIN}v${version}/${name}` });
+      components.push({ ...item, version, bytes: fs.statSync(file).size, unpackedBytes: Math.max(1, unpackedBytes), sha256: hash.digest('hex'), url: `${ORIGIN}${packagesTag(version, platform, arch)}/${name}` });
     }
     const doc = { schema: 1, version, platform, arch, components };
     validateCatalog(doc, platform, arch);

@@ -69,9 +69,13 @@ async function main() {
   if (require(path.join(manager, 'package.json')).version !== version) throw new Error('Manager version must match VERSION');
   const { build, Platform, Arch } = require(path.join(manager, 'node_modules/electron-builder'));
   await build({ config: configuration(), publish: 'never', ...(process.argv.includes('--linux') ? { targets: Platform.LINUX.createTarget(['deb', 'AppImage'], Arch.x64) } : {}) });
+  // electron-builder can skip a target and still exit 0, so a missing installer must fail here.
+  const output = path.join(repo, 'release/app-manager');
+  const expected = { win32: ['Windows-Setup.exe'], linux: ['Linux-amd64.deb', 'Linux-x86_64.AppImage'], darwin: [`macOS-${process.arch}.dmg`] }[process.platform];
+  for (const artifact of expected) if (!fs.existsSync(path.join(output, `RobOS-v${version}-${artifact}`))) throw new Error(`Build did not produce RobOS-v${version}-${artifact}`);
   // Enforce a small, stable base; suite payloads must never return to the installer.
-  for (const file of fs.readdirSync(path.join(repo, 'release/app-manager')).filter(file => /\.(exe|AppImage|deb|dmg)$/.test(file))) {
-    if (fs.statSync(path.join(repo, 'release/app-manager', file)).size > 150 * 1024 ** 2) throw new Error(`Base installer exceeded 150 MiB budget: ${file}`);
+  for (const file of fs.readdirSync(output).filter(file => /\.(exe|AppImage|deb|dmg)$/.test(file))) {
+    if (fs.statSync(path.join(output, file)).size > 150 * 1024 ** 2) throw new Error(`Base installer exceeded 150 MiB budget: ${file}`);
   }
 }
 module.exports = { configuration, prepareApp };

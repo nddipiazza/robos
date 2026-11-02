@@ -19,7 +19,7 @@ async function main() {
   const labels = { 'smoke-one': 'Sample Notes', 'smoke-two': 'Sample Register', 'smoke-three': 'Sample Calendar' };
   const item = (id, group) => ({ id, label: labels[id], group, kind: 'app', description: 'An independently downloaded test app',
     version, dependencies: [], bytes: payload.length, unpackedBytes: 10000, sha256: crypto.createHash('sha256').update(payload).digest('hex'),
-    url: `https://github.com/nddipiazza/robos/releases/download/v${version}/${id}.tgz` });
+    url: `https://github.com/nddipiazza/robos/releases/download/apps-v${version}-${process.platform}-${process.arch}/${id}.tgz` });
   const catalog = { schema: 1, version, platform: process.platform, arch: process.arch, components: [item('smoke-one', 'Everyday & business'), item('smoke-two', 'Developer tools'), item('smoke-three', 'Everyday & business')] };
   const server = http.createServer((req, res) => { if (req.url.endsWith('.json')) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(catalog)); } else res.end(payload); });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

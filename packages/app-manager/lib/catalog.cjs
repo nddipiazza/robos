@@ -2,9 +2,12 @@
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VERSION = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.-]+)?$/;
 const ORIGIN = 'https://github.com/nddipiazza/robos/releases/download/';
-function assetURL(value, version) {
+// GitHub release assets cannot hold folders, so each platform's catalog and app packages
+// live in their own release. The main release keeps only what people download by hand.
+const packagesTag = (version, platform, arch) => `apps-v${version}-${platform}-${arch}`;
+function assetURL(value, version, platform, arch) {
   const url = new URL(value);
-  if (!url.href.startsWith(`${ORIGIN}v${version}/`) || url.search || url.hash || url.username || url.password)
+  if (!url.href.startsWith(`${ORIGIN}${packagesTag(version, platform, arch)}/`) || url.search || url.hash || url.username || url.password)
     throw new Error('Catalog contains an untrusted download URL');
   return url.href;
 }
@@ -19,7 +22,7 @@ function validateCatalog(doc, platform = process.platform, arch = process.arch) 
         typeof item.label !== 'string' || !item.label.length || /[\r\n]/.test(item.label) ||
         typeof item.group !== 'string' || !Array.isArray(item.dependencies) || !item.dependencies.every(id => ID.test(id)))
       throw new Error('Invalid catalog component');
-    assetURL(item.url, doc.version); ids.add(item.id);
+    assetURL(item.url, doc.version, platform, arch); ids.add(item.id);
   }
   const byId = new Map(doc.components.map(item => [item.id, item]));
   for (const item of doc.components) for (const dep of item.dependencies) if (!byId.has(dep)) throw new Error(`Missing dependency: ${dep}`);
@@ -40,4 +43,4 @@ function plan(doc, selected, installed) {
   }
   selected.forEach(visit); return result;
 }
-module.exports = { ID, VERSION, ORIGIN, assetURL, validateCatalog, plan };
+module.exports = { ID, VERSION, ORIGIN, packagesTag, assetURL, validateCatalog, plan };
