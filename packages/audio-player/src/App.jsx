@@ -447,8 +447,7 @@ export default function App() {
       if (outputTarget !== 'local') {
         castTrack(outputTarget, first);
         if (playerRef.current?.audio?.current) {
-          playerRef.current.audio.current.muted = true;
-          playerRef.current.audio.current.play().catch(() => {});
+          playerRef.current.audio.current.pause();
         }
       } else {
         if (activeCastSession) handleStopCast();
@@ -928,14 +927,10 @@ export default function App() {
     if (sameSrc && playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = 0;
 
     if (outputTarget !== 'local') {
-      // Cast the track to the selected speaker
+      // Cast the track to the selected speaker; keep local audio stopped
       castTrack(outputTarget, trackToPlay);
-      // Mute local audio element so it acts as synchronized visual seeker without audio leak
       if (playerRef.current?.audio?.current) {
-        playerRef.current.audio.current.muted = true;
-        setTimeout(() => {
-          playerRef.current?.audio?.current?.play().catch(() => {});
-        }, 60);
+        playerRef.current.audio.current.pause();
       }
     } else {
       // Local desktop playback: stop any remote casting sessions
