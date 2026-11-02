@@ -175,7 +175,6 @@
       ],
       "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
       "dcterms:title": "RobOS Data & Storage Engineer Agent",
-      "robos:assignedTeam": "urn:robos:team:data-platform",
       "robos:category": "Data & Storage",
       "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
       "robos:domainStandard": "https://schema.org/Person",
@@ -650,13 +649,8 @@
       "dcterms:title": "Enterprise Architecture Guild",
       "robos:domainStandard": "https://schema.org/ProjectTeam",
       "robos:hasMember": [
-        "urn:robos:person:john-connor",
         "urn:robos:person:sconnor"
       ],
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ],
-      "robos:lead": "urn:robos:person:john-connor",
       "robos:memberCount": 5,
       "robos:namespace": "robos.org",
       "robos:package": "organization",
@@ -675,9 +669,6 @@
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ],
       "robos:lead": "urn:robos:person:admin",
       "robos:memberCount": 5,
       "robos:namespace": "robos.org",
@@ -695,8 +686,7 @@
       "dcterms:title": "Core Platform & Infrastructure",
       "robos:domainStandard": "https://schema.org/ProjectTeam",
       "robos:hasMember": [
-        "urn:robos:person:sconnor",
-        "urn:robos:person:marcus-wright"
+        "urn:robos:person:sconnor"
       ],
       "robos:lead": "urn:robos:person:sconnor",
       "robos:namespace": "robos.org",
@@ -715,7 +705,6 @@
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
-      "robos:lead": "urn:robos:person:architect",
       "robos:memberOf": "urn:robos:organization:acme-global",
       "robos:namespace": "robos.org",
       "robos:package": "organization",
@@ -731,13 +720,6 @@
       ],
       "dcterms:title": "Order Processing & Payments",
       "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:hasMember": [
-        "urn:robos:person:kyle-reese"
-      ],
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ],
-      "robos:lead": "urn:robos:person:kyle-reese",
       "robos:memberCount": 5,
       "robos:namespace": "robos.org",
       "robos:package": "organization",
@@ -811,7 +793,6 @@
       ],
       "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
       "dcterms:title": "RobOS Data & Storage Engineer Agent",
-      "robos:assignedTeam": "urn:robos:team:data-platform",
       "robos:category": "Data & Storage",
       "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
       "robos:domainStandard": "https://schema.org/Person",
@@ -1286,13 +1267,8 @@
       "dcterms:title": "Enterprise Architecture Guild",
       "robos:domainStandard": "https://schema.org/ProjectTeam",
       "robos:hasMember": [
-        "urn:robos:person:john-connor",
         "urn:robos:person:sconnor"
       ],
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ],
-      "robos:lead": "urn:robos:person:john-connor",
       "robos:memberCount": 5,
       "robos:namespace": "robos.org",
       "robos:package": "organization",
@@ -1311,9 +1287,6 @@
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ],
       "robos:lead": "urn:robos:person:admin",
       "robos:memberCount": 5,
       "robos:namespace": "robos.org",
@@ -1331,8 +1304,7 @@
       "dcterms:title": "Core Platform & Infrastructure",
       "robos:domainStandard": "https://schema.org/ProjectTeam",
       "robos:hasMember": [
-        "urn:robos:person:sconnor",
-        "urn:robos:person:marcus-wright"
+        "urn:robos:person:sconnor"
       ],
       "robos:lead": "urn:robos:person:sconnor",
       "robos:namespace": "robos.org",
@@ -1351,7 +1323,6 @@
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
-      "robos:lead": "urn:robos:person:architect",
       "robos:memberOf": "urn:robos:organization:acme-global",
       "robos:namespace": "robos.org",
       "robos:package": "organization",
@@ -1367,13 +1338,6 @@
       ],
       "dcterms:title": "Order Processing & Payments",
       "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:hasMember": [
-        "urn:robos:person:kyle-reese"
-      ],
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ],
-      "robos:lead": "urn:robos:person:kyle-reese",
       "robos:memberCount": 5,
       "robos:namespace": "robos.org",
       "robos:package": "organization",

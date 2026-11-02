@@ -954,23 +954,7 @@
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkm21t",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkmgt4",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkn2tn",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhknorg",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkny96",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkurva",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvjue",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvs2f",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkxn9z",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicj0mi",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicp0oa",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicpmge",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimlank",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimmiax"
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
       ],
       "robos:hasELearning": [
         "urn:robos:elearning:course:robos-crpg",
@@ -2085,7 +2069,16 @@
       "robos:evidenceVideo": "games/crpg-realm/tests/e2e/reports/videos/qa_evidence_character_creation_and_homestead.mp4",
       "robos:inFeature": "urn:robos:crpg:feature:qa-player-user-simulation",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "Typing hero name",
+        "Selecting Fighter class archetype",
+        "Clicking Embark",
+        "Arriving in Homestead",
+        "Interacting with partner Elora and progressing dialogue",
+        "Looting footlocker for equipment",
+        "Exiting through front door into Village Square"
+      ]
     },
     {
       "@id": "urn:robos:crpg:quest:dreppin-sick-cow",
@@ -2301,7 +2294,14 @@
       "dcterms:title": "Creating Fighter Lieutenant Vance",
       "robos:inFeature": "urn:robos:crpg:feature:character-creation",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "Given the cRPG game is running and healthy",
+        "When the player selects race \"human\" and class \"fighter\"",
+        "And the player rolls character ability scores",
+        "And the player embarks as \"Lieutenant Vance\"",
+        "Then the current scene is \"Homestead\""
+      ]
     },
     {
       "@id": "urn:robos:crpg:scenario:homestead-elora-confrontation",
@@ -2312,7 +2312,16 @@
       "dcterms:title": "Confronting Elora and looting the guard footlocker",
       "robos:inFeature": "urn:robos:crpg:feature:homestead-amnesia",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "When the player speaks with partner Elora",
+        "Then the active party contains 2 members",
+        "And the activity log contains dialogue answer \"I... I honestly don't remember anything after midnight.\"",
+        "When the player scrolls up the activity log to review conversation history",
+        "Then the activity log scroll position is scrolled up",
+        "When the player loots the footlocker",
+        "Then the hero inventory contains \"service-sword\""
+      ]
     },
     {
       "@id": "urn:robos:crpg:scenario:keep-malakor-boss-victory",
@@ -2323,7 +2332,14 @@
       "dcterms:title": "Infiltrating the keep, defeating Captain Malakor, and achieving victory",
       "robos:inFeature": "urn:robos:crpg:feature:garrison-boss-victory",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "When the player enters the Royal Garrison Keep",
+        "Then the current scene is \"GarrisonKeep\"",
+        "When the player confronts Captain Malakor",
+        "And the combat rounds against Captain Malakor are executed until victory",
+        "Then the terminal victory screen is displayed with quest stage 5"
+      ]
     },
     {
       "@id": "urn:robos:crpg:scenario:village-brand-and-hounds",
@@ -2334,7 +2350,25 @@
       "dcterms:title": "Speaking with Blacksmith Brand and defeating corrupted hounds",
       "robos:inFeature": "urn:robos:crpg:feature:village-investigation",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "When the player speaks with Blacksmith Brand",
+        "Then the blacksmith gives the \"garrison-key\" and quest advances to stage 3",
+        "And the activity log contains dialogue answer \"The garrison gates are barred. Can you help me enter?\"",
+        "When the player opens the shopkeeper trading window",
+        "Then the shopkeeper trading window is visible",
+        "When the player trades with the shopkeeper to buy \"potion-healing\"",
+        "And the player closes the shopkeeper trading window",
+        "When the player traverses to the eastern ruins to confront the Corrupted Shadow Hound",
+        "Then the shadow hound is visible on screen",
+        "When the player presses the spacebar to pause the game",
+        "Then the game simulation is paused with the RTwP banner visible",
+        "When the player queues action \"attack\" on the action toolbar",
+        "And the player unpauses the game",
+        "Then the game simulation is unpaused",
+        "When the player attacks the Corrupted Shadow Hound",
+        "Then the shadow hound is slain and total kills equals 1"
+      ]
     },
     {
       "@id": "urn:robos:crpg:spell:blizzard",
@@ -3386,23 +3420,7 @@
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkm21t",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkmgt4",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkn2tn",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhknorg",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkny96",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkurva",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvjue",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvs2f",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkxn9z",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicj0mi",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicp0oa",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicpmge",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimlank",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimmiax"
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
       ],
       "robos:hasELearning": [
         "urn:robos:elearning:course:robos-crpg",
@@ -4517,7 +4535,16 @@
       "robos:evidenceVideo": "games/crpg-realm/tests/e2e/reports/videos/qa_evidence_character_creation_and_homestead.mp4",
       "robos:inFeature": "urn:robos:crpg:feature:qa-player-user-simulation",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "Typing hero name",
+        "Selecting Fighter class archetype",
+        "Clicking Embark",
+        "Arriving in Homestead",
+        "Interacting with partner Elora and progressing dialogue",
+        "Looting footlocker for equipment",
+        "Exiting through front door into Village Square"
+      ]
     },
     {
       "@id": "urn:robos:crpg:quest:dreppin-sick-cow",
@@ -4733,7 +4760,14 @@
       "dcterms:title": "Creating Fighter Lieutenant Vance",
       "robos:inFeature": "urn:robos:crpg:feature:character-creation",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "Given the cRPG game is running and healthy",
+        "When the player selects race \"human\" and class \"fighter\"",
+        "And the player rolls character ability scores",
+        "And the player embarks as \"Lieutenant Vance\"",
+        "Then the current scene is \"Homestead\""
+      ]
     },
     {
       "@id": "urn:robos:crpg:scenario:homestead-elora-confrontation",
@@ -4744,7 +4778,16 @@
       "dcterms:title": "Confronting Elora and looting the guard footlocker",
       "robos:inFeature": "urn:robos:crpg:feature:homestead-amnesia",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "When the player speaks with partner Elora",
+        "Then the active party contains 2 members",
+        "And the activity log contains dialogue answer \"I... I honestly don't remember anything after midnight.\"",
+        "When the player scrolls up the activity log to review conversation history",
+        "Then the activity log scroll position is scrolled up",
+        "When the player loots the footlocker",
+        "Then the hero inventory contains \"service-sword\""
+      ]
     },
     {
       "@id": "urn:robos:crpg:scenario:keep-malakor-boss-victory",
@@ -4755,7 +4798,14 @@
       "dcterms:title": "Infiltrating the keep, defeating Captain Malakor, and achieving victory",
       "robos:inFeature": "urn:robos:crpg:feature:garrison-boss-victory",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "When the player enters the Royal Garrison Keep",
+        "Then the current scene is \"GarrisonKeep\"",
+        "When the player confronts Captain Malakor",
+        "And the combat rounds against Captain Malakor are executed until victory",
+        "Then the terminal victory screen is displayed with quest stage 5"
+      ]
     },
     {
       "@id": "urn:robos:crpg:scenario:village-brand-and-hounds",
@@ -4766,7 +4816,25 @@
       "dcterms:title": "Speaking with Blacksmith Brand and defeating corrupted hounds",
       "robos:inFeature": "urn:robos:crpg:feature:village-investigation",
       "robos:namespace": "robos.crpg",
-      "robos:package": "crpg"
+      "robos:package": "crpg",
+      "robos:steps": [
+        "When the player speaks with Blacksmith Brand",
+        "Then the blacksmith gives the \"garrison-key\" and quest advances to stage 3",
+        "And the activity log contains dialogue answer \"The garrison gates are barred. Can you help me enter?\"",
+        "When the player opens the shopkeeper trading window",
+        "Then the shopkeeper trading window is visible",
+        "When the player trades with the shopkeeper to buy \"potion-healing\"",
+        "And the player closes the shopkeeper trading window",
+        "When the player traverses to the eastern ruins to confront the Corrupted Shadow Hound",
+        "Then the shadow hound is visible on screen",
+        "When the player presses the spacebar to pause the game",
+        "Then the game simulation is paused with the RTwP banner visible",
+        "When the player queues action \"attack\" on the action toolbar",
+        "And the player unpauses the game",
+        "Then the game simulation is unpaused",
+        "When the player attacks the Corrupted Shadow Hound",
+        "Then the shadow hound is slain and total kills equals 1"
+      ]
     },
     {
       "@id": "urn:robos:crpg:spell:blizzard",

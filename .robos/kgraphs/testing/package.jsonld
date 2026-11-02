@@ -125,6 +125,7 @@
         "robos:DataTable",
         "schema:Table"
       ],
+      "dcterms:title": "Cart items data table",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables",
       "robos:namespace": "robos.testing",
       "robos:package": "testing",
@@ -155,6 +156,7 @@
         "robos:DocString",
         "schema:Text"
       ],
+      "dcterms:title": "Checkout payload doc string",
       "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
       "robos:contentType": "application/json",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
@@ -391,6 +393,7 @@
         "robos:ScenarioStep",
         "schema:HowToStep"
       ],
+      "dcterms:title": "When the customer adds items to cart with configuration",
       "robos:dataTable": "urn:robos:datatable:cart-items",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
       "robos:keyword": "When",
@@ -406,6 +409,7 @@
         "robos:ScenarioStep",
         "schema:HowToStep"
       ],
+      "dcterms:title": "Given the checkout order payload is provided as JSON",
       "robos:docString": "urn:robos:docstring:checkout-payload",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
       "robos:keyword": "Given",
@@ -806,6 +810,7 @@
         "robos:DataTable",
         "schema:Table"
       ],
+      "dcterms:title": "Cart items data table",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables",
       "robos:namespace": "robos.testing",
       "robos:package": "testing",
@@ -836,6 +841,7 @@
         "robos:DocString",
         "schema:Text"
       ],
+      "dcterms:title": "Checkout payload doc string",
       "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
       "robos:contentType": "application/json",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
@@ -1072,6 +1078,7 @@
         "robos:ScenarioStep",
         "schema:HowToStep"
       ],
+      "dcterms:title": "When the customer adds items to cart with configuration",
       "robos:dataTable": "urn:robos:datatable:cart-items",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
       "robos:keyword": "When",
@@ -1087,6 +1094,7 @@
         "robos:ScenarioStep",
         "schema:HowToStep"
       ],
+      "dcterms:title": "Given the checkout order payload is provided as JSON",
       "robos:docString": "urn:robos:docstring:checkout-payload",
       "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
       "robos:keyword": "Given",
