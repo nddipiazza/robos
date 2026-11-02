@@ -8,6 +8,9 @@ function start(id, locations) {
   const installed = JSON.parse(fs.readFileSync(path.join(locations.root, 'installed.json'), 'utf8'));
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || installed[id]?.kind !== 'app') throw new Error('This RobOS app is not installed');
   const root = locations.root, dir = path.join(root, 'packages', id);
+  // Electron reports uncaught errors in a blocking dialog on macOS and Windows, which the
+  // startup audit could only see as a hang.
+  if (process.env.ROBOS_APP_AUDIT) process.on('uncaughtException', error => { console.error(`[robos-audit] ${error.stack || error}`); process.exit(70); });
   try {
     const release = require('./leases.cjs').acquire(root, id);
     app.on('will-quit', release);
