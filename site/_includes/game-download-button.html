@@ -1,0 +1,4 @@
+{% assign game_download = site.data.games[page.game_id] %}
+{% assign game_tag = site.data.release.version | prepend: 'games-v' %}
+{% assign game_asset = page.game_id | append: '-v' | append: site.data.release.version | append: '-Windows-Setup.exe' %}
+<a class="btn" href="https://github.com/nddipiazza/robos/releases/download/{{ game_tag }}/{{ game_asset }}" data-game-download="{{ page.game_id }}" data-game-version="{{ site.data.release.version }}">Download &amp; play for Windows</a>

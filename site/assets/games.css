@@ -1,4 +1,5 @@
 body.game{background:#05060a;color:#f3efe6}
+.download-primary{justify-content:flex-start;margin:24px 0 16px}.download-options{display:flex;flex-wrap:wrap;gap:12px 24px;margin:24px 0}.download-options a{text-decoration:underline;text-underline-offset:4px}.game-downloads a:focus-visible{outline:3px solid var(--accent);outline-offset:5px}.game-downloads .small{font-size:.9rem}
 .bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#05060a}
 .bg-poster,.bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .bg-video{opacity:0;transition:opacity 1.2s}.bg-live .bg-video{opacity:1}
