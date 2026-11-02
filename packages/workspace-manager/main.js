@@ -7,7 +7,8 @@ const net  = require('net');
 
 const SETTINGS_FILE = path.join(process.env.HOME, '.config', 'robos', 'settings.json');
 const DESKTOPS_DIR = path.join(process.env.HOME, '.config', 'robos', 'desktops');
-const WM_SOCKET_PATH = require('../robos-lib/local-ipc-path').localIpcPath('workspace-manager', `/run/user/${process.getuid ? process.getuid() : 1000}/robos-wm.sock`);
+// macOS has no /run/user, and its temporary folder is already private to each user.
+const WM_SOCKET_PATH = require('../robos-lib/local-ipc-path').localIpcPath('workspace-manager', process.platform === 'darwin' ? path.join(os.tmpdir(), 'robos-wm.sock') : `/run/user/${process.getuid ? process.getuid() : 1000}/robos-wm.sock`);
 
 // Debug server (optional) — checks env override, local dev path, then VM install path
 var _debugServer = null;

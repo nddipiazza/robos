@@ -48,10 +48,10 @@ async function worker(id, home) {
   try {
     instance = await _electron.launch({ executablePath, args: ['--no-sandbox', '--disable-gpu', `--app=${id}`], env, timeout: 15000 });
     instance.process().stderr.on('data', data => { stderr += data; });
-    instance.on('window', opened => opened.on('pageerror', error => errors.push(error.message)));
+    const pageError = error => { errors.push(error.message); (result.errorStacks ||= []).push(String(error.stack || '').slice(0, 2000)); };
+    instance.on('window', opened => opened.on('pageerror', pageError));
     page = await instance.firstWindow({ timeout: 15000 });
     result.firstWindowMs = Date.now() - started;
-    page.on('pageerror', error => errors.push(error.message));
     page.on('requestfailed', request => failedRequests.push({ url: request.url(), error: request.failure()?.errorText }));
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
     await page.waitForTimeout(1200);
