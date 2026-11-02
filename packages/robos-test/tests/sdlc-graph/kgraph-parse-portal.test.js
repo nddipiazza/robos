@@ -24,6 +24,7 @@ const {
 } = require('../../../kgraph-parse-portal/lib/buildbarn-rbe');
 const { LuxirSearchBridge } = require('../../../kgraph-parse-portal/lib/luxir-search-bridge');
 const { ParsePortalServer } = require('../../../kgraph-parse-portal/server');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 describe('RobOS KGraph Parse Portal & Heavy-Scale Connectors Test Suite', () => {
   const validator = new SHACLValidator();
@@ -40,8 +41,10 @@ describe('RobOS KGraph Parse Portal & Heavy-Scale Connectors Test Suite', () => 
   });
 
   describe('1. RobOS Project & Application Registration in Knowledge Graph', () => {
-    const graphFile = path.resolve(__dirname, '../../../../.robos/knowledge-graph.jsonld');
-    const store = new SDLCKnowledgeGraphStore({ filePath: graphFile, rootDir: path.dirname(graphFile) });
+    const fixture = createRepoFixture();
+    const store = new SDLCKnowledgeGraphStore({ filePath: fixture.graphFile, rootDir: fixture.robosDir });
+
+    after(() => fixture.cleanup());
 
     it('verifies urn:robos:project:robos-kgraph-parse-portal exists and conforms to ProjectShape', () => {
       const projectNode = store.getNode('urn:robos:project:robos-kgraph-parse-portal');

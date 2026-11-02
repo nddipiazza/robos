@@ -3,6 +3,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const { SDLCKnowledgeGraphStore } = require('../../../robos-graph/lib/graph-store');
 const { SHACLValidator } = require('../../../robos-graph/lib/shacl-validator');
@@ -244,8 +245,10 @@ describe('REAPI v2 Distributed Build & Buildbarn KGraph Engine Suite', () => {
     assert.strictEqual(nativelinkConfig.servers[0].services.execution.scheduler, 'main');
   });
 
-  it('8. Packages route correctly into modular KGraph packages (devops & core-platform)', () => {
-    const pm = new KGraphPackageManager({ baseDir: '.robos' });
+  it('8. Packages route correctly into modular KGraph packages (devops & core-platform)', (t) => {
+    const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-remote-exec-pkg-'));
+    t.after(() => fs.rmSync(baseDir, { recursive: true, force: true }));
+    const pm = new KGraphPackageManager({ baseDir });
 
     const clusterNode = {
       '@id': 'urn:robos:remote-execution:routed-cluster',

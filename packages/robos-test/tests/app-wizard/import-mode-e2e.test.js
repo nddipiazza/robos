@@ -7,6 +7,7 @@ const http = require('http');
 const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 const SAMPLE_IMPORT_DIR = path.resolve(__dirname, '../../../../packages/rest-client');
 
@@ -30,9 +31,12 @@ function fetchScreenshot(port, timeoutMs = 10000) {
 }
 
 describe('App Wizard Existing Codebase Import Mode E2E Test Suite', () => {
-  it('scans brownfield repository, refines archetype via AI prompt, assigns team, and completes ingestion', async () => {
+  it('scans brownfield repository, refines archetype via AI prompt, assigns team, and completes ingestion', async (t) => {
+    const fixture = createRepoFixture();
+    t.after(() => fixture.cleanup());
     const app = await launchApp('app-wizard', {
       ...scenarios['all-good'],
+      cwd: fixture.root,
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
 

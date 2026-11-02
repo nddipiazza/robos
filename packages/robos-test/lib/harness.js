@@ -373,6 +373,8 @@ async function launchApp(appId, scenarioConfig) {
   const pathEnv = useRealBinaries ? process.env.PATH : `${SANDBOX_BIN}:${process.env.PATH}`;
 
   const proc = spawn(electronBin, electronArgs, {
+    // Some apps resolve .robos and relative output paths from their working directory.
+    cwd: scenarioConfig.cwd,
     env: {
       ...process.env,
       HOME: sandboxHome,

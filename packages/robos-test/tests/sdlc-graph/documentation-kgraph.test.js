@@ -13,6 +13,7 @@ const {
 const { SHACLValidator, BUILTIN_SHACL_SHAPES } = require('../../../robos-graph/lib/shacl-validator');
 const { OSLCGraphParser, OSLC_CONTEXT } = require('../../../robos-graph/lib/oslc-parser');
 const { SchemaDocGenerator } = require('../../../robos-graph/lib/schema-doc-generator');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 describe('RobOS Documentation Package & FlowDiagram First-Class Elements', () => {
   it('1. Registers documentation package (robos.docs) and routes documentation entities', () => {
@@ -265,8 +266,10 @@ describe('RobOS Documentation Package & FlowDiagram First-Class Elements', () =>
     assert.ok(savedDocPkg['@graph'].some(n => n['@id'] === retrievedADR['@id']));
   });
 
-  it('5. SchemaDocGenerator documents documentation package and FlowDiagram schema', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
+  it('5. SchemaDocGenerator documents documentation package and FlowDiagram schema', (t) => {
+    const fixture = createRepoFixture({ copy: ['.robos', 'docs/schemas', 'docs/schemas.md'] });
+    t.after(() => fixture.cleanup());
+    const rootDir = fixture.root;
     const generator = new SchemaDocGenerator({ rootDir });
 
     const result = generator.generateAll();

@@ -1,5 +1,5 @@
 'use strict';
-const { describe, it } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
@@ -10,8 +10,23 @@ const {
   OSLCGraphParser,
   SHACLValidator,
 } = require('../../../robos-graph/index');
+const { enterCwd } = require('../../lib/repo-fixture');
 
 describe('Application-Attached eLearning, Living Documentation & Completion Certificates', () => {
+  // The store writes .robos/elearning.yaml and docs/applications/ under the working directory.
+  let workDir;
+  let restoreCwd;
+
+  before(() => {
+    workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-test-app-el-cwd-'));
+    restoreCwd = enterCwd(workDir);
+  });
+
+  after(() => {
+    restoreCwd();
+    fs.rmSync(workDir, { recursive: true, force: true });
+  });
+
   it('1. Generates interactive eLearning attached to an application, scaffolds Electron app, and conforms to SHACL', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-test-app-el-'));
     const filePath = path.join(tmpDir, 'knowledge-graph.jsonld');
