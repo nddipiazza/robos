@@ -49,10 +49,16 @@ async function worker(id, home) {
     instance = await _electron.launch({ executablePath, args: ['--no-sandbox', '--disable-gpu', `--app=${id}`], env, timeout: 15000 });
     instance.process().stderr.on('data', data => { stderr += data; });
     const pageError = error => { errors.push(error.message); (result.errorStacks ||= []).push(String(error.stack || '').slice(0, 2000)); };
-    instance.on('window', opened => opened.on('pageerror', pageError));
+    // Apps can open a background window too, and either may finish loading before a listener can
+    // attach. Reloading each one once it is watched catches a broken page regardless of load order.
+    const watched = new WeakSet();
+    const watch = opened => { if (watched.has(opened)) return; watched.add(opened); opened.on('pageerror', pageError); opened.reload().catch(() => {}); };
+    instance.on('window', watch);
     page = await instance.firstWindow({ timeout: 15000 });
+    instance.windows().forEach(watch);
     result.firstWindowMs = Date.now() - started;
-    page.on('requestfailed', request => failedRequests.push({ url: request.url(), error: request.failure()?.errorText }));
+    // The reload above aborts requests in flight, which says nothing about whether a file exists.
+    page.on('requestfailed', request => { if (request.failure()?.errorText !== 'net::ERR_ABORTED') failedRequests.push({ url: request.url(), error: request.failure()?.errorText }); });
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
     await page.waitForTimeout(1200);
     const state = await page.evaluate(() => ({ title: document.title, text: document.body?.innerText || '', controls: document.querySelectorAll('button,input,a,select,textarea').length }));
