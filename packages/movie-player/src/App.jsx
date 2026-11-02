@@ -1647,12 +1647,44 @@ export default function App() {
           }
           return { ok: true, playing: true };
         },
-        playFromControl: async ({ tracks, shuffle } = {}) => {
+        playFromControl: async ({ tracks, shuffle, targetIp } = {}) => {
           if (!Array.isArray(tracks) || !tracks.length) return { ok: false, error: 'No movies given' };
+          if (targetIp && targetIp !== 'local') {
+            const list = tracks.map(t => ({ ...t }));
+            if (shuffle) {
+              for (let i = list.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [list[i], list[j]] = [list[j], list[i]];
+              }
+            }
+            const first = list[0];
+            if (first.filePath && !first.cloud && window.robosAudio?.ensureFileAccessible) {
+              window.robosAudio.ensureFileAccessible(first.filePath).catch(() => {});
+            }
+            setOutputTarget(targetIp);
+            setPlaylist(list);
+            setCurrentTrackIndex(0);
+            shuffleHistoryRef.current = [];
+            await castTrack(targetIp, first);
+            playerRef.current?.audio?.current?.pause();
+            if (videoRef.current) videoRef.current.pause();
+            setIsPlaying(true);
+            return {
+              ok: true,
+              playing: true,
+              targetIp,
+              count: list.length,
+              track: { title: first.title || '', artist: first.artist || '', album: first.album || '' },
+            };
+          }
+          if (targetIp === 'local' && outputTarget !== 'local') {
+            setOutputTarget('local');
+          }
           playTracks(tracks, 0, { shuffle: !!shuffle });
           return {
             ok: true,
             playing: true,
+            targetIp: targetIp || outputTarget,
             count: tracks.length,
             track: { title: tracks[0].title || '', artist: tracks[0].artist || '', album: tracks[0].album || '' },
           };
@@ -2126,7 +2158,7 @@ export default function App() {
                     id="cinema-video-element"
                     ref={videoRef}
                     className={`cinema-video-el fit-${videoFit}`}
-                    src={resolveSrc(currentTrack)}
+                    src={outputTarget === 'local' ? resolveSrc(currentTrack) : undefined}
                     poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
                     muted={outputTarget !== 'local'}
                     controls

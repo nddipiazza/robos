@@ -1034,6 +1034,7 @@ class CastService {
       currentTime: Number(metadata.currentTime) > 0 ? Number(metadata.currentTime) : 0,
       duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : 0,
       idleReason: null,
+      startedAtMs: Date.now(),
       lastSeekAt: reattachOnly ? 0 : Date.now(),
       lastSavedProgressAt: 0,
       trackId: metadata.trackId || null,
@@ -1153,23 +1154,37 @@ class CastService {
       let updatedFromRoku = false;
       if (tvInfo.platformId === 'roku-os') {
         const rokuSt = await this._queryRokuMediaPlayer(ip, tvInfo?.ports?.ecp || 8060);
-        if (rokuSt && !rokuSt.isKeepAlive) {
-          state.sawMovieOnRoku = true;
+        const isRealMoviePlaying = Boolean(
+          rokuSt &&
+          !rokuSt.isKeepAlive &&
+          (rokuSt.state === 'play' || rokuSt.state === 'pause') &&
+          ((rokuSt.durationSec && rokuSt.durationSec > 65) ||
+           (rokuSt.videoRes && rokuSt.videoRes !== '160x90' && rokuSt.videoRes !== '0x0'))
+        );
+        if (rokuSt && !rokuSt.isKeepAlive && ['play', 'pause', 'buffer', 'startup', 'open'].includes(rokuSt.state)) {
+          if (isRealMoviePlaying) {
+            state.sawMovieOnRoku = true;
+          }
           if (rokuSt.durationSec && rokuSt.durationSec > 65) {
             state.duration = rokuSt.durationSec;
             entry.duration = rokuSt.durationSec;
           }
           // Only overwrite currentTime from Roku if we didn't just seek within the last 2.5s
-          if (rokuSt.positionSec != null && Date.now() - state.lastSeekAt > 2500) {
+          if (isRealMoviePlaying && rokuSt.positionSec != null && Date.now() - state.lastSeekAt > 2500) {
             state.currentTime = rokuSt.positionSec;
             updatedFromRoku = true;
-          } else if (rokuSt.state === 'startup' || rokuSt.state === 'buffer') {
+          } else if (rokuSt.state === 'startup' || rokuSt.state === 'buffer' || rokuSt.state === 'open') {
             // Hold clock while Roku is buffering so it doesn't run ahead of the TV
             updatedFromRoku = true;
           }
           if (rokuSt.state === 'pause') state.playerState = 'PAUSED';
           else if (rokuSt.state === 'play') state.playerState = 'PLAYING';
-        } else if (rokuSt && state.sawMovieOnRoku && (rokuSt.isKeepAlive || rokuSt.state === 'none' || rokuSt.state === 'close')) {
+        } else if (
+          rokuSt &&
+          state.sawMovieOnRoku &&
+          Date.now() - (state.startedAtMs || 0) > 10000 &&
+          (rokuSt.isKeepAlive || rokuSt.state === 'none' || rokuSt.state === 'close')
+        ) {
           // User stopped the movie on the TV via their physical remote
           persistCastProgress(false, true);
           state.playerState = 'IDLE';

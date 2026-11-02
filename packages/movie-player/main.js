@@ -296,7 +296,7 @@ const controlServer = createControlServer({
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
       }
-      return askRenderer('play', { tracks, shuffle: Boolean(body.shuffle) });
+      return askRenderer('play', { tracks, shuffle: Boolean(body.shuffle), targetIp: body.targetIp || null });
     },
     next: () => askRenderer('next'),
     previous: () => askRenderer('previous'),
