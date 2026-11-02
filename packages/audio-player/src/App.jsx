@@ -1363,6 +1363,24 @@ export default function App() {
           }
           return { ok: true, playing: true };
         },
+        playFromControl: async ({ tracks, shuffle } = {}) => {
+          if (!Array.isArray(tracks) || !tracks.length) return { ok: false, error: 'No tracks given' };
+          playTracks(tracks, 0, { shuffle: !!shuffle });
+          return {
+            ok: true,
+            playing: true,
+            count: tracks.length,
+            track: { title: tracks[0].title || '', artist: tracks[0].artist || '', album: tracks[0].album || '' },
+          };
+        },
+        nextTrack: async () => {
+          handlePlayNext();
+          return { ok: true };
+        },
+        previousTrack: async () => {
+          handlePlayPrev();
+          return { ok: true };
+        },
       };
     },
     // After a DJ break the queue may have changed: find the planned song again.

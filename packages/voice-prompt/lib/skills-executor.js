@@ -32,6 +32,8 @@ class SkillsExecutor {
       { id: 'system-status', label: 'RobOS Platform Status', intent: 'Health of all core services and graph packages', patterns: ['system status', 'project status'] },
       { id: 'change-voice', label: 'Change Outgoing Voice', intent: 'Switch TTS voice or speed', patterns: ['change voice to', 'switch voice'] },
       { id: 'stop-speaking', label: 'Stop Audio Playback', intent: 'Silence current TTS playback', patterns: ['stop speaking', 'silence', 'be quiet'] },
+      { id: 'audio-play', label: 'Play Music from Library', intent: 'Find and play the best matching song, artist, album, or genre in RobOS Audio Player', patterns: ['play [song/artist/album]', 'play some [music]', 'listen to [artist]'] },
+      { id: 'movie-play', label: 'Play Movie from Library', intent: 'Find and play the best matching movie or film in RobOS Movie Player', patterns: ['play movie [title]', 'watch [movie]', 'put on movie [title]'] },
       { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['hello robos', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
@@ -54,11 +56,28 @@ class SkillsExecutor {
     const q = query.toLowerCase();
 
     // 0. Greeting Intent: "hi", "hello", "hey", "hello robos", "rob os", "row bose", etc.
-    const isGreeting = /^(?:hi|hello|hey|greetings|howdy|what'?s\s+up)(?:\s+(?:robos|rob\s+os|row\s+bose|there|assistant))?[!.]*$/i.test(query) ||
-                       /^(?:robos|rob\s+os|row\s+bose)[!.]*$/i.test(query);
+    const isGreeting = /^(?:hi|hello|hey|greetings|howdy|what'?s\s+up)(?:\s+(?:robos|rob\s+os|row\s+bose|nabu|there|assistant))?[!.]*$/i.test(query) ||
+                       /^(?:robos|rob\s+os|row\s+bose|nabu)[!.]*$/i.test(query);
     if (isGreeting) {
       return await this.executeGreeting(options);
     }
+
+    // 0.5 Media Library Playback & Transport ("play some Dark Tranquillity", "play movie Dune", "pause", "next song")
+    try {
+      const { classifyVoiceCommand, executeNabuCommand, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
+      const cleanedMedia = stripWakePhrase(query);
+      const mediaIntent = classifyVoiceCommand(cleanedMedia);
+      if (mediaIntent.type === 'play-movie' || mediaIntent.type === 'play-media' || mediaIntent.type === 'transport') {
+        const res = await executeNabuCommand(cleanedMedia, { skillsExecutor: this });
+        return {
+          ok: res.ok,
+          skill: res.skill,
+          actionDone: res.response,
+          response: res.response,
+          data: res.data || null,
+        };
+      }
+    } catch {}
 
     // 1. Compound Command: Open app AND/THEN add task
     // e.g., "open task explorer, then add a task to verify OAuth login"
@@ -392,6 +411,16 @@ class SkillsExecutor {
       'search index': { id: 'search-index', label: 'Search Index' },
       'software center': { id: 'software-center', label: 'Software Center' },
       'app launcher': { id: 'app-launcher', label: 'RobOS App Launcher' },
+      'audio player': { id: 'audio-player', label: 'RobOS Audio Player' },
+      'music player': { id: 'audio-player', label: 'RobOS Audio Player' },
+      'movie player': { id: 'movie-player', label: 'RobOS Movie Player' },
+      'video player': { id: 'movie-player', label: 'RobOS Movie Player' },
+      'home speaker': { id: 'home-speaker', label: 'RobOS Home Speaker' },
+      'speaker': { id: 'home-speaker', label: 'RobOS Home Speaker' },
+      'pass manager': { id: 'pass-manager', label: 'RobOS Pass Manager' },
+      'hardware keys': { id: 'hardware-keys', label: 'RobOS Hardware Keys' },
+      'smart light': { id: 'smart-light', label: 'RobOS Smart Light' },
+      'smart tv': { id: 'robos-tv', label: 'RobOS Smart TV Studio' },
     };
 
     let resolved = null;

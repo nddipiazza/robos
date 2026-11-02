@@ -424,6 +424,38 @@ class HomeSpeakerService {
     });
   }
 
+  /**
+   * Execute a spoken or typed "Hello Nabu / Okay Nabu -> {command}" across Audio Player,
+   * Movie Player, and all 48 RobOS Voice Skills + AI Agent, and optionally speak the reply
+   * out loud on the target speaker.
+   */
+  async executeVoiceCommand(commandText, options = {}) {
+    const { executeNabuCommand } = require('./nabu-command-router');
+    const result = await executeNabuCommand(commandText, options);
+    const entry = {
+      id: `cmd_${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      speakerIp: options.targetIp || this.esphomeService.listenerState.ip || '192.168.1.64',
+      wakeWord: 'Hello Nabu Command',
+      transcript: commandText,
+      skill: result?.skill || 'robos-skill',
+      reply: result?.response || '',
+    };
+    this.esphomeService.listenerState.lastTranscript = commandText;
+    this.esphomeService.listenerState.lastReply = entry.reply;
+    this.esphomeService.listenerState.inbox.unshift(entry);
+    if (this.esphomeService.listenerState.inbox.length > 30) {
+      this.esphomeService.listenerState.inbox.length = 30;
+    }
+    this.esphomeService.emit('listener-update', this.esphomeService.getListenerStatus());
+
+    if (options.speakReply !== false && result?.response && this.ttsEngine) {
+      const targetIp = options.targetIp || this.esphomeService.listenerState.ip || '192.168.1.64';
+      await this.castTTS(targetIp, result.response, { prependChime: false }).catch(() => {});
+    }
+    return result;
+  }
+
   getSpeakers() {
     const list = Array.from(this.knownSpeakers.values());
     // Sort so Home Assistant Voice PE (NC-VK-9727) & online speakers appear prominently

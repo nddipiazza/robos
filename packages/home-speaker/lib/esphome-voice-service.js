@@ -1193,10 +1193,12 @@ class EspHomeVoiceService extends EventEmitter {
     this._sendVoiceEvent(socket, 4, [{ name: 'text', value: transcript }]); // VOICE_ASSISTANT_STT_END
 
     let replyText = '';
+    let commandResult = null;
     if (this.AutoReply && transcript && !transcript.startsWith('(Voice note')) {
       this.listenerState.status = 'replying';
       this.emit('listener-update', this.getListenerStatus());
-      replyText = await this._queryRobosAssistant(transcript);
+      commandResult = await this._executeNabuVoiceCommand(transcript);
+      replyText = commandResult?.response || '';
     }
 
     const entry = {
@@ -1205,6 +1207,7 @@ class EspHomeVoiceService extends EventEmitter {
       speakerIp: ip,
       wakeWord: this.listenerState.lastWakeWord || 'Wake Word',
       transcript,
+      skill: commandResult?.skill || null,
       reply: replyText,
       audioWavPath: wavPath,
     };
@@ -1263,6 +1266,18 @@ class EspHomeVoiceService extends EventEmitter {
     return String(result?.text || '')
       .replace(/\[.*?\]/g, '')
       .trim();
+  }
+
+  async _executeNabuVoiceCommand(query) {
+    try {
+      const { executeNabuCommand } = require('./nabu-command-router');
+      const res = await executeNabuCommand(query);
+      if (res && res.response) return res;
+    } catch (err) {
+      console.warn('[EspHomeVoiceService] Nabu command router notice:', err.message);
+    }
+    const text = await this._queryRobosAssistant(query);
+    return { ok: true, skill: 'assistant', response: text };
   }
 
   async _queryRobosAssistant(query) {

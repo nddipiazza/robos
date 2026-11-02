@@ -316,6 +316,53 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(js.includes('castTTS'), 'Should call castTTS');
       assert.ok(js.includes('loadMusicLibrary'), 'Should implement loadMusicLibrary');
       assert.ok(js.includes('loadSchedules'), 'Should implement loadSchedules');
+      assert.ok(js.includes('executeVoiceCommand'), 'Should wire Nabu command router in UI');
+    });
+  });
+
+  describe('Nabu Voice Command & Media Router (Hello Nabu -> RobOS Skills + Media Library)', () => {
+    it('strips wake phrases (Hello Nabu, Okay Nabu, Hello RobOS) and classifies intents', () => {
+      const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
+      assert.strictEqual(router.stripWakePhrase('Hello Nabu, play some Dark Tranquillity'), 'play some Dark Tranquillity');
+      assert.strictEqual(router.stripWakePhrase('Okay Nabu please open Task Explorer'), 'open Task Explorer');
+      assert.strictEqual(router.classifyVoiceCommand('play some Dark Tranquillity').type, 'play-media');
+      assert.strictEqual(router.classifyVoiceCommand('play the movie Dune').type, 'play-movie');
+      assert.strictEqual(router.classifyVoiceCommand('pause the music').action, 'pause');
+      assert.strictEqual(router.classifyVoiceCommand('next song').action, 'next');
+      assert.strictEqual(router.classifyVoiceCommand('validate knowledge graph').type, 'robos-skill');
+    });
+
+    it('scores and ranks songs, artists, albums, and movies with fuzzy matching', async () => {
+      const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
+      const sampleAudio = [
+        { id: 't1', title: 'Encircled', artist: 'Dark Tranquillity', album: 'Atoma', trackNumber: 1, year: 2016, genre: 'Melodic Death Metal' },
+        { id: 't2', title: 'Caves and Embers', artist: 'Dark Tranquillity', album: 'Atoma', trackNumber: 12, year: 2016, genre: 'Melodic Death Metal' },
+        { id: 't3', title: 'Overactive Imagination', artist: 'Death', album: 'Individual Thought Patterns', trackNumber: 1, year: 1993, genre: 'Death Metal' },
+      ];
+      // Fuzzy spelling ("Tranquility" with one 'l') matches artist "Dark Tranquillity"
+      const artistMatch = router.findBestMediaMatches('play some Dark Tranquility', sampleAudio, { kind: 'audio' });
+      assert.strictEqual(artistMatch.ok, true);
+      assert.strictEqual(artistMatch.matchType, 'artist');
+      assert.strictEqual(artistMatch.tracks.length, 2);
+
+      // Exact song title match
+      const songMatch = router.findBestMediaMatches('play Caves and Embers', sampleAudio, { kind: 'audio' });
+      assert.strictEqual(songMatch.ok, true);
+      assert.strictEqual(songMatch.bestTrack.id, 't2');
+
+      // Movie number normalization ("two" -> "2")
+      const sampleMovies = [
+        { id: 'm1', title: 'Dune', year: 2021, album: 'Dune (2021)' },
+        { id: 'm2', title: 'Scary Movie 2', year: 2001, album: 'Scary Movie 2 (2001)' },
+      ];
+      const movieMatch = router.findBestMediaMatches('watch Scary Movie two', sampleMovies, { kind: 'movie' });
+      assert.strictEqual(movieMatch.ok, true);
+      assert.strictEqual(movieMatch.bestTrack.id, 'm2');
+
+      // RobOS skill execution via executeNabuCommand
+      const skillRes = await router.executeNabuCommand('Hello Nabu validate knowledge graph', { autoLaunchPlayers: false });
+      assert.strictEqual(skillRes.ok, true);
+      assert.strictEqual(skillRes.skill, 'kgraph-validate');
     });
   });
 

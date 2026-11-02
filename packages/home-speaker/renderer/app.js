@@ -1336,7 +1336,7 @@ function renderIncomingListenerState(st) {
           (item) => `
           <div class="incoming-msg-card">
             <div class="incoming-msg-top">
-              <span>From Speaker (${item.speakerIp}) • Triggered by: ${item.wakeWord || 'Speaker Mic'}</span>
+              <span>From Speaker (${item.speakerIp}) • Triggered by: ${item.wakeWord || 'Speaker Mic'}${item.skill ? ` • Skill: <strong>${item.skill}</strong>` : ''}</span>
               <span>${item.timestamp || ''}</span>
             </div>
             <div class="incoming-msg-text">"${item.transcript}"</div>
@@ -1393,6 +1393,39 @@ if (btnClearInbox) {
     await window.robosSpeaker.clearVoiceInbox();
     const st = await window.robosSpeaker.getVoiceListenerStatus();
     renderIncomingListenerState(st);
+  });
+}
+
+const nabuCommandInput = document.getElementById('nabu-command-input');
+const btnRunNabuCommand = document.getElementById('btn-run-nabu-command');
+async function handleRunNabuCommand() {
+  if (!nabuCommandInput || !window.robosSpeaker?.executeVoiceCommand) return;
+  const cmd = nabuCommandInput.value.trim();
+  if (!cmd) return;
+  if (btnRunNabuCommand) {
+    btnRunNabuCommand.disabled = true;
+    btnRunNabuCommand.textContent = 'Running...';
+  }
+  try {
+    await window.robosSpeaker.executeVoiceCommand(cmd, {
+      speakReply: listenerAutoReply ? listenerAutoReply.checked : true,
+    });
+    nabuCommandInput.value = '';
+    const st = await window.robosSpeaker.getVoiceListenerStatus();
+    renderIncomingListenerState(st);
+  } finally {
+    if (btnRunNabuCommand) {
+      btnRunNabuCommand.disabled = false;
+      btnRunNabuCommand.textContent = 'Run Nabu Command';
+    }
+  }
+}
+if (btnRunNabuCommand) {
+  btnRunNabuCommand.addEventListener('click', handleRunNabuCommand);
+}
+if (nabuCommandInput) {
+  nabuCommandInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleRunNabuCommand();
   });
 }
 

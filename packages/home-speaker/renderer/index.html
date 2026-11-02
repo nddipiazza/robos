@@ -165,6 +165,12 @@
             <button id="btn-clear-inbox" class="btn btn-secondary btn-sm">Clear History</button>
           </div>
 
+          <!-- Nabu Voice Command Router Bar (Hello Nabu / Okay Nabu -> RobOS Skills + Media Library) -->
+          <div class="nabu-command-bar" style="display:flex;gap:8px;align-items:center;margin:10px 0 12px;flex-wrap:wrap;">
+            <input type="text" id="nabu-command-input" class="text-input" placeholder='Say "Okay Nabu..." on the speaker or test a voice command here (e.g. "Hello Nabu play some Dark Tranquillity", "play movie Dune", "open Task Explorer")' style="flex:1;min-width:260px;">
+            <button id="btn-run-nabu-command" class="btn btn-primary btn-sm">Run Nabu Command</button>
+          </div>
+
           <div id="incoming-voice-list" class="incoming-voice-list">
             <div class="incoming-empty-state">
               No incoming voice messages yet. Once listening is on, press the center button on your Home Assistant Voice speaker or say <strong>"Okay Nabu"</strong> and speak!
