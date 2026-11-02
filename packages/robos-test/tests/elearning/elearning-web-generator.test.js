@@ -51,7 +51,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.includes('parent: Realm of Heroes CRPG'), 'Must place in Crpg documentation parent');
     assert.ok(content.includes('grand_parent: Projects'), 'Must place in Projects grand parent');
     assert.ok(content.includes('redirect_from:'), 'Must include redirect_from fallbacks');
-    assert.ok(content.includes('/elearning/robos-crpg-engine'), 'Must include legacy redirect fallback');
+    assert.ok(content.includes('/projects/crpg-realm/robos-crpg-engine'), 'Must include legacy redirect fallback');
 
     // 2. Verify RobOS branding & top navbar
     assert.ok(content.includes('https://rowbose.com/'), 'Must link back to root domain');

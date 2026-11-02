@@ -56,7 +56,6 @@ function generateELearningWebsite(store, options = {}) {
   const isCrpg = courseSlug.includes('crpg') || (course['dcterms:title'] || '').toLowerCase().includes('crpg');
   const isParsePortal = courseSlug.includes('parse-portal') || (course['dcterms:title'] || '').toLowerCase().includes('parse portal');
 
-  const permalink = options.permalink || (isCrpg ? '/projects/crpg-realm/elearning/' : (isParsePortal ? '/projects/kgraph-parse-portal/elearning/' : `/elearning/${courseSlug}`));
   const outputFileName = (isCrpg || isParsePortal) ? 'index.html' : `${courseSlug}.html`;
   const defaultOutputPath = isCrpg
     ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html')
@@ -64,6 +63,8 @@ function generateELearningWebsite(store, options = {}) {
       ? path.join(process.cwd(), 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html')
       : path.join(process.cwd(), 'docs', 'elearning', outputFileName));
   const outputPath = options.outputFilePath || defaultOutputPath;
+  const existingPage = readMaintainedPageParts(outputPath);
+  const permalink = options.permalink || existingPage.permalink || (isCrpg ? '/projects/crpg-realm/elearning/' : (isParsePortal ? '/projects/kgraph-parse-portal/elearning/' : `/elearning/${courseSlug}`));
 
   // Resolve living documentation markdown file
   let docMarkdown = '';
@@ -106,6 +107,8 @@ function generateELearningWebsite(store, options = {}) {
     modules,
     permalink,
     docMarkdown,
+    existingFrontMatter: existingPage.frontMatter,
+    existingDocHtml: existingPage.docHtml,
     isCrpg,
     isParsePortal,
   });
@@ -145,6 +148,65 @@ function generateELearningWebsite(store, options = {}) {
 }
 
 /**
+ * Read the parts of an already published page that outlive generation. Front
+ * matter is maintained with the docs navigation, and the doc tab may be the only
+ * remaining copy of its content once the markdown source has moved on.
+ */
+function readMaintainedPageParts(filePath) {
+  let html;
+  try {
+    html = fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return {};
+  }
+  const frontMatter = html.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
+  const article = html.match(/<article class="doc-article">\s*([\s\S]*?)\s*<\/article>/);
+  const permalink = frontMatter && frontMatter[0].match(/^permalink:\s*(\S+)\s*$/m);
+  return {
+    frontMatter: frontMatter ? frontMatter[0] : null,
+    permalink: permalink ? permalink[1] : null,
+    docHtml: article ? article[1] : null,
+  };
+}
+
+/**
+ * Jekyll front matter for a page that has none yet.
+ */
+function buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, isParsePortal }) {
+  const cleanPermalink = permalink.endsWith('/') ? permalink : `${permalink}/`;
+  const basePermalink = permalink.replace(/\/$/, '');
+  const redirectList = [
+    `${basePermalink}`,
+    `${basePermalink}.html`,
+    `${cleanPermalink}`,
+  ];
+  if (isCrpg) {
+    redirectList.push(
+      '/projects/crpg-realm/robos-crpg-engine',
+      '/projects/crpg-realm/robos-crpg-engine/'
+    );
+  }
+  const uniqueRedirects = Array.from(new Set(redirectList.filter(r => r !== permalink)));
+  const description = (courseDesc || '').replace(/\s+/g, ' ').replace(/"/g, '\\"');
+
+  return `---
+layout: null
+title: "${isCrpg ? 'Tactical cRPG Codex' : (isParsePortal ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"')))}"
+${description ? `description: "${description}"
+` : ''}${isCrpg ? `parent: Realm of Heroes CRPG
+grand_parent: Projects
+nav_order: 9
+` : (isParsePortal ? `parent: KGraph parse portal
+grand_parent: Build on RobOS
+nav_order: 1
+` : '')}permalink: ${permalink}
+redirect_from:
+${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
+---
+`;
+}
+
+/**
  * Build the complete self-contained HTML document with Jekyll frontmatter,
  * responsive dark navy/cyan styling, interactive player, living docs, and certificate modal.
  */
@@ -161,6 +223,8 @@ function buildStandaloneHtml(params) {
     modules,
     permalink,
     docMarkdown,
+    existingFrontMatter,
+    existingDocHtml,
     isCrpg,
     isParsePortal,
   } = params;
@@ -173,41 +237,14 @@ function buildStandaloneHtml(params) {
   const serializedModules = JSON.stringify(modules);
   const serializedApp = JSON.stringify(appNode || {});
 
-  // Parse markdown documentation into structured sections
-  const docHtml = parseLivingDocMarkdown(docMarkdown);
+  // Parse markdown documentation into structured sections. Without a source, keep the published doc tab.
+  const docHtml = docMarkdown ? parseLivingDocMarkdown(docMarkdown) : (existingDocHtml || parseLivingDocMarkdown(''));
 
-  const cleanPermalink = permalink.endsWith('/') ? permalink : `${permalink}/`;
-  const basePermalink = permalink.replace(/\/$/, '');
-  const redirectList = [
-    `${basePermalink}`,
-    `${basePermalink}.html`,
-    `${cleanPermalink}`,
-  ];
-  if (isCrpg) {
-    redirectList.push(
-      '/projects/crpg-realm/robos-crpg-engine',
-      '/projects/crpg-realm/robos-crpg-engine/',
-      '/elearning/robos-crpg-engine',
-      '/elearning/robos-crpg-engine/',
-      '/elearning/robos-crpg-engine.html'
-    );
-  }
-  const uniqueRedirects = Array.from(new Set(redirectList.filter(r => r !== permalink)));
+  const frontMatter = existingFrontMatter
+    ? existingFrontMatter.replace(/^permalink:.*$/m, () => `permalink: ${permalink}`)
+    : buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, isParsePortal });
 
-  return `---
-layout: null
-title: "${isCrpg ? 'Tactical cRPG Codex' : (isParsePortal ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"')))}"
-${isCrpg ? `parent: Realm of Heroes CRPG
-grand_parent: Projects
-nav_order: 9
-` : (isParsePortal ? `parent: KGraph parse portal
-grand_parent: Build on RobOS
-nav_order: 1
-` : '')}permalink: ${permalink}
-redirect_from:
-${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
----
-<!DOCTYPE html>
+  return `${frontMatter}<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2850,7 +2887,7 @@ flowchart LR
           lines.push('');
         });
       }
-      const md = lines.join('\n');
+      const md = lines.join('\\n');
       await copyToClipboard(md);
       showWebToast('📄 Copied Slide Markdown to clipboard!');
     }
@@ -3000,7 +3037,7 @@ flowchart LR
         '  <link rel="stylesheet" href="style.css">\\n' +
         '</head>\\n<body>\\n' +
         '  <div class="slide-offline-container">\\n' +
-        '    <div class="slide-offline-header">\n' +
+        '    <div class="slide-offline-header">\\n' +
         '      <span class="slide-offline-badge">RobOS Offline Learning Slide &middot; ' + (idx + 1) + ' of ' + MODULES_DATA.length + '</span>\\n' +
         '      <h1>' + slideTitle + '</h1>\\n' +
         '      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">\\n' +
@@ -3198,6 +3235,14 @@ flowchart LR
 /**
  * Lightweight helper to parse the Living Architecture markdown file into styled HTML.
  */
+function renderInlineMarkdown(text) {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent-cyan);">$1</a>');
+}
+
 function parseLivingDocMarkdown(markdown) {
   if (!markdown) {
     return '<p>No living documentation markdown source attached.</p>';
@@ -3205,6 +3250,9 @@ function parseLivingDocMarkdown(markdown) {
 
   // Strip Jekyll frontmatter
   let clean = markdown.replace(/^---[\s\S]*?---\s*/, '');
+
+  // Drop Kramdown's collapsible table of contents; it only renders under Jekyll's markdown converter
+  clean = clean.replace(/<details[^>]*>(?:(?!<\/details>)[\s\S])*?\{:toc\}\s*<\/details>\s*/g, '');
 
   // Strip Kramdown inline macros like {: .no_toc }
   clean = clean.replace(/\{:\s*[^}]+\s*\}/g, '');
@@ -3244,7 +3292,10 @@ function parseLivingDocMarkdown(markdown) {
     let html = '<table>';
     lines.forEach((line, idx) => {
       if (line.includes('---')) return; // separator
-      const cells = line.split('|').slice(1, -1).map(c => c.trim());
+      // A Liquid filter's pipe is not a cell boundary
+      const cells = line.replace(/\{\{[\s\S]*?\}\}/g, liquid => liquid.replace(/\|/g, '\0'))
+        .split('|').slice(1, -1)
+        .map(c => renderInlineMarkdown(c.trim().replace(/\0/g, '|')));
       if (idx === 0) {
         html += '<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
       } else {
@@ -3252,7 +3303,7 @@ function parseLivingDocMarkdown(markdown) {
       }
     });
     html += '</tbody></table>';
-    return saveToken(html);
+    return `${saveToken(html)}\n\n`;
   });
 
   // 6. Convert inline math: $...$
@@ -3271,10 +3322,7 @@ function parseLivingDocMarkdown(markdown) {
   clean = clean.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
 
   // 10. Inline bold / italic / code / links
-  clean = clean.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  clean = clean.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  clean = clean.replace(/`([^`]+)`/g, '<code>$1</code>');
-  clean = clean.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent-cyan);">$1</a>');
+  clean = renderInlineMarkdown(clean);
 
   // 11. Wrap loose paragraphs
   const chunks = clean.split(/\n\s*\n/).map(p => {
@@ -3298,7 +3346,7 @@ function parseLivingDocMarkdown(markdown) {
 
   // 12. Restore saved tokens
   for (const { placeholder, html } of tokens) {
-    result = result.replace(placeholder, html);
+    result = result.replace(placeholder, () => html);
   }
 
   return result;
