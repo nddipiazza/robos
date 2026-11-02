@@ -21338,9 +21338,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         if (outputTarget !== "local") {
           castTrack(outputTarget, first);
           if (playerRef.current?.audio?.current) {
-            playerRef.current.audio.current.muted = true;
-            playerRef.current.audio.current.play().catch(() => {
-            });
+            playerRef.current.audio.current.pause();
           }
         } else {
           if (activeCastSession) handleStopCast();
@@ -21769,11 +21767,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (outputTarget !== "local") {
         castTrack(outputTarget, trackToPlay);
         if (playerRef.current?.audio?.current) {
-          playerRef.current.audio.current.muted = true;
-          setTimeout(() => {
-            playerRef.current?.audio?.current?.play().catch(() => {
-            });
-          }, 60);
+          playerRef.current.audio.current.pause();
         }
       } else {
         if (activeCastSession) {
