@@ -68,6 +68,8 @@ Next to the packages, `.robos/` holds these files:
 |---|---|
 | `kgraph.yaml` | Catalog with the `packages` list. RobOS updates the list when it writes a workspace. It does not read the `repositories` or `dependencies` entries. |
 | `knowledge-graph.jsonld` | All packages combined in one file, rewritten when packages are saved. It exists for tools that read a single file. After editing a package file by hand, run `node packages/crpg-builder/scripts/sync-aggregate.js`. A strict workspace read fails if the two disagree, and CI checks this. |
+| `import-state.json` | Written by `kgraph apply`: the revision hash, the last extracted nodes, and retired IDs so an import cannot bring a removed node back. Tracked in the RobOS repository. |
+| `revisions/` | Written by `kgraph apply`: a full copy of each applied proposal, about 2 MB each for the RobOS graph. Nothing reads it, and the RobOS repository ignores it. |
 | `ontology.jsonld` | Classes and properties with their Schema.org parents and shape ids. |
 | `teams.yaml`, `packages.yaml`, `documentation.yaml`, `elearning.yaml` | YAML catalogs kept beside the graph. |
 
@@ -233,6 +235,6 @@ If `pass` is missing or cannot run, the code does not stop. It writes a file at 
 ## Known limits
 
 - The validator checks only the minimum and maximum number of values per property. It does not check datatypes or formats, and it is not a full W3C SHACL implementation. A passing result is a structural check.
-- The `.robos` directory in the RobOS repository opens as a workspace, but `kgraph apply` on it refuses every proposal because the graph has validation errors (missing titles, references to nodes that do not exist, and missing required properties). `kgraph validate` on a copy of it reports them.
+- The `.robos` directory in the RobOS repository is a strict workspace that passes validation, but only `kgraph apply` enforces that. CI checks that the aggregate matches the packages, not that the graph is valid, so a hand edit can bring errors back. `ResourceImporter` also still writes `urn:robos:project:enterprise-core` and `urn:robos:person:architect` as defaults without creating those nodes, so an import can add references that fail validation.
 - In the default graph, **Packages & Repos** records external graph repositories in `~/.robos/config/kgraph-repos.json` and clones the chosen tag into `~/.robos/cache/kgraphs/`. If the clone fails, the code writes a stub package in its place. Nothing merges those packages into the graph the Explorer shows, so a registered remote repository is not yet part of the graph. Workspaces refuse this change.
 - Dependency impact covers only the modeled edges. The `impact` output says so itself: finding no dependents does not mean a change is safe.
