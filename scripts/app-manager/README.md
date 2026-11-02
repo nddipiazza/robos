@@ -55,4 +55,4 @@ It uses an isolated profile and verifies one app, multiple apps, the complete li
 xvfb-run -a -s "-screen 0 1440x900x24" node scripts/app-manager/audit-linux.cjs
 ```
 
-The new application registration is stored as a refinement request in `.robos/proposals/app-manager.registration.json`. `kgraph apply` refuses it for now because the repository graph has existing validation errors unrelated to App Manager, which must be fixed first. The package registry, icon registry, diagnostics and app documentation register App Manager independently.
+The graph node is `urn:robos:desktop-app:app-manager`, applied with `kgraph propose` and `kgraph apply` from `.robos/proposals/app-manager.registration.json` after `.robos/proposals/repair-validation-errors.refinement.json` cleared the repository graph's existing validation errors. The package registry, icon registry, diagnostics and app documentation register App Manager independently.
