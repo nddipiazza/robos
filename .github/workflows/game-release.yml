@@ -1,0 +1,100 @@
+name: Standalone game downloads
+on:
+  push:
+    branches: [main, codex/game-downloads]
+    tags: ['games-v*']
+    paths: ['games/**', 'scripts/games/**', 'site/_data/games.json', 'VERSION', '.github/workflows/game-release.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: standalone-games-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      needed: ${{ steps.check.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check whether this version is already published
+        id: check
+        run: node scripts/games/check-release.cjs
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.needed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-24.04
+            platform: linux
+          - os: macos-15-intel
+            platform: macos
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify download routing and packaging contracts
+        run: node --test scripts/games/*.test.cjs
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/robos-tools/godot-4.7.2
+          key: game-godot-4.7.2-${{ runner.os }}
+      - name: Install official Godot and verify checksums
+        id: engine
+        run: node scripts/games/setup.cjs
+      - name: Install Windows installer compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress
+          "NSIS_BIN=C:/Program Files (x86)/NSIS/makensis.exe" >> $env:GITHUB_ENV
+      - name: Export standalone games and smoke test native exports
+        env:
+          GODOT_BIN: ${{ steps.engine.outputs.godot }}
+          GAME_PLATFORM: ${{ matrix.platform }}
+        run: node scripts/games/build-all.cjs
+      - name: Upload game builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-games-${{ matrix.platform }}
+          path: |
+            release/games/*.exe
+            release/games/*.zip
+            release/games/*-build.json
+            release/games/*-SHA256SUMS.txt
+      - name: Keep export and smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-game-logs-${{ matrix.platform }}
+          include-hidden-files: true
+          path: release/games/.build-*/*.log
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: standalone-games-*
+          path: release/games
+          merge-multiple: true
+      - name: Publish complete verified game downloads
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/games/publish.cjs

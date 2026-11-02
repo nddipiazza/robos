@@ -1,5 +1,6 @@
 ---
 layout: game
+game_id: quest-warrior-dragon
 title: "Quest: Warrior Dragon"
 permalink: /games/quest-warrior-dragon/
 description: "A clean-room NES-authentic 2D JRPG in Godot 4 featuring 29 interconnected maps, 40 monsters, 10 spells, in-engine Stride AI, Cucumber checkpoint E2E tests, and 100% verified global map reachability."
@@ -14,7 +15,8 @@ keywords: "Quest Warrior Dragon, RobOS 2D JRPG, Dragon Warrior clean-room RPG, G
   <h1 class="g-title">Descendant of Erdrick,<br>restore the light.</h1>
   <p class="lead">An NES-authentic 8-bit 2D RPG rebuilt from a declarative Knowledge Graph with 100% clean-room procedural pixel art &amp; chiptune audio, an in-engine autonomous Stride AI, chained Cucumber checkpoint tests, and a headless global pathfinding audit proving every tile, chest, door, shrine, and boss in Alefgard is reachable.</p>
   <div class="cta">
-    <a class="btn" href="#play">Play it</a>
+    {% include game-download-button.html %}
+    <a class="btn btn-ghost" href="#download">All platforms</a>
     <a class="btn btn-ghost" href="#proof-of-viability">Proof of Viability</a>
     <a class="btn btn-ghost" href="{{ '/games/quest-warrior-dragon/proof-of-viability.html' | relative_url }}">Interactive 20-Slide Tour</a>
     <a class="btn btn-ghost" href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">AI Playthrough</a>
@@ -22,6 +24,7 @@ keywords: "Quest Warrior Dragon, RobOS 2D JRPG, Dragon Warrior clean-room RPG, G
   </div>
   <span class="scroll">Scroll ↓</span>
 </section>
+{% include game-downloads.html %}
 
 <section class="g-sec">
   <div class="wrap">

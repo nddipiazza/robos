@@ -1,5 +1,6 @@
 ---
 layout: game
+game_id: tabletop-rpg
 title: "Tabletop RPG"
 permalink: /games/tabletop-rpg/
 description: "A HeroQuest-inspired tabletop dungeon crawler featuring Quest 1: Custom Dungeon and Election 2026: Battle for the Hill, autonomous AI verification, fog of war, a talking story, Game Master mode, and the editors to build your own. Built in Godot 4 by RobOS agents."
@@ -14,9 +15,10 @@ keywords: "RobOS Tabletop RPG, HeroQuest dungeon crawler, Godot 4 tabletop game,
   <p class="kicker">RobOS Tabletop RPG</p>
   <h1 class="g-title">Descend. Open the door.<br>Face what waits.</h1>
   <p class="lead">A HeroQuest-inspired dungeon crawler. Lead four heroes through the fully verified custom quest, or sit behind the screen as the Game Master. Then build quests of your own.</p>
-  <div class="cta"><a class="btn" href="#play">Play it</a><a class="btn btn-ghost" href="#build">Build a quest</a><a class="btn btn-ghost" href="#proof-of-viability">Proof of Viability</a><a class="btn btn-ghost" href="{{ '/games/tabletop-rpg/docs/' | relative_url }}">Read the docs</a></div>
+  <div class="cta">{% include game-download-button.html %}<a class="btn btn-ghost" href="#download">All platforms</a><a class="btn btn-ghost" href="#build">Build a quest</a><a class="btn btn-ghost" href="#proof-of-viability">Proof of Viability</a><a class="btn btn-ghost" href="{{ '/games/tabletop-rpg/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
 </section>
+{% include game-downloads.html %}
 
 <section class="g-sec">
   <div class="wrap">

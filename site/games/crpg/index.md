@@ -1,5 +1,6 @@
 ---
 layout: game
+game_id: crpg
 title: "Realm of Heroes CRPG"
 permalink: /games/crpg/
 description: "Realm of Heroes CRPG: A Night Without Memory — a party-based, real-time-with-pause cRPG built by AI agents in RobOS."
@@ -14,9 +15,10 @@ keywords: "Realm of Heroes CRPG, RobOS cRPG, A Night Without Memory, real-time w
   <p class="kicker">RobOS cRPG</p>
   <h1 class="g-title">Realm of Heroes CRPG</h1>
   <p class="lead">A Night Without Memory. Wake in a stranger's manor, gather a party and fight your way to the Garrison Keep in a real-time-with-pause tactical RPG.</p>
-  <div class="cta"><a class="btn" href="#play">Play it</a><a class="btn btn-ghost" href="{{ '/games/crpg/docs/' | relative_url }}">Read the docs</a></div>
+  <div class="cta">{% include game-download-button.html %}<a class="btn btn-ghost" href="#download">All platforms</a><a class="btn btn-ghost" href="{{ '/games/crpg/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
 </section>
+{% include game-downloads.html %}
 
 <section class="g-sec" id="about">
   <div class="wrap">

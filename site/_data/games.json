@@ -1,0 +1,6 @@
+{
+  "crpg": { "title": "Realm of Heroes", "project": "crpg-realm", "executable": "RealmOfHeroes", "itch_url": null },
+  "tabletop-rpg": { "title": "RobOS Tabletop RPG", "project": "tabletop-rpg", "executable": "RobOSTabletop", "itch_url": null },
+  "robos-rts": { "title": "Starfall Command", "project": "robos-rts", "executable": "StarfallCommand", "itch_url": null },
+  "quest-warrior-dragon": { "title": "Quest: Warrior Dragon", "project": "quest-warrior-dragon", "executable": "QuestWarriorDragon", "itch_url": null }
+}

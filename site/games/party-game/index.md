@@ -13,8 +13,22 @@ keywords: "RobOS Party Game, AI party game, AI game show host, party games on TV
   <p class="kicker">RobOS Party Games · AI-hosted</p>
   <h1 class="g-title">RobOS Party Game</h1>
   <p class="lead">An AI host in a hooded mask runs the party on your TVs. Guests answer a survey on their phones, get secret roles, and play mini games the AI writes about them and the house you are standing in.</p>
-  <div class="cta"><a class="btn" href="#how">How a party runs</a><a class="btn btn-ghost" href="{{ '/games/party-game/docs/' | relative_url }}">Read the docs</a></div>
+  <div class="cta"><a class="btn" href="#download">Install &amp; host a party</a><a class="btn btn-ghost" href="#how">How a party runs</a><a class="btn btn-ghost" href="{{ '/games/party-game/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
+</section>
+<section class="g-sec" id="download">
+  <div class="wrap"><div class="panel-g">
+    <p class="eyebrow">Download &amp; play</p>
+    <h2 class="h2">Install RobOS Party Game</h2>
+    <p class="sec-p">Download App Manager for your computer, choose <b>RobOS Party Game</b>, and click Install. Open the game from its launcher, select your AI agent and paired RobOS TV, then invite guests with the QR code. Guests play on their phones without installing anything.</p>
+    <div class="download-options">
+      <a class="btn" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Windows installer</a>
+      <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-amd64.deb">Ubuntu installer</a>
+      <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-arm64.dmg">Mac · Apple Silicon</a>
+      <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-x64.dmg">Mac · Intel</a>
+    </div>
+    <p class="sec-p">The host needs a configured AI agent and a TV paired in RobOS Smart TV Studio. <a href="{{ '/games/party-game/docs/' | relative_url }}">Party setup guide</a> · <a href="#play">Run from source</a></p>
+  </div></div>
 </section>
 
 <section class="g-sec" id="about">

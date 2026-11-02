@@ -1,5 +1,6 @@
 ---
 layout: game
+game_id: robos-rts
 title: "Starfall Command (RobOS RTS)"
 permalink: /games/robos-rts/
 description: "Starfall Command: one player versus AI on a 256×256 battlefield, with eight possible starts, unlimited deposits, a Godot 4 map editor and live gameplay tests."
@@ -14,9 +15,10 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
   <p class="kicker">RobOS RTS</p>
   <h1 class="g-title">Starfall Command</h1>
   <p class="lead">Build from twelve workers into an army on Frontier Hunters, a 256×256 battlefield with eight possible starts and inexhaustible deposits. One player, one AI, and a working map editor for the next battlefield you want to make.</p>
-  <div class="cta"><a class="btn" href="#play">Play it</a><a class="btn btn-ghost" href="#frontier">Watch the live match</a><a class="btn btn-ghost" href="{{ '/games/robos-rts/docs/' | relative_url }}">Read the docs</a></div>
+  <div class="cta">{% include game-download-button.html %}<a class="btn btn-ghost" href="#download">All platforms</a><a class="btn btn-ghost" href="#frontier">Watch the live match</a><a class="btn btn-ghost" href="{{ '/games/robos-rts/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
 </section>
+{% include game-downloads.html %}
 
 <section class="g-sec" id="about">
   <div class="wrap">
