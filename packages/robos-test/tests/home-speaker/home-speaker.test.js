@@ -369,6 +369,46 @@ describe('RobOS Home Speaker Tests', () => {
       assert.strictEqual(skillRes.ok, true);
       assert.strictEqual(skillRes.skill, 'kgraph-validate');
     });
+
+    it('matches TV Season & Episode queries and resolves target cast devices across Audio and Movie libraries', () => {
+      const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
+      const sampleDevices = [
+        { ip: '192.168.1.15', id: 'tv-roku', name: '65" TCL Roku TV (Living room)', model: 'TCL Roku OS', platformId: 'roku-os', deviceType: 'tv', isRealLanDevice: true },
+        { ip: '192.168.1.10', id: 'spk-kitchen', name: 'Kitchen speaker', model: 'Google Nest Audio', platformId: 'google-cast', deviceType: 'speaker', isRealLanDevice: true },
+      ];
+      const sampleAudio = [
+        { id: 'a1', title: 'Misery\'s Crown', artist: 'Dark Tranquillity', album: 'Fiction', trackNumber: 3 },
+      ];
+      const sampleMovies = [
+        { id: 'rm_s07e01', title: 'Rick and Morty · S07E01', showName: 'Rick and Morty', seasonNumber: 7, episodeNumber: 1, episodeCode: 'S07E01', mediaType: 'tv' },
+        { id: 'rm_s08e01', title: 'Rick and Morty · S08E01 · Summer of All Fears', showName: 'Rick and Morty', seasonNumber: 8, episodeNumber: 1, episodeCode: 'S08E01', episodeTitle: 'Summer of All Fears', mediaType: 'tv' },
+        { id: 'rm_s08e02', title: 'Rick and Morty · S08E02 · Valkyrick', showName: 'Rick and Morty', seasonNumber: 8, episodeNumber: 2, episodeCode: 'S08E02', episodeTitle: 'Valkyrick', mediaType: 'tv' },
+      ];
+
+      const tvRes = router.findUnifiedMediaMatch('play rick and morty season 8 episode 1 on the roku', {
+        audioTracks: sampleAudio,
+        movieTracks: sampleMovies,
+        devices: sampleDevices,
+      });
+      assert.strictEqual(tvRes.ok, true);
+      assert.strictEqual(tvRes.kind, 'movie');
+      assert.strictEqual(tvRes.matchType, 'tv-episode');
+      assert.strictEqual(tvRes.bestTrack.id, 'rm_s08e01');
+      assert.strictEqual(tvRes.targetIp, '192.168.1.15');
+      assert.ok(tvRes.summaryText.includes('Season 8 Episode 1'));
+      assert.ok(tvRes.summaryText.includes('Roku TV'));
+
+      const audioRes = router.findUnifiedMediaMatch('play some dark tranquility on the kitchen speaker', {
+        audioTracks: sampleAudio,
+        movieTracks: sampleMovies,
+        devices: sampleDevices,
+      });
+      assert.strictEqual(audioRes.ok, true);
+      assert.strictEqual(audioRes.kind, 'audio');
+      assert.strictEqual(audioRes.bestTrack.id, 'a1');
+      assert.strictEqual(audioRes.targetIp, '192.168.1.10');
+      assert.ok(audioRes.summaryText.includes('Kitchen speaker'));
+    });
   });
 
 });
