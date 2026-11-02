@@ -102,18 +102,25 @@ async function main() {
   const results = [];
   for (const app of apps) {
     const file = path.join(output, `${app.id}.json`);
-    await new Promise(resolve => {
-      const child = spawn(process.execPath, [__filename, '--worker', app.id, home], { stdio: 'ignore', windowsHide: true });
-      const timeout = setTimeout(() => kill(child.pid), 60000);
-      child.on('close', () => { clearTimeout(timeout); resolve(); });
-    });
-    fs.rmSync(path.join(locations.root, 'running', `${app.id}.json`), { force: true });
-    const result = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file)) : { id: app.id, ok: false, error: 'Startup timed out' };
+    const attempt = async () => {
+      fs.rmSync(file, { force: true });
+      await new Promise(resolve => {
+        const child = spawn(process.execPath, [__filename, '--worker', app.id, home], { stdio: 'ignore', windowsHide: true });
+        const timeout = setTimeout(() => kill(child.pid), 60000);
+        child.on('close', () => { clearTimeout(timeout); resolve(); });
+      });
+      fs.rmSync(path.join(locations.root, 'running', `${app.id}.json`), { force: true });
+      return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file)) : { id: app.id, ok: false, error: 'Startup timed out' };
+    };
+    let result = await attempt();
+    // The test driver's debugger handshake occasionally hangs before any app code runs. That
+    // earns one retry, recorded in the report. A hang on both attempts still fails.
+    if (result.error?.startsWith('electron.launch')) result = { ...await attempt(), retriedAfterLaunchTimeout: true };
     const issues = linux ? desktopIssues(app.id, path.join(locations.shortcuts, `robos-managed-${app.id}.desktop`)) : [];
     if (issues.length) { result.ok = false; result.desktopIssues = issues; }
     results.push(result);
     const reason = result.ok ? '' : `: ${[result.error, ...(result.errors || []), ...(result.failedRequests || []).map(item => item.url), ...issues].filter(Boolean).join('; ').slice(0, 300) || `no content (${result.textLength} characters)`}`;
-    console.log(`${result.ok ? 'PASS' : 'FAIL'} ${app.id}${reason}`);
+    console.log(`${result.ok ? 'PASS' : 'FAIL'} ${app.id}${reason}${result.retriedAfterLaunchTimeout ? ' (retried once)' : ''}`);
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
   }
   console.log(`Passed ${results.filter(item => item.ok).length}/${results.length}`);
