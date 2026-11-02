@@ -49,10 +49,10 @@ It uses an isolated profile and verifies one app, multiple apps, the complete li
 
 `test-ubuntu-install.sh` proves the Ubuntu result end to end. It installs the built `.deb` in a clean Ubuntu container (`ROBOS_UBUNTU_VERSION`, default 26.04), starts a real headless GNOME Shell with the Ubuntu dock, and drives `smoke-gnome.cjs`. That asks the Shell itself whether App Manager is pinned, whether each app is in the app grid and search with its own icon, whether each running window belongs to its dock entry, and whether uninstalling removes everything. Screenshots are saved to `run/app-manager-gnome-smoke/`. Nothing touches the desktop running the test. It needs Docker and app payloads built with `publish-catalog.cjs`.
 
-`audit-linux.cjs` is the Linux counterpart of the Windows startup audit. Under a display, it installs every catalog app through the real manager into an isolated home, validates each desktop entry and icon, starts each app, and fails if its window has no content, has page errors, misses local resources or carries the wrong window class. Reports are saved to `run/linux-audit/`.
+`audit-apps.cjs` is the release gate for the real apps on Windows, macOS and Linux. It installs every catalog app for the platform through the real manager into an isolated home and starts each one from its managed location, failing if its window has no content, has page errors or misses local resources. On Linux it also validates each desktop entry and icon, and checks the window class. Reports and screenshots are saved to `run/app-audit/`.
 
 ```sh
-xvfb-run -a -s "-screen 0 1440x900x24" node scripts/app-manager/audit-linux.cjs
+xvfb-run -a -s "-screen 0 1440x900x24" node scripts/app-manager/audit-apps.cjs
 ```
 
 The graph node is `urn:robos:desktop-app:app-manager`, applied with `kgraph propose` and `kgraph apply` from `.robos/proposals/app-manager.registration.json` after `.robos/proposals/repair-validation-errors.refinement.json` cleared the repository graph's existing validation errors. The package registry, icon registry, diagnostics and app documentation register App Manager independently.
