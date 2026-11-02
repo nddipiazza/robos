@@ -53,8 +53,19 @@ app.whenReady().then(() => {
   speakerService = new HomeSpeakerService();
   createWindow();
 
-  // Fast background probe of known speakers
-  speakerService.probeKnownSpeakers(2000).catch(() => {});
+  // Push live incoming voice listener state updates to renderer
+  speakerService.onVoiceListenerUpdate((status) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('speakers:listener-update', status);
+    }
+  });
+
+  // Fast background probe of known speakers & auto-enable listening on HA Voice PE
+  speakerService.probeKnownSpeakers(2000).then(() => {
+    if (!process.env.ROBOS_TEST) {
+      speakerService.startVoiceListener('192.168.1.64', { autoReply: true }).catch(() => {});
+    }
+  }).catch(() => {});
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -116,6 +127,22 @@ ipcMain.handle('speakers:scanBle', async (_event, timeoutSec) => {
 
 ipcMain.handle('speakers:provisionBleWifi', async (_event, params) => {
   return speakerService.provisionBleWifi(params || {});
+});
+
+ipcMain.handle('speakers:startListener', async (_event, ip, options) => {
+  return speakerService.startVoiceListener(ip || '192.168.1.64', options || {});
+});
+
+ipcMain.handle('speakers:stopListener', async () => {
+  return speakerService.stopVoiceListener();
+});
+
+ipcMain.handle('speakers:getListenerStatus', async () => {
+  return speakerService.getVoiceListenerStatus();
+});
+
+ipcMain.handle('speakers:clearInbox', async () => {
+  return speakerService.clearVoiceInbox();
 });
 
 ipcMain.handle('speakers:getStatus', async (_event, targetIp) => {

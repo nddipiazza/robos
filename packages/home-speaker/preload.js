@@ -15,6 +15,15 @@ contextBridge.exposeInMainWorld('robosSpeaker', {
   testDevice: (ip, options) => ipcRenderer.invoke('speakers:testDevice', ip, options),
   scanBleDevices: (timeoutSec) => ipcRenderer.invoke('speakers:scanBle', timeoutSec),
   provisionBleWifi: (params) => ipcRenderer.invoke('speakers:provisionBleWifi', params),
+  startVoiceListener: (ip, options) => ipcRenderer.invoke('speakers:startListener', ip, options),
+  stopVoiceListener: () => ipcRenderer.invoke('speakers:stopListener'),
+  getVoiceListenerStatus: () => ipcRenderer.invoke('speakers:getListenerStatus'),
+  clearVoiceInbox: () => ipcRenderer.invoke('speakers:clearInbox'),
+  onVoiceListenerUpdate: (cb) => {
+    const handler = (_event, status) => cb(status);
+    ipcRenderer.on('speakers:listener-update', handler);
+    return () => ipcRenderer.removeListener('speakers:listener-update', handler);
+  },
   getStatus: (targetIp) => ipcRenderer.invoke('speakers:getStatus', targetIp),
   setVolume: (targetIp, level, muted) => ipcRenderer.invoke('speakers:setVolume', targetIp, level, muted),
   stopPlayback: (targetIp) => ipcRenderer.invoke('speakers:stop', targetIp),

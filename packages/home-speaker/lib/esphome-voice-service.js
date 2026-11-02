@@ -4,6 +4,8 @@ const net = require('net');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const EventEmitter = require('events');
 const { exec, execFile } = require('child_process');
 
 const DEFAULT_ESPHOME_PORT = 6053;
@@ -285,10 +287,25 @@ function getVarint(fields, num, fallback = 0) {
 /**
  * ESPHome Native API Client for Home Assistant Voice PE (NC-VK-9727) & ESPHome Satellites
  */
-class EspHomeVoiceService {
+class EspHomeVoiceService extends EventEmitter {
   constructor(options = {}) {
+    super();
     this.clientInfo = options.clientInfo || 'robos-home-speaker';
     this.deviceMetadataCache = new Map(); // ip -> parsed device & entities metadata
+    this.listenerSocket = null;
+    this.listenerState = {
+      active: false,
+      ip: null,
+      port: DEFAULT_ESPHOME_PORT,
+      status: 'idle', // 'idle' | 'listening_for_wake_word' | 'capturing_speech' | 'transcribing' | 'replying'
+      lastWakeWord: null,
+      lastTranscript: '',
+      lastReply: '',
+      inbox: [], // { id, timestamp, speakerIp, wakeWord, transcript, reply, audioWavPath }
+    };
+    this._currentPcmChunks = [];
+    this._silenceTimer = null;
+    this._whisperTranscriberPromise = null;
   }
 
   /**
@@ -858,6 +875,416 @@ class EspHomeVoiceService {
         }
       }
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // Incoming Voice Satellite Listener (NC-VK-9727 Dual-Mic + Wake Word / Button)
+  // -------------------------------------------------------------------------
+
+  getListenerStatus() {
+    return {
+      active: this.listenerState.active,
+      ip: this.listenerState.ip,
+      port: this.listenerState.port,
+      status: this.listenerState.status,
+      lastWakeWord: this.listenerState.lastWakeWord,
+      lastTranscript: this.listenerState.lastTranscript,
+      lastReply: this.listenerState.lastReply,
+      inbox: this.listenerState.inbox.slice(0, 25),
+    };
+  }
+
+  clearIncomingInbox() {
+    this.listenerState.inbox = [];
+    this.emit('listener-update', this.getListenerStatus());
+    return { ok: true };
+  }
+
+  stopVoiceListener() {
+    if (this._silenceTimer) {
+      clearTimeout(this._silenceTimer);
+      this._silenceTimer = null;
+    }
+    if (this.listenerSocket) {
+      try {
+        // Unsubscribe VoiceAssistant (msgType 89, subscribe=false)
+        const unsub = encodeBoolField(1, false);
+        this.listenerSocket.write(buildEspHomeFrame(89, unsub));
+        this.listenerSocket.destroy();
+      } catch {}
+      this.listenerSocket = null;
+    }
+    this.listenerState.active = false;
+    this.listenerState.status = 'idle';
+    this.emit('listener-update', this.getListenerStatus());
+    return this.getListenerStatus();
+  }
+
+  /**
+   * Start persistent ESPHome Voice Assistant subscription on the NC-VK-9727 (:6053)
+   * Listens for on-device wake word ("Okay Nabu" / "Hey Jarvis") or center button press,
+   * streams 16kHz 16-bit PCM audio from the XMOS dual-mic array, transcribes it locally,
+   * and optionally replies with RobOS Voice / Desktop Assistant.
+   */
+  async startVoiceListener(ip = '192.168.1.64', options = {}) {
+    const port = Number(options.port || DEFAULT_ESPHOME_PORT);
+    this.stopVoiceListener();
+
+    this.listenerState.ip = ip;
+    this.listenerState.port = port;
+    this.listenerState.active = true;
+    this.listenerState.status = 'connecting';
+    this.AutoReply = options.autoReply !== false;
+    this.onReplyAudio = options.onReplyAudio || null;
+    this.emit('listener-update', this.getListenerStatus());
+
+    return new Promise((resolve) => {
+      const socket = new net.Socket();
+      this.listenerSocket = socket;
+      let rxBuf = Buffer.alloc(0);
+      let resolved = false;
+
+      const finishConnect = (ok, errText) => {
+        if (resolved) return;
+        resolved = true;
+        if (!ok) {
+          this.listenerState.active = false;
+          this.listenerState.status = 'error';
+          this.emit('listener-update', this.getListenerStatus());
+          resolve({ ok: false, error: errText || 'Could not connect to speaker microphone' });
+        } else {
+          this.listenerState.status = 'listening_for_wake_word';
+          this.emit('listener-update', this.getListenerStatus());
+          resolve({ ok: true, status: this.getListenerStatus() });
+        }
+      };
+
+      socket.on('error', (err) => {
+        finishConnect(false, err.message);
+      });
+
+      socket.on('close', () => {
+        if (this.listenerSocket === socket) {
+          this.listenerSocket = null;
+          this.listenerState.active = false;
+          this.listenerState.status = 'idle';
+          this.emit('listener-update', this.getListenerStatus());
+        }
+      });
+
+      socket.connect(port, ip, () => {
+        const helloPayload = Buffer.concat([
+          encodeStringField(1, `${this.clientInfo}-listener`),
+          encodeVarintField(2, 1),
+          encodeVarintField(3, 10),
+        ]);
+        // SubscribeVoiceAssistantRequest (msgType 89): subscribe=true (1), flags=1 (API_AUDIO)
+        const subVoicePayload = Buffer.concat([
+          encodeBoolField(1, true),
+          encodeVarintField(2, 1),
+        ]);
+        socket.write(Buffer.concat([
+          buildEspHomeFrame(1, helloPayload),
+          buildEspHomeFrame(3),
+          buildEspHomeFrame(20), // SubscribeStatesRequest (for button & switch events)
+          buildEspHomeFrame(89, subVoicePayload),
+        ]));
+        setTimeout(() => finishConnect(true), 350);
+      });
+
+      socket.on('data', (chunk) => {
+        rxBuf = Buffer.concat([rxBuf, chunk]);
+        while (rxBuf.length >= 3) {
+          if (rxBuf[0] !== 0x00) {
+            rxBuf = Buffer.alloc(0);
+            break;
+          }
+          const lenRes = decodeVarint(rxBuf, 1);
+          if (!lenRes) break;
+          const typeRes = decodeVarint(rxBuf, lenRes.nextOffset);
+          if (!typeRes) break;
+          const frameEnd = typeRes.nextOffset + lenRes.value;
+          if (rxBuf.length < frameEnd) break;
+
+          const msgType = typeRes.value;
+          const payload = rxBuf.slice(typeRes.nextOffset, frameEnd);
+          rxBuf = rxBuf.slice(frameEnd);
+
+          this._handleListenerFrame(socket, ip, port, msgType, payload);
+        }
+      });
+    });
+  }
+
+  _sendVoiceEvent(socket, eventType, dataPairs = []) {
+    if (!socket || socket.destroyed) return;
+    const parts = [encodeVarintField(1, eventType)];
+    for (const pair of dataPairs) {
+      const sub = Buffer.concat([
+        encodeStringField(1, pair.name),
+        encodeStringField(2, pair.value),
+      ]);
+      const tag = (2 << 3) | 2;
+      parts.push(Buffer.concat([encodeVarint(tag), encodeVarint(sub.length), sub]));
+    }
+    try {
+      socket.write(buildEspHomeFrame(92, Buffer.concat(parts)));
+    } catch {}
+  }
+
+  _handleListenerFrame(socket, ip, port, msgType, payload) {
+    // PingRequest (msgType 7) -> PingResponse (msgType 8)
+    if (msgType === 7) {
+      try { socket.write(buildEspHomeFrame(8)); } catch {}
+      return;
+    }
+
+    const f = parseProtobufFields(payload);
+
+    // VoiceAssistantRequest (msgType 90) — Wake word or Center button triggered voice stream!
+    if (msgType === 90) {
+      const start = getVarint(f, 1, 0) === 1;
+      const wakePhrase = getStr(f, 5, '') || 'Center Button / Wake Word';
+      if (start) {
+        this._currentPcmChunks = [];
+        this.listenerState.lastWakeWord = wakePhrase;
+        this.listenerState.status = 'capturing_speech';
+        this.emit('listener-update', this.getListenerStatus());
+
+        // Reply with VoiceAssistantResponse (msgType 91): port=0 (use API audio), error=false
+        const respPayload = Buffer.concat([
+          encodeVarintField(1, 0),
+          encodeBoolField(2, false),
+        ]);
+        try { socket.write(buildEspHomeFrame(91, respPayload)); } catch {}
+
+        // Send VOICE_ASSISTANT_RUN_START (1) and VOICE_ASSISTANT_STT_START (3)
+        this._sendVoiceEvent(socket, 1);
+        this._sendVoiceEvent(socket, 3);
+
+        // Glow LED ring purple/cyan while listening
+        this.setLedRing(ip, { state: true, brightness: 0.9, hexColor: '#00bcd4', port }).catch(() => {});
+
+        if (this._silenceTimer) clearTimeout(this._silenceTimer);
+        this._silenceTimer = setTimeout(() => {
+          this._finalizeCapturedUtterance(socket, ip, port);
+        }, 4800);
+      } else {
+        this._finalizeCapturedUtterance(socket, ip, port);
+      }
+      return;
+    }
+
+    // VoiceAssistantAudio (msgType 106) — 16kHz 16-bit mono PCM audio chunk from XMOS mics
+    if (msgType === 106) {
+      const pcmData = f[1] && f[1][0];
+      const endFlag = getVarint(f, 2, 0) === 1;
+      if (Buffer.isBuffer(pcmData) && pcmData.length > 0) {
+        this._currentPcmChunks.push(pcmData);
+        // Check RMS energy for voice activity end detection
+        let sumSq = 0;
+        const samples = Math.floor(pcmData.length / 2);
+        for (let i = 0; i < samples; i += 4) {
+          const s = pcmData.readInt16LE(i * 2) / 32768.0;
+          sumSq += s * s;
+        }
+        const rms = samples > 0 ? Math.sqrt(sumSq / Math.ceil(samples / 4)) : 0;
+        const totalBytes = this._currentPcmChunks.reduce((acc, b) => acc + b.length, 0);
+
+        // Once we have at least 0.9s of audio (28,800 bytes at 16kHz 16-bit), reset silence timer when user is still speaking
+        if (rms > 0.015) {
+          if (this._silenceTimer) clearTimeout(this._silenceTimer);
+          this._silenceTimer = setTimeout(() => {
+            this._finalizeCapturedUtterance(socket, ip, port);
+          }, 1300);
+        } else if (totalBytes > 160000) {
+          // Cap at ~5 seconds max per utterance
+          this._finalizeCapturedUtterance(socket, ip, port);
+        }
+      }
+      if (endFlag) {
+        this._finalizeCapturedUtterance(socket, ip, port);
+      }
+    }
+  }
+
+  _writePcm16kToWav(pcmBuffer) {
+    const sampleRate = 16000;
+    const numChannels = 1;
+    const bitsPerSample = 16;
+    const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+    const blockAlign = numChannels * (bitsPerSample / 8);
+    const dataSize = pcmBuffer.length;
+    const header = Buffer.alloc(44);
+
+    header.write('RIFF', 0);
+    header.writeUInt32LE(36 + dataSize, 4);
+    header.write('WAVE', 8);
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16);
+    header.writeUInt16LE(1, 20); // PCM
+    header.writeUInt16LE(numChannels, 22);
+    header.writeUInt32LE(sampleRate, 24);
+    header.writeUInt32LE(byteRate, 28);
+    header.writeUInt16LE(blockAlign, 32);
+    header.writeUInt16LE(bitsPerSample, 34);
+    header.write('data', 36);
+    header.writeUInt32LE(dataSize, 40);
+
+    const outPath = path.join(os.tmpdir(), `robos-voice-pe-in-${Date.now()}.wav`);
+    fs.writeFileSync(outPath, Buffer.concat([header, pcmBuffer]));
+    return outPath;
+  }
+
+  async _finalizeCapturedUtterance(socket, ip, port) {
+    if (this._silenceTimer) {
+      clearTimeout(this._silenceTimer);
+      this._silenceTimer = null;
+    }
+    if (!this._currentPcmChunks || this._currentPcmChunks.length === 0) {
+      this.listenerState.status = 'listening_for_wake_word';
+      this.emit('listener-update', this.getListenerStatus());
+      return;
+    }
+
+    const pcmBuffer = Buffer.concat(this._currentPcmChunks);
+    this._currentPcmChunks = [];
+
+    // Notify device that VAD & STT capture ended
+    this._sendVoiceEvent(socket, 12); // VOICE_ASSISTANT_STT_VAD_END
+    this.listenerState.status = 'transcribing';
+    this.emit('listener-update', this.getListenerStatus());
+
+    const wavPath = this._writePcm16kToWav(pcmBuffer);
+    let transcript = '';
+    try {
+      transcript = await this.transcribePcm16kBuffer(pcmBuffer);
+    } catch (err) {
+      console.warn('[EspHomeVoiceService] Transcription error:', err.message);
+    }
+
+    transcript = String(transcript || '').trim() || '(Voice note recorded from speaker)';
+    this._sendVoiceEvent(socket, 4, [{ name: 'text', value: transcript }]); // VOICE_ASSISTANT_STT_END
+
+    let replyText = '';
+    if (this.AutoReply && transcript && !transcript.startsWith('(Voice note')) {
+      this.listenerState.status = 'replying';
+      this.emit('listener-update', this.getListenerStatus());
+      replyText = await this._queryRobosAssistant(transcript);
+    }
+
+    const entry = {
+      id: `in_${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      speakerIp: ip,
+      wakeWord: this.listenerState.lastWakeWord || 'Wake Word',
+      transcript,
+      reply: replyText,
+      audioWavPath: wavPath,
+    };
+
+    this.listenerState.lastTranscript = transcript;
+    this.listenerState.lastReply = replyText;
+    this.listenerState.inbox.unshift(entry);
+    if (this.listenerState.inbox.length > 30) {
+      this.listenerState.inbox.length = 30;
+    }
+
+    this._sendVoiceEvent(socket, 2); // VOICE_ASSISTANT_RUN_END
+    this.setLedRing(ip, { state: false, port }).catch(() => {});
+
+    this.listenerState.status = 'listening_for_wake_word';
+    this.emit('listener-update', this.getListenerStatus());
+    this.emit('incoming-utterance', entry);
+
+    if (replyText && typeof this.onReplyAudio === 'function') {
+      try {
+        await this.onReplyAudio(ip, replyText);
+      } catch {}
+    }
+  }
+
+  async transcribePcm16kBuffer(pcmBuffer) {
+    const sampleCount = Math.floor(pcmBuffer.length / 2);
+    if (sampleCount < 1600) return '';
+    const float32 = new Float32Array(sampleCount);
+    for (let i = 0; i < sampleCount; i++) {
+      float32[i] = pcmBuffer.readInt16LE(i * 2) / 32768.0;
+    }
+
+    if (!this._whisperTranscriberPromise) {
+      this._whisperTranscriberPromise = (async () => {
+        try {
+          // Use @xenova/transformers from voice-prompt or local node_modules
+          const voicePromptTransformers = path.resolve(__dirname, '../../voice-prompt/node_modules/@xenova/transformers');
+          const mod = fs.existsSync(voicePromptTransformers)
+            ? await import(voicePromptTransformers)
+            : await import('@xenova/transformers');
+          return await mod.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
+        } catch (err) {
+          console.warn('[EspHomeVoiceService] Whisper load notice:', err.message);
+          return null;
+        }
+      })();
+    }
+
+    const transcriber = await this._whisperTranscriberPromise;
+    if (!transcriber) return '';
+    const result = await transcriber(float32, { chunk_length_s: 15, stride_length_s: 3 });
+    return String(result?.text || '')
+      .replace(/\[.*?\]/g, '')
+      .trim();
+  }
+
+  async _queryRobosAssistant(query) {
+    // 1. Try running RobOS Voice Desktop Assistant on port 19188 if active
+    const fromVoiceDaemon = await new Promise((resolve) => {
+      const body = JSON.stringify({ query, speak: false });
+      const req = http.request(
+        {
+          hostname: '127.0.0.1',
+          port: Number(process.env.ROBOS_VOICE_PORT || 19188),
+          path: '/api/assistant',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body),
+          },
+          timeout: 4500,
+        },
+        (res) => {
+          let data = '';
+          res.on('data', (c) => (data += c));
+          res.on('end', () => {
+            try {
+              const parsed = JSON.parse(data);
+              resolve(parsed?.turn?.response || parsed?.response || '');
+            } catch {
+              resolve('');
+            }
+          });
+        }
+      );
+      req.on('error', () => resolve(''));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve('');
+      });
+      req.write(body);
+      req.end();
+    });
+
+    if (fromVoiceDaemon) return fromVoiceDaemon;
+
+    // 2. Built-in fast local smart-home & workstation answers
+    const q = query.toLowerCase();
+    if (q.includes('time') || q.includes('clock')) {
+      return `It is currently ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`;
+    }
+    if (q.includes('status') || q.includes('online')) {
+      return 'RobOS Home Speaker and your Home Assistant Voice satellite are online and connected.';
+    }
+    return `Heard from speaker: "${query}"`;
   }
 }
 
