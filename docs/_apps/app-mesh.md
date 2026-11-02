@@ -2,6 +2,7 @@
 title: "RobOS App Mesh"
 package: app-mesh
 category: "security-vault"
+landing: /p2p/
 icon: app-mesh.svg
 summary: "Zero-Trust App & IPC Port Mesh for connecting RobOS applications across machines (mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard)"
 description: "Zero-Trust App & IPC Port Mesh for connecting RobOS applications across machines (mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard)"

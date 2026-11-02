@@ -36,7 +36,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
       <li><a href="{{ '/auto-center/' | relative_url }}"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="" width="1000" height="625"><span>Auto Center</span></a></li>
       <li><a href="{{ '/family-finances/' | relative_url }}"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="" width="1440" height="1185"><span>Household</span></a></li>
       <li><a href="{{ '/games/' | relative_url }}"><img src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="" width="1280" height="720"><span>Games</span></a></li>
-      <li><a href="{{ '/v1/apps/audio-player/' | relative_url }}"><img src="{{ '/assets/audio-player/casting-deck.jpg' | relative_url }}" alt="" width="780" height="290"><span>Audio Player</span></a></li>
+      <li><a href="{{ '/apps/audio-player/' | relative_url }}"><img src="{{ '/assets/audio-player/casting-deck.jpg' | relative_url }}" alt="" width="780" height="290"><span>Audio Player</span></a></li>
       <li class="l-mosaic-new"><a class="l-mosaic-more" href="{{ '/apps/' | relative_url }}"><span>More apps</span><b aria-hidden="true">→</b></a><a href="{{ '/build-apps/' | relative_url }}"><b aria-hidden="true">+</b><span>Add your own app</span></a></li>
     </ul>
   </div>
@@ -59,7 +59,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
           <li><span>Repair-shop management software</span><a href="{{ '/auto-center/' | relative_url }}">Auto Center</a></li>
           <li><span>Budgeting and tax-prep apps</span><a href="{{ '/family-finances/' | relative_url }}">Household</a></li>
           <li><span>Locked-in music and movie apps</span><a href="{{ '/movie-player/' | relative_url }}">Audio &amp; Movie Player</a></li>
-          <li><span>Vendor smart-home and TV apps</span><a href="{{ '/v1/apps/smart-light/' | relative_url }}">Smart Light &amp; Smart TV</a></li>
+          <li><span>Vendor smart-home and TV apps</span><a href="{{ '/apps/smart-light/' | relative_url }}">Smart Light &amp; Smart TV</a></li>
           <li><span>Per-seat developer tools</span><a href="{{ '/build-apps/' | relative_url }}">Developer suite</a></li>
         </ul>
         <a class="go" href="{{ '/apps/' | relative_url }}">Browse all {{ site.apps | size }} apps →</a>

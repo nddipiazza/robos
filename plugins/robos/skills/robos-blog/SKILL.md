@@ -50,7 +50,7 @@ Each post is one file, `site/_blog/<slug>.html`, published at `https://rowbose.c
      node --test ...</div>
      </div>
      <div class="blog-links">
-       <a href="{{ '/v1/apps/<app-id>/' | relative_url }}">App docs →</a>
+       <a href="{{ '/apps/<app-id>/' | relative_url }}">App docs →</a>
        <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/<sha>"><sha></a></span>
      </div>
      ```

@@ -2,6 +2,7 @@
 title: "Agent Code Review & PR Review Theater"
 package: pr-review
 category: code-review
+landing: /code-review/
 icon: pr-review.svg
 summary: "Review window for a pull request or a local agent branch, with a seven-step reviewer flow, links into IntelliJ and VS Code, and author tools for creating and updating the PR."
 description: "Opens a task, a PR URL or a saved local review, and walks through overview, documentation, changes, IDE, evidence, walkthrough and approval. This page covers the app; the review flow itself is described in the PR Review Theater guide."

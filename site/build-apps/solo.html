@@ -50,7 +50,7 @@ keywords: "solo developer AI workflow, build apps on your own, Task Planner, Tas
 <li>Click <strong>Test Connection</strong>, then <strong>Save</strong>.</li>
 </ol>
 <figure class="guide-shot"><a href="{{ shots }}servers-1-github.jpg"><img src="{{ shots }}servers-1-github.jpg" alt="Task Servers with a GitHub server selected: the API URL, Use Git client account ticked, one repository, label filters, and Test Connection and Save buttons" loading="lazy" width="1280" height="720"></a><figcaption>A GitHub task server for one repository, using your <code>gh</code> sign-in.</figcaption></figure>
-<p>The entry is saved to <code>~/.config/robos/settings.json</code>. The apps use the first server in the list unless <code>active_task_server</code> in that file names another, and they show the active server in their top right corner. Details: <a href="{{ '/v1/apps/task-servers/' | relative_url }}">Task Servers</a>.</p>
+<p>The entry is saved to <code>~/.config/robos/settings.json</code>. The apps use the first server in the list unless <code>active_task_server</code> in that file names another, and they show the active server in their top right corner. Details: <a href="{{ '/apps/task-servers/' | relative_url }}">Task Servers</a>.</p>
 
 <h2 id="plan">Step 3: Plan the work in Task Planner</h2>
 <p>Open <strong>Task Planner</strong>; its window is titled <strong>Task Explorer</strong>.</p>
@@ -66,7 +66,7 @@ keywords: "solo developer AI workflow, build apps on your own, Task Planner, Tas
 </ol>
 <figure class="guide-shot"><a href="{{ shots }}planner-3-generated.jpg"><img src="{{ shots }}planner-3-generated.jpg" alt="The generated plan: an epic assigned to the Software Architect persona and a task assigned to Backend Systems Developer, with acceptance criteria and happy-path, negative and edge cases" loading="lazy" width="1600" height="1135"></a><figcaption>The plan: an epic and a task, each with a persona. The task has acceptance criteria plus a happy-path, a negative and an edge case.</figcaption></figure>
 <figure class="guide-shot"><a href="{{ shots }}planner-4-synced.jpg"><img src="{{ shots }}planner-4-synced.jpg" alt="After Sync All to Server, each card shows its new issue number, #41 and #42, and the status reads Synced 2 tasks" loading="lazy" width="1600" height="1135"></a><figcaption>Synced: the epic is issue #41 and the task is #42.</figcaption></figure>
-<p>GitHub issues are created without links between them, so note which tasks have to be done first. Generation gives up after 3 minutes. More on templates, personas and project plans: <a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>.</p>
+<p>GitHub issues are created without links between them, so note which tasks have to be done first. Generation gives up after 3 minutes. More on templates, personas and project plans: <a href="{{ '/apps/task-planner/' | relative_url }}">Task Planner</a>.</p>
 
 <h2 id="implement">Step 4: Implement a task in Task Implementer</h2>
 <p>The agent works in the folder Task Implementer was started from; the window has no folder picker. Start it from your clone:</p>
