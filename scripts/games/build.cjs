@@ -69,7 +69,12 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   const project = path.join(stage, 'project'), payload = path.join(stage, 'payload');
   fs.mkdirSync(payload);
   fs.cpSync(path.join(root, 'games', game.project), project, { recursive: true, filter: file => !ignored.has(path.basename(file)) && !/\.(?:py|mp4|webm|mkv|log)$/.test(file) });
-  fs.writeFileSync(path.join(project, 'export_presets.cfg'), preset(platform, id));
+  fs.writeFileSync(path.join(project, 'export_presets.cfg'), preset(platform, id).replace('texture_format/etc2_astc=false', `texture_format/etc2_astc=${platform === 'macos'}`));
+  if (platform === 'macos') {
+    const config = path.join(project, 'project.godot');
+    const source = fs.readFileSync(config, 'utf8');
+    fs.writeFileSync(config, source.includes('[rendering]') ? source.replace('[rendering]', '[rendering]\ntextures/vram_compression/import_etc2_astc=true') : source + '\n[rendering]\ntextures/vram_compression/import_etc2_astc=true\n');
+  }
   function run(args, name, bootstrap = false) {
     const result = spawnSync(godot, args, { encoding: 'utf8', timeout: 15 * 60 * 1000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
     fs.writeFileSync(path.join(stage, `${name}.log`), (result.stdout || '') + (result.stderr || ''));
@@ -99,6 +104,13 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
       fs.writeFileSync(path.join(stage, 'smoke.log'), (smoke.stdout || '') + (smoke.stderr || ''));
       if (smoke.error || smoke.status !== 0 || /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((smoke.stdout || '') + (smoke.stderr || ''))) throw new Error(`macOS smoke failed: ${stage}/smoke.log`);
     }
+    fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
+    fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\nExtract this ZIP and open the game app. No Godot editor, Git or RobOS installation is required. This macOS build is unsigned.\nhttps://rowbose.com/games/${id}/\n\nEngine: Godot (MIT), https://godotengine.org/license/\n`);
+    // Add distribution notices without extracting/repacking the app's executable modes.
+    if (process.platform === 'win32') {
+      const quote = value => "'" + value.replaceAll("'", "''") + "'";
+      execFileSync('powershell.exe', ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; $gameZip=[IO.Compression.ZipFile]::Open(${quote(executable)}, 'Update'); try { [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($gameZip, ${quote(path.join(payload, 'LICENSE.txt'))}, 'LICENSE.txt') | Out-Null; [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($gameZip, ${quote(path.join(payload, 'README.txt'))}, 'README.txt') | Out-Null } finally { $gameZip.Dispose() }`], { windowsHide: true });
+    } else execFileSync('zip', ['-q', executable, 'LICENSE.txt', 'README.txt'], { cwd: payload });
     fs.renameSync(executable, archive);
   } else {
     // Smoke the exported game itself, never the source project.
