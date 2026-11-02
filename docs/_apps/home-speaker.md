@@ -24,10 +24,10 @@ RobOS Home Speaker turns your workstation into a multi-room smart speaker interc
 
 ## Supported Hardware
 
-- Google Nest Audio & Google Home
-- Google Nest Mini
-- Lenovo / Google Smart Clocks
-- Chromecast Audio and Cast-enabled smart displays
+1. **Nabu Casa Home Assistant Voice Preview Edition (`NC-VK-9727`)** — Featured #1 supported open-hardware voice & speaker satellite (ESPHome Native API `:6053`, 48kHz FLAC streaming, 12-LED RGB Halo Ring control, XMOS XU316 dual-mic DSP, rotary dial, and Improv BLE Wi-Fi provisioning wizard)
+2. **ESPHome Voice Satellites & Media Players (`:6053`)** — ESP32-S3-BOX-3, M5Stack Atom Echo, and custom ESPHome `media_player` nodes
+3. **Home Assistant Media Player Bridge (`:8123`)** — Any `media_player.*` entity exposed via Home Assistant REST API
+4. **Google Nest Audio, Nest Mini, Lenovo Smart Clocks & Chromecast Audio (`:8009`)** — Zero-cloud Castv2 TLS streaming
 
 ## Files & Ports
 

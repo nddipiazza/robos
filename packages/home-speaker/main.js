@@ -82,6 +82,42 @@ ipcMain.handle('speakers:probe', async () => {
   return speakerService.probeKnownSpeakers(2000);
 });
 
+ipcMain.handle('speakers:getSupportedCatalog', async () => {
+  return speakerService.getSupportedCatalog();
+});
+
+ipcMain.handle('speakers:discoverHA', async (_event, options) => {
+  return speakerService.discoverHomeAssistantDevices(options || {});
+});
+
+ipcMain.handle('speakers:probeSingle', async (_event, params) => {
+  return speakerService.probeSingleDevice(params || {});
+});
+
+ipcMain.handle('speakers:addDevice', async (_event, deviceData) => {
+  return speakerService.addDevice(deviceData || {});
+});
+
+ipcMain.handle('speakers:removeDevice', async (_event, ip) => {
+  return speakerService.removeDevice(ip);
+});
+
+ipcMain.handle('speakers:setLedRing', async (_event, ip, options) => {
+  return speakerService.setDeviceLedRing(ip, options || {});
+});
+
+ipcMain.handle('speakers:testDevice', async (_event, ip, options) => {
+  return speakerService.testDevice(ip, options || {});
+});
+
+ipcMain.handle('speakers:scanBle', async (_event, timeoutSec) => {
+  return speakerService.scanBleDevices(timeoutSec || 4);
+});
+
+ipcMain.handle('speakers:provisionBleWifi', async (_event, params) => {
+  return speakerService.provisionBleWifi(params || {});
+});
+
 ipcMain.handle('speakers:getStatus', async (_event, targetIp) => {
   return speakerService.getStatus(targetIp);
 });

@@ -108,8 +108,11 @@ async function loadSpeakers(probe = true) {
     speakers.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.ip;
-      opt.textContent = `${s.name || 'Cast Device'} (${s.ip}) ${s.online ? '• Online' : '• Offline'}`;
-      if (s.ip === currentVal || (!currentVal && s.name.toLowerCase().includes('kitchen'))) {
+      const isPe = s.modelCode === 'NC-VK-9727' || (s.model || '').includes('NC-VK-9727');
+      const prefix = isPe ? '🎙️ ' : '';
+      const badge = isPe ? ' [HA Voice PE]' : '';
+      opt.textContent = `${prefix}${s.name || 'Smart Speaker'}${badge} (${s.ip}) ${s.online ? '• Online' : '• Offline'}`;
+      if (s.ip === currentVal || (!currentVal && isPe)) {
         opt.selected = true;
       }
       speakerSelect.appendChild(opt);
@@ -867,6 +870,407 @@ async function loadSchedules() {
   }
 }
 
+// 10. Tab 8: Home Assistant Devices & Add Device Wizard (NC-VK-9727 #1 Supported)
+const btnAddDeviceWizardHeader = document.getElementById('btn-add-device-wizard');
+const btnLaunchWizardInline = document.getElementById('btn-launch-wizard-inline');
+const btnDiscoverHaDevices = document.getElementById('btn-discover-ha-devices');
+const supportedCatalogGrid = document.getElementById('supported-catalog-grid');
+const wizardSelectedLabel = document.getElementById('wizard-selected-label');
+const wizardStepPill = document.getElementById('wizard-step-pill');
+const wizStepTabs = document.querySelectorAll('.wiz-step-tab');
+const wizStep1 = document.getElementById('wizard-step-1');
+const wizStep2 = document.getElementById('wizard-step-2');
+const wizStep3 = document.getElementById('wizard-step-3');
+
+const btnWizNext1 = document.getElementById('btn-wiz-next-1');
+const btnWizBack2 = document.getElementById('btn-wiz-back-2');
+const btnWizNext2 = document.getElementById('btn-wiz-next-2');
+const btnWizBack3 = document.getElementById('btn-wiz-back-3');
+const btnWizSaveDevice = document.getElementById('btn-wiz-save-device');
+
+const wizIpInput = document.getElementById('wiz-ip-input');
+const wizPortInput = document.getElementById('wiz-port-input');
+const btnWizProbeIp = document.getElementById('btn-wiz-probe-ip');
+const btnWizScanLan = document.getElementById('btn-wiz-scan-lan');
+const wizProbeResult = document.getElementById('wiz-probe-result');
+const wizDiscoveredList = document.getElementById('wiz-discovered-list');
+
+const wizBleMac = document.getElementById('wiz-ble-mac');
+const btnWizScanBle = document.getElementById('btn-wiz-scan-ble');
+const wizWifiSsid = document.getElementById('wiz-wifi-ssid');
+const wizWifiPass = document.getElementById('wiz-wifi-pass');
+const btnWizProvisionBle = document.getElementById('btn-wiz-provision-ble');
+const wizBleStatus = document.getElementById('wiz-ble-status');
+
+const wizDeviceName = document.getElementById('wiz-device-name');
+const wizDeviceRoom = document.getElementById('wiz-device-room');
+const wizLedColor = document.getElementById('wiz-led-color');
+const btnWizTestLed = document.getElementById('btn-wiz-test-led');
+const btnWizLedOff = document.getElementById('btn-wiz-led-off');
+const btnWizTestAudio = document.getElementById('btn-wiz-test-audio');
+const btnWizTestTts = document.getElementById('btn-wiz-test-tts');
+const wizVerifyStatus = document.getElementById('wiz-verify-status');
+const registeredDevicesGrid = document.getElementById('registered-devices-grid');
+
+let supportedCatalog = [];
+let selectedCatalogItem = null;
+
+function setWizardStep(stepNum) {
+  const stepTitles = {
+    1: 'Step 1 of 3 • Select Supported Hardware',
+    2: 'Step 2 of 3 • Discover on LAN (:6053) or Provision Wi-Fi via BLE',
+    3: 'Step 3 of 3 • Test LED Halo Ring, Verify Audio & Save',
+  };
+  if (wizardStepPill) wizardStepPill.textContent = stepTitles[stepNum] || stepTitles[1];
+  wizStepTabs.forEach((tab) => {
+    tab.classList.toggle('active', Number(tab.dataset.wizStep) === stepNum);
+  });
+  if (wizStep1) wizStep1.classList.toggle('hidden', stepNum !== 1);
+  if (wizStep2) wizStep2.classList.toggle('hidden', stepNum !== 2);
+  if (wizStep3) wizStep3.classList.toggle('hidden', stepNum !== 3);
+}
+
+wizStepTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    setWizardStep(Number(tab.dataset.wizStep) || 1);
+  });
+});
+
+function openDeviceWizard() {
+  const devTabBtn = document.getElementById('tab-btn-devices');
+  if (devTabBtn) devTabBtn.click();
+  setWizardStep(1);
+}
+
+if (btnAddDeviceWizardHeader) {
+  btnAddDeviceWizardHeader.addEventListener('click', openDeviceWizard);
+}
+if (btnLaunchWizardInline) {
+  btnLaunchWizardInline.addEventListener('click', () => setWizardStep(1));
+}
+if (btnWizNext1) btnWizNext1.addEventListener('click', () => setWizardStep(2));
+if (btnWizBack2) btnWizBack2.addEventListener('click', () => setWizardStep(1));
+if (btnWizNext2) btnWizNext2.addEventListener('click', () => setWizardStep(3));
+if (btnWizBack3) btnWizBack3.addEventListener('click', () => setWizardStep(2));
+
+async function loadDeviceCatalog() {
+  if (!window.robosSpeaker || !window.robosSpeaker.getSupportedCatalog || !supportedCatalogGrid) return;
+  try {
+    supportedCatalog = await window.robosSpeaker.getSupportedCatalog();
+    if (!selectedCatalogItem && supportedCatalog.length > 0) {
+      selectedCatalogItem = supportedCatalog[0]; // #1 NC-VK-9727
+    }
+    renderCatalogGrid();
+  } catch (err) {
+    console.warn('Error loading supported speaker catalog:', err);
+  }
+}
+
+function renderCatalogGrid() {
+  if (!supportedCatalogGrid) return;
+  supportedCatalogGrid.innerHTML = '';
+  supportedCatalog.forEach((item) => {
+    const isSel = selectedCatalogItem && selectedCatalogItem.id === item.id;
+    const card = document.createElement('div');
+    card.className = `catalog-card ${isSel ? 'selected' : ''}`;
+    card.dataset.catalogId = item.id;
+    card.innerHTML = `
+      <div class="catalog-card-top">
+        <div class="catalog-icon-title">
+          <span class="catalog-icon">${item.icon || '🔊'}</span>
+          <div>
+            <div class="catalog-title">${item.name}</div>
+            <div class="catalog-vendor">${item.vendor} • Model: <code>${item.modelCode}</code></div>
+          </div>
+        </div>
+        <span class="catalog-badge ${item.featured ? 'featured' : ''}">${item.badge}</span>
+      </div>
+      <div class="catalog-specs">
+        <div><strong>Audio/DSP:</strong> ${item.specs?.dsp || ''}</div>
+        <div><strong>Controls:</strong> ${item.specs?.controls || ''}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      selectedCatalogItem = item;
+      if (wizardSelectedLabel) {
+        wizardSelectedLabel.textContent = `Selected: ${item.name}`;
+      }
+      if (wizPortInput) {
+        wizPortInput.value = String(item.defaultPort || 6053);
+      }
+      if (item.id === 'ha-voice-pe-nc-vk-9727' && wizIpInput && !wizIpInput.value) {
+        wizIpInput.value = '192.168.1.64';
+      }
+      renderCatalogGrid();
+    });
+    supportedCatalogGrid.appendChild(card);
+  });
+}
+
+async function probeWizardIp() {
+  if (!wizIpInput || !window.robosSpeaker?.probeSingleDevice) return;
+  const ip = wizIpInput.value.trim();
+  const port = Number(wizPortInput?.value || 6053);
+  const protocol = selectedCatalogItem?.protocol || 'esphome-native';
+
+  wizProbeResult.className = 'probe-result-box';
+  wizProbeResult.textContent = `Probing ${ip}:${port} (${protocol})...`;
+
+  try {
+    const res = await window.robosSpeaker.probeSingleDevice({ ip, port, protocol });
+    if (res && res.ok && res.device) {
+      const d = res.device;
+      wizProbeResult.className = 'probe-result-box ok';
+      wizProbeResult.innerHTML = `✓ Connected to <strong>${d.name}</strong> (${d.model || d.modelCode}) • MAC: <code>${d.mac || 'N/A'}</code> • Firmware: <code>${d.firmware || '25.5.2'}</code>`;
+      if (wizDeviceName && d.name) wizDeviceName.value = d.name;
+    } else {
+      wizProbeResult.textContent = `⚠️ ${res?.error || 'Device did not respond.'}`;
+    }
+  } catch (err) {
+    wizProbeResult.textContent = `⚠️ Probe error: ${err.message}`;
+  }
+}
+
+if (btnWizProbeIp) {
+  btnWizProbeIp.addEventListener('click', probeWizardIp);
+}
+
+async function scanHaLanDevices() {
+  if (!window.robosSpeaker?.discoverHADevices) return;
+  wizProbeResult.className = 'probe-result-box';
+  wizProbeResult.textContent = 'Scanning local subnet for Home Assistant Voice PE & ESPHome devices (:6053)...';
+  try {
+    const { lanDevices } = await window.robosSpeaker.discoverHADevices({ includeBle: false, timeoutMs: 1400 });
+    wizDiscoveredList.innerHTML = '';
+    if (!lanDevices || lanDevices.length === 0) {
+      wizProbeResult.textContent = 'No ESPHome devices responded on port 6053. Try entering the IP directly above.';
+      return;
+    }
+    wizProbeResult.className = 'probe-result-box ok';
+    wizProbeResult.textContent = `Found ${lanDevices.length} Home Assistant / ESPHome voice device(s) on LAN:`;
+    lanDevices.forEach((dev) => {
+      const row = document.createElement('div');
+      row.className = 'discovered-mini-row';
+      row.innerHTML = `
+        <div>
+          <strong>🎙️ ${dev.name}</strong> <code>${dev.ip}:${dev.port || 6053}</code> • <span>${dev.model}</span>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm">Use This Device</button>
+      `;
+      row.querySelector('button').addEventListener('click', () => {
+        if (wizIpInput) wizIpInput.value = dev.ip;
+        if (wizPortInput) wizPortInput.value = String(dev.port || 6053);
+        if (wizDeviceName) wizDeviceName.value = dev.name;
+        setWizardStep(3);
+      });
+      wizDiscoveredList.appendChild(row);
+    });
+  } catch (err) {
+    wizProbeResult.textContent = `Scan error: ${err.message}`;
+  }
+}
+
+if (btnWizScanLan) btnWizScanLan.addEventListener('click', scanHaLanDevices);
+if (btnDiscoverHaDevices) btnDiscoverHaDevices.addEventListener('click', scanHaLanDevices);
+
+if (btnWizScanBle) {
+  btnWizScanBle.addEventListener('click', async () => {
+    if (!window.robosSpeaker?.scanBleDevices) return;
+    wizBleStatus.textContent = 'Scanning Bluetooth Low Energy for ha-voice-pe / Improv BLE devices...';
+    try {
+      const bleDevs = await window.robosSpeaker.scanBleDevices(4);
+      if (!bleDevs || bleDevs.length === 0) {
+        wizBleStatus.textContent = 'No unprovisioned BLE devices found (device may already be connected to Wi-Fi at 192.168.1.64).';
+      } else {
+        const first = bleDevs[0];
+        if (wizBleMac) wizBleMac.value = first.mac;
+        wizBleStatus.className = 'probe-result-box ok';
+        wizBleStatus.innerHTML = `Found BLE device: <strong>${first.name}</strong> (<code>${first.mac}</code>). Press the center button on the puck and click <strong>Push Wi-Fi</strong>.`;
+      }
+    } catch (err) {
+      wizBleStatus.textContent = `BLE scan error: ${err.message}`;
+    }
+  });
+}
+
+if (btnWizProvisionBle) {
+  btnWizProvisionBle.addEventListener('click', async () => {
+    if (!window.robosSpeaker?.provisionBleWifi) return;
+    const mac = wizBleMac?.value.trim();
+    const ssid = wizWifiSsid?.value.trim();
+    const password = wizWifiPass?.value || '';
+    if (!mac || !ssid) {
+      wizBleStatus.textContent = 'Please provide both the Bluetooth MAC and 2.4 GHz Wi-Fi SSID.';
+      return;
+    }
+    wizBleStatus.textContent = `Connecting to ${mac} over Bluetooth LE and sending Wi-Fi credentials for "${ssid}"...`;
+    try {
+      const res = await window.robosSpeaker.provisionBleWifi({ mac, ssid, password });
+      if (res && res.needsAuthorizationButton) {
+        wizBleStatus.textContent = '⚠️ Device requires physical authorization: press the center button on top of the NC-VK-9727 once, then click Push Wi-Fi again!';
+      } else {
+        wizBleStatus.className = 'probe-result-box ok';
+        wizBleStatus.textContent = `✓ Wi-Fi credentials sent to ${mac}! Click Scan LAN on the left to detect its IP address.`;
+      }
+    } catch (err) {
+      wizBleStatus.textContent = `Provisioning error: ${err.message}`;
+    }
+  });
+}
+
+if (btnWizTestLed) {
+  btnWizTestLed.addEventListener('click', async () => {
+    const ip = wizIpInput?.value.trim() || '192.168.1.64';
+    const hexColor = wizLedColor?.value || '#00bcd4';
+    wizVerifyStatus.textContent = `Lighting up 12-LED RGB Halo Ring on ${ip} (${hexColor})...`;
+    try {
+      await window.robosSpeaker.setDeviceLedRing(ip, { state: true, brightness: 0.9, hexColor });
+      wizVerifyStatus.className = 'probe-result-box ok';
+      wizVerifyStatus.textContent = `✓ 12-LED RGB Halo Ring active on ${ip} (${hexColor})!`;
+    } catch (err) {
+      wizVerifyStatus.textContent = `LED Ring error: ${err.message}`;
+    }
+  });
+}
+
+if (btnWizLedOff) {
+  btnWizLedOff.addEventListener('click', async () => {
+    const ip = wizIpInput?.value.trim() || '192.168.1.64';
+    try {
+      await window.robosSpeaker.setDeviceLedRing(ip, { state: false });
+      wizVerifyStatus.textContent = `LED Halo Ring turned off on ${ip}.`;
+    } catch (err) {
+      wizVerifyStatus.textContent = `LED Ring error: ${err.message}`;
+    }
+  });
+}
+
+if (btnWizTestAudio) {
+  btnWizTestAudio.addEventListener('click', async () => {
+    const ip = wizIpInput?.value.trim() || '192.168.1.64';
+    const hexColor = wizLedColor?.value || '#00bcd4';
+    wizVerifyStatus.textContent = `Streaming 48kHz FLAC test chime + LED halo pulse to ${ip}...`;
+    try {
+      await window.robosSpeaker.testDevice(ip, { hexColor, soundId: 'chime' });
+      wizVerifyStatus.className = 'probe-result-box ok';
+      wizVerifyStatus.textContent = `✓ 48kHz FLAC Chime + Halo Ring verified on ${ip}!`;
+    } catch (err) {
+      wizVerifyStatus.textContent = `Audio test error: ${err.message}`;
+    }
+  });
+}
+
+if (btnWizTestTts) {
+  btnWizTestTts.addEventListener('click', async () => {
+    const ip = wizIpInput?.value.trim() || '192.168.1.64';
+    const name = wizDeviceName?.value.trim() || 'Home Assistant Voice';
+    wizVerifyStatus.textContent = `Synthesizing Kokoro neural greeting for ${name} (${ip})...`;
+    try {
+      await window.robosSpeaker.castTTS(ip, `Hello from RobOS Home Speaker! ${name} is connected and ready.`, {
+        voice: 'af_heart',
+        prependChime: true,
+      });
+      wizVerifyStatus.className = 'probe-result-box ok';
+      wizVerifyStatus.textContent = `✓ Kokoro TTS greeting streamed to ${name} (${ip})!`;
+    } catch (err) {
+      wizVerifyStatus.textContent = `TTS test error: ${err.message}`;
+    }
+  });
+}
+
+if (btnWizSaveDevice) {
+  btnWizSaveDevice.addEventListener('click', async () => {
+    const ip = wizIpInput?.value.trim() || '192.168.1.64';
+    const port = Number(wizPortInput?.value || 6053);
+    const name = wizDeviceName?.value.trim() || 'Home Assistant Voice 0ad22c';
+    const room = wizDeviceRoom?.value || 'Studio & Dev Desk';
+    const catalogId = selectedCatalogItem?.id || 'ha-voice-pe-nc-vk-9727';
+    const protocol = selectedCatalogItem?.protocol || 'esphome-native';
+
+    try {
+      const saved = await window.robosSpeaker.addDevice({
+        ip,
+        port,
+        name,
+        room,
+        catalogId,
+        protocol,
+      });
+      wizVerifyStatus.className = 'probe-result-box ok';
+      wizVerifyStatus.innerHTML = `✓ Saved <strong>${saved.name}</strong> (<code>${saved.ip}:${saved.port}</code>) to RobOS Home Speaker!`;
+      await loadSpeakers(false);
+      if (speakerSelect) {
+        speakerSelect.value = saved.ip;
+        updateSpeakerStatusBadge();
+      }
+      await renderRegisteredDevices();
+    } catch (err) {
+      wizVerifyStatus.textContent = `Save error: ${err.message}`;
+    }
+  });
+}
+
+async function renderRegisteredDevices() {
+  if (!registeredDevicesGrid || !window.robosSpeaker?.getSpeakers) return;
+  try {
+    const speakers = await window.robosSpeaker.getSpeakers();
+    registeredDevicesGrid.innerHTML = '';
+
+    speakers.forEach((s) => {
+      const isPe = s.modelCode === 'NC-VK-9727' || s.protocol === 'esphome-native';
+      const card = document.createElement('div');
+      card.className = `device-inventory-card ${isPe ? 'voice-pe' : ''}`;
+      card.innerHTML = `
+        <div>
+          <div class="device-card-head">
+            <div>
+              <div class="device-card-title">${isPe ? '🎙️ ' : '🔊 '}${s.name}</div>
+              <div class="device-card-sub">${s.model || 'Smart Speaker'} • <code>${s.ip}${s.port ? ':' + s.port : ''}</code></div>
+            </div>
+            <span class="catalog-badge ${isPe ? 'featured' : ''}">${isPe ? 'NC-VK-9727 • ESPHome' : 'Google Cast'}</span>
+          </div>
+          <div class="sched-badges" style="margin-top:8px;">
+            <span class="badge">${s.online ? '🟢 Online' : '⚪ Offline'}</span>
+            ${s.firmware ? `<span class="badge">FW v${s.firmware}</span>` : ''}
+            ${s.mac ? `<span class="badge">${s.mac}</span>` : ''}
+          </div>
+        </div>
+        <div class="device-card-actions">
+          <button type="button" class="btn btn-secondary btn-sm btn-dev-select">Select Target</button>
+          <button type="button" class="btn btn-secondary btn-sm btn-dev-chime">🔔 Test Chime</button>
+          ${isPe ? '<button type="button" class="btn btn-secondary btn-sm btn-dev-halo">💡 Pulse Halo</button>' : ''}
+        </div>
+      `;
+
+      card.querySelector('.btn-dev-select').addEventListener('click', () => {
+        if (speakerSelect) {
+          speakerSelect.value = s.ip;
+          updateSpeakerStatusBadge();
+        }
+      });
+
+      card.querySelector('.btn-dev-chime').addEventListener('click', async () => {
+        setPlaybackState(true, `Test Chime → ${s.name}`);
+        await window.robosSpeaker.testDevice(s.ip, { soundId: 'chime' });
+      });
+
+      const haloBtn = card.querySelector('.btn-dev-halo');
+      if (haloBtn) {
+        haloBtn.addEventListener('click', async () => {
+          await window.robosSpeaker.setDeviceLedRing(s.ip, { state: true, brightness: 0.9, hexColor: '#00bcd4' });
+          setTimeout(() => {
+            window.robosSpeaker.setDeviceLedRing(s.ip, { state: false }).catch(() => {});
+          }, 3000);
+        });
+      }
+
+      registeredDevicesGrid.appendChild(card);
+    });
+  } catch (err) {
+    console.warn('Error rendering registered devices:', err);
+  }
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   initWaveformCanvas();
@@ -874,5 +1278,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSoundboard();
   loadMusicLibrary();
   loadSchedules();
+  loadDeviceCatalog();
+  renderRegisteredDevices();
 });
 

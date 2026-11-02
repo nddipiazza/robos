@@ -50,7 +50,10 @@ async function main() {
 RobOS Smart Speaker CLI (robos-speaker)
 
 Commands:
-  list                                    List discovered Google Home / Nest speakers
+  list                                    List discovered Home Assistant Voice PE & Cast speakers
+  catalog                                 List supported smart speaker hardware catalog (#1 NC-VK-9727)
+  add --ip <ip> [--name <n>] [--port <p>] Register a Home Assistant Voice PE / ESPHome / Cast speaker
+  halo <on|off> [--color #hex] [--speaker S] Control the 12-LED RGB Halo Ring on NC-VK-9727
   speak "<text>" [--speaker S] [--chime]  Synthesize and cast speech to speaker
   play <file> [--speaker S]               Stream a custom audio file (MP3/WAV/etc.)
   sound <id> [--speaker S]                Play soundboard SFX (chime, ping, fanfare, siren, witch_laugh)
@@ -279,6 +282,50 @@ Options:
       console.log(`Stopping playback on "${targetSpeaker}"...`);
       await service.stop(targetSpeaker);
       console.log('Playback stopped.');
+      process.exit(0);
+      break;
+    }
+
+    case 'catalog': {
+      const cat = service.getSupportedCatalog();
+      console.log('Supported Smart Speaker & Voice Satellite Hardware Catalog:');
+      cat.forEach((item, idx) => {
+        console.log(`  ${idx + 1}. ${item.name} [${item.modelCode}] (${item.protocol} :${item.defaultPort})`);
+        console.log(`     ${item.badge} — ${item.specs?.dsp || ''}`);
+      });
+      process.exit(0);
+      break;
+    }
+
+    case 'add': {
+      const ip = args.ip || args._[1];
+      if (!ip) {
+        console.error('Error: Please provide --ip <address> to register a device.');
+        process.exit(1);
+      }
+      const saved = await service.addDevice({
+        ip,
+        port: args.port ? parseInt(args.port, 10) : 6053,
+        name: args.name || '',
+        catalogId: args.type || 'ha-voice-pe-nc-vk-9727',
+        protocol: args.protocol || 'esphome-native',
+      });
+      console.log(`Registered device: ${saved.name} (${saved.model}) at ${saved.ip}:${saved.port}`);
+      process.exit(0);
+      break;
+    }
+
+    case 'halo': {
+      const stateArg = (args._[1] || 'on').toLowerCase();
+      const ips = service._resolveTargetIps(targetSpeaker);
+      const ip = ips[0] || '192.168.1.64';
+      const hexColor = args.color || '#00bcd4';
+      await service.setDeviceLedRing(ip, {
+        state: stateArg !== 'off',
+        brightness: args.brightness ? parseFloat(args.brightness) : 0.85,
+        hexColor,
+      });
+      console.log(`NC-VK-9727 LED Halo Ring ${stateArg === 'off' ? 'OFF' : `ON (${hexColor})`} on ${ip}`);
       process.exit(0);
       break;
     }
