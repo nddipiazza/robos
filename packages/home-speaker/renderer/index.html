@@ -24,7 +24,7 @@
         </svg>
         <div>
           <h1>RobOS Home Speaker</h1>
-          <span class="subtitle">Smart Speaker Intercom, Voice Notes & Audio Broadcast</span>
+          <span class="subtitle">Intercom & Smart Speakers</span>
         </div>
       </div>
 
@@ -91,7 +91,7 @@
       </button>
       <button class="tab-btn" data-tab="tab-devices" id="tab-btn-devices">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
-        Home Assistant & Devices
+        Speakers & Setup
       </button>
     </nav>
 
@@ -461,16 +461,15 @@
         <div class="card pane-card">
           <div class="card-header">
             <div>
-              <h2>Home Assistant Voice & Smart Speaker Devices</h2>
-              <p class="card-desc">First-class native support for <strong>Home Assistant Voice Preview Edition (NC-VK-9727)</strong>, ESPHome satellites (:6053), Home Assistant Media Players (:8123), and Google Cast (:8009).</p>
+              <h2>Speakers & Setup Wizard</h2>
+              <p class="card-desc">Add a new smart speaker (including the <strong>Home Assistant Voice PE / NC-VK-9727</strong>) or manage your connected speakers.</p>
             </div>
             <div class="header-actions-row">
               <button id="btn-launch-wizard-inline" class="btn btn-primary btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add New Device Wizard
+                + Add Speaker
               </button>
               <button id="btn-discover-ha-devices" class="btn btn-secondary btn-sm">
-                🔍 Scan HA / ESPHome (:6053)
+                Find Speakers on Wi-Fi
               </button>
             </div>
           </div>
@@ -479,69 +478,81 @@
           <div id="device-wizard-modal" class="wizard-card">
             <div class="wizard-header">
               <div>
-                <span class="wizard-step-pill" id="wizard-step-pill">Step 1 of 3 • Select Supported Hardware</span>
-                <h3 id="wizard-title">Add Smart Speaker / Home Assistant Voice Device</h3>
+                <span class="wizard-step-pill" id="wizard-step-pill">Step 1 of 3</span>
+                <h3 id="wizard-title">Add a Speaker</h3>
               </div>
               <div class="wizard-steps-dots">
-                <button type="button" class="wiz-step-tab active" data-wiz-step="1">1. Hardware Catalog</button>
-                <button type="button" class="wiz-step-tab" data-wiz-step="2">2. Discover / Wi-Fi Setup</button>
-                <button type="button" class="wiz-step-tab" data-wiz-step="3">3. Test Halo Ring & Save</button>
+                <button type="button" class="wiz-step-tab active" data-wiz-step="1">1. Choose Device</button>
+                <button type="button" class="wiz-step-tab" data-wiz-step="2">2. Connect</button>
+                <button type="button" class="wiz-step-tab" data-wiz-step="3">3. Test & Save</button>
               </div>
             </div>
 
             <!-- Wizard Step 1: Supported Hardware Catalog (#1 NC-VK-9727) -->
             <div id="wizard-step-1" class="wizard-step-pane active">
-              <p class="wizard-help">Select the device you want to add. <strong>Home Assistant Voice Preview Edition (NC-VK-9727)</strong> is the #1 supported open-hardware voice & speaker satellite:</p>
+              <p class="wizard-help">Which type of speaker are you setting up?</p>
               <div id="supported-catalog-grid" class="catalog-grid">
                 <!-- Populated from getSupportedCatalog() with NC-VK-9727 first -->
               </div>
               <div class="wizard-footer">
-                <span class="wizard-selected-summary" id="wizard-selected-label">Selected: Home Assistant Voice Preview Edition (NC-VK-9727)</span>
-                <button type="button" id="btn-wiz-next-1" class="btn btn-primary">Next: Discover & Connect →</button>
+                <span class="wizard-selected-summary" id="wizard-selected-label">Selected: Home Assistant Voice PE (NC-VK-9727)</span>
+                <button type="button" id="btn-wiz-next-1" class="btn btn-primary">Continue →</button>
               </div>
             </div>
 
             <!-- Wizard Step 2: LAN Discovery & Improv BLE Wi-Fi Provisioning -->
             <div id="wizard-step-2" class="wizard-step-pane hidden">
               <div class="wizard-split-grid">
-                <!-- Left: LAN Discovery (:6053 / :8009 / :8123) -->
+                <!-- Left: Already on Wi-Fi -->
                 <div class="wizard-subcard">
-                  <h4>🌐 1. LAN Auto-Discovery & Direct IP Probe</h4>
-                  <p class="subcard-desc">If your NC-VK-9727 or speaker is already on Wi-Fi, scan your subnet or probe its IP directly:</p>
+                  <h4>Already connected to Wi-Fi?</h4>
+                  <p class="subcard-desc">Scan your home network or enter the speaker's IP address:</p>
                   <div class="inline-form-row">
-                    <input type="text" id="wiz-ip-input" class="input-text" value="192.168.1.64" placeholder="Device IP (e.g. 192.168.1.64)">
-                    <input type="number" id="wiz-port-input" class="input-text input-port" value="6053" placeholder="Port">
-                    <button type="button" id="btn-wiz-probe-ip" class="btn btn-secondary btn-sm">Probe IP</button>
-                    <button type="button" id="btn-wiz-scan-lan" class="btn btn-primary btn-sm">Scan LAN</button>
+                    <input type="text" id="wiz-ip-input" class="input-text" value="192.168.1.64" placeholder="IP Address (e.g. 192.168.1.64)">
+                    <button type="button" id="btn-wiz-probe-ip" class="btn btn-secondary btn-sm">Check Connection</button>
+                    <button type="button" id="btn-wiz-scan-lan" class="btn btn-primary btn-sm">Scan Network</button>
                   </div>
+                  <details class="advanced-details">
+                    <summary>Advanced network settings</summary>
+                    <div class="inline-form-row" style="margin-top:8px;">
+                      <label for="wiz-port-input" style="font-size:0.78rem;color:var(--text-secondary);">Port:</label>
+                      <input type="number" id="wiz-port-input" class="input-text input-port" value="6053" placeholder="6053">
+                    </div>
+                  </details>
                   <div id="wiz-probe-result" class="probe-result-box">
-                    Ready to probe <code>192.168.1.64:6053</code> (ESPHome Native API).
+                    Ready to connect to <code>192.168.1.64</code>.
                   </div>
                   <div id="wiz-discovered-list" class="discovered-mini-list"></div>
                 </div>
 
-                <!-- Right: Bluetooth Improv Wi-Fi Setup (for fresh/eBay NC-VK-9727) -->
+                <!-- Right: New / Reset Speaker Bluetooth Setup -->
                 <div class="wizard-subcard">
-                  <h4>📶 2. Bluetooth Improv Wi-Fi Provisioning (NC-VK-9727)</h4>
-                  <p class="subcard-desc">Just unboxed or factory-reset your <code>NC-VK-9727</code>? Push 2.4 GHz Wi-Fi credentials over Bluetooth LE:</p>
+                  <h4>Setting up a new speaker over Bluetooth?</h4>
+                  <p class="subcard-desc">If your speaker isn't on Wi-Fi yet, send your Wi-Fi password to it over Bluetooth:</p>
                   <div class="inline-form-row">
-                    <input type="text" id="wiz-ble-mac" class="input-text" value="20:F8:3B:0A:D2:2E" placeholder="BLE MAC (e.g. 20:F8:3B:0A:D2:2E)">
-                    <button type="button" id="btn-wiz-scan-ble" class="btn btn-secondary btn-sm">Scan BLE</button>
+                    <input type="text" id="wiz-wifi-ssid" class="input-text" value="NETGEAR65" placeholder="2.4 GHz Wi-Fi Name (SSID)">
+                    <input type="password" id="wiz-wifi-pass" class="input-text" placeholder="Wi-Fi Password">
                   </div>
                   <div class="inline-form-row" style="margin-top:8px;">
-                    <input type="text" id="wiz-wifi-ssid" class="input-text" value="NETGEAR65" placeholder="2.4 GHz Wi-Fi SSID">
-                    <input type="password" id="wiz-wifi-pass" class="input-text" placeholder="Wi-Fi Password">
-                    <button type="button" id="btn-wiz-provision-ble" class="btn btn-secondary btn-sm">Push Wi-Fi</button>
+                    <button type="button" id="btn-wiz-scan-ble" class="btn btn-secondary btn-sm">Find via Bluetooth</button>
+                    <button type="button" id="btn-wiz-provision-ble" class="btn btn-primary btn-sm">Send Wi-Fi to Speaker</button>
                   </div>
+                  <details class="advanced-details">
+                    <summary>Advanced Bluetooth details</summary>
+                    <div class="inline-form-row" style="margin-top:8px;">
+                      <label for="wiz-ble-mac" style="font-size:0.78rem;color:var(--text-secondary);">Bluetooth Address:</label>
+                      <input type="text" id="wiz-ble-mac" class="input-text" value="20:F8:3B:0A:D2:2E" placeholder="20:F8:3B:0A:D2:2E">
+                    </div>
+                  </details>
                   <div id="wiz-ble-status" class="probe-result-box">
-                    Tip: Tap the center button on top of the NC-VK-9727 once when authorizing Bluetooth Wi-Fi setup.
+                    Tip: Press the center button on top of the speaker once when prompted to allow Wi-Fi setup.
                   </div>
                 </div>
               </div>
 
               <div class="wizard-footer">
                 <button type="button" id="btn-wiz-back-2" class="btn btn-secondary">← Back</button>
-                <button type="button" id="btn-wiz-next-2" class="btn btn-primary">Next: Test Halo Ring & Save →</button>
+                <button type="button" id="btn-wiz-next-2" class="btn btn-primary">Continue →</button>
               </div>
             </div>
 
@@ -549,50 +560,50 @@
             <div id="wizard-step-3" class="wizard-step-pane hidden">
               <div class="form-grid">
                 <div class="form-group">
-                  <label for="wiz-device-name">Speaker Display Name:</label>
-                  <input type="text" id="wiz-device-name" class="input-text" value="Home Assistant Voice 0ad22c" placeholder="e.g. Studio Voice PE">
+                  <label for="wiz-device-name">Speaker Name:</label>
+                  <input type="text" id="wiz-device-name" class="input-text" value="Home Assistant Voice 0ad22c" placeholder="e.g. Office Desk Speaker">
                 </div>
                 <div class="form-group">
-                  <label for="wiz-device-room">Room / Zone:</label>
+                  <label for="wiz-device-room">Room:</label>
                   <select id="wiz-device-room" class="dropdown">
-                    <option value="Studio & Dev Desk" selected>💻 Studio & Dev Desk</option>
-                    <option value="Kitchen & Dining">☕ Kitchen & Dining</option>
-                    <option value="Living Room">🛋️ Living Room</option>
-                    <option value="Master Bedroom">🛏️ Master Bedroom</option>
-                    <option value="Basement Theater">🎬 Basement Theater</option>
+                    <option value="Studio & Dev Desk" selected>Office / Desk</option>
+                    <option value="Kitchen & Dining">Kitchen</option>
+                    <option value="Living Room">Living Room</option>
+                    <option value="Master Bedroom">Bedroom</option>
+                    <option value="Basement Theater">Basement</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="wiz-led-color">NC-VK-9727 LED Halo Ring Color:</label>
+                  <label for="wiz-led-color">Light Ring Color:</label>
                   <div class="inline-form-row">
                     <input type="color" id="wiz-led-color" value="#00bcd4" class="color-picker-input">
-                    <button type="button" id="btn-wiz-test-led" class="btn btn-secondary btn-sm">💡 Glow Ring</button>
-                    <button type="button" id="btn-wiz-led-off" class="btn btn-secondary btn-sm">Ring Off</button>
+                    <button type="button" id="btn-wiz-test-led" class="btn btn-secondary btn-sm">Light On</button>
+                    <button type="button" id="btn-wiz-led-off" class="btn btn-secondary btn-sm">Light Off</button>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label>Live Hardware Verification (48kHz FLAC + Halo):</label>
+                  <label>Test Sound:</label>
                   <div class="inline-form-row">
-                    <button type="button" id="btn-wiz-test-audio" class="btn btn-secondary btn-sm">🔔 Play Test Chime</button>
-                    <button type="button" id="btn-wiz-test-tts" class="btn btn-secondary btn-sm">🗣️ Speak Kokoro Greeting</button>
+                    <button type="button" id="btn-wiz-test-audio" class="btn btn-secondary btn-sm">Play Chime</button>
+                    <button type="button" id="btn-wiz-test-tts" class="btn btn-secondary btn-sm">Test Voice</button>
                   </div>
                 </div>
               </div>
 
               <div id="wiz-verify-status" class="probe-result-box">
-                Click <strong>Play Test Chime</strong> or <strong>Glow Ring</strong> to verify your NC-VK-9727 hardware live, then click <strong>Save & Register Device</strong>.
+                Click <strong>Play Chime</strong> or <strong>Light On</strong> to test your speaker, then click <strong>Save Speaker</strong>.
               </div>
 
               <div class="wizard-footer">
                 <button type="button" id="btn-wiz-back-3" class="btn btn-secondary">← Back</button>
-                <button type="button" id="btn-wiz-save-device" class="btn btn-primary btn-glow">✓ Save & Register Device</button>
+                <button type="button" id="btn-wiz-save-device" class="btn btn-primary">Save Speaker</button>
               </div>
             </div>
           </div>
 
           <!-- Registered Speakers & Voice Satellites Inventory -->
           <div class="registered-devices-section">
-            <h3>Registered Speakers & Home Assistant Satellites</h3>
+            <h3>Your Connected Speakers</h3>
             <div id="registered-devices-grid" class="registered-devices-grid">
               <!-- Populated dynamically from getSpeakers() -->
             </div>
