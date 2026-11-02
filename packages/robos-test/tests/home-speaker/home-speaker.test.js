@@ -178,7 +178,7 @@ describe('RobOS Home Speaker Tests', () => {
       assert.strictEqual(catalog[0].featured, true, 'First item should be marked featured');
     });
 
-    it('EspHomeVoiceService builds valid Improv BLE Wi-Fi packets and protobuf frames', () => {
+    it('EspHomeVoiceService builds valid Improv BLE Wi-Fi packets, protobuf frames, and exposes incoming voice listener state', () => {
       const { EspHomeVoiceService, buildEspHomeFrame } = require(path.join(APP_DIR, 'lib', 'esphome-voice-service'));
       const esp = new EspHomeVoiceService();
       const pkt = esp.buildImprovWifiPacket('NETGEAR65', 'secret123');
@@ -187,6 +187,9 @@ describe('RobOS Home Speaker Tests', () => {
       const frame = buildEspHomeFrame(9);
       assert.strictEqual(frame[0], 0x00, 'ESPHome frame preamble should be 0x00');
       assert.strictEqual(frame[2], 9, 'ESPHome frame msgType should be 9');
+      const st = esp.getListenerStatus();
+      assert.strictEqual(st.active, false);
+      assert.ok(Array.isArray(st.inbox));
     });
   });
 
@@ -290,7 +293,8 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(html.includes('id="tab-schedules"'), 'Should contain tab-schedules pane');
       assert.ok(html.includes('id="tab-devices"'), 'Should contain tab-devices pane for Home Assistant & Add Device Wizard');
       assert.ok(html.includes('id="device-wizard-modal"'), 'Should contain Add Device Wizard container');
-      assert.ok(html.includes('NC-VK-9727'), 'Wizard should highlight NC-VK-9727');
+      assert.ok(html.includes('Home Assistant Voice'), 'Wizard should highlight Home Assistant Voice');
+      assert.ok(html.includes('id="btn-toggle-listener"'), 'Should have incoming voice listener toggle');
       assert.ok(html.includes('id="waveform-canvas"'), 'Should have waveform canvas');
     });
 

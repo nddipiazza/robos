@@ -138,6 +138,38 @@
             </div>
           </div>
         </div>
+
+        <!-- Incoming Voice from Speaker (Two-Way Listen Mode) -->
+        <div class="card pane-card" style="margin-top: 16px;">
+          <div class="card-header">
+            <div>
+              <h2>Incoming from Speaker (Listen Mode)</h2>
+              <p class="card-desc">Let your Home Assistant Voice speaker listen with its built-in microphone. Say <strong>"Okay Nabu"</strong> or press the center button on top of the speaker to talk back to this computer.</p>
+            </div>
+            <div class="incoming-header-actions">
+              <label class="toggle-control" title="Automatically answer out loud on the speaker">
+                <input type="checkbox" id="listener-auto-reply" checked>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Auto-Reply Out Loud</span>
+              </label>
+              <button id="btn-toggle-listener" class="btn btn-primary btn-sm">Start Listening</button>
+            </div>
+          </div>
+
+          <div class="incoming-status-bar">
+            <div class="incoming-status-left">
+              <span id="listener-status-dot" class="status-dot offline"></span>
+              <span id="listener-status-text">Speaker microphone is off — click Start Listening to turn it on.</span>
+            </div>
+            <button id="btn-clear-inbox" class="btn btn-secondary btn-sm">Clear History</button>
+          </div>
+
+          <div id="incoming-voice-list" class="incoming-voice-list">
+            <div class="incoming-empty-state">
+              No incoming voice messages yet. Once listening is on, press the center button on your Home Assistant Voice speaker or say <strong>"Okay Nabu"</strong> and speak!
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Tab 2: TTS Announcer -->

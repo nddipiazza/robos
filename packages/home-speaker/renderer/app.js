@@ -1285,6 +1285,111 @@ async function renderRegisteredDevices() {
 }
 
 // Init
+const btnToggleListener = document.getElementById('btn-toggle-listener');
+const listenerAutoReply = document.getElementById('listener-auto-reply');
+const listenerStatusDot = document.getElementById('listener-status-dot');
+const listenerStatusText = document.getElementById('listener-status-text');
+const btnClearInbox = document.getElementById('btn-clear-inbox');
+const incomingVoiceList = document.getElementById('incoming-voice-list');
+
+let currentListenerStatus = { active: false, status: 'idle', inbox: [] };
+
+function renderIncomingListenerState(st) {
+  if (!st) return;
+  currentListenerStatus = st;
+  if (!listenerStatusDot || !listenerStatusText || !btnToggleListener) return;
+
+  if (st.active) {
+    listenerStatusDot.className = 'status-dot online';
+    btnToggleListener.textContent = 'Stop Listening';
+    btnToggleListener.className = 'btn btn-secondary btn-sm';
+
+    const labels = {
+      connecting: `Connecting to speaker microphone (${st.ip})...`,
+      listening_for_wake_word: `Listening on speaker (${st.ip}) — Say "Okay Nabu" or press the speaker's center button to talk`,
+      capturing_speech: `Hearing you speak on the speaker right now...`,
+      transcribing: `Transcribing what you said...`,
+      replying: `Speaking reply out loud on the speaker...`,
+    };
+    listenerStatusText.textContent = labels[st.status] || `Listening on speaker (${st.ip})`;
+  } else {
+    listenerStatusDot.className = 'status-dot offline';
+    btnToggleListener.textContent = 'Start Listening';
+    btnToggleListener.className = 'btn btn-primary btn-sm';
+    listenerStatusText.textContent = st.status === 'error'
+      ? 'Could not reach speaker microphone — check that your speaker is powered on.'
+      : 'Speaker microphone is off — click Start Listening to turn it on.';
+  }
+
+  if (incomingVoiceList) {
+    const inbox = Array.isArray(st.inbox) ? st.inbox : [];
+    if (inbox.length === 0) {
+      incomingVoiceList.innerHTML = `
+        <div class="incoming-empty-state">
+          No incoming voice messages yet. Once listening is on, press the center button on your Home Assistant Voice speaker or say <strong>"Okay Nabu"</strong> and speak!
+        </div>
+      `;
+    } else {
+      incomingVoiceList.innerHTML = inbox
+        .map(
+          (item) => `
+          <div class="incoming-msg-card">
+            <div class="incoming-msg-top">
+              <span>From Speaker (${item.speakerIp}) • Triggered by: ${item.wakeWord || 'Speaker Mic'}</span>
+              <span>${item.timestamp || ''}</span>
+            </div>
+            <div class="incoming-msg-text">"${item.transcript}"</div>
+            ${item.reply ? `<div class="incoming-msg-reply">↳ Speaker Reply: "${item.reply}"</div>` : ''}
+            ${item.audioWavPath ? `<audio controls class="incoming-msg-audio" src="file://${item.audioWavPath}"></audio>` : ''}
+          </div>
+        `
+        )
+        .join('');
+    }
+  }
+}
+
+if (btnToggleListener) {
+  btnToggleListener.addEventListener('click', async () => {
+    if (!window.robosSpeaker?.startVoiceListener) return;
+    if (currentListenerStatus.active) {
+      const st = await window.robosSpeaker.stopVoiceListener();
+      renderIncomingListenerState(st);
+    } else {
+      btnToggleListener.disabled = true;
+      btnToggleListener.textContent = 'Connecting...';
+      try {
+        const res = await window.robosSpeaker.startVoiceListener('192.168.1.64', {
+          autoReply: listenerAutoReply ? listenerAutoReply.checked : true,
+        });
+        if (res && res.status) renderIncomingListenerState(res.status);
+      } finally {
+        btnToggleListener.disabled = false;
+      }
+    }
+  });
+}
+
+if (btnClearInbox) {
+  btnClearInbox.addEventListener('click', async () => {
+    if (!window.robosSpeaker?.clearVoiceInbox) return;
+    await window.robosSpeaker.clearVoiceInbox();
+    const st = await window.robosSpeaker.getVoiceListenerStatus();
+    renderIncomingListenerState(st);
+  });
+}
+
+async function initIncomingListener() {
+  if (!window.robosSpeaker?.getVoiceListenerStatus) return;
+  if (window.robosSpeaker.onVoiceListenerUpdate) {
+    window.robosSpeaker.onVoiceListenerUpdate((st) => {
+      renderIncomingListenerState(st);
+    });
+  }
+  const st = await window.robosSpeaker.getVoiceListenerStatus();
+  renderIncomingListenerState(st);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initWaveformCanvas();
   loadSpeakers(true);
@@ -1293,5 +1398,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSchedules();
   loadDeviceCatalog();
   renderRegisteredDevices();
+  initIncomingListener();
 });
 

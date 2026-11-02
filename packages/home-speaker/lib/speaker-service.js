@@ -359,6 +359,38 @@ class HomeSpeakerService {
     return this.esphomeService.provisionBleWifi({ mac, ssid, password });
   }
 
+  // -------------------------------------------------------------
+  // Two-Way Incoming Voice Satellite Listener (NC-VK-9727 Mics)
+  // -------------------------------------------------------------
+  async startVoiceListener(ip = '192.168.1.64', options = {}) {
+    const dev = this.knownSpeakers.get(ip) || { ip, port: DEFAULT_ESPHOME_PORT };
+    return this.esphomeService.startVoiceListener(ip, {
+      port: dev.port || DEFAULT_ESPHOME_PORT,
+      autoReply: options.autoReply !== false,
+      onReplyAudio: async (targetIp, replyText) => {
+        if (this.ttsEngine && replyText) {
+          await this.castTTS(targetIp, replyText, { prependChime: false });
+        }
+      },
+    });
+  }
+
+  stopVoiceListener() {
+    return this.esphomeService.stopVoiceListener();
+  }
+
+  getVoiceListenerStatus() {
+    return this.esphomeService.getListenerStatus();
+  }
+
+  clearVoiceInbox() {
+    return this.esphomeService.clearIncomingInbox();
+  }
+
+  onVoiceListenerUpdate(callback) {
+    this.esphomeService.on('listener-update', callback);
+  }
+
   getSpeakers() {
     const list = Array.from(this.knownSpeakers.values());
     // Sort so Home Assistant Voice PE (NC-VK-9727) & online speakers appear prominently
