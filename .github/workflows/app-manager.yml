@@ -65,7 +65,7 @@ jobs:
       - name: Build platform app manager
         run: node scripts/app-manager/build.cjs
       - name: Smoke test packaged manager
-        if: runner.os == 'Windows'
+        if: runner.os != 'Linux'
         run: node scripts/app-manager/smoke.cjs
       - name: Build individual app downloads
         run: node scripts/app-manager/publish-catalog.cjs
@@ -87,11 +87,11 @@ jobs:
             release/app-manager/robos-catalog-*.json
           if-no-files-found: error
           compression-level: 0
-      - name: Upload Windows smoke evidence
-        if: always() && runner.os == 'Windows'
+      - name: Upload smoke evidence
+        if: always() && runner.os != 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: app-manager-windows-smoke
+          name: app-manager-smoke-${{ runner.os }}-${{ runner.arch }}
           path: run/app-manager-smoke/**
       - name: Upload Ubuntu install evidence
         if: always() && runner.os == 'Linux'
@@ -101,7 +101,7 @@ jobs:
           path: run/app-manager-gnome-smoke/**
   publish:
     needs: [unit, windows-regression, build]
-    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/release-0.0.9'
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/codex/release-')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -121,4 +121,5 @@ jobs:
       - name: Publish verified release with resumable, paced uploads
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/app-manager/publish-release.cjs release/publish
+        # A release branch prepares invisible drafts. A version tag, or the resume workflow, publishes.
+        run: node scripts/app-manager/publish-release.cjs release/publish ${{ startsWith(github.ref, 'refs/tags/') && ' ' || '--draft-only' }}

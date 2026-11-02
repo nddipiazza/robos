@@ -101,6 +101,19 @@ test('app packages go to one release per platform, leaving the main release easy
   assert.equal(patches.at(-1).json.make_latest, 'true');
   for (const patch of patches.slice(0, -1)) { assert.equal(patch.json.make_latest, 'false'); assert.equal(patch.json.prerelease, true); assert.match(patch.json.body, /releases\/tag\/v0\.0\.9/); }
 });
+test('draft-only runs verify everything against GitHub and publish nothing', async t => {
+  const { directory, revision } = releaseFolder(t);
+  fs.writeFileSync(path.join(directory, 'robos-catalog-linux-x64.json'), 'catalog');
+  const { request, releases, mutations } = fakeGitHub(directory, revision);
+  await publish(directory, { repository: 'owner/repo', request, draftOnly: true });
+  for (const release of releases.values()) { assert.equal(release.draft, true); assert.ok(release.body); assert.ok(release.assets.length); }
+  for (const patch of mutations.filter(item => item.method === 'PATCH')) assert.deepEqual(Object.keys(patch.json).sort(), ['body', 'draft']);
+  // A later real publish reuses every upload and only changes visibility.
+  mutations.length = 0;
+  await publish(directory, { repository: 'owner/repo', request });
+  assert.deepEqual([...new Set(mutations.map(item => item.method))], ['PATCH']);
+  for (const release of releases.values()) assert.equal(release.draft, false);
+});
 test('the release description links every installer directly', () => {
   const files = ['SHA256SUMS', 'release-manifest.json', ...installers('1.2.3')];
   const { main, packages } = groupFiles([...files, 'robos-catalog-linux-x64.json'], '1.2.3');

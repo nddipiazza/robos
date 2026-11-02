@@ -93,7 +93,7 @@ function mainNotes(tag, repository, files, packages) {
 function packageNotes(tag, repository, item) {
   return `App packages for ${SYSTEMS[item.platform]} ${item.arch}. RobOS App Manager downloads these for you, so there is nothing here to install by hand.\n\n**Looking for RobOS? [Download it here](https://github.com/${repository}/releases/tag/${tag}).**`;
 }
-async function publish(directory, { token = process.env.GITHUB_TOKEN, repository = process.env.GITHUB_REPOSITORY, request } = {}) {
+async function publish(directory, { token = process.env.GITHUB_TOKEN, repository = process.env.GITHUB_REPOSITORY, request, draftOnly = false } = {}) {
   if (!request && !token) throw new Error('GITHUB_TOKEN is required');
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository || '')) throw new Error('Invalid repository');
   request ||= client(token);
@@ -147,8 +147,10 @@ async function publish(directory, { token = process.env.GITHUB_TOKEN, repository
     draft: false, prerelease: true, make_latest: 'false', body: packageNotes(tag, repository, item) } });
   uploads.push({ ...await upload(tag, `RobOS ${tag}`, tag.includes('-'), main), json: {
     draft: false, prerelease: tag.includes('-'), make_latest: tag.includes('-') ? 'false' : 'true', body: notes } });
-  for (const { release, json } of uploads) await request(`${api}/releases/${release.id}`, { method: 'PATCH', json });
+  // Draft-only runs prove everything against GitHub without creating a tag or public release.
+  for (const { release, json } of uploads) await request(`${api}/releases/${release.id}`, { method: 'PATCH', json: draftOnly ? { draft: true, body: json.body } : json });
+  if (draftOnly) { console.log(`Prepared drafts for ${tag}: ${all.length} verified assets in ${uploads.length} releases. Nothing is public.`); return; }
   console.log(`Published ${tag}: ${all.length} verified assets in ${uploads.length} releases (${uploads.reduce((sum, item) => sum + item.reused, 0)} completed uploads reused)`);
 }
 module.exports = { client, list, sameAsset, groupFiles, mainNotes, publish };
-if (require.main === module) publish(path.resolve(process.argv[2] || 'release/publish')).catch(error => { console.error(error.message); process.exitCode = 1; });
+if (require.main === module) publish(path.resolve(process.argv[2] || 'release/publish'), { draftOnly: process.argv.includes('--draft-only') }).catch(error => { console.error(error.message); process.exitCode = 1; });
