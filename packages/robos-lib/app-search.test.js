@@ -15,7 +15,9 @@ test('every Windows app has intent vocabulary, with ordinary language ranked app
     'pull requests': 'pr-review', 'k8s': 'kube-studio', 'café': 'point-of-sale',
     'watch movies': 'movie-player', 'pair tv': 'robos-tv', 'smart lights': 'smart-light',
     'vpn locations': 'vpn-servers', 'vpn sandbox': 'vpn-sandbox', 'game playthrough': 'game-playthrough',
-    'custom dashboards': 'robos-dashboards', 'cloud accounts': 'cloud-accounts', appointments: 'google-calendar' })) {
+    'custom dashboards': 'robos-dashboards', 'cloud accounts': 'cloud-accounts', appointments: 'google-calendar',
+    yubikey: 'hardware-keys', 'security keys': 'hardware-keys', passkeys: 'hardware-keys', tailscale: 'app-mesh', wireguard: 'app-mesh',
+    'connect computers': 'private-networks', 'remote videos': 'private-networks', 'private network': 'private-networks' })) {
     assert.equal(search(query)[0]?.id, id, query);
   }
 });
