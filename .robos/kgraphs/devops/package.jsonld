@@ -1,92 +1,338 @@
 {
   "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
     "oslc": "http://open-services.net/ns/core#",
     "oslc_am": "http://open-services.net/ns/am#",
     "oslc_cm": "http://open-services.net/ns/cm#",
-    "oslc_rm": "http://open-services.net/ns/rm#",
     "oslc_qm": "http://open-services.net/ns/qm#",
-    "robos": "https://robos.dev/ns/sdlc#",
-    "c4": "https://c4model.com/ns#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
     "pact": "https://pact.io/ns#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "robos:sourceSummary": {
-      "@id": "robos:sourceSummary",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:annotations": {
+      "@id": "robos:annotations",
       "@type": "@json"
+    },
+    "robos:arguments": {
+      "@id": "robos:arguments",
+      "@type": "@json"
+    },
+    "robos:classification": {
+      "@container": "@set",
+      "@id": "robos:classification",
+      "@type": "@id"
+    },
+    "robos:evidence": {
+      "@container": "@set",
+      "@context": {
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "path": "robos:sourcePath",
+        "repository": "robos:sourceRepository",
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      },
+      "@id": "robos:evidence"
+    },
+    "robos:inputSchema": {
+      "@id": "robos:inputSchema",
+      "@type": "@json"
+    },
+    "robos:mcpServer": {
+      "@id": "robos:mcpServer",
+      "@type": "@id"
+    },
+    "robos:outputSchema": {
+      "@id": "robos:outputSchema",
+      "@type": "@json"
+    },
+    "robos:parameters": {
+      "@id": "robos:parameters",
+      "@type": "@json"
+    },
+    "robos:promptsProvided": {
+      "@container": "@set",
+      "@id": "robos:promptsProvided",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
     },
     "robos:provenance": {
       "@id": "robos:provenance",
       "@type": "@json"
     },
     "robos:relationshipEvidence": {
-      "@id": "robos:relationshipEvidence",
       "@container": "@set",
       "@context": {
-        "predicate": {
-          "@id": "robos:predicate",
-          "@type": "@vocab"
-        },
-        "target": {
-          "@id": "robos:target",
-          "@type": "@id"
-        },
+        "condition": "robos:condition",
         "evidence": {
-          "@id": "robos:evidence",
           "@container": "@set",
           "@context": {
-            "repository": "robos:sourceRepository",
-            "path": "robos:sourcePath",
             "line": {
               "@id": "robos:sourceLine",
               "@type": "xsd:integer"
             },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
             "revision": "robos:sourceRevision",
             "sha256": "robos:sourceHash",
             "workingTreeStatus": "robos:workingTreeStatus"
-          }
+          },
+          "@id": "robos:evidence"
         },
         "note": "dcterms:description",
-        "condition": "robos:condition",
-        "status": "robos:evidenceStatus"
-      }
-    },
-    "robos:evidence": {
-      "@id": "robos:evidence",
-      "@container": "@set",
-      "@context": {
-        "repository": "robos:sourceRepository",
-        "path": "robos:sourcePath",
-        "line": {
-          "@id": "robos:sourceLine",
-          "@type": "xsd:integer"
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
         },
-        "revision": "robos:sourceRevision",
-        "sha256": "robos:sourceHash",
-        "workingTreeStatus": "robos:workingTreeStatus"
-      }
+        "status": "robos:evidenceStatus",
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        }
+      },
+      "@id": "robos:relationshipEvidence"
+    },
+    "robos:resourcesProvided": {
+      "@container": "@set",
+      "@id": "robos:resourcesProvided",
+      "@type": "@id"
+    },
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
     },
     "robos:technologyReference": {
       "@id": "robos:technologyReference",
       "@type": "@id"
     },
-    "robos:protocolReference": {
-      "@id": "robos:protocolReference",
-      "@type": "@id"
-    }
+    "robos:toolAnnotations": {
+      "@id": "robos:toolAnnotations",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
+  "@graph": [
+    {
+      "@id": "urn:robos:cluster:prod-us-east-eks",
+      "@type": [
+        "c4:DeploymentNode",
+        "robos:KubernetesCluster",
+        "robos:K8sCluster",
+        "schema:ComputerPlatform"
+      ],
+      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
+      "dcterms:title": "Production US-East AWS EKS Cluster",
+      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/",
+      "robos:inEnvironment": "urn:robos:env:production",
+      "robos:namespace": "robos.devops",
+      "robos:namespaces": [
+        "production",
+        "ingress",
+        "monitoring"
+      ],
+      "robos:package": "devops",
+      "robos:provider": "eks",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform"
+    },
+    {
+      "@id": "urn:robos:devops:github:enterprise",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:DevOpsIntegration"
+      ],
+      "dcterms:title": "GitHub Enterprise Server",
+      "robos:category": "source-control",
+      "robos:categoryName": "Source Control & Git",
+      "robos:endpointUrl": "https://github.internal.acme.com",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:provider": "github",
+      "robos:providerName": "GitHub Cloud & Enterprise",
+      "robos:status": "connected"
+    },
+    {
+      "@id": "urn:robos:env:production",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
+      ],
+      "dcterms:description": "High-availability production tier serving external customer traffic.",
+      "dcterms:title": "Production Environment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment",
+      "robos:environmentType": "production",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:tier": "tier-1"
+    },
+    {
+      "@id": "urn:robos:env:staging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
+      ],
+      "dcterms:description": "Pre-production verification environment matching production architecture.",
+      "dcterms:title": "Staging & Pre-Release Environment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment",
+      "robos:environmentType": "staging",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:tier": "tier-2"
+    },
+    {
+      "@id": "urn:robos:gitops:checkout-service-argocd",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:GitOpsDeployment",
+        "robos:ArgoCDApplication",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
+      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
+      "robos:domainStandard": "https://opengitops.dev/",
+      "robos:gitopsEngine": "argocd",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:sourcePath": "charts/billing-api",
+      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
+      "robos:syncPolicy": "automated",
+      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
+      "robos:targetNamespace": "production"
+    },
+    {
+      "@id": "urn:robos:pipeline:checkout-service-ci",
+      "@type": [
+        "oslc_qm:TestPlan",
+        "robos:CICDPipeline",
+        "robos:Pipeline",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
+      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:platform": "github-actions",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:stages": [
+        "lint",
+        "test",
+        "security-scan",
+        "docker-build",
+        "argocd-sync"
+      ],
+      "robos:workflowFile": ".github/workflows/ci.yml"
+    },
+    {
+      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "@type": [
+        "robos:RemoteExecutionCluster",
+        "robos:RemoteBuildCluster",
+        "oslc:Resource",
+        "schema:ComputerPlatform"
+      ],
+      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
+      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+      "robos:cacheSettings": {
+        "evictionPolicy": "lru",
+        "maxSizeBytes": "500GB",
+        "retentionDays": 14
+      },
+      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis",
+      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+      "robos:instanceName": "main",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:protocol": "REAPI_v2",
+      "robos:provider": "buildbarn",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:status": "active",
+      "robos:tlsEnabled": false,
+      "robos:workerPools": [
+        {
+          "concurrency": 64,
+          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+          "isa": "x86-64",
+          "name": "linux-x86_64-large",
+          "osFamily": "linux"
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-test-runtime",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Isolated Electron graph test runtime",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-test/docker/kgraph.Dockerfile",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-test/docker/kgraph.Dockerfile"
+    }
+  ],
   "@id": "urn:robos:package:devops",
   "@type": [
     "oslc:ServiceProvider",
     "robos:Package"
   ],
-  "robos:package": "devops",
-  "robos:namespace": "robos.devops",
-  "robos:version": "1.0.0",
-  "dcterms:title": "devops Package",
   "dcterms:description": "",
+  "dcterms:title": "devops Package",
+  "robos:namespace": "robos.devops",
   "robos:nodes": [
     {
+      "@id": "urn:robos:cluster:prod-us-east-eks",
+      "@type": [
+        "c4:DeploymentNode",
+        "robos:KubernetesCluster",
+        "robos:K8sCluster",
+        "schema:ComputerPlatform"
+      ],
+      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
+      "dcterms:title": "Production US-East AWS EKS Cluster",
+      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/",
+      "robos:inEnvironment": "urn:robos:env:production",
+      "robos:namespace": "robos.devops",
+      "robos:namespaces": [
+        "production",
+        "ingress",
+        "monitoring"
+      ],
+      "robos:package": "devops",
+      "robos:provider": "eks",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform"
+    },
+    {
       "@id": "urn:robos:devops:github:enterprise",
       "@type": [
         "oslc_config:ConfigurationItem",
@@ -95,74 +341,12 @@
       "dcterms:title": "GitHub Enterprise Server",
       "robos:category": "source-control",
       "robos:categoryName": "Source Control & Git",
+      "robos:endpointUrl": "https://github.internal.acme.com",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
       "robos:provider": "github",
       "robos:providerName": "GitHub Cloud & Enterprise",
-      "robos:endpointUrl": "https://github.internal.acme.com",
-      "robos:status": "connected",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops"
-    },
-    {
-      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "@type": [
-        "robos:RemoteExecutionCluster",
-        "robos:RemoteBuildCluster",
-        "oslc:Resource",
-        "schema:ComputerPlatform"
-      ],
-      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
-      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
-      "robos:protocol": "REAPI_v2",
-      "robos:provider": "buildbarn",
-      "robos:instanceName": "main",
-      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
-      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
-      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
-      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
-      "robos:tlsEnabled": false,
-      "robos:status": "active",
-      "robos:workerPools": [
-        {
-          "name": "linux-x86_64-large",
-          "osFamily": "linux",
-          "isa": "x86-64",
-          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
-          "concurrency": 64
-        }
-      ],
-      "robos:cacheSettings": {
-        "maxSizeBytes": "500GB",
-        "retentionDays": 14,
-        "evictionPolicy": "lru"
-      },
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
-      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
-    },
-    {
-      "@id": "urn:robos:cluster:prod-us-east-eks",
-      "@type": [
-        "c4:DeploymentNode",
-        "robos:KubernetesCluster",
-        "robos:K8sCluster",
-        "schema:ComputerPlatform"
-      ],
-      "dcterms:title": "Production US-East AWS EKS Cluster",
-      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
-      "robos:provider": "eks",
-      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
-      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
-      "robos:namespaces": [
-        "production",
-        "ingress",
-        "monitoring"
-      ],
-      "robos:inEnvironment": "urn:robos:env:production",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
-      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
+      "robos:status": "connected"
     },
     {
       "@id": "urn:robos:env:production",
@@ -172,14 +356,14 @@
         "robos:DeploymentEnvironment",
         "schema:DeploymentEnvironment"
       ],
-      "dcterms:title": "Production Environment",
       "dcterms:description": "High-availability production tier serving external customer traffic.",
+      "dcterms:title": "Production Environment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment",
       "robos:environmentType": "production",
-      "robos:tier": "tier-1",
-      "robos:package": "devops",
       "robos:namespace": "robos.devops",
+      "robos:package": "devops",
       "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
-      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
+      "robos:tier": "tier-1"
     },
     {
       "@id": "urn:robos:env:staging",
@@ -189,14 +373,14 @@
         "robos:DeploymentEnvironment",
         "schema:DeploymentEnvironment"
       ],
-      "dcterms:title": "Staging & Pre-Release Environment",
       "dcterms:description": "Pre-production verification environment matching production architecture.",
+      "dcterms:title": "Staging & Pre-Release Environment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment",
       "robos:environmentType": "staging",
-      "robos:tier": "tier-2",
-      "robos:package": "devops",
       "robos:namespace": "robos.devops",
+      "robos:package": "devops",
       "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
-      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
+      "robos:tier": "tier-2"
     },
     {
       "@id": "urn:robos:gitops:checkout-service-argocd",
@@ -206,18 +390,18 @@
         "robos:ArgoCDApplication",
         "schema:SoftwareApplication"
       ],
-      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
       "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
+      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
+      "robos:domainStandard": "https://opengitops.dev/",
       "robos:gitopsEngine": "argocd",
-      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
-      "robos:sourcePath": "charts/billing-api",
-      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
-      "robos:targetNamespace": "production",
-      "robos:syncPolicy": "automated",
-      "robos:package": "devops",
       "robos:namespace": "robos.devops",
+      "robos:package": "devops",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://opengitops.dev/"
+      "robos:sourcePath": "charts/billing-api",
+      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
+      "robos:syncPolicy": "automated",
+      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
+      "robos:targetNamespace": "production"
     },
     {
       "@id": "urn:robos:pipeline:checkout-service-ci",
@@ -227,10 +411,13 @@
         "robos:Pipeline",
         "schema:SoftwareApplication"
       ],
-      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
       "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
+      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
       "robos:platform": "github-actions",
-      "robos:workflowFile": ".github/workflows/ci.yml",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:stages": [
         "lint",
         "test",
@@ -238,10 +425,45 @@
         "docker-build",
         "argocd-sync"
       ],
-      "robos:package": "devops",
+      "robos:workflowFile": ".github/workflows/ci.yml"
+    },
+    {
+      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "@type": [
+        "robos:RemoteExecutionCluster",
+        "robos:RemoteBuildCluster",
+        "oslc:Resource",
+        "schema:ComputerPlatform"
+      ],
+      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
+      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+      "robos:cacheSettings": {
+        "evictionPolicy": "lru",
+        "maxSizeBytes": "500GB",
+        "retentionDays": 14
+      },
+      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis",
+      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+      "robos:instanceName": "main",
       "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+      "robos:package": "devops",
+      "robos:protocol": "REAPI_v2",
+      "robos:provider": "buildbarn",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:status": "active",
+      "robos:tlsEnabled": false,
+      "robos:workerPools": [
+        {
+          "concurrency": 64,
+          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+          "isa": "x86-64",
+          "name": "linux-x86_64-large",
+          "osFamily": "linux"
+        }
+      ]
     },
     {
       "@id": "urn:robos:source:workspace-test-runtime",
@@ -250,201 +472,22 @@
         "schema:CreativeWork"
       ],
       "dcterms:title": "Isolated Electron graph test runtime",
-      "robos:package": "devops",
-      "robos:sourcePath": "packages/robos-test/docker/kgraph.Dockerfile",
-      "robos:sourceKind": "implementation",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-test/docker/kgraph.Dockerfile",
+          "repository": "robos"
+        }
+      ],
       "robos:inRepository": {
         "@id": "urn:robos:source:workspace"
       },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-test/docker/kgraph.Dockerfile",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:package": "devops",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-test/docker/kgraph.Dockerfile"
     }
   ],
-  "@graph": [
-    {
-      "@id": "urn:robos:devops:github:enterprise",
-      "@type": [
-        "oslc_config:ConfigurationItem",
-        "robos:DevOpsIntegration"
-      ],
-      "dcterms:title": "GitHub Enterprise Server",
-      "robos:category": "source-control",
-      "robos:categoryName": "Source Control & Git",
-      "robos:provider": "github",
-      "robos:providerName": "GitHub Cloud & Enterprise",
-      "robos:endpointUrl": "https://github.internal.acme.com",
-      "robos:status": "connected",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops"
-    },
-    {
-      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "@type": [
-        "robos:RemoteExecutionCluster",
-        "robos:RemoteBuildCluster",
-        "oslc:Resource",
-        "schema:ComputerPlatform"
-      ],
-      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
-      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
-      "robos:protocol": "REAPI_v2",
-      "robos:provider": "buildbarn",
-      "robos:instanceName": "main",
-      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
-      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
-      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
-      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
-      "robos:tlsEnabled": false,
-      "robos:status": "active",
-      "robos:workerPools": [
-        {
-          "name": "linux-x86_64-large",
-          "osFamily": "linux",
-          "isa": "x86-64",
-          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
-          "concurrency": 64
-        }
-      ],
-      "robos:cacheSettings": {
-        "maxSizeBytes": "500GB",
-        "retentionDays": 14,
-        "evictionPolicy": "lru"
-      },
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
-      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
-    },
-    {
-      "@id": "urn:robos:cluster:prod-us-east-eks",
-      "@type": [
-        "c4:DeploymentNode",
-        "robos:KubernetesCluster",
-        "robos:K8sCluster",
-        "schema:ComputerPlatform"
-      ],
-      "dcterms:title": "Production US-East AWS EKS Cluster",
-      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
-      "robos:provider": "eks",
-      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
-      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
-      "robos:namespaces": [
-        "production",
-        "ingress",
-        "monitoring"
-      ],
-      "robos:inEnvironment": "urn:robos:env:production",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
-      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
-    },
-    {
-      "@id": "urn:robos:env:production",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Environment",
-        "robos:DeploymentEnvironment",
-        "schema:DeploymentEnvironment"
-      ],
-      "dcterms:title": "Production Environment",
-      "dcterms:description": "High-availability production tier serving external customer traffic.",
-      "robos:environmentType": "production",
-      "robos:tier": "tier-1",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
-      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
-    },
-    {
-      "@id": "urn:robos:env:staging",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Environment",
-        "robos:DeploymentEnvironment",
-        "schema:DeploymentEnvironment"
-      ],
-      "dcterms:title": "Staging & Pre-Release Environment",
-      "dcterms:description": "Pre-production verification environment matching production architecture.",
-      "robos:environmentType": "staging",
-      "robos:tier": "tier-2",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
-      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
-    },
-    {
-      "@id": "urn:robos:gitops:checkout-service-argocd",
-      "@type": [
-        "oslc_config:ConfigurationItem",
-        "robos:GitOpsDeployment",
-        "robos:ArgoCDApplication",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
-      "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
-      "robos:gitopsEngine": "argocd",
-      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
-      "robos:sourcePath": "charts/billing-api",
-      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
-      "robos:targetNamespace": "production",
-      "robos:syncPolicy": "automated",
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://opengitops.dev/"
-    },
-    {
-      "@id": "urn:robos:pipeline:checkout-service-ci",
-      "@type": [
-        "oslc_qm:TestPlan",
-        "robos:CICDPipeline",
-        "robos:Pipeline",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
-      "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
-      "robos:platform": "github-actions",
-      "robos:workflowFile": ".github/workflows/ci.yml",
-      "robos:stages": [
-        "lint",
-        "test",
-        "security-scan",
-        "docker-build",
-        "argocd-sync"
-      ],
-      "robos:package": "devops",
-      "robos:namespace": "robos.devops",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:source:workspace-test-runtime",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Isolated Electron graph test runtime",
-      "robos:package": "devops",
-      "robos:sourcePath": "packages/robos-test/docker/kgraph.Dockerfile",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-test/docker/kgraph.Dockerfile",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.devops"
-    }
-  ]
+  "robos:package": "devops",
+  "robos:version": "1.0.0"
 }

@@ -1,463 +1,123 @@
 {
   "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
     "oslc": "http://open-services.net/ns/core#",
     "oslc_am": "http://open-services.net/ns/am#",
     "oslc_cm": "http://open-services.net/ns/cm#",
-    "oslc_rm": "http://open-services.net/ns/rm#",
     "oslc_qm": "http://open-services.net/ns/qm#",
-    "robos": "https://robos.dev/ns/sdlc#",
-    "c4": "https://c4model.com/ns#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
     "pact": "https://pact.io/ns#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "robos:sourceSummary": {
-      "@id": "robos:sourceSummary",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:annotations": {
+      "@id": "robos:annotations",
       "@type": "@json"
+    },
+    "robos:arguments": {
+      "@id": "robos:arguments",
+      "@type": "@json"
+    },
+    "robos:classification": {
+      "@container": "@set",
+      "@id": "robos:classification",
+      "@type": "@id"
+    },
+    "robos:evidence": {
+      "@container": "@set",
+      "@context": {
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "path": "robos:sourcePath",
+        "repository": "robos:sourceRepository",
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      },
+      "@id": "robos:evidence"
+    },
+    "robos:inputSchema": {
+      "@id": "robos:inputSchema",
+      "@type": "@json"
+    },
+    "robos:mcpServer": {
+      "@id": "robos:mcpServer",
+      "@type": "@id"
+    },
+    "robos:outputSchema": {
+      "@id": "robos:outputSchema",
+      "@type": "@json"
+    },
+    "robos:parameters": {
+      "@id": "robos:parameters",
+      "@type": "@json"
+    },
+    "robos:promptsProvided": {
+      "@container": "@set",
+      "@id": "robos:promptsProvided",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
     },
     "robos:provenance": {
       "@id": "robos:provenance",
       "@type": "@json"
     },
     "robos:relationshipEvidence": {
-      "@id": "robos:relationshipEvidence",
       "@container": "@set",
       "@context": {
-        "predicate": {
-          "@id": "robos:predicate",
-          "@type": "@vocab"
-        },
-        "target": {
-          "@id": "robos:target",
-          "@type": "@id"
-        },
+        "condition": "robos:condition",
         "evidence": {
-          "@id": "robos:evidence",
           "@container": "@set",
           "@context": {
-            "repository": "robos:sourceRepository",
-            "path": "robos:sourcePath",
             "line": {
               "@id": "robos:sourceLine",
               "@type": "xsd:integer"
             },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
             "revision": "robos:sourceRevision",
             "sha256": "robos:sourceHash",
             "workingTreeStatus": "robos:workingTreeStatus"
-          }
+          },
+          "@id": "robos:evidence"
         },
         "note": "dcterms:description",
-        "condition": "robos:condition",
-        "status": "robos:evidenceStatus"
-      }
-    },
-    "robos:evidence": {
-      "@id": "robos:evidence",
-      "@container": "@set",
-      "@context": {
-        "repository": "robos:sourceRepository",
-        "path": "robos:sourcePath",
-        "line": {
-          "@id": "robos:sourceLine",
-          "@type": "xsd:integer"
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
         },
-        "revision": "robos:sourceRevision",
-        "sha256": "robos:sourceHash",
-        "workingTreeStatus": "robos:workingTreeStatus"
-      }
+        "status": "robos:evidenceStatus",
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        }
+      },
+      "@id": "robos:relationshipEvidence"
+    },
+    "robos:resourcesProvided": {
+      "@container": "@set",
+      "@id": "robos:resourcesProvided",
+      "@type": "@id"
+    },
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
     },
     "robos:technologyReference": {
       "@id": "robos:technologyReference",
       "@type": "@id"
     },
-    "robos:protocolReference": {
-      "@id": "robos:protocolReference",
-      "@type": "@id"
-    }
+    "robos:toolAnnotations": {
+      "@id": "robos:toolAnnotations",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
-  "@id": "urn:robos:package:applications",
-  "@type": [
-    "oslc:ServiceProvider",
-    "robos:Package"
-  ],
-  "robos:package": "applications",
-  "robos:namespace": "robos.applications",
-  "robos:version": "1.0.0",
-  "dcterms:title": "applications Package",
-  "dcterms:description": "",
-  "robos:nodes": [
-    {
-      "@id": "urn:robos:app:billing-portal",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FrontEndApp",
-        "schema:WebApplication"
-      ],
-      "dcterms:title": "Billing Web Portal",
-      "robos:framework": "React 19 / Vite",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/acme/billing-portal",
-      "robos:technology": "React 19 / TypeScript / Vite",
-      "robos:frontendFramework": "React",
-      "robos:schemaOrgType": "https://schema.org/WebApplication",
-      "robos:domainStandard": "https://schema.org/WebApplication"
-    },
-    {
-      "@id": "urn:robos:app:voice-prompt",
-      "@type": [
-        "robos:DesktopApp",
-        "schema:SoftwareApplication",
-        "oslc_am:Resource",
-        "c4:Container"
-      ],
-      "dcterms:title": "Voice Prompt Agent",
-      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
-      "robos:desktopFramework": "Electron",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
-      "robos:apiPort": 19188,
-      "robos:globalHotkey": "Super+V",
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
-      "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:console-app:rest-client",
-      "@type": [
-        "robos:ConsoleApp",
-        "oslc_am:Resource",
-        "c4:Container"
-      ],
-      "dcterms:title": "Rest Client CLI",
-      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
-      "robos:repository": "github.com/acme/rest-client",
-      "robos:technology": "Node.js 20 / TypeScript",
-      "robos:cliCommand": "rest-client",
-      "robos:subcommands": [
-        {
-          "name": "init",
-          "description": "Initialize local workspace and credentials"
-        },
-        {
-          "name": "deploy",
-          "description": "Deploy artifacts to targeted cluster or environment"
-        },
-        {
-          "name": "status",
-          "description": "Inspect health and operational status"
-        },
-        {
-          "name": "logs",
-          "description": "Stream aggregated logs with live tail"
-        },
-        {
-          "name": "rollback",
-          "description": "Revert to previous revision"
-        }
-      ],
-      "robos:globalFlags": [
-        {
-          "flag": "--verbose, -v",
-          "description": "Enable verbose debug tracing"
-        },
-        {
-          "flag": "--config, -c",
-          "description": "Path to configuration manifest"
-        },
-        {
-          "flag": "--output, -o",
-          "description": "Output format (json, yaml, text)"
-        }
-      ],
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
-      "robos:inOrganization": "urn:robos:git-org:acme",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication",
-      "robos:command": "rest-client",
-      "robos:commandName": "inspect"
-    },
-    {
-      "@id": "urn:robos:source:workspace-explorer",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Explorer import and refinement panel",
-      "robos:package": "applications",
-      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/renderer/workspace-review.js",
-          "line": 1
-        }
-      ],
-      "robos:dependsOn": {
-        "@id": "urn:robos:source:workspace-review"
-      },
-      "robos:namespace": "robos.applications"
-    },
-    {
-      "@id": "urn:robos:source:schema-group-view",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
-      "robos:package": "applications",
-      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/renderer/schema-group-view.js",
-          "line": 1
-        }
-      ],
-      "robos:classification": [
-        {
-          "@id": "https://robos.dev/ns/sdlc#classification/source"
-        }
-      ],
-      "robos:classificationOrigin": "inferred",
-      "robos:dependsOn": [
-        {
-          "@id": "urn:robos:source:inspector-property-groups"
-        }
-      ],
-      "robos:relationshipEvidence": [
-        {
-          "predicate": "robos:dependsOn",
-          "target": {
-            "@id": "urn:robos:source:inspector-property-groups"
-          },
-          "evidence": [
-            {
-              "repository": "robos",
-              "path": "packages/robos-graph/renderer/schema-group-view.js",
-              "line": 11
-            }
-          ],
-          "note": "Implementation uses this module, or test exercises its rendered behavior."
-        }
-      ],
-      "robos:namespace": "robos.applications"
-    },
-    {
-      "@id": "urn:robos:app:customer-portal",
-      "@type": [
-        "robos:FrontEndApp",
-        "schema:WebApplication",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Customer Portal SPA",
-      "dcterms:description": "React & Vite single-page application for client checkout.",
-      "robos:repository": "github.com/acme/customer-portal",
-      "robos:technology": "TypeScript / React",
-      "robos:frontendFramework": "React",
-      "robos:buildTool": "Vite",
-      "robos:devServerPort": 3000,
-      "robos:ownerTeam": "urn:robos:team:frontend-guild",
-      "robos:package": "applications",
-      "robos:namespace": "robos.apps",
-      "robos:hasELearning": [
-        "urn:robos:elearning:app:customer-portal"
-      ],
-      "robos:hasCertificate": [
-        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
-      ]
-    },
-    {
-      "@id": "urn:robos:app:kgraph-parse-portal",
-      "@type": [
-        "robos:DesktopApp",
-        "robos:FrontEndApp",
-        "schema:SoftwareApplication",
-        "schema:WebApplication",
-        "oslc_am:Resource",
-        "c4:Container"
-      ],
-      "dcterms:title": "RobOS Kgraph Parse Portal",
-      "dcterms:description": "Universal connectors webapp and desktop portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:technology": "Electron / Express / Luxir / Buildbarn / Tika gRPC",
-      "robos:desktopFramework": "Electron",
-      "robos:frontendFramework": "Vanilla JS",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
-      "robos:apiPort": 19192,
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:hasELearning": [
-        "urn:robos:elearning:course:kgraph-parse-portal"
-      ],
-      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal"
-    },
-    {
-      "@id": "urn:robos:frontend-app:getemgigs",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FrontEndApp",
-        "schema:WebApplication"
-      ],
-      "dcterms:title": "Get 'Em Gigs (The Gig Bandit)",
-      "dcterms:description": "Buddy Gigs for local bands: trade attendance, lock a deposit, get scanned in at the door (Venmo-style QR); Venue Stay-To-Play instead of pay-to-play.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/thegigbandit",
-      "robos:technology": "Next.js 15 / React 19 / Node.js 22",
-      "robos:frontendFramework": "Next.js",
-      "robos:appTemplate": "robos:template:nextjs-vercel-web@1 (reference implementation)",
-      "robos:hostingPlatform": "Vercel",
-      "robos:productionUrl": "https://www.getemgigs.com",
-      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
-      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
-      "robos:abuseControls": [
-        "rate-limits",
-        "honeypot",
-        "form-timing",
-        "disposable-email-block",
-        "password-policy",
-        "same-origin-csrf",
-        "csp",
-        "audit-log",
-        "rotating-hmac-checkin-codes"
-      ],
-      "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
-      "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account, /deals, /scan, /gigs/new disallowed",
-      "robos:sitemapUrl": "https://www.getemgigs.com/sitemap.xml",
-      "robos:llmsTxtUrl": "https://www.getemgigs.com/llms.txt",
-      "robos:structuredData": [
-        "schema:Organization",
-        "schema:WebSite",
-        "schema:WebApplication",
-        "schema:FAQPage",
-        "schema:ItemList",
-        "schema:MusicEvent"
-      ],
-      "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
-      "robos:schemaOrgType": "https://schema.org/WebApplication",
-      "robos:domainStandard": "https://schema.org/WebApplication"
-    },
-    {
-      "@id": "urn:robos:voice-command:voice-prompt",
-      "@type": [
-        "robos:VoiceCommand",
-        "oslc_am:Resource"
-      ],
-      "dcterms:title": "Open RobOS Voice",
-      "dcterms:description": "Launch and focus the RobOS Voice offline dictation assistant HUD",
-      "robos:commandMatcher": [
-        "open robos voice",
-        "open voice",
-        "launch robos voice",
-        "robos voice"
-      ],
-      "robos:targetType": "app",
-      "robos:targetId": "voice-prompt",
-      "robos:action": "open-app",
-      "robos:schemaOrgType": "https://schema.org/ControlAction",
-      "robos:domainStandard": "https://schema.org/ControlAction",
-      "robos:refersFrom": "https://schema.org/ControlAction",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications"
-    },
-    {
-      "@id": "urn:robos:frontend-app:urban-plant-tracker",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FrontEndApp",
-        "schema:WebApplication"
-      ],
-      "dcterms:title": "Urban Plant Tracker",
-      "dcterms:description": "Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
-      "robos:technology": "Next.js 15 / React 19 / Node.js 22",
-      "robos:frontendFramework": "Next.js",
-      "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
-      "robos:hostingPlatform": "Vercel",
-      "robos:productionUrl": "https://www.urbanplanttracker.com",
-      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
-      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
-      "robos:abuseControls": [
-        "rate-limits",
-        "honeypot",
-        "form-timing",
-        "disposable-email-block",
-        "password-policy",
-        "same-origin-csrf",
-        "csp",
-        "audit-log"
-      ],
-      "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
-      "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account disallowed",
-      "robos:sitemapUrl": "https://www.urbanplanttracker.com/sitemap.xml",
-      "robos:llmsTxtUrl": "https://www.urbanplanttracker.com/llms.txt",
-      "robos:structuredData": [
-        "schema:Organization",
-        "schema:WebSite",
-        "schema:WebApplication",
-        "schema:FAQPage"
-      ],
-      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
-      "robos:schemaOrgType": "https://schema.org/WebApplication",
-      "robos:domainStandard": "https://schema.org/WebApplication"
-    },
-    {
-      "@id": "urn:robos:desktop-app:docu-vault-desktop",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "DocuVault Desktop",
-      "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
-      "robos:technology": "Electron 29 / Vanilla JS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:console-app:pulse-metrics-cli",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:ConsoleApp",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Pulse Metrics CLI",
-      "dcterms:description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
-      "robos:technology": "Node.js 20 / CLI",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
-    }
-  ],
   "@graph": [
     {
       "@id": "urn:robos:app:billing-portal",
@@ -467,172 +127,14 @@
         "schema:WebApplication"
       ],
       "dcterms:title": "Billing Web Portal",
+      "robos:domainStandard": "https://schema.org/WebApplication",
       "robos:framework": "React 19 / Vite",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/acme/billing-portal",
-      "robos:technology": "React 19 / TypeScript / Vite",
       "robos:frontendFramework": "React",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "github.com/acme/billing-portal",
       "robos:schemaOrgType": "https://schema.org/WebApplication",
-      "robos:domainStandard": "https://schema.org/WebApplication"
-    },
-    {
-      "@id": "urn:robos:app:voice-prompt",
-      "@type": [
-        "robos:DesktopApp",
-        "schema:SoftwareApplication",
-        "oslc_am:Resource",
-        "c4:Container"
-      ],
-      "dcterms:title": "Voice Prompt Agent",
-      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
-      "robos:desktopFramework": "Electron",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
-      "robos:apiPort": 19188,
-      "robos:globalHotkey": "Super+V",
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
-      "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:console-app:rest-client",
-      "@type": [
-        "robos:ConsoleApp",
-        "oslc_am:Resource",
-        "c4:Container"
-      ],
-      "dcterms:title": "Rest Client CLI",
-      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
-      "robos:repository": "github.com/acme/rest-client",
-      "robos:technology": "Node.js 20 / TypeScript",
-      "robos:cliCommand": "rest-client",
-      "robos:subcommands": [
-        {
-          "name": "init",
-          "description": "Initialize local workspace and credentials"
-        },
-        {
-          "name": "deploy",
-          "description": "Deploy artifacts to targeted cluster or environment"
-        },
-        {
-          "name": "status",
-          "description": "Inspect health and operational status"
-        },
-        {
-          "name": "logs",
-          "description": "Stream aggregated logs with live tail"
-        },
-        {
-          "name": "rollback",
-          "description": "Revert to previous revision"
-        }
-      ],
-      "robos:globalFlags": [
-        {
-          "flag": "--verbose, -v",
-          "description": "Enable verbose debug tracing"
-        },
-        {
-          "flag": "--config, -c",
-          "description": "Path to configuration manifest"
-        },
-        {
-          "flag": "--output, -o",
-          "description": "Output format (json, yaml, text)"
-        }
-      ],
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
-      "robos:inOrganization": "urn:robos:git-org:acme",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication",
-      "robos:command": "rest-client",
-      "robos:commandName": "inspect"
-    },
-    {
-      "@id": "urn:robos:source:workspace-explorer",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Explorer import and refinement panel",
-      "robos:package": "applications",
-      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/renderer/workspace-review.js",
-          "line": 1
-        }
-      ],
-      "robos:dependsOn": {
-        "@id": "urn:robos:source:workspace-review"
-      },
-      "robos:namespace": "robos.applications"
-    },
-    {
-      "@id": "urn:robos:source:schema-group-view",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
-      "robos:package": "applications",
-      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/renderer/schema-group-view.js",
-          "line": 1
-        }
-      ],
-      "robos:classification": [
-        {
-          "@id": "https://robos.dev/ns/sdlc#classification/source"
-        }
-      ],
-      "robos:classificationOrigin": "inferred",
-      "robos:dependsOn": [
-        {
-          "@id": "urn:robos:source:inspector-property-groups"
-        }
-      ],
-      "robos:relationshipEvidence": [
-        {
-          "predicate": "robos:dependsOn",
-          "target": {
-            "@id": "urn:robos:source:inspector-property-groups"
-          },
-          "evidence": [
-            {
-              "repository": "robos",
-              "path": "packages/robos-graph/renderer/schema-group-view.js",
-              "line": 11
-            }
-          ],
-          "note": "Implementation uses this module, or test exercises its rendered behavior."
-        }
-      ],
-      "robos:namespace": "robos.applications"
+      "robos:technology": "React 19 / TypeScript / Vite"
     },
     {
       "@id": "urn:robos:app:customer-portal",
@@ -641,22 +143,22 @@
         "schema:WebApplication",
         "oslc:Resource"
       ],
-      "dcterms:title": "Customer Portal SPA",
       "dcterms:description": "React & Vite single-page application for client checkout.",
-      "robos:repository": "github.com/acme/customer-portal",
-      "robos:technology": "TypeScript / React",
-      "robos:frontendFramework": "React",
+      "dcterms:title": "Customer Portal SPA",
       "robos:buildTool": "Vite",
       "robos:devServerPort": 3000,
-      "robos:ownerTeam": "urn:robos:team:frontend-guild",
-      "robos:package": "applications",
-      "robos:namespace": "robos.apps",
+      "robos:frontendFramework": "React",
+      "robos:hasCertificate": [
+        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
+      ],
       "robos:hasELearning": [
         "urn:robos:elearning:app:customer-portal"
       ],
-      "robos:hasCertificate": [
-        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
-      ]
+      "robos:namespace": "robos.apps",
+      "robos:ownerTeam": "urn:robos:team:frontend-guild",
+      "robos:package": "applications",
+      "robos:repository": "github.com/acme/customer-portal",
+      "robos:technology": "TypeScript / React"
     },
     {
       "@id": "urn:robos:app:kgraph-parse-portal",
@@ -668,25 +170,275 @@
         "oslc_am:Resource",
         "c4:Container"
       ],
-      "dcterms:title": "RobOS Kgraph Parse Portal",
       "dcterms:description": "Universal connectors webapp and desktop portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:technology": "Electron / Express / Luxir / Buildbarn / Tika gRPC",
-      "robos:desktopFramework": "Electron",
-      "robos:frontendFramework": "Vanilla JS",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "dcterms:title": "RobOS Kgraph Parse Portal",
       "robos:apiPort": 19192,
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:frontendFramework": "Vanilla JS",
+      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal",
       "robos:hasELearning": [
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
-      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal"
+      "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:namespace": "robos.applications",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "applications",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron / Express / Luxir / Buildbarn / Tika gRPC"
+    },
+    {
+      "@id": "urn:robos:app:voice-prompt",
+      "@type": [
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
+      "dcterms:title": "Voice Prompt Agent",
+      "robos:apiPort": 19188,
+      "robos:desktopFramework": "Electron",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:globalHotkey": "Super+V",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:namespace": "robos.applications",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "applications",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron / Vanilla JS / Whisper ONNX"
+    },
+    {
+      "@id": "urn:robos:console-app:pulse-metrics-cli",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ConsoleApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
+      "dcterms:title": "Pulse Metrics CLI",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Node.js 20 / CLI"
+    },
+    {
+      "@id": "urn:robos:console-app:rest-client",
+      "@type": [
+        "robos:ConsoleApp",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
+      "dcterms:title": "Rest Client CLI",
+      "robos:cliCommand": "rest-client",
+      "robos:command": "rest-client",
+      "robos:commandName": "inspect",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:globalFlags": [
+        {
+          "description": "Enable verbose debug tracing",
+          "flag": "--verbose, -v"
+        },
+        {
+          "description": "Path to configuration manifest",
+          "flag": "--config, -c"
+        },
+        {
+          "description": "Output format (json, yaml, text)",
+          "flag": "--output, -o"
+        }
+      ],
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:namespace": "robos.applications",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "applications",
+      "robos:repository": "github.com/acme/rest-client",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:subcommands": [
+        {
+          "description": "Initialize local workspace and credentials",
+          "name": "init"
+        },
+        {
+          "description": "Deploy artifacts to targeted cluster or environment",
+          "name": "deploy"
+        },
+        {
+          "description": "Inspect health and operational status",
+          "name": "status"
+        },
+        {
+          "description": "Stream aggregated logs with live tail",
+          "name": "logs"
+        },
+        {
+          "description": "Revert to previous revision",
+          "name": "rollback"
+        }
+      ],
+      "robos:technology": "Node.js 20 / TypeScript"
+    },
+    {
+      "@id": "urn:robos:desktop-app:app-mesh",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Provider-agnostic Zero-Trust App & IPC Port Mesh that securely bridges RobOS application IPC/snapshot ports (19100–19231) and service ports (:3410, :19210, :19213, :63343) across machines on the same or different networks using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard.",
+      "dcterms:title": "RobOS App Mesh",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/app-mesh",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Mutual TLS 1.3 / OpenZiti / Tailscale / NetBird / WireGuard"
+    },
+    {
+      "@id": "urn:robos:desktop-app:docu-vault-desktop",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
+      "dcterms:title": "DocuVault Desktop",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 29 / Vanilla JS"
+    },
+    {
+      "@id": "urn:robos:desktop-app:gnome-desktop-installer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Manage GNOME desktop shortcuts, App Grid .desktop launchers, GIO trusted desktop icons, multi-scale hicolor icons, and GNOME Dock favorites across all RobOS applications.",
+      "dcterms:title": "RobOS GNOME Desktop App Installer",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/gnome-desktop-installer",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / FreeDesktop 1.5 / GIO / GSettings"
+    },
+    {
+      "@id": "urn:robos:desktop-app:hardware-keys",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Physical YubiKey & FIDO2/U2F push-key security studio: live USB/HID/CTAP2 hardware inspector, interactive physical touch assertion verifier, hardware-backed OpenSSH keys (ed25519-sk & ecdsa-sk), FIDO2 PIN & resident passkeys manager, Linux PAM U2F enrollment (pamu2fcfg), and RobOS Pass Store / Agent touch-to-approve security gates.",
+      "dcterms:title": "RobOS Hardware Keys",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/hardware-keys",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 30 / YubiKey Manager (ykman) / CTAP2 / OpenSSH FIDO2 (-sk) / PAM U2F"
+    },
+    {
+      "@id": "urn:robos:desktop-app:home-speaker",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Smart speaker intercom, walkie-talkie voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller for Google Home, Nest, and Cast devices.",
+      "dcterms:title": "RobOS Home Speaker",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/home-speaker",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Google Cast / Kokoro TTS"
+    },
+    {
+      "@id": "urn:robos:desktop-app:party-game",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "schema:VideoGame"
+      ],
+      "dcterms:description": "First game in the Party Games category: an animated AI host face runs survey-powered mini games on one or more RobOS TVs (stage, scoreboard and spotlight screens) while guests play on their phones. Guests get roles from their answers, the party host describes the house, and the required AI agent writes the show (role reveals, superlatives, interest trivia, House Quests using the real rooms and supplies, bluffs, recaps and finale awards). Mini games share a reusable template.",
+      "dcterms:title": "RobOS Party Game",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/party-game",
+      "robos:schemaOrgType": "https://schema.org/VideoGame",
+      "robos:technology": "Electron 28 / LAN HTTP + SSE / RobOS TV app casts / robos-agent-client"
+    },
+    {
+      "@id": "urn:robos:desktop-app:robos-dashboards",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Graphical dashboard studio and builder where every widget is a composable RobOS component displaying any RobOS-powered data source, backed by KGraph card layouts, embeddable via <robos-dashboard>, and castable to RobOS Smart TV Studio.",
+      "dcterms:title": "RobOS Dashboards",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/robos-dashboards",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / RobOS UI Web Components / Smart TV 10-Foot Portal"
+    },
+    {
+      "@id": "urn:robos:desktop-app:robos-tv",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "First-class Smart TV integration studio: LAN TV discovery, Developer Mode native package generator & sideloader (LG webOS IPK, Samsung Tizen WGT, Google TV/Android TV ADB Leanback, Roku OS), automated LG 1,000-hour dev timer renewal, 10-foot D-Pad/Gamepad Big-Screen Portal (:19210), and Moonlight/Sunshine 4K 120Hz streaming.",
+      "dcterms:title": "RobOS Smart TV Studio",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/robos-tv",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Smart TV Developer Mode / 10-Foot Spatial Navigation Portal"
+    },
+    {
+      "@id": "urn:robos:desktop-app:vpn-sandbox",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Zero-leak OpenVPN application launcher that runs any desktop or CLI executable inside an isolated Linux network namespace (ip netns) with a 3-barrier iptables/ip6tables kill-switch so your normal public IP is never exposed.",
+      "dcterms:title": "RobOS VPN Sandbox",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/vpn-sandbox",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / OpenVPN 2.7 / Linux ip-netns / iptables"
+    },
+    {
+      "@id": "urn:robos:desktop-app:vpn-servers",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Manage OpenVPN providers (IPVanish built-in with 3,598 server profiles), GPG/AES-256-GCM encrypted VPN accounts, live TLS 1.3 credential verification, and server locations across RobOS.",
+      "dcterms:title": "RobOS VPN Servers",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/vpn-servers",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / OpenVPN 2.7 / Pass / AES-256-GCM"
     },
     {
       "@id": "urn:robos:frontend-app:getemgigs",
@@ -695,18 +447,8 @@
         "robos:FrontEndApp",
         "schema:WebApplication"
       ],
-      "dcterms:title": "Get 'Em Gigs (The Gig Bandit)",
       "dcterms:description": "Buddy Gigs for local bands: trade attendance, lock a deposit, get scanned in at the door (Venmo-style QR); Venue Stay-To-Play instead of pay-to-play.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/thegigbandit",
-      "robos:technology": "Next.js 15 / React 19 / Node.js 22",
-      "robos:frontendFramework": "Next.js",
-      "robos:appTemplate": "robos:template:nextjs-vercel-web@1 (reference implementation)",
-      "robos:hostingPlatform": "Vercel",
-      "robos:productionUrl": "https://www.getemgigs.com",
-      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
-      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+      "dcterms:title": "Get 'Em Gigs (The Gig Bandit)",
       "robos:abuseControls": [
         "rate-limits",
         "honeypot",
@@ -718,10 +460,22 @@
         "audit-log",
         "rotating-hmac-checkin-codes"
       ],
+      "robos:appTemplate": "robos:template:nextjs-vercel-web@1 (reference implementation)",
+      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
       "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
       "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account, /deals, /scan, /gigs/new disallowed",
-      "robos:sitemapUrl": "https://www.getemgigs.com/sitemap.xml",
+      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+      "robos:domainStandard": "https://schema.org/WebApplication",
+      "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
+      "robos:frontendFramework": "Next.js",
+      "robos:hostingPlatform": "Vercel",
       "robos:llmsTxtUrl": "https://www.getemgigs.com/llms.txt",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:productionUrl": "https://www.getemgigs.com",
+      "robos:repository": "github.com/nddipiazza/thegigbandit",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:sitemapUrl": "https://www.getemgigs.com/sitemap.xml",
       "robos:structuredData": [
         "schema:Organization",
         "schema:WebSite",
@@ -730,32 +484,7 @@
         "schema:ItemList",
         "schema:MusicEvent"
       ],
-      "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
-      "robos:schemaOrgType": "https://schema.org/WebApplication",
-      "robos:domainStandard": "https://schema.org/WebApplication"
-    },
-    {
-      "@id": "urn:robos:voice-command:voice-prompt",
-      "@type": [
-        "robos:VoiceCommand",
-        "oslc_am:Resource"
-      ],
-      "dcterms:title": "Open RobOS Voice",
-      "dcterms:description": "Launch and focus the RobOS Voice offline dictation assistant HUD",
-      "robos:commandMatcher": [
-        "open robos voice",
-        "open voice",
-        "launch robos voice",
-        "robos voice"
-      ],
-      "robos:targetType": "app",
-      "robos:targetId": "voice-prompt",
-      "robos:action": "open-app",
-      "robos:schemaOrgType": "https://schema.org/ControlAction",
-      "robos:domainStandard": "https://schema.org/ControlAction",
-      "robos:refersFrom": "https://schema.org/ControlAction",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:technology": "Next.js 15 / React 19 / Node.js 22"
     },
     {
       "@id": "urn:robos:frontend-app:urban-plant-tracker",
@@ -764,18 +493,8 @@
         "robos:FrontEndApp",
         "schema:WebApplication"
       ],
-      "dcterms:title": "Urban Plant Tracker",
       "dcterms:description": "Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
-      "robos:technology": "Next.js 15 / React 19 / Node.js 22",
-      "robos:frontendFramework": "Next.js",
-      "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
-      "robos:hostingPlatform": "Vercel",
-      "robos:productionUrl": "https://www.urbanplanttracker.com",
-      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
-      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+      "dcterms:title": "Urban Plant Tracker",
       "robos:abuseControls": [
         "rate-limits",
         "honeypot",
@@ -786,34 +505,232 @@
         "csp",
         "audit-log"
       ],
+      "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
+      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
       "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
       "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account disallowed",
-      "robos:sitemapUrl": "https://www.urbanplanttracker.com/sitemap.xml",
+      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+      "robos:domainStandard": "https://schema.org/WebApplication",
+      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
+      "robos:frontendFramework": "Next.js",
+      "robos:hostingPlatform": "Vercel",
       "robos:llmsTxtUrl": "https://www.urbanplanttracker.com/llms.txt",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:productionUrl": "https://www.urbanplanttracker.com",
+      "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:sitemapUrl": "https://www.urbanplanttracker.com/sitemap.xml",
       "robos:structuredData": [
         "schema:Organization",
         "schema:WebSite",
         "schema:WebApplication",
         "schema:FAQPage"
       ],
-      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
-      "robos:schemaOrgType": "https://schema.org/WebApplication",
-      "robos:domainStandard": "https://schema.org/WebApplication"
+      "robos:technology": "Next.js 15 / React 19 / Node.js 22"
     },
     {
-      "@id": "urn:robos:desktop-app:docu-vault-desktop",
+      "@id": "urn:robos:source:schema-group-view",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-property-groups"
+        }
+      ],
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/renderer/schema-group-view.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:relationshipEvidence": [
+        {
+          "evidence": [
+            {
+              "line": 11,
+              "path": "packages/robos-graph/renderer/schema-group-view.js",
+              "repository": "robos"
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior.",
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-property-groups"
+          }
+        }
+      ],
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-explorer",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Explorer import and refinement panel",
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:workspace-review"
+      },
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/renderer/workspace-review.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js"
+    },
+    {
+      "@id": "urn:robos:voice-command:voice-prompt",
+      "@type": [
+        "robos:VoiceCommand",
+        "oslc_am:Resource"
+      ],
+      "dcterms:description": "Launch and focus the RobOS Voice offline dictation assistant HUD",
+      "dcterms:title": "Open RobOS Voice",
+      "robos:action": "open-app",
+      "robos:commandMatcher": [
+        "open robos voice",
+        "open voice",
+        "launch robos voice",
+        "robos voice"
+      ],
+      "robos:domainStandard": "https://schema.org/ControlAction",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:refersFrom": "https://schema.org/ControlAction",
+      "robos:schemaOrgType": "https://schema.org/ControlAction",
+      "robos:targetId": "voice-prompt",
+      "robos:targetType": "app"
+    }
+  ],
+  "@id": "urn:robos:package:applications",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "dcterms:description": "",
+  "dcterms:title": "applications Package",
+  "robos:namespace": "robos.applications",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:app:billing-portal",
       "@type": [
         "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+        "robos:FrontEndApp",
+        "schema:WebApplication"
       ],
-      "dcterms:title": "DocuVault Desktop",
-      "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
-      "robos:package": "applications",
+      "dcterms:title": "Billing Web Portal",
+      "robos:domainStandard": "https://schema.org/WebApplication",
+      "robos:framework": "React 19 / Vite",
+      "robos:frontendFramework": "React",
       "robos:namespace": "robos.applications",
-      "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
-      "robos:technology": "Electron 29 / Vanilla JS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:package": "applications",
+      "robos:repository": "github.com/acme/billing-portal",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:technology": "React 19 / TypeScript / Vite"
+    },
+    {
+      "@id": "urn:robos:app:customer-portal",
+      "@type": [
+        "robos:FrontEndApp",
+        "schema:WebApplication",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "React & Vite single-page application for client checkout.",
+      "dcterms:title": "Customer Portal SPA",
+      "robos:buildTool": "Vite",
+      "robos:devServerPort": 3000,
+      "robos:frontendFramework": "React",
+      "robos:hasCertificate": [
+        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
+      ],
+      "robos:hasELearning": [
+        "urn:robos:elearning:app:customer-portal"
+      ],
+      "robos:namespace": "robos.apps",
+      "robos:ownerTeam": "urn:robos:team:frontend-guild",
+      "robos:package": "applications",
+      "robos:repository": "github.com/acme/customer-portal",
+      "robos:technology": "TypeScript / React"
+    },
+    {
+      "@id": "urn:robos:app:kgraph-parse-portal",
+      "@type": [
+        "robos:DesktopApp",
+        "robos:FrontEndApp",
+        "schema:SoftwareApplication",
+        "schema:WebApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Universal connectors webapp and desktop portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
+      "dcterms:title": "RobOS Kgraph Parse Portal",
+      "robos:apiPort": 19192,
+      "robos:desktopFramework": "Electron",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:frontendFramework": "Vanilla JS",
+      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal",
+      "robos:hasELearning": [
+        "urn:robos:elearning:course:kgraph-parse-portal"
+      ],
+      "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:namespace": "robos.applications",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "applications",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron / Express / Luxir / Buildbarn / Tika gRPC"
+    },
+    {
+      "@id": "urn:robos:app:voice-prompt",
+      "@type": [
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
+      "dcterms:title": "Voice Prompt Agent",
+      "robos:apiPort": 19188,
+      "robos:desktopFramework": "Electron",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:globalHotkey": "Super+V",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:namespace": "robos.applications",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "applications",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron / Vanilla JS / Whisper ONNX"
     },
     {
       "@id": "urn:robos:console-app:pulse-metrics-cli",
@@ -822,149 +739,275 @@
         "robos:ConsoleApp",
         "schema:SoftwareApplication"
       ],
-      "dcterms:title": "Pulse Metrics CLI",
       "dcterms:description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
-      "robos:package": "applications",
+      "dcterms:title": "Pulse Metrics CLI",
       "robos:namespace": "robos.applications",
+      "robos:package": "applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
-      "robos:technology": "Node.js 20 / CLI",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Node.js 20 / CLI"
     },
     {
-      "@id": "urn:robos:desktop-app:home-speaker",
+      "@id": "urn:robos:console-app:rest-client",
+      "@type": [
+        "robos:ConsoleApp",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
+      "dcterms:title": "Rest Client CLI",
+      "robos:cliCommand": "rest-client",
+      "robos:command": "rest-client",
+      "robos:commandName": "inspect",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:globalFlags": [
+        {
+          "description": "Enable verbose debug tracing",
+          "flag": "--verbose, -v"
+        },
+        {
+          "description": "Path to configuration manifest",
+          "flag": "--config, -c"
+        },
+        {
+          "description": "Output format (json, yaml, text)",
+          "flag": "--output, -o"
+        }
+      ],
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:namespace": "robos.applications",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "applications",
+      "robos:repository": "github.com/acme/rest-client",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:subcommands": [
+        {
+          "description": "Initialize local workspace and credentials",
+          "name": "init"
+        },
+        {
+          "description": "Deploy artifacts to targeted cluster or environment",
+          "name": "deploy"
+        },
+        {
+          "description": "Inspect health and operational status",
+          "name": "status"
+        },
+        {
+          "description": "Stream aggregated logs with live tail",
+          "name": "logs"
+        },
+        {
+          "description": "Revert to previous revision",
+          "name": "rollback"
+        }
+      ],
+      "robos:technology": "Node.js 20 / TypeScript"
+    },
+    {
+      "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
         "robos:DesktopApp",
         "schema:SoftwareApplication"
       ],
-      "dcterms:title": "RobOS Home Speaker",
-      "dcterms:description": "Smart speaker intercom, walkie-talkie voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller for Google Home, Nest, and Cast devices.",
-      "robos:package": "applications",
+      "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
+      "dcterms:title": "DocuVault Desktop",
       "robos:namespace": "robos.applications",
-      "robos:repository": "packages/home-speaker",
-      "robos:technology": "Electron 28 / Google Cast / Kokoro TTS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:package": "applications",
+      "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 29 / Vanilla JS"
     },
     {
-      "@id": "urn:robos:desktop-app:gnome-desktop-installer",
+      "@id": "urn:robos:frontend-app:getemgigs",
       "@type": [
         "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+        "robos:FrontEndApp",
+        "schema:WebApplication"
       ],
-      "dcterms:title": "RobOS GNOME Desktop App Installer",
-      "dcterms:description": "Manage GNOME desktop shortcuts, App Grid .desktop launchers, GIO trusted desktop icons, multi-scale hicolor icons, and GNOME Dock favorites across all RobOS applications.",
-      "robos:package": "applications",
+      "dcterms:description": "Buddy Gigs for local bands: trade attendance, lock a deposit, get scanned in at the door (Venmo-style QR); Venue Stay-To-Play instead of pay-to-play.",
+      "dcterms:title": "Get 'Em Gigs (The Gig Bandit)",
+      "robos:abuseControls": [
+        "rate-limits",
+        "honeypot",
+        "form-timing",
+        "disposable-email-block",
+        "password-policy",
+        "same-origin-csrf",
+        "csp",
+        "audit-log",
+        "rotating-hmac-checkin-codes"
+      ],
+      "robos:appTemplate": "robos:template:nextjs-vercel-web@1 (reference implementation)",
+      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+      "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
+      "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account, /deals, /scan, /gigs/new disallowed",
+      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+      "robos:domainStandard": "https://schema.org/WebApplication",
+      "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
+      "robos:frontendFramework": "Next.js",
+      "robos:hostingPlatform": "Vercel",
+      "robos:llmsTxtUrl": "https://www.getemgigs.com/llms.txt",
       "robos:namespace": "robos.applications",
-      "robos:repository": "packages/gnome-desktop-installer",
-      "robos:technology": "Electron 28 / FreeDesktop 1.5 / GIO / GSettings",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:package": "applications",
+      "robos:productionUrl": "https://www.getemgigs.com",
+      "robos:repository": "github.com/nddipiazza/thegigbandit",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:sitemapUrl": "https://www.getemgigs.com/sitemap.xml",
+      "robos:structuredData": [
+        "schema:Organization",
+        "schema:WebSite",
+        "schema:WebApplication",
+        "schema:FAQPage",
+        "schema:ItemList",
+        "schema:MusicEvent"
+      ],
+      "robos:technology": "Next.js 15 / React 19 / Node.js 22"
     },
     {
-      "@id": "urn:robos:desktop-app:vpn-sandbox",
+      "@id": "urn:robos:frontend-app:urban-plant-tracker",
       "@type": [
         "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+        "robos:FrontEndApp",
+        "schema:WebApplication"
       ],
-      "dcterms:title": "RobOS VPN Sandbox",
-      "dcterms:description": "Zero-leak OpenVPN application launcher that runs any desktop or CLI executable inside an isolated Linux network namespace (ip netns) with a 3-barrier iptables/ip6tables kill-switch so your normal public IP is never exposed.",
-      "robos:package": "applications",
+      "dcterms:description": "Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides.",
+      "dcterms:title": "Urban Plant Tracker",
+      "robos:abuseControls": [
+        "rate-limits",
+        "honeypot",
+        "form-timing",
+        "disposable-email-block",
+        "password-policy",
+        "same-origin-csrf",
+        "csp",
+        "audit-log"
+      ],
+      "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
+      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+      "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
+      "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account disallowed",
+      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+      "robos:domainStandard": "https://schema.org/WebApplication",
+      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
+      "robos:frontendFramework": "Next.js",
+      "robos:hostingPlatform": "Vercel",
+      "robos:llmsTxtUrl": "https://www.urbanplanttracker.com/llms.txt",
       "robos:namespace": "robos.applications",
-      "robos:repository": "packages/vpn-sandbox",
-      "robos:technology": "Electron 28 / OpenVPN 2.7 / Linux ip-netns / iptables",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:package": "applications",
+      "robos:productionUrl": "https://www.urbanplanttracker.com",
+      "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:sitemapUrl": "https://www.urbanplanttracker.com/sitemap.xml",
+      "robos:structuredData": [
+        "schema:Organization",
+        "schema:WebSite",
+        "schema:WebApplication",
+        "schema:FAQPage"
+      ],
+      "robos:technology": "Next.js 15 / React 19 / Node.js 22"
     },
     {
-      "@id": "urn:robos:desktop-app:vpn-servers",
+      "@id": "urn:robos:source:schema-group-view",
       "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
       ],
-      "dcterms:title": "RobOS VPN Servers",
-      "dcterms:description": "Manage OpenVPN providers (IPVanish built-in with 3,598 server profiles), GPG/AES-256-GCM encrypted VPN accounts, live TLS 1.3 credential verification, and server locations across RobOS.",
-      "robos:package": "applications",
+      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-property-groups"
+        }
+      ],
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/renderer/schema-group-view.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
       "robos:namespace": "robos.applications",
-      "robos:repository": "packages/vpn-servers",
-      "robos:technology": "Electron 28 / OpenVPN 2.7 / Pass / AES-256-GCM",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:package": "applications",
+      "robos:relationshipEvidence": [
+        {
+          "evidence": [
+            {
+              "line": 11,
+              "path": "packages/robos-graph/renderer/schema-group-view.js",
+              "repository": "robos"
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior.",
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-property-groups"
+          }
+        }
+      ],
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js"
     },
     {
-      "@id": "urn:robos:desktop-app:app-mesh",
+      "@id": "urn:robos:source:workspace-explorer",
       "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
       ],
-      "dcterms:title": "RobOS App Mesh",
-      "dcterms:description": "Provider-agnostic Zero-Trust App & IPC Port Mesh that securely bridges RobOS application IPC/snapshot ports (19100–19231) and service ports (:3410, :19210, :19213, :63343) across machines on the same or different networks using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard.",
-      "robos:package": "applications",
+      "dcterms:title": "Explorer import and refinement panel",
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:workspace-review"
+      },
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/renderer/workspace-review.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
       "robos:namespace": "robos.applications",
-      "robos:repository": "packages/app-mesh",
-      "robos:technology": "Electron 28 / Mutual TLS 1.3 / OpenZiti / Tailscale / NetBird / WireGuard",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:package": "applications",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js"
     },
     {
-      "@id": "urn:robos:desktop-app:robos-tv",
+      "@id": "urn:robos:voice-command:voice-prompt",
       "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+        "robos:VoiceCommand",
+        "oslc_am:Resource"
       ],
-      "dcterms:title": "RobOS Smart TV Studio",
-      "dcterms:description": "First-class Smart TV integration studio: LAN TV discovery, Developer Mode native package generator & sideloader (LG webOS IPK, Samsung Tizen WGT, Google TV/Android TV ADB Leanback, Roku OS), automated LG 1,000-hour dev timer renewal, 10-foot D-Pad/Gamepad Big-Screen Portal (:19210), and Moonlight/Sunshine 4K 120Hz streaming.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "packages/robos-tv",
-      "robos:technology": "Electron 28 / Smart TV Developer Mode / 10-Foot Spatial Navigation Portal",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:desktop-app:robos-dashboards",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
+      "dcterms:description": "Launch and focus the RobOS Voice offline dictation assistant HUD",
+      "dcterms:title": "Open RobOS Voice",
+      "robos:action": "open-app",
+      "robos:commandMatcher": [
+        "open robos voice",
+        "open voice",
+        "launch robos voice",
+        "robos voice"
       ],
-      "dcterms:title": "RobOS Dashboards",
-      "dcterms:description": "Graphical dashboard studio and builder where every widget is a composable RobOS component displaying any RobOS-powered data source, backed by KGraph card layouts, embeddable via <robos-dashboard>, and castable to RobOS Smart TV Studio.",
-      "robos:package": "applications",
+      "robos:domainStandard": "https://schema.org/ControlAction",
       "robos:namespace": "robos.applications",
-      "robos:repository": "packages/robos-dashboards",
-      "robos:technology": "Electron 28 / RobOS UI Web Components / Smart TV 10-Foot Portal",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:desktop-app:party-game",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication",
-        "schema:VideoGame"
-      ],
-      "dcterms:title": "RobOS Party Game",
-      "dcterms:description": "First game in the Party Games category: an animated AI host face runs survey-powered mini games on one or more RobOS TVs (stage, scoreboard and spotlight screens) while guests play on their phones. Guests get roles from their answers, the party host describes the house, and the required AI agent writes the show (role reveals, superlatives, interest trivia, House Quests using the real rooms and supplies, bluffs, recaps and finale awards). Mini games share a reusable template.",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "packages/party-game",
-      "robos:technology": "Electron 28 / LAN HTTP + SSE / RobOS TV app casts / robos-agent-client",
-      "robos:schemaOrgType": "https://schema.org/VideoGame"
-    },
-    {
-      "@id": "urn:robos:desktop-app:hardware-keys",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Hardware Keys",
-      "dcterms:description": "Physical YubiKey & FIDO2/U2F push-key security studio: live USB/HID/CTAP2 hardware inspector, interactive physical touch assertion verifier, hardware-backed OpenSSH keys (ed25519-sk & ecdsa-sk), FIDO2 PIN & resident passkeys manager, Linux PAM U2F enrollment (pamu2fcfg), and RobOS Pass Store / Agent touch-to-approve security gates.",
-      "robos:package": "applications",
-      "robos:namespace": "robos.applications",
-      "robos:repository": "packages/hardware-keys",
-      "robos:technology": "Electron 30 / YubiKey Manager (ykman) / CTAP2 / OpenSSH FIDO2 (-sk) / PAM U2F",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/ControlAction",
+      "robos:schemaOrgType": "https://schema.org/ControlAction",
+      "robos:targetId": "voice-prompt",
+      "robos:targetType": "app"
     }
-  ]
+  ],
+  "robos:package": "applications",
+  "robos:version": "1.0.0"
 }
