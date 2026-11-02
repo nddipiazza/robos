@@ -125,7 +125,8 @@ async function main() {
   }
   console.log(`Passed ${results.filter(item => item.ok).length}/${results.length}`);
   if (linux) spawnSync('pkill', ['-f', home], { stdio: 'ignore' });
-  fs.rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 });
+  // Windows can hold files open briefly after an app exits. That must not fail the audit.
+  try { fs.rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }); } catch (error) { console.warn(`Could not remove the audit home: ${error.message}`); }
   if (results.some(item => !item.ok)) process.exitCode = 1;
 }
 process.on('unhandledRejection', error => console.error(error));
