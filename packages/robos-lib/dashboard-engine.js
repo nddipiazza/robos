@@ -4611,7 +4611,7 @@ function renderDashboardTvWallboardHtml({
                     '<span class="pill-mini js-agent-elapsed" data-started-epoch="' + escHtml(s.startedEpochSec || '') + '">⏱ ' + escHtml(s.elapsedFormatted || '00:05') + '</span>' +
                   '</div>' +
                   '<div class="agent-cwd">cwd: <code>' + escHtml(s.cwd || '/home/ndipiazza/source/robos') + '</code>' + (s.activity ? ' · <span style="color:#67e8f9;">' + escHtml(s.activity) + '</span>' : '') + '</div>' +
-                  '<pre class="agent-tail-log">' + (s.statusLines || []).map(l => escHtml(l)).join('\n') + '</pre>' +
+                  '<pre class="agent-tail-log">' + (s.statusLines || []).map(l => escHtml(l)).join('\\n') + '</pre>' +
                 '</div>'
               ).join('') +
             '</div>';
