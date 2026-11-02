@@ -20908,8 +20908,23 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       return getPlayer().resumeMusic();
     }, [getPlayer]);
+    const play = (0, import_react23.useCallback)(async (payload = {}) => {
+      const p = getPlayer();
+      if (typeof p.playFromControl === "function") return p.playFromControl(payload);
+      return { ok: false, error: "playFromControl unavailable" };
+    }, [getPlayer]);
+    const next = (0, import_react23.useCallback)(async () => {
+      const p = getPlayer();
+      if (typeof p.nextTrack === "function") return p.nextTrack();
+      return { ok: false, error: "nextTrack unavailable" };
+    }, [getPlayer]);
+    const previous = (0, import_react23.useCallback)(async () => {
+      const p = getPlayer();
+      if (typeof p.previousTrack === "function") return p.previousTrack();
+      return { ok: false, error: "previousTrack unavailable" };
+    }, [getPlayer]);
     const handlers = (0, import_react23.useRef)({});
-    handlers.current = { status, "speak-clip": speakClip, pause, resume };
+    handlers.current = { status, "speak-clip": speakClip, play, next, previous, pause, resume };
     (0, import_react23.useEffect)(() => {
       if (!window.robosAudio?.onControlRequest) return void 0;
       return window.robosAudio.onControlRequest((action, payload) => {
@@ -22153,6 +22168,24 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               setIsPlaying(true);
             }
             return { ok: true, playing: true };
+          },
+          playFromControl: async ({ tracks, shuffle } = {}) => {
+            if (!Array.isArray(tracks) || !tracks.length) return { ok: false, error: "No tracks given" };
+            playTracks(tracks, 0, { shuffle: !!shuffle });
+            return {
+              ok: true,
+              playing: true,
+              count: tracks.length,
+              track: { title: tracks[0].title || "", artist: tracks[0].artist || "", album: tracks[0].album || "" }
+            };
+          },
+          nextTrack: async () => {
+            handlePlayNext();
+            return { ok: true };
+          },
+          previousTrack: async () => {
+            handlePlayPrev();
+            return { ok: true };
           }
         };
       },

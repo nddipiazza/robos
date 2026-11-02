@@ -149,6 +149,10 @@ ipcMain.handle('speakers:triggerMicNow', async (_event, ip, options) => {
   return speakerService.triggerSpeakerMicrophoneNow(ip || '192.168.1.64', options || {});
 });
 
+ipcMain.handle('speakers:executeVoiceCommand', async (_event, commandText, options) => {
+  return speakerService.executeVoiceCommand(commandText, options || {});
+});
+
 ipcMain.handle('speakers:getStatus', async (_event, targetIp) => {
   return speakerService.getStatus(targetIp);
 });

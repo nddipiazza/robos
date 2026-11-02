@@ -282,6 +282,24 @@ const controlServer = createControlServer({
   handlers: {
     status: () => askRenderer('status'),
     speakClip: (clip) => askRenderer('speak-clip', clip, 60000),
+    play: async (body = {}) => {
+      refreshCloudTrackUrls();
+      const byId = new Map(mediaLibrary.tracks.map(t => [t.id, t]));
+      let tracks = [];
+      if (Array.isArray(body.trackIds) && body.trackIds.length) {
+        tracks = body.trackIds.map(id => byId.get(id)).filter(Boolean);
+      } else if (Array.isArray(body.tracks) && body.tracks.length) {
+        tracks = body.tracks.map(t => (t && byId.get(t.id)) || t).filter(Boolean);
+      }
+      if (!tracks.length) return { ok: false, error: 'No matching movies to play' };
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+      }
+      return askRenderer('play', { tracks, shuffle: Boolean(body.shuffle) });
+    },
+    next: () => askRenderer('next'),
+    previous: () => askRenderer('previous'),
     pause: () => askRenderer('pause'),
     resume: () => askRenderer('resume'),
   },
