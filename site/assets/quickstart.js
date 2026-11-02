@@ -151,7 +151,7 @@
     }
     if (os === 'linux' || os === 'any') b.push({ label: os === 'any' ? 'Linux (AppImage)' : 'Download for Linux (AppImage)', url: d + '/RobOS-v' + v + '-Linux-x86_64.AppImage' });
     return '<div class="qs-dl">' + b.map(function (x, i) {
-      return '<a class="btn' + (x.ghost || (os === 'any' && i > 0) ? ' btn-ghost' : '') + '" href="' + esc(x.url) + '"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> ' + esc(x.label) + '</a>';
+      return '<a class="btn' + (x.ghost || (os === 'any' && i > 0) ? ' btn-ghost' : '') + '" href="' + esc(x.url) + '"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> ' + esc(x.label) + '</a>';
     }).join('') + '</div>';
   }
   function installSteps(os, level, persona) {
