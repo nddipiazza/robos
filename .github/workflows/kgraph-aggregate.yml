@@ -1,0 +1,19 @@
+name: KGraph aggregate
+on:
+  push:
+    branches: [main]
+    paths: ['.robos/**', 'packages/robos-graph/lib/graph-workspace.js', 'packages/robos-test/tests/kgraph-aggregate/**', '.github/workflows/kgraph-aggregate.yml']
+  pull_request:
+    paths: ['.robos/**', 'packages/robos-graph/lib/graph-workspace.js', 'packages/robos-test/tests/kgraph-aggregate/**', '.github/workflows/kgraph-aggregate.yml']
+permissions:
+  contents: read
+jobs:
+  aggregate-matches-packages:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check the compatibility aggregate against the package files
+        run: node --test packages/robos-test/tests/kgraph-aggregate/unit.test.js

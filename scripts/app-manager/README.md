@@ -55,4 +55,4 @@ It uses an isolated profile and verifies one app, multiple apps, the complete li
 xvfb-run -a -s "-screen 0 1440x900x24" node scripts/app-manager/audit-linux.cjs
 ```
 
-The repository's existing compatibility graph aggregate disagrees with its modular graph packages. The new application registration is stored as a refinement request in `.robos/proposals/app-manager.registration.json`; canonical graph application must follow repair of that existing inconsistency. The package registry, icon registry, diagnostics and app documentation register App Manager independently.
+The new application registration is stored as a refinement request in `.robos/proposals/app-manager.registration.json`. `kgraph apply` refuses it for now because the repository graph has existing validation errors unrelated to App Manager, which must be fixed first. The package registry, icon registry, diagnostics and app documentation register App Manager independently.
