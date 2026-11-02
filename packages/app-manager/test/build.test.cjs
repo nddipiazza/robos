@@ -35,6 +35,8 @@ test('catalog groups user apps and dependency discovery does not pull the entire
   assert.ok(dependencies('git-projects').includes('robos-graph'));
   assert.ok(entries.some(item => item.id === 'knowledge-graph-explorer' && item.sourceId === 'robos-graph'));
   assert.ok(!dependencies('robos-lib').includes('agents-manager'));
+  // Tabletop loads this through path.join(REPO_ROOT, "packages/robos-gaming").
+  assert.ok(dependencies('robos-tabletop').includes('robos-gaming'));
 });
 test('the graph library omits the Explorer UI but keeps the view companion apps load from it', async t => {
   const output = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-graph-payload-test-'));
