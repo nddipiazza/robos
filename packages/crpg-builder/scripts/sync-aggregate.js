@@ -50,5 +50,5 @@ for (const entry of fs.readdirSync(kgraphsDir, { withFileTypes: true }).sort((a,
 
 const doc = normalize({ ...aggregate, 'robos:nodes': nodes });
 doc['@graph'] = doc['robos:nodes'];
-fs.writeFileSync(aggregateFile, JSON.stringify(doc, null, 2) + '\n', 'utf8');
+fs.writeFileSync(aggregateFile, JSON.stringify(canonical(doc), null, 2) + '\n', 'utf8');
 console.log(`Synced ${nodes.length} nodes from ${fs.readdirSync(kgraphsDir).length} packages to ${aggregateFile}`);

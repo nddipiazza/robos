@@ -68,6 +68,26 @@ test('package moves, property removal, stale sources and explicit retirement', t
   assert.equal(ws.propose({ document: doc(ws, [node()]) }).conflicts.length, 1);
 });
 
+test('apply keeps existing @graph mirrors in step and never adds one', t => {
+  const { ws } = fixture(t);
+  ws.apply(ws.propose({ mode: 'replace', document: doc(ws, [node()]) }));
+  const pkg = path.join(ws.root, 'kgraphs', node()['robos:package'], 'package.jsonld');
+  const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+  ws.apply(ws.propose({ edits: [{ op: 'add', node: node('urn:example:project:two', 'Two') }], mode: 'refine' }));
+  assert.equal(read(pkg)['@graph'], undefined);
+  assert.equal(read(ws.file)['@graph'], undefined);
+  for (const file of [pkg, ws.file]) {
+    const parsed = read(file);
+    fs.writeFileSync(file, JSON.stringify({ ...parsed, '@graph': parsed['robos:nodes'] }));
+  }
+  ws.apply(ws.propose({ edits: [{ op: 'add', node: node('urn:example:project:three', 'Three') }], mode: 'refine' }));
+  for (const file of [pkg, ws.file]) {
+    const parsed = read(file);
+    assert.equal(parsed['robos:nodes'].length, 3);
+    assert.deepEqual(parsed['@graph'], parsed['robos:nodes']);
+  }
+});
+
 test('invalid shape, dangling reference, duplicate ID, evidence and traversal rejected', t => {
   const { ws } = fixture(t);
   assert.throws(() => ws.propose({ document: doc(ws, [node(), node()]) }), /Duplicate node ID/);

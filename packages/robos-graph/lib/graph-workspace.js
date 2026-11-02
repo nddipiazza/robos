@@ -385,7 +385,8 @@ class GraphWorkspace {
     for (const p of [...packages.values()].sort((a, b) => a.id.localeCompare(b.id))) {
       const relative = `kgraphs/${p.id}/package.jsonld`;
       const envelope = metadata.packages[p.id] || {};
-      writes.push([path.join(this.root, relative), { '@context': doc['@context'], '@id': `urn:robos:package:${p.id}`, '@type': ['robos:KGraphPackage'], 'dcterms:title': p.title, 'robos:package': p.id, 'robos:namespace': p.namespace, ...envelope, '@context': { ...envelope['@context'], ...doc['@context'] }, 'robos:nodes': doc['robos:nodes'].filter(n => n['robos:package'] === p.id) }]);
+      const nodes = doc['robos:nodes'].filter(n => n['robos:package'] === p.id);
+      writes.push([path.join(this.root, relative), { '@context': doc['@context'], '@id': `urn:robos:package:${p.id}`, '@type': ['robos:KGraphPackage'], 'dcterms:title': p.title, 'robos:package': p.id, 'robos:namespace': p.namespace, ...envelope, '@context': { ...envelope['@context'], ...doc['@context'] }, 'robos:nodes': nodes, ...(Array.isArray(envelope['@graph']) ? { '@graph': nodes } : {}) }]);
       catalog.push({ id: p.id, namespace: p.namespace, title: p.title, path: relative });
     }
     writes.push([path.join(this.root, 'kgraph.yaml'), manifestText(metadata.manifest, catalog, doc['dcterms:title'])]);
@@ -395,7 +396,9 @@ class GraphWorkspace {
   finish(proposal) {
     const doc = normalize(proposal.candidate);
     for (const [file, value] of this.packageWrites(proposal)) writeAtomic(file, value);
-    writeAtomic(this.file, doc);
+    // Files that carry an @graph mirror keep it in step; some tools read that key.
+    const mirrored = fs.existsSync(this.file) && Array.isArray(JSON.parse(fs.readFileSync(this.file, 'utf8'))['@graph']);
+    writeAtomic(this.file, mirrored ? { ...doc, '@graph': doc['robos:nodes'] } : doc);
     writeAtomic(this.stateFile, { revision: hash(doc), extracted: proposal.extracted, retired: proposal.retired });
     writeAtomic(path.join(this.root, 'revisions', `${proposal.id}.json`), proposal);
   }

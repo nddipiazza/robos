@@ -43,3 +43,8 @@ run/
 site/_apps/
 site/_data/app_categories.yml
 _site/
+
+# GraphWorkspace write-ahead journal, lock and per-apply proposal copies. .robos/import-state.json is tracked.
+.robos/revisions/
+.robos/pending-import.json
+.robos/write.lock*
