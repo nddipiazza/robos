@@ -391,6 +391,39 @@ class HomeSpeakerService {
     this.esphomeService.on('listener-update', callback);
   }
 
+  /**
+   * Immediately trigger the speaker's microphone to start recording (or speak a prompt first and then record)
+   * without needing to say "Okay Nabu" or press the physical button on the speaker.
+   */
+  async triggerSpeakerMicrophoneNow(ip = '192.168.1.64', options = {}) {
+    const promptText = String(options.promptText || '').trim();
+    let flacUrl = null;
+    if (promptText && this.ttsEngine) {
+      const synth = await this.ttsEngine.synthesize(promptText, {
+        engine: options.engine || 'kokoro',
+        voice: options.voice || 'af_heart',
+        speed: options.speed || 1.0,
+      });
+      const flacPath = await this.esphomeService.convertToFlac48k(synth.filePath, 1);
+      flacUrl = this.castService.registerFile(flacPath, 'audio/flac');
+    } else {
+      const chimeBuf = generateIntercomChime();
+      const tmpWav = path.join(os.tmpdir(), `robos-mic-cue-${Date.now()}.wav`);
+      fs.writeFileSync(tmpWav, chimeBuf);
+      const flacPath = await this.esphomeService.convertToFlac48k(tmpWav, 1);
+      try { fs.unlinkSync(tmpWav); } catch {}
+      flacUrl = this.castService.registerFile(flacPath, 'audio/flac');
+    }
+    return this.esphomeService.announceAndStartListening(ip, flacUrl, promptText || 'Listening...', {
+      autoReply: options.autoReply !== false,
+      onReplyAudio: async (targetIp, replyText) => {
+        if (this.ttsEngine && replyText) {
+          await this.castTTS(targetIp, replyText, { prependChime: false });
+        }
+      },
+    });
+  }
+
   getSpeakers() {
     const list = Array.from(this.knownSpeakers.values());
     // Sort so Home Assistant Voice PE (NC-VK-9727) & online speakers appear prominently

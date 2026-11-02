@@ -1041,12 +1041,14 @@ class EspHomeVoiceService extends EventEmitter {
 
     const f = parseProtobufFields(payload);
 
-    // VoiceAssistantRequest (msgType 90) — Wake word or Center button triggered voice stream!
+    // VoiceAssistantRequest (msgType 90) — Wake word, Center button, or Auto-Start (start_conversation=true) triggered voice stream!
     if (msgType === 90) {
       const start = getVarint(f, 1, 0) === 1;
-      const wakePhrase = getStr(f, 5, '') || 'Center Button / Wake Word';
+      const wakePhrase = getStr(f, 5, '') || (this._autoTriggeredMic ? 'Auto-Listen (No Wake Word)' : 'Center Button / Wake Word');
+      this._autoTriggeredMic = false;
       if (start) {
         this._currentPcmChunks = [];
+        this._captureStartTime = Date.now();
         this.listenerState.lastWakeWord = wakePhrase;
         this.listenerState.status = 'capturing_speech';
         this.emit('listener-update', this.getListenerStatus());
@@ -1068,7 +1070,7 @@ class EspHomeVoiceService extends EventEmitter {
         if (this._silenceTimer) clearTimeout(this._silenceTimer);
         this._silenceTimer = setTimeout(() => {
           this._finalizeCapturedUtterance(socket, ip, port);
-        }, 4800);
+        }, 10000);
       } else {
         this._finalizeCapturedUtterance(socket, ip, port);
       }
@@ -1080,32 +1082,56 @@ class EspHomeVoiceService extends EventEmitter {
       const pcmData = f[1] && f[1][0];
       const endFlag = getVarint(f, 2, 0) === 1;
       if (Buffer.isBuffer(pcmData) && pcmData.length > 0) {
-        this._currentPcmChunks.push(pcmData);
-        // Check RMS energy for voice activity end detection
-        let sumSq = 0;
-        const samples = Math.floor(pcmData.length / 2);
-        for (let i = 0; i < samples; i += 4) {
-          const s = pcmData.readInt16LE(i * 2) / 32768.0;
-          sumSq += s * s;
-        }
-        const rms = samples > 0 ? Math.sqrt(sumSq / Math.ceil(samples / 4)) : 0;
-        const totalBytes = this._currentPcmChunks.reduce((acc, b) => acc + b.length, 0);
+        const elapsedSinceStart = Date.now() - (this._captureStartTime || 0);
+        // Ignore first 550ms of speaker room reverberation after TTS ends
+        if (elapsedSinceStart > 550) {
+          this._currentPcmChunks.push(pcmData);
+          let sumSq = 0;
+          const samples = Math.floor(pcmData.length / 2);
+          for (let i = 0; i < samples; i += 4) {
+            const s = pcmData.readInt16LE(i * 2) / 32768.0;
+            sumSq += s * s;
+          }
+          const rms = samples > 0 ? Math.sqrt(sumSq / Math.ceil(samples / 4)) : 0;
+          const totalBytes = this._currentPcmChunks.reduce((acc, b) => acc + b.length, 0);
 
-        // Once we have at least 0.9s of audio (28,800 bytes at 16kHz 16-bit), reset silence timer when user is still speaking
-        if (rms > 0.015) {
-          if (this._silenceTimer) clearTimeout(this._silenceTimer);
-          this._silenceTimer = setTimeout(() => {
+          if (rms > 0.038) {
+            if (this._silenceTimer) clearTimeout(this._silenceTimer);
+            this._silenceTimer = setTimeout(() => {
+              this._finalizeCapturedUtterance(socket, ip, port);
+            }, 1700);
+          } else if (totalBytes > 256000) {
+            // Cap at ~8 seconds max per utterance
             this._finalizeCapturedUtterance(socket, ip, port);
-          }, 1300);
-        } else if (totalBytes > 160000) {
-          // Cap at ~5 seconds max per utterance
-          this._finalizeCapturedUtterance(socket, ip, port);
+          }
         }
       }
       if (endFlag) {
         this._finalizeCapturedUtterance(socket, ip, port);
       }
     }
+  }
+
+  /**
+   * Play an announcement or prompt (or brief chime) and automatically start recording from the speaker's
+   * microphone (`VoiceAssistantAnnounceRequest` msgType 119, `start_conversation = true` field 4)
+   * without needing "Okay Nabu" or pressing the center button.
+   */
+  async announceAndStartListening(ip = '192.168.1.64', flacUrl, text = 'Listening...', options = {}) {
+    if (!this.listenerSocket || this.listenerSocket.destroyed || !this.listenerState.active) {
+      await this.startVoiceListener(ip, options);
+    }
+    if (!this.listenerSocket || this.listenerSocket.destroyed) {
+      throw new Error('Could not connect to speaker voice assistant socket');
+    }
+    this._autoTriggeredMic = true;
+    const announcePayload = Buffer.concat([
+      encodeStringField(1, flacUrl),
+      encodeStringField(2, String(text || 'Listening...')),
+      encodeBoolField(4, true), // field 4 = start_conversation (automatically opens mic after audio finishes!)
+    ]);
+    this.listenerSocket.write(buildEspHomeFrame(119, announcePayload));
+    return { ok: true, ip, autoListening: true };
   }
 
   _writePcm16kToWav(pcmBuffer) {

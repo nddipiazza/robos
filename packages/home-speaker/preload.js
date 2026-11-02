@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('robosSpeaker', {
   stopVoiceListener: () => ipcRenderer.invoke('speakers:stopListener'),
   getVoiceListenerStatus: () => ipcRenderer.invoke('speakers:getListenerStatus'),
   clearVoiceInbox: () => ipcRenderer.invoke('speakers:clearInbox'),
+  triggerSpeakerMicNow: (ip, options) => ipcRenderer.invoke('speakers:triggerMicNow', ip, options),
   onVoiceListenerUpdate: (cb) => {
     const handler = (_event, status) => cb(status);
     ipcRenderer.on('speakers:listener-update', handler);

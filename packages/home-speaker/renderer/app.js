@@ -1286,6 +1286,7 @@ async function renderRegisteredDevices() {
 
 // Init
 const btnToggleListener = document.getElementById('btn-toggle-listener');
+const btnTriggerMicNow = document.getElementById('btn-trigger-mic-now');
 const listenerAutoReply = document.getElementById('listener-auto-reply');
 const listenerStatusDot = document.getElementById('listener-status-dot');
 const listenerStatusText = document.getElementById('listener-status-text');
@@ -1366,6 +1367,22 @@ if (btnToggleListener) {
       } finally {
         btnToggleListener.disabled = false;
       }
+    }
+  });
+}
+
+if (btnTriggerMicNow) {
+  btnTriggerMicNow.addEventListener('click', async () => {
+    if (!window.robosSpeaker?.triggerSpeakerMicNow) return;
+    btnTriggerMicNow.disabled = true;
+    btnTriggerMicNow.textContent = 'Opening Speaker Mic...';
+    try {
+      await window.robosSpeaker.triggerSpeakerMicNow('192.168.1.64', {
+        autoReply: listenerAutoReply ? listenerAutoReply.checked : true,
+      });
+    } finally {
+      btnTriggerMicNow.disabled = false;
+      btnTriggerMicNow.textContent = 'Record from Speaker Now';
     }
   });
 }
