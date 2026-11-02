@@ -13,13 +13,17 @@ const {
 } = require('../../../robos-graph/lib/resource-importer');
 const { SDLCKnowledgeGraphStore } = require('../../../robos-graph/index');
 const { OSLC_CONTEXT } = require('../../../robos-graph/lib/oslc-parser');
+const { enterCwd } = require('../../lib/repo-fixture');
 
 describe('RobOS Universal KGraph Resource Importer Test Suite', () => {
   let tmpDir;
   let localMonorepoDir;
+  let restoreCwd;
 
   before(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-resource-importer-test-'));
+    // importFromPrompt writes .robos/packages.yaml under the working directory.
+    restoreCwd = enterCwd(tmpDir);
 
     // Create a local filesystem monorepo fixture with a service and local ADR
     localMonorepoDir = path.join(tmpDir, 'acme-legacy-monorepo');
@@ -40,6 +44,7 @@ describe('RobOS Universal KGraph Resource Importer Test Suite', () => {
   });
 
   after(() => {
+    restoreCwd();
     if (tmpDir && fs.existsSync(tmpDir)) {
       try {
         fs.rmSync(tmpDir, { recursive: true, force: true });

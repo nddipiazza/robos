@@ -7,6 +7,7 @@ const http = require('http');
 const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -28,9 +29,12 @@ function fetchScreenshot(port, timeoutMs = 10000) {
 }
 
 describe('App Wizard Multi-Resource Knowledge Graph Import GUI Test Suite', () => {
-  it('queues heterogeneous resources in Step 1, uses AI prompt extraction, inspects graph topology, and completes KGraph ingestion', async () => {
+  it('queues heterogeneous resources in Step 1, uses AI prompt extraction, inspects graph topology, and completes KGraph ingestion', async (t) => {
+    const fixture = createRepoFixture();
+    t.after(() => fixture.cleanup());
     const app = await launchApp('app-wizard', {
       ...scenarios['all-good'],
+      cwd: fixture.root,
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
 

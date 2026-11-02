@@ -8,8 +8,9 @@ const http = require('http');
 const { launchApp, killApp } = require('../../lib/harness');
 const { getSnapshot, flatText, evalJS, evalClick, evalType } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { docScreenshotDir } = require('../../lib/repo-fixture');
 
-const SCREENSHOTS_DIR = path.resolve(__dirname, '../../../../docs/assets/images/screenshots');
+const SCREENSHOTS_DIR = docScreenshotDir('dev-central');
 
 function saveScreenshot(port, filename) {
   return new Promise((resolve, reject) => {

@@ -1,5 +1,5 @@
 'use strict';
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
@@ -14,8 +14,13 @@ const {
 const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS, evalClick } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { createRepoFixture, enterCwd } = require('../../lib/repo-fixture');
 
 describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', () => {
+  // KGraph Explorer writes .robos/*.yaml under its working directory.
+  const appCwd = createRepoFixture({ copy: [] });
+  after(() => appCwd.cleanup());
+
   const SAMPLE_REPOS = [
     'https://github.com/acme/order-processing-java-service',
     'https://github.com/acme/user-auth-go-service',
@@ -29,8 +34,9 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
     'https://github.com/acme/galaxy-runners-mobile-game',
   ];
 
-  it('bulk-imports diverse GitHub URLs and generates specialized KGraph archetypes with OpenAPI & CLI models', async () => {
+  it('bulk-imports diverse GitHub URLs and generates specialized KGraph archetypes with OpenAPI & CLI models', async (t) => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-bulk-import-'));
+    t.after(enterCwd(tmpDir));
     const filePath = path.join(tmpDir, 'knowledge-graph.jsonld');
     const store = new SDLCKnowledgeGraphStore({ filePath });
 
@@ -152,6 +158,7 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
   it('runs interactive GUI E2E flow: Git Projects ingestion, Agent Sessions, Notifications, archetypes, and per-app doc updates', async () => {
     const app = await launchApp('robos-graph', {
       ...scenarios['all-good'],
+      cwd: appCwd.root,
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
 
