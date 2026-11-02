@@ -5,8 +5,8 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 const { execFile, spawn } = require('node:child_process');
 const builds = new Map();
-const run = (file, args) => new Promise((resolve, reject) => {
-  execFile(file, args, { windowsHide: true, encoding: 'utf8', timeout: 15000 }, (error, stdout, stderr) => {
+const run = (file, args, timeout = 15000) => new Promise((resolve, reject) => {
+  execFile(file, args, { windowsHide: true, encoding: 'utf8', timeout }, (error, stdout, stderr) => {
     if (error) { error.message += ` ${stderr || ''}`; reject(error); } else resolve(stdout.trim());
   });
 });
@@ -24,7 +24,7 @@ async function nativeHelper(host, home = os.homedir()) {
   fs.mkdirSync(cache, { recursive: true });
   const cs = path.join(cache, 'launcher-native.cs'); fs.writeFileSync(cs, source);
   const temporary = path.join(cache, `native-${process.pid}.exe`);
-  await run(compiler, ['/nologo', '/optimize+', '/target:exe', '/r:System.Windows.Forms.dll', '/r:System.Management.dll', `/out:${temporary}`, cs]);
+  await run(compiler, ['/nologo', '/optimize+', '/target:exe', '/r:System.Windows.Forms.dll', '/r:System.Management.dll', `/out:${temporary}`, cs], 120000); // Slow disks and busy machines can take well over 15 seconds.
   if (fs.existsSync(exe)) fs.rmSync(temporary, { force: true }); else fs.renameSync(temporary, exe);
   return exe;
   })();

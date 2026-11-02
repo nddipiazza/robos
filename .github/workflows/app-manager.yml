@@ -66,6 +66,7 @@ jobs:
         run: node scripts/app-manager/build.cjs
       - name: Smoke test packaged manager
         if: runner.os != 'Linux'
+        timeout-minutes: 15
         run: node scripts/app-manager/smoke.cjs
       - name: Build individual app downloads
         run: node scripts/app-manager/publish-catalog.cjs

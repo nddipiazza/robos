@@ -123,7 +123,11 @@ async function main() {
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: false, error: error.stack, steps }, null, 2));
     throw error;
   } finally {
-    if (application && !applicationClosed) await application.close();
+    // A crashed or hung app must fail the test, not hang the release job.
+    if (application && !applicationClosed) {
+      await Promise.race([application.close().catch(() => {}), new Promise(resolve => setTimeout(resolve, 15000).unref())]);
+      if (!applicationClosed) { try { application.process().kill('SIGKILL'); } catch {} }
+    }
     await new Promise(resolve => server.close(resolve));
     try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
     catch { console.warn(`Temporary test profile could not be removed: ${temporary}`); }

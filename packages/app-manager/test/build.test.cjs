@@ -46,7 +46,8 @@ test('the graph library omits the Explorer UI but keeps the view companion apps 
   assert.ok(!entries.includes('renderer/index.html'));
   assert.ok(!entries.includes('main.js'));
 });
-test('hard-linked npm files become regular archive entries the installer accepts', async t => {
+// npm creates these links on Unix. The publish step still validates every Windows archive.
+test('hard-linked npm files become regular archive entries the installer accepts', { skip: process.platform === 'win32' }, async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-hardlink-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const dir = path.join(root, 'payload'), tar = require('tar'); fs.mkdirSync(path.join(dir, 'bin'), { recursive: true });
