@@ -326,6 +326,11 @@ describe('RobOS Home Speaker Tests', () => {
       assert.strictEqual(router.stripWakePhrase('Hello Nabu, play some Dark Tranquillity'), 'play some Dark Tranquillity');
       assert.strictEqual(router.stripWakePhrase('Okay Nabu please open Task Explorer'), 'open Task Explorer');
       assert.strictEqual(router.classifyVoiceCommand('play some Dark Tranquillity').type, 'play-media');
+      // Phonetic ASR coarticulation ("Place some..." / "Place Slayer..." instead of "Play...")
+      assert.strictEqual(router.classifyVoiceCommand('Place some dark tranquility').type, 'play-media');
+      assert.strictEqual(router.classifyVoiceCommand('Place Slayer seasons of the Abyss').type, 'play-media');
+      // Genuine tabletop command still routes to tabletop skill
+      assert.strictEqual(router.classifyVoiceCommand('place 2 skeletons in room 1').type, 'robos-skill');
       assert.strictEqual(router.classifyVoiceCommand('play the movie Dune').type, 'play-movie');
       assert.strictEqual(router.classifyVoiceCommand('pause the music').action, 'pause');
       assert.strictEqual(router.classifyVoiceCommand('next song').action, 'next');
