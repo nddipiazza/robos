@@ -171,12 +171,15 @@
       "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
       "dcterms:title": "RobOS Documentation",
       "robos:desktopCategory": "Development",
+      "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
       "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
       "robos:namespace": "robos.docs",
       "robos:package": "documentation",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28"
     },
     {
       "@id": "urn:robos:diagram:checkout-payment-flow",
@@ -551,12 +554,15 @@
       "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
       "dcterms:title": "RobOS Documentation",
       "robos:desktopCategory": "Development",
+      "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
       "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
       "robos:namespace": "robos.docs",
       "robos:package": "documentation",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28"
     },
     {
       "@id": "urn:robos:diagram:checkout-payment-flow",

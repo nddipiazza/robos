@@ -137,6 +137,7 @@
       ],
       "dcterms:description": "Runs and watches the end-to-end AI playthrough of Quest: Warrior Dragon: start, resume or replay runs, live game state, per-milestone videos and checkpoints, run history.",
       "dcterms:title": "RobOS Game Playthrough",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.jrpg",
       "robos:package": "jrpg",
       "robos:playsGame": {
@@ -266,6 +267,7 @@
       "robos:namespace": "robos.jrpg",
       "robos:package": "jrpg",
       "robos:repository": "github.com/nddipiazza/quest-warrior-dragon",
+      "robos:ruleset": "quest-warrior-dragon",
       "robos:targetPlatform": "Linux, Windows, macOS",
       "robos:technology": "Godot 4 / GDScript"
     },

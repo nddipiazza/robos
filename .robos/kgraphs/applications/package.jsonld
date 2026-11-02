@@ -155,7 +155,6 @@
         "urn:robos:elearning:app:customer-portal"
       ],
       "robos:namespace": "robos.apps",
-      "robos:ownerTeam": "urn:robos:team:frontend-guild",
       "robos:package": "applications",
       "robos:repository": "github.com/acme/customer-portal",
       "robos:technology": "TypeScript / React"
@@ -176,7 +175,6 @@
       "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:frontendFramework": "Vanilla JS",
-      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal",
       "robos:hasELearning": [
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
@@ -204,7 +202,6 @@
       "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:globalHotkey": "Super+V",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
       "robos:namespace": "robos.applications",
@@ -224,6 +221,7 @@
       ],
       "dcterms:description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
       "dcterms:title": "Pulse Metrics CLI",
+      "robos:cliCommand": "pulse-metrics-cli",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
@@ -257,7 +255,6 @@
           "flag": "--output, -o"
         }
       ],
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:inOrganization": "urn:robos:git-org:acme",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
       "robos:namespace": "robos.applications",
@@ -298,6 +295,7 @@
       ],
       "dcterms:description": "Provider-agnostic Zero-Trust App & IPC Port Mesh that securely bridges RobOS application IPC/snapshot ports (19100–19231) and service ports (:3410, :19210, :19213, :63343) across machines on the same or different networks using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard.",
       "dcterms:title": "RobOS App Mesh",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/app-mesh",
@@ -313,6 +311,7 @@
       ],
       "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
       "dcterms:title": "DocuVault Desktop",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
@@ -328,6 +327,7 @@
       ],
       "dcterms:description": "Manage GNOME desktop shortcuts, App Grid .desktop launchers, GIO trusted desktop icons, multi-scale hicolor icons, and GNOME Dock favorites across all RobOS applications.",
       "dcterms:title": "RobOS GNOME Desktop App Installer",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/gnome-desktop-installer",
@@ -343,6 +343,7 @@
       ],
       "dcterms:description": "Physical YubiKey & FIDO2/U2F push-key security studio: live USB/HID/CTAP2 hardware inspector, interactive physical touch assertion verifier, hardware-backed OpenSSH keys (ed25519-sk & ecdsa-sk), FIDO2 PIN & resident passkeys manager, Linux PAM U2F enrollment (pamu2fcfg), and RobOS Pass Store / Agent touch-to-approve security gates.",
       "dcterms:title": "RobOS Hardware Keys",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/hardware-keys",
@@ -358,6 +359,7 @@
       ],
       "dcterms:description": "Smart speaker intercom, walkie-talkie voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller for Google Home, Nest, and Cast devices.",
       "dcterms:title": "RobOS Home Speaker",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/home-speaker",
@@ -374,26 +376,12 @@
       ],
       "dcterms:description": "First game in the Party Games category: an animated AI host face runs survey-powered mini games on one or more RobOS TVs (stage, scoreboard and spotlight screens) while guests play on their phones. Guests get roles from their answers, the party host describes the house, and the required AI agent writes the show (role reveals, superlatives, interest trivia, House Quests using the real rooms and supplies, bluffs, recaps and finale awards). Mini games share a reusable template.",
       "dcterms:title": "RobOS Party Game",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/party-game",
       "robos:schemaOrgType": "https://schema.org/VideoGame",
       "robos:technology": "Electron 28 / LAN HTTP + SSE / RobOS TV app casts / robos-agent-client"
-    },
-    {
-      "@id": "urn:robos:desktop-app:robos-dashboards",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:DesktopApp",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:description": "Graphical dashboard studio and builder where every widget is a composable RobOS component displaying any RobOS-powered data source, backed by KGraph card layouts, embeddable via <robos-dashboard>, and castable to RobOS Smart TV Studio.",
-      "dcterms:title": "RobOS Dashboards",
-      "robos:namespace": "robos.applications",
-      "robos:package": "applications",
-      "robos:repository": "packages/robos-dashboards",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:technology": "Electron 28 / RobOS UI Web Components / Smart TV 10-Foot Portal"
     },
     {
       "@id": "urn:robos:desktop-app:robos-tv",
@@ -404,6 +392,7 @@
       ],
       "dcterms:description": "First-class Smart TV integration studio: LAN TV discovery, Developer Mode native package generator & sideloader (LG webOS IPK, Samsung Tizen WGT, Google TV/Android TV ADB Leanback, Roku OS), automated LG 1,000-hour dev timer renewal, 10-foot D-Pad/Gamepad Big-Screen Portal (:19210), and Moonlight/Sunshine 4K 120Hz streaming.",
       "dcterms:title": "RobOS Smart TV Studio",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/robos-tv",
@@ -419,6 +408,7 @@
       ],
       "dcterms:description": "Zero-leak OpenVPN application launcher that runs any desktop or CLI executable inside an isolated Linux network namespace (ip netns) with a 3-barrier iptables/ip6tables kill-switch so your normal public IP is never exposed.",
       "dcterms:title": "RobOS VPN Sandbox",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/vpn-sandbox",
@@ -434,6 +424,7 @@
       ],
       "dcterms:description": "Manage OpenVPN providers (IPVanish built-in with 3,598 server profiles), GPG/AES-256-GCM encrypted VPN accounts, live TLS 1.3 credential verification, and server locations across RobOS.",
       "dcterms:title": "RobOS VPN Servers",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "packages/vpn-servers",
@@ -672,7 +663,6 @@
         "urn:robos:elearning:app:customer-portal"
       ],
       "robos:namespace": "robos.apps",
-      "robos:ownerTeam": "urn:robos:team:frontend-guild",
       "robos:package": "applications",
       "robos:repository": "github.com/acme/customer-portal",
       "robos:technology": "TypeScript / React"
@@ -693,7 +683,6 @@
       "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:frontendFramework": "Vanilla JS",
-      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal",
       "robos:hasELearning": [
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
@@ -721,7 +710,6 @@
       "robos:desktopFramework": "Electron",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:globalHotkey": "Super+V",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
       "robos:namespace": "robos.applications",
@@ -741,6 +729,7 @@
       ],
       "dcterms:description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
       "dcterms:title": "Pulse Metrics CLI",
+      "robos:cliCommand": "pulse-metrics-cli",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
@@ -774,7 +763,6 @@
           "flag": "--output, -o"
         }
       ],
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:inOrganization": "urn:robos:git-org:acme",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
       "robos:namespace": "robos.applications",
@@ -807,6 +795,22 @@
       "robos:technology": "Node.js 20 / TypeScript"
     },
     {
+      "@id": "urn:robos:desktop-app:app-mesh",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Provider-agnostic Zero-Trust App & IPC Port Mesh that securely bridges RobOS application IPC/snapshot ports (19100–19231) and service ports (:3410, :19210, :19213, :63343) across machines on the same or different networks using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard.",
+      "dcterms:title": "RobOS App Mesh",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/app-mesh",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Mutual TLS 1.3 / OpenZiti / Tailscale / NetBird / WireGuard"
+    },
+    {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
@@ -815,11 +819,125 @@
       ],
       "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
       "dcterms:title": "DocuVault Desktop",
+      "robos:desktopFramework": "Electron",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 29 / Vanilla JS"
+    },
+    {
+      "@id": "urn:robos:desktop-app:gnome-desktop-installer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Manage GNOME desktop shortcuts, App Grid .desktop launchers, GIO trusted desktop icons, multi-scale hicolor icons, and GNOME Dock favorites across all RobOS applications.",
+      "dcterms:title": "RobOS GNOME Desktop App Installer",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/gnome-desktop-installer",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / FreeDesktop 1.5 / GIO / GSettings"
+    },
+    {
+      "@id": "urn:robos:desktop-app:hardware-keys",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Physical YubiKey & FIDO2/U2F push-key security studio: live USB/HID/CTAP2 hardware inspector, interactive physical touch assertion verifier, hardware-backed OpenSSH keys (ed25519-sk & ecdsa-sk), FIDO2 PIN & resident passkeys manager, Linux PAM U2F enrollment (pamu2fcfg), and RobOS Pass Store / Agent touch-to-approve security gates.",
+      "dcterms:title": "RobOS Hardware Keys",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/hardware-keys",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 30 / YubiKey Manager (ykman) / CTAP2 / OpenSSH FIDO2 (-sk) / PAM U2F"
+    },
+    {
+      "@id": "urn:robos:desktop-app:home-speaker",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Smart speaker intercom, walkie-talkie voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller for Google Home, Nest, and Cast devices.",
+      "dcterms:title": "RobOS Home Speaker",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/home-speaker",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Google Cast / Kokoro TTS"
+    },
+    {
+      "@id": "urn:robos:desktop-app:party-game",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "schema:VideoGame"
+      ],
+      "dcterms:description": "First game in the Party Games category: an animated AI host face runs survey-powered mini games on one or more RobOS TVs (stage, scoreboard and spotlight screens) while guests play on their phones. Guests get roles from their answers, the party host describes the house, and the required AI agent writes the show (role reveals, superlatives, interest trivia, House Quests using the real rooms and supplies, bluffs, recaps and finale awards). Mini games share a reusable template.",
+      "dcterms:title": "RobOS Party Game",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/party-game",
+      "robos:schemaOrgType": "https://schema.org/VideoGame",
+      "robos:technology": "Electron 28 / LAN HTTP + SSE / RobOS TV app casts / robos-agent-client"
+    },
+    {
+      "@id": "urn:robos:desktop-app:robos-tv",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "First-class Smart TV integration studio: LAN TV discovery, Developer Mode native package generator & sideloader (LG webOS IPK, Samsung Tizen WGT, Google TV/Android TV ADB Leanback, Roku OS), automated LG 1,000-hour dev timer renewal, 10-foot D-Pad/Gamepad Big-Screen Portal (:19210), and Moonlight/Sunshine 4K 120Hz streaming.",
+      "dcterms:title": "RobOS Smart TV Studio",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/robos-tv",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Smart TV Developer Mode / 10-Foot Spatial Navigation Portal"
+    },
+    {
+      "@id": "urn:robos:desktop-app:vpn-sandbox",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Zero-leak OpenVPN application launcher that runs any desktop or CLI executable inside an isolated Linux network namespace (ip netns) with a 3-barrier iptables/ip6tables kill-switch so your normal public IP is never exposed.",
+      "dcterms:title": "RobOS VPN Sandbox",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/vpn-sandbox",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / OpenVPN 2.7 / Linux ip-netns / iptables"
+    },
+    {
+      "@id": "urn:robos:desktop-app:vpn-servers",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Manage OpenVPN providers (IPVanish built-in with 3,598 server profiles), GPG/AES-256-GCM encrypted VPN accounts, live TLS 1.3 credential verification, and server locations across RobOS.",
+      "dcterms:title": "RobOS VPN Servers",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/vpn-servers",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / OpenVPN 2.7 / Pass / AES-256-GCM"
     },
     {
       "@id": "urn:robos:frontend-app:getemgigs",

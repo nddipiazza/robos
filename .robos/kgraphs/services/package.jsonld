@@ -193,6 +193,19 @@
       "robos:specFile": "specs/contracts/checkout-api-v1.yaml"
     },
     {
+      "@id": "urn:robos:contract:forms-api-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component"
+      ],
+      "dcterms:title": "Forms API OpenAPI 3.1 Spec",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Forms API Spec\n  version: 1.0.0\npaths:\n  /api/v1/forms:\n    get:\n      summary: List forms\n      responses:\n        \"200\":\n          description: Success\n",
+      "robos:namespace": "robos.services",
+      "robos:package": "services",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:specFile": "specs/contracts/forms-api-v1.yaml"
+    },
+    {
       "@id": "urn:robos:contract:fraud-detector-v1",
       "@type": [
         "robos:Contract",
@@ -708,7 +721,6 @@
       "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
       "dcterms:title": "Checkout API Microservice Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:checkout-api-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-retail",
@@ -723,6 +735,68 @@
       "robos:technology": "Node.js 20 / TypeScript"
     },
     {
+      "@id": "urn:robos:service:forms-api",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Forms API Service",
+      "robos:implementsContract": "urn:robos:contract:forms-api-v1",
+      "robos:namespace": "robos.services",
+      "robos:outboundDependencies": [
+        {
+          "contract": "specs/contracts/acme-tax-api-v2.yaml",
+          "method": "GET",
+          "mockPort": 18081,
+          "mockProxyUrl": "http://localhost:18081/v2/forms/2026/vendor-1099",
+          "mockResponse": {
+            "ein": "XX-XXX8921",
+            "formId": "tax-1099-2026-v88",
+            "formType": "1099-MISC",
+            "status": "CERTIFIED_READY",
+            "taxYear": 2026,
+            "vendorName": "Acme Global Seller LLC"
+          },
+          "name": "Acme Tax Forms API",
+          "status": "MOCKED VIA CONTRACT",
+          "url": "https://api.acme-tax.com/v2/forms/2026/vendor-1099"
+        },
+        {
+          "contract": "specs/contracts/stripe-v1.yaml",
+          "method": "POST",
+          "mockPort": 18082,
+          "mockProxyUrl": "http://localhost:18082/v1/charges",
+          "mockResponse": {
+            "amount": 5000,
+            "currency": "usd",
+            "id": "ch_mock123456789",
+            "status": "succeeded"
+          },
+          "name": "Stripe Payment Gateway",
+          "status": "MOCKED (WireMock)",
+          "url": "https://api.stripe.com/v1/charges"
+        },
+        {
+          "contract": "specs/contracts/auth0-oauth2.yaml",
+          "method": "POST",
+          "mockPort": 18083,
+          "mockProxyUrl": "http://localhost:18083/oauth/token",
+          "mockResponse": {
+            "access_token": "mock-jwt-token-standard-user",
+            "expires_in": 3600,
+            "token_type": "Bearer"
+          },
+          "name": "OAuth2 Identity & Token Service",
+          "status": "MOCKED",
+          "url": "https://auth.acme.com/oauth/token"
+        }
+      ],
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "services",
+      "robos:repository": "github.com/acme/buildbarn-forms"
+    },
+    {
       "@id": "urn:robos:service:fraud-detector",
       "@type": [
         "oslc_am:Resource",
@@ -732,7 +806,6 @@
       "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
       "dcterms:title": "Fraud Detector Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:fraud-detector-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
@@ -756,7 +829,6 @@
       "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
       "dcterms:title": "Oauth Server Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:oauth-server-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
@@ -779,7 +851,6 @@
       ],
       "dcterms:description": "Backend microservice powering Order Service (Local) capabilities with containerized deployment.",
       "dcterms:title": "Order Service (Local) Service",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:order-service-v1",
       "robos:inOrganization": "urn:robos:git-org:acme",
@@ -803,7 +874,6 @@
       "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
       "dcterms:title": "Payment Gateway Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:payment-gateway-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
@@ -827,7 +897,6 @@
       "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
       "dcterms:title": "User Directory Sync Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:user-directory-sync-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
@@ -950,6 +1019,19 @@
       "robos:specFile": "specs/contracts/checkout-api-v1.yaml"
     },
     {
+      "@id": "urn:robos:contract:forms-api-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component"
+      ],
+      "dcterms:title": "Forms API OpenAPI 3.1 Spec",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Forms API Spec\n  version: 1.0.0\npaths:\n  /api/v1/forms:\n    get:\n      summary: List forms\n      responses:\n        \"200\":\n          description: Success\n",
+      "robos:namespace": "robos.services",
+      "robos:package": "services",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:specFile": "specs/contracts/forms-api-v1.yaml"
+    },
+    {
       "@id": "urn:robos:contract:fraud-detector-v1",
       "@type": [
         "robos:Contract",
@@ -1465,7 +1547,6 @@
       "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
       "dcterms:title": "Checkout API Microservice Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:checkout-api-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-retail",
@@ -1480,6 +1561,68 @@
       "robos:technology": "Node.js 20 / TypeScript"
     },
     {
+      "@id": "urn:robos:service:forms-api",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Forms API Service",
+      "robos:implementsContract": "urn:robos:contract:forms-api-v1",
+      "robos:namespace": "robos.services",
+      "robos:outboundDependencies": [
+        {
+          "contract": "specs/contracts/acme-tax-api-v2.yaml",
+          "method": "GET",
+          "mockPort": 18081,
+          "mockProxyUrl": "http://localhost:18081/v2/forms/2026/vendor-1099",
+          "mockResponse": {
+            "ein": "XX-XXX8921",
+            "formId": "tax-1099-2026-v88",
+            "formType": "1099-MISC",
+            "status": "CERTIFIED_READY",
+            "taxYear": 2026,
+            "vendorName": "Acme Global Seller LLC"
+          },
+          "name": "Acme Tax Forms API",
+          "status": "MOCKED VIA CONTRACT",
+          "url": "https://api.acme-tax.com/v2/forms/2026/vendor-1099"
+        },
+        {
+          "contract": "specs/contracts/stripe-v1.yaml",
+          "method": "POST",
+          "mockPort": 18082,
+          "mockProxyUrl": "http://localhost:18082/v1/charges",
+          "mockResponse": {
+            "amount": 5000,
+            "currency": "usd",
+            "id": "ch_mock123456789",
+            "status": "succeeded"
+          },
+          "name": "Stripe Payment Gateway",
+          "status": "MOCKED (WireMock)",
+          "url": "https://api.stripe.com/v1/charges"
+        },
+        {
+          "contract": "specs/contracts/auth0-oauth2.yaml",
+          "method": "POST",
+          "mockPort": 18083,
+          "mockProxyUrl": "http://localhost:18083/oauth/token",
+          "mockResponse": {
+            "access_token": "mock-jwt-token-standard-user",
+            "expires_in": 3600,
+            "token_type": "Bearer"
+          },
+          "name": "OAuth2 Identity & Token Service",
+          "status": "MOCKED",
+          "url": "https://auth.acme.com/oauth/token"
+        }
+      ],
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "services",
+      "robos:repository": "github.com/acme/buildbarn-forms"
+    },
+    {
       "@id": "urn:robos:service:fraud-detector",
       "@type": [
         "oslc_am:Resource",
@@ -1489,7 +1632,6 @@
       "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
       "dcterms:title": "Fraud Detector Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:fraud-detector-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
@@ -1513,7 +1655,6 @@
       "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
       "dcterms:title": "Oauth Server Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:oauth-server-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
@@ -1536,7 +1677,6 @@
       ],
       "dcterms:description": "Backend microservice powering Order Service (Local) capabilities with containerized deployment.",
       "dcterms:title": "Order Service (Local) Service",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:order-service-v1",
       "robos:inOrganization": "urn:robos:git-org:acme",
@@ -1560,7 +1700,6 @@
       "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
       "dcterms:title": "Payment Gateway Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:payment-gateway-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
@@ -1584,7 +1723,6 @@
       "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
       "dcterms:title": "User Directory Sync Service",
       "robos:domainStandard": "https://w3id.org/c4/Container",
-      "robos:hasProject": "urn:robos:project:enterprise-core",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": "urn:robos:contract:user-directory-sync-v1",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",

@@ -138,6 +138,16 @@
       "robos:repository": "https://github.com/nddipiazza/robos",
       "robos:sourcePath": "packages/point-of-sale",
       "robos:technology": "Electron / Node.js (zero runtime dependencies)"
+    },
+    {
+      "@id": "urn:robos:point-of-sale:family",
+      "@type": "schema:SoftwareApplication",
+      "dcterms:title": "RobOS Point of Sale",
+      "robos:hasApp": {
+        "@id": "urn:robos:app:point-of-sale"
+      },
+      "robos:package": "point-of-sale",
+      "schema:name": "RobOS Point of Sale"
     }
   ],
   "robos:package": "point-of-sale"
