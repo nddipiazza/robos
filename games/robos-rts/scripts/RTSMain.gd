@@ -15,6 +15,7 @@ const CARD_ORIGIN := Vector2(1560.0, 862.0)
 const CARD_BTN := 64.0
 const CARD_GAP := 6.0
 const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
+const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 
 var world_3d: Node3D
 var icons: Node
@@ -375,7 +376,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if left:
 		for g in hud.group_tab_rects().keys():
 			if hud.group_tab_rects()[g].has_point(mpos):
-				_handle_group_input(int(g), mb.ctrl_pressed or mb.meta_pressed, mb.shift_pressed)
+				_handle_group_input(int(g), mb.ctrl_pressed or mb.meta_pressed, mb.shift_pressed, mb.alt_pressed)
 				return true
 		_last_group_press.clear()
 		var cells: Array = hud.selection_cells()
@@ -736,10 +737,31 @@ func _prune_control_groups() -> void:
 		else:
 			control_groups[g] = kept
 
-func _set_control_group(g: int, tags: Array, append: bool = false) -> void:
-	if g < 1 or g > 9:
+func _set_control_group(g: int, tags: Array, append: bool = false, exclusive: bool = false) -> void:
+	if not CONTROL_GROUP_KEYS.has(g):
 		return
 	var members := _living_tags(tags, true)
+	if exclusive:
+		_last_group_press.clear()
+		# An empty or enemy-only selection must never erase a saved squad.
+		if members.is_empty():
+			return
+		var incoming := {}
+		for t in members:
+			incoming[t] = true
+		# Only the incoming selection moves. Existing destination members keep
+		# their intentional memberships elsewhere when appending.
+		for other in control_groups.keys():
+			if other == g:
+				continue
+			var kept: Array[int] = []
+			for t in _living_tags(control_groups[other], true):
+				if not incoming.has(t):
+					kept.append(t)
+			if kept.is_empty():
+				control_groups.erase(other)
+			else:
+				control_groups[other] = kept
 	if append:
 		var existing := _living_tags(control_groups.get(g, []), true)
 		for t in members:
@@ -751,11 +773,12 @@ func _set_control_group(g: int, tags: Array, append: bool = false) -> void:
 	else:
 		control_groups[g] = members
 	_last_group_press.clear()
-	push_message("Control group %d: %d units." % [g, members.size()], "info")
+	var suffix := " Moved selection from other groups." if exclusive else ""
+	push_message("Control group %d: %d units.%s" % [g, members.size(), suffix], "info")
 
-func _handle_group_input(g: int, assign: bool, add: bool) -> void:
-	if assign:
-		_set_control_group(g, selected_tags, add)
+func _handle_group_input(g: int, assign: bool, add: bool, exclusive: bool = false) -> void:
+	if assign or exclusive:
+		_set_control_group(g, selected_tags, add, exclusive)
 	else:
 		_recall_group(g, add)
 
@@ -794,12 +817,9 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			push_message("Audio %s." % ("muted" if is_muted else "unmuted"), "info")
 		return
 
-	if ke.keycode >= KEY_1 and ke.keycode <= KEY_9:
-		if ke.alt_pressed:
-			_last_group_press.clear()
-			return
+	if ke.keycode >= KEY_0 and ke.keycode <= KEY_9:
 		var grp: int = ke.keycode - KEY_0
-		_handle_group_input(grp, ke.ctrl_pressed or ke.meta_pressed, ke.shift_pressed)
+		_handle_group_input(grp, ke.ctrl_pressed or ke.meta_pressed, ke.shift_pressed, ke.alt_pressed)
 		return
 	_last_group_press.clear()
 
@@ -962,6 +982,7 @@ func inject_input(d: Dictionary) -> void:
 		mb.shift_pressed = bool(d.get("shift", false))
 		mb.ctrl_pressed = bool(d.get("ctrl", false))
 		mb.meta_pressed = bool(d.get("meta", false))
+		mb.alt_pressed = bool(d.get("alt", false))
 		if DisplayServer.get_name() == "headless":
 			_unhandled_input(mb)
 		else:

@@ -22,4 +22,16 @@ Feature: Clickable control group slots
     Then the commander has selected "alpha,bravo"
     When the commander double clicks control slot 1
     Then the control group camera is centered on unit "alpha"
+    When the commander clicks unit "charlie"
+    And the commander clicks control slot 0 with "Ctrl"
+    And the commander clicks unit "bravo"
+    And the commander clicks control slot 0 with "Alt"
+    Then control group 0 contains "bravo"
+    And control group 1 contains "alpha"
+    When the commander clicks unit "alpha"
+    And the commander clicks control slot 0 with "Alt+Shift"
+    Then control group 0 contains "alpha,bravo"
+    And control group 1 contains "none"
+    When the commander clicks control slot 0 with "none"
+    Then the commander has selected "alpha,bravo"
     And the control group HUD proof is captured
