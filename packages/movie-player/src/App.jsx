@@ -302,9 +302,6 @@ export default function App() {
             ? status.duration
             : (castClock.get().duration || (videoRef.current && isFinite(videoRef.current.duration) ? videoRef.current.duration : 0));
           castClock.set({ position: status.currentTime, duration: nextDur, playing: status.playerState === 'PLAYING' });
-          if (videoRef.current && videoRef.current.paused && Math.abs((videoRef.current.currentTime || 0) - status.currentTime) > 0.75) {
-            syncVideoElementTime(status.currentTime);
-          }
           L.countCastPlay(status.currentTime, nextDur);
         } else if (status.playerState) {
           castClock.set({ playing: status.playerState === 'PLAYING' });
@@ -541,8 +538,10 @@ export default function App() {
       if (outputTarget !== 'local') {
         castTrack(outputTarget, first);
         if (playerRef.current?.audio?.current) {
-          playerRef.current.audio.current.muted = true;
-          playerRef.current.audio.current.play().catch(() => {});
+          playerRef.current.audio.current.pause();
+        }
+        if (videoRef.current) {
+          videoRef.current.pause();
         }
       } else {
         if (activeCastSession) handleStopCast();
@@ -908,9 +907,6 @@ export default function App() {
   const handleCastSeek = (seconds) => {
     const targetSec = Math.max(0, Number(seconds) || 0);
     castClock.set({ position: targetSec });
-    if (videoRef.current && Math.abs((videoRef.current.currentTime || 0) - targetSec) > 0.5) {
-      syncVideoElementTime(targetSec);
-    }
     if (outputTarget !== 'local') window.robosAudio.castSeek(outputTarget, targetSec).catch(() => {});
   };
 
@@ -1080,14 +1076,13 @@ export default function App() {
     if (sameSrc && playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = 0;
 
     if (outputTarget !== 'local') {
-      // Cast the track to the selected speaker
+      // Cast the track to the selected speaker; keep local media completely stopped
       castTrack(outputTarget, trackToPlay);
-      // Mute local audio element so it acts as synchronized visual seeker without audio leak
       if (playerRef.current?.audio?.current) {
-        playerRef.current.audio.current.muted = true;
-        setTimeout(() => {
-          playerRef.current?.audio?.current?.play().catch(() => {});
-        }, 60);
+        playerRef.current.audio.current.pause();
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
       }
     } else {
       // Local desktop playback: stop any remote casting sessions
@@ -2154,94 +2149,109 @@ export default function App() {
               {/* Cinema Video Stage */}
               {isVideoTrack(currentTrack) && (
                 <div className="cinema-stage-box">
-                  <video
-                    id="cinema-video-element"
-                    ref={videoRef}
-                    className={`cinema-video-el fit-${videoFit}`}
-                    src={outputTarget === 'local' ? resolveSrc(currentTrack) : undefined}
-                    poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
-                    muted={outputTarget !== 'local'}
-                    controls
-                    playsInline
-                    onLoadedMetadata={(e) => {
-                      const d = e.currentTarget?.duration;
-                      if (d && isFinite(d) && d > 0) {
-                        if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
-                        if (outputTarget !== 'local') {
-                          castClock.set({ duration: d });
+                  {outputTarget === 'local' ? (
+                    <video
+                      id="cinema-video-element"
+                      ref={videoRef}
+                      className={`cinema-video-el fit-${videoFit}`}
+                      src={resolveSrc(currentTrack)}
+                      poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
+                      controls
+                      playsInline
+                      onLoadedMetadata={(e) => {
+                        const d = e.currentTarget?.duration;
+                        if (d && isFinite(d) && d > 0) {
+                          if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
                         }
-                      }
-                      const at = pendingLocalSeekRef.current;
-                      if (outputTarget === 'local' && at != null && e.currentTarget) {
-                        pendingLocalSeekRef.current = null;
-                        e.currentTarget.currentTime = at;
-                      }
-                    }}
-                    onDurationChange={(e) => {
-                      const d = e.currentTarget?.duration;
-                      if (d && isFinite(d) && d > 0) {
-                        if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
-                        if (outputTarget !== 'local') {
-                          castClock.set({ duration: d });
+                        const at = pendingLocalSeekRef.current;
+                        if (at != null && e.currentTarget) {
+                          pendingLocalSeekRef.current = null;
+                          e.currentTarget.currentTime = at;
                         }
-                      }
-                    }}
-                    onTimeUpdate={(e) => {
-                      if (outputTarget !== 'local') return;
-                      const v = e.currentTarget;
-                      if (!v || !currentTrack) return;
-                      const pos = v.currentTime || 0;
-                      const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
-                      const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
-                      if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
-                      if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
-                        playedRef.current.counted = true;
-                        recordPlay(currentTrack);
-                      }
-                      if (pos >= 5) {
-                        saveTrackProgress(currentTrack, pos, dur, false);
-                      }
-                    }}
-                    onSeeked={(e) => {
-                      const v = e.currentTarget;
-                      const sec = v?.currentTime || 0;
-                      if (outputTarget !== 'local') {
-                        const last = lastProgrammaticVideoSeekRef.current;
-                        if (Date.now() - last.time < 4000 && Math.abs(sec - last.target) < 4.0) {
-                          return;
+                      }}
+                      onDurationChange={(e) => {
+                        const d = e.currentTarget?.duration;
+                        if (d && isFinite(d) && d > 0) {
+                          if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
                         }
-                        handleCastSeek(sec);
-                      } else if (currentTrack && sec >= 5) {
-                        const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
-                        saveTrackProgress(currentTrack, sec, dur, false, { force: true });
-                      }
-                    }}
-                    onPlay={() => {
-                      if (outputTarget === 'local') {
+                      }}
+                      onTimeUpdate={(e) => {
+                        const v = e.currentTarget;
+                        if (!v || !currentTrack) return;
+                        const pos = v.currentTime || 0;
+                        const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                        const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
+                        if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+                        if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
+                          playedRef.current.counted = true;
+                          recordPlay(currentTrack);
+                        }
+                        if (pos >= 5) {
+                          saveTrackProgress(currentTrack, pos, dur, false);
+                        }
+                      }}
+                      onSeeked={(e) => {
+                        const v = e.currentTarget;
+                        const sec = v?.currentTime || 0;
+                        if (currentTrack && sec >= 5) {
+                          const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                          saveTrackProgress(currentTrack, sec, dur, false, { force: true });
+                        }
+                      }}
+                      onPlay={() => {
                         setIsPlaying(true);
-                      } else if (activeCastSession?.isPaused) {
-                        handleToggleCastPause();
-                      }
-                    }}
-                    onPause={(e) => {
-                      if (outputTarget === 'local') {
+                      }}
+                      onPause={(e) => {
                         setIsPlaying(false);
                         const v = e.currentTarget;
                         if (v && currentTrack && (v.currentTime || 0) >= 5) {
                           const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
                           saveTrackProgress(currentTrack, v.currentTime, dur, false, { force: true });
                         }
-                      }
-                    }}
-                    onEnded={(e) => {
-                      if (outputTarget === 'local') {
+                      }}
+                      onEnded={(e) => {
                         const v = e.currentTarget;
                         const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack?.duration || 0);
                         if (currentTrack) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
                         handleTrackEnded();
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  ) : (
+                    <div
+                      id="cinema-cast-stage"
+                      className="cinema-video-el"
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '14px',
+                        padding: '28px',
+                        background: 'radial-gradient(circle at center, rgba(232,163,61,0.12) 0%, rgba(10,12,18,0.96) 75%)',
+                        textAlign: 'center',
+                        minHeight: '260px',
+                      }}
+                    >
+                      {artUrlFor(artBase.local, currentTrack?.artId) && (
+                        <img
+                          src={artUrlFor(artBase.local, currentTrack?.artId)}
+                          alt=""
+                          style={{
+                            maxHeight: '160px',
+                            borderRadius: '8px',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      )}
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#f8fafc' }}>
+                        📺 Playing on {getSpeakerName(outputTarget)}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#94a3b8', maxWidth: '520px' }}>
+                        {currentTrack?.title} — Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.
+                      </div>
+                    </div>
+                  )}
                   <div className="cinema-stage-toolbar">
                     <span className="cinema-stage-badge">
                       🎬 {currentTrack?.title || 'Cinema Stage'} {currentTrack?.year ? `(${currentTrack.year})` : ''}
