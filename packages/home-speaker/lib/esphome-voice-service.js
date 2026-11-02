@@ -989,7 +989,12 @@ class EspHomeVoiceService extends EventEmitter {
           buildEspHomeFrame(20), // SubscribeStatesRequest (for button & switch events)
           buildEspHomeFrame(89, subVoicePayload),
         ]));
-        setTimeout(() => finishConnect(true), 350);
+        setTimeout(() => {
+          // Send VOICE_ASSISTANT_RUN_END (2) on connect to clear any stuck red/error ring on the speaker
+          this._sendVoiceEvent(socket, 2);
+          this.setLedRing(ip, { state: false, port }).catch(() => {});
+          finishConnect(true);
+        }, 350);
       });
 
       socket.on('data', (chunk) => {

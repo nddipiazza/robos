@@ -401,10 +401,18 @@ async function ensureMediaPlayerRunning(appId, createClient, { configDir, timeou
   const repoRoot = path.resolve(__dirname, '..', '..', '..');
   const appDir = path.join(repoRoot, 'packages', appId);
   let electronBin = 'electron';
-  const localElectron = path.join(repoRoot, 'node_modules', '.bin', 'electron');
-  const pkgElectron = path.join(appDir, 'node_modules', '.bin', 'electron');
-  if (fs.existsSync(pkgElectron)) electronBin = pkgElectron;
-  else if (fs.existsSync(localElectron)) electronBin = localElectron;
+  const candidateBins = [
+    path.join(appDir, 'node_modules', '.bin', 'electron'),
+    path.join(repoRoot, 'node_modules', '.bin', 'electron'),
+    path.join(repoRoot, 'packages', 'voice-prompt', 'node_modules', 'electron', 'dist', 'electron'),
+    path.join(repoRoot, 'packages', 'app-manager', 'node_modules', 'electron', 'dist', 'electron'),
+  ];
+  for (const bin of candidateBins) {
+    if (fs.existsSync(bin)) {
+      electronBin = bin;
+      break;
+    }
+  }
 
   try {
     const child = spawn(electronBin, [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
