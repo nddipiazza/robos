@@ -46,6 +46,7 @@ RobOS is a desktop suite of developer apps, a knowledge graph of your system, an
 
 ## Also here
 
+- [Home Assistant Voice (NC-VK-9727) & Two-Way Voice Intercom]({{ site.baseurl }}{% link home-assistant-voice.md %}): hands-free spoken questions, automatic microphone listening, local Whisper STT, and demo video.
 - [Roadmap]({{ site.baseurl }}{% link roadmap.md %}): what is built, in progress and planned.
 - [Training]({{ site.baseurl }}{% link training.md %}): task-oriented lessons.
 - [About]({{ site.baseurl }}{% link about.md %}): the project, the license and where to ask questions.

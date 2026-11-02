@@ -1,0 +1,68 @@
+---
+title: "Hands-Free Two-Way Voice Approval with Home Assistant Voice (NC-VK-9727) & RobOS Home Speaker"
+nav_label: "Home Assistant Voice (NC-VK-9727) Two-Way Intercom"
+date: 2026-11-02 15:50:00 +0000
+date_label: "Nov 2, 2026"
+tags:
+  - "RobOS Home Speaker"
+  - "Home Assistant Voice PE"
+  - "ESPHome Native API"
+  - "Kokoro-82M & Whisper STT"
+summary: "How we added zero-cloud two-way voice conversation and hands-free spoken approval to <strong>RobOS Home Speaker</strong> (<code>packages/home-speaker</code>) using the Nabu Casa <strong>Home Assistant Voice Preview Edition (<code>NC-VK-9727</code>)</strong>, ESPHome Protobuf <code>VoiceAssistantAnnounceRequest</code> (<code>start_conversation=true</code>), Kokoro-82M neural TTS, and local Whisper STT."
+description: "How we added zero-cloud two-way voice conversation and hands-free spoken approval to RobOS Home Speaker (packages/home-speaker) using the Nabu Casa Home Assistant Voice Preview Edition (NC-VK-9727), ESPHome Protobuf VoiceAssistantAnnounceRequest (start_conversation=true), Kokoro-82M neural TTS, and local Whisper STT."
+og_image: /assets/home-speaker/01-two-way-voice-intercom.png
+og_image_alt: "RobOS Home Speaker showing the Two-Way Voice Intercom panel and live transcript with a Home Assistant Voice Preview Edition speaker"
+---
+<div class="blog-body">
+  <div style="margin:1.25rem 0 1.75rem;text-align:center;">
+    <iframe width="360" height="640" src="https://www.youtube.com/embed/3ZCU7gsIodg" title="RobOS Home Speaker + Home Assistant Voice PE Hands-Free Voice Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="max-width:100%;border-radius:14px;border:1px solid var(--line, #30363d);box-shadow:0 12px 32px rgba(0,0,0,0.28);"></iframe>
+    <p class="muted small" style="margin-top:0.5rem;"><strong>Live Demo (<a href="https://www.youtube.com/shorts/3ZCU7gsIodg" target="_blank" rel="noopener">YouTube Shorts</a>):</strong> An AI coding agent asks out loud over the <strong>Home Assistant Voice Preview Edition (<code>NC-VK-9727</code>)</strong> if it is okay to push to <code>main</code>, automatically opens the speaker's microphone with no wake word or button press, transcribes the spoken reply locally, and confirms back out loud.</p>
+  </div>
+
+  <p><strong>Why agents need a physical, zero-cloud voice intercom on your desk.</strong> When an autonomous coding agent finishes a task or reaches a deployment gate (like pushing to <code>main</code>), you aren't always staring at a terminal window. With the <strong>Nabu Casa Home Assistant Voice Preview Edition (<code>NC-VK-9727</code>)</strong> connected to <strong>RobOS Home Speaker</strong> (<code>packages/home-speaker</code>, port <code>:19200</code>), any agent or script can speak a question out loud in natural <strong>Kokoro-82M</strong> neural voice, automatically open the speaker's dual-microphone array as soon as the question finishes playing, transcribe your answer locally on your workstation using <strong>Whisper</strong> (<code>Xenova/whisper-tiny.en</code>), and confirm your decision out loud—all over your local LAN with zero cloud dependencies.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/home-speaker/ha-voice-pe-architecture.png' | relative_url }}" alt="RobOS Home Speaker and Home Assistant Voice Preview Edition (NC-VK-9727) Two-Way Voice Architecture Diagram" loading="lazy">
+    <figcaption>End-to-end local LAN pipeline in <a href="https://github.com/nddipiazza/robos/blob/main/packages/home-speaker/lib/esphome-voice-service.js"><code>packages/home-speaker/lib/esphome-voice-service.js</code></a>: Kokoro-82M neural TTS transcoded to 48 kHz 16-bit stereo FLAC, ESPHome Native API TCP <code>:6053</code> Protobuf <code>VoiceAssistantAnnounceRequest</code> (<code>msgType 119</code>, field <code>4 start_conversation=true</code>), XMOS XU316 hardware acoustic echo cancellation, and local Whisper STT.</figcaption>
+  </figure>
+
+  <p><strong>How hands-free auto-listen works under the hood (ESPHome <code>msgType 119</code> field <code>4</code>).</strong> Normally, smart speakers require you to say a wake word (<em>"Okay Nabu"</em>) or press the physical center button before they stream microphone audio. By subscribing as a native ESPHome voice assistant pipeline over TCP port <code>6053</code> (<code>VoiceAssistantSubscribeRequest</code>, <code>msgType 89</code> with <code>flags = 1</code>) and sending <code>VoiceAssistantAnnounceRequest</code> (<code>msgType 119</code>) with field <code>1</code> set to the HTTP FLAC stream URL and <strong>field <code>4</code> (<code>start_conversation</code>) set to <code>true</code></strong>, the <code>NC-VK-9727</code> plays the spoken question through its TI DAC and—at the exact millisecond playback finishes—automatically triggers <code>VoiceAssistantRequest</code> (<code>msgType 90</code>, <code>start=true</code>) and streams 16 kHz 16-bit mono PCM chunks (<code>VoiceAssistantAudio</code>, <code>msgType 106</code>) back to RobOS.</p>
+
+  <p><strong>Acoustic echo guard &amp; RMS silence detection.</strong> To prevent the room's acoustic reverb tail from the speaker's own TTS prompt from false-triggering the voice detector, <code>esphome-voice-service.js</code> applies a <code>550 ms</code> post-playback echo guard before arming RMS speech detection, then automatically closes the mic stream with <code>VoiceAssistantEventResponse</code> (<code>msgType 92</code>) after <code>950 ms</code> of post-speech silence and runs local Whisper transcription.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/home-speaker/01-two-way-voice-intercom.png' | relative_url }}" alt="RobOS Home Speaker showing the Two-Way Voice Intercom panel and live transcript" loading="lazy">
+      <figcaption><strong>Two-Way Voice Intercom (<code>packages/home-speaker</code>):</strong> Turn on background wake-word/button listening, click <strong> Listen Now</strong>, or use <strong>Ask &amp; Listen (Hands-Free)</strong> to speak a question and automatically record the spoken reply.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/home-speaker/02-add-device-wizard.png' | relative_url }}" alt="RobOS Home Speaker Add Device Wizard with layman-friendly speaker cards" loading="lazy">
+      <figcaption><strong>Add Speaker or Display Wizard:</strong> Provision a brand-new <code>NC-VK-9727</code> over Bluetooth Low Energy (<code>Improv BLE</code>) or auto-discover it via mDNS (<code>_esphomelib._tcp.local</code>) with clean cards and expandable technical details.</figcaption>
+    </figure>
+  </div>
+
+  <div class="blog-log"># Launch RobOS Home Speaker
+electron packages/home-speaker
+
+# Ask a question out loud, auto-open the mic (no wake word/button), and transcribe the spoken reply:
+node -e '
+const svc = require("./packages/home-speaker/lib/speaker-service");
+(async () => {
+  const askRes = await svc.askAndListen("esphome-ha-voice-pe-192-168-1-64", "Is it okay to push to main?", {
+    voice: "af_heart",
+    timeoutMs: 15000
+  });
+  console.log("Heard:", askRes.text);
+  if (/yes|sure|ok|yep|approve/i.test(askRes.text || "")) {
+    await svc.broadcastTTS("Got it! Pushing to main is approved.", ["esphome-ha-voice-pe-192-168-1-64"]);
+  }
+})();
+'</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/home-assistant-voice/' | relative_url }}">Home Assistant Voice (NC-VK-9727) Wiki Guide →</a>
+  <a href="{{ '/v1/apps/home-speaker/' | relative_url }}">RobOS Home Speaker App Reference →</a>
+  <a href="https://www.youtube.com/shorts/3ZCU7gsIodg" target="_blank" rel="noopener">Watch the YouTube Shorts Demo →</a>
+  <a href="https://github.com/nddipiazza/robos/blob/main/packages/home-speaker/lib/esphome-voice-service.js">Source (<code>esphome-voice-service.js</code>) →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/dbc5be19">dbc5be19</a>, <a href="https://github.com/nddipiazza/robos/commit/5d508ffa">5d508ffa</a>, <a href="https://github.com/nddipiazza/robos/commit/8ae97069">8ae97069</a>, <a href="https://github.com/nddipiazza/robos/commit/e2b26582">e2b26582</a></span>
+</div>
