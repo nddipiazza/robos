@@ -44,7 +44,7 @@ async function setup() {
     if (process.platform !== 'win32') fs.chmodSync(engine, 0o755);
   }
   const dataHome = process.platform === 'win32' ? process.env.APPDATA : process.platform === 'darwin' ? path.join(os.homedir(), 'Library/Application Support') : process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local/share');
-  const templates = path.join(dataHome, 'Godot/export_templates', `${VERSION}.stable`);
+  const templates = path.join(dataHome, process.platform === 'linux' ? 'godot/export_templates' : 'Godot/export_templates', `${VERSION}.stable`);
   if (!fs.existsSync(path.join(templates, 'windows_release_x86_64.exe'))) {
     const temp = fs.mkdtempSync(path.join(cache, 'templates-'));
     extract(await download(`Godot_v${VERSION}-stable_export_templates.tpz`), temp);
