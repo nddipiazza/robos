@@ -51,7 +51,7 @@ def click_unit(context, name):
 @when('the commander presses "{shortcut}"')
 def press_shortcut(context, shortcut):
     parts = shortcut.split("+")
-    context.client.key(parts[-1], ctrl="Ctrl" in parts, shift="Shift" in parts)
+    context.client.key(parts[-1], ctrl="Ctrl" in parts, shift="Shift" in parts, alt="Alt" in parts)
     context.client.key(parts[-1], pressed=False)
 
 
@@ -79,8 +79,9 @@ def group_members(context, number, names):
 @when('the commander clicks control slot {number:d} with "{modifiers}"')
 def click_slot(context, number, modifiers):
     assert context.rts_mode != "backend", "HUD checks require rendered --human mode"
-    x, y = 340 + (number - 1) * 78, 821
-    context.client.mouse(x, y, ctrl="Ctrl" in modifiers, shift="Shift" in modifiers)
+    slot_index = 9 if number == 0 else number - 1
+    x, y = 340 + slot_index * 78, 821
+    context.client.mouse(x, y, ctrl="Ctrl" in modifiers, shift="Shift" in modifiers, alt="Alt" in modifiers)
     context.client.mouse(x, y, pressed=False)
 
 
@@ -103,7 +104,7 @@ def centered_camera(context, name):
 
 @then("the control group HUD proof is captured")
 def capture_hud_proof(context):
-    context.client.ui(hover=[340, 821], banner=0)
+    context.client.ui(hover=[1042, 821], banner=0)
     context.client.set_overlay("", "")
     time.sleep(0.1)
     result = context.client.screenshot(str(context.reports_dir / "control-groups.png"))

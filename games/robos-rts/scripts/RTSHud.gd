@@ -250,8 +250,9 @@ func _draw_idle_worker_button() -> void:
 
 func group_tab_rects() -> Dictionary:
 	var out := {}
-	for g in range(1, 10):
-		out[g] = Rect2(main.SEL_PANEL.position.x + float(g - 1) * 78.0, main.HUD_TOP - 38.0, 72.0, 30.0)
+	for i in range(main.CONTROL_GROUP_KEYS.size()):
+		var g: int = main.CONTROL_GROUP_KEYS[i]
+		out[g] = Rect2(main.SEL_PANEL.position.x + float(i) * 78.0, main.HUD_TOP - 38.0, 72.0, 30.0)
 	return out
 
 func _draw_group_tabs() -> void:
@@ -647,13 +648,15 @@ func _draw_tooltip() -> void:
 	for g in group_tab_rects():
 		var tab: Rect2 = group_tab_rects()[g]
 		if tab.has_point(hover):
-			var r := Rect2(tab.position.x, tab.position.y - 132.0, 430.0, 124.0)
+			var r := Rect2(tab.position.x, tab.position.y - 176.0, 460.0, 168.0)
 			_frame(r, 0.97)
 			_text(r.position + Vector2(14, 26), "Control group %d" % g, 19, C_GOLD)
 			_text(r.position + Vector2(14, 50), "Ctrl + number / click: assign (empty clears)", 16)
 			_text(r.position + Vector2(14, 72), "Ctrl + Shift + number / click: add units", 16)
 			_text(r.position + Vector2(14, 94), "Number / click: recall; Shift: add to selection", 16)
-			_text(r.position + Vector2(14, 116), "Double tap / click: center camera", 16, C_MUTED)
+			_text(r.position + Vector2(14, 116), "Alt + number / click: move to this group", 16)
+			_text(r.position + Vector2(14, 138), "Alt + Shift: add here, remove from other groups", 16)
+			_text(r.position + Vector2(14, 160), "Double tap / click: center camera", 16, C_MUTED)
 			return
 	var hit: Dictionary = {}
 	for btn in main.get_card_buttons():
@@ -752,7 +755,7 @@ func _draw_help() -> void:
 	]
 	var right := [
 		["Arrow keys", "Pan the camera"],
-		["Ctrl + 1-9 / Ctrl + Shift + 1-9", "Assign / add units; empty assignment clears"],
+		["Ctrl + 1-0 / Ctrl + Shift + 1-0", "Assign / add units; Alt moves from other groups"],
 		["Tab", "Cycle the active unit type in a mixed selection"],
 		[".", "Select the next idle worker"],
 		["Space", "Jump to the last attack alert, or home"],
@@ -763,7 +766,7 @@ func _draw_help() -> void:
 	if not SimEngine.match_state.is_empty():
 		right[6] = ["F8", "Match setup, speed, restart and surrender"]
 		right[7] = ["Victory", "Destroy every enemy structure"]
-	_text(r.position + Vector2(28, 578), "Groups: 1-9 or click recalls; Shift adds to selection; double tap centers. Hover a slot for controls.", 17, C_GOLD)
+	_text(r.position + Vector2(28, 578), "Groups 1-9, 0: recall; Shift adds selection; Alt moves units; double tap centers. Hover for controls.", 17, C_GOLD)
 	for i in range(left.size()):
 		var y := r.position.y + 106.0 + float(i) * 56.0
 		_text(Vector2(r.position.x + 28, y), str(left[i][0]), 19, C_GOLD)

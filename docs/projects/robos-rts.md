@@ -143,17 +143,21 @@ The layout follows RTS convention: resources top-right, minimap bottom-left, the
 
 Drag a box to select a squad. In a mixed selection the gold-bordered type is the active subgroup, which owns the command card; press **Tab** to cycle it. Double click selects every unit of that type on screen.
 
-The numbered slots above the selection panel save your own living units and structures. Hover a slot for instructions; its gold border indicates that its members match the current selection. Use the keyboard or the same modifiers while clicking a slot:
+The slots **1–9, then 0** above the selection panel save your own living units and structures. Hover a slot for instructions; its gold border indicates that its members match the current selection. Use the keyboard or the same modifiers while clicking a slot:
 
 | Controls | Result |
 |:---|:---|
-| Ctrl + 1–9 / Ctrl + click | Replace the group with the current selection. An empty selection clears it. Command also works on macOS. |
-| Ctrl + Shift + 1–9 / Ctrl + Shift + click | Add the selected units to the group without duplicates. |
-| 1–9 / click | Recall the group, replacing the selection. An empty group preserves the selection. |
-| Shift + 1–9 / Shift + click | Add the group to the current selection. |
+| Ctrl + number / Ctrl + click | Replace the group with the current selection. An empty selection clears it. Command also works on macOS. |
+| Ctrl + Shift + number / Ctrl + Shift + click | Add the selected units to the group without duplicates. |
+| Alt + number / Alt + click | Replace this group with the selected units and remove those units from every other group. |
+| Alt + Shift + number / Alt + Shift + click | Add selected units here and remove those incoming units from every other group. |
+| Number / click | Recall the group, replacing the selection. An empty group preserves the selection. |
+| Shift + number / Shift + click | Add the group to the current selection. |
 | Double tap a number / double click a slot | Recall and center the camera on the first surviving member. |
 
 Destroyed units are removed from groups. Groups reset when a new scenario loads or the viewed faction changes. F1 also lists the shortcuts.
+
+To split a scouting or flanking squad from an army on **1**, select that squad and press **Alt+2**. The squad stays selected and moves to **2**; recalling **1** leaves it behind. Use **Alt+Shift+2** to join an existing flanking group. With an empty or enemy-only selection, either Alt shortcut leaves saved squads intact. Ordinary Ctrl assignment still permits overlapping groups.
 
 Control-group regression checks run through the same input handlers as play:
 
@@ -165,7 +169,7 @@ python run_cucumber_tests.py --human --tags=@control_groups
 RTS_MODE=human python -m behave tests/e2e/features/ui
 ```
 
-The direct checks cover all slots, box selection, structures, ownership, destroyed members, clearing, key repeat and player/scenario resets. Cucumber checks use mouse selection and keyboard input through the public API; the rendered HUD feature verifies modifier clicks, additive recall and double-click camera focus, and saves `tests/e2e/reports/control-groups.png`.
+The direct checks cover all slots, box selection, structures, ownership, destroyed members, clearing, exclusive squad moves, key repeat, player/scenario resets and the audio listener's player. Cucumber checks use mouse selection and keyboard input through the public API; the rendered HUD feature verifies modifier clicks, squad splitting into slot 0, additive recall and double-click camera focus, and saves `tests/e2e/reports/control-groups.png`.
 
 ![Eight units box-selected: six Riflemen, a Breacher and a Howitzer]({{ '/assets/images/robos-rts/06-squad-selection.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -333,7 +337,7 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Mouse wheel, middle drag | Zoom, pan |
 | Arrow keys | Pan |
 | Letter in a button's corner | Use that command |
-| Ctrl + 1 to 9, 1 to 9 | Set, recall a control group |
+| Ctrl + number, number (1–9, 0) | Set, recall a control group; Alt moves selected units from other groups |
 | Tab | Cycle the active unit type |
 | **.** | Select the next idle worker |
 | Space | Jump to the last attack alert, or home |
