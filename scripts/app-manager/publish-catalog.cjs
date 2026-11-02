@@ -110,7 +110,11 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
       // Game Playthrough executes the game's own E2E driver as an app feature.
       fs.cpSync(source, dir, { recursive: true, filter: file => (!ignored.has(path.basename(file)) || gameData && path.basename(file) === 'tests') &&
         (gameData || !/\.(?:test|spec)\.[cm]?js$/.test(file)) });
-      if (item.id === 'robos-graph') for (const name of ['renderer', 'main.js', 'preload.js']) fs.rmSync(path.join(dir, name), { force: true, recursive: true });
+      if (item.id === 'robos-graph') {
+        for (const name of ['main.js', 'preload.js']) fs.rmSync(path.join(dir, name), { force: true });
+        // The Explorer UI ships separately, but companion apps load the source-only view from the library.
+        for (const name of fs.readdirSync(path.join(dir, 'renderer'))) if (name !== 'source-workspace-view.js') fs.rmSync(path.join(dir, 'renderer', name), { force: true, recursive: true });
+      }
       if (fs.existsSync(path.join(dir, 'package.json'))) {
         const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json')));
         if (item.id === 'robos-graph') pkg.main = 'index.js';

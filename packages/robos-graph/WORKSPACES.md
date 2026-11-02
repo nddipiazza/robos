@@ -9,8 +9,11 @@ Existing installations without an explicit workspace retain their legacy behavio
 The canonical store contains eight standard packages plus any explicitly named
 custom packages. `kgraph.yaml` catalogs them. `knowledge-graph.jsonld` is a checked
 compatibility aggregate. A disagreement between the aggregate and packages fails
-instead of silently discarding one version. JSON-formatted YAML keeps the catalog
-portable without additional dependencies.
+instead of silently discarding one version. In the RobOS repository, regenerate it
+after editing a package file by hand with
+`node packages/crpg-builder/scripts/sync-aggregate.js`;
+`packages/robos-test/tests/kgraph-aggregate/unit.test.js` fails if you forget.
+JSON-formatted YAML keeps the catalog portable without additional dependencies.
 
 ## Import and refinement
 

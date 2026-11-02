@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { configuration } = require('../../../scripts/app-manager/build.cjs');
-const { dependencies, sourceCatalog, breakHardLinks } = require('../../../scripts/app-manager/publish-catalog.cjs');
+const { dependencies, sourceCatalog, publish, breakHardLinks } = require('../../../scripts/app-manager/publish-catalog.cjs');
 const { validateArchive } = require('../lib/download.cjs');
 test('both deliverables use the same minimal app, without any suite resources', t => {
   const output = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-build-test-'));
@@ -35,6 +35,16 @@ test('catalog groups user apps and dependency discovery does not pull the entire
   assert.ok(dependencies('git-projects').includes('robos-graph'));
   assert.ok(entries.some(item => item.id === 'knowledge-graph-explorer' && item.sourceId === 'robos-graph'));
   assert.ok(!dependencies('robos-lib').includes('agents-manager'));
+});
+test('the graph library omits the Explorer UI but keeps the view companion apps load from it', async t => {
+  const output = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-graph-payload-test-'));
+  t.after(() => fs.rmSync(output, { recursive: true, force: true }));
+  await publish({ output, selected: ['kube-studio'], install: false });
+  const version = fs.readFileSync(path.join(__dirname, '../../../VERSION'), 'utf8').trim(), entries = [];
+  await require('tar').t({ file: path.join(output, `robos-robos-graph-v${version}-${process.platform}-${process.arch}.tgz`), onReadEntry: entry => entries.push(entry.path.replace(/^\.\//, '')) });
+  assert.ok(entries.includes('renderer/source-workspace-view.js'));
+  assert.ok(!entries.includes('renderer/index.html'));
+  assert.ok(!entries.includes('main.js'));
 });
 test('hard-linked npm files become regular archive entries the installer accepts', async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-hardlink-test-'));
