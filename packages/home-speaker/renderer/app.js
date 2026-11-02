@@ -917,9 +917,9 @@ let selectedCatalogItem = null;
 
 function setWizardStep(stepNum) {
   const stepTitles = {
-    1: 'Step 1 of 3 • Select Supported Hardware',
-    2: 'Step 2 of 3 • Discover on LAN (:6053) or Provision Wi-Fi via BLE',
-    3: 'Step 3 of 3 • Test LED Halo Ring, Verify Audio & Save',
+    1: 'Step 1 of 3',
+    2: 'Step 2 of 3',
+    3: 'Step 3 of 3',
   };
   if (wizardStepPill) wizardStepPill.textContent = stepTitles[stepNum] || stepTitles[1];
   wizStepTabs.forEach((tab) => {
@@ -974,26 +974,34 @@ function renderCatalogGrid() {
     const card = document.createElement('div');
     card.className = `catalog-card ${isSel ? 'selected' : ''}`;
     card.dataset.catalogId = item.id;
+    const summaryText = item.summary || 'Smart network speaker for voice announcements and music.';
     card.innerHTML = `
       <div class="catalog-card-top">
         <div class="catalog-icon-title">
           <span class="catalog-icon">${item.icon || '🔊'}</span>
-          <div>
+          <div class="catalog-title-block">
             <div class="catalog-title">${item.name}</div>
-            <div class="catalog-vendor">${item.vendor} • Model: <code>${item.modelCode}</code></div>
+            <div class="catalog-vendor">${item.vendor}</div>
           </div>
         </div>
         <span class="catalog-badge ${item.featured ? 'featured' : ''}">${item.badge}</span>
       </div>
-      <div class="catalog-specs">
-        <div><strong>Audio/DSP:</strong> ${item.specs?.dsp || ''}</div>
-        <div><strong>Controls:</strong> ${item.specs?.controls || ''}</div>
-      </div>
+      <p class="catalog-summary">${summaryText}</p>
+      <details class="catalog-details">
+        <summary>Show technical details</summary>
+        <div class="catalog-specs">
+          <div><strong>Model:</strong> ${item.modelCode}</div>
+          <div><strong>Audio:</strong> ${item.specs?.dsp || ''}</div>
+          <div><strong>Controls:</strong> ${item.specs?.controls || ''}</div>
+          <div><strong>Connection:</strong> ${item.specs?.connectivity || `${item.protocol} (:${item.defaultPort})`}</div>
+        </div>
+      </details>
     `;
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('details')) return;
       selectedCatalogItem = item;
       if (wizardSelectedLabel) {
-        wizardSelectedLabel.textContent = `Selected: ${item.name}`;
+        wizardSelectedLabel.textContent = `Selected: ${item.name} (${item.modelCode})`;
       }
       if (wizPortInput) {
         wizPortInput.value = String(item.defaultPort || 6053);
@@ -1218,27 +1226,32 @@ async function renderRegisteredDevices() {
 
     speakers.forEach((s) => {
       const isPe = s.modelCode === 'NC-VK-9727' || s.protocol === 'esphome-native';
+      const friendlyType = isPe ? 'Home Assistant Voice Speaker' : 'Google Home / Cast Speaker';
       const card = document.createElement('div');
       card.className = `device-inventory-card ${isPe ? 'voice-pe' : ''}`;
       card.innerHTML = `
         <div>
           <div class="device-card-head">
-            <div>
-              <div class="device-card-title">${isPe ? '🎙️ ' : '🔊 '}${s.name}</div>
-              <div class="device-card-sub">${s.model || 'Smart Speaker'} • <code>${s.ip}${s.port ? ':' + s.port : ''}</code></div>
+            <div class="catalog-title-block">
+              <div class="device-card-title">${s.name}</div>
+              <div class="device-card-sub">${friendlyType} • ${s.online ? 'Online' : 'Offline'}</div>
             </div>
-            <span class="catalog-badge ${isPe ? 'featured' : ''}">${isPe ? 'NC-VK-9727 • ESPHome' : 'Google Cast'}</span>
+            <span class="status-dot ${s.online ? 'online' : 'offline'}" title="${s.online ? 'Online' : 'Offline'}"></span>
           </div>
-          <div class="sched-badges" style="margin-top:8px;">
-            <span class="badge">${s.online ? '🟢 Online' : '⚪ Offline'}</span>
-            ${s.firmware ? `<span class="badge">FW v${s.firmware}</span>` : ''}
-            ${s.mac ? `<span class="badge">${s.mac}</span>` : ''}
-          </div>
+          <details class="catalog-details" style="margin-top:8px;">
+            <summary>Show details</summary>
+            <div class="catalog-specs">
+              <div><strong>IP Address:</strong> ${s.ip}${s.port ? ':' + s.port : ''}</div>
+              ${s.modelCode ? `<div><strong>Model:</strong> ${s.modelCode}</div>` : ''}
+              ${s.firmware ? `<div><strong>Firmware:</strong> v${s.firmware}</div>` : ''}
+              ${s.mac ? `<div><strong>MAC:</strong> ${s.mac}</div>` : ''}
+            </div>
+          </details>
         </div>
         <div class="device-card-actions">
-          <button type="button" class="btn btn-secondary btn-sm btn-dev-select">Select Target</button>
-          <button type="button" class="btn btn-secondary btn-sm btn-dev-chime">🔔 Test Chime</button>
-          ${isPe ? '<button type="button" class="btn btn-secondary btn-sm btn-dev-halo">💡 Pulse Halo</button>' : ''}
+          <button type="button" class="btn btn-secondary btn-sm btn-dev-select">Use Speaker</button>
+          <button type="button" class="btn btn-secondary btn-sm btn-dev-chime">Play Chime</button>
+          ${isPe ? '<button type="button" class="btn btn-secondary btn-sm btn-dev-halo">Light Ring</button>' : ''}
         </div>
       `;
 
