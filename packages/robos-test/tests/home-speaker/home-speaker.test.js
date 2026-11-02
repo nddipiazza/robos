@@ -90,6 +90,9 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(content.includes('speakers:castVoiceRecording'), 'Should register speakers:castVoiceRecording');
       assert.ok(content.includes('speakers:playSound'), 'Should register speakers:playSound');
       assert.ok(content.includes('speakers:playAmbient'), 'Should register speakers:playAmbient');
+      assert.ok(content.includes('speakers:getSupportedCatalog'), 'Should register speakers:getSupportedCatalog');
+      assert.ok(content.includes('speakers:addDevice'), 'Should register speakers:addDevice');
+      assert.ok(content.includes('speakers:setLedRing'), 'Should register speakers:setLedRing');
       assert.ok(content.includes('dialog:openAudioFile'), 'Should register dialog:openAudioFile');
     });
 
@@ -98,6 +101,9 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(fs.existsSync(preloadPath), 'preload.js should exist');
       const content = fs.readFileSync(preloadPath, 'utf8');
       assert.ok(content.includes('scanSpeakers:'), 'preload should expose scanSpeakers');
+      assert.ok(content.includes('getSupportedCatalog:'), 'preload should expose getSupportedCatalog');
+      assert.ok(content.includes('addDevice:'), 'preload should expose addDevice');
+      assert.ok(content.includes('setDeviceLedRing:'), 'preload should expose setDeviceLedRing');
       assert.ok(content.includes('castTTS:'), 'preload should expose castTTS');
       assert.ok(content.includes('castVoiceRecording:'), 'preload should expose castVoiceRecording');
       assert.ok(content.includes('playSound:'), 'preload should expose playSound');
@@ -151,13 +157,36 @@ describe('RobOS Home Speaker Tests', () => {
       assert.strictEqual(kitchen.ip, '192.168.1.10');
     });
 
-    it('_resolveTargetIps handles single IP, speaker name, and all', () => {
+    it('_resolveTargetIps handles single IP, speaker name, modelCode NC-VK-9727, and all', () => {
       const service = new HomeSpeakerService();
       assert.deepStrictEqual(service._resolveTargetIps('192.168.1.10'), ['192.168.1.10']);
       const kitchenRes = service._resolveTargetIps('Kitchen speaker');
       assert.ok(kitchenRes.includes('192.168.1.10'));
+      const peRes = service._resolveTargetIps('NC-VK-9727');
+      assert.ok(peRes.includes('192.168.1.64'), 'NC-VK-9727 should resolve to Home Assistant Voice PE IP');
       const allRes = service._resolveTargetIps('all');
       assert.ok(allRes.length >= 2, 'all should resolve to multiple speaker IPs');
+    });
+
+    it('getSupportedCatalog lists Home Assistant Voice Preview Edition (NC-VK-9727) first (#1)', () => {
+      const service = new HomeSpeakerService();
+      const catalog = service.getSupportedCatalog();
+      assert.ok(Array.isArray(catalog) && catalog.length >= 4, 'Should return supported hardware catalog');
+      assert.strictEqual(catalog[0].id, 'ha-voice-pe-nc-vk-9727', 'First item should be ha-voice-pe-nc-vk-9727');
+      assert.strictEqual(catalog[0].modelCode, 'NC-VK-9727', 'First item modelCode should be NC-VK-9727');
+      assert.strictEqual(catalog[0].rank, 1, 'First item should have rank 1');
+      assert.strictEqual(catalog[0].featured, true, 'First item should be marked featured');
+    });
+
+    it('EspHomeVoiceService builds valid Improv BLE Wi-Fi packets and protobuf frames', () => {
+      const { EspHomeVoiceService, buildEspHomeFrame } = require(path.join(APP_DIR, 'lib', 'esphome-voice-service'));
+      const esp = new EspHomeVoiceService();
+      const pkt = esp.buildImprovWifiPacket('NETGEAR65', 'secret123');
+      assert.strictEqual(pkt[0], 0x01, 'Command byte should be 0x01');
+      assert.strictEqual(pkt[2], 9, 'SSID length should be 9');
+      const frame = buildEspHomeFrame(9);
+      assert.strictEqual(frame[0], 0x00, 'ESPHome frame preamble should be 0x00');
+      assert.strictEqual(frame[2], 9, 'ESPHome frame msgType should be 9');
     });
   });
 
@@ -259,6 +288,9 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(html.includes('id="tab-ambient"'), 'Should contain tab-ambient pane');
       assert.ok(html.includes('id="tab-music"'), 'Should contain tab-music pane');
       assert.ok(html.includes('id="tab-schedules"'), 'Should contain tab-schedules pane');
+      assert.ok(html.includes('id="tab-devices"'), 'Should contain tab-devices pane for Home Assistant & Add Device Wizard');
+      assert.ok(html.includes('id="device-wizard-modal"'), 'Should contain Add Device Wizard container');
+      assert.ok(html.includes('NC-VK-9727'), 'Wizard should highlight NC-VK-9727');
       assert.ok(html.includes('id="waveform-canvas"'), 'Should have waveform canvas');
     });
 
