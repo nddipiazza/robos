@@ -1,299 +1,877 @@
 {
   "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
     "oslc": "http://open-services.net/ns/core#",
     "oslc_am": "http://open-services.net/ns/am#",
     "oslc_cm": "http://open-services.net/ns/cm#",
-    "oslc_rm": "http://open-services.net/ns/rm#",
     "oslc_qm": "http://open-services.net/ns/qm#",
-    "robos": "https://robos.dev/ns/sdlc#",
-    "c4": "https://c4model.com/ns#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/",
+    "oslc_rm": "http://open-services.net/ns/rm#",
     "pact": "https://pact.io/ns#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "robos:sourceSummary": {
-      "@id": "robos:sourceSummary",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:annotations": {
+      "@id": "robos:annotations",
       "@type": "@json"
+    },
+    "robos:arguments": {
+      "@id": "robos:arguments",
+      "@type": "@json"
+    },
+    "robos:classification": {
+      "@container": "@set",
+      "@id": "robos:classification",
+      "@type": "@id"
+    },
+    "robos:evidence": {
+      "@container": "@set",
+      "@context": {
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "path": "robos:sourcePath",
+        "repository": "robos:sourceRepository",
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      },
+      "@id": "robos:evidence"
+    },
+    "robos:inputSchema": {
+      "@id": "robos:inputSchema",
+      "@type": "@json"
+    },
+    "robos:mcpServer": {
+      "@id": "robos:mcpServer",
+      "@type": "@id"
+    },
+    "robos:outputSchema": {
+      "@id": "robos:outputSchema",
+      "@type": "@json"
+    },
+    "robos:parameters": {
+      "@id": "robos:parameters",
+      "@type": "@json"
+    },
+    "robos:promptsProvided": {
+      "@container": "@set",
+      "@id": "robos:promptsProvided",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
     },
     "robos:provenance": {
       "@id": "robos:provenance",
       "@type": "@json"
     },
     "robos:relationshipEvidence": {
-      "@id": "robos:relationshipEvidence",
       "@container": "@set",
       "@context": {
-        "predicate": {
-          "@id": "robos:predicate",
-          "@type": "@vocab"
-        },
-        "target": {
-          "@id": "robos:target",
-          "@type": "@id"
-        },
+        "condition": "robos:condition",
         "evidence": {
-          "@id": "robos:evidence",
           "@container": "@set",
           "@context": {
-            "repository": "robos:sourceRepository",
-            "path": "robos:sourcePath",
             "line": {
               "@id": "robos:sourceLine",
               "@type": "xsd:integer"
             },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
             "revision": "robos:sourceRevision",
             "sha256": "robos:sourceHash",
             "workingTreeStatus": "robos:workingTreeStatus"
-          }
+          },
+          "@id": "robos:evidence"
         },
         "note": "dcterms:description",
-        "condition": "robos:condition",
-        "status": "robos:evidenceStatus"
-      }
-    },
-    "robos:evidence": {
-      "@id": "robos:evidence",
-      "@container": "@set",
-      "@context": {
-        "repository": "robos:sourceRepository",
-        "path": "robos:sourcePath",
-        "line": {
-          "@id": "robos:sourceLine",
-          "@type": "xsd:integer"
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
         },
-        "revision": "robos:sourceRevision",
-        "sha256": "robos:sourceHash",
-        "workingTreeStatus": "robos:workingTreeStatus"
-      }
+        "status": "robos:evidenceStatus",
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        }
+      },
+      "@id": "robos:relationshipEvidence"
+    },
+    "robos:resourcesProvided": {
+      "@container": "@set",
+      "@id": "robos:resourcesProvided",
+      "@type": "@id"
+    },
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
     },
     "robos:technologyReference": {
       "@id": "robos:technologyReference",
       "@type": "@id"
     },
-    "robos:protocolReference": {
-      "@id": "robos:protocolReference",
-      "@type": "@id"
-    }
+    "robos:toolAnnotations": {
+      "@id": "robos:toolAnnotations",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
+  "@graph": [
+    {
+      "@id": "urn:robos:agent:architecture-guardian",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
+      "dcterms:title": "RobOS Architecture & Governance Guardian",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:modelPreference": "gemini-2.5-pro",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "Architecture & Governance Guardian",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:kgraph-navigator"
+      ]
+    },
+    {
+      "@id": "urn:robos:agent:backend-dev",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
+      "dcterms:title": "RobOS Backend Systems Developer Agent",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:category": "Backend & Services",
+      "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "⚙️",
+      "robos:implementationPrompt": "Implement API controllers, service business logic, data access repositories, request validation, and unit/integration test suites.",
+      "robos:modelPreference": "pro",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
+      "robos:role": "Backend Systems Developer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security."
+    },
+    {
+      "@id": "urn:robos:agent:data-engineer-dev",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
+      "dcterms:title": "RobOS Data & Storage Engineer Agent",
+      "robos:assignedTeam": "urn:robos:team:data-platform",
+      "robos:category": "Data & Storage",
+      "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "💾",
+      "robos:implementationPrompt": "Write migration scripts, define entity mappings, configure connection pools, write Kafka event producers/consumers, and write database test fixtures.",
+      "robos:modelPreference": "pro",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
+      "robos:role": "Data & Storage Engineer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing."
+    },
+    {
+      "@id": "urn:robos:agent:frontend-web-dev",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
+      "dcterms:title": "RobOS Frontend Web Developer Agent",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:category": "Frontend & UI",
+      "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "🎨",
+      "robos:implementationPrompt": "Build responsive UI components, connect IPC handlers, implement DOM rendering and event listeners, apply RobOS CSS design tokens, and verify visual accessibility.",
+      "robos:modelPreference": "claude-sonnet-5",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
+      "robos:role": "Frontend Web Developer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa)."
+    },
+    {
+      "@id": "urn:robos:agent:game-dev",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
+      "dcterms:title": "RobOS Tactical Game Developer Agent",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:category": "Game Systems",
+      "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "⚔️",
+      "robos:implementationPrompt": "Implement Godot nodes, write GDScript logic, bind input and combat events, integrate tilemaps/sprites, and write automated scenario tests.",
+      "robos:modelPreference": "claude-sonnet-5",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
+      "robos:role": "Game Developer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification."
+    },
+    {
+      "@id": "urn:robos:agent:pr-reviewer",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
+      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:modelPreference": "claude-sonnet-5",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "Autonomous Pull Request Auditor",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:context-engine",
+        "urn:robos:mcp:kgraph-navigator"
+      ]
+    },
+    {
+      "@id": "urn:robos:agent:software-architect",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
+      "dcterms:title": "RobOS Software Architect Agent",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:category": "Architecture",
+      "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "🏛️",
+      "robos:implementationPrompt": "Implement foundational system scaffolding, contract specifications (OpenAPI/Protobuf), SHACL shapes, and package structures according to the architectural design.",
+      "robos:modelPreference": "pro",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
+      "robos:role": "Software Architect",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written."
+    },
+    {
+      "@id": "urn:robos:agent:sre-incident-triage",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
+      ],
+      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
+      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
+      "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:modelPreference": "pro",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "SRE Incident & Health Triager",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents."
+    },
+    {
+      "@id": "urn:robos:git-org:acme",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Git Project Organization for acme.",
+      "dcterms:title": "Acme",
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "docsUrl": "https://github.com/acme",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme/rest-client"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme",
+      "robos:package": "organization",
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme",
+      "robos:visibility": "public"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-identity",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
+      "dcterms:title": "Acme Identity & Access Management Organization",
+      "robos:agentRules": [
+        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
+        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
+        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "docsUrl": "https://github.com/acme-identity",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme-identity/oauth-server",
+        "github.com/acme-identity/user-directory-sync"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme-identity",
+      "robos:package": "organization",
+      "robos:repoCount": 2,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme-identity",
+      "robos:visibility": "internal"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-payments",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
+      "dcterms:title": "Acme Payments Organization",
+      "robos:agentRules": [
+        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
+        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
+        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "docsUrl": "https://github.com/acme-payments",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme-payments/payment-gateway",
+        "github.com/acme-payments/fraud-detector"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme-payments",
+      "robos:package": "organization",
+      "robos:repoCount": 2,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme-payments",
+      "robos:visibility": "internal"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-retail",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Git Project Organization for acme-retail.",
+      "dcterms:title": "Acme-retail",
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "docsUrl": "https://github.com/acme-retail",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme-retail/checkout-api"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme-retail",
+      "robos:package": "organization",
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme-retail",
+      "robos:visibility": "public"
+    },
+    {
+      "@id": "urn:robos:git-org:apache",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
+      "dcterms:title": "Apache Software Foundation",
+      "robos:agentRules": [
+        {
+          "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
+          "enforcement": "pre-commit",
+          "ruleFile": "AGENTS.md",
+          "ruleId": "RULE-APACHE-001",
+          "severity": "mandatory",
+          "title": "ASF License Header & Notice Verification"
+        },
+        {
+          "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
+          "enforcement": "agent-review",
+          "ruleFile": "docs/governance.md",
+          "ruleId": "RULE-APACHE-002",
+          "severity": "mandatory",
+          "title": "Public Discussion & Consensus Tracing"
+        },
+        {
+          "description": "All git commits generated by agents must be GPG signed with verified committer keys.",
+          "enforcement": "git-commit",
+          "ruleId": "RULE-APACHE-003",
+          "severity": "mandatory",
+          "title": "Cryptographic Commit Signing"
+        },
+        {
+          "description": "Public APIs must not break binary or source compatibility without a documented deprecation cycle across at least one minor release.",
+          "enforcement": "pr-audit",
+          "ruleId": "RULE-APACHE-004",
+          "severity": "recommended",
+          "title": "Backward-Compatible SemVer Contracts"
+        }
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
+      "robos:defaultBranch": "main",
+      "robos:documentation": {
+        "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md",
+          "GOVERNANCE.md",
+          "SECURITY.md"
+        ],
+        "docsUrl": "https://www.apache.org/dev/",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/apache/kafka",
+        "github.com/apache/spark",
+        "github.com/apache/lucene",
+        "github.com/apache/airflow",
+        "github.com/apache/arrow"
+      ],
+      "robos:isEnterprise": false,
+      "robos:memberCount": 1100,
+      "robos:namespace": "robos.org",
+      "robos:orgName": "apache",
+      "robos:package": "organization",
+      "robos:repoCount": 350,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/apache",
+      "robos:verified": true,
+      "robos:visibility": "public"
+    },
+    {
+      "@id": "urn:robos:organization:acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
+      "dcterms:title": "Acme Global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:slug": "acme-global"
+    },
+    {
+      "@id": "urn:robos:organization:at-https",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:description": "Enterprise technology ecosystem for at https.",
+      "dcterms:title": "at https",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:slug": "at-https"
+    },
+    {
+      "@id": "urn:robos:organization:sdlc-resources-for-acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:description": "Enterprise technology ecosystem for SDLC resources for Acme Global.",
+      "dcterms:title": "SDLC resources for Acme Global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:slug": "sdlc-resources-for-acme-global"
+    },
+    {
+      "@id": "urn:robos:person:admin",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Alex Rivera",
+      "robos:email": "alex@acmecloud.io",
+      "robos:handle": "admin",
+      "robos:memberOf": "urn:robos:team:founding-core",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "Chief Architect & VP Engineering"
+    },
+    {
+      "@id": "urn:robos:person:sconnor",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Sarah Connor",
+      "robos:email": "sarah.connor@acmeglobal.com",
+      "robos:handle": "sconnor",
+      "robos:memberOf": "urn:robos:team:core-platform",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "Lead Architect & Approver"
+    },
+    {
+      "@id": "urn:robos:project:robos-kgraph-parse-portal",
+      "@type": [
+        "robos:Project",
+        "schema:Project"
+      ],
+      "dcterms:description": "Heavy-scale connectors webapp & headless parsing portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
+      "dcterms:title": "RobOS Kgraph Parse Portal",
+      "robos:domainStandard": "https://schema.org/Project",
+      "robos:hasApplication": [
+        "urn:robos:app:kgraph-parse-portal"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "organization",
+      "robos:refersFrom": "https://schema.org/Project",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/Project",
+      "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:source:workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "RobOS source workspace",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "AGENTS.md",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:sourceKind": "git-repository",
+      "robos:sourcePath": "AGENTS.md"
+    },
+    {
+      "@id": "urn:robos:team:architecture-guild",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Enterprise Architecture Guild",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:john-connor",
+        "urn:robos:person:sconnor"
+      ],
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ],
+      "robos:lead": "urn:robos:person:john-connor",
+      "robos:memberCount": 5,
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:status": "active",
+      "robos:topology": "enabling"
+    },
+    {
+      "@id": "urn:robos:team:cloud-platform",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Cloud Platform & Infrastructure",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ],
+      "robos:lead": "urn:robos:person:admin",
+      "robos:memberCount": 5,
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:status": "active",
+      "robos:topology": "platform"
+    },
+    {
+      "@id": "urn:robos:team:core-platform",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Core Platform & Infrastructure",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:sconnor",
+        "urn:robos:person:marcus-wright"
+      ],
+      "robos:lead": "urn:robos:person:sconnor",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:topology": "platform"
+    },
+    {
+      "@id": "urn:robos:team:founding-core",
+      "@type": [
+        "oslc:Group",
+        "robos:Team"
+      ],
+      "dcterms:title": "Acme Global Core Platform Team",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:lead": "urn:robos:person:architect",
+      "robos:memberOf": "urn:robos:organization:acme-global",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:topology": "stream-aligned",
+      "robos:topologyType": "platform"
+    },
+    {
+      "@id": "urn:robos:team:order-processing",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Order Processing & Payments",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:kyle-reese"
+      ],
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ],
+      "robos:lead": "urn:robos:person:kyle-reese",
+      "robos:memberCount": 5,
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:status": "active",
+      "robos:topology": "stream-aligned"
+    }
+  ],
   "@id": "urn:robos:package:organization",
   "@type": [
     "oslc:ServiceProvider",
     "robos:Package"
   ],
-  "robos:package": "organization",
-  "robos:namespace": "robos.org",
-  "robos:version": "1.0.0",
-  "dcterms:title": "Enterprise Organization, Teams & Personas",
   "dcterms:description": "People, developer profiles, team topologies, and cross-team communication channels.",
+  "dcterms:title": "Enterprise Organization, Teams & Personas",
+  "robos:namespace": "robos.org",
   "robos:nodes": [
     {
-      "@id": "urn:robos:person:sconnor",
+      "@id": "urn:robos:agent:architecture-guardian",
       "@type": [
         "oslc:Person",
-        "robos:Developer"
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
       ],
-      "dcterms:title": "Sarah Connor",
-      "robos:email": "sarah.connor@acmeglobal.com",
-      "robos:handle": "sconnor",
-      "robos:role": "Lead Architect & Approver",
-      "robos:memberOf": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:team:core-platform",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Core Platform & Infrastructure",
-      "robos:topology": "platform",
-      "robos:lead": "urn:robos:person:sconnor",
-      "robos:hasMember": [
-        "urn:robos:person:sconnor",
-        "urn:robos:person:marcus-wright"
-      ],
-      "robos:package": "organization",
+      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
+      "dcterms:title": "RobOS Architecture & Governance Guardian",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:modelPreference": "gemini-2.5-pro",
       "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
-    },
-    {
-      "@id": "urn:robos:team:order-processing",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Order Processing & Payments",
-      "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:kyle-reese",
-      "robos:hasMember": [
-        "urn:robos:person:kyle-reese"
-      ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:memberCount": 5,
-      "robos:status": "active",
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
+      "robos:role": "Architecture & Governance Guardian",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:kgraph-navigator"
       ]
     },
     {
-      "@id": "urn:robos:team:architecture-guild",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Enterprise Architecture Guild",
-      "robos:topology": "enabling",
-      "robos:lead": "urn:robos:person:john-connor",
-      "robos:hasMember": [
-        "urn:robos:person:john-connor",
-        "urn:robos:person:sconnor"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:memberCount": 5,
-      "robos:status": "active",
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ]
-    },
-    {
-      "@id": "urn:robos:person:admin",
+      "@id": "urn:robos:agent:backend-dev",
       "@type": [
         "oslc:Person",
-        "robos:Developer"
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
       ],
-      "dcterms:title": "Alex Rivera",
-      "robos:email": "alex@acmecloud.io",
-      "robos:handle": "admin",
-      "robos:role": "Chief Architect & VP Engineering",
-      "robos:memberOf": "urn:robos:team:founding-core",
+      "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
+      "dcterms:title": "RobOS Backend Systems Developer Agent",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:category": "Backend & Services",
+      "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "⚙️",
+      "robos:implementationPrompt": "Implement API controllers, service business logic, data access repositories, request validation, and unit/integration test suites.",
+      "robos:modelPreference": "pro",
+      "robos:namespace": "robos.org",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
+      "robos:role": "Backend Systems Developer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security."
     },
     {
-      "@id": "urn:robos:team:founding-core",
+      "@id": "urn:robos:agent:data-engineer-dev",
       "@type": [
-        "oslc:Group",
-        "robos:Team"
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
       ],
-      "dcterms:title": "Acme Global Core Platform Team",
-      "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:architect",
-      "robos:hasMember": [
-        "urn:robos:person:admin"
-      ],
-      "robos:package": "organization",
+      "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
+      "dcterms:title": "RobOS Data & Storage Engineer Agent",
+      "robos:assignedTeam": "urn:robos:team:data-platform",
+      "robos:category": "Data & Storage",
+      "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "💾",
+      "robos:implementationPrompt": "Write migration scripts, define entity mappings, configure connection pools, write Kafka event producers/consumers, and write database test fixtures.",
+      "robos:modelPreference": "pro",
       "robos:namespace": "robos.org",
-      "robos:topologyType": "platform",
-      "robos:memberOf": "urn:robos:organization:acme-global",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
+      "robos:role": "Data & Storage Engineer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing."
     },
     {
-      "@id": "urn:robos:team:cloud-platform",
+      "@id": "urn:robos:agent:frontend-web-dev",
       "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
       ],
-      "dcterms:title": "Cloud Platform & Infrastructure",
-      "robos:topology": "platform",
-      "robos:lead": "urn:robos:person:admin",
-      "robos:hasMember": [
-        "urn:robos:person:admin"
-      ],
-      "robos:package": "organization",
+      "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
+      "dcterms:title": "RobOS Frontend Web Developer Agent",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:category": "Frontend & UI",
+      "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "🎨",
+      "robos:implementationPrompt": "Build responsive UI components, connect IPC handlers, implement DOM rendering and event listeners, apply RobOS CSS design tokens, and verify visual accessibility.",
+      "robos:modelPreference": "claude-sonnet-5",
       "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:memberCount": 5,
-      "robos:status": "active",
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ]
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
+      "robos:role": "Frontend Web Developer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa)."
     },
     {
-      "@id": "urn:robos:git-org:apache",
+      "@id": "urn:robos:agent:game-dev",
       "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent",
+        "schema:Person"
       ],
-      "dcterms:title": "Apache Software Foundation",
-      "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
-      "robos:orgName": "apache",
-      "robos:url": "https://github.com/apache",
-      "robos:forgeType": "github",
-      "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
-      "robos:visibility": "public",
-      "robos:isEnterprise": false,
-      "robos:verified": true,
-      "robos:defaultBranch": "main",
-      "robos:memberCount": 1100,
-      "robos:repoCount": 350,
-      "robos:hasRepository": [
-        "github.com/apache/kafka",
-        "github.com/apache/spark",
-        "github.com/apache/lucene",
-        "github.com/apache/airflow",
-        "github.com/apache/arrow"
-      ],
-      "robos:documentation": {
-        "docsUrl": "https://www.apache.org/dev/",
-        "docsPaths": [
-          "docs/index.md",
-          "README.md",
-          "CONTRIBUTING.md",
-          "GOVERNANCE.md",
-          "SECURITY.md"
-        ],
-        "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
-        "license": "Apache-2.0"
-      },
-      "robos:agentRules": [
-        {
-          "ruleId": "RULE-APACHE-001",
-          "title": "ASF License Header & Notice Verification",
-          "severity": "mandatory",
-          "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
-          "ruleFile": "AGENTS.md",
-          "enforcement": "pre-commit"
-        },
-        {
-          "ruleId": "RULE-APACHE-002",
-          "title": "Public Discussion & Consensus Tracing",
-          "severity": "mandatory",
-          "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
-          "ruleFile": "docs/governance.md",
-          "enforcement": "agent-review"
-        },
-        {
-          "ruleId": "RULE-APACHE-003",
-          "title": "Cryptographic Commit Signing",
-          "severity": "mandatory",
-          "description": "All git commits generated by agents must be GPG signed with verified committer keys.",
-          "enforcement": "git-commit"
-        },
-        {
-          "ruleId": "RULE-APACHE-004",
-          "title": "Backward-Compatible SemVer Contracts",
-          "severity": "recommended",
-          "description": "Public APIs must not break binary or source compatibility without a documented deprecation cycle across at least one minor release.",
-          "enforcement": "pr-audit"
-        }
-      ],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:package": "organization",
+      "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
+      "dcterms:title": "RobOS Tactical Game Developer Agent",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:category": "Game Systems",
+      "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "⚔️",
+      "robos:implementationPrompt": "Implement Godot nodes, write GDScript logic, bind input and combat events, integrate tilemaps/sprites, and write automated scenario tests.",
+      "robos:modelPreference": "claude-sonnet-5",
       "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
+      "robos:package": "organization",
+      "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
+      "robos:role": "Game Developer",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification."
     },
     {
       "@id": "urn:robos:agent:pr-reviewer",
@@ -303,293 +881,19 @@
         "robos:AIAgent",
         "schema:Person"
       ],
-      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
       "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
-      "robos:role": "Autonomous Pull Request Auditor",
-      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-      "robos:modelPreference": "claude-sonnet-5",
+      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
       "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:modelPreference": "claude-sonnet-5",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "Autonomous Pull Request Auditor",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
       "robos:usesMCPServer": [
         "urn:robos:mcp:context-engine",
         "urn:robos:mcp:kgraph-navigator"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:architecture-guardian",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Architecture & Governance Guardian",
-      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
-      "robos:role": "Architecture & Governance Guardian",
-      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
-      "robos:modelPreference": "gemini-2.5-pro",
-      "robos:assignedTeam": "urn:robos:team:architecture-guild",
-      "robos:usesMCPServer": [
-        "urn:robos:mcp:kgraph-navigator"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:sre-incident-triage",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
-      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
-      "robos:role": "SRE Incident & Health Triager",
-      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
-      "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:cloud-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:organization:acme-global",
-      "@type": [
-        "oslc:Organization",
-        "robos:Company"
-      ],
-      "dcterms:title": "Acme Global",
-      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
-      "robos:slug": "acme-global",
-      "robos:hasTeam": [
-        "urn:robos:team:founding-core"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:git-org:acme",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme",
-      "dcterms:description": "Git Project Organization for acme.",
-      "robos:orgName": "acme",
-      "robos:url": "https://github.com/acme",
-      "robos:forgeType": "github",
-      "robos:visibility": "public",
-      "robos:hasRepository": [
-        "github.com/acme/rest-client"
-      ],
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme",
-        "docsPaths": [
-          "docs/index.md",
-          "README.md",
-          "CONTRIBUTING.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:agentRules": [],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:repoCount": 1,
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:organization:at-https",
-      "@type": [
-        "oslc:Organization",
-        "robos:Company"
-      ],
-      "dcterms:title": "at https",
-      "dcterms:description": "Enterprise technology ecosystem for at https.",
-      "robos:slug": "at-https",
-      "robos:hasTeam": [
-        "urn:robos:team:founding-core"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:git-org:acme-payments",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme Payments Organization",
-      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
-      "robos:orgName": "acme-payments",
-      "robos:url": "https://github.com/acme-payments",
-      "robos:forgeType": "github",
-      "robos:visibility": "internal",
-      "robos:hasRepository": [
-        "github.com/acme-payments/payment-gateway",
-        "github.com/acme-payments/fraud-detector"
-      ],
-      "robos:agentRules": [
-        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
-        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
-        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
-      ],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme-payments",
-        "docsPaths": [
-          "README.md",
-          "CONTRIBUTING.md",
-          "docs/index.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:repoCount": 2,
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:git-org:acme-retail",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme-retail",
-      "dcterms:description": "Git Project Organization for acme-retail.",
-      "robos:orgName": "acme-retail",
-      "robos:url": "https://github.com/acme-retail",
-      "robos:forgeType": "github",
-      "robos:visibility": "public",
-      "robos:hasRepository": [
-        "github.com/acme-retail/checkout-api"
-      ],
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme-retail",
-        "docsPaths": [
-          "docs/index.md",
-          "README.md",
-          "CONTRIBUTING.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:agentRules": [],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:repoCount": 1,
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:git-org:acme-identity",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme Identity & Access Management Organization",
-      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
-      "robos:orgName": "acme-identity",
-      "robos:url": "https://github.com/acme-identity",
-      "robos:forgeType": "github",
-      "robos:visibility": "internal",
-      "robos:hasRepository": [
-        "github.com/acme-identity/oauth-server",
-        "github.com/acme-identity/user-directory-sync"
-      ],
-      "robos:agentRules": [
-        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
-        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
-        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
-      ],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme-identity",
-        "docsPaths": [
-          "README.md",
-          "CONTRIBUTING.md",
-          "docs/index.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:repoCount": 2,
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:organization:sdlc-resources-for-acme-global",
-      "@type": [
-        "oslc:Organization",
-        "robos:Company"
-      ],
-      "dcterms:title": "SDLC resources for Acme Global",
-      "dcterms:description": "Enterprise technology ecosystem for SDLC resources for Acme Global.",
-      "robos:slug": "sdlc-resources-for-acme-global",
-      "robos:hasTeam": [
-        "urn:robos:team:founding-core"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:source:workspace",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "RobOS source workspace",
-      "robos:package": "organization",
-      "robos:sourcePath": "AGENTS.md",
-      "robos:sourceKind": "git-repository",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "AGENTS.md",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:project:robos-kgraph-parse-portal",
-      "@type": [
-        "robos:Project",
-        "schema:Project"
-      ],
-      "dcterms:title": "RobOS Kgraph Parse Portal",
-      "dcterms:description": "Heavy-scale connectors webapp & headless parsing portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
-      "robos:status": "active",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Project",
-      "robos:domainStandard": "https://schema.org/Project",
-      "robos:refersFrom": "https://schema.org/Project",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasApplication": [
-        "urn:robos:app:kgraph-parse-portal"
       ]
     },
     {
@@ -600,745 +904,484 @@
         "robos:AIAgent",
         "schema:Person"
       ],
-      "dcterms:title": "RobOS Software Architect Agent",
       "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
-      "robos:role": "Software Architect",
+      "dcterms:title": "RobOS Software Architect Agent",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
       "robos:category": "Architecture",
-      "robos:icon": "🏛️",
-      "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written.",
       "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
-      "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
+      "robos:domainStandard": "https://schema.org/Person",
+      "robos:icon": "🏛️",
       "robos:implementationPrompt": "Implement foundational system scaffolding, contract specifications (OpenAPI/Protobuf), SHACL shapes, and package structures according to the architectural design.",
       "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:architecture-guild",
-      "robos:package": "organization",
       "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
+      "robos:role": "Software Architect",
       "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
+      "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written."
     },
     {
-      "@id": "urn:robos:agent:frontend-web-dev",
+      "@id": "urn:robos:agent:sre-incident-triage",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
         "robos:AIAgent",
         "schema:Person"
       ],
-      "dcterms:title": "RobOS Frontend Web Developer Agent",
-      "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
-      "robos:role": "Frontend Web Developer",
-      "robos:category": "Frontend & UI",
-      "robos:icon": "🎨",
-      "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa).",
-      "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
-      "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
-      "robos:implementationPrompt": "Build responsive UI components, connect IPC handlers, implement DOM rendering and event listeners, apply RobOS CSS design tokens, and verify visual accessibility.",
-      "robos:modelPreference": "claude-sonnet-5",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:game-dev",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Tactical Game Developer Agent",
-      "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
-      "robos:role": "Game Developer",
-      "robos:category": "Game Systems",
-      "robos:icon": "⚔️",
-      "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification.",
-      "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
-      "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
-      "robos:implementationPrompt": "Implement Godot nodes, write GDScript logic, bind input and combat events, integrate tilemaps/sprites, and write automated scenario tests.",
-      "robos:modelPreference": "claude-sonnet-5",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:backend-dev",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Backend Systems Developer Agent",
-      "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
-      "robos:role": "Backend Systems Developer",
-      "robos:category": "Backend & Services",
-      "robos:icon": "⚙️",
-      "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security.",
-      "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
-      "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
-      "robos:implementationPrompt": "Implement API controllers, service business logic, data access repositories, request validation, and unit/integration test suites.",
+      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
+      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
+      "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:domainStandard": "https://schema.org/Person",
       "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:package": "organization",
       "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "SRE Incident & Health Triager",
       "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
+      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents."
     },
     {
-      "@id": "urn:robos:agent:data-engineer-dev",
+      "@id": "urn:robos:git-org:acme",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Git Project Organization for acme.",
+      "dcterms:title": "Acme",
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "docsUrl": "https://github.com/acme",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme/rest-client"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme",
+      "robos:package": "organization",
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme",
+      "robos:visibility": "public"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-identity",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
+      "dcterms:title": "Acme Identity & Access Management Organization",
+      "robos:agentRules": [
+        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
+        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
+        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "docsUrl": "https://github.com/acme-identity",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme-identity/oauth-server",
+        "github.com/acme-identity/user-directory-sync"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme-identity",
+      "robos:package": "organization",
+      "robos:repoCount": 2,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme-identity",
+      "robos:visibility": "internal"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-payments",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
+      "dcterms:title": "Acme Payments Organization",
+      "robos:agentRules": [
+        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
+        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
+        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "docsUrl": "https://github.com/acme-payments",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme-payments/payment-gateway",
+        "github.com/acme-payments/fraud-detector"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme-payments",
+      "robos:package": "organization",
+      "robos:repoCount": 2,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme-payments",
+      "robos:visibility": "internal"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-retail",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "Git Project Organization for acme-retail.",
+      "dcterms:title": "Acme-retail",
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "docsUrl": "https://github.com/acme-retail",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/acme-retail/checkout-api"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:orgName": "acme-retail",
+      "robos:package": "organization",
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/acme-retail",
+      "robos:visibility": "public"
+    },
+    {
+      "@id": "urn:robos:git-org:apache",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
+      "dcterms:title": "Apache Software Foundation",
+      "robos:agentRules": [
+        {
+          "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
+          "enforcement": "pre-commit",
+          "ruleFile": "AGENTS.md",
+          "ruleId": "RULE-APACHE-001",
+          "severity": "mandatory",
+          "title": "ASF License Header & Notice Verification"
+        },
+        {
+          "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
+          "enforcement": "agent-review",
+          "ruleFile": "docs/governance.md",
+          "ruleId": "RULE-APACHE-002",
+          "severity": "mandatory",
+          "title": "Public Discussion & Consensus Tracing"
+        },
+        {
+          "description": "All git commits generated by agents must be GPG signed with verified committer keys.",
+          "enforcement": "git-commit",
+          "ruleId": "RULE-APACHE-003",
+          "severity": "mandatory",
+          "title": "Cryptographic Commit Signing"
+        },
+        {
+          "description": "Public APIs must not break binary or source compatibility without a documented deprecation cycle across at least one minor release.",
+          "enforcement": "pr-audit",
+          "ruleId": "RULE-APACHE-004",
+          "severity": "recommended",
+          "title": "Backward-Compatible SemVer Contracts"
+        }
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
+      "robos:defaultBranch": "main",
+      "robos:documentation": {
+        "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md",
+          "GOVERNANCE.md",
+          "SECURITY.md"
+        ],
+        "docsUrl": "https://www.apache.org/dev/",
+        "license": "Apache-2.0"
+      },
+      "robos:domainStandard": "https://schema.org/Organization",
+      "robos:forgeType": "github",
+      "robos:hasRepository": [
+        "github.com/apache/kafka",
+        "github.com/apache/spark",
+        "github.com/apache/lucene",
+        "github.com/apache/airflow",
+        "github.com/apache/arrow"
+      ],
+      "robos:isEnterprise": false,
+      "robos:memberCount": 1100,
+      "robos:namespace": "robos.org",
+      "robos:orgName": "apache",
+      "robos:package": "organization",
+      "robos:repoCount": 350,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:url": "https://github.com/apache",
+      "robos:verified": true,
+      "robos:visibility": "public"
+    },
+    {
+      "@id": "urn:robos:organization:acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
+      "dcterms:title": "Acme Global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:slug": "acme-global"
+    },
+    {
+      "@id": "urn:robos:organization:at-https",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:description": "Enterprise technology ecosystem for at https.",
+      "dcterms:title": "at https",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:slug": "at-https"
+    },
+    {
+      "@id": "urn:robos:organization:sdlc-resources-for-acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:description": "Enterprise technology ecosystem for SDLC resources for Acme Global.",
+      "dcterms:title": "SDLC resources for Acme Global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:slug": "sdlc-resources-for-acme-global"
+    },
+    {
+      "@id": "urn:robos:person:admin",
       "@type": [
         "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
+        "robos:Developer"
       ],
-      "dcterms:title": "RobOS Data & Storage Engineer Agent",
-      "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
-      "robos:role": "Data & Storage Engineer",
-      "robos:category": "Data & Storage",
-      "robos:icon": "💾",
-      "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing.",
-      "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
-      "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
-      "robos:implementationPrompt": "Write migration scripts, define entity mappings, configure connection pools, write Kafka event producers/consumers, and write database test fixtures.",
-      "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:data-platform",
-      "robos:package": "organization",
+      "dcterms:title": "Alex Rivera",
+      "robos:email": "alex@acmecloud.io",
+      "robos:handle": "admin",
+      "robos:memberOf": "urn:robos:team:founding-core",
       "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
+      "robos:package": "organization",
+      "robos:role": "Chief Architect & VP Engineering"
+    },
+    {
+      "@id": "urn:robos:person:sconnor",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Sarah Connor",
+      "robos:email": "sarah.connor@acmeglobal.com",
+      "robos:handle": "sconnor",
+      "robos:memberOf": "urn:robos:team:core-platform",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:role": "Lead Architect & Approver"
+    },
+    {
+      "@id": "urn:robos:project:robos-kgraph-parse-portal",
+      "@type": [
+        "robos:Project",
+        "schema:Project"
+      ],
+      "dcterms:description": "Heavy-scale connectors webapp & headless parsing portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
+      "dcterms:title": "RobOS Kgraph Parse Portal",
+      "robos:domainStandard": "https://schema.org/Project",
+      "robos:hasApplication": [
+        "urn:robos:app:kgraph-parse-portal"
+      ],
+      "robos:namespace": "robos.org",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:package": "organization",
+      "robos:refersFrom": "https://schema.org/Project",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/Project",
+      "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:source:workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "RobOS source workspace",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "AGENTS.md",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:sourceKind": "git-repository",
+      "robos:sourcePath": "AGENTS.md"
+    },
+    {
+      "@id": "urn:robos:team:architecture-guild",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Enterprise Architecture Guild",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:john-connor",
+        "urn:robos:person:sconnor"
+      ],
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ],
+      "robos:lead": "urn:robos:person:john-connor",
+      "robos:memberCount": 5,
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:status": "active",
+      "robos:topology": "enabling"
+    },
+    {
+      "@id": "urn:robos:team:cloud-platform",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Cloud Platform & Infrastructure",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ],
+      "robos:lead": "urn:robos:person:admin",
+      "robos:memberCount": 5,
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:status": "active",
+      "robos:topology": "platform"
+    },
+    {
+      "@id": "urn:robos:team:core-platform",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Core Platform & Infrastructure",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:sconnor",
+        "urn:robos:person:marcus-wright"
+      ],
+      "robos:lead": "urn:robos:person:sconnor",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:topology": "platform"
+    },
+    {
+      "@id": "urn:robos:team:founding-core",
+      "@type": [
+        "oslc:Group",
+        "robos:Team"
+      ],
+      "dcterms:title": "Acme Global Core Platform Team",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:lead": "urn:robos:person:architect",
+      "robos:memberOf": "urn:robos:organization:acme-global",
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:topology": "stream-aligned",
+      "robos:topologyType": "platform"
+    },
+    {
+      "@id": "urn:robos:team:order-processing",
+      "@type": [
+        "robos:Team",
+        "schema:ProjectTeam"
+      ],
+      "dcterms:title": "Order Processing & Payments",
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:hasMember": [
+        "urn:robos:person:kyle-reese"
+      ],
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ],
+      "robos:lead": "urn:robos:person:kyle-reese",
+      "robos:memberCount": 5,
+      "robos:namespace": "robos.org",
+      "robos:package": "organization",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:status": "active",
+      "robos:topology": "stream-aligned"
     }
   ],
-  "@graph": [
-    {
-      "@id": "urn:robos:person:sconnor",
-      "@type": [
-        "oslc:Person",
-        "robos:Developer"
-      ],
-      "dcterms:title": "Sarah Connor",
-      "robos:email": "sarah.connor@acmeglobal.com",
-      "robos:handle": "sconnor",
-      "robos:role": "Lead Architect & Approver",
-      "robos:memberOf": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:team:core-platform",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Core Platform & Infrastructure",
-      "robos:topology": "platform",
-      "robos:lead": "urn:robos:person:sconnor",
-      "robos:hasMember": [
-        "urn:robos:person:sconnor",
-        "urn:robos:person:marcus-wright"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
-    },
-    {
-      "@id": "urn:robos:team:order-processing",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Order Processing & Payments",
-      "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:kyle-reese",
-      "robos:hasMember": [
-        "urn:robos:person:kyle-reese"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:memberCount": 5,
-      "robos:status": "active",
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ]
-    },
-    {
-      "@id": "urn:robos:team:architecture-guild",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Enterprise Architecture Guild",
-      "robos:topology": "enabling",
-      "robos:lead": "urn:robos:person:john-connor",
-      "robos:hasMember": [
-        "urn:robos:person:john-connor",
-        "urn:robos:person:sconnor"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:memberCount": 5,
-      "robos:status": "active",
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ]
-    },
-    {
-      "@id": "urn:robos:person:admin",
-      "@type": [
-        "oslc:Person",
-        "robos:Developer"
-      ],
-      "dcterms:title": "Alex Rivera",
-      "robos:email": "alex@acmecloud.io",
-      "robos:handle": "admin",
-      "robos:role": "Chief Architect & VP Engineering",
-      "robos:memberOf": "urn:robos:team:founding-core",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:team:founding-core",
-      "@type": [
-        "oslc:Group",
-        "robos:Team"
-      ],
-      "dcterms:title": "Acme Global Core Platform Team",
-      "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:architect",
-      "robos:hasMember": [
-        "urn:robos:person:admin"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:topologyType": "platform",
-      "robos:memberOf": "urn:robos:organization:acme-global",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
-    },
-    {
-      "@id": "urn:robos:team:cloud-platform",
-      "@type": [
-        "robos:Team",
-        "schema:ProjectTeam"
-      ],
-      "dcterms:title": "Cloud Platform & Infrastructure",
-      "robos:topology": "platform",
-      "robos:lead": "urn:robos:person:admin",
-      "robos:hasMember": [
-        "urn:robos:person:admin"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam",
-      "robos:memberCount": 5,
-      "robos:status": "active",
-      "robos:hasProject": [
-        "urn:robos:project:enterprise-core"
-      ]
-    },
-    {
-      "@id": "urn:robos:git-org:apache",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Apache Software Foundation",
-      "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
-      "robos:orgName": "apache",
-      "robos:url": "https://github.com/apache",
-      "robos:forgeType": "github",
-      "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
-      "robos:visibility": "public",
-      "robos:isEnterprise": false,
-      "robos:verified": true,
-      "robos:defaultBranch": "main",
-      "robos:memberCount": 1100,
-      "robos:repoCount": 350,
-      "robos:hasRepository": [
-        "github.com/apache/kafka",
-        "github.com/apache/spark",
-        "github.com/apache/lucene",
-        "github.com/apache/airflow",
-        "github.com/apache/arrow"
-      ],
-      "robos:documentation": {
-        "docsUrl": "https://www.apache.org/dev/",
-        "docsPaths": [
-          "docs/index.md",
-          "README.md",
-          "CONTRIBUTING.md",
-          "GOVERNANCE.md",
-          "SECURITY.md"
-        ],
-        "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
-        "license": "Apache-2.0"
-      },
-      "robos:agentRules": [
-        {
-          "ruleId": "RULE-APACHE-001",
-          "title": "ASF License Header & Notice Verification",
-          "severity": "mandatory",
-          "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
-          "ruleFile": "AGENTS.md",
-          "enforcement": "pre-commit"
-        },
-        {
-          "ruleId": "RULE-APACHE-002",
-          "title": "Public Discussion & Consensus Tracing",
-          "severity": "mandatory",
-          "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
-          "ruleFile": "docs/governance.md",
-          "enforcement": "agent-review"
-        },
-        {
-          "ruleId": "RULE-APACHE-003",
-          "title": "Cryptographic Commit Signing",
-          "severity": "mandatory",
-          "description": "All git commits generated by agents must be GPG signed with verified committer keys.",
-          "enforcement": "git-commit"
-        },
-        {
-          "ruleId": "RULE-APACHE-004",
-          "title": "Backward-Compatible SemVer Contracts",
-          "severity": "recommended",
-          "description": "Public APIs must not break binary or source compatibility without a documented deprecation cycle across at least one minor release.",
-          "enforcement": "pr-audit"
-        }
-      ],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:agent:pr-reviewer",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
-      "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
-      "robos:role": "Autonomous Pull Request Auditor",
-      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-      "robos:modelPreference": "claude-sonnet-5",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:usesMCPServer": [
-        "urn:robos:mcp:context-engine",
-        "urn:robos:mcp:kgraph-navigator"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:architecture-guardian",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Architecture & Governance Guardian",
-      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
-      "robos:role": "Architecture & Governance Guardian",
-      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
-      "robos:modelPreference": "gemini-2.5-pro",
-      "robos:assignedTeam": "urn:robos:team:architecture-guild",
-      "robos:usesMCPServer": [
-        "urn:robos:mcp:kgraph-navigator"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:sre-incident-triage",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
-      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
-      "robos:role": "SRE Incident & Health Triager",
-      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
-      "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:cloud-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:organization:acme-global",
-      "@type": [
-        "oslc:Organization",
-        "robos:Company"
-      ],
-      "dcterms:title": "Acme Global",
-      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
-      "robos:slug": "acme-global",
-      "robos:hasTeam": [
-        "urn:robos:team:founding-core"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:git-org:acme",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme",
-      "dcterms:description": "Git Project Organization for acme.",
-      "robos:orgName": "acme",
-      "robos:url": "https://github.com/acme",
-      "robos:forgeType": "github",
-      "robos:visibility": "public",
-      "robos:hasRepository": [
-        "github.com/acme/rest-client"
-      ],
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme",
-        "docsPaths": [
-          "docs/index.md",
-          "README.md",
-          "CONTRIBUTING.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:agentRules": [],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:repoCount": 1,
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:organization:at-https",
-      "@type": [
-        "oslc:Organization",
-        "robos:Company"
-      ],
-      "dcterms:title": "at https",
-      "dcterms:description": "Enterprise technology ecosystem for at https.",
-      "robos:slug": "at-https",
-      "robos:hasTeam": [
-        "urn:robos:team:founding-core"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:git-org:acme-payments",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme Payments Organization",
-      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
-      "robos:orgName": "acme-payments",
-      "robos:url": "https://github.com/acme-payments",
-      "robos:forgeType": "github",
-      "robos:visibility": "internal",
-      "robos:hasRepository": [
-        "github.com/acme-payments/payment-gateway",
-        "github.com/acme-payments/fraud-detector"
-      ],
-      "robos:agentRules": [
-        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
-        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
-        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
-      ],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme-payments",
-        "docsPaths": [
-          "README.md",
-          "CONTRIBUTING.md",
-          "docs/index.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:repoCount": 2,
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:git-org:acme-retail",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme-retail",
-      "dcterms:description": "Git Project Organization for acme-retail.",
-      "robos:orgName": "acme-retail",
-      "robos:url": "https://github.com/acme-retail",
-      "robos:forgeType": "github",
-      "robos:visibility": "public",
-      "robos:hasRepository": [
-        "github.com/acme-retail/checkout-api"
-      ],
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme-retail",
-        "docsPaths": [
-          "docs/index.md",
-          "README.md",
-          "CONTRIBUTING.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:agentRules": [],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:repoCount": 1,
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:git-org:acme-identity",
-      "@type": [
-        "robos:GitProjectOrganization",
-        "robos:GitOrganization",
-        "schema:Organization",
-        "oslc:Resource"
-      ],
-      "dcterms:title": "Acme Identity & Access Management Organization",
-      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
-      "robos:orgName": "acme-identity",
-      "robos:url": "https://github.com/acme-identity",
-      "robos:forgeType": "github",
-      "robos:visibility": "internal",
-      "robos:hasRepository": [
-        "github.com/acme-identity/oauth-server",
-        "github.com/acme-identity/user-directory-sync"
-      ],
-      "robos:agentRules": [
-        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
-        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
-        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
-      ],
-      "robos:agentRulesDoc": "AGENTS.md",
-      "robos:documentation": {
-        "docsUrl": "https://github.com/acme-identity",
-        "docsPaths": [
-          "README.md",
-          "CONTRIBUTING.md",
-          "docs/index.md"
-        ],
-        "license": "Apache-2.0"
-      },
-      "robos:repoCount": 2,
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Organization",
-      "robos:domainStandard": "https://schema.org/Organization"
-    },
-    {
-      "@id": "urn:robos:organization:sdlc-resources-for-acme-global",
-      "@type": [
-        "oslc:Organization",
-        "robos:Company"
-      ],
-      "dcterms:title": "SDLC resources for Acme Global",
-      "dcterms:description": "Enterprise technology ecosystem for SDLC resources for Acme Global.",
-      "robos:slug": "sdlc-resources-for-acme-global",
-      "robos:hasTeam": [
-        "urn:robos:team:founding-core"
-      ],
-      "robos:package": "organization",
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:source:workspace",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "RobOS source workspace",
-      "robos:package": "organization",
-      "robos:sourcePath": "AGENTS.md",
-      "robos:sourceKind": "git-repository",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "AGENTS.md",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.org"
-    },
-    {
-      "@id": "urn:robos:project:robos-kgraph-parse-portal",
-      "@type": [
-        "robos:Project",
-        "schema:Project"
-      ],
-      "dcterms:title": "RobOS Kgraph Parse Portal",
-      "dcterms:description": "Heavy-scale connectors webapp & headless parsing portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
-      "robos:status": "active",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Project",
-      "robos:domainStandard": "https://schema.org/Project",
-      "robos:refersFrom": "https://schema.org/Project",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:ownerTeam": "urn:robos:team:core-platform",
-      "robos:hasApplication": [
-        "urn:robos:app:kgraph-parse-portal"
-      ]
-    },
-    {
-      "@id": "urn:robos:agent:software-architect",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Software Architect Agent",
-      "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
-      "robos:role": "Software Architect",
-      "robos:category": "Architecture",
-      "robos:icon": "🏛️",
-      "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written.",
-      "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
-      "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
-      "robos:implementationPrompt": "Implement foundational system scaffolding, contract specifications (OpenAPI/Protobuf), SHACL shapes, and package structures according to the architectural design.",
-      "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:architecture-guild",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:frontend-web-dev",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Frontend Web Developer Agent",
-      "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
-      "robos:role": "Frontend Web Developer",
-      "robos:category": "Frontend & UI",
-      "robos:icon": "🎨",
-      "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa).",
-      "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
-      "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
-      "robos:implementationPrompt": "Build responsive UI components, connect IPC handlers, implement DOM rendering and event listeners, apply RobOS CSS design tokens, and verify visual accessibility.",
-      "robos:modelPreference": "claude-sonnet-5",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:game-dev",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Tactical Game Developer Agent",
-      "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
-      "robos:role": "Game Developer",
-      "robos:category": "Game Systems",
-      "robos:icon": "⚔️",
-      "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification.",
-      "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
-      "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
-      "robos:implementationPrompt": "Implement Godot nodes, write GDScript logic, bind input and combat events, integrate tilemaps/sprites, and write automated scenario tests.",
-      "robos:modelPreference": "claude-sonnet-5",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:backend-dev",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Backend Systems Developer Agent",
-      "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
-      "robos:role": "Backend Systems Developer",
-      "robos:category": "Backend & Services",
-      "robos:icon": "⚙️",
-      "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security.",
-      "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
-      "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
-      "robos:implementationPrompt": "Implement API controllers, service business logic, data access repositories, request validation, and unit/integration test suites.",
-      "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:core-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    },
-    {
-      "@id": "urn:robos:agent:data-engineer-dev",
-      "@type": [
-        "oslc:Person",
-        "robos:AgentPersona",
-        "robos:AIAgent",
-        "schema:Person"
-      ],
-      "dcterms:title": "RobOS Data & Storage Engineer Agent",
-      "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
-      "robos:role": "Data & Storage Engineer",
-      "robos:category": "Data & Storage",
-      "robos:icon": "💾",
-      "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing.",
-      "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
-      "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
-      "robos:implementationPrompt": "Write migration scripts, define entity mappings, configure connection pools, write Kafka event producers/consumers, and write database test fixtures.",
-      "robos:modelPreference": "pro",
-      "robos:assignedTeam": "urn:robos:team:data-platform",
-      "robos:package": "organization",
-      "robos:namespace": "robos.org",
-      "robos:schemaOrgType": "https://schema.org/Person",
-      "robos:domainStandard": "https://schema.org/Person"
-    }
-  ]
+  "robos:package": "organization",
+  "robos:version": "1.0.0"
 }

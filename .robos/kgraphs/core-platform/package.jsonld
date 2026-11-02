@@ -1,543 +1,1474 @@
 {
   "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
     "oslc": "http://open-services.net/ns/core#",
     "oslc_am": "http://open-services.net/ns/am#",
     "oslc_cm": "http://open-services.net/ns/cm#",
-    "oslc_rm": "http://open-services.net/ns/rm#",
     "oslc_qm": "http://open-services.net/ns/qm#",
-    "robos": "https://robos.dev/ns/sdlc#",
-    "c4": "https://c4model.com/ns#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/",
+    "oslc_rm": "http://open-services.net/ns/rm#",
     "pact": "https://pact.io/ns#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "robos:sourceSummary": {
-      "@id": "robos:sourceSummary",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:annotations": {
+      "@id": "robos:annotations",
       "@type": "@json"
+    },
+    "robos:arguments": {
+      "@id": "robos:arguments",
+      "@type": "@json"
+    },
+    "robos:classification": {
+      "@container": "@set",
+      "@id": "robos:classification",
+      "@type": "@id"
+    },
+    "robos:evidence": {
+      "@container": "@set",
+      "@context": {
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "path": "robos:sourcePath",
+        "repository": "robos:sourceRepository",
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      },
+      "@id": "robos:evidence"
+    },
+    "robos:inputSchema": {
+      "@id": "robos:inputSchema",
+      "@type": "@json"
+    },
+    "robos:mcpServer": {
+      "@id": "robos:mcpServer",
+      "@type": "@id"
+    },
+    "robos:outputSchema": {
+      "@id": "robos:outputSchema",
+      "@type": "@json"
+    },
+    "robos:parameters": {
+      "@id": "robos:parameters",
+      "@type": "@json"
+    },
+    "robos:promptsProvided": {
+      "@container": "@set",
+      "@id": "robos:promptsProvided",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
     },
     "robos:provenance": {
       "@id": "robos:provenance",
       "@type": "@json"
     },
     "robos:relationshipEvidence": {
-      "@id": "robos:relationshipEvidence",
       "@container": "@set",
       "@context": {
-        "predicate": {
-          "@id": "robos:predicate",
-          "@type": "@vocab"
-        },
-        "target": {
-          "@id": "robos:target",
-          "@type": "@id"
-        },
+        "condition": "robos:condition",
         "evidence": {
-          "@id": "robos:evidence",
           "@container": "@set",
           "@context": {
-            "repository": "robos:sourceRepository",
-            "path": "robos:sourcePath",
             "line": {
               "@id": "robos:sourceLine",
               "@type": "xsd:integer"
             },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
             "revision": "robos:sourceRevision",
             "sha256": "robos:sourceHash",
             "workingTreeStatus": "robos:workingTreeStatus"
-          }
+          },
+          "@id": "robos:evidence"
         },
         "note": "dcterms:description",
-        "condition": "robos:condition",
-        "status": "robos:evidenceStatus"
-      }
-    },
-    "robos:evidence": {
-      "@id": "robos:evidence",
-      "@container": "@set",
-      "@context": {
-        "repository": "robos:sourceRepository",
-        "path": "robos:sourcePath",
-        "line": {
-          "@id": "robos:sourceLine",
-          "@type": "xsd:integer"
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
         },
-        "revision": "robos:sourceRevision",
-        "sha256": "robos:sourceHash",
-        "workingTreeStatus": "robos:workingTreeStatus"
-      }
+        "status": "robos:evidenceStatus",
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        }
+      },
+      "@id": "robos:relationshipEvidence"
+    },
+    "robos:resourcesProvided": {
+      "@container": "@set",
+      "@id": "robos:resourcesProvided",
+      "@type": "@id"
+    },
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
     },
     "robos:technologyReference": {
       "@id": "robos:technologyReference",
       "@type": "@id"
     },
-    "robos:protocolReference": {
-      "@id": "robos:protocolReference",
-      "@type": "@id"
-    }
+    "robos:toolAnnotations": {
+      "@id": "robos:toolAnnotations",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
+  "@graph": [
+    {
+      "@id": "https://robos.dev/ns/protocol#bazel-bep",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Bazel Build Event Protocol",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "bazel-bep"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Buildbarn CompletedActionLogger",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "completed-action-logger"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#mcp",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Model Context Protocol",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "mcp"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#reapi-v2",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Remote Execution API v2",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "reapi-v2"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#bazel",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Bazel",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "bazel"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#buildbarn",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Buildbarn",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "buildbarn"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#elasticsearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Distributed, JSON-based search and analytics engine designed for horizontal scalability, reliability, and real-time search.",
+      "dcterms:title": "Elasticsearch",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": true,
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "elasticsearch"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#helm",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Helm",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "helm"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#luxir",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Next-generation native C++ hybrid full-text and vector search engine created by Yonik Seeley. Single-node pre-release architecture with instant startup and zero GC overhead. Evaluated as experimental and not yet production-ready.",
+      "dcterms:title": "Luxir",
+      "robos:maturity": "pre-release",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": false,
+      "robos:status": "experimental",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "luxir"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#nats-jetstream",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "NATS JetStream",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "nats-jetstream"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#opensearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Community-driven, open-source search and analytics suite derived from Elasticsearch, with built-in vector search and SQL support.",
+      "dcterms:title": "OpenSearch",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": true,
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "opensearch"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "PostgreSQL",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "postgresql"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#protobuf",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Protocol Buffers",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "protobuf"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#pulumi",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Pulumi",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "pulumi"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#react",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "React",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "react"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#redis",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Redis",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "redis"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#solr",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Enterprise open-source search platform built on Apache Lucene, providing distributed indexing, replication, and faceted search.",
+      "dcterms:title": "Apache Solr",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": true,
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "solr"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victorialogs",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "VictoriaLogs",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "victorialogs"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victoriametrics",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "VictoriaMetrics",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "victoriametrics"
+    },
+    {
+      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptOptimizer",
+        "robos:PromptCompiler"
+      ],
+      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
+      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
+      "robos:enabled": true,
+      "robos:engine": "dspy",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:parameters": {
+        "autoCompileOnSave": false,
+        "candidatePrompts": 10,
+        "maxBootstrappedDemos": 4,
+        "metric": "shacl_validation",
+        "teleprompter": "MIPROv2"
+      },
+      "robos:strategyType": "teleprompter-optimization",
+      "robos:targetTiers": [
+        "tier2",
+        "tier3"
+      ]
+    },
+    {
+      "@id": "urn:robos:agent:strategy:caveman-compression",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptStrategy",
+        "robos:AIPromptTechnique",
+        "schema:Intangible"
+      ],
+      "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
+      "dcterms:title": "Caveman Algorithmic Prompt Compression",
+      "robos:domainStandard": "https://schema.org/Intangible",
+      "robos:enabled": true,
+      "robos:engine": "caveman",
+      "robos:mode": "standard",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:parameters": {
+        "preserveCodeBlocks": true,
+        "preservePaths": true,
+        "stripFillers": true,
+        "terseDirectives": true
+      },
+      "robos:schemaOrgType": "https://schema.org/Intangible",
+      "robos:strategyType": "compression",
+      "robos:targetTiers": [
+        "tier1",
+        "tier2"
+      ]
+    },
+    {
+      "@id": "urn:robos:broker:acme-event-kafka",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus",
+        "schema:BroadcastService"
+      ],
+      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
+      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
+      "robos:brokerType": "kafka",
+      "robos:domainStandard": "https://kafka.apache.org/",
+      "robos:endpoint": "kafka.internal.acme.corp:9092",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:topics": [
+        "orders.created",
+        "payments.processed",
+        "invoices.generated"
+      ]
+    },
+    {
+      "@id": "urn:robos:broker:kafka-stream",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:description": "Imported event bus at kafka.internal:9092",
+      "dcterms:title": "KAFKA Event Stream",
+      "robos:brokerType": "kafka",
+      "robos:domainStandard": "https://kafka.apache.org/",
+      "robos:endpoint": "kafka.internal:9092",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:topics": [
+        "events.incoming",
+        "events.processed"
+      ]
+    },
+    {
+      "@id": "urn:robos:build-system:acme-backend-gradle",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
+      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
+      "robos:buildTool": "gradle",
+      "robos:configFile": "build.gradle.kts",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/kotlin-services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-cloud-go",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
+      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
+      "robos:buildTool": "go",
+      "robos:configFile": "go.mod",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/k8s-operator",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
+      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
+      "robos:buildTool": "buck2",
+      "robos:configFile": ".buckconfig",
+      "robos:defaultExecProperties": {
+        "ISA": "x86-64",
+        "OSFamily": "linux"
+      },
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/buildbarn-tasks",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
+      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
+      "robos:buildTool": "bazel",
+      "robos:configFile": ".bazelrc",
+      "robos:defaultExecProperties": {
+        "ISA": "x86-64",
+        "OSFamily": "linux"
+      },
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/buildbarn-forms",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
+      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
+      "robos:buildTool": "pnpm",
+      "robos:configFile": "pnpm-workspace.yaml",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/web-portal",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-native-cmake",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
+      "dcterms:title": "Acme Native Video Engine (CMake)",
+      "robos:buildTool": "cmake",
+      "robos:configFile": "CMakeLists.txt",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/video-engine",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-services-maven",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
+      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
+      "robos:buildTool": "maven",
+      "robos:configFile": "pom.xml",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/enterprise-services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-systems-cargo",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
+      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
+      "robos:buildTool": "cargo",
+      "robos:configFile": "Cargo.toml",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/crypto-engine",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:db:acme-orders-postgres",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
+      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+      "robos:databaseName": "orders_db",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html",
+      "robos:engine": "postgresql",
+      "robos:host": "postgres.internal.acme.corp",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 5432,
+      "robos:schemaMigration": "flyway",
+      "robos:schemaOrgType": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:db:acme-session-redis",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:NoSQLDatabase",
+        "robos:CacheStore",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
+      "dcterms:title": "Acme Distributed Session & Cache Store",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "redis",
+      "robos:host": "redis-cluster.internal.acme.corp",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 6379,
+      "robos:schemaOrgType": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:db:db-9wv0p",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
+      "dcterms:title": "DB Database (acme_db)",
+      "robos:databaseName": "acme_db",
+      "robos:engine": "postgresql",
+      "robos:host": "db.internal",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 5432
+    },
+    {
+      "@id": "urn:robos:db:postgresql-nb5dk",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
+      "dcterms:title": "POSTGRESQL Database (payments_db)",
+      "robos:databaseName": "payments_db",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html",
+      "robos:engine": "postgresql",
+      "robos:host": "db.internal",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 5432,
+      "robos:schemaOrgType": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:graph:root",
+      "@type": [
+        "oslc:ServiceProvider",
+        "robos:SystemGraph"
+      ],
+      "dcterms:title": "Acme Enterprise Global SDLC Universe",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:status": "active",
+      "robos:version": "1.0.0"
+    },
+    {
+      "@id": "urn:robos:library:robos-llm",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "dcterms:title": "RobOS LLM (optional API mode)",
+      "robos:defaultEnabled": false,
+      "robos:dependsOn": [
+        "urn:robos:security:prompt-security-guard"
+      ],
+      "robos:domainStandard": "https://js.langchain.com/",
+      "robos:namespace": "robos.core",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:sourcePath": "packages/robos-llm",
+      "robos:supportedProviders": [
+        "anthropic",
+        "openai",
+        "gemini",
+        "ollama"
+      ],
+      "robos:tags": [
+        "ai",
+        "llm",
+        "api-mode",
+        "embeddings",
+        "semantic-search",
+        "langchain",
+        "optional"
+      ],
+      "robos:technology": "Node.js 20 / LangChain.js"
+    },
+    {
+      "@id": "urn:robos:mcp:context-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+      "dcterms:title": "RobOS Code Context MCP Server",
+      "robos:command": "/usr/local/bin/robos-context-mcp",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:tools": [
+        {
+          "description": "Perform structural AST pattern matching across source files",
+          "inputSchema": {
+            "properties": {
+              "filePattern": {
+                "description": "Glob filter (e.g. **/*.js)",
+                "type": "string"
+              },
+              "maxResults": {
+                "default": 10,
+                "type": "integer"
+              },
+              "query": {
+                "description": "AST pattern or symbol name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "type": "object"
+          },
+          "name": "ast_search"
+        },
+        {
+          "description": "Resolve declaration location, signature, and usages of a code symbol",
+          "inputSchema": {
+            "properties": {
+              "includeReferences": {
+                "default": true,
+                "type": "boolean"
+              },
+              "symbol": {
+                "description": "Identifier name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ],
+            "type": "object"
+          },
+          "name": "symbol_lookup"
+        },
+        {
+          "description": "Calculate import and call graph for target module or package",
+          "inputSchema": {
+            "properties": {
+              "depth": {
+                "default": 2,
+                "type": "integer"
+              },
+              "entrypoint": {
+                "description": "Path to entrypoint file",
+                "type": "string"
+              }
+            },
+            "required": [
+              "entrypoint"
+            ],
+            "type": "object"
+          },
+          "name": "dependency_graph"
+        }
+      ],
+      "robos:toolsProvided": [
+        "ast_search",
+        "symbol_lookup",
+        "dependency_graph"
+      ],
+      "robos:transport": "stdio"
+    },
+    {
+      "@id": "urn:robos:mcp:kgraph-navigator",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
+      "dcterms:title": "RobOS Knowledge Graph MCP Server",
+      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:tools": [
+        {
+          "description": "Search and filter knowledge graph nodes by type or keyword",
+          "inputSchema": {
+            "properties": {
+              "limit": {
+                "default": 20,
+                "type": "integer"
+              },
+              "text": {
+                "description": "Full-text search query",
+                "type": "string"
+              },
+              "type": {
+                "description": "RDF type filter",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "name": "query_nodes"
+        },
+        {
+          "description": "Perform recursive dependency and impact traversal for a graph node",
+          "inputSchema": {
+            "properties": {
+              "direction": {
+                "default": "downstream",
+                "enum": [
+                  "upstream",
+                  "downstream"
+                ],
+                "type": "string"
+              },
+              "nodeId": {
+                "description": "Target URN",
+                "type": "string"
+              }
+            },
+            "required": [
+              "nodeId"
+            ],
+            "type": "object"
+          },
+          "name": "blast_radius"
+        }
+      ],
+      "robos:toolsProvided": [
+        "query_nodes",
+        "get_blast_radius",
+        "validate_shacl"
+      ],
+      "robos:transport": "stdio"
+    },
+    {
+      "@id": "urn:robos:search:elasticsearch-telemetry-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Production Elasticsearch cluster index housing distributed traces, APM metrics, and microservice logs.",
+      "dcterms:title": "Elasticsearch Observability & Telemetry Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "elasticsearch",
+      "robos:host": "elasticsearch.internal.acme.corp",
+      "robos:indexName": "telemetry-events",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 9200,
+      "robos:productionReady": true,
+      "robos:readiness": "production-ready",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:status": "active",
+      "robos:technology": "https://robos.dev/ns/technology#elasticsearch"
+    },
+    {
+      "@id": "urn:robos:search:luxir-kgraph-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
+      "dcterms:title": "Luxir Knowledge Graph Search Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "luxir",
+      "robos:features": [
+        "full-text",
+        "vector-search",
+        "faceting",
+        "instant-warmup",
+        "no-gc"
+      ],
+      "robos:host": "localhost",
+      "robos:indexName": "kgraph_nodes",
+      "robos:maturity": "pre-release",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 8983,
+      "robos:productionReady": false,
+      "robos:readiness": "not-yet-prod-ready",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:status": "experimental",
+      "robos:technology": "https://robos.dev/ns/technology#luxir"
+    },
+    {
+      "@id": "urn:robos:search:opensearch-cluster-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Production-grade OpenSearch vector and log search cluster backing full-text search across SDLC artifacts.",
+      "dcterms:title": "OpenSearch Production Cluster Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "opensearch",
+      "robos:host": "opensearch.internal.acme.corp",
+      "robos:indexName": "sdlc_artifacts",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 9200,
+      "robos:productionReady": true,
+      "robos:readiness": "production-ready",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:status": "active",
+      "robos:technology": "https://robos.dev/ns/technology#opensearch"
+    },
+    {
+      "@id": "urn:robos:search:solr-enterprise-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Production-grade Apache Solr search collection for faceted enterprise documentation and architectural index search.",
+      "dcterms:title": "Apache Solr Enterprise Search Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "solr",
+      "robos:host": "solr.internal.acme.corp",
+      "robos:indexName": "enterprise_catalog",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 8983,
+      "robos:productionReady": true,
+      "robos:readiness": "production-ready",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:status": "active",
+      "robos:technology": "https://robos.dev/ns/technology#solr"
+    },
+    {
+      "@id": "urn:robos:security:prompt-security-guard",
+      "@type": [
+        "robos:SecurityGuard",
+        "robos:PromptSecurityGuard",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Open-source prompt security guardrail engine preventing developers from intentionally or unintentionally sending secrets, credentials, PII, and prompt injections to AI agents. Built on Gitleaks, TruffleHog, Microsoft Presidio, and OWASP LLM01 standards.",
+      "dcterms:title": "RobOS Prompt Security Guard & OSS Guardrails Engine",
+      "robos:domainStandard": "https://github.com/gitleaks/gitleaks",
+      "robos:namespace": "robos.security",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:supportedModes": [
+        "redact",
+        "block",
+        "warn",
+        "audit-only",
+        "off"
+      ],
+      "robos:supportedStandards": [
+        "Gitleaks v8+",
+        "TruffleHog",
+        "Microsoft Presidio",
+        "OWASP LLM01: Prompt Injection",
+        "OWASP LLM02: Sensitive Information Disclosure",
+        "NIST SP 800-53"
+      ]
+    },
+    {
+      "@id": "urn:robos:source:graph-workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "External graph workspace and revision store",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/graph-workspace.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js"
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema property-group catalog",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:declaredName": "RobosInspectorGroups",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/inspector-groups.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-groups.js",
+      "robos:version": "1.0.0"
+    },
+    {
+      "@id": "urn:robos:source:inspector-property-groups",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Recorded property-group resolution",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-groups"
+        }
+      ],
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/inspector-property-groups.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:relationshipEvidence": [
+        {
+          "evidence": [
+            {
+              "line": 2,
+              "path": "packages/robos-graph/lib/inspector-property-groups.js",
+              "repository": "robos"
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior.",
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-groups"
+          }
+        }
+      ],
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-property-groups.js"
+    },
+    {
+      "@id": "urn:robos:source:source-extractor",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Tracked source evidence extractor",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/source-extractor.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js"
+    },
+    {
+      "@id": "urn:robos:source:source-shapes",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source declaration shapes",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/source-shapes.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-commands",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Workspace CLI commands",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/workspace-commands.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-review",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Agent review and proposal workflow",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/workspace-review.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js"
+    }
+  ],
   "@id": "urn:robos:package:core-platform",
   "@type": [
     "oslc:ServiceProvider",
     "robos:Package"
   ],
-  "robos:package": "core-platform",
-  "robos:namespace": "robos.platform",
-  "robos:version": "1.0.0",
-  "dcterms:title": "RobOS Platform Core & Base SDLC Architecture",
   "dcterms:description": "Foundational architectural graph, system roots, and platform configuration.",
+  "dcterms:title": "RobOS Platform Core & Base SDLC Architecture",
+  "robos:namespace": "robos.platform",
   "robos:nodes": [
     {
-      "@id": "urn:robos:graph:root",
+      "@id": "https://robos.dev/ns/protocol#bazel-bep",
       "@type": [
-        "oslc:ServiceProvider",
-        "robos:SystemGraph"
+        "schema:DefinedTerm"
       ],
-      "dcterms:title": "Acme Enterprise Global SDLC Universe",
-      "robos:package": "core-platform",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Bazel Build Event Protocol",
       "robos:namespace": "robos.platform",
-      "robos:version": "1.0.0",
-      "robos:status": "active"
-    },
-    {
-      "@id": "urn:robos:security:prompt-security-guard",
-      "@type": [
-        "robos:SecurityGuard",
-        "robos:PromptSecurityGuard",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Prompt Security Guard & OSS Guardrails Engine",
-      "dcterms:description": "Open-source prompt security guardrail engine preventing developers from intentionally or unintentionally sending secrets, credentials, PII, and prompt injections to AI agents. Built on Gitleaks, TruffleHog, Microsoft Presidio, and OWASP LLM01 standards.",
       "robos:package": "core-platform",
-      "robos:namespace": "robos.security",
-      "robos:refersFrom": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://github.com/gitleaks/gitleaks",
-      "robos:supportedStandards": [
-        "Gitleaks v8+",
-        "TruffleHog",
-        "Microsoft Presidio",
-        "OWASP LLM01: Prompt Injection",
-        "OWASP LLM02: Sensitive Information Disclosure",
-        "NIST SP 800-53"
-      ],
-      "robos:supportedModes": [
-        "redact",
-        "block",
-        "warn",
-        "audit-only",
-        "off"
-      ]
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "bazel-bep"
     },
     {
-      "@id": "urn:robos:library:robos-llm",
+      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
       "@type": [
-        "robos:Library",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
+        "schema:DefinedTerm"
       ],
-      "dcterms:title": "RobOS LLM (optional API mode)",
-      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Buildbarn CompletedActionLogger",
+      "robos:namespace": "robos.platform",
       "robos:package": "core-platform",
-      "robos:namespace": "robos.core",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:sourcePath": "packages/robos-llm",
-      "robos:technology": "Node.js 20 / LangChain.js",
-      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://js.langchain.com/",
-      "robos:supportedProviders": [
-        "anthropic",
-        "openai",
-        "gemini",
-        "ollama"
-      ],
-      "robos:defaultEnabled": false,
-      "robos:dependsOn": [
-        "urn:robos:security:prompt-security-guard"
-      ],
-      "robos:tags": [
-        "ai",
-        "llm",
-        "api-mode",
-        "embeddings",
-        "semantic-search",
-        "langchain",
-        "optional"
-      ]
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "completed-action-logger"
     },
     {
-      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@id": "https://robos.dev/ns/protocol#mcp",
       "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
+        "schema:DefinedTerm"
       ],
-      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
-      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
-      "robos:buildTool": "bazel",
-      "robos:configFile": ".bazelrc",
-      "robos:repository": "github.com/acme/buildbarn-forms",
-      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "robos:defaultExecProperties": {
-        "OSFamily": "linux",
-        "ISA": "x86-64"
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Model Context Protocol",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "mcp"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#reapi-v2",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Remote Execution API v2",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "schema:termCode": "reapi-v2"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#bazel",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Bazel",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "bazel"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#buildbarn",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Buildbarn",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "buildbarn"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#elasticsearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Distributed, JSON-based search and analytics engine designed for horizontal scalability, reliability, and real-time search.",
+      "dcterms:title": "Elasticsearch",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": true,
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "elasticsearch"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#helm",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Helm",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "helm"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#luxir",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Next-generation native C++ hybrid full-text and vector search engine created by Yonik Seeley. Single-node pre-release architecture with instant startup and zero GC overhead. Evaluated as experimental and not yet production-ready.",
+      "dcterms:title": "Luxir",
+      "robos:maturity": "pre-release",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": false,
+      "robos:status": "experimental",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "luxir"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#nats-jetstream",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "NATS JetStream",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "nats-jetstream"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#opensearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Community-driven, open-source search and analytics suite derived from Elasticsearch, with built-in vector search and SQL support.",
+      "dcterms:title": "OpenSearch",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": true,
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "opensearch"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "PostgreSQL",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "postgresql"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#protobuf",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Protocol Buffers",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "protobuf"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#pulumi",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Pulumi",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "pulumi"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#react",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "React",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "react"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#redis",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "Redis",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "redis"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#solr",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Enterprise open-source search platform built on Apache Lucene, providing distributed indexing, replication, and faceted search.",
+      "dcterms:title": "Apache Solr",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:productionReady": true,
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "solr"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victorialogs",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "VictoriaLogs",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "victorialogs"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victoriametrics",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:title": "VictoriaMetrics",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "schema:termCode": "victoriametrics"
+    },
+    {
+      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptOptimizer",
+        "robos:PromptCompiler"
+      ],
+      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
+      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
+      "robos:enabled": true,
+      "robos:engine": "dspy",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:parameters": {
+        "autoCompileOnSave": false,
+        "candidatePrompts": 10,
+        "maxBootstrappedDemos": 4,
+        "metric": "shacl_validation",
+        "teleprompter": "MIPROv2"
       },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-mobile-buck2",
-      "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
-      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
-      "robos:buildTool": "buck2",
-      "robos:configFile": ".buckconfig",
-      "robos:repository": "github.com/acme/buildbarn-tasks",
-      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "robos:defaultExecProperties": {
-        "OSFamily": "linux",
-        "ISA": "x86-64"
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-services-maven",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
-      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
-      "robos:buildTool": "maven",
-      "robos:configFile": "pom.xml",
-      "robos:repository": "github.com/acme/enterprise-services",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-backend-gradle",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
-      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
-      "robos:buildTool": "gradle",
-      "robos:configFile": "build.gradle.kts",
-      "robos:repository": "github.com/acme/kotlin-services",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-systems-cargo",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
-      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
-      "robos:buildTool": "cargo",
-      "robos:configFile": "Cargo.toml",
-      "robos:repository": "github.com/acme/crypto-engine",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-cloud-go",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
-      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
-      "robos:buildTool": "go",
-      "robos:configFile": "go.mod",
-      "robos:repository": "github.com/acme/k8s-operator",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
-      "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
-      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
-      "robos:buildTool": "pnpm",
-      "robos:configFile": "pnpm-workspace.yaml",
-      "robos:repository": "github.com/acme/web-portal",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-native-cmake",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Native Video Engine (CMake)",
-      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
-      "robos:buildTool": "cmake",
-      "robos:configFile": "CMakeLists.txt",
-      "robos:repository": "github.com/acme/video-engine",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:db:acme-orders-postgres",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
-      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
-      "robos:engine": "postgresql",
-      "robos:databaseName": "orders_db",
-      "robos:host": "postgres.internal.acme.corp",
-      "robos:port": 5432,
-      "robos:schemaMigration": "flyway",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
-    },
-    {
-      "@id": "urn:robos:db:acme-session-redis",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:NoSQLDatabase",
-        "robos:CacheStore",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Acme Distributed Session & Cache Store",
-      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
-      "robos:engine": "redis",
-      "robos:host": "redis-cluster.internal.acme.corp",
-      "robos:port": 6379,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "urn:robos:broker:acme-event-kafka",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MessageBroker",
-        "robos:EventBus",
-        "schema:BroadcastService"
-      ],
-      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
-      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
-      "robos:brokerType": "kafka",
-      "robos:endpoint": "kafka.internal.acme.corp:9092",
-      "robos:topics": [
-        "orders.created",
-        "payments.processed",
-        "invoices.generated"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/BroadcastService",
-      "robos:domainStandard": "https://kafka.apache.org/"
-    },
-    {
-      "@id": "urn:robos:mcp:context-engine",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MCPServer",
-        "robos:ToolProvider",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Code Context MCP Server",
-      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
-      "robos:transport": "stdio",
-      "robos:command": "/usr/local/bin/robos-context-mcp",
-      "robos:toolsProvided": [
-        "ast_search",
-        "symbol_lookup",
-        "dependency_graph"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
-      "robos:tools": [
-        {
-          "name": "ast_search",
-          "description": "Perform structural AST pattern matching across source files",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "query": {
-                "type": "string",
-                "description": "AST pattern or symbol name"
-              },
-              "filePattern": {
-                "type": "string",
-                "description": "Glob filter (e.g. **/*.js)"
-              },
-              "maxResults": {
-                "type": "integer",
-                "default": 10
-              }
-            },
-            "required": [
-              "query"
-            ]
-          }
-        },
-        {
-          "name": "symbol_lookup",
-          "description": "Resolve declaration location, signature, and usages of a code symbol",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "symbol": {
-                "type": "string",
-                "description": "Identifier name"
-              },
-              "includeReferences": {
-                "type": "boolean",
-                "default": true
-              }
-            },
-            "required": [
-              "symbol"
-            ]
-          }
-        },
-        {
-          "name": "dependency_graph",
-          "description": "Calculate import and call graph for target module or package",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "entrypoint": {
-                "type": "string",
-                "description": "Path to entrypoint file"
-              },
-              "depth": {
-                "type": "integer",
-                "default": 2
-              }
-            },
-            "required": [
-              "entrypoint"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "@id": "urn:robos:mcp:kgraph-navigator",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MCPServer",
-        "robos:ToolProvider",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Knowledge Graph MCP Server",
-      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
-      "robos:transport": "stdio",
-      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
-      "robos:toolsProvided": [
-        "query_nodes",
-        "get_blast_radius",
-        "validate_shacl"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
-      "robos:tools": [
-        {
-          "name": "query_nodes",
-          "description": "Search and filter knowledge graph nodes by type or keyword",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "description": "RDF type filter"
-              },
-              "text": {
-                "type": "string",
-                "description": "Full-text search query"
-              },
-              "limit": {
-                "type": "integer",
-                "default": 20
-              }
-            }
-          }
-        },
-        {
-          "name": "blast_radius",
-          "description": "Perform recursive dependency and impact traversal for a graph node",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "nodeId": {
-                "type": "string",
-                "description": "Target URN"
-              },
-              "direction": {
-                "type": "string",
-                "enum": [
-                  "upstream",
-                  "downstream"
-                ],
-                "default": "downstream"
-              }
-            },
-            "required": [
-              "nodeId"
-            ]
-          }
-        }
+      "robos:strategyType": "teleprompter-optimization",
+      "robos:targetTiers": [
+        "tier2",
+        "tier3"
       ]
     },
     {
@@ -548,70 +1479,48 @@
         "robos:AIPromptTechnique",
         "schema:Intangible"
       ],
-      "dcterms:title": "Caveman Algorithmic Prompt Compression",
       "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
-      "robos:strategyType": "compression",
+      "dcterms:title": "Caveman Algorithmic Prompt Compression",
+      "robos:domainStandard": "https://schema.org/Intangible",
+      "robos:enabled": true,
       "robos:engine": "caveman",
+      "robos:mode": "standard",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:parameters": {
+        "preserveCodeBlocks": true,
+        "preservePaths": true,
+        "stripFillers": true,
+        "terseDirectives": true
+      },
+      "robos:schemaOrgType": "https://schema.org/Intangible",
+      "robos:strategyType": "compression",
       "robos:targetTiers": [
         "tier1",
         "tier2"
-      ],
-      "robos:mode": "standard",
-      "robos:enabled": true,
-      "robos:parameters": {
-        "stripFillers": true,
-        "terseDirectives": true,
-        "preserveCodeBlocks": true,
-        "preservePaths": true
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/Intangible",
-      "robos:domainStandard": "https://schema.org/Intangible"
+      ]
     },
     {
-      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
+      "@id": "urn:robos:broker:acme-event-kafka",
       "@type": [
         "oslc_am:Resource",
-        "robos:PromptOptimizer",
-        "robos:PromptCompiler"
+        "robos:MessageBroker",
+        "robos:EventBus",
+        "schema:BroadcastService"
       ],
-      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
-      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
-      "robos:strategyType": "teleprompter-optimization",
-      "robos:engine": "dspy",
-      "robos:targetTiers": [
-        "tier2",
-        "tier3"
-      ],
-      "robos:enabled": true,
-      "robos:parameters": {
-        "teleprompter": "MIPROv2",
-        "metric": "shacl_validation",
-        "candidatePrompts": 10,
-        "maxBootstrappedDemos": 4,
-        "autoCompileOnSave": false
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:db:postgresql-nb5dk",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase"
-      ],
-      "dcterms:title": "POSTGRESQL Database (payments_db)",
-      "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
-      "robos:engine": "postgresql",
-      "robos:databaseName": "payments_db",
-      "robos:host": "db.internal",
-      "robos:port": 5432,
-      "robos:package": "core-platform",
+      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
+      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
+      "robos:brokerType": "kafka",
+      "robos:domainStandard": "https://kafka.apache.org/",
+      "robos:endpoint": "kafka.internal.acme.corp:9092",
       "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:topics": [
+        "orders.created",
+        "payments.processed",
+        "invoices.generated"
+      ]
     },
     {
       "@id": "urn:robos:broker:kafka-stream",
@@ -620,18 +1529,213 @@
         "robos:MessageBroker",
         "robos:EventBus"
       ],
-      "dcterms:title": "KAFKA Event Stream",
       "dcterms:description": "Imported event bus at kafka.internal:9092",
+      "dcterms:title": "KAFKA Event Stream",
       "robos:brokerType": "kafka",
+      "robos:domainStandard": "https://kafka.apache.org/",
       "robos:endpoint": "kafka.internal:9092",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
       "robos:topics": [
         "events.incoming",
         "events.processed"
+      ]
+    },
+    {
+      "@id": "urn:robos:build-system:acme-backend-gradle",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
-      "robos:package": "core-platform",
+      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
+      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
+      "robos:buildTool": "gradle",
+      "robos:configFile": "build.gradle.kts",
+      "robos:domainStandard": "https://bazel.build/",
       "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/BroadcastService",
-      "robos:domainStandard": "https://kafka.apache.org/"
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/kotlin-services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-cloud-go",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
+      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
+      "robos:buildTool": "go",
+      "robos:configFile": "go.mod",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/k8s-operator",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
+      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
+      "robos:buildTool": "buck2",
+      "robos:configFile": ".buckconfig",
+      "robos:defaultExecProperties": {
+        "ISA": "x86-64",
+        "OSFamily": "linux"
+      },
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/buildbarn-tasks",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
+      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
+      "robos:buildTool": "bazel",
+      "robos:configFile": ".bazelrc",
+      "robos:defaultExecProperties": {
+        "ISA": "x86-64",
+        "OSFamily": "linux"
+      },
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/buildbarn-forms",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
+      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
+      "robos:buildTool": "pnpm",
+      "robos:configFile": "pnpm-workspace.yaml",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/web-portal",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-native-cmake",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
+      "dcterms:title": "Acme Native Video Engine (CMake)",
+      "robos:buildTool": "cmake",
+      "robos:configFile": "CMakeLists.txt",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/video-engine",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-services-maven",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
+      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
+      "robos:buildTool": "maven",
+      "robos:configFile": "pom.xml",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/enterprise-services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-systems-cargo",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
+      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
+      "robos:buildTool": "cargo",
+      "robos:configFile": "Cargo.toml",
+      "robos:domainStandard": "https://bazel.build/",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:repository": "github.com/acme/crypto-engine",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:db:acme-orders-postgres",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
+      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+      "robos:databaseName": "orders_db",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html",
+      "robos:engine": "postgresql",
+      "robos:host": "postgres.internal.acme.corp",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 5432,
+      "robos:schemaMigration": "flyway",
+      "robos:schemaOrgType": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:db:acme-session-redis",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:NoSQLDatabase",
+        "robos:CacheStore",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
+      "dcterms:title": "Acme Distributed Session & Cache Store",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "redis",
+      "robos:host": "redis-cluster.internal.acme.corp",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 6379,
+      "robos:schemaOrgType": "https://schema.org/DataStore"
     },
     {
       "@id": "urn:robos:db:db-9wv0p",
@@ -640,66 +1744,238 @@
         "robos:Database",
         "robos:RelationalDatabase"
       ],
-      "dcterms:title": "DB Database (acme_db)",
       "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
+      "dcterms:title": "DB Database (acme_db)",
       "robos:databaseName": "acme_db",
       "robos:engine": "postgresql",
       "robos:host": "db.internal",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 5432
+    },
+    {
+      "@id": "urn:robos:db:postgresql-nb5dk",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
+      "dcterms:title": "POSTGRESQL Database (payments_db)",
+      "robos:databaseName": "payments_db",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html",
+      "robos:engine": "postgresql",
+      "robos:host": "db.internal",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
       "robos:port": 5432,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:schemaOrgType": "https://schema.org/DataStore"
     },
     {
-      "@id": "urn:robos:search:luxir-kgraph-index",
+      "@id": "urn:robos:graph:root",
       "@type": [
-        "oslc_am:Resource",
-        "robos:SearchIndex",
-        "schema:DataStore"
+        "oslc:ServiceProvider",
+        "robos:SystemGraph"
       ],
-      "dcterms:title": "Luxir Knowledge Graph Search Index",
-      "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
-      "robos:engine": "luxir",
-      "robos:indexName": "kgraph_nodes",
-      "robos:productionReady": false,
-      "robos:status": "experimental",
-      "robos:readiness": "not-yet-prod-ready",
-      "robos:maturity": "pre-release",
-      "robos:host": "localhost",
-      "robos:port": 8983,
-      "robos:features": [
-        "full-text",
-        "vector-search",
-        "faceting",
-        "instant-warmup",
-        "no-gc"
-      ],
-      "robos:package": "core-platform",
+      "dcterms:title": "Acme Enterprise Global SDLC Universe",
       "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#luxir",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "urn:robos:search:solr-enterprise-index",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:SearchIndex",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Apache Solr Enterprise Search Index",
-      "dcterms:description": "Production-grade Apache Solr search collection for faceted enterprise documentation and architectural index search.",
-      "robos:engine": "solr",
-      "robos:indexName": "enterprise_catalog",
-      "robos:productionReady": true,
+      "robos:package": "core-platform",
       "robos:status": "active",
-      "robos:readiness": "production-ready",
-      "robos:host": "solr.internal.acme.corp",
-      "robos:port": 8983,
+      "robos:version": "1.0.0"
+    },
+    {
+      "@id": "urn:robos:library:robos-llm",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "dcterms:title": "RobOS LLM (optional API mode)",
+      "robos:defaultEnabled": false,
+      "robos:dependsOn": [
+        "urn:robos:security:prompt-security-guard"
+      ],
+      "robos:domainStandard": "https://js.langchain.com/",
+      "robos:namespace": "robos.core",
       "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:sourcePath": "packages/robos-llm",
+      "robos:supportedProviders": [
+        "anthropic",
+        "openai",
+        "gemini",
+        "ollama"
+      ],
+      "robos:tags": [
+        "ai",
+        "llm",
+        "api-mode",
+        "embeddings",
+        "semantic-search",
+        "langchain",
+        "optional"
+      ],
+      "robos:technology": "Node.js 20 / LangChain.js"
+    },
+    {
+      "@id": "urn:robos:mcp:context-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+      "dcterms:title": "RobOS Code Context MCP Server",
+      "robos:command": "/usr/local/bin/robos-context-mcp",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
       "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#solr",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:tools": [
+        {
+          "description": "Perform structural AST pattern matching across source files",
+          "inputSchema": {
+            "properties": {
+              "filePattern": {
+                "description": "Glob filter (e.g. **/*.js)",
+                "type": "string"
+              },
+              "maxResults": {
+                "default": 10,
+                "type": "integer"
+              },
+              "query": {
+                "description": "AST pattern or symbol name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "type": "object"
+          },
+          "name": "ast_search"
+        },
+        {
+          "description": "Resolve declaration location, signature, and usages of a code symbol",
+          "inputSchema": {
+            "properties": {
+              "includeReferences": {
+                "default": true,
+                "type": "boolean"
+              },
+              "symbol": {
+                "description": "Identifier name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ],
+            "type": "object"
+          },
+          "name": "symbol_lookup"
+        },
+        {
+          "description": "Calculate import and call graph for target module or package",
+          "inputSchema": {
+            "properties": {
+              "depth": {
+                "default": 2,
+                "type": "integer"
+              },
+              "entrypoint": {
+                "description": "Path to entrypoint file",
+                "type": "string"
+              }
+            },
+            "required": [
+              "entrypoint"
+            ],
+            "type": "object"
+          },
+          "name": "dependency_graph"
+        }
+      ],
+      "robos:toolsProvided": [
+        "ast_search",
+        "symbol_lookup",
+        "dependency_graph"
+      ],
+      "robos:transport": "stdio"
+    },
+    {
+      "@id": "urn:robos:mcp:kgraph-navigator",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
+      "dcterms:title": "RobOS Knowledge Graph MCP Server",
+      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:tools": [
+        {
+          "description": "Search and filter knowledge graph nodes by type or keyword",
+          "inputSchema": {
+            "properties": {
+              "limit": {
+                "default": 20,
+                "type": "integer"
+              },
+              "text": {
+                "description": "Full-text search query",
+                "type": "string"
+              },
+              "type": {
+                "description": "RDF type filter",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "name": "query_nodes"
+        },
+        {
+          "description": "Perform recursive dependency and impact traversal for a graph node",
+          "inputSchema": {
+            "properties": {
+              "direction": {
+                "default": "downstream",
+                "enum": [
+                  "upstream",
+                  "downstream"
+                ],
+                "type": "string"
+              },
+              "nodeId": {
+                "description": "Target URN",
+                "type": "string"
+              }
+            },
+            "required": [
+              "nodeId"
+            ],
+            "type": "object"
+          },
+          "name": "blast_radius"
+        }
+      ],
+      "robos:toolsProvided": [
+        "query_nodes",
+        "get_blast_radius",
+        "validate_shacl"
+      ],
+      "robos:transport": "stdio"
     },
     {
       "@id": "urn:robos:search:elasticsearch-telemetry-index",
@@ -708,20 +1984,50 @@
         "robos:SearchIndex",
         "schema:DataStore"
       ],
-      "dcterms:title": "Elasticsearch Observability & Telemetry Index",
       "dcterms:description": "Production Elasticsearch cluster index housing distributed traces, APM metrics, and microservice logs.",
+      "dcterms:title": "Elasticsearch Observability & Telemetry Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
       "robos:engine": "elasticsearch",
-      "robos:indexName": "telemetry-events",
-      "robos:productionReady": true,
-      "robos:status": "active",
-      "robos:readiness": "production-ready",
       "robos:host": "elasticsearch.internal.acme.corp",
-      "robos:port": 9200,
-      "robos:package": "core-platform",
+      "robos:indexName": "telemetry-events",
       "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#elasticsearch",
+      "robos:package": "core-platform",
+      "robos:port": 9200,
+      "robos:productionReady": true,
+      "robos:readiness": "production-ready",
       "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
+      "robos:status": "active",
+      "robos:technology": "https://robos.dev/ns/technology#elasticsearch"
+    },
+    {
+      "@id": "urn:robos:search:luxir-kgraph-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
+      "dcterms:title": "Luxir Knowledge Graph Search Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "luxir",
+      "robos:features": [
+        "full-text",
+        "vector-search",
+        "faceting",
+        "instant-warmup",
+        "no-gc"
+      ],
+      "robos:host": "localhost",
+      "robos:indexName": "kgraph_nodes",
+      "robos:maturity": "pre-release",
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:port": 8983,
+      "robos:productionReady": false,
+      "robos:readiness": "not-yet-prod-ready",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:status": "experimental",
+      "robos:technology": "https://robos.dev/ns/technology#luxir"
     },
     {
       "@id": "urn:robos:search:opensearch-cluster-index",
@@ -730,254 +2036,73 @@
         "robos:SearchIndex",
         "schema:DataStore"
       ],
-      "dcterms:title": "OpenSearch Production Cluster Index",
       "dcterms:description": "Production-grade OpenSearch vector and log search cluster backing full-text search across SDLC artifacts.",
+      "dcterms:title": "OpenSearch Production Cluster Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
       "robos:engine": "opensearch",
-      "robos:indexName": "sdlc_artifacts",
-      "robos:productionReady": true,
-      "robos:status": "active",
-      "robos:readiness": "production-ready",
       "robos:host": "opensearch.internal.acme.corp",
-      "robos:port": 9200,
-      "robos:package": "core-platform",
+      "robos:indexName": "sdlc_artifacts",
       "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#opensearch",
+      "robos:package": "core-platform",
+      "robos:port": 9200,
+      "robos:productionReady": true,
+      "robos:readiness": "production-ready",
       "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
+      "robos:status": "active",
+      "robos:technology": "https://robos.dev/ns/technology#opensearch"
     },
     {
-      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@id": "urn:robos:search:solr-enterprise-index",
       "@type": [
-        "schema:DefinedTerm"
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
       ],
-      "dcterms:title": "PostgreSQL",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "dcterms:description": "Production-grade Apache Solr search collection for faceted enterprise documentation and architectural index search.",
+      "dcterms:title": "Apache Solr Enterprise Search Index",
+      "robos:domainStandard": "https://schema.org/DataStore",
+      "robos:engine": "solr",
+      "robos:host": "solr.internal.acme.corp",
+      "robos:indexName": "enterprise_catalog",
+      "robos:namespace": "robos.platform",
       "robos:package": "core-platform",
-      "schema:termCode": "postgresql",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#redis",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Redis",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "redis",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#nats-jetstream",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "NATS JetStream",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "nats-jetstream",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#victoriametrics",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "VictoriaMetrics",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "victoriametrics",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#victorialogs",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "VictoriaLogs",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "victorialogs",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#bazel",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Bazel",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "bazel",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#buildbarn",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Buildbarn",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "buildbarn",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#react",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "React",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "react",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#protobuf",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Protocol Buffers",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "protobuf",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#helm",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Helm",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "helm",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#pulumi",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Pulumi",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "pulumi",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#luxir",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Luxir",
-      "dcterms:description": "Next-generation native C++ hybrid full-text and vector search engine created by Yonik Seeley. Single-node pre-release architecture with instant startup and zero GC overhead. Evaluated as experimental and not yet production-ready.",
-      "robos:package": "core-platform",
-      "schema:termCode": "luxir",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": false,
-      "robos:status": "experimental",
-      "robos:maturity": "pre-release",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#solr",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Apache Solr",
-      "dcterms:description": "Enterprise open-source search platform built on Apache Lucene, providing distributed indexing, replication, and faceted search.",
-      "robos:package": "core-platform",
-      "schema:termCode": "solr",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:port": 8983,
       "robos:productionReady": true,
-      "robos:namespace": "robos.platform"
+      "robos:readiness": "production-ready",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:status": "active",
+      "robos:technology": "https://robos.dev/ns/technology#solr"
     },
     {
-      "@id": "https://robos.dev/ns/technology#elasticsearch",
+      "@id": "urn:robos:security:prompt-security-guard",
       "@type": [
-        "schema:DefinedTerm"
+        "robos:SecurityGuard",
+        "robos:PromptSecurityGuard",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
-      "dcterms:title": "Elasticsearch",
-      "dcterms:description": "Distributed, JSON-based search and analytics engine designed for horizontal scalability, reliability, and real-time search.",
+      "dcterms:description": "Open-source prompt security guardrail engine preventing developers from intentionally or unintentionally sending secrets, credentials, PII, and prompt injections to AI agents. Built on Gitleaks, TruffleHog, Microsoft Presidio, and OWASP LLM01 standards.",
+      "dcterms:title": "RobOS Prompt Security Guard & OSS Guardrails Engine",
+      "robos:domainStandard": "https://github.com/gitleaks/gitleaks",
+      "robos:namespace": "robos.security",
       "robos:package": "core-platform",
-      "schema:termCode": "elasticsearch",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": true,
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#opensearch",
-      "@type": [
-        "schema:DefinedTerm"
+      "robos:refersFrom": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:supportedModes": [
+        "redact",
+        "block",
+        "warn",
+        "audit-only",
+        "off"
       ],
-      "dcterms:title": "OpenSearch",
-      "dcterms:description": "Community-driven, open-source search and analytics suite derived from Elasticsearch, with built-in vector search and SQL support.",
-      "robos:package": "core-platform",
-      "schema:termCode": "opensearch",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": true,
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#reapi-v2",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Remote Execution API v2",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "reapi-v2",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#bazel-bep",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Bazel Build Event Protocol",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "bazel-bep",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Buildbarn CompletedActionLogger",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "completed-action-logger",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#mcp",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Model Context Protocol",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "mcp",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
+      "robos:supportedStandards": [
+        "Gitleaks v8+",
+        "TruffleHog",
+        "Microsoft Presidio",
+        "OWASP LLM01: Prompt Injection",
+        "OWASP LLM02: Sensitive Information Disclosure",
+        "NIST SP 800-53"
+      ]
     },
     {
       "@id": "urn:robos:source:graph-workspace",
@@ -986,108 +2111,20 @@
         "schema:CreativeWork"
       ],
       "dcterms:title": "External graph workspace and revision store",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
       "robos:evidence": [
         {
-          "repository": "robos",
+          "line": 1,
           "path": "packages/robos-graph/lib/graph-workspace.js",
-          "line": 1
+          "repository": "robos"
         }
       ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:source-extractor",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Tracked source evidence extractor",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js",
-      "robos:sourceKind": "implementation",
       "robos:inRepository": {
         "@id": "urn:robos:source:workspace"
       },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/source-extractor.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:workspace-commands",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Workspace CLI commands",
+      "robos:namespace": "robos.platform",
       "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js",
       "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/workspace-commands.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:workspace-review",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Agent review and proposal workflow",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/workspace-review.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:source-shapes",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Source declaration shapes",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/source-shapes.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
+      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js"
     },
     {
       "@id": "urn:robos:source:inspector-groups",
@@ -1096,19 +2133,6 @@
         "schema:CreativeWork"
       ],
       "dcterms:title": "Schema property-group catalog",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/inspector-groups.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/inspector-groups.js",
-          "line": 1
-        }
-      ],
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/source"
@@ -1116,8 +2140,21 @@
       ],
       "robos:classificationOrigin": "inferred",
       "robos:declaredName": "RobosInspectorGroups",
-      "robos:version": "1.0.0",
-      "robos:namespace": "robos.platform"
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/inspector-groups.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-groups.js",
+      "robos:version": "1.0.0"
     },
     {
       "@id": "urn:robos:source:inspector-property-groups",
@@ -1126,19 +2163,6 @@
         "schema:CreativeWork"
       ],
       "dcterms:title": "Recorded property-group resolution",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/inspector-property-groups.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/inspector-property-groups.js",
-          "line": 1
-        }
-      ],
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/source"
@@ -1150,1107 +2174,126 @@
           "@id": "urn:robos:source:inspector-groups"
         }
       ],
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/inspector-property-groups.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
       "robos:relationshipEvidence": [
         {
+          "evidence": [
+            {
+              "line": 2,
+              "path": "packages/robos-graph/lib/inspector-property-groups.js",
+              "repository": "robos"
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior.",
           "predicate": "robos:dependsOn",
           "target": {
             "@id": "urn:robos:source:inspector-groups"
-          },
-          "evidence": [
-            {
-              "repository": "robos",
-              "path": "packages/robos-graph/lib/inspector-property-groups.js",
-              "line": 2
-            }
-          ],
-          "note": "Implementation uses this module, or test exercises its rendered behavior."
+          }
         }
       ],
-      "robos:namespace": "robos.platform"
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-property-groups.js"
+    },
+    {
+      "@id": "urn:robos:source:source-extractor",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Tracked source evidence extractor",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/source-extractor.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js"
+    },
+    {
+      "@id": "urn:robos:source:source-shapes",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source declaration shapes",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/source-shapes.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-commands",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Workspace CLI commands",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/workspace-commands.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-review",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Agent review and proposal workflow",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-graph/lib/workspace-review.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js"
     }
   ],
-  "@graph": [
-    {
-      "@id": "urn:robos:graph:root",
-      "@type": [
-        "oslc:ServiceProvider",
-        "robos:SystemGraph"
-      ],
-      "dcterms:title": "Acme Enterprise Global SDLC Universe",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:version": "1.0.0",
-      "robos:status": "active"
-    },
-    {
-      "@id": "urn:robos:security:prompt-security-guard",
-      "@type": [
-        "robos:SecurityGuard",
-        "robos:PromptSecurityGuard",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Prompt Security Guard & OSS Guardrails Engine",
-      "dcterms:description": "Open-source prompt security guardrail engine preventing developers from intentionally or unintentionally sending secrets, credentials, PII, and prompt injections to AI agents. Built on Gitleaks, TruffleHog, Microsoft Presidio, and OWASP LLM01 standards.",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.security",
-      "robos:refersFrom": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://github.com/gitleaks/gitleaks",
-      "robos:supportedStandards": [
-        "Gitleaks v8+",
-        "TruffleHog",
-        "Microsoft Presidio",
-        "OWASP LLM01: Prompt Injection",
-        "OWASP LLM02: Sensitive Information Disclosure",
-        "NIST SP 800-53"
-      ],
-      "robos:supportedModes": [
-        "redact",
-        "block",
-        "warn",
-        "audit-only",
-        "off"
-      ]
-    },
-    {
-      "@id": "urn:robos:library:robos-llm",
-      "@type": [
-        "robos:Library",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS LLM (optional API mode)",
-      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.core",
-      "robos:repository": "github.com/nddipiazza/robos",
-      "robos:sourcePath": "packages/robos-llm",
-      "robos:technology": "Node.js 20 / LangChain.js",
-      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://js.langchain.com/",
-      "robos:supportedProviders": [
-        "anthropic",
-        "openai",
-        "gemini",
-        "ollama"
-      ],
-      "robos:defaultEnabled": false,
-      "robos:dependsOn": [
-        "urn:robos:security:prompt-security-guard"
-      ],
-      "robos:tags": [
-        "ai",
-        "llm",
-        "api-mode",
-        "embeddings",
-        "semantic-search",
-        "langchain",
-        "optional"
-      ]
-    },
-    {
-      "@id": "urn:robos:build-system:acme-monorepo-bazel",
-      "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
-      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
-      "robos:buildTool": "bazel",
-      "robos:configFile": ".bazelrc",
-      "robos:repository": "github.com/acme/buildbarn-forms",
-      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "robos:defaultExecProperties": {
-        "OSFamily": "linux",
-        "ISA": "x86-64"
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-mobile-buck2",
-      "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
-      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
-      "robos:buildTool": "buck2",
-      "robos:configFile": ".buckconfig",
-      "robos:repository": "github.com/acme/buildbarn-tasks",
-      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "robos:defaultExecProperties": {
-        "OSFamily": "linux",
-        "ISA": "x86-64"
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-services-maven",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
-      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
-      "robos:buildTool": "maven",
-      "robos:configFile": "pom.xml",
-      "robos:repository": "github.com/acme/enterprise-services",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-backend-gradle",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
-      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
-      "robos:buildTool": "gradle",
-      "robos:configFile": "build.gradle.kts",
-      "robos:repository": "github.com/acme/kotlin-services",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-systems-cargo",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
-      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
-      "robos:buildTool": "cargo",
-      "robos:configFile": "Cargo.toml",
-      "robos:repository": "github.com/acme/crypto-engine",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-cloud-go",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
-      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
-      "robos:buildTool": "go",
-      "robos:configFile": "go.mod",
-      "robos:repository": "github.com/acme/k8s-operator",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
-      "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
-      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
-      "robos:buildTool": "pnpm",
-      "robos:configFile": "pnpm-workspace.yaml",
-      "robos:repository": "github.com/acme/web-portal",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:build-system:acme-native-cmake",
-      "@type": [
-        "robos:BuildSystem",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Acme Native Video Engine (CMake)",
-      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
-      "robos:buildTool": "cmake",
-      "robos:configFile": "CMakeLists.txt",
-      "robos:repository": "github.com/acme/video-engine",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://bazel.build/"
-    },
-    {
-      "@id": "urn:robos:db:acme-orders-postgres",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
-      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
-      "robos:engine": "postgresql",
-      "robos:databaseName": "orders_db",
-      "robos:host": "postgres.internal.acme.corp",
-      "robos:port": 5432,
-      "robos:schemaMigration": "flyway",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
-    },
-    {
-      "@id": "urn:robos:db:acme-session-redis",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:NoSQLDatabase",
-        "robos:CacheStore",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Acme Distributed Session & Cache Store",
-      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
-      "robos:engine": "redis",
-      "robos:host": "redis-cluster.internal.acme.corp",
-      "robos:port": 6379,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "urn:robos:broker:acme-event-kafka",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MessageBroker",
-        "robos:EventBus",
-        "schema:BroadcastService"
-      ],
-      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
-      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
-      "robos:brokerType": "kafka",
-      "robos:endpoint": "kafka.internal.acme.corp:9092",
-      "robos:topics": [
-        "orders.created",
-        "payments.processed",
-        "invoices.generated"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/BroadcastService",
-      "robos:domainStandard": "https://kafka.apache.org/"
-    },
-    {
-      "@id": "urn:robos:mcp:context-engine",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MCPServer",
-        "robos:ToolProvider",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Code Context MCP Server",
-      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
-      "robos:transport": "stdio",
-      "robos:command": "/usr/local/bin/robos-context-mcp",
-      "robos:toolsProvided": [
-        "ast_search",
-        "symbol_lookup",
-        "dependency_graph"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
-      "robos:tools": [
-        {
-          "name": "ast_search",
-          "description": "Perform structural AST pattern matching across source files",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "query": {
-                "type": "string",
-                "description": "AST pattern or symbol name"
-              },
-              "filePattern": {
-                "type": "string",
-                "description": "Glob filter (e.g. **/*.js)"
-              },
-              "maxResults": {
-                "type": "integer",
-                "default": 10
-              }
-            },
-            "required": [
-              "query"
-            ]
-          }
-        },
-        {
-          "name": "symbol_lookup",
-          "description": "Resolve declaration location, signature, and usages of a code symbol",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "symbol": {
-                "type": "string",
-                "description": "Identifier name"
-              },
-              "includeReferences": {
-                "type": "boolean",
-                "default": true
-              }
-            },
-            "required": [
-              "symbol"
-            ]
-          }
-        },
-        {
-          "name": "dependency_graph",
-          "description": "Calculate import and call graph for target module or package",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "entrypoint": {
-                "type": "string",
-                "description": "Path to entrypoint file"
-              },
-              "depth": {
-                "type": "integer",
-                "default": 2
-              }
-            },
-            "required": [
-              "entrypoint"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "@id": "urn:robos:mcp:kgraph-navigator",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MCPServer",
-        "robos:ToolProvider",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "RobOS Knowledge Graph MCP Server",
-      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
-      "robos:transport": "stdio",
-      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
-      "robos:toolsProvided": [
-        "query_nodes",
-        "get_blast_radius",
-        "validate_shacl"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
-      "robos:tools": [
-        {
-          "name": "query_nodes",
-          "description": "Search and filter knowledge graph nodes by type or keyword",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "description": "RDF type filter"
-              },
-              "text": {
-                "type": "string",
-                "description": "Full-text search query"
-              },
-              "limit": {
-                "type": "integer",
-                "default": 20
-              }
-            }
-          }
-        },
-        {
-          "name": "blast_radius",
-          "description": "Perform recursive dependency and impact traversal for a graph node",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "nodeId": {
-                "type": "string",
-                "description": "Target URN"
-              },
-              "direction": {
-                "type": "string",
-                "enum": [
-                  "upstream",
-                  "downstream"
-                ],
-                "default": "downstream"
-              }
-            },
-            "required": [
-              "nodeId"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "@id": "urn:robos:agent:strategy:caveman-compression",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:PromptStrategy",
-        "robos:AIPromptTechnique",
-        "schema:Intangible"
-      ],
-      "dcterms:title": "Caveman Algorithmic Prompt Compression",
-      "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
-      "robos:strategyType": "compression",
-      "robos:engine": "caveman",
-      "robos:targetTiers": [
-        "tier1",
-        "tier2"
-      ],
-      "robos:mode": "standard",
-      "robos:enabled": true,
-      "robos:parameters": {
-        "stripFillers": true,
-        "terseDirectives": true,
-        "preserveCodeBlocks": true,
-        "preservePaths": true
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/Intangible",
-      "robos:domainStandard": "https://schema.org/Intangible"
-    },
-    {
-      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:PromptOptimizer",
-        "robos:PromptCompiler"
-      ],
-      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
-      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
-      "robos:strategyType": "teleprompter-optimization",
-      "robos:engine": "dspy",
-      "robos:targetTiers": [
-        "tier2",
-        "tier3"
-      ],
-      "robos:enabled": true,
-      "robos:parameters": {
-        "teleprompter": "MIPROv2",
-        "metric": "shacl_validation",
-        "candidatePrompts": 10,
-        "maxBootstrappedDemos": 4,
-        "autoCompileOnSave": false
-      },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:db:postgresql-nb5dk",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase"
-      ],
-      "dcterms:title": "POSTGRESQL Database (payments_db)",
-      "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
-      "robos:engine": "postgresql",
-      "robos:databaseName": "payments_db",
-      "robos:host": "db.internal",
-      "robos:port": 5432,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
-    },
-    {
-      "@id": "urn:robos:broker:kafka-stream",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MessageBroker",
-        "robos:EventBus"
-      ],
-      "dcterms:title": "KAFKA Event Stream",
-      "dcterms:description": "Imported event bus at kafka.internal:9092",
-      "robos:brokerType": "kafka",
-      "robos:endpoint": "kafka.internal:9092",
-      "robos:topics": [
-        "events.incoming",
-        "events.processed"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:schemaOrgType": "https://schema.org/BroadcastService",
-      "robos:domainStandard": "https://kafka.apache.org/"
-    },
-    {
-      "@id": "urn:robos:db:db-9wv0p",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase"
-      ],
-      "dcterms:title": "DB Database (acme_db)",
-      "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
-      "robos:databaseName": "acme_db",
-      "robos:engine": "postgresql",
-      "robos:host": "db.internal",
-      "robos:port": 5432,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:search:luxir-kgraph-index",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:SearchIndex",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Luxir Knowledge Graph Search Index",
-      "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
-      "robos:engine": "luxir",
-      "robos:indexName": "kgraph_nodes",
-      "robos:productionReady": false,
-      "robos:status": "experimental",
-      "robos:readiness": "not-yet-prod-ready",
-      "robos:maturity": "pre-release",
-      "robos:host": "localhost",
-      "robos:port": 8983,
-      "robos:features": [
-        "full-text",
-        "vector-search",
-        "faceting",
-        "instant-warmup",
-        "no-gc"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#luxir",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "urn:robos:search:solr-enterprise-index",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:SearchIndex",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Apache Solr Enterprise Search Index",
-      "dcterms:description": "Production-grade Apache Solr search collection for faceted enterprise documentation and architectural index search.",
-      "robos:engine": "solr",
-      "robos:indexName": "enterprise_catalog",
-      "robos:productionReady": true,
-      "robos:status": "active",
-      "robos:readiness": "production-ready",
-      "robos:host": "solr.internal.acme.corp",
-      "robos:port": 8983,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#solr",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "urn:robos:search:elasticsearch-telemetry-index",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:SearchIndex",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "Elasticsearch Observability & Telemetry Index",
-      "dcterms:description": "Production Elasticsearch cluster index housing distributed traces, APM metrics, and microservice logs.",
-      "robos:engine": "elasticsearch",
-      "robos:indexName": "telemetry-events",
-      "robos:productionReady": true,
-      "robos:status": "active",
-      "robos:readiness": "production-ready",
-      "robos:host": "elasticsearch.internal.acme.corp",
-      "robos:port": 9200,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#elasticsearch",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "urn:robos:search:opensearch-cluster-index",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:SearchIndex",
-        "schema:DataStore"
-      ],
-      "dcterms:title": "OpenSearch Production Cluster Index",
-      "dcterms:description": "Production-grade OpenSearch vector and log search cluster backing full-text search across SDLC artifacts.",
-      "robos:engine": "opensearch",
-      "robos:indexName": "sdlc_artifacts",
-      "robos:productionReady": true,
-      "robos:status": "active",
-      "robos:readiness": "production-ready",
-      "robos:host": "opensearch.internal.acme.corp",
-      "robos:port": 9200,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:technology": "https://robos.dev/ns/technology#opensearch",
-      "robos:schemaOrgType": "https://schema.org/DataStore",
-      "robos:domainStandard": "https://schema.org/DataStore"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#postgresql",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "PostgreSQL",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "postgresql",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#redis",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Redis",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "redis",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#nats-jetstream",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "NATS JetStream",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "nats-jetstream",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#victoriametrics",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "VictoriaMetrics",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "victoriametrics",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#victorialogs",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "VictoriaLogs",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "victorialogs",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#bazel",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Bazel",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "bazel",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#buildbarn",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Buildbarn",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "buildbarn",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#react",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "React",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "react",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#protobuf",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Protocol Buffers",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "protobuf",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#helm",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Helm",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "helm",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#pulumi",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Pulumi",
-      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "pulumi",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#luxir",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Luxir",
-      "dcterms:description": "Next-generation native C++ hybrid full-text and vector search engine created by Yonik Seeley. Single-node pre-release architecture with instant startup and zero GC overhead. Evaluated as experimental and not yet production-ready.",
-      "robos:package": "core-platform",
-      "schema:termCode": "luxir",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": false,
-      "robos:status": "experimental",
-      "robos:maturity": "pre-release",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#solr",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Apache Solr",
-      "dcterms:description": "Enterprise open-source search platform built on Apache Lucene, providing distributed indexing, replication, and faceted search.",
-      "robos:package": "core-platform",
-      "schema:termCode": "solr",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": true,
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#elasticsearch",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Elasticsearch",
-      "dcterms:description": "Distributed, JSON-based search and analytics engine designed for horizontal scalability, reliability, and real-time search.",
-      "robos:package": "core-platform",
-      "schema:termCode": "elasticsearch",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": true,
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/technology#opensearch",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "OpenSearch",
-      "dcterms:description": "Community-driven, open-source search and analytics suite derived from Elasticsearch, with built-in vector search and SQL support.",
-      "robos:package": "core-platform",
-      "schema:termCode": "opensearch",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
-      "robos:productionReady": true,
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#reapi-v2",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Remote Execution API v2",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "reapi-v2",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#bazel-bep",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Bazel Build Event Protocol",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "bazel-bep",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Buildbarn CompletedActionLogger",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "completed-action-logger",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "https://robos.dev/ns/protocol#mcp",
-      "@type": [
-        "schema:DefinedTerm"
-      ],
-      "dcterms:title": "Model Context Protocol",
-      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
-      "robos:package": "core-platform",
-      "schema:termCode": "mcp",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:graph-workspace",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "External graph workspace and revision store",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/graph-workspace.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:source-extractor",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Tracked source evidence extractor",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/source-extractor.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:workspace-commands",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Workspace CLI commands",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/workspace-commands.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:workspace-review",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Agent review and proposal workflow",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/workspace-review.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:source-shapes",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Source declaration shapes",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/source-shapes.js",
-          "line": 1
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:inspector-groups",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Schema property-group catalog",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/inspector-groups.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/inspector-groups.js",
-          "line": 1
-        }
-      ],
-      "robos:classification": [
-        {
-          "@id": "https://robos.dev/ns/sdlc#classification/source"
-        }
-      ],
-      "robos:classificationOrigin": "inferred",
-      "robos:declaredName": "RobosInspectorGroups",
-      "robos:version": "1.0.0",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:source:inspector-property-groups",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Recorded property-group resolution",
-      "robos:package": "core-platform",
-      "robos:sourcePath": "packages/robos-graph/lib/inspector-property-groups.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-graph/lib/inspector-property-groups.js",
-          "line": 1
-        }
-      ],
-      "robos:classification": [
-        {
-          "@id": "https://robos.dev/ns/sdlc#classification/source"
-        }
-      ],
-      "robos:classificationOrigin": "inferred",
-      "robos:dependsOn": [
-        {
-          "@id": "urn:robos:source:inspector-groups"
-        }
-      ],
-      "robos:relationshipEvidence": [
-        {
-          "predicate": "robos:dependsOn",
-          "target": {
-            "@id": "urn:robos:source:inspector-groups"
-          },
-          "evidence": [
-            {
-              "repository": "robos",
-              "path": "packages/robos-graph/lib/inspector-property-groups.js",
-              "line": 2
-            }
-          ],
-          "note": "Implementation uses this module, or test exercises its rendered behavior."
-        }
-      ],
-      "robos:namespace": "robos.platform"
-    }
-  ]
+  "robos:package": "core-platform",
+  "robos:version": "1.0.0"
 }

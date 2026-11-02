@@ -1,202 +1,816 @@
 {
   "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
     "oslc": "http://open-services.net/ns/core#",
     "oslc_am": "http://open-services.net/ns/am#",
     "oslc_cm": "http://open-services.net/ns/cm#",
-    "oslc_rm": "http://open-services.net/ns/rm#",
     "oslc_qm": "http://open-services.net/ns/qm#",
-    "robos": "https://robos.dev/ns/sdlc#",
-    "c4": "https://c4model.com/ns#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
     "pact": "https://pact.io/ns#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "robos:sourceSummary": {
-      "@id": "robos:sourceSummary",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:annotations": {
+      "@id": "robos:annotations",
       "@type": "@json"
+    },
+    "robos:arguments": {
+      "@id": "robos:arguments",
+      "@type": "@json"
+    },
+    "robos:classification": {
+      "@container": "@set",
+      "@id": "robos:classification",
+      "@type": "@id"
+    },
+    "robos:evidence": {
+      "@container": "@set",
+      "@context": {
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "path": "robos:sourcePath",
+        "repository": "robos:sourceRepository",
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      },
+      "@id": "robos:evidence"
+    },
+    "robos:inputSchema": {
+      "@id": "robos:inputSchema",
+      "@type": "@json"
+    },
+    "robos:mcpServer": {
+      "@id": "robos:mcpServer",
+      "@type": "@id"
+    },
+    "robos:outputSchema": {
+      "@id": "robos:outputSchema",
+      "@type": "@json"
+    },
+    "robos:parameters": {
+      "@id": "robos:parameters",
+      "@type": "@json"
+    },
+    "robos:promptsProvided": {
+      "@container": "@set",
+      "@id": "robos:promptsProvided",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
     },
     "robos:provenance": {
       "@id": "robos:provenance",
       "@type": "@json"
     },
     "robos:relationshipEvidence": {
-      "@id": "robos:relationshipEvidence",
       "@container": "@set",
       "@context": {
-        "predicate": {
-          "@id": "robos:predicate",
-          "@type": "@vocab"
-        },
-        "target": {
-          "@id": "robos:target",
-          "@type": "@id"
-        },
+        "condition": "robos:condition",
         "evidence": {
-          "@id": "robos:evidence",
           "@container": "@set",
           "@context": {
-            "repository": "robos:sourceRepository",
-            "path": "robos:sourcePath",
             "line": {
               "@id": "robos:sourceLine",
               "@type": "xsd:integer"
             },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
             "revision": "robos:sourceRevision",
             "sha256": "robos:sourceHash",
             "workingTreeStatus": "robos:workingTreeStatus"
-          }
+          },
+          "@id": "robos:evidence"
         },
         "note": "dcterms:description",
-        "condition": "robos:condition",
-        "status": "robos:evidenceStatus"
-      }
-    },
-    "robos:evidence": {
-      "@id": "robos:evidence",
-      "@container": "@set",
-      "@context": {
-        "repository": "robos:sourceRepository",
-        "path": "robos:sourcePath",
-        "line": {
-          "@id": "robos:sourceLine",
-          "@type": "xsd:integer"
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
         },
-        "revision": "robos:sourceRevision",
-        "sha256": "robos:sourceHash",
-        "workingTreeStatus": "robos:workingTreeStatus"
-      }
+        "status": "robos:evidenceStatus",
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        }
+      },
+      "@id": "robos:relationshipEvidence"
+    },
+    "robos:resourcesProvided": {
+      "@container": "@set",
+      "@id": "robos:resourcesProvided",
+      "@type": "@id"
+    },
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
     },
     "robos:technologyReference": {
       "@id": "robos:technologyReference",
       "@type": "@id"
     },
-    "robos:protocolReference": {
-      "@id": "robos:protocolReference",
-      "@type": "@id"
-    }
+    "robos:toolAnnotations": {
+      "@id": "robos:toolAnnotations",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
+  "@graph": [
+    {
+      "@id": "urn:robos:datatable:cart-items",
+      "@type": [
+        "robos:DataTable",
+        "schema:Table"
+      ],
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables",
+      "robos:schemaOrgType": "https://schema.org/Table",
+      "robos:step": "urn:robos:step:checkout-add-item-with-table",
+      "robos:tableRows": [
+        [
+          "sku",
+          "quantity",
+          "price"
+        ],
+        [
+          "SKU-101",
+          "2",
+          "19.99"
+        ],
+        [
+          "SKU-202",
+          "1",
+          "49.50"
+        ]
+      ]
+    },
+    {
+      "@id": "urn:robos:docstring:checkout-payload",
+      "@type": [
+        "robos:DocString",
+        "schema:Text"
+      ],
+      "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
+      "robos:contentType": "application/json",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
+      "robos:schemaOrgType": "https://schema.org/Text",
+      "robos:step": "urn:robos:step:checkout-payload-docstring"
+    },
+    {
+      "@id": "urn:robos:examples:checkout-loyalty-tiers",
+      "@type": [
+        "robos:ExamplesTable",
+        "schema:Table"
+      ],
+      "dcterms:title": "Loyalty Tier Discounts",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
+      "robos:schemaOrgType": "https://schema.org/Table",
+      "robos:tableHeaders": [
+        "tier",
+        "amount",
+        "discount"
+      ],
+      "robos:tableRows": [
+        [
+          "Bronze",
+          "100",
+          "5%"
+        ],
+        [
+          "Silver",
+          "100",
+          "10%"
+        ],
+        [
+          "Gold",
+          "100",
+          "20%"
+        ]
+      ]
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
+      "dcterms:title": "E-Commerce Checkout & Cart Validation",
+      "robos:domainStandard": "http://open-services.net/ns/rm#Requirement",
+      "robos:featureFile": "features/checkout.feature",
+      "robos:hasBackground": "urn:robos:gherkin:checkout-cart-validation:background",
+      "robos:hasRule": [
+        "urn:robos:gherkin:checkout-cart-validation:rule-inventory"
+      ],
+      "robos:hasScenario": [
+        "urn:robos:scenario:checkout-standard-items"
+      ],
+      "robos:hasScenarioOutline": [
+        "urn:robos:scenario-outline:checkout-discount-tiers"
+      ],
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:tags": [
+        "checkout",
+        "billing",
+        "regression"
+      ],
+      "robos:testsService": "urn:robos:service:billing-api"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation:background",
+      "@type": [
+        "robos:GherkinBackground",
+        "robos:Background",
+        "schema:ItemList"
+      ],
+      "dcterms:title": "Customer Session & Cart Initialization",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:steps": [
+        "Given the customer is logged in with valid token",
+        "And the shopping cart is initialized"
+      ]
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
+      "@type": [
+        "robos:GherkinRule",
+        "robos:Rule",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
+      "dcterms:title": "Rule: Inventory must be verified before payment processing",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument"
+    },
+    {
+      "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
+      "@type": [
+        "robos:ScenarioOutline",
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
+      ],
+      "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
+      "dcterms:title": "Discount tier calculation for loyalty members",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
+      "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:steps": [
+        "Given customer loyalty tier is <tier>",
+        "When order subtotal is <amount>",
+        "Then calculated discount is <discount>"
+      ]
+    },
+    {
+      "@id": "urn:robos:scenario:checkout-standard-items",
+      "@type": [
+        "robos:Scenario",
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
+      ],
+      "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
+      "dcterms:title": "Successful checkout with in-stock items",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:inRule": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:steps": [
+        "Given items SKU-101 and SKU-202 are in stock",
+        "When the customer submits order with total $50",
+        "Then order status is CONFIRMED"
+      ]
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware inspector Electron checks",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:schema-group-view"
+        }
+      ],
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:relationshipEvidence": [
+        {
+          "evidence": [
+            {
+              "line": 76,
+              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+              "repository": "robos"
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior.",
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:schema-group-view"
+          }
+        }
+      ],
+      "robos:sourceKind": "test-definition",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Real Electron review/save/reopen test",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+      "robos:targets": {
+        "@id": "urn:robos:source:workspace-explorer"
+      }
+    },
+    {
+      "@id": "urn:robos:step:checkout-add-item-with-table",
+      "@type": [
+        "robos:ScenarioStep",
+        "schema:HowToStep"
+      ],
+      "robos:dataTable": "urn:robos:datatable:cart-items",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:keyword": "When",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:stepText": "the customer adds items to cart with configuration"
+    },
+    {
+      "@id": "urn:robos:step:checkout-payload-docstring",
+      "@type": [
+        "robos:ScenarioStep",
+        "schema:HowToStep"
+      ],
+      "robos:docString": "urn:robos:docstring:checkout-payload",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:keyword": "Given",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:stepText": "the checkout order payload is provided as JSON"
+    },
+    {
+      "@id": "urn:robos:stepdef:customer-submits-order",
+      "@type": [
+        "robos:StepDefinition",
+        "schema:SoftwareSourceCode"
+      ],
+      "dcterms:title": "StepDef: Customer Submits Order",
+      "robos:codeFile": "tests/steps/checkout_steps.js",
+      "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/",
+      "robos:functionName": "submitOrderStep",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
+      "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode"
+    },
+    {
+      "@id": "urn:robos:test-exec:checkout-standard-items-latest",
+      "@type": [
+        "robos:TestExecutionRecord",
+        "oslc_qm:TestExecutionRecord",
+        "schema:AssessAction"
+      ],
+      "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
+      "oslc_qm:executionStatus": "PASS",
+      "oslc_qm:reportsOnTestCase": "urn:robos:scenario:checkout-standard-items",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord",
+      "robos:durationMs": 420,
+      "robos:executedAt": "2026-09-08T12:00:00Z",
+      "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
+      "robos:schemaOrgType": "https://schema.org/AssessAction",
+      "robos:testFramework": "cucumber"
+    },
+    {
+      "@id": "urn:robos:test-plan:q3-release-regression",
+      "@type": [
+        "robos:TestPlan",
+        "oslc_qm:TestPlan",
+        "schema:Plan"
+      ],
+      "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
+      "dcterms:title": "Q3 Release Acceptance & Regression Plan",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
+      "robos:schemaOrgType": "https://schema.org/Plan",
+      "robos:testsService": "urn:robos:service:billing-api"
+    },
+    {
+      "@id": "urn:robos:test-suite:billing-api-bdd",
+      "@type": [
+        "robos:TestSuite",
+        "oslc_qm:TestSuite",
+        "schema:ItemList"
+      ],
+      "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
+      "dcterms:title": "Billing API Cucumber BDD Test Suite",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+      "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:testFramework": "cucumber",
+      "robos:testingType": "BDD Acceptance",
+      "robos:testsService": "urn:robos:service:billing-api"
+    },
+    {
+      "@id": "urn:robos:testing:cucumber",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
+      "dcterms:title": "Cucumber",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "polyglot",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "bdd",
+      "robos:website": "https://cucumber.io"
+    },
+    {
+      "@id": "urn:robos:testing:cypress",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
+      "dcterms:title": "Cypress",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "e2e",
+      "robos:website": "https://www.cypress.io"
+    },
+    {
+      "@id": "urn:robos:testing:godog",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
+      "dcterms:title": "Godog",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "go",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "bdd",
+      "robos:website": "https://github.com/cucumber/godog"
+    },
+    {
+      "@id": "urn:robos:testing:jest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
+      "dcterms:title": "Jest",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://jestjs.io"
+    },
+    {
+      "@id": "urn:robos:testing:junit5",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
+      "dcterms:title": "JUnit 5",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://junit.org/junit5/"
+    },
+    {
+      "@id": "urn:robos:testing:k6",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
+      "dcterms:title": "Grafana k6",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "performance",
+      "robos:website": "https://k6.io"
+    },
+    {
+      "@id": "urn:robos:testing:mocha",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
+      "dcterms:title": "Mocha",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://mochajs.org"
+    },
+    {
+      "@id": "urn:robos:testing:mockito",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
+      "dcterms:title": "Mockito",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "mocking",
+      "robos:website": "https://site.mockito.org"
+    },
+    {
+      "@id": "urn:robos:testing:pact",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
+      "dcterms:title": "Pact",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "polyglot",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "contract",
+      "robos:website": "https://pact.io"
+    },
+    {
+      "@id": "urn:robos:testing:playwright",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
+      "dcterms:title": "Playwright",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "polyglot",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "e2e",
+      "robos:website": "https://playwright.dev"
+    },
+    {
+      "@id": "urn:robos:testing:pytest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
+      "dcterms:title": "Pytest",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "python",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://pytest.org"
+    },
+    {
+      "@id": "urn:robos:testing:restassured",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
+      "dcterms:title": "REST Assured",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "api",
+      "robos:website": "https://rest-assured.io"
+    },
+    {
+      "@id": "urn:robos:testing:robot-framework",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
+      "dcterms:title": "Robot Framework",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "python",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "bdd",
+      "robos:website": "https://robotframework.org"
+    },
+    {
+      "@id": "urn:robos:testing:testify",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
+      "dcterms:title": "Testify",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "go",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://github.com/stretchr/testify"
+    },
+    {
+      "@id": "urn:robos:testing:testng",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
+      "dcterms:title": "TestNG",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "integration",
+      "robos:website": "https://testng.org"
+    },
+    {
+      "@id": "urn:robos:testing:vitest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
+      "dcterms:title": "Vitest",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "typescript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://vitest.dev"
+    }
+  ],
   "@id": "urn:robos:package:testing",
   "@type": [
     "oslc:ServiceProvider",
     "robos:Package"
   ],
-  "robos:package": "testing",
-  "robos:namespace": "robos.testing",
-  "robos:version": "1.0.0",
-  "dcterms:title": "Testing, Quality & BDD Package",
   "dcterms:description": "First-class Gherkin features, scenarios, step definitions, test execution records, and 16+ major testing frameworks.",
+  "dcterms:title": "Testing, Quality & BDD Package",
+  "robos:namespace": "robos.testing",
   "robos:nodes": [
     {
-      "@id": "urn:robos:gherkin:checkout-cart-validation",
-      "@type": [
-        "robos:GherkinFeature",
-        "robos:BDDFeature",
-        "oslc_rm:Requirement",
-        "schema:DigitalDocument"
-      ],
-      "dcterms:title": "E-Commerce Checkout & Cart Validation",
-      "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
-      "robos:featureFile": "features/checkout.feature",
-      "robos:testsService": "urn:robos:service:billing-api",
-      "robos:hasBackground": "urn:robos:gherkin:checkout-cart-validation:background",
-      "robos:hasRule": [
-        "urn:robos:gherkin:checkout-cart-validation:rule-inventory"
-      ],
-      "robos:hasScenario": [
-        "urn:robos:scenario:checkout-standard-items"
-      ],
-      "robos:hasScenarioOutline": [
-        "urn:robos:scenario-outline:checkout-discount-tiers"
-      ],
-      "robos:tags": [
-        "checkout",
-        "billing",
-        "regression"
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement",
-      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "http://open-services.net/ns/rm#Requirement"
-    },
-    {
-      "@id": "urn:robos:gherkin:checkout-cart-validation:background",
-      "@type": [
-        "robos:GherkinBackground",
-        "robos:Background",
-        "schema:ItemList"
-      ],
-      "dcterms:title": "Customer Session & Cart Initialization",
-      "robos:steps": [
-        "Given the customer is logged in with valid token",
-        "And the shopping cart is initialized"
-      ],
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
-      "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
-    },
-    {
-      "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
-      "@type": [
-        "robos:GherkinRule",
-        "robos:Rule",
-        "schema:DigitalDocument"
-      ],
-      "dcterms:title": "Rule: Inventory must be verified before payment processing",
-      "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule",
-      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule"
-    },
-    {
-      "@id": "urn:robos:scenario:checkout-standard-items",
-      "@type": [
-        "robos:Scenario",
-        "oslc_qm:TestCase",
-        "schema:CheckAction"
-      ],
-      "dcterms:title": "Successful checkout with in-stock items",
-      "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:inRule": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
-      "robos:steps": [
-        "Given items SKU-101 and SKU-202 are in stock",
-        "When the customer submits order with total $50",
-        "Then order status is CONFIRMED"
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
-      "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
-    },
-    {
-      "@id": "urn:robos:step:checkout-add-item-with-table",
-      "@type": [
-        "robos:ScenarioStep",
-        "schema:HowToStep"
-      ],
-      "robos:keyword": "When",
-      "robos:stepText": "the customer adds items to cart with configuration",
-      "robos:dataTable": "urn:robos:datatable:cart-items",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
-      "robos:schemaOrgType": "https://schema.org/HowToStep",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
-    },
-    {
       "@id": "urn:robos:datatable:cart-items",
       "@type": [
         "robos:DataTable",
         "schema:Table"
       ],
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables",
+      "robos:schemaOrgType": "https://schema.org/Table",
       "robos:step": "urn:robos:step:checkout-add-item-with-table",
       "robos:tableRows": [
         [
@@ -214,27 +828,7 @@
           "1",
           "49.50"
         ]
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables",
-      "robos:schemaOrgType": "https://schema.org/Table",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables"
-    },
-    {
-      "@id": "urn:robos:step:checkout-payload-docstring",
-      "@type": [
-        "robos:ScenarioStep",
-        "schema:HowToStep"
-      ],
-      "robos:keyword": "Given",
-      "robos:stepText": "the checkout order payload is provided as JSON",
-      "robos:docString": "urn:robos:docstring:checkout-payload",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
-      "robos:schemaOrgType": "https://schema.org/HowToStep",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
+      ]
     },
     {
       "@id": "urn:robos:docstring:checkout-payload",
@@ -242,36 +836,14 @@
         "robos:DocString",
         "schema:Text"
       ],
-      "robos:step": "urn:robos:step:checkout-payload-docstring",
       "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
       "robos:contentType": "application/json",
-      "robos:package": "testing",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
       "robos:namespace": "robos.testing",
+      "robos:package": "testing",
       "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
       "robos:schemaOrgType": "https://schema.org/Text",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
-    },
-    {
-      "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
-      "@type": [
-        "robos:ScenarioOutline",
-        "oslc_qm:TestCase",
-        "schema:CheckAction"
-      ],
-      "dcterms:title": "Discount tier calculation for loyalty members",
-      "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:steps": [
-        "Given customer loyalty tier is <tier>",
-        "When order subtotal is <amount>",
-        "Then calculated discount is <discount>"
-      ],
-      "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
-      "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
+      "robos:step": "urn:robos:step:checkout-payload-docstring"
     },
     {
       "@id": "urn:robos:examples:checkout-loyalty-tiers",
@@ -280,6 +852,11 @@
         "schema:Table"
       ],
       "dcterms:title": "Loyalty Tier Discounts",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
+      "robos:schemaOrgType": "https://schema.org/Table",
       "robos:tableHeaders": [
         "tier",
         "amount",
@@ -301,412 +878,119 @@
           "100",
           "20%"
         ]
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
-      "robos:schemaOrgType": "https://schema.org/Table",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
+      ]
     },
     {
-      "@id": "urn:robos:stepdef:customer-submits-order",
+      "@id": "urn:robos:gherkin:checkout-cart-validation",
       "@type": [
-        "robos:StepDefinition",
-        "schema:SoftwareSourceCode"
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
       ],
-      "dcterms:title": "StepDef: Customer Submits Order",
-      "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
-      "robos:codeFile": "tests/steps/checkout_steps.js",
-      "robos:functionName": "submitOrderStep",
-      "robos:package": "testing",
+      "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
+      "dcterms:title": "E-Commerce Checkout & Cart Validation",
+      "robos:domainStandard": "http://open-services.net/ns/rm#Requirement",
+      "robos:featureFile": "features/checkout.feature",
+      "robos:hasBackground": "urn:robos:gherkin:checkout-cart-validation:background",
+      "robos:hasRule": [
+        "urn:robos:gherkin:checkout-cart-validation:rule-inventory"
+      ],
+      "robos:hasScenario": [
+        "urn:robos:scenario:checkout-standard-items"
+      ],
+      "robos:hasScenarioOutline": [
+        "urn:robos:scenario-outline:checkout-discount-tiers"
+      ],
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
-      "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:tags": [
+        "checkout",
+        "billing",
+        "regression"
+      ],
+      "robos:testsService": "urn:robos:service:billing-api"
     },
     {
-      "@id": "urn:robos:test-plan:q3-release-regression",
+      "@id": "urn:robos:gherkin:checkout-cart-validation:background",
       "@type": [
-        "robos:TestPlan",
-        "oslc_qm:TestPlan",
-        "schema:Plan"
-      ],
-      "dcterms:title": "Q3 Release Acceptance & Regression Plan",
-      "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
-      "robos:testsService": "urn:robos:service:billing-api",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
-      "robos:schemaOrgType": "https://schema.org/Plan",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan"
-    },
-    {
-      "@id": "urn:robos:test-suite:billing-api-bdd",
-      "@type": [
-        "robos:TestSuite",
-        "oslc_qm:TestSuite",
+        "robos:GherkinBackground",
+        "robos:Background",
         "schema:ItemList"
       ],
-      "dcterms:title": "Billing API Cucumber BDD Test Suite",
-      "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
-      "robos:testFramework": "cucumber",
-      "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
-      "robos:package": "testing",
+      "dcterms:title": "Customer Session & Cart Initialization",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
       "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
-      "robos:testsService": "urn:robos:service:billing-api",
-      "robos:testingType": "BDD Acceptance"
+      "robos:steps": [
+        "Given the customer is logged in with valid token",
+        "And the shopping cart is initialized"
+      ]
     },
     {
-      "@id": "urn:robos:test-exec:checkout-standard-items-latest",
+      "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
       "@type": [
-        "robos:TestExecutionRecord",
-        "oslc_qm:TestExecutionRecord",
-        "schema:AssessAction"
+        "robos:GherkinRule",
+        "robos:Rule",
+        "schema:DigitalDocument"
       ],
-      "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
-      "oslc_qm:executionStatus": "PASS",
-      "oslc_qm:reportsOnTestCase": "urn:robos:scenario:checkout-standard-items",
-      "robos:testFramework": "cucumber",
-      "robos:durationMs": 420,
-      "robos:executedAt": "2026-09-08T12:00:00Z",
-      "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
-      "robos:package": "testing",
+      "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
+      "dcterms:title": "Rule: Inventory must be verified before payment processing",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
-      "robos:schemaOrgType": "https://schema.org/AssessAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument"
     },
     {
-      "@id": "urn:robos:testing:cucumber",
+      "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
       "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
+        "robos:ScenarioOutline",
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
       ],
-      "dcterms:title": "Cucumber",
-      "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
-      "robos:testingType": "bdd",
-      "robos:language": "polyglot",
-      "robos:website": "https://cucumber.io",
-      "robos:package": "testing",
+      "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
+      "dcterms:title": "Discount tier calculation for loyalty members",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
+      "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:steps": [
+        "Given customer loyalty tier is <tier>",
+        "When order subtotal is <amount>",
+        "Then calculated discount is <discount>"
+      ]
     },
     {
-      "@id": "urn:robos:testing:jest",
+      "@id": "urn:robos:scenario:checkout-standard-items",
       "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
+        "robos:Scenario",
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
       ],
-      "dcterms:title": "Jest",
-      "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
-      "robos:testingType": "unit",
-      "robos:language": "javascript",
-      "robos:website": "https://jestjs.io",
-      "robos:package": "testing",
+      "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
+      "dcterms:title": "Successful checkout with in-stock items",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:inRule": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:vitest",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Vitest",
-      "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
-      "robos:testingType": "unit",
-      "robos:language": "typescript",
-      "robos:website": "https://vitest.dev",
       "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:playwright",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Playwright",
-      "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
-      "robos:testingType": "e2e",
-      "robos:language": "polyglot",
-      "robos:website": "https://playwright.dev",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:cypress",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Cypress",
-      "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
-      "robos:testingType": "e2e",
-      "robos:language": "javascript",
-      "robos:website": "https://www.cypress.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:junit5",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "JUnit 5",
-      "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
-      "robos:testingType": "unit",
-      "robos:language": "java",
-      "robos:website": "https://junit.org/junit5/",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:testng",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "TestNG",
-      "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
-      "robos:testingType": "integration",
-      "robos:language": "java",
-      "robos:website": "https://testng.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:mockito",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Mockito",
-      "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
-      "robos:testingType": "mocking",
-      "robos:language": "java",
-      "robos:website": "https://site.mockito.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:pytest",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Pytest",
-      "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
-      "robos:testingType": "unit",
-      "robos:language": "python",
-      "robos:website": "https://pytest.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:robot-framework",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Robot Framework",
-      "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
-      "robos:testingType": "bdd",
-      "robos:language": "python",
-      "robos:website": "https://robotframework.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:pact",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Pact",
-      "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
-      "robos:testingType": "contract",
-      "robos:language": "polyglot",
-      "robos:website": "https://pact.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:k6",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Grafana k6",
-      "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
-      "robos:testingType": "performance",
-      "robos:language": "javascript",
-      "robos:website": "https://k6.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:restassured",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "REST Assured",
-      "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
-      "robos:testingType": "api",
-      "robos:language": "java",
-      "robos:website": "https://rest-assured.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:testify",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Testify",
-      "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
-      "robos:testingType": "unit",
-      "robos:language": "go",
-      "robos:website": "https://github.com/stretchr/testify",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:godog",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Godog",
-      "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
-      "robos:testingType": "bdd",
-      "robos:language": "go",
-      "robos:website": "https://github.com/cucumber/godog",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:mocha",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Mocha",
-      "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
-      "robos:testingType": "unit",
-      "robos:language": "javascript",
-      "robos:website": "https://mochajs.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:source:workspace-e2e",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Real Electron review/save/reopen test",
-      "robos:package": "testing",
-      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
-          "line": 1
-        }
-      ],
-      "robos:targets": {
-        "@id": "urn:robos:source:workspace-explorer"
-      },
-      "robos:namespace": "robos.testing"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:steps": [
+        "Given items SKU-101 and SKU-202 are in stock",
+        "When the customer submits order with total $50",
+        "Then order status is CONFIRMED"
+      ]
     },
     {
       "@id": "urn:robos:source:inspector-groups-e2e",
@@ -715,19 +999,6 @@
         "schema:CreativeWork"
       ],
       "dcterms:title": "Schema-aware inspector Electron checks",
-      "robos:package": "testing",
-      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
-      "robos:sourceKind": "test-definition",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
-          "line": 1
-        }
-      ],
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/source"
@@ -739,696 +1010,468 @@
           "@id": "urn:robos:source:schema-group-view"
         }
       ],
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
       "robos:relationshipEvidence": [
         {
+          "evidence": [
+            {
+              "line": 76,
+              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+              "repository": "robos"
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior.",
           "predicate": "robos:dependsOn",
           "target": {
             "@id": "urn:robos:source:schema-group-view"
-          },
-          "evidence": [
-            {
-              "repository": "robos",
-              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
-              "line": 76
-            }
-          ],
-          "note": "Implementation uses this module, or test exercises its rendered behavior."
+          }
         }
       ],
-      "robos:namespace": "robos.testing"
+      "robos:sourceKind": "test-definition",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js"
+    },
+    {
+      "@id": "urn:robos:source:workspace-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Real Electron review/save/reopen test",
+      "robos:evidence": [
+        {
+          "line": 1,
+          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+          "repository": "robos"
+        }
+      ],
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:sourceKind": "implementation",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+      "robos:targets": {
+        "@id": "urn:robos:source:workspace-explorer"
+      }
+    },
+    {
+      "@id": "urn:robos:step:checkout-add-item-with-table",
+      "@type": [
+        "robos:ScenarioStep",
+        "schema:HowToStep"
+      ],
+      "robos:dataTable": "urn:robos:datatable:cart-items",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:keyword": "When",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:stepText": "the customer adds items to cart with configuration"
+    },
+    {
+      "@id": "urn:robos:step:checkout-payload-docstring",
+      "@type": [
+        "robos:ScenarioStep",
+        "schema:HowToStep"
+      ],
+      "robos:docString": "urn:robos:docstring:checkout-payload",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:keyword": "Given",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:stepText": "the checkout order payload is provided as JSON"
+    },
+    {
+      "@id": "urn:robos:stepdef:customer-submits-order",
+      "@type": [
+        "robos:StepDefinition",
+        "schema:SoftwareSourceCode"
+      ],
+      "dcterms:title": "StepDef: Customer Submits Order",
+      "robos:codeFile": "tests/steps/checkout_steps.js",
+      "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/",
+      "robos:functionName": "submitOrderStep",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
+      "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode"
+    },
+    {
+      "@id": "urn:robos:test-exec:checkout-standard-items-latest",
+      "@type": [
+        "robos:TestExecutionRecord",
+        "oslc_qm:TestExecutionRecord",
+        "schema:AssessAction"
+      ],
+      "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
+      "oslc_qm:executionStatus": "PASS",
+      "oslc_qm:reportsOnTestCase": "urn:robos:scenario:checkout-standard-items",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord",
+      "robos:durationMs": 420,
+      "robos:executedAt": "2026-09-08T12:00:00Z",
+      "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
+      "robos:schemaOrgType": "https://schema.org/AssessAction",
+      "robos:testFramework": "cucumber"
+    },
+    {
+      "@id": "urn:robos:test-plan:q3-release-regression",
+      "@type": [
+        "robos:TestPlan",
+        "oslc_qm:TestPlan",
+        "schema:Plan"
+      ],
+      "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
+      "dcterms:title": "Q3 Release Acceptance & Regression Plan",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
+      "robos:schemaOrgType": "https://schema.org/Plan",
+      "robos:testsService": "urn:robos:service:billing-api"
+    },
+    {
+      "@id": "urn:robos:test-suite:billing-api-bdd",
+      "@type": [
+        "robos:TestSuite",
+        "oslc_qm:TestSuite",
+        "schema:ItemList"
+      ],
+      "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
+      "dcterms:title": "Billing API Cucumber BDD Test Suite",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+      "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:testFramework": "cucumber",
+      "robos:testingType": "BDD Acceptance",
+      "robos:testsService": "urn:robos:service:billing-api"
+    },
+    {
+      "@id": "urn:robos:testing:cucumber",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
+      "dcterms:title": "Cucumber",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "polyglot",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "bdd",
+      "robos:website": "https://cucumber.io"
+    },
+    {
+      "@id": "urn:robos:testing:cypress",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
+      "dcterms:title": "Cypress",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "e2e",
+      "robos:website": "https://www.cypress.io"
+    },
+    {
+      "@id": "urn:robos:testing:godog",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
+      "dcterms:title": "Godog",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "go",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "bdd",
+      "robos:website": "https://github.com/cucumber/godog"
+    },
+    {
+      "@id": "urn:robos:testing:jest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
+      "dcterms:title": "Jest",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://jestjs.io"
+    },
+    {
+      "@id": "urn:robos:testing:junit5",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
+      "dcterms:title": "JUnit 5",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://junit.org/junit5/"
+    },
+    {
+      "@id": "urn:robos:testing:k6",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
+      "dcterms:title": "Grafana k6",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "performance",
+      "robos:website": "https://k6.io"
+    },
+    {
+      "@id": "urn:robos:testing:mocha",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
+      "dcterms:title": "Mocha",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "javascript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://mochajs.org"
+    },
+    {
+      "@id": "urn:robos:testing:mockito",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
+      "dcterms:title": "Mockito",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "mocking",
+      "robos:website": "https://site.mockito.org"
+    },
+    {
+      "@id": "urn:robos:testing:pact",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
+      "dcterms:title": "Pact",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "polyglot",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "contract",
+      "robos:website": "https://pact.io"
+    },
+    {
+      "@id": "urn:robos:testing:playwright",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
+      "dcterms:title": "Playwright",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "polyglot",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "e2e",
+      "robos:website": "https://playwright.dev"
+    },
+    {
+      "@id": "urn:robos:testing:pytest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
+      "dcterms:title": "Pytest",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "python",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://pytest.org"
+    },
+    {
+      "@id": "urn:robos:testing:restassured",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
+      "dcterms:title": "REST Assured",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "api",
+      "robos:website": "https://rest-assured.io"
+    },
+    {
+      "@id": "urn:robos:testing:robot-framework",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
+      "dcterms:title": "Robot Framework",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "python",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "bdd",
+      "robos:website": "https://robotframework.org"
+    },
+    {
+      "@id": "urn:robos:testing:testify",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
+      "dcterms:title": "Testify",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "go",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://github.com/stretchr/testify"
+    },
+    {
+      "@id": "urn:robos:testing:testng",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
+      "dcterms:title": "TestNG",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "java",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "integration",
+      "robos:website": "https://testng.org"
+    },
+    {
+      "@id": "urn:robos:testing:vitest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
+      "dcterms:title": "Vitest",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:language": "typescript",
+      "robos:namespace": "robos.testing",
+      "robos:package": "testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:testingType": "unit",
+      "robos:website": "https://vitest.dev"
     }
   ],
-  "@graph": [
-    {
-      "@id": "urn:robos:gherkin:checkout-cart-validation",
-      "@type": [
-        "robos:GherkinFeature",
-        "robos:BDDFeature",
-        "oslc_rm:Requirement",
-        "schema:DigitalDocument"
-      ],
-      "dcterms:title": "E-Commerce Checkout & Cart Validation",
-      "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
-      "robos:featureFile": "features/checkout.feature",
-      "robos:testsService": "urn:robos:service:billing-api",
-      "robos:hasBackground": "urn:robos:gherkin:checkout-cart-validation:background",
-      "robos:hasRule": [
-        "urn:robos:gherkin:checkout-cart-validation:rule-inventory"
-      ],
-      "robos:hasScenario": [
-        "urn:robos:scenario:checkout-standard-items"
-      ],
-      "robos:hasScenarioOutline": [
-        "urn:robos:scenario-outline:checkout-discount-tiers"
-      ],
-      "robos:tags": [
-        "checkout",
-        "billing",
-        "regression"
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement",
-      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "http://open-services.net/ns/rm#Requirement"
-    },
-    {
-      "@id": "urn:robos:gherkin:checkout-cart-validation:background",
-      "@type": [
-        "robos:GherkinBackground",
-        "robos:Background",
-        "schema:ItemList"
-      ],
-      "dcterms:title": "Customer Session & Cart Initialization",
-      "robos:steps": [
-        "Given the customer is logged in with valid token",
-        "And the shopping cart is initialized"
-      ],
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
-      "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
-    },
-    {
-      "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
-      "@type": [
-        "robos:GherkinRule",
-        "robos:Rule",
-        "schema:DigitalDocument"
-      ],
-      "dcterms:title": "Rule: Inventory must be verified before payment processing",
-      "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule",
-      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule"
-    },
-    {
-      "@id": "urn:robos:scenario:checkout-standard-items",
-      "@type": [
-        "robos:Scenario",
-        "oslc_qm:TestCase",
-        "schema:CheckAction"
-      ],
-      "dcterms:title": "Successful checkout with in-stock items",
-      "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:inRule": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
-      "robos:steps": [
-        "Given items SKU-101 and SKU-202 are in stock",
-        "When the customer submits order with total $50",
-        "Then order status is CONFIRMED"
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
-      "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
-    },
-    {
-      "@id": "urn:robos:step:checkout-add-item-with-table",
-      "@type": [
-        "robos:ScenarioStep",
-        "schema:HowToStep"
-      ],
-      "robos:keyword": "When",
-      "robos:stepText": "the customer adds items to cart with configuration",
-      "robos:dataTable": "urn:robos:datatable:cart-items",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
-      "robos:schemaOrgType": "https://schema.org/HowToStep",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
-    },
-    {
-      "@id": "urn:robos:datatable:cart-items",
-      "@type": [
-        "robos:DataTable",
-        "schema:Table"
-      ],
-      "robos:step": "urn:robos:step:checkout-add-item-with-table",
-      "robos:tableRows": [
-        [
-          "sku",
-          "quantity",
-          "price"
-        ],
-        [
-          "SKU-101",
-          "2",
-          "19.99"
-        ],
-        [
-          "SKU-202",
-          "1",
-          "49.50"
-        ]
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables",
-      "robos:schemaOrgType": "https://schema.org/Table",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables"
-    },
-    {
-      "@id": "urn:robos:step:checkout-payload-docstring",
-      "@type": [
-        "robos:ScenarioStep",
-        "schema:HowToStep"
-      ],
-      "robos:keyword": "Given",
-      "robos:stepText": "the checkout order payload is provided as JSON",
-      "robos:docString": "urn:robos:docstring:checkout-payload",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
-      "robos:schemaOrgType": "https://schema.org/HowToStep",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
-    },
-    {
-      "@id": "urn:robos:docstring:checkout-payload",
-      "@type": [
-        "robos:DocString",
-        "schema:Text"
-      ],
-      "robos:step": "urn:robos:step:checkout-payload-docstring",
-      "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
-      "robos:contentType": "application/json",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
-      "robos:schemaOrgType": "https://schema.org/Text",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
-    },
-    {
-      "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
-      "@type": [
-        "robos:ScenarioOutline",
-        "oslc_qm:TestCase",
-        "schema:CheckAction"
-      ],
-      "dcterms:title": "Discount tier calculation for loyalty members",
-      "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
-      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
-      "robos:steps": [
-        "Given customer loyalty tier is <tier>",
-        "When order subtotal is <amount>",
-        "Then calculated discount is <discount>"
-      ],
-      "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
-      "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
-    },
-    {
-      "@id": "urn:robos:examples:checkout-loyalty-tiers",
-      "@type": [
-        "robos:ExamplesTable",
-        "schema:Table"
-      ],
-      "dcterms:title": "Loyalty Tier Discounts",
-      "robos:tableHeaders": [
-        "tier",
-        "amount",
-        "discount"
-      ],
-      "robos:tableRows": [
-        [
-          "Bronze",
-          "100",
-          "5%"
-        ],
-        [
-          "Silver",
-          "100",
-          "10%"
-        ],
-        [
-          "Gold",
-          "100",
-          "20%"
-        ]
-      ],
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
-      "robos:schemaOrgType": "https://schema.org/Table",
-      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
-    },
-    {
-      "@id": "urn:robos:stepdef:customer-submits-order",
-      "@type": [
-        "robos:StepDefinition",
-        "schema:SoftwareSourceCode"
-      ],
-      "dcterms:title": "StepDef: Customer Submits Order",
-      "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
-      "robos:codeFile": "tests/steps/checkout_steps.js",
-      "robos:functionName": "submitOrderStep",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
-      "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
-    },
-    {
-      "@id": "urn:robos:test-plan:q3-release-regression",
-      "@type": [
-        "robos:TestPlan",
-        "oslc_qm:TestPlan",
-        "schema:Plan"
-      ],
-      "dcterms:title": "Q3 Release Acceptance & Regression Plan",
-      "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
-      "robos:testsService": "urn:robos:service:billing-api",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
-      "robos:schemaOrgType": "https://schema.org/Plan",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan"
-    },
-    {
-      "@id": "urn:robos:test-suite:billing-api-bdd",
-      "@type": [
-        "robos:TestSuite",
-        "oslc_qm:TestSuite",
-        "schema:ItemList"
-      ],
-      "dcterms:title": "Billing API Cucumber BDD Test Suite",
-      "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
-      "robos:testFramework": "cucumber",
-      "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
-      "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
-      "robos:testsService": "urn:robos:service:billing-api",
-      "robos:testingType": "BDD Acceptance"
-    },
-    {
-      "@id": "urn:robos:test-exec:checkout-standard-items-latest",
-      "@type": [
-        "robos:TestExecutionRecord",
-        "oslc_qm:TestExecutionRecord",
-        "schema:AssessAction"
-      ],
-      "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
-      "oslc_qm:executionStatus": "PASS",
-      "oslc_qm:reportsOnTestCase": "urn:robos:scenario:checkout-standard-items",
-      "robos:testFramework": "cucumber",
-      "robos:durationMs": 420,
-      "robos:executedAt": "2026-09-08T12:00:00Z",
-      "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
-      "robos:schemaOrgType": "https://schema.org/AssessAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
-    },
-    {
-      "@id": "urn:robos:testing:cucumber",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Cucumber",
-      "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
-      "robos:testingType": "bdd",
-      "robos:language": "polyglot",
-      "robos:website": "https://cucumber.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:jest",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Jest",
-      "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
-      "robos:testingType": "unit",
-      "robos:language": "javascript",
-      "robos:website": "https://jestjs.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:vitest",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Vitest",
-      "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
-      "robos:testingType": "unit",
-      "robos:language": "typescript",
-      "robos:website": "https://vitest.dev",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:playwright",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Playwright",
-      "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
-      "robos:testingType": "e2e",
-      "robos:language": "polyglot",
-      "robos:website": "https://playwright.dev",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:cypress",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Cypress",
-      "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
-      "robos:testingType": "e2e",
-      "robos:language": "javascript",
-      "robos:website": "https://www.cypress.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:junit5",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "JUnit 5",
-      "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
-      "robos:testingType": "unit",
-      "robos:language": "java",
-      "robos:website": "https://junit.org/junit5/",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:testng",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "TestNG",
-      "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
-      "robos:testingType": "integration",
-      "robos:language": "java",
-      "robos:website": "https://testng.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:mockito",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Mockito",
-      "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
-      "robos:testingType": "mocking",
-      "robos:language": "java",
-      "robos:website": "https://site.mockito.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:pytest",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Pytest",
-      "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
-      "robos:testingType": "unit",
-      "robos:language": "python",
-      "robos:website": "https://pytest.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:robot-framework",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Robot Framework",
-      "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
-      "robos:testingType": "bdd",
-      "robos:language": "python",
-      "robos:website": "https://robotframework.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:pact",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Pact",
-      "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
-      "robos:testingType": "contract",
-      "robos:language": "polyglot",
-      "robos:website": "https://pact.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:k6",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Grafana k6",
-      "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
-      "robos:testingType": "performance",
-      "robos:language": "javascript",
-      "robos:website": "https://k6.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:restassured",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "REST Assured",
-      "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
-      "robos:testingType": "api",
-      "robos:language": "java",
-      "robos:website": "https://rest-assured.io",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:testify",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Testify",
-      "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
-      "robos:testingType": "unit",
-      "robos:language": "go",
-      "robos:website": "https://github.com/stretchr/testify",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:godog",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Godog",
-      "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
-      "robos:testingType": "bdd",
-      "robos:language": "go",
-      "robos:website": "https://github.com/cucumber/godog",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:testing:mocha",
-      "@type": [
-        "robos:TestingLibrary",
-        "robos:TestFramework",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "Mocha",
-      "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
-      "robos:testingType": "unit",
-      "robos:language": "javascript",
-      "robos:website": "https://mochajs.org",
-      "robos:package": "testing",
-      "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
-    },
-    {
-      "@id": "urn:robos:source:workspace-e2e",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Real Electron review/save/reopen test",
-      "robos:package": "testing",
-      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
-      "robos:sourceKind": "implementation",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
-          "line": 1
-        }
-      ],
-      "robos:targets": {
-        "@id": "urn:robos:source:workspace-explorer"
-      },
-      "robos:namespace": "robos.testing"
-    },
-    {
-      "@id": "urn:robos:source:inspector-groups-e2e",
-      "@type": [
-        "robos:SourceArtifact",
-        "schema:CreativeWork"
-      ],
-      "dcterms:title": "Schema-aware inspector Electron checks",
-      "robos:package": "testing",
-      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
-      "robos:sourceKind": "test-definition",
-      "robos:inRepository": {
-        "@id": "urn:robos:source:workspace"
-      },
-      "robos:evidence": [
-        {
-          "repository": "robos",
-          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
-          "line": 1
-        }
-      ],
-      "robos:classification": [
-        {
-          "@id": "https://robos.dev/ns/sdlc#classification/source"
-        }
-      ],
-      "robos:classificationOrigin": "inferred",
-      "robos:dependsOn": [
-        {
-          "@id": "urn:robos:source:schema-group-view"
-        }
-      ],
-      "robos:relationshipEvidence": [
-        {
-          "predicate": "robos:dependsOn",
-          "target": {
-            "@id": "urn:robos:source:schema-group-view"
-          },
-          "evidence": [
-            {
-              "repository": "robos",
-              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
-              "line": 76
-            }
-          ],
-          "note": "Implementation uses this module, or test exercises its rendered behavior."
-        }
-      ],
-      "robos:namespace": "robos.testing"
-    }
-  ]
+  "robos:package": "testing",
+  "robos:version": "1.0.0"
 }
