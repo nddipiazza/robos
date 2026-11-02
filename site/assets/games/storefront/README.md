@@ -5,10 +5,14 @@ slideshow. They are shared by the four published itch.io storefronts.
 
 | Game | Capture source | GIF |
 | --- | --- | --- |
-| Quest: Warrior Dragon | Windows v0.0.9 export, demo controller walking the overworld; 20–28 seconds of a Godot movie capture | 768px wide, 5 fps, 8 seconds |
-| Realm of Heroes | Windows v0.0.9 export, VillageSquare fixture and real `user_input/move_to` commands; viewport screenshots sampled during movement | 960px wide, 5 fps, 10 seconds |
-| Starfall Command | `../rts/frontier-hunters-live.mp4`, 28–37 seconds | 1920px wide, 8 fps, 9 seconds |
-| RobOS Tabletop RPG | `../proof-of-viability-election-2026/election-2026-playthrough.webm`, 8–16 seconds | 960px wide, 6 fps, 8 seconds |
+| Quest: Warrior Dragon | Windows v0.0.9 export, demo controller walking the overworld; 20–28 seconds of a Godot movie capture | 768px wide, 40 frames, 24-second loop |
+| Realm of Heroes | Windows v0.0.9 export, VillageSquare fixture and real `user_input/move_to` commands; viewport screenshots sampled during movement | 960px wide, 50 frames, 30-second loop |
+| Starfall Command | `../rts/frontier-hunters-live.mp4`, 28–37 seconds | 1920px wide, 72 frames, 27.03-second loop |
+| RobOS Tabletop RPG | `../proof-of-viability-election-2026/election-2026-playthrough.webm`, 8–16 seconds | 960px wide, 48 frames, 24-second loop |
+
+Playback is one-third of the original capture speed, giving viewers more time
+to follow the action. Only GIF frame delays changed; every frame, palette,
+resolution and loop setting is preserved without re-encoding the images.
 
 Quest preserves its original pixel art with nearest-neighbor scaling. Its wide
 background is an enlargement of the native capture, not newly added detail.
