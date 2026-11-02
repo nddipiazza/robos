@@ -8,10 +8,23 @@
 
   <!-- Open Graph / Meta -->
   <meta name="description" content="The definitive hands-on training module for building, extending, and autonomously verifying party-based tactical cRPGs in Godot 4.3 with D&D 5e SRD rules, 2.5D isometric geometry, Infinity Engine traps, and automated video proof-of-work.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="RobOS Project">
+  <link rel="canonical" href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/elearning/">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="https://rowbose.com/sitemap.xml">
+  <meta property="og:site_name" content="RobOS">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/elearning/">
   <meta property="og:title" content="RobOS cRPG Game Builder & Tactical Engine Academy">
   <meta property="og:description" content="The definitive hands-on training module for building, extending, and autonomously verifying party-based tactical cRPGs in Godot 4.3 with D&D 5e SRD rules, 2.5D isometric geometry, Infinity Engine traps, and automated video proof-of-work.">
   <meta property="og:type" content="article">
   <meta property="og:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/elearning/">
+  <meta name="twitter:title" content="RobOS cRPG Game Builder & Tactical Engine Academy">
+  <meta name="twitter:description" content="The definitive hands-on training module for building, extending, and autonomously verifying party-based tactical cRPGs in Godot 4.3 with D&D 5e SRD rules, 2.5D isometric geometry, Infinity Engine traps, and automated video proof-of-work.">
+  <meta name="twitter:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
 
   <!-- Mermaid.js for Interactive Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -423,6 +436,142 @@
       font-size: 20px;
       color: var(--text-bright);
     }
+    .slide-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .copy-tab-path-link {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      background: rgba(0, 188, 212, 0.1);
+      border: 1px solid rgba(0, 188, 212, 0.3);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .copy-tab-path-link:hover {
+      background: rgba(0, 188, 212, 0.25);
+      border-color: var(--accent);
+      color: var(--text-bright);
+      text-decoration: none;
+    }
+    .btn-copy-tab-path {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .btn-copy-tab-path:hover {
+      border-color: var(--accent);
+      background: rgba(0, 188, 212, 0.1);
+      color: var(--text-bright);
+    }
+    .slide-menu-container {
+      position: relative;
+      display: inline-block;
+    }
+    .btn-slide-menu {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-slide-menu:hover {
+      border-color: var(--accent);
+      background: var(--bg-surface-hover);
+      color: var(--accent);
+    }
+    .slide-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #161b22;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      min-width: 230px;
+      z-index: 100;
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .slide-dropdown-menu.hidden {
+      display: none !important;
+    }
+    .slide-menu-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 6px 14px 4px;
+    }
+    .slide-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .slide-menu-item:hover {
+      background: rgba(0, 188, 212, 0.12);
+      color: var(--text-bright);
+    }
+    .slide-menu-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .web-toast-notice {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #161b22;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      padding: 12px 20px;
+      color: var(--text-bright);
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      z-index: 9999;
+      transition: opacity 0.25s, transform 0.25s;
+      max-width: 480px;
+      word-break: break-word;
+    }
+    .web-toast-notice.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+    }
     .module-overview {
       color: var(--text);
       font-size: 14px;
@@ -619,9 +768,11 @@
     }
     .quiz-feedback {
       margin-top: 10px;
-      padding: 10px 14px;
+      margin-bottom: 20px;
+      padding: 12px 16px 14px 16px;
       border-radius: var(--radius-sm);
-      font-size: 12px;
+      font-size: 13px;
+      line-height: 1.5;
       display: none;
     }
     .quiz-feedback.pass {
@@ -915,6 +1066,35 @@
       .cert-frame h2, .cert-recipient, .cert-course-name { color: #000 !important; }
       .cert-footer, .modal-close { display: none !important; }
     }
+
+    /* ── Zoom Indicator Overlay (Ctrl +, Ctrl -, Ctrl 0) ── */
+    .zoom-indicator {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(22, 27, 34, 0.95);
+      border: 1px solid var(--accent);
+      color: var(--text-bright);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .zoom-indicator.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -1010,6 +1190,7 @@
                 <span>⏱️ 12 mins</span>
                 <span>🧪 3 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 0)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1031,6 +1212,7 @@
                 <span>⏱️ 10 mins</span>
                 <span>🧪 3 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 1)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1052,6 +1234,7 @@
                 <span>⏱️ 12 mins</span>
                 <span>🧪 3 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 2)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1073,6 +1256,7 @@
                 <span>⏱️ 10 mins</span>
                 <span>🧪 3 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 3)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1094,6 +1278,7 @@
                 <span>⏱️ 15 mins</span>
                 <span>🧪 4 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 4)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1115,6 +1300,7 @@
                 <span>⏱️ 12 mins</span>
                 <span>🧪 3 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 5)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1136,6 +1322,7 @@
                 <span>⏱️ 14 mins</span>
                 <span>🧪 4 labs</span>
                 <span>📝 2 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 6)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
@@ -1172,114 +1359,83 @@
       <!-- VIEW 2: Full Architecture Specification (Living Docs) -->
       <section id="view-doc" role="tabpanel" aria-labelledby="btn-tab-doc" style="display: none;">
         <article class="doc-article">
-          <h1>Creating Your Own Game with robos-crpg</h1>
+          <h1>Extending the CRPG</h1>
 
-<p>A complete engineering masterclass and living documentation section on building, extending, and autonomously verifying party-based tactical isometric cRPGs using Godot 4.3, D&D 5e SRD rules, and the RobOS AI governance harness.</p>
+<p>How to add locations, items, traps, enemies and spells to the hand-built scenes of <code>games/crpg-realm</code>, and what the code assumes about a scene. You need to read GDScript and work in the Godot 4.3 editor. For data-only authoring, use the <a href="https://rowbose.com/v1/projects/crpg-realm/campaign-editor-tutorial.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">campaign editor</a>.</p>
 
-<div style="margin: 1.5rem 0;">
-  <img src="https://rowbose.com/v1/assets/images/crpg-realm/crpg_game_builder_architecture.jpg" alt="Tactical cRPG Architecture and Game Builder Diagram" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #4a3722; box-shadow: 0 4px 24px rgba(0,0,0,0.6);" />
-  <p style="text-align: center; color: #b8860b; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 1: Tactical Isometric RPG Architecture Codex — Complete game loop, party management, combat resolution, and scene portal flow.</em></p>
-</div>
+<h2>Pick a route</h2>
 
-<h2>Table of contents</h2>
+<table><thead><tr><th>You want to</th><th>Use</th></tr></thead><tbody><tr><td>Add maps, characters or items as data and play them</td><td>The <a href="https://rowbose.com/v1/projects/crpg-realm/campaign-editor-tutorial.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">editor and cartridges</a>. Read its last section first: NPCs and quests in cartridges are still coded per story.</td></tr><tr><td>Add a rule, spell, monster or AI behaviour and prove it with a test</td><td><code>data/v1/*.json</code>, <code>ScenarioEngine.gd</code> and a feature in <code>tests/e2e/features/engine/</code>. See <a href="https://rowbose.com/v1/projects/crpg-realm/infinity-ai-agent-harness.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">testing</a>.</td></tr><tr><td>Add a location, trap, enemy or spell to the real-time scenes</td><td>This guide and its three pages.</td></tr></tbody></table>
 
-<p>1. TOC</p>
+<p>The three pages:</p>
 
-<hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+<p>1. <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/scenes-and-maps.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Scenes, doors and maps</a>: the scene tree, <code>DoorPortal</code>, collision and camera.<br>2. <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/items-traps-and-mods.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Items, traps and mods</a>: <code>items.json</code>, ground items and chests, <code>Trap</code>, and the mod loader.<br>3. <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Combat, party and spells</a>: attack math, the Malakor fight, formations, enemy threat and the spell code.</p>
 
-<h2>Documentation Chapters & Technical Modules</h2>
+<h2>Where things live</h2>
 
-<p>This guide has been expanded into a comprehensive multi-chapter engineering curriculum. Select any module below to dive into code samples, architecture schematics, and implementation standards:</p>
+<table><thead><tr><th>Path in <code>games/crpg-realm/</code></th><th>What it holds</th></tr></thead><tbody><tr><td><code>project.godot</code></td><td>Engine settings, main scene (<code>CharacterSelect.tscn</code>) and the ten autoloads</td></tr><tr><td><code>scripts/</code></td><td>One script per location (<code>VillageSquare.gd</code>, <code>AncientCatacombs.gd</code>, ...), components (<code>DoorPortal.gd</code>, <code>Trap.gd</code>, <code>TacticalEnemy.gd</code>, <code>GroundItem.gd</code>), <code>GameState.gd</code>, <code>CombatManager.gd</code>, <code>Pathfinder.gd</code>, <code>FogOfWar.gd</code>, <code>GameControlServer.gd</code></td></tr><tr><td><code>scripts/engine/</code>, <code>scripts/demo/</code></td><td>The scenario engine, dice, cartridge manager and demo mode</td></tr><tr><td><code>scenes/</code></td><td>One <code>.tscn</code> per location, plus <code>HeroPlayer.tscn</code>, <code>PartyCompanion.tscn</code>, <code>ShadowHound.tscn</code>, <code>CharacterSelect.tscn</code>, <code>VictoryScreen.tscn</code>, <code>CartridgeWorld.tscn</code></td></tr><tr><td><code>scenes/components/</code></td><td>Building blocks to instance: <code>DoorPortal</code>, <code>Trap</code>, <code>GroundItem</code>, <code>TacticalEnemy</code>, <code>NPCCharacter</code>, <code>FogOfWar</code>, <code>ActionLog</code>, windows and toolbars</td></tr><tr><td><code>data/v1/</code></td><td>JSON content arrays. Which code reads which file is on the <a href="https://rowbose.com/v1/projects/crpg-realm/reference.html#data-v1-files" target="_blank" rel="noopener" style="color:var(--accent-cyan);">reference page</a>.</td></tr><tr><td><code>src/generated/v1/</code></td><td><code>DataStoreV1.gd</code> and the typed wrappers <code>ItemData</code>, <code>SpellData</code>, <code>MonsterData</code>, <code>NPCData</code></td></tr><tr><td><code>mods/</code></td><td>Drop-in mods. The loader reads only a <code>traps_file</code>.</td></tr><tr><td><code>tests/e2e/</code></td><td><code>behave</code> features, step definitions in <code>features/steps/</code>, the report generator</td></tr></tbody></table>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 1.5rem 0;">
+<p><code>DataStoreV1.gd</code> starts with "Auto-generated", but it has been edited by hand (races, traps, mod loading). Do not regenerate it with <code>packages/crpg-builder</code>. The generator template would overwrite those edits.</p>
 
-  <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 1</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/01-godot-architecture.html" style="color: #00bcd4; text-decoration: none;">Godot 4 Architecture for Programmers</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">The mental model for software engineers: SceneTree hierarchy, Node2D, CharacterBody2D, Y-Sort depth pipeline, and persistent autoload singletons.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/01-godot-architecture.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 1 →</a>
-  </div>
+<h2>Rules the code depends on</h2>
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 2</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/02-scenes-and-portals.html" style="color: #00bcd4; text-decoration: none;">Scenes, Level Transitions & Door Portals</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Structuring location scenes, building two-way DoorPortal components with Area2D, coordinate offsets, and dynamic companion spawning.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/02-scenes-and-portals.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 2 →</a>
-  </div>
+<p>Breaking these does not raise an error. The affected feature just stops seeing your nodes.</p>
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 3</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/03-maps-and-isometric-geometry.html" style="color: #00bcd4; text-decoration: none;">2560×1440 Maps & Isometric World Layers</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Rendering 2560×1440 plates, applying the Foundation Footprint rule to colliders, camera limit clamping, and two-tier click-to-move pathfinding.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/03-maps-and-isometric-geometry.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 3 →</a>
-  </div>
+<p>- Keep gameplay nodes flat. Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. <code>GameState.get_scene_traps()</code>, the <code>battle.enemies</code> list in <code>/api/v1/state</code>, fireball targeting, enemy pack alerts and party lookup all scan <code>get_tree().current_scene.get_children()</code>. A trap under a <code>Traps</code> group node is never detected, and an enemy under an <code>Enemies</code> node never hears an alert.<br>- Add a <code>CombatManager</code> child node to any scene with combat. It is a <code>class_name</code>, not an autoload, and scene scripts reach it as <code>$CombatManager</code>.<br>- Name the player node <code>HeroPlayer</code>. <code>GameState.get_scene_party_nodes()</code>, <code>TacticalEnemy</code> and the HTTP API look it up by that name. Its <code>Camera2D</code> is the scene camera.<br>- The root node name is the scene name. <code>/api/v1/state</code> reports it, and the test step <code>the current scene is "X"</code> compares against it.<br>- Set <code>mouse_filter = 2</code> (Ignore) on the map's <code>Ground</code> node. Otherwise it swallows clicks before <code>HeroPlayer._unhandled_input</code> sees them and click-to-move stops working.<br>- Put content in <code>data/v1/*.json</code>, but expect some behaviour to be keyed by id in code. Potion effects are in <code>GameState.use_item()</code>, spells in <code>CombatManager.gd</code>. Adding JSON alone is not always enough; each page says when.</p>
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 4</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/04-items-loot-and-inventory.html" style="color: #00bcd4; text-decoration: none;">Items, Inventory & D&D 5e Equipment</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Zero-hardcoding JSON schemas, GroundItem pickup triggers, container footlockers, and D&D 5e Armor Class (AC) and damage calculations.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/04-items-loot-and-inventory.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 4 →</a>
-  </div>
+<h2>Checklist: a new location</h2>
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 5</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/05-infinity-engine-traps.html" style="color: #00bcd4; text-decoration: none;">Infinity Engine Traps & Hazards System</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Concealed traps, Rogue modal Find Traps skill, 2nd-level divination spell sweeps, pulsing red danger outlines, Thieves' Tools disarms, and fumble detonation.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/05-infinity-engine-traps.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 5 →</a>
-  </div>
+<p>This is the shortest path to a new playable scene. The details of each step are on the three pages above. Duplicating an existing scene in the Godot editor is safer than writing a <code>.tscn</code> by hand.</p>
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 6</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/06-boss-fights-and-encounters.html" style="color: #00bcd4; text-decoration: none;">Custom Boss Encounters & Multi-Phase Logic</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Building multi-phase boss state machines: cutscenes, Phase 1 combat, 50% HP necrotic invulnerability shields, summoned minion waves, and victory fanfares.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/06-boss-fights-and-encounters.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 6 →</a>
-  </div>
+<p>1. Duplicate a scene. In the FileSystem dock, right-click <code>scenes/AncientCatacombs.tscn</code> and choose Duplicate. Rename the file and its root node (the root name must match the file name for tests). Delete the catacomb children you do not want (the traps, the sarcophagus, the skeleton and guardian, the two ground items, <code>KeepSecretPassage</code>).<br>2. Keep what scripts look up by path: <code>CombatManager</code>, <code>Ground</code>, the boundary <code>StaticBody2D</code>, <code>HeroPlayer</code>, and under <code>CanvasLayer</code> the <code>NoticeLabel</code>, <code>PartyHUD</code> (with <code>QuestLabel</code>, <code>BtnOptions</code>, <code>BtnInventory</code>, <code>BtnPause</code>), <code>ActionLog</code>, <code>InventoryWindow</code>, <code>SettingsModal</code> and <code>CharacterStatusWindow</code>. Keep <code>FogOfWar</code> if you want fog.<br>3. Write the scene script. Attach a new script that follows the start of <code>AncientCatacombs.gd</code>:</p>
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 7</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/07-modding-and-custom-content.html" style="color: #00bcd4; text-decoration: none;">Modding Engine, Manifests & Data Overrides</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Zero-code Mod Loader architecture: mod.json manifests, registering custom traps, spells, items, and monsters without modifying core source files.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/07-modding-and-custom-content.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 7 →</a>
-  </div>
+<pre><code class="language-gdscript">extends Node2D
 
-<div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-    <div>
-      <div style="font-size: 0.8rem; text-transform: uppercase; color: #58a6ff; font-weight: bold; margin-bottom: 0.4rem;">Chapter 8</div>
-      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: #00bcd4;"><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/08-cucumber-bdd-testing.html" style="color: #00bcd4; text-decoration: none;">Automated Cucumber BDD & Xvfb Framebuffers</a></h3>
-      <p style="font-size: 0.9rem; color: #8b949e; margin: 0 0 1rem 0;">Headless verification harness: driving Godot via REST (:18090), virtual display :99, 1080p MP4 proof-of-work video recording, and GameState telemetry.</p>
-    </div>
-    <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/08-cucumber-bdd-testing.html" class="btn btn-primary" style="align-self: flex-start; font-size: 0.85rem;">Read Chapter 8 →</a>
-  </div>
+   @onready var hud = $CanvasLayer/PartyHUD
+   @onready var hero = $HeroPlayer
 
-<p></div></p>
+   func _ready() -&gt; void:
+       if hero and hero.has_method("set_camera_limits"):
+           hero.set_camera_limits(0, 0, 2560, 1440)
+       hud.update_display("Active Quest: Explore the new room")
 
-<hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+       if GameState.party_members.size() &gt; 1 and not has_node("PartyCompanion"):
+           var comp_scene = load("res://scenes/PartyCompanion.tscn")
+           if comp_scene:
+               var comp = comp_scene.instantiate()
+               comp.global_position = hero.global_position + Vector2(-48, 24)
+               add_child(comp)
+               if has_node("FogOfWar"):
+                   $FogOfWar.register_actor(comp)</code></pre>
 
-<h2>Interactive eLearning & Training Modules</h2>
+<p>This is a sketch derived from <code>AncientCatacombs.gd</code>. Run the scene in the editor to check it. Use the size of your own map plate for the camera limits, and set the same size on <code>FogOfWar.map_width</code> and <code>map_height</code>.<br>4. Connect it with doors. Instance <code>scenes/components/DoorPortal.tscn</code> directly under the root of both scenes. Set <code>door_id</code>, <code>door_name</code>, <code>target_scene</code> (<code>res://scenes/YourScene.tscn</code>) and <code>target_spawn</code> (the position where the hero should appear). Details and pitfalls are on <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/scenes-and-maps.html#doors" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Scenes, doors and maps</a>.<br>5. Add content. Ground items, chests, traps, enemies and NPCs are on the other two pages.<br>6. Run it: <code>./debug.sh --scene res://scenes/YourScene.tscn</code>. The short names in <code>debug.sh</code> cover only five scenes.<br>7. Test it. Add a feature under <code>tests/e2e/features/normal/</code>. These steps exist in <code>crpg_steps.py</code> and <code>infinity_ai_steps.py</code>:</p>
 
-<p>Interested in a hands-on, self-paced curriculum with quizzes, interactive code playgrounds, and a verifiable completion certificate?</p>
+<pre><code class="language-gherkin">Feature: Your location portals
 
-<p>- 🎓 <strong><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/elearning/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">cRPG Game Builder & Tactical Engine Academy (Self-Paced Training Module)</a></strong> — 7 modules, practical labs, and interactive knowledge checks covering custom maps, items, traps, boss scripting, and Cucumber BDD.<br>  <pre><code class="language-bash">electron packages/crpg-game-builder-elearning</code></pre><br>- ⚔️ <strong><a href="https://rowbose.com/v1/projects/crpg-realm/elearning/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Tactical cRPG Architecture & Masterclass</a></strong> — Full deep-dive into D&D 5e SRD implementation, Infinity Engine systems, and turn-based tactical combat.<br>  <pre><code class="language-bash">electron packages/robos-crpg-elearning</code></pre></p>
+     Background:
+       Given the cRPG game is running and healthy
 
-<hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+     Scenario: Travel from the catacombs to the new room and back
+       Given an isolated test starting in scene "AncientCatacombs" with party "Lieutenant Vance" the "fighter"
+       Then the current scene is "AncientCatacombs"
+       When the infinity ai agent enters door "door-id-your-room"
+       Then the current scene is "YourScene"
+       When the infinity ai agent enters door "door-id-your-room-exit"
+       Then the current scene is "AncientCatacombs"</code></pre>
 
-<h2>Architectural Rules & Standards Reference</h2>
+<p>Scenario names must be unique across all features, because the video file name comes from the name. Run it with <code>python3 run_cucumber_tests.py tests/e2e/features/normal/<your-file>.feature</code>. The <code>enters door</code> step finds the node by <code>door_id</code>, walks the hero to it and calls <code>try_enter()</code>.</p>
 
-<table><thead><tr><th>Architecture Rule</th><th>Implementation Standard</th><th>Why It Matters</th></tr></thead><tbody><tr><td>**Zero-Hardcoding**</td><td>All item, enemy, trap, and dialogue data lives in `data/v1/*.json` or `mods/`</td><td>Ensures tests, UI, and Godot stay 100% synchronized without drift.</td></tr><tr><td>**Layer 1 Colliders**</td><td>Place `StaticBody2D` only on physical foundation footprints (bottom 30%)</td><td>Allows natural 2.5D depth sorting with `y_sort_enabled = true`.</td></tr><tr><td>**Camera Limits**</td><td>Call `set_camera_limits()` on map load</td><td>Prevents revealing black margins outside 2560×1440 plates.</td></tr><tr><td>**Dual Testing**</td><td>Write Normal tests for fast iteration; Full Playthroughs for CI/CD</td><td>Guarantees genuine game completability without sacrificing test speed.</td></tr><tr><td>**Single Responsibility Singletons**</td><td>Route state through `GameState`, rolls through `CombatManager`</td><td>Prevents tangled scene coupling and makes state injection trivial.</td></tr><tr><td>**Modular Modding**</td><td>Place extensions in `mods/<mod-id>/` with `mod.json` manifests</td><td>Enables community content packs and custom hazards without touching core code.</td></tr><tr><td>**Technical Documentation Diagrams**</td><td>Include Gemini 3.8 AI-generated schematics alongside Mermaid syntax</td><td>Ensures documentation is crystal-clear, developer-friendly, and professional without AI bling.</td></tr></tbody></table>
+<h2>Drive the game over HTTP</h2>
+
+<p>The "verify it" steps on the other pages use the control server. It listens on port 8080 by default (18090 under the test harness).</p>
+
+<pre><code class="language-bash">curl -s http://127.0.0.1:8080/api/v1/health
+curl -s -X POST http://127.0.0.1:8080/api/v1/setup_state \
+     -H 'Content-Type: application/json' \
+     -d '{"scene": "AncientCatacombs", "name": "Lieutenant Vance", "class": "fighter", "companions": ["elora"]}'
+curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40</code></pre>
+
+<p><code>setup_state</code> re-initialises the hero and loads the scene. A bare scene name becomes <code>res://scenes/<name>.tscn</code>. The full endpoint and action list is on the <a href="https://rowbose.com/v1/projects/crpg-realm/reference.html#http-control-api" target="_blank" rel="noopener" style="color:var(--accent-cyan);">reference page</a>.</p>
         </article>
       </section>
 
@@ -1352,12 +1508,21 @@
     </div>
   </div>
 
+  <!-- Toast Notification Overlay -->
+  <div id="web-toast-notice" class="web-toast-notice hidden"></div>
+
   <!-- Embedded Client-Side Application Script -->
   <script>
-    const COURSE_DATA = {"@id":"urn:robos:elearning:course:crpg-game-builder","@type":["oslc_am:Resource","robos:ELearningCourse","robos:ELearning","schema:Course"],"dcterms:title":"RobOS cRPG Game Builder & Tactical Engine Academy","dcterms:description":"The definitive hands-on training module for building, extending, and autonomously verifying party-based tactical cRPGs in Godot 4.3 with D&D 5e SRD rules, 2.5D isometric geometry, Infinity Engine traps, and automated video proof-of-work.","robos:topic":"cRPG Game Engine Architecture & Godot 4 Development","robos:difficulty":"Advanced","robos:targetAudience":"Game Developers, Systems Programmers, D&D Dungeon Masters, AI Agent Architects","robos:estimatedDuration":"75 minutes","robos:modulesCount":7,"robos:gitopsFile":".robos/elearning.yaml","robos:targetApplication":"urn:robos:crpg:game:realm-of-heroes","robos:engineArchitecture":"urn:robos:infinity:engine:gemrb-infinity","robos:package":"learning","robos:namespace":"robos.learning","robos:schemaOrgType":"https://schema.org/Course","robos:domainStandard":"https://schema.org/Course","robos:status":"published","robos:modules":[{"id":"mod-01-godot-architecture","title":"Module 1: Godot 4 SceneTree, Entity Hierarchy & 2.5D Y-Sorting","durationMinutes":12,"overview":"Master Godot 4's scene tree hierarchy for software engineers: Node2D transforms, CharacterBody2D movement, 2.5D Y-sorting depth pipeline, and persistent autoload singletons.","labSteps":["Inspect SceneTree hierarchy in games/crpg-realm/scenes/AncientCatacombs.tscn","Verify y_sort_enabled = true on parent Node2D and character foot anchors","Test singleton state persistence across scene transitions via GameState.gd"],"quiz":[{"question":"Why must character sprites in a 2.5D isometric game have their local origin (0, 0) placed at their feet rather than sprite center?","options":["So the Y-Sort engine sorts rendering depth by where characters contact the ground","Because Godot physics engines only detect collisions at (0, 0)","To reduce texture memory usage during animation cycles","To prevent sprites from rotating when moving diagonally"],"answer":"So the Y-Sort engine sorts rendering depth by where characters contact the ground"},{"question":"Where does persistent global state (party roster, gold, active quest stage) live across scene changes?","options":["In autoload singletons like GameState.gd registered in project.godot","In local variables declared on the active scene root","In temporary environment variables passed through the OS shell","Inside the CollisionShape2D user metadata"],"answer":"In autoload singletons like GameState.gd registered in project.godot"}]},{"id":"mod-02-scenes-and-portals","title":"Module 2: Location Scenes, Level Transitions & Door Portals","durationMinutes":10,"overview":"Implement interconnected campaign scenes, two-way DoorPortal Area2D triggers, arrival spawn coordinates, and companion party synchronization.","labSteps":["Inspect DoorPortal.gd trigger volume and collision layer 1 masking","Verify two-way teleport coordinates and key requirements in AncientCatacombs.tscn","Review dynamic PartyCompanion instancing in location scene _ready() hooks"],"quiz":[{"question":"What node type is used to construct trigger zones for doors, portals, and room transitions?","options":["Area2D with body_entered signals","StaticBody2D with immovable colliders","CharacterBody2D with move_and_slide()","CanvasLayer with screen-pinned overlays"],"answer":"Area2D with body_entered signals"},{"question":"How are recruited companions positioned when transitioning into a newly loaded zone?","options":["Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates","Hardcoded into every location scene file manually","Loaded as separate sub-scenes through external HTTP requests","Kept in an invisible queue until combat begins"],"answer":"Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates"}]},{"id":"mod-03-maps-and-geometry","title":"Module 3: 2560x1440 Maps, Foundation Colliders & Camera Limits","durationMinutes":12,"overview":"Render high-resolution 2560x1440 maps, enforce the foundation footprint rule, clamp camera limits, and navigate using two-tier pathfinding.","labSteps":["Verify 2560x1440 full-bleed TextureRect configuration with mouse_filter = 2","Apply the Foundation Footprint rule: colliders on bottom 25-35% of structures only","Execute Camera2D.set_camera_limits(0, 0, 2560, 1440) to prevent black border leaks"],"quiz":[{"question":"What is the Foundation Footprint Rule in 2.5D isometric geometry?","options":["Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs","Build building foundations using 3D meshes rather than 2D sprites","Require all structures to share identical square dimensions","Lock camera zoom whenever characters are near building doors"],"answer":"Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs"},{"question":"Why must Camera2D limits be clamped to (0, 0, 2560, 1440) on map load?","options":["To prevent the viewport from scrolling past map edges and revealing black margins","To lock the mouse cursor inside the operating system window","To improve frame rates by skipping invisible off-screen rendering","To enable hardware anti-aliasing on the ground texture"],"answer":"To prevent the viewport from scrolling past map edges and revealing black margins"}]},{"id":"mod-04-items-and-inventory","title":"Module 4: Zero-Hardcoding JSON DataStore, Inventory & D&D 5e Equipment","durationMinutes":10,"overview":"Architect declarative data-driven item registries, GroundItem pickup physics, multi-slot equipment, and D&D 5e Armor Class calculations.","labSteps":["Explore declarative item definitions in games/crpg-realm/data/v1/items.json","Inspect GroundItem.tscn Area2D pickup trigger and bounce tween","Verify D&D 5e Armor Class calculation accounting for base AC, DEX caps, and shields"],"quiz":[{"question":"Where do item statistics, values, and equip slot properties live in cRPG Realm?","options":["In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore","Hardcoded directly inside GDScript weapon scripts","Stored in a remote PostgreSQL database queried over WebSockets","Embedded inside PNG texture EXIF metadata"],"answer":"In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore"},{"question":"In D&D 5e SRD, how does heavy armor like Full Plate interact with a character's Dexterity modifier?","options":["It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)","It doubles the Dexterity modifier for reflex saves","It penalizes AC by the Dexterity modifier value","It requires rolling a d20 every turn to check if the armor holds"],"answer":"It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)"}]},{"id":"mod-05-infinity-traps","title":"Module 5: Infinity Engine Traps, Modal Thief Perception & Spell Divination","durationMinutes":15,"overview":"Build classic Infinity Engine dungeon traps: concealed floor plates, Rogue active modal sweeps with passive perception floor, 2nd-level Find Traps divination, pulsing red hazard highlights, Thieves' Tools disarm checks, critical fumble detonations, and D&D 5e saving throws.","labSteps":["Inspect games/crpg-realm/scripts/Trap.gd state machine and Line2D pulsing danger highlight","Verify modal Find Traps sweep with D&D 5e passive perception floor (10 + WIS mod + prof)","Test Thieves' Tools disarm checks and critical fumble detonation in CombatManager.gd","Execute Cucumber feature: python3 -m behave tests/e2e/features/normal/12_infinity_engine_traps_detection_and_disarm.feature"],"quiz":[{"question":"What visual cue alerts the player that a concealed Infinity Engine trap has been detected?","options":["A pulsing red danger highlight outlining the hazard polygon with status text","A full-screen flash and camera shake","An immediate pause dialog asking to reload the save","A green waypoint marker on the minimap only"],"answer":"A pulsing red danger highlight outlining the hazard polygon with status text"},{"question":"What happens if a rogue critically fumbles (force_fumble or natural 1) while attempting to disarm a trap?","options":["The delicate mechanism prematurely springs and detonates directly in the disarmer's face","The thieves' tools are permanently destroyed with no damage taken","The trap is safely disarmed anyway due to passive proficiency","The disarm attempt is cancelled with no consequence"],"answer":"The delicate mechanism prematurely springs and detonates directly in the disarmer's face"}]},{"id":"mod-06-boss-encounters","title":"Module 6: Multi-Phase Boss Encounters & Real-Time with Pause Combat","durationMinutes":12,"overview":"Script intense boss encounters with proximity cutscene dialogs, 50% HP necrotic invulnerability shields, summoned minion waves, enrage timers, and victory rewards.","labSteps":["Inspect boss proximity cutscene and dialog choices in GarrisonKeep.gd","Implement Phase 2 transition logic at 50% HP with invulnerability barrier","Wire minion death signals to shatter the boss shield and trigger victory loot on defeat"],"quiz":[{"question":"How is boss invulnerability handled during the Phase 2 shield transition?","options":["A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain","The boss teleported off-screen into an unreachable room","The game engine pauses all player input until a timer expires","Incoming damage is converted into healing hit points"],"answer":"A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain"},{"question":"What happens when a boss reaches 0 HP in cRPG Realm?","options":["Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn","Immediately crashes the game engine to prevent save scumming","Spawns another identical boss in an infinite loop","Resets the hero to Act 1 Homestead"],"answer":"Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn"}]},{"id":"mod-07-modding-and-bdd","title":"Module 7: Zero-Code Modding & Autonomous Cucumber BDD Verification","durationMinutes":14,"overview":"Package community content with mod.json manifests, write Cucumber BDD Gherkin specifications, and capture 1080p video proof-of-work in headless Xvfb.","labSteps":["Inspect games/crpg-realm/mods/catacomb-traps-mod/mod.json manifest and custom traps.json","Verify DataStoreV1 automatic directory scanning across res://mods/ and user://mods/","Execute headless Cucumber BDD test suite: python3 games/crpg-realm/run_cucumber_tests.py --normal","Inspect generated interactive HTML report and MP4 video recordings in tests/e2e/reports/"],"quiz":[{"question":"How does the RobOS cRPG Mod Loader discover custom content packages?","options":["It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests","It requires recompiling the Godot C++ engine binary with custom mod flags","It downloads mods from an external proprietary cloud server on every boot","It parses comments inside .tscn scene files"],"answer":"It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests"},{"question":"Why does the RobOS verification harness run games inside an Xvfb virtual framebuffer?","options":["To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors","To bypass Godot's graphics rendering pipeline completely","To overclock the GPU for faster frame rates","Because Godot cannot run on Linux without virtual framebuffers"],"answer":"To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors"}]}]};
-    const MODULES_DATA = [{"id":"mod-01-godot-architecture","title":"Module 1: Godot 4 SceneTree, Entity Hierarchy & 2.5D Y-Sorting","durationMinutes":12,"overview":"Master Godot 4's scene tree hierarchy for software engineers: Node2D transforms, CharacterBody2D movement, 2.5D Y-sorting depth pipeline, and persistent autoload singletons.","labSteps":["Inspect SceneTree hierarchy in games/crpg-realm/scenes/AncientCatacombs.tscn","Verify y_sort_enabled = true on parent Node2D and character foot anchors","Test singleton state persistence across scene transitions via GameState.gd"],"quiz":[{"question":"Why must character sprites in a 2.5D isometric game have their local origin (0, 0) placed at their feet rather than sprite center?","options":["So the Y-Sort engine sorts rendering depth by where characters contact the ground","Because Godot physics engines only detect collisions at (0, 0)","To reduce texture memory usage during animation cycles","To prevent sprites from rotating when moving diagonally"],"answer":"So the Y-Sort engine sorts rendering depth by where characters contact the ground"},{"question":"Where does persistent global state (party roster, gold, active quest stage) live across scene changes?","options":["In autoload singletons like GameState.gd registered in project.godot","In local variables declared on the active scene root","In temporary environment variables passed through the OS shell","Inside the CollisionShape2D user metadata"],"answer":"In autoload singletons like GameState.gd registered in project.godot"}]},{"id":"mod-02-scenes-and-portals","title":"Module 2: Location Scenes, Level Transitions & Door Portals","durationMinutes":10,"overview":"Implement interconnected campaign scenes, two-way DoorPortal Area2D triggers, arrival spawn coordinates, and companion party synchronization.","labSteps":["Inspect DoorPortal.gd trigger volume and collision layer 1 masking","Verify two-way teleport coordinates and key requirements in AncientCatacombs.tscn","Review dynamic PartyCompanion instancing in location scene _ready() hooks"],"quiz":[{"question":"What node type is used to construct trigger zones for doors, portals, and room transitions?","options":["Area2D with body_entered signals","StaticBody2D with immovable colliders","CharacterBody2D with move_and_slide()","CanvasLayer with screen-pinned overlays"],"answer":"Area2D with body_entered signals"},{"question":"How are recruited companions positioned when transitioning into a newly loaded zone?","options":["Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates","Hardcoded into every location scene file manually","Loaded as separate sub-scenes through external HTTP requests","Kept in an invisible queue until combat begins"],"answer":"Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates"}]},{"id":"mod-03-maps-and-geometry","title":"Module 3: 2560x1440 Maps, Foundation Colliders & Camera Limits","durationMinutes":12,"overview":"Render high-resolution 2560x1440 maps, enforce the foundation footprint rule, clamp camera limits, and navigate using two-tier pathfinding.","labSteps":["Verify 2560x1440 full-bleed TextureRect configuration with mouse_filter = 2","Apply the Foundation Footprint rule: colliders on bottom 25-35% of structures only","Execute Camera2D.set_camera_limits(0, 0, 2560, 1440) to prevent black border leaks"],"quiz":[{"question":"What is the Foundation Footprint Rule in 2.5D isometric geometry?","options":["Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs","Build building foundations using 3D meshes rather than 2D sprites","Require all structures to share identical square dimensions","Lock camera zoom whenever characters are near building doors"],"answer":"Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs"},{"question":"Why must Camera2D limits be clamped to (0, 0, 2560, 1440) on map load?","options":["To prevent the viewport from scrolling past map edges and revealing black margins","To lock the mouse cursor inside the operating system window","To improve frame rates by skipping invisible off-screen rendering","To enable hardware anti-aliasing on the ground texture"],"answer":"To prevent the viewport from scrolling past map edges and revealing black margins"}]},{"id":"mod-04-items-and-inventory","title":"Module 4: Zero-Hardcoding JSON DataStore, Inventory & D&D 5e Equipment","durationMinutes":10,"overview":"Architect declarative data-driven item registries, GroundItem pickup physics, multi-slot equipment, and D&D 5e Armor Class calculations.","labSteps":["Explore declarative item definitions in games/crpg-realm/data/v1/items.json","Inspect GroundItem.tscn Area2D pickup trigger and bounce tween","Verify D&D 5e Armor Class calculation accounting for base AC, DEX caps, and shields"],"quiz":[{"question":"Where do item statistics, values, and equip slot properties live in cRPG Realm?","options":["In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore","Hardcoded directly inside GDScript weapon scripts","Stored in a remote PostgreSQL database queried over WebSockets","Embedded inside PNG texture EXIF metadata"],"answer":"In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore"},{"question":"In D&D 5e SRD, how does heavy armor like Full Plate interact with a character's Dexterity modifier?","options":["It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)","It doubles the Dexterity modifier for reflex saves","It penalizes AC by the Dexterity modifier value","It requires rolling a d20 every turn to check if the armor holds"],"answer":"It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)"}]},{"id":"mod-05-infinity-traps","title":"Module 5: Infinity Engine Traps, Modal Thief Perception & Spell Divination","durationMinutes":15,"overview":"Build classic Infinity Engine dungeon traps: concealed floor plates, Rogue active modal sweeps with passive perception floor, 2nd-level Find Traps divination, pulsing red hazard highlights, Thieves' Tools disarm checks, critical fumble detonations, and D&D 5e saving throws.","labSteps":["Inspect games/crpg-realm/scripts/Trap.gd state machine and Line2D pulsing danger highlight","Verify modal Find Traps sweep with D&D 5e passive perception floor (10 + WIS mod + prof)","Test Thieves' Tools disarm checks and critical fumble detonation in CombatManager.gd","Execute Cucumber feature: python3 -m behave tests/e2e/features/normal/12_infinity_engine_traps_detection_and_disarm.feature"],"quiz":[{"question":"What visual cue alerts the player that a concealed Infinity Engine trap has been detected?","options":["A pulsing red danger highlight outlining the hazard polygon with status text","A full-screen flash and camera shake","An immediate pause dialog asking to reload the save","A green waypoint marker on the minimap only"],"answer":"A pulsing red danger highlight outlining the hazard polygon with status text"},{"question":"What happens if a rogue critically fumbles (force_fumble or natural 1) while attempting to disarm a trap?","options":["The delicate mechanism prematurely springs and detonates directly in the disarmer's face","The thieves' tools are permanently destroyed with no damage taken","The trap is safely disarmed anyway due to passive proficiency","The disarm attempt is cancelled with no consequence"],"answer":"The delicate mechanism prematurely springs and detonates directly in the disarmer's face"}]},{"id":"mod-06-boss-encounters","title":"Module 6: Multi-Phase Boss Encounters & Real-Time with Pause Combat","durationMinutes":12,"overview":"Script intense boss encounters with proximity cutscene dialogs, 50% HP necrotic invulnerability shields, summoned minion waves, enrage timers, and victory rewards.","labSteps":["Inspect boss proximity cutscene and dialog choices in GarrisonKeep.gd","Implement Phase 2 transition logic at 50% HP with invulnerability barrier","Wire minion death signals to shatter the boss shield and trigger victory loot on defeat"],"quiz":[{"question":"How is boss invulnerability handled during the Phase 2 shield transition?","options":["A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain","The boss teleported off-screen into an unreachable room","The game engine pauses all player input until a timer expires","Incoming damage is converted into healing hit points"],"answer":"A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain"},{"question":"What happens when a boss reaches 0 HP in cRPG Realm?","options":["Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn","Immediately crashes the game engine to prevent save scumming","Spawns another identical boss in an infinite loop","Resets the hero to Act 1 Homestead"],"answer":"Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn"}]},{"id":"mod-07-modding-and-bdd","title":"Module 7: Zero-Code Modding & Autonomous Cucumber BDD Verification","durationMinutes":14,"overview":"Package community content with mod.json manifests, write Cucumber BDD Gherkin specifications, and capture 1080p video proof-of-work in headless Xvfb.","labSteps":["Inspect games/crpg-realm/mods/catacomb-traps-mod/mod.json manifest and custom traps.json","Verify DataStoreV1 automatic directory scanning across res://mods/ and user://mods/","Execute headless Cucumber BDD test suite: python3 games/crpg-realm/run_cucumber_tests.py --normal","Inspect generated interactive HTML report and MP4 video recordings in tests/e2e/reports/"],"quiz":[{"question":"How does the RobOS cRPG Mod Loader discover custom content packages?","options":["It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests","It requires recompiling the Godot C++ engine binary with custom mod flags","It downloads mods from an external proprietary cloud server on every boot","It parses comments inside .tscn scene files"],"answer":"It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests"},{"question":"Why does the RobOS verification harness run games inside an Xvfb virtual framebuffer?","options":["To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors","To bypass Godot's graphics rendering pipeline completely","To overclock the GPU for faster frame rates","Because Godot cannot run on Linux without virtual framebuffers"],"answer":"To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors"}]}];
-    const APP_DATA = {"@id":"urn:robos:crpg:game:realm-of-heroes","@type":["oslc_am:Resource","robos:CRPGGame","robos:PCGame","schema:VideoGame"],"dcterms:title":"Realm of Heroes: A Night Without Memory","robos:repository":"github.com/nddipiazza/realm-of-heroes","robos:technology":"Godot 4 / GDScript","robos:gameEngine":"Godot 4","robos:targetPlatform":"Linux, Windows, macOS","robos:ruleset":"dnd5e","robos:combatModel":"real-time-with-pause","robos:startingZone":"urn:robos:crpg:zone:homestead","robos:assetPackage":"flareteam/flare-game","robos:engineArchitecture":"urn:robos:infinity:engine:gemrb-infinity","robos:maxPartySize":4,"robos:hasELearning":["urn:robos:elearning:course:robos-crpg","urn:robos:elearning:course:crpg-game-builder"],"robos:package":"crpg","robos:namespace":"robos.crpg","robos:hasCertificate":["urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6"]};
+    const COURSE_DATA = {"@id":"urn:robos:elearning:course:crpg-game-builder","@type":["oslc_am:Resource","robos:ELearningCourse","robos:ELearning","schema:Course"],"dcterms:description":"The definitive hands-on training module for building, extending, and autonomously verifying party-based tactical cRPGs in Godot 4.3 with D&D 5e SRD rules, 2.5D isometric geometry, Infinity Engine traps, and automated video proof-of-work.","dcterms:title":"RobOS cRPG Game Builder & Tactical Engine Academy","robos:difficulty":"Advanced","robos:domainStandard":"https://schema.org/Course","robos:engineArchitecture":"urn:robos:infinity:engine:gemrb-infinity","robos:estimatedDuration":"75 minutes","robos:gitopsFile":".robos/elearning.yaml","robos:modules":[{"durationMinutes":12,"id":"mod-01-godot-architecture","labSteps":["Inspect SceneTree hierarchy in games/crpg-realm/scenes/AncientCatacombs.tscn","Verify y_sort_enabled = true on parent Node2D and character foot anchors","Test singleton state persistence across scene transitions via GameState.gd"],"overview":"Master Godot 4's scene tree hierarchy for software engineers: Node2D transforms, CharacterBody2D movement, 2.5D Y-sorting depth pipeline, and persistent autoload singletons.","quiz":[{"answer":"So the Y-Sort engine sorts rendering depth by where characters contact the ground","options":["So the Y-Sort engine sorts rendering depth by where characters contact the ground","Because Godot physics engines only detect collisions at (0, 0)","To reduce texture memory usage during animation cycles","To prevent sprites from rotating when moving diagonally"],"question":"Why must character sprites in a 2.5D isometric game have their local origin (0, 0) placed at their feet rather than sprite center?"},{"answer":"In autoload singletons like GameState.gd registered in project.godot","options":["In autoload singletons like GameState.gd registered in project.godot","In local variables declared on the active scene root","In temporary environment variables passed through the OS shell","Inside the CollisionShape2D user metadata"],"question":"Where does persistent global state (party roster, gold, active quest stage) live across scene changes?"}],"title":"Module 1: Godot 4 SceneTree, Entity Hierarchy & 2.5D Y-Sorting"},{"durationMinutes":10,"id":"mod-02-scenes-and-portals","labSteps":["Inspect DoorPortal.gd trigger volume and collision layer 1 masking","Verify two-way teleport coordinates and key requirements in AncientCatacombs.tscn","Review dynamic PartyCompanion instancing in location scene _ready() hooks"],"overview":"Implement interconnected campaign scenes, two-way DoorPortal Area2D triggers, arrival spawn coordinates, and companion party synchronization.","quiz":[{"answer":"Area2D with body_entered signals","options":["Area2D with body_entered signals","StaticBody2D with immovable colliders","CharacterBody2D with move_and_slide()","CanvasLayer with screen-pinned overlays"],"question":"What node type is used to construct trigger zones for doors, portals, and room transitions?"},{"answer":"Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates","options":["Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates","Hardcoded into every location scene file manually","Loaded as separate sub-scenes through external HTTP requests","Kept in an invisible queue until combat begins"],"question":"How are recruited companions positioned when transitioning into a newly loaded zone?"}],"title":"Module 2: Location Scenes, Level Transitions & Door Portals"},{"durationMinutes":12,"id":"mod-03-maps-and-geometry","labSteps":["Verify 2560x1440 full-bleed TextureRect configuration with mouse_filter = 2","Apply the Foundation Footprint rule: colliders on bottom 25-35% of structures only","Execute Camera2D.set_camera_limits(0, 0, 2560, 1440) to prevent black border leaks"],"overview":"Render high-resolution 2560x1440 maps, enforce the foundation footprint rule, clamp camera limits, and navigate using two-tier pathfinding.","quiz":[{"answer":"Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs","options":["Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs","Build building foundations using 3D meshes rather than 2D sprites","Require all structures to share identical square dimensions","Lock camera zoom whenever characters are near building doors"],"question":"What is the Foundation Footprint Rule in 2.5D isometric geometry?"},{"answer":"To prevent the viewport from scrolling past map edges and revealing black margins","options":["To prevent the viewport from scrolling past map edges and revealing black margins","To lock the mouse cursor inside the operating system window","To improve frame rates by skipping invisible off-screen rendering","To enable hardware anti-aliasing on the ground texture"],"question":"Why must Camera2D limits be clamped to (0, 0, 2560, 1440) on map load?"}],"title":"Module 3: 2560x1440 Maps, Foundation Colliders & Camera Limits"},{"durationMinutes":10,"id":"mod-04-items-and-inventory","labSteps":["Explore declarative item definitions in games/crpg-realm/data/v1/items.json","Inspect GroundItem.tscn Area2D pickup trigger and bounce tween","Verify D&D 5e Armor Class calculation accounting for base AC, DEX caps, and shields"],"overview":"Architect declarative data-driven item registries, GroundItem pickup physics, multi-slot equipment, and D&D 5e Armor Class calculations.","quiz":[{"answer":"In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore","options":["In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore","Hardcoded directly inside GDScript weapon scripts","Stored in a remote PostgreSQL database queried over WebSockets","Embedded inside PNG texture EXIF metadata"],"question":"Where do item statistics, values, and equip slot properties live in cRPG Realm?"},{"answer":"It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)","options":["It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)","It doubles the Dexterity modifier for reflex saves","It penalizes AC by the Dexterity modifier value","It requires rolling a d20 every turn to check if the armor holds"],"question":"In D&D 5e SRD, how does heavy armor like Full Plate interact with a character's Dexterity modifier?"}],"title":"Module 4: Zero-Hardcoding JSON DataStore, Inventory & D&D 5e Equipment"},{"durationMinutes":15,"id":"mod-05-infinity-traps","labSteps":["Inspect games/crpg-realm/scripts/Trap.gd state machine and Line2D pulsing danger highlight","Verify modal Find Traps sweep with D&D 5e passive perception floor (10 + WIS mod + prof)","Test Thieves' Tools disarm checks and critical fumble detonation in CombatManager.gd","Execute Cucumber feature: python3 -m behave tests/e2e/features/normal/12_infinity_engine_traps_detection_and_disarm.feature"],"overview":"Build classic Infinity Engine dungeon traps: concealed floor plates, Rogue active modal sweeps with passive perception floor, 2nd-level Find Traps divination, pulsing red hazard highlights, Thieves' Tools disarm checks, critical fumble detonations, and D&D 5e saving throws.","quiz":[{"answer":"A pulsing red danger highlight outlining the hazard polygon with status text","options":["A pulsing red danger highlight outlining the hazard polygon with status text","A full-screen flash and camera shake","An immediate pause dialog asking to reload the save","A green waypoint marker on the minimap only"],"question":"What visual cue alerts the player that a concealed Infinity Engine trap has been detected?"},{"answer":"The delicate mechanism prematurely springs and detonates directly in the disarmer's face","options":["The delicate mechanism prematurely springs and detonates directly in the disarmer's face","The thieves' tools are permanently destroyed with no damage taken","The trap is safely disarmed anyway due to passive proficiency","The disarm attempt is cancelled with no consequence"],"question":"What happens if a rogue critically fumbles (force_fumble or natural 1) while attempting to disarm a trap?"}],"title":"Module 5: Infinity Engine Traps, Modal Thief Perception & Spell Divination"},{"durationMinutes":12,"id":"mod-06-boss-encounters","labSteps":["Inspect boss proximity cutscene and dialog choices in GarrisonKeep.gd","Implement Phase 2 transition logic at 50% HP with invulnerability barrier","Wire minion death signals to shatter the boss shield and trigger victory loot on defeat"],"overview":"Script intense boss encounters with proximity cutscene dialogs, 50% HP necrotic invulnerability shields, summoned minion waves, enrage timers, and victory rewards.","quiz":[{"answer":"A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain","options":["A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain","The boss teleported off-screen into an unreachable room","The game engine pauses all player input until a timer expires","Incoming damage is converted into healing hit points"],"question":"How is boss invulnerability handled during the Phase 2 shield transition?"},{"answer":"Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn","options":["Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn","Immediately crashes the game engine to prevent save scumming","Spawns another identical boss in an infinite loop","Resets the hero to Act 1 Homestead"],"question":"What happens when a boss reaches 0 HP in cRPG Realm?"}],"title":"Module 6: Multi-Phase Boss Encounters & Real-Time with Pause Combat"},{"durationMinutes":14,"id":"mod-07-modding-and-bdd","labSteps":["Inspect games/crpg-realm/mods/catacomb-traps-mod/mod.json manifest and custom traps.json","Verify DataStoreV1 automatic directory scanning across res://mods/ and user://mods/","Execute headless Cucumber BDD test suite: python3 games/crpg-realm/run_cucumber_tests.py --normal","Inspect generated interactive HTML report and MP4 video recordings in tests/e2e/reports/"],"overview":"Package community content with mod.json manifests, write Cucumber BDD Gherkin specifications, and capture 1080p video proof-of-work in headless Xvfb.","quiz":[{"answer":"It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests","options":["It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests","It requires recompiling the Godot C++ engine binary with custom mod flags","It downloads mods from an external proprietary cloud server on every boot","It parses comments inside .tscn scene files"],"question":"How does the RobOS cRPG Mod Loader discover custom content packages?"},{"answer":"To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors","options":["To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors","To bypass Godot's graphics rendering pipeline completely","To overclock the GPU for faster frame rates","Because Godot cannot run on Linux without virtual framebuffers"],"question":"Why does the RobOS verification harness run games inside an Xvfb virtual framebuffer?"}],"title":"Module 7: Zero-Code Modding & Autonomous Cucumber BDD Verification"}],"robos:modulesCount":7,"robos:namespace":"robos.learning","robos:package":"learning","robos:schemaOrgType":"https://schema.org/Course","robos:status":"published","robos:targetApplication":"urn:robos:crpg:game:realm-of-heroes","robos:targetAudience":"Game Developers, Systems Programmers, D&D Dungeon Masters, AI Agent Architects","robos:topic":"cRPG Game Engine Architecture & Godot 4 Development"};
+    const MODULES_DATA = [{"durationMinutes":12,"id":"mod-01-godot-architecture","labSteps":["Inspect SceneTree hierarchy in games/crpg-realm/scenes/AncientCatacombs.tscn","Verify y_sort_enabled = true on parent Node2D and character foot anchors","Test singleton state persistence across scene transitions via GameState.gd"],"overview":"Master Godot 4's scene tree hierarchy for software engineers: Node2D transforms, CharacterBody2D movement, 2.5D Y-sorting depth pipeline, and persistent autoload singletons.","quiz":[{"answer":"So the Y-Sort engine sorts rendering depth by where characters contact the ground","options":["So the Y-Sort engine sorts rendering depth by where characters contact the ground","Because Godot physics engines only detect collisions at (0, 0)","To reduce texture memory usage during animation cycles","To prevent sprites from rotating when moving diagonally"],"question":"Why must character sprites in a 2.5D isometric game have their local origin (0, 0) placed at their feet rather than sprite center?"},{"answer":"In autoload singletons like GameState.gd registered in project.godot","options":["In autoload singletons like GameState.gd registered in project.godot","In local variables declared on the active scene root","In temporary environment variables passed through the OS shell","Inside the CollisionShape2D user metadata"],"question":"Where does persistent global state (party roster, gold, active quest stage) live across scene changes?"}],"title":"Module 1: Godot 4 SceneTree, Entity Hierarchy & 2.5D Y-Sorting"},{"durationMinutes":10,"id":"mod-02-scenes-and-portals","labSteps":["Inspect DoorPortal.gd trigger volume and collision layer 1 masking","Verify two-way teleport coordinates and key requirements in AncientCatacombs.tscn","Review dynamic PartyCompanion instancing in location scene _ready() hooks"],"overview":"Implement interconnected campaign scenes, two-way DoorPortal Area2D triggers, arrival spawn coordinates, and companion party synchronization.","quiz":[{"answer":"Area2D with body_entered signals","options":["Area2D with body_entered signals","StaticBody2D with immovable colliders","CharacterBody2D with move_and_slide()","CanvasLayer with screen-pinned overlays"],"question":"What node type is used to construct trigger zones for doors, portals, and room transitions?"},{"answer":"Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates","options":["Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates","Hardcoded into every location scene file manually","Loaded as separate sub-scenes through external HTTP requests","Kept in an invisible queue until combat begins"],"question":"How are recruited companions positioned when transitioning into a newly loaded zone?"}],"title":"Module 2: Location Scenes, Level Transitions & Door Portals"},{"durationMinutes":12,"id":"mod-03-maps-and-geometry","labSteps":["Verify 2560x1440 full-bleed TextureRect configuration with mouse_filter = 2","Apply the Foundation Footprint rule: colliders on bottom 25-35% of structures only","Execute Camera2D.set_camera_limits(0, 0, 2560, 1440) to prevent black border leaks"],"overview":"Render high-resolution 2560x1440 maps, enforce the foundation footprint rule, clamp camera limits, and navigate using two-tier pathfinding.","quiz":[{"answer":"Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs","options":["Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs","Build building foundations using 3D meshes rather than 2D sprites","Require all structures to share identical square dimensions","Lock camera zoom whenever characters are near building doors"],"question":"What is the Foundation Footprint Rule in 2.5D isometric geometry?"},{"answer":"To prevent the viewport from scrolling past map edges and revealing black margins","options":["To prevent the viewport from scrolling past map edges and revealing black margins","To lock the mouse cursor inside the operating system window","To improve frame rates by skipping invisible off-screen rendering","To enable hardware anti-aliasing on the ground texture"],"question":"Why must Camera2D limits be clamped to (0, 0, 2560, 1440) on map load?"}],"title":"Module 3: 2560x1440 Maps, Foundation Colliders & Camera Limits"},{"durationMinutes":10,"id":"mod-04-items-and-inventory","labSteps":["Explore declarative item definitions in games/crpg-realm/data/v1/items.json","Inspect GroundItem.tscn Area2D pickup trigger and bounce tween","Verify D&D 5e Armor Class calculation accounting for base AC, DEX caps, and shields"],"overview":"Architect declarative data-driven item registries, GroundItem pickup physics, multi-slot equipment, and D&D 5e Armor Class calculations.","quiz":[{"answer":"In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore","options":["In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore","Hardcoded directly inside GDScript weapon scripts","Stored in a remote PostgreSQL database queried over WebSockets","Embedded inside PNG texture EXIF metadata"],"question":"Where do item statistics, values, and equip slot properties live in cRPG Realm?"},{"answer":"It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)","options":["It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)","It doubles the Dexterity modifier for reflex saves","It penalizes AC by the Dexterity modifier value","It requires rolling a d20 every turn to check if the armor holds"],"question":"In D&D 5e SRD, how does heavy armor like Full Plate interact with a character's Dexterity modifier?"}],"title":"Module 4: Zero-Hardcoding JSON DataStore, Inventory & D&D 5e Equipment"},{"durationMinutes":15,"id":"mod-05-infinity-traps","labSteps":["Inspect games/crpg-realm/scripts/Trap.gd state machine and Line2D pulsing danger highlight","Verify modal Find Traps sweep with D&D 5e passive perception floor (10 + WIS mod + prof)","Test Thieves' Tools disarm checks and critical fumble detonation in CombatManager.gd","Execute Cucumber feature: python3 -m behave tests/e2e/features/normal/12_infinity_engine_traps_detection_and_disarm.feature"],"overview":"Build classic Infinity Engine dungeon traps: concealed floor plates, Rogue active modal sweeps with passive perception floor, 2nd-level Find Traps divination, pulsing red hazard highlights, Thieves' Tools disarm checks, critical fumble detonations, and D&D 5e saving throws.","quiz":[{"answer":"A pulsing red danger highlight outlining the hazard polygon with status text","options":["A pulsing red danger highlight outlining the hazard polygon with status text","A full-screen flash and camera shake","An immediate pause dialog asking to reload the save","A green waypoint marker on the minimap only"],"question":"What visual cue alerts the player that a concealed Infinity Engine trap has been detected?"},{"answer":"The delicate mechanism prematurely springs and detonates directly in the disarmer's face","options":["The delicate mechanism prematurely springs and detonates directly in the disarmer's face","The thieves' tools are permanently destroyed with no damage taken","The trap is safely disarmed anyway due to passive proficiency","The disarm attempt is cancelled with no consequence"],"question":"What happens if a rogue critically fumbles (force_fumble or natural 1) while attempting to disarm a trap?"}],"title":"Module 5: Infinity Engine Traps, Modal Thief Perception & Spell Divination"},{"durationMinutes":12,"id":"mod-06-boss-encounters","labSteps":["Inspect boss proximity cutscene and dialog choices in GarrisonKeep.gd","Implement Phase 2 transition logic at 50% HP with invulnerability barrier","Wire minion death signals to shatter the boss shield and trigger victory loot on defeat"],"overview":"Script intense boss encounters with proximity cutscene dialogs, 50% HP necrotic invulnerability shields, summoned minion waves, enrage timers, and victory rewards.","quiz":[{"answer":"A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain","options":["A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain","The boss teleported off-screen into an unreachable room","The game engine pauses all player input until a timer expires","Incoming damage is converted into healing hit points"],"question":"How is boss invulnerability handled during the Phase 2 shield transition?"},{"answer":"Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn","options":["Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn","Immediately crashes the game engine to prevent save scumming","Spawns another identical boss in an infinite loop","Resets the hero to Act 1 Homestead"],"question":"What happens when a boss reaches 0 HP in cRPG Realm?"}],"title":"Module 6: Multi-Phase Boss Encounters & Real-Time with Pause Combat"},{"durationMinutes":14,"id":"mod-07-modding-and-bdd","labSteps":["Inspect games/crpg-realm/mods/catacomb-traps-mod/mod.json manifest and custom traps.json","Verify DataStoreV1 automatic directory scanning across res://mods/ and user://mods/","Execute headless Cucumber BDD test suite: python3 games/crpg-realm/run_cucumber_tests.py --normal","Inspect generated interactive HTML report and MP4 video recordings in tests/e2e/reports/"],"overview":"Package community content with mod.json manifests, write Cucumber BDD Gherkin specifications, and capture 1080p video proof-of-work in headless Xvfb.","quiz":[{"answer":"It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests","options":["It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests","It requires recompiling the Godot C++ engine binary with custom mod flags","It downloads mods from an external proprietary cloud server on every boot","It parses comments inside .tscn scene files"],"question":"How does the RobOS cRPG Mod Loader discover custom content packages?"},{"answer":"To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors","options":["To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors","To bypass Godot's graphics rendering pipeline completely","To overclock the GPU for faster frame rates","Because Godot cannot run on Linux without virtual framebuffers"],"question":"Why does the RobOS verification harness run games inside an Xvfb virtual framebuffer?"}],"title":"Module 7: Zero-Code Modding & Autonomous Cucumber BDD Verification"}];
+    const APP_DATA = {"@id":"urn:robos:crpg:game:realm-of-heroes","@type":["oslc_am:Resource","robos:CRPGGame","robos:PCGame","schema:VideoGame","robos:Game"],"dcterms:title":"Realm of Heroes: A Night Without Memory","robos:assetPackage":"flareteam/flare-game","robos:combatModel":"real-time-with-pause","robos:engineArchitecture":"urn:robos:infinity:engine:gemrb-infinity","robos:gameEngine":"Godot 4","robos:gameType":"crpg","robos:hasCertificate":["urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n","urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"],"robos:hasELearning":["urn:robos:elearning:course:robos-crpg","urn:robos:elearning:course:crpg-game-builder"],"robos:maxPartySize":4,"robos:namespace":"robos.crpg","robos:package":"crpg","robos:repository":"github.com/nddipiazza/realm-of-heroes","robos:ruleset":"dnd5e","robos:startingZone":"urn:robos:crpg:zone:homestead","robos:targetPlatform":"Linux, Windows, macOS","robos:technology":"Godot 4 / GDScript"};
     const STORAGE_KEY = 'robos_elearning_' + ("crpg-game-builder");
+    const GIT_INFO = {
+      gitRemoteUrl: 'https://github.com/nddipiazza/robos',
+      gitBranch: 'main',
+      gitopsPath: '/home/ndipiazza/source/robos/.robos/elearning.yaml',
+      gitopsRelative: '.robos/elearning.yaml'
+    };
 
     let currentModIdx = 0;
     let progress = {
@@ -1977,6 +2142,434 @@ static func get_class_data(class_id: String) -> Dictionary:
           `;
         }
       }
+      if (false) {
+        if (idx === 0) {
+          return `
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🐧 1. The Linux Operating System as a First-Class Knowledge Graph Entity</h4>
+              <p class="lesson-text">
+                In RobOS, an operating system is not merely an unmanaged execution substrate. Instead, <strong>every file, directory, and system primitive on a Linux system is extracted into the Knowledge Graph with verifiable linked data provenance</strong>.
+              </p>
+              <p class="lesson-text">
+                The ingestion engine in <code>packages/kgraph-parse-portal/lib/fs-mime-classifier.js</code> traverses filesystems recursively using non-blocking directory streams. It enforces a strict exclusion policy (<code>DEFAULT_EXCLUDES</code>) over unmanaged caches (<code>.git</code>, <code>node_modules</code>, <code>target</code>, <code>dist</code>, <code>__pycache__</code>), while inspecting filesystem inodes via <code>fs.lstatSync</code> to safely classify files without following recursive symlink loops or blocking on FIFOs.
+              </p>
+
+              <div class="mermaid">
+flowchart TD
+    Scan["Filesystem Inode Scanner<br/><i>fs-mime-classifier.js</i>"] --> Filter{"In DEFAULT_EXCLUDES?<br/><i>.git, node_modules</i>"}
+    Filter -- Yes --> Ignore["Skip Path"]
+    Filter -- No --> InodeType{"Inode Type?"}
+    InodeType -- "isSocket()" --> SocketNode["robos:LinuxSocket<br/><i>inode/socket</i>"]
+    InodeType -- "isFIFO()" --> FifoNode["robos:LinuxNamedPipe<br/><i>inode/fifo</i>"]
+    InodeType -- "isSymbolicLink()" --> SymlinkNode["robos:LinuxSymlink<br/><i>inode/symlink</i>"]
+    InodeType -- "isFile()" --> ContentCheck{"Magic Header / Ext?"}
+    ContentCheck -- "\\x7fELF" --> ElfNode["robos:BinaryExecutable<br/><i>application/x-executable</i>"]
+    ContentCheck -- "systemd/*.service" --> SystemdNode["robos:SystemdService<br/><i>text/plain</i>"]
+    ContentCheck -- "Standard Source" --> MimeClassify["Forward to Contextual Disambiguation"]
+    SocketNode --> EvidenceGen["Compute SHA-256 & Attach robos:evidence"]
+    FifoNode --> EvidenceGen
+    SymlinkNode --> EvidenceGen
+    ElfNode --> EvidenceGen
+    SystemdNode --> EvidenceGen
+    MimeClassify --> EvidenceGen
+    EvidenceGen --> KGraphEmit["Emit Validated KGraph JSON-LD Node"]
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🔒 2. Cryptographic Provenance: The robos:evidence Schema</h4>
+              <p class="lesson-text">
+                Blind trust in AI diffs or unverified code updates is eliminated in RobOS. Every extracted node is stamped with a canonical, tamper-evident <code>robos:evidence</code> block:
+              </p>
+              <div class="formula-box">
+"robos:evidence": {<br>
+&nbsp;&nbsp;"repository": "github.com/nddipiazza/robos",<br>
+&nbsp;&nbsp;"path": "packages/kgraph-parse-portal/contracts/openapi.yaml",<br>
+&nbsp;&nbsp;"line": 1,<br>
+&nbsp;&nbsp;"workingTreeRevision": "clean",<br>
+&nbsp;&nbsp;"sha256": "4a72d3f9b8c105e1975e2f694e2a1b94e09834bfac8950293847e62a1100e381"<br>
+}
+              </div>
+              <p class="lesson-text">
+                The <code>sha256</code> hash is computed synchronously from the raw file buffer using Node's <code>crypto.createHash('sha256')</code>. When an agent or developer opens a Pull Request, the <code>kgraph diff</code> command re-computes hashes against <code>origin/main</code> to determine exact semantic blast radius and prevent undetected drift.
+              </p>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">⚙️ 3. Linux Virtual Filesystem Primitives & Special Inode Detection</h4>
+              <p class="lesson-text">
+                Unlike generic file tree indexers, the KGraph Parse Portal provides deep classification of Linux operating system primitives:
+              </p>
+              <table class="spec-table">
+                <thead>
+                  <tr>
+                    <th>Filesystem Inode / Marker</th>
+                    <th>Detection Mechanism</th>
+                    <th>RobOS Semantic Type</th>
+                    <th>MIME Classification</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>ELF Executables & Shared Libs</strong></td>
+                    <td>Magic header: <code>0x7F 'E' 'L' 'F'</code></td>
+                    <td><code>robos:BinaryExecutable</code> / <code>SharedLibrary</code></td>
+                    <td><code>application/x-executable</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Unix Domain Sockets</strong></td>
+                    <td><code>stats.isSocket() === true</code></td>
+                    <td><code>robos:LinuxSocket</code></td>
+                    <td><code>inode/socket</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Named Pipes (FIFO)</strong></td>
+                    <td><code>stats.isFIFO() === true</code></td>
+                    <td><code>robos:LinuxNamedPipe</code></td>
+                    <td><code>inode/fifo</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Systemd Service Units</strong></td>
+                    <td>Path: <code>/etc/systemd/system/*.service</code></td>
+                    <td><code>robos:SystemdService</code></td>
+                    <td><code>text/plain</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Linux Device Nodes</strong></td>
+                    <td><code>stats.isBlockDevice()</code> / <code>isCharacterDevice()</code></td>
+                    <td><code>robos:LinuxDeviceNode</code></td>
+                    <td><code>inode/blockdevice</code></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="doc-figure">
+                <img src="https://rowbose.com/v1/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <div class="doc-caption">Figure 1.1: Stage 1 of the Ingestion Pipeline extracting Linux filesystem entities into the RobOS Knowledge Graph.</div>
+              </div>
+            </div>
+          `;
+        } else if (idx === 1) {
+          return `
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🧠 1. Moving Beyond Raw HTTP/2 MIME Headers</h4>
+              <p class="lesson-text">
+                A standard MIME type such as <code>application/json</code> or <code>text/yaml</code> carries zero architectural intent on its own. For example, a <code>package.json</code> file, an OpenAPI 3.1 contract, a <code>tsconfig.json</code>, and a test fixture all evaluate to <code>application/json</code>, yet each represents a completely distinct software lifecycle concern.
+              </p>
+              <p class="lesson-text">
+                The Kgraph Parse Portal introduces a multi-stage <strong>contextual disambiguation engine</strong> (<code>classifyFile()</code> in <code>fs-mime-classifier.js</code>) that parses beyond surface headers to assign definitive <strong>W3C SHACL targetClass shapes</strong>.
+              </p>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📋 2. The Semantic Disambiguation Matrix</h4>
+              <table class="spec-table">
+                <thead>
+                  <tr>
+                    <th>File Pattern / Path</th>
+                    <th>Raw MIME</th>
+                    <th>Disambiguated Semantic Meaning</th>
+                    <th>Target RobOS SHACL Shape</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>package.json</code></td>
+                    <td><code>application/json</code></td>
+                    <td>Node.js Manifest, Scripts & Dependencies</td>
+                    <td><code>robos:SourceArtifact</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>tsconfig.json</code></td>
+                    <td><code>application/json</code></td>
+                    <td>TypeScript Compiler Configuration</td>
+                    <td><code>robos:SourceArtifact</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>openapi.yaml</code> / <code>.json</code></td>
+                    <td><code>text/yaml</code></td>
+                    <td>REST API Contract (OpenAPI 3.1)</td>
+                    <td><code>robos:Contract</code> (protocol: OpenAPI)</td>
+                  </tr>
+                  <tr>
+                    <td><code>*.proto</code></td>
+                    <td><code>text/x-protobuf</code></td>
+                    <td>gRPC Microservice RPC Protocol</td>
+                    <td><code>robos:ProtobufContract</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>*.graphql</code> / <code>*.gql</code></td>
+                    <td><code>application/graphql</code></td>
+                    <td>GraphQL Schema Contract</td>
+                    <td><code>robos:GraphQLContract</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>Chart.yaml</code> / <code>values.yaml</code></td>
+                    <td><code>application/x-yaml</code></td>
+                    <td>Kubernetes Helm Chart Definition</td>
+                    <td><code>robos:GitOpsDeployment</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>*.service</code></td>
+                    <td><code>text/plain</code></td>
+                    <td>Linux Systemd Daemon Unit</td>
+                    <td><code>robos:SystemdService</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>*.feature</code></td>
+                    <td><code>text/x-gherkin</code></td>
+                    <td>Cucumber / BDD Feature Specification</td>
+                    <td><code>robos:GherkinFeature</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>MODULE.bazel</code> / <code>WORKSPACE</code></td>
+                    <td><code>text/plain</code></td>
+                    <td>Bazel Monorepo Workspace</td>
+                    <td><code>robos:BuildSystem</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>project.godot</code></td>
+                    <td><code>text/plain</code></td>
+                    <td>Godot 4 Game Engine Project</td>
+                    <td><code>robos:PCGame</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📁 3. Directory Archetype Detection Across 11+ Ecosystems</h4>
+              <p class="lesson-text">
+                When pointed at any directory, <code>detectDirectoryArchetype()</code> scans root marker files to establish ecosystem context:
+              </p>
+
+              <div class="mermaid">
+graph TD
+    DirScan["Directory Ingestion Scan"] --> MarkerCheck{"Inspect Marker Files"}
+    MarkerCheck -- "MODULE.bazel / WORKSPACE" --> BazelMonorepo["robos:BuildSystem<br/><i>Bazel Monorepo (RBE Ready)</i>"]
+    MarkerCheck -- ".buckconfig" --> Buck2Monorepo["robos:BuildSystem<br/><i>Buck2 Monorepo (RBE Ready)</i>"]
+    MarkerCheck -- "pom.xml / build.gradle" --> JvmApp["robos:Microservice<br/><i>Java/Kotlin JVM Ecosystem</i>"]
+    MarkerCheck -- "Cargo.toml" --> RustApp["robos:Microservice<br/><i>Cargo Rust Crate</i>"]
+    MarkerCheck -- "go.mod" --> GoApp["robos:Microservice<br/><i>Go Modules Service</i>"]
+    MarkerCheck -- "package.json" --> PkgCheck{"Dependencies Check"}
+    PkgCheck -- "electron" --> ElectronApp["robos:DesktopApp<br/><i>Electron Desktop Framework</i>"]
+    PkgCheck -- "next / react" --> ReactApp["robos:FrontEndApp<br/><i>React / Next.js Web App</i>"]
+    PkgCheck -- "express / fastify" --> ExpressApp["robos:Microservice<br/><i>Node.js REST Service</i>"]
+    MarkerCheck -- "project.godot" --> GodotApp["robos:PCGame<br/><i>Godot 4 2.5D Isometric Engine</i>"]
+    MarkerCheck -- "Chart.yaml" --> HelmApp["robos:GitOpsDeployment<br/><i>Kubernetes Helm Chart</i>"]
+              </div>
+            </div>
+          `;
+        } else if (idx === 2) {
+          return `
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">⚡ 1. High-Throughput HTTP/2 gRPC Streaming Architecture</h4>
+              <p class="lesson-text">
+                Parsing multi-megabyte API contracts, database schemas, and hundreds of source code files inside the Node.js event loop causes severe memory spikes, event loop starvation, and potential process crashes. The Kgraph Parse Portal connects to an <strong>Apache Tika 4.0 streaming daemon</strong> listening on <code>localhost:50051</code>.
+              </p>
+              <p class="lesson-text">
+                Documents are streamed in non-blocking chunks over HTTP/2 gRPC frames with zero-copy buffer transfers. This isolates the heavy compilation and text extraction runtime in a separate process space, preventing V8 garbage collection latency.
+              </p>
+
+              <div class="mermaid">
+sequenceDiagram
+    participant App as Portal / REST API
+    participant Conn as TikaGrpcConnector
+    participant Daemon as Tika 4.0 gRPC (:50051)
+    participant Fallback as Embedded AST Engine
+
+    App->>Conn: parseDocument(filePath, content)
+    Conn->>Conn: isAvailable() TCP probe
+    alt Tika Daemon Online
+        Conn->>Daemon: Stream document over gRPC HTTP/2
+        Daemon-->>Conn: Stream parsed text & AST tokens
+    else Tika Daemon Offline / Cold
+        Conn->>Fallback: Dispatch to embedded polyglot AST extractor
+        Fallback-->>Conn: Return AST symbols & tokens
+    end
+    Conn-->>App: Extracted AST Symbols (classes, methods, RPCs)
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🌳 2. Polyglot AST Symbol Extraction Engine</h4>
+              <p class="lesson-text">
+                The portal's <code>TikaGrpcConnector</code> (<code>packages/kgraph-parse-portal/lib/tika-grpc-connector.js</code>) parses polyglot source trees into fine-grained AST symbols:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong>TypeScript & JavaScript</strong>: Extracts <code>class</code> hierarchies with superclasses, <code>interface</code> definitions, exported types, and named/async arrow functions.</li>
+                <li><strong>Python</strong>: Extracts <code>class</code> definitions with multiple inheritance bases, method signatures, and functions.</li>
+                <li><strong>Java & Kotlin</strong>: Extracts <code>class</code>, <code>interface</code>, <code>record</code>, and <code>enum</code> declarations, along with public/private methods.</li>
+                <li><strong>Protocol Buffers (Protobuf v3)</strong>: Extracts <code>service</code> declarations, <code>rpc</code> endpoints with parameter/return types, and <code>message</code> schemas.</li>
+              </ul>
+
+              <pre class="code-snippet"><code>// Example AST Symbol Extraction from contracts/tika-service.proto
+const symbols = tikaConnector.extractAstSymbols(protoContent, '.proto');
+// Output:
+// [
+//   { type: 'service', name: 'TikaStreamingService' },
+//   { type: 'rpc', name: 'ParseDocumentStream', request: 'DocumentChunk', response: 'ParsedTokenStream' },
+//   { type: 'message', name: 'DocumentChunk' }
+// ]</code></pre>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛡️ 3. Resilient Zero-Downtime Offline Fallback Handling</h4>
+              <p class="lesson-text">
+                In test environments, containerized Docker builds, or air-gapped developer laptops where the external Tika daemon is not running, the portal never throws an error or aborts crawling.
+              </p>
+              <p class="lesson-text">
+                <code>TikaGrpcConnector.isAvailable()</code> conducts a rapid 500ms socket connection test against port 50051. If the daemon is unreachable, the connector seamlessly routes documents to its embedded regular expression and lexical AST engine, ensuring 100% operational resilience.
+              </p>
+            </div>
+          `;
+        } else if (idx === 3) {
+          return `
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🏗️ 1. Scaling Ingestion: Why Remote Execution API (REAPI v2)?</h4>
+              <p class="lesson-text">
+                For enterprise monorepos (tens of thousands of source files, Protobuf schemas, and Bazel/Buck2 compilation units), local developer workstations quickly run out of RAM and CPU threads.
+              </p>
+              <p class="lesson-text">
+                RobOS incorporates the industry-standard <strong>Remote Execution API v2 (REAPI v2)</strong>, enabling Bazel/Buck2 builds and massive parallel parsing jobs to be offloaded to an elastic remote cluster.
+              </p>
+
+              <div class="mermaid">
+flowchart TD
+    subgraph Client["Developer Workstations & CI Runners"]
+        Bazel["Bazel / Buck2 Build"]
+        Portal["KGraph Parse Portal"]
+    end
+
+    subgraph RBEGrid["Hermetiq Buildbarn RBE Cluster (oci://ghcr.io/hermetiq/buildbarn)"]
+        Frontend["bb-frontend (:8980)<br/><i>Unified REAPI v2 Endpoint</i>"]
+        Scheduler["bb-scheduler (:8982)<br/><i>Priority Queue & Resource Matching</i>"]
+        Storage["bb-storage (:8981)<br/><i>CAS / Action Cache (100Gi+ PVC)</i>"]
+
+        subgraph WorkerPool["bb-worker Cluster"]
+            W1["bb-worker #1<br/><i>Docker Runner</i>"]
+            W2["bb-worker #2<br/><i>Docker Runner</i>"]
+            W3["bb-worker #N<br/><i>Docker Runner</i>"]
+        end
+    end
+
+    Bazel -->|gRPC REAPI v2| Frontend
+    Portal -->|Distributed Parse| Frontend
+    Frontend --> Scheduler
+    Frontend --> Storage
+    Scheduler -->|Dispatch Action| W1
+    Scheduler -->|Dispatch Action| W2
+    Scheduler -->|Dispatch Action| W3
+    W1 <-->|Read / Write Blobs| Storage
+    W2 <-->|Read / Write Blobs| Storage
+    W3 <-->|Read / Write Blobs| Storage
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📦 2. Hermetiq Buildbarn OCI Helm Chart Architecture</h4>
+              <p class="lesson-text">
+                RobOS standardizes on Hermetiq's official OCI Helm distribution (<code>oci://ghcr.io/hermetiq/buildbarn</code>). The grid consists of four decoupled microservices:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong><code>bb-storage</code></strong>: Content Addressable Storage (CAS) for immutable input/output files and Action Cache (AC) for storing previous compilation results. Configured with 100Gi+ storage.</li>
+                <li><strong><code>bb-scheduler</code></strong>: High-throughput task scheduling queue that matches action digest requirements to available worker pools based on platform criteria (Linux, x86_64).</li>
+                <li><strong><code>bb-worker</code></strong>: Sandboxed execution runners that pull action inputs from CAS and run builds inside isolated Docker containers via the host Docker daemon socket.</li>
+                <li><strong><code>bb-frontend</code></strong>: Unified gRPC frontend gateway exposing the standard REAPI v2 endpoint on port 8980.</li>
+              </ul>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛠️ 3. Automated Helm Values Generation & Cluster Lifecycle</h4>
+              <p class="lesson-text">
+                The module in <code>packages/kgraph-parse-portal/lib/buildbarn-rbe.js</code> provides automated Helm values generation and CLI deployment helpers:
+              </p>
+              <pre class="code-snippet"><code># Deploy Hermetiq Buildbarn RBE to Kubernetes cluster
+helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn \
+  --namespace buildbarn \
+  --create-namespace \
+  -f buildbarn-values.yaml</code></pre>
+              <p class="lesson-text">
+                The portal conducts periodic health checks on port 8980 (REAPI frontend) and port 8981 (CAS storage) to verify remote execution cluster health before queuing heavy monorepo parsing jobs.
+              </p>
+            </div>
+          `;
+        } else if (idx === 4) {
+          return `
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🔍 1. Sub-Millisecond Search via the Luxir C++ Engine</h4>
+              <p class="lesson-text">
+                Once files are crawled, disambiguated, and parsed into AST symbols, they are indexed into <strong>Luxir</strong>, RobOS's high-speed embedded C++ search engine running on port 8983.
+              </p>
+              <p class="lesson-text">
+                <code>LuxirSearchBridge</code> (<code>packages/kgraph-parse-portal/lib/luxir-search-bridge.js</code>) transforms raw KGraph nodes into unified search documents with multi-field inverted indexing:
+              </p>
+              <div class="formula-box">
+Index Document = {<br>
+&nbsp;&nbsp;id: "urn:robos:contract:openapi-v1",<br>
+&nbsp;&nbsp;title: "Petstore OpenAPI 3.1 Specification",<br>
+&nbsp;&nbsp;textCorpus: "petstore openapi contract pet findbyid get delete post",<br>
+&nbsp;&nbsp;types: ["robos:Contract", "schema:DigitalDocument"],<br>
+&nbsp;&nbsp;package: "services",<br>
+&nbsp;&nbsp;protocol: "OpenAPI 3.1"<br>
+}
+              </div>
+              <p class="lesson-text">
+                The bridge utilizes a dual-write pattern: writing to the live C++ engine and continuously maintaining an in-memory resilient fallback cache for instant sub-millisecond query evaluation.
+              </p>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🖥️ 2. Direct CLI Access via luxir-portal-cli.js</h4>
+              <p class="lesson-text">
+                The portal includes a standalone CLI tool and in-app Tilix console tab:
+              </p>
+              <pre class="code-snippet"><code># Check Luxir C++ engine state (:8983) and indexed document distribution
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status
+
+# Query the Luxir index directly from the terminal
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract"
+
+# Search with faceted SHACL type filter
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract" --type robos:Contract
+
+# Inspect raw Luxir index JSON document by path or ID
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml</code></pre>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
+                <div class="doc-figure" style="margin: 0;">
+                  <img src="https://rowbose.com/v1/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <div class="doc-caption">Figure 5.1: Direct Luxir CLI search returning indexed OpenAPI and Protobuf contracts.</div>
+                </div>
+                <div class="doc-figure" style="margin: 0;">
+                  <img src="https://rowbose.com/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <div class="doc-caption">Figure 5.2: Luxir engine status report showing READY state, :8983 endpoint, and type counts.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛡️ 3. W3C SHACL Validation Gates: Guaranteeing Zero Graph Corruption</h4>
+              <p class="lesson-text">
+                Autonomous agents and high-throughput crawlers must never mutate the canonical Knowledge Graph without strict schema enforcement.
+              </p>
+              <p class="lesson-text">
+                The portal's <code>POST /api/v1/ingest</code> endpoint subjects every node to RobOS's <strong>98 W3C SHACL constraint shapes</strong>. If an incoming node lacks a required property (e.g., <code>dcterms:title</code>, <code>robos:evidence</code>), violates cardinality, or specifies an invalid datatype, the transaction is rejected before any state changes occur.
+              </p>
+
+              <div class="mermaid">
+flowchart LR
+    NodeExtracted["Extracted Node<br/><i>from Filesystem / Tika</i>"] --> SHACLGate{"W3C SHACL<br/>Validation Gate"}
+    SHACLGate -- "Violates Constraints" --> Reject["Ingestion Rejected<br/><i>Error Logged to ~/.config/robos/</i>"]
+    SHACLGate -- "Valid Shape Conformance" --> DualCommit["Atomic Dual Commit"]
+    DualCommit --> KGraphStore["Modular KGraph Packages<br/><i>.robos/kgraphs/ & knowledge-graph.jsonld</i>"]
+    DualCommit --> LuxirIndex["Luxir C++ Index (:8983)<br/><i>Faceted Sub-Millisecond Search</i>"]
+    LuxirIndex --> CLI["Luxir CLI & REST Gateway<br/><i>luxir-portal-cli.js</i>"]
+              </div>
+            </div>
+          `;
+        }
+      }
       const m = MODULES_DATA[idx];
       return `
         <div class="lesson-section">
@@ -2000,7 +2593,36 @@ static func get_class_data(class_id: String) -> Dictionary:
                 Module ${currentModIdx + 1} of ${MODULES_DATA.length} &middot; Estimated Time: ${m.durationMinutes || 15} minutes
               </div>
             </div>
-            <span class="badge badge-duration">⏱️ ${m.durationMinutes || 15} mins</span>
+            <div class="slide-header-actions">
+              <button class="btn-copy-tab-path" onclick="copySlidePath(${currentModIdx})" title="Copy file system path for AI agents">
+                📋 Copy as Path
+              </button>
+              <span class="badge badge-duration">⏱️ ${m.durationMinutes || 15} mins</span>
+              <div class="slide-menu-container">
+                <button class="btn-slide-menu" onclick="toggleSlideMenu(event, ${currentModIdx})" title="Slide Actions & Exports">
+                  ⋮ Slide Actions ▾
+                </button>
+                <div class="slide-dropdown-menu hidden" id="slide-dropdown-${currentModIdx}">
+                  <div class="slide-menu-label">Slide &middot; Actions</div>
+                  <button class="slide-menu-item" onclick="copySlidePath(${currentModIdx})">
+                    📋 <span>Copy Path on File System</span>
+                  </button>
+                  <button class="slide-menu-item" onclick="copySlideGitUrl(${currentModIdx})">
+                    🔗 <span>Copy Git URL Path</span>
+                  </button>
+                  <button class="slide-menu-item" onclick="exportSlideAsZip(${currentModIdx})">
+                    📦 <span>Export as HTML Zip</span>
+                  </button>
+                  <div class="slide-menu-divider"></div>
+                  <button class="slide-menu-item" onclick="copySlideMarkdown(${currentModIdx})">
+                    📄 <span>Copy Slide Markdown</span>
+                  </button>
+                  <button class="slide-menu-item" onclick="copySlideUri(${currentModIdx})">
+                    🏷️ <span>Copy Slide KGraph URI</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="module-overview">
@@ -2116,14 +2738,438 @@ static func get_class_data(class_id: String) -> Dictionary:
       announceA11y('All labs in Module ' + (mIdx + 1) + ' marked completed.');
     }
 
-    // Global Escape Key Listener for Accessible Modals
+    // ── Slide Menu & Offline HTML Zip Actions ──────────────────────────────
+    async function copyToClipboard(text) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch {}
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    }
+
+    function showWebToast(msg) {
+      const el = document.getElementById('web-toast-notice');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => {
+        el.classList.add('hidden');
+      }, 4000);
+    }
+
+    function toggleSlideMenu(event, idx) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const target = document.getElementById('slide-dropdown-' + idx);
+      const wasHidden = target ? target.classList.contains('hidden') : true;
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      if (target && wasHidden) {
+        target.classList.remove('hidden');
+      }
+    }
+
+    window.addEventListener('click', () => {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+    });
+
+    async function copyTabPath(event, idx) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return await copySlidePath(idx);
+    }
+
+    async function copySlidePath(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      const slideId = (m && m.id) || ('slide-' + (idx + 1));
+      const fullPath = GIT_INFO.gitopsPath + '#' + slideId;
+      await copyToClipboard(fullPath);
+      showWebToast('📋 Copied file system path: ' + fullPath);
+    }
+
+    async function copySlideGitUrl(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      const slideId = (m && m.id) || ('slide-' + (idx + 1));
+      const gitUrl = GIT_INFO.gitRemoteUrl + '/blob/' + GIT_INFO.gitBranch + '/' + GIT_INFO.gitopsRelative + '#' + slideId;
+      await copyToClipboard(gitUrl);
+      showWebToast('🔗 Copied Git URL path: ' + gitUrl);
+    }
+
+    async function copySlideMarkdown(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      if (!m) return;
+      const lines = [
+        '# ' + (m.title || ('Slide ' + (idx + 1))),
+        '**Course**: ' + (COURSE_DATA['dcterms:title'] || 'RobOS Masterclass'),
+        '**Duration**: ' + (m.durationMinutes || 15) + ' mins',
+        '',
+        '## Overview',
+        m.overview || '',
+        ''
+      ];
+      if (m.labSteps && m.labSteps.length) {
+        lines.push('## Hands-On Lab Exercises');
+        m.labSteps.forEach((s, sIdx) => {
+          lines.push((sIdx + 1) + '. ' + s);
+        });
+        lines.push('');
+      }
+      if (m.quiz && m.quiz.length) {
+        lines.push('## Knowledge Check Quizzes');
+        m.quiz.forEach((q, qIdx) => {
+          lines.push('### Question ' + (qIdx + 1) + ': ' + q.question);
+          if (q.options) {
+            q.options.forEach(opt => lines.push('- [ ] ' + opt));
+          }
+          lines.push('**Correct Answer**: ' + q.answer);
+          if (q.explanation) lines.push('*Explanation*: ' + q.explanation);
+          lines.push('');
+        });
+      }
+      const md = lines.join('\n');
+      await copyToClipboard(md);
+      showWebToast('📄 Copied Slide Markdown to clipboard!');
+    }
+
+    async function copySlideUri(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      const uri = (COURSE_DATA['@id'] || 'urn:robos:elearning') + '#' + ((m && m.id) || ('slide-' + (idx + 1)));
+      await copyToClipboard(uri);
+      showWebToast('🏷️ Copied Slide KGraph URI: ' + uri);
+    }
+
+    function createZipBlob(files) {
+      const enc = new TextEncoder();
+      let crcTable = window._crcTable;
+      if (!crcTable) {
+        crcTable = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          crcTable[i] = c >>> 0;
+        }
+        window._crcTable = crcTable;
+      }
+      function calcCrc(bytes) {
+        let crc = 0xFFFFFFFF;
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+
+      const entries = [];
+      for (const f of files) {
+        const nameBytes = enc.encode(f.name);
+        const dataBytes = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+        const crc = calcCrc(dataBytes);
+        entries.push({ nameBytes, dataBytes, crc, offset: 0 });
+      }
+
+      let offset = 0;
+      const localHeaders = [];
+      for (const e of entries) {
+        e.offset = offset;
+        const lh = new Uint8Array(30 + e.nameBytes.length);
+        const view = new DataView(lh.buffer);
+        view.setUint32(0, 0x04034b50, true);
+        view.setUint16(4, 20, true);
+        view.setUint16(6, 0, true);
+        view.setUint16(8, 0, true);
+        view.setUint16(10, 0x4a00, true);
+        view.setUint16(12, 0x5939, true);
+        view.setUint32(14, e.crc, true);
+        view.setUint32(18, e.dataBytes.length, true);
+        view.setUint32(22, e.dataBytes.length, true);
+        view.setUint16(26, e.nameBytes.length, true);
+        view.setUint16(28, 0, true);
+        lh.set(e.nameBytes, 30);
+        localHeaders.push(lh);
+        offset += lh.length + e.dataBytes.length;
+      }
+
+      const cdHeaders = [];
+      let cdSize = 0;
+      for (const e of entries) {
+        const cdh = new Uint8Array(46 + e.nameBytes.length);
+        const view = new DataView(cdh.buffer);
+        view.setUint32(0, 0x02014b50, true);
+        view.setUint16(4, 20, true);
+        view.setUint16(6, 20, true);
+        view.setUint16(8, 0, true);
+        view.setUint16(10, 0, true);
+        view.setUint16(12, 0x4a00, true);
+        view.setUint16(14, 0x5939, true);
+        view.setUint32(16, e.crc, true);
+        view.setUint32(20, e.dataBytes.length, true);
+        view.setUint32(24, e.dataBytes.length, true);
+        view.setUint16(28, e.nameBytes.length, true);
+        view.setUint16(30, 0, true);
+        view.setUint16(32, 0, true);
+        view.setUint16(34, 0, true);
+        view.setUint16(36, 0, true);
+        view.setUint32(38, 0, true);
+        view.setUint32(42, e.offset, true);
+        cdh.set(e.nameBytes, 46);
+        cdHeaders.push(cdh);
+        cdSize += cdh.length;
+      }
+
+      const eocd = new Uint8Array(22);
+      const eView = new DataView(eocd.buffer);
+      eView.setUint32(0, 0x06054b50, true);
+      eView.setUint16(4, 0, true);
+      eView.setUint16(6, 0, true);
+      eView.setUint16(8, entries.length, true);
+      eView.setUint16(10, entries.length, true);
+      eView.setUint32(12, cdSize, true);
+      eView.setUint32(16, offset, true);
+      eView.setUint16(20, 0, true);
+
+      const parts = [];
+      for (let i = 0; i < entries.length; i++) {
+        parts.push(localHeaders[i]);
+        parts.push(entries[i].dataBytes);
+      }
+      for (const cdh of cdHeaders) parts.push(cdh);
+      parts.push(eocd);
+
+      return new Blob(parts, { type: 'application/zip' });
+    }
+
+    function exportSlideAsZip(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      if (!m) return;
+      showWebToast('⏳ Packaging slide as offline HTML zip…');
+
+      const slideTitle = m.title || ('Slide ' + (idx + 1));
+      const safeSlug = slideTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('slide-' + (idx + 1));
+      const filename = 'elearning-slide-' + (idx + 1) + '-' + safeSlug + '.zip';
+
+      const labsHtml = (m.labSteps && m.labSteps.length) ?
+        '<h3 style="color:var(--accent); font-size:16px; margin:24px 0 12px;">🧪 Hands-On Lab Exercises</h3><ol style="padding-left:24px; display:flex; flex-direction:column; gap:8px;">' +
+        m.labSteps.map(s => '<li>' + s + '</li>').join('') +
+        '</ol>' : '';
+
+      const quizzesHtml = (m.quiz && m.quiz.length) ?
+        '<h3 style="color:var(--gold); font-size:16px; margin:24px 0 12px;">📝 Knowledge Check</h3><div style="display:flex; flex-direction:column; gap:16px;">' +
+        m.quiz.map((q, qIdx) => {
+          const optsHtml = q.options ? '<ul style="list-style:none; padding-left:0; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">' +
+            q.options.map(opt => '<li style="background:#0d1117; border:1px solid #30363d; padding:6px 10px; border-radius:4px; font-size:13px;">' + opt + '</li>').join('') + '</ul>' : '';
+          const expHtml = q.explanation ? '<div style="font-size:12px; color:var(--text-muted); margin-top:4px;"><em>Explanation:</em> ' + q.explanation + '</div>' : '';
+          return '<div style="background:#161b22; border:1px solid #30363d; border-radius:6px; padding:14px;">' +
+            '<p style="font-weight:600; margin-bottom:8px;">Q' + (qIdx + 1) + ': ' + q.question + '</p>' +
+            optsHtml +
+            '<div style="font-size:12px; color:var(--success);">✅ <strong>Answer:</strong> ' + q.answer + '</div>' +
+            expHtml +
+            '</div>';
+        }).join('') +
+        '</div>' : '';
+
+      const offlineHtml = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
+        '  <meta charset="UTF-8">\n' +
+        '  <title>' + slideTitle + ' &middot; Offline RobOS Slide</title>\n' +
+        '  <link rel="stylesheet" href="style.css">\n' +
+        '</head>\n<body>\n' +
+        '  <div class="slide-offline-container">\n' +
+        '    <div class="slide-offline-header">\n' +
+        '      <span class="slide-offline-badge">RobOS Offline Learning Slide &middot; ' + (idx + 1) + ' of ' + MODULES_DATA.length + '</span>\n' +
+        '      <h1>' + slideTitle + '</h1>\n' +
+        '      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">\n' +
+        '        Course: ' + (COURSE_DATA['dcterms:title'] || 'RobOS Masterclass') + ' &middot; Duration: ' + (m.durationMinutes || 15) + ' mins\n' +
+        '      </p>\n' +
+        '    </div>\n' +
+        '    <div class="slide-offline-card">\n' +
+        '      <div style="font-size:15px; margin-bottom:20px; line-height:1.6;">\n' +
+        '        ' + (m.overview || '') + '\n' +
+        '      </div>\n' +
+        '      ' + labsHtml + '\n' +
+        '      ' + quizzesHtml + '\n' +
+        '    </div>\n' +
+        '  </div>\n</body>\n</html>';
+
+      const offlineCss = ':root {\n' +
+        '  --bg-primary: #0d1117;\n' +
+        '  --bg-surface: #161b22;\n' +
+        '  --accent: #00bcd4;\n' +
+        '  --accent-cyan: #38bdf8;\n' +
+        '  --border: #30363d;\n' +
+        '  --text: #c9d1d9;\n' +
+        '  --text-muted: #8b949e;\n' +
+        '  --text-bright: #f0f6fc;\n' +
+        '  --success: #2ea043;\n' +
+        '  --gold: #f1e05a;\n' +
+        '}\n' +
+        '* { box-sizing: border-box; margin: 0; padding: 0; }\n' +
+        'body {\n' +
+        '  background: var(--bg-primary);\n' +
+        '  color: var(--text);\n' +
+        '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;\n' +
+        '  line-height: 1.6;\n' +
+        '  padding: 30px 20px;\n' +
+        '}\n' +
+        '.slide-offline-container {\n' +
+        '  max-width: 900px;\n' +
+        '  margin: 0 auto;\n' +
+        '}\n' +
+        '.slide-offline-header {\n' +
+        '  border-bottom: 1px solid var(--border);\n' +
+        '  padding-bottom: 20px;\n' +
+        '  margin-bottom: 24px;\n' +
+        '}\n' +
+        '.slide-offline-badge {\n' +
+        '  display: inline-block;\n' +
+        '  background: rgba(0, 188, 212, 0.15);\n' +
+        '  color: var(--accent);\n' +
+        '  border: 1px solid var(--accent);\n' +
+        '  padding: 4px 10px;\n' +
+        '  border-radius: 4px;\n' +
+        '  font-size: 11px;\n' +
+        '  font-weight: 600;\n' +
+        '  text-transform: uppercase;\n' +
+        '  margin-bottom: 10px;\n' +
+        '}\n' +
+        '.slide-offline-card {\n' +
+        '  background: var(--bg-surface);\n' +
+        '  border: 1px solid var(--border);\n' +
+        '  border-radius: 8px;\n' +
+        '  padding: 24px;\n' +
+        '}\n' +
+        'code {\n' +
+        '  font-family: monospace;\n' +
+        '  background: #0d1117;\n' +
+        '  padding: 2px 6px;\n' +
+        '  border-radius: 4px;\n' +
+        '  border: 1px solid var(--border);\n' +
+        '  color: var(--accent-cyan);\n' +
+        '}';
+
+      const metadataJson = JSON.stringify({
+        slideIndex: idx,
+        slideId: m.id || ('slide-' + (idx + 1)),
+        title: m.title,
+        durationMinutes: m.durationMinutes,
+        courseId: COURSE_DATA['@id'],
+        courseTitle: COURSE_DATA['dcterms:title'],
+        exportedAt: new Date().toISOString()
+      }, null, 2);
+
+      const readmeMd = '# ' + slideTitle + '\n' +
+        'Offline HTML Export for RobOS eLearning Slide ' + (idx + 1) + ' of ' + MODULES_DATA.length + '.\n\n' +
+        '- Course: ' + (COURSE_DATA['dcterms:title'] || 'RobOS Masterclass') + '\n' +
+        '- Export Date: ' + new Date().toISOString() + '\n\n' +
+        'To view this slide offline, open index.html in any standard web browser.\n';
+
+      const files = [
+        { name: 'index.html', data: offlineHtml },
+        { name: 'style.css', data: offlineCss },
+        { name: 'metadata.json', data: metadataJson },
+        { name: 'README.md', data: readmeMd }
+      ];
+
+      try {
+        const blob = createZipBlob(files);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showWebToast('📦 Successfully downloaded: ' + filename);
+      } catch (err) {
+        showWebToast('❌ Failed to create zip: ' + err.message);
+      }
+    }
+
+    // Global Escape Key & Zoom Shortcuts (Ctrl +, Ctrl -, Ctrl 0)
+    let currentZoomFactor = 1.0;
+    let zoomIndicatorTimeout = null;
+
+    function showZoomIndicator(factor) {
+      currentZoomFactor = Math.min(3.0, Math.max(0.5, Math.round(Number(factor) * 10) / 10));
+      let indicator = document.getElementById('zoom-indicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'zoom-indicator';
+        indicator.className = 'zoom-indicator';
+        document.body.appendChild(indicator);
+      }
+      const pct = Math.round(currentZoomFactor * 100);
+      indicator.textContent = '🔍 ' + pct + '%' + (pct === 100 ? ' (Default)' : '');
+      indicator.classList.add('visible');
+
+      if (zoomIndicatorTimeout) clearTimeout(zoomIndicatorTimeout);
+      zoomIndicatorTimeout = setTimeout(() => {
+        indicator.classList.remove('visible');
+      }, 1200);
+    }
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeCertificateModal();
         closeJsonLdModal();
         closeLightbox();
+        return;
+      }
+
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const isPlus = e.key === '=' || e.key === '+' || e.code === 'NumpadAdd' || e.code === 'Equal';
+      const isMinus = e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus';
+      const isZero = e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0';
+
+      if (isPlus) {
+        e.preventDefault();
+        const next = Math.min(3.0, Math.round((currentZoomFactor + 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      } else if (isMinus) {
+        e.preventDefault();
+        const next = Math.max(0.5, Math.round((currentZoomFactor - 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      } else if (isZero) {
+        e.preventDefault();
+        document.body.style.zoom = '1.0';
+        showZoomIndicator(1.0);
       }
     });
+
+    window.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        const next = Math.min(3.0, Math.round((currentZoomFactor + 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      } else if (e.deltaY > 0) {
+        const next = Math.max(0.5, Math.round((currentZoomFactor - 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      }
+    }, { passive: false });
 
     // Initialize application on load
     window.addEventListener('DOMContentLoaded', () => {
