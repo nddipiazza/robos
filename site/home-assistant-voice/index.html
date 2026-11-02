@@ -1,0 +1,105 @@
+---
+layout: default
+title: Home Assistant Voice (NC-VK-9727) — Two-Way Intercom & Hands-Free Voice Approvals in RobOS
+permalink: /home-assistant-voice/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "Complete guide to using the Nabu Casa Home Assistant Voice Preview Edition (NC-VK-9727) with RobOS Home Speaker (packages/home-speaker): Bluetooth Wi-Fi setup, 48kHz FLAC neural TTS, 12-LED RGB ring control, and hands-free two-way voice questions & approvals with local Whisper STT."
+og_image: /assets/home-speaker/01-two-way-voice-intercom.png
+og_image_alt: "RobOS Home Speaker showing Push-to-Talk Voice Intercom and Incoming from Speaker (Listen Mode) with Record from Speaker Now"
+og_type: article
+schema_type: TechArticle
+keywords: "Home Assistant Voice Preview Edition, NC-VK-9727, RobOS Home Speaker, ESPHome Native API 6053, VoiceAssistantAnnounceRequest start_conversation, two-way voice intercom, local Whisper STT, Kokoro TTS, Improv BLE Wi-Fi"
+---
+{%- assign hs = '/assets/home-speaker/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">Guide · Smart Home &amp; Voice › RobOS Home Speaker (<code>packages/home-speaker</code>)</p>
+<h1>Home Assistant Voice (<code>NC-VK-9727</code>) Two-Way Intercom</h1>
+<p class="lead"><strong>RobOS Home Speaker</strong> features first-class support for the <strong>Nabu Casa Home Assistant Voice Preview Edition (<code>NC-VK-9727</code>)</strong>. Speak announcements out loud with Kokoro neural TTS, ask a question from your workstation or coding agent, and have the speaker <strong>automatically open its dual-microphone array</strong> to record and transcribe your spoken answer locally with Whisper—without needing a wake word, button press, or cloud server.</p>
+</header>
+
+<ul class="cr-nav">
+<li><a href="#video-demo"><b>Live Video Demo</b><span>Hands-free voice approval (<i>"Is it okay to push to main?"</i>)</span></a></li>
+<li><a href="#architecture"><b>Architecture</b><span>ESPHome TCP <code>:6053</code>, <code>start_conversation=true</code> &amp; Whisper STT</span></a></li>
+<li><a href="#two-way-listen"><b>Incoming Listen Mode</b><span>Auto-record, wake word, local transcription &amp; auto-reply</span></a></li>
+<li><a href="#setup-wizard"><b>Add Speaker Wizard</b><span>Bluetooth Wi-Fi setup (Improv BLE) &amp; plain-English cards</span></a></li>
+<li><a href="#protocol-reference"><b>Protocol Reference</b><span>Entity keys, protobuf frame IDs &amp; CLI commands</span></a></li>
+</ul>
+
+<h2 id="video-demo">1. Live Video Demo: Hands-Free Voice Approval</h2>
+<p>In this live demo, RobOS asks out loud on the <strong>Home Assistant Voice (<code>NC-VK-9727</code>)</strong>: <em>"Is it okay to push to main?"</em>. The instant the question finishes playing, the speaker automatically turns on its microphone (no <em>"Okay Nabu"</em> wake word and no button press needed), hears the user answer <em>"Yes it is."</em>, transcribes it locally with Whisper, and confirms out loud: <em>"Got it! You said yes. Pushing to main is approved."</em></p>
+
+<div style="margin: 24px 0; display: flex; flex-direction: column; align-items: center;">
+  <iframe width="360" height="640" src="https://www.youtube.com/embed/3ZCU7gsIodg" title="RobOS Home Speaker + Home Assistant Voice PE Two-Way Voice Approval Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border-radius: 12px; border: 1px solid #30363d; max-width: 100%;"></iframe>
+  <p style="font-size: 0.9rem; margin-top: 10px;"><a href="https://www.youtube.com/shorts/3ZCU7gsIodg" target="_blank" rel="noopener">Watch on YouTube Shorts: https://www.youtube.com/shorts/3ZCU7gsIodg</a></p>
+</div>
+
+<h2 id="architecture">2. Two-Way Voice Architecture</h2>
+<p><strong>RobOS Home Speaker</strong> (<code>packages/home-speaker</code>, debug port <code>:19200</code>) talks directly to the <strong>Home Assistant Voice Preview Edition (<code>NC-VK-9727</code>)</strong> over your local Wi-Fi network on TCP port <code>:6053</code> using the native ESPHome protobuf wire protocol (<code>packages/home-speaker/lib/esphome-voice-service.js</code>).</p>
+
+<figure class="guide-shot"><a href="{{ hs }}ha-voice-pe-architecture.png"><img src="{{ hs }}ha-voice-pe-architecture.png" alt="RobOS Home Speaker & Home Assistant Voice PE (NC-VK-9727) Two-Way Voice Architecture Diagram" width="1280" height="720"></a><figcaption>End-to-end schematic of <strong>RobOS Home Speaker</strong> and the <strong>Home Assistant Voice PE (<code>NC-VK-9727</code>)</strong> over TCP <code>:6053</code>.</figcaption></figure>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph WORKSTATION["RobOS Workstation (packages/home-speaker :19200)"]
+    TTS["Kokoro-82M Neural TTS<br/>FFmpeg 48kHz 16-bit FLAC Transcoder"]
+    ANNOUNCE["EspHomeVoiceService<br/>VoiceAssistantAnnounceRequest (ID 119)<br/>start_conversation = true (field 4)"]
+    STT["Local Whisper ASR<br/>(Xenova/whisper-tiny.en)<br/>550ms Echo Guard + RMS VAD"]
+    TTS --> ANNOUNCE
+  end
+
+  subgraph LAN["Zero-Cloud Local Network (TCP :6053 &amp; Improv BLE)"]
+    OUT["48kHz FLAC Stream + LED Ring RGB (ID 32 &amp; 65)"]
+    IN["Auto-Triggered 16kHz PCM Mic Stream (ID 90 &amp; 106)"]
+  end
+
+  subgraph DEVICE["Home Assistant Voice PE (NC-VK-9727)"]
+    DAC["TI TLV320AIC3204 DAC<br/>Speaker + 12-LED RGB Halo Ring"]
+    XMOS["XMOS XU316 Dual-Mic Array<br/>Echo Cancellation &amp; Noise Suppression"]
+  end
+
+  ANNOUNCE --> OUT --> DAC
+  DAC -. "AnnounceFinished (ID 120) -> Auto-Start Mic" .-> XMOS
+  XMOS --> IN --> STT
+  STT -- "Spoken Confirmation Reply" --> TTS
+</pre>
+
+<h2 id="two-way-listen">3. Incoming from Speaker (Listen Mode) &amp; Hands-Free Auto-Recording</h2>
+<figure class="guide-shot"><a href="{{ hs }}01-two-way-voice-intercom.png"><img src="{{ hs }}01-two-way-voice-intercom.png" alt="RobOS Home Speaker Voice Walkie-Talkie and Incoming from Speaker (Listen Mode) UI" width="1120" height="820"></a><figcaption><strong>Voice Walkie-Talkie &amp; Incoming from Speaker (Listen Mode)</strong> with one-click <strong>Record from Speaker Now</strong> and automatic spoken replies.</figcaption></figure>
+
+<ul>
+<li><strong>Hands-Free Question &amp; Auto-Listen (<code>start_conversation = true</code>):</strong> By setting field <code>4</code> (<code>start_conversation = true</code>) on <code>VoiceAssistantAnnounceRequest</code> (<code>msgType 119</code>), the speaker plays the question and automatically transitions into microphone capture the moment playback ends—no wake word and no button press needed.</li>
+<li><strong>550 ms Acoustic Echo Guard:</strong> When the microphone opens immediately after TTS playback, <code>EspHomeVoiceService</code> discards the first 550 ms of room reverberation so the speaker never mistakes its own tail echo for your voice.</li>
+<li><strong>Record from Speaker Now:</strong> Click <strong>Record from Speaker Now</strong> in the UI to play a brief chime on the speaker and open its microphone immediately from your desk.</li>
+<li><strong>Wake Word &amp; Center Button:</strong> In background Listen Mode, you can also say <strong>"Okay Nabu"</strong> or press the center button on top of the speaker at any time to send a voice note to your computer.</li>
+</ul>
+
+<h2 id="setup-wizard">4. Add Smart Speaker Wizard</h2>
+<figure class="guide-shot"><a href="{{ hs }}02-add-device-wizard.png"><img src="{{ hs }}02-add-device-wizard.png" alt="RobOS Home Speaker Add Smart Speaker Wizard showing Home Assistant Voice Speaker first" width="1120" height="820"></a><figcaption><strong>Add Smart Speaker Wizard</strong> with <strong>Home Assistant Voice Speaker</strong> ranked #1, plain-English cards, and collapsible technical details.</figcaption></figure>
+
+<ol>
+<li>Open <strong>RobOS Home Speaker</strong> and switch to the <strong>Speakers &amp; Setup</strong> tab (or click <strong>+ Add Speaker</strong> in the top bar).</li>
+<li>Select <strong>Home Assistant Voice Speaker</strong> (#1 in the catalog). Technical specifications stay tucked neatly inside collapsible <code>▸ Show technical details</code> sections.</li>
+<li>If your speaker is brand new, expand the Bluetooth Wi-Fi setup section, click <strong>Scan Bluetooth</strong>, enter your 2.4 GHz Wi-Fi credentials, and click <strong>Send Wi-Fi to Speaker</strong>.</li>
+<li>Test the 12-LED RGB light ring, 48 kHz FLAC chime, and Kokoro neural greeting before saving.</li>
+</ol>
+
+<h2 id="protocol-reference">5. Hardware Entities &amp; Protocol Reference</h2>
+<table class="wide">
+<thead><tr><th>Entity / Message</th><th>Key / Protobuf ID</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>media_player</code></td><td>Key <code>2232357057</code> (<code>msgType 65</code>)</td><td>Hardware 48 kHz 16-bit FLAC announcement &amp; media playback pipeline</td></tr>
+<tr><td><code>led_ring</code></td><td>Key <code>1459351809</code> (<code>msgType 32</code>)</td><td>12-LED RGB Halo Ring control (<code>LightCommandRequest</code>)</td></tr>
+<tr><td><code>button_press</code></td><td>Key <code>2698747613</code></td><td>Physical center button press events</td></tr>
+<tr><td><code>SubscribeVoiceAssistantRequest</code></td><td><code>msgType 89</code></td><td>Subscribes RobOS to receive 16 kHz microphone audio over TCP <code>:6053</code></td></tr>
+<tr><td><code>VoiceAssistantRequest</code></td><td><code>msgType 90</code></td><td>Sent by speaker when microphone capture begins (<code>start = true</code>)</td></tr>
+<tr><td><code>VoiceAssistantAudio</code></td><td><code>msgType 106</code></td><td>16 kHz 16-bit mono PCM audio frames from the XMOS XU316 dual-mic array</td></tr>
+<tr><td><code>VoiceAssistantAnnounceRequest</code></td><td><code>msgType 119</code></td><td>Plays <code>media_id</code> (field 1) and with <code>start_conversation = true</code> (field 4) automatically starts recording</td></tr>
+</tbody>
+</table>
+
+</article>
+</div></section>
