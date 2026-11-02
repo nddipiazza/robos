@@ -52,16 +52,22 @@ async function worker(id, home) {
     // Apps can open a background window too, and either may finish loading before a listener can
     // attach. Reloading each one once it is watched catches a broken page regardless of load order.
     const watched = new WeakSet();
-    const watch = opened => { if (watched.has(opened)) return; watched.add(opened); opened.on('pageerror', pageError); opened.reload().catch(() => {}); };
+    const watch = opened => { if (watched.has(opened)) return null; watched.add(opened); opened.on('pageerror', pageError); return opened.reload({ timeout: 15000 }).catch(() => {}); };
     instance.on('window', watch);
     page = await instance.firstWindow({ timeout: 15000 });
-    instance.windows().forEach(watch);
+    await Promise.all(instance.windows().map(watch));
     result.firstWindowMs = Date.now() - started;
     // The reload above aborts requests in flight, which says nothing about whether a file exists.
     page.on('requestfailed', request => { if (request.failure()?.errorText !== 'net::ERR_ABORTED') failedRequests.push({ url: request.url(), error: request.failure()?.errorText }); });
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
     await page.waitForTimeout(1200);
-    const state = await page.evaluate(() => ({ title: document.title, text: document.body?.innerText || '', controls: document.querySelectorAll('button,input,a,select,textarea').length }));
+    const read = () => page.evaluate(() => ({ title: document.title, text: document.body?.innerText || '', controls: document.querySelectorAll('button,input,a,select,textarea').length }));
+    // An app may navigate as it starts, which destroys the page being read.
+    const state = await read().catch(async error => {
+      if (!/context was destroyed/.test(error.message)) throw error;
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+      return read();
+    });
     result.title = state.title; result.textLength = state.text.trim().length; result.controls = state.controls; result.errors = errors; result.failedRequests = failedRequests;
     let matched = true;
     if (linux) {
