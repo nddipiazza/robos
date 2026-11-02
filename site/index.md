@@ -24,7 +24,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
       </ul>
       <a class="l-quick" href="{{ '/using-robos-wizard/' | relative_url }}"><span class="l-quick-ic" aria-hidden="true">?</span><span><b>New here? Click here for a quick start</b><small>A few questions, then a guide made for you: install steps, the apps to try first, what to read next</small></span><span class="l-quick-go" aria-hidden="true">→</span></a>
       <div class="cta">
-        <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> <span data-dl-label>Download RobOS</span></a>
+        <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> <span data-dl-label>Download RobOS</span></a>
         <a class="btn btn-ghost" href="#vision">See the plan</a>
       </div>
       <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>
@@ -342,6 +342,6 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
 <section class="final alt">
   <div class="wrap">
     <h2 class="h2">Replace one app today. Need less AI tomorrow.</h2>
-    <div class="cta" style="margin-top:30px"><a class="btn btn-accent" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> Download RobOS</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener"><img class="btn-ic" src="/assets/icons/star.svg" alt="" width="18" height="18"> Star on GitHub</a></div>
+    <div class="cta" style="margin-top:30px"><a class="btn btn-accent" href="{{ '/download/' | relative_url }}"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> Download RobOS</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener"><span class="btn-ic" style="--ic:url(/assets/icons/star.svg)" aria-hidden="true"></span> Star on GitHub</a></div>
   </div>
 </section>
