@@ -1,0 +1,18 @@
+/* Ready for itch.io Custom CSS once enabled for the creator account. */
+#wrapper {
+  background: linear-gradient(rgba(5,6,10,.35), rgba(5,6,10,.72)), url("https://rowbose.com/assets/games/storefront/tabletop-rpg-background.jpg") center / cover fixed no-repeat;
+  color: #f3efe6;
+  min-height: 100vh;
+}
+#wrapper .inner_column {
+  background: rgba(8,9,14,.78);
+  border: 1px solid #e0b25255;
+  border-radius: 16px;
+  box-shadow: 0 18px 70px #0008;
+}
+#wrapper a { color: #e0b252; }
+#wrapper .formatted_description img { max-width: 100%; height: auto; border-radius: 12px; }
+@media (max-width: 700px) {
+  #wrapper { background-attachment: scroll; }
+  #wrapper .inner_column { border-radius: 0; }
+}
