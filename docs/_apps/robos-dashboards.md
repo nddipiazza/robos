@@ -17,7 +17,7 @@ Every widget on a dashboard is a composable RobOS custom element (`<robos-widget
 
 ## Architecture Overview
 
-![RobOS Castable Smart Dashboards Architecture](/assets/images/castable-smart-dashboards-architecture.jpg)
+![RobOS Castable Smart Dashboards Architecture]({{ '/assets/images/castable-smart-dashboards-architecture.jpg' | relative_url }})
 
 ```mermaid
 flowchart LR

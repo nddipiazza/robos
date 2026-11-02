@@ -2,6 +2,7 @@
 title: "RobOS Movie Player"
 package: movie-player
 category: core-desktop
+landing: /movie-player/
 icon: movie-player.svg
 summary: "Open-source cinema, TV series & Tablo OTA DVR player sharing the warm theater theme of RobOS Audio Player: 100,000-movie & TV series library, Show & Season Navigator, Tablo 4th Gen OTA DVR live & recorded broadcast streaming, TMDB/TVmaze posters, AI Watchlists, Virtual Cinema Host, synced .srt/.vtt subtitles, and a 3-row visual image-card Roku & Smart TV app."
 description: "Desktop & Smart TV cinema stage with Movies, TV Shows & Tablo OTA DVR tabs, Show & Season Navigator, live & recorded Tablo DVR streaming with broadcast thumbnails, TMDB/TVmaze metadata, .srt/.vtt subtitles, AI Watchlists, RobOS Voice Virtual Cinema Host, SFTP/Cloud HTTP 206 streaming, and a 3-row visual image-card Roku OS channel."

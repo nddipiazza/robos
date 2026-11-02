@@ -2,6 +2,7 @@
 title: "Task Planner"
 package: task-planner
 category: ai-agents
+landing: /task-planner/
 icon: task-planner.svg
 summary: "Describe a feature or pick a template, have GitHub Copilot draft epics and tasks, edit them, and create them as issues on your task server."
 description: "Also called Task Explorer in its window and launcher. It generates a task list with gh copilot, creates GitHub or Jira issues, and manages linked project plans in the knowledge graph."

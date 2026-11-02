@@ -2,6 +2,7 @@
 title: "RobOS Household"
 package: household
 category: household
+landing: /family-finances/
 icon: household.svg
 summary: "Family financial-year sandbox: six account types, statement reconciliation, spending categories, split purchases, PDF tax review and local federal tax estimates."
 description: "A runnable browser prototype for an invented family's financial year, from January statements and everyday spending to February tax preparation."

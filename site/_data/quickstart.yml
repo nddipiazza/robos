@@ -223,7 +223,7 @@ personas:
     wow_title: "What will impress you: one window for the data you chase across a dozen tabs"
     wow: "Clusters, CI runs, deployments, logs, secrets and network links usually mean a browser window per vendor. RobOS brings them into native desktop apps on your own machine, signed in once and backed by one knowledge graph. RobOS Dashboards then puts widgets from any of them on one wall, and can cast it to a TV in the team room."
     wow_links:
-      - { label: "RobOS Dashboards", url: "/v1/apps/robos-dashboards/" }
+      - { label: "RobOS Dashboards", url: "/apps/robos-dashboards/" }
       - { label: "Zero-trust app mesh between machines", url: "/p2p/" }
       - { label: "Security and isolation proofs", url: "/security/" }
     apps: [kube-studio, ci-monitor, deploy-tracker, robos-logs, robos-dashboards, pass-manager]
@@ -341,39 +341,39 @@ apps:
   task-planner: { name: "Task Planner", url: "/task-planner/", text: "Turn a description into epics and tasks on GitHub or Jira." }
   task-implementer: { name: "Task Implementer", url: "/task-implementer/", text: "Hand one issue to a coding agent: it branches, tests, commits and pushes." }
   pr-review: { name: "Code Review Theater", url: "/code-review/", text: "Diff, before-and-after evidence and the agent's walkthrough for every branch." }
-  dev-central: { name: "Dev Central", url: "/v1/apps/dev-central/", text: "Your daily task list, with buttons to start agents." }
-  git-projects: { name: "Git Projects", url: "/v1/apps/git-projects/", text: "Clone, pull and open all your repositories in an IDE." }
-  agents-manager: { name: "Agents Manager", url: "/v1/apps/agents-manager/", text: "Sessions, logins, models and MCP servers for each agent CLI." }
-  manager-dashboard: { name: "Manager Dashboard", url: "/v1/apps/manager-dashboard/", text: "Issues, merged PRs, cycle time and deploy frequency for a repo." }
+  dev-central: { name: "Dev Central", url: "/apps/dev-central/", text: "Your daily task list, with buttons to start agents." }
+  git-projects: { name: "Git Projects", url: "/apps/git-projects/", text: "Clone, pull and open all your repositories in an IDE." }
+  agents-manager: { name: "Agents Manager", url: "/apps/agents-manager/", text: "Sessions, logins, models and MCP servers for each agent CLI." }
+  manager-dashboard: { name: "Manager Dashboard", url: "/apps/manager-dashboard/", text: "Issues, merged PRs, cycle time and deploy frequency for a repo." }
   # Operations
-  kube-studio: { name: "Kube Studio", url: "/v1/apps/kube-studio/", text: "Browse a local Kind or Minikube cluster with real kubectl. Remote, Helm and ArgoCD panels are previews." }
-  remote-execution-studio: { name: "Remote Execution Studio", url: "/v1/apps/remote-execution-studio/", text: "Bazel and Buck2 remote build clusters and their config." }
-  ci-monitor: { name: "CI Monitor", url: "/v1/apps/ci-monitor/", text: "GitHub Actions and Buildkite runs, failed-job logs and re-runs." }
-  deploy-tracker: { name: "Deploy Tracker", url: "/v1/apps/deploy-tracker/", text: "Deployments, releases and merged PRs for a repository." }
-  robos-logs: { name: "System Logs Viewer", url: "/v1/apps/robos-logs/", text: "Search and filter the structured logs every RobOS app writes." }
-  robos-dashboards: { name: "RobOS Dashboards", url: "/v1/apps/robos-dashboards/", text: "Compose any RobOS widget into one wall and cast it to a TV." }
-  data-sources: { name: "Data Sources", url: "/v1/apps/data-sources/", text: "Google Drive, OneDrive, SFTP, FTP and local folders in one catalog." }
-  db-manager: { name: "Relational DB Manager", url: "/v1/apps/db-manager/", text: "SQL studio with a schema tree and console.", preview: true }
-  nosql-manager: { name: "NoSQL DB Manager", url: "/v1/apps/nosql-manager/", text: "MongoDB documents and Redis keys.", preview: true }
-  rest-client: { name: "REST API Client", url: "/v1/apps/rest-client/", text: "Request editor and collection runner.", preview: true }
-  grpc-client: { name: "gRPC Client", url: "/v1/apps/grpc-client/", text: "Browse protobuf services.", preview: true }
-  graphql-client: { name: "GraphQL Client", url: "/v1/apps/graphql-client/", text: "Query editor, variables and schema.", preview: true }
-  pass-manager: { name: "Pass Manager", url: "/v1/apps/pass-manager/", text: "The standard Unix password store, encrypted with GPG." }
+  kube-studio: { name: "Kube Studio", url: "/apps/kube-studio/", text: "Browse a local Kind or Minikube cluster with real kubectl. Remote, Helm and ArgoCD panels are previews." }
+  remote-execution-studio: { name: "Remote Execution Studio", url: "/apps/remote-execution-studio/", text: "Bazel and Buck2 remote build clusters and their config." }
+  ci-monitor: { name: "CI Monitor", url: "/apps/ci-monitor/", text: "GitHub Actions and Buildkite runs, failed-job logs and re-runs." }
+  deploy-tracker: { name: "Deploy Tracker", url: "/apps/deploy-tracker/", text: "Deployments, releases and merged PRs for a repository." }
+  robos-logs: { name: "System Logs Viewer", url: "/apps/robos-logs/", text: "Search and filter the structured logs every RobOS app writes." }
+  robos-dashboards: { name: "RobOS Dashboards", url: "/apps/robos-dashboards/", text: "Compose any RobOS widget into one wall and cast it to a TV." }
+  data-sources: { name: "Data Sources", url: "/apps/data-sources/", text: "Google Drive, OneDrive, SFTP, FTP and local folders in one catalog." }
+  db-manager: { name: "Relational DB Manager", url: "/apps/db-manager/", text: "SQL studio with a schema tree and console.", preview: true }
+  nosql-manager: { name: "NoSQL DB Manager", url: "/apps/nosql-manager/", text: "MongoDB documents and Redis keys.", preview: true }
+  rest-client: { name: "REST API Client", url: "/apps/rest-client/", text: "Request editor and collection runner.", preview: true }
+  grpc-client: { name: "gRPC Client", url: "/apps/grpc-client/", text: "Browse protobuf services.", preview: true }
+  graphql-client: { name: "GraphQL Client", url: "/apps/graphql-client/", text: "Query editor, variables and schema.", preview: true }
+  pass-manager: { name: "Pass Manager", url: "/apps/pass-manager/", text: "The standard Unix password store, encrypted with GPG." }
   hardware-keys: { name: "Hardware Keys", url: "/physical-keys/", text: "YubiKey and FIDO2 keys for SSH, signing and approvals." }
   vpn-sandbox: { name: "VPN Sandbox", url: "/security/", text: "Run any app inside an isolated network with a kill switch." }
   app-mesh: { name: "App Mesh & Private Networks", url: "/p2p/", text: "Link RobOS machines across networks with mutual TLS." }
-  mcp-manager: { name: "MCP Manager", url: "/v1/apps/mcp-manager/", text: "See, test and assign the MCP servers on this machine." }
+  mcp-manager: { name: "MCP Manager", url: "/apps/mcp-manager/", text: "See, test and assign the MCP servers on this machine." }
   # Everyday and business
   point-of-sale: { name: "Point of Sale", url: "/point-of-sale/", text: "Touchscreen register with self-checkout, scanning, tabs and tips." }
   auto-center: { name: "Auto Center", url: "/auto-center/", text: "Front desk, mechanic bench with OBD-II, estimates and checkout." }
   household: { name: "Household", url: "/family-finances/", text: "Import statements, sort spending and estimate your taxes." }
-  audio-player: { name: "Audio Player", url: "/v1/apps/audio-player/", text: "Your music library, lyrics, and casting to Google speakers." }
+  audio-player: { name: "Audio Player", url: "/apps/audio-player/", text: "Your music library, lyrics, and casting to Google speakers." }
   movie-player: { name: "Movie Player", url: "/movie-player/", text: "Your movies and shows with posters, subtitles and TV casting." }
   robos-tv: { name: "Smart TV Studio", url: "/tv/", text: "Pair your TV and put RobOS apps on the big screen." }
-  smart-light: { name: "Smart Light", url: "/v1/apps/smart-light/", text: "Wi-Fi lights by room, scenes and a daylight schedule." }
-  home-speaker: { name: "Home Speaker", url: "/v1/apps/home-speaker/", text: "Intercom, voice notes and announcements on your speakers." }
-  cloud-accounts: { name: "Cloud Accounts", url: "/v1/apps/cloud-accounts/", text: "Sign in to Google, Microsoft and others once, for every app." }
-  google-calendar: { name: "Google Calendar", url: "/v1/apps/google-calendar/", text: "Sets up your Google calendar, contacts and mail in Thunderbird." }
+  smart-light: { name: "Smart Light", url: "/apps/smart-light/", text: "Wi-Fi lights by room, scenes and a daylight schedule." }
+  home-speaker: { name: "Home Speaker", url: "/apps/home-speaker/", text: "Intercom, voice notes and announcements on your speakers." }
+  cloud-accounts: { name: "Cloud Accounts", url: "/apps/cloud-accounts/", text: "Sign in to Google, Microsoft and others once, for every app." }
+  google-calendar: { name: "Google Calendar", url: "/apps/google-calendar/", text: "Sets up your Google calendar, contacts and mail in Thunderbird." }
   # Games
   party-game: { name: "Party Game", url: "/games/party-game/", text: "An AI host runs mini games about your guests on your TVs." }
   crpg: { name: "Realm of Heroes", url: "/games/crpg/", text: "Party-based RPG with real-time-with-pause combat." }
@@ -381,9 +381,9 @@ apps:
   robos-rts: { name: "Starfall Command", url: "/games/robos-rts/", text: "One player against the AI on a huge strategy map." }
   quest-warrior-dragon: { name: "Quest: Warrior Dragon", url: "/games/quest-warrior-dragon/", text: "A retro console RPG across 29 maps." }
   # Game tools
-  robos-tabletop: { name: "Tabletop Studio", url: "/v1/apps/robos-tabletop/", text: "Quests, heroes, monsters and boards, then launch the game." }
-  tabletop-blockmap-creator: { name: "Blockmap Creator", url: "/v1/apps/tabletop-blockmap-creator/", text: "Line a grid up with a board image and mark the rooms." }
-  tabletop-quest-editor: { name: "Quest Map Editor", url: "/v1/apps/tabletop-quest-editor/", text: "Place doors, monsters, traps and stairs on a map." }
-  crpg-editor: { name: "cRPG Editor", url: "/v1/apps/crpg-editor/", text: "Campaigns, characters, items, spells and battle maps." }
-  crpg-builder: { name: "cRPG Builder", url: "/v1/apps/crpg-builder/", text: "Turn the game's knowledge graph into a Godot 4 project." }
-  game-playthrough: { name: "Game Playthrough", url: "/v1/apps/game-playthrough/", text: "Watch an AI play the game end to end, with videos per milestone." }
+  robos-tabletop: { name: "Tabletop Studio", url: "/apps/robos-tabletop/", text: "Quests, heroes, monsters and boards, then launch the game." }
+  tabletop-blockmap-creator: { name: "Blockmap Creator", url: "/apps/tabletop-blockmap-creator/", text: "Line a grid up with a board image and mark the rooms." }
+  tabletop-quest-editor: { name: "Quest Map Editor", url: "/apps/tabletop-quest-editor/", text: "Place doors, monsters, traps and stairs on a map." }
+  crpg-editor: { name: "cRPG Editor", url: "/apps/crpg-editor/", text: "Campaigns, characters, items, spells and battle maps." }
+  crpg-builder: { name: "cRPG Builder", url: "/apps/crpg-builder/", text: "Turn the game's knowledge graph into a Godot 4 project." }
+  game-playthrough: { name: "Game Playthrough", url: "/apps/game-playthrough/", text: "Watch an AI play the game end to end, with videos per milestone." }

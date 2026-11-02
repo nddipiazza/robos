@@ -2,6 +2,7 @@
 title: "RobOS Hardware Keys"
 package: hardware-keys
 category: "security-vault"
+landing: /physical-keys/
 icon: hardware-keys.svg
 summary: "YubiKey & FIDO2 physical push keys, touch verification, ed25519-sk SSH keys, Passkeys, and PAM U2F security studio"
 description: "YubiKey & FIDO2 physical push keys, touch verification, ed25519-sk SSH keys, Passkeys, and PAM U2F security studio"

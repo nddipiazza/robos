@@ -2,6 +2,7 @@
 title: "RobOS Party Game"
 package: party-game
 category: "party-games"
+landing: /games/party-game/
 icon: party-game.svg
 summary: "AI-hosted party game on your RobOS TVs: guests take a survey on their phones, get secret roles, and play mini games built from each other's answers"
 description: "AI-hosted party game on your RobOS TVs: guests take a survey on their phones, get secret roles, and play mini games built from each other's answers"

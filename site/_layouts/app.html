@@ -1,0 +1,102 @@
+---
+layout: default
+---
+{%- comment -%}
+One page per app, from docs/_apps/<slug>.md (staged by scripts/stage-site-data.sh).
+Links to other apps go to their hand-made guide when the app sets `landing:`.
+{%- endcomment -%}
+{%- assign cat = site.data.app_categories | where: "id", page.category | first -%}
+<section class="cr-page app-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<nav class="app-crumbs" aria-label="Breadcrumb">
+  <a href="{{ '/apps/' | relative_url }}">Apps</a>
+  {%- if cat %} / <a href="{{ '/apps/' | relative_url }}#{{ cat.id }}">{{ cat.name }}</a>{% endif %}
+</nav>
+
+<header class="app-hero">
+  {%- if page.icon %}
+  <img class="app-hero-ic" src="{{ '/v1/assets/images/icons/' | append: page.icon | relative_url }}" width="72" height="72" alt="">
+  {%- else %}
+  <span class="app-hero-ic ph">{{ page.title | slice: 0 }}</span>
+  {%- endif %}
+  <div>
+    <h1>{{ page.title }}</h1>
+    <p class="lead">{{ page.summary }}</p>
+    <div class="app-cta">
+      {%- if page.landing %}
+      <a class="btn" href="{{ page.landing | relative_url }}">Read the guide</a>
+      <a class="btn btn-ghost" href="{{ '/download/' | relative_url }}">Download RobOS</a>
+      {%- else %}
+      <a class="btn" href="{{ '/download/' | relative_url }}">Download RobOS</a>
+      {%- endif %}
+      <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/{{ page.package }}" target="_blank" rel="noopener">Source</a>
+    </div>
+    <p class="app-pkg-line"><code>packages/{{ page.package }}</code></p>
+  </div>
+</header>
+
+<div class="app-content">
+{{ content }}
+</div>
+
+{%- if page.related %}
+<section class="app-related">
+  <h2>Related</h2>
+  <ul>
+  {%- for url in page.related %}
+    {%- assign rel_app = nil -%}
+    {%- if url contains '/apps/' -%}
+      {%- assign rel_slug = url | remove_first: '/apps/' | split: '/' | first -%}
+      {%- assign rel_app = site.apps | where: "slug", rel_slug | first -%}
+    {%- endif -%}
+    {%- if rel_app %}
+    <li><a href="{{ rel_app.landing | default: rel_app.url | relative_url }}">{{ rel_app.title }}</a></li>
+    {%- else %}
+    {%- assign rel_url = '/v1' | append: url -%}
+    <li><a href="{{ rel_url | relative_url }}">{{ url | remove: '.html' | split: '#' | first | split: '/' | last | replace: '-', ' ' | capitalize }}</a></li>
+    {%- endif %}
+  {%- endfor %}
+  </ul>
+</section>
+{%- endif %}
+
+{%- assign siblings = site.apps | where: "category", page.category | sort_natural: "title" -%}
+{%- if cat and siblings.size > 1 %}
+<section class="app-more">
+  <h2>More in {{ cat.name }}</h2>
+  <div class="app-grid">
+  {%- for a in siblings %}
+    {%- if a.url != page.url %}
+    <a class="card app-card" href="{{ a.landing | default: a.url | relative_url }}">
+      {%- if a.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: a.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ a.title | slice: 0 }}</span>{%- endif -%}
+      <div>
+        <h3>{{ a.title }}</h3>
+        <p>{{ a.summary | escape }}</p>
+      </div>
+    </a>
+    {%- endif %}
+  {%- endfor %}
+  </div>
+</section>
+{%- endif %}
+
+</article>
+</div></section>
+{%- if content contains 'language-mermaid' %}
+<script type="module">
+  // Fenced ```mermaid blocks arrive as Rouge-highlighted code; swap each for a plain <pre class="mermaid">
+  // first, so the diagram source still reads cleanly if the renderer can't load.
+  document.querySelectorAll('.language-mermaid').forEach((block) => {
+    if (block.parentElement?.closest('.language-mermaid')) return;
+    const pre = document.createElement('pre');
+    pre.className = 'mermaid';
+    pre.textContent = block.textContent;
+    block.replaceWith(pre);
+  });
+  const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.esm.min.mjs');
+  const dark = document.documentElement.dataset.theme === 'dark';
+  mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral' });
+  mermaid.run({ querySelector: 'pre.mermaid' });
+</script>
+{%- endif %}
