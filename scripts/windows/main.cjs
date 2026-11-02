@@ -46,6 +46,7 @@ app.on('web-contents-created', (_event, contents) => {
 if (id) {
   if (!apps.some(a => a.id === id)) throw new Error('Unknown RobOS app');
   const dir = path.join(root, 'packages', id);
+  process.env.ROBOS_MANAGED_APP = id;
   process.chdir(dir);
   app.setPath('userData', path.join(os.homedir(), '.config/robos/electron', id));
   app.setAppPath(dir);
