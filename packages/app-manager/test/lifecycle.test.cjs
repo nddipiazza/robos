@@ -265,6 +265,27 @@ test('macOS apps get native application bundles with safely quoted launchers', a
   native.shortcut({ id: 'one', label: 'One & Two' }, true);
   assert.equal(fs.existsSync(bundle), false);
 });
+test('macOS copies the whole app out of the disk image, replacing an older copy', async t => {
+  const { locations, root } = await fixture(t);
+  locations.macManager = path.join(root, 'Applications/RobOS.app');
+  const image = path.join(root, 'Volumes/RobOS.app'), resources = path.join(image, 'Contents/Resources'), framework = path.join(image, 'Contents/Frameworks');
+  fs.mkdirSync(resources, { recursive: true }); fs.mkdirSync(framework, { recursive: true });
+  fs.writeFileSync(path.join(resources, 'app.asar'), 'asar'); fs.writeFileSync(path.join(framework, 'real'), 'x');
+  fs.symlinkSync('real', path.join(framework, 'link'));
+  fs.mkdirSync(path.join(locations.macManager, 'Contents'), { recursive: true }); fs.writeFileSync(path.join(locations.macManager, 'Contents/stale'), 'old');
+  const before = process.noAsar;
+  // Electron's fs would see this as a folder, as it does in the packaged app.
+  const { cpSync } = fs; let asarDisabled;
+  fs.cpSync = (...args) => { asarDisabled = process.noAsar; return cpSync(...args); };
+  t.after(() => { fs.cpSync = cpSync; process.noAsar = before; });
+  integration({ locations, executable: 'x', packaged: true, platform: 'darwin' }).installManager(image);
+  assert.equal(asarDisabled, true, 'asar handling is off during the copy');
+  assert.equal(process.noAsar, before, 'and restored afterwards');
+  assert.equal(fs.readFileSync(path.join(locations.macManager, 'Contents/Resources/app.asar'), 'utf8'), 'asar');
+  assert.equal(fs.readlinkSync(path.join(locations.macManager, 'Contents/Frameworks/link')), 'real');
+  assert.equal(fs.existsSync(path.join(locations.macManager, 'Contents/stale')), false);
+  assert.equal(fs.existsSync(`${locations.macManager}.installing`), false);
+});
 test('archive validation rejects links and excess uncompressed data', async t => {
   const { archive, root, buffer } = await fixture(t);
   const target = path.join(root, 'extract'); fs.mkdirSync(target);
