@@ -24,6 +24,10 @@ Continue locally, where those sites are reachable.
 ## Decisions already made by the user
 
 - Data comes from real fan sites (crawl them), not from agent recall.
+- **The AI writes scripts that access the sites; it does not read the sites itself.** Every
+  fan source gets a checked-in, re-runnable fetch-and-extract script. The agent's job is to
+  author and fix those scripts; the scripts do the fetching and produce the records. Anyone
+  can rerun them to reproduce or refresh the KGraph without an AI in the loop.
 - Art: the public repo holds **original procedural art** generated from the data (as DW1 does
   with `games/quest-warrior-dragon/tools/generate_original_assets.py`), plus attributed links to
   the fan-site pages that show the real art. Do not rehost ripped Square Enix sprites or maps.
@@ -62,10 +66,22 @@ Continue locally, where those sites are reachable.
 - `lib/source-registry.js`: per-game fan-source catalog mapping URLs → asset types it fills
   (DW1 USA and FF1 USA), plus search-query templates so the agent can find sources for any
   other game.
-- `lib/acquire.js`: fetch with an on-disk cache, MediaWiki `api.php?action=parse&prop=wikitext`
-  for wiki tables, a generic wikitable parser, and an agent step (`ai-agent.ask`) that turns
-  page text into records for one asset type. Every record carries provenance (source URL,
-  fetch date, extractor) and fails loudly on missing required fields.
+- `sources/<game>/<source>.js`: one scraper script per fan source (for example
+  `sources/ff1-usa/strategywiki-enemies.js`, `sources/ff1-usa/vgmaps-maps.js`). Each exports
+  `{ id, url(s), assetTypes, fetch(ctx), extract(raw) }`, uses the shared fetch helper, and
+  returns records for its asset types. These are ordinary code, reviewed and committed like
+  any other.
+- `lib/fetch.js`: shared HTTP helper with an on-disk cache (`.cache/<host>/...`), polite rate
+  limit, user agent, robots.txt check, and MediaWiki helpers
+  (`api.php?action=parse&prop=wikitext`, a generic wikitable parser).
+- `lib/script-author.js`: the agent step. Given a game, an asset type, a source URL and a
+  cached sample of that page (fetched by the helper, not by the agent), it asks
+  `ai-agent.ask()` to write or repair the scraper script, then runs it and checks the output
+  against the asset type's required fields. Failing runs go back to the agent with the error
+  and the script, never to the agent with a request to read the page and type the data.
+- `lib/acquire.js`: runs the scraper scripts for a game, merges their records, and stamps
+  every record with provenance (source URL, fetch date, script id and version). Missing
+  required fields fail loudly.
 - `lib/importers/quest-warrior-dragon.js`: DW1 local data → KGraph folder (the proof case,
   covering all asset types including milestones, formulas and maps).
 - `lib/procedural-art.js`: deterministic original SVG/PNG sprites, tiles and map renders from data.
@@ -85,7 +101,9 @@ Continue locally, where those sites are reachable.
   e.g. `jrpg:Boss ⊂ jrpg:Enemy ⊂ jrpg:Combatant`) → generic property/relationship renderer.
   Custom renderers are plain browser JS in `<kgraph>/renderers/*.js` declared in
   `renderers.json`; built-ins for Enemy, Map/Location, Milestone timeline, Shop, Formula.
-- `--agent` option asks the RobOS agent to write renderers for types that only have the generic one.
+- `--agent` option asks the RobOS agent to write renderer scripts (saved into
+  `<kgraph>/renderers/`) for types that only have the generic one; same rule: the agent writes
+  code, the generator runs it.
 - Wire into `bin/kgraph-cli.js` (`kgraph site build <folder> --out <dir>`) and an Explorer
   IPC handler + button.
 
@@ -93,7 +111,8 @@ Continue locally, where those sites are reachable.
 
 1. Taxonomy + KGraph folder writer + DW1 importer; check DW1 coverage is complete.
 2. Site generator with renderer resolution; build the DW1 site and look at it in a browser.
-3. Source registry + acquire for FF1; crawl, fill every asset type, generate original art.
+3. Source registry for FF1; have the agent write a scraper script per source, run them,
+   fill every asset type, generate original art.
 4. Build the FF1 site; create public `nddipiazza/kgraph-final-fantasy`, push the KGraph folder
    and site, enable GitHub Pages.
 5. Tests in `packages/robos-test/tests/`, docs, app registration.
