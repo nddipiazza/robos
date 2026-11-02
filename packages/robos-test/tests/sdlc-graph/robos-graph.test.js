@@ -1,5 +1,5 @@
 'use strict';
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
@@ -13,8 +13,13 @@ const {
 const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS, evalClick } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { createRepoFixture, enterCwd } = require('../../lib/repo-fixture');
 
 describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertions', () => {
+  // KGraph Explorer writes .robos/*.yaml under its working directory.
+  const appCwd = createRepoFixture({ copy: [] });
+  after(() => appCwd.cleanup());
+
   it('parses OSLC Core 3.0 JSON-LD graphs, enforces SHACL constraints, and traces blast radius', async () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-graph-test-'));
     const filePath = path.join(tmpDir, 'knowledge-graph.jsonld');
@@ -50,8 +55,9 @@ describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertio
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('manages eLearning KGraph objects, enforces ELearningShape, syncs GitOps, and prompts documentation updates', async () => {
+  it('manages eLearning KGraph objects, enforces ELearningShape, syncs GitOps, and prompts documentation updates', async (t) => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-elearning-test-'));
+    t.after(enterCwd(tmpDir));
     const filePath = path.join(tmpDir, 'knowledge-graph.jsonld');
     const store = new SDLCKnowledgeGraphStore({ filePath });
 
@@ -123,6 +129,7 @@ describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertio
   it('launches SDLC Knowledge Graph GUI, executes SHACL validation, and traverses blast radius', async () => {
     const app = await launchApp('robos-graph', {
       ...scenarios['all-good'],
+      cwd: appCwd.root,
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
 
@@ -170,6 +177,7 @@ describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertio
   it('provides rich flagship GUI support: entity creator, editor, interactive topology diagram, impact analyzer, and path finder', async () => {
     const app = await launchApp('robos-graph', {
       ...scenarios['all-good'],
+      cwd: appCwd.root,
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
 
