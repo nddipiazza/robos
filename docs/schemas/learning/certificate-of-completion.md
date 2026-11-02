@@ -38,33 +38,28 @@ Count is the minimum and maximum number of values (`*` means no maximum). The va
 
 ## Example node
 
-This node comes from `.robos/kgraphs/learning/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
+The checked-in graph has no node of this class that passes the validator, so this is a placeholder built from the shape. It has every required property, with example values. It is not a node from the graph.
 
 {% raw %}
 ```json
 {
-  "@id": "urn:robos:credential:certificate:course-test-architect-mucvneo3",
+  "@id": "urn:robos:learning:certificate-of-completion-sample",
   "@type": [
     "robos:CertificateOfCompletion",
     "schema:EducationalOccupationalCredential",
     "oslc:Resource"
   ],
-  "dcterms:title": "Certificate of Completion: RobOS Platform Masterclass",
-  "dcterms:description": "Official RobOS verified certificate of completion awarded to test-architect for mastering RobOS Platform Masterclass.",
-  "robos:recipientUser": "test-architect",
-  "robos:forCourse": "urn:robos:elearning:app:course",
-  "robos:forApplication": "urn:robos:service:forms-api",
-  "robos:issueDate": "2026-09-22T16:17:14.501Z",
-  "robos:scorePercentage": 98,
-  "robos:verificationHash": "ROBOS-CERT-34FC6D395C5F1599",
-  "robos:skillsAcquired": [
-    "Forms API Architecture",
-    "OpenAPI 3.1 & Pact Contract Verification",
-    "Strict Red-Green-Refactor E2E Verification"
-  ],
-  "robos:status": "issued",
+  "dcterms:title": "Sample Certificate Of Completion",
+  "dcterms:description": "Placeholder node for robos:CertificateOfCompletion.",
   "robos:package": "learning",
-  "robos:namespace": "robos.learning"
+  "robos:namespace": "robos.learning",
+  "robos:recipientUser": "<recipientUser>",
+  "robos:forCourse": "<forCourse>",
+  "robos:issueDate": "<issueDate>",
+  "robos:scorePercentage": "<scorePercentage>",
+  "robos:schemaOrgType": "https://schema.org/EducationalOccupationalCredential",
+  "robos:domainStandard": "https://schema.org/EducationalOccupationalCredential",
+  "robos:refersFrom": "https://schema.org/EducationalOccupationalCredential"
 }
 ```
 {% endraw %}

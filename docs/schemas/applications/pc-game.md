@@ -38,63 +38,29 @@ Count is the minimum and maximum number of values (`*` means no maximum). The va
 
 ## Example node
 
-This node comes from `.robos/kgraphs/crpg/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
+This node comes from `.robos/kgraphs/jrpg/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
 {% raw %}
 ```json
 {
-  "@id": "urn:robos:crpg:game:realm-of-heroes",
+  "@id": "urn:robos:jrpg:game:quest-warrior-dragon",
   "@type": [
     "oslc_am:Resource",
-    "robos:CRPGGame",
     "robos:PCGame",
-    "schema:VideoGame",
-    "robos:Game"
+    "robos:Game",
+    "schema:VideoGame"
   ],
-  "dcterms:title": "Realm of Heroes: A Night Without Memory",
-  "robos:repository": "github.com/nddipiazza/realm-of-heroes",
-  "robos:technology": "Godot 4 / GDScript",
+  "dcterms:description": "Classic 2D tile-based turn-based JRPG powered by the RobOS Dual-State Knowledge Graph, Godot 4, and 100% procedural copyright-free pixel art and chiptune audio.",
+  "dcterms:title": "Quest: Warrior Dragon (RobOS 2D JRPG Engine)",
+  "robos:combatModel": "turn-based-menu",
   "robos:gameEngine": "Godot 4",
+  "robos:gameType": "jrpg",
+  "robos:namespace": "robos.jrpg",
+  "robos:package": "jrpg",
+  "robos:repository": "github.com/nddipiazza/quest-warrior-dragon",
+  "robos:ruleset": "quest-warrior-dragon",
   "robos:targetPlatform": "Linux, Windows, macOS",
-  "robos:ruleset": "dnd5e",
-  "robos:combatModel": "real-time-with-pause",
-  "robos:startingZone": "urn:robos:crpg:zone:homestead",
-  "robos:assetPackage": "flareteam/flare-game",
-  "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
-  "robos:maxPartySize": 4,
-  "robos:hasELearning": [
-    "urn:robos:elearning:course:robos-crpg",
-    "urn:robos:elearning:course:crpg-game-builder"
-  ],
-  "robos:package": "crpg",
-  "robos:namespace": "robos.crpg",
-  "robos:hasCertificate": [
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkm21t",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkmgt4",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkn2tn",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhknorg",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkny96",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkurva",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvjue",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvs2f",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkxn9z",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicj0mi",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicp0oa",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicpmge",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimlank",
-    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimmiax"
-  ],
-  "robos:gameType": "crpg"
+  "robos:technology": "Godot 4 / GDScript"
 }
 ```
 {% endraw %}
