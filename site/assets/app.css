@@ -1,0 +1,33 @@
+/* rowbose.com/apps/<slug>/: one page per app (layout _layouts/app.html), on the shared guide styles */
+@import url("code-review.css");
+.app-crumbs{font-size:.85rem;color:var(--muted);margin-bottom:22px}
+.app-crumbs a{color:var(--muted)!important;text-decoration:none!important}.app-crumbs a:hover{color:var(--accent)!important}
+.app-hero{display:flex;gap:24px;align-items:flex-start;margin-bottom:34px}
+.app-hero-ic{flex:none;width:72px;height:72px;border-radius:16px;padding:8px;background:var(--bg2);border:1px solid var(--line)}
+.app-hero-ic.ph{display:grid;place-items:center;font-size:1.8rem}
+.app-hero h1{font-size:clamp(1.9rem,4vw,2.8rem);line-height:1.1;letter-spacing:-.03em;margin:0 0 10px}
+.app-hero .lead{font-size:clamp(1.02rem,1.5vw,1.18rem);color:var(--muted);max-width:70ch;margin:0}
+.app-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.guide-body .app-cta a{text-decoration:none}
+.app-pkg-line{margin:14px 0 0;font-size:.82rem;color:var(--muted)}
+
+.app-content img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px}
+.app-content iframe{max-width:100%}
+.app-content pre{font-size:.84rem}
+.app-content pre.mermaid{background:var(--card);text-align:center}
+
+/* kramdown callouts written for the v1 theme: {: .note } {: .tip } {: .warning } {: .important } */
+.app-content .note,.app-content .tip,.app-content .warning,.app-content .important{--c:#2563eb;max-width:78ch;border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 8%,var(--card));border-radius:0 8px 8px 0;padding:12px 16px;margin:18px 0}
+.app-content .tip{--c:#15803d}.app-content .warning{--c:#b7791f}.app-content .important{--c:#dc2626}
+.app-content .note::before,.app-content .tip::before,.app-content .warning::before,.app-content .important::before{display:block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c);margin-bottom:4px}
+.app-content .note::before{content:"Note"}.app-content .tip::before{content:"Tip"}.app-content .warning::before{content:"Warning"}.app-content .important::before{content:"Important"}
+
+.app-related,.app-more{margin-top:56px;padding-top:28px;border-top:1px solid var(--line)}
+.app-related h2,.app-more h2{font-size:1.2rem;margin:0 0 14px;padding:0;border:0}
+.app-related ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0;max-width:none}
+.app-related li{max-width:none}
+.guide-body .app-related a{display:inline-block;padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:var(--card);text-decoration:none;color:var(--fg);font-size:.88rem}
+.guide-body .app-related a:hover{border-color:var(--accent)}
+.app-more .app-grid{max-width:none}
+.guide-body .app-more a{text-decoration:none}.app-more .app-card p{color:var(--muted);max-width:none}
+@media(max-width:640px){.app-hero{flex-direction:column;gap:14px}.app-hero-ic{width:56px;height:56px}}

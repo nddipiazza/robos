@@ -13,12 +13,15 @@ plugins:
 # a separate Jekyll site in ../docs, built with baseurl /v1 and published
 # under /v1/. See .github/workflows/pages.yml.
 #
-# The App Directory reads app front matter from ../docs/_apps. The workflow (and
-# scripts/build-docs.sh) stage it into site/_apps via scripts/stage-site-data.sh; the
-# collection is data only (output: false), the pages themselves live at /v1/apps/.
+# The App Directory reads the app pages in ../docs/_apps. The workflow (and
+# scripts/build-docs.sh) stage them into site/_apps via scripts/stage-site-data.sh,
+# and each one is published at /apps/<slug>/ with _layouts/app.html. An app whose
+# front matter sets `landing:` (a hand-made guide such as /point-of-sale/) is linked
+# there from the directory instead.
 collections:
   apps:
-    output: false
+    output: true
+    permalink: /apps/:name/
   # Engineering blog posts: one file per post in _blog/, published at /blog/<file name>/.
   # /blog/ lists them newest first by `date`.
   blog:
@@ -26,6 +29,14 @@ collections:
     permalink: /blog/:name/
 
 defaults:
+  - scope:
+      path: ""
+      type: apps
+    values:
+      layout: app
+      body_class: guide
+      extra_css: /assets/app.css
+      schema_type: TechArticle
   - scope:
       path: ""
       type: blog

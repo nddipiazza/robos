@@ -15,6 +15,19 @@ both EXEs, checksums and source provenance. It runs on version tags; its manual 
 can add EXEs to an existing release matching `VERSION`. These EXEs are separate from
 the Linux-distro USB flasher built by `release.yml`.
 
+## App pages (`/apps/` and `/apps/<slug>/`)
+
+Every app's page is written once, in `docs/_apps/<slug>.md`. `scripts/stage-site-data.sh` copies those files,
+bodies included, into `site/_apps/` (gitignored) and rewrites links that only work on the v1 site
+(`scripts/stage-site-apps.cjs`): `{% raw %}{% link %}{% endraw %}` tags and `relative_url` paths go to `/v1/…`, except `/apps/<slug>/`,
+which stays on this site. Each app is then published at `/apps/<slug>/` with `_layouts/app.html` and
+`assets/app.css`, and the same page stays at `/v1/apps/<slug>/`. In app bodies, link to front-site pages
+(`/config-management/`, `/games/…`) with a plain markdown path so the link works from both sites.
+
+An app with a hand-made guide sets `landing:` in its front matter (for example `landing: /point-of-sale/`).
+The directory, "Related" and "More in" cards then link to the guide, and the app page shows a **Read the guide**
+button. Link to `/apps/<slug>/` from front-site pages, not `/v1/apps/<slug>/`.
+
 ## Engineering blog (`/blog/`)
 
 Each post is its own file, `_blog/<slug>.html`, published at `/blog/<slug>/` with the `blog-post` layout.

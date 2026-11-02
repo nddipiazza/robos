@@ -17,7 +17,7 @@ keywords: "Tabletop RPG documentation, HeroQuest cartridge format, Tabletop Bloc
   <p class="lead" style="margin-top:14px;color:#c9c2b2;max-width:60ch">Play, author and extend HeroQuest-style cartridges.</p>
   <div class="grid3">
     <a class="card" href="{{ '/v1/projects/tabletop-rpg/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/book.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Engine guide</h3><p>Architecture, board layout, turn sequence, combat dice and the four heroes.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/apps/robos-tabletop/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/tools.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Tabletop Studio</h3><p>The visual editor for quests, heroes, monsters and the board.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/apps/robos-tabletop/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/tools.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Tabletop Studio</h3><p>The visual editor for quests, heroes, monsters and the board.</p><span class="go">Open →</span></a>
     <a class="card" href="{{ '/v1/game-development.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/gamepad.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Game development in RobOS</h3><p>How RobOS models and builds games.</p><span class="go">Open →</span></a>
   </div>
   <div class="doc-list" style="margin-top:44px">

@@ -2,6 +2,7 @@
 title: "RobOS Private Networks"
 package: private-networks
 category: "security-vault"
+landing: /p2p/
 icon: private-networks.svg
 summary: "Cross-Network Zero-Trust P2P & Relay Mesh for linking RobOS machines across separate networks/NAT/CGNAT via Mutual TLS 1.3 (robos-net://), AES-256-GCM encrypted rendezvous, bidirectional Reverse-Mux tunneling, and cross-machine RobOS Movie Player (:19215) streaming"
 description: "Cross-Network Zero-Trust P2P & Relay Mesh for linking RobOS machines across separate networks/NAT/CGNAT via Mutual TLS 1.3 (robos-net://), AES-256-GCM encrypted rendezvous, bidirectional Reverse-Mux tunneling, and cross-machine RobOS Movie Player (:19215) streaming"
@@ -15,7 +16,7 @@ Built on `packages/robos-lib/app-mesh-engine.js`, every connection is end-to-end
 
 ## Architecture Overview
 
-![RobOS Private Networks & Zero-Trust mTLS 1.3 Cross-Network P2P Architecture](/assets/images/private-networks-architecture.jpg)
+![RobOS Private Networks & Zero-Trust mTLS 1.3 Cross-Network P2P Architecture]({{ '/assets/images/private-networks-architecture.jpg' | relative_url }})
 
 ```mermaid
 flowchart LR

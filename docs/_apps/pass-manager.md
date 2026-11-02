@@ -2,6 +2,7 @@
 title: "Pass Manager Vault"
 package: pass-manager
 category: security-vault
+landing: /pass-manager/
 icon: pass-manager.svg
 summary: "Desktop front end for the standard Unix password store (pass), with entries encrypted by GPG."
 description: "Browse, add, edit, delete and copy entries in your ~/.password-store, and create a GPG key and store if you do not have one. It shells out to the pass and gpg commands."
