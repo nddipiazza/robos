@@ -2,13 +2,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { ID } = require('./catalog.cjs');
+const { gnome, MANAGER_ENTRY } = require('./gnome.cjs');
 const quoteShell = value => "'" + value.replace(/'/g, "'\\''") + "'";
 const xml = value => value.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
 function quoteDesktop(value) {
   // Desktop string escaping happens before Exec argument parsing.
   return '"' + value.replace(/%/g, '%%').replace(/\\/g, '\\\\\\\\').replace(/["`$]/g, '\\\\$&') + '"';
 }
-function integration({ locations, executable, host, packaged, shell, platform = process.platform }) {
+// Desktop entry string values escape backslashes and line breaks.
+const desktopValue = value => value.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n');
+const MENU_CATEGORIES = { 'Everyday & business': 'Office', 'Games & game tools': 'Game', 'AI & agents': 'Development', 'Developer tools': 'Development', 'System & security': 'System' };
+const managedEntry = id => `robos-managed-${id}.desktop`;
+function integration({ locations, executable, host, packaged, shell, platform = process.platform, desktop = gnome() }) {
   const baseArgs = packaged ? [] : [host];
   const command = args => [...baseArgs, ...args];
   function shortcut(item, remove = false) {
@@ -34,19 +39,50 @@ function integration({ locations, executable, host, packaged, shell, platform = 
       const icon = path.resolve(path.dirname(executable), '../Resources/icon.icns');
       if (fs.existsSync(icon)) fs.copyFileSync(icon, path.join(bundle, 'Contents/Resources/icon.icns'));
     } else {
-      fs.mkdirSync(locations.shortcuts, { recursive: true });
-      const file = path.join(locations.shortcuts, `robos-managed-${item.id}.desktop`);
-      if (remove) { fs.rmSync(file, { force: true }); return; }
-      const exec = command([`--app=${item.id}`]).map(quoteDesktop);
-      const icon = path.join(locations.root, 'packages', item.id, 'icon.svg');
-      fs.writeFileSync(file, `[Desktop Entry]\nType=Application\nName=${item.label}\nComment=RobOS application\nExec=${quoteDesktop(executable)} ${exec.join(' ')}\nIcon=${fs.existsSync(icon) ? icon : 'applications-other'}\nTerminal=false\nCategories=Utility;\nX-RobOS-App=true\nStartupWMClass=robos-${item.id}\nActions=Uninstall;\n\n[Desktop Action Uninstall]\nName=Uninstall ${item.label}\nExec=${[executable, ...command([`--remove=${item.id}`])].map(quoteDesktop).join(' ')}\n`, { mode: 0o755 });
+      const entry = managedEntry(item.id);
+      if (remove) {
+        fs.rmSync(path.join(locations.shortcuts, entry), { force: true });
+        desktop.unpin(pinned => pinned === entry); desktop.removeFromFolder(entry);
+        return;
+      }
+      writeEntry(item);
+      desktop.addToFolder(entry);
     }
+  }
+  // Rewrites an app's menu entry only, so startup keeps any app the user moved out of the folder.
+  function writeEntry(item) {
+    fs.mkdirSync(locations.shortcuts, { recursive: true });
+    const exec = command([`--app=${item.id}`]).map(quoteDesktop);
+    const installed = path.join(locations.root, 'packages', item.id);
+    const icon = ['icon.svg', 'icon.png'].map(name => path.join(installed, name)).find(fs.existsSync) || 'application-x-executable';
+    // StartupWMClass is what ties a running window to this entry's dock icon; app-host
+    // guarantees the window carries it. TryExec hides the entry if RobOS itself is removed.
+    fs.writeFileSync(path.join(locations.shortcuts, managedEntry(item.id)), `[Desktop Entry]\nVersion=1.5\nType=Application\nName=${desktopValue(item.label)}\nComment=${desktopValue(item.description || 'RobOS application')}\nTryExec=${desktopValue(executable)}\nExec=${quoteDesktop(executable)} ${exec.join(' ')}\nIcon=${desktopValue(icon)}\nTerminal=false\nStartupNotify=true\nStartupWMClass=robos-${item.id}\nCategories=${MENU_CATEGORIES[item.group] || 'Utility'};\nKeywords=RobOS;\nX-RobOS-App=true\nActions=Uninstall;\n\n[Desktop Action Uninstall]\nName=Uninstall ${desktopValue(item.label)}\nExec=${[executable, ...command([`--remove=${item.id}`])].map(quoteDesktop).join(' ')}\n`, { mode: 0o755 });
   }
   function removeAll() {
     if (platform === 'win32' || platform === 'darwin') fs.rmSync(locations.shortcuts, { recursive: true, force: true });
     else if (fs.existsSync(locations.shortcuts)) for (const file of fs.readdirSync(locations.shortcuts)) {
       if (/^robos-managed-[a-z0-9-]+\.desktop$/.test(file)) fs.rmSync(path.join(locations.shortcuts, file));
     }
+    if (platform !== 'win32' && platform !== 'darwin') { desktop.unpin(entry => entry.startsWith('robos-managed-')); desktop.removeFolder(); }
+  }
+  // The dock pin happens once, so a user who later unpins RobOS is not overruled.
+  function pinManager() {
+    if (platform !== 'linux') return;
+    const marker = path.join(locations.data, 'dock-pinned');
+    if (fs.existsSync(marker) || !desktop.pin(MANAGER_ENTRY)) return;
+    fs.mkdirSync(locations.data, { recursive: true }); fs.writeFileSync(marker, '');
+  }
+  // An AppImage copy from an earlier install must not shadow the system package.
+  function adoptSystemManager() {
+    fs.rmSync(path.join(locations.shortcuts, MANAGER_ENTRY), { force: true });
+    fs.rmSync(locations.image, { force: true });
+    fs.rmSync(path.join(locations.data, 'robos-app-manager.png'), { force: true });
+  }
+  function removeManager() {
+    adoptSystemManager();
+    desktop.unpin(entry => entry === MANAGER_ENTRY);
+    fs.rmSync(path.join(locations.data, 'dock-pinned'), { force: true });
   }
   function installManager(image) {
     if (platform === 'darwin') {
@@ -61,8 +97,11 @@ function integration({ locations, executable, host, packaged, shell, platform = 
     if (path.resolve(image) !== locations.image) { fs.copyFileSync(image, `${locations.image}.new`); fs.renameSync(`${locations.image}.new`, locations.image); }
     fs.chmodSync(locations.image, 0o755);
     fs.mkdirSync(locations.shortcuts, { recursive: true });
-    fs.writeFileSync(path.join(locations.shortcuts, 'robos-app-manager.desktop'), `[Desktop Entry]\nType=Application\nName=RobOS App Manager\nExec=${quoteDesktop(locations.image)}\nIcon=system-software-install\nTerminal=false\nCategories=Utility;\n`, { mode: 0o755 });
+    // Desktop shells cannot read icons from inside the AppImage's archive.
+    const icon = path.join(locations.data, 'robos-app-manager.png');
+    fs.copyFileSync(path.join(__dirname, '../icon.png'), icon);
+    fs.writeFileSync(path.join(locations.shortcuts, MANAGER_ENTRY), `[Desktop Entry]\nVersion=1.5\nType=Application\nName=RobOS App Manager\nComment=Choose, download, launch and remove RobOS apps\nTryExec=${desktopValue(locations.image)}\nExec=${quoteDesktop(locations.image)}\nIcon=${desktopValue(icon)}\nTerminal=false\nStartupNotify=true\nStartupWMClass=robos-app-manager\nCategories=Utility;\nKeywords=RobOS;\n`, { mode: 0o755 });
   }
-  return { shortcut, removeAll, installManager };
+  return { shortcut, writeEntry, removeAll, installManager, pinManager, adoptSystemManager, removeManager };
 }
 module.exports = { integration, quoteDesktop };

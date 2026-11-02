@@ -15,7 +15,8 @@ const download = fs.readFileSync(path.join(output, 'download/index.html'), 'utf8
 for (const file of ['Install-RobOS.cmd', 'Install-RobOS.ps1', 'WINDOWS-SHA256SUMS']) {
   assert.ok(download.includes(`https://github.com/nddipiazza/robos/releases/download/v${version}/${file}`), `Missing release asset: ${file}`);
 }
-assert.ok(download.includes('id="windows"') && download.includes('id="linux-distro"'));
+assert.ok(download.includes('id="windows"') && download.includes('id="ubuntu"') && download.includes('id="linux-distro"'));
+assert.ok(download.includes(`RobOS-v${version}-Linux-amd64.deb`), 'Missing Ubuntu package');
 
 // Merge /v1/sitemap.xml entries into root /sitemap.xml so a single sitemap submission indexes the whole site.
 const rootSitemapPath = path.join(output, 'sitemap.xml');

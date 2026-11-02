@@ -7,7 +7,7 @@ og_image: /assets/og.png
 og_image_width: 1200
 og_image_height: 630
 og_image_alt: "Download RobOS for Windows, Linux and macOS"
-keywords: "download RobOS, Windows installer, Linux app suite, macOS install, Ubuntu appliance ISO, QEMU VM, open-source desktop apps"
+keywords: "download RobOS, Windows installer, Ubuntu deb package, Linux app suite, macOS install, Ubuntu appliance ISO, QEMU VM, open-source desktop apps"
 ---
 <div class="page-h wrap">
   <h1>Download RobOS</h1>
@@ -17,13 +17,13 @@ keywords: "download RobOS, Windows installer, Linux app suite, macOS install, Ub
   <div class="wrap">
     <h2 class="h2">RobOS App Manager</h2>
     <p>The same app manager runs on Windows, Ubuntu GNOME and macOS. Choose apps in a grouped checkbox tree, download only your selection, and add or remove apps later. Each installed app gets its own native launcher. Uninstalling RobOS removes its managed apps.</p>
-    <p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.9/RobOS-v0.0.9-Windows-Setup.exe">Windows app manager</a> <a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.9/RobOS-v0.0.9-Linux-x86_64.AppImage">Linux AppImage</a></p>
+    <p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.9/RobOS-v0.0.9-Windows-Setup.exe">Windows app manager</a> <a class="btn" href="{{ site.data.release.url }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Linux-amd64.deb" data-release-tag="{{ site.data.release.tag }}">Ubuntu GNOME (.deb)</a></p>
     <p><a href="https://github.com/nddipiazza/robos/releases/download/v0.0.9/RobOS-v0.0.9-macOS-arm64.dmg">macOS — Apple Silicon</a> · <a href="https://github.com/nddipiazza/robos/releases/download/v0.0.9/RobOS-v0.0.9-macOS-x64.dmg">macOS — Intel</a></p>
-    <p class="muted small">Windows EXE, Linux AppImage and macOS DMG share one interface; apps use platform-specific downloads. Verify downloads with SHA256SUMS on the <a href="https://github.com/nddipiazza/robos/releases/tag/v0.0.9">release page</a>.</p>
+    <p class="muted small">Windows EXE, Ubuntu .deb, Linux AppImage and macOS DMG share one interface; apps use platform-specific downloads. Verify downloads with SHA256SUMS on the <a href="https://github.com/nddipiazza/robos/releases/tag/v0.0.9">release page</a>.</p>
     <div class="os-grid">
       <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">App Manager (.dmg)</p><a class="btn" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-arm64.dmg">Apple Silicon</a><a class="alt-l" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-x64.dmg">Intel</a></div>
       <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">App Manager installer</p><a class="btn" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Download Windows installer</a><p class="small">Choose apps to download and manage them together.</p></div>
-      <div class="card os" data-os="linux"><h3>Linux</h3><p class="muted">App Manager (AppImage)</p><a class="btn" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">Download Linux AppImage</a><p class="small">For Ubuntu GNOME and compatible Linux desktops.</p></div>
+      <div class="card os" data-os="linux"><h3>Ubuntu GNOME</h3><p class="muted">App Manager (.deb)</p><a class="btn" href="{{ site.data.release.url }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Linux-amd64.deb" data-release-tag="{{ site.data.release.tag }}">Download for Ubuntu</a><a class="alt-l" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">AppImage for other Linux</a><p class="small">Pins to the dock. Apps appear in your app grid.</p></div>
     </div>
     <p class="muted small" style="text-align:center;margin-top:18px">App Manager and individual app downloads are on <a style="text-decoration:underline" href="{{ site.data.release.url }}" target="_blank" rel="noopener">GitHub Releases</a>. Optional appliance images are built separately; see the available assets on each release.</p>
   </div>
@@ -41,7 +41,17 @@ keywords: "download RobOS, Windows installer, Linux app suite, macOS install, Ub
     <details><summary>Update an existing RobOS folder</summary><p>Close RobOS apps, download the PowerShell setup above, and run:</p><pre class="code"><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "$env:USERPROFILE\RobOS" -Repair</code></pre><p>Use the folder containing your existing RobOS installation. Your app settings remain in <code>%USERPROFILE%\.config\robos</code>.</p></details>
   </div>
 </section>
-<section id="linux-distro" class="alt">
+<section id="ubuntu" class="alt">
+  <div class="wrap">
+    <h2 class="h2">Run RobOS on Ubuntu GNOME</h2>
+    <p>Use the Ubuntu package to install App Manager on your current desktop. Double-click the <code>.deb</code> and choose <strong>Install</strong> in App Center, or run it from a terminal. Installing the package asks for your password; apps install for your user only.</p>
+    <pre class="code"><button data-copy>Copy</button><code>sudo apt install ./RobOS-v{{ site.data.release.version }}-Linux-amd64.deb</code></pre>
+    <p>Open <strong>RobOS App Manager</strong> from the app grid and it pins itself to the dock. Select one app, several apps or the entire library in its grouped checkbox tree. Each installed app appears in the app grid under <strong>RobOS Apps</strong>, can be found by search, and shows its own icon in the dock while running.</p>
+    <p>Remove selections together in App Manager, or choose <strong>Uninstall RobOS</strong> to remove the manager, its apps, the menu entries and the dock icon. <code>sudo apt remove robos-app-manager</code> also removes the program and hides its menu entries. Settings stay in <code>~/.config/robos</code>.</p>
+    <p class="muted">Tested on Ubuntu 26.04 and 24.04 with GNOME. On another Linux desktop, use the <a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">AppImage</a>, which needs FUSE 2 (<code>libfuse2t64</code> on Ubuntu) and adds itself to your app menu on first launch.</p>
+  </div>
+</section>
+<section id="linux-distro">
   <div class="wrap">
     <h2 class="h2">Install the RobOS Linux GNOME distro</h2>
     <p>This is a separate installation option: create a bootable USB drive and install the RobOS Linux appliance on a dedicated PC. Flashing erases the selected USB drive, and the unattended OS installation can erase the target PC.</p>
@@ -93,7 +103,8 @@ scripts/install-local.sh</code></pre>
     <table class="t">
       <tr><th>Artifact</th><th>File</th><th>Purpose</th></tr>
       <tr><td>Windows App Manager</td><td><a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Windows-Setup.exe</a></td><td>Install App Manager and choose apps to download</td></tr>
-      <tr><td>Linux App Manager</td><td><a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">Linux-x86_64.AppImage</a></td><td>Run App Manager on Ubuntu GNOME</td></tr>
+      <tr><td>Ubuntu App Manager</td><td><a href="{{ site.data.release.url }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Linux-amd64.deb" data-release-tag="{{ site.data.release.tag }}">Linux-amd64.deb</a></td><td>Install App Manager on Ubuntu GNOME</td></tr>
+      <tr><td>Linux App Manager</td><td><a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">Linux-x86_64.AppImage</a></td><td>Run App Manager on other Linux desktops (needs FUSE 2)</td></tr>
       <tr><td>macOS App Manager</td><td><a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-arm64.dmg">Apple Silicon DMG</a> · <a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-x64.dmg">Intel DMG</a></td><td>Install App Manager for your Mac</td></tr>
       <tr><td>Windows app setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.cmd">Install-RobOS.cmd</a></td><td>Install the native Windows app suite</td></tr>
       <tr><td>Windows PowerShell setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.ps1">Install-RobOS.ps1</a></td><td>Custom install folder or repair</td></tr>

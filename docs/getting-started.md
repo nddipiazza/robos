@@ -34,18 +34,35 @@ The native Windows app suite has passed its startup audit. GNOME, KVM, UNIX pass
 
 For a custom folder, download `Install-RobOS.ps1` from the download page and run `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "D:\RobOS"`. The execution policy applies only to that setup process. This setup installs apps on Windows. The USB flasher below is a separate option for installing the Linux GNOME operating system on a target PC.
 
+## Ubuntu GNOME app suite
+
+[Download the Ubuntu package]({{ site.data.release.url }}), **RobOS-v{{ site.data.release.version }}-Linux-amd64.deb**. Double-click it and choose **Install** in App Center, or run:
+
+```sh
+sudo apt install ./RobOS-v{{ site.data.release.version }}-Linux-amd64.deb
+```
+
+Open **RobOS App Manager** from the app grid. It pins itself to the dock the first time it opens; if you unpin it later, it stays unpinned. Choose apps in the grouped checkbox tree. Each app downloads only what it needs and installs for your user under `~/.local/share/robos/app-manager`, with no further administrator prompts.
+
+Every installed app appears in the app grid in a **RobOS Apps** folder and in GNOME search. While an app runs, the dock shows it with its own icon. Right-click an app in the grid or dock and choose **Uninstall** to remove it.
+
+**Uninstall RobOS** in App Manager removes the manager, its apps, the menu entries, the folder and the dock icon, then asks for your password to remove the package. `sudo apt remove robos-app-manager` also works: menu entries disappear with the program, and downloaded apps stay in your home folder until you reinstall RobOS or delete `~/.local/share/robos`. Personal settings remain in `~/.config/robos`.
+
+The package is tested on Ubuntu 24.04 and 26.04. For other Linux desktops, the AppImage on the [download page](https://rowbose.com/download/#ubuntu) runs the same manager and needs FUSE 2 (`libfuse2t64` on Ubuntu). GNOME, KVM, UNIX pass and X11 integrations use the desktop's own services, as on the appliance. Apps that need external tools can install them through RobOS Software Center.
+
 ## Pick a method
 
 | Method | Where it runs | You need | What you get |
 |---|---|---|---|
 | [Windows app suite](#windows-app-suite) | Windows | Internet access during setup | Native apps in `%USERPROFILE%\RobOS` and a Start menu launcher |
+| [Ubuntu GNOME app suite](#ubuntu-gnome-app-suite) | Ubuntu with GNOME | Administrator password for the package, internet access for app downloads | App Manager pinned to the dock; each app in the app grid and shown with its own dock icon |
 | [Run from source](#run-from-source) | Linux desktop; the shell scripts can also be used in a suitable macOS or WSL environment. Use native setup above for Windows. | Node.js 20 or newer, Git, a desktop session | One app window per command |
 | [GNOME launcher](#add-the-apps-to-the-gnome-launcher) | Ubuntu with GNOME | The same as above | A launcher entry for each app in your clone |
 | [USB installer](#install-the-appliance-from-a-usb-drive) | The installer app runs on Linux, macOS or Windows (it cannot flash on Windows, see below); the target is an x86_64 PC | A USB drive of 4 GB or more | The RobOS appliance on the target PC |
 | [Virtual machine](#boot-the-appliance-in-qemu) | A Linux host with QEMU | QEMU, 16 GB of RAM for the guest | The appliance in a QEMU window |
 
 {: .note }
-The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. These versioned appliance files do not install the app suite on macOS or Windows. The Windows app-suite setup is the separate download described above. On Windows, use the native app-suite setup above. For a Linux source checkout, use "Run from source".
+Files named `RobOS-Installer-*` are the USB installer for the appliance. They do not install the app suite on your current computer. The Windows app-suite setup is the separate download described above. On Windows, use the native app-suite setup above. For a Linux source checkout, use "Run from source".
 
 ## Run from source
 

@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const repo = path.resolve(__dirname, '../..');
 const { ID, ORIGIN, validateCatalog } = require('../../packages/app-manager/lib/catalog.cjs');
+const { validateArchive } = require('../../packages/app-manager/lib/download.cjs');
 const tools = name => require(path.join(repo, 'packages/app-manager/node_modules', name));
 const ignored = new Set(['node_modules', '.git', '.godot', '__pycache__', 'run', 'test', 'tests', 'demos', 'coverage']);
 function walk(dir, visit) {
@@ -63,6 +64,19 @@ function sourceCatalog(root = repo, platform = process.platform) {
       label: id === 'robos-graph' ? 'Knowledge Graph Explorer' : icon?.label || id, iconSvg: icon?.iconSvg || null, group, description: pkg.description || '' }];
   });
 }
+// npm packages such as esbuild hard-link files on Unix. tar records those as links,
+// which the installer rejects, so each file becomes independent before packing.
+function breakHardLinks(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) breakHardLinks(file);
+    else if (entry.isFile() && fs.statSync(file).nlink > 1) {
+      fs.copyFileSync(file, `${file}.unlinked`);
+      fs.chmodSync(`${file}.unlinked`, fs.statSync(file).mode);
+      fs.renameSync(`${file}.unlinked`, file);
+    }
+  }
+}
 function runNpm(dir) {
   const args = ['install', '--omit=dev', '--no-audit', '--no-fund', '--package-lock=false'];
   const cli = process.env.ROBOS_NPM_CLI || process.env.npm_execpath;
@@ -106,12 +120,15 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
       }
       if (item.id === 'audio-player') tools('esbuild').buildSync({ absWorkingDir: dir, entryPoints: ['src/index.jsx'], bundle: true, outfile: 'renderer/bundle.js',
         platform: 'browser', loader: { '.js': 'jsx', '.jsx': 'jsx' }, define: { 'process.env.NODE_ENV': '"production"' } });
+      breakHardLinks(dir);
       const name = `robos-${item.id}-v${version}-${platform}-${arch}.tgz`, file = path.join(output, name);
       // tar dereferences only the npm links created in this isolated staging tree.
       await tools('tar').c({ cwd: dir, file, gzip: true, portable: true, follow: true,
         filter: name => !/(?:^|\/)node_modules\/electron(?:\/|$)/.test(name) }, ['.']);
       let unpackedBytes = 0;
       await tools('tar').t({ file, onReadEntry: entry => { unpackedBytes += entry.size; } });
+      // Publish only what the manager will accept when a user installs it.
+      await validateArchive(file, Math.max(1, unpackedBytes));
       const hash = crypto.createHash('sha256'); for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
       components.push({ ...item, version, bytes: fs.statSync(file).size, unpackedBytes: Math.max(1, unpackedBytes), sha256: hash.digest('hex'), url: `${ORIGIN}v${version}/${name}` });
     }
@@ -121,6 +138,6 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
     return doc;
   } finally { fs.rmSync(stage, { recursive: true, force: true }); }
 }
-module.exports = { dependencies, sourceCatalog, publish };
+module.exports = { dependencies, sourceCatalog, publish, breakHardLinks };
 if (require.main === module) publish({ selected: process.argv.includes('--apps') ? process.argv[process.argv.indexOf('--apps') + 1].split(',') : undefined })
   .catch(error => { console.error(error); process.exitCode = 1; });

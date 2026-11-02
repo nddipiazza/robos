@@ -69,6 +69,11 @@ jobs:
         run: node scripts/app-manager/smoke.cjs
       - name: Build individual app downloads
         run: node scripts/app-manager/publish-catalog.cjs
+      - name: Install the .deb on clean Ubuntu and verify the GNOME dock and app grid
+        if: runner.os == 'Linux'
+        env:
+          ROBOS_UBUNTU_VERSION: '24.04'
+        run: scripts/app-manager/test-ubuntu-install.sh
       - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
@@ -76,6 +81,7 @@ jobs:
           path: |
             release/app-manager/*.exe
             release/app-manager/*.AppImage
+            release/app-manager/*.deb
             release/app-manager/*.dmg
             release/app-manager/*.tgz
             release/app-manager/robos-catalog-*.json
@@ -87,6 +93,12 @@ jobs:
         with:
           name: app-manager-windows-smoke
           path: run/app-manager-smoke/**
+      - name: Upload Ubuntu install evidence
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-manager-ubuntu-install
+          path: run/app-manager-gnome-smoke/**
   publish:
     needs: [unit, windows-regression, build]
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/release-0.0.9'

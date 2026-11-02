@@ -2,6 +2,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const repo = path.resolve(__dirname, '../..'), manager = path.join(repo, 'packages/app-manager');
+// One logo across platforms: Linux uses every size inside the Windows icon, named
+// so the build places each in its hicolor size directory.
+function linuxIcons(output) {
+  const ico = fs.readFileSync(path.join(repo, 'scripts/windows/robos.ico'));
+  const directory = path.join(output, 'linux-icons');
+  fs.rmSync(directory, { recursive: true, force: true }); fs.mkdirSync(directory, { recursive: true });
+  for (let index = 0; index < ico.readUInt16LE(4); index++) {
+    const entry = 6 + index * 16, size = ico[entry] || 256, length = ico.readUInt32LE(entry + 8), offset = ico.readUInt32LE(entry + 12);
+    fs.writeFileSync(path.join(directory, `${size}x${size}.png`), ico.subarray(offset, offset + length));
+  }
+  return directory;
+}
 function prepareApp(output) {
   const { createRequire } = require('node:module');
   const destination = path.join(output, 'app-source');
@@ -27,6 +39,7 @@ function prepareApp(output) {
     }
   }
   copyDependencies(manager, destination);
+  fs.copyFileSync(path.join(linuxIcons(output), '256x256.png'), path.join(destination, 'icon.png'));
   return destination;
 }
 function configuration(output = path.join(repo, 'release/app-manager')) {
@@ -36,14 +49,17 @@ function configuration(output = path.join(repo, 'release/app-manager')) {
   const macIcon = path.join(output, 'app-manager.icns'); fs.writeFileSync(macIcon, Buffer.concat([header, png]));
   return { appId: 'com.rowbose.robos', productName: 'RobOS', electronVersion: '33.4.11',
     directories: { app: prepareApp(output), output }, npmRebuild: false, asar: true,
-    files: ['main.js', 'preload.js', 'lib/**/*', 'renderer/**/*', 'icon.svg', 'package.json', '!**/test/**'],
+    files: ['main.js', 'preload.js', 'lib/**/*', 'renderer/**/*', 'icon.svg', 'icon.png', 'package.json', '!**/test/**'],
     win: { target: [{ target: 'nsis', arch: ['x64'] }], icon: path.join(repo, 'scripts/windows/robos.ico'), executableName: 'RobOS' },
     nsis: { artifactName: 'RobOS-v${version}-Windows-Setup.${ext}', oneClick: false, perMachine: false, allowElevation: false,
       allowToChangeInstallationDirectory: true, createStartMenuShortcut: true, createDesktopShortcut: true, shortcutName: 'RobOS App Manager',
       deleteAppDataOnUninstall: false, include: path.join(__dirname, 'uninstall.nsh') },
-    linux: { target: [{ target: 'AppImage', arch: ['x64'] }], category: 'Utility', executableName: 'robos-app-manager',
-      icon: path.join(repo, 'packages/app-launcher/icon.png'), artifactName: 'RobOS-v${version}-Linux-x86_64.${ext}',
-      desktop: { Name: 'RobOS App Manager', Comment: 'Choose, download, launch and remove RobOS apps', StartupWMClass: 'robos-app-manager' } },
+    linux: { target: [{ target: 'deb', arch: ['x64'] }, { target: 'AppImage', arch: ['x64'] }], category: 'Utility', executableName: 'robos-app-manager',
+      icon: linuxIcons(output), artifactName: 'RobOS-v${version}-Linux-x86_64.${ext}', maintainer: 'RobOS <noreply@rowbose.com>',
+      synopsis: 'RobOS App Manager', description: 'Choose, download, launch and remove RobOS apps',
+      desktop: { Name: 'RobOS App Manager', StartupWMClass: 'robos-app-manager', StartupNotify: 'true', Keywords: 'RobOS;' } },
+    deb: { artifactName: 'RobOS-v${version}-Linux-amd64.${ext}', packageCategory: 'utils', recommends: ['libglib2.0-bin', 'pkexec'],
+      afterInstall: path.join(__dirname, 'deb-after-install.sh'), afterRemove: path.join(__dirname, 'deb-after-remove.sh') },
     mac: { target: [{ target: 'dmg', arch: [process.arch] }], category: 'public.app-category.utilities',
       icon: macIcon, artifactName: 'RobOS-v${version}-macOS-${arch}.${ext}' },
   };
@@ -52,9 +68,9 @@ async function main() {
   const version = fs.readFileSync(path.join(repo, 'VERSION'), 'utf8').trim();
   if (require(path.join(manager, 'package.json')).version !== version) throw new Error('Manager version must match VERSION');
   const { build, Platform, Arch } = require(path.join(manager, 'node_modules/electron-builder'));
-  await build({ config: configuration(), publish: 'never', ...(process.argv.includes('--linux') ? { targets: Platform.LINUX.createTarget(['AppImage'], Arch.x64) } : {}) });
+  await build({ config: configuration(), publish: 'never', ...(process.argv.includes('--linux') ? { targets: Platform.LINUX.createTarget(['deb', 'AppImage'], Arch.x64) } : {}) });
   // Enforce a small, stable base; suite payloads must never return to the installer.
-  for (const file of fs.readdirSync(path.join(repo, 'release/app-manager')).filter(file => /\.(exe|AppImage|dmg)$/.test(file))) {
+  for (const file of fs.readdirSync(path.join(repo, 'release/app-manager')).filter(file => /\.(exe|AppImage|deb|dmg)$/.test(file))) {
     if (fs.statSync(path.join(repo, 'release/app-manager', file)).size > 150 * 1024 ** 2) throw new Error(`Base installer exceeded 150 MiB budget: ${file}`);
   }
 }

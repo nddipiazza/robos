@@ -5,7 +5,8 @@ const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const { validateCatalog } = require('../../packages/app-manager/lib/catalog.cjs');
 const repo = path.resolve(__dirname, '../..');
-const targets = [['win32', 'x64', 'Windows-Setup.exe'], ['linux', 'x64', 'Linux-x86_64.AppImage'],
+// Rows list each platform's manager downloads after its OS and CPU.
+const targets = [['win32', 'x64', 'Windows-Setup.exe'], ['linux', 'x64', 'Linux-amd64.deb', 'Linux-x86_64.AppImage'],
   ['darwin', 'arm64', 'macOS-arm64.dmg'], ['darwin', 'x64', 'macOS-x64.dmg']];
 async function sha256(file) {
   const hash = crypto.createHash('sha256');
@@ -14,9 +15,9 @@ async function sha256(file) {
 }
 async function verify(directory, version) {
   const platforms = [];
-  for (const [platform, arch, artifact] of targets) {
-    const manager = `RobOS-v${version}-${artifact}`;
-    if (!fs.existsSync(path.join(directory, manager))) throw new Error(`Missing manager: ${manager}`);
+  for (const [platform, arch, ...artifacts] of targets) {
+    const managers = artifacts.map(artifact => `RobOS-v${version}-${artifact}`);
+    for (const manager of managers) if (!fs.existsSync(path.join(directory, manager))) throw new Error(`Missing manager: ${manager}`);
     const catalog = validateCatalog(JSON.parse(fs.readFileSync(path.join(directory, `robos-catalog-${platform}-${arch}.json`))), platform, arch);
     if (catalog.version !== version) throw new Error('Catalog version does not match release');
     for (const item of catalog.components) {
@@ -25,7 +26,7 @@ async function verify(directory, version) {
       if (path.dirname(file) !== path.resolve(directory) || !fs.existsSync(file)) throw new Error(`Missing component: ${item.id} (${platform}/${arch})`);
       if (fs.statSync(file).size !== item.bytes || await sha256(file) !== item.sha256) throw new Error(`Invalid component checksum: ${name}`);
     }
-    platforms.push({ platform, arch, manager, components: catalog.components.length });
+    platforms.push({ platform, arch, manager: managers[0], managers, components: catalog.components.length });
   }
   return platforms;
 }

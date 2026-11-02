@@ -12,17 +12,19 @@
   var os = /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'linux';
   var names = { win: 'Windows', mac: 'macOS', linux: 'Linux' };
   document.querySelectorAll('[data-dl-label]').forEach(function (el) {
-    el.textContent = os === 'win' ? 'Download for Windows' : 'USB installer for ' + names[os];
+    el.textContent = os === 'mac' ? 'USB installer for macOS' : 'Download for ' + names[os];
   });
   document.querySelectorAll('[data-dl-href]').forEach(function (el) {
     var h = el.getAttribute('data-' + os);
     if (h) el.setAttribute('href', h);
-    if (os === 'win' && el.getAttribute('data-win-asset')) el.setAttribute('data-release-asset', el.getAttribute('data-win-asset'));
+    var asset = el.getAttribute('data-' + os + '-asset');
+    if (asset) el.setAttribute('data-release-asset', asset);
   });
   // Keep a valid release-page fallback while binary builds are pending. Once
   // published, buttons resolve to the actual asset without another site deploy.
-  var releaseLinks = Array.from(document.querySelectorAll('[data-release-asset]'));
-  if (releaseLinks.length) {
+  window.robosResolveReleaseAssets = function (scope) {
+    var releaseLinks = Array.from(scope.querySelectorAll('[data-release-asset]'));
+    if (!releaseLinks.length) return;
     var tag = releaseLinks[0].getAttribute('data-release-tag');
     fetch('https://api.github.com/repos/nddipiazza/robos/releases/tags/' + encodeURIComponent(tag), { credentials: 'omit' })
       .then(function (response) { if (!response.ok) throw new Error('Release unavailable'); return response.json(); })
@@ -32,7 +34,8 @@
           if (asset && /^https:\/\/github\.com\/nddipiazza\/robos\/releases\/download\//.test(asset.browser_download_url)) link.setAttribute('href', asset.browser_download_url);
         });
       }).catch(function () { /* The release-page fallback remains usable. */ });
-  }
+  };
+  window.robosResolveReleaseAssets(document);
   document.querySelectorAll('[data-os]').forEach(function (el) {
     if (el.getAttribute('data-os') === os) el.classList.add('is-current');
   });

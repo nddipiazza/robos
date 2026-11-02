@@ -8,7 +8,7 @@
   var dataEl = document.getElementById('qs-data');
   if (!root || !dataEl) return;
   var D = JSON.parse(dataEl.textContent);
-  var REL = { version: root.dataset.version, download: root.dataset.download, url: root.dataset.releaseUrl };
+  var REL = { version: root.dataset.version, download: root.dataset.download, url: root.dataset.releaseUrl, tag: 'v' + root.dataset.version };
 
   var OS_NAME = { win: 'Windows', mac: 'Mac', linux: 'Linux', any: 'your computer' };
   var SOURCE_APP = { dev: 'pr-review', lead: 'pr-review', ops: 'kube-studio', creator: 'crpg-editor', gamer: 'party-game', home: 'audio-player', business: 'point-of-sale' };
@@ -149,9 +149,9 @@
       b.push({ label: os === 'any' ? 'Mac (Apple chip)' : 'Download for Mac with Apple chip', url: d + '/RobOS-v' + v + '-macOS-arm64.dmg' });
       b.push({ label: os === 'any' ? 'Mac (Intel)' : 'Mac with Intel', url: d + '/RobOS-v' + v + '-macOS-x64.dmg', ghost: true });
     }
-    if (os === 'linux' || os === 'any') b.push({ label: os === 'any' ? 'Linux (AppImage)' : 'Download for Linux (AppImage)', url: d + '/RobOS-v' + v + '-Linux-x86_64.AppImage' });
+    if (os === 'linux' || os === 'any') b.push({ label: os === 'any' ? 'Ubuntu (.deb)' : 'Download for Ubuntu (.deb)', url: REL.url, asset: 'RobOS-v' + v + '-Linux-amd64.deb' });
     return '<div class="qs-dl">' + b.map(function (x, i) {
-      return '<a class="btn' + (x.ghost || (os === 'any' && i > 0) ? ' btn-ghost' : '') + '" href="' + esc(x.url) + '"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> ' + esc(x.label) + '</a>';
+      return '<a class="btn' + (x.ghost || (os === 'any' && i > 0) ? ' btn-ghost' : '') + '" href="' + esc(x.url) + '"' + (x.asset ? ' data-release-asset="' + esc(x.asset) + '" data-release-tag="' + esc(REL.tag) + '"' : '') + '><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> ' + esc(x.label) + '</a>';
     }).join('') + '</div>';
   }
   function installSteps(os, level, persona) {
@@ -161,14 +161,14 @@
       steps = {
         win: ['Run the installer. App Manager opens with every app in a grouped checkbox tree.', 'Tick ' + pick + ' below (or the whole library). Each gets a Start menu entry; remove them the same way.', 'Open Software Center to install your coding-agent CLI, IDEs, Godot 4 and FFmpeg through WinGet.'],
         mac: ['Open the DMG and install App Manager.', 'Tick ' + pick + ' below. Each gets its own launcher, and you can add or remove apps later.'],
-        linux: ['<code>chmod +x</code> the AppImage and run it to open App Manager.', 'Tick ' + pick + ' below. Each gets a native launcher. On GNOME you can also install from source into the app grid (see below).'],
+        linux: ['Install the package with <code>sudo apt install ./RobOS-*-Linux-amd64.deb</code>, or open it in App Center.', 'Open <b>RobOS App Manager</b> from the app grid. It pins itself to the dock.', 'Tick ' + pick + ' below. Each appears in the app grid under <b>RobOS Apps</b> and shows its own dock icon when running. You can also install from source (see below).'],
         any: ['Download App Manager for your system and open it.', 'Tick ' + pick + ' below. Each gets its own launcher.']
       }[os];
     } else {
       steps = {
         win: ['Click the download button above to get RobOS for Windows.', 'Open the file you downloaded. If Windows asks whether to allow it, choose <b>Yes</b>. If it warns about an unrecognized app, choose <b>More info</b>, then <b>Run anyway</b>.', 'RobOS App Manager opens. Tick ' + pick + ' listed below and start the download.', 'Open your apps from the <b>Start</b> menu, like any other program.'],
         mac: ['Click the button for your Mac. Not sure which? Open the Apple menu → <b>About This Mac</b>. If it says <b>Chip: Apple M…</b>, pick Apple chip; if it says <b>Intel</b>, pick Intel.', 'Open the file you downloaded and follow the prompts to install RobOS App Manager.', 'If your Mac says it can\'t open the app, go to <b>System Settings → Privacy &amp; Security</b> and choose <b>Open Anyway</b>.', 'In App Manager, tick ' + pick + ' listed below. Each one gets its own icon.'],
-        linux: ['Click the download button above to get the AppImage file.', 'Right-click the file, open <b>Properties</b> and turn on <b>Allow executing file as program</b>.', 'Double-click it to open RobOS App Manager, then tick ' + pick + ' listed below.'],
+        linux: ['Click the download button above to get RobOS for Ubuntu.', 'Double-click the file you downloaded, choose <b>Install</b> in App Center and enter your password.', 'Open <b>RobOS App Manager</b> from your apps. It stays in the dock on the left of your screen. Tick ' + pick + ' listed below and start the download.', 'Open your apps from the <b>RobOS Apps</b> folder in your app grid, like any other program.'],
         any: ['Pick the download for your computer above.', 'Open the file you downloaded and follow the prompts.', 'RobOS App Manager opens. Tick ' + pick + ' listed below.']
       }[os];
     }
@@ -258,6 +258,7 @@
     h += '<section class="qs-card"><p class="qs-kicker">Step 3</p><h3>Read next</h3><ul class="qs-read">' + read.map(function (l) { return '<li>' + link(l) + '</li>'; }).join('') + '</ul></section>';
     h += '</div>';
     root.innerHTML = h;
+    if (window.robosResolveReleaseAssets) window.robosResolveReleaseAssets(root);
 
     root.querySelector('[data-act=back]').addEventListener('click', back);
     root.querySelector('[data-act=restart]').addEventListener('click', function () { go({}); });
