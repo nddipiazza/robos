@@ -7,6 +7,18 @@ const root = path.resolve(__dirname, '../..');
 const games = require('../../site/_data/games.json');
 const ignored = new Set(['.git', '.godot', 'node_modules', '__pycache__', 'tests', 'reports', 'qa_player', 'build', 'run', 'docs', 'tools']);
 const platforms = { windows: { preset: 'Windows Desktop', suffix: '.exe', label: 'Windows-x64' }, linux: { preset: 'Linux', suffix: '.x86_64', label: 'Linux-x64' }, macos: { preset: 'macOS', suffix: '.zip', label: 'macOS' } };
+function copyNotices(game, payload) {
+  const destination = path.join(payload, 'THIRD-PARTY-NOTICES'); fs.mkdirSync(destination, { recursive: true });
+  function walk(dir, relative = '') {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ignored.has(entry.name)) continue;
+      const rel = path.join(relative, entry.name), file = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(file, rel);
+      else if (/license|copying|attribution|notice/i.test(entry.name)) { const dest = path.join(destination, rel); fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(file, dest); }
+    }
+  }
+  walk(path.join(root, 'games', game.project));
+}
 function preset(platform, id = "standalone") {
   return `[preset.0]\nname="Standalone"\nplatform="${platforms[platform].preset}"\nrunnable=true\nexport_filter="all_resources"\ninclude_filter="*.json,*.jsonld,*.crpgcart,*.csv,*.txt,*.glsl"\nexclude_filter=""\nscript_export_mode=2\n\n[preset.0.options]\nbinary_format/architecture="${platform === 'macos' ? 'universal' : 'x86_64'}"\nbinary_format/embed_pck=false\napplication/bundle_identifier="com.rowbose.${id}"\napplication/export_console_wrapper=0\ncodesign/enable=false\ncodesign/codesign=0\ntexture_format/s3tc_bptc=true\ntexture_format/etc2_astc=false\n`;
 }
@@ -70,6 +82,11 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   fs.mkdirSync(payload);
   fs.cpSync(path.join(root, 'games', game.project), project, { recursive: true, filter: file => !ignored.has(path.basename(file)) && !/\.(?:py|mp4|webm|mkv|log)$/.test(file) });
   fs.writeFileSync(path.join(project, 'export_presets.cfg'), preset(platform, id).replace('texture_format/etc2_astc=false', `texture_format/etc2_astc=${platform === 'macos'}`));
+  const projectConfig = path.join(project, 'project.godot');
+  const projectSource = fs.readFileSync(projectConfig, 'utf8');
+  // Godot's parallel font importer can crash during a clean headless Windows import.
+  // This editor-only setting affects the staging copy, never gameplay or the source.
+  fs.writeFileSync(projectConfig, projectSource.includes('[editor]') ? projectSource.replace('[editor]', '[editor]\nimport/use_multiple_threads=false') : projectSource + '\n[editor]\nimport/use_multiple_threads=false\n');
   if (platform === 'macos') {
     const config = path.join(project, 'project.godot');
     const source = fs.readFileSync(config, 'utf8');
@@ -80,7 +97,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
     fs.writeFileSync(path.join(stage, `${name}.log`), (result.stdout || '') + (result.stderr || ''));
     if (result.error || result.status !== 0 || !bootstrap && /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((result.stdout || '') + (result.stderr || ''))) {
       console.error(((result.stdout || '') + (result.stderr || '')).slice(-5000));
-      throw new Error(`${name} failed; see ${stage}/${name}.log`);
+      throw new Error(`${name} failed (exit ${result.status}, ${result.error?.message || result.signal || 'no signal'}); see ${stage}/${name}.log`);
     }
   }
   console.log(`Importing ${game.title}`);
@@ -105,12 +122,13 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
       if (smoke.error || smoke.status !== 0 || /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((smoke.stdout || '') + (smoke.stderr || ''))) throw new Error(`macOS smoke failed: ${stage}/smoke.log`);
     }
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
+    copyNotices(game, payload);
     fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\nExtract this ZIP and open the game app. No Godot editor, Git or RobOS installation is required. This macOS build is unsigned.\nhttps://rowbose.com/games/${id}/\n\nEngine: Godot (MIT), https://godotengine.org/license/\n`);
     // Add distribution notices without extracting/repacking the app's executable modes.
     if (process.platform === 'win32') {
       const quote = value => "'" + value.replaceAll("'", "''") + "'";
-      execFileSync('powershell.exe', ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; $gameZip=[IO.Compression.ZipFile]::Open(${quote(executable)}, 'Update'); try { [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($gameZip, ${quote(path.join(payload, 'LICENSE.txt'))}, 'LICENSE.txt') | Out-Null; [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($gameZip, ${quote(path.join(payload, 'README.txt'))}, 'README.txt') | Out-Null } finally { $gameZip.Dispose() }`], { windowsHide: true });
-    } else execFileSync('zip', ['-q', executable, 'LICENSE.txt', 'README.txt'], { cwd: payload });
+      execFileSync('powershell.exe', ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; $gameZip=[IO.Compression.ZipFile]::Open(${quote(executable)}, 'Update'); try { $gameNoticeRoot=${quote(payload)}; foreach ($gameNoticeFile in Get-ChildItem -LiteralPath $gameNoticeRoot -Recurse -File) { if ($gameNoticeFile.FullName -ne ${quote(executable)}) { $gameEntry=$gameNoticeFile.FullName.Substring($gameNoticeRoot.Length+1).Replace('\\','/'); [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($gameZip, $gameNoticeFile.FullName, $gameEntry) | Out-Null } } } finally { $gameZip.Dispose() }`], { windowsHide: true });
+    } else execFileSync('zip', ['-q', '-r', executable, 'LICENSE.txt', 'README.txt', 'THIRD-PARTY-NOTICES'], { cwd: payload });
     fs.renameSync(executable, archive);
   } else {
     // Smoke the exported game itself, never the source project.
@@ -122,16 +140,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
     }
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
     fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\n${platform === 'windows' ? `Extract this ZIP, then double-click ${game.executable}.exe.` : `Extract this ZIP, then run ./${game.executable}.x86_64 (mark it executable if needed).`}\nGodot, Git and RobOS are not required.\nhttps://rowbose.com/games/${id}/\n\nEngine: Godot ${require('./setup.cjs').VERSION} (MIT), https://godotengine.org/license/\nThird-party game notices are included in THIRD-PARTY-NOTICES.\n`);
-    const notices = path.join(payload, 'THIRD-PARTY-NOTICES'); fs.mkdirSync(notices);
-    function copyNotices(dir, relative = '') {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (ignored.has(entry.name)) continue;
-        const rel = path.join(relative, entry.name), file = path.join(dir, entry.name);
-        if (entry.isDirectory()) copyNotices(file, rel);
-        else if (/license|copying|attribution|notice/i.test(entry.name)) { const dest = path.join(notices, rel); fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(file, dest); }
-      }
-    }
-    copyNotices(path.join(root, 'games', game.project));
+    copyNotices(game, payload);
     if (platform === 'windows' && nsis) {
       const config = path.join(stage, 'installer.nsi');
       fs.writeFileSync(config, nsisInstaller({ id, game, version, payload, output }));

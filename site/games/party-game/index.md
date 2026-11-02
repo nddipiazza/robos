@@ -23,7 +23,7 @@ keywords: "RobOS Party Game, AI party game, AI game show host, party games on TV
     <p class="sec-p">Download App Manager for your computer, choose <b>RobOS Party Game</b>, and click Install. Open the game from its launcher, select your AI agent and paired RobOS TV, then invite guests with the QR code. Guests play on their phones without installing anything.</p>
     <div class="download-options">
       <a class="btn" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Windows installer</a>
-      <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-amd64.deb">Ubuntu installer</a>
+      <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">Linux AppImage</a>
       <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-arm64.dmg">Mac · Apple Silicon</a>
       <a class="btn btn-ghost" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-macOS-x64.dmg">Mac · Intel</a>
     </div>

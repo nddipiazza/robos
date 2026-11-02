@@ -1,6 +1,26 @@
 {
-  "crpg": { "title": "Realm of Heroes", "project": "crpg-realm", "executable": "RealmOfHeroes", "itch_url": null },
-  "tabletop-rpg": { "title": "RobOS Tabletop RPG", "project": "tabletop-rpg", "executable": "RobOSTabletop", "itch_url": null },
-  "robos-rts": { "title": "Starfall Command", "project": "robos-rts", "executable": "StarfallCommand", "itch_url": null },
-  "quest-warrior-dragon": { "title": "Quest: Warrior Dragon", "project": "quest-warrior-dragon", "executable": "QuestWarriorDragon", "itch_url": null }
+  "crpg": {
+    "title": "Realm of Heroes",
+    "project": "crpg-realm",
+    "executable": "RealmOfHeroes",
+    "itch_url": "https://nddipiazza.itch.io/realm-of-heroes"
+  },
+  "tabletop-rpg": {
+    "title": "RobOS Tabletop RPG",
+    "project": "tabletop-rpg",
+    "executable": "RobOSTabletop",
+    "itch_url": "https://nddipiazza.itch.io/robos-tabletop-rpg"
+  },
+  "robos-rts": {
+    "title": "Starfall Command",
+    "project": "robos-rts",
+    "executable": "StarfallCommand",
+    "itch_url": "https://nddipiazza.itch.io/starfall-command"
+  },
+  "quest-warrior-dragon": {
+    "title": "Quest: Warrior Dragon",
+    "project": "quest-warrior-dragon",
+    "executable": "QuestWarriorDragon",
+    "itch_url": "https://nddipiazza.itch.io/quest-warrior-dragon"
+  }
 }
