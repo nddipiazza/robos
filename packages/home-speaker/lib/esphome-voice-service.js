@@ -1216,7 +1216,10 @@ class EspHomeVoiceService extends EventEmitter {
       this._whisperTranscriberPromise = (async () => {
         try {
           // Use @xenova/transformers from voice-prompt or local node_modules
-          const voicePromptTransformers = path.resolve(__dirname, '../../voice-prompt/node_modules/@xenova/transformers');
+          const voicePromptTransformers = path.resolve(
+            __dirname,
+            '../../voice-prompt/node_modules/@xenova/transformers/src/transformers.js'
+          );
           const mod = fs.existsSync(voicePromptTransformers)
             ? await import(voicePromptTransformers)
             : await import('@xenova/transformers');
@@ -1294,6 +1297,11 @@ module.exports = {
   EspHomeVoiceService,
   encodeVarint,
   decodeVarint,
+  encodeStringField,
+  encodeVarintField,
+  encodeBoolField,
+  encodeFixed32Field,
+  encodeFloatField,
   buildEspHomeFrame,
   parseProtobufFields,
 };
