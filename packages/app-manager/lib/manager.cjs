@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { EventEmitter } = require('node:events');
-const { plan, validateCatalog, ORIGIN } = require('./catalog.cjs');
+const { plan, validateCatalog, ORIGIN, packagesTag } = require('./catalog.cjs');
 const { download, extract } = require('./download.cjs');
 function atomic(file, value) { fs.writeFileSync(`${file}.tmp`, JSON.stringify(value, null, 2)); fs.renameSync(`${file}.tmp`, file); }
 class Manager extends EventEmitter {
@@ -40,7 +40,7 @@ class Manager extends EventEmitter {
   }
   async refresh() {
     if (this.busy) throw new Error('An installation is already in progress');
-    const url = `${ORIGIN}v${this.version}/robos-catalog-${this.platform}-${this.arch}.json`;
+    const url = `${ORIGIN}${packagesTag(this.version, this.platform, this.arch)}/robos-catalog-${this.platform}-${this.arch}.json`;
     const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
     if (!response.ok) throw new Error(`App catalog unavailable (${response.status}). Check your connection and that this release has app downloads.`);
     const raw = await response.text();

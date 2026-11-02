@@ -33,7 +33,7 @@ async function fixture(t) {
   const manager = new Manager({ locations, native, version: '1.0.0',
     downloader: (item, ...rest) => download({ ...item, url: `http://127.0.0.1:${server.address().port}/app` }, ...rest) });
   const make = (id, kind = 'app', dependencies = []) => ({ id, kind, dependencies, label: id, description: '', group: 'Tests', version: '1.0.0',
-    url: `https://github.com/nddipiazza/robos/releases/download/v1.0.0/${id}.tgz`, bytes: buffer.length, unpackedBytes: 10000,
+    url: `https://github.com/nddipiazza/robos/releases/download/apps-v1.0.0-${process.platform}-${process.arch}/${id}.tgz`, bytes: buffer.length, unpackedBytes: 10000,
     sha256: crypto.createHash('sha256').update(buffer).digest('hex') });
   manager.catalog = { schema: 1, version: '1.0.0', platform: process.platform, arch: process.arch,
     components: [make('shared', 'library'), make('one', 'app', ['shared']), make('two', 'app', ['shared'])] };

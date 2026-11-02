@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
-const { validateCatalog } = require('../../packages/app-manager/lib/catalog.cjs');
+const { validateCatalog, packagesTag } = require('../../packages/app-manager/lib/catalog.cjs');
 const repo = path.resolve(__dirname, '../..');
 // Rows list each platform's manager downloads after its OS and CPU.
 const targets = [['win32', 'x64', 'Windows-Setup.exe'], ['linux', 'x64', 'Linux-amd64.deb', 'Linux-x86_64.AppImage'],
@@ -26,7 +26,7 @@ async function verify(directory, version) {
       if (path.dirname(file) !== path.resolve(directory) || !fs.existsSync(file)) throw new Error(`Missing component: ${item.id} (${platform}/${arch})`);
       if (fs.statSync(file).size !== item.bytes || await sha256(file) !== item.sha256) throw new Error(`Invalid component checksum: ${name}`);
     }
-    platforms.push({ platform, arch, manager: managers[0], managers, components: catalog.components.length });
+    platforms.push({ platform, arch, manager: managers[0], managers, packages: packagesTag(version, platform, arch), components: catalog.components.length });
   }
   return platforms;
 }

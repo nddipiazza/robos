@@ -25,7 +25,7 @@ keywords: "download RobOS, Windows installer, Ubuntu deb package, Linux app suit
       <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">App Manager installer</p><a class="btn" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Download Windows installer</a><p class="small">Choose apps to download and manage them together.</p></div>
       <div class="card os" data-os="linux"><h3>Ubuntu GNOME</h3><p class="muted">App Manager (.deb)</p><a class="btn" href="{{ site.data.release.url }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Linux-amd64.deb" data-release-tag="{{ site.data.release.tag }}">Download for Ubuntu</a><a class="alt-l" href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Linux-x86_64.AppImage">AppImage for other Linux</a><p class="small">Pins to the dock. Apps appear in your app grid.</p></div>
     </div>
-    <p class="muted small" style="text-align:center;margin-top:18px">App Manager and individual app downloads are on <a style="text-decoration:underline" href="{{ site.data.release.url }}" target="_blank" rel="noopener">GitHub Releases</a>. Optional appliance images are built separately; see the available assets on each release.</p>
+    <p class="muted small" style="text-align:center;margin-top:18px">App Manager installers are on <a style="text-decoration:underline" href="{{ site.data.release.url }}" target="_blank" rel="noopener">GitHub Releases</a>, and App Manager downloads the apps you choose. Optional appliance images are built separately; see the available assets on each release.</p>
   </div>
 </section>
 
@@ -99,7 +99,7 @@ scripts/install-local.sh</code></pre>
   <div class="wrap">
     <p class="eyebrow">Release assets</p>
     <h2 class="h2">{{ site.data.release.tag }} downloads</h2>
-    <p>App Manager, platform catalogs and individual app archives are on <a href="{{ site.data.release.url }}">the release page</a>. The Windows scripts are full-suite alternatives. Optional USB flasher, ISO and VM artifacts are built separately and are available only when listed on a release.</p>
+    <p>App Manager installers are on <a href="{{ site.data.release.url }}">the release page</a>. App Manager downloads the apps you choose from a separate package release for your system. The Windows scripts are full-suite alternatives. Optional USB flasher, ISO and VM artifacts are built separately and are available only when listed on a release.</p>
     <table class="t">
       <tr><th>Artifact</th><th>File</th><th>Purpose</th></tr>
       <tr><td>Windows App Manager</td><td><a href="{{ site.data.release.download }}/RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Windows-Setup.exe</a></td><td>Install App Manager and choose apps to download</td></tr>
