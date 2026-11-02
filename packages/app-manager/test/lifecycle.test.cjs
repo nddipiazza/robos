@@ -11,6 +11,12 @@ const { Manager } = require('../lib/manager.cjs');
 const { download, extract } = require('../lib/download.cjs');
 const { validateCatalog, plan } = require('../lib/catalog.cjs');
 const { integration, quoteDesktop } = require('../lib/integration.cjs');
+const { gnome, parseList, formatList } = require('../lib/gnome.cjs');
+const fakeDesktop = () => {
+  const calls = [];
+  return { calls, pin: entry => { calls.push(['pin', entry]); return true; }, unpin: match => calls.push(['unpin', match]),
+    addToFolder: entry => calls.push(['folder', entry]), removeFromFolder: entry => calls.push(['unfolder', entry]), removeFolder: () => calls.push(['remove-folder']) };
+};
 async function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-manager-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -136,16 +142,108 @@ test('restart recovers an interrupted replacement and remove-all keeps unrelated
   await recovered.removeAll(); assert.equal(fs.existsSync(locations.root), false); assert.equal(fs.existsSync(personal), true);
 });
 test('GNOME entries quote executable paths and expose launch and uninstall actions', async t => {
-  const { locations, root } = await fixture(t);
-  const native = integration({ locations, executable: '/home/a user/RobOS.AppImage', packaged: true, platform: 'linux' });
+  const { locations, root } = await fixture(t), desktop = fakeDesktop();
+  const native = integration({ locations, executable: '/home/a user/RobOS.AppImage', packaged: true, platform: 'linux', desktop });
   native.shortcut({ id: 'one', label: 'One App' });
   const file = path.join(locations.shortcuts, 'robos-managed-one.desktop'), entry = fs.readFileSync(file, 'utf8');
   assert.match(entry, /Exec="\/home\/a user\/RobOS.AppImage" "--app=one"/);
+  assert.match(entry, /TryExec=\/home\/a user\/RobOS.AppImage\n/);
   assert.match(entry, /\[Desktop Action Uninstall\]/); assert.match(entry, /--remove=one/);
   fs.writeFileSync(path.join(locations.shortcuts, 'unrelated.desktop'), 'keep'); native.removeAll();
   assert.ok(fs.existsSync(path.join(locations.shortcuts, 'unrelated.desktop'))); assert.equal(fs.existsSync(file), false);
   assert.equal(quoteDesktop('a%b'), '"a%%b"');
   assert.ok(root);
+});
+test('GNOME entries tie windows to their icon and place apps in the RobOS menu folder', async t => {
+  const { locations } = await fixture(t), desktop = fakeDesktop();
+  const native = integration({ locations, executable: '/opt/RobOS/robos-app-manager', packaged: true, platform: 'linux', desktop });
+  const packageDir = path.join(locations.root, 'packages/one'); fs.mkdirSync(packageDir, { recursive: true });
+  fs.writeFileSync(path.join(packageDir, 'icon.png'), 'png');
+  native.shortcut({ id: 'one', label: 'One\\App', description: 'Line one\nline two', group: 'Games & game tools' });
+  const file = path.join(locations.shortcuts, 'robos-managed-one.desktop'), entry = fs.readFileSync(file, 'utf8');
+  assert.match(entry, /StartupWMClass=robos-one\n/); assert.match(entry, /StartupNotify=true\n/);
+  assert.ok(entry.includes(`Icon=${path.join(packageDir, 'icon.png')}\n`), 'falls back to the PNG icon');
+  assert.match(entry, /Categories=Game;\n/);
+  assert.ok(entry.includes('Name=One\\\\App\n')); assert.ok(entry.includes('Comment=Line one\\nline two\n'));
+  assert.deepEqual(desktop.calls.find(([name]) => name === 'folder'), ['folder', 'robos-managed-one.desktop']);
+  fs.writeFileSync(path.join(packageDir, 'icon.svg'), '<svg/>'); native.shortcut({ id: 'one', label: 'One' });
+  assert.ok(fs.readFileSync(file, 'utf8').includes(`Icon=${path.join(packageDir, 'icon.svg')}\n`));
+  assert.match(fs.readFileSync(file, 'utf8'), /Categories=Utility;\n/);
+  // A startup refresh keeps the entry current without undoing a user's folder changes.
+  const placed = desktop.calls.length; native.writeEntry({ id: 'one', label: 'Renamed' });
+  assert.match(fs.readFileSync(file, 'utf8'), /Name=Renamed\n/); assert.equal(desktop.calls.length, placed);
+  native.shortcut({ id: 'one', label: 'One' }, true);
+  assert.equal(fs.existsSync(file), false);
+  const [, match] = desktop.calls.find(([name]) => name === 'unpin');
+  assert.ok(match('robos-managed-one.desktop')); assert.ok(!match('org.gnome.Nautilus.desktop'));
+  assert.deepEqual(desktop.calls.find(([name]) => name === 'unfolder'), ['unfolder', 'robos-managed-one.desktop']);
+});
+test('the dock pin happens once so a later unpin is respected, and is removed with RobOS', async t => {
+  const { locations, root } = await fixture(t), desktop = fakeDesktop();
+  locations.data = path.join(root, 'data'); locations.image = path.join(locations.data, 'RobOS.AppImage');
+  const native = integration({ locations, executable: '/opt/RobOS/robos-app-manager', packaged: true, platform: 'linux', desktop });
+  native.pinManager(); native.pinManager();
+  assert.deepEqual(desktop.calls.filter(([name]) => name === 'pin'), [['pin', 'robos-app-manager.desktop']]);
+  native.removeManager();
+  assert.ok(desktop.calls.find(([name]) => name === 'unpin')[1]('robos-app-manager.desktop'));
+  native.pinManager(); assert.equal(desktop.calls.filter(([name]) => name === 'pin').length, 2);
+  // A session without GNOME leaves the marker unset so a later GNOME login still pins.
+  const absent = fakeDesktop(); absent.pin = () => false; fs.rmSync(path.join(locations.data, 'dock-pinned'));
+  integration({ locations, executable: 'x', packaged: true, platform: 'linux', desktop: absent }).pinManager();
+  assert.equal(fs.existsSync(path.join(locations.data, 'dock-pinned')), false);
+});
+test('AppImage installs register the manager with its window class and own icon', async t => {
+  const { locations, root } = await fixture(t);
+  locations.data = path.join(root, 'data'); locations.image = path.join(locations.data, 'RobOS.AppImage');
+  const icon = path.join(__dirname, '../icon.png'), hadIcon = fs.existsSync(icon);
+  if (!hadIcon) { fs.writeFileSync(icon, 'png'); t.after(() => fs.rmSync(icon, { force: true })); }
+  const source = path.join(root, 'Download.AppImage'); fs.writeFileSync(source, 'image');
+  const native = integration({ locations, executable: locations.image, packaged: true, platform: 'linux', desktop: fakeDesktop() });
+  native.installManager(source);
+  const entry = fs.readFileSync(path.join(locations.shortcuts, 'robos-app-manager.desktop'), 'utf8');
+  assert.match(entry, /StartupWMClass=robos-app-manager\n/);
+  assert.ok(entry.includes(`Icon=${path.join(locations.data, 'robos-app-manager.png')}\n`));
+  native.adoptSystemManager();
+  assert.equal(fs.existsSync(path.join(locations.shortcuts, 'robos-app-manager.desktop')), false);
+  assert.equal(fs.existsSync(locations.image), false);
+});
+test('GNOME settings keep other apps, never rewrite unreadable lists and stay off elsewhere', () => {
+  assert.deepEqual(parseList("['a.desktop', 'b.desktop']\n"), ['a.desktop', 'b.desktop']);
+  assert.deepEqual(parseList('@as []\n'), []);
+  assert.equal(formatList(['a', 'b']), "['a', 'b']");
+  const store = { 'org.gnome.shell favorite-apps': "['firefox.desktop']\n", 'org.gnome.desktop.app-folders folder-children': "['Utilities']\n" };
+  const writes = [], run = ([verb, schema, key, value]) => {
+    if (verb === 'get') return store[`${schema} ${key}`];
+    writes.push([verb, schema, key, value]);
+    if (verb === 'set' && store[`${schema} ${key}`]) store[`${schema} ${key}`] = value;
+    return '';
+  };
+  const desktop = gnome({ run, env: { XDG_CURRENT_DESKTOP: 'ubuntu:GNOME' } });
+  assert.equal(desktop.pin('robos.desktop'), true); writes.length = 0;
+  assert.equal(desktop.pin('robos.desktop'), true); assert.deepEqual(writes, []);
+  assert.equal(store['org.gnome.shell favorite-apps'], "['firefox.desktop', 'robos.desktop']");
+  desktop.unpin(entry => entry === 'robos.desktop');
+  assert.equal(store['org.gnome.shell favorite-apps'], "['firefox.desktop']");
+  const folderApps = 'org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/RobOS/ apps';
+  store[folderApps] = '@as []\n';
+  desktop.addToFolder('robos-one.desktop');
+  assert.equal(store['org.gnome.desktop.app-folders folder-children'], "['Utilities', 'RobOS']");
+  assert.ok(writes.some(([, schema, key, value]) => schema.endsWith('/folders/RobOS/') && key === 'name' && value === 'RobOS Apps'));
+  assert.equal(store[folderApps], "['robos-one.desktop']");
+  writes.length = 0; desktop.addToFolder('robos-one.desktop'); assert.deepEqual(writes, []);
+  desktop.addToFolder('robos-two.desktop'); desktop.removeFromFolder('robos-one.desktop');
+  assert.equal(store[folderApps], "['robos-two.desktop']");
+  desktop.removeFolder();
+  assert.equal(store['org.gnome.desktop.app-folders folder-children'], "['Utilities']");
+  store['org.gnome.shell favorite-apps'] = `["it's.desktop", 'firefox.desktop']\n`; writes.length = 0;
+  assert.equal(desktop.pin('robos.desktop'), false); assert.deepEqual(writes, []);
+  const other = gnome({ run: () => { throw new Error('gsettings must not run'); }, env: { XDG_CURRENT_DESKTOP: 'KDE' } });
+  assert.equal(other.pin('robos.desktop'), false); assert.equal(other.addToFolder('robos.desktop'), false);
+  const electronRenamed = gnome({ run, env: { XDG_CURRENT_DESKTOP: 'Unity', ORIGINAL_XDG_CURRENT_DESKTOP: 'ubuntu:GNOME' } });
+  store['org.gnome.shell favorite-apps'] = "['firefox.desktop']\n";
+  assert.equal(electronRenamed.pin('robos.desktop'), true);
+  const missing = gnome({ run: () => { throw new Error('No such schema'); }, env: { XDG_CURRENT_DESKTOP: 'GNOME' } });
+  assert.equal(missing.pin('robos.desktop'), false);
 });
 test('Windows shortcuts point directly to app and its uninstall command', async t => {
   const { locations } = await fixture(t), links = [];

@@ -15,7 +15,7 @@ async function download(item, destination, progress, signal) {
   await pipeline(Readable.fromWeb(response.body), meter, fs.createWriteStream(destination, { flags: 'wx' }), { signal });
   if (received !== item.bytes || hash.digest('hex') !== item.sha256) throw new Error(`Checksum verification failed: ${item.label}`);
 }
-async function extract(archive, destination, unpackedBytes) {
+async function validateArchive(archive, unpackedBytes) {
   const tar = require('tar'); let size = 0, invalid;
   // Validate the complete archive before writing any payload. Throwing in tar's
   // asynchronous filter would escape the extraction promise.
@@ -31,6 +31,9 @@ async function extract(archive, destination, unpackedBytes) {
     },
   });
   if (invalid) throw invalid;
-  await tar.x({ file: archive, cwd: destination, strict: true, preservePaths: false });
 }
-module.exports = { download, extract };
+async function extract(archive, destination, unpackedBytes) {
+  await validateArchive(archive, unpackedBytes);
+  await require('tar').x({ file: archive, cwd: destination, strict: true, preservePaths: false });
+}
+module.exports = { download, extract, validateArchive };

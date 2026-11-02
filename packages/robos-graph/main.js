@@ -3,7 +3,8 @@
 // "main" has to point here. Other apps that require('robos-graph') for the store would then
 // start a second Explorer inside their own process. Give them the library instead.
 // (require.main is unset for an Electron app entry, so check how the process was started.)
-if (module.parent && !process.argv.some(a => [__filename, __dirname].includes(require('path').resolve(a)))) {
+// App Manager starts the Explorer by loading this file, and says so in ROBOS_MANAGED_APP.
+if (module.parent && process.env.ROBOS_MANAGED_APP !== 'knowledge-graph-explorer' && !process.argv.some(a => [__filename, __dirname].includes(require('path').resolve(a)))) {
   module.exports = require('./index');
   return;
 }

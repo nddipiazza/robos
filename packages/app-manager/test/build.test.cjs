@@ -5,7 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { configuration } = require('../../../scripts/app-manager/build.cjs');
-const { dependencies, sourceCatalog } = require('../../../scripts/app-manager/publish-catalog.cjs');
+const { dependencies, sourceCatalog, breakHardLinks } = require('../../../scripts/app-manager/publish-catalog.cjs');
+const { validateArchive } = require('../lib/download.cjs');
 test('both deliverables use the same minimal app, without any suite resources', t => {
   const output = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-build-test-'));
   t.after(() => fs.rmSync(output, { recursive: true, force: true }));
@@ -15,9 +16,13 @@ test('both deliverables use the same minimal app, without any suite resources', 
   const resolve = require('node:module').createRequire(path.join(config.directories.app, 'package.json'));
   assert.ok(resolve('pino')({ enabled: false }));
   assert.ok(resolve('tar').x);
-  assert.equal(config.win.target[0].target, 'nsis'); assert.equal(config.linux.target[0].target, 'AppImage');
+  assert.equal(config.win.target[0].target, 'nsis'); assert.deepEqual(config.linux.target.map(item => item.target), ['deb', 'AppImage']);
   assert.equal(config.mac.target[0].target, 'dmg');
   assert.equal(config.nsis.perMachine, false); assert.equal(config.nsis.deleteAppDataOnUninstall, false);
+  assert.equal(config.linux.desktop.StartupWMClass, 'robos-app-manager');
+  assert.ok(fs.existsSync(path.join(config.directories.app, 'icon.png')));
+  for (const script of [config.deb.afterInstall, config.deb.afterRemove]) assert.ok(fs.existsSync(script));
+  assert.match(fs.readFileSync(config.deb.afterInstall, 'utf8'), /userns,/);
   const hook = fs.readFileSync(config.nsis.include, 'utf8');
   assert.match(hook, /isUpdated/); assert.match(hook, /LOCALAPPDATA\\RobOS\\app-manager/); assert.match(hook, /SMPROGRAMS\\RobOS Apps/);
 });
@@ -30,4 +35,18 @@ test('catalog groups user apps and dependency discovery does not pull the entire
   assert.ok(dependencies('git-projects').includes('robos-graph'));
   assert.ok(entries.some(item => item.id === 'knowledge-graph-explorer' && item.sourceId === 'robos-graph'));
   assert.ok(!dependencies('robos-lib').includes('agents-manager'));
+});
+test('hard-linked npm files become regular archive entries the installer accepts', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-hardlink-test-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const dir = path.join(root, 'payload'), tar = require('tar'); fs.mkdirSync(path.join(dir, 'bin'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'tool'), 'binary', { mode: 0o755 }); fs.linkSync(path.join(dir, 'tool'), path.join(dir, 'bin/tool'));
+  const archive = path.join(root, 'linked.tgz');
+  await tar.c({ cwd: dir, file: archive, gzip: true, portable: true, follow: true }, ['.']);
+  await assert.rejects(validateArchive(archive, 1000), /Unsafe archive entry/);
+  breakHardLinks(dir);
+  assert.equal(fs.statSync(path.join(dir, 'tool')).nlink, 1);
+  assert.equal(fs.statSync(path.join(dir, 'bin/tool')).mode & 0o777, 0o755);
+  fs.rmSync(archive); await tar.c({ cwd: dir, file: archive, gzip: true, portable: true, follow: true }, ['.']);
+  await validateArchive(archive, 1000);
 });

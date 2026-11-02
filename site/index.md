@@ -24,7 +24,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
       </ul>
       <a class="l-quick" href="{{ '/using-robos-wizard/' | relative_url }}"><span class="l-quick-ic" aria-hidden="true">?</span><span><b>New here? Click here for a quick start</b><small>A few questions, then a guide made for you: install steps, the apps to try first, what to read next</small></span><span class="l-quick-go" aria-hidden="true">→</span></a>
       <div class="cta">
-        <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> <span data-dl-label>Download RobOS</span></a>
+        <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="{{ site.data.release.url }}" data-linux-asset="RobOS-v{{ site.data.release.version }}-Linux-amd64.deb" href="{{ '/download/' | relative_url }}"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> <span data-dl-label>Download RobOS</span></a>
         <a class="btn btn-ghost" href="#vision">See the plan</a>
       </div>
       <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>

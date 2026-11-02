@@ -16,6 +16,7 @@ function start(id, locations) {
     throw error;
   }
   process.env.HOME ||= os.homedir();
+  process.env.ROBOS_MANAGED_APP = id;
   process.env.ROBOS_APP_BASE = path.join(root, 'packages');
   process.env.ROBOS_LIB_PATH = path.join(root, 'packages/robos-lib');
   process.env.ROBOS_GRAPH_ROOT = root;
@@ -36,6 +37,12 @@ function start(id, locations) {
     try { require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root, process.env, process.env.ROBOS_TOOL_ROOT); } catch {}
   }
   app.setName(`robos-${id}`);
+  if (process.platform === 'linux') {
+    // Many apps name themselves in main.js. A managed window must keep the class its
+    // desktop entry declares, or GNOME shows it as a separate app with a generic icon.
+    app.setName = () => {};
+    app.setDesktopName(`robos-managed-${id}.desktop`);
+  }
   app.setPath('userData', path.join(os.homedir(), '.config/robos/electron', id));
   app.setAppPath(dir); process.chdir(dir);
   if (process.platform === 'win32') app.setAppUserModelId(`com.rowbose.robos.${id}`);

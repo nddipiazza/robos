@@ -14,6 +14,7 @@ if (id) {
   require('./lib/app-host.cjs').start(id, locations);
 } else {
   app.setName('robos-app-manager');
+  if (process.platform === 'linux') app.setDesktopName('robos-app-manager.desktop');
   const profile = path.join(os.homedir(), '.config/robos/electron/app-manager');
   fs.mkdirSync(profile, { recursive: true }); app.setPath('userData', profile);
   if (!app.requestSingleInstanceLock()) { app.quit(); } else {
@@ -25,6 +26,16 @@ if (id) {
     const executable = process.platform === 'linux' && image ? locations.image : fromDiskImage ? path.join(locations.macManager, 'Contents/MacOS/RobOS') : process.execPath;
     const native = integration({ locations, executable, host: path.dirname(__filename), packaged: app.isPackaged, shell });
     const show = () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } };
+    // The .deb is owned by the system, so finishing its removal needs the admin prompt.
+    async function removeSystemPackage() {
+      const name = require('./package.json').name;
+      const code = await new Promise(resolve => {
+        const child = spawn('pkexec', ['apt-get', 'remove', '-y', name], { stdio: 'ignore' });
+        child.once('error', () => resolve(-1)); child.once('exit', resolve);
+      });
+      if (code !== 0) await dialog.showMessageBox(window, { type: 'info', message: 'Your RobOS apps were removed.',
+        detail: `To finish removing App Manager, run:\n\nsudo apt remove ${name}` });
+    }
     const removeRequested = argv => argv.find(arg => arg.startsWith('--remove='))?.slice(9);
     async function remove(ids, all = false) {
       if (manager.busy) throw new Error('Another operation is in progress');
@@ -48,6 +59,12 @@ if (id) {
       manager = new Manager({ locations, native, version: require('./package.json').version, logger });
       try { manager.loadCached(); } catch (error) { logger.warn({ err: error }, 'Ignoring invalid cached catalog'); }
       if (image) native.installManager(image);
+      if (process.platform === 'linux' && app.isPackaged) {
+        if (!image) native.adoptSystemManager();
+        native.pinManager();
+        // Keep existing entries current across upgrades and a move between AppImage and .deb.
+        for (const item of Object.values(manager.installed)) if (item.kind === 'app') native.writeEntry(item);
+      }
       if (fromDiskImage) native.installManager(macBundle);
       ipcMain.handle('manager:state', () => manager.state());
       ipcMain.handle('manager:refresh', () => manager.refresh());
@@ -88,14 +105,15 @@ if (id) {
           const uninstaller = path.join(path.dirname(process.execPath), 'Uninstall RobOS.exe');
           if (fs.existsSync(uninstaller)) { const child = spawn(uninstaller, [], { detached: true, stdio: 'ignore' }); child.unref(); }
         } else if (process.platform === 'linux') {
-          fs.rmSync(path.join(locations.shortcuts, 'robos-app-manager.desktop'), { force: true });
-          fs.rmSync(locations.image, { force: true });
+          native.removeManager();
+          if (app.isPackaged && !image) await removeSystemPackage();
         } else if (process.platform === 'darwin' && macBundle?.endsWith('/RobOS.app')) {
           await shell.trashItem(fromDiskImage ? locations.macManager : macBundle);
         }
         app.quit();
       });
       window = new BrowserWindow({ width: 1180, height: 850, minWidth: 960, minHeight: 600, backgroundColor: '#202020', autoHideMenuBar: true,
+        ...(app.isPackaged && process.platform === 'linux' ? { icon: path.join(__dirname, 'icon.png') } : {}),
         webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
       window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
       window.webContents.on('will-navigate', event => event.preventDefault());
