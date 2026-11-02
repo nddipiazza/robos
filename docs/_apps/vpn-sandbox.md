@@ -2,6 +2,7 @@
 title: "RobOS VPN Sandbox"
 package: vpn-sandbox
 category: "security-vault"
+landing: /security/#zero-leak-vpn-app-sandbox
 icon: vpn-sandbox.svg
 summary: "Launch any desktop or CLI app inside an isolated Linux network namespace (ip netns) routed exclusively through OpenVPN with a 3-barrier kernel kill-switch."
 description: "Zero-leak OpenVPN application launcher (IPVanish built-in) that confines executables to per-app Linux network namespaces with dual-layer iptables/ip6tables kill-switch rules and live E2E drop verification."

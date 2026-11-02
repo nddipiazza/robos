@@ -107,7 +107,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     <h2>{{ cat.name }}</h2>
     <div class="app-grid">
     {%- for app in apps %}
-      <a class="card app-card" href="{{ '/v1/apps/' | append: app.slug | append: '/' | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: cat.name | append: ' ' | append: app.summary | downcase | escape }}">
+      <a class="card app-card" href="{{ app.landing | default: app.url | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: cat.name | append: ' ' | append: app.summary | downcase | escape }}">
         {%- if app.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
         <div>
           <h3>{{ app.title }}</h3>
@@ -128,7 +128,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     <div class="app-grid">
     {%- assign others = others | sort_natural: "title" -%}
     {%- for app in others %}
-      <a class="card app-card" href="{{ '/v1/apps/' | append: app.slug | append: '/' | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: app.summary | downcase | escape }}">
+      <a class="card app-card" href="{{ app.landing | default: app.url | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: app.summary | downcase | escape }}">
         {%- if app.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
         <div>
           <h3>{{ app.title }}</h3>

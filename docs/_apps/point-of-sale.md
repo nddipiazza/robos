@@ -2,6 +2,7 @@
 title: "RobOS Point of Sale"
 package: point-of-sale
 category: point-of-sale
+landing: /point-of-sale/
 icon: point-of-sale.svg
 summary: "Open-source cash register for shops, cafés and bars: touchscreen order entry, self-checkout, inventory, cash drawer controls and an open checkout API."
 description: "A modern, self-hosted cash register that runs on any touchscreen. No subscription, no cloud account, no card-processing lock-in."

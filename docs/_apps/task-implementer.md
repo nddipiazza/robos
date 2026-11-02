@@ -2,6 +2,7 @@
 title: "Task Implementer"
 package: task-implementer
 category: ai-agents
+landing: /task-implementer/
 icon: task-implementer.svg
 summary: "Pick a GitHub or Jira task, choose a developer persona and coding agent, and run the agent on it with streamed output."
 description: "Lists tasks from the active task server, builds a prompt from the task and a role persona, and runs the chosen coding-agent CLI (Codex, AGY, Claude Code or GitHub Copilot) in your account. It also generates an ordered plan for Jira tasks."

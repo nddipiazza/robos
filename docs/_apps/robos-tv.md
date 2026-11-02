@@ -2,6 +2,7 @@
 title: "RobOS Smart TV Studio"
 package: robos-tv
 category: "core-desktop"
+landing: /tv/
 icon: robos-tv.svg
 summary: "Pair Smart TVs, build & sideload Developer Mode TV apps (LG webOS, Samsung Tizen, Google TV/ADB, Roku), serve the 10-foot D-Pad TV Portal (:19210), and stream 4K games."
 description: "First-class Smart TV integration for RobOS: Developer Mode native app generator and sideloader (LG webOS IPK, Samsung Tizen WGT, Google TV/Android TV ADB Leanback, Roku OS), automated LG 1,000-hour dev timer renewal, 10-foot D-Pad/Gamepad Big-Screen Portal, and Moonlight/Sunshine 4K 120Hz game streaming."

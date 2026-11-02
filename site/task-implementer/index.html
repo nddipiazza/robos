@@ -19,7 +19,7 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
         <p class="eyebrow">RobOS Task Implementer · step 2 of <a href="{{ '/build-apps/' | relative_url }}">the build loop</a></p>
         <h1 id="task-implementer-title">Pick an issue. An agent builds it on its own branch.</h1>
         <p class="auto-intro-lead">Choose a task from GitHub or Jira, check the persona and add your hints, then click <strong>Start Agent</strong>.</p>
-        <p>The agent creates a branch, implements and tests the task, commits and pushes. It does not open a pull request: you review the branch first in <a href="{{ '/v1/apps/pr-review/' | relative_url }}">Agent Code Review</a>, and decide.</p>
+        <p>The agent creates a branch, implements and tests the task, commits and pushes. It does not open a pull request: you review the branch first in <a href="{{ '/apps/pr-review/' | relative_url }}">Agent Code Review</a>, and decide.</p>
         <a class="btn" href="#run">Run your first task <span aria-hidden="true">↓</span></a>
       </div>
       <div class="auto-intro-demo">
@@ -96,7 +96,7 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 <p>The agent also gets <code>ROBOS_AGENT_ROLE</code> and <code>ROBOS_AGENT_MODE</code> in its environment, so scripts it runs can tell which persona started them.</p>
 
 <h2 id="review">Review the branch</h2>
-<p>When the agent has finished, click <strong>Review branch…</strong> and choose the clone the agent worked in. The <a href="{{ '/v1/apps/pr-review/' | relative_url }}">Agent Code Review</a> window opens on that branch, diffed against your default branch. Uncommitted changes are not part of the diff. It refuses while an agent is still running on the task, so wait for <strong>Agent Output</strong> to finish.</p>
+<p>When the agent has finished, click <strong>Review branch…</strong> and choose the clone the agent worked in. The <a href="{{ '/apps/pr-review/' | relative_url }}">Agent Code Review</a> window opens on that branch, diffed against your default branch. Uncommitted changes are not part of the diff. It refuses while an agent is still running on the task, so wait for <strong>Agent Output</strong> to finish.</p>
 <p>From there you read the diff, ask for changes in plain language, check the evidence, take a walkthrough, and click <strong>Create PR</strong> only when you are ready. The steps, with screenshots, are in <a href="{{ '/build-apps/solo/#review' | relative_url }}">Review the branch before it becomes a pull request</a>.</p>
 
 <h2 id="personas">Personas and directives</h2>
@@ -149,7 +149,7 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
 <a class="role-card" href="{{ '/build-apps/solo/#review' | relative_url }}"><b>Review the branch →</b><span>Read the diff, check the evidence and take the walkthrough in Agent Code Review, then open the pull request.</span></a>
 <a class="role-card" href="{{ '/build-apps/teams/' | relative_url }}"><b>Building as a team →</b><span>Picking up assigned work, shared review defaults, and approving a teammate's pull request.</span></a>
 </div>
-<p>Reference: <a href="{{ '/v1/apps/task-implementer/' | relative_url }}">Task Implementer in the classic docs</a> · <a href="https://github.com/nddipiazza/robos/tree/main/packages/task-implementer">Source code</a></p>
+<p>Reference: <a href="{{ '/apps/task-implementer/' | relative_url }}">Task Implementer app reference</a> · <a href="https://github.com/nddipiazza/robos/tree/main/packages/task-implementer">Source code</a></p>
 
 <div class="guide-pager"><a class="prev" href="{{ '/task-planner/' | relative_url }}"><small>Previous</small>← Task Planner</a><a class="next" href="{{ '/build-apps/solo/#review' | relative_url }}"><small>Next</small>Review the branch →</a></div>
 </article>

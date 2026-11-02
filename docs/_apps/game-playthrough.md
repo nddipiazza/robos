@@ -7,7 +7,7 @@ summary: "Run and watch the Quest: Warrior Dragon end-to-end AI playthrough with
 description: "Run and watch the Quest: Warrior Dragon end-to-end AI playthrough with per-milestone videos, checkpoints and run history"
 ---
 
-RobOS Game Playthrough runs the end-to-end AI playthrough of [Quest: Warrior Dragon]({{ '/games/quest-warrior-dragon/' | relative_url }}) and lets you watch it. The in-engine AI plays the whole game the way a player would, using only real button presses, and works through 74 milestones from King Lorik's throne room to the ending. This app starts those runs, follows them live, and keeps every earlier run so you can go back to it.
+RobOS Game Playthrough runs the end-to-end AI playthrough of [Quest: Warrior Dragon](/games/quest-warrior-dragon/) and lets you watch it. The in-engine AI plays the whole game the way a player would, using only real button presses, and works through 74 milestones from King Lorik's throne room to the ending. This app starts those runs, follows them live, and keeps every earlier run so you can go back to it.
 
 ## What it does
 
