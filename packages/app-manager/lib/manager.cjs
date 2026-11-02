@@ -41,7 +41,10 @@ class Manager extends EventEmitter {
   async refresh() {
     if (this.busy) throw new Error('An installation is already in progress');
     const url = `${ORIGIN}${packagesTag(this.version, this.platform, this.arch)}/robos-catalog-${this.platform}-${this.arch}.json`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    // A brief network failure should not leave someone with an empty app list. HTTP errors
+    // such as a missing catalog are real answers and are reported straight away.
+    const request = () => fetch(url, { signal: AbortSignal.timeout(30000) });
+    const response = await request().catch(() => new Promise(resolve => setTimeout(resolve, 1000)).then(request));
     if (!response.ok) throw new Error(`App catalog unavailable (${response.status}). Check your connection and that this release has app downloads.`);
     const raw = await response.text();
     if (raw.length > 2 * 1024 ** 2) throw new Error('Catalog too large');
