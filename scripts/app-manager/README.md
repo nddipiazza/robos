@@ -13,7 +13,7 @@ node scripts/app-manager/publish-catalog.cjs
 
 Run builds on the target platform so native npm dependencies match the platform and CPU. `build.cjs --linux` requests the `.deb` and AppImage explicitly. `.github/workflows/app-manager.yml` builds the Windows EXE, Ubuntu `.deb`, Linux AppImage, and separate Intel and Apple Silicon macOS DMGs, together with independent app archives and catalogs for each OS/CPU. It replaces the automatic monolithic Windows EXE release workflow. The old PowerShell suite setup and scripts/windows build scripts remain development/legacy tools.
 
-Stable publication requires the core unit suite, Windows app-suite regression workflow and every platform build to pass. The publishing job combines the platform artifacts, verifies every archive against its catalog, and writes SHA256SUMS and a source-pinned release manifest. A matching version tag triggers publication; the authorized `codex/release-0.0.9` branch also cuts the initial stable release after these gates pass. Optional appliance/VM images have a separate manual workflow, `appliance-release.yml`.
+Stable publication requires the core unit suite, Windows app-suite regression workflow and every platform build to pass. The publishing job combines the platform artifacts, verifies every archive against its catalog, and writes SHA256SUMS and a source-pinned release manifest. A matching version tag publishes after these gates pass. A `codex/release-*` branch runs the same gates, then uploads everything as invisible drafts with `--draft-only`, so a release can be inspected on GitHub before it goes public. **Resume verified app release**, given that run's ID, then publishes the verified drafts without rebuilding. Merge the version bump to `main` straight after, because the site's links follow `VERSION`. Optional appliance/VM images have a separate manual workflow, `appliance-release.yml`.
 
 Release uploads run serially, pause between writes, honor GitHub rate-limit backoff, and reuse assets only when their size and SHA-256 digest match. Package releases are marked as prereleases so they never become Latest. A draft becomes public only after every release's complete remote asset set verifies, with the main release going public last. Existing tags and releases cannot be repointed to another source revision.
 
@@ -39,7 +39,7 @@ macOS payloads live in `~/Library/Application Support/RobOS/app-manager`. Indivi
 
 Knowledge Graph Explorer is an app component (`knowledge-graph-explorer`) with source in `packages/robos-graph`. The graph library remains a separate shared component (`robos-graph`), so an app needing graph APIs does not install the Explorer UI.
 
-The packaged Windows smoke test exercises the real downloader, extraction, renderer, app launcher and Start menu integration against local fixture downloads:
+The packaged smoke test, run on Windows and macOS, exercises the real downloader, extraction, renderer, app launcher and Start menu integration against local fixture downloads. On macOS it also proves the manager copies itself out of the disk image and that app launchers use that copy:
 
 ```sh
 node scripts/app-manager/smoke.cjs
