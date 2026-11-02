@@ -73,7 +73,10 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   function run(args, name, bootstrap = false) {
     const result = spawnSync(godot, args, { encoding: 'utf8', timeout: 15 * 60 * 1000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
     fs.writeFileSync(path.join(stage, `${name}.log`), (result.stdout || '') + (result.stderr || ''));
-    if (result.error || result.status !== 0 || !bootstrap && /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((result.stdout || '') + (result.stderr || ''))) throw new Error(`${name} failed; see ${stage}/${name}.log`);
+    if (result.error || result.status !== 0 || !bootstrap && /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((result.stdout || '') + (result.stderr || ''))) {
+      console.error(((result.stdout || '') + (result.stderr || '')).slice(-5000));
+      throw new Error(`${name} failed; see ${stage}/${name}.log`);
+    }
   }
   console.log(`Importing ${game.title}`);
   // A custom project font can be loaded before its first import finishes.
