@@ -1,7 +1,19 @@
 {
   "extracted": [],
   "retired": [
-    "urn:robos:credential:certificate:course-test-architect-mucvneo3"
+    "urn:robos:credential:certificate:course-test-architect-mucvneo3",
+    "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvnelt",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
+    "urn:robos:documentation:billing-api",
+    "urn:robos:documentation:forms-api"
   ],
-  "revision": "2e806c1da2dc7cceac6bb93caa44af75b7f8e9f2729ed72a62b6f44ac53d0ea7"
+  "revision": "2ebe4e29ff554db042b74df5e6590f2975e54e1ea25f1560283a1815387343c4"
 }

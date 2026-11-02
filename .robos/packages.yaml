@@ -340,7 +340,7 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/robos-tv"
     technology: "Electron 28 / Smart TV Developer Mode (webOS, Tizen, ADB, Roku) / 10-Foot Portal"
-  - id: "urn:robos:desktop-app:robos-dashboards"
+  - id: "urn:robos:app:robos-dashboards"
     title: "RobOS Dashboards"
     type: "robos:DesktopApp"
     repository: "packages/robos-dashboards"

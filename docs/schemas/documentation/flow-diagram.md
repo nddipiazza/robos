@@ -49,23 +49,23 @@ This node comes from `.robos/kgraphs/documentation/package.jsonld` in the RobOS 
     "robos:FlowDiagram",
     "schema:ImageObject"
   ],
-  "dcterms:title": "Order Lifecycle & Event Processing Flow",
   "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
-  "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing",
-  "robos:mermaidText": "sequenceDiagram\n    participant Client\n    participant Gateway\n    participant OrderService\n    participant Kafka\n    Client->>Gateway: POST /orders\n    Gateway->>OrderService: Validate & Route\n    OrderService->>Kafka: Emit OrderCreated\n",
-  "robos:imagePath": "assets/images/architecture/order-lifecycle-flow.jpg",
-  "robos:diagramType": "sequence",
+  "dcterms:title": "Order Lifecycle & Event Processing Flow",
   "robos:aspectRatio": "16:9",
-  "robos:targetComponent": "urn:robos:service:forms-api",
+  "robos:diagramType": "sequence",
+  "robos:domainStandard": "https://schema.org/ImageObject",
+  "robos:imagePath": "assets/images/architecture/order-lifecycle-flow.jpg",
+  "robos:mermaidText": "sequenceDiagram\n    participant Client\n    participant Gateway\n    participant OrderService\n    participant Kafka\n    Client->>Gateway: POST /orders\n    Gateway->>OrderService: Validate & Route\n    OrderService->>Kafka: Emit OrderCreated\n",
+  "robos:namespace": "robos.docs",
+  "robos:package": "documentation",
+  "robos:schemaOrgType": "https://schema.org/ImageObject",
   "robos:tags": [
     "Architecture",
     "Ordering",
     "EventDriven"
   ],
-  "robos:package": "documentation",
-  "robos:namespace": "robos.docs",
-  "robos:schemaOrgType": "https://schema.org/ImageObject",
-  "robos:domainStandard": "https://schema.org/ImageObject"
+  "robos:targetComponent": "urn:robos:service:order-service",
+  "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing"
 }
 ```
 {% endraw %}

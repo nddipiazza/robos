@@ -1,0 +1,88 @@
+{
+  "prompt": "Remove leftovers from test runs and removed docs. The 10 certificates carry the literal test user IDs from crpg-elearning.test.js and app-elearning-doc-generator.test.js. 102bd2e3 deleted the forms-api, billing-api and robos-documentation pages and redirected them to docs/architecture.md, which does not cover the two sample services, so those Documentation nodes go and robos-documentation points at its current page. The order lifecycle diagram describes OrderService, so it targets order-service.",
+  "edits": [
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvnelt"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
+    },
+    {
+      "op": "update",
+      "id": "urn:robos:crpg:game:realm-of-heroes",
+      "unset": [
+        "robos:hasCertificate"
+      ]
+    },
+    {
+      "op": "update",
+      "id": "urn:robos:app:customer-portal",
+      "unset": [
+        "robos:hasCertificate"
+      ]
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:documentation:forms-api"
+    },
+    {
+      "op": "remove",
+      "id": "urn:robos:documentation:billing-api"
+    },
+    {
+      "op": "update",
+      "id": "urn:robos:service:billing-api",
+      "unset": [
+        "robos:hasDocumentation"
+      ]
+    },
+    {
+      "op": "update",
+      "id": "urn:robos:documentation:robos-documentation",
+      "set": {
+        "robos:docPath": "docs/_apps/robos-documentation.md"
+      }
+    },
+    {
+      "op": "update",
+      "id": "urn:robos:diagram:order-lifecycle-flow",
+      "set": {
+        "robos:targetComponent": "urn:robos:service:order-service"
+      }
+    }
+  ]
+}

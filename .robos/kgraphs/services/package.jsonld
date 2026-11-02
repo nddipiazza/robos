@@ -693,7 +693,6 @@
           }
         }
       ],
-      "robos:hasDocumentation": "urn:robos:documentation:billing-api",
       "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": [
@@ -1519,7 +1518,6 @@
           }
         }
       ],
-      "robos:hasDocumentation": "urn:robos:documentation:billing-api",
       "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
       "robos:healthCheckUrl": "/healthz",
       "robos:implementsContract": [

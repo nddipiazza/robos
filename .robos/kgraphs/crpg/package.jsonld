@@ -946,16 +946,6 @@
       "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
       "robos:gameEngine": "Godot 4",
       "robos:gameType": "crpg",
-      "robos:hasCertificate": [
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
-      ],
       "robos:hasELearning": [
         "urn:robos:elearning:course:robos-crpg",
         "urn:robos:elearning:course:crpg-game-builder"
@@ -3412,16 +3402,6 @@
       "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
       "robos:gameEngine": "Godot 4",
       "robos:gameType": "crpg",
-      "robos:hasCertificate": [
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
-      ],
       "robos:hasELearning": [
         "urn:robos:elearning:course:robos-crpg",
         "urn:robos:elearning:course:crpg-game-builder"

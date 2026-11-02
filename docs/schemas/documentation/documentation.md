@@ -43,23 +43,23 @@ This node comes from `.robos/kgraphs/documentation/package.jsonld` in the RobOS 
 {% raw %}
 ```json
 {
-  "@id": "urn:robos:documentation:billing-api",
+  "@id": "urn:robos:documentation:robos-documentation",
   "@type": [
     "oslc_am:Resource",
     "robos:Documentation",
     "schema:TechArticle"
   ],
-  "dcterms:title": "Billing API Microservice Architecture",
-  "dcterms:description": "Living architectural documentation and component topology for Billing API Service.",
-  "robos:targetEntity": "urn:robos:service:billing-api",
-  "robos:docPath": "docs/architecture/billing-api.md",
+  "dcterms:description": "Living architecture specification for the RobOS Documentation application and GitOps catalog synchronization.",
+  "dcterms:title": "RobOS Documentation Hub Architecture",
+  "robos:category": "Applications",
+  "robos:docPath": "docs/_apps/robos-documentation.md",
+  "robos:domainStandard": "https://schema.org/TechArticle",
   "robos:gitopsFile": ".robos/documentation.yaml",
-  "robos:category": "Services",
   "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
-  "robos:package": "documentation",
   "robos:namespace": "robos.docs",
+  "robos:package": "documentation",
   "robos:schemaOrgType": "https://schema.org/TechArticle",
-  "robos:domainStandard": "https://schema.org/TechArticle"
+  "robos:targetEntity": "urn:robos:app:robos-documentation"
 }
 ```
 {% endraw %}

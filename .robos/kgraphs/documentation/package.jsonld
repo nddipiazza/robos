@@ -222,7 +222,7 @@
         "Ordering",
         "EventDriven"
       ],
-      "robos:targetComponent": "urn:robos:service:forms-api",
+      "robos:targetComponent": "urn:robos:service:order-service",
       "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing"
     },
     {
@@ -376,45 +376,6 @@
       "robos:slug": "whitepaper-turing-skills"
     },
     {
-      "@id": "urn:robos:documentation:billing-api",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Documentation",
-        "schema:TechArticle"
-      ],
-      "dcterms:description": "Living architectural documentation and component topology for Billing API Service.",
-      "dcterms:title": "Billing API Microservice Architecture",
-      "robos:category": "Services",
-      "robos:docPath": "docs/architecture/billing-api.md",
-      "robos:domainStandard": "https://schema.org/TechArticle",
-      "robos:gitopsFile": ".robos/documentation.yaml",
-      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
-      "robos:namespace": "robos.docs",
-      "robos:package": "documentation",
-      "robos:schemaOrgType": "https://schema.org/TechArticle",
-      "robos:targetEntity": "urn:robos:service:billing-api"
-    },
-    {
-      "@id": "urn:robos:documentation:forms-api",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Documentation",
-        "schema:TechArticle"
-      ],
-      "dcterms:description": "Living architectural documentation, schema contracts, and runtime verification for Forms API Service.",
-      "dcterms:title": "Forms API Microservice Living Documentation",
-      "robos:category": "Services",
-      "robos:docPath": "docs/architecture/forms-api.md",
-      "robos:domainStandard": "https://schema.org/TechArticle",
-      "robos:gitopsFile": ".robos/documentation.yaml",
-      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
-      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
-      "robos:namespace": "robos.docs",
-      "robos:package": "documentation",
-      "robos:schemaOrgType": "https://schema.org/TechArticle",
-      "robos:targetEntity": "urn:robos:service:forms-api"
-    },
-    {
       "@id": "urn:robos:documentation:robos-documentation",
       "@type": [
         "oslc_am:Resource",
@@ -424,7 +385,7 @@
       "dcterms:description": "Living architecture specification for the RobOS Documentation application and GitOps catalog synchronization.",
       "dcterms:title": "RobOS Documentation Hub Architecture",
       "robos:category": "Applications",
-      "robos:docPath": "docs/architecture/robos-documentation.md",
+      "robos:docPath": "docs/_apps/robos-documentation.md",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:gitopsFile": ".robos/documentation.yaml",
       "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
@@ -605,7 +566,7 @@
         "Ordering",
         "EventDriven"
       ],
-      "robos:targetComponent": "urn:robos:service:forms-api",
+      "robos:targetComponent": "urn:robos:service:order-service",
       "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing"
     },
     {
@@ -759,45 +720,6 @@
       "robos:slug": "whitepaper-turing-skills"
     },
     {
-      "@id": "urn:robos:documentation:billing-api",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Documentation",
-        "schema:TechArticle"
-      ],
-      "dcterms:description": "Living architectural documentation and component topology for Billing API Service.",
-      "dcterms:title": "Billing API Microservice Architecture",
-      "robos:category": "Services",
-      "robos:docPath": "docs/architecture/billing-api.md",
-      "robos:domainStandard": "https://schema.org/TechArticle",
-      "robos:gitopsFile": ".robos/documentation.yaml",
-      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
-      "robos:namespace": "robos.docs",
-      "robos:package": "documentation",
-      "robos:schemaOrgType": "https://schema.org/TechArticle",
-      "robos:targetEntity": "urn:robos:service:billing-api"
-    },
-    {
-      "@id": "urn:robos:documentation:forms-api",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Documentation",
-        "schema:TechArticle"
-      ],
-      "dcterms:description": "Living architectural documentation, schema contracts, and runtime verification for Forms API Service.",
-      "dcterms:title": "Forms API Microservice Living Documentation",
-      "robos:category": "Services",
-      "robos:docPath": "docs/architecture/forms-api.md",
-      "robos:domainStandard": "https://schema.org/TechArticle",
-      "robos:gitopsFile": ".robos/documentation.yaml",
-      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
-      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
-      "robos:namespace": "robos.docs",
-      "robos:package": "documentation",
-      "robos:schemaOrgType": "https://schema.org/TechArticle",
-      "robos:targetEntity": "urn:robos:service:forms-api"
-    },
-    {
       "@id": "urn:robos:documentation:robos-documentation",
       "@type": [
         "oslc_am:Resource",
@@ -807,7 +729,7 @@
       "dcterms:description": "Living architecture specification for the RobOS Documentation application and GitOps catalog synchronization.",
       "dcterms:title": "RobOS Documentation Hub Architecture",
       "robos:category": "Applications",
-      "robos:docPath": "docs/architecture/robos-documentation.md",
+      "robos:docPath": "docs/_apps/robos-documentation.md",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:gitopsFile": ".robos/documentation.yaml",
       "robos:lastUpdated": "2026-09-25T12:00:00.000Z",

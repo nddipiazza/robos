@@ -148,9 +148,6 @@
       "robos:buildTool": "Vite",
       "robos:devServerPort": 3000,
       "robos:frontendFramework": "React",
-      "robos:hasCertificate": [
-        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
-      ],
       "robos:hasELearning": [
         "urn:robos:elearning:app:customer-portal"
       ],
@@ -676,9 +673,6 @@
       "robos:buildTool": "Vite",
       "robos:devServerPort": 3000,
       "robos:frontendFramework": "React",
-      "robos:hasCertificate": [
-        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
-      ],
       "robos:hasELearning": [
         "urn:robos:elearning:app:customer-portal"
       ],
