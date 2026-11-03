@@ -38,9 +38,9 @@ function setupWorkspaceDirs() {
 function launchRealApps() {
   setupWorkspaceDirs();
   const display = process.env.DISPLAY || ':99';
-  const codeBin = fs.existsSync('/home/ndipiazza/.local/share/code/code')
-    ? '/home/ndipiazza/.local/share/code/code'
-    : (fs.existsSync('/home/ndipiazza/.local/share/code/bin/code') ? '/home/ndipiazza/.local/share/code/bin/code' : 'code');
+  const codeBin = fs.existsSync(`${require('os').homedir()}/.local/share/code/code`)
+    ? `${require('os').homedir()}/.local/share/code/code`
+    : (fs.existsSync(`${require('os').homedir()}/.local/share/code/bin/code`) ? `${require('os').homedir()}/.local/share/code/bin/code` : 'code');
 
   // 1. Launch VS Code Window 1 (Workspace A)
   const p1 = spawn(codeBin, [
@@ -294,9 +294,9 @@ runDemo({
         ...s,
         action: async () => {
           const display = process.env.DISPLAY || ':99';
-          const codeBin = fs.existsSync('/home/ndipiazza/.local/share/code/code')
-            ? '/home/ndipiazza/.local/share/code/code'
-            : (fs.existsSync('/home/ndipiazza/.local/share/code/bin/code') ? '/home/ndipiazza/.local/share/code/bin/code' : 'code');
+          const codeBin = fs.existsSync(`${require('os').homedir()}/.local/share/code/code`)
+            ? `${require('os').homedir()}/.local/share/code/code`
+            : (fs.existsSync(`${require('os').homedir()}/.local/share/code/bin/code`) ? `${require('os').homedir()}/.local/share/code/bin/code` : 'code');
           const p = spawn(codeBin, [
             '--ozone-platform=x11',
             '--no-sandbox',

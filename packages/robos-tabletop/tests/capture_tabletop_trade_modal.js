@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 
 const REPO_ROOT = path.resolve(__dirname, "../../..");
-const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/ecd6859c-9e96-4f38-b78f-3eccec8ad76f";
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/ecd6859c-9e96-4f38-b78f-3eccec8ad76f`;
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');

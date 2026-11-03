@@ -12,7 +12,7 @@ const { runDemo } = require('../lib/demo-runner');
  *   4. Agent completes with a summary
  *
  * Requires JIRA_TOKEN env var (set from `pass show robos-acme-inc/jira-token`).
- * Uses JIRA_USER env var or falls back to nicholas.dipiazza@gmail.com.
+ * Uses JIRA_USER env var or falls back to a placeholder address.
  */
 
 // Mock agent output lines — streamed progressively for demo readability

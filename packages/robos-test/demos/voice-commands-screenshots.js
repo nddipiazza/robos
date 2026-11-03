@@ -7,7 +7,7 @@ const { launchApp, killApp } = require('../lib/harness');
 const scenarios = require('../lib/scenarios');
 
 const DOCS_DIR = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', 'voice-commands');
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', 'voice-commands');
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));

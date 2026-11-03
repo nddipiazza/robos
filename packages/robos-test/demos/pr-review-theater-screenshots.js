@@ -8,7 +8,7 @@ const { evalJS, maximizeWindow } = require('../lib/snapshot');
 const scenarios = require('../lib/scenarios');
 
 const SLUG = 'pr-review-theater';
-const HOME_DIR = process.env.HOME || '/home/ndipiazza';
+const HOME_DIR = process.env.HOME || require('os').homedir();
 const PERSIST_DIR = path.join(HOME_DIR, '.robos', 'development', 'walkthroughs', SLUG);
 const DOCS_DIR = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
 const BRAIN_DIR = process.env.BRAIN_DIR || null;
