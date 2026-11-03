@@ -118,7 +118,7 @@
 .l-mosaic a{position:relative;display:block;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2);transition:border-color .2s,transform .2s}
 .l-mosaic a:hover{border-color:var(--accent);transform:translateY(-2px)}
 .l-mosaic img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
-.l-mosaic span{position:absolute;left:0;right:0;bottom:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82))}
+.l-mosaic span{position:absolute;left:0;right:0;bottom:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;line-height:1.3;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82))}
 .l-mosaic-new a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-style:dashed;border-width:2px;color:var(--muted)}
 .l-mosaic-new b{font-size:2rem;line-height:1;color:var(--accent);font-weight:500}
 .l-mosaic-new span{position:static;background:none;color:var(--fg);padding:0}
@@ -134,7 +134,7 @@
 .l-mosaic .l-mosaic-biz > a{aspect-ratio:auto;height:100%;border:0;border-radius:0;transform:none}
 .l-mosaic-biz > a + a{border-left:1px solid rgba(255,255,255,.35)}
 .l-mosaic-biz > a:hover img{opacity:.85}
-.l-biz-label{position:absolute;left:0;right:0;bottom:0;margin:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;line-height:1.35;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82));pointer-events:none}
+.l-biz-label{position:absolute;left:0;right:0;bottom:0;margin:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;line-height:1.3;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82));pointer-events:none}
 .l-mosaic .l-biz-label a{display:inline;aspect-ratio:auto;border:0;border-radius:0;background:none;overflow:visible;color:#ffb38a;pointer-events:auto;white-space:nowrap}
 .l-mosaic .l-biz-label a:hover{color:#fff;text-decoration:underline;transform:none}
 .landing #product .grid3 .card .go{display:inline-block}
