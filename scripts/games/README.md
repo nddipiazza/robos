@@ -73,3 +73,12 @@ Cutscenes use the bundled 720p Ogg Theora movies on desktop and Web. Only a real
 headless display skips playback; exported-template status is not a headless
 signal. Existing skip/finish callbacks resume the campaign. Plain ASCII `X`
 labels are used for dialog close buttons and the canvas-drawn close control.
+
+Standalone campaign menus hide the full Tabletop quest selector and reject quest
+switches before changing campaign state or saved progress. Each build checks
+that a rejected switch preserves an isolated save and that the save can reload.
+Native builds also send an intentionally fragmented UTF-8 HTTP request to the
+exported game's control server, verifying that it waits for the complete body.
+The packaged Windows campaign was checked through all three Hydra victories
+and quest completion with the existing autonomous campaign test. This headless
+check verifies game state; it does not replace browser cutscene and input checks.
