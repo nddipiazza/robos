@@ -120,18 +120,21 @@ export function useSpeakerTakeover({ getPlayer, showStatus }) {
       track: p.song ? { title: p.song.title || '', artist: p.song.artist || '', album: p.song.album || '' } : null,
       position: p.position,
       speakingClip: !!takeover.current,
+      robosUser: p.activeRobosUser || null,
     };
   }, [getPlayer]);
 
   // Pause and resume apply to the song even while a clip has the speaker.
-  const pause = useCallback(async () => {
-    if (takeover.current) { takeover.current.wasPlaying = false; return { ok: true, paused: true }; }
-    return getPlayer().pauseMusic();
+  const pause = useCallback(async (payload = {}) => {
+    if (payload.robosUser && typeof getPlayer().setRobosUser === 'function') getPlayer().setRobosUser(payload.robosUser);
+    if (takeover.current) { takeover.current.wasPlaying = false; return { ok: true, paused: true, robosUser: payload.robosUser || null }; }
+    return getPlayer().pauseMusic(payload);
   }, [getPlayer]);
 
-  const resume = useCallback(async () => {
-    if (takeover.current) { takeover.current.wasPlaying = true; return { ok: true, playing: true }; }
-    return getPlayer().resumeMusic();
+  const resume = useCallback(async (payload = {}) => {
+    if (payload.robosUser && typeof getPlayer().setRobosUser === 'function') getPlayer().setRobosUser(payload.robosUser);
+    if (takeover.current) { takeover.current.wasPlaying = true; return { ok: true, playing: true, robosUser: payload.robosUser || null }; }
+    return getPlayer().resumeMusic(payload);
   }, [getPlayer]);
 
   const play = useCallback(async (payload = {}) => {
@@ -140,15 +143,17 @@ export function useSpeakerTakeover({ getPlayer, showStatus }) {
     return { ok: false, error: 'playFromControl unavailable' };
   }, [getPlayer]);
 
-  const next = useCallback(async () => {
+  const next = useCallback(async (payload = {}) => {
     const p = getPlayer();
-    if (typeof p.nextTrack === 'function') return p.nextTrack();
+    if (payload.robosUser && typeof p.setRobosUser === 'function') p.setRobosUser(payload.robosUser);
+    if (typeof p.nextTrack === 'function') return p.nextTrack(payload);
     return { ok: false, error: 'nextTrack unavailable' };
   }, [getPlayer]);
 
-  const previous = useCallback(async () => {
+  const previous = useCallback(async (payload = {}) => {
     const p = getPlayer();
-    if (typeof p.previousTrack === 'function') return p.previousTrack();
+    if (payload.robosUser && typeof p.setRobosUser === 'function') p.setRobosUser(payload.robosUser);
+    if (typeof p.previousTrack === 'function') return p.previousTrack(payload);
     return { ok: false, error: 'previousTrack unavailable' };
   }, [getPlayer]);
 

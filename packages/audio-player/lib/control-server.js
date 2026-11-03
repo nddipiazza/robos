@@ -122,13 +122,13 @@ function createControlServer({ handlers, configDir = defaultConfigDir(), port = 
       return [200, await handlers.play(body || {})];
     }
     if (url.pathname === '/api/next' && typeof handlers.next === 'function') {
-      return [200, await handlers.next()];
+      return [200, await handlers.next(body || {})];
     }
     if (url.pathname === '/api/previous' && typeof handlers.previous === 'function') {
-      return [200, await handlers.previous()];
+      return [200, await handlers.previous(body || {})];
     }
-    if (url.pathname === '/api/pause') return [200, await handlers.pause()];
-    if (url.pathname === '/api/resume') return [200, await handlers.resume()];
+    if (url.pathname === '/api/pause') return [200, await handlers.pause(body || {})];
+    if (url.pathname === '/api/resume') return [200, await handlers.resume(body || {})];
     return [404, { ok: false, error: 'Not found' }];
   }
 
@@ -233,10 +233,10 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     status: () => call('GET', '/api/status'),
     speakClip: (clip) => call('POST', '/api/speak-clip', clip),
     play: (opts = {}) => call('POST', '/api/play', opts),
-    next: () => call('POST', '/api/next', {}),
-    previous: () => call('POST', '/api/previous', {}),
-    pause: () => call('POST', '/api/pause', {}),
-    resume: () => call('POST', '/api/resume', {}),
+    next: (opts = {}) => call('POST', '/api/next', opts),
+    previous: (opts = {}) => call('POST', '/api/previous', opts),
+    pause: (opts = {}) => call('POST', '/api/pause', opts),
+    resume: (opts = {}) => call('POST', '/api/resume', opts),
   };
 }
 

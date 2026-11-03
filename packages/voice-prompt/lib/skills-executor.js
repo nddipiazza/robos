@@ -115,7 +115,7 @@ class SkillsExecutor {
       const appTarget = rawTarget.toLowerCase();
       // Ensure we don't accidentally intercept "open task to..."
       if (!appTarget.startsWith('task to ') && !appTarget.startsWith('task for ')) {
-        return await this.executeOpenApp(appTarget);
+        return await this.executeOpenApp(appTarget, context);
       }
     }
 
@@ -287,14 +287,17 @@ class SkillsExecutor {
 
     const taskIndex = targetProject.tasks.length + 1;
     const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const voiceUser = context.robosUser || null;
     const newTask = {
       id: taskId,
       title: title,
-      body: `Task created via RobOS Voice Assistant on ${new Date().toLocaleString()}.\nContext: ${context.activeApp?.title || 'Desktop'}.`,
+      body: `Task created via RobOS Voice Assistant${voiceUser?.name ? ` by ${voiceUser.name}` : ''} on ${new Date().toLocaleString()}.\nContext: ${context.activeApp?.title || 'Desktop'}.`,
       isEpic: false,
       labels: ['voice-created', 'ai-assist'],
       ticketKey: `TASK-${taskIndex}`,
       ticketStatus: 'open',
+      createdBy: voiceUser?.name || null,
+      robosUser: voiceUser,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -308,7 +311,7 @@ class SkillsExecutor {
 
     // Auto-launch / bring up RobOS Task Explorer so the user sees the newly created task on screen
     if (!options.skipAutoLaunch && process.env.ROBOS_TEST !== '1') {
-      this._launchAppProcess('task-planner');
+      this._launchAppProcess('task-planner', voiceUser);
     }
 
     const actionDone = `Created task "${title}" in project "${targetProject.name}"`;
@@ -321,6 +324,7 @@ class SkillsExecutor {
       response,
       data: {
         task: newTask,
+        robosUser: voiceUser,
         project: { id: targetProject.id, name: targetProject.name, totalTasks: targetProject.tasks.length }
       }
     };
@@ -377,7 +381,7 @@ class SkillsExecutor {
   /**
    * Skill: Open RobOS Desktop Application
    */
-  async executeOpenApp(appTarget) {
+  async executeOpenApp(appTarget, context = {}) {
     const APP_MAP = {
       'task explorer': { id: 'task-planner', label: 'RobOS Task Explorer' },
       'task-explorer': { id: 'task-planner', label: 'RobOS Task Explorer' },
@@ -436,7 +440,8 @@ class SkillsExecutor {
     }
 
     // Launch app process
-    this._launchAppProcess(resolved.id);
+    const voiceUser = context.robosUser || null;
+    this._launchAppProcess(resolved.id, voiceUser);
 
     const actionDone = `Launched application ${resolved.label}`;
     const response = `I have opened ${resolved.label} for you.`;
@@ -446,7 +451,7 @@ class SkillsExecutor {
       skill: 'open-app',
       actionDone,
       response,
-      data: { appId: resolved.id, label: resolved.label }
+      data: { appId: resolved.id, label: resolved.label, robosUser: voiceUser }
     };
   }
 
@@ -783,7 +788,7 @@ class SkillsExecutor {
     return 'electron';
   }
 
-  _launchAppProcess(appId) {
+  _launchAppProcess(appId, robosUser = null) {
     if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') {
       return;
     }
@@ -800,6 +805,13 @@ class SkillsExecutor {
 
       const uid = process.getuid ? process.getuid() : null;
       const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+      if (robosUser && typeof robosUser === 'object') {
+        env.ROBOS_VOICE_USER_ID = String(robosUser.userId || '');
+        env.ROBOS_VOICE_USER_NAME = String(robosUser.name || '');
+        try {
+          env.ROBOS_VOICE_USER_JSON = JSON.stringify(robosUser);
+        } catch {}
+      }
       if (!env.DBUS_SESSION_BUS_ADDRESS && uid !== null) {
         env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${uid}/bus`;
       }
