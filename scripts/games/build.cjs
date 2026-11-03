@@ -6,7 +6,7 @@ const { execFileSync, spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
 const games = require('../../site/_data/games.json');
 const ignored = new Set(['.git', '.godot', 'node_modules', '__pycache__', 'tests', 'reports', 'qa_player', 'build', 'run', 'docs', 'tools']);
-const platforms = { windows: { preset: 'Windows Desktop', suffix: '.exe', label: 'Windows-x64' }, linux: { preset: 'Linux', suffix: '.x86_64', label: 'Linux-x64' }, macos: { preset: 'macOS', suffix: '.zip', label: 'macOS' } };
+const platforms = { windows: { preset: 'Windows Desktop', suffix: '.exe', label: 'Windows-x64' }, linux: { preset: 'Linux', suffix: '.x86_64', label: 'Linux-x64' }, macos: { preset: 'macOS', suffix: '.zip', label: 'macOS' }, web: { preset: 'Web', suffix: '.html', label: 'Web' } };
 function copyNotices(game, payload) {
   const destination = path.join(payload, 'THIRD-PARTY-NOTICES'); fs.mkdirSync(destination, { recursive: true });
   function walk(dir, relative = '') {
@@ -20,7 +20,27 @@ function copyNotices(game, payload) {
   walk(path.join(root, 'games', game.project));
 }
 function preset(platform, id = "standalone") {
+  if (platform === 'web') return `[preset.0]\nname="Standalone"\nplatform="Web"\nrunnable=true\nexport_filter="all_resources"\ninclude_filter="*.json,*.jsonld,*.csv,*.txt"\nscript_export_mode=2\n\n[preset.0.options]\nvariant/extensions_support=false\nvariant/thread_support=false\nvram_texture_compression/for_desktop=true\nvram_texture_compression/for_mobile=false\nhtml/canvas_resize_policy=2\nhtml/focus_canvas_on_start=true\nprogressive_web_app/enabled=false\n`;
   return `[preset.0]\nname="Standalone"\nplatform="${platforms[platform].preset}"\nrunnable=true\nexport_filter="all_resources"\ninclude_filter="*.json,*.jsonld,*.crpgcart,*.csv,*.txt,*.glsl"\nexclude_filter=""\nscript_export_mode=2\n\n[preset.0.options]\nbinary_format/architecture="${platform === 'macos' ? 'universal' : 'x86_64'}"\nbinary_format/embed_pck=false\napplication/bundle_identifier="com.rowbose.${id}"\napplication/export_console_wrapper=0\ncodesign/enable=false\ncodesign/codesign=0\ntexture_format/s3tc_bptc=true\ntexture_format/etc2_astc=false\n`;
+}
+function configureVariant(project, game) {
+  if (!game.cartridge) return;
+  if (!/^[a-z0-9-]+$/.test(game.cartridge)) throw new Error('Invalid standalone cartridge');
+  const config = path.join(project, 'project.godot');
+  let source = fs.readFileSync(config, 'utf8');
+  source = source.replace(/^config\/name=.*$/m, `config/name=${JSON.stringify(game.title)}`);
+  source += `\n[robos]\nstandalone/cartridge=${JSON.stringify(game.cartridge)}\n`;
+  fs.writeFileSync(config, source);
+  const cartridgeDir = path.join(project, 'cartridges');
+  const cartridgePath = path.join(cartridgeDir, `${game.cartridge}.cartridge.json`);
+  const cartridge = fs.readFileSync(cartridgePath, 'utf8');
+  // Keep the shared engine, but distribute only this campaign's cartridge/movies.
+  for (const name of fs.readdirSync(cartridgeDir)) if (name.endsWith('.cartridge.json') && name !== `${game.cartridge}.cartridge.json`) fs.unlinkSync(path.join(cartridgeDir, name));
+  const movieDir = path.join(project, 'assets/movies');
+  for (const name of fs.readdirSync(movieDir)) {
+    const resource = name.replace(/\.import$/, '');
+    if (!cartridge.includes(`res://assets/movies/${resource}`)) fs.unlinkSync(path.join(movieDir, name));
+  }
 }
 function nsisInstaller({ id, game, version, payload, output }) {
   const shortcut = game.title.replace(/[<>:"/\\|?*]/g, '');
@@ -81,6 +101,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   const project = path.join(stage, 'project'), payload = path.join(stage, 'payload');
   fs.mkdirSync(payload);
   fs.cpSync(path.join(root, 'games', game.project), project, { recursive: true, filter: file => !ignored.has(path.basename(file)) && !/\.(?:py|mp4|webm|mkv|log)$/.test(file) });
+  configureVariant(project, game);
   fs.writeFileSync(path.join(project, 'export_presets.cfg'), preset(platform, id).replace('texture_format/etc2_astc=false', `texture_format/etc2_astc=${platform === 'macos'}`));
   const projectConfig = path.join(project, 'project.godot');
   const projectSource = fs.readFileSync(projectConfig, 'utf8');
@@ -105,11 +126,21 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   // Verify a second clean editor start after the bootstrap has flushed imports.
   run(['--headless', '--path', project, '--editor', '--import'], 'bootstrap-import', true);
   run(['--headless', '--path', project, '--editor', '--import'], 'import');
-  const executable = path.join(payload, game.executable + target.suffix);
+  const executable = path.join(payload, platform === 'web' ? 'index.html' : game.executable + target.suffix);
   console.log(`Exporting ${game.title} for ${platform}`);
   run(['--headless', '--path', project, '--export-release', 'Standalone', executable], 'export');
   const archive = path.join(output, `${id}-v${version}-${target.label}.zip`);
-  if (platform === 'macos') {
+  if (platform === 'web') {
+    const files = fs.readdirSync(payload);
+    for (const name of files) if (fs.statSync(path.join(payload, name)).size > 200 * 1024 * 1024) throw new Error(`Web file exceeds itch.io's 200 MB limit: ${name}`);
+    fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
+    copyNotices(game, payload);
+    if (process.platform === 'win32') {
+      const quote = value => "'" + value.replaceAll("'", "''") + "'";
+      if (fs.existsSync(archive)) fs.unlinkSync(archive);
+      execFileSync('powershell.exe', ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory(${quote(payload)}, ${quote(archive)})`], { windowsHide: true });
+    } else execFileSync('zip', ['-q', '-r', archive, '.'], { cwd: payload });
+  } else if (platform === 'macos') {
     if (process.platform === 'darwin') {
       const unpacked = path.join(stage, 'mac-smoke'); fs.mkdirSync(unpacked);
       execFileSync('unzip', ['-q', executable, '-d', unpacked]);
@@ -120,10 +151,11 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
       const smoke = spawnSync(binary, ['--headless', '--quit-after', '180'], { encoding: 'utf8', timeout: 90000 });
       fs.writeFileSync(path.join(stage, 'smoke.log'), (smoke.stdout || '') + (smoke.stderr || ''));
       if (smoke.error || smoke.status !== 0 || /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((smoke.stdout || '') + (smoke.stderr || ''))) throw new Error(`macOS smoke failed: ${stage}/smoke.log`);
+      if (game.cartridge && !(smoke.stdout || '').includes('Plugged in cartridge: ' + JSON.parse(fs.readFileSync(path.join(project, 'cartridges', game.cartridge + '.cartridge.json'))).header.title)) throw new Error('Standalone macOS export did not open its campaign');
     }
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
     copyNotices(game, payload);
-    fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\nExtract this ZIP and open the game app. No Godot editor, Git or RobOS installation is required. This macOS build is unsigned.\nhttps://rowbose.com/games/${id}/\n\nEngine: Godot (MIT), https://godotengine.org/license/\n`);
+    fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\nExtract this ZIP and open the game app. No Godot editor, Git or RobOS installation is required. This macOS build is unsigned.\nhttps://rowbose.com${require('./catalog.cjs').pagePath(id, game)}\n\nEngine: Godot (MIT), https://godotengine.org/license/\n`);
     // Add distribution notices without extracting/repacking the app's executable modes.
     if (process.platform === 'win32') {
       const quote = value => "'" + value.replaceAll("'", "''") + "'";
@@ -137,9 +169,10 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
       const smoke = spawnSync(executable, ['--headless', '--quit-after', '180'], { encoding: 'utf8', timeout: 90000, windowsHide: true, maxBuffer: 16 * 1024 * 1024 });
       fs.writeFileSync(path.join(stage, 'smoke.log'), (smoke.stdout || '') + (smoke.stderr || ''));
       if (smoke.error || smoke.status !== 0 || /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((smoke.stdout || '') + (smoke.stderr || ''))) throw new Error(`Exported game smoke failed: ${stage}/smoke.log`);
+      if (game.cartridge && !(smoke.stdout || '').includes('Plugged in cartridge: ' + JSON.parse(fs.readFileSync(path.join(project, 'cartridges', game.cartridge + '.cartridge.json'))).header.title)) throw new Error('Standalone export did not open its campaign');
     }
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
-    fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\n${platform === 'windows' ? `Extract this ZIP, then double-click ${game.executable}.exe.` : `Extract this ZIP, then run ./${game.executable}.x86_64 (mark it executable if needed).`}\nGodot, Git and RobOS are not required.\nhttps://rowbose.com/games/${id}/\n\nEngine: Godot ${require('./setup.cjs').VERSION} (MIT), https://godotengine.org/license/\nThird-party game notices are included in THIRD-PARTY-NOTICES.\n`);
+    fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\n${platform === 'windows' ? `Extract this ZIP, then double-click ${game.executable}.exe.` : `Extract this ZIP, then run ./${game.executable}.x86_64 (mark it executable if needed).`}\nGodot, Git and RobOS are not required.\nhttps://rowbose.com${require('./catalog.cjs').pagePath(id, game)}\n\nEngine: Godot ${require('./setup.cjs').VERSION} (MIT), https://godotengine.org/license/\nThird-party game notices are included in THIRD-PARTY-NOTICES.\n`);
     copyNotices(game, payload);
     if (platform === 'windows' && nsis) {
       const config = path.join(stage, 'installer.nsi');
@@ -160,5 +193,5 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   console.log(`Built: ${archive}`);
   return { archive, stage, payload };
 }
-module.exports = { build, preset, nsisInstaller, platforms };
+module.exports = { build, preset, nsisInstaller, platforms, configureVariant };
 if (require.main === module) build({ id: process.argv[2], platform: process.argv[3] || 'windows' }).catch(error => { console.error(error); process.exitCode = 1; });

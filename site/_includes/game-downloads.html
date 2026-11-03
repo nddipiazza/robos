@@ -1,5 +1,6 @@
 {% assign game_download = site.data.games[page.game_id] %}
-{% assign game_tag = site.data.release.version | prepend: 'games-v' %}
+{% assign game_prefix = game_download.release_prefix | default: 'games-v' %}
+{% assign game_tag = game_prefix | append: site.data.release.version %}
 {% assign game_base = 'https://github.com/nddipiazza/robos/releases/download/' | append: game_tag | append: '/' | append: page.game_id | append: '-v' | append: site.data.release.version %}
 <section class="g-sec game-downloads" id="download" aria-labelledby="download-heading">
   <div class="wrap"><div class="panel-g">

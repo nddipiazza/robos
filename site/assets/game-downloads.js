@@ -7,7 +7,7 @@
   var suffix = { windows: 'Windows-Setup.exe', linux: 'Linux-x64.zip', macos: 'macOS.zip' };
   var labels = { windows: 'Windows', linux: 'Linux', macos: 'macOS' };
   var messages = { windows: 'Open the installer, then leave “Play” checked to start. Launch again from your desktop or Start menu.', linux: 'Extract the ZIP, mark the game executable if needed, then open it.', macos: 'Extract the ZIP and open the game app. This download is unsigned.', mobile: 'These games run on a Windows, Linux or macOS computer. Choose a desktop download below.', unknown: 'Choose the download for your computer below.' };
-  var tag = 'games-v' + buttons[0].dataset.gameVersion;
+  var tag = buttons[0].dataset.gameRelease || 'games-v' + buttons[0].dataset.gameVersion;
   buttons.forEach(function (button) {
     if (!suffix[platform]) { button.href = '#download'; button.textContent = 'Choose a desktop download'; return; }
     var asset = button.dataset.gameDownload + '-v' + button.dataset.gameVersion + '-' + suffix[platform];

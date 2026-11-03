@@ -1,0 +1,103 @@
+name: Midterms 2026 standalone and browser game
+on:
+  push:
+    branches: [main]
+    paths: ['games/tabletop-rpg/**', 'scripts/games/**', 'site/_data/games.json', 'VERSION', '.github/workflows/midterms-release.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GAME_RELEASE_PREFIX: midterms-2026-v
+concurrency:
+  group: midterms-game-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      needed: ${{ steps.check.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check existing Midterms release
+        id: check
+        run: node scripts/games/check-release.cjs
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.needed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-24.04
+            platform: linux
+          - os: macos-15-intel
+            platform: macos
+          - os: ubuntu-24.04
+            platform: web
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify distribution contracts
+        run: node --test scripts/games/*.test.cjs
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/robos-tools/godot-4.7.2
+          key: game-godot-4.7.2-${{ runner.os }}
+      - name: Install verified Godot engine and templates
+        id: engine
+        run: node scripts/games/setup.cjs
+      - name: Install Windows installer compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress
+          "NSIS_BIN=C:/Program Files (x86)/NSIS/makensis.exe" >> $env:GITHUB_ENV
+      - name: Export Midterms 2026 and smoke test native exports
+        env:
+          GODOT_BIN: ${{ steps.engine.outputs.godot }}
+          GAME_PLATFORM: ${{ matrix.platform }}
+        run: node scripts/games/build-all.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: standalone-midterms-${{ matrix.platform }}
+          compression-level: 0
+          path: |
+            release/games/*.exe
+            release/games/*.zip
+            release/games/*-build.json
+            release/games/*-SHA256SUMS.txt
+      - name: Keep export logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: midterms-logs-${{ matrix.platform }}
+          include-hidden-files: true
+          path: release/games/.build-*/*.log
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: standalone-midterms-*
+          path: release/games
+          merge-multiple: true
+      - name: Publish verified native and browser downloads
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/games/publish.cjs

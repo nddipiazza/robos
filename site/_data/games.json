@@ -24,6 +24,19 @@
     "ai_playthrough_url": "https://rowbose.com/games/robos-rts/#frontier",
     "ai_playthrough_label": "Watch the Starfall Command automated AI match"
   },
+  "midterms-2026": {
+    "title": "Midterms 2026: Battle for the Hill",
+    "project": "tabletop-rpg",
+    "executable": "Midterms2026",
+    "page_path": "/games/tabletop-rpg/midterms-2026/",
+    "release_prefix": "midterms-2026-v",
+    "cartridge": "election-2026-quest-1",
+    "web": true,
+    "kgraph_ref": "urn:robos:tabletop:map:election-2026-quest-1",
+    "kgraph_scope": "its Capitol dungeon, heroes, monsters, quests, combat rules and tests",
+    "ai_playthrough_url": "https://www.youtube.com/watch?v=7HkZARyvqmM",
+    "ai_playthrough_label": "Watch the Midterms 2026 AI playthrough"
+  },
   "quest-warrior-dragon": {
     "title": "Quest: Warrior Dragon",
     "project": "quest-warrior-dragon",

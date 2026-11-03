@@ -8,19 +8,20 @@ const root = path.resolve(__dirname, '../..');
 async function sha256(file) { const hash = crypto.createHash('sha256'); for await (const chunk of fs.createReadStream(file)) hash.update(chunk); return hash.digest('hex'); }
 async function publish() {
   if (!process.env.GITHUB_TOKEN) throw new Error('Publishing needs GITHUB_TOKEN');
-  const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim(), tag = `games-v${version}`;
-  const directory = path.join(root, 'release/games'), games = require('../../site/_data/games.json');
+  const prefix = process.env.GAME_RELEASE_PREFIX || 'games-v';
+  const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim(), tag = `${prefix}${version}`;
+  const directory = path.join(root, 'release/games'), games = require('./catalog.cjs').releaseGames(prefix);
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-  const expected = Object.keys(games).flatMap(id => ['Windows-Setup.exe', 'Windows-x64.zip', 'Linux-x64.zip', 'macOS.zip'].map(suffix => `${id}-v${version}-${suffix}`));
+  const expected = Object.entries(games).flatMap(([id, game]) => ['Windows-Setup.exe', 'Windows-x64.zip', 'Linux-x64.zip', 'macOS.zip', ...(game.web ? ['Web.zip'] : [])].map(suffix => `${id}-v${version}-${suffix}`));
   for (const name of expected) if (!fs.existsSync(path.join(directory, name)) || !fs.statSync(path.join(directory, name)).size) throw new Error(`Missing game build: ${name}`);
-  for (const id of Object.keys(games)) for (const platform of ['windows', 'linux', 'macos']) {
+  for (const [id, game] of Object.entries(games)) for (const platform of ['windows', 'linux', 'macos', ...(game.web ? ['web'] : [])]) {
     const proof = JSON.parse(fs.readFileSync(path.join(directory, `${id}-${platform}-build.json`), 'utf8'));
     if (proof.revision !== revision || proof.version !== version || proof.id !== id || proof.platform !== platform) throw new Error(`Wrong build provenance: ${id}/${platform}`);
   }
   const sums = [];
   for (const name of expected) sums.push(`${await sha256(path.join(directory, name))}  ${name}`);
   fs.writeFileSync(path.join(directory, 'SHA256SUMS.txt'), sums.join('\n') + '\n');
-  const files = [...expected, 'SHA256SUMS.txt', ...Object.keys(games).flatMap(id => ['windows', 'linux', 'macos'].map(platform => `${id}-${platform}-build.json`))];
+  const files = [...expected, 'SHA256SUMS.txt', ...Object.entries(games).flatMap(([id, game]) => ['windows', 'linux', 'macos', ...(game.web ? ['web'] : [])].map(platform => `${id}-${platform}-build.json`))];
   const hashes = new Map(); for (const name of files) hashes.set(name, await sha256(path.join(directory, name)));
   const request = client(process.env.GITHUB_TOKEN), api = 'https://api.github.com/repos/nddipiazza/robos';
   let release = (await request(`${api}/releases/tags/${tag}`, { allow404: true })).data;
@@ -36,7 +37,7 @@ async function publish() {
     console.log(`Uploaded ${name}`);
   }
   const notes = ['Free standalone game downloads. No Godot editor, Git or RobOS installation required.', '',
-    ...Object.entries(games).map(([id, game]) => `- [${game.title}](https://rowbose.com/games/${id}/#download)`), '',
+    ...Object.entries(games).map(([id, game]) => `- [${game.title}](https://rowbose.com${require('./catalog.cjs').pagePath(id, game)}#download)`), '',
     'Windows: run the Setup EXE and leave Play checked, or extract the portable ZIP. Linux: extract the ZIP and run the game binary. macOS: extract the universal app ZIP (unsigned).', '',
     'These are development builds. SHA256SUMS.txt and per-platform build provenance are included.'].join('\n');
   await request(`${api}/releases/${release.id}`, { method: 'PATCH', json: { draft: false, prerelease: true, body: notes } });

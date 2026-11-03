@@ -21,6 +21,13 @@ keywords: "RobOS Tabletop RPG, HeroQuest dungeon crawler, Godot 4 tabletop game,
 {% include game-downloads.html %}
 {% include game-kgraph.html %}
 
+<section class="g-sec" id="midterms-2026"><div class="wrap"><div class="panel-g">
+  <p class="eyebrow">Standalone campaign</p>
+  <h2 class="h2">Midterms 2026: Battle for the Hill</h2>
+  <p class="sec-p">The election campaign now has its own game page, browser edition and standalone downloads. Open directly into the satirical Capitol dungeon adventure.</p>
+  <a class="btn" href="{{ '/games/tabletop-rpg/midterms-2026/' | relative_url }}">Play Midterms 2026</a>
+</div></div></section>
+
 <section class="g-sec">
   <div class="wrap">
     <div class="panel-g">
