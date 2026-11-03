@@ -45,7 +45,8 @@ Kinds: `world-map`, `area-map`, `battle-backdrop`, `class-sprite`, `menu-screen`
 ## Rules
 
 - Generating sends the reference images to Google through `agy`. Only run it on files the person gave you for this purpose.
-- This art derives from a commercial game. Keep the output private unless the person says to publish it.
+- This art derives from a commercial game. Keep the output private unless the person says to publish it, and then publish only with `jrpg-parser publish`.
+- Never publish or commit what the person downloaded: source files, working folders, or anything quoted from them.
 - Do not use `--dangerously-skip-permissions`. Headless `agy` can read files and generate images without it.
 
 ## Validation

@@ -22,6 +22,9 @@ Commands:
        [--only id,id]             Redo these images, by the ids in the manifest
        [--refit]                  Redo the shrink step from the raw images, without the model
   coverage --out <dir>          What is covered and what to collect next
+  publish --out <dir> --to <dir> [--kinds a,b|none]
+                                Make the only copy meant to be shared: parsed facts and generated
+                                images, with no source files, file names or quotes
 
 Image kinds: ${Object.keys(TARGETS).join(', ')} (default: ${DEFAULT_KINDS.join(', ')})
 `;
@@ -98,6 +101,11 @@ async function main() {
       console.log(`Generated ${res.generated} of ${res.planned} images in ${path.join(out, 'assets', 'generated')}`);
       for (const f of res.failures) console.log(`  failed ${f.id}: ${f.error}`);
       if (res.failures.length) process.exitCode = 1;
+      return;
+    }
+    case 'publish': {
+      const res = pipeline.publish(need(flags, 'out'), need(flags, 'to'), { kinds });
+      console.log(`Wrote ${res.nodeCount} nodes and ${res.images} images to ${flags.to}. Nothing was pushed anywhere.`);
       return;
     }
     case 'coverage':

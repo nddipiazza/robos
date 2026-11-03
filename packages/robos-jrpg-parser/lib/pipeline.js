@@ -11,6 +11,7 @@ const { readCharts, crossCheckEquipment, applySpellNames, isChartTable } = requi
 const { extractProse, consolidate, linkImages, mergeRecord, extractScreenLayout, classifyImage } = require('./extract');
 const { generateArt, refitArt, planJobs } = require('./art');
 const { writeKgraph } = require('./kgraph');
+const { publish } = require('./publish');
 const { slug } = require('./slug');
 
 const LAYOUT_ROLES = ['menu-screen', 'equip-screen', 'class-select', 'shop-screen', 'battle-screen'];
@@ -155,4 +156,4 @@ function plan(out, opts = {}) {
   return planJobs(readParsed(out), opts);
 }
 
-module.exports = { parse, art, plan, refit: refitArt, readParsed, scan };
+module.exports = { parse, art, plan, refit: refitArt, publish, readParsed, scan };
