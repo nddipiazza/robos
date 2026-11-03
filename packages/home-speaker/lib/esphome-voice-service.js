@@ -943,8 +943,19 @@ class EspHomeVoiceService extends EventEmitter {
     this.listenerState.active = true;
     this.listenerState.status = 'connecting';
     this.AutoReply = options.autoReply !== false;
+    this.onAckAudio = options.onAckAudio || null;
     this.onReplyAudio = options.onReplyAudio || null;
     this.emit('listener-update', this.getListenerStatus());
+
+    // Pre-warm Whisper STT and WavLM-SV Speaker Identity models in RAM so utterances have 0ms cold-start
+    if (process.env.ROBOS_TEST !== '1') {
+      setTimeout(() => {
+        this._ensureWhisperTranscriber().catch(() => {});
+        if (this.voiceIdentityService && typeof this.voiceIdentityService._getNeuralExtractor === 'function') {
+          this.voiceIdentityService._getNeuralExtractor().catch(() => {});
+        }
+      }, 200);
+    }
 
     return new Promise((resolve) => {
       const socket = new net.Socket();
@@ -1112,7 +1123,7 @@ class EspHomeVoiceService extends EventEmitter {
             if (this._silenceTimer) clearTimeout(this._silenceTimer);
             this._silenceTimer = setTimeout(() => {
               this._finalizeCapturedUtterance(socket, ip, port);
-            }, 1700);
+            }, 1150);
           } else if (totalBytes > 256000) {
             // Cap at ~8 seconds max per utterance
             this._finalizeCapturedUtterance(socket, ip, port);
@@ -1189,10 +1200,18 @@ class EspHomeVoiceService extends EventEmitter {
     const pcmBuffer = Buffer.concat(this._currentPcmChunks);
     this._currentPcmChunks = [];
 
-    // Notify device that VAD & STT capture ended
+    // Notify device that VAD & STT capture ended immediately so mic closes cleanly
     this._sendVoiceEvent(socket, 12); // VOICE_ASSISTANT_STT_VAD_END
+    this._sendVoiceEvent(socket, 2);  // VOICE_ASSISTANT_RUN_END (releases speaker player for instant ack!)
     this.listenerState.status = 'transcribing';
     this.emit('listener-update', this.getListenerStatus());
+
+    // Switch LED ring to purple "thinking/processing" glow and play immediate spoken acknowledgement ("Got it, please wait.")
+    this.setLedRing(ip, { state: true, brightness: 0.78, hexColor: '#a371f7', port }).catch(() => {});
+    const ackStartMs = Date.now();
+    if (this.AutoReply && typeof this.onAckAudio === 'function') {
+      Promise.resolve(this.onAckAudio(ip)).catch(() => {});
+    }
 
     const wavPath = this._writePcm16kToWav(pcmBuffer);
     let transcript = '';
@@ -1292,6 +1311,8 @@ class EspHomeVoiceService extends EventEmitter {
         pending.resolve({ ...enrollRes, transcript, wavPath, entry });
       }
       if (onboardingReply && typeof this.onReplyAudio === 'function') {
+        const waitAck = Math.max(0, 1650 - (Date.now() - ackStartMs));
+        if (waitAck > 0) await new Promise((r) => setTimeout(r, waitAck));
         try { await this.onReplyAudio(ip, onboardingReply); } catch {}
       }
       return;
@@ -1343,6 +1364,8 @@ class EspHomeVoiceService extends EventEmitter {
     this.emit('incoming-utterance', entry);
 
     if (replyText && typeof this.onReplyAudio === 'function') {
+      const waitAck = Math.max(0, 1650 - (Date.now() - ackStartMs));
+      if (waitAck > 0) await new Promise((r) => setTimeout(r, waitAck));
       try {
         await this.onReplyAudio(ip, replyText);
       } catch {}
@@ -1396,14 +1419,7 @@ class EspHomeVoiceService extends EventEmitter {
     });
   }
 
-  async transcribePcm16kBuffer(pcmBuffer) {
-    const sampleCount = Math.floor(pcmBuffer.length / 2);
-    if (sampleCount < 1600) return '';
-    const float32 = new Float32Array(sampleCount);
-    for (let i = 0; i < sampleCount; i++) {
-      float32[i] = pcmBuffer.readInt16LE(i * 2) / 32768.0;
-    }
-
+  async _ensureWhisperTranscriber() {
     if (!this._whisperTranscriberPromise) {
       this._whisperTranscriberPromise = (async () => {
         try {
@@ -1422,8 +1438,18 @@ class EspHomeVoiceService extends EventEmitter {
         }
       })();
     }
+    return this._whisperTranscriberPromise;
+  }
 
-    const transcriber = await this._whisperTranscriberPromise;
+  async transcribePcm16kBuffer(pcmBuffer) {
+    const sampleCount = Math.floor(pcmBuffer.length / 2);
+    if (sampleCount < 1600) return '';
+    const float32 = new Float32Array(sampleCount);
+    for (let i = 0; i < sampleCount; i++) {
+      float32[i] = pcmBuffer.readInt16LE(i * 2) / 32768.0;
+    }
+
+    const transcriber = await this._ensureWhisperTranscriber();
     if (!transcriber) return '';
     const result = await transcriber(float32, { chunk_length_s: 15, stride_length_s: 3 });
     return String(result?.text || '')
