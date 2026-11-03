@@ -2,22 +2,23 @@
 'use strict';
 
 /**
- * robos-tv — CLI tool to control Smart TVs (65" TCL Roku TV, Android TV, LG webOS, Samsung Tizen) in RobOS
+ * robos-tv — CLI tool to control Smart TVs (Roku TV, Android TV, LG webOS, Samsung Tizen) in RobOS
  *
  * Usage:
- *   robos-tv status [--ip 192.168.1.15]
- *   robos-tv check [--ip 192.168.1.15]
- *   robos-tv on [--ip 192.168.1.15]
- *   robos-tv off [--ip 192.168.1.15]
- *   robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute> [--ip 192.168.1.15]
- *   robos-tv launch <appId|ps5|youtube|netflix|plex> [--ip 192.168.1.15]
+ *   robos-tv status [--ip <tv-ip>]
+ *   robos-tv check [--ip <tv-ip>]
+ *   robos-tv on [--ip <tv-ip>]
+ *   robos-tv off [--ip <tv-ip>]
+ *   robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute> [--ip <tv-ip>]
+ *   robos-tv launch <appId|ps5|youtube|netflix|plex> [--ip <tv-ip>]
  *   robos-tv list
+ *
+ * Without --ip, the TV comes from ROBOS_TV_IP, then the first Roku TV saved in RobOS Smart TV.
+ * The Tablo commands use --ip, then ROBOS_TABLO_IP, then the Tablo address saved in RobOS Smart TV.
  */
 
 const http = require('node:http');
 const { createTvEngine, TV_PLATFORMS } = require('../robos-lib/tv-engine');
-
-const DEFAULT_ROKU_IP = '192.168.1.15';
 
 const ROKU_SHORTCUT_APPS = {
   ps5: 'tvinput.hdmi2',
@@ -74,24 +75,36 @@ function printRokuBlockedHelp(ip, ecpMode, httpStatus) {
   console.error('');
 }
 
+function requireIp(ip, message) {
+  if (ip) return ip;
+  console.error(message);
+  process.exit(1);
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const cmd = (args[0] || 'status').toLowerCase();
   const ipIdx = args.indexOf('--ip');
-  const ip = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : DEFAULT_ROKU_IP;
+  const ipArg = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '';
 
   const engine = createTvEngine();
+  const saved = engine.getSavedDevices();
+  const defaultRokuIp = process.env.ROBOS_TV_IP || saved.tvs.find((tv) => tv.platformId === 'roku-os')?.ip || '';
+  const rokuIp = () =>
+    requireIp(ipArg || defaultRokuIp, 'No Roku TV set up. Pass --ip <tv-ip>, set ROBOS_TV_IP, or pair a TV in RobOS Smart TV.');
+  const tabloAddress = () =>
+    requireIp(ipArg || saved.tabloIp, 'No Tablo DVR set up. Pass --ip <tablo-ip>, set ROBOS_TABLO_IP, or save it in RobOS Smart TV.');
 
   if (cmd === 'list') {
-    const ov = engine.getOverview();
-    for (const tv of ov.tvs) {
+    if (!saved.tvs.length) console.log('No TVs paired yet.');
+    for (const tv of saved.tvs) {
       console.log(`${tv.name} — ${tv.ip} (${tv.model})`);
     }
     return;
   }
 
   if (cmd === 'tablo' || cmd === 'recordings') {
-    const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';
+    const tabloIp = tabloAddress();
     const ov = await engine.getTabloOverview({ ip: tabloIp });
     if (!ov.ok) {
       console.error(`Could not connect to Tablo at ${tabloIp}: ${ov.error}`);
@@ -110,7 +123,7 @@ async function main() {
   }
 
   if (cmd === 'cast-tablo' || cmd === 'roku-tablo') {
-    const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';
+    const tabloIp = tabloAddress();
     const res = await engine.castTabloToTv({ ip: tabloIp });
     console.log(JSON.stringify(res, null, 2));
     return;
@@ -118,7 +131,7 @@ async function main() {
 
   if (cmd === 'watch') {
     const query = args[1] || '';
-    const tabloIp = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : '192.168.1.55';
+    const tabloIp = tabloAddress();
     const ov = await engine.getTabloOverview({ ip: tabloIp });
     const match =
       ov.recordings.find((r) => String(r.id) === query || r.path === query || r.fullTitle.toLowerCase().includes(query.toLowerCase())) ||
@@ -133,6 +146,7 @@ async function main() {
   }
 
   if (cmd === 'status' || cmd === 'check') {
+    const ip = rokuIp();
     const st = await engine.queryRokuPowerMode(ip);
     console.log(JSON.stringify(st, null, 2));
     if (st.ok && !st.ecpAllowed) {
@@ -144,6 +158,7 @@ async function main() {
 
   if (cmd === 'on' || cmd === 'poweron' || cmd === 'off' || cmd === 'poweroff') {
     const action = cmd.includes('off') ? 'off' : 'on';
+    const ip = rokuIp();
     const info = await engine.queryRokuPowerMode(ip);
     if (info.ok && !info.ecpAllowed) {
       printRokuBlockedHelp(ip, info.ecpMode, 403);
@@ -161,6 +176,7 @@ async function main() {
 
   if (cmd === 'key') {
     const keyName = args[1] || 'Home';
+    const ip = rokuIp();
     const info = await engine.queryRokuPowerMode(ip);
     if (info.ok && !info.ecpAllowed) {
       printRokuBlockedHelp(ip, info.ecpMode, 403);
@@ -178,6 +194,7 @@ async function main() {
   if (cmd === 'launch') {
     const rawApp = (args[1] || 'Home').toLowerCase();
     const appId = ROKU_SHORTCUT_APPS[rawApp] || args[1];
+    const ip = rokuIp();
     const info = await engine.queryRokuPowerMode(ip);
     if (info.ok && !info.ecpAllowed) {
       printRokuBlockedHelp(ip, info.ecpMode, 403);
@@ -193,15 +210,17 @@ async function main() {
   }
 
   console.log(`Usage:
-  robos-tv on [--ip 192.168.1.15]
-  robos-tv off [--ip 192.168.1.15]
-  robos-tv status [--ip 192.168.1.15]
-  robos-tv check [--ip 192.168.1.15]
+  robos-tv on [--ip <tv-ip>]
+  robos-tv off [--ip <tv-ip>]
+  robos-tv status [--ip <tv-ip>]
+  robos-tv check [--ip <tv-ip>]
   robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute>
   robos-tv launch <ps5|youtube|netflix|plex|disney|hulu|max|spotify|appId>
   robos-tv list
-  robos-tv recordings [--ip 192.168.1.55]
-  robos-tv watch <recordingId|title> [--ip 192.168.1.55]`);
+  robos-tv recordings [--ip <tablo-ip>]
+  robos-tv watch <recordingId|title> [--ip <tablo-ip>]
+
+Without --ip, the TV comes from ROBOS_TV_IP, then the first Roku TV saved in RobOS Smart TV.`);
 }
 
 main().catch((err) => {

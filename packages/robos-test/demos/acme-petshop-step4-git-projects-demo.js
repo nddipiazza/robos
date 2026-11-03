@@ -7,8 +7,8 @@ const { runDemo } = require('../lib/demo-runner');
 const { evalJS } = require('../lib/snapshot');
 
 const SLUG = 'acme-petshop-step4-git-projects';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424`;
 
 const AI_REPOS_PROMPT = `Scaffold and configure all 6 Acme Petshop polyglot repositories from the project graph:
 - petstore-web (React 18 / Vite frontend client)
@@ -307,7 +307,7 @@ async function main() {
     env: { ROBOS_DEMO_SHOW: '1' },
     script: SCRIPT,
     prelaunch: async (app) => {
-      seedAcmeProjects(app.sandboxHome || process.env.HOME || '/home/ndipiazza');
+      seedAcmeProjects(app.sandboxHome || process.env.HOME || require('os').homedir());
       try {
         await evalJS(app.port, `window.location.reload()`);
       } catch (_) {}

@@ -275,7 +275,8 @@ components:
 class BulkRepoImporter {
   constructor(options = {}) {
     this.defaultTeam = options.defaultTeam || 'urn:robos:team:core-platform';
-    this.defaultProject = options.defaultProject || 'urn:robos:project:acme-petshop';
+    // Optional: a repository links to a project only when the caller names one.
+    this.defaultProject = options.defaultProject || null;
   }
 
   /**
@@ -360,7 +361,6 @@ class BulkRepoImporter {
             'robos:ipcBridge': true,
             'robos:desktopCategory': 'Development',
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.desktopApps++;
           break;
@@ -388,7 +388,6 @@ class BulkRepoImporter {
               { flag: '--output, -o', description: 'Output format (json, yaml, text)' },
             ],
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.consoleApps++;
           break;
@@ -406,7 +405,6 @@ class BulkRepoImporter {
             'robos:bundleId': `com.robos.${parsed.slug.replace(/-/g, '')}`,
             'robos:minOsVersion': { ios: '16.0', android: '13.0' },
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.mobileApps++;
           break;
@@ -425,7 +423,6 @@ class BulkRepoImporter {
             'robos:outputTopics': [`events.${parsed.slug}.curated`, `events.${parsed.slug}.metrics`],
             'robos:schedule': 'Continuous Event-Driven',
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.dataPipelines++;
           break;
@@ -441,7 +438,6 @@ class BulkRepoImporter {
             'robos:technology': technology,
             'robos:packageType': 'npm / maven',
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           if (contractId) appNode['robos:definesContract'] = contractId;
           summary.libraries++;
@@ -467,7 +463,6 @@ class BulkRepoImporter {
             'robos:devServerPort': 3000,
             'schema:browserRequirements': 'Requires HTML5 and modern evergreen browser with JavaScript enabled.',
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.frontendApps++;
           break;
@@ -492,7 +487,6 @@ class BulkRepoImporter {
             'schema:gamePlatform': 'PC',
             'schema:playMode': 'SinglePlayer',
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.pcGames++;
           break;
@@ -516,7 +510,6 @@ class BulkRepoImporter {
             'schema:gamePlatform': ['iOS', 'Android'],
             'schema:playMode': 'SinglePlayer',
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
           };
           summary.mobileGames++;
           break;
@@ -533,7 +526,6 @@ class BulkRepoImporter {
             'robos:technology': technology,
             'robos:implementsContract': contractId,
             'robos:ownerTeam': this.defaultTeam,
-            'robos:hasProject': this.defaultProject,
             'robos:ports': [8080],
             'robos:healthCheckUrl': '/healthz',
           };
@@ -543,6 +535,7 @@ class BulkRepoImporter {
       }
 
       if (appNode) {
+        if (this.defaultProject) appNode['robos:hasProject'] = this.defaultProject;
         if (parsed.org && parsed.org !== 'acme-org') {
           appNode['robos:inOrganization'] = `urn:robos:git-org:${parsed.org.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}`;
         }

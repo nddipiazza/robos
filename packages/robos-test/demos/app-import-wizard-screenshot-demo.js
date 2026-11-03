@@ -7,10 +7,10 @@ const { evalJS } = require('../lib/snapshot');
 const scenarios = require('../lib/scenarios');
 
 const SLUG = 'app-import-wizard';
-const HOME_DIR = process.env.HOME || '/home/ndipiazza';
+const HOME_DIR = process.env.HOME || require('os').homedir();
 const PERSIST_DIR = path.join(HOME_DIR, '.robos', 'development', 'walkthroughs', SLUG);
 const DOCS_DIR = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce';
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce`;
 const SAMPLE_IMPORT_DIR = path.resolve(__dirname, '../../../packages/rest-client');
 
 function sleep(ms) {

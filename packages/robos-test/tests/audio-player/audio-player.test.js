@@ -51,7 +51,7 @@ describe('RobOS Audio Player Tests', () => {
     });
 
     it('desktop shortcut exists in ~/Desktop/audio-player.desktop', () => {
-      const desktopShortcut = path.join(process.env.HOME || '/home/ndipiazza', 'Desktop', 'audio-player.desktop');
+      const desktopShortcut = path.join(process.env.HOME || require('os').homedir(), 'Desktop', 'audio-player.desktop');
       assert.ok(fs.existsSync(desktopShortcut), 'Desktop shortcut should exist on ~/Desktop');
       const content = fs.readFileSync(desktopShortcut, 'utf8');
       assert.ok(content.includes('Name=RobOS Audio Player'), 'Shortcut should have correct Name');

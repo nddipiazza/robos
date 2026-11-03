@@ -16,7 +16,7 @@ let mainWindow;
 let activeBranch = 'main';
 let prismRunning = false;
 
-const REAL_HOME = process.env.REAL_HOME || process.env.ROBOS_HOST_HOME || process.env.HOME || '/home/ndipiazza';
+const REAL_HOME = process.env.REAL_HOME || process.env.ROBOS_HOST_HOME || process.env.HOME || require('os').homedir();
 const PROJECT_DIR = path.join(REAL_HOME, '.robos', 'projects', 'acme-petshop-platform');
 const CONTRACTS_DIR = path.join(PROJECT_DIR, 'contracts');
 

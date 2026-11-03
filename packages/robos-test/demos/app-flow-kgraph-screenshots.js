@@ -7,10 +7,10 @@ const { evalJS } = require('../lib/snapshot');
 const scenarios = require('../lib/scenarios');
 
 const SLUG = 'app-development-flow';
-const HOME_DIR = process.env.HOME || '/home/ndipiazza';
+const HOME_DIR = process.env.HOME || require('os').homedir();
 const PERSIST_DIR = path.join(HOME_DIR, '.robos', 'development', 'walkthroughs', SLUG);
 const DOCS_DIR = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/04644cae-489f-4a1d-a844-9b01a6b5861e';
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/04644cae-489f-4a1d-a844-9b01a6b5861e`;
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));

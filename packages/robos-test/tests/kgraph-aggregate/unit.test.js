@@ -6,7 +6,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { GraphWorkspace, diffNodes } = require('../../../robos-graph/lib/graph-workspace');
+const { GraphWorkspace, diffNodes, validateDocument } = require('../../../robos-graph/lib/graph-workspace');
 
 const root = path.resolve(__dirname, '../../../../.robos');
 const regenerate = 'Regenerate with: node packages/crpg-builder/scripts/sync-aggregate.js';
@@ -31,4 +31,9 @@ test('the aggregate @graph mirror matches robos:nodes', () => {
 
 test('a strict workspace read of the repository graph succeeds', () => {
   assert.equal(new GraphWorkspace(root).read()['robos:nodes'].length, packageNodes.length);
+});
+
+// `kgraph apply` refuses a graph that fails this, whatever the change it is applying.
+test('the repository graph conforms to the validator', () => {
+  assert.deepEqual(validateDocument(new GraphWorkspace(root).read()).errors, []);
 });

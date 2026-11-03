@@ -13,10 +13,10 @@ const { evalJS, maximizeWindow } = require('../lib/snapshot');
 const scenarios = require('../lib/scenarios');
 
 const SLUG = 'kgraph-parse-portal';
-const HOME_DIR = process.env.HOME || '/home/ndipiazza';
+const HOME_DIR = process.env.HOME || require('os').homedir();
 const PERSIST_DIR = path.join(HOME_DIR, '.robos', 'development', 'walkthroughs', SLUG);
 const DOCS_DIR = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/679fbb6f-c272-4386-980d-3e5538e429f7';
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/679fbb6f-c272-4386-980d-3e5538e429f7`;
 const DISPLAY_NUM = process.env.XVFB_DISPLAY || ':105';
 const RESOLUTION = '1920x1080';
 
@@ -109,7 +109,7 @@ async function main() {
     // 1. First crawl the portal directory to populate all indexed nodes
     console.log(`Populating crawl nodes...`);
     await evalJS(app.port, `
-      document.getElementById('crawl-path').value = '/home/ndipiazza/source/robos/packages/kgraph-parse-portal';
+      document.getElementById('crawl-path').value = '${require('path').resolve(__dirname, '../../..')}/packages/kgraph-parse-portal';
       document.getElementById('btn-crawl').click();
     `);
     await sleep(2000);

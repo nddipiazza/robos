@@ -37,9 +37,9 @@ function launchRealApps() {
   const display = process.env.DISPLAY || ':99';
   const env = { ...process.env, DISPLAY: display, GDK_BACKEND: 'x11' };
 
-  const codeBin = fs.existsSync('/home/ndipiazza/.local/share/code/code')
-    ? '/home/ndipiazza/.local/share/code/code'
-    : (fs.existsSync('/home/ndipiazza/.local/share/code/bin/code') ? '/home/ndipiazza/.local/share/code/bin/code' : 'code');
+  const codeBin = fs.existsSync(`${require('os').homedir()}/.local/share/code/code`)
+    ? `${require('os').homedir()}/.local/share/code/code`
+    : (fs.existsSync(`${require('os').homedir()}/.local/share/code/bin/code`) ? `${require('os').homedir()}/.local/share/code/bin/code` : 'code');
 
   // 1. Launch VS Code
   const p1 = spawn(codeBin, [

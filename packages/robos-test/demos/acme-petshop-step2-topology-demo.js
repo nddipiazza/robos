@@ -6,8 +6,8 @@ const scenarios = require('../lib/scenarios');
 const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'acme-petshop-step2-topology';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424`;
 
 const TOPOLOGY_PROMPT = `Synthesizing architecture for Acme Petshop Platform:
 - Java 21 Spring Boot 3 REST API microservice (petstore-api)

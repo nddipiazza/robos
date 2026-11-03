@@ -312,7 +312,7 @@ describe('Tablo 4th Gen OTA DVR integration', () => {
     assert.strictEqual(snap.items[0].pkgThumbUri, 'pkg:/images/tablo-186023.jpg');
     assert.ok(snap.items[0].artUrl.includes('/api/tablo/image/186023.jpg'));
 
-    const rokuPkg = engine.buildTvPackage({ platformId: 'roku-os', tvId: 'tv-livingroom-tcl-roku', tvIp: '192.168.1.15' });
+    const rokuPkg = engine.buildTvPackage({ platformId: 'roku-os', tvId: 'tv-livingroom-tcl-roku', tvIp: '192.0.2.15' });
     assert.strictEqual(rokuPkg.ok, true);
     const mainSceneXml = fs.readFileSync(path.join(rokuPkg.targetDir, 'components/MainScene.xml'), 'utf8');
     const mainSceneBrs = fs.readFileSync(path.join(rokuPkg.targetDir, 'components/MainScene.brs'), 'utf8');

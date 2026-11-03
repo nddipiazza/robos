@@ -67,7 +67,7 @@
 
     <!-- Navigation Tabs -->
     <nav class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="tab-tablo" role="tab">📡 Tablo DVR &amp; Recordings (192.168.1.55)</button>
+      <button type="button" class="tab-btn active" data-tab="tab-tablo" role="tab">📡 Tablo DVR &amp; Recordings</button>
       <button type="button" class="tab-btn" data-tab="tab-devices" role="tab">Paired Smart TVs &amp; Remote</button>
       <button type="button" class="tab-btn" data-tab="tab-checklist" role="tab">TV Setup Checklists (All Brands)</button>
       <button type="button" class="tab-btn" data-tab="tab-sideload" role="tab">Developer Mode Sideloader (webOS / Tizen / ADB / Roku)</button>
@@ -81,19 +81,19 @@
           <div class="card-header" style="margin-bottom:8px;flex-wrap:wrap;gap:10px;">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <span class="dot online" id="tablo-status-dot"></span>
-              <h2 class="card-title" id="tablo-device-title">Tablo 4th Gen OTA DVR (192.168.1.55:8887)</h2>
-              <span class="badge badge-green" id="tablo-sid-badge">SID_5087B8556EE5</span>
-              <span class="badge" id="tablo-drive-badge">Sabrent SSD 1TB</span>
-              <span class="badge" id="tablo-tuners-badge">Tuners Ready</span>
+              <h2 class="card-title" id="tablo-device-title">Tablo OTA DVR</h2>
+              <span class="badge badge-green" id="tablo-sid-badge">Not connected</span>
+              <span class="badge" id="tablo-drive-badge">No drive</span>
+              <span class="badge" id="tablo-tuners-badge">No tuners</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <input type="text" id="input-tablo-ip" class="input" style="width:140px;padding:4px 8px;font-size:12px;" value="192.168.1.55" placeholder="192.168.1.55" />
+              <input type="text" id="input-tablo-ip" class="input" style="width:140px;padding:4px 8px;font-size:12px;" value="" placeholder="Tablo IP address" />
               <button type="button" class="btn btn-sm" id="btn-tablo-refresh">↻ Refresh Recordings</button>
               <button type="button" class="btn btn-sm" id="btn-tablo-load-channels">📺 Load Live OTA Channels</button>
-              <button type="button" class="btn btn-sm btn-primary" id="btn-tablo-cast-roku" title="Open the Tablo DVR tab with recording thumbnails on your 65&quot; TCL Roku TV">📺 Show Tablo Tab on 65&quot; Roku TV</button>
+              <button type="button" class="btn btn-sm btn-primary" id="btn-tablo-cast-roku" title="Open the Tablo DVR tab with recording thumbnails on your Roku TV">📺 Show Tablo Tab on Roku TV</button>
             </div>
           </div>
-          <div id="tablo-device-meta" class="item-sub">Connecting to Tablo DVR on 192.168.1.55:8887 via HMAC-MD5 device auth…</div>
+          <div id="tablo-device-meta" class="item-sub">Enter your Tablo DVR address to see its recordings.</div>
         </div>
 
         <div class="tablo-layout">
@@ -276,7 +276,7 @@
             <div class="form-grid" style="margin-top:10px;">
               <div class="field">
                 <label for="input-builder-tv-ip">2. Target TV IP Address</label>
-                <input type="text" id="input-builder-tv-ip" class="input" value="192.168.1.64" />
+                <input type="text" id="input-builder-tv-ip" class="input" value="" placeholder="TV IP address" />
               </div>
               <div class="field">
                 <label for="input-builder-passphrase">LG Key Server Passphrase (webOS only)</label>

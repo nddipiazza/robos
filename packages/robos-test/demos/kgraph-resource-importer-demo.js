@@ -23,10 +23,10 @@ const { evalJS, evalClick } = require('../lib/snapshot');
 const scenarios = require('../lib/scenarios');
 
 const SLUG = 'kgraph-resource-importer';
-const HOME_DIR = process.env.HOME || '/home/ndipiazza';
+const HOME_DIR = process.env.HOME || require('os').homedir();
 const PERSIST_DIR = path.join(HOME_DIR, '.robos', 'development', 'walkthroughs', SLUG);
 const DOCS_DIR = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce';
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce`;
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));

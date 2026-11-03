@@ -373,6 +373,8 @@ async function launchApp(appId, scenarioConfig) {
   const pathEnv = useRealBinaries ? process.env.PATH : `${SANDBOX_BIN}:${process.env.PATH}`;
 
   const proc = spawn(electronBin, electronArgs, {
+    // Some apps resolve .robos and relative output paths from their working directory.
+    cwd: scenarioConfig.cwd,
     env: {
       ...process.env,
       HOME: sandboxHome,
@@ -388,8 +390,8 @@ async function launchApp(appId, scenarioConfig) {
       ROBOS_LIB_PATH: path.join(PACKAGES_DIR, 'robos-lib'),
       GNUPGHOME: path.join(sandboxHome, '.gnupg'),
       PASSWORD_STORE_DIR: path.join(sandboxHome, '.password-store'),
-      REAL_HOME: process.env.HOME || '/home/ndipiazza',
-      ROBOS_HOST_HOME: process.env.HOME || '/home/ndipiazza',
+      REAL_HOME: process.env.HOME || require('os').homedir(),
+      ROBOS_HOST_HOME: process.env.HOME || require('os').homedir(),
       // The app's debug server moves from basePort to the port claimed above.
       ROBOS_DEBUG_PORT_REMAP: `${basePort}:${port}`,
       ROBOS_DEBUG_INSTANCE: instance,

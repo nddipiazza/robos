@@ -11,6 +11,7 @@ const { DesktopAssistant } = require('../../../voice-prompt/lib/desktop-assistan
 const { WakeWordDetector } = require('../../../voice-prompt/lib/wake-word');
 const { TTSEngine } = require('../../../voice-prompt/lib/tts-engine');
 const { RobOSVoiceClient } = require('../../../robos-lib/voice');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 describe('RobOS Voice Skills Integration Tests', () => {
   let tmpProjectsDir;
@@ -18,12 +19,15 @@ describe('RobOS Voice Skills Integration Tests', () => {
   let executor;
   let mockTTS;
   let lastSpokenText = null;
+  let fixture;
 
   before(() => {
     tmpProjectsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-test-projects-'));
+    fixture = createRepoFixture({ link: ['packages'] });
     executor = new SkillsExecutor();
     // Point projectsDir to temp dir for isolated testing
     executor.projectsDir = tmpProjectsDir;
+    executor.rootRepoDir = fixture.root;
 
     mockTTS = {
       speak: async (text) => {
@@ -37,6 +41,7 @@ describe('RobOS Voice Skills Integration Tests', () => {
 
   after(() => {
     try { fs.rmSync(tmpProjectsDir, { recursive: true }); } catch {}
+    fixture.cleanup();
   });
 
   describe('1. Task Management Skills via Voice', () => {

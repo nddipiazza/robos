@@ -190,10 +190,10 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
       'robos:evidence': [{ repository: 'Hermetiq/hermetiq-genai-agent' }],
     };
 
-    const resolved = resolveFn(hermetiqCourse, { repoRoot: '/home/ndipiazza/source/robos' });
+    const resolved = resolveFn(hermetiqCourse, { repoRoot: '/home/user/source/robos' });
     const slug = slugFn(hermetiqCourse);
 
-    assert.equal(resolved, '/home/ndipiazza/source/hermetiq/hermetiq-genai-agent/projects/grpc-cache-proxy/elearning/course.json');
+    assert.equal(resolved, '/home/user/source/hermetiq/hermetiq-genai-agent/projects/grpc-cache-proxy/elearning/course.json');
     assert.equal(slug, 'grpc-cache-proxy', 'Anchor slug must strip urn:*:elearning: prefix');
     if (fs.existsSync(path.dirname(resolved))) {
       assert.ok(fs.existsSync(resolved), 'Resolved path must physically exist on disk');

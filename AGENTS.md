@@ -187,6 +187,9 @@ Run isolated E2E tests in a Docker container with Xvfb virtual framebuffer and P
 ./scripts/e2e-container.sh -i                      # Drop into interactive container shell
 ```
 
+### Keep tests away from the tracked graph and docs
+Suites in `packages/robos-test` must not change `.robos/` or `docs/`, because a change left by a local run can get committed. Opening a graph store and saving through it rewrites package files and the aggregate, and several generators write relative to the current directory. Use `lib/repo-fixture.js`: `createRepoFixture()` for a throwaway copy of the real graph or docs, `enterCwd()` around code that writes relative to the current directory, the harness `cwd` scenario option for apps that do the same, and `docScreenshotDir()` for documentation screenshots (`ROBOS_UPDATE_DOC_SCREENSHOTS=1` refreshes the tracked images). `npm run test:repo-isolation` checks this.
+
 ### cRPG game (`games/crpg-realm`)
 
 The cRPG has its own [AGENTS.md](games/crpg-realm/AGENTS.md): the e2e test pyramid (headless Infinity AI scenario engine at the base, long real-player playthroughs at the top), how to set up game state as `robos:CRPGTestScenario` KGraph nodes, how to direct the Infinity AI, and how to assert outcomes.

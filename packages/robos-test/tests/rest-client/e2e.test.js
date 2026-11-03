@@ -1,6 +1,7 @@
 'use strict';
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { launchApp, killApp } = require('../../lib/harness');
@@ -8,10 +9,13 @@ const { evalJS, evalClick } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
 
 describe('RobOS REST API Client (Bruno) E2E Tests', () => {
-  it('generates Bruno .bru spec from TypeSpec schema, commits to Git, dispatches live verification request, and validates response & assertions', async () => {
+  it('generates Bruno .bru spec from TypeSpec schema, commits to Git, dispatches live verification request, and validates response & assertions', async (t) => {
     const binDir = path.join(os.homedir(), '.local', 'bin');
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-rest-client-'));
+    t.after(() => fs.rmSync(workDir, { recursive: true, force: true }));
     const app = await launchApp('rest-client', {
       ...scenarios['all-good'],
+      cwd: workDir,
       useRealBinaries: true,
       env: {
         ROBOS_TEST: '1',

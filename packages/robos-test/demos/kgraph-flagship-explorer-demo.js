@@ -5,7 +5,7 @@ const scenarios = require('../lib/scenarios');
 const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'kgraph-flagship-explorer';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
 const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
 
 const SCRIPT = [

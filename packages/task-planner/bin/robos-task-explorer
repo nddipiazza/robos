@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-ROBOS_ROOT="/home/ndipiazza/source/robos"
-if [ -d "/home/ndipiazza/source/robos/packages/task-planner" ]; then
-  APP_DIR="/home/ndipiazza/source/robos/packages/task-planner"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+ROBOS_ROOT="${ROBOS_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+if [ -d "$ROBOS_ROOT/packages/task-planner" ]; then
+  APP_DIR="$ROBOS_ROOT/packages/task-planner"
 elif [ -d "/usr/local/share/robos/robos-task-explorer" ]; then
   APP_DIR="/usr/local/share/robos/robos-task-explorer"
 else
