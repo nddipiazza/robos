@@ -15,11 +15,12 @@ const download = fs.readFileSync(path.join(output, 'download/index.html'), 'utf8
 for (const [id, game] of Object.entries(require('../site/_data/games.json'))) {
   // A game can live at its own page_path and ship under its own release tag (release_prefix).
   const page = game.page_path ? path.join(output, game.page_path, 'index.html') : path.join(output, 'games', id, 'index.html');
-  const tag = `${game.release_prefix || 'games-v'}${version}`;
+  const gameVersion = game.version || version;
+  const tag = `${game.release_prefix || 'games-v'}${gameVersion}`;
   const html = fs.readFileSync(page, 'utf8');
   assert.ok(html.includes('id="download"'), `${id}: missing player download section`);
   for (const suffix of ['Windows-Setup.exe', 'Windows-x64.zip', 'Linux-x64.zip', 'macOS.zip']) {
-    assert.ok(html.includes(`https://github.com/nddipiazza/robos/releases/download/${tag}/${id}-v${version}-${suffix}`), `${id}: missing direct game download ${suffix}`);
+    assert.ok(html.includes(`https://github.com/nddipiazza/robos/releases/download/${tag}/${id}-v${gameVersion}-${suffix}`), `${id}: missing direct game download ${suffix}`);
   }
   assert.ok(html.includes('/assets/game-downloads.js'), `${id}: missing OS selection`);
   assert.ok(!html.includes('{% include game-download'), `${id}: unrendered download controls`);
@@ -84,6 +85,7 @@ const seoCheckedPages = [
   'games/crpg/index.html',
   'games/crpg/docs/index.html',
   'games/tabletop-rpg/index.html',
+  'games/tabletop-rpg/midterms-2026/index.html',
   'games/tabletop-rpg/docs/index.html',
   'games/tabletop-rpg/proof-of-viability.html',
   'games/tabletop-rpg/proof-of-viability-election-2026.html',
