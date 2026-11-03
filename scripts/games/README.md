@@ -60,6 +60,10 @@ as an HTML game on itch.io, mark the ZIP as playable in-browser and use a
 click-to-launch fullscreen player. Keep desktop downloads as platform-tagged
 files. Desktop browsers with mouse and keyboard are the supported web target.
 
+For the Rowbose browser player, copy `web_embed_url` from itch.io's
+**Distribute → Embed game** code generator. Use its `itch.io/embed-upload/…`
+URL; the raw `html-classic.itch.zone` asset URL rejects external hotlinks.
+
 Verification: open the exported HTML through an HTTP server, commence the quest,
 complete spell selection, roll movement dice and move a hero. Check browser
 errors, and check the final itch.io player after publishing. The campaign's
