@@ -14,8 +14,9 @@ const { slug } = require('./slug');
 const NESIFY = path.join(__dirname, '..', 'tools', 'nesify.py');
 
 const TARGETS = {
-  'world-map': { width: 512, height: 480, colors: 16 },
-  'area-map': { width: 512, height: 480, colors: 16 },
+  // A map holds far more tiles than a screen, so shrinking it or forcing the palette destroys it.
+  'world-map': { width: 512, height: 480, colors: 48, keepColors: true, keepSize: true },
+  'area-map': { width: 512, height: 480, colors: 48, keepColors: true, keepSize: true },
   'battle-backdrop': { width: 256, height: 64, colors: 8, crop: true },
   'class-sprite': { width: 64, height: 64, colors: 8, key: true },
   'enemy-sprite': { width: 96, height: 96, colors: 12, key: true },
@@ -40,11 +41,18 @@ function byRole(sources, ...roles) {
 // The largest image of a role is the best reference when a folder holds several.
 function largest(list) {
   const area = s => (s.size ? s.size.width * s.size.height : 0);
-  return [...list].sort((a, b) => area(b) - area(a))[0];
+  // A labelled map would teach the model to draw the labels.
+  const unmarked = s => (/unmarked/i.test(s.name) ? 1 : 0);
+  return [...list].sort((a, b) => area(b) - area(a) || unmarked(b) - unmarked(a))[0];
 }
 
-function job(kind, id, title, prompt, references, depicts) {
-  return { id: `${kind}-${slug(id)}`, kind, title, prompt, references, depicts, basis: references.length ? 'reference' : 'text-only' };
+function job(kind, id, title, prompt, references, depicts, altNames = []) {
+  return {
+    id: `${kind}-${slug(id)}`, kind, title, prompt, references, depicts,
+    basis: references.length ? 'reference' : 'text-only',
+    // The same image under a name the record had before, so a rename does not regenerate it.
+    altIds: (altNames || []).map(name => `${kind}-${slug(name)}`).filter(alt => alt !== `${kind}-${slug(id)}`),
+  };
 }
 
 /** Every image the parsed game calls for. */
@@ -65,10 +73,11 @@ function planJobs(parsed, { kinds = DEFAULT_KINDS } = {}) {
   for (const place of places) {
     if (!['town', 'castle', 'dungeon'].includes(place.type)) continue;
     const description = [place.description, place.evidence].filter(Boolean).join(' ');
-    const refs = byRole(sources, 'area-map').filter(s => slug(s.name).includes(slug(place.name))).map(s => s.name);
+    const refs = byRole(sources, 'area-map').filter(s => s.depicts === place.name).map(s => s.name);
+    const follow = refs.length ? 'Follow the layout of the reference map: the same rooms, paths and buildings in the same places. ' : '';
     jobs.push(job('area-map', place.name, `${place.name} map`,
-      `A top-down tile map of ${place.name}, a ${place.type} in ${title}, with no text or interface. What a guide says about it: ${description || 'nothing further'}. ${STYLE}`,
-      refs, `place:${slug(place.name)}`));
+      `A top-down tile map of ${place.name}, a ${place.type} in ${title}, with no text or interface. ${follow}What a guide says about it: ${description || 'nothing further'}. ${STYLE}`,
+      refs, `place:${slug(place.name)}`, place.altNames));
   }
   for (const screen of battle) {
     jobs.push(job('battle-backdrop', screen.name.replace(/\.[^.]+$/, ''), `Battle backdrop from ${screen.name}`,
@@ -78,7 +87,7 @@ function planJobs(parsed, { kinds = DEFAULT_KINDS } = {}) {
   for (const cls of classes) {
     jobs.push(job('class-sprite', cls.name, `${cls.name} sprite`,
       `A full-body battle sprite of the ${cls.name} class from ${title}, facing left, centered on a solid magenta background, with nothing else in the frame. ${cls.description ? `About the class: ${cls.description}. ` : ''}${STYLE}`,
-      [...select, ...sheet].map(s => s.name).slice(0, 2), `class:${slug(cls.name)}`));
+      [...byRole(sources, 'class-sprite').filter(s => s.depicts === cls.name), ...select, ...sheet].map(s => s.name).slice(0, 2), `class:${slug(cls.name)}`, cls.altNames));
   }
   for (const enemy of enemies) {
     jobs.push(job('enemy-sprite', enemy.name, `${enemy.name} sprite`,
@@ -103,7 +112,7 @@ function fitToGame(raw, file, kind) {
   const target = TARGETS[kind];
   runNesify([
     raw, file, '--width', target.width, '--height', target.height, '--colors', target.colors,
-    ...(target.key ? ['--key'] : []), ...(target.crop ? ['--crop'] : []), ...(target.keepColors ? ['--keep-colors'] : []),
+    ...(target.key ? ['--key'] : []), ...(target.crop ? ['--crop'] : []), ...(target.keepColors ? ['--keep-colors'] : []), ...(target.keepSize ? ['--keep-size'] : []),
   ].map(String));
 }
 
@@ -128,7 +137,12 @@ async function generateArt(parsed, outDir, opts = {}) {
   const sourcesByName = new Map(parsed.sources.map(s => [s.name, s]));
 
   const planned = planJobs(parsed, { kinds: only ? Object.keys(TARGETS) : kinds || DEFAULT_KINDS });
-  const todo = only ? planned.filter(j => only.includes(j.id)) : planned.filter(j => force || !done.has(j.id));
+  const todo = only ? planned.filter(j => only.includes(j.id)) : planned.filter((j) => {
+    if (force) return true;
+    const made = [j.id, ...j.altIds].map(id => done.get(id)).find(Boolean);
+    // An image invented from text is replaced once a reference for it has been collected.
+    return !made || (made.basis === 'text-only' && j.basis === 'reference');
+  });
   const jobs = limit ? todo.slice(0, limit) : todo;
   const refDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-refs-'));
   const failures = [];
@@ -160,6 +174,7 @@ async function generateArt(parsed, outDir, opts = {}) {
         file: path.join('assets', 'generated', rel),
         raw: path.join('assets', 'generated', 'raw', `${j.id}.img`),
       });
+      for (const old of j.altIds) done.delete(old);
       manifest.images = [...done.values()];
       fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
     }

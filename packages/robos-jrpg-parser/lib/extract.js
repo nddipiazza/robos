@@ -66,12 +66,13 @@ const RECORD_SPEC = `Return one JSON object and nothing else, with these arrays 
   "milestones": [{"title","place","description","requires":[],"grants":[],"boss","evidence"}],
   "equipment":  [{"name","altNames":[],"kind":"weapon|armor|consumable|key-item","usableBy":[],"foundAt","description","evidence"}],
   "shops":      [{"town","kind":"weapon|armor|white-magic|black-magic|item|inn","stock":[],"evidence"}],
-  "rules":      [{"name","kind":"formula|stat|status|element|mechanic","description","evidence"}]
+  "rules":      [{"name","kind":"formula|stat|status|element|mechanic","expression","description","evidence"}]
 }
 "evidence" is a sentence copied word for word from the text that supports the record.
 Milestones are the steps of the main quest in the order the text gives them. A step is something the text walks the player through; a passing mention in an introduction is not one.
 Classes are the jobs a player can choose or upgrade to. When the text gives two names for one thing, make one record: "name" is the name this edition uses and "altNames" holds the other.
-A "formula" is a numeric calculation. Other rules about how the game plays are "mechanic".
+A "formula" is a numeric calculation, and "expression" holds it as the text writes it. Other rules about how the game plays are "mechanic".
+Note known bugs in the game in "description", since a remake needs them.
 Only record what the text says. Leave a field out rather than guess it.`;
 
 function extractionPrompt(gameTitle, edition, chunk, part, total) {
@@ -99,7 +100,8 @@ function mergeKey(kind, r) {
 
 function mergeRecord(into, r) {
   for (const [key, value] of Object.entries(r)) {
-    if (Array.isArray(value)) into[key] = [...new Set([...(into[key] || []), ...value])];
+    // Records code read from a table already have the full list.
+    if (Array.isArray(value)) { if (!into.exact) into[key] = [...new Set([...(into[key] || []), ...value])]; }
     else if (into[key] === undefined || into[key] === null || into[key] === '') into[key] = value;
   }
 }
@@ -157,7 +159,7 @@ function consolidationPrompt(gameTitle, edition, lists) {
 Group the names that mean the same thing. Use only names from the lists. Do not use tools.
 Return one JSON object and nothing else:
 { "classes": [{"canonical":"","aliases":[]}], "places": [...], "equipment": [...], "notRecords": {"classes":[]} }
-"canonical" is the name this edition uses. List only groups with at least one alias. A castle and the town beside it are different places.
+"canonical" is the name this edition uses. List only groups with at least one alias. A castle and the town beside it are different places. Weapons or armor renamed between editions are one thing.
 "notRecords.classes" lists names that are not a job a player can have.
 
 ${JSON.stringify(lists, null, 1)}`;
@@ -213,6 +215,69 @@ async function consolidate(parsed, { gameTitle, edition = 'original', cacheDir, 
   return warnings;
 }
 
+function compact(value) {
+  return slug(value).replace(/-/g, '');
+}
+
+function mapMatchPrompt(gameTitle, edition, files, places) {
+  return `A person collected these image files for the ${edition} edition of ${gameTitle}. Go by the file names; do not open them and do not use tools.
+Decide which are maps of a place in this list, under any of that place's names in any edition. A file may be a place the list does not have.
+Return one JSON object and nothing else:
+{ "maps": [{"file":"","place":""}], "newPlaces": [{"file":"","name":"","type":"town|castle|dungeon"}], "notMaps": [""] }
+"place" must be a name from the list. "file" must be a file name exactly as written.
+
+Places: ${JSON.stringify(places)}
+Files: ${JSON.stringify(files)}`;
+}
+
+/** Links collected images to the places and classes they show, adding places only a map file names. */
+async function linkImages(parsed, { gameTitle, edition = 'original', cacheDir, providerId = DEFAULT_PROVIDER, model = DEFAULT_MODEL, ask: askFn }) {
+  const ask = askFn || loadAgent().ask;
+  const warnings = [];
+  const images = parsed.sources.filter(s => s.kind === 'image' && s.use !== false);
+
+  for (const cls of parsed.classes) {
+    for (const s of images.filter(x => x.role === 'unknown')) {
+      if (compact(s.name).includes(compact(cls.name))) {
+        s.role = 'class-sprite';
+        s.depicts = cls.name;
+      }
+    }
+  }
+
+  const files = images.filter(s => s.role === 'unknown' || s.role === 'area-map');
+  if (!files.length) return warnings;
+  const placeNames = parsed.places.map(p => p.name);
+  const res = await askCached(mapMatchPrompt(gameTitle, edition, files.map(s => s.name), placeNames), { cacheDir, ask, providerId, model });
+  if (!res.ok) return [`Could not match map files to places: ${res.error}`];
+  let reply;
+  try { reply = parseJsonReply(res.text); } catch (e) { return [`Could not match map files to places: ${e.message}`]; }
+
+  const byName = new Map(files.map(s => [s.name, s]));
+  const known = new Map(parsed.places.map(p => [slug(p.name), p]));
+  for (const m of Array.isArray(reply.maps) ? reply.maps : []) {
+    const source = byName.get(m.file);
+    const place = known.get(slug(m.place));
+    if (source && place) {
+      source.role = 'area-map';
+      source.depicts = place.name;
+    }
+  }
+  for (const m of Array.isArray(reply.newPlaces) ? reply.newPlaces : []) {
+    const source = byName.get(m.file);
+    if (!source || !m.name || source.depicts) continue;
+    let place = known.get(slug(m.name));
+    if (!place) {
+      place = { name: m.name, type: m.type || 'dungeon', source: source.name, fromFileName: true };
+      known.set(slug(m.name), place);
+      parsed.places.push(place);
+    }
+    source.role = 'area-map';
+    source.depicts = place.name;
+  }
+  return warnings;
+}
+
 const LAYOUT_SPEC = `Return one JSON object and nothing else:
 {
   "title": "short name of this screen",
@@ -260,4 +325,4 @@ async function classifyImage({ gameTitle, imagePath, roles, cacheDir, providerId
   }
 }
 
-module.exports = { extractProse, consolidate, displayName, extractScreenLayout, classifyImage, chunkText, parseJsonReply, DEFAULT_MODEL, DEFAULT_PROVIDER };
+module.exports = { extractProse, consolidate, linkImages, displayName, mergeRecord, extractScreenLayout, classifyImage, chunkText, parseJsonReply, DEFAULT_MODEL, DEFAULT_PROVIDER };

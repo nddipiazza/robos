@@ -14,7 +14,7 @@ Generates images for a game already parsed with `jrpg-parse-assets` and adds the
 ## Requirements
 
 - `agy` signed in. Images use its `generate_image` tool through `packages/robos-lib/ai-image.js`, so no API key is needed.
-- `python3` with Pillow, for shrinking images to game size and the NES palette.
+- `python3` with Pillow, for fitting images to the game's size and colors.
 
 ## Procedure
 
@@ -37,7 +37,7 @@ Kinds: `world-map`, `area-map`, `battle-backdrop`, `class-sprite`, `menu-screen`
 
 ## Output
 
-- `assets/generated/<kind>/<id>.png` — game-size image on the NES palette
+- `assets/generated/<kind>/<id>.png` — the image fitted to the game. Maps keep the model's size and colors with noise removed, sprites and backdrops are game size on the NES palette, and menus are game size in their own colors
 - `assets/generated/raw/<id>.img` — what the model returned
 - `assets/generated/manifest.json` — model, prompt hash, and references for each image
 - A `jrpg:GeneratedImage` node for each image, with `jrpg:depicts`, `jrpg:references` and `jrpg:basis` (`reference` or `text-only`)

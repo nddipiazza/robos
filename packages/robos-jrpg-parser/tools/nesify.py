@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Shrinks a generated image to game size and maps it onto the NES palette.
+"""Fits a generated image to the game: its size, its colors, and for sprites a clear background.
 
-  nesify.py <in> <out> --width 256 --height 240 [--colors 16] [--key] [--crop] [--keep-colors]
+  nesify.py <in> <out> --width 256 --height 240 [--colors 16] [--key] [--crop] [--keep-colors] [--keep-size]
   nesify.py <in> <out> --max 1024     convert to PNG for use as a reference
 
 --key removes a sprite's solid background and makes it transparent.
@@ -75,10 +75,13 @@ def nearest_nes(color):
     return min(NES_LAB, key=lambda entry: sum((a - b) ** 2 for a, b in zip(entry[0], lab)))[1]
 
 
-def nesify(image, width, height, colors, crop, keep_colors=False):
+def nesify(image, width, height, colors, crop, keep_colors=False, keep_size=False):
     source = image.convert('RGB')
-    small = (center_crop(source, width, height) if crop else source).resize((width, height), Image.BOX)
-    small = brighten(small)
+    if keep_size:
+        width, height = source.size
+    small = source if keep_size else (center_crop(source, width, height) if crop else source).resize((width, height), Image.BOX)
+    if not keep_colors:
+        small = brighten(small)
     limited = small.quantize(colors=colors, dither=Image.Dither.NONE).convert('RGB')
     mapped = {color: color if keep_colors else nearest_nes(color) for _, color in limited.getcolors(width * height)}
     out = Image.new('RGBA', (width, height))
@@ -187,6 +190,7 @@ def main():
     parser.add_argument('--key', action='store_true')
     parser.add_argument('--crop', action='store_true', help='crop to the target shape instead of stretching')
     parser.add_argument('--keep-colors', action='store_true', help="reduce the image's own colors without the NES palette")
+    parser.add_argument('--keep-size', action='store_true', help='clean up the colors without resizing')
     parser.add_argument('--max', type=int, help='convert to PNG, no larger than this')
     args = parser.parse_args()
 
@@ -199,7 +203,7 @@ def main():
     if args.key:
         sprite(image, args.width, args.height, args.colors).save(args.output)
         return
-    nesify(image, args.width, args.height, args.colors, args.crop, args.keep_colors).save(args.output)
+    nesify(image, args.width, args.height, args.colors, args.crop, args.keep_colors, args.keep_size).save(args.output)
 
 
 if __name__ == '__main__':
