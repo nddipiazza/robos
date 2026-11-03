@@ -9,7 +9,7 @@ og_image: /assets/og.png
 og_image_width: 1200
 og_image_height: 630
 og_image_alt: "RobOS — One open-source app suite to replace them all. Then need less AI."
-keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps, open-source alternatives, knowledge graph, KGraph, context engineering, AI energy use, reuse AI output, Skill Commons, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, Godot 4 AI games, developer tools, coding agents"
+keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps, open-source alternatives, knowledge graph, KGraph, context engineering, AI energy use, reuse AI output, Skill Commons, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, RobOS eLearning, open-source course app, Godot 4 AI games, developer tools, coding agents"
 ---
 <section class="l-hero">
   <div class="wrap l-hero-grid">
@@ -32,14 +32,14 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
 
     <ul class="l-mosaic" aria-label="Apps in the RobOS suite">
       <li class="l-mosaic-build"><a href="{{ '/build-apps/' | relative_url }}"><img src="{{ '/assets/build-apps/planner-tile.jpg' | relative_url }}" alt="" width="400" height="300"><span>Build apps</span></a></li>
-      <li class="l-mosaic-biz"><a href="{{ '/auto-center/' | relative_url }}" aria-label="Manage your Business: Auto Center"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="" width="1000" height="625"></a><a href="{{ '/point-of-sale/' | relative_url }}" aria-label="Manage your Business: Retail Point of Sale"><img src="{{ '/assets/point-of-sale/coffee-register-latte.jpg' | relative_url }}" alt="" width="1280" height="800"></a><p class="l-biz-label">Manage your Business <a href="{{ '/auto-center/' | relative_url }}">(Auto)</a> <a href="{{ '/point-of-sale/' | relative_url }}">(Retail)</a></p></li>
+      <li class="l-mosaic-split"><a href="{{ '/auto-center/' | relative_url }}" aria-label="Manage your Business: Auto Center"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="" width="1000" height="625"></a><a href="{{ '/point-of-sale/' | relative_url }}" aria-label="Manage your Business: Retail Point of Sale"><img src="{{ '/assets/point-of-sale/coffee-register-latte.jpg' | relative_url }}" alt="" width="1280" height="800"></a><p class="l-biz-label">Manage your Business <a href="{{ '/auto-center/' | relative_url }}">(Auto)</a> <a href="{{ '/point-of-sale/' | relative_url }}">(Retail)</a></p></li>
+      <li><a href="{{ '/elearning/' | relative_url }}"><img src="{{ '/assets/landing/tiles/elearning.jpg' | relative_url }}" alt="" width="800" height="600"><span>eLearning: courses, hands-on labs &amp; certificates</span></a></li>
       <li><a href="{{ '/family-finances/' | relative_url }}"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="" width="1440" height="1185"><span>Household</span></a></li>
       <li><a href="{{ '/games/' | relative_url }}"><img src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="" width="1280" height="720"><span>Games</span></a></li>
       <li><a href="{{ '/movie-player/' | relative_url }}"><img src="{{ '/assets/landing/tiles/media.jpg' | relative_url }}" alt="" width="800" height="600"><span>Media library, with server and clients for multiple platforms</span></a></li>
       <li><a href="{{ '/code-review/' | relative_url }}"><img src="{{ '/assets/landing/tiles/code.jpg' | relative_url }}" alt="" width="800" height="600"><span>AI coding agents &amp; code review</span></a></li>
-      <li><a href="{{ '/security/' | relative_url }}"><img src="{{ '/assets/landing/tiles/security.jpg' | relative_url }}" alt="" width="800" height="600"><span>Passwords, hardware keys &amp; VPN</span></a></li>
+      <li class="l-mosaic-split"><a href="{{ '/security/' | relative_url }}" aria-label="Passwords, hardware keys and VPN"><img src="{{ '/assets/landing/tiles/security.jpg' | relative_url }}" alt="" width="800" height="600"></a><a href="{{ '/p2p/' | relative_url }}" aria-label="Private mesh across all your machines"><img src="{{ '/assets/landing/tiles/mesh.jpg' | relative_url }}" alt="" width="800" height="600"></a><p class="l-biz-label"><a href="{{ '/security/' | relative_url }}">Passwords, hardware keys, VPN</a> &amp; <a href="{{ '/p2p/' | relative_url }}">private mesh</a></p></li>
       <li><a href="{{ '/home-assistant-voice/' | relative_url }}"><img src="{{ '/assets/landing/tiles/home.jpg' | relative_url }}" alt="" width="800" height="600"><span>Smart home: lights, speakers &amp; voice</span></a></li>
-      <li><a href="{{ '/p2p/' | relative_url }}"><img src="{{ '/assets/landing/tiles/mesh.jpg' | relative_url }}" alt="" width="800" height="600"><span>Private mesh across all your machines</span></a></li>
       <li class="l-mosaic-new"><a class="l-mosaic-more" href="{{ '/apps/' | relative_url }}"><span>More apps</span><b aria-hidden="true">→</b></a><a href="{{ '/build-apps/' | relative_url }}"><b aria-hidden="true">+</b><span>Add your own app</span></a></li>
     </ul>
   </div>
@@ -63,6 +63,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
           <li><span>Budgeting and tax-prep apps</span><a href="{{ '/family-finances/' | relative_url }}">Household</a></li>
           <li><span>Locked-in music and movie apps</span><a href="{{ '/movie-player/' | relative_url }}">Audio &amp; Movie Player</a></li>
           <li><span>Vendor smart-home and TV apps</span><a href="{{ '/apps/smart-light/' | relative_url }}">Smart Light &amp; Smart TV</a></li>
+          <li><span>Paid course platforms</span><a href="{{ '/elearning/' | relative_url }}">eLearning</a></li>
           <li><span>Per-seat developer tools</span><a href="{{ '/build-apps/' | relative_url }}">Developer suite</a></li>
         </ul>
         <a class="go" href="{{ '/apps/' | relative_url }}">Browse all {{ site.apps | size }} apps →</a>
@@ -170,6 +171,10 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
       <a class="card suite" href="{{ '/movie-player/' | relative_url }}">
         <div class="suite-shot"><img src="{{ '/assets/blog/movie-player/02-library-grid.png' | relative_url }}" alt="RobOS Movie Player theater browser with TMDB posters, spotlight hero banner, and Smart TV casting" width="1280" height="720" loading="lazy"></div>
         <div class="suite-body"><span class="suite-tag">Music · Cinema · Smart TVs</span><h3>Movie Player, Audio Player &amp; Smart TVs</h3><p>100,000-movie &amp; TV series home theater and 100,000-song audio player with zero-cloud Roku &amp; Google Cast streaming, Show &amp; Season Navigator, plus optional AI Watchlists/Playlists and a spoken Virtual Host.</p><span class="go">Tour Movie &amp; Video Player →</span></div>
+      </a>
+      <a class="card suite" href="{{ '/elearning/' | relative_url }}">
+        <div class="suite-shot"><img src="{{ '/assets/elearning/lesson.jpg' | relative_url }}" alt="RobOS eLearning lesson with a summary, lesson text and the lesson list with progress" width="1920" height="1200" loading="lazy"></div>
+        <div class="suite-body"><span class="suite-tag">Learners · Teachers · Teams</span><h3>eLearning</h3><p>A course library with readable lessons, hands-on lab steps and quizzes that explain each answer. Progress is saved on your computer, and finishing a course earns a PDF certificate. Write and export your own courses.</p><span class="go">Tour eLearning →</span></div>
       </a>
       <a class="card suite" href="#build">
         <div class="suite-shot suite-idea" aria-hidden="true"><div class="prompt">A tracker for our community garden…</div><ul class="nodes"><li><b>app</b> Garden Club</li><li>Plot</li><li>Member</li><li>WateringShift</li><li>Harvest</li><li><b>tests</b> 6</li></ul></div>

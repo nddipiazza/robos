@@ -88,15 +88,17 @@ for (const arg of process.argv) {
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1360,
+    width: 1440,
+    minWidth: 980,
+    minHeight: 640,
     height: 900,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#0b1220',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
-    title: 'RobOS — Interactive eLearning & Verification Hub',
+    title: 'RobOS eLearning',
   });
 
   if (win.webContents && typeof win.webContents.on === 'function') {
@@ -222,6 +224,10 @@ ipcMain.handle('elearning:list-courses', async () => {
       estimatedDuration: c['robos:estimatedDuration'] || '45 mins',
       targetApplication: c['robos:targetApplication'] || null,
       modulesCount: (c['robos:modules'] || []).length,
+      description: c['dcterms:description'] || '',
+      targetAudience: c['robos:targetAudience'] || '',
+      lessonMinutes: (c['robos:modules'] || []).reduce((sum, m) => sum + (Number(m && m.durationMinutes) || 0), 0),
+      featured: !!c['robos:featured'],
     }));
   }
   return [];
@@ -1150,7 +1156,81 @@ ipcMain.handle('elearning:copy-to-clipboard', async (_, text) => {
   }
 });
 
+// ── Learner progress, name on certificates and certificate PDF ──────────────
+// Progress is saved per course in ~/.config/robos/elearning/progress.json so a
+// learner can close the app and continue where they left off.
+const PROGRESS_DIR = path.join(os.homedir(), '.config', 'robos', 'elearning');
+const PROGRESS_FILE = path.join(PROGRESS_DIR, 'progress.json');
+
+function defaultLearnerName() {
+  try {
+    const info = os.userInfo();
+    return (info && info.username) || 'RobOS learner';
+  } catch {
+    return 'RobOS learner';
+  }
+}
+
+function readProgressFile(file = PROGRESS_FILE) {
+  try {
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (data && typeof data === 'object') {
+      if (!data.courses || typeof data.courses !== 'object') data.courses = {};
+      return data;
+    }
+  } catch {}
+  return { version: 1, learnerName: '', lastCourseId: null, courses: {} };
+}
+
+function writeProgressFile(data, file = PROGRESS_FILE) {
+  const clean = {
+    version: 1,
+    learnerName: String((data && data.learnerName) || '').slice(0, 120),
+    lastCourseId: (data && data.lastCourseId) || null,
+    courses: (data && typeof data.courses === 'object' && data.courses) || {},
+  };
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(clean, null, 2));
+  fs.renameSync(tmp, file);
+  return clean;
+}
+
+ipcMain.handle('elearning:get-progress', async () => {
+  const data = readProgressFile();
+  return { ...data, defaultLearnerName: defaultLearnerName() };
+});
+
+ipcMain.handle('elearning:save-progress', async (_, data) => {
+  try {
+    writeProgressFile(data);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('elearning:save-certificate-pdf', async (_, { fileName } = {}) => {
+  try {
+    if (!win || !win.webContents || typeof win.webContents.printToPDF !== 'function') {
+      return { ok: false, error: 'PDF export is not available' };
+    }
+    const pdf = await win.webContents.printToPDF({ landscape: true, printBackground: true, pageSize: 'A4', margins: { marginType: 'none' } });
+    const docs = path.join(os.homedir(), 'Documents');
+    const dir = path.join(fs.existsSync(docs) ? docs : os.homedir(), 'RobOS Certificates');
+    fs.mkdirSync(dir, { recursive: true });
+    const safe = String(fileName || 'robos-certificate').replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'robos-certificate';
+    const filePath = path.join(dir, safe.endsWith('.pdf') ? safe : `${safe}.pdf`);
+    fs.writeFileSync(filePath, pdf);
+    return { ok: true, filePath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 module.exports = {
+  readProgressFile,
+  writeProgressFile,
   getGitInfo,
   createZipBuffer,
   buildStandaloneSlideHtml,
