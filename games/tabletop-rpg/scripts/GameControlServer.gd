@@ -7,6 +7,9 @@ var port: int = 18092
 var clients: Array[StreamPeerTCP] = []
 
 func _ready() -> void:
+	# Browser games use local input; native TCP telemetry is unavailable on Web.
+	if OS.has_feature("web"):
+		return
 	var port_env = OS.get_environment("TABLETOP_SERVER_PORT")
 	if port_env != "":
 		port = int(port_env)

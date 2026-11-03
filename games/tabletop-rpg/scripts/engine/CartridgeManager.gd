@@ -71,7 +71,7 @@ func _check_cli_cartridge() -> void:
 		cart_arg = "heroquest-the-trial"
 
 	if cart_arg == "":
-		cart_arg = "custom-quest"
+		cart_arg = str(ProjectSettings.get_setting("robos/standalone/cartridge", "custom-quest"))
 
 	insert_cartridge(cart_arg)
 
@@ -88,6 +88,10 @@ func discover_cartridges() -> Array[Dictionary]:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
 		while file_name != "":
+			var standalone_cart = str(ProjectSettings.get_setting("robos/standalone/cartridge", ""))
+			if standalone_cart != "" and file_name != standalone_cart + ".cartridge.json":
+				file_name = dir.get_next()
+				continue
 			if not dir.current_is_dir() and file_name.ends_with(".cartridge.json"):
 				var full_path = dir_path + file_name
 				var cart = _load_json_file(full_path)

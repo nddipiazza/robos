@@ -44,7 +44,7 @@ test('uploaded assets resolve to their direct verified release URLs', async () =
 test('every standalone game page has the shared download controls and actual source project', () => {
   const games = require('../../site/_data/games.json');
   for (const [id, game] of Object.entries(games)) {
-    const source = fs.readFileSync(path.join(root, 'site/games', id, 'index.md'), 'utf8');
+    const source = fs.readFileSync(path.join(root, 'site', require('./catalog.cjs').pagePath(id, game), 'index.md'), 'utf8');
     assert.ok(source.includes(`game_id: ${id}`));
     assert.ok(source.includes('{% include game-download-button.html %}'));
     assert.ok(source.includes('{% include game-downloads.html %}'));

@@ -27,6 +27,9 @@ keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tab
       <a href="{{ '/games/tabletop-rpg/' | relative_url }}" style="background-image:url('{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}')">
         <div class="in"><h2>Tabletop RPG</h2><p>A HeroQuest-inspired dungeon crawler with cartridges, fog of war and a Game Master mode.</p><span class="go">Open the box →</span></div>
       </a>
+      <a href="{{ '/games/tabletop-rpg/midterms-2026/' | relative_url }}" style="background-image:url('{{ '/assets/games/storefront/tabletop-rpg-background.jpg' | relative_url }}');--accent:#e0b252">
+        <div class="in"><h2>Midterms 2026</h2><p>Battle for the Hill: a standalone satirical Capitol dungeon adventure. Play in your browser or download the game.</p><span class="go">Enter the Capitol →</span></div>
+      </a>
       <a href="{{ '/games/robos-rts/' | relative_url }}" style="background-image:url('{{ '/assets/games/rts/frontier-hunters-live.jpg' | relative_url }}');--accent:#58b4ff">
         <div class="in"><h2>Starfall Command</h2><p>One player versus AI on a 256×256 battlefield with eight possible starts, unlimited deposits, a map editor and live gameplay tests.</p><span class="go">Take command →</span></div>
       </a>
