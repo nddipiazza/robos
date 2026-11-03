@@ -255,33 +255,42 @@ function probeLocalPort(port, host = '127.0.0.1', timeoutMs = 180) {
 }
 
 /**
- * Generate a self-signed X.509 certificate + P-256 private key using openssl (or fallback).
+ * Generate a self-signed X.509 certificate + P-256 private key in-process. Windows PCs often have no
+ * openssl, and the LibreSSL that macOS ships rejects the equivalent command.
  * Used for real TLS 1.3 Mutual TLS (`requestCert: true`) with SHA-256 fingerprint pinning.
  */
 function generateIdentityCredentials(nodeId, nodeName) {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-mesh-id-'));
-  const keyFile = path.join(tmpDir, 'key.pem');
-  const certFile = path.join(tmpDir, 'cert.pem');
-  try {
-    const subj = `/CN=${nodeId}/O=RobOS-ZeroTrust-Mesh/OU=${String(nodeName || 'robos').replace(/[^a-zA-Z0-9_-]/g, '')}`;
-    cp.execFileSync('openssl', [
-      'req', '-x509',
-      '-newkey', 'ec',
-      '-pkeyopt', 'ec_paramgen_curve:prime256v1',
-      '-keyout', keyFile,
-      '-out', certFile,
-      '-days', '3650',
-      '-nodes',
-      '-subj', subj,
-    ], { stdio: 'ignore', timeout: 5000 });
-    const keyPem = fs.readFileSync(keyFile, 'utf8');
-    const certPem = fs.readFileSync(certFile, 'utf8');
-    const x509 = new crypto.X509Certificate(certPem);
-    const fingerprint = x509.fingerprint256; // SHA256:...
-    return { keyPem, certPem, fingerprint };
-  } finally {
-    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
-  }
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+  const der = (tag, ...parts) => {
+    const body = Buffer.concat(parts), size = [];
+    for (let n = body.length; n > 0; n = Math.floor(n / 256)) size.unshift(n % 256);
+    return Buffer.concat([Buffer.from([tag]), Buffer.from(body.length < 128 ? [body.length] : [0x80 | size.length, ...size]), body]);
+  };
+  const sequence = (...parts) => der(0x30, ...parts);
+  const oid = hex => der(0x06, Buffer.from(hex, 'hex'));
+  const nameEntry = (type, value) => der(0x31, sequence(oid(type), der(0x0c, Buffer.from(String(value)))));
+  // X.509 requires UTCTime through 2049 and GeneralizedTime after it.
+  const time = date => {
+    const digits = date.toISOString().replace(/[-:T]|\.\d+/g, '');
+    return date.getUTCFullYear() < 2050 ? der(0x17, Buffer.from(digits.slice(2))) : der(0x18, Buffer.from(digits));
+  };
+  const name = sequence(
+    nameEntry('550403', nodeId), nameEntry('55040a', 'RobOS-ZeroTrust-Mesh'),
+    nameEntry('55040b', String(nodeName || 'robos').replace(/[^a-zA-Z0-9_-]/g, '')));
+  const serial = crypto.randomBytes(16); serial[0] = (serial[0] & 0x7f) | 0x40;
+  const ecdsaSha256 = sequence(oid('2a8648ce3d040302'));
+  const spki = publicKey.export({ type: 'spki', format: 'der' });
+  const keyId = crypto.createHash('sha1').update(spki).digest();
+  const now = Date.now(), day = 86400000;
+  const extensions = der(0xa3, sequence(
+    sequence(oid('551d13'), der(0x01, Buffer.from([0xff])), der(0x04, sequence(der(0x01, Buffer.from([0xff]))))), // basicConstraints: CA
+    sequence(oid('551d0e'), der(0x04, der(0x04, keyId))))); // subjectKeyIdentifier
+  const tbs = sequence(der(0xa0, der(0x02, Buffer.from([2]))), der(0x02, serial), ecdsaSha256, name,
+    sequence(time(new Date(now - day)), time(new Date(now + 3650 * day))), name, spki, extensions);
+  const certificate = sequence(tbs, ecdsaSha256, der(0x03, Buffer.from([0]), crypto.sign('sha256', tbs, privateKey)));
+  const certPem = `-----BEGIN CERTIFICATE-----\n${certificate.toString('base64').match(/.{1,64}/g).join('\n')}\n-----END CERTIFICATE-----\n`;
+  const fingerprint = new crypto.X509Certificate(certPem).fingerprint256; // SHA256:...
+  return { keyPem: privateKey.export({ type: 'pkcs8', format: 'pem' }), certPem, fingerprint };
 }
 
 function computeCertFingerprint(certOrPem) {

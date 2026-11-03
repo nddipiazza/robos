@@ -10,6 +10,7 @@ const http = require('node:http');
 const {
   createAppMeshEngine,
   getAppPortCatalog,
+  generateIdentityCredentials,
 } = require('./app-mesh-engine');
 
 test('getAppPortCatalog returns all registered RobOS IPC and service ports', () => {
@@ -21,6 +22,21 @@ test('getAppPortCatalog returns all registered RobOS IPC and service ports', () 
   assert.ok(catalog.some(c => c.appId === 'app-mesh' && c.port === 19216));
 });
 
+test('identity certificates are valid and need no external openssl', () => {
+  const crypto = require('node:crypto'), cp = require('node:child_process');
+  const original = cp.execFileSync;
+  cp.execFileSync = () => { throw new Error('openssl must not be required'); };
+  let creds;
+  try { creds = generateIdentityCredentials('node-é-1', 'my host!'); } finally { cp.execFileSync = original; }
+  const x509 = new crypto.X509Certificate(creds.certPem), key = crypto.createPrivateKey(creds.keyPem);
+  assert.ok(x509.verify(crypto.createPublicKey(key)), 'self-signature verifies');
+  assert.ok(x509.checkPrivateKey(key));
+  assert.equal(x509.ca, true);
+  assert.equal(x509.fingerprint256, creds.fingerprint);
+  assert.match(x509.subject, /CN=node-é-1/); assert.match(x509.subject, /O=RobOS-ZeroTrust-Mesh/); assert.match(x509.subject, /OU=myhost/);
+  assert.ok(new Date(x509.validFrom) < new Date() && new Date(x509.validTo) > new Date(Date.now() + 3600 * 86400000));
+  assert.notEqual(generateIdentityCredentials('a', 'b').fingerprint, generateIdentityCredentials('a', 'b').fingerprint);
+});
 test('AppMeshEngine runs mTLS 1.3 gateway, rejects untrusted certs, and tunnels IPC ports across two distinct nodes', async () => {
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-app-mesh-test-'));
   const nodeADir = path.join(tmpRoot, 'node-a');

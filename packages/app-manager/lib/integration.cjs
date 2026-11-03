@@ -88,7 +88,15 @@ function integration({ locations, executable, host, packaged, shell, platform = 
     if (platform === 'darwin') {
       if (image && path.resolve(image) !== locations.macManager) {
         fs.mkdirSync(path.dirname(locations.macManager), { recursive: true });
-        fs.cpSync(image, locations.macManager, { recursive: true, verbatimSymlinks: true });
+        // Electron's fs treats app.asar as a folder, which fails the copy with ENOTDIR.
+        const staging = `${locations.macManager}.installing`, asar = process.noAsar;
+        process.noAsar = true;
+        try {
+          fs.rmSync(staging, { recursive: true, force: true });
+          fs.cpSync(image, staging, { recursive: true, verbatimSymlinks: true });
+          fs.rmSync(locations.macManager, { recursive: true, force: true });
+          fs.renameSync(staging, locations.macManager);
+        } finally { process.noAsar = asar; }
       }
       return;
     }

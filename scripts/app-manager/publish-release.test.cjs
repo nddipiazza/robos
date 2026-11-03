@@ -55,7 +55,12 @@ function fakeGitHub(directory, revision, seed = {}) {
     else if (method === 'POST' && url.endsWith('/releases')) data = add(options.json.tag_name);
     else if (method === 'DELETE') { for (const item of releases.values()) item.assets = item.assets.filter(entry => !url.endsWith(`/${entry.id}`)); }
     else if (method === 'POST') { const release = byId(Number(new URL(url).pathname.slice(1))); data = asset(new URL(url).searchParams.get('name')); release.assets.push(data); }
-    else if (method === 'PATCH') { const release = byId(Number(url.split('/').pop())); Object.assign(release, options.json); data = release; }
+    else if (method === 'PATCH') {
+      // GitHub replaces a draft's tag with an untagged- name unless the update repeats it.
+      const release = byId(Number(url.split('/').pop()));
+      if (!options.json.tag_name) { releases.delete(release.tag_name); release.tag_name = `untagged-${release.id}`; releases.set(release.tag_name, release); }
+      Object.assign(release, options.json); data = release;
+    }
     else if (url.includes('/assets?')) data = byId(Number(url.match(/releases\/(\d+)\/assets/)[1])).assets.slice();
     else if (url.includes('/releases?')) data = [...releases.values()];
     else throw new Error('Unexpected request: ' + url);
@@ -100,6 +105,21 @@ test('app packages go to one release per platform, leaving the main release easy
   assert.ok(mutations.findIndex(item => item.method === 'PATCH') > mutations.map(item => item.method).lastIndexOf('POST'), 'nothing is public until every upload is verified');
   assert.equal(patches.at(-1).json.make_latest, 'true');
   for (const patch of patches.slice(0, -1)) { assert.equal(patch.json.make_latest, 'false'); assert.equal(patch.json.prerelease, true); assert.match(patch.json.body, /releases\/tag\/v0\.0\.9/); }
+});
+test('draft-only runs verify everything against GitHub and publish nothing', async t => {
+  const { directory, revision } = releaseFolder(t);
+  fs.writeFileSync(path.join(directory, 'robos-catalog-linux-x64.json'), 'catalog');
+  const { request, releases, mutations } = fakeGitHub(directory, revision);
+  await publish(directory, { repository: 'owner/repo', request, draftOnly: true });
+  for (const release of releases.values()) { assert.equal(release.draft, true); assert.ok(release.body); assert.ok(release.assets.length); }
+  assert.deepEqual([...releases.keys()].sort(), ['apps-v0.0.9-linux-x64', 'v0.0.9']);
+  for (const patch of mutations.filter(item => item.method === 'PATCH')) assert.deepEqual(Object.keys(patch.json).sort(), ['body', 'draft', 'tag_name', 'target_commitish']);
+  // A later real publish reuses every upload and only changes visibility.
+  mutations.length = 0;
+  await publish(directory, { repository: 'owner/repo', request });
+  assert.deepEqual([...new Set(mutations.map(item => item.method))], ['PATCH']);
+  assert.deepEqual([...releases.keys()].sort(), ['apps-v0.0.9-linux-x64', 'v0.0.9']);
+  for (const release of releases.values()) assert.equal(release.draft, false);
 });
 test('the release description links every installer directly', () => {
   const files = ['SHA256SUMS', 'release-manifest.json', ...installers('1.2.3')];

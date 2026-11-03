@@ -44,7 +44,7 @@ function prepareApp(output) {
 }
 function configuration(output = path.join(repo, 'release/app-manager')) {
   fs.mkdirSync(output, { recursive: true });
-  const png = fs.readFileSync(path.join(repo, 'packages/app-launcher/icon.png'));
+  const png = fs.readFileSync(path.join(linuxIcons(output), '256x256.png'));
   const header = Buffer.alloc(16); header.write('icns', 0); header.writeUInt32BE(png.length + 16, 4); header.write('ic08', 8); header.writeUInt32BE(png.length + 8, 12);
   const macIcon = path.join(output, 'app-manager.icns'); fs.writeFileSync(macIcon, Buffer.concat([header, png]));
   return { appId: 'com.rowbose.robos', productName: 'RobOS', electronVersion: '33.4.11',

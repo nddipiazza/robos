@@ -86,14 +86,14 @@ function mainNotes(tag, repository, files, packages) {
     '## What this is', '',
     'Install or uninstall one app, several selected apps or the entire library in a batch. Apps download separately for your OS and CPU, with shared components downloaded once and native launchers for every app.', '',
     'Uninstall all apps keeps App Manager available. Uninstall RobOS removes the manager and its managed library. Personal settings are retained.', '',
-    `Verified: core unit tests, the complete Windows app startup audit, packaged manager lifecycle tests and all four platform builds. SHA256SUMS and [release-manifest.json](${file('release-manifest.json')}) identify every download and its source revision.`, '',
+    `Verified: core unit tests, every app started through App Manager on Windows, macOS and Linux, installer tests on clean Ubuntu, and all four platform builds. SHA256SUMS and [release-manifest.json](${file('release-manifest.json')}) identify every download and its source revision.`, '',
     `App packages are kept in separate releases, one for each system: ${folders.join(' · ')}.`,
   ].join('\n');
 }
 function packageNotes(tag, repository, item) {
   return `App packages for ${SYSTEMS[item.platform]} ${item.arch}. RobOS App Manager downloads these for you, so there is nothing here to install by hand.\n\n**Looking for RobOS? [Download it here](https://github.com/${repository}/releases/tag/${tag}).**`;
 }
-async function publish(directory, { token = process.env.GITHUB_TOKEN, repository = process.env.GITHUB_REPOSITORY, request } = {}) {
+async function publish(directory, { token = process.env.GITHUB_TOKEN, repository = process.env.GITHUB_REPOSITORY, request, draftOnly = false } = {}) {
   if (!request && !token) throw new Error('GITHUB_TOKEN is required');
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository || '')) throw new Error('Invalid repository');
   request ||= client(token);
@@ -138,7 +138,7 @@ async function publish(directory, { token = process.env.GITHUB_TOKEN, repository
     // Verify the complete remote set again before making a draft public.
     const remote = await list(request, `${api}/releases/${release.id}/assets?per_page=100`);
     for (const name of files) if (!sameAsset(remote.find(asset => asset.name === name) || {}, fs.statSync(path.join(directory, name)).size, hashes.get(name))) throw new Error(`Missing or corrupted release asset: ${name}`);
-    return { release, reused };
+    return { release, reused, tag_name: releaseTag };
   }
   // Nothing goes public until every release has verified. The main release goes last, so
   // its installers are never available before the packages they will download.
@@ -147,8 +147,12 @@ async function publish(directory, { token = process.env.GITHUB_TOKEN, repository
     draft: false, prerelease: true, make_latest: 'false', body: packageNotes(tag, repository, item) } });
   uploads.push({ ...await upload(tag, `RobOS ${tag}`, tag.includes('-'), main), json: {
     draft: false, prerelease: tag.includes('-'), make_latest: tag.includes('-') ? 'false' : 'true', body: notes } });
-  for (const { release, json } of uploads) await request(`${api}/releases/${release.id}`, { method: 'PATCH', json });
+  // Draft-only runs prove everything against GitHub without creating a tag or public release.
+  // GitHub forgets a draft's tag unless each update repeats it.
+  for (const { release, json, tag_name } of uploads) await request(`${api}/releases/${release.id}`, { method: 'PATCH', json: {
+    tag_name, target_commitish: manifest.revision, ...(draftOnly ? { draft: true, body: json.body } : json) } });
+  if (draftOnly) { console.log(`Prepared drafts for ${tag}: ${all.length} verified assets in ${uploads.length} releases. Nothing is public.`); return; }
   console.log(`Published ${tag}: ${all.length} verified assets in ${uploads.length} releases (${uploads.reduce((sum, item) => sum + item.reused, 0)} completed uploads reused)`);
 }
 module.exports = { client, list, sameAsset, groupFiles, mainNotes, publish };
-if (require.main === module) publish(path.resolve(process.argv[2] || 'release/publish')).catch(error => { console.error(error.message); process.exitCode = 1; });
+if (require.main === module) publish(path.resolve(process.argv[2] || 'release/publish'), { draftOnly: process.argv.includes('--draft-only') }).catch(error => { console.error(error.message); process.exitCode = 1; });

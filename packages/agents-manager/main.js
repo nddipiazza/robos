@@ -526,7 +526,7 @@ ipcMain.handle('antigravity-sessions', () => {
           sessions.push({
             session_id: sess.id,
             name: sess.task || sess.id,
-            cwd: '/home/ndipiazza/source/robos',
+            cwd: os.homedir(),
             created_at: typeof sess.startedAt === 'number' ? new Date(sess.startedAt).toISOString() : (sess.startedAt || new Date().toISOString()),
             updated_at: typeof sess.stoppedAt === 'number' ? new Date(sess.stoppedAt).toISOString() : (sess.stoppedAt || new Date().toISOString()),
             first_message: sess.task || 'Knowledge Graph Ingestion Job',
@@ -551,7 +551,7 @@ ipcMain.handle('antigravity-sessions', () => {
           sessions.push({
             session_id: id,
             name: `AGY Session ${id.slice(0, 8)}`,
-            cwd: '/home/ndipiazza/source/robos',
+            cwd: os.homedir(),
             created_at: stat.birthtime ? stat.birthtime.toISOString() : stat.mtime.toISOString(),
             updated_at: stat.mtime.toISOString(),
             first_message: 'PET-106: Add Emergency Pet Surgery Booking Endpoint [POST /api/v1/pets/{id}/surgery]',
@@ -567,7 +567,7 @@ ipcMain.handle('antigravity-sessions', () => {
     sessions.push({
       session_id: '2d2c4639-6694-4741-9b8f-bb0ba6b00424',
       name: 'AGY Session 2d2c4639',
-      cwd: '/home/ndipiazza/source/robos',
+      cwd: os.homedir(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       first_message: 'PET-106: Add Emergency Pet Surgery Booking Endpoint via RobOS MCP',
@@ -606,7 +606,7 @@ ipcMain.handle('antigravity-launch-terminal', (_, id, extraArgs, cwd) => {
   if (id && id !== 'new') parts.push('--resume', id);
   const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
   const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
-  const targetCwd = (cwd && typeof cwd === 'string' && cwd.trim()) ? cwd.trim() : '/home/ndipiazza/source/robos';
+  const targetCwd = (cwd && typeof cwd === 'string' && cwd.trim()) ? cwd.trim() : os.homedir();
   const cwdPrefix = `cd "${dqEscape(targetCwd)}" && `;
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}echo "[Antigravity] Starting AGY paired with RobOS Unified MCP Router..." && ${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0', ROBOS_MCP_AUTO: 'true' },

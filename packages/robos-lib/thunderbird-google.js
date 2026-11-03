@@ -768,7 +768,7 @@ function getCalendarEventsFilePath(options = {}) {
   return path.join(configDir, 'calendar-events.json');
 }
 
-function buildSeedCalendarEvents(email = 'nicholas.dipiazza@gmail.com') {
+function buildSeedCalendarEvents(email = 'you@example.com') {
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth();
@@ -859,7 +859,7 @@ function loadLocalCalendarEvents(options = {}) {
     }
   } catch {}
   const defaultAcc = cloudAccounts.getAccountById(null, options);
-  const email = defaultAcc?.email || 'nicholas.dipiazza@gmail.com';
+  const email = defaultAcc?.email || 'you@example.com';
   const seeded = buildSeedCalendarEvents(email);
   saveLocalCalendarEvents(seeded, options);
   return seeded;
@@ -880,7 +880,7 @@ function addCalendarEvent(eventInput = {}, options = {}) {
     throw new Error('Event title / summary is required.');
   }
   const defaultAcc = cloudAccounts.getAccountById(eventInput.accountId || null, options);
-  const email = eventInput.accountEmail || defaultAcc?.email || 'nicholas.dipiazza@gmail.com';
+  const email = eventInput.accountEmail || defaultAcc?.email || 'you@example.com';
 
   const now = new Date();
   const startIso = eventInput.start
@@ -1185,7 +1185,7 @@ print(json.dumps(out_events))
   try {
     const out = execFileSync(
       'python3',
-      ['-c', pyScript, profilePath, tokenCachePath, JSON.stringify(calMap), email || 'nicholas.dipiazza@gmail.com'],
+      ['-c', pyScript, profilePath, tokenCachePath, JSON.stringify(calMap), email || 'you@example.com'],
       { encoding: 'utf8', timeout: 5500 }
     ).trim();
     if (out) {
@@ -1269,7 +1269,7 @@ function readThunderbirdCachedEvents(profilePath, email = '') {
     if (!Array.isArray(rows)) return [];
     return rows.map((r) => {
       const meta = calMap[r.cal_id] || {};
-      const resolvedEmail = meta.username || email || 'nicholas.dipiazza@gmail.com';
+      const resolvedEmail = meta.username || email || 'you@example.com';
       const resolvedName = meta.name || `Google Calendar (${resolvedEmail})`;
       const resolvedColor = meta.color || '#00bcd4';
       const startMs = r.event_start ? Math.floor(Number(r.event_start) / 1000) : Date.now();
@@ -1313,7 +1313,7 @@ async function getUnifiedCalendarEvents(accountIdOrEmail = null, options = {}) {
     || googleAccounts[0]
     || null;
 
-  const email = activeAccount?.email || 'nicholas.dipiazza@gmail.com';
+  const email = activeAccount?.email || 'you@example.com';
   const tbStatus = detectThunderbird(options);
   const localEvents = loadLocalCalendarEvents(options);
   const tbCached = readThunderbirdCachedEvents(tbStatus.primaryProfilePath, email);
