@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld('robosELearning', {
   exportSlideZip: (payload) => ipcRenderer.invoke('elearning:export-slide-zip', payload),
   saveCourse: (course) => ipcRenderer.invoke('elearning:save-course', course),
   copyToClipboard: (text) => ipcRenderer.invoke('elearning:copy-to-clipboard', text),
+  // Saved progress (~/.config/robos/elearning/progress.json) and certificate PDF
+  getProgress: () => ipcRenderer.invoke('elearning:get-progress'),
+  saveProgress: (data) => ipcRenderer.invoke('elearning:save-progress', data),
+  saveCertificatePdf: (opts) => ipcRenderer.invoke('elearning:save-certificate-pdf', opts),
   // Zoom Controls (Ctrl +, Ctrl -, Ctrl 0)
   getZoom: () => ipcRenderer.invoke('elearning:get-zoom'),
   setZoom: (factor) => ipcRenderer.invoke('elearning:set-zoom', factor),
