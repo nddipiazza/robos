@@ -14,7 +14,7 @@ try {
 
 let mainWindow;
 
-const REAL_HOME = process.env.REAL_HOME || process.env.ROBOS_HOST_HOME || process.env.HOME || '/home/ndipiazza';
+const REAL_HOME = process.env.REAL_HOME || process.env.ROBOS_HOST_HOME || process.env.HOME || require('os').homedir();
 const PROJECT_DIR = path.join(REAL_HOME, '.robos', 'projects', 'acme-petshop-platform');
 const TOPOLOGY_FILE = path.join(PROJECT_DIR, '.robos', 'topology.yaml');
 

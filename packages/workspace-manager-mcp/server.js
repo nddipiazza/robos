@@ -14,7 +14,7 @@ const DEFAULT_WORKSPACES = [
     name: 'robos-core',
     branch: 'main',
     repo: 'nddipiazza/robos',
-    path: '/home/ndipiazza/source/robos',
+    path: path.resolve(__dirname, '..', '..'),
     status: 'ACTIVE',
     activeTaskId: 'TASK-101',
     devServer: {
@@ -30,7 +30,7 @@ const DEFAULT_WORKSPACES = [
     name: 'robos-auth-service',
     branch: 'feature/jwt-rotation',
     repo: 'nddipiazza/robos-auth',
-    path: '/home/ndipiazza/source/robos-auth',
+    path: path.resolve(__dirname, '..', '..', '..', 'robos-auth'),
     status: 'IDLE',
     activeTaskId: null,
     devServer: {
@@ -86,7 +86,7 @@ class WorkspaceService {
       name: data.name || (data.taskId ? `robos-workspace-${data.taskId.toLowerCase()}` : 'robos-custom-ws'),
       branch: data.branch || (data.taskId ? `feat/${data.taskId.toLowerCase()}` : 'feat/task-branch'),
       repo: data.repo || 'nddipiazza/robos',
-      path: data.path || `/home/ndipiazza/source/worktrees/${id}`,
+      path: data.path || path.join(os.homedir(), 'source', 'worktrees', id),
       status: 'ACTIVE',
       activeTaskId: data.taskId || null,
       devServer: {

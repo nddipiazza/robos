@@ -1230,8 +1230,9 @@ function resolveGitopsPathForCourse(course, srcInfo) {
   const customFile = course['robos:gitopsFile'] || course.gitopsFile;
   if (customFile && customFile.startsWith('/')) return customFile;
 
-  const repoRoot = (srcInfo && srcInfo.repoRoot) || '/home/ndipiazza/source/robos';
-  if (!customFile) return (srcInfo && srcInfo.gitopsPath) || `${repoRoot}/.robos/elearning.yaml`;
+  const repoRoot = (srcInfo && srcInfo.repoRoot) || '';
+  const inRepo = (rel) => (repoRoot ? `${repoRoot}/${rel}` : rel);
+  if (!customFile) return (srcInfo && srcInfo.gitopsPath) || inRepo('.robos/elearning.yaml');
 
   const rel = customFile.replace(/^\.?\//, '');
 
@@ -1241,9 +1242,11 @@ function resolveGitopsPathForCourse(course, srcInfo) {
     const repoParts = ev.repository.split('/');
     const repoName = repoParts.pop();
     const orgPrefix = repoParts[0]?.toLowerCase();
+    // Other repositories are expected next to this checkout.
+    const sourceRoot = repoRoot ? repoRoot.replace(/[\\/][^\\/]+$/, '') : '..';
     const candidateRoot = orgPrefix && orgPrefix !== repoName.toLowerCase()
-      ? `/home/ndipiazza/source/${orgPrefix}/${repoName}`
-      : `/home/ndipiazza/source/${repoName}`;
+      ? `${sourceRoot}/${orgPrefix}/${repoName}`
+      : `${sourceRoot}/${repoName}`;
     return `${candidateRoot}/${rel}`;
   }
 
@@ -1254,7 +1257,7 @@ function resolveGitopsPathForCourse(course, srcInfo) {
     }
   }
 
-  return `${repoRoot}/${rel}`;
+  return inRepo(rel);
 }
 
 function getCourseAnchorSlug(course) {

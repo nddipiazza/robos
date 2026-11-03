@@ -31,7 +31,7 @@ const ephemeralWorkspaces = new Map();
 runConfigs.set('Debug PetServiceTest', {
   name: 'Debug PetServiceTest',
   type: 'JUnit',
-  projectPath: '/home/ndipiazza/source/robos/packages/robos-agent-session/demo-app',
+  projectPath: path.join(__dirname, '..', 'robos-agent-session', 'demo-app'),
   mainClassOrCommand: 'com.acme.petshop.service.PetServiceTest',
   env: {
     SPRING_PROFILES_ACTIVE: 'test',
