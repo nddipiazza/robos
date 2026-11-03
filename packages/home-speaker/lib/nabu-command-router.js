@@ -1088,6 +1088,15 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
     return { type: 'transport', action: 'previous' };
   }
 
+  // 1.5 Voice Identity & Spoken Voice Onboarding intents
+  if (/^(?:who\s+am\s+i|whose\s+voice\s+is\s+this|who\s+is\s+(?:speaking|talking)|do\s+you\s+(?:know|recognize)\s+(?:my\s+voice|who\s+i\s+am)|what\s+is\s+my\s+name|identify\s+my\s+voice)$/.test(q)) {
+    return { type: 'voice-whoami', query: cleanedText };
+  }
+  const enrollMatch = cleanedText.match(/^(?:(?:remember|enroll|register|save|onboard)\s+my\s+voice\s+as|my\s+name\s+is|i\s+am\s+speaking\s+as|this\s+is\s+the\s+voice\s+of)\s+([a-zA-Z][a-zA-Z0-9\s.'-]{1,40}?)[.!?]*$/i);
+  if (enrollMatch) {
+    return { type: 'voice-enroll', targetName: enrollMatch[1].trim(), query: cleanedText };
+  }
+
   // 2. If it's a genuine Tabletop Quest Editor command ("place 2 skeletons in room 1"), let Tabletop handle it
   if (isGenuineTabletopCommand(q)) {
     return { type: 'robos-skill', query: cleanedText };
@@ -1178,27 +1187,158 @@ function findUnifiedMediaMatch(cleanedCommand, {
 
 /**
  * Execute any spoken "Hello Nabu / Okay Nabu -> {command}" across Audio Player,
- * Movie Player, Smart TV / Speaker casting, and all 48 RobOS Voice Skills + AI Agent.
+ * Movie Player, Smart TV / Speaker casting, and all 48 RobOS Voice Skills + AI Agent,
+ * while propagating the identified "robosUser" voice metadata to target apps.
  */
 async function executeNabuCommand(rawTranscript, {
   configDir = path.join(os.homedir(), '.config', 'robos'),
   autoLaunchPlayers = process.env.ROBOS_TEST !== '1',
   skillsExecutor = null,
+  robosUser = null,
+  pcmBuffer = null,
+  wavPath = null,
+  speakerIp = null,
+  voiceIdentityService = null,
 } = {}) {
+  const { VoiceIdentityService } = require('./voice-identity-service');
+  const idSvc = voiceIdentityService || new VoiceIdentityService({ configDir });
+
+  // Resolve speaker identity if audio was provided or fall back to active/default user
+  let activeUser = robosUser;
+  if (!activeUser && (pcmBuffer || wavPath)) {
+    try {
+      const idRes = await idSvc.identifySpeaker({ pcmBuffer, wavPath, speakerIp });
+      if (idRes && idRes.robosUser) activeUser = idRes.robosUser;
+    } catch {}
+  }
+  if (!activeUser) {
+    const savedCtx = idSvc.readActiveVoiceContext();
+    if (savedCtx && savedCtx.robosUser) {
+      activeUser = savedCtx.robosUser;
+    } else {
+      const def = idSvc.getDefaultWorkstationUser();
+      activeUser = {
+        userId: def.userId,
+        name: def.name,
+        displayName: def.name,
+        role: def.role,
+        email: def.email || '',
+        identified: false,
+        enrolled: false,
+        confidence: 0,
+        source: 'workstation-default',
+      };
+    }
+  }
+
   const cleaned = stripWakePhrase(rawTranscript);
   if (!cleaned) {
     return {
       ok: false,
       skill: 'none',
       cleanedCommand: '',
+      robosUser: activeUser,
       response: 'I am listening. How can I help you?',
     };
   }
+
+  try {
+    idSvc.writeActiveVoiceContext(activeUser, { lastCommand: cleaned });
+  } catch {}
 
   const audioTracks = loadLibraryTracks('audio', configDir);
   const movieTracks = loadLibraryTracks('movie', configDir);
   const castDevices = loadCastDevices(configDir);
   const intent = classifyVoiceCommand(cleaned, { audioTracks, movieTracks, configDir });
+
+  // ── 0.1 Voice Identity Query ("who am I?", "whose voice is this?") ──────────
+  if (intent.type === 'voice-whoami') {
+    const pct = Math.round((Number(activeUser?.confidence) || 0) * 100);
+    if (activeUser && activeUser.identified) {
+      return {
+        ok: true,
+        skill: 'voice-whoami',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        response: `You are ${activeUser.name} (${activeUser.role || 'RobOS User'}), identified by your voiceprint with ${pct}% confidence.`,
+        data: { robosUser: activeUser },
+      };
+    }
+    const enrolledList = idSvc.listProfiles();
+    const hint = enrolledList.length === 0
+      ? `No voice profiles are enrolled yet. Say "Hello Nabu, remember my voice as" followed by your name, or open Voice Onboarding in RobOS Home Speaker.`
+      : `I could not confidently match your voice against the ${enrolledList.length} enrolled profile${enrolledList.length === 1 ? '' : 's'}. Say "Hello Nabu, remember my voice as" followed by your name to add a voice sample.`;
+    return {
+      ok: true,
+      skill: 'voice-whoami',
+      cleanedCommand: cleaned,
+      robosUser: activeUser,
+      response: hint,
+      data: { robosUser: activeUser, enrolledCount: enrolledList.length },
+    };
+  }
+
+  // ── 0.2 Spoken Voice Enrollment ("remember my voice as Nicholas", "my name is Sarah") ──
+  if (intent.type === 'voice-enroll') {
+    const targetName = intent.targetName;
+    if (pcmBuffer || wavPath) {
+      const enrollRes = await idSvc.enrollVoiceSample({
+        name: targetName,
+        pcmBuffer,
+        wavPath,
+        phrase: rawTranscript,
+        transcript: cleaned,
+        source: speakerIp ? `speaker:${speakerIp}` : 'voice-command',
+      });
+      if (enrollRes && enrollRes.ok && enrollRes.profile) {
+        const newlyEnrolledUser = {
+          userId: enrollRes.profile.userId,
+          name: enrollRes.profile.name,
+          displayName: enrollRes.profile.displayName || enrollRes.profile.name,
+          role: enrollRes.profile.role,
+          avatarColor: enrollRes.profile.avatarColor,
+          identified: true,
+          enrolled: true,
+          confidence: 1.0,
+          source: 'spoken-enrollment',
+          speakerIp: speakerIp || null,
+          identifiedAt: new Date().toISOString(),
+        };
+        try {
+          idSvc.writeActiveVoiceContext(newlyEnrolledUser, { lastCommand: cleaned });
+        } catch {}
+        return {
+          ok: true,
+          skill: 'voice-enroll',
+          cleanedCommand: cleaned,
+          robosUser: newlyEnrolledUser,
+          response: `Got it, ${enrollRes.profile.name}! I saved your voiceprint (${enrollRes.profile.sampleCount} sample${enrollRes.profile.sampleCount === 1 ? '' : 's'} enrolled). RobOS apps will now recognize your voice as ${enrollRes.profile.name}.`,
+          data: { robosUser: newlyEnrolledUser, profile: enrollRes.profile },
+        };
+      }
+    }
+    // Profile created/updated without live PCM (e.g. text command test)
+    const prof = idSvc.upsertUserProfile({ name: targetName });
+    const createdUser = {
+      userId: prof.userId,
+      name: prof.name,
+      displayName: prof.displayName || prof.name,
+      role: prof.role,
+      avatarColor: prof.avatarColor,
+      identified: true,
+      enrolled: prof.sampleCount > 0,
+      confidence: 1.0,
+      source: 'profile-registration',
+    };
+    return {
+      ok: true,
+      skill: 'voice-enroll',
+      cleanedCommand: cleaned,
+      robosUser: createdUser,
+      response: `Registered RobOS User profile for ${prof.name}. Speak to the speaker or record 3 phrases in Voice Onboarding to complete your biometric voiceprint.`,
+      data: { robosUser: createdUser, profile: prof },
+    };
+  }
 
   const { createAudioPlayerClient } = require('../../audio-player/lib/control-server');
   const { createAudioPlayerClient: createMoviePlayerClient } = require('../../movie-player/lib/control-server');
@@ -1221,11 +1361,12 @@ async function executeNabuCommand(rawTranscript, {
         ok: false,
         skill: `media-${intent.action}`,
         cleanedCommand: cleaned,
+        robosUser: activeUser,
         response: 'Neither Audio Player nor Movie Player is currently running.',
       };
     }
 
-    const res = await targetClient[intent.action]();
+    const res = await targetClient[intent.action]({ robosUser: activeUser });
     const actionLabels = {
       pause: `Paused ${targetName}.`,
       resume: `Resumed playback in ${targetName}.`,
@@ -1236,8 +1377,9 @@ async function executeNabuCommand(rawTranscript, {
       ok: Boolean(res && res.ok !== false),
       skill: `media-${intent.action}`,
       cleanedCommand: cleaned,
+      robosUser: activeUser,
       response: actionLabels[intent.action] || `Updated ${targetName}.`,
-      data: res,
+      data: { ...(res || {}), robosUser: activeUser },
     };
   }
 
@@ -1259,6 +1401,7 @@ async function executeNabuCommand(rawTranscript, {
         ok: false,
         skill: chosenKind === 'movie' ? 'movie-play' : 'audio-play',
         cleanedCommand: cleaned,
+        robosUser: activeUser,
         response: match.error || `I couldn't find that in your ${chosenKind} library.`,
       };
     }
@@ -1273,6 +1416,7 @@ async function executeNabuCommand(rawTranscript, {
         trackIds: match.tracks.map(t => t.id),
         shuffle: Boolean(match.shuffle),
         targetIp: match.targetIp || null,
+        robosUser: activeUser,
       });
     }
 
@@ -1280,6 +1424,7 @@ async function executeNabuCommand(rawTranscript, {
       ok: true,
       skill: chosenKind === 'movie' ? 'movie-play' : 'audio-play',
       cleanedCommand: cleaned,
+      robosUser: activeUser,
       matchType: match.matchType,
       score: Math.round(match.score),
       bestTrack: match.bestTrack,
@@ -1297,6 +1442,7 @@ async function executeNabuCommand(rawTranscript, {
         trackIds: match.tracks.map(t => t.id),
         targetDevice: match.targetDevice || null,
         targetIp: match.targetIp || null,
+        robosUser: activeUser,
       },
     };
   }
@@ -1307,10 +1453,17 @@ async function executeNabuCommand(rawTranscript, {
     const { SkillsExecutor } = require('../../voice-prompt/lib/skills-executor');
     executor = new SkillsExecutor();
   }
-  const skillRes = await executor.executeCommand(cleaned, { source: 'home-assistant-voice-pe' });
+  const skillRes = await executor.executeCommand(cleaned, {
+    source: 'home-assistant-voice-pe',
+    robosUser: activeUser,
+  });
   return {
     ...skillRes,
     cleanedCommand: cleaned,
+    robosUser: activeUser,
+    data: skillRes.data && typeof skillRes.data === 'object'
+      ? { ...skillRes.data, robosUser: activeUser }
+      : { result: skillRes.data || null, robosUser: activeUser },
   };
 }
 

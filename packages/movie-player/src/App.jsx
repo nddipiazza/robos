@@ -119,6 +119,7 @@ export default function App() {
   const playedRef = useRef({ key: null, counted: false });
   const shuffleHistoryRef = useRef([]);
   const latestRef = useRef({});
+  const [activeRobosUser, setActiveRobosUser] = useState(null);
 
   const formatDuration = (sec) => {
     if (!sec || isNaN(sec)) return '--:--';
@@ -1614,6 +1615,8 @@ export default function App() {
         speakers,
         song: playlist[currentTrackIndex] || null,
         castActive: !!activeCastSession,
+        activeRobosUser,
+        setRobosUser: (u) => setActiveRobosUser(u || null),
         position: casting ? castClock.now() : (audio ? audio.currentTime : 0),
         playing: casting
           ? (castClock.get().playing || (isPlaying && !!activeCastSession && !activeCastSession.isPaused))
@@ -1627,7 +1630,7 @@ export default function App() {
           } else if (activeCastSession && !activeCastSession.isPaused) {
             await handleToggleCastPause();
           }
-          return { ok: true, playing: false };
+          return { ok: true, playing: false, robosUser: activeRobosUser || null };
         },
         resumeMusic: async () => {
           const song = playlist[currentTrackIndex];
@@ -1640,10 +1643,13 @@ export default function App() {
             await castTrack(outputTarget, song, { startAt: castClock.now() });
             setIsPlaying(true);
           }
-          return { ok: true, playing: true };
+          return { ok: true, playing: true, robosUser: activeRobosUser || null };
         },
-        playFromControl: async ({ tracks, shuffle, targetIp } = {}) => {
+        playFromControl: async ({ tracks, shuffle, targetIp, robosUser } = {}) => {
           if (!Array.isArray(tracks) || !tracks.length) return { ok: false, error: 'No movies given' };
+          if (robosUser) {
+            setActiveRobosUser(robosUser);
+          }
           if (targetIp && targetIp !== 'local') {
             const list = tracks.map(t => ({ ...t }));
             if (shuffle) {
@@ -1664,11 +1670,15 @@ export default function App() {
             playerRef.current?.audio?.current?.pause();
             if (videoRef.current) videoRef.current.pause();
             setIsPlaying(true);
+            if (robosUser?.name) {
+              showStatus(`🎙️ Playing for ${robosUser.name}: ${first.title}`);
+            }
             return {
               ok: true,
               playing: true,
               targetIp,
               count: list.length,
+              robosUser: robosUser || activeRobosUser || null,
               track: { title: first.title || '', artist: first.artist || '', album: first.album || '' },
             };
           }
@@ -1676,11 +1686,15 @@ export default function App() {
             setOutputTarget('local');
           }
           playTracks(tracks, 0, { shuffle: !!shuffle });
+          if (robosUser?.name) {
+            showStatus(`🎙️ Playing for ${robosUser.name}: ${tracks[0].title}`);
+          }
           return {
             ok: true,
             playing: true,
             targetIp: targetIp || outputTarget,
             count: tracks.length,
+            robosUser: robosUser || activeRobosUser || null,
             track: { title: tracks[0].title || '', artist: tracks[0].artist || '', album: tracks[0].album || '' },
           };
         },
@@ -1917,6 +1931,29 @@ export default function App() {
 
         {/* Global Action Buttons in Header */}
         <div className="header-actions">
+          {activeRobosUser && activeRobosUser.name && (
+            <span
+              id="active-robos-user-badge"
+              className="cinema-stage-badge"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 10px',
+                borderRadius: '999px',
+                background: activeRobosUser.identified ? 'rgba(0, 188, 212, 0.16)' : 'rgba(232, 163, 61, 0.16)',
+                border: activeRobosUser.identified ? '1px solid rgba(0, 188, 212, 0.45)' : '1px solid rgba(232, 163, 61, 0.45)',
+                color: '#f0f6fc',
+                fontSize: '12px',
+                fontWeight: 600,
+              }}
+              title={activeRobosUser.identified
+                ? `Identified by RobOS Voice ID (${Math.round((activeRobosUser.confidence || 0) * 100)}% voiceprint confidence)`
+                : `Active RobOS User context (${activeRobosUser.source || 'voice'})`}
+            >
+              {`👤 RobOS User: ${activeRobosUser.name}${activeRobosUser.identified && activeRobosUser.confidence ? ` (${Math.round(activeRobosUser.confidence * 100)}%)` : ''}`}
+            </span>
+          )}
           <button
             id="btn-header-add-folder"
             className="btn-accent"

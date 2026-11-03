@@ -20891,36 +20891,41 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         playing: !!p.playing,
         track: p.song ? { title: p.song.title || "", artist: p.song.artist || "", album: p.song.album || "" } : null,
         position: p.position,
-        speakingClip: !!takeover.current
+        speakingClip: !!takeover.current,
+        robosUser: p.activeRobosUser || null
       };
     }, [getPlayer]);
-    const pause = (0, import_react23.useCallback)(async () => {
+    const pause = (0, import_react23.useCallback)(async (payload = {}) => {
+      if (payload.robosUser && typeof getPlayer().setRobosUser === "function") getPlayer().setRobosUser(payload.robosUser);
       if (takeover.current) {
         takeover.current.wasPlaying = false;
-        return { ok: true, paused: true };
+        return { ok: true, paused: true, robosUser: payload.robosUser || null };
       }
-      return getPlayer().pauseMusic();
+      return getPlayer().pauseMusic(payload);
     }, [getPlayer]);
-    const resume = (0, import_react23.useCallback)(async () => {
+    const resume = (0, import_react23.useCallback)(async (payload = {}) => {
+      if (payload.robosUser && typeof getPlayer().setRobosUser === "function") getPlayer().setRobosUser(payload.robosUser);
       if (takeover.current) {
         takeover.current.wasPlaying = true;
-        return { ok: true, playing: true };
+        return { ok: true, playing: true, robosUser: payload.robosUser || null };
       }
-      return getPlayer().resumeMusic();
+      return getPlayer().resumeMusic(payload);
     }, [getPlayer]);
     const play = (0, import_react23.useCallback)(async (payload = {}) => {
       const p = getPlayer();
       if (typeof p.playFromControl === "function") return p.playFromControl(payload);
       return { ok: false, error: "playFromControl unavailable" };
     }, [getPlayer]);
-    const next = (0, import_react23.useCallback)(async () => {
+    const next = (0, import_react23.useCallback)(async (payload = {}) => {
       const p = getPlayer();
-      if (typeof p.nextTrack === "function") return p.nextTrack();
+      if (payload.robosUser && typeof p.setRobosUser === "function") p.setRobosUser(payload.robosUser);
+      if (typeof p.nextTrack === "function") return p.nextTrack(payload);
       return { ok: false, error: "nextTrack unavailable" };
     }, [getPlayer]);
-    const previous = (0, import_react23.useCallback)(async () => {
+    const previous = (0, import_react23.useCallback)(async (payload = {}) => {
       const p = getPlayer();
-      if (typeof p.previousTrack === "function") return p.previousTrack();
+      if (payload.robosUser && typeof p.setRobosUser === "function") p.setRobosUser(payload.robosUser);
+      if (typeof p.previousTrack === "function") return p.previousTrack(payload);
       return { ok: false, error: "previousTrack unavailable" };
     }, [getPlayer]);
     const handlers = (0, import_react23.useRef)({});
@@ -21023,6 +21028,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const playedRef = (0, import_react24.useRef)({ key: null, counted: false });
     const shuffleHistoryRef = (0, import_react24.useRef)([]);
     const latestRef = (0, import_react24.useRef)({});
+    const [activeRobosUser, setActiveRobosUser] = (0, import_react24.useState)(null);
     const formatDuration5 = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
@@ -22130,6 +22136,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           speakers,
           song: playlist[currentTrackIndex] || null,
           castActive: !!activeCastSession,
+          activeRobosUser,
+          setRobosUser: (u) => setActiveRobosUser(u || null),
           position: casting ? castClock.now() : audio ? audio.currentTime : 0,
           playing: casting ? castClock.get().playing || isPlaying && !!activeCastSession && !activeCastSession.isPaused : !!(audio && !audio.paused),
           djSpeaking: !!dj.speaking,
@@ -22144,7 +22152,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             } else if (activeCastSession && !activeCastSession.isPaused) {
               await handleToggleCastPause();
             }
-            return { ok: true, playing: false };
+            return { ok: true, playing: false, robosUser: activeRobosUser || null };
           },
           resumeMusic: async () => {
             const song = playlist[currentTrackIndex];
@@ -22161,10 +22169,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               await castTrack(outputTarget, song, { startAt: castClock.now() });
               setIsPlaying(true);
             }
-            return { ok: true, playing: true };
+            return { ok: true, playing: true, robosUser: activeRobosUser || null };
           },
-          playFromControl: async ({ tracks, shuffle, targetIp } = {}) => {
+          playFromControl: async ({ tracks, shuffle, targetIp, robosUser } = {}) => {
             if (!Array.isArray(tracks) || !tracks.length) return { ok: false, error: "No tracks given" };
+            if (robosUser) {
+              setActiveRobosUser(robosUser);
+            }
             if (targetIp && targetIp !== "local") {
               const list = tracks.map((t) => ({ ...t }));
               if (shuffle) {
@@ -22185,11 +22196,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               await castTrack(targetIp, first);
               playerRef.current?.audio?.current?.pause();
               setIsPlaying(true);
+              if (robosUser?.name) {
+                showStatus(`\u{1F399}\uFE0F Playing for ${robosUser.name}: ${first.title}`);
+              }
               return {
                 ok: true,
                 playing: true,
                 targetIp,
                 count: list.length,
+                robosUser: robosUser || activeRobosUser || null,
                 track: { title: first.title || "", artist: first.artist || "", album: first.album || "" }
               };
             }
@@ -22197,11 +22212,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               setOutputTarget("local");
             }
             playTracks(tracks, 0, { shuffle: !!shuffle });
+            if (robosUser?.name) {
+              showStatus(`\u{1F399}\uFE0F Playing for ${robosUser.name}: ${tracks[0].title}`);
+            }
             return {
               ok: true,
               playing: true,
               targetIp: targetIp || outputTarget,
               count: tracks.length,
+              robosUser: robosUser || activeRobosUser || null,
               track: { title: tracks[0].title || "", artist: tracks[0].artist || "", album: tracks[0].album || "" }
             };
           },
@@ -22419,7 +22438,26 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+      /* @__PURE__ */ import_react24.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react24.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react24.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react24.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react24.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react24.default.createElement("div", null, /* @__PURE__ */ import_react24.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react24.default.createElement("div", { className: "header-actions" }, activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react24.default.createElement(
+        "span",
+        {
+          id: "active-robos-user-badge",
+          style: {
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "5px 10px",
+            borderRadius: "999px",
+            background: activeRobosUser.identified ? "rgba(0, 188, 212, 0.16)" : "rgba(232, 163, 61, 0.16)",
+            border: activeRobosUser.identified ? "1px solid rgba(0, 188, 212, 0.45)" : "1px solid rgba(232, 163, 61, 0.45)",
+            color: "#f0f6fc",
+            fontSize: "12px",
+            fontWeight: 600
+          },
+          title: activeRobosUser.identified ? `Identified by RobOS Voice ID (${Math.round((activeRobosUser.confidence || 0) * 100)}% voiceprint confidence)` : `Active RobOS User context (${activeRobosUser.source || "voice"})`
+        },
+        `\u{1F464} RobOS User: ${activeRobosUser.name}${activeRobosUser.identified && activeRobosUser.confidence ? ` (${Math.round(activeRobosUser.confidence * 100)}%)` : ""}`
+      ), /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
