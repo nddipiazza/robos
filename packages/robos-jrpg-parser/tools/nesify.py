@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Shrinks a generated image to game size and maps it onto the NES palette.
 
-  nesify.py <in> <out> --width 256 --height 240 [--colors 16] [--key] [--crop]
+  nesify.py <in> <out> --width 256 --height 240 [--colors 16] [--key] [--crop] [--keep-colors]
   nesify.py <in> <out> --max 1024     convert to PNG for use as a reference
 
 --key removes a sprite's solid background and makes it transparent.
@@ -75,12 +75,12 @@ def nearest_nes(color):
     return min(NES_LAB, key=lambda entry: sum((a - b) ** 2 for a, b in zip(entry[0], lab)))[1]
 
 
-def nesify(image, width, height, colors, crop):
+def nesify(image, width, height, colors, crop, keep_colors=False):
     source = image.convert('RGB')
     small = (center_crop(source, width, height) if crop else source).resize((width, height), Image.BOX)
     small = brighten(small)
     limited = small.quantize(colors=colors, dither=Image.Dither.NONE).convert('RGB')
-    mapped = {color: nearest_nes(color) for _, color in limited.getcolors(width * height)}
+    mapped = {color: color if keep_colors else nearest_nes(color) for _, color in limited.getcolors(width * height)}
     out = Image.new('RGBA', (width, height))
     for y in range(height):
         for x in range(width):
@@ -88,38 +88,92 @@ def nesify(image, width, height, colors, crop):
     return out
 
 
+def dominant_color(image):
+    """The commonest color that is not near black, which a frame around the picture can be."""
+    small = image.resize((128, 128), Image.NEAREST)
+    counts = {}
+    for y in range(128):
+        for x in range(128):
+            pixel = small.getpixel((x, y))
+            if sum(pixel) >= 90:
+                coarse = tuple(c // 24 for c in pixel)
+                total, sums = counts.get(coarse, (0, (0, 0, 0)))
+                counts[coarse] = (total + 1, tuple(a + b for a, b in zip(sums, pixel)))
+    if not counts:
+        return image.getpixel((0, 0))
+    total, sums = max(counts.values(), key=lambda entry: entry[0])
+    return tuple(c // total for c in sums)
+
+
+def foreground_mask(image, background):
+    """Pixels of the subject: not background, in a group that does not touch the image's edge."""
+    width, height = image.size
+    pixels = image.load()
+    candidate = bytearray(width * height)
+    for y in range(height):
+        for x in range(width):
+            if sum((a - b) ** 2 for a, b in zip(pixels[x, y], background)) >= 90 ** 2:
+                candidate[y * width + x] = 1
+
+    mask = bytearray(candidate)
+    # Whatever is joined to the edge is a frame or border, such as a drawn CRT screen.
+    stack = [i for i in range(width) if candidate[i]]
+    stack += [(height - 1) * width + i for i in range(width) if candidate[(height - 1) * width + i]]
+    stack += [y * width for y in range(height) if candidate[y * width]]
+    stack += [y * width + width - 1 for y in range(height) if candidate[y * width + width - 1]]
+    while stack:
+        i = stack.pop()
+        if not mask[i]:
+            continue
+        mask[i] = 0
+        x, y = i % width, i // width
+        if x > 0 and mask[i - 1]:
+            stack.append(i - 1)
+        if x < width - 1 and mask[i + 1]:
+            stack.append(i + 1)
+        if y > 0 and mask[i - width]:
+            stack.append(i - width)
+        if y < height - 1 and mask[i + width]:
+            stack.append(i + width)
+    return mask if any(mask) else candidate
+
+
 def sprite(image, width, height, colors):
     """Removes a solid background first, so its color does not take over the palette."""
     source = image.convert('RGB')
-    background = source.getpixel((0, 0))
-    is_background = lambda p: sum((a - b) ** 2 for a, b in zip(p, background)) < 90 ** 2
-
-    pixels = source.load()
     src_w, src_h = source.size
-    xs = [x for x in range(src_w) for y in range(src_h) if not is_background(pixels[x, y])]
-    ys = [y for y in range(src_h) for x in range(src_w) if not is_background(pixels[x, y])]
-    if not xs:
+    mask = foreground_mask(source, dominant_color(source))
+    if not any(mask):
         raise SystemExit('The image is only background')
+    xs = [i % src_w for i, on in enumerate(mask) if on]
+    ys = [i // src_w for i, on in enumerate(mask) if on]
     box = (min(xs), min(ys), max(xs) + 1, max(ys) + 1)
     scale = min(width / (box[2] - box[0]), height / (box[3] - box[1]))
     size = (max(1, round((box[2] - box[0]) * scale)), max(1, round((box[3] - box[1]) * scale)))
+
     # NEAREST keeps the source's hard pixel edges, and no background blends into them.
-    small = source.crop(box).resize(size, Image.NEAREST)
+    def source_of(x, y):
+        return (box[0] + int((x + 0.5) * (box[2] - box[0]) / size[0]), box[1] + int((y + 0.5) * (box[3] - box[1]) / size[1]))
 
-    foreground = [small.getpixel((x, y)) for y in range(size[1]) for x in range(size[0]) if not is_background(small.getpixel((x, y)))]
-    strip = Image.new('RGB', (len(foreground), 1))
-    strip.putdata(foreground)
-    limited = strip.quantize(colors=colors, dither=Image.Dither.NONE).convert('RGB')
-    reduced = {foreground[i]: limited.getpixel((i, 0)) for i in range(len(foreground))}
-    mapped = {color: nearest_nes(color) for color in set(reduced.values())}
-
-    out = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-    left, top = (width - size[0]) // 2, (height - size[1]) // 2
+    kept = []
     for y in range(size[1]):
         for x in range(size[0]):
-            pixel = small.getpixel((x, y))
-            if not is_background(pixel):
-                out.putpixel((left + x, top + y), mapped[reduced[pixel]] + (255,))
+            sx, sy = source_of(x, y)
+            if mask[sy * src_w + sx]:
+                kept.append((x, y, source.getpixel((sx, sy))))
+    if not kept:
+        raise SystemExit('The image is only background')
+
+    strip = Image.new('RGB', (len(kept), 1))
+    strip.putdata([pixel for _, _, pixel in kept])
+    limited = strip.quantize(colors=colors, dither=Image.Dither.NONE).convert('RGB')
+    mapped = {}
+    out = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    left, top = (width - size[0]) // 2, (height - size[1]) // 2
+    for i, (x, y, _) in enumerate(kept):
+        color = limited.getpixel((i, 0))
+        mapped.setdefault(color, nearest_nes(color))
+        out.putpixel((left + x, top + y), mapped[color] + (255,))
     return out
 
 
@@ -132,6 +186,7 @@ def main():
     parser.add_argument('--colors', type=int, default=16)
     parser.add_argument('--key', action='store_true')
     parser.add_argument('--crop', action='store_true', help='crop to the target shape instead of stretching')
+    parser.add_argument('--keep-colors', action='store_true', help="reduce the image's own colors without the NES palette")
     parser.add_argument('--max', type=int, help='convert to PNG, no larger than this')
     args = parser.parse_args()
 
@@ -144,7 +199,7 @@ def main():
     if args.key:
         sprite(image, args.width, args.height, args.colors).save(args.output)
         return
-    nesify(image, args.width, args.height, args.colors, args.crop).save(args.output)
+    nesify(image, args.width, args.height, args.colors, args.crop, args.keep_colors).save(args.output)
 
 
 if __name__ == '__main__':

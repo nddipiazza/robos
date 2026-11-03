@@ -19,6 +19,8 @@ Commands:
   plan --out <dir> [--kinds a,b]  List the images that art would generate
   art --out <dir> [--kinds a,b] [--limit n] [--model <id>] [--force]
                                 Generate images with Gemini and add them to the kgraph
+       [--only id,id]             Redo these images, by the ids in the manifest
+       [--refit]                  Redo the shrink step from the raw images, without the model
   coverage --out <dir>          What is covered and what to collect next
 
 Image kinds: ${Object.keys(TARGETS).join(', ')} (default: ${DEFAULT_KINDS.join(', ')})
@@ -85,7 +87,14 @@ async function main() {
     }
     case 'art': {
       const out = need(flags, 'out');
-      const res = await pipeline.art(out, { kinds, limit: flags.limit ? Number(flags.limit) : undefined, model: flags.model, force: !!flags.force, log });
+      if (flags.refit) {
+        const res = pipeline.refit(out, { log });
+        console.log(`Refit ${res.count - res.failures.length} of ${res.count} images`);
+        if (res.failures.length) process.exitCode = 1;
+        return;
+      }
+      const only = typeof flags.only === 'string' ? flags.only.split(',') : undefined;
+      const res = await pipeline.art(out, { kinds, only, limit: flags.limit ? Number(flags.limit) : undefined, model: flags.model, force: !!flags.force, log });
       console.log(`Generated ${res.generated} of ${res.planned} images in ${path.join(out, 'assets', 'generated')}`);
       for (const f of res.failures) console.log(`  failed ${f.id}: ${f.error}`);
       if (res.failures.length) process.exitCode = 1;

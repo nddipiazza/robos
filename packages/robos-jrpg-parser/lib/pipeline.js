@@ -9,7 +9,7 @@ const { scan } = require('./scan');
 const { decodeHtml, visibleText, tables } = require('./html');
 const { readCharts } = require('./charts');
 const { extractProse, consolidate, extractScreenLayout, classifyImage } = require('./extract');
-const { generateArt, planJobs } = require('./art');
+const { generateArt, refitArt, planJobs } = require('./art');
 const { writeKgraph } = require('./kgraph');
 const { slug } = require('./slug');
 
@@ -116,4 +116,4 @@ function plan(out, opts = {}) {
   return planJobs(readParsed(out), opts);
 }
 
-module.exports = { parse, art, plan, readParsed, scan };
+module.exports = { parse, art, plan, refit: refitArt, readParsed, scan };

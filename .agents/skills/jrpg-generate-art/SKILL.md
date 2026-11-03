@@ -31,6 +31,8 @@ Generates images for a game already parsed with `jrpg-parse-assets` and adds the
    node packages/robos-jrpg-parser/bin/jrpg-parser.js art --out <dir> [--kinds world-map,area-map] [--force]
    ```
 
+If one image is wrong, look at its raw file first. Redo just that image with `--only <id>`. If the raw is fine and the shrink step spoiled it, change `tools/nesify.py` and run `art --out <dir> --refit`, which does not call the model.
+
 Kinds: `world-map`, `area-map`, `battle-backdrop`, `class-sprite`, `menu-screen`, and `enemy-sprite`, which is off by default because a game has over a hundred enemies.
 
 ## Output
