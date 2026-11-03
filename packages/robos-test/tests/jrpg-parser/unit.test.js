@@ -15,7 +15,7 @@ const { scan, imageSize, imageRole } = require(path.join(PKG, 'lib', 'scan'));
 const { readCharts, readSpellName } = require(path.join(PKG, 'lib', 'charts'));
 const { tables, visibleText, decodeHtml } = require(path.join(PKG, 'lib', 'html'));
 const { extractProse, consolidate, displayName, chunkText, parseJsonReply } = require(path.join(PKG, 'lib', 'extract'));
-const { planJobs, generateArt } = require(path.join(PKG, 'lib', 'art'));
+const { planJobs, generateArt, refitArt } = require(path.join(PKG, 'lib', 'art'));
 const { coverage } = require(path.join(PKG, 'lib', 'ontology'));
 const pipeline = require(path.join(PKG, 'lib', 'pipeline'));
 const aiImage = require(path.resolve(PKG, '..', 'robos-lib', 'ai-image'));
@@ -307,6 +307,47 @@ describe('jrpg parser: the whole pipeline', () => {
     const nodes = manifest.packages.flatMap(p => JSON.parse(fs.readFileSync(path.join(out, '.robos', p.path), 'utf8'))['robos:nodes']);
     const ids = new Set(nodes.map(n => n['@id']));
     for (const n of nodes.filter(x => x['jrpg:depicts'])) assert.ok(ids.has(n['jrpg:depicts']['@id']), n['jrpg:depicts']['@id']);
+  });
+
+  it('finds a sprite inside a frame the model drew around it', { skip: !pythonHasPillow() }, () => {
+    const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-sprite-'));
+    const script = `
+from PIL import Image
+i = Image.new('RGB', (200, 200), (0, 0, 0))
+i.paste((190, 10, 170), (10, 10, 190, 190))
+i.paste((220, 180, 40), (80, 70, 120, 130))
+i.save(${JSON.stringify(path.join(dir2, 'in.png'))})
+`;
+    assert.equal(cp.spawnSync('python3', ['-I', '-c', script]).status, 0);
+    const run = cp.spawnSync('python3', ['-I', path.join(PKG, 'tools', 'nesify.py'), path.join(dir2, 'in.png'), path.join(dir2, 'out.png'), '--width', '64', '--height', '64', '--colors', '8', '--key'], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    const check = cp.spawnSync('python3', ['-I', '-c', `
+from PIL import Image
+i = Image.open(${JSON.stringify(path.join(dir2, 'out.png'))}).convert('RGBA')
+print(i.getpixel((0, 0))[3], i.getpixel((32, 32))[3], i.getpixel((32, 32))[0] > i.getpixel((32, 32))[2])
+`], { encoding: 'utf8' });
+    assert.equal(check.stdout.trim(), '0 255 True');
+    fs.rmSync(dir2, { recursive: true, force: true });
+  });
+
+  it('redoes one image with only, and the shrink step without the model', { skip: !pythonHasPillow() }, async () => {
+    const picture = path.join(out, 'picture.png');
+    const calls = [];
+    const generateImage = async ({ outFile }) => {
+      calls.push(outFile);
+      fs.mkdirSync(path.dirname(outFile), { recursive: true });
+      fs.copyFileSync(picture, outFile);
+      return { ok: true, file: outFile, model: 'fake-model' };
+    };
+    await generateArt(result.parsed, out, { only: ['class-sprite-warrior'], generateImage });
+    assert.equal(calls.length, 1);
+    assert.match(calls[0], /class-sprite-warrior/);
+    const file = path.join(out, 'assets', 'generated', 'class-sprite', 'class-sprite-warrior.png');
+    fs.rmSync(file);
+    const before = calls.length;
+    assert.deepEqual(refitArt(out).failures, []);
+    assert.equal(calls.length, before);
+    assert.ok(fs.existsSync(file));
   });
 
   it('records an unusable image as failed and keeps going', { skip: !pythonHasPillow() }, async () => {

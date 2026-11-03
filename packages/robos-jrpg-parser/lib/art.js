@@ -19,7 +19,8 @@ const TARGETS = {
   'battle-backdrop': { width: 256, height: 64, colors: 8, crop: true },
   'class-sprite': { width: 64, height: 64, colors: 8, key: true },
   'enemy-sprite': { width: 96, height: 96, colors: 12, key: true },
-  'menu-screen': { width: 256, height: 240, colors: 6 },
+  // A menu's navy has no close NES palette entry, and small sprites inside it need the colors.
+  'menu-screen': { width: 256, height: 240, colors: 16, keepColors: true },
 };
 
 const DEFAULT_KINDS = ['world-map', 'area-map', 'battle-backdrop', 'class-sprite', 'menu-screen'];
@@ -98,6 +99,14 @@ function runNesify(args) {
   if (res.status !== 0) throw new Error(`nesify failed: ${(res.stderr || '').trim().split('\n').pop()}`);
 }
 
+function fitToGame(raw, file, kind) {
+  const target = TARGETS[kind];
+  runNesify([
+    raw, file, '--width', target.width, '--height', target.height, '--colors', target.colors,
+    ...(target.key ? ['--key'] : []), ...(target.crop ? ['--crop'] : []), ...(target.keepColors ? ['--keep-colors'] : []),
+  ].map(String));
+}
+
 // A large or webp source is converted first, so the model always gets a readable PNG.
 function prepareReference(source, dir) {
   const out = path.join(dir, `${slug(source.name)}.png`);
@@ -110,7 +119,7 @@ function prepareReference(source, dir) {
  * A job already in the manifest is skipped, so an interrupted run can be resumed.
  */
 async function generateArt(parsed, outDir, opts = {}) {
-  const { kinds, limit, model, force = false, log = () => {}, generateImage = loadImageLib().generateImage } = opts;
+  const { kinds, only, limit, model, force = false, log = () => {}, generateImage = loadImageLib().generateImage } = opts;
   const root = path.join(outDir, 'assets', 'generated');
   const manifestFile = path.join(root, 'manifest.json');
   fs.mkdirSync(root, { recursive: true });
@@ -118,7 +127,8 @@ async function generateArt(parsed, outDir, opts = {}) {
   const done = new Map(manifest.images.map(i => [i.id, i]));
   const sourcesByName = new Map(parsed.sources.map(s => [s.name, s]));
 
-  const todo = planJobs(parsed, { kinds: kinds || DEFAULT_KINDS }).filter(j => force || !done.has(j.id));
+  const planned = planJobs(parsed, { kinds: only ? Object.keys(TARGETS) : kinds || DEFAULT_KINDS });
+  const todo = only ? planned.filter(j => only.includes(j.id)) : planned.filter(j => force || !done.has(j.id));
   const jobs = limit ? todo.slice(0, limit) : todo;
   const refDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-refs-'));
   const failures = [];
@@ -133,12 +143,11 @@ async function generateArt(parsed, outDir, opts = {}) {
         failures.push({ id: j.id, error: res.error });
         continue;
       }
-      const target = TARGETS[j.kind];
       const rel = path.join(j.kind, `${j.id}.png`);
       const file = path.join(root, rel);
       fs.mkdirSync(path.dirname(file), { recursive: true });
       try {
-        runNesify([raw, file, '--width', target.width, '--height', target.height, '--colors', target.colors, ...(target.key ? ['--key'] : []), ...(target.crop ? ['--crop'] : [])].map(String));
+        fitToGame(raw, file, j.kind);
       } catch (e) {
         log(`  failed: ${e.message}`);
         failures.push({ id: j.id, error: e.message });
@@ -162,4 +171,20 @@ async function generateArt(parsed, outDir, opts = {}) {
   return { planned: jobs.length, generated: jobs.length - failures.length, failures, manifest };
 }
 
-module.exports = { planJobs, generateArt, TARGETS, DEFAULT_KINDS };
+/** Redoes the shrink step from the stored raw images, without calling the model. */
+function refitArt(outDir, { log = () => {} } = {}) {
+  const manifestFile = path.join(outDir, 'assets', 'generated', 'manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  const failures = [];
+  for (const image of manifest.images) {
+    try {
+      fitToGame(path.join(outDir, image.raw), path.join(outDir, image.file), image.kind);
+    } catch (e) {
+      log(`${image.id} failed: ${e.message}`);
+      failures.push({ id: image.id, error: e.message });
+    }
+  }
+  return { count: manifest.images.length, failures };
+}
+
+module.exports = { planJobs, generateArt, refitArt, TARGETS, DEFAULT_KINDS };
