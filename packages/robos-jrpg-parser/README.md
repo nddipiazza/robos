@@ -5,11 +5,11 @@ Turns folders of classic JRPG resources into a kgraph, and generates backgrounds
 A person collects the resources: walkthroughs, reference guides, screenshots, maps, sprite sheets. Pass any mix of folders and single files. The parser reads local files only and has no crawler or fetch step. When something is missing, it says what to add.
 
 ```bash
-node bin/jrpg-parser.js scan ~/Downloads/ff1
-node bin/jrpg-parser.js parse ~/Downloads/ff1 --out ~/kgraphs/final-fantasy-nes --title "Final Fantasy" --edition "NES (USA)"
-node bin/jrpg-parser.js coverage --out ~/kgraphs/final-fantasy-nes
-node bin/jrpg-parser.js plan --out ~/kgraphs/final-fantasy-nes
-node bin/jrpg-parser.js art --out ~/kgraphs/final-fantasy-nes --limit 3
+node bin/jrpg-parser.js scan ~/Downloads/my-game
+node bin/jrpg-parser.js parse ~/Downloads/my-game --out ~/kgraphs/my-game --title "My Game" --edition "NES (USA)"
+node bin/jrpg-parser.js coverage --out ~/kgraphs/my-game
+node bin/jrpg-parser.js plan --out ~/kgraphs/my-game
+node bin/jrpg-parser.js art --out ~/kgraphs/my-game --limit 3
 ```
 
 ## Steps

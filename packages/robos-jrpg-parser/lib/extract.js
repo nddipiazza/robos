@@ -145,7 +145,7 @@ async function extractProse(opts) {
   return { ...out, warnings };
 }
 
-// Lower-case or upper-case names from prose become "Mt. Gulg", not "MT. GULG".
+// Lower-case or upper-case names from prose become "Mt. Ash", not "MT. ASH".
 function displayName(name) {
   const value = String(name || '').trim();
   if (/[a-z]/.test(value) && /[A-Z]/.test(value)) return value;

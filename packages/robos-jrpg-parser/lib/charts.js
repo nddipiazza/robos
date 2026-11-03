@@ -51,7 +51,7 @@ function readBestiary(rows, source) {
   return out;
 }
 
-// "POISON (BANE) * *" → title POISON, alternate name BANE. "(HRM2 )" comes from split cells.
+// "BLAST (BURST) * *" → title BLAST, alternate name BURST. "(BRST )" comes from split cells.
 function readSpellName(cell) {
   const clean = cell.replace(/\*/g, ' ').replace(/\s+/g, ' ').trim();
   const m = clean.match(/^(.+?)\s*\(\s*([^)]*?)\s*\)?$/);
@@ -113,7 +113,7 @@ function readSpellDescriptions(text) {
   return out;
 }
 
-// FIRE1 uses the description under FIRE; SHLD1 under SHLD.
+// BLAST1 uses the description under BLAST.
 function spellDescription(spell, descriptions) {
   const keys = [spell.name, spell.altName, spell.name.replace(/\d+$/, ''), spell.altName && spell.altName.replace(/\d+$/, '')];
   for (const key of keys) {
@@ -130,7 +130,7 @@ function isMusicTable(header) {
   return columnOf(header, /track/) >= 0 && columnOf(header, /title/) >= 0;
 }
 
-// "`FI` = Fighter | `KN` = Knight" lines give a guide's class abbreviations.
+// "`SQ` = Squire | `PL` = Paladin" lines give a guide's class abbreviations.
 function readClassKey(text) {
   const key = new Map();
   for (const m of text.matchAll(/`([A-Z]{2})`\s*=\s*([A-Z][A-Za-z ]+?)(?=\s*\||\s*$)/gm)) key.set(m[1], m[2].trim());
@@ -167,7 +167,7 @@ function readEquipment(rows, source, classKey) {
   const isWeapon = damage >= 0;
   const out = [];
   for (const row of rows.slice(1)) {
-    // "Wooden staff / Staff" gives one item's two names. A row of one cell is a subheading.
+    // "Ash staff / Staff" gives one item's two names. A row of one cell is a subheading.
     const [title, ...altNames] = String(row[name >= 0 ? name : 0] || '').split(/\s+\/\s+/).map(s => s.trim());
     if (!title || row.length < 3 || row[price] === '' || row[price] === undefined) continue;
     const special = effect >= 0 ? row[effect] : '';
@@ -240,8 +240,8 @@ function pricedItems(text) {
 }
 
 /**
- * Reads a "## ... Shop ..." section of a Markdown guide: "### 1. Coneria" headings with
- * "* **Weapon Shop:** Rapier (10 G)" bullets and "* **Magic (Level 1 - 100 G each):**" lists.
+ * Reads a "## ... Shop ..." section of a Markdown guide: "### 1. Rivertown" headings with
+ * "* **Weapon Shop:** Dagger (10 G)" bullets and "* **Magic (Level 1 - 100 G each):**" lists.
  */
 function readShopSections(text, source) {
   const shops = new Map();
