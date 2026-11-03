@@ -429,6 +429,7 @@ var btn_quest_objectives: Button = null
 # RPG Font and Texture Theme Assets
 var font_rpg_cinzel: FontFile = null
 var font_rpg_medieval: FontFile = null
+var font_rpg_emoji: FontFile = null
 var tex_rpg_menu_dungeon_bg: Texture2D = null
 var tex_rpg_dialog_panel_bg: Texture2D = null
 var tex_rpg_parchment_banner_bg: Texture2D = null
@@ -1792,6 +1793,13 @@ func _load_font_file_safe(path: String) -> FontFile:
 func _load_rpg_ui_theme_assets() -> void:
 	font_rpg_cinzel = _load_font_file_safe("res://assets/fonts/Cinzel.ttf")
 	font_rpg_medieval = _load_font_file_safe("res://assets/fonts/MedievalSharp.ttf")
+	# Web exports cannot rely on the operating system's emoji fonts. Bundle a
+	# monochrome fallback for buttons, dynamic labels and canvas-drawn text.
+	font_rpg_emoji = _load_font_file_safe("res://assets/fonts/NotoEmoji.ttf")
+	if font_rpg_emoji:
+		for text_font in [font_rpg_cinzel, font_rpg_medieval, ThemeDB.fallback_font]:
+			if text_font:
+				text_font.fallbacks = [font_rpg_emoji]
 	tex_rpg_menu_dungeon_bg = _load_texture_safe("res://assets/ui/rpg_menu_dungeon_bg.png")
 	tex_rpg_dialog_panel_bg = _load_texture_safe("res://assets/ui/rpg_dialog_panel_bg.png")
 	tex_rpg_parchment_banner_bg = _load_texture_safe("res://assets/ui/rpg_parchment_banner_bg.png")

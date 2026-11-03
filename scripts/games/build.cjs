@@ -126,6 +126,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   // Verify a second clean editor start after the bootstrap has flushed imports.
   run(['--headless', '--path', project, '--editor', '--import'], 'bootstrap-import', true);
   run(['--headless', '--path', project, '--editor', '--import'], 'import');
+  if (game.project === 'tabletop-rpg') run(['--headless', '--path', project, '--script', path.join(root, 'games/tabletop-rpg/tests/check_emoji_font.gd')], 'emoji-font');
   const executable = path.join(payload, platform === 'web' ? 'index.html' : game.executable + target.suffix);
   console.log(`Exporting ${game.title} for ${platform}`);
   run(['--headless', '--path', project, '--export-release', 'Standalone', executable], 'export');
