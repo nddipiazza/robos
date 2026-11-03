@@ -38,6 +38,17 @@ test('catalog groups user apps and dependency discovery does not pull the entire
   // Tabletop loads this through path.join(REPO_ROOT, "packages/robos-gaming").
   assert.ok(dependencies('robos-tabletop').includes('robos-gaming'));
 });
+test('dependency discovery follows requires from deep in a package, unless a try block makes them optional', () => {
+  // home-speaker/lib/speaker-service.js cannot load without ../../audio-player/lib/cast-service.
+  assert.ok(dependencies('home-speaker').includes('audio-player'));
+  assert.ok(dependencies('home-speaker').includes('movie-player'));
+  assert.ok(dependencies('auto-center').includes('robos-graph'));
+  // Voice Prompt only offers media commands when Home Speaker happens to be installed.
+  assert.ok(!dependencies('voice-prompt').includes('home-speaker'));
+  assert.ok(!dependencies('movie-player').includes('data-sources'));
+  // A development script's test driver is not part of the app.
+  assert.ok(!dependencies('auto-center').includes('robos-test'));
+});
 test('the graph library omits the Explorer UI but keeps the view companion apps load from it', async t => {
   const output = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-graph-payload-test-'));
   t.after(() => fs.rmSync(output, { recursive: true, force: true }));

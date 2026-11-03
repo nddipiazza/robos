@@ -17,6 +17,15 @@ function walk(dir, visit) {
     if (entry.isDirectory()) walk(file, visit); else visit(file);
   }
 }
+// Whether this line sits directly inside a try block, which makes it an optional feature.
+function guarded(text, index) {
+  const lines = text.slice(0, index).split('\n'), current = lines.pop(), depth = current.match(/^\s*/)[0].length;
+  if (/\btry\s*\{/.test(current)) return true;
+  for (let line = lines.length - 1; line >= 0; line--) {
+    if (lines[line].trim() && lines[line].match(/^\s*/)[0].length < depth) return /\btry\s*\{\s*$/.test(lines[line]);
+  }
+  return false;
+}
 function dependencies(id, root = repo) {
   const sourceId = id === 'knowledge-graph-explorer' ? 'robos-graph' : id;
   const support = {
@@ -40,6 +49,11 @@ function dependencies(id, root = repo) {
     for (const match of text.matchAll(/(?:\/usr\/local\/share\/robos\/|['"]\.\.\/|['"]packages\/)(robos-[a-z0-9-]+)(?:\/|['"])/g)) {
       const dep = match[1];
       if (dep !== sourceId && dep !== 'robos-test' && (!apps.has(dep) || support[dep]) && fs.existsSync(path.join(root, 'packages', dep, 'package.json'))) found.add(dep);
+    }
+    // A file deeper in the package climbs further, as in lib/service.js requiring ../../other/lib/x.
+    for (const match of text.matchAll(/require\(\s*['"]((?:\.\.\/){2,}[^'"]+)['"]/g)) {
+      const [dep] = path.relative(path.join(root, 'packages'), path.resolve(path.dirname(file), match[1])).split(path.sep);
+      if (dep !== sourceId && dep !== 'robos-test' && dep !== 'app-manager' && !guarded(text, match.index) && ID.test(dep) && fs.existsSync(path.join(root, 'packages', dep, 'package.json'))) found.add(dep);
     }
   });
   const games = { 'robos-tabletop': 'tabletop-rpg', 'tabletop-blockmap-creator': 'tabletop-rpg', 'tabletop-quest-editor': 'tabletop-rpg',
