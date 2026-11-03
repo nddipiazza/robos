@@ -55,3 +55,17 @@ test('catalogs and packages come only from the release for this version, OS and 
   await manager.refresh();
   assert.equal(requested, `${base}apps-v1.2.3-linux-x64/robos-catalog-linux-x64.json`);
 });
+test('refreshing the catalog retries once after a network failure, but not after an HTTP error', async t => {
+  const body = JSON.stringify({ schema: 1, version: '1.2.3', platform: 'linux', arch: 'x64', components: [] });
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-catalog-retry-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const original = globalThis.fetch; t.after(() => { globalThis.fetch = original; });
+  const manager = new Manager({ locations: { root: path.join(root, 'managed') }, native: {}, version: '1.2.3', platform: 'linux', arch: 'x64' });
+  let calls = 0;
+  globalThis.fetch = async () => { if (++calls === 1) throw new TypeError('fetch failed'); return new Response(body); };
+  assert.ok((await manager.refresh()).catalog); assert.equal(calls, 2);
+  calls = 0; globalThis.fetch = async () => { calls++; throw new TypeError('fetch failed'); };
+  await assert.rejects(manager.refresh(), /fetch failed/); assert.equal(calls, 2);
+  calls = 0; globalThis.fetch = async () => { calls++; return new Response('', { status: 404 }); };
+  await assert.rejects(manager.refresh(), /unavailable \(404\)/); assert.equal(calls, 1);
+});

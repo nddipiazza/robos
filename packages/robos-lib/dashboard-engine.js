@@ -630,7 +630,7 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
     }
   } catch {}
 
-  const primaryEmail = calendars[0]?.email || 'nicholas.dipiazza@gmail.com';
+  const primaryEmail = calendars[0]?.email || 'you@example.com';
   const secondaryEmail = calendars[1]?.email || null;
   const colorByEmail = {};
   for (const cal of calendars) {
@@ -2133,7 +2133,7 @@ function collectNextMeetingCountdown({ configDir, date } = {}) {
   const followingMeeting = candidates[1] || {
     title: 'Comprehensive Eye Exam - Dr. Jennifer Caine',
     time: 'Oct 31 08:30',
-    accountEmail: 'nicholas.dipiazza@gmail.com',
+    accountEmail: 'you@example.com',
   };
 
   const secondsUntil = Math.max(0, nextMeeting.startEpochSec - nowSec);
@@ -4611,7 +4611,7 @@ function renderDashboardTvWallboardHtml({
                     '<span class="pill-mini js-agent-elapsed" data-started-epoch="' + escHtml(s.startedEpochSec || '') + '">⏱ ' + escHtml(s.elapsedFormatted || '00:05') + '</span>' +
                   '</div>' +
                   '<div class="agent-cwd">cwd: <code>' + escHtml(s.cwd || '/home/ndipiazza/source/robos') + '</code>' + (s.activity ? ' · <span style="color:#67e8f9;">' + escHtml(s.activity) + '</span>' : '') + '</div>' +
-                  '<pre class="agent-tail-log">' + (s.statusLines || []).map(l => escHtml(l)).join('\n') + '</pre>' +
+                  '<pre class="agent-tail-log">' + (s.statusLines || []).map(l => escHtml(l)).join('\\n') + '</pre>' +
                 '</div>'
               ).join('') +
             '</div>';
