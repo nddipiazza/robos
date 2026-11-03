@@ -9,9 +9,9 @@ const { DEFAULT_KINDS, TARGETS } = require('../lib/art');
 const HELP = `RobOS JRPG parser: turn folders of classic JRPG resources you collected into a kgraph.
 
 Commands:
-  scan <dir...>                 List the files and what each one is
+  scan <path...>                List the files and what each one is (folders or single files)
        [--manifest <file>]        Per-file overrides: {"files":{"name":{"role":"...","use":false}}}
-  parse <dir...> --out <dir> --title <name> [--edition <name>]
+  parse <path...> --out <dir> --title <name> [--edition <name>]
        [--manifest <file>]
        [--no-agent]               Charts only, without the agent
        [--provider <id>]          Agent CLI (default antigravity)
@@ -72,7 +72,7 @@ async function main() {
       return;
     }
     case 'parse': {
-      if (!dirs.length) throw new Error('Give at least one folder to parse');
+      if (!dirs.length) throw new Error('Give at least one folder or file to parse');
       const out = need(flags, 'out');
       await pipeline.parse(dirs, {
         out, title: need(flags, 'title'), edition: flags.edition, manifest: flags.manifest,

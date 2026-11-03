@@ -36,6 +36,7 @@ const TYPE_HIERARCHY = [
   ['jrpg:Weapon', 'jrpg:Equipment', 'Weapon', 'A weapon.'],
   ['jrpg:Armor', 'jrpg:Equipment', 'Armor', 'Armor, shields, helmets, gloves.'],
   ['jrpg:Spell', 'jrpg:Thing', 'Spell', 'A spell: school, level, cost and effect.'],
+  ['jrpg:MusicTrack', 'jrpg:Thing', 'Music Track', 'A music track and where it plays.'],
   ['jrpg:Shop', 'jrpg:Thing', 'Shop', 'A shop or inn and what it sells.'],
   ['jrpg:Rule', 'jrpg:Thing', 'Rule', 'A rule the game engine follows.'],
   ['jrpg:Formula', 'jrpg:Rule', 'Formula', 'A battle, magic or economy formula.'],
@@ -65,7 +66,8 @@ const ASSET_TYPES = [
   { id: 'rules', label: 'Rules (stats, statuses, elements)', package: 'rules', types: ['jrpg:StatDefinition', 'jrpg:StatusEffect', 'jrpg:Element', 'jrpg:Rule'], min: 3, collect: 'a guide to how stats, statuses and elements work' },
   { id: 'formulas', label: 'Battle formulas', package: 'rules', types: ['jrpg:Formula'], min: 5, collect: 'a battle mechanics guide with damage, hit and evade formulas' },
   { id: 'story', label: 'Story milestones', package: 'story', types: ['jrpg:StoryMilestone'], min: 5, collect: 'a walkthrough' },
-  { id: 'music', label: 'Music', package: 'audio', roles: ['music'], min: 1, collect: 'music files or a track list' },
+  { id: 'music', label: 'Music track list', package: 'audio', types: ['jrpg:MusicTrack'], min: 1, collect: 'a track list saying where each track plays' },
+  { id: 'music-files', label: 'Music files', package: 'audio', roles: ['music'], min: 1, collect: 'music files, such as an NSF' },
 ];
 
 const PACKAGES = [
@@ -79,6 +81,7 @@ const PACKAGES = [
   { id: 'ui', title: 'Menus & UI', description: 'Menu layouts, battle layouts and rendered screens.' },
   { id: 'rules', title: 'Rule Engine', description: 'Formulas, stats, statuses and elements.' },
   { id: 'story', title: 'Story & Progression', description: 'Main quest milestones in order.' },
+  { id: 'audio', title: 'Music', description: 'Music tracks and where they play.' },
 ];
 
 function ontologyDocument() {

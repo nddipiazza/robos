@@ -12,9 +12,9 @@ process.env.HOME = HOME;
 
 const PKG = path.resolve(__dirname, '..', '..', '..', 'robos-jrpg-parser');
 const { scan, imageSize, imageRole } = require(path.join(PKG, 'lib', 'scan'));
-const { readCharts, readSpellName } = require(path.join(PKG, 'lib', 'charts'));
-const { tables, visibleText, decodeHtml } = require(path.join(PKG, 'lib', 'html'));
-const { extractProse, consolidate, displayName, chunkText, parseJsonReply } = require(path.join(PKG, 'lib', 'extract'));
+const { readCharts, readSpellName, crossCheckEquipment, applySpellNames } = require(path.join(PKG, 'lib', 'charts'));
+const { tables, visibleText, decodeHtml, markdownTables, markdownProse } = require(path.join(PKG, 'lib', 'html'));
+const { extractProse, consolidate, linkImages, displayName, chunkText, parseJsonReply } = require(path.join(PKG, 'lib', 'extract'));
 const { planJobs, generateArt, refitArt } = require(path.join(PKG, 'lib', 'art'));
 const { coverage } = require(path.join(PKG, 'lib', 'ontology'));
 const pipeline = require(path.join(PKG, 'lib', 'pipeline'));
@@ -141,6 +141,282 @@ describe('jrpg parser: charts', () => {
 
   it('falls back to windows-1252 for older pages', () => {
     assert.equal(decodeHtml(Buffer.from([0x63, 0x61, 0x66, 0xe9])), 'café');
+  });
+});
+
+const REFERENCE = `# Final Fantasy Reference
+
+## 1. Links
+Scrape these: https://example.invalid/map.png
+
+## 2. Formulas
+* Evade: 48 + Agility - Weight
+
+## 3. Equipment
+**Class Key:**
+* \`FI\` = Fighter | \`TH\` = Thief | \`BM\` = Black Mage
+
+### A. Weapons
+| ID | Weapon Name (USA) | Damage | Hit% | NES Crit% (Actual) | Price (G) | Sell (G) | Equip Permissions | Special |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- |
+| 04 | Rapier | 9 | 5 | 4 | 10 | 5 | FI, TH | - |
+| 28 | Power Staff | 12 | 0 | 28 | 12345 | 6172 | All except TH | Casts **HEAL** |
+
+### B. Armor
+| Shield Name (USA) | Absorb | Evade Penalty (Weight) | Price (G) | Sell (G) | Equip Permissions | Effect |
+| :--- | :---: | :---: | :---: | :---: | :--- | :--- |
+| Buckler | 2 | 0 | 2500 | 1250 | All Classes | - |
+
+## 4. Town Shop Inventories
+### 1. Coneria
+* **Weapon Shop:** Rapier (10 G), Mystery Blade (99 G)
+* **Armor Shop:** Buckler (2400 G)
+* **Item Shop:** *(None)*
+* **Inn:** 30 G | **Clinic:** 40 G
+* **Magic (Level 1 - 100 G each):**
+  * *White:* CURE, HARM
+  * *Black:* *(None)*
+
+### 2. Caravan (Desert)
+* **Initial Inventory:** Bottle (50000 G)
+
+## 5. Music
+| NSF Track # | Official / Common Title | In-Game Context |
+| :---: | :--- | :--- |
+| 06 | **Town** | All Towns and Villages |
+`;
+
+describe('jrpg parser: Markdown reference guides', () => {
+  const charts = readCharts(markdownTables(REFERENCE), REFERENCE, 'ref.md');
+
+  it('reads weapons with stats, prices and expanded class names', () => {
+    const rapier = charts.equipment.find(e => e.name === 'Rapier');
+    assert.equal(rapier.kind, 'weapon');
+    assert.equal(rapier.damage, 9);
+    assert.equal(rapier.price, 10);
+    assert.equal(rapier.gameId, 4);
+    assert.deepEqual(rapier.usableBy, ['Fighter', 'Thief']);
+    assert.deepEqual(charts.equipment.find(e => e.name === 'Power Staff').usableBy, ['Fighter', 'Black Mage']);
+    assert.equal(charts.equipment.find(e => e.name === 'Power Staff').effect, 'Casts HEAL');
+  });
+
+  it('reads armor with its slot', () => {
+    const buckler = charts.equipment.find(e => e.name === 'Buckler');
+    assert.equal(buckler.kind, 'armor');
+    assert.equal(buckler.slot, 'shield');
+    assert.equal(buckler.absorb, 2);
+    assert.deepEqual(buckler.usableBy, ['Fighter', 'Thief', 'Black Mage']);
+  });
+
+  it('reads shops, inns, clinics and magic', () => {
+    const shop = (town, kind) => charts.shops.find(s => s.town === town && s.kind === kind);
+    assert.deepEqual(shop('Coneria', 'weapon').stock[0], { name: 'Rapier', price: 10 });
+    assert.equal(shop('Coneria', 'inn').price, 30);
+    assert.equal(shop('Coneria', 'clinic').price, 40);
+    assert.deepEqual(shop('Coneria', 'white-magic').stock[0], { name: 'CURE', price: 100, level: 1 });
+    assert.equal(shop('Coneria', 'black-magic'), undefined);
+    assert.equal(shop('Coneria', 'item'), undefined);
+    assert.equal(shop('Caravan', 'item').stock[0].name, 'Bottle');
+  });
+
+  it('reports shop items its own tables disagree with', () => {
+    assert.ok(charts.problems.some(p => p.includes('Mystery Blade')));
+    assert.ok(charts.problems.some(p => p.includes('Buckler for 2400') && p.includes('2500')));
+    assert.ok(!charts.problems.some(p => p.includes('Rapier')));
+  });
+
+  it('reads music tracks', () => {
+    assert.deepEqual(charts.music.map(t => [t.track, t.name, t.usedFor]), [[6, 'Town', 'All Towns and Villages']]);
+  });
+
+  it('gives the agent only what code did not read', () => {
+    const prose = markdownProse(REFERENCE, /\bshops?\b/i);
+    assert.match(prose, /Evade: 48/);
+    assert.ok(!prose.includes('Rapier'));
+    assert.ok(!prose.includes('Coneria'));
+  });
+
+  it('parses a single file next to a folder, without touching the links it lists', async () => {
+    const dir = makeFolder();
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-md-out-'));
+    const guide = path.join(out, 'reference.md');
+    fs.writeFileSync(guide, REFERENCE);
+    const realFetch = globalThis.fetch;
+    let fetched = 0;
+    globalThis.fetch = async () => { fetched++; throw new Error('no network'); };
+    try {
+      const res = await pipeline.parse([dir, guide], { out, title: 'Final Fantasy', edition: 'NES (USA)', ask: fakeAsk });
+      assert.equal(fetched, 0);
+      const rapier = res.parsed.equipment.find(e => e.name === 'Rapier');
+      assert.equal(rapier.price, 10);
+      const report = JSON.parse(fs.readFileSync(path.join(out, 'coverage.json'), 'utf8'));
+      assert.ok(report.assetTypes.find(c => c.id === 'music').covered);
+      assert.ok(!report.assetTypes.find(c => c.id === 'music-files').covered);
+      const items = JSON.parse(fs.readFileSync(path.join(out, '.robos', 'kgraphs', 'items', 'package.jsonld'), 'utf8'))['robos:nodes'];
+      assert.equal(items.find(n => n['dcterms:title'] === 'Rapier')['robos:attackBonus'], 9);
+      assert.deepEqual(new SHACLValidator().validate(items).violations, []);
+    } finally {
+      globalThis.fetch = realFetch;
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.rmSync(out, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps table numbers and the table\'s stock when prose names the same thing', async () => {
+    const parsed = {
+      classes: [], places: [], milestones: [], equipment: [],
+      shops: [{ town: 'Coneria', kind: 'weapon', stock: [{ name: 'Rapier', price: 10 }], exact: true }, { town: 'Corneria', kind: 'weapon', stock: ['staff'] }],
+    };
+    parsed.places = [{ name: 'Coneria', type: 'town' }, { name: 'Corneria', type: 'town' }];
+    await consolidate(parsed, { gameTitle: 'FF', ask: async () => ({ ok: true, text: JSON.stringify({ places: [{ canonical: 'Coneria', aliases: ['Corneria'] }] }) }) });
+    assert.equal(parsed.shops.length, 1);
+    assert.deepEqual(parsed.shops[0].stock, [{ name: 'Rapier', price: 10 }]);
+  });
+
+  it('does not treat a name as its own earlier name', () => {
+    const jobs = planJobs({ game: { title: 'FF' }, sources: [], places: [{ name: 'Mirage Tower', type: 'dungeon', altNames: ['Mirage Tower', 'Tower of Mirage'] }] });
+    assert.deepEqual(jobs[0].altIds, ['area-map-tower-of-mirage']);
+  });
+
+  it('only links a shop to a place that exists', () => {
+    const { buildNodes } = require(path.join(PKG, 'lib', 'kgraph'));
+    const nodes = buildNodes({
+      game: { title: 'FF', edition: 'NES' }, sources: [],
+      places: [{ name: 'Coneria', type: 'town' }],
+      shops: [{ town: 'Coneria', kind: 'weapon', stock: [] }, { town: 'Starting town', kind: 'item', stock: [] }],
+    });
+    const shop = t => nodes.find(n => n['@id'].includes(`shop:${t}`));
+    assert.deepEqual(shop('coneria')['jrpg:town'], { '@id': 'urn:robos:jrpg:ff:place:coneria' });
+    assert.equal(shop('starting-town')['jrpg:town'], 'Starting town');
+  });
+
+  it('does not regenerate an image when its place takes a new name', () => {
+    const jobs = planJobs({ game: { title: 'FF' }, sources: [], places: [{ name: 'Coneria', type: 'town', altNames: ['Corneria'] }] });
+    assert.equal(jobs[0].id, 'area-map-coneria');
+    assert.deepEqual(jobs[0].altIds, ['area-map-corneria']);
+  });
+});
+
+describe('jrpg parser: a large collected folder', () => {
+  it('splits camel case names and marks ports', () => {
+    assert.equal(imageRole('FinalFantasy-MarshCave.png'), 'area-map');
+    assert.equal(imageRole('FinalFantasy-World(Unmarked).png'), 'world-map');
+    assert.equal(imageRole('Final_Fantasy_1_NES_Subscreen.png'), 'menu-screen');
+    assert.equal(imageRole('Final_Fantasy_logo.png'), 'logo');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-ports-'));
+    fs.writeFileSync(path.join(dir, 'Final_Fantasy_1_GBA_Save.png'), PNG);
+    fs.writeFileSync(path.join(dir, 'Final_Fantasy_1_NES_Combat.png'), Buffer.concat([PNG, Buffer.from('x')]));
+    const found = scan([dir], {}, { edition: 'NES (USA)' });
+    assert.equal(found.find(f => f.name.includes('GBA')).use, false);
+    assert.equal(found.find(f => f.name.includes('NES')).use, true);
+    assert.equal(scan([dir], {}, { edition: 'GBA' }).find(f => f.name.includes('GBA')).use, true);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('skips a page too large to be a guide', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-big-'));
+    fs.writeFileSync(path.join(dir, 'atlas.html'), Buffer.alloc(3 * 1024 * 1024, 'x'));
+    const [page] = scan([dir]);
+    assert.equal(page.use, false);
+    assert.match(page.note, /site index/);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reports disagreeing numbers, adds locations, and leaves out remake-only gear', () => {
+    const primary = [{ name: 'Power Staff', altNames: [], price: 12345, damage: 12, hit: 0, source: 'guide.md' }, { name: 'Rapier', altNames: [], price: 10, damage: 9, source: 'guide.md' }];
+    const others = [
+      { name: 'Power staff', altNames: [], price: 24690, damage: 12, hit: 0, source: 'wiki.html', foundAt: 'Find: Western Keep' },
+      { name: 'Foil', altNames: ['Rapier'], price: 10, damage: 9, source: 'wiki.html' },
+      { name: 'Elven cloak', altNames: [], price: 5, source: 'wiki.html' },
+    ];
+    const { conflicts, unmatched } = crossCheckEquipment(primary, others);
+    assert.deepEqual(conflicts, ['Power Staff: price is 12345 in guide.md but 24690 in wiki.html.']);
+    assert.equal(unmatched, 1);
+    assert.equal(primary[0].foundAt, 'Find: Western Keep');
+  });
+
+  it('reads wiki equipment tables with two names and subheadings', () => {
+    const rows = [['Name', 'Price', 'Atk', 'Hit%', 'Locations'], ['Swords & axes'], ['Wooden staff / Staff', '5', '6', '0%', 'Buy: Cornelia']];
+    const { equipment } = readCharts([rows], '', 'wiki.html');
+    assert.equal(equipment.length, 1);
+    assert.deepEqual([equipment[0].name, equipment[0].altNames, equipment[0].damage, equipment[0].foundAt], ['Wooden staff', ['Staff'], 6, 'Buy: Cornelia']);
+  });
+
+  it('gives chart spells their NES names and effects', () => {
+    const rows = [['Spell', 'Fire', 'Thunder'], ['Alternate names', 'NES: FIRE PSX: Fire1', 'NES: LIT PSX: Bolt1'], ['Range', 'One enemy', 'One enemy'], ['Effect', 'Minor fire damage', 'Minor shock']];
+    const { spellNames } = readCharts([rows], '', 'wiki.html');
+    const spells = [{ name: 'FIRE1', altName: null, description: null }, { name: 'BOLT1', altName: null, description: 'Already known' }];
+    applySpellNames(spells, spellNames, 'NES (USA)');
+    assert.equal(spells[0].name, 'FIRE');
+    assert.deepEqual(spells[0].otherNames, ['FIRE1', 'Fire1', 'Fire']);
+    assert.equal(spells[0].description, 'Minor fire damage');
+    assert.equal(spells[1].name, 'LIT');
+    assert.equal(spells[1].description, 'Already known');
+    assert.equal(spells[1].range, 'One enemy');
+  });
+
+  it('links map files and sprites, adds places only a map names, and ignores invented answers', async () => {
+    const parsed = {
+      classes: [{ name: 'Black Mage' }],
+      places: [{ name: 'Coneria', type: 'town' }, { name: 'Mt. Gulg', type: 'dungeon' }],
+      sources: [
+        { name: 'FFI_black_mage.gif', kind: 'image', role: 'unknown' },
+        { name: 'FinalFantasy-Coneria.png', kind: 'image', role: 'unknown' },
+        { name: 'FinalFantasy-GurguVolcano.png', kind: 'image', role: 'unknown' },
+        { name: "FinalFantasy-Titan'sCave.png", kind: 'image', role: 'area-map' },
+        { name: 'Spoilers_icon.png', kind: 'image', role: 'unknown' },
+      ],
+    };
+    const warnings = await linkImages(parsed, {
+      gameTitle: 'FF',
+      ask: async () => ({ ok: true, text: JSON.stringify({
+        maps: [{ file: 'FinalFantasy-Coneria.png', place: 'Coneria' }, { file: 'FinalFantasy-GurguVolcano.png', place: 'Mt. Gulg' }, { file: 'nope.png', place: 'Coneria' }, { file: 'Spoilers_icon.png', place: 'Atlantis' }],
+        newPlaces: [{ file: "FinalFantasy-Titan'sCave.png", name: "Titan's Cave", type: 'dungeon' }],
+        notMaps: ['Spoilers_icon.png'],
+      }) }),
+    });
+    assert.deepEqual(warnings, []);
+    const by = n => parsed.sources.find(s => s.name === n);
+    assert.equal(by('FFI_black_mage.gif').role, 'class-sprite');
+    assert.equal(by('FFI_black_mage.gif').depicts, 'Black Mage');
+    assert.equal(by('FinalFantasy-GurguVolcano.png').depicts, 'Mt. Gulg');
+    assert.equal(by('Spoilers_icon.png').role, 'unknown');
+    assert.ok(parsed.places.some(p => p.name === "Titan's Cave"));
+
+    const jobs = planJobs({ game: { title: 'FF' }, sources: parsed.sources, places: parsed.places, classes: parsed.classes });
+    assert.deepEqual(jobs.find(j => j.id === 'area-map-mt-gulg').references, ['FinalFantasy-GurguVolcano.png']);
+    assert.equal(jobs.find(j => j.id === 'area-map-coneria').basis, 'reference');
+    assert.equal(jobs.find(j => j.id === 'class-sprite-black-mage').references[0], 'FFI_black_mage.gif');
+  });
+
+  it('replaces a text-only image once a reference has been collected, but not a finished one', { skip: !pythonHasPillow() }, async () => {
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-upgrade-'));
+    const ref = path.join(out, 'ref.png');
+    fs.writeFileSync(ref, PNG);
+    const made = path.join(out, 'made.png');
+    assert.equal(cp.spawnSync('python3', ['-I', '-c', `from PIL import Image; Image.new('RGB', (8, 8), (10, 90, 200)).save(${JSON.stringify(made)})`]).status, 0);
+    const root = path.join(out, 'assets', 'generated');
+    fs.mkdirSync(root, { recursive: true });
+    fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify({ images: [
+      { id: 'area-map-corneria', kind: 'area-map', basis: 'text-only', references: [], depicts: 'place:corneria', title: 'old', file: 'x', raw: 'y' },
+      { id: 'area-map-melmond', kind: 'area-map', basis: 'text-only', references: [], depicts: 'place:melmond', title: 'old', file: 'x', raw: 'y' },
+    ] }));
+    const parsed = {
+      game: { title: 'FF' },
+      sources: [{ name: 'coneria.png', path: ref, kind: 'image', role: 'area-map', depicts: 'Coneria' }],
+      places: [{ name: 'Coneria', type: 'town', altNames: ['Corneria'] }, { name: 'Melmond', type: 'town' }],
+    };
+    const calls = [];
+    const res = await generateArt(parsed, out, { kinds: ['area-map'], generateImage: async ({ outFile, references }) => {
+      calls.push(references.length);
+      fs.mkdirSync(path.dirname(outFile), { recursive: true });
+      fs.copyFileSync(made, outFile);
+      return { ok: true, model: 'fake' };
+    } });
+    assert.deepEqual(calls, [1]);
+    const ids = res.manifest.images.map(i => i.id).sort();
+    assert.deepEqual(ids, ['area-map-coneria', 'area-map-melmond']);
+    fs.rmSync(out, { recursive: true, force: true });
   });
 });
 
@@ -348,6 +624,17 @@ print(i.getpixel((0, 0))[3], i.getpixel((32, 32))[3], i.getpixel((32, 32))[0] > 
     assert.deepEqual(refitArt(out).failures, []);
     assert.equal(calls.length, before);
     assert.ok(fs.existsSync(file));
+  });
+
+  it('keeps a map at its full size', { skip: !pythonHasPillow() }, () => {
+    const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-map-'));
+    const input = path.join(dir2, 'in.png');
+    const output = path.join(dir2, 'out.png');
+    assert.equal(cp.spawnSync('python3', ['-I', '-c', `from PIL import Image; Image.new('RGB', (900, 700), (0, 170, 0)).save(${JSON.stringify(input)})`]).status, 0);
+    assert.equal(cp.spawnSync('python3', ['-I', path.join(PKG, 'tools', 'nesify.py'), input, output, '--width', '512', '--height', '480', '--colors', '48', '--keep-colors', '--keep-size']).status, 0);
+    const check = cp.spawnSync('python3', ['-I', '-c', `from PIL import Image; i = Image.open(${JSON.stringify(output)}).convert('RGB'); print(i.size, i.getpixel((5, 5)))`], { encoding: 'utf8' });
+    assert.equal(check.stdout.trim(), '(900, 700) (0, 170, 0)');
+    fs.rmSync(dir2, { recursive: true, force: true });
   });
 
   it('records an unusable image as failed and keeps going', { skip: !pythonHasPillow() }, async () => {

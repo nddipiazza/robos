@@ -7,7 +7,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { decodeHtml, htmlTitle, savedFromUrl } = require('./html');
+const { decodeHtml, htmlTitle, markdownTitle, savedFromUrl } = require('./html');
 
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp']);
 const AUDIO_EXT = new Set(['.mp3', '.ogg', '.flac', '.wav', '.nsf', '.m4a', '.opus']);
@@ -19,11 +19,17 @@ const IMAGE_ROLES = [
   ['equip-screen', /\bequip/],
   ['shop-screen', /\b(shop|store|inn)\b/],
   ['battle-screen', /\b(battle|combat|fight)/],
-  ['menu-screen', /\b(menu|status|title)\b/],
+  ['menu-screen', /\b(menu|status|title|subscreen)\b/],
   ['world-map', /\b(world|overworld)/],
   ['area-map', /\b(dungeon|cave|castle|town|floor|tower|shrine|temple|map)\b/],
   ['sprite-sheet', /\b(sprite|character|monster|enem|bestiary|boss)/],
+  ['logo', /\b(logo|icon)\b/],
 ];
+
+// File names marking a port, for a person collecting from a site that covers every release.
+const PORT_NAMES = /\b(gba|psx|ps1|psp|wsc|wonderswan|3ds|ios|android|snes|mobile)\b/i;
+// A page this large is an index of a whole site, not a guide to one game.
+const MAX_PAGE_BYTES = 2 * 1024 * 1024;
 
 // Page titles naming a remake or a mod: its stats and prices are not the base game's.
 const OTHER_EDITION = /\b(mod|hack|randomi[sz]er)\b|dawn of souls|pixel remaster|anniversary edition/i;
@@ -32,6 +38,7 @@ const GUIDE_TITLE = /walkthrough|\bfaq\b|\bguide\b|strategy|\bwiki\b/i;
 
 function imageSize(file) {
   const b = fs.readFileSync(file);
+  if (b.toString('latin1', 0, 3) === 'GIF') return { width: b.readUInt16LE(6), height: b.readUInt16LE(8) };
   if (b.length > 24 && b.readUInt32BE(0) === 0x89504e47) return { width: b.readUInt32BE(16), height: b.readUInt32BE(20) };
   if (b[0] === 0xff && b[1] === 0xd8) {
     for (let i = 2; i + 9 < b.length;) {
@@ -55,15 +62,22 @@ function imageSize(file) {
   return null;
 }
 
+function fileWords(name) {
+  return name.replace(/\.[^.]+$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+}
+
 function imageRole(name) {
-  const words = name.toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/g, ' ');
+  const words = fileWords(name);
   for (const [role, re] of IMAGE_ROLES) if (re.test(words)) return role;
   return 'unknown';
 }
 
 function describePage(file) {
+  if (fs.statSync(file).size > MAX_PAGE_BYTES) {
+    return { title: path.basename(file), role: 'document', use: false, note: 'Too large to be a guide to one game, so it looks like a site index. Set "use": true in a manifest to read it.' };
+  }
   const text = decodeHtml(fs.readFileSync(file));
-  const title = htmlTitle(text) || path.basename(file);
+  const title = (/\.md$/i.test(file) ? markdownTitle(text) : htmlTitle(text)) || path.basename(file);
   const out = { title, savedFrom: savedFromUrl(text) };
   if (OTHER_EDITION.test(title)) {
     out.use = false;
@@ -86,17 +100,19 @@ function walk(dir, found = []) {
 }
 
 /**
- * @param {string[]} dirs folders to read
+ * @param {string[]} dirs folders or single files to read
  * @param {{ files?: Object }} [manifest] per-file overrides by file name: { role, use, note }
+ * @param {{ edition?: string }} [opts] the edition being parsed, so screenshots of its ports are skipped
  */
-function scan(dirs, manifest = {}) {
+function scan(dirs, manifest = {}, { edition = '' } = {}) {
   const overrides = manifest.files || {};
   const seen = new Map();
   for (const dir of dirs) {
-    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) throw new Error(`Not a folder: ${dir}`);
-    for (const file of walk(dir)) {
+    if (!fs.existsSync(dir)) throw new Error(`Not found: ${dir}`);
+    const single = fs.statSync(dir).isFile();
+    for (const file of single ? [dir] : walk(dir)) {
       const ext = path.extname(file).toLowerCase();
-      const name = path.relative(dir, file);
+      const name = single ? path.basename(file) : path.relative(dir, file);
       const sha256 = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
       if (seen.has(sha256)) continue;
       const entry = { name, path: file, sha256, bytes: fs.statSync(file).size, use: true };
@@ -104,6 +120,11 @@ function scan(dirs, manifest = {}) {
         entry.kind = 'image';
         entry.role = imageRole(path.basename(file));
         entry.size = imageSize(file);
+        const port = fileWords(path.basename(file)).match(PORT_NAMES);
+        if (port && !new RegExp(`\\b${port[1]}\\b`, 'i').test(edition)) {
+          entry.use = false;
+          entry.note = `The file name marks the ${port[1].toUpperCase()} port.`;
+        }
       } else if (AUDIO_EXT.has(ext)) {
         entry.kind = 'audio';
         entry.role = 'music';
@@ -114,6 +135,7 @@ function scan(dirs, manifest = {}) {
         entry.kind = 'other';
         entry.role = 'unknown';
         entry.use = false;
+        if (ext === '.pdf') entry.note = 'PDFs are not read yet.';
       }
       Object.assign(entry, overrides[name] || overrides[path.basename(file)] || {});
       seen.set(sha256, entry);
@@ -122,4 +144,4 @@ function scan(dirs, manifest = {}) {
   return [...seen.values()];
 }
 
-module.exports = { scan, imageSize, imageRole };
+module.exports = { scan, imageSize, imageRole, fileWords };

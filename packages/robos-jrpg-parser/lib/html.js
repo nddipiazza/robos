@@ -58,9 +58,60 @@ function tables(html) {
       (row.match(/<t[dh]\b[\s\S]*?<\/t[dh]>/gi) || []).map(cellText)));
 }
 
+function isMarkdownRow(line) {
+  return /^\s*\|.*\|\s*$/.test(line);
+}
+
+function isMarkdownSeparator(line) {
+  return /^\s*\|[\s:|-]+\|\s*$/.test(line);
+}
+
+/** Every Markdown table as rows of cells, with the heading above it as `heading`. */
+function markdownTables(text) {
+  const out = [];
+  let heading = '';
+  let current = null;
+  for (const line of text.split('\n')) {
+    const h = line.match(/^#{1,6}\s+(.+)/);
+    if (h) heading = h[1].trim();
+    if (isMarkdownRow(line)) {
+      if (!current) {
+        current = [];
+        current.heading = heading;
+        out.push(current);
+      }
+      if (!isMarkdownSeparator(line)) {
+        current.push(line.trim().replace(/^\||\|$/g, '').split('|').map(c => c.replace(/[*`]/g, '').trim()));
+      }
+    } else current = null;
+  }
+  return out;
+}
+
+function markdownTitle(text) {
+  const m = text.match(/^#\s+(.+)/m);
+  return m ? m[1].replace(/[*`]/g, '').trim() : '';
+}
+
+/** Lines outside tables and outside any `skip` section, which code has already read. */
+function markdownProse(text, skip) {
+  const out = [];
+  let skipLevel = 0;
+  for (const line of text.split('\n')) {
+    const h = line.match(/^(#{1,6})\s+(.+)/);
+    if (h) {
+      if (skipLevel && h[1].length <= skipLevel) skipLevel = 0;
+      if (!skipLevel && skip && skip.test(h[2])) skipLevel = h[1].length;
+    }
+    if (skipLevel || isMarkdownRow(line) || !line.trim()) continue;
+    out.push(line.trim());
+  }
+  return out.join('\n');
+}
+
 /** Text with whitespace collapsed and case folded, for checking that a quote is in a source. */
 function normalizeForMatch(text) {
   return String(text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
-module.exports = { decodeHtml, decodeEntities, htmlTitle, savedFromUrl, visibleText, tables, normalizeForMatch };
+module.exports = { decodeHtml, decodeEntities, htmlTitle, savedFromUrl, visibleText, tables, markdownTables, markdownTitle, markdownProse, normalizeForMatch };

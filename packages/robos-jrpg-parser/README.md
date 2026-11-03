@@ -2,7 +2,7 @@
 
 Turns folders of classic JRPG resources into a kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.
 
-A person collects the resources: walkthroughs, screenshots, maps, sprite sheets. The parser reads local files only and has no crawler or fetch step. When something is missing, it says what to add.
+A person collects the resources: walkthroughs, reference guides, screenshots, maps, sprite sheets. Pass any mix of folders and single files. The parser reads local files only and has no crawler or fetch step. When something is missing, it says what to add.
 
 ```bash
 node bin/jrpg-parser.js scan ~/Downloads/ff1
@@ -17,10 +17,10 @@ node bin/jrpg-parser.js art --out ~/kgraphs/final-fantasy-nes --limit 3
 | Step | What it does | Needs |
 | --- | --- | --- |
 | `scan` | Hashes each file and works out its role from its name and title. A page whose title names a remake or mod is skipped, with a note. | Nothing |
-| `parse`, charts | Reads monster, boss and spell tables by their headers. | Nothing |
-| `parse`, prose | The agent extracts classes, places, story, equipment, shops and rules. A record whose quote is not in the page is dropped. | `agy` (or `--provider`) |
+| `parse`, charts | Reads monster, boss, spell, weapon, armor and music tables by their headers, in HTML or Markdown, and Markdown shop lists. Reports shop prices that disagree with the equipment tables. | Nothing |
+| `parse`, prose | The agent extracts classes, places, story, equipment, shops and rules, including formulas. Numbers from tables win over prose. A record whose quote is not in the page is dropped. | `agy` (or `--provider`) |
 | `parse`, screens | The agent describes the layout of one screenshot per screen type. | `agy` |
-| `art` | Generates images, shrinks them to game size and the NES palette, and adds them to the kgraph. | `agy`, `python3` with Pillow |
+| `art` | Generates images, fits them to the game (maps keep their full size, sprites and backdrops go on the NES palette) and adds them to the kgraph. An image invented from text is replaced once you collect a reference for it. | `agy`, `python3` with Pillow |
 
 ## Output
 
@@ -34,6 +34,10 @@ assets/generated/                     images and their manifest
 ```
 
 Nodes carry the workspace's JRPG types (`robos:GameMonster`, `robos:GameSpell`, `robos:GameItem`, `robos:GameClass`, `schema:Place`) along with `jrpg:` types, so the workspace's SHACL shapes apply. Source files are referenced by name and SHA-256, and are never copied.
+
+## When sources disagree
+
+A page whose title names the edition, such as "NES" in a guide's title, supplies the equipment records. Other pages add where to find each item, and their differing numbers go in `conflicts` in `parsed.json`. Gear that only those other pages list is left out, because a page covering several editions lists remake-only items.
 
 ## Correcting a scan
 

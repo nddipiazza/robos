@@ -6,9 +6,9 @@
 const fs = require('fs');
 const path = require('path');
 const { scan } = require('./scan');
-const { decodeHtml, visibleText, tables } = require('./html');
-const { readCharts } = require('./charts');
-const { extractProse, consolidate, extractScreenLayout, classifyImage } = require('./extract');
+const { decodeHtml, visibleText, tables, markdownTables, markdownProse } = require('./html');
+const { readCharts, crossCheckEquipment, applySpellNames, isChartTable } = require('./charts');
+const { extractProse, consolidate, linkImages, mergeRecord, extractScreenLayout, classifyImage } = require('./extract');
 const { generateArt, refitArt, planJobs } = require('./art');
 const { writeKgraph } = require('./kgraph');
 const { slug } = require('./slug');
@@ -25,13 +25,33 @@ function mergeByName(rows) {
   const seen = new Map();
   for (const row of rows) {
     const key = slug(row.name || row.title || `${row.town}-${row.kind}`);
-    if (!seen.has(key)) seen.set(key, row);
+    if (seen.has(key)) mergeRecord(seen.get(key), row);
+    else seen.set(key, row);
   }
   return [...seen.values()];
 }
 
+/** A page's tables, and the text the agent should read: Markdown tables and shop sections are already read by code. */
+function readPage(page) {
+  const html = decodeHtml(fs.readFileSync(page.path));
+  if (/\.md$/i.test(page.path)) {
+    return { tableRows: markdownTables(html), chartText: html, proseText: markdownProse(html, /\bshops?\b/i) };
+  }
+  // Tables code does not read still go to the agent, with their rows as lines of text.
+  const tableRows = tables(html);
+  let index = 0;
+  const unread = html.replace(/<table\b[\s\S]*?<\/table>/gi, block => (isChartTable(tableRows[index++] || []) ? '\n' : block));
+  return { tableRows, chartText: visibleText(html), proseText: visibleText(unread, { keepTables: true }) };
+}
+
+/** Whether a page says it covers this edition, such as "NES" in "(NES USA)". */
+function namesEdition(page, edition) {
+  const word = String(edition || '').split(/[\s(]+/).find(Boolean);
+  return !!word && new RegExp(`\\b${word}\\b`, 'i').test(page.title || '');
+}
+
 /**
- * @param {string[]} dirs folders of collected files
+ * @param {string[]} dirs folders or single files a person collected
  * @param {{ out: string, title: string, edition: string, manifest?: string, agent?: boolean, providerId?: string, model?: string, log?: Function, ask?: Function }} opts
  */
 async function parse(dirs, opts) {
@@ -39,41 +59,60 @@ async function parse(dirs, opts) {
   if (!title) throw new Error('A game title is required');
   fs.mkdirSync(out, { recursive: true });
   const cacheDir = path.join(out, '.cache', 'agent');
-  const sources = scan(dirs, readManifest(opts.manifest));
+  const sources = scan(dirs, readManifest(opts.manifest), { edition });
   const warnings = [];
-  const parsed = { game: { title, edition: edition || 'unspecified' }, sources, enemies: [], spells: [], menus: [], warnings };
+  const parsed = { game: { title, edition: edition || 'unspecified' }, sources, enemies: [], spells: [], music: [], menus: [], warnings };
   for (const kind of PROSE_KINDS) parsed[kind] = [];
 
   for (const s of sources) if (s.note) warnings.push(`${s.name}: ${s.note}`);
 
-  if (agent) {
-    for (const s of sources.filter(x => x.kind === 'image' && x.role === 'unknown' && x.use !== false)) {
-      log(`Classifying ${s.name}`);
-      const role = await classifyImage({ gameTitle: title, imagePath: s.path, roles: IMAGE_ROLE_NAMES, cacheDir, providerId, model, ask });
-      if (role) s.role = role;
-    }
-  }
-
-  const pages = sources.filter(s => s.kind === 'page' && s.use !== false);
+  // A page for this edition goes first, so its numbers win.
+  const pages = sources.filter(s => s.kind === 'page' && s.use !== false)
+    .sort((a, b) => Number(namesEdition(b, edition)) - Number(namesEdition(a, edition)));
+  const exactRows = { equipment: [], shops: [] };
+  const otherEquipment = [];
+  const spellNames = [];
   for (const page of pages) {
-    const html = decodeHtml(fs.readFileSync(page.path));
-    const text = visibleText(html);
-    const { enemies, spells } = readCharts(tables(html), text, page.name);
-    parsed.enemies.push(...enemies);
-    parsed.spells.push(...spells);
-    log(`${page.name}: ${enemies.length} enemies and ${spells.length} spells from charts`);
+    const { tableRows, chartText, proseText } = readPage(page);
+    const charts = readCharts(tableRows, chartText, page.name);
+    parsed.enemies.push(...charts.enemies);
+    parsed.spells.push(...charts.spells);
+    parsed.music.push(...charts.music);
+    // Tables go first, so their numbers win when the agent finds the same thing in prose.
+    (namesEdition(page, edition) ? exactRows.equipment : otherEquipment).push(...charts.equipment);
+    spellNames.push(...charts.spellNames);
+    exactRows.shops.push(...charts.shops);
+    warnings.push(...charts.problems.map(p => `${page.name}: ${p}`));
+    log(`${page.name}: charts have ${charts.enemies.length} enemies, ${charts.spells.length} spells, ${charts.equipment.length} equipment, ${charts.shops.length} shops, ${charts.music.length} music tracks`);
     if (!agent) continue;
-    const records = await extractProse({ gameTitle: title, edition, text, sourceName: page.name, cacheDir, providerId, model, ask });
+    const records = await extractProse({ gameTitle: title, edition, text: proseText, sourceName: page.name, cacheDir, providerId, model, ask });
     for (const kind of PROSE_KINDS) parsed[kind].push(...records[kind]);
     warnings.push(...records.warnings);
     log(`${page.name}: ${PROSE_KINDS.map(k => `${records[k].length} ${k}`).join(', ')}`);
   }
+  // With a source for this edition, other sources check its numbers and add no gear of their own.
+  if (exactRows.equipment.length) {
+    const { conflicts, unmatched } = crossCheckEquipment(exactRows.equipment, otherEquipment);
+    parsed.conflicts = conflicts;
+    if (conflicts.length) warnings.push(`${conflicts.length} equipment numbers disagree between sources; see "conflicts" in parsed.json.`);
+    if (unmatched) warnings.push(`Left out ${unmatched} equipment rows that only pages about other editions list.`);
+  } else exactRows.equipment.push(...otherEquipment);
+  applySpellNames(parsed.spells, spellNames, edition);
+  parsed.equipment = [...exactRows.equipment, ...parsed.equipment];
+  parsed.shops = [...exactRows.shops, ...parsed.shops];
   for (const kind of PROSE_KINDS) parsed[kind] = mergeByName(parsed[kind]);
   parsed.enemies = mergeByName(parsed.enemies);
 
   if (agent) {
     log('Merging duplicate names');
     warnings.push(...await consolidate(parsed, { gameTitle: title, edition, cacheDir, providerId, model, ask }));
+    log('Matching image files to places and classes');
+    warnings.push(...await linkImages(parsed, { gameTitle: title, edition, cacheDir, providerId, model, ask }));
+    for (const s of sources.filter(x => x.kind === 'image' && x.role === 'unknown' && x.use !== false)) {
+      log(`Classifying ${s.name}`);
+      const role = await classifyImage({ gameTitle: title, imagePath: s.path, roles: IMAGE_ROLE_NAMES, cacheDir, providerId, model, ask });
+      if (role) s.role = role;
+    }
     // One layout per screen type: more screenshots of a battle add nothing to its layout.
     const done = new Set();
     for (const s of sources.filter(x => x.kind === 'image' && x.use !== false && LAYOUT_ROLES.includes(x.role))) {

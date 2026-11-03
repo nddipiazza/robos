@@ -54,6 +54,7 @@ function buildNodes(parsed, art = { images: [] }) {
   const urn = (kind, name) => `urn:robos:jrpg:${gameSlug}:${kind}:${slug(name)}`;
   const gameId = urn('game', g.title);
   const sourceRef = name => (name ? ref(urn('source', name)) : undefined);
+  const placeSlugs = new Set((parsed.places || []).map(p => slug(p.name)));
   const nodes = [];
   const usedIds = new Map();
 
@@ -82,6 +83,7 @@ function buildNodes(parsed, art = { images: [] }) {
       'jrpg:sha256': s.sha256,
       'jrpg:sourceRole': s.role,
       'jrpg:savedFrom': s.savedFrom,
+      'jrpg:depictsName': s.depicts,
       'jrpg:width': s.size && s.size.width,
       'jrpg:height': s.size && s.size.height,
       'jrpg:used': s.use !== false,
@@ -100,7 +102,8 @@ function buildNodes(parsed, art = { images: [] }) {
 
   for (const s of parsed.spells || []) {
     add(urn('spell', `${s.school || 'x'}-${s.level}-${s.name}`), 'magic', ['robos:GameSpell', 'schema:Action', 'jrpg:Spell'], s.name, {
-      'jrpg:altName': s.altName, 'jrpg:school': s.school, 'jrpg:spellLevel': s.level,
+      'jrpg:altName': s.otherNames || s.altName, 'jrpg:school': s.school, 'jrpg:spellLevel': s.level, 'jrpg:range': s.range,
+      'jrpg:soldIn': (parsed.shops || []).filter(shop => placeSlugs.has(slug(shop.town)) && (shop.stock || []).some(i => i && i.name === s.name)).map(shop => ref(urn('place', shop.town))),
       'robos:cost': s.price, 'dcterms:description': s.description, 'jrpg:source': sourceRef(s.source),
     });
   }
@@ -115,6 +118,7 @@ function buildNodes(parsed, art = { images: [] }) {
   for (const p of parsed.places || []) {
     add(urn('place', p.name), 'world', ['schema:Place', PLACE_TYPES[p.type] || 'jrpg:Place'], p.name, {
       'robos:locationType': p.type, 'jrpg:altName': p.altNames,
+      'jrpg:referenceMap': parsed.sources.filter(s => s.role === 'area-map' && s.depicts === p.name).map(s => ref(urn('source', s.name))),
       'dcterms:description': p.description, 'jrpg:evidence': p.evidence, 'jrpg:source': sourceRef(p.source),
     });
   }
@@ -122,20 +126,30 @@ function buildNodes(parsed, art = { images: [] }) {
   for (const it of parsed.equipment || []) {
     add(urn('item', it.name), 'items', ['robos:GameItem', 'schema:Product', ITEM_TYPES[it.kind] || 'jrpg:Item'], it.name, {
       'robos:itemCategory': it.kind, 'jrpg:altName': it.altNames, 'jrpg:usableBy': it.usableBy, 'jrpg:foundAt': it.foundAt,
+      'robos:attackBonus': it.damage, 'robos:defenseBonus': it.absorb, 'robos:cost': it.price,
+      'jrpg:slot': it.slot, 'jrpg:gameId': it.gameId, 'jrpg:hitBonus': it.hit, 'jrpg:critRate': it.crit,
+      'jrpg:evadePenalty': it.weight, 'jrpg:sellPrice': it.sell, 'jrpg:effect': it.effect,
       'dcterms:description': it.description, 'jrpg:evidence': it.evidence, 'jrpg:source': sourceRef(it.source),
     });
   }
 
   for (const s of parsed.shops || []) {
     add(urn('shop', `${s.town}-${s.kind}`), 'economy', ['jrpg:Shop'], `${s.town} ${s.kind} shop`, {
-      'jrpg:town': ref(urn('place', s.town)), 'jrpg:shopKind': s.kind, 'jrpg:stock': s.stock,
+      // Prose can describe a town without naming it, so only a known place becomes a link.
+      'jrpg:town': placeSlugs.has(slug(s.town)) ? ref(urn('place', s.town)) : s.town, 'jrpg:shopKind': s.kind, 'jrpg:stock': s.stock, 'robos:cost': s.price,
       'jrpg:evidence': s.evidence, 'jrpg:source': sourceRef(s.source),
     });
   }
 
   for (const r of parsed.rules || []) {
     add(urn('rule', r.name), 'rules', [RULE_TYPES[r.kind] || 'jrpg:Rule'], r.name, {
-      'dcterms:description': r.description, 'jrpg:evidence': r.evidence, 'jrpg:source': sourceRef(r.source),
+      'jrpg:expression': r.expression, 'dcterms:description': r.description, 'jrpg:evidence': r.evidence, 'jrpg:source': sourceRef(r.source),
+    });
+  }
+
+  for (const t of parsed.music || []) {
+    add(urn('music', t.name), 'audio', ['jrpg:MusicTrack', 'schema:MusicRecording'], t.name, {
+      'jrpg:track': t.track, 'jrpg:usedFor': t.usedFor, 'jrpg:source': sourceRef(t.source),
     });
   }
 
@@ -156,11 +170,16 @@ function buildNodes(parsed, art = { images: [] }) {
   // A folder can hold more screenshots of a screen than there are layouts, so a
   // target that has no node falls back to the game.
   const nodeIds = new Set(nodes.map(n => n['@id']));
+  // An image made before a place or class took its edition's name still depicts it.
+  const renamed = new Map();
+  for (const [kind, rows] of [['place', parsed.places], ['class', parsed.classes]]) {
+    for (const row of rows || []) for (const alt of row.altNames || []) renamed.set(`${kind}:${slug(alt)}`, urn(kind, row.name));
+  }
   const depictsRef = d => {
     if (d === 'game') return gameId;
     const [kind, name] = d.split(':');
     const id = `urn:robos:jrpg:${gameSlug}:${kind}:${name}`;
-    return nodeIds.has(id) ? id : gameId;
+    return nodeIds.has(id) ? id : renamed.get(d) || gameId;
   };
   for (const img of art.images) {
     add(urn('image', img.id), ART_PACKAGES[img.kind], [...ART_TYPES[img.kind], 'jrpg:GeneratedImage'], img.title, {
