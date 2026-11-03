@@ -6,8 +6,8 @@ const scenarios = require('../lib/scenarios');
 const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'kgraph-nodes-redesign';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce`;
 const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
 
 const SCRIPT = [

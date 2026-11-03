@@ -565,28 +565,15 @@ function collectLatestGitCommits({ repoDir, limit = 10 } = {}) {
     }
   } catch {}
 
-  // Fallback commits if run outside a git checkout
-  const fallbackCommits = [
-    { index: 1, sha: 'a1b2c3d4', shortSha: 'a1b2c3d', author: 'Nicolas DiPiazza', relativeTime: '5 minutes ago', subject: 'feat(smart-light): add zero-cloud LAN Smart Light Studio & Circadian Daylight', commitType: 'feat' },
-    { index: 2, sha: 'b2c3d4e5', shortSha: 'b2c3d4e', author: 'Nicolas DiPiazza', relativeTime: '22 minutes ago', subject: 'feat(google-calendar): add Thunderbird CalDAV/CardDAV Google Calendar installer', commitType: 'feat' },
-    { index: 3, sha: 'c3d4e5f6', shortSha: 'c3d4e5f', author: 'Nicolas DiPiazza', relativeTime: '45 minutes ago', subject: 'feat(cloud-accounts): add unified Google Workspace & OneDrive Cloud Accounts manager', commitType: 'feat' },
-    { index: 4, sha: 'd4e5f6a7', shortSha: 'd4e5f6a', author: 'Nicolas DiPiazza', relativeTime: '1 hour ago', subject: 'feat(robos-tv): add Roku ECP readiness verifier and Dev Central TV wallboard cast', commitType: 'feat' },
-    { index: 5, sha: 'e5f6a7b8', shortSha: 'e5f6a7b', author: 'Nicolas DiPiazza', relativeTime: '2 hours ago', subject: 'feat(vpn-sandbox): add 3-barrier ip-netns OpenVPN kill-switch sandbox', commitType: 'feat' },
-    { index: 6, sha: 'f6a7b8c9', shortSha: 'f6a7b8c', author: 'Nicolas DiPiazza', relativeTime: '3 hours ago', subject: 'feat(vpn-servers): add IPVanish 3,598 server profile catalog & TLS probe', commitType: 'feat' },
-    { index: 7, sha: '17a8b9c0', shortSha: '17a8b9c', author: 'Nicolas DiPiazza', relativeTime: '4 hours ago', subject: 'feat(point-of-sale): add self-checkout kiosk, prep queue & GS1 scanner', commitType: 'feat' },
-    { index: 8, sha: '28b9c0d1', shortSha: '28b9c0d', author: 'Nicolas DiPiazza', relativeTime: '5 hours ago', subject: 'feat(audio-player): add Kokoro Virtual DJ & AI Playlist generator', commitType: 'feat' },
-    { index: 9, sha: '39c0d1e2', shortSha: '39c0d1e', author: 'Nicolas DiPiazza', relativeTime: '6 hours ago', subject: 'feat(kgraph): add W3C SHACL shape validation across all modular packages', commitType: 'feat' },
-    { index: 10, sha: '40d1e2f3', shortSha: '40d1e2f', author: 'Nicolas DiPiazza', relativeTime: '8 hours ago', subject: 'docs(agents): document Bring-Your-Own Agent CLIs & Prompt Security Guard', commitType: 'docs' },
-  ].slice(0, maxCount);
-
+  // Outside a git checkout (an installed app, for example) there is no history to show.
   return {
     ok: true,
     repoDir: targetDir,
     repoName,
     branch,
     limit: maxCount,
-    count: fallbackCommits.length,
-    commits: fallbackCommits,
+    count: 0,
+    commits: [],
   };
 }
 
@@ -611,8 +598,8 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
   const PALETTE = ['#00bcd4', '#10b981', '#a855f7', '#f59e0b'];
   let googleAccounts = [];
   let calendars = [];
-  let syncedAccountEmail = 'developer@robos.dev';
-  let caldavConfigured = true;
+  let syncedAccountEmail = '';
+  let caldavConfigured = false;
   try {
     const ca = require('./cloud-accounts');
     const st = ca.listAccounts({ configDir: resolvedConfigDir });
@@ -627,6 +614,7 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
     }));
     if (calendars.length > 0) {
       syncedAccountEmail = calendars.map((c) => c.email).join(' · ');
+      caldavConfigured = true;
     }
   } catch {}
 
@@ -674,6 +662,8 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
       const tbRows = tb.readThunderbirdCachedEvents(tbStatus.primaryProfilePath, primaryEmail);
       if (tbRows.length > 0) {
         hasLiveThunderbirdEvents = true;
+        caldavConfigured = true;
+        syncedAccountEmail = syncedAccountEmail || 'Thunderbird';
       }
       for (const r of tbRows.slice(0, 8)) {
         const accEmail = r.accountEmail || primaryEmail;
@@ -708,7 +698,7 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
       const parsed = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
       const rawList = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.events) ? parsed.events : [];
       for (const item of rawList) {
-        if (hasLiveThunderbirdEvents && item.id && SEEDED_DEMO_IDS.has(item.id)) {
+        if (item.id && SEEDED_DEMO_IDS.has(item.id)) {
           continue;
         }
         const accEmail = item.accountEmail || item.calendar || primaryEmail;
@@ -729,94 +719,6 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
       }
     }
   } catch {}
-
-  if (events.length === 0) {
-    events = [
-      {
-        id: 'evt-standup',
-        time: '09:30',
-        endTime: '09:45',
-        title: 'RobOS Platform Daily Standup & Blocker Triage',
-        calendar: primaryEmail,
-        accountEmail: primaryEmail,
-        location: `Google Calendar (${primaryEmail})`,
-        status: 'completed',
-        color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
-      },
-      {
-        id: 'evt-kgraph-review',
-        time: '11:00',
-        endTime: '11:45',
-        title: 'KGraph Schema & SHACL Dashboard Layout Review',
-        calendar: secondaryEmail || primaryEmail,
-        accountEmail: secondaryEmail || primaryEmail,
-        location: `Google Calendar (${secondaryEmail || primaryEmail})`,
-        status: 'completed',
-        color: colorByEmail[(secondaryEmail || primaryEmail).toLowerCase()] || '#10b981',
-      },
-      {
-        id: 'evt-agent-ops',
-        time: '14:00',
-        endTime: '15:00',
-        title: 'Autonomous Agent Harness & Smart TV Wallboard Sync',
-        calendar: primaryEmail,
-        accountEmail: primaryEmail,
-        location: `Google Calendar (${primaryEmail})`,
-        status: 'now',
-        color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
-      },
-      {
-        id: 'evt-pr-theater',
-        time: '16:00',
-        endTime: '16:30',
-        title: 'Sprint 42 Code Review Theater & E2E Walkthroughs',
-        calendar: secondaryEmail || primaryEmail,
-        accountEmail: secondaryEmail || primaryEmail,
-        location: `Google Calendar (${secondaryEmail || primaryEmail})`,
-        status: 'upcoming',
-        color: colorByEmail[(secondaryEmail || primaryEmail).toLowerCase()] || '#10b981',
-      },
-      {
-        id: 'evt-release-gate',
-        time: '17:30',
-        endTime: '18:00',
-        title: 'Evening Appliance VM Snapshot & Release Check',
-        calendar: primaryEmail,
-        accountEmail: primaryEmail,
-        location: `Google Calendar (${primaryEmail})`,
-        status: 'upcoming',
-        color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
-      },
-    ];
-  } else if (
-    !hasLiveThunderbirdEvents &&
-    secondaryEmail &&
-    !events.some((e) => String(e.accountEmail).toLowerCase() === secondaryEmail.toLowerCase())
-  ) {
-    // Ensure the 2nd Google Calendar account's schedule is also represented when no live Thunderbird events exist
-    events.splice(1, 0, {
-      id: `evt-${secondaryEmail}-sync`,
-      time: '13:00',
-      endTime: '14:00',
-      title: 'Hermetiq Architecture & Roadmap Sync',
-      calendar: secondaryEmail,
-      accountEmail: secondaryEmail,
-      location: `Google Calendar (${secondaryEmail})`,
-      status: 'completed',
-      color: colorByEmail[secondaryEmail.toLowerCase()] || '#10b981',
-    });
-    events.splice(3, 0, {
-      id: `evt-${secondaryEmail}-review`,
-      time: '16:30',
-      endTime: '17:15',
-      title: 'Hermetiq Client Delivery & Agent Ops Check-In',
-      calendar: secondaryEmail,
-      accountEmail: secondaryEmail,
-      location: `Google Calendar (${secondaryEmail})`,
-      status: 'upcoming',
-      color: colorByEmail[secondaryEmail.toLowerCase()] || '#10b981',
-    });
-  }
 
   return {
     ok: true,
@@ -949,7 +851,7 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSy
             name: String(s.name || s.title || s.activity || 'In-Progress Agent Session').replace(/^[^·]+·\s*/, ''),
             status: 'running',
             pid: s.pid || null,
-            cwd: s.cwd || '/home/ndipiazza/source/robos',
+            cwd: s.cwd || '',
             taskRef: s.taskRef || null,
             activity: s.activity || (lines[lines.length - 1] || 'Executing task').replace(/^\[[^\]]+\]\s*/, ''),
             startedAt: new Date(startedEpochSec * 1000).toISOString(),
@@ -1007,7 +909,7 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSy
               name: run.title || run.taskKey || 'In-Progress Task Run',
               status: 'running',
               pid: run.pid,
-              cwd: run.cwd || '/home/ndipiazza/source/robos',
+              cwd: run.cwd || '',
               taskRef: run.taskKey || run.taskId || null,
               activity: run.activity || 'Running task',
               startedAt: new Date(startedMs).toISOString(),
@@ -1049,7 +951,7 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSy
               name: job.agentName || job.activity || `Session ${job.sessionId.slice(0, 8)}`,
               status: 'running',
               pid: livePid,
-              cwd: job.cwd || '/home/ndipiazza/source/robos',
+              cwd: job.cwd || '',
               taskRef: job.taskKey || job.taskId || null,
               activity: job.activity || 'Executing workspace task',
               startedAt: new Date(startedMs).toISOString(),
@@ -1163,7 +1065,7 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSy
             sessionId: id,
             name: promptTitle,
             status: 'running',
-            cwd: '/home/ndipiazza/source/robos',
+            cwd: '',
             taskRef: `turn #${lastStep.step_index || steps.length}`,
             activity: latestActivity,
             startedAt: new Date(startedMs).toISOString(),
@@ -1199,7 +1101,7 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSy
               name: data.cwd ? `Workspace Session (${path.basename(data.cwd)})` : `Session ${String(data.sessionId || data.pid).slice(0, 8)}`,
               status: 'running',
               pid: data.pid,
-              cwd: data.cwd || '/home/ndipiazza/source/robos',
+              cwd: data.cwd || '',
               activity: 'Executing in workspace',
               startedAt: new Date(startedMs).toISOString(),
               startedEpochSec,
@@ -1246,7 +1148,7 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSy
               id: `session-${id.slice(0, 8)}`,
               name: parsedLines[parsedLines.length - 1].replace(/^\[[^\]]+\]\s*/, '').slice(0, 64) || `Session ${id.slice(0, 8)}`,
               status: 'running',
-              cwd: '/home/ndipiazza/source/robos',
+              cwd: '',
               activity: 'Streaming session output',
               startedAt: new Date(startedEpochSec * 1000).toISOString(),
               startedEpochSec,
@@ -1337,15 +1239,7 @@ function collectSupplementalWidgetData({ configDir, repoDir } = {}) {
     }
   } catch {}
 
-  let smartTvs = {
-    portalPort: 19210,
-    tvs: [
-      { id: 'tv-livingroom-tcl-roku', name: '65" TCL Roku TV (Living room)', ip: '192.168.1.15', platformName: 'Roku OS TV', online: true },
-      { id: 'tv-livingroom-webos', name: 'Living Room OLED', ip: '192.168.1.64', platformName: 'LG webOS Smart TV', online: true },
-      { id: 'tv-basement-cast', name: 'Basement TV', ip: '192.168.1.52', platformName: 'Google TV / Android TV', online: true },
-      { id: 'tv-office-tizen', name: 'Studio Wall Display', ip: '192.168.1.78', platformName: 'Samsung Tizen Smart TV', online: true },
-    ],
-  };
+  let smartTvs = { portalPort: 19210, tvs: [] };
   try {
     const tvFile = path.join(
       configDir || process.env.ROBOS_CONFIG_DIR || path.join(process.env.HOME || os.homedir(), '.config', 'robos'),
@@ -1363,7 +1257,8 @@ function collectSupplementalWidgetData({ configDir, repoDir } = {}) {
   } catch {}
 
   const sprintRadar = {
-    sprintName: 'Sprint 42',
+    sample: true,
+    sprintName: 'Sample sprint',
     ciHealth: '100%',
     openPrs: 3,
     activeTasks: 5,
@@ -1530,15 +1425,7 @@ function collectGitHubRepoActivity({
     networkCount: 1,
     openIssues: 2,
     repoSizeMb: 854,
-    stargazers: [
-      { login: 'mrsdianajane-design', starredAt: '2026-10-24' },
-      { login: 'reham00025', starredAt: '2026-10-09' },
-      { login: 'krickert', starredAt: '2026-09-03' },
-      { login: 'aliasdhacker', starredAt: '2026-08-06' },
-      { login: 'nddipiazza-ak', starredAt: '2026-04-24' },
-      { login: 'gwatts', starredAt: '2026-04-23' },
-      { login: 'bdw617', starredAt: '2026-04-17' },
-    ],
+    stargazers: [],
     clones14d: {
       count: 2637,
       uniques: 612,
@@ -1593,6 +1480,7 @@ function collectGitHubRepoActivity({
     },
   };
 
+  let gitHubAnswered = false;
   if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
     try {
       const repoRes = spawnSync(
@@ -1601,6 +1489,7 @@ function collectGitHubRepoActivity({
         { env: cleanEnv, encoding: 'utf8', timeout: 3500 }
       );
       if (repoRes.status === 0 && repoRes.stdout) {
+        gitHubAnswered = true;
         const rInfo = JSON.parse(repoRes.stdout);
         if (typeof rInfo.stargazers_count === 'number') popularity.stars = rInfo.stargazers_count;
         if (typeof rInfo.forks_count === 'number') popularity.forks = rInfo.forks_count;
@@ -1882,6 +1771,7 @@ function collectGitHubRepoActivity({
 
   const result = {
     ok: true,
+    sample: !gitHubAnswered,
     repo,
     branch,
     selectedAccount,
@@ -1932,25 +1822,21 @@ function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
   };
 
   let track = {
-    id: 'trk_a1c5c6190a5e3618',
-    title: 'Ambience & Music',
-    artist: "Baldur's Gate 3",
-    album: 'video game music',
-    artistAlbum: "Baldur's Gate 3 • video game music",
+    id: null,
+    title: 'Nothing playing',
+    artist: 'RobOS Audio Player',
+    album: '',
+    artistAlbum: 'Open Audio Player to start listening',
     elapsed: '0:00',
-    duration: '46:07',
+    duration: '0:00',
     elapsedSec: 0,
-    maxSec: 2767.7,
+    maxSec: 0,
     progressPct: 0,
     isPlaying: false,
     output: 'Desktop (Local Audio)',
-    codec: 'MPEG 1 Layer 3 · 48 kHz',
-    source: 'Google Drive (/video game music)',
-    upNext: [
-      { title: 'Lux Aeterna (Requiem for a Dream) 4', artist: 'Clint Mansell' },
-      { title: '8BitStereo mixed', artist: 'Copy of Dragon Warrior (NES) Soundtrack' },
-      { title: 'Original Soundtrack 4', artist: 'Final Fantasy IX Memoria Project' },
-    ],
+    codec: '',
+    source: '',
+    upNext: [],
   };
 
   // 1. Check most recently played track in audio-track-stats.json + audio-library.json
@@ -1974,11 +1860,11 @@ function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
         const libTracks = Array.isArray(libRaw) ? libRaw : libRaw.tracks || [];
         const found = libTracks.find((t) => t.id === latestId);
         if (found) {
-          const durSec = Number(found.duration) || 2767.7;
+          const durSec = Number(found.duration) || 0;
           track.id = found.id;
-          track.title = found.title || track.title;
-          track.artist = found.artist || track.artist;
-          track.album = found.album || track.album;
+          track.title = found.title || 'Untitled track';
+          track.artist = found.artist || 'Unknown artist';
+          track.album = found.album || 'Unknown album';
           track.artistAlbum = `${track.artist} • ${track.album}`;
           track.maxSec = durSec;
           track.duration = fmtMinSec(durSec);
@@ -2110,31 +1996,29 @@ function collectNextMeetingCountdown({ configDir, date } = {}) {
   }
   candidates.sort((a, b) => a.startEpochSec - b.startEpochSec);
 
-  // If no today/future event is in the immediate window, ensure a realistic upcoming meeting slot
-  let nextMeeting = candidates[0] || null;
-  if (!nextMeeting) {
-    const fallbackStartSec = nowSec + 42 * 60;
-    const fbDate = new Date(fallbackStartSec * 1000);
-    const fbHm = fbDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    nextMeeting = {
-      id: 'evt-next-upcoming',
-      time: fbHm,
-      endTime: '17:15',
-      title: 'Hermetiq Client Delivery & Agent Ops Check-In',
-      calendar: 'nicholas@hermetiq.com',
-      accountEmail: 'nicholas@hermetiq.com',
-      location: 'Google Calendar (nicholas@hermetiq.com)',
-      status: 'upcoming',
-      color: '#10b981',
-      startEpochSec: fallbackStartSec,
+  if (!candidates.length) {
+    return {
+      ok: true,
+      nowEpochSec: nowSec,
+      targetEpochSec: 0,
+      secondsUntil: 0,
+      minutesUntil: 0,
+      countdownFormatted: '',
+      countdownLabel: 'No upcoming meetings',
+      urgencyPct: 0,
+      nextMeeting: {
+        time: '--:--',
+        title: 'No upcoming meetings',
+        calendar: '',
+        accountEmail: '',
+        location: 'Connect a calendar to see your next meeting',
+      },
+      followingMeeting: null,
+      updatedAt: new Date().toISOString(),
     };
   }
-
-  const followingMeeting = candidates[1] || {
-    title: 'Comprehensive Eye Exam - Dr. Jennifer Caine',
-    time: 'Oct 31 08:30',
-    accountEmail: 'you@example.com',
-  };
+  const nextMeeting = candidates[0];
+  const followingMeeting = candidates[1] || null;
 
   const secondsUntil = Math.max(0, nextMeeting.startEpochSec - nowSec);
   const days = Math.floor(secondsUntil / 86400);
@@ -2452,42 +2336,6 @@ function collectVoiceDictationBubbles({ configDir, limit = 10 } = {}) {
     } catch {}
   }
 
-  // 3. Fallback sample dialogue bubbles if neither file exists yet (e.g. fresh workspace / test dir)
-  if (bubbles.length === 0 && !interimBubble && !cleared) {
-    const nowMs = Date.now();
-    const t1 = new Date(nowMs - 140000).toISOString();
-    const t2 = new Date(nowMs - 75000).toISOString();
-    const t3 = new Date(nowMs - 20000).toISOString();
-    bubbles = [
-      enrichVoiceBubble({
-        id: 'vp-seed-1',
-        text: 'Open RobOS Dashboards and check the Smart TV wallboard status',
-        isoTime: t1,
-        isFinal: true,
-        commandCard: {
-          typeLabel: 'App',
-          typeClass: 'app',
-          title: 'RobOS Dashboards',
-          status: 'done',
-          statusLabel: '✓ Done',
-          resultText: 'Launched RobOS Dashboards',
-        },
-      }),
-      enrichVoiceBubble({
-        id: 'vp-seed-2',
-        text: 'Check the Knowledge Graph diff and validate all SHACL shapes',
-        isoTime: t2,
-        isFinal: true,
-      }),
-      enrichVoiceBubble({
-        id: 'vp-seed-3',
-        text: 'Add a RobOS Voice dictation dashboard widget showing live dialogue bubbles',
-        isoTime: t3,
-        isFinal: true,
-      }),
-    ].slice(-maxBubbles);
-  }
-
   const trimmedBubbles = bubbles.slice(-maxBubbles);
 
   return {
@@ -2526,7 +2374,7 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
 
   let state = {
     activeDashboardId: 'daily-engineering-ops',
-    lastCastTvId: 'tv-livingroom-tcl-roku',
+    lastCastTvId: null,
     lastCastAt: null,
     slideshow: {
       enabled: false,
@@ -3297,7 +3145,7 @@ function renderDashboardTvWallboardHtml({
   hostIp = '192.168.1.100',
   portalPort = 19210,
   resolvedDashboard,
-  tvName = 'Living Room Smart TV',
+  tvName = 'Preview',
   tvIp = '',
 } = {}) {
   const portalUrl = `http://${hostIp}:${portalPort}`;
@@ -3313,6 +3161,12 @@ function renderDashboardTvWallboardHtml({
       .replace(/"/g, '&quot;');
 
   const renderCardBodyHtml = (card) => {
+    const body = renderLiveCardBodyHtml(card);
+    if (!card.liveData?.sample) return body;
+    return `<div class="dashboard-sample-note" style="font-size:11px;font-weight:700;color:#fbbf24;margin-bottom:6px;">Sample data, not live.</div>${body}`;
+  };
+
+  const renderLiveCardBodyHtml = (card) => {
     const data = card.liveData || {};
     if (card.widgetType === 'git-commits') {
       const commits = Array.isArray(data.commits) ? data.commits : [];
@@ -3333,7 +3187,7 @@ function renderDashboardTvWallboardHtml({
             </li>
           `
             )
-            .join('')}
+            .join('') || '<li class="commit-compact-row"><span class="commit-subject">No git history here.</span></li>'}
         </ol>
       `;
     }
@@ -3343,7 +3197,7 @@ function renderDashboardTvWallboardHtml({
       return `
         <div class="widget-meta-row">
           <span>📅 ${esc(data.dateLabel || 'Today')}</span>
-          <span class="pill-mini">${esc(data.syncedAccountEmail || 'CalDAV Synced')}</span>
+          <span class="pill-mini">${esc(data.syncedAccountEmail || 'No calendar connected')}</span>
         </div>
         <div class="calendar-events-list">
           ${events
@@ -3364,7 +3218,7 @@ function renderDashboardTvWallboardHtml({
             </div>
           `
             )
-            .join('')}
+            .join('') || '<div class="cal-sub-row">No calendar events today.</div>'}
         </div>
       `;
     }
@@ -3391,7 +3245,7 @@ function renderDashboardTvWallboardHtml({
                 </div>
                 <span class="pill-mini js-agent-elapsed" data-started-epoch="${esc(s.startedEpochSec || '')}">⏱ ${esc(s.elapsedFormatted || '00:05')}</span>
               </div>
-              <div class="agent-cwd">cwd: <code>${esc(s.cwd || '/home/ndipiazza/source/robos')}</code>${s.activity ? ` · <span style="color:#67e8f9;">${esc(s.activity)}</span>` : ''}</div>
+              <div class="agent-cwd">cwd: <code>${esc(s.cwd || 'not reported')}</code>${s.activity ? ` · <span style="color:#67e8f9;">${esc(s.activity)}</span>` : ''}</div>
               <pre class="agent-tail-log">${(s.statusLines || []).map((l) => esc(l)).join('\n')}</pre>
             </div>
           `
@@ -3423,7 +3277,7 @@ function renderDashboardTvWallboardHtml({
             </div>
           `
             )
-            .join('')}
+            .join('') || '<div class="cal-sub-row">No TVs paired yet. Pair one in RobOS Smart TV.</div>'}
         </div>
       `;
     }
@@ -3473,7 +3327,7 @@ function renderDashboardTvWallboardHtml({
     if (card.widgetType === 'sprint-radar') {
       return `
         <div class="widget-meta-row">
-          <span>🚀 ${esc(data.sprintName || 'Sprint 42')}</span>
+          <span>🚀 ${esc(data.sprintName || 'Sprint')}</span>
           <span class="pill-mini">CI Health: ${esc(data.ciHealth || '100%')}</span>
         </div>
         <div class="calendar-events-list">
@@ -3762,9 +3616,9 @@ function renderDashboardTvWallboardHtml({
         <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid ${isPlaying ? '#a855f7' : '#475569'};border-radius:10px;padding:10px 12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div style="min-width:0;flex:1;">
-              <div style="font-size:15px;font-weight:800;color:${isPlaying ? '#f8fafc' : '#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? `🎵 ${esc(data.title || 'Ambience & Music')}` : '🔇 No Audio Currently Playing'}</div>
-              <div style="font-size:12px;color:${isPlaying ? '#d8b4fe' : '#64748b'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? esc(data.artistAlbum || "Baldur's Gate 3 • video game music") : `Last queued: ${esc(data.title || 'None')} (${esc(data.artist || 'RobOS Audio Player')})`}</div>
-              <div style="font-size:10.5px;color:#94a3b8;margin-top:2px;">${esc(data.source || 'Google Drive')} · ${esc(data.codec || 'MPEG 1 Layer 3 · 48 kHz')}</div>
+              <div style="font-size:15px;font-weight:800;color:${isPlaying ? '#f8fafc' : '#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? `🎵 ${esc(data.title || 'Unknown track')}` : '🔇 No Audio Currently Playing'}</div>
+              <div style="font-size:12px;color:${isPlaying ? '#d8b4fe' : '#64748b'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? esc(data.artistAlbum || '') : (data.id ? `Last queued: ${esc(data.title || 'None')} (${esc(data.artist || 'RobOS Audio Player')})` : esc(data.artistAlbum || ''))}</div>
+              <div style="font-size:10.5px;color:#94a3b8;margin-top:2px;">${esc([data.source, data.codec].filter(Boolean).join(' · '))}</div>
             </div>
             <div style="text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;">
               <div style="font-size:14px;font-weight:800;color:${isPlaying ? '#67e8f9' : '#64748b'};">${esc(isPlaying ? (data.elapsed || '0:00') : '0:00')} <span style="color:#64748b;font-weight:500;">/ ${esc(data.duration || '0:00')}</span></div>
@@ -3790,12 +3644,12 @@ function renderDashboardTvWallboardHtml({
       const nm = data.nextMeeting || {};
       const fm = data.followingMeeting || null;
       const targetSec = Number(data.targetEpochSec) || 0;
-      const pct = Math.max(8, Math.min(100, Number(data.urgencyPct) || 50));
+      const pct = targetSec ? Math.max(8, Math.min(100, Number(data.urgencyPct) || 8)) : 0;
       return `
         <div class="widget-meta-row">
           <span>⏳ <strong>Countdown Until Next Meeting</strong></span>
           <span class="pill-mini" style="background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:rgba(16,185,129,0.45);">
-            📅 ${esc(nm.accountEmail || nm.calendar || 'nicholas@hermetiq.com')}
+            📅 ${esc(nm.accountEmail || nm.calendar || 'No calendar connected')}
           </span>
         </div>
         <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #10b981;border-radius:10px;padding:10px 12px;">
@@ -3803,10 +3657,10 @@ function renderDashboardTvWallboardHtml({
             <canvas class="robos-meeting-countdown-canvas" width="96" height="96" data-target-epoch="${esc(targetSec)}" style="width:96px;height:96px;flex-shrink:0;"></canvas>
             <div style="flex:1;min-width:0;">
               <div class="js-next-meeting-countdown" data-target-epoch="${esc(targetSec)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:26px;font-weight:800;color:#6ee7b7;letter-spacing:0.03em;">
-                ${esc(data.countdownLabel || 'T - 00:30:00')}
+                ${esc(data.countdownLabel || 'No upcoming meetings')}
               </div>
               <div style="font-size:13.5px;font-weight:800;color:#f8fafc;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${esc(nm.time || '16:30')} · ${esc(nm.title || 'Hermetiq Client Delivery & Agent Ops Check-In')}
+                ${esc(nm.time || '--:--')} · ${esc(nm.title || 'No upcoming meetings')}
               </div>
               <div style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 📍 ${esc(nm.location || 'Google Calendar')}
@@ -4479,7 +4333,8 @@ function renderDashboardTvWallboardHtml({
         document.querySelectorAll('.robos-meeting-countdown-canvas').forEach(canvas => {
           const ctx = canvas.getContext('2d');
           if (!ctx) return;
-          const target = Number(canvas.getAttribute('data-target-epoch')) || (nowEpoch + 1800);
+          const target = Number(canvas.getAttribute('data-target-epoch')) || 0;
+          if (!target) return;
           const rem = Math.max(0, target - nowEpoch);
           const ratio = 1 - Math.min(3600, rem) / 3600;
           const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 7;
@@ -4610,7 +4465,7 @@ function renderDashboardTvWallboardHtml({
                     '<div><span class="agent-dot running"></span><strong class="agent-name">' + escHtml(s.name) + '</strong></div>' +
                     '<span class="pill-mini js-agent-elapsed" data-started-epoch="' + escHtml(s.startedEpochSec || '') + '">⏱ ' + escHtml(s.elapsedFormatted || '00:05') + '</span>' +
                   '</div>' +
-                  '<div class="agent-cwd">cwd: <code>' + escHtml(s.cwd || '/home/ndipiazza/source/robos') + '</code>' + (s.activity ? ' · <span style="color:#67e8f9;">' + escHtml(s.activity) + '</span>' : '') + '</div>' +
+                  '<div class="agent-cwd">cwd: <code>' + escHtml(s.cwd || 'not reported') + '</code>' + (s.activity ? ' · <span style="color:#67e8f9;">' + escHtml(s.activity) + '</span>' : '') + '</div>' +
                   '<pre class="agent-tail-log">' + (s.statusLines || []).map(l => escHtml(l)).join('\\n') + '</pre>' +
                 '</div>'
               ).join('') +

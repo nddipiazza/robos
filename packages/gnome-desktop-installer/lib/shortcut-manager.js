@@ -279,7 +279,7 @@ class ShortcutManager {
       builtinById.set(b.appId, b);
     }
 
-    // 1. Scan packagesDir (e.g. /home/ndipiazza/source/robos/packages)
+    // 1. Scan packagesDir (e.g. ~/source/robos/packages)
     if (fs.existsSync(this.packagesDir)) {
       const pkgDirs = fs.readdirSync(this.packagesDir).sort();
       for (const pkgName of pkgDirs) {

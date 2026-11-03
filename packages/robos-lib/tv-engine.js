@@ -323,7 +323,7 @@ const TEN_FOOT_LAUNCH_TILES = [
     id: 'tablo-dvr',
     title: 'Tablo OTA DVR & Live TV',
     category: 'Live TV & DVR',
-    badge: '192.168.1.55',
+    badge: 'LAN',
     description: 'Watch recorded NFL/MLB games, TV series, and 55 live OTA antenna channels from your Tablo 4th Gen DVR.',
     packageId: 'robos-tv',
     shortcutKey: '0',
@@ -662,7 +662,7 @@ function renderDevCentralWallboardHtml({ hostIp, portalPort, devCentralCast = nu
       <span class="wb-badge-live">● LIVE TV CAST</span>
       <div>
         <div class="wb-title">RobOS Dev Central — Mission Control Wallboard</div>
-        <div class="wb-sub">Cast to ${esc(cast.tvName || 'Living Room Smart TV')} (${esc(cast.tvIp || hostIp)}) · ${esc(cast.sprintName || 'Sprint 42')}</div>
+        <div class="wb-sub">Cast to ${esc(cast.tvName || 'Preview')} (${esc(cast.tvIp || hostIp)}) · ${esc(cast.sprintName || 'Sprint 42')}</div>
       </div>
     </div>
     <div class="wb-pills">
@@ -1147,7 +1147,7 @@ function generateSideloadPackage({
   outputDir,
   hostIp = '192.168.1.100',
   portalPort = DEFAULT_PORTAL_PORT,
-  tvIp = '192.168.1.52',
+  tvIp = '',
   appName = 'RobOS TV',
   appId = 'com.robos.tv',
   version = '1.0.0',
@@ -1372,43 +1372,31 @@ tizen run -p robostv001.RobOSTV
     ).slice(0, 8);
     const events = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || []).slice(0, 5);
     const musicData = (musicCard && musicCard.liveData) || {
-      title: 'Ambience & Music',
-      artist: "Baldur's Gate 3",
-      album: 'video game music',
-      artistAlbum: "Baldur's Gate 3 - video game music",
-      elapsed: '24:45',
-      duration: '46:07',
-      progressPct: 54,
-      isPlaying: true,
+      title: '',
+      artist: '',
+      album: '',
+      artistAlbum: '',
+      elapsed: '0:00',
+      duration: '0:00',
+      progressPct: 0,
+      isPlaying: false,
       output: 'Desktop (Local Audio)',
-      upNext: [
-        { title: 'Lux Aeterna (Requiem for a Dream) 4', artist: 'Clint Mansell' },
-        { title: '8BitStereo mixed', artist: 'Copy of Dragon Warrior (NES) Soundtrack' },
-      ],
+      upNext: [],
     };
     const sessions = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || []).slice(0, 3);
     const meetingData = (meetingCard && meetingCard.liveData) || {
-      secondsUntil: 1680,
-      countdownLabel: 'T - 00:28:00',
-      urgencyPct: 76,
-      nextMeeting: {
-        time: '16:30',
-        title: 'Hermetiq Client Delivery & Agent Ops Check-In',
-        accountEmail: 'nicholas@hermetiq.com',
-        location: 'Google Calendar (nicholas@hermetiq.com)',
-      },
-      followingMeeting: {
-        time: 'Oct 31 08:30',
-        title: 'Comprehensive Eye Exam - Dr. Jennifer Caine',
-        accountEmail: 'you@example.com',
-      },
+      secondsUntil: 0,
+      countdownLabel: 'No upcoming meetings',
+      urgencyPct: 0,
     };
     const nm = meetingData.nextMeeting || {};
     const fm = meetingData.followingMeeting || {};
-    const initialRemSec = Math.max(60, Number(meetingData.secondsUntil) || 1680);
-    const nmTitleLine = `${nm.time || '16:30'} - ${nm.title || 'Hermetiq Client Delivery & Agent Ops Check-In'}`;
-    const nmMetaLine = `Calendar: ${nm.accountEmail || 'nicholas@hermetiq.com'} | After: ${fm.time || 'Oct 31 08:30'} ${String(fm.title || '').slice(0, 22)}`;
-    const nmBarW = Math.max(24, Math.min(528, Math.round(((Number(meetingData.urgencyPct) || 70) / 100) * 528)));
+    const initialRemSec = Math.max(0, Number(meetingData.secondsUntil) || 0);
+    const nmTitleLine = nm.title ? `${nm.time || '--:--'} - ${nm.title}` : 'No upcoming meetings';
+    const nmMetaLine = nm.title
+      ? `Calendar: ${nm.accountEmail || 'not connected'}${fm.title ? ` | After: ${fm.time || ''} ${String(fm.title).slice(0, 22)}` : ''}`
+      : 'Connect a calendar to see your next meeting';
+    const nmBarW = Math.max(24, Math.min(528, Math.round(((Number(meetingData.urgencyPct) || 0) / 100) * 528)));
 
     const relRunning = Boolean(ghRel.isRunningNow);
     const relStripeColor = relRunning ? '0xF59E0BFF' : '0x10B981FF';
@@ -1492,17 +1480,7 @@ tizen run -p robostv001.RobOSTV
     const popClonesPeak = pop.clones14d?.peakDay || { label: 'Oct 23', count: 328, uniques: 109 };
     const popViewsCount = Number(pop.views14d?.count ?? 17);
     const popViewsUniques = Number(pop.views14d?.uniques ?? 8);
-    const popStargazers = Array.isArray(pop.stargazers) && pop.stargazers.length
-      ? pop.stargazers
-      : [
-          { login: 'mrsdianajane-design', starredAt: '2026-10-24' },
-          { login: 'reham00025', starredAt: '2026-10-09' },
-          { login: 'krickert', starredAt: '2026-09-03' },
-          { login: 'aliasdhacker', starredAt: '2026-08-06' },
-          { login: 'nddipiazza-ak', starredAt: '2026-04-24' },
-          { login: 'gwatts', starredAt: '2026-04-23' },
-          { login: 'bdw617', starredAt: '2026-04-17' },
-        ];
+    const popStargazers = Array.isArray(pop.stargazers) ? pop.stargazers : [];
     const defaultClonesDaily = [
       { date: '2026-10-13', count: 29, uniques: 17 },
       { date: '2026-10-14', count: 249, uniques: 95 },
@@ -1571,21 +1549,23 @@ tizen run -p robostv001.RobOSTV
 
     const musicPlaying = Boolean(musicData.isPlaying === true);
     const musicStatusLine = musicPlaying
-      ? `NOW PLAYING [PLAYING]  ${musicData.elapsed || '0:00'} / ${musicData.duration || '46:07'}  |  ${musicData.output || 'Local Audio'}`
+      ? `NOW PLAYING [PLAYING]  ${musicData.elapsed || '0:00'} / ${musicData.duration || '0:00'}  |  ${musicData.output || 'Local Audio'}`
       : `AUDIO IDLE [NOT PLAYING]  0:00 / ${musicData.duration || '0:00'}  |  ${musicData.output || 'Local Audio'}`;
     const musicTitleLine = musicPlaying
-      ? `${musicData.title || 'Ambience & Music'}`
+      ? `${musicData.title || 'Unknown track'}`
       : 'No Audio Currently Playing';
     const musicArtistClean = String(musicData.artistAlbum || `${musicData.artist || ''} - ${musicData.album || ''}`).replace(/[^\x20-\x7E]/g, '-');
     const musicArtistLine = musicPlaying
-      ? `${musicArtistClean}  (${musicData.source || 'Google Drive'})`
-      : `Last queued: ${String(musicData.title || 'None').slice(0, 38)} (${musicData.output || 'RobOS Audio Player'})`;
+      ? `${musicArtistClean}${musicData.source ? `  (${musicData.source})` : ''}`
+      : musicData.id
+      ? `Last queued: ${String(musicData.title || 'None').slice(0, 38)} (${musicData.output || 'RobOS Audio Player'})`
+      : 'Open Audio Player to start listening';
     const musicPct = musicPlaying ? Math.max(4, Math.min(100, Number(musicData.progressPct) || 1)) : 0;
     const musicBarW = musicPlaying ? Math.max(16, Math.round((musicPct / 100) * 512)) : 0;
     const upNextArr = Array.isArray(musicData.upNext) ? musicData.upNext : [];
     const musicUpNextLine = upNextArr.length
       ? `Up Next: ${upNextArr.map((u) => `${u.title} (${u.artist})`).join(' | ')}`
-      : 'Up Next: Lux Aeterna (Clint Mansell) | 8BitStereo mixed';
+      : 'Up Next: nothing queued';
 
     const eqBarsXml = Array.from({ length: 8 }, (_, i) => {
       const bx = 1116 + i * 11;
@@ -1602,7 +1582,7 @@ tizen run -p robostv001.RobOSTV
       const y = 310 + i * 112;
       const status = String(ev?.status || 'upcoming').toUpperCase();
       const accEmail = ev?.accountEmail || ev?.calendar || 'you@example.com';
-      const isSecondCal = String(accEmail).toLowerCase().includes('hermetiq') || ev?.color === '#10b981';
+      const isSecondCal = ev?.color === '#10b981';
       const stripeColor = isSecondCal ? '0x10B981FF' : '0x00BCD4FF';
       const timeColor = isSecondCal ? '0x6EE7B7FF' : '0x67E8F9FF';
       const timeText = ev ? `${ev.time}  [${status}]  (${accEmail})` : '';
@@ -1671,7 +1651,7 @@ tizen run -p robostv001.RobOSTV
       const y = 316 + i * 190;
       const isVis = s && i < 3 ? 'true' : 'false';
       const sTitle = s ? s.name || s.title || s.id || 'In-Progress Session' : '';
-      const sAct = s ? s.activity || s.cwd || '/home/ndipiazza/source/robos' : '';
+      const sAct = s ? s.activity || s.cwd || '' : '';
       const sEl = s ? s.elapsedFormatted || '00:05' : '00:00';
       const titleText = s ? `* ${String(sTitle).slice(0, 46)}` : '';
       const metaText = s ? `IN PROGRESS [${sEl}] | ${String(sAct).slice(0, 42)}` : '';
@@ -2132,7 +2112,7 @@ ${voiceSlide2RowsXml}
         <Label translation="[996, 36]" scale="[0.52, 0.52]" width="106" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
         <Poster id="cinemaTabTabloPoster" translation="[996, 18]" width="56" height="56" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaTabTabloLabel" translation="[1062, 20]" scale="[0.58, 0.58]" width="400" height="30" numLines="1" color="0x67E8F9FF" text="TABLO DVR" />
-        <Label id="cinemaTabTabloSub" translation="[1062, 48]" scale="[0.43, 0.43]" width="520" height="24" numLines="1" color="0xA5F3FCFF" text="192.168.1.55  |  OTA Recordings" />
+        <Label id="cinemaTabTabloSub" translation="[1062, 48]" scale="[0.43, 0.43]" width="520" height="24" numLines="1" color="0xA5F3FCFF" text="OTA Recordings" />
         <Rectangle id="cinemaTabTabloPillBg" translation="[1304, 22]" width="84" height="26" color="0x00BCD4FF" />
         <Label id="cinemaTabTabloPillTxt" translation="[1304, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0x07131AFF" text="TABLO &gt;" />
       </Group>
@@ -2222,7 +2202,7 @@ ${voiceSlide2RowsXml}
         <Label translation="[1404, 224]" scale="[0.58, 0.58]" width="800" height="30" numLines="1" horizAlign="center" color="0x38BDF8FF" text="TABLO DVR RECORDING THUMBNAIL" />
         <Poster id="cinemaHeroThumbPoster" translation="[1404, 116]" width="464" height="260" loadDisplayMode="scaleToZoom" />
         <Rectangle translation="[1404, 344]" width="464" height="32" color="0x090D16D8" />
-        <Label id="cinemaHeroThumbCaption" translation="[1414, 350]" scale="[0.43, 0.43]" width="1040" height="22" numLines="1" color="0x67E8F9FF" text="TABLO RECORDING THUMBNAIL | 192.168.1.55" />
+        <Label id="cinemaHeroThumbCaption" translation="[1414, 350]" scale="[0.43, 0.43]" width="1040" height="22" numLines="1" color="0x67E8F9FF" text="TABLO RECORDING THUMBNAIL" />
       </Group>
 
       <!-- ============================================================================== -->
@@ -2557,7 +2537,7 @@ sub init()
         { id: "comedy", tag: "GENRE", mono: "COM", label: "Comedy & Animation" }
     ]
     m.tabloCategories = [
-        { id: "all", tag: "TABLO 192.168.1.55", mono: "DVR", label: "All Recordings" },
+        { id: "all", tag: "TABLO DVR", mono: "DVR", label: "All Recordings" },
         { id: "sports", tag: "LIVE SPORTS", mono: "SPT", label: "NFL & MLB Sports" },
         { id: "series", tag: "TV SHOWS", mono: "TV", label: "Series & Episodes" },
         { id: "news", tag: "LOCAL OTA", mono: "NWS", label: "Local News" },
@@ -2596,7 +2576,7 @@ sub init()
     m.wallCards = [
         { id: "movie-player", title: "RobOS Cinema+ Movies", desc: "Browse & play 107 feature films with 2:3 posters, plot synopses, and watch progress." },
         { id: "tv-shows", title: "RobOS Cinema+ TV Shows", desc: "Browse 48 TV Series by Season & Episode with visual poster cards and resume tracking." },
-        { id: "tablo-dvr", title: "Tablo OTA DVR Recordings", desc: "Browse & play your Tablo DVR (192.168.1.55) recordings with acquired broadcast thumbnails." },
+        { id: "tablo-dvr", title: "Tablo OTA DVR Recordings", desc: "Browse & play your Tablo DVR recordings with acquired broadcast thumbnails." },
         { id: "daily-engineering-ops", title: "Daily Engineering & Agent Ops", desc: "Slide 1: GitHub Releases & Commits + Music + Dual Calendars + Tailed Agents." },
         { id: "github-ci-popularity", title: "GitHub CI Status & App Popularity", desc: "Slide 2: CI Status in main + Stars & Forks + 14-Day Clones & Release Downloads." },
         { id: "robos-voice-dictation", title: "RobOS Voice Dictation Chats", desc: "Slide 3: Live RobOS Voice dictation dialogue bubbles, commands, and skill badges." }
@@ -3386,7 +3366,7 @@ sub updateCinemaTabHeaderUi()
         if isTablo or isTabloTabFocused then m.cinemaTabTabloLabel.color = "0x67E8F9FF" else m.cinemaTabTabloLabel.color = "0x94A3B8FF"
     end if
     if m.cinemaTabTabloSub <> invalid
-        m.cinemaTabTabloSub.text = "192.168.1.55  |  " + tabloCnt.ToStr() + " OTA Recordings"
+        m.cinemaTabTabloSub.text = tabloCnt.ToStr() + " OTA Recordings"
     end if
     if m.cinemaTabTabloPillBg <> invalid and m.cinemaTabTabloPillTxt <> invalid
         if isTabloTabFocused
@@ -3517,7 +3497,7 @@ sub updateCinemaPaneFocusUi()
                 m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  TABLO DVR CHANNELS & CATEGORIES  ([LEFT/RIGHT] FILTER  |  [UP] TABS  |  [DOWN] RECORDINGS)"
                 m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
             else
-                m.cinemaCatHeaderLabel.text = "ROW 2  |  TABLO DVR CATEGORIES (192.168.1.55)  (1 [UP] FROM RECORDINGS  |  2 [UP] TO MOVIES / SHOWS / TABLO TABS)"
+                m.cinemaCatHeaderLabel.text = "ROW 2  |  TABLO DVR CATEGORIES  (1 [UP] FROM RECORDINGS  |  2 [UP] TO MOVIES / SHOWS / TABLO TABS)"
                 m.cinemaCatHeaderLabel.color = "0xA89F91FF"
             end if
         else if m.cinemaActiveTab = "shows"
@@ -4176,7 +4156,7 @@ sub updateCinemaLibDetail(idx as Integer)
         if info.isTablo
             netUpper = "OTA CHANNEL"
             if mv.network <> invalid and mv.network <> "" then netUpper = UCase(cleanAscii(mv.network))
-            m.cinemaHeroEyebrow.text = "TABLO 4G DVR (192.168.1.55)  |  " + netUpper + "  |  " + UCase(cleanAscii(mv.qualityBadge))
+            m.cinemaHeroEyebrow.text = "TABLO 4G DVR  |  " + netUpper + "  |  " + UCase(cleanAscii(mv.qualityBadge))
         else if m.activeShowGroup <> invalid
             sNum = 1
             eNum = 1
@@ -4611,7 +4591,11 @@ sub onPayloadUpdated()
                     mtNode.color = "0x94A3B8FF"
                 end if
                 if maNode <> invalid
-                    maNode.text = "Last queued: " + Left(cleanAscii(md.title), 36) + " (" + cleanAscii(md.output) + ")"
+                    if md.id <> invalid
+                        maNode.text = "Last queued: " + Left(cleanAscii(md.title), 36) + " (" + cleanAscii(md.output) + ")"
+                    else
+                        maNode.text = "Open Audio Player to start listening"
+                    end if
                     maNode.color = "0x64748BFF"
                 end if
                 if mpNode <> invalid then mpNode.width = 0
@@ -4638,7 +4622,7 @@ sub onPayloadUpdated()
                     accEmail = ev.accountEmail
                     if accEmail = invalid then accEmail = ev.calendar
                     if accEmail = invalid then accEmail = "you@example.com"
-                    isSecond = (Instr(1, LCase(cleanAscii(accEmail)), "hermetiq") > 0)
+                    isSecond = (ev.color <> invalid and LCase(cleanAscii(ev.color)) = "#10b981")
                     if bgNode <> invalid then bgNode.visible = true
                     if stNode <> invalid
                         stNode.visible = true
@@ -5319,59 +5303,7 @@ function createTvEngine({
         state = { ...state, ...parsed };
       }
     } catch {}
-    if (!Array.isArray(state.tvs) || state.tvs.length === 0) {
-      state.tvs = [
-        {
-          id: 'tv-livingroom-tcl-roku',
-          name: '65" TCL Roku TV (Living room)',
-          ip: '192.168.1.15',
-          platformId: 'roku-os',
-          platformName: 'Roku OS TV & Streaming Players',
-          model: 'TCL 65S425 (Roku OS 15.3.4)',
-          devModeEnabled: false,
-          sideloadStatus: 'Live on LAN (:8060 ECP Active) · Enable Dev Mode to Sideload ZIP',
-          online: true,
-          ports: { ecp: 8060, http: 80 },
-        },
-        {
-          id: 'tv-basement-cast',
-          name: 'Basement TV',
-          ip: '192.168.1.52',
-          platformId: 'android-tv',
-          platformName: 'Google TV / Android TV (ADB + Cast)',
-          model: 'Sony Bravia 4K Google TV',
-          devModeEnabled: true,
-          sideloadStatus: 'Installed (com.robos.tv v1.0.0)',
-          online: true,
-          ports: { cast: 8009, adb: 5555 },
-        },
-        {
-          id: 'tv-livingroom-webos',
-          name: 'Living Room OLED',
-          ip: '192.168.1.64',
-          platformId: 'lg-webos',
-          platformName: 'LG webOS Smart TV',
-          model: 'LG OLED65C4PUA (webOS 24)',
-          devModeEnabled: true,
-          sideloadStatus: 'Installed (Auto-Renew Active · 998h left)',
-          online: true,
-          ports: { ssh: 9991, ssap: 3000 },
-        },
-        {
-          id: 'tv-office-tizen',
-          name: 'Studio Wall Display',
-          ip: '192.168.1.78',
-          platformId: 'samsung-tizen',
-          platformName: 'Samsung Tizen Smart TV',
-          model: 'Samsung QN90D Neo QLED',
-          devModeEnabled: true,
-          sideloadStatus: 'Ready to Sideload (.wgt)',
-          online: true,
-          ports: { sdb: 26101, rest: 8001 },
-        },
-      ];
-      saveState();
-    }
+    if (!Array.isArray(state.tvs)) state.tvs = [];
   }
 
   function saveState({ overwriteCinemaState = false } = {}) {
@@ -5852,7 +5784,7 @@ function createTvEngine({
             hostIp,
             portalPort: boundPort,
             resolvedDashboard: resolved,
-            tvName: state.activeDashboardCast?.tvName || state.tvs[0]?.name || 'Living Room Smart TV',
+            tvName: state.activeDashboardCast?.tvName || state.tvs[0]?.name || 'Preview',
             tvIp: state.activeDashboardCast?.tvIp || state.tvs[0]?.ip || hostIp,
           });
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -6044,7 +5976,7 @@ function createTvEngine({
           <div class="tab-thumb shows" id="tab-tablo-thumb" style="background:#00bcd4;">DVR</div>
           <div class="tab-meta">
             <div class="tab-title" id="tab-tablo-title" style="color:#67e8f9;">TABLO DVR</div>
-            <div class="tab-sub" id="tab-tablo-sub">192.168.1.55 · OTA Recordings</div>
+            <div class="tab-sub" id="tab-tablo-sub">OTA Recordings</div>
           </div>
         </div>
         <div class="top-tab-card" id="tab-back" style="display:none;width:250px;">
@@ -6807,6 +6739,12 @@ function createTvEngine({
     };
   }
 
+  // Saved devices only, for callers that do not need the cost of a full overview.
+  function getSavedDevices() {
+    loadState();
+    return { tvs: state.tvs, tabloIp: state.tabloIp || '' };
+  }
+
   function addOrUpdateTv(tvInput = {}) {
     const ip = String(tvInput.ip || '').trim();
     if (!ip) throw new Error('TV IP address is required');
@@ -6865,7 +6803,7 @@ function createTvEngine({
     const hostIp = detectLanIp();
     const platformId = options.platformId || 'lg-webos';
     const tv = state.tvs.find((t) => t.id === options.tvId) || state.tvs.find((t) => t.platformId === platformId) || state.tvs[0];
-    const tvIp = options.tvIp || (tv && tv.ip) || '192.168.1.52';
+    const tvIp = options.tvIp || (tv && tv.ip) || '';
 
     const pkgResult = generateSideloadPackage({
       platformId,
@@ -7104,8 +7042,8 @@ function createTvEngine({
               ecpAllowed: false,
               developerEnabled: false,
               supportsWakeOnWlan: false,
-              name: '65" TCL Roku TV',
-              model: 'TCL Roku TV',
+              name: 'Roku TV',
+              model: 'Roku TV',
               osVersion: (res.headers?.server?.match(/Roku\/([\d.]+)/) || [])[1] || '15.3.4',
             });
           }
@@ -7204,7 +7142,8 @@ function createTvEngine({
 
   function setTvPower({ tvId, ip, action = 'on' } = {}) {
     const tv = state.tvs.find((t) => t.id === tvId || t.ip === ip) || state.tvs[0];
-    const targetIp = ip || (tv && tv.ip) || '192.168.1.15';
+    const targetIp = ip || (tv && tv.ip);
+    if (!targetIp) return Promise.resolve({ ok: false, error: 'No Smart TV found in paired TV list' });
     const norm = String(action || 'on').toLowerCase();
     const key = norm === 'off' ? 'POWER_OFF' : 'POWER_ON';
     sendRemoteKey({ tvId: tv ? tv.id : undefined, key });
@@ -7280,7 +7219,7 @@ function createTvEngine({
       platformId: tv.platformId,
       platformName: tv.platformName,
       castAt: new Date().toISOString(),
-      sprintName: dashboard.sprintName || 'Sprint 42',
+      sprintName: dashboard.sprintName || 'Sprint',
       activeTab: dashboard.activeTab || 'all',
       activeFeature: dashboard.activeFeature || null,
       kpis: dashboard.kpis || {},
@@ -7649,6 +7588,7 @@ function createTvEngine({
     getPortalOwnership,
     restartPortal,
     getOverview,
+    getSavedDevices,
     addOrUpdateTv,
     removeTv,
     scanLanForTvs,

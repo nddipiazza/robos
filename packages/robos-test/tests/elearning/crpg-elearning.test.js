@@ -6,14 +6,15 @@ const fs = require('fs');
 const path = require('path');
 
 const { SDLCKnowledgeGraphStore } = require('../../../robos-graph/lib/graph-store');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 const rootRepo = path.resolve(__dirname, '../../../../');
-const graphFile = path.join(rootRepo, '.robos', 'knowledge-graph.jsonld');
 
 describe('Tactical cRPG Knowledge Graph eLearning Course Tests', () => {
+  const fixture = createRepoFixture();
   const store = new SDLCKnowledgeGraphStore({
-    filePath: graphFile,
-    rootDir: path.join(rootRepo, '.robos'),
+    filePath: fixture.graphFile,
+    rootDir: fixture.robosDir,
   });
 
   let issuedCertId = null;
@@ -24,6 +25,7 @@ describe('Tactical cRPG Knowledge Graph eLearning Course Tests', () => {
         store.deleteNode(issuedCertId);
       } catch {}
     }
+    fixture.cleanup();
   });
 
   it('Course node exists in Knowledge Graph store with correct metadata', () => {

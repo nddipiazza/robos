@@ -6,8 +6,8 @@ const scenarios = require('../lib/scenarios');
 const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'acme-petshop-step3-contracts';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424`;
 
 const CONTRACT_PROMPT = `Author and compile API contracts for Acme Petshop Platform (urn:robos:project:acme-petshop-platform):
 - Compile entities/pet.typespec into OpenAPI 3.1 contract for petstore-api (5 endpoints, AdoptionRequest)

@@ -71,7 +71,6 @@ function parseArgs(args) {
     companyName: 'Acme Global',
     companySlug: 'acme',
     defaultTeam: 'urn:robos:team:core-platform',
-    defaultProject: 'urn:robos:project:enterprise-core',
     packageId: 'services',
     importToRobos: false,
     dryRun: false,
@@ -461,7 +460,6 @@ function generateCompanyKnowledgeGraph(repoEntries, options = {}) {
   const companyName = options.companyName || 'Acme Global';
   const companySlug = options.companySlug || 'acme';
   const defaultTeam = options.defaultTeam || 'urn:robos:team:core-platform';
-  const defaultProject = options.defaultProject || `urn:robos:project:${companySlug}-core`;
 
   const nodes = [];
   const contracts = [];
@@ -489,6 +487,7 @@ function generateCompanyKnowledgeGraph(repoEntries, options = {}) {
     'dcterms:description': `Enterprise organization and technology ecosystem for ${companyName}.`,
     'robos:slug': companySlug,
     'robos:hasTeam': [defaultTeam],
+    'robos:package': 'organization',
   };
   nodes.push(orgNode);
 
@@ -499,9 +498,10 @@ function generateCompanyKnowledgeGraph(repoEntries, options = {}) {
     'dcterms:title': `${companyName} Core Platform Team`,
     'robos:topologyType': 'platform',
     'robos:memberOf': orgNode['@id'],
-    'robos:lead': 'urn:robos:person:architect',
+    'robos:package': 'organization',
   };
   nodes.push(teamNode);
+  const teamIds = new Set([defaultTeam]);
 
   // 3. Process each discovered repository / component
   for (const item of repoEntries) {
@@ -524,6 +524,18 @@ function generateCompanyKnowledgeGraph(repoEntries, options = {}) {
       ? (item.owner.startsWith('urn:') ? item.owner : `urn:robos:team:${item.owner}`)
       : defaultTeam;
 
+    // A team the manifest names as owner needs a node, titled with the name the manifest gave it.
+    if (!teamIds.has(owner)) {
+      teamIds.add(owner);
+      nodes.push({
+        '@id': owner,
+        '@type': ['oslc:Group', 'robos:Team'],
+        'dcterms:title': owner.split(':').pop(),
+        'robos:package': 'organization',
+      });
+      summary.teams++;
+    }
+
     // Build Contract for Microservices / Libraries
     let contractId = null;
     if (archetype === 'microservice' || archetype === 'library') {
@@ -541,6 +553,7 @@ function generateCompanyKnowledgeGraph(repoEntries, options = {}) {
           { path: `/api/v1/${parsed.slug}/{id}`, method: 'GET', description: `Get ${label} by ID` },
           { path: '/healthz', method: 'GET', description: 'Liveness probe' },
         ],
+        'robos:package': 'services',
       };
       contracts.push(contractNode);
       nodes.push(contractNode);
@@ -614,6 +627,7 @@ function generateCompanyKnowledgeGraph(repoEntries, options = {}) {
           'dcterms:description': description,
           'robos:repository': parsed.canonicalRepo,
           'robos:technology': technology,
+          'robos:cliCommand': parsed.slug.replace(/-(cli|console|tool)$/, ''),
           'robos:owner': owner,
           'robos:package': 'applications',
         };

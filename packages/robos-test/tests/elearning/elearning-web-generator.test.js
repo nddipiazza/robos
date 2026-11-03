@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
@@ -10,18 +10,21 @@ const {
   SDLCKnowledgeGraphStore,
   generateELearningWebsite,
 } = require('../../../robos-graph/index');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 const rootRepo = path.resolve(__dirname, '../../../../');
-const graphFile = path.join(rootRepo, '.robos', 'knowledge-graph.jsonld');
 
 describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
+  const fixture = createRepoFixture();
   const store = new SDLCKnowledgeGraphStore({
-    filePath: graphFile,
-    rootDir: path.join(rootRepo, '.robos'),
+    filePath: fixture.graphFile,
+    rootDir: fixture.robosDir,
   });
 
+  after(() => fixture.cleanup());
+
   it('1. Generates standalone interactive website for robos-crpg with Jekyll frontmatter for GitHub Pages', () => {
-    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
+    const targetHtmlPath = path.join(fixture.root, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
 
     const result = store.generateELearningWebsite({
       courseId: 'robos-crpg',
@@ -39,7 +42,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(fs.existsSync(targetHtmlPath), 'docs/projects/crpg-realm/elearning/index.html must exist on disk');
 
     // Verify NO stray sibling elearning.html exists that would cause Jekyll menu duplication
-    const straySibling = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning.html');
+    const straySibling = path.join(fixture.root, 'docs', 'projects', 'crpg-realm', 'elearning.html');
     assert.ok(!fs.existsSync(straySibling), 'Must NOT create duplicate elearning.html sibling file');
 
     const content = fs.readFileSync(targetHtmlPath, 'utf8');
@@ -160,7 +163,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
   });
 
   it('5. Generates standalone interactive website for kgraph-parse-portal with 5 comprehensive modules', () => {
-    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html');
+    const targetHtmlPath = path.join(fixture.root, 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html');
 
     const result = store.generateELearningWebsite({
       courseId: 'urn:robos:elearning:course:kgraph-parse-portal',

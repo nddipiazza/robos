@@ -25,7 +25,7 @@ test('auto-imports logged-in Google Drive account from data-sources.json and exp
       name: 'My Google Drive',
       driverType: 'gdrive',
       category: 'storage',
-      user: 'nicholas.dipiazza@gmail.com',
+      user: 'user@example.com',
       accessToken: 'ya29.test_drive_token',
       refreshToken: '1//0test_refresh_token',
       authStatus: 'authenticated',
@@ -39,7 +39,7 @@ test('auto-imports logged-in Google Drive account from data-sources.json and exp
 
   const googleAcc = state.accounts[0];
   assert.equal(googleAcc.provider, 'google');
-  assert.equal(googleAcc.email, 'nicholas.dipiazza@gmail.com');
+  assert.equal(googleAcc.email, 'user@example.com');
   assert.equal(googleAcc.loggedIn, true);
   assert.equal(googleAcc.isDefault, true);
   assert.equal(googleAcc.hasAccessToken, true);
@@ -51,11 +51,11 @@ test('auto-imports logged-in Google Drive account from data-sources.json and exp
   // Verify Google Suite endpoints
   assert.equal(
     googleAcc.endpoints.caldavUrl,
-    'https://apidata.googleusercontent.com/caldav/v2/nicholas.dipiazza%40gmail.com/events'
+    'https://apidata.googleusercontent.com/caldav/v2/user%40example.com/events'
   );
   assert.equal(
     googleAcc.endpoints.carddavUrl,
-    'https://www.googleapis.com/carddav/v1/principals/nicholas.dipiazza%40gmail.com/lists/default/'
+    'https://www.googleapis.com/carddav/v1/principals/user%40example.com/lists/default/'
   );
   assert.equal(googleAcc.suites.drive.enabled, true);
   assert.equal(googleAcc.suites.calendar.enabled, true);
@@ -72,7 +72,7 @@ test('bidirectionally syncs updated tokens from cloud-accounts back to data-sour
       id: 'gdrive-my-google-drive-4ofw',
       name: 'My Google Drive',
       driverType: 'gdrive',
-      user: 'nicholas.dipiazza@gmail.com',
+      user: 'user@example.com',
       accessToken: 'ya29.old_token',
       refreshToken: '1//0old_refresh',
       loggedIn: true,
@@ -85,7 +85,7 @@ test('bidirectionally syncs updated tokens from cloud-accounts back to data-sour
   cloudAccounts.saveAccount({
     id: accId,
     provider: 'google',
-    email: 'nicholas.dipiazza@gmail.com',
+    email: 'user@example.com',
     accessToken: 'ya29.new_refreshed_token',
     refreshToken: '1//0new_refresh',
     loggedIn: true,
@@ -100,8 +100,8 @@ test('configures Thunderbird profile user.js with CalDAV Calendar, CardDAV Conta
   const env = createTempHome();
   cloudAccounts.saveAccount({
     provider: 'google',
-    email: 'nicholas.dipiazza@gmail.com',
-    label: 'Nicholas DiPiazza',
+    email: 'user@example.com',
+    label: 'Example User',
     accessToken: 'ya29.test_token',
     refreshToken: '1//0test_refresh',
     loggedIn: true,
@@ -109,7 +109,7 @@ test('configures Thunderbird profile user.js with CalDAV Calendar, CardDAV Conta
 
   // 1. Default configuration (Calendar + Contacts enabled, Mail disabled)
   const res1 = thunderbirdGoogle.configureThunderbirdForGoogleAccount(
-    'nicholas.dipiazza@gmail.com',
+    'user@example.com',
     { enableCalendar: true, enableContacts: true, enableMail: false },
     env
   );
@@ -122,13 +122,13 @@ test('configures Thunderbird profile user.js with CalDAV Calendar, CardDAV Conta
 
   const userJs1 = fs.readFileSync(res1.writtenFiles[0], 'utf8');
   assert.match(userJs1, /calendar\.registry\.[^"]+\.type",\s*"caldav"/);
-  assert.match(userJs1, /https:\/\/apidata\.googleusercontent\.com\/caldav\/v2\/nicholas\.dipiazza%40gmail\.com\/events/);
+  assert.match(userJs1, /https:\/\/apidata\.googleusercontent\.com\/caldav\/v2\/user%40example\.com\/events/);
   assert.match(userJs1, /ldap_2\.servers\.robos_gcontacts_[a-f0-9]+\.dirType",\s*102/);
   assert.doesNotMatch(userJs1, /imap\.gmail\.com/);
 
   // 2. Re-configure with Gmail IMAP/SMTP enabled and ensure idempotent replacement (no duplicate blocks)
   const res2 = thunderbirdGoogle.configureThunderbirdForGoogleAccount(
-    'nicholas.dipiazza@gmail.com',
+    'user@example.com',
     { enableCalendar: true, enableContacts: true, enableMail: true },
     env
   );
@@ -145,8 +145,8 @@ test('Dev Central unified calendar events store seeds, adds, and deletes events 
   const env = createTempHome();
   cloudAccounts.saveAccount({
     provider: 'google',
-    email: 'nicholas.dipiazza@gmail.com',
-    label: 'Nicholas DiPiazza',
+    email: 'user@example.com',
+    label: 'Example User',
     accessToken: 'ya29.test_token',
     refreshToken: '1//0test_refresh',
     loggedIn: true,
@@ -154,7 +154,7 @@ test('Dev Central unified calendar events store seeds, adds, and deletes events 
 
   const initial = await thunderbirdGoogle.getUnifiedCalendarEvents(null, { ...env, skipNetwork: true });
   assert.equal(initial.ok, true);
-  assert.equal(initial.account.email, 'nicholas.dipiazza@gmail.com');
+  assert.equal(initial.account.email, 'user@example.com');
   assert.ok(initial.events.length >= 5, 'Should seed initial sprint and standup calendar events');
 
   const added = thunderbirdGoogle.addCalendarEvent({
@@ -163,7 +163,7 @@ test('Dev Central unified calendar events store seeds, adds, and deletes events 
     location: 'Google Meet',
   }, env);
   assert.equal(added.ok, true);
-  assert.equal(added.event.accountEmail, 'nicholas.dipiazza@gmail.com');
+  assert.equal(added.event.accountEmail, 'user@example.com');
 
   const afterAdd = await thunderbirdGoogle.getUnifiedCalendarEvents(null, { ...env, skipNetwork: true });
   assert.ok(afterAdd.events.some(e => e.id === added.event.id));

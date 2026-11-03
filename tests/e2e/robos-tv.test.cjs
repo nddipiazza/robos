@@ -45,7 +45,7 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
     for (const p of TV_PLATFORMS) {
       assert.ok(Array.isArray(p.requiredPermissions) && p.requiredPermissions.length > 0, `Missing requiredPermissions for ${p.id}`);
     }
-    assert.equal(TEN_FOOT_LAUNCH_TILES.length, 8);
+    assert.equal(TEN_FOOT_LAUNCH_TILES.length, 10);
   });
 
   await t.test('2. Generates valid Developer Mode sideload bundles for LG webOS, Samsung Tizen, Android TV & Roku', () => {
@@ -120,7 +120,7 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
       const statusJson = JSON.parse(statusRes.body);
       assert.equal(statusJson.ok, true);
       assert.equal(statusJson.app, 'robos-tv-portal');
-      assert.equal(statusJson.tiles.length, 8);
+      assert.equal(statusJson.tiles.length, TEN_FOOT_LAUNCH_TILES.length);
 
       const htmlRes = await httpGet(`http://127.0.0.1:${srv.port}/`);
       assert.equal(htmlRes.status, 200);
@@ -134,7 +134,7 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
         platformId: 'roku-os',
       });
       assert.equal(pairRes.ok, true);
-      assert.equal(pairRes.tvs.length, 5);
+      assert.equal(pairRes.tvs.length, 1);
 
       // Navigate right on D-Pad
       const navRes = engine.sendRemoteKey({ key: 'DPAD_RIGHT' });
@@ -148,7 +148,7 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
 
       // Cast Dev Central Dashboard to a Smart TV in the list
       const castRes = await engine.castDevCentralDashboard({
-        tvId: 'tv-livingroom-tcl-roku',
+        tvId: pairRes.tv.id,
         dashboard: {
           sprintName: 'Sprint 42 • 4d left',
           activeFeature: {
@@ -175,13 +175,13 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
       });
       assert.equal(castRes.ok, true);
       assert.equal(castRes.castSession.active, true);
-      assert.equal(castRes.castSession.tvName, '65" TCL Roku TV (Living room)');
+      assert.equal(castRes.castSession.tvName, 'Patio Roku TV');
 
       // Verify /dev-central 10-foot wallboard endpoint and /api/dev-central-cast
       const wbRes = await httpGet(`http://127.0.0.1:${srv.port}/dev-central`);
       assert.equal(wbRes.status, 200);
       assert.ok(wbRes.body.includes('RobOS Dev Central — Mission Control Wallboard'));
-      assert.ok(wbRes.body.includes('65&quot; TCL Roku TV (Living room)'));
+      assert.ok(wbRes.body.includes('Patio Roku TV'));
       assert.ok(wbRes.body.includes('FEAT-42'));
 
       const castApiRes = await httpGet(`http://127.0.0.1:${srv.port}/api/dev-central-cast`);
@@ -191,7 +191,7 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
       assert.equal(castApiJson.cast.active, true);
 
       // Stop casting
-      const stopRes = engine.stopDevCentralCast({ tvId: 'tv-livingroom-tcl-roku' });
+      const stopRes = engine.stopDevCentralCast({ tvId: pairRes.tv.id });
       assert.equal(stopRes.ok, true);
       assert.equal(stopRes.devCentralCast.active, false);
     } finally {

@@ -3,7 +3,7 @@
 /**
  * RobOS Tablo OTA DVR & Live TV Client (`robos-lib/tablo-client`)
  *
- * Connects directly to a Tablo device on the local LAN (default `192.168.1.55:8887`)
+ * Connects directly to a Tablo device on the local LAN (address from saved settings or `ROBOS_TABLO_IP`, port 8887)
  * using Tablo's HMAC-MD5 device request signing (`tablo:<device_key>:<sig>`),
  * discovers DVR recordings (`/recordings/airings`), live OTA channels (`/guide/channels`),
  * storage & tuner telemetry (`/server/harddrives`, `/server/tuners`), thumbnail images
@@ -18,7 +18,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawn, spawnSync } = require('node:child_process');
 
-const DEFAULT_TABLO_IP = process.env.ROBOS_TABLO_IP || '192.168.1.55';
+const DEFAULT_TABLO_IP = process.env.ROBOS_TABLO_IP || '';
 const DEFAULT_TABLO_PORT = Number(process.env.ROBOS_TABLO_PORT || 8887);
 
 // Tablo local device HMAC-MD5 signing keys
@@ -41,6 +41,8 @@ function makeTabloDeviceAuth(method, urlPath, body = '', dateStr = new Date().to
 
 function tabloRequestOnce(ip, port, method, urlPath, { body = '', timeoutMs = 4500, rawBuffer = false, contentType } = {}) {
   const targetIp = String(ip || DEFAULT_TABLO_IP).trim();
+  // Node sends a request with an empty hostname to localhost, so stop here instead.
+  if (!targetIp) return Promise.resolve({ ok: false, status: 0, error: 'No Tablo DVR address set' });
   const targetPort = Number(port || DEFAULT_TABLO_PORT);
   const bodyStr = body ? (typeof body === 'string' ? body : JSON.stringify(body)) : '';
   const { authorization, date } = makeTabloDeviceAuth(method, urlPath, bodyStr);

@@ -29,9 +29,9 @@ const { evalJS, maximizeWindow } = require("../lib/snapshot");
 const { startRecording, stopRecording, createCaptionTrack, writeVttFile } = require("../lib/recorder");
 
 const SLUG = "crpg-dragonwarrior-e2e";
-const PERSIST_DIR = path.join(process.env.HOME || "/home/ndipiazza", ".robos", "development", "walkthroughs", SLUG);
-const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/378ca830-4ff9-41ba-a48b-b56c4dd0a48f";
-const ROBOS_ROOT = "/home/ndipiazza/source/robos";
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), ".robos", "development", "walkthroughs", SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/378ca830-4ff9-41ba-a48b-b56c4dd0a48f`;
+const ROBOS_ROOT = require('path').resolve(__dirname, '../../..');
 const SANDBOX_DIR = path.join(PERSIST_DIR, "sandbox");
 
 const MAP_PATH = path.join(SANDBOX_DIR, "maps", "tantegel-throne-room.jsonld");

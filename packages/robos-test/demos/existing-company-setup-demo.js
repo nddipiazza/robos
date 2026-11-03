@@ -6,8 +6,8 @@ const scenarios = require('../lib/scenarios');
 const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'existing-company-setup';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/38cf4ff1-059d-4d41-9db8-305c6dee0964';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/38cf4ff1-059d-4d41-9db8-305c6dee0964`;
 const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
 const DOCS_VIDEOS = path.resolve(__dirname, '../../../docs/assets/videos');
 
@@ -105,7 +105,7 @@ const SCRIPT = [
     js: `(() => {
       const cat = document.querySelector('.cat-item[data-cat="git"]');
       if (cat) cat.click();
-      const robosRoot = '/home/ndipiazza/source/robos';
+      const robosRoot = require('path').resolve(__dirname, '../../..');
       const fs = require('fs');
       if (!fs.existsSync(robosRoot + '/.robos/teams.yaml')) {
         throw new Error('E2E Assertion Failed: .robos/teams.yaml was not created');
@@ -136,7 +136,7 @@ async function main() {
         execSync(`wmctrl -r "RobOS Group Developer Settings" -e 0,160,60,1600,960`, { env: { ...process.env, DISPLAY: display } });
       } catch (_) {}
       // Initialize an explicit unlinked state before the demo begins
-      const identPath = path.join(process.env.HOME || '/home/ndipiazza', '.config', 'robos', 'identity.json');
+      const identPath = path.join(process.env.HOME || require('os').homedir(), '.config', 'robos', 'identity.json');
       fs.mkdirSync(path.dirname(identPath), { recursive: true });
       fs.writeFileSync(identPath, JSON.stringify({
         name: 'Not Identified',

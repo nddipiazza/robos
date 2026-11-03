@@ -1564,7 +1564,7 @@ function buildStandaloneHtml(params) {
     const GIT_INFO = {
       gitRemoteUrl: 'https://github.com/nddipiazza/robos',
       gitBranch: 'main',
-      gitopsPath: '/home/ndipiazza/source/robos/.robos/elearning.yaml',
+      gitopsPath: '.robos/elearning.yaml',
       gitopsRelative: '.robos/elearning.yaml'
     };
 

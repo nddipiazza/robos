@@ -128,6 +128,11 @@
     const depthVal = parseInt(document.getElementById('crawl-depth').value, 10);
     const pkgVal = document.getElementById('crawl-package').value;
 
+    if (!pathVal) {
+      crawlerStats.textContent = 'Enter a folder to crawl';
+      return;
+    }
+
     crawlerStats.textContent = 'Crawling filesystem...';
     jsonldViewer.innerHTML = '<code>Scanning directory and extracting semantic KGraph nodes...</code>';
 
@@ -160,6 +165,11 @@
     const pathVal = document.getElementById('crawl-path').value.trim();
     const depthVal = parseInt(document.getElementById('crawl-depth').value, 10);
     const pkgVal = document.getElementById('crawl-package').value;
+
+    if (!pathVal) {
+      crawlerStats.textContent = 'Enter a folder to ingest';
+      return;
+    }
 
     crawlerStats.textContent = 'Committing to Dual-State KGraph...';
 

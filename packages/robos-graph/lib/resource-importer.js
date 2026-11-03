@@ -172,15 +172,15 @@ const DEFAULT_MOCK_REGISTRY = {
 class KGraphResourceImporter {
   constructor(options = {}) {
     this.defaultTeam = options.defaultTeam || 'urn:robos:team:core-platform';
-    this.defaultProject = options.defaultProject || 'urn:robos:project:enterprise-core';
     this.companyName = options.companyName || 'Acme Global';
     this.companySlug = options.companySlug || 'acme';
     this.mockRegistry = options.mockRegistry || DEFAULT_MOCK_REGISTRY;
     this.validator = new SHACLValidator();
-    this.bulkRepoImporter = new BulkRepoImporter({
-      defaultTeam: this.defaultTeam,
-      defaultProject: this.defaultProject,
-    });
+  }
+
+  // importResources writes the team node for options.defaultTeam, so repositories must name that same team.
+  repoImporter(options = {}) {
+    return new BulkRepoImporter({ defaultTeam: options.defaultTeam || this.defaultTeam });
   }
 
   // ── 1. Smart Agent Prompt Analyzer ──────────────────────────────────────────
@@ -577,7 +577,7 @@ class KGraphResourceImporter {
     for (const repo of mockOrg.repositories || []) {
       const repoUrl = repo.url;
       const parsed = parseGitUrl(repoUrl);
-      const subImport = this.bulkRepoImporter.importRepositories([{
+      const subImport = this.repoImporter(options).importRepositories([{
         url: repoUrl,
         label: repo.name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
         description: repo.description,
@@ -610,7 +610,7 @@ class KGraphResourceImporter {
       };
     }
 
-    const res = this.bulkRepoImporter.importRepositories([repoInput]);
+    const res = this.repoImporter(options).importRepositories([repoInput]);
     const nodes = [...res.nodes];
 
     // If it's a GitLab URL, adjust forge metadata
@@ -638,7 +638,7 @@ class KGraphResourceImporter {
       // Synthesize a graceful virtual directory representation if missing
       const baseName = path.basename(localPath);
       const parsed = parseGitUrl(`https://github.com/${this.companySlug}/${baseName}`);
-      const res = this.bulkRepoImporter.importRepositories([{
+      const res = this.repoImporter(options).importRepositories([{
         url: `https://github.com/${this.companySlug}/${baseName}`,
         localPath: localPath,
         label: `${baseName.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} (Local)`,
@@ -676,7 +676,7 @@ class KGraphResourceImporter {
         });
       }
 
-      const res = this.bulkRepoImporter.importRepositories(foundProjects);
+      const res = this.repoImporter(options).importRepositories(foundProjects);
       nodes.push(...res.nodes);
 
       // Scan for local markdown ADRs or documentation
@@ -863,7 +863,6 @@ class KGraphResourceImporter {
       'dcterms:title': `${compName} Core Platform Team`,
       'robos:topologyType': 'platform',
       'robos:memberOf': orgNode['@id'],
-      'robos:lead': 'urn:robos:person:architect',
       'robos:package': 'organization',
       'robos:namespace': 'robos.org',
     };

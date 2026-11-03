@@ -1,5 +1,5 @@
 'use strict';
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
@@ -13,10 +13,16 @@ const {
 const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS, evalClick } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { createRepoFixture, enterCwd } = require('../../lib/repo-fixture');
 
 describe('RobOS eLearning Generator & Living Documentation Sync E2E Test Suite', () => {
-  it('executes full E2E lifecycle: existing course lookup, new course synthesis, GitOps sync, and AI doc sync prompt', async () => {
+  // KGraph Explorer writes .robos/*.yaml under its working directory.
+  const appCwd = createRepoFixture({ copy: [] });
+  after(() => appCwd.cleanup());
+
+  it('executes full E2E lifecycle: existing course lookup, new course synthesis, GitOps sync, and AI doc sync prompt', async (t) => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-e2e-elearning-'));
+    t.after(enterCwd(tmpDir));
     const filePath = path.join(tmpDir, 'knowledge-graph.jsonld');
     const store = new SDLCKnowledgeGraphStore({ filePath });
 
@@ -82,6 +88,7 @@ describe('RobOS eLearning Generator & Living Documentation Sync E2E Test Suite',
   it('runs interactive GUI E2E flow: filter pills, generator modal, textarea submission, inspector rendering, and doc sync banner', async () => {
     const app = await launchApp('robos-graph', {
       ...scenarios['all-good'],
+      cwd: appCwd.root,
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
 

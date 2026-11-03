@@ -9,11 +9,12 @@ const { spawn, execSync } = require('node:child_process');
 const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS, evalClick, getSnapshot, findById, flatText, maximizeWindow } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
+const { docScreenshotDir } = require('../../lib/repo-fixture');
 
 const DISPLAY_NUM = process.env.XVFB_DISPLAY || ':106';
 const RESOLUTION = '1920x1080';
-const DOCS_DIR = path.resolve(__dirname, '../../../../docs/assets/images/screenshots');
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/50dce001-b236-456c-9ceb-5a818f421a45';
+const DOCS_DIR = docScreenshotDir('game-planner');
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/50dce001-b236-456c-9ceb-5a818f421a45`;
 
 const GAME_PROMPT = `Design and plan a 2D fantasy adventure game feature:
 - Village Potion Shop: An interactive shop in the town square run by an apothecary NPC

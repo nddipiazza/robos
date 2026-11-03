@@ -1,5 +1,5 @@
 'use strict';
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const fs = require('fs');
@@ -7,11 +7,15 @@ const fs = require('fs');
 const { SchemaDocGenerator, PACKAGE_DISPLAY_TITLES, EXTRA_DOC_PACKAGES, yamlValue } = require('../../../robos-graph/lib/schema-doc-generator');
 const { DEFAULT_PACKAGES } = require('../../../robos-graph/lib/package-manager');
 const { BUILTIN_SHACL_SHAPES, SHACLValidator } = require('../../../robos-graph/lib/shacl-validator');
+const { createRepoFixture } = require('../../lib/repo-fixture');
 
 describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
+  const fixture = createRepoFixture({ copy: ['.robos', 'docs/schemas', 'docs/schemas.md'] });
+  const rootDir = fixture.root;
+
+  after(() => fixture.cleanup());
 
   it('1. Generates 3-tier schema documentation tree across all documented packages', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
     const generator = new SchemaDocGenerator({ rootDir });
 
     const result = generator.generateAll();
@@ -44,7 +48,6 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
   });
 
   it('2. Enforces Just the Docs 3-tier navigation hierarchy in child schema pages', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
     const generator = new SchemaDocGenerator({ rootDir });
 
     for (const shape of BUILTIN_SHACL_SHAPES) {
@@ -75,7 +78,6 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
   });
 
   it('3. Validates that all canonical JSON-LD blocks in generated docs are valid JSON', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
     const generator = new SchemaDocGenerator({ rootDir });
 
     for (const shape of BUILTIN_SHACL_SHAPES) {
@@ -107,7 +109,6 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
   });
 
   it('4. Accurately formats acronyms and compounds (GraphQLContract, NoSQLDatabase, MCPServer, APIEndpoint, CICDPipeline)', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
     const generator = new SchemaDocGenerator({ rootDir });
 
     assert.strictEqual(generator.getEntitySlug('robos:GraphQLContract'), 'graphql-contract');
@@ -142,7 +143,6 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
   });
 
   it('5. Generated pages have unique titles, valid nav links and no emoji or hype wording', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
     const generator = new SchemaDocGenerator({ rootDir });
     generator.generateAll();
 
@@ -171,7 +171,6 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
   });
 
   it('6. Every package page parents its schema pages, and the hub lists every shape', () => {
-    const rootDir = path.resolve(__dirname, '../../../..');
     const generator = new SchemaDocGenerator({ rootDir });
     generator.generateAll();
     const hub = fs.readFileSync(path.join(rootDir, 'docs', 'schemas.md'), 'utf8');
