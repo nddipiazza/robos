@@ -48,3 +48,7 @@ _site/
 .robos/revisions/
 .robos/pending-import.json
 .robos/write.lock*
+
+# Local Jekyll builds of docs/ (CI builds with jekyll-build-pages)
+docs/.sass-cache/
+docs/Gemfile.lock
