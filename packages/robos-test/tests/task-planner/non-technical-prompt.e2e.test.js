@@ -14,7 +14,7 @@ const { docScreenshotDir } = require('../../lib/repo-fixture');
 const DISPLAY_NUM = process.env.XVFB_DISPLAY || ':105';
 const RESOLUTION = '1920x1080';
 const DOCS_DIR = docScreenshotDir('acme-petshop');
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/50dce001-b236-456c-9ceb-5a818f421a45';
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/50dce001-b236-456c-9ceb-5a818f421a45`;
 
 const NON_TECHNICAL_PROMPT = `Design and plan a friendly Pet Adoption & Rescue matching platform:
 - Pet Discovery Gallery: Browse rescue dogs and cats with photo cards, personality badges, and location

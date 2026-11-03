@@ -9,7 +9,7 @@ const SLUG = 'big-win-dual-state-kgraph';
 const ROOT_DIR = path.resolve(__dirname, '../../..');
 const DOCS_VIDEOS = path.join(ROOT_DIR, 'docs/assets/videos');
 const DOCS_IMAGES = path.join(ROOT_DIR, 'docs/assets/images');
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
 
 fs.mkdirSync(DOCS_VIDEOS, { recursive: true });
 fs.mkdirSync(DOCS_IMAGES, { recursive: true });

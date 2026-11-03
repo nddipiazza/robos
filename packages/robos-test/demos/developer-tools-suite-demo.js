@@ -6,8 +6,8 @@ const scenarios = require("../lib/scenarios");
 const { runDemo } = require("../lib/demo-runner");
 
 const SLUG = "acme-petshop-step16-developer-tools";
-const PERSIST_DIR = path.join(process.env.HOME || "/home/ndipiazza", ".robos", "development", "walkthroughs", SLUG);
-const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424";
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), ".robos", "development", "walkthroughs", SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424`;
 
 const SCRIPT = [
   {
@@ -80,7 +80,7 @@ const SCRIPT = [
 
 async function main() {
   const display = process.env.DISPLAY || ":99";
-  const binDir = path.join(process.env.HOME || "/home/ndipiazza", ".local", "bin");
+  const binDir = path.join(process.env.HOME || require('os').homedir(), ".local", "bin");
 
   runDemo({
     slug: SLUG,
@@ -135,7 +135,7 @@ async function main() {
         await killApp(a3);
       }
       snap().catch(console.error);
-    "`, { cwd: "/home/ndipiazza/source/robos", env: { ...process.env, DISPLAY: display } });
+    "`, { cwd: require('path').resolve(__dirname, '../../..'), env: { ...process.env, DISPLAY: display } });
 
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/${SLUG}-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/${SLUG}.vtt`);

@@ -6,8 +6,8 @@ const scenarios = require('../lib/scenarios');
 const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'app-import-wizard';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/38cf4ff1-059d-4d41-9db8-305c6dee0964';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/38cf4ff1-059d-4d41-9db8-305c6dee0964`;
 const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
 
 // Sample brownfield codebase path for live inspection

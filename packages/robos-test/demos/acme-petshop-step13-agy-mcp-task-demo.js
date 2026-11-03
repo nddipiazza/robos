@@ -6,8 +6,8 @@ const scenarios = require("../lib/scenarios");
 const { runDemo } = require("../lib/demo-runner");
 
 const SLUG = "acme-petshop-step13-agy-mcp-task";
-const PERSIST_DIR = path.join(process.env.HOME || "/home/ndipiazza", ".robos", "development", "walkthroughs", SLUG);
-const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424";
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), ".robos", "development", "walkthroughs", SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424`;
 
 const SCRIPT = [
   {
@@ -106,7 +106,7 @@ const SCRIPT = [
 
 async function main() {
   const display = process.env.DISPLAY || ":99";
-  const binDir = path.join(process.env.HOME || "/home/ndipiazza", ".local", "bin");
+  const binDir = path.join(process.env.HOME || require('os').homedir(), ".local", "bin");
 
   runDemo({
     slug: SLUG,

@@ -8,8 +8,8 @@ const { launchApp, killApp } = require('../lib/harness');
 const { GiteaForgeService } = require('../lib/gitea-forge');
 
 const SLUG = 'acme-petshop-step1-tasks';
-const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424';
+const PERSIST_DIR = path.join(process.env.HOME || require('os').homedir(), '.robos', 'development', 'walkthroughs', SLUG);
+const BRAIN_DIR = `${require('os').homedir()}/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424`;
 
 const RICH_ARCH_PROMPT = `Architect and plan the Acme Petshop distributed polyglot platform:
 - Backend: Java 21 Spring Boot 3 REST API microservice with OpenAPI 3.1 contracts
