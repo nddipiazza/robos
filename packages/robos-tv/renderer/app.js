@@ -11,7 +11,7 @@ let state = {
   tiles: [],
   tvs: [],
   generatedPackages: [],
-  tabloIp: '192.168.1.55',
+  tabloIp: '',
   tabloPort: 8887,
   tabloStatus: null,
   tabloRecordings: [],
@@ -114,6 +114,10 @@ function renderTabloSection() {
     if (metaEl) {
       metaEl.innerHTML = `Firmware <code>v${esc(st.version)}</code> (build ${esc(st.buildNumber)}) · Status: <strong style="color:#86efac;">${esc(st.availability)}</strong> · ${state.tabloRecordings.length} Recordings Ready to Play`;
     }
+  } else if (!state.tabloIp) {
+    if (dot) dot.className = 'dot';
+    if (titleEl) titleEl.textContent = 'Tablo OTA DVR';
+    if (metaEl) metaEl.textContent = 'No Tablo DVR set up yet. Enter its address and choose Refresh Recordings.';
   } else if (st && !st.online) {
     if (dot) dot.className = 'dot warning';
     if (metaEl) metaEl.textContent = `Could not reach Tablo at ${state.tabloIp}:${state.tabloPort} — ${st.error || 'Offline'}`;
@@ -271,7 +275,7 @@ function playTabloItem(item, seekSec = 0) {
 async function loadTabloData(autoSelectFirst = false) {
   if (typeof window.robosTv?.getTabloOverview !== 'function') return;
   const ipInput = document.getElementById('input-tablo-ip');
-  const ip = (ipInput && ipInput.value.trim()) || state.tabloIp || '192.168.1.55';
+  const ip = (ipInput && ipInput.value.trim()) || state.tabloIp || '';
   const res = await window.robosTv.getTabloOverview({ ip });
   if (res) {
     state.tabloIp = res.ip || ip;
@@ -863,7 +867,7 @@ async function init() {
 
   document.getElementById('btn-build-package').onclick = async () => {
     const platformId = document.getElementById('select-builder-platform').value;
-    const tvIp = document.getElementById('input-builder-tv-ip').value.trim() || '192.168.1.64';
+    const tvIp = document.getElementById('input-builder-tv-ip').value.trim();
     const webosPassphrase = document.getElementById('input-builder-passphrase').value.trim();
     const res = await window.robosTv.buildPackage({
       platformId,
@@ -950,7 +954,7 @@ async function init() {
   if (tabloCastRokuBtn) {
     tabloCastRokuBtn.onclick = async () => {
       tabloCastRokuBtn.disabled = true;
-      tabloCastRokuBtn.textContent = 'Opening on 65" Roku TV…';
+      tabloCastRokuBtn.textContent = 'Opening on Roku TV…';
       try {
         const res = await window.robosTv.castTabloToTv({ ip: state.tabloIp });
         if (res && res.ok) {
@@ -960,7 +964,7 @@ async function init() {
         }
       } finally {
         tabloCastRokuBtn.disabled = false;
-        tabloCastRokuBtn.textContent = '📺 Show Tablo Tab on 65" Roku TV';
+        tabloCastRokuBtn.textContent = '📺 Show Tablo Tab on Roku TV';
       }
     };
   }

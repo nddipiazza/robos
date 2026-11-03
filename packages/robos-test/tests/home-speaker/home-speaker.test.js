@@ -373,7 +373,7 @@ describe('RobOS Home Speaker Tests', () => {
     it('matches TV Season & Episode queries and resolves target cast devices across Audio and Movie libraries', () => {
       const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
       const sampleDevices = [
-        { ip: '192.168.1.15', id: 'tv-roku', name: '65" TCL Roku TV (Living room)', model: 'TCL Roku OS', platformId: 'roku-os', deviceType: 'tv', isRealLanDevice: true },
+        { ip: '192.0.2.15', id: 'tv-roku', name: '65" TCL Roku TV (Living room)', model: 'TCL Roku OS', platformId: 'roku-os', deviceType: 'tv', isRealLanDevice: true },
         { ip: '192.168.1.10', id: 'spk-kitchen', name: 'Kitchen speaker', model: 'Google Nest Audio', platformId: 'google-cast', deviceType: 'speaker', isRealLanDevice: true },
       ];
       const sampleAudio = [
@@ -394,7 +394,7 @@ describe('RobOS Home Speaker Tests', () => {
       assert.strictEqual(tvRes.kind, 'movie');
       assert.strictEqual(tvRes.matchType, 'tv-episode');
       assert.strictEqual(tvRes.bestTrack.id, 'rm_s08e01');
-      assert.strictEqual(tvRes.targetIp, '192.168.1.15');
+      assert.strictEqual(tvRes.targetIp, '192.0.2.15');
       assert.ok(tvRes.summaryText.includes('Season 8 Episode 1'));
       assert.ok(tvRes.summaryText.includes('Roku TV'));
 
