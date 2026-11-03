@@ -95,7 +95,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   const game = games[id], target = platforms[platform];
   if (!game || !target) throw new Error('Choose a known game and platform');
   if (!godot) throw new Error('Set GODOT_BIN to the official Godot executable (scripts/games/setup.cjs)');
-  const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
+  const version = game.version || fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
   const output = path.join(root, 'release/games'); fs.mkdirSync(output, { recursive: true });
   const stage = fs.mkdtempSync(path.join(output, `.build-${id}-`));
   const project = path.join(stage, 'project'), payload = path.join(stage, 'payload');

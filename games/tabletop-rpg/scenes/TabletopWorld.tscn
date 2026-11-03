@@ -798,7 +798,7 @@ text = "ACTIVE HERO"
 [node name="BtnCloseHeader" type="Button" parent="UI/HeroDetailModal/Card/Margin/VBox/Header"]
 layout_mode = 2
 custom_minimum_size = Vector2(32, 28)
-text = "✕"
+text = "X"
 
 [node name="Separator" type="HSeparator" parent="UI/HeroDetailModal/Card/Margin/VBox"]
 layout_mode = 2
@@ -880,7 +880,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 36)
-text = "✕ Close Character Sheet (Esc)"
+text = "X Close Character Sheet (Esc)"
 
 [node name="MonsterDetailModal" type="ColorRect" parent="UI"]
 visible = false
@@ -931,7 +931,7 @@ text = "DUNGEON FOE"
 [node name="BtnCloseHeader" type="Button" parent="UI/MonsterDetailModal/Card/Margin/VBox/Header"]
 layout_mode = 2
 custom_minimum_size = Vector2(32, 28)
-text = "✕"
+text = "X"
 
 [node name="Separator" type="HSeparator" parent="UI/MonsterDetailModal/Card/Margin/VBox"]
 layout_mode = 2
@@ -1013,7 +1013,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 36)
-text = "✕ Close Monster Bestiary (Esc)"
+text = "X Close Monster Bestiary (Esc)"
 
 [node name="ArmoryModal" type="ColorRect" parent="UI"]
 visible = false
@@ -1064,7 +1064,7 @@ text = "PARTY TREASURY: 400 GP"
 [node name="BtnCloseHeader" type="Button" parent="UI/ArmoryModal/Card/Margin/VBox/Header"]
 layout_mode = 2
 custom_minimum_size = Vector2(32, 28)
-text = "✕"
+text = "X"
 
 [node name="Separator" type="HSeparator" parent="UI/ArmoryModal/Card/Margin/VBox"]
 layout_mode = 2
@@ -1167,7 +1167,7 @@ text = "[DECK: 16 CARDS | 25% HAZARD]"
 [node name="BtnCloseHeader" type="Button" parent="UI/TreasureModal/Card/Margin/VBox/Header"]
 layout_mode = 2
 custom_minimum_size = Vector2(32, 28)
-text = "✕"
+text = "X"
 
 [node name="Separator" type="HSeparator" parent="UI/TreasureModal/Card/Margin/VBox"]
 layout_mode = 2

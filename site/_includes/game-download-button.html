@@ -1,6 +1,7 @@
 {% assign game_download = site.data.games[page.game_id] %}
+{% assign game_version = game_download.version | default: site.data.release.version %}
 {% assign game_prefix = game_download.release_prefix | default: 'games-v' %}
-{% assign game_tag = game_prefix | append: site.data.release.version %}
-{% assign game_asset = page.game_id | append: '-v' | append: site.data.release.version | append: '-Windows-Setup.exe' %}
-<a class="btn" href="https://github.com/nddipiazza/robos/releases/download/{{ game_tag }}/{{ game_asset }}" data-game-download="{{ page.game_id }}" data-game-version="{{ site.data.release.version }}" data-game-release="{{ game_tag }}">Download &amp; play for Windows</a>
+{% assign game_tag = game_prefix | append: game_version %}
+{% assign game_asset = page.game_id | append: '-v' | append: game_version | append: '-Windows-Setup.exe' %}
+<a class="btn" href="https://github.com/nddipiazza/robos/releases/download/{{ game_tag }}/{{ game_asset }}" data-game-download="{{ page.game_id }}" data-game-version="{{ game_version }}" data-game-release="{{ game_tag }}">Download &amp; play for Windows</a>
 {% if game_download.itch_url %}<a class="btn btn-ghost" href="{{ game_download.itch_url }}">Get it on itch.io</a>{% endif %}

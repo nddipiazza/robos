@@ -30,6 +30,7 @@
     "executable": "Midterms2026",
     "page_path": "/games/tabletop-rpg/midterms-2026/",
     "release_prefix": "midterms-2026-v",
+    "version": "0.0.11",
     "cartridge": "election-2026-quest-1",
     "web": true,
     "kgraph_ref": "urn:robos:tabletop:map:election-2026-quest-1",

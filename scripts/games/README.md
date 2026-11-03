@@ -49,6 +49,9 @@ Linux, universal macOS and Web packages into a separate immutable release,
 `midterms-2026-v<VERSION>`. Set `GAME_RELEASE_PREFIX=midterms-2026-v` when
 running `build-all.cjs` or `publish.cjs` locally. Native startup checks verify
 that the packaged game loads the election campaign with no command-line flags.
+An optional `version` in the game's metadata pins this product independently
+of the app suite's `VERSION`, preserving immutable game downloads as the suite
+changes. All games within one release group must use the same version.
 
 The Web ZIP has `index.html` at its root and uses Godot's single-threaded
 Compatibility renderer. Native TCP telemetry is disabled on Web. It runs
@@ -61,3 +64,8 @@ Verification: open the exported HTML through an HTTP server, commence the quest,
 complete spell selection, roll movement dice and move a hero. Check browser
 errors, and check the final itch.io player after publishing. The campaign's
 existing full AI playthrough and report remain linked from its own game page.
+
+Cutscenes use the bundled 720p Ogg Theora movies on desktop and Web. Only a real
+headless display skips playback; exported-template status is not a headless
+signal. Existing skip/finish callbacks resume the campaign. Plain ASCII `X`
+labels are used for dialog close buttons and the canvas-drawn close control.

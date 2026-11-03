@@ -9,7 +9,7 @@ async function sha256(file) { const hash = crypto.createHash('sha256'); for awai
 async function publish() {
   if (!process.env.GITHUB_TOKEN) throw new Error('Publishing needs GITHUB_TOKEN');
   const prefix = process.env.GAME_RELEASE_PREFIX || 'games-v';
-  const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim(), tag = `${prefix}${version}`;
+  const version = require('./catalog.cjs').releaseVersion(prefix), tag = `${prefix}${version}`;
   const directory = path.join(root, 'release/games'), games = require('./catalog.cjs').releaseGames(prefix);
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
   const expected = Object.entries(games).flatMap(([id, game]) => ['Windows-Setup.exe', 'Windows-x64.zip', 'Linux-x64.zip', 'macOS.zip', ...(game.web ? ['Web.zip'] : [])].map(suffix => `${id}-v${version}-${suffix}`));

@@ -22,6 +22,15 @@ schema_type: VideoGame
     <p class="eyebrow">Click to play · No installation</p>
     <h2 class="h2">Play Midterms 2026</h2>
     <p class="sec-p">The browser edition runs locally in your browser. Use a desktop browser with a mouse and keyboard, and open fullscreen for the clearest view of the board.</p>
+    {% if midterms.web_embed_url %}
+    <div data-browser-game-src="{{ midterms.web_embed_url | escape }}">
+      <button class="btn" type="button" data-browser-game-launch>Play Midterms 2026</button>
+      <p class="sec-p small" data-browser-game-status role="status">Click Play to load the game. Your first launch downloads the game assets.</p>
+      <div data-browser-game-frame></div>
+      <div class="cta" data-browser-game-controls></div>
+    </div>
+    <script src="{{ '/assets/game-browser.js' | relative_url }}" defer></script>
+    {% endif %}
     {% if midterms.itch_url %}
     <a class="btn" href="{{ midterms.itch_url }}">Launch browser game on itch.io</a>
     {% else %}
@@ -47,7 +56,7 @@ schema_type: VideoGame
 <section class="g-sec" id="play">
   <div class="wrap"><div class="panel-g">
     <h2 class="h2">Open source, built with RobOS</h2>
-    <p class="sec-p">A Godot game built with AI coding agents and generated visual content. No AI account or service is required to play. This is a development build and a work of political satire.</p>
+    <p class="sec-p">A Godot game built with AI coding agents, generated visual content and synthetic character dialogue. No AI account or service is required to play. This is a development build and a work of political satire.</p>
     <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/tabletop-rpg">Browse the shared engine and campaign source</a>
   </div></div>
 </section>

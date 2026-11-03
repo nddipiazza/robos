@@ -1,7 +1,8 @@
 {% assign game_download = site.data.games[page.game_id] %}
+{% assign game_version = game_download.version | default: site.data.release.version %}
 {% assign game_prefix = game_download.release_prefix | default: 'games-v' %}
-{% assign game_tag = game_prefix | append: site.data.release.version %}
-{% assign game_base = 'https://github.com/nddipiazza/robos/releases/download/' | append: game_tag | append: '/' | append: page.game_id | append: '-v' | append: site.data.release.version %}
+{% assign game_tag = game_prefix | append: game_version %}
+{% assign game_base = 'https://github.com/nddipiazza/robos/releases/download/' | append: game_tag | append: '/' | append: page.game_id | append: '-v' | append: game_version %}
 <section class="g-sec game-downloads" id="download" aria-labelledby="download-heading">
   <div class="wrap"><div class="panel-g">
     <p class="eyebrow">Free download · Standalone game</p>
@@ -10,10 +11,10 @@
     <div class="cta download-primary">{% include game-download-button.html %}</div>
     <p class="download-status sec-p" role="status" data-game-download-status>Windows: open the installer, then leave “Play” checked to start. You can launch it again from your desktop or Start menu.</p>
     <div class="download-options">
-      <a href="{{ game_base }}-Windows-Setup.exe" data-game-asset="{{ page.game_id }}-v{{ site.data.release.version }}-Windows-Setup.exe">Windows installer (.exe)</a>
-      <a href="{{ game_base }}-Windows-x64.zip" data-game-asset="{{ page.game_id }}-v{{ site.data.release.version }}-Windows-x64.zip">Windows portable (.zip)</a>
-      <a href="{{ game_base }}-Linux-x64.zip" data-game-asset="{{ page.game_id }}-v{{ site.data.release.version }}-Linux-x64.zip">Linux (.zip)</a>
-      <a href="{{ game_base }}-macOS.zip" data-game-asset="{{ page.game_id }}-v{{ site.data.release.version }}-macOS.zip">macOS · Intel &amp; Apple Silicon (.zip)</a>
+      <a href="{{ game_base }}-Windows-Setup.exe" data-game-asset="{{ page.game_id }}-v{{ game_version }}-Windows-Setup.exe">Windows installer (.exe)</a>
+      <a href="{{ game_base }}-Windows-x64.zip" data-game-asset="{{ page.game_id }}-v{{ game_version }}-Windows-x64.zip">Windows portable (.zip)</a>
+      <a href="{{ game_base }}-Linux-x64.zip" data-game-asset="{{ page.game_id }}-v{{ game_version }}-Linux-x64.zip">Linux (.zip)</a>
+      <a href="{{ game_base }}-macOS.zip" data-game-asset="{{ page.game_id }}-v{{ game_version }}-macOS.zip">macOS · Intel &amp; Apple Silicon (.zip)</a>
     </div>
     <p class="sec-p small">Portable: extract the ZIP and open the game. Linux: mark the game executable if needed. macOS downloads are unsigned. Windows and Linux builds are for 64-bit Intel/AMD computers.</p>
     <p class="sec-p small"><a href="https://github.com/nddipiazza/robos/releases/tag/{{ game_tag }}">Release notes &amp; checksums</a>{% if game_download.itch_url %} · <a href="{{ game_download.itch_url }}">Also available on itch.io</a>{% endif %} · <a href="#play">Build from source</a></p>
