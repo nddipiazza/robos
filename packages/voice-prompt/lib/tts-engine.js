@@ -171,7 +171,7 @@ class TTSEngine extends EventEmitter {
       try {
         const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
         if (!fs.existsSync(KOKORO_MODEL)) throw new Error(`model not installed (${KOKORO_MODEL})`);
-        await this._synthesizeKokoro(cleanText, outWav, { voice, speed, timeoutMs: options.kokoroTimeoutMs });
+        await this._synthesizeKokoro(cleanText, outWav, { voice, speed, timeoutMs: options.kokoroTimeoutMs || 6500 });
         if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
           if (cachedFilePath) {
             try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
@@ -180,17 +180,34 @@ class TTSEngine extends EventEmitter {
           return { ok: true, filePath: outWav, durationMs, engine: 'kokoro' };
         }
       } catch (err) {
-        console.warn('[tts-engine] Kokoro synthesis error, falling back:', err.message);
+        console.warn('[tts-engine] Kokoro synthesis error, falling back to local Piper:', err.message);
         errors.push({ engine: 'kokoro', error: err.message });
       }
     }
 
-    // 2. Try Edge-TTS
-    if (engine === 'edge-tts' || engine === 'kokoro') {
+    // 2. Try Piper Neural TTS (fast ~120ms local neural fallback — no cloud latency)
+    if (engine === 'piper' || engine === 'kokoro' || fs.existsSync(PIPER_DEFAULT_MODEL)) {
+      try {
+        const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
+        await this._synthesizePiper(cleanText, outWav, { voice: /^(?:af_|am_|bf_|bm_|en-)/.test(voice) ? 'en_US-lessac-medium' : voice, speed });
+        if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
+          if (cachedFilePath) {
+            try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
+          }
+          const durationMs = this._getAudioDurationMs(outWav);
+          return { ok: true, filePath: outWav, durationMs, engine: 'piper' };
+        }
+      } catch (err) {
+        console.warn('[tts-engine] Piper synthesis error, falling back:', err.message);
+        errors.push({ engine: 'piper', error: err.message });
+      }
+    }
+
+    // 3. Try Edge-TTS only if explicitly requested
+    if (engine === 'edge-tts') {
       try {
         const outMp3 = path.join(os.tmpdir(), `${tmpId}.mp3`);
-        // Falling back from Kokoro: its voice ids mean nothing to Edge.
-        const edgeVoice = engine === 'edge-tts' ? voice : 'en-US-AndrewMultilingualNeural';
+        const edgeVoice = voice || 'en-US-AndrewMultilingualNeural';
         await this._synthesizeEdgeTTS(cleanText, outMp3, { voice: edgeVoice, speed, pitch, volume });
         if (fs.existsSync(outMp3) && fs.statSync(outMp3).size > 100) {
           if (cachedFilePath) {
@@ -202,21 +219,6 @@ class TTSEngine extends EventEmitter {
       } catch (err) {
         console.warn('[tts-engine] Edge-TTS synthesis error, falling back:', err.message);
         errors.push({ engine: 'edge-tts', error: err.code === 'ENOENT' ? 'edge-tts is not installed' : err.message });
-      }
-    }
-
-    // 3. Try Piper Neural TTS
-    if (engine === 'piper' || fs.existsSync(PIPER_DEFAULT_MODEL)) {
-      try {
-        const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
-        await this._synthesizePiper(cleanText, outWav, { voice: /^(?:af_|am_|bf_|bm_|en-)/.test(voice) ? 'en_US-lessac-medium' : voice, speed });
-        if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
-          const durationMs = this._getAudioDurationMs(outWav);
-          return { ok: true, filePath: outWav, durationMs, engine: 'piper' };
-        }
-      } catch (err) {
-        console.warn('[tts-engine] Piper synthesis error, falling back:', err.message);
-        errors.push({ engine: 'piper', error: err.message });
       }
     }
 
@@ -342,6 +344,9 @@ class TTSEngine extends EventEmitter {
         const workerScript = path.join(__dirname, 'kokoro-worker.py');
         if (fs.existsSync(workerScript)) {
           const proc = spawn('python3', [workerScript], { stdio: ['pipe', 'pipe', 'pipe'] });
+          if (proc.stderr) {
+            proc.stderr.on('data', () => {}); // Drain onnxruntime stderr warnings so pipe buffer never blocks
+          }
           try {
             proc.unref();
             if (proc.stdin) proc.stdin.unref();
@@ -460,6 +465,31 @@ except Exception as e:
   }
 
   _synthesizePiper(text, outWav, { voice = 'en_US-lessac-medium', speed = 1.0 } = {}) {
+    const worker = this._getKokoroWorker();
+    if (worker && worker.stdin && !worker.killed) {
+      return new Promise((resolve, reject) => {
+        const id = `preq-${++this.kokoroSeq}-${Date.now()}`;
+        const timeout = setTimeout(() => {
+          this.kokoroPending.delete(id);
+          reject(new Error('Piper worker timeout'));
+        }, 8000);
+        this.kokoroPending.set(id, {
+          resolve: () => { clearTimeout(timeout); resolve(); },
+          reject: (err) => { clearTimeout(timeout); reject(err); },
+        });
+        try {
+          worker.stdin.write(JSON.stringify({ id, engine: 'piper', text, outWav, voice, speed }) + '\n');
+        } catch (err) {
+          clearTimeout(timeout);
+          this.kokoroPending.delete(id);
+          reject(err);
+        }
+      }).catch(() => this._synthesizePiperCli(text, outWav, { voice, speed }));
+    }
+    return this._synthesizePiperCli(text, outWav, { voice, speed });
+  }
+
+  _synthesizePiperCli(text, outWav, { voice = 'en_US-lessac-medium', speed = 1.0 } = {}) {
     return new Promise((resolve, reject) => {
       const modelPath = voice.includes('/') || voice.endsWith('.onnx')
         ? voice

@@ -362,14 +362,57 @@ class HomeSpeakerService {
   // -------------------------------------------------------------
   // Two-Way Incoming Voice Satellite Listener (NC-VK-9727 Mics)
   // -------------------------------------------------------------
+  async _ensureAckFlacUrl() {
+    if (this._cachedAckFlacUrl && this._cachedAckFlacPath && fs.existsSync(this._cachedAckFlacPath)) {
+      return this._cachedAckFlacUrl;
+    }
+    const cacheDir = path.join(os.homedir(), '.config', 'robos', 'voice-cache');
+    fs.mkdirSync(cacheDir, { recursive: true });
+    const ackFlacPath = path.join(cacheDir, 'ack-got-it-please-wait-48k.flac');
+    if (!fs.existsSync(ackFlacPath) || fs.statSync(ackFlacPath).size < 200) {
+      if (this.ttsEngine) {
+        const synth = await this.ttsEngine.synthesize('Got it, please wait.', {
+          engine: 'kokoro',
+          voice: 'af_heart',
+          speed: 1.05,
+        });
+        const converted = await this.esphomeService.convertToFlac48k(synth.filePath, 1);
+        fs.copyFileSync(converted, ackFlacPath);
+      }
+    }
+    if (fs.existsSync(ackFlacPath)) {
+      this._cachedAckFlacPath = ackFlacPath;
+      this._cachedAckFlacUrl = this.castService.registerFile(ackFlacPath, 'audio/flac');
+      return this._cachedAckFlacUrl;
+    }
+    return null;
+  }
+
+  async playAckPleaseWait(targetIp = '192.168.1.64') {
+    const flacUrl = await this._ensureAckFlacUrl().catch(() => null);
+    if (!flacUrl) return null;
+    const dev = this.knownSpeakers.get(targetIp) || { ip: targetIp, port: DEFAULT_ESPHOME_PORT };
+    return this.esphomeService.playMediaUrl(targetIp, flacUrl, {
+      port: dev.port || DEFAULT_ESPHOME_PORT,
+      announcement: true,
+      flashLed: false,
+    });
+  }
+
   async startVoiceListener(ip = '192.168.1.64', options = {}) {
     const dev = this.knownSpeakers.get(ip) || { ip, port: DEFAULT_ESPHOME_PORT };
+    if (process.env.ROBOS_TEST !== '1') {
+      this._ensureAckFlacUrl().catch(() => {});
+    }
     return this.esphomeService.startVoiceListener(ip, {
       port: dev.port || DEFAULT_ESPHOME_PORT,
       autoReply: options.autoReply !== false,
+      onAckAudio: async (targetIp) => {
+        await this.playAckPleaseWait(targetIp).catch(() => {});
+      },
       onReplyAudio: async (targetIp, replyText) => {
         if (this.ttsEngine && replyText) {
-          await this.castTTS(targetIp, replyText, { prependChime: false });
+          await this.castTTS(targetIp, replyText, { engine: 'piper', prependChime: false });
         }
       },
     });
@@ -416,9 +459,12 @@ class HomeSpeakerService {
     }
     return this.esphomeService.announceAndStartListening(ip, flacUrl, promptText || 'Listening...', {
       autoReply: options.autoReply !== false,
+      onAckAudio: async (targetIp) => {
+        await this.playAckPleaseWait(targetIp).catch(() => {});
+      },
       onReplyAudio: async (targetIp, replyText) => {
         if (this.ttsEngine && replyText) {
-          await this.castTTS(targetIp, replyText, { prependChime: false });
+          await this.castTTS(targetIp, replyText, { engine: 'piper', prependChime: false });
         }
       },
     });
@@ -456,7 +502,7 @@ class HomeSpeakerService {
 
     if (options.speakReply !== false && result?.response && this.ttsEngine) {
       const targetIp = options.targetIp || this.esphomeService.listenerState.ip || '192.168.1.64';
-      await this.castTTS(targetIp, result.response, { prependChime: false }).catch(() => {});
+      await this.castTTS(targetIp, result.response, { engine: 'piper', prependChime: false }).catch(() => {});
     }
     return result;
   }
