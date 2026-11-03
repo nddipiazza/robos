@@ -1780,6 +1780,12 @@ func _load_texture_safe(res_path: String) -> Texture2D:
 	return null
 
 func _load_font_file_safe(path: String) -> FontFile:
+	# Exported fonts are imported resources; their original TTF may not be a
+	# raw file in the PCK. Resolve the import remap before trying loose files.
+	if ResourceLoader.exists(path):
+		var imported_font = load(path) as FontFile
+		if imported_font:
+			return imported_font
 	var global_path = ProjectSettings.globalize_path(path)
 	var paths_to_try = [global_path, path]
 	for p in paths_to_try:
