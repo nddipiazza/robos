@@ -67,3 +67,6 @@ body.game{background:#05060a;color:#f3efe6}
 .game .nav .links{gap:22px;flex-wrap:nowrap}.game .nav .links a{white-space:nowrap;font-size:.9rem}.game .brand span{white-space:nowrap}
 /* Docs links need extra room; each game page links its docs, so they show only on wide screens. */
 @media(max-width:1700px){.game .nav .links a[href$="/docs/"]{display:none}}
+/* The hosted game loads after Play is clicked. */
+.browser-game-frame{display:block;width:100%;aspect-ratio:16/9;border:0;background:#08090e;border-radius:12px}
+.browser-game-frame:fullscreen{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0}

@@ -4,13 +4,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const { releaseGames, pagePath } = require('./catalog.cjs');
+const { releaseGames, pagePath, releaseVersion } = require('./catalog.cjs');
 const { configureVariant, preset } = require('./build.cjs');
 
 test('Midterms has its own release group and nested game page', () => {
   assert.deepEqual(Object.keys(releaseGames('midterms-2026-v')), ['midterms-2026']);
   assert.ok(!releaseGames('games-v')['midterms-2026']);
   assert.equal(pagePath('midterms-2026'), '/games/tabletop-rpg/midterms-2026/');
+  assert.equal(releaseVersion('midterms-2026-v'), require('../../site/_data/games.json')['midterms-2026'].version);
 });
 
 test('standalone campaign staging selects its campaign and excludes unrelated content', () => {

@@ -7346,7 +7346,7 @@ func _setup_wandering_monster_modal() -> void:
 
 	btn_wandering_monster_close_header = Button.new()
 	btn_wandering_monster_close_header.name = "BtnCloseHeader"
-	btn_wandering_monster_close_header.text = "✕"
+	btn_wandering_monster_close_header.text = "X"
 	btn_wandering_monster_close_header.custom_minimum_size = Vector2(26, 26)
 	btn_wandering_monster_close_header.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	apply_rpg_font_to_button(btn_wandering_monster_close_header, 11, Color(0.85, 0.80, 0.70, 0.9))
@@ -25520,12 +25520,12 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 			canvas.draw_rect(badge_rect, outline_col, false, 1.5)
 			canvas.draw_string(font, Vector2(center.x - sum_w * 0.5, tray_rect.end.y - 13.0), summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, outline_col)
 
-		# Close / Dismiss button [✕] in top right corner of tray
+		# Close / Dismiss button [X] in top right corner of tray
 		var close_btn_rect = Rect2(tray_rect.end.x - 28.0, tray_rect.position.y + 6.0, 22.0, 22.0)
 		canvas.draw_rect(close_btn_rect, Color(0.25, 0.08, 0.08, 0.90))
 		canvas.draw_rect(close_btn_rect, Color(0.85, 0.35, 0.35, 0.85), false, 1.2)
-		var x_w = font.get_string_size("✕", HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
-		canvas.draw_string(font, Vector2(close_btn_rect.get_center().x - x_w * 0.5, close_btn_rect.get_center().y + 4.5), "✕", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(1.0, 0.85, 0.85, 0.95))
+		var x_w = font.get_string_size("X", HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
+		canvas.draw_string(font, Vector2(close_btn_rect.get_center().x - x_w * 0.5, close_btn_rect.get_center().y + 4.5), "X", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(1.0, 0.85, 0.85, 0.95))
 
 		# Subtle dismiss hint under outcome banner
 		var hint_txt = "(Click anywhere or press Space to continue)"
@@ -25893,7 +25893,9 @@ func play_movie(movie_path: String, title: String = "", can_skip: bool = true, o
 		movie_player_hint_label.visible = can_skip
 
 	# Check if running in headless mode
-	var is_headless = DisplayServer.get_name() == "headless" or OS.has_feature("template")
+	# "template" means an exported game, including playable desktop and Web
+	# builds. Only a real headless display should bypass cutscene playback.
+	var is_headless = DisplayServer.get_name() == "headless"
 
 	var stream = VideoStreamTheora.new()
 	stream.set_file(resolved)
