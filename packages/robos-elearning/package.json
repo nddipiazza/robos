@@ -1,7 +1,7 @@
 {
   "name": "robos-elearning",
   "version": "1.0.0",
-  "description": "RobOS Interactive eLearning Player, Hands-On Lab Runner, and Completion Certificate Hub",
+  "description": "Take courses with readable lessons, hands-on labs and quizzes that explain each answer; progress is saved and you get a certificate when you finish.",
   "main": "main.js",
   "dependencies": {
     "electron": "^28.0.0"

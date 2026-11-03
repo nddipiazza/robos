@@ -1,0 +1,184 @@
+---
+layout: default
+title: RobOS eLearning — Courses that teach by doing
+permalink: /elearning/
+body_class: elearning-page
+extra_css: /assets/elearning.css
+description: "RobOS eLearning is a free, open-source course app for your desktop: short lessons, hands-on lab steps, quizzes that explain every answer, progress saved on your computer and a certificate when you finish. Courses live in the RobOS knowledge graph, so you can edit them, export them as a website or have an agent write one."
+og_image: /assets/elearning/og.jpg
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "RobOS eLearning course library with a Continue where you left off card and course cards"
+keywords: "RobOS eLearning, open-source eLearning app, desktop course player, offline LMS, hands-on labs, quizzes with explanations, course certificate PDF, knowledge graph courses, export course website, Getting Started with RobOS"
+---
+{%- assign el = '/assets/elearning/' | relative_url -%}
+<section class="el-hero">
+  <div class="wrap el-hero-grid">
+    <div class="el-hero-copy">
+      <p class="eyebrow">RobOS eLearning</p>
+      <h1>Courses that teach <em>by doing.</em></h1>
+      <p class="lead">Short lessons, hands-on steps you tick off on your own machine, and quizzes that tell you why an answer is right. Your progress is saved on your computer, and you get a certificate when you finish.</p>
+      <ul class="el-points">
+        <li>Free and open source, no account, no subscription</li>
+        <li>Works offline: courses and progress stay on your computer</li>
+        <li>Write, edit and publish your own courses</li>
+      </ul>
+      <div class="cta el-cta">
+        <a class="btn" href="{{ '/download/' | relative_url }}"><span class="btn-ic" style="--ic:url(/assets/icons/download.svg)" aria-hidden="true"></span> Download RobOS</a>
+        <a class="btn btn-ghost" href="#tour">Take the tour</a>
+      </div>
+      <p class="sub">Install <b>RobOS eLearning</b> from the RobOS App Manager, then open <b>Getting Started with RobOS</b>.</p>
+    </div>
+    <figure class="el-shot el-shot-hero">
+      <img src="{{ el }}library.jpg" alt="RobOS eLearning course library: a Continue where you left off card for Getting Started with RobOS at 57 percent, filters, search and course cards with progress bars" width="1920" height="1200">
+    </figure>
+  </div>
+</section>
+
+<section class="el-strip" aria-label="What is inside">
+  <div class="wrap">
+    <ul class="el-feats">
+      <li><b>Course library</b><span>Search, filter by level, and pick up where you left off.</span></li>
+      <li><b>Readable lessons</b><span>Headings, tables, code and a "Key ideas" box in every lesson.</span></li>
+      <li><b>Hands-on labs</b><span>Real steps to do on your machine, ticked off as you go.</span></li>
+      <li><b>Quizzes that explain</b><span>Check an answer, see why, try again. First-try score counts.</span></li>
+      <li><b>Saved progress</b><span>Close the app any time. Nothing leaves your computer.</span></li>
+      <li><b>Certificates</b><span>Finish a course and save your certificate as a PDF.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="tour">
+  <div class="wrap">
+    <p class="eyebrow">A course, start to finish</p>
+    <h2 class="h2">What taking a course looks like</h2>
+    <p class="sec-p">These screens are the real app, running the <b>Getting Started with RobOS</b> course that ships with it.</p>
+
+    <div class="split el-split">
+      <div class="split-t">
+        <span class="el-step">1</span>
+        <h3>Read a lesson</h3>
+        <p>Each lesson opens with a one-line summary, then the lesson itself: short sections, tables and code where they help. The lesson list on the left shows what is done, what you have started and how long each one takes.</p>
+        <ul class="ticks"><li>Move between lessons with the arrow keys</li><li>A ring shows how far through the course you are</li></ul>
+      </div>
+      <figure class="el-shot"><img src="{{ el }}lesson.jpg" alt="A lesson titled What RobOS is, and what it is not, with a summary, headings, a numbered list and the lesson list with progress on the left" width="1920" height="1200" loading="lazy"></figure>
+    </div>
+
+    <div class="split rev el-split">
+      <div class="split-t">
+        <span class="el-step">2</span>
+        <h3>Do the lab, not just the reading</h3>
+        <p>Lab steps are things to actually do on your computer: open an app, change a setting, check a file. Tick each one off when it is done. The counter shows how many are left.</p>
+        <ul class="ticks"><li>Steps can include commands and file paths</li><li>Your ticks are saved, so you can come back tomorrow</li></ul>
+      </div>
+      <figure class="el-shot"><img src="{{ el }}lab-quiz.jpg" alt="The Hands-on lab panel with two of three steps ticked, above the Check your understanding quiz" width="1920" height="1200" loading="lazy"></figure>
+    </div>
+
+    <div class="split el-split">
+      <div class="split-t">
+        <span class="el-step">3</span>
+        <h3>Answer, then learn why</h3>
+        <p>Pick an answer and press <b>Check answer</b>. A right answer shows the explanation. A wrong one asks you to look again, and after a second miss it shows the answer and the reason. Answers are shuffled, so the right one is not always first.</p>
+        <ul class="ticks"><li>Your quiz score counts first-try answers only</li><li>A lesson is done when every lab step and question is</li></ul>
+      </div>
+      <figure class="el-shot"><img src="{{ el }}quiz.jpg" alt="Quiz questions: one answered correctly with an explanation, one answered wrongly with a Not quite message" width="1920" height="1200" loading="lazy"></figure>
+    </div>
+
+    <div class="split rev el-split">
+      <div class="split-t">
+        <span class="el-step">4</span>
+        <h3>Finish and get your certificate</h3>
+        <p>When every lesson is done, you get a summary of the course and a certificate with your name, the date, your first-try quiz score and a certificate ID. Save it as a PDF. When the knowledge graph is available, the certificate is also recorded there.</p>
+        <ul class="ticks"><li>Type the name you want on the certificate</li><li>Courses marked as reference material do not issue one</li></ul>
+      </div>
+      <figure class="el-shot"><img src="{{ el }}certificate.jpg" alt="Certificate of Completion for Getting Started with RobOS, made out to Sam Rivera, with quiz score, date, lesson count and certificate ID, and a Save as PDF button" width="1920" height="1200" loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="courses">
+  <div class="wrap">
+    <p class="eyebrow">In the box</p>
+    <h2 class="h2">Courses you can take today</h2>
+    <p class="sec-p">Start with the beginner course. The others go deep on how parts of RobOS are built.</p>
+    <div class="el-courses">
+      <article class="el-course is-start">
+        <span class="el-level">Beginner · Start here</span>
+        <h3>Getting Started with RobOS</h3>
+        <p>What RobOS is, installing only the apps you need, where your data lives and how to back it up, changing an app by describing it, and using AI features safely or not at all.</p>
+        <span class="el-meta">6 lessons · 45 min</span>
+      </article>
+      <article class="el-course">
+        <span class="el-level">Advanced</span>
+        <h3>cRPG Game Builder &amp; Tactical Engine Academy</h3>
+        <p>Build a party-based tactical cRPG in Godot 4: scenes and portals, maps, data-driven items, traps, boss fights and BDD-tested mods.</p>
+        <span class="el-meta">7 lessons</span>
+      </article>
+      <article class="el-course">
+        <span class="el-level">Advanced</span>
+        <h3>Tactical cRPG Architecture</h3>
+        <p>D&amp;D 5e SRD rules and the Godot 4 engine behind Realm of Heroes.</p>
+        <span class="el-meta">5 lessons</span>
+      </article>
+      <article class="el-course">
+        <span class="el-level">Advanced</span>
+        <h3>KGraph Parse Portal Masterclass</h3>
+        <p>Large-scale ingestion into the knowledge graph: file evidence, Apache Tika parsing, search indexing and remote build clusters.</p>
+        <span class="el-meta">5 lessons</span>
+      </article>
+      <article class="el-course">
+        <span class="el-level">Intermediate</span>
+        <h3>Building Event-Driven Microservices</h3>
+        <p>Contract-first APIs, Gherkin specifications and event-driven services in the RobOS ecosystem.</p>
+        <span class="el-meta">3 lessons</span>
+      </article>
+      <article class="el-course">
+        <span class="el-level">Beginner</span>
+        <h3>Customer Portal SPA Walkthrough</h3>
+        <p>The architecture, API contracts and test scenarios of a sample customer portal.</p>
+        <span class="el-meta">3 lessons</span>
+      </article>
+    </div>
+    <p class="el-note">Want to try one in a browser first? <a href="{{ '/v1/projects/crpg-realm/elearning/' | relative_url }}">Open the cRPG course exported as a website →</a></p>
+  </div>
+</section>
+
+<section id="write">
+  <div class="wrap">
+    <div class="split el-split">
+      <div class="split-t">
+        <p class="eyebrow">For teachers, teams and app makers</p>
+        <h3>Write your own course</h3>
+        <p>Every course is a node in the <b>learning</b> package of the RobOS knowledge graph. Choose <b>Edit course</b> to change any lesson: its summary, the lesson text in Markdown, key ideas, lab steps, and quiz questions with the reason each answer is right. <b>Save course</b> writes it back to the graph and to <code>.robos/elearning.yaml</code>.</p>
+        <ul class="ticks">
+          <li><b>Export website</b> turns a course into one static HTML page you can host anywhere</li>
+          <li><b>Export as HTML Zip</b> packages a single lesson for offline use</li>
+          <li>The <code>generate-app-elearning</code> agent skill drafts a course for any app in the graph, for you to review</li>
+        </ul>
+      </div>
+      <figure class="el-shot"><img src="{{ el }}editor.jpg" alt="The lesson editor with fields for title, ID, minutes, summary, Markdown lesson text, key ideas and lab steps" width="1920" height="1200" loading="lazy"></figure>
+    </div>
+    <div class="el-code">
+      <p>Export a course from a terminal:</p>
+<pre><code>node packages/robos-elearning/cli-export-web.js --course=getting-started-with-robos --output=course.html</code></pre>
+      <p>Open the app straight into a course:</p>
+<pre><code>electron packages/robos-elearning --course=getting-started-with-robos</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="alt final" id="start">
+  <div class="wrap">
+    <p class="eyebrow">Start learning</p>
+    <h2 class="h2">Three steps to your first lesson</h2>
+    <ol class="el-start">
+      <li><b>Download RobOS</b><span>Get the App Manager for Windows, macOS or Linux.</span></li>
+      <li><b>Install RobOS eLearning</b><span>Tick it in the App Manager under <em>Everyday &amp; business</em>.</span></li>
+      <li><b>Open Getting Started with RobOS</b><span>It is the first course in the library.</span></li>
+    </ol>
+    <div class="cta">
+      <a class="btn" href="{{ '/download/' | relative_url }}">Download RobOS</a>
+      <a class="btn btn-ghost" href="{{ '/apps/robos-elearning/' | relative_url }}">App reference</a>
+    </div>
+  </div>
+</section>

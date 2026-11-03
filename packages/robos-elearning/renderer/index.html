@@ -2,152 +2,159 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RobOS eLearning Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RobOS eLearning</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="elearning-app">
+  <div class="elearning-app" id="app" data-view="library">
     <header class="app-header">
       <div class="header-left">
-        <span class="app-icon">🎓</span>
-        <div>
-          <h1 id="course-title">RobOS Interactive eLearning Hub</h1>
-          <div class="course-meta">
-            <span class="badge badge-tech" id="course-tech">KGraph-First</span>
-            <span class="badge badge-difficulty" id="course-difficulty">Intermediate</span>
-            <span class="badge badge-duration" id="course-duration">⏱️ 45 mins</span>
-            <span class="badge badge-scorm">SCORM 2004 Verified</span>
-          </div>
-        </div>
+        <button class="brand" id="btn-home" type="button" onclick="window.showLibrary()" title="Course library">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>
+          </span>
+          <span class="brand-text">RobOS <b>eLearning</b></span>
+        </button>
+        <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
       </div>
       <div class="header-right">
-        <select class="course-picker" id="course-selector" onchange="window.onCourseSelected(this.value)">
-          <option value="">Switch Course…</option>
-        </select>
-        <button class="btn btn-outline btn-copy-course-path" id="btn-copy-course-path" onclick="window.copyCoursePath()" title="Copy course file system path for AI agents" style="font-size: 11px; padding: 5px 10px;">
-          📋 Copy Course Path
-        </button>
-        <button class="btn btn-outline" id="btn-toggle-editor" onclick="window.toggleEditorMode()" title="Toggle Curriculum Editor Mode" style="font-size: 11px; padding: 5px 10px;">
-          ✏️ Editor Mode
-        </button>
-        <button class="btn btn-primary" id="btn-save-course" onclick="window.saveCurrentCourse()" title="Save all course updates to .robos/elearning.yaml and Knowledge Graph" style="font-size: 11px; padding: 5px 10px; display: none;">
-          💾 Save Course
-        </button>
-        <button class="btn btn-outline" id="btn-export-web" onclick="window.exportCourseWebsite()" title="Export self-contained interactive website for GitHub Pages" style="font-size: 11px; padding: 5px 10px;">
-          🌐 Export Website
-        </button>
-        <div class="progress-container">
-          <div class="progress-label">Course Progress: <span id="progress-percent">0%</span></div>
+        <div class="course-tools" id="course-tools" aria-label="Course tools">
+          <button class="btn btn-ghost btn-sm btn-copy-course-path" id="btn-copy-course-path" type="button" onclick="window.copyCoursePath()" title="Copy the course's file path for an AI agent">Copy course path</button>
+          <button class="btn btn-ghost btn-sm" id="btn-export-web" type="button" onclick="window.exportCourseWebsite()" title="Export this course as a static website">Export website</button>
+          <button class="btn btn-ghost btn-sm" id="btn-toggle-editor" type="button" onclick="window.toggleEditorMode()" title="Edit lessons, labs and quizzes">Edit course</button>
+          <button class="btn btn-primary btn-sm" id="btn-save-course" type="button" onclick="window.saveCurrentCourse()" title="Save the course to the knowledge graph and .robos/elearning.yaml" style="display:none;">Save course</button>
+        </div>
+        <div class="progress-container" id="header-progress" title="Course progress">
+          <div class="progress-label"><span>Progress</span><span id="progress-percent">0%</span></div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div></div>
         </div>
       </div>
     </header>
 
-    <div class="app-body">
+    <!-- Library: every course in the knowledge graph -->
+    <section class="library-view" id="library-view" aria-label="Course library">
+      <div class="loading-state">Loading courses…</div>
+    </section>
+
+    <!-- Course player -->
+    <div class="app-body" id="course-view" hidden>
       <aside class="sidebar">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <h3 style="margin-bottom: 0;">Curriculum Modules</h3>
-          <span id="editor-indicator-badge" class="badge badge-editor hidden">Editor Mode</span>
+        <div class="side-course" id="side-course"></div>
+        <div class="side-toolbar">
+          <h3>Lessons</h3>
+          <span id="editor-indicator-badge" class="badge badge-editor hidden">Editing</span>
         </div>
-        <button class="btn btn-outline btn-xs" id="btn-add-slide-sidebar" onclick="window.addNewSlide()" style="display:none; width: 100%; margin-bottom: 10px; font-size: 11px;">
-          ➕ Add New Slide
-        </button>
-        <ul class="module-list" id="module-nav-list"></ul>
+        <button class="btn btn-ghost btn-sm btn-block" id="btn-add-slide-sidebar" type="button" onclick="window.addNewSlide()" style="display:none;">+ Add lesson</button>
+        <ol class="module-list" id="module-nav-list"></ol>
         <div class="cert-status-box" id="cert-status-box">
-          <h4>🏆 Completion Certificate</h4>
-          <p id="cert-status-text">Complete all modules and score >= 80% to earn your Knowledge Graph Certificate of Completion.</p>
-          <button class="btn btn-cert" id="btn-view-certificate" style="display:none;" onclick="window.showCertificateModal()">View Verified Certificate</button>
+          <div class="cert-status-head">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg>
+            <h4>Certificate</h4>
+          </div>
+          <p id="cert-status-text">Finish every lesson to earn your certificate.</p>
+          <button class="btn btn-cert btn-block" id="btn-view-certificate" type="button" style="display:none;" onclick="window.showCertificateModal()">View certificate</button>
         </div>
       </aside>
 
       <main class="content-panel" id="content-panel">
         <div id="editor-banner" class="editor-banner hidden">
-          <span>✏️ <strong>Slide Editor Active</strong> — Use the <strong>⋮ Slide Menu</strong> on each slide to copy paths, copy Git URL, export as HTML zip, or edit content.</span>
-          <button class="btn btn-xs btn-primary" onclick="window.saveCurrentCourse()">💾 Save Course</button>
+          <span><strong>Editing this course.</strong> Use the <strong>⋯</strong> menu on a lesson to edit it, add or delete lessons, copy paths or export it. Changes stay in this window until you save.</span>
+          <button class="btn btn-primary btn-sm" type="button" onclick="window.saveCurrentCourse()">Save course</button>
         </div>
-        <div id="module-content">
-          <div class="loading-state">Loading interactive curriculum from Knowledge Graph…</div>
-        </div>
+        <div id="module-content"></div>
       </main>
     </div>
 
-    <!-- Slide Editor Modal -->
-    <div class="modal-overlay" id="slide-editor-modal" style="display:none;">
+    <!-- Lesson editor -->
+    <div class="modal-overlay" id="slide-editor-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="slide-editor-title">
       <div class="modal-card editor-modal-card">
         <div class="editor-modal-header">
-          <h2 id="slide-editor-title">✏️ Edit Slide</h2>
-          <button class="btn-close-modal" onclick="window.closeSlideEditor()">&times;</button>
+          <h2 id="slide-editor-title">Edit lesson</h2>
+          <button class="btn-close-modal" type="button" onclick="window.closeSlideEditor()" aria-label="Close">&times;</button>
         </div>
         <div class="editor-modal-body">
           <div class="form-group">
-            <label for="edit-slide-title">Slide Title</label>
-            <input type="text" id="edit-slide-title" class="form-input" placeholder="e.g. Module 1: Architecture & Rationale">
+            <label for="edit-slide-title">Lesson title</label>
+            <input type="text" id="edit-slide-title" class="form-input" placeholder="e.g. Lesson 1: How the pieces fit together">
           </div>
           <div class="form-row">
             <div class="form-group flex-1">
-              <label for="edit-slide-id">Slide ID</label>
+              <label for="edit-slide-id">Lesson ID</label>
               <input type="text" id="edit-slide-id" class="form-input" placeholder="e.g. mod-01-architecture">
             </div>
-            <div class="form-group" style="width: 140px;">
-              <label for="edit-slide-duration">Duration (mins)</label>
+            <div class="form-group" style="width: 150px;">
+              <label for="edit-slide-duration">Minutes</label>
               <input type="number" id="edit-slide-duration" class="form-input" min="1" max="180" value="15">
             </div>
           </div>
           <div class="form-group">
-            <label for="edit-slide-overview">Slide Overview / Notes (Markdown supported)</label>
-            <textarea id="edit-slide-overview" class="form-textarea" rows="4" placeholder="Overview of architectural concepts, theory, and instructions..."></textarea>
+            <label for="edit-slide-overview">Summary <small>(one or two sentences shown at the top)</small></label>
+            <textarea id="edit-slide-overview" class="form-textarea" rows="3" placeholder="What this lesson teaches and why it matters."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit-slide-body">Lesson text <small>(Markdown)</small></label>
+            <textarea id="edit-slide-body" class="form-textarea" rows="8" placeholder="## A heading&#10;&#10;Paragraphs, lists, `code`, tables and fenced code blocks."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit-slide-keypoints">Key ideas <small>(one per line)</small></label>
+            <textarea id="edit-slide-keypoints" class="form-textarea" rows="3" placeholder="The one thing to remember"></textarea>
           </div>
           <div class="form-group">
             <div class="form-label-row">
-              <label>🧪 Hands-On Lab Steps</label>
-              <button type="button" class="btn btn-outline btn-xs" onclick="window.addEditorLabStep()">+ Add Step</button>
+              <label>Hands-on lab steps</label>
+              <button type="button" class="btn btn-ghost btn-xs" onclick="window.addEditorLabStep()">+ Add step</button>
             </div>
             <div id="editor-lab-steps-container" class="editor-steps-container"></div>
           </div>
           <div class="form-group">
             <div class="form-label-row">
-              <label>📝 Knowledge Check Quizzes</label>
-              <button type="button" class="btn btn-outline btn-xs" onclick="window.addEditorQuizQuestion()">+ Add Question</button>
+              <label>Quiz questions</label>
+              <button type="button" class="btn btn-ghost btn-xs" onclick="window.addEditorQuizQuestion()">+ Add question</button>
             </div>
             <div id="editor-quizzes-container" class="editor-quizzes-container"></div>
           </div>
         </div>
         <div class="editor-modal-footer">
-          <button class="btn btn-outline" onclick="window.closeSlideEditor()">Cancel</button>
-          <button class="btn btn-primary" onclick="window.saveSlideEditor()">Apply Changes</button>
+          <button class="btn btn-ghost" type="button" onclick="window.closeSlideEditor()">Cancel</button>
+          <button class="btn btn-primary" type="button" onclick="window.saveSlideEditor()">Apply changes</button>
         </div>
       </div>
     </div>
 
-    <!-- Certificate Modal -->
-    <div class="modal-overlay" id="cert-modal" style="display:none;">
-      <div class="modal-card">
-        <div class="cert-frame">
-          <div class="cert-badge">RobOS Verified Credential</div>
-          <h2>CERTIFICATE OF COMPLETION</h2>
-          <div class="cert-sub">Formal W3C SHACL verified credential registered in the RobOS Knowledge Graph</div>
-          <div class="cert-body">
-            <p>This certifies that</p>
-            <h3 class="cert-recipient" id="cert-recipient-name">robos</h3>
-            <p>has successfully passed and mastered</p>
+    <!-- Certificate -->
+    <div class="modal-overlay" id="cert-modal" style="display:none;" role="dialog" aria-modal="true" aria-label="Certificate of completion">
+      <div class="modal-card cert-modal-card">
+        <div class="cert-controls">
+          <label for="cert-name-input">Name on the certificate</label>
+          <input type="text" id="cert-name-input" class="form-input" maxlength="80" oninput="window.onCertificateNameInput(this.value)">
+        </div>
+        <div class="cert-frame" id="cert-print">
+          <div class="cert-inner">
+            <div class="cert-badge">RobOS eLearning</div>
+            <h2>Certificate of Completion</h2>
+            <p class="cert-lead">This certifies that</p>
+            <h3 class="cert-recipient" id="cert-recipient-name">RobOS learner</h3>
+            <p class="cert-lead">has completed every lesson, lab and quiz in</p>
             <h4 class="cert-course-name" id="cert-course-name">RobOS Course</h4>
             <div class="cert-meta-grid">
-              <div><strong>Score:</strong> <span id="cert-score">100%</span></div>
-              <div><strong>Issuance Date:</strong> <span id="cert-date">Today</span></div>
-              <div><strong>Target Application:</strong> <span id="cert-target-app">RobOS Platform</span></div>
-              <div><strong>Verification Hash:</strong> <code id="cert-hash">ROBOS-CERT-XXXX</code></div>
+              <div><span>Quiz score (first try)</span><strong id="cert-score">—</strong></div>
+              <div><span>Completed</span><strong id="cert-date">Today</strong></div>
+              <div><span>Lessons</span><strong id="cert-lessons">—</strong></div>
+              <div><span>Certificate ID</span><code id="cert-hash">—</code></div>
             </div>
+            <p class="cert-foot" id="cert-target-app">Recorded in your RobOS knowledge graph</p>
           </div>
-          <div class="cert-footer">
-            <div class="cert-seal">RobOS Verified Credential &middot; schema:EducationalOccupationalCredential</div>
-            <button class="btn btn-primary" onclick="window.closeCertificateModal()">Close</button>
-          </div>
+        </div>
+        <div class="cert-footer">
+          <button class="btn btn-ghost" type="button" onclick="window.closeCertificateModal()">Close</button>
+          <button class="btn btn-primary" id="btn-cert-pdf" type="button" onclick="window.saveCertificatePdf()">Save as PDF</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="toast-notice" class="toast-notice hidden"></div>
+  <div id="toast-notice" class="toast-notice hidden" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>
