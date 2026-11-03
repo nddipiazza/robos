@@ -662,7 +662,7 @@ function renderDevCentralWallboardHtml({ hostIp, portalPort, devCentralCast = nu
       <span class="wb-badge-live">● LIVE TV CAST</span>
       <div>
         <div class="wb-title">RobOS Dev Central — Mission Control Wallboard</div>
-        <div class="wb-sub">Cast to ${esc(cast.tvName || 'Living Room Smart TV')} (${esc(cast.tvIp || hostIp)}) · ${esc(cast.sprintName || 'Sprint 42')}</div>
+        <div class="wb-sub">Cast to ${esc(cast.tvName || 'Preview')} (${esc(cast.tvIp || hostIp)}) · ${esc(cast.sprintName || 'Sprint 42')}</div>
       </div>
     </div>
     <div class="wb-pills">
@@ -5784,7 +5784,7 @@ function createTvEngine({
             hostIp,
             portalPort: boundPort,
             resolvedDashboard: resolved,
-            tvName: state.activeDashboardCast?.tvName || state.tvs[0]?.name || 'Living Room Smart TV',
+            tvName: state.activeDashboardCast?.tvName || state.tvs[0]?.name || 'Preview',
             tvIp: state.activeDashboardCast?.tvIp || state.tvs[0]?.ip || hostIp,
           });
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
