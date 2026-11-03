@@ -160,6 +160,8 @@ const EXCLUDE = [
   // Machine identity: the mesh private key and live invite belong to this machine only.
   'config/app-mesh/identity.json', 'config/app-mesh/live-invite.json',
   'config/movie-player/active-peer-bridge.json',
+  // The LG ThinQ personal access token stays on the computer it was entered on.
+  'config/lg-thinq.json',
   // Caches, audit logs and live state.
   'config/**/*-cache.json', 'config/**/cache/**', 'config/prompt-security-audit.json',
   'config/notifications.json', 'config/voice-bubbles-live.json', 'config/journal-events.json',
@@ -245,7 +247,7 @@ const FILE_LABELS = {
   'config/git-projects.json': 'Git Projects',
   'config/kgraph-repos.json': 'KGraph repositories',
   'config/app-mesh/mesh-state.json': 'Private Networks',
-  'config/smart-lights.json': 'Smart Light',
+  'config/smart-lights.json': 'Smart Home',
   'config/tv-studio.json': 'Smart TV Studio',
   'config/settings.json': 'RobOS Preferences',
   'config/movie-folders.json': 'Movie Player',

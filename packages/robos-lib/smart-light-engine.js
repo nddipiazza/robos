@@ -41,7 +41,7 @@ const LIGHT_PROTOCOLS = [
     setupSteps: [
       'Open the WiZ V2 mobile app → Settings → Current Home → Security / Local Communication.',
       'Ensure "Allow Local Communication (UDP 38899)" is toggled ON (enabled by default on most WiZ bulbs).',
-      'Click "Scan LAN for Lights" in RobOS Smart Light to broadcast `{"method":"getPilot","params":{}}` on port 38899.',
+      'Click "Scan LAN for Lights" in RobOS Smart Home to broadcast `{"method":"getPilot","params":{}}` on port 38899.',
     ],
   },
   {
@@ -79,7 +79,7 @@ const LIGHT_PROTOCOLS = [
     capabilities: ['power', 'brightness', 'kelvin', 'rgb'],
     setupSteps: [
       'Press the physical round Link Button on top of your Philips Hue Bridge.',
-      'Within 30 seconds, click "Pair Hue Bridge" in RobOS Smart Light to generate and save a local API username key.',
+      'Within 30 seconds, click "Pair Hue Bridge" in RobOS Smart Home to generate and save a local API username key.',
       'All Zigbee bulbs, lightstrips, and Hue Play bars paired to your bridge can then be controlled with zero cloud latency.',
     ],
   },

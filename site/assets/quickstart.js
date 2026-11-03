@@ -197,7 +197,7 @@
     var apps = st.apps.slice();
     if (bx) apps = bx.apps.concat(apps);
     if (cx) apps = cx.apps.concat(apps);
-    if (!apps.length) apps = P.apps.length ? P.apps : (persona === 'gamer' ? Object.keys(D.games) : ['audio-player', 'movie-player', 'household', 'smart-light', 'robos-tv', 'party-game']);
+    if (!apps.length) apps = P.apps.length ? P.apps : (persona === 'gamer' ? Object.keys(D.games) : ['audio-player', 'movie-player', 'household', 'smart-home', 'robos-tv', 'party-game']);
     else if (persona === 'dev' || persona === 'lead' || persona === 'ops') apps = apps.concat(P.apps);
 
     var wowLinks = P.wow_links.concat(bx ? bx.links : []).concat(cx ? cx.links.slice(0, 1) : []);

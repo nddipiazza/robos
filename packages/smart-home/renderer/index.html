@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*;" />
-  <title>RobOS Smart Light Studio</title>
+  <title>Smart Home</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,8 +20,7 @@
           </svg>
         </div>
         <div>
-          <h1 class="title">RobOS Smart Light Studio</h1>
-          <p class="subtitle">Zero-Cloud LAN Lighting (WiZ · WLED · Hue · Kasa · LIFX · Govee · Elgato), Mood Scenes, Circadian Daylight &amp; CI Build Sync</p>
+          <h1 class="title">Smart Home</h1>
         </div>
       </div>
 
@@ -50,11 +49,12 @@
 
     <!-- Navigation Tabs -->
     <nav class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="tab-lights" role="tab">Rooms &amp; Smart Lights</button>
-      <button type="button" class="tab-btn" data-tab="tab-scenes" role="tab">Mood Scenes &amp; AI Designer</button>
-      <button type="button" class="tab-btn" data-tab="tab-schedules" role="tab">Circadian Daylight &amp; Schedules</button>
-      <button type="button" class="tab-btn" data-tab="tab-integrations" role="tab">Dev / CI Status Light Bar &amp; TV Sync</button>
-      <button type="button" class="tab-btn" data-tab="tab-protocols" role="tab">LAN Protocol Inspector &amp; Setup Guides</button>
+      <button type="button" class="tab-btn active" data-tab="tab-lights" role="tab">Lights</button>
+      <button type="button" class="tab-btn" data-tab="tab-appliances" role="tab">Appliances</button>
+      <button type="button" class="tab-btn" data-tab="tab-scenes" role="tab">Scenes</button>
+      <button type="button" class="tab-btn" data-tab="tab-schedules" role="tab">Schedules</button>
+      <button type="button" class="tab-btn" data-tab="tab-integrations" role="tab">Integrations</button>
+      <button type="button" class="tab-btn" data-tab="tab-protocols" role="tab">Protocols</button>
     </nav>
 
     <main class="main">
@@ -78,7 +78,7 @@
           <div class="side-stack">
             <div class="card">
               <div class="card-header">
-                <h2 class="card-title">Pair / Add LAN Smart Light</h2>
+                <h2 class="card-title">Add a light</h2>
                 <span class="badge" id="paired-count-badge">7 Lights</span>
               </div>
               <p class="muted-text">Add any local Wi-Fi or Zigbee Bridge light by IP. Zero cloud accounts required.</p>
@@ -136,6 +136,48 @@
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Appliances: LG ThinQ washer, dryer and refrigerator status -->
+      <section id="tab-appliances" class="tab-pane">
+        <div id="appliances-connect" class="card appliances-connect hidden">
+          <div class="card-header">
+            <h2 class="card-title">Connect LG ThinQ</h2>
+            <span class="badge">Uses LG's cloud</span>
+          </div>
+          <p class="muted-text">See your LG washer, dryer and refrigerator here. Your lights stay on your local network, but LG appliances are only reachable through LG's cloud, so this tab sends your token to LG. RobOS only reads status; it cannot start or change anything.</p>
+          <ol class="appliances-steps">
+            <li><button type="button" class="link-btn" id="btn-appliance-token-page">Open LG's token page</button> and sign in with your ThinQ account.</li>
+            <li>Add a token with the <strong>view devices and statuses</strong> permission, then copy it.</li>
+            <li>Paste it below. It is saved only on this computer, in a private file that Config Sync does not copy.</li>
+          </ol>
+          <div class="form-stack">
+            <div class="field">
+              <label for="input-appliance-token">Personal access token</label>
+              <input type="password" id="input-appliance-token" class="input" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="appliances-connect-row">
+              <div class="field">
+                <label for="input-appliance-country">Country (2 letters)</label>
+                <input type="text" id="input-appliance-country" class="input" maxlength="2" value="US" />
+              </div>
+              <button type="button" class="btn btn-primary" id="btn-appliance-connect">Connect</button>
+            </div>
+            <p id="appliance-connect-error" class="appliances-error hidden" role="alert"></p>
+          </div>
+        </div>
+
+        <div id="appliances-connected" class="hidden">
+          <div class="toolbar-row">
+            <p class="muted-text appliances-updated" id="appliances-updated" aria-live="polite"></p>
+            <div class="quick-global-actions">
+              <button type="button" class="btn btn-sm" id="btn-appliance-refresh">Refresh</button>
+              <button type="button" class="btn btn-sm" id="btn-appliance-forget">Forget token</button>
+            </div>
+          </div>
+          <p id="appliances-error" class="appliances-error hidden" role="alert"></p>
+          <div id="appliances-grid" class="lights-grid"></div>
         </div>
       </section>
 

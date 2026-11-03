@@ -20,4 +20,9 @@ contextBridge.exposeInMainWorld('robos', {
   scanLan: () => ipcRenderer.invoke('lights:scanLan'),
   pairHueBridge: (payload) => ipcRenderer.invoke('lights:pairHueBridge', payload),
   launchApp: (appId) => ipcRenderer.invoke('lights:launchApp', appId),
+  getAppliances: () => ipcRenderer.invoke('appliances:getOverview'),
+  connectAppliances: (payload) => ipcRenderer.invoke('appliances:connect', payload),
+  refreshAppliances: (opts) => ipcRenderer.invoke('appliances:refresh', opts),
+  disconnectAppliances: () => ipcRenderer.invoke('appliances:disconnect'),
+  openApplianceTokenPage: () => ipcRenderer.invoke('appliances:openTokenPage'),
 });

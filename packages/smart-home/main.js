@@ -1,8 +1,8 @@
 'use strict';
 
-let app, BrowserWindow, ipcMain, dialog;
+let app, BrowserWindow, ipcMain, dialog, shell;
 try {
-  ({ app, BrowserWindow, ipcMain, dialog } = require('electron'));
+  ({ app, BrowserWindow, ipcMain, dialog, shell } = require('electron'));
 } catch (error) {
   if (process.versions.electron) throw error;
   app = {
@@ -17,6 +17,7 @@ try {
   BrowserWindow = class {};
   ipcMain = { handle: () => {} };
   dialog = {};
+  shell = {};
 }
 
 const path = require('node:path');
@@ -29,11 +30,11 @@ const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config'
 
 try {
   const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
-  setupGlobalErrorHandlers('smart-light', dialog);
+  setupGlobalErrorHandlers('smart-home', dialog);
 } catch {
   try {
     const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
-    setupGlobalErrorHandlers('smart-light', dialog);
+    setupGlobalErrorHandlers('smart-home', dialog);
   } catch {}
 }
 
@@ -61,8 +62,11 @@ const lightEngine = lightEngineModule.createSmartLightEngine({
   apiPort: Number(process.env.ROBOS_SMART_LIGHT_API_PORT || lightEngineModule.DEFAULT_API_PORT),
 });
 
-const userDataDir = path.join(CONFIG_DIR, 'electron', 'smart-light');
-app.setName?.('robos-smart-light');
+const lgThinqModule = requireShared('lg-thinq');
+const lgThinq = lgThinqModule.createThinqService({ configDir: CONFIG_DIR });
+
+const userDataDir = path.join(CONFIG_DIR, 'electron', 'smart-home');
+app.setName?.('robos-smart-home');
 app.setPath?.('userData', userDataDir);
 
 try {
@@ -100,7 +104,7 @@ let mainWindow = null;
 function createWindow() {
   const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
-    title: 'RobOS Smart Light Studio',
+    title: 'Smart Home',
     width: 1220,
     height: 820,
     minWidth: 920,
@@ -122,7 +126,7 @@ function createWindow() {
   if (_debugServer) {
     try {
       _debugServer.registerSnapshotIPC?.(mainWindow);
-      _debugServer.startDebugServer?.(mainWindow, 19209, 'smart-light');
+      _debugServer.startDebugServer?.(mainWindow, 19209, 'smart-home');
     } catch {}
   }
 
@@ -224,6 +228,26 @@ ipcMain.handle('lights:scanLan', async () => {
 
 ipcMain.handle('lights:pairHueBridge', async (_e, payload) => {
   return lightEngine.pairHueBridge(payload);
+});
+
+ipcMain.handle('appliances:getOverview', async () => {
+  return lgThinq.getOverview();
+});
+
+ipcMain.handle('appliances:connect', async (_e, payload) => {
+  return lgThinq.connect(payload);
+});
+
+ipcMain.handle('appliances:refresh', async (_e, opts) => {
+  return lgThinq.refresh(opts);
+});
+
+ipcMain.handle('appliances:disconnect', async () => {
+  return lgThinq.disconnect();
+});
+
+ipcMain.handle('appliances:openTokenPage', async () => {
+  await shell.openExternal?.(lgThinqModule.PAT_PAGE_URL);
 });
 
 ipcMain.handle('lights:launchApp', async (_e, appId) => {

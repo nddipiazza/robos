@@ -1,10 +1,12 @@
 ---
-title: "RobOS Smart Light"
-package: smart-light
+title: "RobOS Smart Home"
+package: smart-home
 category: household
-icon: smart-light.svg
-summary: "Controls Wi-Fi smart lights on your local network by room, with preset and saved scenes, a circadian color-temperature curve and a status-light mode for CI builds."
-description: "RobOS Smart Light sends commands straight to WiZ, WLED, Hue, Kasa, LIFX, Govee, Elgato and other lights on your LAN, with no vendor cloud. Scenes, a daylight curve, an optional AI scene designer and a local REST API sit on top."
+icon: smart-home.svg
+redirect_from:
+  - /apps/smart-light/
+summary: "Controls Wi-Fi smart lights on your local network by room, with preset and saved scenes, a circadian color-temperature curve and a status-light mode for CI builds. Also shows the status of your LG washer, dryer and refrigerator."
+description: "RobOS Smart Home sends commands straight to WiZ, WLED, Hue, Kasa, LIFX, Govee, Elgato and other lights on your LAN, with no vendor cloud. Scenes, a daylight curve, an optional AI scene designer and a local REST API sit on top. An optional Appliances tab reads LG washers, dryers and refrigerators through LG ThinQ."
 related:
   - /apps/robos-tv/
   - /apps/audio-player/
@@ -13,7 +15,7 @@ related:
   - /apps/robos-dashboards/
 ---
 
-RobOS Smart Light (`packages/smart-light`) is an Electron window over the shared engine `robos-lib/smart-light-engine.js`. The engine builds each vendor's local packet from a light's on/off, brightness, color temperature and RGB color, sends it over UDP, TCP or HTTP, and saves the state. Nothing goes through a vendor cloud.
+RobOS Smart Home (`packages/smart-home`), previously Smart Light, is an Electron window over the shared engine `robos-lib/smart-light-engine.js`. The engine builds each vendor's local packet from a light's on/off, brightness, color temperature and RGB color, sends it over UDP, TCP or HTTP, and saves the state. Lighting never goes through a vendor cloud. The one exception in the app is the optional [Appliances tab](#lg-appliances), which reads LG appliances through LG's cloud once you connect it.
 
 ## Supported lights
 
@@ -88,6 +90,36 @@ Nothing in RobOS sets these states on its own. The app does not poll CI. A scrip
 
 The other cross-app buttons work the same way. **Activate TV Bias** applies the Cinema scene to the living room, and the rest launch [Smart TV Studio]({{ '/apps/robos-tv/' | relative_url }}), [Audio Player]({{ '/apps/audio-player/' | relative_url }}) or [Home Speaker]({{ '/apps/home-speaker/' | relative_url }}). No lighting sync with those apps is implemented.
 
+## LG appliances
+
+The **Appliances** tab shows the LG washers, dryers and refrigerators on your LG ThinQ account. It only reads status: nothing in RobOS can start a cycle or change a setting.
+
+| Appliance | What the card shows |
+|---|---|
+| Washer or dryer | Current state, time left, cycle length, delayed start or finish, whether remote start is on, cycles run and detergent setting |
+| WashTower | The same details for the washer and the dryer, on one card |
+| Refrigerator | Door open or closed, the temperature each compartment is set to, water and fresh air filter status, and express, quick freeze, eco, power saving and Sabbath modes |
+
+Other LG appliances on the account appear with the plain values LG reports for them. Which details appear depends on what your model sends. Refrigerator temperatures are the settings, because LG's API does not report a measured temperature. The washer and dryer connection has been checked against a real LG account. The refrigerator and WashTower cards have only been tested with simulated LG responses so far.
+
+### Connect your account
+
+LG appliances are only reachable through LG's cloud, so unlike your lights this needs an internet connection and sends a token to LG.
+
+1. Open the **Appliances** tab and click **Open LG's token page**, then sign in with your ThinQ account.
+2. Add a token with the **view devices and statuses** permission and copy it.
+3. Paste it into the app, check the two-letter country of your ThinQ account (it defaults to `US`) and click **Connect**.
+
+The app tries the token before saving it. If LG rejects it, nothing is stored and the tab shows why. **Forget token** deletes the saved token from this computer; to cancel it completely, delete it on LG's token page too.
+
+### How it behaves
+
+The app calls LG's ThinQ Connect API directly from `robos-lib/lg-thinq.js`: `GET /devices`, then `GET /devices/<id>/state` for each appliance, one at a time. It checks when you open the tab and once a minute while the tab is showing, and it does not use LG's live event stream, so a change can take up to a minute to appear. Nothing is checked while the tab is hidden or the app is closed, and there are no notifications yet.
+
+An appliance LG cannot reach is marked **Offline** and the others still show. If LG says the account has made too many requests, the app waits five minutes and keeps showing the last status it read.
+
+The token is stored in `~/.config/robos/lg-thinq.json`, readable only by your user and not encrypted. Config Sync and shared bundles leave it out. The token and appliance status are not available through the local API below, which any web page on this computer could call.
+
 ## Local API and protocol inspector
 
 While the window is open the engine serves HTTP on `127.0.0.1:19219`. You can change the port with `ROBOS_SMART_LIGHT_API_PORT`, and the engine picks a free port if 19219 is taken. The API has no authentication and allows requests from any origin.
@@ -104,14 +136,15 @@ The **LAN Protocol Inspector** tab lists recent commands with an equivalent `nc`
 ## Where data is stored
 
 - `~/.config/robos/smart-lights.json`: rooms, lights (with device keys and tokens), custom and AI scenes, schedules, CI target and state, and the newest 35 protocol log entries.
-- `~/.config/robos/electron/smart-light/`: the Electron profile.
+- `~/.config/robos/lg-thinq.json`: your LG ThinQ token, country and a random client ID. Only present after you connect, and never synced. Appliance status is kept in memory only.
+- `~/.config/robos/electron/smart-home/`: the Electron profile.
 
-`ROBOS_CONFIG_DIR` moves both. With `ROBOS_TEST=1` the engine sends nothing on the network.
+`ROBOS_CONFIG_DIR` moves all of them. With `ROBOS_TEST=1` the engine sends nothing on the network and the app does not contact LG.
 
-The **Smart Lights** widget in [RobOS Dashboards]({{ '/apps/robos-dashboards/' | relative_url }}) reads this file: how many lights are on out of the total, the active scene and the first few lights. If Smart Light has never saved its state, the widget shows no lights.
+The **Smart Lights** widget in [RobOS Dashboards]({{ '/apps/robos-dashboards/' | relative_url }}) reads the lights file: how many lights are on out of the total, the active scene and the first few lights. If Smart Light has never saved its state, the widget shows no lights.
 
 ## Run it
 
-Open **RobOS Smart Light** from the desktop or the [App Launcher]({{ '/apps/app-launcher/' | relative_url }}). From the repository, run `scripts/dev-launch.sh smart-light`. When the RobOS library is installed, the window runs a DOM-snapshot debug server on port `19209`.
+Open **RobOS Smart Home** from the desktop or the [App Launcher]({{ '/apps/app-launcher/' | relative_url }}). From the repository, run `scripts/dev-launch.sh smart-home`. When the RobOS library is installed, the window runs a DOM-snapshot debug server on port `19209`.
 
-Source: [`packages/smart-light`](https://github.com/nddipiazza/robos/tree/main/packages/smart-light) and [`packages/robos-lib/smart-light-engine.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/smart-light-engine.js). The engine tests are in `smart-light-engine.test.cjs` next to it, and the pairing, schedule and dashboard-widget tests are in `packages/robos-test/tests/smart-light/unit.test.js`.
+Source: [`packages/smart-home`](https://github.com/nddipiazza/robos/tree/main/packages/smart-home) and [`packages/robos-lib/smart-light-engine.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/smart-light-engine.js). The engine tests are in `smart-light-engine.test.cjs` next to it, the pairing, schedule and dashboard-widget tests are in `packages/robos-test/tests/smart-home/unit.test.js`, and the LG tests are in `packages/robos-test/tests/smart-home/lg-thinq.test.js`. The LG client is [`packages/robos-lib/lg-thinq.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/lg-thinq.js).
