@@ -654,6 +654,111 @@ print(i.getpixel((0, 0))[3], i.getpixel((32, 32))[3], i.getpixel((32, 32))[0] > 
   });
 });
 
+describe('jrpg parser: publishing only what we made', () => {
+  const { publish, findLeaks } = require(path.join(PKG, 'lib', 'publish'));
+  let dir, out, to, result;
+  before(async () => {
+    dir = makeFolder();
+    out = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-pub-out-'));
+    to = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-pub-to-')), 'public');
+    await pipeline.parse([dir], { out, title: 'Final Fantasy', edition: 'NES (USA)', ask: fakeAsk });
+    const parsed = JSON.parse(fs.readFileSync(path.join(out, 'parsed.json'), 'utf8'));
+    await generateArt(parsed, out, { kinds: ['area-map'], generateImage: async ({ outFile }) => {
+      fs.mkdirSync(path.dirname(outFile), { recursive: true });
+      fs.writeFileSync(outFile, PNG);
+      return { ok: true, model: 'fake' };
+    } }).catch(() => {});
+    result = publish(out, to);
+  });
+  after(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(out, { recursive: true, force: true });
+    fs.rmSync(path.dirname(to), { recursive: true, force: true });
+  });
+
+  const everything = () => {
+    const files = [];
+    const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else files.push(f); } };
+    walk(to);
+    return files;
+  };
+
+  it('leaves out working files and raw model output', () => {
+    const names = everything().map(f => path.relative(to, f));
+    for (const secret of ['parsed.json', 'coverage.json', 'manifest.json', '.cache', '/raw/']) assert.ok(!names.some(n => n.includes(secret)), secret);
+  });
+
+  it('holds no source names, hashes, quotes or copied descriptions', () => {
+    const text = everything().filter(f => !f.endsWith('.png')).map(f => fs.readFileSync(f, 'utf8')).join('\n');
+    for (const secret of ['guide.html', 'world-map.png', 'guides.example', 'jrpg:sha256', 'jrpg:evidence', 'jrpg:source"', 'This will cast that element', 'Head to Corneria, a town', dir]) {
+      assert.ok(!text.includes(secret), secret);
+    }
+  });
+
+  it('keeps the facts, and the graph still validates', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(to, '.robos', 'kgraph.yaml'), 'utf8'));
+    const nodes = manifest.packages.flatMap(p => JSON.parse(fs.readFileSync(path.join(to, '.robos', p.path), 'utf8'))['robos:nodes']);
+    const agama = nodes.find(n => n['dcterms:title'] === 'Agama');
+    assert.equal(agama['robos:hpMax'], 296);
+    assert.ok(!nodes.some(n => [].concat(n['@type']).includes('jrpg:Source')));
+    assert.deepEqual(new SHACLValidator().validate(nodes).violations, []);
+    assert.ok(result.nodeCount > 0);
+  });
+
+  it('removes source file names from image titles', () => {
+    const { publicNode } = require(path.join(PKG, 'lib', 'publish'));
+    const node = publicNode({ '@type': ['jrpg:BattleBackdrop', 'jrpg:GeneratedImage'], 'dcterms:title': 'Battle backdrop from battle2.jpeg' });
+    assert.equal(node['dcterms:title'], 'Battle backdrop');
+  });
+
+  it('numbers images and menu layouts named after a source file', async () => {
+    const out2 = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-pub2-'));
+    const to2 = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-pub2to-')), 'public');
+    const shot = path.join(out2, 'battle2.png');
+    fs.writeFileSync(shot, PNG);
+    const parsed = {
+      game: { title: 'FF', edition: 'NES' }, warnings: [],
+      sources: [{ name: 'battle2.png', path: shot, sha256: 'abcabcabc', kind: 'image', role: 'battle-screen' }],
+      menus: [{ title: 'Battle', source: 'battle2.png' }],
+    };
+    fs.writeFileSync(path.join(out2, 'parsed.json'), JSON.stringify(parsed));
+    const root = path.join(out2, 'assets', 'generated');
+    fs.mkdirSync(path.join(root, 'battle-backdrop'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'battle-backdrop', 'battle-backdrop-battle2.png'), PNG);
+    const art = { images: [{ id: 'battle-backdrop-battle2', kind: 'battle-backdrop', title: 'Battle backdrop from battle2.png', depicts: 'game', basis: 'reference', references: ['battle2.png'], file: 'assets/generated/battle-backdrop/battle-backdrop-battle2.png' }] };
+    fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(art));
+    require(path.join(PKG, 'lib', 'kgraph')).writeKgraph(out2, parsed, art);
+    publish(out2, to2);
+    assert.ok(fs.existsSync(path.join(to2, 'assets', 'generated', 'battle-backdrop', 'battle-backdrop-1.png')));
+    const world = fs.readFileSync(path.join(to2, '.robos', 'kgraphs', 'world', 'package.jsonld'), 'utf8');
+    assert.match(world, /image:battle-backdrop-1"/);
+    assert.match(world, /battle-backdrop-1\.png/);
+    assert.ok(!world.includes('battle2'));
+    const ui = fs.readFileSync(path.join(to2, '.robos', 'kgraphs', 'ui', 'package.jsonld'), 'utf8');
+    assert.match(ui, /menu:screen-1"/);
+    assert.ok(!ui.includes('battle2'));
+    fs.rmSync(out2, { recursive: true, force: true });
+    fs.rmSync(path.dirname(to2), { recursive: true, force: true });
+  });
+
+  it('refuses a target inside the working folder or one already in use', () => {
+    assert.throws(() => publish(out, path.join(out, 'public')), /outside the working folder/);
+    assert.throws(() => publish(out, to), /not empty/);
+  });
+
+  it('finds a source name or quote left in the copy', () => {
+    const leaky = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-leak-'));
+    fs.writeFileSync(path.join(leaky, 'notes.md'), 'Made from secret-guide.html: the quoted sentence from the guide goes here.');
+    const problems = findLeaks(leaky, { sources: [{ name: 'secret-guide.html', sha256: 'abc' }], places: [{ evidence: 'the quoted sentence from the guide goes here' }, { evidence: 'Coneria, Pravoka, Elfland' }] });
+    assert.equal(problems.length, 2);
+    fs.rmSync(leaky, { recursive: true, force: true });
+  });
+
+  it('marks the working folder as ignored by git', () => {
+    assert.match(fs.readFileSync(path.join(out, '.gitignore'), 'utf8'), /^\*$/m);
+  });
+});
+
 describe('jrpg parser: coverage', () => {
   it('ignores source files marked unusable', () => {
     const row = coverage([], [{ role: 'music', use: false }]).find(c => c.id === 'music');

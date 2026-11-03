@@ -203,6 +203,8 @@ function readme(parsed, catalog, cov, warnings) {
     '',
     `${parsed.game.title} (${parsed.game.edition}), parsed by the RobOS JRPG parser from files a person collected. Source files are referenced by name and hash, and are not stored here. ${invented}`,
     '',
+    '**This working folder is private.** It names downloaded files and quotes them. To share the game, run `jrpg-parser publish`, which makes a copy holding only what was parsed and generated.',
+    '',
     '## Coverage',
     '',
     '| Asset type | Count | Covered |',
@@ -264,6 +266,8 @@ function writeKgraph(outDir, parsed, art = { images: [] }) {
   const report = { game: parsed.game, nodeCount: nodes.length, assetTypes: cov, stillToCollect: cov.filter(c => !c.covered).map(c => ({ id: c.id, collect: c.collect })), warnings };
   fs.writeFileSync(path.join(outDir, 'coverage.json'), JSON.stringify(report, null, 2) + '\n');
   fs.writeFileSync(path.join(outDir, 'README.md'), readme(parsed, catalog, cov, warnings));
+  // This folder holds downloaded material, so git must not pick it up. `publish` makes the copy to share.
+  fs.writeFileSync(path.join(outDir, '.gitignore'), '# Private working folder. Use `jrpg-parser publish` to make a copy to share.\n*\n');
   return { nodes, catalog, coverage: cov };
 }
 

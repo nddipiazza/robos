@@ -52,6 +52,12 @@ Pass `--manifest <file>` to change a file's role or skip it:
 - The spell chart parser assumes black magic rows above white magic rows, in equal halves, as charts of this era list them.
 - Colored asterisks in spell charts, which mark who cannot learn a spell, are not read.
 
+## Keeping downloads private
+
+Files you collect, and anything copied from them, are never published. The working folder holds both: source file names and hashes, quotes used as evidence, descriptions taken from guides, and agent replies. It writes a `.gitignore` that ignores everything in it, so git will not pick it up.
+
+`jrpg-parser publish --out <working folder> --to <new folder>` makes the copy to share, with parsed facts and generated images only. It searches the result for source file names, hashes, paths and quotes, and writes nothing if it finds any. Pushing that folder anywhere is a separate step you take yourself. Generated images can still closely resemble the game's own art, so choose with `--kinds` which ones to include.
+
 ## Tests
 
 ```bash
