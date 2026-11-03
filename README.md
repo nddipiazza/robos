@@ -1,185 +1,378 @@
 # RobOS
 
-RobOS is an app suite you can customize and build on. It ships ready-made desktop apps (a point of sale, an auto repair shop, household finances, games, an audio player and a developer suite), all described in one knowledge graph (KGraph). Use the apps as they are, customize any of them by describing the change, or describe a new app and have agents build it from that context, with tests and a recorded walkthrough as proof.
+RobOS is one open-source app suite built to replace the apps you pay for, one at a time, all on one knowledge graph (KGraph). It has free desktop apps for shops, homes, players and developers: Point of Sale, Auto Center, Household finances, an audio and movie player, eLearning, games, smart-home tools and a developer suite. Every app is described in the KGraph, so you can use it as it is, customize it by describing the change, or describe a new app and have agents build it, with tests as proof.
 
-Actions inside the apps also have optional AI-powered features. The Audio Player, for example, can create a Virtual DJ that introduces each song, or build a playlist from a description of a mood. These use the agent you already have (Claude Code, Codex, Copilot, Gemini CLI / Antigravity, or a local Ollama model), and every app works without them.
+RobOS also keeps and reuses what AI makes (code, graph nodes, skills and tests), so each new app needs less AI. Built once, an app runs with no AI at all. AI features inside the apps are optional and use the agent you already have (Claude Code, Codex, Copilot, Gemini CLI / Antigravity, or a local Ollama model).
 
-It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.10](https://github.com/nddipiazza/robos/releases/tag/v0.0.10).
+Read more at **[rowbose.com](https://rowbose.com/)**.
 
-[Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Security](https://rowbose.com/security/) | [Future](https://rowbose.com/future/) | [Blog](https://rowbose.com/blog/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
+Free and open source under the [Apache License 2.0](LICENSE).
 
-<p align="center">
-  <img src="site/assets/point-of-sale/coffee-register-latte.jpg" alt="RobOS Point of Sale register with a customized latte order" width="440">
-  <img src="site/assets/family-finances/02-accounts.png" alt="RobOS Household accounts view with reconciled accounts" width="440">
-</p>
+The rest of this file covers building code on RobOS.
 
-*Two of the suites: Point of Sale and Household. Each was modeled in the KGraph, built by agents and is verified by automated browser tests.*
+---
 
-## Three ways to use it
+## Contents
 
-1. **Use the suites.** Ready-made apps that run on your machine and keep your data local. See the [app directory](https://rowbose.com/apps/).
-2. **Customize any app.** Describe the change. It becomes an edit to the app's KGraph, an agent implements it on a branch, and tests plus a narrated walkthrough show the result before you keep it.
-3. **Build a new app.** Describe it, or import the repositories, APIs and docs you already have. RobOS models it in the KGraph and routed agents build it the same way the suites were built.
+- [Requirements](#requirements)
+- [Get the code and run an app](#get-the-code-and-run-an-app)
+- [Repository layout](#repository-layout)
+- [How an app is put together](#how-an-app-is-put-together)
+- [Create a new app](#create-a-new-app)
+- [Change an existing app](#change-an-existing-app)
+- [Shared libraries](#shared-libraries)
+- [Adding an AI feature](#adding-an-ai-feature)
+- [Testing](#testing)
+- [Debugging a running app](#debugging-a-running-app)
+- [The knowledge graph](#the-knowledge-graph)
+- [Working with coding agents](#working-with-coding-agents)
+- [Docs and site](#docs-and-site)
+- [The VM image](#the-vm-image)
+- [Conventions](#conventions)
+- [Contributing](#contributing)
 
-Separately, AI-powered features inside the apps are optional extras you switch on, grounded in your own data. The Audio Player's [Virtual DJ and AI Playlists](https://rowbose.com/blog/audio-player-virtual-dj/) are the reference example.
+## Requirements
 
-## What is in this repository
+- **Node.js 20+** and npm
+- **Git**
+- **Docker**, for the headless end-to-end test container
+- Optional: **QEMU/KVM** for the appliance VM image, **JDK 17+ and Gradle** for the IntelliJ plugin, **Godot 4** for the games in `games/`, **Jekyll** for the docs sites
 
-- **App suites.** Point of Sale, Auto Center, Household, Audio Player and Home Speaker, and games (a cRPG, a tabletop RPG, an RTS, and the AI-hosted RobOS Party Game played on your TVs and phones), each with optional AI features.
-- **Developer suite.** Electron apps covering the development lifecycle that builds and changes the apps: planning, code review, git and issues, databases and API clients, Kubernetes, builds, documentation and eLearning. See the [app directory](https://rowbose.com/apps/).
-- **Knowledge graph.** Apps, services, contracts, databases, teams and work items stored as JSON-LD under `.robos/` and validated with SHACL. Two states of the graph (`main` and a feature branch) can be diffed to see what a change touches before it merges.
-- **Agent harness.** Runs the agent CLIs you have installed (Claude Code, Codex, Copilot, Gemini CLI / Antigravity), scans prompts for secrets and personal data, runs agents in disposable profiles, and captures test and UI evidence for review. No API keys are needed. An optional API mode can send quick requests to Anthropic, OpenAI, Gemini or a local Ollama server instead ([AI agents and API mode](https://rowbose.com/v1/ai-providers.html)).
-- **Skills and plugins.** Skills and slash commands that let coding agents operate RobOS and work on this repository.
-- **Appliance OS (optional).** An Ubuntu desktop image for QEMU/KVM with the whole suite preinstalled.
+`scripts/install-dev-deps.sh` audits and installs the dependencies for every component.
 
-## Getting started
+## Get the code and run an app
 
-The [RobOS App Manager](packages/app-manager) provides the same app selection and launcher on Windows, Ubuntu GNOME and macOS. Open its Windows EXE, Ubuntu `.deb` or macOS DMG (other Linux desktops can use the AppImage), choose apps in the grouped checkbox tree, and download only those apps and their shared components. Apps get individual native launchers. The manager can add or remove apps later, and uninstalling RobOS removes its managed apps. See the [distribution build guide](scripts/app-manager/README.md). The separate USB flasher installs the optional Linux GNOME distro.
-
-```sh
+```bash
 git clone https://github.com/nddipiazza/robos.git
+```
+
+```bash
 cd robos
+```
+
+```bash
 scripts/dev-launch.sh point-of-sale
 ```
 
-`dev-launch.sh` installs the app's dependencies on first run, then starts it. Run it with no argument to list the apps. On GNOME, `scripts/install-local.sh` adds the apps to the application launcher instead.
+`dev-launch.sh` runs `npm install` in the app's package on first launch, then starts it with Electron. Run it with no argument to list every launchable app (any `packages/<id>/` with a `main.js` and `package.json`).
 
-For the Ubuntu desktop setup, the VM image and per-platform notes, see the [installation guide](https://rowbose.com/v1/getting-started.html). To model another repository in a knowledge graph, see the [graph workspace guide](packages/robos-graph/WORKSPACES.md).
+There is **no root `package.json`**. Every package under `packages/` is independent and has its own `node_modules`. You can also run an app from inside its package:
 
-## How a change moves through RobOS
-
-Customizing an app and building a new one follow the same path:
-
-
-1. **Plan.** `task-planner` turns a request into tracked issues with acceptance criteria and test cases.
-2. **Implement.** An agent (`task-implementer`) works on a branch, commits and pushes. It does not open the pull request.
-3. **Review.** `pr-review`, also called Code Review Theater, shows the diff file by file, before-and-after evidence captured from real runs of the code, and a walkthrough where an agent demonstrates each checkpoint. IntelliJ IDEA and VS Code open from the same screen.
-4. **Ship.** The reviewed description is published as a draft pull request, moved to ready once CI is green, then reviewed and merged. A CI failure on `main` files a follow-up task.
-
-More on this in [Agent Governance & Review](https://rowbose.com/v1/agent-review-development.html) and [PR Review Theater](https://rowbose.com/v1/pr-review-theater.html).
-
-### The apps
-
-Each app is a directory under `packages/`, launched with `scripts/dev-launch.sh <package>`. A sample, not the full list:
-
-| Area | Packages |
-|---|---|
-| App suites | `point-of-sale`, `auto-center`, `household`, `audio-player`, `home-speaker`, `robos-tabletop` |
-| Building apps | `app-wizard`, `robos-graph` (Knowledge Graph Explorer) |
-| Planning and tasks | `task-planner`, `task-implementer`, `task-board`, `issue-manager`, `dev-central` |
-| Review and delivery | `pr-review`, `ci-monitor`, `deploy-tracker` |
-| Architecture and graph | `robos-graph` (Knowledge Graph Explorer), `topology-manager`, `schema-studio`, `contract-studio` |
-| Data and APIs | `db-manager`, `nosql-manager`, `rest-client`, `grpc-client`, `graphql-client`, `data-sources` |
-| Infrastructure and secrets | `kube-studio`, `remote-execution-studio`, `pass-manager`, `vpn-sandbox`, `vpn-servers` |
-| Agents | `agents-manager`, `agent-chat`, `mcp-manager` |
-
-Every app has a page in [`docs/_apps/`](docs/_apps/) and an entry in the [app directory](https://rowbose.com/apps/).
-
-## How it is built
-
-The apps are Electron with plain JavaScript and no UI framework. Each package is independent: there is no root `package.json`, and each has its own `node_modules`.
-
-An app looks like this:
-
-```
-packages/<app-id>/
-  main.js          Electron main process; registers ipcMain handlers
-  preload.js       contextBridge API exposed to the renderer
-  renderer/        HTML, CSS and JavaScript for the UI
-  package.json     the app's own dependencies
-  icon.svg         app icon
-  <app-id>.desktop launcher entry
+```bash
+cd packages/point-of-sale && npm install && npm start
 ```
 
-- **IPC.** Renderers have no Node access. They call `window.<api>` from `preload.js`, which forwards to `ipcMain.handle` in `main.js`.
-- **State.** Persistent data lives in `~/.config/robos/`.
-- **Shared code.** `robos-lib` (prompt security, evidence capture, DOM snapshots, `.desktop` parsing), `robos-icons`, `robos-ui` and `robos-mcp-lib`. On the VM these are installed under `/usr/local/share/robos/` and required by absolute path, so apps wrap those requires in `try/catch`. See [AGENTS.md](AGENTS.md) for the details.
-- **MCP servers.** Packages ending in `-mcp` expose the graph, IDE bridge, tasks and workspaces to agents over the Model Context Protocol.
-- **Knowledge graph.** JSON-LD packages in `.robos/kgraphs/<package>/package.jsonld`, indexed by `.robos/kgraph.yaml`. The engine, SHACL validation, diffing and the `kgraph` CLI are in `packages/robos-graph/`. Inserts must pass SHACL validation; graph changes go through a propose-then-apply review. See [WORKSPACES.md](packages/robos-graph/WORKSPACES.md) and [INSPECTOR.md](packages/robos-graph/INSPECTOR.md).
-- **Agent CLIs.** Apps start the agent CLIs you installed directly; there is no router layer. One-shot requests go through `robos-lib/ai-agent`, which uses the active CLI, or the opt-in `robos-llm` API mode (LangChain.js) when the user turns it on.
-- **Sandboxing.** `robos-profiled` gives each agent its own profile with a tmpfs-backed home directory and a display bridge for GUI runs.
+On GNOME, `scripts/install-local.sh` adds the apps to the application launcher.
 
-It is built on existing standards instead of new formats: OSLC and JSON-LD for the graph, SHACL for validation, Backstage catalog files and the C4 model for topology, TypeSpec, OpenAPI and AsyncAPI for schemas and contracts, Pact for consumer contracts, Bruno files for API collections, and MCP for agent tooling.
-
-### Repository layout
+## Repository layout
 
 | Path | Contents |
 |---|---|
 | `packages/` | Apps, shared libraries and MCP servers, one directory each |
-| `packages/robos-graph/` | Knowledge graph engine, SHACL validation, `kgraph` CLI and explorer app |
-| `packages/robos-test/` | Unit and end-to-end tests |
-| `.robos/` | This repository's own knowledge graph |
-| `plugins/` | Skill marketplace for coding agents, and the IntelliJ IDEA plugin |
-| `.agents/`, `.claude/`, `.antigravity/`, `.gemini/`, `.github/skills/` | Skills and commands in the form each agent reads |
+| `packages/robos-lib/` | Shared runtime code: AI agent wrapper, prompt security, DOM snapshots, agent selector, config sync |
+| `packages/robos-graph/` | Knowledge graph engine, SHACL validation, `kgraph` CLI and the KGraph Explorer app |
+| `packages/robos-test/` | Unit and end-to-end test harness and tests |
+| `packages/app-wizard/` | App generator and templates (desktop apps, the `nextjs-vercel-web` launch kit) |
+| `.robos/` | This repository's own knowledge graph (`kgraph.yaml`, `kgraphs/<package>/package.jsonld`) |
+| `plugins/` | Agent skills marketplace (`plugins/robos/skills/`) and the IntelliJ IDEA plugin |
+| `.agents/`, `.claude/`, `.antigravity/`, `.gemini/`, `.github/skills/` | The same skills, in the form each agent reads |
 | `docs/` | Documentation site (Jekyll), published at rowbose.com/v1/ |
 | `site/` | Front site (Jekyll), published at rowbose.com |
-| `infra/` | `docker/` for the containerized E2E runner, `desktop/` for the VM image build |
-| `installer/` | Installer app for the appliance OS |
-| `games/` | Godot games (a cRPG and a tabletop RPG) and their tooling |
+| `games/` | Godot games and their tooling |
+| `infra/docker/` | Containerized E2E runner |
+| `infra/desktop/` | Appliance VM image build |
+| `installer/` | Installer for the appliance OS |
 | `scripts/` | Launch, install, build, release and docs tooling |
 
-## Development
+## How an app is put together
 
-Requirements: Node.js 20+ and Git. Docker is needed for the containerized E2E runner, QEMU/KVM for the VM image, and JDK 17+ with Gradle for the IntelliJ plugin.
+Apps are Electron with plain JavaScript. There is no UI framework.
 
-```sh
-# Run an app
-scripts/dev-launch.sh <package>
-
-# Unit tests (no display needed)
-cd packages/robos-test
-npm install
-npm run test:unit
-
-# End-to-end tests in a container with a virtual display
-./scripts/e2e-container.sh
-
-# Inspect a running app's DOM
-node packages/robos-lib/snapshot-cli.js <package> --text
+```
+packages/<app-id>/
+  main.js            Electron main process: windows, ipcMain handlers, data
+  preload.js         contextBridge API exposed to the renderer
+  renderer/          index.html, CSS and JavaScript for the UI
+  lib/               app logic that can be unit tested without Electron
+  tests/             the app's own tests (optional; see Testing)
+  package.json       the app's own dependencies and scripts
+  icon.svg           48×48 app icon
+  <app-id>.desktop   launcher entry
 ```
 
-Adding, renaming or removing an app touches several registries (desktop manager, icons, install scripts, the knowledge graph, docs). Use the `create-robos-app`, `rename-robos-app` and `remove-robos-app` skills, or follow the checklist in [AGENTS.md](AGENTS.md).
+**IPC.** The renderer never gets Node access (`contextIsolation: true`, `nodeIntegration: false`). It calls an API that `preload.js` exposes, which forwards to `ipcMain.handle` in `main.js`:
 
-The documentation lives in `docs/` and `site/`. `scripts/build-docs.sh` builds both the way CI does (needs Jekyll and the gems in `docs/Gemfile`), and `node scripts/sync-app-docs.js` refreshes the per-app pages.
+```js
+// preload.js
+const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('robos', {
+  listItems: () => ipcRenderer.invoke('items:list'),
+  saveItem: (item) => ipcRenderer.invoke('items:save', item),
+});
+```
 
-To build and run the VM image, see `infra/desktop/` (`build.sh`, `run.sh`, `clean.sh`).
+```js
+// main.js
+ipcMain.handle('items:list', () => store.list());
+ipcMain.handle('items:save', (_e, item) => store.save(item));
+```
 
-## Skills
+```js
+// renderer/app.js
+const items = await window.robos.listItems();
+```
 
-Skills are how coding agents operate RobOS: scaffolding apps, running the E2E harness, recording demos, querying and diffing the knowledge graph, and managing the VM. They are written once in [`plugins/robos/skills/`](plugins/robos/skills/) and installed in the form each agent reads (Claude Code, Codex, Antigravity, Copilot, Gemini CLI).
+**State.** Persistent data lives under `~/.config/robos/` (for example `~/.config/robos/point-of-sale/`). Call `app.setPath('userData', ...)` before `requestSingleInstanceLock()` so each app gets its own Electron profile and lockfiles do not collide.
 
-```sh
-# Claude Code
+**Electron flags.** Apps run with `--no-sandbox --disable-gpu --disable-dev-shm-usage`. Without `--disable-dev-shm-usage`, renderer windows go blank in VMs and containers.
+
+**Logic out of `main.js`.** Keep business logic in `lib/` as plain modules. That is what makes it testable with `node --test` and no display. `packages/point-of-sale/lib/` is a good example.
+
+**Theme.** All apps share a dark theme: `--bg-primary: #0d1117`, `--bg-card: #161b22`, `--border: #30363d`, `--accent: #00bcd4`, `--text-main: #c9d1d9`, `--text-muted: #8b949e`.
+
+## Create a new app
+
+A new app has to be registered in several places so the launcher, icons, installers and knowledge graph know about it. The `create-robos-app` skill does all of it. With Claude Code:
+
+```
+/create-robos-app <app-id> <one-line description>
+```
+
+Other agents read the same skill from `.agents/skills/` or `plugins/robos/skills/`. To do it by hand:
+
+1. `packages/<app-id>/`, the app itself, with its `<app-id>.desktop` launcher entry
+2. `packages/desktop-manager/main.js`: `APP_REGISTRY` and `APP_BINS`
+3. `packages/robos-icons/builtin-apps.js`: `BUILTIN_APPS` (alphabetical)
+4. `packages/robos-icons/builtin-apps-browser.js`: `ROBOS_BUILTIN_APPS`
+5. The App Suite table in `AGENTS.md`
+6. The app's node in `.robos/kgraphs/` plus `.robos/kgraph.yaml` and `.robos/packages.yaml`
+7. A debug port in `PORT_REGISTRY` in `packages/robos-lib/snapshot-cli.js`, and in `PORT_MAP` in `packages/robos-test/lib/harness.js` if it has shared E2E tests
+
+Then run `node scripts/sync-app-docs.js` to generate its page in `docs/_apps/`. The checklist in [AGENTS.md](AGENTS.md) also names a few registries that only exist on some setups.
+
+Renaming or removing an app touches the same list. Use `rename-robos-app` and `remove-robos-app`.
+
+For a public web app (Next.js on Vercel) start from `packages/app-wizard/templates/nextjs-vercel-web` via `packages/app-wizard/lib/generate-app.js`. The section "Web App Launch Kit" in [AGENTS.md](AGENTS.md) lists what that template must keep in place.
+
+## Change an existing app
+
+1. Branch from `main`.
+2. Launch the app with `scripts/dev-launch.sh <app-id>` and find the code: UI in `renderer/`, IPC in `main.js` and `preload.js`, logic in `lib/`.
+3. Make the change. If it adds or changes something the app *is* (a screen, an entity, an API, a test), update the app's node in the knowledge graph too (see [The knowledge graph](#the-knowledge-graph)).
+4. Add or update tests, run them (see [Testing](#testing)).
+5. Commit with a [Conventional Commit](https://www.conventionalcommits.org/) message scoped to the package, for example `fix(point-of-sale): round tax per line`.
+
+The planning and review apps in this repo (`task-planner`, `task-implementer`, `pr-review`) run the same loop with an agent doing the implementation. You don't need them to contribute; a normal branch and pull request works.
+
+## Shared libraries
+
+| Package | What it gives you |
+|---|---|
+| `robos-lib/ai-agent.js` | `ask(prompt, opts)`: one call that runs the user's active agent CLI (or the opt-in API mode), with the prompt security guard applied |
+| `robos-lib/agent-selector.js` | `<robos-agent-selector>`, the shared agent picker |
+| `robos-lib/ai-json.js` | `parseAIJson` and `JSON_RULES_PROMPT` for streaming and repairing JSON from agents |
+| `robos-lib/dom-snapshot.js` | Debug server used by the snapshot CLI and tests |
+| `robos-lib/config-sync.js` | Back up and share `~/.config/robos` |
+| `robos-icons/` | SVG icon registry and the built-in app list |
+| `robos-ui/` | Shared UI components |
+| `robos-mcp-lib/` | Helpers for the `*-mcp` packages (MCP servers for the graph, IDE bridge, tasks, workspaces) |
+
+On the VM these are installed under `/usr/local/share/robos/` and required by absolute path. Outside the VM that path does not exist, so always load shared code with a fallback:
+
+```js
+let aiAgent = null;
+for (const p of [
+  path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+  '/usr/local/share/robos/robos-lib/ai-agent',
+]) {
+  try { aiAgent = require(p); break; } catch {}
+}
+```
+
+## Adding an AI feature
+
+AI in an app is always an optional extra. The app must work fully with no agent configured.
+
+- Put the feature behind an explicit action: a `<robos-ai-textarea>` with an adjacent `✦` button that starts disabled. The `add-ai-text-area-to-app` skill wires this up.
+- Let the user pick the agent with `<robos-agent-selector>`.
+- Send one-shot requests through `robos-lib/ai-agent` `ask()`, never by calling a CLI or API yourself. That is where the prompt security guard (secret, PII and prompt-injection scanning) runs.
+- Ground the prompt in the app's own data and its KGraph slice, not generic text.
+- Never depend on the opt-in API mode (`robos-llm`); it is off by default.
+- In tests, don't call a real agent. Inject the expected result instead.
+
+The Audio Player's AI Playlists and Virtual DJ (`packages/audio-player/`) are the reference implementation.
+
+## Testing
+
+**Unit tests** need no display:
+
+```bash
+cd packages/robos-test && npm install && npm run test:unit
+```
+
+**End-to-end tests** launch real Electron apps and drive them over a debug port. Run them in the container, which provides a virtual display:
+
+```bash
+./scripts/e2e-container.sh
+```
+
+```bash
+./scripts/e2e-container.sh --build
+```
+
+```bash
+./scripts/e2e-container.sh node packages/robos-test/tests/dev-central/e2e.test.js
+```
+
+`--build` rebuilds the image first; passing a command runs just that test; `--interactive` drops you into a shell in the container.
+
+Shared tests live in `packages/robos-test/tests/<app-id>/` and use the harness in `packages/robos-test/lib/` (`harness.js` to launch and kill apps, `snapshot.js` to read the DOM, `scenarios.js` for preset app state). Some apps also keep their own tests in `packages/<app-id>/tests/`, run with that package's `npm test` and `npm run test:e2e`.
+
+Rules that keep tests reliable:
+
+- Use only selectors that exist in the app's `renderer/` files. Grep for them before writing an assertion.
+- Mock AI and network results; don't call the real endpoint.
+- Avoid long sleeps; wait for text or state instead.
+
+The `create-test` skill generates a test that follows these rules. `e2e-driven-dev` writes the E2E test first and records a narrated walkthrough when it passes; recordings are saved under `~/.robos/development/walkthroughs/<slug>/`.
+
+## Debugging a running app
+
+Each app opens a debug port (19100 and up, listed in `PORT_REGISTRY` in `packages/robos-lib/snapshot-cli.js`). With the app running:
+
+```bash
+node packages/robos-lib/snapshot-cli.js <app-id> --text
+```
+
+```bash
+node packages/robos-lib/snapshot-cli.js <app-id> --json
+```
+
+```bash
+node packages/robos-lib/snapshot-cli.js <app-id> --screenshot
+```
+
+The `read-error-logs` skill collects Electron and RobOS failure logs.
+
+## The knowledge graph
+
+The KGraph describes the apps, services, contracts, databases, teams and work items in JSON-LD, validated with SHACL shapes.
+
+- `.robos/kgraph.yaml` indexes the packages.
+- `.robos/kgraphs/<package>/package.jsonld` holds each package's nodes (`applications`, `core-platform`, `services`, `devops`, `testing` and others).
+- `.robos/knowledge-graph.jsonld` is the aggregate of all packages.
+
+After editing a package file by hand, regenerate the aggregate. Apps that read the graph fail on startup if the two disagree, and a unit test checks it in CI:
+
+```bash
+node packages/crpg-builder/scripts/sync-aggregate.js
+```
+
+The `kgraph` CLI is in `packages/robos-graph/`:
+
+```bash
+node packages/robos-graph/bin/kgraph-cli.js --help
+```
+
+```bash
+node packages/robos-graph/bin/kgraph-cli.js search "point of sale"
+```
+
+```bash
+node packages/robos-graph/bin/kgraph-cli.js impact <node-id> --depth 3
+```
+
+```bash
+node packages/robos-graph/bin/kgraph-cli.js validate
+```
+
+`insert` and `update` run SHACL validation before writing. `propose` and `apply` give a two-step reviewed change for imports and bulk edits. Never put secrets in the graph; credentials are stored in `pass` and referenced by path.
+
+To model another repository in its own graph workspace, see [WORKSPACES.md](packages/robos-graph/WORKSPACES.md). The graph standards (OSLC, JSON-LD, SHACL, C4, Backstage, OpenAPI/AsyncAPI, TypeSpec, Pact) are covered in [AGENTS.md](AGENTS.md).
+
+## Working with coding agents
+
+[AGENTS.md](AGENTS.md) is the reference for agents and contributors: architecture, conventions, the registration checklist and known gotchas. `CLAUDE.md`, `GEMINI.md` and `ANTIGRAVITY.md` point to it.
+
+Skills are written once in `plugins/robos/skills/` and installed in the form each agent reads:
+
+```bash
 claude plugin marketplace add ./plugins
-claude plugin install robos
+```
 
-# Any agent: sync skills into this repository, or add --global for your user profile
+```bash
+claude plugin install robos
+```
+
+```bash
 ./plugins/install.sh
+```
+
+```bash
 ./plugins/install.sh --target codex
 ```
 
-- [plugins/README.md](plugins/README.md): install steps for each agent
-- [Skills catalog](docs/skills/skills-catalog.md): every skill, its parameters and how it is verified
-- [RobOS Skills](https://rowbose.com/v1/robos-skills.html) on the docs site
+`install.sh` syncs skills into this repository for every supported agent; add `--global` to install into your user profile instead. Use the `manage-robos-skill` skill to add or change a skill.
 
-[AGENTS.md](AGENTS.md) is the reference for agents and contributors: architecture, conventions, the app registration checklist and known gotchas. `CLAUDE.md`, `GEMINI.md` and `ANTIGRAVITY.md` point to it.
+Skills you will use most when building:
 
-## Documentation
+| Skill | Use it to |
+|---|---|
+| `create-robos-app`, `rename-robos-app`, `remove-robos-app` | Add, rename or remove an app across every registry |
+| `create-test` | Write a test with verified selectors |
+| `e2e-driven-dev`, `record-demo` | Drive work from an E2E test and record a walkthrough |
+| `test-container` | Run the containerized E2E suite |
+| `app-snapshot`, `read-error-logs` | Inspect a running app and its failures |
+| `add-ai-text-area-to-app` | Add an optional AI action to an app |
+| `kgraph-query`, `kgraph-insert`, `kgraph-update`, `kgraph-validate`, `kgraph-diff`, `kgraph-impact-analysis` | Read and change the knowledge graph |
+| `update-app-icon` | Replace an app's icon |
 
-- [Installation guide](https://rowbose.com/v1/getting-started.html)
-- [System architecture](https://rowbose.com/v1/architecture.html)
-- [SDLC knowledge graph](https://rowbose.com/v1/knowledge-graph.html) and [schemas](https://rowbose.com/v1/schemas.html)
-- [Agent governance and review](https://rowbose.com/v1/agent-review-development.html)
-- [App directory](https://rowbose.com/apps/)
-- [Game development](https://rowbose.com/v1/game-development.html) and the [cRPG test guide](games/crpg-realm/AGENTS.md)
-- [Roadmap](https://rowbose.com/v1/roadmap.html), [Why RobOS](https://rowbose.com/v1/why-robos.html) and [About](https://rowbose.com/v1/about.html)
+The full list, with parameters, is in the [skills catalog](docs/skills/skills-catalog.md) and [plugins/README.md](plugins/README.md).
+
+## Docs and site
+
+- `docs/` is the documentation site and `site/` is the front site, both Jekyll.
+- `scripts/build-docs.sh` builds both the way CI does (needs Jekyll and the gems in `docs/Gemfile`).
+- `node scripts/sync-app-docs.js` regenerates the per-app pages in `docs/_apps/`.
+- Don't write counts of things that grow ("the app suite", not "30+ apps"); they go stale.
+
+## The VM image
+
+The optional appliance is an Ubuntu desktop image for QEMU/KVM with every app preinstalled. Build and run it from `infra/desktop/`:
+
+```bash
+infra/desktop/build.sh
+```
+
+```bash
+infra/desktop/run.sh
+```
+
+```bash
+infra/desktop/clean.sh
+```
+
+The `build-vm`, `start-vm`, `stop-vm`, `vm-status`, `vm-ssh` and `deploy-to-vm` skills wrap these. When deploying packages into the VM by hand, run `sudo chmod -R a+rX` on `/usr/local/share/robos/` afterwards, and reinstall `node_modules` there, because copying dereferences the Electron symlinks.
+
+## Conventions
+
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`), scoped to the package.
+- **No root `package.json`.** Each package installs its own dependencies.
+- **IPC only** through `contextBridge` and `ipcRenderer.invoke()` / `ipcMain.handle()`. Never `nodeIntegration: true`.
+- **Data** in `~/.config/robos/`.
+- **Logging** with `pino` (JSON).
+- **Icons:** 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, round caps and joins.
+- **Shared-lib requires** wrapped in `try/catch` with a local fallback.
+- **AI is optional** in every app (see [Adding an AI feature](#adding-an-ai-feature)).
+
+More rules and gotchas are in [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Commits follow [Conventional Commits](https://www.conventionalcommits.org/). Feature ideas are in [`docs/ideas/`](docs/ideas/) and reported problems in [`docs/issues/`](docs/issues/). Questions and proposals go to [GitHub Discussions](https://github.com/nddipiazza/robos/discussions), bugs to [Issues](https://github.com/nddipiazza/robos/issues), and conversation to [Discord](https://discord.gg/6PjxzkHujE).
+Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Keep each pull request to one change, include test output, and for visible changes link a recorded walkthrough. If you touched `.robos/kgraphs/`, include the `kgraph-diff` result.
+
+Feature ideas go in [`docs/ideas/`](docs/ideas/) and reported problems in [`docs/issues/`](docs/issues/). Questions and proposals go to [GitHub Discussions](https://github.com/nddipiazza/robos/discussions), bugs to [Issues](https://github.com/nddipiazza/robos/issues), and conversation to [Discord](https://discord.gg/6PjxzkHujE).
 
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
-
-RobOS is pronounced "row-bose". The name comes from Robo in *Chrono Trigger*; the [About page](https://rowbose.com/v1/about.html) has the story.
