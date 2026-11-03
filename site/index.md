@@ -32,11 +32,14 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
 
     <ul class="l-mosaic" aria-label="Apps in the RobOS suite">
       <li class="l-mosaic-build"><a href="{{ '/build-apps/' | relative_url }}"><img src="{{ '/assets/build-apps/planner-tile.jpg' | relative_url }}" alt="" width="400" height="300"><span>Build apps</span></a></li>
-      <li><a href="{{ '/point-of-sale/' | relative_url }}"><img src="{{ '/assets/point-of-sale/coffee-register-latte.jpg' | relative_url }}" alt="" width="1280" height="800"><span>Point of Sale</span></a></li>
-      <li><a href="{{ '/auto-center/' | relative_url }}"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="" width="1000" height="625"><span>Auto Center</span></a></li>
+      <li class="l-mosaic-biz"><a href="{{ '/auto-center/' | relative_url }}" aria-label="Manage your Business: Auto Center"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="" width="1000" height="625"></a><a href="{{ '/point-of-sale/' | relative_url }}" aria-label="Manage your Business: Retail Point of Sale"><img src="{{ '/assets/point-of-sale/coffee-register-latte.jpg' | relative_url }}" alt="" width="1280" height="800"></a><p class="l-biz-label">Manage your Business <a href="{{ '/auto-center/' | relative_url }}">(Auto)</a> <a href="{{ '/point-of-sale/' | relative_url }}">(Retail)</a></p></li>
       <li><a href="{{ '/family-finances/' | relative_url }}"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="" width="1440" height="1185"><span>Household</span></a></li>
       <li><a href="{{ '/games/' | relative_url }}"><img src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="" width="1280" height="720"><span>Games</span></a></li>
-      <li><a href="{{ '/apps/audio-player/' | relative_url }}"><img src="{{ '/assets/audio-player/casting-deck.jpg' | relative_url }}" alt="" width="780" height="290"><span>Audio Player</span></a></li>
+      <li><a href="{{ '/movie-player/' | relative_url }}"><img src="{{ '/assets/landing/tiles/media.jpg' | relative_url }}" alt="" width="800" height="600"><span>Media library, with server and clients for multiple platforms</span></a></li>
+      <li><a href="{{ '/code-review/' | relative_url }}"><img src="{{ '/assets/landing/tiles/code.jpg' | relative_url }}" alt="" width="800" height="600"><span>AI coding agents &amp; code review</span></a></li>
+      <li><a href="{{ '/security/' | relative_url }}"><img src="{{ '/assets/landing/tiles/security.jpg' | relative_url }}" alt="" width="800" height="600"><span>Passwords, hardware keys &amp; VPN</span></a></li>
+      <li><a href="{{ '/home-assistant-voice/' | relative_url }}"><img src="{{ '/assets/landing/tiles/home.jpg' | relative_url }}" alt="" width="800" height="600"><span>Smart home: lights, speakers &amp; voice</span></a></li>
+      <li><a href="{{ '/p2p/' | relative_url }}"><img src="{{ '/assets/landing/tiles/mesh.jpg' | relative_url }}" alt="" width="800" height="600"><span>Private mesh across all your machines</span></a></li>
       <li class="l-mosaic-new"><a class="l-mosaic-more" href="{{ '/apps/' | relative_url }}"><span>More apps</span><b aria-hidden="true">→</b></a><a href="{{ '/build-apps/' | relative_url }}"><b aria-hidden="true">+</b><span>Add your own app</span></a></li>
     </ul>
   </div>

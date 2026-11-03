@@ -128,6 +128,15 @@
 .l-mosaic-new a{flex:1;aspect-ratio:auto;flex-direction:row;gap:10px;padding:12px}
 .l-mosaic-new b{font-size:1.5rem}
 .l-mosaic-new .l-mosaic-more{border-style:solid;border-width:1px}
+/* "Manage your Business": Auto Center and Point of Sale share one tile, split in two halves */
+.l-mosaic-biz{position:relative;display:grid;grid-template-columns:1fr 1fr;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2);transition:border-color .2s,transform .2s}
+.l-mosaic-biz:hover{border-color:var(--accent);transform:translateY(-2px)}
+.l-mosaic .l-mosaic-biz > a{aspect-ratio:auto;height:100%;border:0;border-radius:0;transform:none}
+.l-mosaic-biz > a + a{border-left:1px solid rgba(255,255,255,.35)}
+.l-mosaic-biz > a:hover img{opacity:.85}
+.l-biz-label{position:absolute;left:0;right:0;bottom:0;margin:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;line-height:1.35;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82));pointer-events:none}
+.l-mosaic .l-biz-label a{display:inline;aspect-ratio:auto;border:0;border-radius:0;background:none;overflow:visible;color:#ffb38a;pointer-events:auto;white-space:nowrap}
+.l-mosaic .l-biz-label a:hover{color:#fff;text-decoration:underline;transform:none}
 .landing #product .grid3 .card .go{display:inline-block}
 .l-ask{margin-top:28px;max-width:760px}
 #ai .l-show{margin-bottom:44px}
@@ -158,4 +167,4 @@
 #vision .l-note a{color:var(--accent);font-weight:600;text-decoration:underline}
 @media(max-width:860px){.l-moves{grid-template-columns:1fr}}
 @media(max-width:520px){.l-swaps li{grid-template-columns:1fr;gap:2px}.l-swaps li:before{display:none}.l-swaps span,.l-swaps a{grid-column:1;grid-row:auto;justify-self:start}}
-@media(max-width:600px){.l-mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.l-mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}.l-mosaic-build{grid-column:1/-1}.l-mosaic-build a{aspect-ratio:8/3}}

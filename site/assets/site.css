@@ -13,6 +13,17 @@ h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0}
 @media(max-width:1120px){.links{gap:14px;font-size:.88rem}}
 @media(max-width:960px){.links{gap:10px;font-size:.85rem}}
 .nav-r{display:flex;align-items:center;gap:10px}
+/* phones in landscape: the menu tabs become a swipeable strip between the logo and the buttons */
+@media (orientation:landscape) and (max-height:540px) and (max-width:1120px){
+.nav .nav-in{height:52px;gap:10px}
+.nav .links{display:flex !important;flex:1 1 auto;min-width:0;gap:6px;font-size:.84rem;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:4px 2px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 24px),transparent)}
+.nav .links::-webkit-scrollbar{display:none}
+.nav .links a{flex:none;scroll-snap-align:start;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);line-height:1.2}
+.nav .links a:hover,.nav .links a:active{border-color:var(--accent);color:var(--accent)}
+.nav .links a[aria-current=page]{border-color:var(--accent);color:var(--accent)}
+.nav .brand span{display:none}
+.nav .nav-r{flex:none;gap:6px}
+}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:34px;height:34px;cursor:pointer;transition:border-color .15s}.icon-btn:hover{border-color:var(--accent)}.icon-btn img{display:block;width:18px;height:18px}
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:8px;background:var(--fg);color:var(--bg);font-weight:600;padding:12px 22px;border-radius:999px;border:1px solid var(--fg);cursor:pointer;transition:transform .15s,opacity .15s}
