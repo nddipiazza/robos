@@ -1,0 +1,49 @@
+---
+title: "Smart Light Is Now Smart Home, and It Can See Your LG Washer and Dryer"
+nav_label: "Smart Home & LG Appliances"
+date: 2026-11-03
+date_label: "Nov 3, 2026"
+tags:
+  - "RobOS Smart Home (<code>packages/smart-home</code>)"
+  - "LG ThinQ Connect"
+  - "Read-only appliance status"
+summary: "<strong>RobOS Smart Light</strong> is now <strong>RobOS Smart Home</strong>, with a new <strong>Appliances</strong> tab that reads LG washers, dryers and refrigerators through LG ThinQ. It only reads status. We checked it against a real LG account: the dryer reported its cycle live and the washer correctly showed as offline. That account has no refrigerator, so the refrigerator card has only been tested with simulated responses."
+description: "RobOS Smart Light is now RobOS Smart Home, with a new Appliances tab that reads LG washers, dryers and refrigerators through LG ThinQ. It only reads status. We checked it against a real LG account: the dryer reported its cycle live and the washer correctly showed as offline. That account has no refrigerator, so the refrigerator card has only been tested with simulated responses."
+og_image: /assets/blog/smart-home-lg-appliances/appliances.png
+og_image_alt: "RobOS Smart Home Appliances tab showing a washer marked offline and a dryer running with 13 minutes left"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/smart-home-lg-appliances/appliances.png' | relative_url }}" alt="RobOS Smart Home Appliances tab showing a washer marked offline and a dryer running with 13 minutes left" loading="lazy">
+    <figcaption>The Appliances tab reading a real LG account. The dryer was partway through a 41-minute cycle, and LG reported the washer as not connected. Model numbers are hidden in this screenshot; the app normally shows them under each name.</figcaption>
+  </figure>
+
+  <p><strong>Why the rename.</strong> The app started with one job, controlling lights, and was named for it. Adding a washer and dryer to something called Smart Light Studio made no sense, so it is now RobOS Smart Home. The long header line listing every protocol is gone, and the tabs have short names: Lights, Appliances, Scenes, Schedules, Integrations and Protocols. Your saved lights carry over, because the app still uses <code>smart-lights.json</code>. Old links to <code>/apps/smart-light/</code> forward to the new page, and "smart light" still works as a voice command.</p>
+
+  <p><strong>What the tab shows.</strong> A washer or dryer card shows its state, time left, cycle length and whether remote start is on. A WashTower shows both halves on one card. A refrigerator card shows whether the door is open, the temperature each compartment is set to, filter status and modes such as quick freeze. LG reports the set temperature rather than a measured one, so the card says "Fridge set to". Any other LG appliance on the account appears with the plain values LG sends.</p>
+
+  <p><strong>This part uses LG's cloud.</strong> Your lights are still controlled directly on your local network. LG appliances are different: the only official route we found is LG's ThinQ Connect API, so this tab needs an internet connection and sends a token to LG. The tab says so before you connect. You create a personal access token on LG's site, paste it into the app, and that's the whole setup.</p>
+
+  <p><strong>Direct from Node.</strong> LG publishes its client as a Python SDK. RobOS apps run on Electron, so rather than ship a Python helper, <code>robos-lib/lg-thinq.js</code> makes the same requests itself: <code>GET /devices</code>, then <code>GET /devices/&lt;id&gt;/state</code> for each appliance, against the regional host for your country (<code>api-aic.lgthinq.com</code> in the US). The headers, regions and error codes come from LG's SDK source.</p>
+
+  <p><strong>Where the token goes.</strong> The token is saved only after LG accepts it, so a mistyped one leaves nothing behind. It gets its own file, <code>~/.config/robos/lg-thinq.json</code>, readable only by your user. It is not encrypted. It stays out of <code>smart-lights.json</code> because Config Sync copies that file and shared bundles can include it. The window never receives the token after you submit it. Neither the token nor appliance status is available through the app's local API on <code>:19219</code>, because that API has no login and accepts requests from any web page.</p>
+
+  <p><strong>Staying inside LG's limits.</strong> LG temporarily blocks accounts that make too many requests. The app reads one appliance at a time and checks once a minute, only while the tab is showing. If LG does limit the account, the app waits five minutes and keeps showing the last status it read. One offline appliance doesn't hide the others, which is what you can see in the screenshot.</p>
+
+  <p><strong>What it can't do yet.</strong></p>
+  <ul>
+    <li>It can't control anything. There is no way to start a cycle or change a temperature, which also means a bug here can't run your washer.</li>
+    <li>It doesn't send alerts. You only see "the dryer is done" if you are looking at the tab, and a change can take up to a minute to appear.</li>
+    <li>The refrigerator and WashTower cards have not been tried on real appliances. The account we tested has neither, so those cards are built from LG's SDK and checked against a fake LG server. Real models may send fields we don't show yet.</li>
+  </ul>
+
+  <div class="blog-log"># Run the tests (no traffic reaches LG; a local server answers like its API)
+node --test packages/robos-test/tests/smart-home/lg-thinq.test.js
+
+# Open the app from a checkout
+scripts/dev-launch.sh smart-home</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/apps/smart-home/' | relative_url }}">App docs →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/6903f3d3">6903f3d3</a></span>
+</div>
