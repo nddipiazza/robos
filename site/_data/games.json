@@ -3,24 +3,34 @@
     "title": "Realm of Heroes",
     "project": "crpg-realm",
     "executable": "RealmOfHeroes",
-    "itch_url": "https://nddipiazza.itch.io/realm-of-heroes"
+    "itch_url": "https://nddipiazza.itch.io/realm-of-heroes",
+    "kgraph_scope": "its world, characters, quests, party combat rules and tests"
   },
   "tabletop-rpg": {
     "title": "RobOS Tabletop RPG",
     "project": "tabletop-rpg",
     "executable": "RobOSTabletop",
-    "itch_url": "https://nddipiazza.itch.io/robos-tabletop-rpg"
+    "itch_url": "https://nddipiazza.itch.io/robos-tabletop-rpg",
+    "kgraph_scope": "its heroes, monsters, dungeon boards, quests, rules and tests",
+    "ai_playthrough_url": "https://www.youtube.com/watch?v=7HkZARyvqmM",
+    "ai_playthrough_label": "Watch the Tabletop RPG AI playthrough"
   },
   "robos-rts": {
     "title": "Starfall Command",
     "project": "robos-rts",
     "executable": "StarfallCommand",
-    "itch_url": "https://nddipiazza.itch.io/starfall-command"
+    "itch_url": "https://nddipiazza.itch.io/starfall-command",
+    "kgraph_scope": "its maps, units, factions, economy, combat rules and tests",
+    "ai_playthrough_url": "https://rowbose.com/games/robos-rts/#frontier",
+    "ai_playthrough_label": "Watch the Starfall Command automated AI match"
   },
   "quest-warrior-dragon": {
     "title": "Quest: Warrior Dragon",
     "project": "quest-warrior-dragon",
     "executable": "QuestWarriorDragon",
-    "itch_url": "https://nddipiazza.itch.io/quest-warrior-dragon"
+    "itch_url": "https://nddipiazza.itch.io/quest-warrior-dragon",
+    "kgraph_scope": "its world, characters, towns, dungeons, quests, combat rules and tests",
+    "ai_playthrough_url": "https://rowbose.com/games/quest-warrior-dragon/ai-playthrough/",
+    "ai_playthrough_label": "See the Quest: Warrior Dragon AI playthrough and checkpoints"
   }
 }

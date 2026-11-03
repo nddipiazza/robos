@@ -23,6 +23,14 @@ The native itch themes use fixed, centered backgrounds, no tiling, matching
 accent colors and 72% panel opacity. Screenshot galleries are hidden; each
 description embeds one gameplay GIF. No cutscene videos are embedded.
 
+Each itch description also explains how its KGraph and RobOS support development
+with minimal AI work, and links to `https://rowbose.com/#build` for context
+engineering and app development. Game-specific graph scope and available AI
+playthrough links live in `site/_data/games.json`; Rowbose game pages render
+the same explanation through `_includes/game-kgraph.html`. Playthrough links
+are provided for Quest, Tabletop and Starfall Command. Realm has no published
+full-playthrough link yet.
+
 The `*-itch.css` files are prepared for the account's Custom CSS feature, which
 itch.io has not enabled. They add responsive `background-size: cover`; the
 native theme editor does not expose that setting. See

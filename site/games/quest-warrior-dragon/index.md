@@ -25,6 +25,7 @@ keywords: "Quest Warrior Dragon, RobOS 2D JRPG, Dragon Warrior clean-room RPG, G
   <span class="scroll">Scroll ↓</span>
 </section>
 {% include game-downloads.html %}
+{% include game-kgraph.html %}
 
 <section class="g-sec">
   <div class="wrap">
