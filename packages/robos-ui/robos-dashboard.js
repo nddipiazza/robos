@@ -325,6 +325,12 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
   }
 
   function renderWidgetInnerHtml(card = {}) {
+    const body = renderLiveWidgetInnerHtml(card);
+    if (!(card.liveData || card.data)?.sample) return body;
+    return `<div class="robos-sample-note" style="font-size:11px;font-weight:700;color:#fbbf24;margin-bottom:6px;">Sample data, not live.</div>${body}`;
+  }
+
+  function renderLiveWidgetInnerHtml(card = {}) {
     const widgetType = card.widgetType || card.type || 'robos-component';
     const data = card.liveData || card.data || {};
 
@@ -347,7 +353,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
             </li>
           `
             )
-            .join('')}
+            .join('') || '<li class="robos-commit-item"><span class="robos-commit-subject">No git history here.</span></li>'}
         </ol>
       `;
     }
@@ -369,7 +375,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
       return `
         <div class="robos-w-meta">
           <span>📅 ${esc(data.dateLabel || 'Today')}</span>
-          <span class="robos-w-pill">${esc(calendars.length > 1 ? `${calendars.length} Calendars Synced` : data.syncedAccountEmail || 'CalDAV Synced')}</span>
+          <span class="robos-w-pill">${esc(calendars.length > 1 ? `${calendars.length} Calendars Synced` : data.syncedAccountEmail || 'No calendar connected')}</span>
         </div>
         ${calPillsHtml}
         <div class="robos-cal-list">
@@ -391,7 +397,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
             </div>
           `
             )
-            .join('')}
+            .join('') || '<div class="robos-cal-sub">No calendar events today.</div>'}
         </div>
       `;
     }
@@ -418,7 +424,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
                 </div>
                 <span class="robos-w-pill js-agent-elapsed" data-started-epoch="${esc(s.startedEpochSec || '')}" style="font-family:ui-monospace,monospace;">⏱ ${esc(s.elapsedFormatted || '00:05')}</span>
               </div>
-              <div class="robos-agent-cwd">cwd: <code>${esc(s.cwd || '/home/ndipiazza/source/robos')}</code>${s.activity ? ` · <span style="color:#67e8f9;">${esc(s.activity)}</span>` : ''}</div>
+              <div class="robos-agent-cwd">cwd: <code>${esc(s.cwd || 'not reported')}</code>${s.activity ? ` · <span style="color:#67e8f9;">${esc(s.activity)}</span>` : ''}</div>
               <pre class="robos-agent-tail">${(s.statusLines || []).map((l) => esc(l)).join('\n')}</pre>
             </div>
           `
@@ -450,7 +456,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
             </div>
           `
             )
-            .join('')}
+            .join('') || '<div class="robos-cal-sub">No TVs paired yet. Pair one in RobOS Smart TV.</div>'}
         </div>
       `;
     }
@@ -498,7 +504,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
     if (widgetType === 'sprint-radar') {
       return `
         <div class="robos-w-meta">
-          <span>🚀 ${esc(data.sprintName || 'Sprint 42')}</span>
+          <span>🚀 ${esc(data.sprintName || 'Sprint')}</span>
           <span class="robos-w-pill">CI Health: ${esc(data.ciHealth || '100%')}</span>
         </div>
         <div class="robos-cal-list">
@@ -787,9 +793,9 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
         <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid ${isPlaying ? '#a855f7' : '#475569'};border-radius:8px;padding:9px 10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="min-width:0;flex:1;">
-              <div style="font-size:13.5px;font-weight:800;color:${isPlaying ? '#f0f6fc' : '#8b949e'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? `🎵 ${esc(data.title || 'Ambience & Music')}` : '🔇 No Audio Currently Playing'}</div>
-              <div style="font-size:11.5px;color:${isPlaying ? '#d8b4fe' : '#6e7681'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? esc(data.artistAlbum || "Baldur's Gate 3 • video game music") : `Last queued: ${esc(data.title || 'None')} (${esc(data.artist || 'RobOS Audio Player')})`}</div>
-              <div style="font-size:10px;color:#8b949e;margin-top:2px;">${esc(data.source || 'Google Drive')} · ${esc(data.codec || 'MPEG 1 Layer 3 · 48 kHz')}</div>
+              <div style="font-size:13.5px;font-weight:800;color:${isPlaying ? '#f0f6fc' : '#8b949e'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? `🎵 ${esc(data.title || 'Unknown track')}` : '🔇 No Audio Currently Playing'}</div>
+              <div style="font-size:11.5px;color:${isPlaying ? '#d8b4fe' : '#6e7681'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isPlaying ? esc(data.artistAlbum || '') : (data.id ? `Last queued: ${esc(data.title || 'None')} (${esc(data.artist || 'RobOS Audio Player')})` : esc(data.artistAlbum || ''))}</div>
+              <div style="font-size:10px;color:#8b949e;margin-top:2px;">${esc([data.source, data.codec].filter(Boolean).join(' · '))}</div>
             </div>
             <div style="text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;">
               <div style="font-size:12.5px;font-weight:800;color:${isPlaying ? '#67e8f9' : '#6e7681'};">${esc(isPlaying ? (data.elapsed || '0:00') : '0:00')} <span style="color:#6e7681;font-weight:500;">/ ${esc(data.duration || '0:00')}</span></div>
@@ -820,7 +826,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
         <div class="robos-w-meta">
           <span>⏳ <strong>Countdown Until Next Meeting</strong></span>
           <span class="robos-w-pill" style="background:rgba(16,185,129,0.16);color:#6ee7b7;border-color:rgba(16,185,129,0.45);">
-            📅 ${esc(nm.accountEmail || nm.calendar || 'nicholas@hermetiq.com')}
+            📅 ${esc(nm.accountEmail || nm.calendar || 'No calendar connected')}
           </span>
         </div>
         <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #10b981;border-radius:8px;padding:9px 10px;">
@@ -828,10 +834,10 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
             <canvas class="robos-meeting-countdown-canvas" width="88" height="88" data-target-epoch="${esc(targetSec)}" style="width:88px;height:88px;flex-shrink:0;"></canvas>
             <div style="flex:1;min-width:0;">
               <div class="js-next-meeting-countdown" data-target-epoch="${esc(targetSec)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;font-weight:800;color:#6ee7b7;letter-spacing:0.03em;">
-                ${esc(data.countdownLabel || 'T - 00:30:00')}
+                ${esc(data.countdownLabel || 'No upcoming meetings')}
               </div>
               <div style="font-size:12.5px;font-weight:800;color:#f0f6fc;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${esc(nm.time || '16:30')} · ${esc(nm.title || 'Hermetiq Client Delivery & Agent Ops Check-In')}
+                ${esc(nm.time || '--:--')} · ${esc(nm.title || 'No upcoming meetings')}
               </div>
               <div style="font-size:10.5px;color:#8b949e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 📍 ${esc(nm.location || 'Google Calendar')}
@@ -1272,7 +1278,8 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
       document.querySelectorAll('.robos-meeting-countdown-canvas').forEach((canvas) => {
         const ctx = canvas.getContext && canvas.getContext('2d');
         if (!ctx) return;
-        const target = Number(canvas.getAttribute('data-target-epoch')) || nowEpoch + 1800;
+        const target = Number(canvas.getAttribute('data-target-epoch')) || 0;
+        if (!target) return;
         const rem = Math.max(0, target - nowEpoch);
         const ratio = 1 - Math.min(3600, rem) / 3600;
         const w = canvas.width;
