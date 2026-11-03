@@ -8,6 +8,7 @@ on:
       - "site/**"
       - "VERSION"
       - "scripts/stage-release-data.cjs"
+      - "scripts/check-install-docs.cjs"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
