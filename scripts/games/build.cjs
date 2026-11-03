@@ -113,8 +113,8 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
     const source = fs.readFileSync(config, 'utf8');
     fs.writeFileSync(config, source.includes('[rendering]') ? source.replace('[rendering]', '[rendering]\ntextures/vram_compression/import_etc2_astc=true') : source + '\n[rendering]\ntextures/vram_compression/import_etc2_astc=true\n');
   }
-  function run(args, name, bootstrap = false) {
-    const result = spawnSync(godot, args, { encoding: 'utf8', timeout: 15 * 60 * 1000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
+  function run(args, name, bootstrap = false, environment = {}) {
+    const result = spawnSync(godot, args, { encoding: 'utf8', timeout: 15 * 60 * 1000, windowsHide: true, maxBuffer: 64 * 1024 * 1024, env: { ...process.env, ...environment } });
     fs.writeFileSync(path.join(stage, `${name}.log`), (result.stdout || '') + (result.stderr || ''));
     if (result.error || result.status !== 0 || !bootstrap && /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((result.stdout || '') + (result.stderr || ''))) {
       console.error(((result.stdout || '') + (result.stderr || '')).slice(-5000));
@@ -127,6 +127,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
   run(['--headless', '--path', project, '--editor', '--import'], 'bootstrap-import', true);
   run(['--headless', '--path', project, '--editor', '--import'], 'import');
   if (game.project === 'tabletop-rpg') run(['--headless', '--path', project, '--script', path.join(root, 'games/tabletop-rpg/tests/check_emoji_font.gd')], 'emoji-font');
+  if (game.cartridge) run(['--headless', '--path', project, '--script', path.join(root, 'games/tabletop-rpg/tests/check_standalone_progress.gd')], 'standalone-progress', false, { TABLETOP_SAVE_PATH: path.join(stage, 'regression-save.json'), TABLETOP_SERVER_PORT: '0', TABLETOP_NO_SPELL_SELECT: '1' });
   const executable = path.join(payload, platform === 'web' ? 'index.html' : game.executable + target.suffix);
   console.log(`Exporting ${game.title} for ${platform}`);
   run(['--headless', '--path', project, '--export-release', 'Standalone', executable], 'export');
@@ -153,6 +154,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
       fs.writeFileSync(path.join(stage, 'smoke.log'), (smoke.stdout || '') + (smoke.stderr || ''));
       if (smoke.error || smoke.status !== 0 || /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((smoke.stdout || '') + (smoke.stderr || ''))) throw new Error(`macOS smoke failed: ${stage}/smoke.log`);
       if (game.cartridge && !(smoke.stdout || '').includes('Plugged in cartridge: ' + JSON.parse(fs.readFileSync(path.join(project, 'cartridges', game.cartridge + '.cartridge.json'))).header.title)) throw new Error('Standalone macOS export did not open its campaign');
+      if (game.cartridge) execFileSync(process.execPath, ['--test', path.join(__dirname, 'control-http.test.cjs')], { env: { ...process.env, TABLETOP_TEST_BINARY: binary, TABLETOP_TEST_SAVE: path.join(stage, 'http-regression-save.json') }, stdio: 'inherit', timeout: 60000 });
     }
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
     copyNotices(game, payload);
@@ -171,6 +173,7 @@ async function build({ id, platform = 'windows', godot = process.env.GODOT_BIN, 
       fs.writeFileSync(path.join(stage, 'smoke.log'), (smoke.stdout || '') + (smoke.stderr || ''));
       if (smoke.error || smoke.status !== 0 || /SCRIPT ERROR:|Parse Error:|Failed to load script/.test((smoke.stdout || '') + (smoke.stderr || ''))) throw new Error(`Exported game smoke failed: ${stage}/smoke.log`);
       if (game.cartridge && !(smoke.stdout || '').includes('Plugged in cartridge: ' + JSON.parse(fs.readFileSync(path.join(project, 'cartridges', game.cartridge + '.cartridge.json'))).header.title)) throw new Error('Standalone export did not open its campaign');
+      if (game.cartridge) execFileSync(process.execPath, ['--test', path.join(__dirname, 'control-http.test.cjs')], { env: { ...process.env, TABLETOP_TEST_BINARY: executable, TABLETOP_TEST_SAVE: path.join(stage, 'http-regression-save.json') }, stdio: 'inherit', timeout: 60000, windowsHide: true });
     }
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(payload, 'LICENSE.txt'));
     fs.writeFileSync(path.join(payload, 'README.txt'), `${game.title}\n\n${platform === 'windows' ? `Extract this ZIP, then double-click ${game.executable}.exe.` : `Extract this ZIP, then run ./${game.executable}.x86_64 (mark it executable if needed).`}\nGodot, Git and RobOS are not required.\nhttps://rowbose.com${require('./catalog.cjs').pagePath(id, game)}\n\nEngine: Godot ${require('./setup.cjs').VERSION} (MIT), https://godotengine.org/license/\nThird-party game notices are included in THIRD-PARTY-NOTICES.\n`);

@@ -5,6 +5,7 @@ extends Node
 var tcp_server: TCPServer
 var port: int = 18092
 var clients: Array[StreamPeerTCP] = []
+var request_buffers: Dictionary = {}
 
 func _ready() -> void:
 	# Browser games use local input; native TCP telemetry is unavailable on Web.
@@ -36,10 +37,35 @@ func _process(_delta: float) -> void:
 			active_clients.append(client)
 			if client.get_available_bytes() > 0:
 				_handle_request(client)
+		else:
+			request_buffers.erase(client)
 	clients = active_clients
 
 func _handle_request(client: StreamPeerTCP) -> void:
-	var raw = client.get_utf8_string(client.get_available_bytes())
+	# TCP can deliver the headers and JSON body in separate packets. Keep
+	# bytes until the declared body is complete, then decode UTF-8 once.
+	var received: Array = client.get_data(client.get_available_bytes())
+	if received[0] != OK:
+		return
+	var buffered: PackedByteArray = request_buffers.get(client, PackedByteArray())
+	buffered.append_array(received[1])
+	request_buffers[client] = buffered
+	var header_end = -1
+	for i in range(maxi(0, buffered.size() - 3)):
+		if buffered[i] == 13 and buffered[i + 1] == 10 and buffered[i + 2] == 13 and buffered[i + 3] == 10:
+			header_end = i
+			break
+	if header_end < 0:
+		return
+	var header_text = buffered.slice(0, header_end).get_string_from_utf8()
+	var content_length = 0
+	for line in header_text.split("\r\n"):
+		if line.to_lower().begins_with("content-length:"):
+			content_length = line.get_slice(":", 1).strip_edges().to_int()
+	if buffered.size() < header_end + 4 + content_length:
+		return
+	var raw = buffered.slice(0, header_end + 4 + content_length).get_string_from_utf8()
+	request_buffers.erase(client)
 	var lines = raw.split("\r\n")
 	if lines.size() == 0:
 		return

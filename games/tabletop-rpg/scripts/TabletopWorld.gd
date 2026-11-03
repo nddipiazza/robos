@@ -5667,6 +5667,7 @@ func _setup_game_menu_modal() -> void:
 	apply_rpg_font_to_button(btn_menu_select_quest, 15, Color(1.0, 0.88, 0.4, 1.0))
 	btn_menu_select_quest.pressed.connect(toggle_quest_selector_modal)
 	btns_vbox.add_child(btn_menu_select_quest)
+	btn_menu_select_quest.visible = not is_standalone_campaign()
 
 	# Restart Quest Button
 	btn_menu_restart_quest = Button.new()
@@ -6223,7 +6224,12 @@ func toggle_quest_selector_modal() -> void:
 	else:
 		open_quest_selector_modal()
 
+func is_standalone_campaign() -> bool:
+	return str(ProjectSettings.get_setting("robos/standalone/cartridge", "")) != ""
+
 func open_quest_selector_modal() -> void:
+	if is_standalone_campaign():
+		return
 	if not quest_selector_modal:
 		_setup_quest_selector_modal()
 	_update_quest_selector_content()
@@ -6318,6 +6324,11 @@ func _update_quest_selector_content() -> void:
 		list_vbox.add_child(q_btn)
 
 func switch_to_quest(quest_slug: String, target_cartridge: String = "") -> void:
+	# Standalone products have one campaign. Reject changes before clearing
+	# saves or active quest state; restarting has its own confirmation flow.
+	if is_standalone_campaign():
+		_log("[QUEST] Campaign switching is unavailable in this standalone edition.")
+		return
 	_log("[QUEST] Switching to %s..." % quest_slug)
 	active_quest_id = quest_slug
 	delete_save_game()
