@@ -19,6 +19,7 @@ keywords: "RobOS Tabletop RPG, HeroQuest dungeon crawler, Godot 4 tabletop game,
   <span class="scroll">Scroll ↓</span>
 </section>
 {% include game-downloads.html %}
+{% include game-kgraph.html %}
 
 <section class="g-sec">
   <div class="wrap">

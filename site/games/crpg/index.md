@@ -19,6 +19,7 @@ keywords: "Realm of Heroes CRPG, RobOS cRPG, A Night Without Memory, real-time w
   <span class="scroll">Scroll ↓</span>
 </section>
 {% include game-downloads.html %}
+{% include game-kgraph.html %}
 
 <section class="g-sec" id="about">
   <div class="wrap">

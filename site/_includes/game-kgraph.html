@@ -1,0 +1,12 @@
+{% assign game_story = site.data.games[page.game_id] %}
+<section class="g-sec" id="built-with-robos" aria-labelledby="game-kgraph-heading">
+  <div class="wrap"><div class="panel-g">
+    <p class="eyebrow">Context engineering with RobOS</p>
+    <h2 class="h2" id="game-kgraph-heading">From knowledge graph to playable game</h2>
+    <p class="sec-p">{{ game_story.title }} starts with a knowledge graph (KGraph) describing {{ game_story.kgraph_scope }}. RobOS uses that structured context to turn the graph into a playable game, minimizing AI work by giving coding agents the relevant context and reusing existing code and knowledge.</p>
+    <p class="sec-p">This is context engineering: describe how the game works, keep that knowledge connected, then use it to build, test and improve the game. Visit <a href="{{ '/#build' | relative_url }}">Rowbose.com</a> to learn about KGraph context engineering and building or customizing apps with RobOS.</p>
+    {% if game_story.ai_playthrough_url %}
+    <p class="sec-p"><a class="btn btn-ghost" href="{{ game_story.ai_playthrough_url }}">{{ game_story.ai_playthrough_label }}</a></p>
+    {% endif %}
+  </div></div>
+</section>

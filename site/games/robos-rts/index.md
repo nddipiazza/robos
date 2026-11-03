@@ -19,6 +19,7 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
   <span class="scroll">Scroll ↓</span>
 </section>
 {% include game-downloads.html %}
+{% include game-kgraph.html %}
 
 <section class="g-sec" id="about">
   <div class="wrap">
