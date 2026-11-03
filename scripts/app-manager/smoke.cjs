@@ -26,7 +26,9 @@ async function main() {
   const env = { ...process.env, HOME: temporary, USERPROFILE: temporary, LOCALAPPDATA: path.join(temporary, 'AppData/Local'), APPDATA: path.join(temporary, 'AppData/Roaming') };
   fs.mkdirSync(env.LOCALAPPDATA, { recursive: true }); fs.mkdirSync(env.APPDATA, { recursive: true });
   delete env.ELECTRON_RUN_AS_NODE;
-  const executablePath = process.platform === 'win32' ? path.join(repo, 'release/app-manager/win-unpacked/RobOS.exe') : path.join(repo, 'release/app-manager/linux-unpacked/robos-app-manager');
+  const executablePath = process.platform === 'win32' ? path.join(repo, 'release/app-manager/win-unpacked/RobOS.exe') :
+    process.platform === 'darwin' ? path.join(repo, `release/app-manager/${process.arch === 'arm64' ? 'mac-arm64' : 'mac'}/RobOS.app/Contents/MacOS/RobOS`) :
+      path.join(repo, 'release/app-manager/linux-unpacked/robos-app-manager');
   const { _electron: electron } = tools('playwright-core');
   let application, applicationClosed = false;
   const steps = [];
@@ -53,7 +55,8 @@ async function main() {
     if (Object.keys(state.installed).join() !== 'smoke-one') throw new Error('An unselected app was installed');
     await narrate('The selected app is installed and has a native menu entry.');
     const locations = require('../../packages/app-manager/lib/paths.cjs').paths({ platform: process.platform, home: temporary, env });
-    const shortcut = process.platform === 'win32' ? path.join(locations.shortcuts, 'smoke-one/Sample Notes.lnk') : path.join(locations.shortcuts, 'robos-managed-smoke-one.desktop');
+    const shortcut = process.platform === 'win32' ? path.join(locations.shortcuts, 'smoke-one/Sample Notes.lnk') :
+      process.platform === 'darwin' ? path.join(locations.shortcuts, 'smoke-one.app') : path.join(locations.shortcuts, 'robos-managed-smoke-one.desktop');
     if (!fs.existsSync(shortcut)) throw new Error('Missing native menu entry');
     await window.screenshot({ path: path.join(output, 'installed.png') });
     await narrate('Open the downloaded app using the shared RobOS runtime.');
@@ -112,6 +115,7 @@ async function main() {
     const closed = application.waitForEvent('close'); await window.locator('#remove-all').click(); await closed;
     if (fs.existsSync(locations.root)) throw new Error('Uninstall RobOS left managed app files');
     if (process.platform === 'win32' && fs.existsSync(locations.shortcuts)) throw new Error('Uninstall RobOS left Start menu entries');
+    if (process.platform === 'darwin' && (fs.existsSync(locations.shortcuts) || fs.existsSync(locations.macManager))) throw new Error('Uninstall RobOS left its Mac applications');
     if (!fs.existsSync(personal)) throw new Error('Uninstall RobOS removed personal settings');
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: true, platform: process.platform, steps }, null, 2));
     console.log('Packaged manager: one, multiple and all app installs/removals, native shortcuts, launch, and full RobOS removal passed.');
@@ -119,7 +123,11 @@ async function main() {
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ passed: false, error: error.stack, steps }, null, 2));
     throw error;
   } finally {
-    if (application && !applicationClosed) await application.close();
+    // A crashed or hung app must fail the test, not hang the release job.
+    if (application && !applicationClosed) {
+      await Promise.race([application.close().catch(() => {}), new Promise(resolve => setTimeout(resolve, 15000).unref())]);
+      if (!applicationClosed) { try { application.process().kill('SIGKILL'); } catch {} }
+    }
     await new Promise(resolve => server.close(resolve));
     try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
     catch { console.warn(`Temporary test profile could not be removed: ${temporary}`); }

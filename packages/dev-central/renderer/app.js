@@ -1158,7 +1158,7 @@ function renderCalendarEvents(events = appState.calendarEvents) {
   const acctBadgeEl = document.getElementById('calendar-account-badge');
   const summaryEl = document.getElementById('calendar-sync-summary');
 
-  const acctEmail = appState.calendarAccount?.email || 'nicholas.dipiazza@gmail.com';
+  const acctEmail = appState.calendarAccount?.email || 'you@example.com';
   if (acctBadgeEl) {
     acctBadgeEl.textContent = `Google (${acctEmail})`;
   }

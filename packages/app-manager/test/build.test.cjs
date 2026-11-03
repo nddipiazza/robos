@@ -35,6 +35,8 @@ test('catalog groups user apps and dependency discovery does not pull the entire
   assert.ok(dependencies('git-projects').includes('robos-graph'));
   assert.ok(entries.some(item => item.id === 'knowledge-graph-explorer' && item.sourceId === 'robos-graph'));
   assert.ok(!dependencies('robos-lib').includes('agents-manager'));
+  // Tabletop loads this through path.join(REPO_ROOT, "packages/robos-gaming").
+  assert.ok(dependencies('robos-tabletop').includes('robos-gaming'));
 });
 test('the graph library omits the Explorer UI but keeps the view companion apps load from it', async t => {
   const output = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-graph-payload-test-'));
@@ -46,7 +48,8 @@ test('the graph library omits the Explorer UI but keeps the view companion apps 
   assert.ok(!entries.includes('renderer/index.html'));
   assert.ok(!entries.includes('main.js'));
 });
-test('hard-linked npm files become regular archive entries the installer accepts', async t => {
+// npm creates these links on Unix. The publish step still validates every Windows archive.
+test('hard-linked npm files become regular archive entries the installer accepts', { skip: process.platform === 'win32' }, async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-hardlink-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const dir = path.join(root, 'payload'), tar = require('tar'); fs.mkdirSync(path.join(dir, 'bin'), { recursive: true });

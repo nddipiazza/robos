@@ -1400,7 +1400,7 @@ tizen run -p robostv001.RobOSTV
       followingMeeting: {
         time: 'Oct 31 08:30',
         title: 'Comprehensive Eye Exam - Dr. Jennifer Caine',
-        accountEmail: 'nicholas.dipiazza@gmail.com',
+        accountEmail: 'you@example.com',
       },
     };
     const nm = meetingData.nextMeeting || {};
@@ -1601,7 +1601,7 @@ tizen run -p robostv001.RobOSTV
       const ev = events[i];
       const y = 310 + i * 112;
       const status = String(ev?.status || 'upcoming').toUpperCase();
-      const accEmail = ev?.accountEmail || ev?.calendar || 'nicholas.dipiazza@gmail.com';
+      const accEmail = ev?.accountEmail || ev?.calendar || 'you@example.com';
       const isSecondCal = String(accEmail).toLowerCase().includes('hermetiq') || ev?.color === '#10b981';
       const stripeColor = isSecondCal ? '0x10B981FF' : '0x00BCD4FF';
       const timeColor = isSecondCal ? '0x6EE7B7FF' : '0x67E8F9FF';
@@ -4637,7 +4637,7 @@ sub onPayloadUpdated()
                     ev = events[i]
                     accEmail = ev.accountEmail
                     if accEmail = invalid then accEmail = ev.calendar
-                    if accEmail = invalid then accEmail = "nicholas.dipiazza@gmail.com"
+                    if accEmail = invalid then accEmail = "you@example.com"
                     isSecond = (Instr(1, LCase(cleanAscii(accEmail)), "hermetiq") > 0)
                     if bgNode <> invalid then bgNode.visible = true
                     if stNode <> invalid

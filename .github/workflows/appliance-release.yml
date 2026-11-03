@@ -6,7 +6,7 @@ on:
       release_tag:
         description: 'Existing release tag to receive optional appliance/VM assets'
         required: true
-        default: 'v0.0.9'
+        default: 'v0.0.10'
 
 permissions:
   contents: write
