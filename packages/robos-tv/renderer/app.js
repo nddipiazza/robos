@@ -137,7 +137,7 @@ function renderTabloSection() {
       if (f === 'all') btn.textContent = `All Recordings (${allCount})`;
       else if (f === 'sports') btn.textContent = `🏈 Sports (${sportsCount})`;
       else if (f === 'series') btn.textContent = `📺 Shows & News (${seriesCount})`;
-      else if (f === 'channels') btn.textContent = `📡 Live OTA (${chCount || 55})`;
+      else if (f === 'channels') btn.textContent = `📡 Live OTA (${chCount})`;
     });
   }
 
