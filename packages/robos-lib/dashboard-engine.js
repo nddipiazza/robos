@@ -3145,7 +3145,7 @@ function renderDashboardTvWallboardHtml({
   hostIp = '192.168.1.100',
   portalPort = 19210,
   resolvedDashboard,
-  tvName = 'Living Room Smart TV',
+  tvName = 'Preview',
   tvIp = '',
 } = {}) {
   const portalUrl = `http://${hostIp}:${portalPort}`;
@@ -3644,7 +3644,7 @@ function renderDashboardTvWallboardHtml({
       const nm = data.nextMeeting || {};
       const fm = data.followingMeeting || null;
       const targetSec = Number(data.targetEpochSec) || 0;
-      const pct = Math.max(8, Math.min(100, Number(data.urgencyPct) || 50));
+      const pct = targetSec ? Math.max(8, Math.min(100, Number(data.urgencyPct) || 8)) : 0;
       return `
         <div class="widget-meta-row">
           <span>⏳ <strong>Countdown Until Next Meeting</strong></span>

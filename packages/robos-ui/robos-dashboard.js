@@ -821,7 +821,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
       const nm = data.nextMeeting || {};
       const fm = data.followingMeeting || null;
       const targetSec = Number(data.targetEpochSec) || 0;
-      const pct = Math.max(8, Math.min(100, Number(data.urgencyPct) || 50));
+      const pct = targetSec ? Math.max(8, Math.min(100, Number(data.urgencyPct) || 8)) : 0;
       return `
         <div class="robos-w-meta">
           <span>⏳ <strong>Countdown Until Next Meeting</strong></span>
