@@ -12,6 +12,8 @@ const { download, extract } = require('../lib/download.cjs');
 const { validateCatalog, plan } = require('../lib/catalog.cjs');
 const { integration, quoteDesktop } = require('../lib/integration.cjs');
 const { gnome, parseList, formatList } = require('../lib/gnome.cjs');
+// Desktop entries escape backslashes, which Windows paths contain when these tests run there.
+const desktopPath = file => file.replace(/\\/g, '\\\\');
 const fakeDesktop = () => {
   const calls = [];
   return { calls, pin: entry => { calls.push(['pin', entry]); return true; }, unpin: match => calls.push(['unpin', match]),
@@ -162,12 +164,12 @@ test('GNOME entries tie windows to their icon and place apps in the RobOS menu f
   native.shortcut({ id: 'one', label: 'One\\App', description: 'Line one\nline two', group: 'Games & game tools' });
   const file = path.join(locations.shortcuts, 'robos-managed-one.desktop'), entry = fs.readFileSync(file, 'utf8');
   assert.match(entry, /StartupWMClass=robos-one\n/); assert.match(entry, /StartupNotify=true\n/);
-  assert.ok(entry.includes(`Icon=${path.join(packageDir, 'icon.png')}\n`), 'falls back to the PNG icon');
+  assert.ok(entry.includes(`Icon=${desktopPath(path.join(packageDir, 'icon.png'))}\n`), 'falls back to the PNG icon');
   assert.match(entry, /Categories=Game;\n/);
   assert.ok(entry.includes('Name=One\\\\App\n')); assert.ok(entry.includes('Comment=Line one\\nline two\n'));
   assert.deepEqual(desktop.calls.find(([name]) => name === 'folder'), ['folder', 'robos-managed-one.desktop']);
   fs.writeFileSync(path.join(packageDir, 'icon.svg'), '<svg/>'); native.shortcut({ id: 'one', label: 'One' });
-  assert.ok(fs.readFileSync(file, 'utf8').includes(`Icon=${path.join(packageDir, 'icon.svg')}\n`));
+  assert.ok(fs.readFileSync(file, 'utf8').includes(`Icon=${desktopPath(path.join(packageDir, 'icon.svg'))}\n`));
   assert.match(fs.readFileSync(file, 'utf8'), /Categories=Utility;\n/);
   // A startup refresh keeps the entry current without undoing a user's folder changes.
   const placed = desktop.calls.length; native.writeEntry({ id: 'one', label: 'Renamed' });
@@ -202,7 +204,7 @@ test('AppImage installs register the manager with its window class and own icon'
   native.installManager(source);
   const entry = fs.readFileSync(path.join(locations.shortcuts, 'robos-app-manager.desktop'), 'utf8');
   assert.match(entry, /StartupWMClass=robos-app-manager\n/);
-  assert.ok(entry.includes(`Icon=${path.join(locations.data, 'robos-app-manager.png')}\n`));
+  assert.ok(entry.includes(`Icon=${desktopPath(path.join(locations.data, 'robos-app-manager.png'))}\n`));
   native.adoptSystemManager();
   assert.equal(fs.existsSync(path.join(locations.shortcuts, 'robos-app-manager.desktop')), false);
   assert.equal(fs.existsSync(locations.image), false);
@@ -262,6 +264,27 @@ test('macOS apps get native application bundles with safely quoted launchers', a
   assert.match(fs.readFileSync(path.join(bundle, 'MacOS/launch'), 'utf8'), /exec '\/Applications\/RobOS.app\/Contents\/MacOS\/RobOS' '--app=one'/);
   native.shortcut({ id: 'one', label: 'One & Two' }, true);
   assert.equal(fs.existsSync(bundle), false);
+});
+test('macOS copies the whole app out of the disk image, replacing an older copy', async t => {
+  const { locations, root } = await fixture(t);
+  locations.macManager = path.join(root, 'Applications/RobOS.app');
+  const image = path.join(root, 'Volumes/RobOS.app'), resources = path.join(image, 'Contents/Resources'), framework = path.join(image, 'Contents/Frameworks');
+  fs.mkdirSync(resources, { recursive: true }); fs.mkdirSync(framework, { recursive: true });
+  fs.writeFileSync(path.join(resources, 'app.asar'), 'asar'); fs.writeFileSync(path.join(framework, 'real'), 'x');
+  fs.symlinkSync('real', path.join(framework, 'link'));
+  fs.mkdirSync(path.join(locations.macManager, 'Contents'), { recursive: true }); fs.writeFileSync(path.join(locations.macManager, 'Contents/stale'), 'old');
+  const before = process.noAsar;
+  // Electron's fs would see this as a folder, as it does in the packaged app.
+  const { cpSync } = fs; let asarDisabled;
+  fs.cpSync = (...args) => { asarDisabled = process.noAsar; return cpSync(...args); };
+  t.after(() => { fs.cpSync = cpSync; process.noAsar = before; });
+  integration({ locations, executable: 'x', packaged: true, platform: 'darwin' }).installManager(image);
+  assert.equal(asarDisabled, true, 'asar handling is off during the copy');
+  assert.equal(process.noAsar, before, 'and restored afterwards');
+  assert.equal(fs.readFileSync(path.join(locations.macManager, 'Contents/Resources/app.asar'), 'utf8'), 'asar');
+  assert.equal(fs.readlinkSync(path.join(locations.macManager, 'Contents/Frameworks/link')), 'real');
+  assert.equal(fs.existsSync(path.join(locations.macManager, 'Contents/stale')), false);
+  assert.equal(fs.existsSync(`${locations.macManager}.installing`), false);
 });
 test('archive validation rejects links and excess uncompressed data', async t => {
   const { archive, root, buffer } = await fixture(t);

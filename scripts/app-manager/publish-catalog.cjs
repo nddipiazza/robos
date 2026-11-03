@@ -37,7 +37,7 @@ function dependencies(id, root = repo) {
     }
     // Some older apps resolve a list of candidate paths before calling require.
     // Include referenced libraries without turning optional app links into installs.
-    for (const match of text.matchAll(/(?:\/usr\/local\/share\/robos\/|['"]\.\.\/)(robos-[a-z0-9-]+)(?:\/|['"])/g)) {
+    for (const match of text.matchAll(/(?:\/usr\/local\/share\/robos\/|['"]\.\.\/|['"]packages\/)(robos-[a-z0-9-]+)(?:\/|['"])/g)) {
       const dep = match[1];
       if (dep !== sourceId && dep !== 'robos-test' && (!apps.has(dep) || support[dep]) && fs.existsSync(path.join(root, 'packages', dep, 'package.json'))) found.add(dep);
     }

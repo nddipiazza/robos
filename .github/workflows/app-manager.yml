@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-24.04, macos-15-intel, macos-15]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
@@ -65,7 +65,8 @@ jobs:
       - name: Build platform app manager
         run: node scripts/app-manager/build.cjs
       - name: Smoke test packaged manager
-        if: runner.os == 'Windows'
+        if: runner.os != 'Linux'
+        timeout-minutes: 15
         run: node scripts/app-manager/smoke.cjs
       - name: Build individual app downloads
         run: node scripts/app-manager/publish-catalog.cjs
@@ -74,6 +75,24 @@ jobs:
         env:
           ROBOS_UBUNTU_VERSION: '24.04'
         run: scripts/app-manager/test-ubuntu-install.sh
+      - name: Start every app the way App Manager does
+        timeout-minutes: 40
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            sudo apt-get update && sudo apt-get install -y xvfb xdotool x11-utils desktop-file-utils
+            xvfb-run -a -s "-screen 0 1440x900x24" node scripts/app-manager/audit-apps.cjs
+          else
+            node scripts/app-manager/audit-apps.cjs
+          fi
+      - name: Upload app audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-audit-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            run/app-audit/*.json
+            run/app-audit/*.png
       - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
@@ -87,11 +106,11 @@ jobs:
             release/app-manager/robos-catalog-*.json
           if-no-files-found: error
           compression-level: 0
-      - name: Upload Windows smoke evidence
-        if: always() && runner.os == 'Windows'
+      - name: Upload smoke evidence
+        if: always() && runner.os != 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: app-manager-windows-smoke
+          name: app-manager-smoke-${{ runner.os }}-${{ runner.arch }}
           path: run/app-manager-smoke/**
       - name: Upload Ubuntu install evidence
         if: always() && runner.os == 'Linux'
@@ -101,7 +120,7 @@ jobs:
           path: run/app-manager-gnome-smoke/**
   publish:
     needs: [unit, windows-regression, build]
-    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/release-0.0.9'
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/codex/release-')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -121,4 +140,5 @@ jobs:
       - name: Publish verified release with resumable, paced uploads
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/app-manager/publish-release.cjs release/publish
+        # A release branch prepares invisible drafts. A version tag, or the resume workflow, publishes.
+        run: node scripts/app-manager/publish-release.cjs release/publish ${{ startsWith(github.ref, 'refs/tags/') && ' ' || '--draft-only' }}
