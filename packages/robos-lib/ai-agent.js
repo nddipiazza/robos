@@ -59,9 +59,10 @@ const PROVIDERS = [
   {
     id:   'antigravity',
     name: 'Gemini CLI / Antigravity',
-    // gemini -p: non-interactive single prompt (RobOS runs the Gemini CLI for the Antigravity provider)
-    buildArgs: (prompt) => ['-p', prompt],
+    // gemini -p / agy -p: non-interactive single prompt. Antigravity installs ship agy without gemini.
+    buildArgs: (prompt, opts = {}) => [...(opts.model ? ['--model', opts.model] : []), '-p', prompt],
     bin: 'gemini',
+    altBins: ['agy'],
   },
 ];
 
@@ -152,13 +153,28 @@ function listProviders() {
 
 // ── Invocation ────────────────────────────────────────────────────────────────
 
-function askCli(prompt, provider) {
+function onPath(bin) {
+  return (process.env.PATH || '').split(path.delimiter).some(dir => {
+    try { fs.accessSync(path.join(dir, bin), fs.constants.X_OK); return true; } catch { return false; }
+  });
+}
+
+/** The provider's executable: its main bin, else the first alternative on PATH. */
+function resolveBin(provider) {
+  if (onPath(provider.bin)) return provider.bin;
+  return (provider.altBins || []).find(onPath) || provider.bin;
+}
+
+function askCli(prompt, providerDef, opts = {}) {
+  const provider = { ...providerDef, bin: resolveBin(providerDef) };
   return new Promise((resolve) => {
     let proc;
     try {
-      proc = cp.spawn(provider.bin, provider.buildArgs(prompt), {
+      proc = cp.spawn(provider.bin, provider.buildArgs(prompt, opts), {
         env:   { ...process.env },
         stdio: ['ignore', 'pipe', 'pipe'],
+        ...(opts.cwd ? { cwd: opts.cwd } : {}),
+        ...(opts.cliTimeoutMs ? { timeout: opts.cliTimeoutMs } : {}),
       });
     } catch (e) {
       return resolve({ ok: false, text: '', error: `Could not launch '${provider.bin}': ${e.message}`, via: 'cli', provider: provider.id });
@@ -187,10 +203,13 @@ function askCli(prompt, provider) {
  * ask(prompt, opts) — invoke an AI provider and collect the full text response.
  *
  * @param {string} prompt
- * @param {{ providerId?: string, allowApi?: boolean, timeoutMs?: number, securityOptions?: object }} [opts]
+ * @param {{ providerId?: string, allowApi?: boolean, timeoutMs?: number, securityOptions?: object, cwd?: string, model?: string, cliTimeoutMs?: number }} [opts]
  *   providerId      — use this CLI; null/undefined = use the default
  *   allowApi        — false keeps the call on the CLI even when API mode is on
  *   securityOptions — PromptSecurityGuard options (e.g. { mode: 'block' }); default is the user's policy
+ *   cwd             — working directory for the CLI, so it can read files placed there
+ *   model           — model for CLIs that take one (Antigravity)
+ *   cliTimeoutMs    — kill the CLI after this long
  * @returns {Promise<{ ok: boolean, text: string, error: string|null, via: 'cli'|'api', provider: string, apiFallback?: string }>}
  */
 async function ask(prompt, opts = {}) {
@@ -215,8 +234,8 @@ async function ask(prompt, opts = {}) {
     notifyApiFallback(res, provider.name);
   }
 
-  const res = await askCli(prompt, provider);
+  const res = await askCli(prompt, provider, opts);
   return apiFallback ? { ...res, apiFallback } : res;
 }
 
-module.exports = { listProviders, getActiveProviderId, ask, PROVIDERS, PROVIDER_MAP };
+module.exports = { listProviders, getActiveProviderId, ask, guardPrompt, resolveBin, PROVIDERS, PROVIDER_MAP };

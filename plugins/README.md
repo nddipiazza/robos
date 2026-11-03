@@ -180,6 +180,8 @@ plugins/
 | **`vpn-sandbox`** | `/vpn-sandbox` | Configure OpenVPN accounts/servers, launch apps inside isolated `ip netns` namespaces, and run the 5-step live E2E kill-switch proof |
 | **`publish-blog-post`** | `/publish-blog-post` | Write and publish a new Engineering Blog post as its own page in `site/_blog/` with E2E screenshots and commit references |
 | **`robos-blog`** | `/robos-blog`, `/blog` | Write and publish a new Engineering Blog post as its own page in `site/_blog/` with E2E screenshots, reproducible CLI commands, and commit references |
+| **`jrpg-parse-assets`** | `/jrpg-parse-assets` | Parse folders of classic JRPG resources a person collected into a kgraph with the JRPG schema, and report what is missing. |
+| **`jrpg-generate-art`** | `/jrpg-generate-art` | Generate maps, dungeons, battle backdrops, character sprites and menu screens for a parsed JRPG with a Gemini image model. |
 | **`fix-media-metadata`** | `/fix-media-metadata` | Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB) |
 
 ---

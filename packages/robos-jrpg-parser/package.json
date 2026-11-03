@@ -1,0 +1,13 @@
+{
+  "name": "robos-jrpg-parser",
+  "version": "0.1.0",
+  "description": "Parses folders of classic JRPG resources that a person collected into a RobOS kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.",
+  "main": "lib/pipeline.js",
+  "bin": {
+    "jrpg-parser": "./bin/jrpg-parser.js"
+  },
+  "scripts": {
+    "test": "node --test ../robos-test/tests/jrpg-parser/"
+  },
+  "license": "Apache-2.0"
+}

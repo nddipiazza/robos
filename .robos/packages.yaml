@@ -1,5 +1,10 @@
 kind: PackagesCatalog
 packages:
+  - id: "urn:robos:library:robos-jrpg-parser"
+    title: "RobOS JRPG Parser"
+    type: "robos:Library"
+    repository: "packages/robos-jrpg-parser"
+    technology: "Node.js / Python (Pillow)"
   - id: "urn:robos:desktop-app:app-manager"
     title: "RobOS App Manager"
     type: "robos:DesktopApp"
