@@ -636,6 +636,19 @@
       font-size: 14px;
       margin-bottom: 12px;
     }
+    .lesson-prose { font-size: 14px; color: var(--text); }
+    .lesson-prose h2 { font-size: 17px; color: var(--text-bright); margin: 22px 0 10px; }
+    .lesson-prose h2:first-child, .lesson-prose h3:first-child { margin-top: 0; }
+    .lesson-prose h3 { font-size: 15px; color: var(--accent-cyan); margin: 18px 0 8px; }
+    .lesson-prose p { margin-bottom: 12px; }
+    .lesson-prose ul, .lesson-prose ol, .key-points ul { margin: 0 0 14px 22px; }
+    .lesson-prose li, .key-points li { margin-bottom: 6px; }
+    .lesson-prose table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 13px; }
+    .lesson-prose th, .lesson-prose td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .lesson-prose th { background: var(--bg-surface); color: var(--text-bright); }
+    .lesson-prose pre { background: #090d13; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto; margin: 0 0 14px; }
+    .lesson-prose blockquote { border-left: 3px solid var(--accent-cyan); padding-left: 12px; margin: 0 0 14px; color: var(--text); }
+    .key-points { border-top: 1px solid var(--border); padding-top: 4px; }
     .code-snippet {
       background: #090d13;
       border: 1px solid var(--border);
@@ -1369,7 +1382,7 @@
 
 <p>The three pages:</p>
 
-<p>1. <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/scenes-and-maps.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Scenes, doors and maps</a>: the scene tree, <code>DoorPortal</code>, collision and camera.<br>2. <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/items-traps-and-mods.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Items, traps and mods</a>: <code>items.json</code>, ground items and chests, <code>Trap</code>, and the mod loader.<br>3. <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Combat, party and spells</a>: attack math, the Malakor fight, formations, enemy threat and the spell code.</p>
+<ol><li><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/scenes-and-maps.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Scenes, doors and maps</a>: the scene tree, <code>DoorPortal</code>, collision and camera.</li><li><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/items-traps-and-mods.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Items, traps and mods</a>: <code>items.json</code>, ground items and chests, <code>Trap</code>, and the mod loader.</li><li><a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Combat, party and spells</a>: attack math, the Malakor fight, formations, enemy threat and the spell code.</li></ol>
 
 <h2>Where things live</h2>
 
@@ -1381,13 +1394,13 @@
 
 <p>Breaking these does not raise an error. The affected feature just stops seeing your nodes.</p>
 
-<p>- Keep gameplay nodes flat. Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. <code>GameState.get_scene_traps()</code>, the <code>battle.enemies</code> list in <code>/api/v1/state</code>, fireball targeting, enemy pack alerts and party lookup all scan <code>get_tree().current_scene.get_children()</code>. A trap under a <code>Traps</code> group node is never detected, and an enemy under an <code>Enemies</code> node never hears an alert.<br>- Add a <code>CombatManager</code> child node to any scene with combat. It is a <code>class_name</code>, not an autoload, and scene scripts reach it as <code>$CombatManager</code>.<br>- Name the player node <code>HeroPlayer</code>. <code>GameState.get_scene_party_nodes()</code>, <code>TacticalEnemy</code> and the HTTP API look it up by that name. Its <code>Camera2D</code> is the scene camera.<br>- The root node name is the scene name. <code>/api/v1/state</code> reports it, and the test step <code>the current scene is "X"</code> compares against it.<br>- Set <code>mouse_filter = 2</code> (Ignore) on the map's <code>Ground</code> node. Otherwise it swallows clicks before <code>HeroPlayer._unhandled_input</code> sees them and click-to-move stops working.<br>- Put content in <code>data/v1/*.json</code>, but expect some behaviour to be keyed by id in code. Potion effects are in <code>GameState.use_item()</code>, spells in <code>CombatManager.gd</code>. Adding JSON alone is not always enough; each page says when.</p>
+<ul><li>Keep gameplay nodes flat. Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. <code>GameState.get_scene_traps()</code>, the <code>battle.enemies</code> list in <code>/api/v1/state</code>, fireball targeting, enemy pack alerts and party lookup all scan <code>get_tree().current_scene.get_children()</code>. A trap under a <code>Traps</code> group node is never detected, and an enemy under an <code>Enemies</code> node never hears an alert.</li><li>Add a <code>CombatManager</code> child node to any scene with combat. It is a <code>class_name</code>, not an autoload, and scene scripts reach it as <code>$CombatManager</code>.</li><li>Name the player node <code>HeroPlayer</code>. <code>GameState.get_scene_party_nodes()</code>, <code>TacticalEnemy</code> and the HTTP API look it up by that name. Its <code>Camera2D</code> is the scene camera.</li><li>The root node name is the scene name. <code>/api/v1/state</code> reports it, and the test step <code>the current scene is "X"</code> compares against it.</li><li>Set <code>mouse_filter = 2</code> (Ignore) on the map's <code>Ground</code> node. Otherwise it swallows clicks before <code>HeroPlayer._unhandled_input</code> sees them and click-to-move stops working.</li><li>Put content in <code>data/v1/*.json</code>, but expect some behaviour to be keyed by id in code. Potion effects are in <code>GameState.use_item()</code>, spells in <code>CombatManager.gd</code>. Adding JSON alone is not always enough; each page says when.</li></ul>
 
 <h2>Checklist: a new location</h2>
 
 <p>This is the shortest path to a new playable scene. The details of each step are on the three pages above. Duplicating an existing scene in the Godot editor is safer than writing a <code>.tscn</code> by hand.</p>
 
-<p>1. Duplicate a scene. In the FileSystem dock, right-click <code>scenes/AncientCatacombs.tscn</code> and choose Duplicate. Rename the file and its root node (the root name must match the file name for tests). Delete the catacomb children you do not want (the traps, the sarcophagus, the skeleton and guardian, the two ground items, <code>KeepSecretPassage</code>).<br>2. Keep what scripts look up by path: <code>CombatManager</code>, <code>Ground</code>, the boundary <code>StaticBody2D</code>, <code>HeroPlayer</code>, and under <code>CanvasLayer</code> the <code>NoticeLabel</code>, <code>PartyHUD</code> (with <code>QuestLabel</code>, <code>BtnOptions</code>, <code>BtnInventory</code>, <code>BtnPause</code>), <code>ActionLog</code>, <code>InventoryWindow</code>, <code>SettingsModal</code> and <code>CharacterStatusWindow</code>. Keep <code>FogOfWar</code> if you want fog.<br>3. Write the scene script. Attach a new script that follows the start of <code>AncientCatacombs.gd</code>:</p>
+<ol><li>Duplicate a scene. In the FileSystem dock, right-click <code>scenes/AncientCatacombs.tscn</code> and choose Duplicate. Rename the file and its root node (the root name must match the file name for tests). Delete the catacomb children you do not want (the traps, the sarcophagus, the skeleton and guardian, the two ground items, <code>KeepSecretPassage</code>).</li><li>Keep what scripts look up by path: <code>CombatManager</code>, <code>Ground</code>, the boundary <code>StaticBody2D</code>, <code>HeroPlayer</code>, and under <code>CanvasLayer</code> the <code>NoticeLabel</code>, <code>PartyHUD</code> (with <code>QuestLabel</code>, <code>BtnOptions</code>, <code>BtnInventory</code>, <code>BtnPause</code>), <code>ActionLog</code>, <code>InventoryWindow</code>, <code>SettingsModal</code> and <code>CharacterStatusWindow</code>. Keep <code>FogOfWar</code> if you want fog.</li><li>Write the scene script. Attach a new script that follows the start of <code>AncientCatacombs.gd</code>:</li></ol>
 
 <pre><code class="language-gdscript">extends Node2D
 
@@ -1408,7 +1421,9 @@
                if has_node("FogOfWar"):
                    $FogOfWar.register_actor(comp)</code></pre>
 
-<p>This is a sketch derived from <code>AncientCatacombs.gd</code>. Run the scene in the editor to check it. Use the size of your own map plate for the camera limits, and set the same size on <code>FogOfWar.map_width</code> and <code>map_height</code>.<br>4. Connect it with doors. Instance <code>scenes/components/DoorPortal.tscn</code> directly under the root of both scenes. Set <code>door_id</code>, <code>door_name</code>, <code>target_scene</code> (<code>res://scenes/YourScene.tscn</code>) and <code>target_spawn</code> (the position where the hero should appear). Details and pitfalls are on <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/scenes-and-maps.html#doors" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Scenes, doors and maps</a>.<br>5. Add content. Ground items, chests, traps, enemies and NPCs are on the other two pages.<br>6. Run it: <code>./debug.sh --scene res://scenes/YourScene.tscn</code>. The short names in <code>debug.sh</code> cover only five scenes.<br>7. Test it. Add a feature under <code>tests/e2e/features/normal/</code>. These steps exist in <code>crpg_steps.py</code> and <code>infinity_ai_steps.py</code>:</p>
+<p>This is a sketch derived from <code>AncientCatacombs.gd</code>. Run the scene in the editor to check it. Use the size of your own map plate for the camera limits, and set the same size on <code>FogOfWar.map_width</code> and <code>map_height</code>.</p>
+
+<ol start="4"><li>Connect it with doors. Instance <code>scenes/components/DoorPortal.tscn</code> directly under the root of both scenes. Set <code>door_id</code>, <code>door_name</code>, <code>target_scene</code> (<code>res://scenes/YourScene.tscn</code>) and <code>target_spawn</code> (the position where the hero should appear). Details and pitfalls are on <a href="https://rowbose.com/v1/projects/crpg-realm/create-your-own-game/scenes-and-maps.html#doors" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Scenes, doors and maps</a>.</li><li>Add content. Ground items, chests, traps, enemies and NPCs are on the other two pages.</li><li>Run it: <code>./debug.sh --scene res://scenes/YourScene.tscn</code>. The short names in <code>debug.sh</code> cover only five scenes.</li><li>Test it. Add a feature under <code>tests/e2e/features/normal/</code>. These steps exist in <code>crpg_steps.py</code> and <code>infinity_ai_steps.py</code>:</li></ol>
 
 <pre><code class="language-gherkin">Feature: Your location portals
 
@@ -2571,11 +2586,20 @@ flowchart LR
         }
       }
       const m = MODULES_DATA[idx];
+      const keyPoints = Array.isArray(m.keyPoints) ? m.keyPoints.filter(Boolean) : [];
+      const keyPointsHtml = keyPoints.length ? `
+        <div class="lesson-section key-points">
+          <h4 class="lesson-subtitle">💡 Key ideas</h4>
+          <ul>${keyPoints.map(k => '<li>' + formatStepText(k) + '</li>').join('')}</ul>
+        </div>` : '';
+      if (m.bodyHtml) {
+        return `<div class="lesson-section lesson-prose">${m.bodyHtml}</div>${keyPointsHtml}`;
+      }
       return `
         <div class="lesson-section">
           <h4 class="lesson-subtitle">📖 Module Overview & Core Architecture</h4>
           <p class="lesson-text">${m.overview || 'Review the attached living architecture documentation and complete the hands-on lab exercises below.'}</p>
-        </div>
+        </div>${keyPointsHtml}
       `;
     }
 
@@ -2724,7 +2748,9 @@ flowchart LR
     }
 
     function formatStepText(text) {
-      return (text || '').replace(/`([^`]+)`/g, '<code>$1</code>');
+      return (text || '')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     }
 
     function completeModuleLabs(mIdx) {

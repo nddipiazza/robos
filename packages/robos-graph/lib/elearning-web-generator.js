@@ -229,12 +229,16 @@ function buildStandaloneHtml(params) {
     isParsePortal,
   } = params;
 
-  const appTitle = appNode ? (appNode['dcterms:title'] || 'Application') : 'Tactical cRPG Realm of Heroes';
-  const appTech = (appNode && (appNode['robos:technology'] || appNode['robos:desktopFramework'] || appNode['robos:frontendFramework'])) || 'Godot 4.3 / D&D 5e SRD';
+  const appTitle = appNode ? (appNode['dcterms:title'] || 'Application') : (isCrpg ? 'Tactical cRPG Realm of Heroes' : 'RobOS');
+  const appTech = (appNode && (appNode['robos:technology'] || appNode['robos:desktopFramework'] || appNode['robos:frontendFramework']))
+    || (isCrpg ? 'Godot 4.3 / D&D 5e SRD' : courseTopic);
 
-  // Serialize course and modules JSON for client-side state
+  // Serialize course and modules JSON for client-side state. A lesson's Markdown
+  // body is rendered here, so the page shows the same lesson text as the app.
   const serializedCourse = JSON.stringify(course);
-  const serializedModules = JSON.stringify(modules);
+  const serializedModules = JSON.stringify(modules.map(m => (m && m.body)
+    ? { ...m, bodyHtml: parseLivingDocMarkdown(m.body) }
+    : m)).replace(/</g, '\\u003c');
   const serializedApp = JSON.stringify(appNode || {});
 
   // Parse markdown documentation into structured sections. Without a source, keep the published doc tab.
@@ -882,6 +886,19 @@ function buildStandaloneHtml(params) {
       font-size: 14px;
       margin-bottom: 12px;
     }
+    .lesson-prose { font-size: 14px; color: var(--text); }
+    .lesson-prose h2 { font-size: 17px; color: var(--text-bright); margin: 22px 0 10px; }
+    .lesson-prose h2:first-child, .lesson-prose h3:first-child { margin-top: 0; }
+    .lesson-prose h3 { font-size: 15px; color: var(--accent-cyan); margin: 18px 0 8px; }
+    .lesson-prose p { margin-bottom: 12px; }
+    .lesson-prose ul, .lesson-prose ol, .key-points ul { margin: 0 0 14px 22px; }
+    .lesson-prose li, .key-points li { margin-bottom: 6px; }
+    .lesson-prose table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 13px; }
+    .lesson-prose th, .lesson-prose td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .lesson-prose th { background: var(--bg-surface); color: var(--text-bright); }
+    .lesson-prose pre { background: #090d13; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto; margin: 0 0 14px; }
+    .lesson-prose blockquote { border-left: 3px solid var(--accent-cyan); padding-left: 12px; margin: 0 0 14px; color: var(--text); }
+    .key-points { border-top: 1px solid var(--border); padding-top: 4px; }
     .code-snippet {
       background: #090d13;
       border: 1px solid var(--border);
@@ -2615,11 +2632,20 @@ flowchart LR
         }
       }
       const m = MODULES_DATA[idx];
+      const keyPoints = Array.isArray(m.keyPoints) ? m.keyPoints.filter(Boolean) : [];
+      const keyPointsHtml = keyPoints.length ? \`
+        <div class="lesson-section key-points">
+          <h4 class="lesson-subtitle">💡 Key ideas</h4>
+          <ul>\${keyPoints.map(k => '<li>' + formatStepText(k) + '</li>').join('')}</ul>
+        </div>\` : '';
+      if (m.bodyHtml) {
+        return \`<div class="lesson-section lesson-prose">\${m.bodyHtml}</div>\${keyPointsHtml}\`;
+      }
       return \`
         <div class="lesson-section">
           <h4 class="lesson-subtitle">📖 Module Overview & Core Architecture</h4>
           <p class="lesson-text">\${m.overview || 'Review the attached living architecture documentation and complete the hands-on lab exercises below.'}</p>
-        </div>
+        </div>\${keyPointsHtml}
       \`;
     }
 
@@ -2768,7 +2794,9 @@ flowchart LR
     }
 
     function formatStepText(text) {
-      return (text || '').replace(/\`([^\`]+)\`/g, '<code>$1</code>');
+      return (text || '')
+        .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
+        .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
     }
 
     function completeModuleLabs(mIdx) {
@@ -3236,11 +3264,14 @@ flowchart LR
  * Lightweight helper to parse the Living Architecture markdown file into styled HTML.
  */
 function renderInlineMarkdown(text) {
+  // Code spans first, so a * inside code is not read as emphasis.
+  const codeSpans = [];
   return text
+    .replace(/`([^`\n]+)`/g, (_m, code) => `\u0000${codeSpans.push(`<code>${code}</code>`) - 1}\u0000`)
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent-cyan);">$1</a>');
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent-cyan);">$1</a>')
+    .replace(/\u0000(\d+)\u0000/g, (_m, i) => codeSpans[Number(i)]);
 }
 
 function parseLivingDocMarkdown(markdown) {
@@ -3320,6 +3351,19 @@ function parseLivingDocMarkdown(markdown) {
 
   // 9. Blockquotes
   clean = clean.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // 9b. Unordered and ordered lists
+  // A list is its own block, even right after a paragraph line, and keeps its first number.
+  clean = clean.replace(/(^|\n)((?:[ \t]*[-*] .+(?:\n|$))+)/g, (_match, _lead, block) => {
+    const items = block.trim().split('\n').map(l => `<li>${l.trim().replace(/^[-*]\s+/, '')}</li>`).join('');
+    return `\n\n<ul>${items}</ul>\n\n`;
+  });
+  clean = clean.replace(/(^|\n)((?:[ \t]*\d+\. .+(?:\n|$))+)/g, (_match, _lead, block) => {
+    const lines = block.trim().split('\n');
+    const first = parseInt(lines[0], 10);
+    const items = lines.map(l => `<li>${l.trim().replace(/^\d+\.\s+/, '')}</li>`).join('');
+    return `\n\n<ol${first > 1 ? ` start="${first}"` : ''}>${items}</ol>\n\n`;
+  });
 
   // 10. Inline bold / italic / code / links
   clean = renderInlineMarkdown(clean);

@@ -28,10 +28,14 @@
 .el-step{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--btn-fg);font-weight:700}
 
 .el-courses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:40px}
+a.el-course{color:inherit;text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+a.el-course:hover,a.el-course:focus-visible{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(15,23,42,.55)}
+a.el-course:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .el-course{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
 .el-course h3{font-size:1.1rem;line-height:1.3;margin:0}
 .el-course p{color:var(--muted);font-size:.92rem;margin:0}
-.el-course .el-meta{margin-top:auto;padding-top:6px;font-size:.82rem;color:var(--muted);font-weight:600}
+.el-course .el-meta{margin-top:auto;padding-top:6px;font-size:.82rem;color:var(--muted);font-weight:600;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+.el-course .el-open{color:var(--accent)}
 .el-level{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .el-course.is-start{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--card))}
 .el-course.is-start .el-level{color:var(--accent)}
