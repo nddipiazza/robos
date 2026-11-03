@@ -431,7 +431,10 @@ class HomeSpeakerService {
    */
   async executeVoiceCommand(commandText, options = {}) {
     const { executeNabuCommand } = require('./nabu-command-router');
-    const result = await executeNabuCommand(commandText, options);
+    const result = await executeNabuCommand(commandText, {
+      ...options,
+      voiceIdentityService: this.esphomeService.voiceIdentityService,
+    });
     const entry = {
       id: `cmd_${Date.now()}`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -440,9 +443,11 @@ class HomeSpeakerService {
       transcript: commandText,
       skill: result?.skill || 'robos-skill',
       reply: result?.response || '',
+      robosUser: result?.robosUser || null,
     };
     this.esphomeService.listenerState.lastTranscript = commandText;
     this.esphomeService.listenerState.lastReply = entry.reply;
+    this.esphomeService.listenerState.lastSpeakerUser = entry.robosUser;
     this.esphomeService.listenerState.inbox.unshift(entry);
     if (this.esphomeService.listenerState.inbox.length > 30) {
       this.esphomeService.listenerState.inbox.length = 30;
@@ -454,6 +459,76 @@ class HomeSpeakerService {
       await this.castTTS(targetIp, result.response, { prependChime: false }).catch(() => {});
     }
     return result;
+  }
+
+  // -------------------------------------------------------------
+  // RobOS Voice ID & Speaker Onboarding
+  // -------------------------------------------------------------
+  getVoiceProfiles() {
+    return this.esphomeService.voiceIdentityService.listProfiles();
+  }
+
+  getVoiceOnboardingPhrases() {
+    return this.esphomeService.voiceIdentityService.getOnboardingPhrases();
+  }
+
+  getDefaultWorkstationUser() {
+    return this.esphomeService.voiceIdentityService.getDefaultWorkstationUser();
+  }
+
+  getActiveVoiceContext() {
+    return this.esphomeService.voiceIdentityService.readActiveVoiceContext();
+  }
+
+  upsertVoiceUserProfile(userData = {}) {
+    return this.esphomeService.voiceIdentityService.upsertUserProfile(userData);
+  }
+
+  removeVoiceUserProfile(userId, sampleId = null) {
+    return this.esphomeService.voiceIdentityService.removeUserProfile(userId, sampleId);
+  }
+
+  async enrollVoiceSample(params = {}) {
+    let pcmBuffer = params.pcmBuffer || null;
+    if (!pcmBuffer && params.pcmBase64) {
+      pcmBuffer = Buffer.from(params.pcmBase64, 'base64');
+    } else if (!pcmBuffer && params.arrayBuffer) {
+      pcmBuffer = Buffer.from(params.arrayBuffer);
+    }
+    let transcript = params.transcript || '';
+    if (!transcript && pcmBuffer && pcmBuffer.length >= 3200) {
+      try {
+        transcript = await this.esphomeService.transcribePcm16kBuffer(pcmBuffer);
+      } catch {}
+    } else if (!transcript && params.wavPath && fs.existsSync(params.wavPath)) {
+      try {
+        const { readWavFile } = require('./voice-identity-service');
+        const parsed = readWavFile(params.wavPath);
+        if (parsed && parsed.pcmBuffer) {
+          transcript = await this.esphomeService.transcribePcm16kBuffer(parsed.pcmBuffer);
+        }
+      } catch {}
+    }
+    return this.esphomeService.voiceIdentityService.enrollVoiceSample({
+      ...params,
+      pcmBuffer,
+      transcript: transcript || params.phrase || '',
+    });
+  }
+
+  async recordVoiceSampleFromSpeaker(ip = '192.168.1.64', params = {}) {
+    return this.esphomeService.captureOnboardingSampleFromSpeaker(ip, params);
+  }
+
+  async identifyVoiceSample(params = {}) {
+    let pcmBuffer = params.pcmBuffer || null;
+    if (!pcmBuffer && params.pcmBase64) {
+      pcmBuffer = Buffer.from(params.pcmBase64, 'base64');
+    }
+    return this.esphomeService.voiceIdentityService.identifySpeaker({
+      ...params,
+      pcmBuffer,
+    });
   }
 
   getSpeakers() {

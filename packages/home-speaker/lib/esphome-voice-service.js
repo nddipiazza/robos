@@ -301,11 +301,19 @@ class EspHomeVoiceService extends EventEmitter {
       lastWakeWord: null,
       lastTranscript: '',
       lastReply: '',
-      inbox: [], // { id, timestamp, speakerIp, wakeWord, transcript, reply, audioWavPath }
+      lastSpeakerUser: null,
+      inbox: [], // { id, timestamp, speakerIp, wakeWord, transcript, reply, audioWavPath, robosUser }
     };
     this._currentPcmChunks = [];
     this._silenceTimer = null;
     this._whisperTranscriberPromise = null;
+    this._pendingOnboardingCapture = null;
+    if (options.voiceIdentityService) {
+      this.voiceIdentityService = options.voiceIdentityService;
+    } else {
+      const { VoiceIdentityService } = require('./voice-identity-service');
+      this.voiceIdentityService = new VoiceIdentityService({ configDir: options.configDir });
+    }
   }
 
   /**
@@ -1188,22 +1196,123 @@ class EspHomeVoiceService extends EventEmitter {
 
     const wavPath = this._writePcm16kToWav(pcmBuffer);
     let transcript = '';
+    let speakerMatch = null;
     try {
-      transcript = await this.transcribePcm16kBuffer(pcmBuffer);
+      const [sttText, idResult] = await Promise.all([
+        this.transcribePcm16kBuffer(pcmBuffer).catch((err) => {
+          console.warn('[EspHomeVoiceService] Transcription error:', err.message);
+          return '';
+        }),
+        this.voiceIdentityService
+          ? this.voiceIdentityService.identifySpeaker({
+              pcmBuffer,
+              wavPath,
+              speakerIp: ip,
+              source: 'home-assistant-voice-pe',
+            }).catch((err) => {
+              console.warn('[EspHomeVoiceService] Speaker ID notice:', err.message);
+              return null;
+            })
+          : Promise.resolve(null),
+      ]);
+      transcript = sttText;
+      speakerMatch = idResult;
     } catch (err) {
-      console.warn('[EspHomeVoiceService] Transcription error:', err.message);
+      console.warn('[EspHomeVoiceService] Utterance processing error:', err.message);
     }
 
     transcript = String(transcript || '').trim() || '(Voice note recorded from speaker)';
     this._sendVoiceEvent(socket, 4, [{ name: 'text', value: transcript }]); // VOICE_ASSISTANT_STT_END
 
+    // If a guided speaker voice onboarding capture is waiting for this utterance, enroll it now!
+    if (this._pendingOnboardingCapture) {
+      const pending = this._pendingOnboardingCapture;
+      this._pendingOnboardingCapture = null;
+      let enrollRes = { ok: false, error: 'Voice identity service unavailable' };
+      try {
+        enrollRes = await this.voiceIdentityService.enrollVoiceSample({
+          userId: pending.userId,
+          name: pending.name,
+          role: pending.role || 'Owner',
+          email: pending.email || '',
+          step: pending.step || 1,
+          phrase: pending.phrase || transcript,
+          transcript,
+          source: `speaker:${ip}`,
+          pcmBuffer,
+          wavPath,
+        });
+      } catch (err) {
+        enrollRes = { ok: false, error: err.message };
+      }
+
+      const enrolledUser = enrollRes.ok && enrollRes.profile
+        ? {
+            userId: enrollRes.profile.userId,
+            name: enrollRes.profile.name,
+            displayName: enrollRes.profile.displayName || enrollRes.profile.name,
+            role: enrollRes.profile.role,
+            avatarColor: enrollRes.profile.avatarColor,
+            identified: true,
+            enrolled: true,
+            confidence: 1.0,
+            source: 'voice-onboarding',
+            speakerIp: ip,
+          }
+        : (speakerMatch?.robosUser || null);
+
+      const onboardingReply = enrollRes.ok
+        ? `Voice sample ${pending.step || 1} saved for ${enrollRes.profile.name}.`
+        : `Could not save voice sample: ${enrollRes.error}`;
+
+      const entry = {
+        id: `in_${Date.now()}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        speakerIp: ip,
+        wakeWord: 'Voice Onboarding',
+        transcript,
+        skill: 'voice-onboarding',
+        reply: onboardingReply,
+        audioWavPath: wavPath,
+        robosUser: enrolledUser,
+      };
+      this.listenerState.lastTranscript = transcript;
+      this.listenerState.lastReply = onboardingReply;
+      this.listenerState.lastSpeakerUser = enrolledUser;
+      this.listenerState.inbox.unshift(entry);
+      if (this.listenerState.inbox.length > 30) this.listenerState.inbox.length = 30;
+
+      this._sendVoiceEvent(socket, 2); // VOICE_ASSISTANT_RUN_END
+      this.setLedRing(ip, { state: false, port }).catch(() => {});
+      this.listenerState.status = 'listening_for_wake_word';
+      this.emit('listener-update', this.getListenerStatus());
+      this.emit('incoming-utterance', entry);
+
+      if (typeof pending.resolve === 'function') {
+        pending.resolve({ ...enrollRes, transcript, wavPath, entry });
+      }
+      if (onboardingReply && typeof this.onReplyAudio === 'function') {
+        try { await this.onReplyAudio(ip, onboardingReply); } catch {}
+      }
+      return;
+    }
+
+    let robosUser = speakerMatch?.robosUser || null;
     let replyText = '';
     let commandResult = null;
     if (this.AutoReply && transcript && !transcript.startsWith('(Voice note')) {
       this.listenerState.status = 'replying';
       this.emit('listener-update', this.getListenerStatus());
-      commandResult = await this._executeNabuVoiceCommand(transcript);
+      commandResult = await this._executeNabuVoiceCommand(transcript, {
+        robosUser,
+        pcmBuffer,
+        wavPath,
+        speakerIp: ip,
+      });
       replyText = commandResult?.response || '';
+      if (commandResult?.robosUser) {
+        robosUser = commandResult.robosUser;
+      }
     }
 
     const entry = {
@@ -1215,10 +1324,12 @@ class EspHomeVoiceService extends EventEmitter {
       skill: commandResult?.skill || null,
       reply: replyText,
       audioWavPath: wavPath,
+      robosUser,
     };
 
     this.listenerState.lastTranscript = transcript;
     this.listenerState.lastReply = replyText;
+    this.listenerState.lastSpeakerUser = robosUser;
     this.listenerState.inbox.unshift(entry);
     if (this.listenerState.inbox.length > 30) {
       this.listenerState.inbox.length = 30;
@@ -1236,6 +1347,53 @@ class EspHomeVoiceService extends EventEmitter {
         await this.onReplyAudio(ip, replyText);
       } catch {}
     }
+  }
+
+  /**
+   * Trigger the speaker's microphone to record one Voice Onboarding calibration sample
+   * and automatically enroll it into the user's voice profile.
+   */
+  async captureOnboardingSampleFromSpeaker(ip = '192.168.1.64', {
+    userId,
+    name,
+    role = 'Owner',
+    email = '',
+    step = 1,
+    phrase = '',
+    timeoutMs = 15000,
+  } = {}) {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        if (this._pendingOnboardingCapture && this._pendingOnboardingCapture.resolve === done) {
+          this._pendingOnboardingCapture = null;
+        }
+        resolve({
+          ok: false,
+          error: 'Timed out waiting for voice sample on speaker microphone.',
+        });
+      }, timeoutMs);
+
+      const done = (result) => {
+        clearTimeout(timer);
+        resolve(result);
+      };
+
+      this._pendingOnboardingCapture = {
+        userId,
+        name,
+        role,
+        email,
+        step,
+        phrase,
+        resolve: done,
+      };
+
+      this.triggerListenerCapture(ip, { wakeWordLabel: `Voice Onboarding Step ${step}` }).catch((err) => {
+        this._pendingOnboardingCapture = null;
+        clearTimeout(timer);
+        resolve({ ok: false, error: err.message });
+      });
+    });
   }
 
   async transcribePcm16kBuffer(pcmBuffer) {
@@ -1273,22 +1431,28 @@ class EspHomeVoiceService extends EventEmitter {
       .trim();
   }
 
-  async _executeNabuVoiceCommand(query) {
+  async _executeNabuVoiceCommand(query, context = {}) {
     try {
       const { executeNabuCommand } = require('./nabu-command-router');
-      const res = await executeNabuCommand(query);
+      const res = await executeNabuCommand(query, {
+        robosUser: context.robosUser || null,
+        pcmBuffer: context.pcmBuffer || null,
+        wavPath: context.wavPath || null,
+        speakerIp: context.speakerIp || null,
+        voiceIdentityService: this.voiceIdentityService,
+      });
       if (res && res.response) return res;
     } catch (err) {
       console.warn('[EspHomeVoiceService] Nabu command router notice:', err.message);
     }
-    const text = await this._queryRobosAssistant(query);
-    return { ok: true, skill: 'assistant', response: text };
+    const text = await this._queryRobosAssistant(query, context.robosUser);
+    return { ok: true, skill: 'assistant', response: text, robosUser: context.robosUser || null };
   }
 
-  async _queryRobosAssistant(query) {
+  async _queryRobosAssistant(query, robosUser = null) {
     // 1. Try running RobOS Voice Desktop Assistant on port 19188 if active
     const fromVoiceDaemon = await new Promise((resolve) => {
-      const body = JSON.stringify({ query, speak: false });
+      const body = JSON.stringify({ query, speak: false, robosUser });
       const req = http.request(
         {
           hostname: '127.0.0.1',

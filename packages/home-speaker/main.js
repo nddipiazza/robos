@@ -153,6 +153,43 @@ ipcMain.handle('speakers:executeVoiceCommand', async (_event, commandText, optio
   return speakerService.executeVoiceCommand(commandText, options || {});
 });
 
+// RobOS Voice ID & Speaker Onboarding Handlers
+ipcMain.handle('voiceId:getProfiles', async () => {
+  return speakerService.getVoiceProfiles();
+});
+
+ipcMain.handle('voiceId:getOnboardingPhrases', async () => {
+  return speakerService.getVoiceOnboardingPhrases();
+});
+
+ipcMain.handle('voiceId:getDefaultUser', async () => {
+  return speakerService.getDefaultWorkstationUser();
+});
+
+ipcMain.handle('voiceId:getActiveContext', async () => {
+  return speakerService.getActiveVoiceContext();
+});
+
+ipcMain.handle('voiceId:upsertUser', async (_event, userData) => {
+  return speakerService.upsertVoiceUserProfile(userData || {});
+});
+
+ipcMain.handle('voiceId:removeUser', async (_event, userId, sampleId) => {
+  return speakerService.removeVoiceUserProfile(userId, sampleId || null);
+});
+
+ipcMain.handle('voiceId:enrollSample', async (_event, params) => {
+  return speakerService.enrollVoiceSample(params || {});
+});
+
+ipcMain.handle('voiceId:recordFromSpeaker', async (_event, ip, params) => {
+  return speakerService.recordVoiceSampleFromSpeaker(ip || '192.168.1.64', params || {});
+});
+
+ipcMain.handle('voiceId:identifySample', async (_event, params) => {
+  return speakerService.identifyVoiceSample(params || {});
+});
+
 ipcMain.handle('speakers:getStatus', async (_event, targetIp) => {
   return speakerService.getStatus(targetIp);
 });

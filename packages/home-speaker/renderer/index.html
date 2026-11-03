@@ -93,6 +93,10 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
         Speakers & Setup
       </button>
+      <button class="tab-btn" data-tab="tab-voice-id" id="tab-btn-voice-id">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+        Voice ID & Onboarding
+      </button>
     </nav>
 
     <!-- Main Content Area -->
@@ -645,6 +649,79 @@
             <h3>Your Connected Speakers</h3>
             <div id="registered-devices-grid" class="registered-devices-grid">
               <!-- Populated dynamically from getSpeakers() -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 9: RobOS Voice ID & Speaker Onboarding -->
+      <section id="tab-voice-id" class="tab-pane">
+        <div class="card pane-card">
+          <div class="card-header">
+            <div>
+              <h2>RobOS Voice ID & Speaker Onboarding</h2>
+              <p class="card-desc">Enroll biometric voiceprints (512-dim WavLM X-Vector + 48-dim Acoustic DSP) so RobOS identifies which <strong>RobOS User</strong> is speaking and forwards their identity metadata to target apps.</p>
+            </div>
+            <div class="header-actions-row">
+              <button type="button" id="btn-voice-id-refresh" class="btn btn-secondary btn-sm">Refresh Profiles</button>
+              <button type="button" id="btn-voice-id-test-whoami" class="btn btn-primary btn-sm">Test "Who Am I?"</button>
+            </div>
+          </div>
+
+          <!-- Voice Onboarding Wizard Card -->
+          <div id="voice-onboarding-card" class="wizard-card">
+            <div class="wizard-header">
+              <div>
+                <span class="wizard-step-pill" id="voice-onboard-pill">Biometric Voice Onboarding</span>
+                <h3>Enroll or Update a RobOS User Voiceprint</h3>
+              </div>
+              <div style="font-size:0.8rem;color:var(--text-secondary);">
+                Hands-free shortcut: say <strong>"Hello Nabu, remember my voice as [Your Name]"</strong>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-top:12px;">
+              <div class="form-group">
+                <label for="voice-onboard-name">RobOS User Name:</label>
+                <input type="text" id="voice-onboard-name" class="input-text" placeholder="e.g. Nicholas DiPiazza">
+              </div>
+              <div class="form-group">
+                <label for="voice-onboard-role">User Role:</label>
+                <select id="voice-onboard-role" class="dropdown">
+                  <option value="Owner / Admin" selected>Owner / Admin</option>
+                  <option value="Family Member">Family Member</option>
+                  <option value="Developer">Developer</option>
+                  <option value="Guest">Guest</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="voice-onboard-speaker-ip">Onboarding Speaker IP:</label>
+                <input type="text" id="voice-onboard-speaker-ip" class="input-text" value="192.168.1.64" placeholder="192.168.1.64">
+              </div>
+              <div class="form-group" style="display:flex;align-items:flex-end;">
+                <button type="button" id="btn-voice-save-profile" class="btn btn-secondary" style="width:100%;">
+                  Create / Save User Profile
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <h4 style="margin:0 0 8px 0;font-size:0.92rem;color:#f0f6fc;">3 Calibration Phrases (Record on Smart Speaker or Desktop Mic)</h4>
+              <div id="voice-onboard-phrases-list" class="registered-devices-grid">
+                <!-- Populated dynamically with the 3 calibration phrases -->
+              </div>
+            </div>
+
+            <div id="voice-onboard-status" class="probe-result-box" style="margin-top:12px;">
+              Enter a <strong>RobOS User Name</strong> above and click <strong>🎙️ Record on Speaker</strong> (or <strong>💻 Desktop Mic</strong>) on any phrase to enroll your biometric voiceprint.
+            </div>
+          </div>
+
+          <!-- Enrolled RobOS User Profiles -->
+          <div class="registered-devices-section" style="margin-top:18px;">
+            <h3>Enrolled RobOS User Voice Profiles</h3>
+            <div id="voice-profiles-grid" class="registered-devices-grid">
+              <!-- Populated dynamically from getVoiceProfiles() -->
             </div>
           </div>
         </div>
