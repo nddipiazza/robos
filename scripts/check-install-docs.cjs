@@ -12,11 +12,14 @@ for (const file of ['index.html', 'download/index.html', 'v1/getting-started.htm
   assert.ok(html.includes(`v${version}`), `${file}: missing current version`);
 }
 const download = fs.readFileSync(path.join(output, 'download/index.html'), 'utf8');
-for (const id of Object.keys(require('../site/_data/games.json'))) {
-  const html = fs.readFileSync(path.join(output, 'games', id, 'index.html'), 'utf8');
+for (const [id, game] of Object.entries(require('../site/_data/games.json'))) {
+  // A game can live at its own page_path and ship under its own release tag (release_prefix).
+  const page = game.page_path ? path.join(output, game.page_path, 'index.html') : path.join(output, 'games', id, 'index.html');
+  const tag = `${game.release_prefix || 'games-v'}${version}`;
+  const html = fs.readFileSync(page, 'utf8');
   assert.ok(html.includes('id="download"'), `${id}: missing player download section`);
   for (const suffix of ['Windows-Setup.exe', 'Windows-x64.zip', 'Linux-x64.zip', 'macOS.zip']) {
-    assert.ok(html.includes(`https://github.com/nddipiazza/robos/releases/download/games-v${version}/${id}-v${version}-${suffix}`), `${id}: missing direct game download ${suffix}`);
+    assert.ok(html.includes(`https://github.com/nddipiazza/robos/releases/download/${tag}/${id}-v${version}-${suffix}`), `${id}: missing direct game download ${suffix}`);
   }
   assert.ok(html.includes('/assets/game-downloads.js'), `${id}: missing OS selection`);
   assert.ok(!html.includes('{% include game-download'), `${id}: unrendered download controls`);

@@ -258,12 +258,17 @@ const controlServer = createControlServer({
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
       }
-      return askRenderer('play', { tracks, shuffle: Boolean(body.shuffle), targetIp: body.targetIp || null });
+      return askRenderer('play', {
+        tracks,
+        shuffle: Boolean(body.shuffle),
+        targetIp: body.targetIp || null,
+        robosUser: body.robosUser || null,
+      });
     },
-    next: () => askRenderer('next'),
-    previous: () => askRenderer('previous'),
-    pause: () => askRenderer('pause'),
-    resume: () => askRenderer('resume'),
+    next: (body = {}) => askRenderer('next', { robosUser: body.robosUser || null }),
+    previous: (body = {}) => askRenderer('previous', { robosUser: body.robosUser || null }),
+    pause: (body = {}) => askRenderer('pause', { robosUser: body.robosUser || null }),
+    resume: (body = {}) => askRenderer('resume', { robosUser: body.robosUser || null }),
   },
   log: (entry) => console.warn('[AudioPlayer] control:', JSON.stringify(entry)),
 });

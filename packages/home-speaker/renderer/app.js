@@ -1332,20 +1332,61 @@ function renderIncomingListenerState(st) {
       `;
     } else {
       incomingVoiceList.innerHTML = inbox
-        .map(
-          (item) => `
+        .map((item) => {
+          const u = item.robosUser;
+          const pct = u && u.confidence ? Math.round(u.confidence * 100) : 0;
+          const userBadge = u && u.name
+            ? `<span class="voice-user-pill" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:0.74rem;font-weight:600;background:${u.identified ? 'rgba(0,188,212,0.18)' : 'rgba(139,148,158,0.18)'};border:1px solid ${u.identified ? 'rgba(0,188,212,0.45)' : 'rgba(139,148,158,0.35)'};color:#f0f6fc;">👤 ${u.name}${u.identified && pct ? ` (${pct}% match)` : ''}</span>`
+            : '';
+          const enrollBtn = item.audioWavPath
+            ? `<button type="button" class="btn btn-secondary btn-sm btn-enroll-inbox-wav" data-wav="${item.audioWavPath}" data-transcript="${(item.transcript || '').replace(/"/g, '&quot;')}" style="padding:2px 8px;font-size:0.72rem;">+ Enroll Voiceprint</button>`
+            : '';
+          return `
           <div class="incoming-msg-card">
-            <div class="incoming-msg-top">
-              <span>From Speaker (${item.speakerIp}) • Triggered by: ${item.wakeWord || 'Speaker Mic'}${item.skill ? ` • Skill: <strong>${item.skill}</strong>` : ''}</span>
-              <span>${item.timestamp || ''}</span>
+            <div class="incoming-msg-top" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span>From Speaker (${item.speakerIp}) • ${item.wakeWord || 'Speaker Mic'}${item.skill ? ` • Skill: <strong>${item.skill}</strong>` : ''} ${userBadge}</span>
+              <span style="display:inline-flex;align-items:center;gap:8px;">${enrollBtn}<span>${item.timestamp || ''}</span></span>
             </div>
             <div class="incoming-msg-text">"${item.transcript}"</div>
             ${item.reply ? `<div class="incoming-msg-reply">↳ Speaker Reply: "${item.reply}"</div>` : ''}
             ${item.audioWavPath ? `<audio controls class="incoming-msg-audio" src="file://${item.audioWavPath}"></audio>` : ''}
           </div>
-        `
-        )
+        `;
+        })
         .join('');
+
+      incomingVoiceList.querySelectorAll('.btn-enroll-inbox-wav').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const wavPath = btn.getAttribute('data-wav');
+          const transcript = btn.getAttribute('data-transcript') || '';
+          const nameInput = document.getElementById('voice-onboard-name');
+          const roleInput = document.getElementById('voice-onboard-role');
+          const userName = (nameInput && nameInput.value.trim()) || 'Nicholas DiPiazza';
+          const userRole = (roleInput && roleInput.value) || 'Owner / Admin';
+          btn.disabled = true;
+          btn.textContent = 'Enrolling...';
+          try {
+            const res = await window.robosSpeaker.enrollVoiceSample({
+              name: userName,
+              role: userRole,
+              wavPath,
+              phrase: transcript,
+              transcript,
+              source: 'inbox-utterance',
+            });
+            if (res && res.ok) {
+              btn.textContent = `✓ Enrolled (${userName})`;
+              await refreshVoiceIdProfiles();
+            } else {
+              btn.textContent = 'Enroll Failed';
+            }
+          } catch {
+            btn.textContent = 'Enroll Error';
+          } finally {
+            setTimeout(() => { btn.disabled = false; }, 1500);
+          }
+        });
+      });
     }
   }
 }
@@ -1434,10 +1475,280 @@ async function initIncomingListener() {
   if (window.robosSpeaker.onVoiceListenerUpdate) {
     window.robosSpeaker.onVoiceListenerUpdate((st) => {
       renderIncomingListenerState(st);
+      refreshVoiceIdProfiles().catch(() => {});
     });
   }
   const st = await window.robosSpeaker.getVoiceListenerStatus();
   renderIncomingListenerState(st);
+}
+
+// -------------------------------------------------------------
+// RobOS Voice ID & Speaker Onboarding UI
+// -------------------------------------------------------------
+const voiceOnboardName = document.getElementById('voice-onboard-name');
+const voiceOnboardRole = document.getElementById('voice-onboard-role');
+const voiceOnboardSpeakerIp = document.getElementById('voice-onboard-speaker-ip');
+const btnVoiceSaveProfile = document.getElementById('btn-voice-save-profile');
+const voiceOnboardPhrasesList = document.getElementById('voice-onboard-phrases-list');
+const voiceOnboardStatus = document.getElementById('voice-onboard-status');
+const voiceProfilesGrid = document.getElementById('voice-profiles-grid');
+const btnVoiceIdRefresh = document.getElementById('btn-voice-id-refresh');
+const btnVoiceIdTestWhoami = document.getElementById('btn-voice-id-test-whoami');
+
+async function captureDesktopMicPcm16k(durationMs = 3500) {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+  const source = audioCtx.createMediaStreamSource(stream);
+  const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+  const floatChunks = [];
+
+  processor.onaudioprocess = (e) => {
+    const ch = e.inputBuffer.getChannelData(0);
+    floatChunks.push(new Float32Array(ch));
+  };
+
+  source.connect(processor);
+  processor.connect(audioCtx.destination);
+
+  await new Promise((r) => setTimeout(r, durationMs));
+
+  processor.disconnect();
+  source.disconnect();
+  stream.getTracks().forEach((t) => t.stop());
+  await audioCtx.close().catch(() => {});
+
+  const totalLen = floatChunks.reduce((acc, c) => acc + c.length, 0);
+  const pcmBuf = new ArrayBuffer(totalLen * 2);
+  const view = new DataView(pcmBuf);
+  let offset = 0;
+  for (const chunk of floatChunks) {
+    for (let i = 0; i < chunk.length; i++) {
+      const s = Math.max(-1, Math.min(1, chunk[i]));
+      view.setInt16(offset, Math.round(s * 32767), true);
+      offset += 2;
+    }
+  }
+  return pcmBuf;
+}
+
+async function renderVoiceOnboardingPhrases() {
+  if (!voiceOnboardPhrasesList || !window.robosSpeaker?.getVoiceOnboardingPhrases) return;
+  const phrases = await window.robosSpeaker.getVoiceOnboardingPhrases();
+  const profiles = (await window.robosSpeaker.getVoiceProfiles()) || [];
+  const activeName = (voiceOnboardName && voiceOnboardName.value.trim()) || '';
+  const activeProf = profiles.find((p) => p.name.toLowerCase() === activeName.toLowerCase());
+
+  voiceOnboardPhrasesList.innerHTML = (phrases || [])
+    .map((p) => {
+      const recordedSample = activeProf?.samples?.find((s) => Number(s.step) === Number(p.step));
+      const badge = recordedSample
+        ? `<span class="badge badge-cyan">✓ Enrolled (${recordedSample.durationSec || 2}s)</span>`
+        : `<span class="badge">Step ${p.step} of 3</span>`;
+      return `
+        <div class="registered-device-card" data-phrase-step="${p.step}">
+          <div class="reg-dev-top">
+            <div>
+              <div class="reg-dev-title">Phrase ${p.step}: "${p.prompt}"</div>
+              <div class="reg-dev-sub">${p.hint}</div>
+            </div>
+            ${badge}
+          </div>
+          <div class="reg-dev-actions" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm btn-onboard-rec-speaker" data-step="${p.step}" data-prompt="${p.prompt.replace(/"/g, '&quot;')}">
+              🎙️ Record on Speaker
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm btn-onboard-rec-desktop" data-step="${p.step}" data-prompt="${p.prompt.replace(/"/g, '&quot;')}">
+              💻 Record on Desktop Mic (3.5s)
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  voiceOnboardPhrasesList.querySelectorAll('.btn-onboard-rec-speaker').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const step = Number(btn.getAttribute('data-step')) || 1;
+      const prompt = btn.getAttribute('data-prompt') || '';
+      const name = (voiceOnboardName && voiceOnboardName.value.trim()) || 'Nicholas DiPiazza';
+      const role = (voiceOnboardRole && voiceOnboardRole.value) || 'Owner / Admin';
+      const ip = (voiceOnboardSpeakerIp && voiceOnboardSpeakerIp.value.trim()) || '192.168.1.64';
+
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = 'Listening on Speaker...';
+      if (voiceOnboardStatus) {
+        voiceOnboardStatus.innerHTML = `🎙️ Speak onto <strong>${ip}</strong> now: <em>"${prompt}"</em>`;
+      }
+      try {
+        const res = await window.robosSpeaker.recordVoiceSampleFromSpeaker(ip, {
+          name,
+          role,
+          step,
+          phrase: prompt,
+        });
+        if (res && res.ok) {
+          if (voiceOnboardStatus) {
+            voiceOnboardStatus.innerHTML = `✅ Enrolled <strong>Step ${step}</strong> for <strong>${res.profile.name}</strong> (${res.profile.sampleCount}/3 phrases complete, pitch: ${res.sample?.stats?.pitchHz || '—'} Hz, method: <code>${res.sample?.method || 'wavlm-xvector+acoustic'}</code>).`;
+          }
+          await refreshVoiceIdProfiles();
+        } else if (voiceOnboardStatus) {
+          voiceOnboardStatus.innerHTML = `⚠️ Could not capture sample from speaker: ${res?.error || 'Timed out'}`;
+        }
+      } catch (err) {
+        if (voiceOnboardStatus) {
+          voiceOnboardStatus.innerHTML = `⚠️ Error: ${err.message}`;
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    });
+  });
+
+  voiceOnboardPhrasesList.querySelectorAll('.btn-onboard-rec-desktop').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const step = Number(btn.getAttribute('data-step')) || 1;
+      const prompt = btn.getAttribute('data-prompt') || '';
+      const name = (voiceOnboardName && voiceOnboardName.value.trim()) || 'Nicholas DiPiazza';
+      const role = (voiceOnboardRole && voiceOnboardRole.value) || 'Owner / Admin';
+
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = 'Recording (3.5s)...';
+      if (voiceOnboardStatus) {
+        voiceOnboardStatus.innerHTML = `💻 Speak into your desktop microphone now: <em>"${prompt}"</em>`;
+      }
+      try {
+        const pcmBuf = await captureDesktopMicPcm16k(3500);
+        const res = await window.robosSpeaker.enrollVoiceSample({
+          name,
+          role,
+          step,
+          phrase: prompt,
+          source: 'desktop-mic',
+          arrayBuffer: pcmBuf,
+        });
+        if (res && res.ok) {
+          if (voiceOnboardStatus) {
+            voiceOnboardStatus.innerHTML = `✅ Enrolled <strong>Step ${step}</strong> for <strong>${res.profile.name}</strong> (${res.profile.sampleCount}/3 phrases complete, pitch: ${res.sample?.stats?.pitchHz || '—'} Hz).`;
+          }
+          await refreshVoiceIdProfiles();
+        } else if (voiceOnboardStatus) {
+          voiceOnboardStatus.innerHTML = `⚠️ Enrollment failed: ${res?.error || 'Unknown error'}`;
+        }
+      } catch (err) {
+        if (voiceOnboardStatus) {
+          voiceOnboardStatus.innerHTML = `⚠️ Microphone error: ${err.message}`;
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    });
+  });
+}
+
+async function refreshVoiceIdProfiles() {
+  if (!voiceProfilesGrid || !window.robosSpeaker?.getVoiceProfiles) return;
+  const profiles = (await window.robosSpeaker.getVoiceProfiles()) || [];
+  await renderVoiceOnboardingPhrases();
+
+  if (profiles.length === 0) {
+    voiceProfilesGrid.innerHTML = `
+      <div class="incoming-empty-state" style="grid-column:1/-1;">
+        No RobOS User voiceprints enrolled yet. Enter your name above and record the 3 calibration phrases, or say <strong>"Hello Nabu, remember my voice as [Your Name]"</strong> to your speaker!
+      </div>
+    `;
+    return;
+  }
+
+  voiceProfilesGrid.innerHTML = profiles
+    .map((p) => {
+      const pitchLabel = p.voiceStats?.averagePitchHz ? `${p.voiceStats.averagePitchHz} Hz avg pitch` : 'Biometric profile';
+      const neuralBadge = p.hasNeuralVoiceprint
+        ? `<span class="badge badge-cyan">512-dim WavLM X-Vector + 48-dim DSP</span>`
+        : `<span class="badge">48-dim Acoustic DSP</span>`;
+      return `
+        <div class="registered-device-card" data-user-id="${p.userId}">
+          <div class="reg-dev-top">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:50%;background:${p.avatarColor || '#00bcd4'};display:flex;align-items:center;justify-content:center;font-weight:700;color:#0d1117;">
+                ${(p.name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div class="reg-dev-title">${p.name} <span style="font-size:0.76rem;color:var(--text-secondary);font-weight:400;">(${p.role || 'User'})</span></div>
+                <div class="reg-dev-sub">User ID: <code>${p.userId}</code> • ${p.sampleCount} voice sample${p.sampleCount === 1 ? '' : 's'} • ${pitchLabel}</div>
+              </div>
+            </div>
+            ${neuralBadge}
+          </div>
+          <div class="reg-dev-actions" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary btn-sm btn-voice-select-user" data-name="${p.name.replace(/"/g, '&quot;')}" data-role="${(p.role || 'Owner / Admin').replace(/"/g, '&quot;')}">
+              Select for Onboarding
+            </button>
+            <button type="button" class="btn btn-danger btn-sm btn-voice-remove-user" data-user-id="${p.userId}">
+              Remove Profile
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  voiceProfilesGrid.querySelectorAll('.btn-voice-select-user').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (voiceOnboardName) voiceOnboardName.value = btn.getAttribute('data-name') || '';
+      if (voiceOnboardRole) voiceOnboardRole.value = btn.getAttribute('data-role') || 'Owner / Admin';
+      renderVoiceOnboardingPhrases();
+    });
+  });
+
+  voiceProfilesGrid.querySelectorAll('.btn-voice-remove-user').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const uid = btn.getAttribute('data-user-id');
+      if (!uid) return;
+      await window.robosSpeaker.removeVoiceUserProfile(uid);
+      await refreshVoiceIdProfiles();
+    });
+  });
+}
+
+async function initVoiceIdentityTab() {
+  if (!window.robosSpeaker?.getVoiceProfiles) return;
+  try {
+    const defUser = await window.robosSpeaker.getDefaultWorkstationUser();
+    if (voiceOnboardName && !voiceOnboardName.value && defUser?.name) {
+      voiceOnboardName.value = defUser.name;
+    }
+  } catch {}
+
+  if (btnVoiceSaveProfile) {
+    btnVoiceSaveProfile.addEventListener('click', async () => {
+      const name = (voiceOnboardName && voiceOnboardName.value.trim()) || 'Nicholas DiPiazza';
+      const role = (voiceOnboardRole && voiceOnboardRole.value) || 'Owner / Admin';
+      const prof = await window.robosSpeaker.upsertVoiceUserProfile({ name, role });
+      if (voiceOnboardStatus && prof) {
+        voiceOnboardStatus.innerHTML = `✅ Saved RobOS User profile for <strong>${prof.name}</strong> (<code>${prof.userId}</code>). Now record the 3 calibration phrases below!`;
+      }
+      await refreshVoiceIdProfiles();
+    });
+  }
+
+  if (btnVoiceIdRefresh) {
+    btnVoiceIdRefresh.addEventListener('click', () => refreshVoiceIdProfiles());
+  }
+
+  if (btnVoiceIdTestWhoami) {
+    btnVoiceIdTestWhoami.addEventListener('click', async () => {
+      const res = await window.robosSpeaker.executeVoiceCommand('Hello Nabu, who am I?', { speakReply: false });
+      if (voiceOnboardStatus && res) {
+        voiceOnboardStatus.innerHTML = `🔎 <strong>Who Am I Result:</strong> ${res.response}`;
+      }
+    });
+  }
+
+  await refreshVoiceIdProfiles();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1449,5 +1760,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDeviceCatalog();
   renderRegisteredDevices();
   initIncomingListener();
+  initVoiceIdentityTab();
 });
 

@@ -21,6 +21,17 @@ contextBridge.exposeInMainWorld('robosSpeaker', {
   clearVoiceInbox: () => ipcRenderer.invoke('speakers:clearInbox'),
   triggerSpeakerMicNow: (ip, options) => ipcRenderer.invoke('speakers:triggerMicNow', ip, options),
   executeVoiceCommand: (commandText, options) => ipcRenderer.invoke('speakers:executeVoiceCommand', commandText, options),
+
+  // RobOS Voice ID & Speaker Onboarding
+  getVoiceProfiles: () => ipcRenderer.invoke('voiceId:getProfiles'),
+  getVoiceOnboardingPhrases: () => ipcRenderer.invoke('voiceId:getOnboardingPhrases'),
+  getDefaultWorkstationUser: () => ipcRenderer.invoke('voiceId:getDefaultUser'),
+  getActiveVoiceContext: () => ipcRenderer.invoke('voiceId:getActiveContext'),
+  upsertVoiceUserProfile: (userData) => ipcRenderer.invoke('voiceId:upsertUser', userData),
+  removeVoiceUserProfile: (userId, sampleId) => ipcRenderer.invoke('voiceId:removeUser', userId, sampleId),
+  enrollVoiceSample: (params) => ipcRenderer.invoke('voiceId:enrollSample', params),
+  recordVoiceSampleFromSpeaker: (ip, params) => ipcRenderer.invoke('voiceId:recordFromSpeaker', ip, params),
+  identifyVoiceSample: (params) => ipcRenderer.invoke('voiceId:identifySample', params),
   onVoiceListenerUpdate: (cb) => {
     const handler = (_event, status) => cb(status);
     ipcRenderer.on('speakers:listener-update', handler);
