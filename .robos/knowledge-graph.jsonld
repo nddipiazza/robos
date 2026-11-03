@@ -704,7 +704,7 @@
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
       "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:localPath": "packages/kgraph-parse-portal",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -773,7 +773,7 @@
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:globalHotkey": "Super+V",
       "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:localPath": "packages/voice-prompt",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -1329,7 +1329,7 @@
         }
       ],
       "robos:inOrganization": "urn:robos:git-org:acme",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:localPath": "packages/rest-client",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -16089,9 +16089,9 @@
       "robos:revealedRooms": [
         "room-sw-8"
       ],
-      "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_custom-quest_custom-quest.json",
+      "robos:saveFilePath": "user://tabletop_autosave_custom-quest_custom-quest.json",
       "robos:savedAt": "2026-10-17T21:27:53.000Z",
-      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_custom-quest_custom-quest.png",
+      "robos:screenshotPath": "user://tabletop_autosave_custom-quest_custom-quest.png",
       "robos:searchedRooms": [
         "room-sw-8"
       ],
@@ -16411,9 +16411,9 @@
         "room-sw-11",
         "room-sw-5"
       ],
-      "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json",
+      "robos:saveFilePath": "user://tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json",
       "robos:savedAt": "2026-10-20T19:49:52.000Z",
-      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
+      "robos:screenshotPath": "user://tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
       "robos:searchedRooms": [],
       "robos:totalPartyGold": 0,
       "robos:trapsDetectedCount": 0,
@@ -18673,7 +18673,7 @@
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
       "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:localPath": "packages/kgraph-parse-portal",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -18742,7 +18742,7 @@
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:globalHotkey": "Super+V",
       "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:localPath": "packages/voice-prompt",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -19298,7 +19298,7 @@
         }
       ],
       "robos:inOrganization": "urn:robos:git-org:acme",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:localPath": "packages/rest-client",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -34058,9 +34058,9 @@
       "robos:revealedRooms": [
         "room-sw-8"
       ],
-      "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_custom-quest_custom-quest.json",
+      "robos:saveFilePath": "user://tabletop_autosave_custom-quest_custom-quest.json",
       "robos:savedAt": "2026-10-17T21:27:53.000Z",
-      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_custom-quest_custom-quest.png",
+      "robos:screenshotPath": "user://tabletop_autosave_custom-quest_custom-quest.png",
       "robos:searchedRooms": [
         "room-sw-8"
       ],
@@ -34380,9 +34380,9 @@
         "room-sw-11",
         "room-sw-5"
       ],
-      "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json",
+      "robos:saveFilePath": "user://tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json",
       "robos:savedAt": "2026-10-20T19:49:52.000Z",
-      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
+      "robos:screenshotPath": "user://tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
       "robos:searchedRooms": [],
       "robos:totalPartyGold": 0,
       "robos:trapsDetectedCount": 0,

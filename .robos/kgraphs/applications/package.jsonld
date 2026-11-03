@@ -176,7 +176,7 @@
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
       "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:localPath": "packages/kgraph-parse-portal",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -200,7 +200,7 @@
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:globalHotkey": "Super+V",
       "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:localPath": "packages/voice-prompt",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -253,7 +253,7 @@
         }
       ],
       "robos:inOrganization": "urn:robos:git-org:acme",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:localPath": "packages/rest-client",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -701,7 +701,7 @@
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
       "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:localPath": "packages/kgraph-parse-portal",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -725,7 +725,7 @@
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:globalHotkey": "Super+V",
       "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:localPath": "packages/voice-prompt",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
@@ -778,7 +778,7 @@
         }
       ],
       "robos:inOrganization": "urn:robos:git-org:acme",
-      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:localPath": "packages/rest-client",
       "robos:namespace": "robos.applications",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:package": "applications",
