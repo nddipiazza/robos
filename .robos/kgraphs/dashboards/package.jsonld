@@ -653,7 +653,7 @@
     {
       "@id": "urn:robos:dashboard-widget:smart-lights",
       "@type": "robos:DashboardWidget",
-      "dcterms:title": "RobOS Smart Light Studio Controller",
+      "dcterms:title": "RobOS Smart Home Lights",
       "robos:componentTag": "robos-widget-smart-lights",
       "robos:description": "Displays LAN smart bulb rooms, circadian daylight state, and quick scene triggers.",
       "robos:package": "dashboards",

@@ -13,7 +13,7 @@ test('every Windows app has intent vocabulary, with ordinary language ranked app
     'car repair': 'auto-center', 'cash register': 'point-of-sale', budget: 'household', sql: 'db-manager',
     password: 'pass-manager', 'install apps': 'software-center', 'new app': 'app-wizard', docs: 'robos-documentation',
     'pull requests': 'pr-review', 'k8s': 'kube-studio', 'café': 'point-of-sale',
-    'watch movies': 'movie-player', 'pair tv': 'robos-tv', 'smart lights': 'smart-light',
+    'watch movies': 'movie-player', 'pair tv': 'robos-tv', 'smart lights': 'smart-home', 'lg washer': 'smart-home',
     'vpn locations': 'vpn-servers', 'vpn sandbox': 'vpn-sandbox', 'game playthrough': 'game-playthrough',
     'custom dashboards': 'robos-dashboards', 'cloud accounts': 'cloud-accounts', appointments: 'google-calendar',
     yubikey: 'hardware-keys', 'security keys': 'hardware-keys', passkeys: 'hardware-keys', tailscale: 'app-mesh', wireguard: 'app-mesh',

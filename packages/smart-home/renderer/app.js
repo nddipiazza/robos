@@ -511,13 +511,110 @@ function renderProtocolInspector(overview) {
   }
 }
 
+const APPLIANCE_POLL_MS = 60 * 1000;
+const APPLIANCE_ICONS = { washer: '🧺', washtower: '🧺', dryer: '🌀', refrigerator: '🧊' };
+
+function setApplianceMessage(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('hidden', !message);
+}
+
+function renderApplianceUnit(unit) {
+  const isAlert = /door open|error/i.test(unit.status);
+  const facts = unit.facts
+    .map((item) => `<dt>${esc(item.label)}</dt><dd>${esc(item.value)}</dd>`)
+    .join('');
+  return `
+    ${unit.label ? `<div class="appliance-unit-label">${esc(unit.label)}</div>` : ''}
+    <div class="appliance-status${isAlert ? ' is-alert' : ''}">${esc(unit.status)}</div>
+    ${facts ? `<dl class="appliance-facts">${facts}</dl>` : ''}`;
+}
+
+function renderAppliance(device) {
+  return `
+    <article class="light-card appliance-card${device.reachable ? '' : ' is-offline'}" data-appliance-kind="${esc(device.kind)}">
+      <div class="appliance-head">
+        <div>
+          <div class="appliance-name">${APPLIANCE_ICONS[device.kind] || '🔌'} ${esc(device.name)}</div>
+          <div class="appliance-model">${esc(device.typeLabel)}${device.model ? ` · ${esc(device.model)}` : ''}</div>
+        </div>
+        <span class="badge ${device.reachable ? 'badge-green' : ''}">${device.reachable ? 'Online' : 'Offline'}</span>
+      </div>
+      ${device.reachable ? device.units.map(renderApplianceUnit).join('') : `<p class="muted-text">${esc(device.error)}</p>`}
+    </article>`;
+}
+
+function renderAppliances(overview) {
+  document.getElementById('appliances-connect')?.classList.toggle('hidden', overview.connected);
+  document.getElementById('appliances-connected')?.classList.toggle('hidden', !overview.connected);
+  if (!overview.connected) return;
+
+  setApplianceMessage('appliances-error', overview.error);
+  const updated = document.getElementById('appliances-updated');
+  if (updated) {
+    updated.textContent = overview.updatedAt
+      ? `Updated ${new Date(overview.updatedAt).toLocaleTimeString()} from LG ThinQ. Checks again every minute while this tab is open.`
+      : 'Reading your appliances from LG ThinQ…';
+  }
+  const grid = document.getElementById('appliances-grid');
+  if (grid) {
+    grid.innerHTML = overview.devices.length
+      ? overview.devices.map(renderAppliance).join('')
+      : overview.updatedAt
+        ? '<p class="muted-text">LG found no appliances on this ThinQ account.</p>'
+        : '';
+  }
+}
+
+async function refreshAppliances(opts) {
+  renderAppliances(await window.robos.refreshAppliances(opts));
+}
+
+function bindApplianceEvents() {
+  document.getElementById('btn-appliance-token-page')?.addEventListener('click', () => {
+    window.robos.openApplianceTokenPage();
+  });
+
+  document.getElementById('btn-appliance-connect')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const tokenInput = document.getElementById('input-appliance-token');
+    const countryCode = document.getElementById('input-appliance-country')?.value;
+    button.disabled = true;
+    setApplianceMessage('appliance-connect-error', '');
+    const res = await window.robos.connectAppliances({ token: tokenInput?.value, countryCode });
+    button.disabled = false;
+    if (res.ok && tokenInput) tokenInput.value = '';
+    if (!res.ok) setApplianceMessage('appliance-connect-error', res.error);
+    renderAppliances(res.overview);
+  });
+
+  document.getElementById('btn-appliance-refresh')?.addEventListener('click', () => {
+    refreshAppliances({ force: true });
+  });
+
+  document.getElementById('btn-appliance-forget')?.addEventListener('click', async () => {
+    renderAppliances(await window.robos.disconnectAppliances());
+  });
+
+  // Only poll while someone can see the tab; LG limits how often an account may ask.
+  setInterval(() => {
+    const visible = document.getElementById('tab-appliances')?.classList.contains('active');
+    if (visible && !document.hidden) refreshAppliances();
+  }, APPLIANCE_POLL_MS);
+}
+
 function bindStaticEvents() {
+  bindApplianceEvents();
+
   // Tabs
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const target = btn.getAttribute('data-tab');
       document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
       document.querySelectorAll('.tab-pane').forEach((p) => p.classList.toggle('active', p.id === target));
+      if (target === 'tab-appliances') refreshAppliances();
     });
   });
 
@@ -705,4 +802,5 @@ window.addEventListener('DOMContentLoaded', async () => {
   bindStaticEvents();
   const overview = await window.robos.getOverview();
   renderAll(overview);
+  renderAppliances(await window.robos.getAppliances());
 });

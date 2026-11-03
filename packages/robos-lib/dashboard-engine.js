@@ -171,7 +171,7 @@ const DASHBOARD_WIDGET_CATALOG = [
   {
     type: 'smart-lights',
     kgraphId: 'urn:robos:dashboard-widget:smart-lights',
-    title: 'RobOS Smart Light Rooms & Scenes',
+    title: 'RobOS Smart Home Lights',
     componentTag: 'robos-widget-smart-lights',
     category: 'Smart Home & TV',
     icon: '💡',

@@ -129,7 +129,7 @@ questions:
     options:
       - { label: "Music and movies, on the TV too", apps: [audio-player, movie-player, robos-tv] }
       - { label: "Family money and taxes", apps: [household] }
-      - { label: "Smart lights and speakers", apps: [smart-light, home-speaker] }
+      - { label: "Smart lights and speakers", apps: [smart-home, home-speaker] }
       - { label: "Calendar, contacts and cloud files", apps: [cloud-accounts, google-calendar] }
       - { label: "My car's upkeep and repairs", apps: [auto-center] }
       - { label: "A game night with friends", apps: [party-game] }
@@ -370,7 +370,7 @@ apps:
   audio-player: { name: "Audio Player", url: "/apps/audio-player/", text: "Your music library, lyrics, and casting to Google speakers." }
   movie-player: { name: "Movie Player", url: "/movie-player/", text: "Your movies and shows with posters, subtitles and TV casting." }
   robos-tv: { name: "Smart TV Studio", url: "/tv/", text: "Pair your TV and put RobOS apps on the big screen." }
-  smart-light: { name: "Smart Light", url: "/apps/smart-light/", text: "Wi-Fi lights by room, scenes and a daylight schedule." }
+  smart-home: { name: "Smart Home", url: "/apps/smart-home/", text: "Wi-Fi lights by room, scenes, a daylight schedule and LG appliance status." }
   home-speaker: { name: "Home Speaker", url: "/apps/home-speaker/", text: "Intercom, voice notes and announcements on your speakers." }
   cloud-accounts: { name: "Cloud Accounts", url: "/apps/cloud-accounts/", text: "Sign in to Google, Microsoft and others once, for every app." }
   google-calendar: { name: "Google Calendar", url: "/apps/google-calendar/", text: "Sets up your Google calendar, contacts and mail in Thunderbird." }
