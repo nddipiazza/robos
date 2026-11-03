@@ -339,7 +339,7 @@ const systemIconDataUriCache = {};
  * Covers every installed theme automatically.
  */
 function getSearchHomes() {
-  const list = [process.env.HOME, process.env.REAL_HOME, process.env.ROBOS_HOST_HOME, '/home/robos', '/home/ndipiazza'];
+  const list = [process.env.HOME, process.env.REAL_HOME, process.env.ROBOS_HOST_HOME, '/home/robos'];
   if (process.env.USER) list.push(`/home/${process.env.USER}`);
   return Array.from(new Set(list.filter(Boolean)));
 }
