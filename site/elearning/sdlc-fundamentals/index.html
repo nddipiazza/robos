@@ -1509,19 +1509,73 @@ redirect_from:
       saveProgress();
     }
 
-    function answerQuiz(mIdx, qIdx, selectedOpt, correctOpt, explanation) {
+    function hashQuizSeed(str) {
+      let h = 2166136261;
+      for (let i = 0; i < String(str).length; i++) {
+        h ^= String(str).charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function getQuizSessionSalt() {
+      try {
+        let salt = sessionStorage.getItem('robos_quiz_salt');
+        if (!salt) {
+          salt = String(Math.floor(Math.random() * 0x7fffffff) + 1);
+          sessionStorage.setItem('robos_quiz_salt', salt);
+        }
+        return salt;
+      } catch {
+        return '1337';
+      }
+    }
+
+    function getShuffledQuizOptions(mIdx, qIdx, q) {
+      const base = (q && Array.isArray(q.options) && q.options.length)
+        ? q.options.slice()
+        : [q.answer, 'Alternative A', 'Alternative B'];
+      if (q && q.answer && !base.includes(q.answer)) base.unshift(q.answer);
+      let seed = hashQuizSeed(getQuizSessionSalt() + ':' + mIdx + ':' + qIdx + ':' + ((q && q.question) || '')) || 1;
+      for (let i = base.length - 1; i > 0; i--) {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        const j = seed % (i + 1);
+        const tmp = base[i];
+        base[i] = base[j];
+        base[j] = tmp;
+      }
+      return base;
+    }
+
+    function answerQuiz(mIdx, qIdx, selectedOrIdx, legacyCorrectOpt, legacyExplanation) {
       const fb = document.getElementById('quiz-feedback-' + mIdx + '-' + qIdx);
+      const m = MODULES_DATA[mIdx];
+      const q = (m && Array.isArray(m.quiz)) ? m.quiz[qIdx] : null;
+      const opts = q ? getShuffledQuizOptions(mIdx, qIdx, q) : [];
+      const selectedOpt = (typeof selectedOrIdx === 'number' && opts[selectedOrIdx] !== undefined)
+        ? opts[selectedOrIdx]
+        : String(selectedOrIdx || '');
+      const correctOpt = (q && q.answer) ? q.answer : String(legacyCorrectOpt || '');
+      const explanation = (q && q.explanation) ? q.explanation : String(legacyExplanation || '');
       const isCorrect = selectedOpt === correctOpt;
-      progress.passedQuizzes[mIdx + '-' + qIdx] = isCorrect;
+      const key = mIdx + '-' + qIdx;
+      progress.quizAttempts = progress.quizAttempts || {};
+      progress.quizSelections = progress.quizSelections || {};
+      progress.quizAttempts[key] = (progress.quizAttempts[key] || 0) + 1;
+      progress.quizSelections[key] = selectedOpt;
+      progress.passedQuizzes[key] = isCorrect;
 
       if (fb) {
         if (isCorrect) {
           fb.className = 'quiz-feedback pass';
-          fb.innerHTML = '✅ <strong>Correct!</strong> ' + (explanation || 'Great job.');
+          fb.innerHTML = '✅ <strong>Correct!</strong> ' + formatStepText(explanation || 'Verified architectural understanding.');
           announceA11y('Question ' + (qIdx + 1) + ': Correct! ' + (explanation || ''));
         } else {
+          const tries = progress.quizAttempts[key];
           fb.className = 'quiz-feedback fail';
-          fb.innerHTML = '❌ <strong>Incorrect.</strong> Review the lesson materials above and try again.';
+          fb.innerHTML = tries >= 2 && explanation
+            ? '❌ <strong>Not quite (Attempt ' + tries + ').</strong> <em>Architectural Insight:</em> ' + formatStepText(explanation)
+            : '❌ <strong>Not quite.</strong> Re-examine the edge cases and architectural trade-offs in the lesson above and try another option.';
           announceA11y('Question ' + (qIdx + 1) + ': Incorrect. Review the lesson materials above and try again.');
         }
       }
@@ -2469,27 +2523,30 @@ flowchart LR
             <h3 id="section-quiz" class="section-title">📝 Module Knowledge Check</h3>
             <div class="quiz-section">
               ${m.quiz.map((q, qIdx) => {
-                const passed = !!progress.passedQuizzes[currentModIdx + '-' + qIdx];
+                const key = currentModIdx + '-' + qIdx;
+                const passed = !!progress.passedQuizzes[key];
+                const selectedOpt = (progress.quizSelections && progress.quizSelections[key]) || (passed ? q.answer : null);
+                const shuffledOpts = getShuffledQuizOptions(currentModIdx, qIdx, q);
                 return `
                   <fieldset class="quiz-card" role="group" aria-labelledby="quiz-q-${currentModIdx}-${qIdx}">
-                    <legend class="quiz-q" id="quiz-q-${currentModIdx}-${qIdx}">Question ${qIdx + 1}: ${q.question}</legend>
+                    <legend class="quiz-q" id="quiz-q-${currentModIdx}-${qIdx}">Question ${qIdx + 1}: ${formatStepText(q.question)}</legend>
                     <div class="quiz-options" role="radiogroup" aria-labelledby="quiz-q-${currentModIdx}-${qIdx}">
-                      ${(q.options || [q.answer, 'Alternative A', 'Alternative B']).map((opt, oIdx) => {
-                        const escapedOpt = opt.replace(/"/g, '&quot;');
-                        const escapedAns = (q.answer || '').replace(/"/g, '&quot;');
-                        const escapedExp = (q.explanation || '').replace(/"/g, '&quot;');
+                      ${shuffledOpts.map((opt, oIdx) => {
+                        const escapedOpt = String(opt || '').replace(/"/g, '&quot;');
+                        const isChecked = selectedOpt === opt;
+                        const optLetter = String.fromCharCode(65 + oIdx);
                         return `
                           <label class="quiz-opt">
-                            <input type="radio" name="quiz-${currentModIdx}-${qIdx}" value="${escapedOpt}"
-                                   onchange="answerQuiz(${currentModIdx}, ${qIdx}, '${escapedOpt}', '${escapedAns}', '${escapedExp}')"
+                            <input type="radio" name="quiz-${currentModIdx}-${qIdx}" value="${escapedOpt}" ${isChecked ? 'checked' : ''}
+                                   onchange="answerQuiz(${currentModIdx}, ${qIdx}, ${oIdx})"
                                    aria-describedby="quiz-feedback-${currentModIdx}-${qIdx}">
-                            <span>${opt}</span>
+                            <span><strong>${optLetter}.</strong> ${formatStepText(opt)}</span>
                           </label>
                         `;
                       }).join('')}
                     </div>
                     <div class="quiz-feedback ${passed ? 'pass' : ''}" id="quiz-feedback-${currentModIdx}-${qIdx}" role="status" aria-live="polite">
-                      ${passed ? '✅ <strong>Correct!</strong> ' + (q.explanation || '') : ''}
+                      ${passed ? '✅ <strong>Correct!</strong> ' + formatStepText(q.explanation || '') : ''}
                     </div>
                   </fieldset>
                 `;

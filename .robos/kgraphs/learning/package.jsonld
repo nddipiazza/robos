@@ -154,8 +154,8 @@
               "answer": "The app's description in the knowledge graph (KGraph)",
               "explanation": "The KGraph records what the app is, how it works and how to test it. A change starts as an edit to that description.",
               "options": [
-                "The app's description in the knowledge graph (KGraph)",
                 "A cloud copy of your data that the agent edits",
+                "The app's description in the knowledge graph (KGraph)",
                 "A paid RobOS support plan",
                 "A screenshot of the app you send to the agent"
               ],
@@ -165,10 +165,10 @@
               "answer": "It works normally; AI features are optional extras",
               "explanation": "Every RobOS app must stay fully usable with no agent configured. AI is always behind an explicit action you choose to take.",
               "options": [
-                "It works normally; AI features are optional extras",
                 "It opens in a read-only demo mode",
-                "It asks you to subscribe before it starts",
-                "Only the developer apps keep working"
+                "Only the developer apps keep working",
+                "It works normally; AI features are optional extras",
+                "It asks you to subscribe before it starts"
               ],
               "question": "What happens to a RobOS app if you never set up an AI agent?"
             }
@@ -195,8 +195,8 @@
               "explanation": "Removing apps or the whole manager keeps ~/.config/robos/, so reinstalling picks up where you left off.",
               "options": [
                 "They stay in ~/.config/robos/",
-                "They are uploaded to rowbose.com first",
                 "They are deleted with the apps",
+                "They are uploaded to rowbose.com first",
                 "They move to the Trash"
               ],
               "question": "You uninstall RobOS from the App Manager. What happens to your personal app settings?"
@@ -205,10 +205,10 @@
               "answer": "Apps are separate downloads you choose in the App Manager",
               "explanation": "The manager ships with one shared runtime. Each app downloads only when you select it, and shared pieces download once.",
               "options": [
-                "Apps are separate downloads you choose in the App Manager",
-                "Apps stream from the cloud while you use them",
                 "Only a trial version is included",
-                "The apps are compressed until you pay"
+                "Apps are separate downloads you choose in the App Manager",
+                "The apps are compressed until you pay",
+                "Apps stream from the cloud while you use them"
               ],
               "question": "Why is the base download small?"
             }
@@ -235,10 +235,10 @@
               "answer": "A share",
               "explanation": "A share is a read-only bundle of selected settings that the other person merges into their own lists. A vault is your full private backup.",
               "options": [
-                "A share",
-                "A vault",
                 "A restore point",
-                "A pass entry"
+                "A pass entry",
+                "A vault",
+                "A share"
               ],
               "question": "You want a friend to get your café menu but not the rest of your settings. Which Config Sync target do you use?"
             },
@@ -247,8 +247,8 @@
               "explanation": "Credentials are removed by key name before anything is written to the cloud folder.",
               "options": [
                 "Strips them and never uploads them",
-                "Encrypts them and uploads them to the vault",
                 "Uploads them only to shares",
+                "Encrypts them and uploads them to the vault",
                 "Asks you each time"
               ],
               "question": "What does Config Sync do with credentials such as API keys?"
@@ -276,10 +276,10 @@
               "answer": "The app's knowledge graph",
               "explanation": "The request becomes an edit to the KGraph first, so the change is planned and reviewable before an agent writes code.",
               "options": [
-                "The app's knowledge graph",
                 "The app's code on your main branch",
-                "Your saved data",
-                "The App Manager"
+                "The App Manager",
+                "The app's knowledge graph",
+                "Your saved data"
               ],
               "question": "What is the first thing that changes when you ask for a new feature?"
             },
@@ -287,10 +287,10 @@
               "answer": "Throw the change away; your app is unchanged",
               "explanation": "The agent works on a branch. You only keep the change if the tests and walkthrough convince you.",
               "options": [
-                "Throw the change away; your app is unchanged",
                 "Restore your computer from a backup",
                 "Reinstall the app",
-                "Nothing; the change is already live"
+                "Nothing; the change is already live",
+                "Throw the change away; your app is unchanged"
               ],
               "question": "An agent finished your change and the walkthrough looks wrong. What do you do?"
             },
@@ -300,8 +300,8 @@
               "options": [
                 "The ones you already use, such as Claude Code, Codex, GitHub Copilot or Gemini CLI",
                 "Only a RobOS-hosted model",
-                "Only agents bought through RobOS",
-                "None; you must write the code yourself"
+                "None; you must write the code yourself",
+                "Only agents bought through RobOS"
               ],
               "question": "Which coding agents can RobOS run for you?"
             }
@@ -328,9 +328,9 @@
               "answer": "The key is replaced before the prompt is sent",
               "explanation": "Redact mode removes the secret and sends the rest. Block mode would stop the prompt entirely.",
               "options": [
+                "The app closes",
                 "The key is replaced before the prompt is sent",
                 "The prompt is sent as typed and logged",
-                "The app closes",
                 "The key is sent but encrypted"
               ],
               "question": "Your prompt accidentally contains an AWS secret key and the guard is in redact mode. What happens?"
@@ -339,10 +339,10 @@
               "answer": "Don't press its ✦ buttons; there is nothing else to switch off",
               "explanation": "AI only runs when you start it. An app with no agent configured is a normal app.",
               "options": [
-                "Don't press its ✦ buttons; there is nothing else to switch off",
+                "Disconnect from the internet",
                 "Uninstall the app's AI plug-in",
-                "Cancel a RobOS AI subscription",
-                "Disconnect from the internet"
+                "Don't press its ✦ buttons; there is nothing else to switch off",
+                "Cancel a RobOS AI subscription"
               ],
               "question": "How do you stop an app from ever calling AI?"
             }
@@ -380,9 +380,9 @@
               "answer": "Export website",
               "explanation": "Export website produces a self-contained HTML page. Copy course path and Copy KGraph URI are references for AI agents.",
               "options": [
+                "Save as PDF",
                 "Export website",
                 "Copy course path",
-                "Save as PDF",
                 "Copy KGraph URI"
               ],
               "question": "You want to put a course on your team's website. What do you use?"
@@ -428,10 +428,10 @@
               "answer": "System component managed under team frontend-guild utilizing TypeScript / React",
               "explanation": "Customer Portal SPA is governed under the frontend-guild team topology utilizing TypeScript / React.",
               "options": [
+                "Stateless API gateway proxy managed by platform-infra that only terminates TLS and forwards raw TCP frames",
                 "System component managed under team frontend-guild utilizing TypeScript / React",
-                "Unmanaged third-party binary",
-                "Ephemeral scratch script",
-                "Static mock proxy"
+                "Background batch ETL worker scheduled via cron to archive historical billing records into cold storage",
+                "Embedded SQLite storage engine running inside the cluster ingress controller"
               ],
               "question": "What is the primary architectural role of Customer Portal SPA?"
             }
@@ -453,9 +453,9 @@
               "explanation": "RobOS couples W3C SHACL and OpenAPI/Gherkin contract testing for total verification.",
               "options": [
                 "Through declarative contracts and BDD Gherkin test traceability",
-                "Manual code review only",
-                "Runtime monkey patching",
-                "Ignoring contract drift"
+                "By relying solely on browser-side TypeScript compile checks without server contract validation or E2E scenarios",
+                "By sampling 1% of production HTTP responses and logging schema mismatches to stdout",
+                "By disabling strict JSON schema validation in CI so frontend and backend teams can deploy independently"
               ],
               "question": "How does Customer Portal SPA enforce schema and behavioral guarantees in RobOS?"
             }
@@ -476,10 +476,10 @@
               "answer": ".robos/elearning.yaml",
               "explanation": "All RobOS eLearning curriculums serialize declaratively to .robos/elearning.yaml.",
               "options": [
-                ".robos/elearning.yaml",
-                "Temporary cookies",
-                "External unversioned wiki",
-                "Hardcoded bash comments"
+                "Inside git hook shell scripts under .git/hooks/post-commit",
+                "Inside unversioned CI runner environment variables injected at container startup",
+                "Inside ephemeral browser localStorage keys that remain local to each developer workstation",
+                ".robos/elearning.yaml"
               ],
               "question": "Where are declarative course definitions stored for GitOps synchronization in RobOS?"
             }
@@ -520,7 +520,14 @@
           "quiz": [
             {
               "answer": "Dual-State Knowledge Graph branches with semantic diff verification",
-              "question": "How does RobOS track Microservices & Distributed Systems across git branches?"
+              "question": "How does RobOS track Microservices & Distributed Systems across git branches?",
+              "options": [
+                "By storing serialized SQL database dumps inside git LFS branches and diffing row counts during pull requests",
+                "Dual-State Knowledge Graph branches with semantic diff verification",
+                "By polling live Kubernetes pod logs in production and reverse-engineering service dependencies from stack traces",
+                "By snapshotting container filesystem layers into OCI registries on every git push and comparing layer digests"
+              ],
+              "explanation": "RobOS models services, topics, and contracts as OSLC JSON-LD nodes across World 1 (main) and World 2 (feature branch), running semantic blast-radius diffs before code merges."
             }
           ],
           "title": "Module 1: Foundations & Architecture of Microservices & Distributed Systems"
@@ -537,7 +544,14 @@
           "quiz": [
             {
               "answer": "Strict RED phase assertion check",
-              "question": "What phase ensures no false positives occur during implementation?"
+              "question": "What phase ensures no false positives occur during implementation?",
+              "options": [
+                "Strict RED phase assertion check",
+                "Running mutation fuzzing after merging to main while bypassing pre-implementation failure checks",
+                "Mocking the assertion library itself so all steps return exit code 0 during scaffolding",
+                "Deferring all contract and Gherkin verification until manual staging sign-off"
+              ],
+              "explanation": "In RobOS End-to-End Driven Development (EDD), the Strict RED phase verifies that the new Gherkin scenario or contract test fails as expected before implementation code is written."
             }
           ],
           "title": "Module 2: Hands-On Implementation & Verification"
@@ -554,7 +568,14 @@
           "quiz": [
             {
               "answer": "Whenever Knowledge Graph objects are updated",
-              "question": "When should documentation be reviewed for noticeable updates?"
+              "question": "When should documentation be reviewed for noticeable updates?",
+              "options": [
+                "Only when a container image base OS is upgraded in the Dockerfile",
+                "Only during quarterly compliance audits after major version tags are cut",
+                "Manually at the end of a sprint when all feature branches have been deleted",
+                "Whenever Knowledge Graph objects are updated"
+              ],
+              "explanation": "Because RobOS couples living documentation directly to Knowledge Graph nodes (.robos/kgraphs/), any structural update to KGraph objects triggers a documentation impact check."
             }
           ],
           "title": "Module 3: GitOps Delivery & Automated Continuous Sync"
@@ -598,20 +619,20 @@
             {
               "answer": "So the Y-Sort engine sorts rendering depth by where characters contact the ground",
               "options": [
+                "To prevent sprites from rotating when moving diagonally",
                 "So the Y-Sort engine sorts rendering depth by where characters contact the ground",
-                "Because Godot physics engines only detect collisions at (0, 0)",
                 "To reduce texture memory usage during animation cycles",
-                "To prevent sprites from rotating when moving diagonally"
+                "Because Godot physics engines only detect collisions at (0, 0)"
               ],
               "question": "Why must character sprites in a 2.5D isometric game have their local origin (0, 0) placed at their feet rather than sprite center?"
             },
             {
               "answer": "In autoload singletons like GameState.gd registered in project.godot",
               "options": [
-                "In autoload singletons like GameState.gd registered in project.godot",
+                "Inside the CollisionShape2D user metadata",
                 "In local variables declared on the active scene root",
-                "In temporary environment variables passed through the OS shell",
-                "Inside the CollisionShape2D user metadata"
+                "In autoload singletons like GameState.gd registered in project.godot",
+                "In temporary environment variables passed through the OS shell"
               ],
               "question": "Where does persistent global state (party roster, gold, active quest stage) live across scene changes?"
             }
@@ -632,18 +653,18 @@
               "answer": "Area2D with body_entered signals",
               "options": [
                 "Area2D with body_entered signals",
+                "CanvasLayer with screen-pinned overlays",
                 "StaticBody2D with immovable colliders",
-                "CharacterBody2D with move_and_slide()",
-                "CanvasLayer with screen-pinned overlays"
+                "CharacterBody2D with move_and_slide()"
               ],
               "question": "What node type is used to construct trigger zones for doors, portals, and room transitions?"
             },
             {
               "answer": "Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates",
               "options": [
+                "Loaded as separate sub-scenes through external HTTP requests",
                 "Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates",
                 "Hardcoded into every location scene file manually",
-                "Loaded as separate sub-scenes through external HTTP requests",
                 "Kept in an invisible queue until combat begins"
               ],
               "question": "How are recruited companions positioned when transitioning into a newly loaded zone?"
@@ -664,10 +685,10 @@
             {
               "answer": "Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs",
               "options": [
-                "Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs",
                 "Build building foundations using 3D meshes rather than 2D sprites",
+                "Lock camera zoom whenever characters are near building doors",
                 "Require all structures to share identical square dimensions",
-                "Lock camera zoom whenever characters are near building doors"
+                "Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs"
               ],
               "question": "What is the Foundation Footprint Rule in 2.5D isometric geometry?"
             },
@@ -675,9 +696,9 @@
               "answer": "To prevent the viewport from scrolling past map edges and revealing black margins",
               "options": [
                 "To prevent the viewport from scrolling past map edges and revealing black margins",
-                "To lock the mouse cursor inside the operating system window",
                 "To improve frame rates by skipping invisible off-screen rendering",
-                "To enable hardware anti-aliasing on the ground texture"
+                "To enable hardware anti-aliasing on the ground texture",
+                "To lock the mouse cursor inside the operating system window"
               ],
               "question": "Why must Camera2D limits be clamped to (0, 0, 2560, 1440) on map load?"
             }
@@ -697,20 +718,20 @@
             {
               "answer": "In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore",
               "options": [
-                "In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore",
-                "Hardcoded directly inside GDScript weapon scripts",
                 "Stored in a remote PostgreSQL database queried over WebSockets",
-                "Embedded inside PNG texture EXIF metadata"
+                "Embedded inside PNG texture EXIF metadata",
+                "In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore",
+                "Hardcoded directly inside GDScript weapon scripts"
               ],
               "question": "Where do item statistics, values, and equip slot properties live in cRPG Realm?"
             },
             {
               "answer": "It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)",
               "options": [
-                "It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)",
-                "It doubles the Dexterity modifier for reflex saves",
+                "It requires rolling a d20 every turn to check if the armor holds",
                 "It penalizes AC by the Dexterity modifier value",
-                "It requires rolling a d20 every turn to check if the armor holds"
+                "It doubles the Dexterity modifier for reflex saves",
+                "It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)"
               ],
               "question": "In D&D 5e SRD, how does heavy armor like Full Plate interact with a character's Dexterity modifier?"
             }
@@ -731,8 +752,8 @@
             {
               "answer": "A pulsing red danger highlight outlining the hazard polygon with status text",
               "options": [
-                "A pulsing red danger highlight outlining the hazard polygon with status text",
                 "A full-screen flash and camera shake",
+                "A pulsing red danger highlight outlining the hazard polygon with status text",
                 "An immediate pause dialog asking to reload the save",
                 "A green waypoint marker on the minimap only"
               ],
@@ -741,9 +762,9 @@
             {
               "answer": "The delicate mechanism prematurely springs and detonates directly in the disarmer's face",
               "options": [
-                "The delicate mechanism prematurely springs and detonates directly in the disarmer's face",
                 "The thieves' tools are permanently destroyed with no damage taken",
                 "The trap is safely disarmed anyway due to passive proficiency",
+                "The delicate mechanism prematurely springs and detonates directly in the disarmer's face",
                 "The disarm attempt is cancelled with no consequence"
               ],
               "question": "What happens if a rogue critically fumbles (force_fumble or natural 1) while attempting to disarm a trap?"
@@ -766,17 +787,17 @@
               "options": [
                 "A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain",
                 "The boss teleported off-screen into an unreachable room",
-                "The game engine pauses all player input until a timer expires",
-                "Incoming damage is converted into healing hit points"
+                "Incoming damage is converted into healing hit points",
+                "The game engine pauses all player input until a timer expires"
               ],
               "question": "How is boss invulnerability handled during the Phase 2 shield transition?"
             },
             {
               "answer": "Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn",
               "options": [
+                "Spawns another identical boss in an infinite loop",
                 "Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn",
                 "Immediately crashes the game engine to prevent save scumming",
-                "Spawns another identical boss in an infinite loop",
                 "Resets the hero to Act 1 Homestead"
               ],
               "question": "What happens when a boss reaches 0 HP in cRPG Realm?"
@@ -798,10 +819,10 @@
             {
               "answer": "It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests",
               "options": [
-                "It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests",
                 "It requires recompiling the Godot C++ engine binary with custom mod flags",
+                "It parses comments inside .tscn scene files",
                 "It downloads mods from an external proprietary cloud server on every boot",
-                "It parses comments inside .tscn scene files"
+                "It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests"
               ],
               "question": "How does the RobOS cRPG Mod Loader discover custom content packages?"
             },
@@ -809,9 +830,9 @@
               "answer": "To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors",
               "options": [
                 "To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors",
-                "To bypass Godot's graphics rendering pipeline completely",
+                "Because Godot cannot run on Linux without virtual framebuffers",
                 "To overclock the GPU for faster frame rates",
-                "Because Godot cannot run on Linux without virtual framebuffers"
+                "To bypass Godot's graphics rendering pipeline completely"
               ],
               "question": "Why does the RobOS verification harness run games inside an Xvfb virtual framebuffer?"
             }
@@ -857,9 +878,9 @@
               "answer": "SHA-256 content hash, repository context, relative path, and working-tree revision",
               "explanation": "RobOS attaches cryptographic SHA-256 digests along with repository context, relative path, line number, and revision status to guarantee absolute provenance.",
               "options": [
+                "Git commit hash without line or path information",
                 "SHA-256 content hash, repository context, relative path, and working-tree revision",
                 "MD5 checksum only",
-                "Git commit hash without line or path information",
                 "No evidence is stored to conserve disk space"
               ],
               "question": "What cryptographic evidence is attached to every ingested Linux file node in RobOS?"
@@ -868,9 +889,9 @@
               "answer": "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
               "explanation": "RobOS maps Linux IPC sockets to robos:LinuxSocket and named pipes to robos:LinuxNamedPipe with accurate inode MIME types.",
               "options": [
-                "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
-                "They are ignored and discarded during filesystem scans",
                 "As plain text documents",
+                "They are ignored and discarded during filesystem scans",
+                "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
                 "As generic database tables"
               ],
               "question": "How are Unix domain sockets and named pipes represented in the KGraph?"
@@ -893,9 +914,9 @@
               "explanation": "The disambiguation engine detects the Kubernetes schema and maps it directly to robos:GitOpsDeployment for automated cluster reconciliation.",
               "options": [
                 "robos:KubernetesManifest with targetClass robos:GitOpsDeployment",
-                "robos:HelmChartDefinition",
                 "Generic text/plain document",
-                "robos:ConfigurationFile without schema validation"
+                "robos:ConfigurationFile without schema validation",
+                "robos:HelmChartDefinition"
               ],
               "question": "When a YAML file contains apiVersion: and kind: Deployment, how is it classified?"
             },
@@ -903,10 +924,10 @@
               "answer": "MODULE.bazel or WORKSPACE",
               "explanation": "MODULE.bazel or WORKSPACE indicates a Bazel monorepo, enabling remote execution flags and build target analysis.",
               "options": [
+                "package.json",
                 "MODULE.bazel or WORKSPACE",
                 "pom.xml",
-                "Cargo.toml",
-                "package.json"
+                "Cargo.toml"
               ],
               "question": "What marker file signals a Bazel monorepo archetype to the directory scanner?"
             }
@@ -927,10 +948,10 @@
               "answer": "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes",
               "explanation": "Streaming large documents across HTTP/2 prevents Node.js heap bloat and isolates complex parser logic in an external daemon.",
               "options": [
-                "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes",
+                "It eliminates the need for schema validation",
                 "It converts all documents directly to PNG images",
                 "It requires zero network configuration",
-                "It eliminates the need for schema validation"
+                "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes"
               ],
               "question": "What is the primary architectural advantage of streaming documents over tika-grpc?"
             },
@@ -939,9 +960,9 @@
               "explanation": "TikaGrpcConnector identifies Protobuf service interfaces, RPC endpoints, and message schemas for microservice contract mapping.",
               "options": [
                 "Protobuf services, RPC method signatures, and message schemas",
-                "Only file comments and copyright notices",
+                "HTTP cookie headers",
                 "Binary machine opcodes",
-                "HTTP cookie headers"
+                "Only file comments and copyright notices"
               ],
               "question": "What symbol types does the polyglot AST parser extract from Protobuf definitions?"
             }
@@ -962,9 +983,9 @@
               "answer": "oci://ghcr.io/hermetiq/buildbarn",
               "explanation": "RobOS standardizes on Hermetiq's official OCI Helm distribution (oci://ghcr.io/hermetiq/buildbarn) for REAPI v2 cluster deployments.",
               "options": [
-                "oci://ghcr.io/hermetiq/buildbarn",
                 "docker.io/buildbarn/monolithic",
                 "helm.elastic.co/buildbarn",
+                "oci://ghcr.io/hermetiq/buildbarn",
                 "oci://quay.io/robos/buildbarn"
               ],
               "question": "What OCI registry chart is used to deploy Buildbarn Remote Build Execution in RobOS?"
@@ -973,10 +994,10 @@
               "answer": "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)",
               "explanation": "Buildbarn divides remote execution into CAS/AC storage, task scheduling queues, containerized worker execution, and frontend gRPC routing.",
               "options": [
-                "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)",
                 "PostgreSQL database and Redis cache only",
                 "Only bb-storage without a worker pool",
-                "A monolithic single-node executable"
+                "A monolithic single-node executable",
+                "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)"
               ],
               "question": "Which REAPI v2 components are deployed by the Hermetiq Buildbarn Helm chart?"
             }
@@ -997,10 +1018,10 @@
               "answer": "Every node must pass through W3C SHACL shape validation gates before being committed",
               "explanation": "Ingestion endpoints enforce W3C SHACL shape validation (targetClass, required properties, datatype constraints) before mutating graph state.",
               "options": [
-                "Every node must pass through W3C SHACL shape validation gates before being committed",
                 "It bypasses all validation to maximize ingestion speed",
-                "It requires manual human approval for every individual file",
-                "It only allows ingestion of plain markdown files"
+                "Every node must pass through W3C SHACL shape validation gates before being committed",
+                "It only allows ingestion of plain markdown files",
+                "It requires manual human approval for every individual file"
               ],
               "question": "How does the KGraph Parse Portal guarantee that ingested nodes do not corrupt the Knowledge Graph?"
             },
@@ -1008,10 +1029,10 @@
               "answer": "packages/kgraph-parse-portal/bin/luxir-portal-cli.js",
               "explanation": "luxir-portal-cli.js enables searching, raw JSON document inspection, and daemon health checks directly from the command line.",
               "options": [
-                "packages/kgraph-parse-portal/bin/luxir-portal-cli.js",
+                "npm test",
                 "kubectl get pods",
-                "git log",
-                "npm test"
+                "packages/kgraph-parse-portal/bin/luxir-portal-cli.js",
+                "git log"
               ],
               "question": "Which CLI tool provides direct terminal access to search, inspect, and monitor the Luxir engine?"
             }
@@ -1057,30 +1078,30 @@
             {
               "answer": "8 + Proficiency Bonus + Spellcasting Ability Modifier",
               "options": [
+                "Armor Class + Wisdom Modifier - Spell Level",
                 "8 + Proficiency Bonus + Spellcasting Ability Modifier",
-                "10 + Spell Level + Intelligence Modifier",
                 "d20 + Proficiency Bonus + Caster Level",
-                "Armor Class + Wisdom Modifier - Spell Level"
+                "10 + Spell Level + Intelligence Modifier"
               ],
               "question": "In D&D 5e SRD, what is the exact formula for a character's Spell Save DC?"
             },
             {
               "answer": "6.0 seconds with visual round progress timer",
               "options": [
-                "6.0 seconds with visual round progress timer",
-                "10.0 seconds turn-based phase",
                 "1.0 second real-time tick",
-                "Variable based on Agility stat"
+                "Variable based on Agility stat",
+                "6.0 seconds with visual round progress timer",
+                "10.0 seconds turn-based phase"
               ],
               "question": "How long is a standard D&D 5e combat round in the tactical RTwP engine?"
             },
             {
               "answer": "Roll 2d20 and take the higher value",
               "options": [
-                "Roll 2d20 and take the higher value",
-                "Roll 1d20 and add a flat +5 modifier",
                 "Roll 2d20 and sum both values together",
-                "Double the damage dice if the roll hits"
+                "Double the damage dice if the roll hits",
+                "Roll 1d20 and add a flat +5 modifier",
+                "Roll 2d20 and take the higher value"
               ],
               "question": "When an attacker has Advantage on a d20 attack roll, how is the roll evaluated?"
             }
@@ -1102,8 +1123,8 @@
               "answer": "Guarantees seamless execution across low-spec hardware, virtualized Xvfb displays (:99), and avoids shader compilation stutter",
               "options": [
                 "Guarantees seamless execution across low-spec hardware, virtualized Xvfb displays (:99), and avoids shader compilation stutter",
-                "Vulkan does not support 2D sprite rendering in Godot 4",
                 "GL Compatibility allows higher polygon count 3D models",
+                "Vulkan does not support 2D sprite rendering in Godot 4",
                 "It enables Ray Tracing and DLSS by default"
               ],
               "question": "Why does RobOS cRPG Realm use the Godot 4 GL Compatibility renderer rather than Vulkan Forward+?"
@@ -1111,10 +1132,10 @@
             {
               "answer": "Fails direct raycast line-of-sight and routes through safe corridor waypoints via A* visibility graph",
               "options": [
+                "Reverses direction until clicking stops",
                 "Fails direct raycast line-of-sight and routes through safe corridor waypoints via A* visibility graph",
-                "Teleports the party directly to the target point",
                 "Disables building collision while moving",
-                "Reverses direction until clicking stops"
+                "Teleports the party directly to the target point"
               ],
               "question": "How does Pathfinder.gd prevent heroes from getting stuck when clicking on the far side of Brand's Forge?"
             }
@@ -1134,10 +1155,10 @@
             {
               "answer": "Small (124px combat), Medium (240px dialogue), Large (420px history & dice breakdown)",
               "options": [
-                "Small (124px combat), Medium (240px dialogue), Large (420px history & dice breakdown)",
                 "Collapsed, Windowed, Fullscreen",
+                "Combat Only, Chat Only, System Only",
                 "Debug, Trace, Error",
-                "Combat Only, Chat Only, System Only"
+                "Small (124px combat), Medium (240px dialogue), Large (420px history & dice breakdown)"
               ],
               "question": "What are the three distinct modes of the Infinity Engine Activity Log in cRPG Realm?"
             },
@@ -1145,9 +1166,9 @@
               "answer": "CC-BY-SA 3.0 / CC0 (Genuine Open Source)",
               "options": [
                 "CC-BY-SA 3.0 / CC0 (Genuine Open Source)",
-                "Proprietary Commercial License",
                 "GPL v2 only",
-                "MIT No-Attribution"
+                "MIT No-Attribution",
+                "Proprietary Commercial License"
               ],
               "question": "What license governs the Flare RPG creature spritesheets and modular paperdoll assets used in the game?"
             }
@@ -1167,20 +1188,20 @@
             {
               "answer": "140px proximity trigger with 200px pack alerting radius",
               "options": [
-                "140px proximity trigger with 200px pack alerting radius",
+                "Instant global aggro upon scene enter",
                 "50px melee range only",
-                "500px entire viewport scan",
-                "Instant global aggro upon scene enter"
+                "140px proximity trigger with 200px pack alerting radius",
+                "500px entire viewport scan"
               ],
               "question": "At what proximity distance does the Infinity AI Agent threat radar trigger hostile combat detection?"
             },
             {
               "answer": "When any companion drops below 40% maximum Hit Points",
               "options": [
-                "When any companion drops below 40% maximum Hit Points",
-                "Only after all enemies are dead",
                 "On round 1 regardless of health",
-                "Only when the Cleric itself is attacked"
+                "Only after all enemies are dead",
+                "Only when the Cleric itself is attacked",
+                "When any companion drops below 40% maximum Hit Points"
               ],
               "question": "In combined-arms AI tactics, when does the Cleric cast Cure Wounds during active combat?"
             }
@@ -1200,19 +1221,19 @@
             {
               "answer": "Provides static type safety, autocompletion in Godot editor, and eliminates runtime KeyError crashes",
               "options": [
-                "Provides static type safety, autocompletion in Godot editor, and eliminates runtime KeyError crashes",
-                "Compresses textures and sound files into binary blobs",
                 "Allows the game to bypass Godot engine lifecycle hooks",
-                "Enables multiplayer networking over WebSockets"
+                "Provides static type safety, autocompletion in Godot editor, and eliminates runtime KeyError crashes",
+                "Enables multiplayer networking over WebSockets",
+                "Compresses textures and sound files into binary blobs"
               ],
               "question": "What is the primary benefit of compiling game data from JSON Schemas into typed GDScript singletons (DataStoreV1.gd)?"
             },
             {
               "answer": "Broken dialogue tree references, missing sprite asset bindings, and monster stat imbalances",
               "options": [
-                "Broken dialogue tree references, missing sprite asset bindings, and monster stat imbalances",
                 "Syntax errors in Python packages",
                 "Network packet loss during multiplayer matchmaking",
+                "Broken dialogue tree references, missing sprite asset bindings, and monster stat imbalances",
                 "GPU driver incompatibilities"
               ],
               "question": "What does RobOS dual-state semantic diffing (kgraph diff main) catch before game code is deployed?"
@@ -1307,7 +1328,7 @@
       "robos:targetApplication": "urn:robos:app:kgraph-parse-portal",
       "robos:targetAudience": "Game Developers, Retro Preservationists, AI Agent Engineers, Context Engineers",
       "robos:topic": "Context-Engineered Classic JRPG Reconstruction & Automated Video Verification",
-      "robos:updatedAt": "2026-11-04T18:44:28.276Z",
+      "robos:updatedAt": "2026-11-04T18:57:34.465Z",
       "robos:modules": [
         {
           "id": "mod-01-browser-and-python-harvesting",
@@ -1323,26 +1344,37 @@
           ],
           "quiz": [
             {
-              "question": "How do we make the Python asset downloader reusable across any classic JRPG (such as Final Fantasy, Dragon Warrior, or Chrono Trigger) instead of hardcoding filenames?",
+              "question": "When adapting harvest_jrpg_assets.py from NES Final Fantasy to another classic JRPG on VGMaps and StrategyWiki (such as Dragon Warrior III or Chrono Trigger), which parameterization avoids rewriting the scraper while preserving deterministic SHA-256 verification?",
               "options": [
-                "By passing the index URL, filename prefix (--map-prefix), and wiki slug (--wiki-slug) to an HTMLParser link-discovery function that generates sources-manifest.json dynamically",
-                "By manually renaming every PNG file in MS Paint before running Python",
-                "By committing all commercial ROMs directly into the public Git repository",
-                "By hardcoding a 500-element array of URLs inside the Godot engine binary"
+                "Scraping the entire VGMaps console directory indiscriminately and filtering downloaded PNGs afterward by checking whether their pixel dimensions are powers of two",
+                "Passing --vgmaps-index, --map-prefix, and --wiki-slug into the HTMLParser link-discovery pipeline so it dynamically builds and hashes sources-manifest.json before fetching",
+                "Maintaining a per-game hardcoded dictionary of map filenames inside lib/maps.js and matching them against local files by fuzzy Levenshtein distance",
+                "Querying the MediaWiki action=parse API for image embeds and relying on StrategyWiki thumbnail URLs as the primary tile-slicing source"
               ],
-              "answer": "By passing the index URL, filename prefix (--map-prefix), and wiki slug (--wiki-slug) to an HTMLParser link-discovery function that generates sources-manifest.json dynamically",
-              "explanation": "Using HTMLParser link discovery (or a Browser DevTools manifest extractor) decouples the Python downloader from any single game so the same script harvests any JRPG."
+              "answer": "Passing --vgmaps-index, --map-prefix, and --wiki-slug into the HTMLParser link-discovery pipeline so it dynamically builds and hashes sources-manifest.json before fetching",
+              "explanation": "Passing --vgmaps-index, --map-prefix, and --wiki-slug lets HTMLParser discover all matching 1:1 map PNGs and sub-pages dynamically and write sources-manifest.json + download-receipt.json with SHA-256 hashes. StrategyWiki thumbnails are lossy/rescaled, and downloading entire console archives wastes bandwidth and mixes games."
             },
             {
-              "question": "Why does a default urllib.request.urlopen(url) call fail with HTTP 403 Forbidden on retro archives like VGMaps and Zophar, and how does harvest_jrpg_assets.py fix it?",
+              "question": "During an automated harvest run against retro game archives (VGMaps, Zophar, ReplacementDocs), urllib.request.urlopen(url) fails with HTTP 403 Forbidden or triggers upstream rate-limiting. Which request strategy in harvest_jrpg_assets.py resolves this reliably?",
               "options": [
-                "They block the default Python-urllib User-Agent; passing a standard browser User-Agent header in urllib.request.Request resolves it",
-                "They require OAuth2 bearer tokens generated via Google Cloud",
-                "They only serve files over FTP rather than HTTPS",
-                "They require WebSocket handshakes before downloading PNGs"
+                "Tunneling requests over HTTP/1.0 without Host headers so legacy Apache mod_security rules treat the client as an archival crawler",
+                "Switching to headless Chromium with stealth WebDriver plugins to execute JavaScript challenges before saving each PNG via canvas.toDataURL()",
+                "Constructing a urllib.request.Request with a standard desktop browser User-Agent and Accept header, paired with sequential polite delays (--delay 0.5) and existing-file SHA-256 cache skips",
+                "Using multi-threaded asyncio.gather() workers with randomized proxy rotation and a 50ms retry backoff across all map URLs simultaneously"
               ],
-              "answer": "They block the default Python-urllib User-Agent; passing a standard browser User-Agent header in urllib.request.Request resolves it",
-              "explanation": "Passing a standard desktop browser User-Agent header with polite rate limiting allows deterministic Python downloads without 403 blocks."
+              "answer": "Constructing a urllib.request.Request with a standard desktop browser User-Agent and Accept header, paired with sequential polite delays (--delay 0.5) and existing-file SHA-256 cache skips",
+              "explanation": "Static retro archives reject Python-urllib/3.x default User-Agent strings via simple mod_rewrite/WAF filters rather than JS challenges. Sending a standard browser User-Agent with sequential 0.5s rate limiting and skipping already-verified files avoids both 403 blocks and rate-limit bans."
+            },
+            {
+              "question": "Why does the Browser DevTools Console snippet filter anchor elements with new URL(a.href, location.href).href and a GamePrefix regex before writing sources-manifest.json, rather than exporting document.images directly?",
+              "options": [
+                "Because document.images only returns SVG vector nodes in Chromium unless the page is scrolled to the bottom first",
+                "Because StrategyWiki encrypts <img src> attributes with a session token that expires before Python urllib can download them",
+                "Because new URL() automatically converts indexed-color GIFs into 32-bit RGBA PNG buffers inside the browser memory",
+                "Because VGMaps index pages link to the full-resolution 1:1 pixel atlas PNGs via <a href=\"...\"> tags, whereas <img> tags on index pages are either absent or point to scaled-down preview thumbnails and UI icons"
+              ],
+              "answer": "Because VGMaps index pages link to the full-resolution 1:1 pixel atlas PNGs via <a href=\"...\"> tags, whereas <img> tags on index pages are either absent or point to scaled-down preview thumbnails and UI icons",
+              "explanation": "On VGMaps and similar retro atlas tables, the full 1024x1024 or 4096x4096 1:1 pixel rips are linked from table <a href=\"...\"> anchors, not inline <img> elements. Resolving a.href via new URL(..., location.href) yields canonical absolute URLs for the unscaled PNGs."
             }
           ]
         },
@@ -1360,26 +1392,37 @@
           ],
           "quiz": [
             {
-              "question": "How does packages/robos-jrpg-parser/bin/jrpg-parser.js prevent the AI agent from hallucinating game items, lore, or rules during the parse step?",
+              "question": "When jrpg-parser.js parse invokes robos-lib/ai-agent on unstructured walkthrough prose to extract story milestones and battle rules, what mechanism prevents the LLM from injecting training-set memories (such as GBA Dawn of Souls bonus dungeons or hallucinated spell names) into knowledge-graph.jsonld?",
               "options": [
-                "Every agent-extracted record must include a verbatim quote from the source file; if the quote is not literally present in the source text, the parser drops the record",
-                "It disables the AI agent completely and ignores all prose",
-                "It queries Wikipedia at runtime to vote on every item name",
-                "It randomly deletes 50% of the extracted nodes"
+                "Requiring every agent-returned JSON record to carry a verbatim quote field and programmatically verifying that the exact substring exists in the local source file before accepting the node",
+                "Running a secondary critic LLM pass that cross-checks every extracted node against an embedded SQLite database of NES ROM strings",
+                "Lowering the model temperature to 0.0 and passing a JSON Schema with additionalProperties: false so only valid schema keys can be emitted",
+                "Restricting the AI agent to only read HTML <table> elements while discarding all <p> and <li> narrative paragraphs before prompt construction"
               ],
-              "answer": "Every agent-extracted record must include a verbatim quote from the source file; if the quote is not literally present in the source text, the parser drops the record",
-              "explanation": "The parser enforces a strict verbatim source-quote gate on all LLM-extracted records and caches verified replies in <out>/.cache/agent."
+              "answer": "Requiring every agent-returned JSON record to carry a verbatim quote field and programmatically verifying that the exact substring exists in the local source file before accepting the node",
+              "explanation": "Temperature 0.0 and JSON Schema constraints enforce structure but cannot stop an LLM from recalling facts from other editions in its pretraining corpus. Requiring a verbatim quote and checking sourceText.includes(record.quote) guarantees every extracted fact is grounded in the local file."
             },
             {
-              "question": "Why did the initial StrategyWiki and PDF manual parse still block battles in the Completeness Gap Matrix?",
+              "question": "You scraped StrategyWiki’s Final Fantasy/Enemies page along with the official NES manual PDF, yielding 124 robos:JRPGEnemy nodes with HP, XP, Gold, and elemental weaknesses. Why does jrpg-parser.js coverage still flag Enemies and Encounters as \"Blocks battles\"?",
               "options": [
-                "Because basic enemy summary lists only had HP, XP, and Gold, lacking ATK, DEF, ACC, Hits, CRT, EVA, Magic Defense, and map encounter zone tables",
-                "Because StrategyWiki did not list weapon prices",
-                "Because the NES game had no random encounters",
-                "Because JSON-LD does not support integer properties"
+                "Because StrategyWiki lists monster names using the PlayStation Origins translation rather than the 6-character NES ASCII strings required by the SHACL validator",
+                "Because summary wiki tables omit internal combat bytes—specifically ATK, ACC, Hits per turn, CRT, DEF, EVA, Magic Defense (M.D), Morale (MOR), AI spell lists, and the 8-slot per-map encounter formation tables",
+                "Because the NES combat engine requires 3D skeletal animation hitboxes before it can resolve turn-based damage formulas",
+                "Because the PDF manual parser cannot extract integer columns unless OCR post-processing is enabled via Tika gRPC"
               ],
-              "answer": "Because basic enemy summary lists only had HP, XP, and Gold, lacking ATK, DEF, ACC, Hits, CRT, EVA, Magic Defense, and map encounter zone tables",
-              "explanation": "Executing actual NES combat formulas requires each enemy’s ATK, ACC, Hits, CRT, DEF, EVA, Magic Defense, Morale, and the 8-slot encounter formation tables per map."
+              "answer": "Because summary wiki tables omit internal combat bytes—specifically ATK, ACC, Hits per turn, CRT, DEF, EVA, Magic Defense (M.D), Morale (MOR), AI spell lists, and the 8-slot per-map encounter formation tables",
+              "explanation": "Basic wiki bestiaries and manuals list player-facing rewards (HP, XP, Gold) but omit the internal combat stats (ATK, ACC, Hits, CRT, DEF, EVA, M.D, MOR) needed to compute hit rolls, damage, initiative, and flee checks, as well as the 8-slot map formation tables."
+            },
+            {
+              "question": "Why does jrpg-parser.js separate scan (plus an optional manifest.json override) from parse when ingesting a multi-source ~/Downloads/<game-id> folder?",
+              "options": [
+                "Because Node.js cannot read HTML and PNG files in the same process without first generating an inode manifest on disk",
+                "Because scan uploads the directory listing to the RobOS Cloud Vault to reserve globally unique @id URNs before local parsing begins",
+                "Because mixed scrape folders often include remake/port pages (e.g., GBA Dawn of Souls or PSP Anniversary) whose altered shop prices and bonus bosses would pollute the NES KGraph unless inspected and excluded before parsing",
+                "Because scan pre-compiles all PNGs into Godot .ctex textures so parse can read their pixel buffers directly from .godot/imported/"
+              ],
+              "answer": "Because mixed scrape folders often include remake/port pages (e.g., GBA Dawn of Souls or PSP Anniversary) whose altered shop prices and bonus bosses would pollute the NES KGraph unless inspected and excluded before parsing",
+              "explanation": "Guides and wikis frequently mix NES original tables with GBA/PS1/PSP remake tables on sub-pages. Running scan first lets the agent inspect inferred roles and edition warnings and write manifest.json overrides ({ \"use\": false }) before parse merges data into the graph."
             }
           ]
         },
@@ -1397,26 +1440,37 @@
           ],
           "quiz": [
             {
-              "question": "Due to a pointer bug in the NES Final Fantasy combat routine, what value is actually used as a weapon’s base critical hit rate out of 201?",
+              "question": "In Disch’s 6502 NES disassembly of Final Fantasy, why does the Masamune have a 40/201 (~19.9%) base critical hit rate while the Vorpal sword has a lower critical rate than later weapons in the inventory table?",
               "options": [
-                "The weapon’s 1-based Inventory Index ID (1 to 40)",
-                "The weapon’s Gold price divided by 100",
-                "The wielder’s Intelligence stat multiplied by 2",
-                "A hardcoded 5% (10/201) for all weapons"
+                "Because critical hit rates on the NES are dynamically derived from (Weapon ATK - Target DEF) clamped to the 1..40 range before rolling 0..200",
+                "Because the weapon struct in Bank 06 omits the critical rate byte, so the combat routine reads the weapon’s 0-based accuracy modifier divided by 2 as the critical threshold",
+                "Because the NES PPU frame counter seeds the RNG with the weapon’s equip-slot memory offset plus the wielder’s Luck stat divided by 4",
+                "Because a pointer bug in the combat routine loads the weapon’s 1-based Inventory Index ID (1 to 40) instead of its critical rate byte from the weapon table"
               ],
-              "answer": "The weapon’s 1-based Inventory Index ID (1 to 40)",
-              "explanation": "In the NES ROM, the combat routine reads the weapon’s 1-based index ID (1..40) instead of a crit column, giving Masamune (ID 40) a 40/201 base critical hit rate."
+              "answer": "Because a pointer bug in the combat routine loads the weapon’s 1-based Inventory Index ID (1 to 40) instead of its critical rate byte from the weapon table",
+              "explanation": "Although the weapon data table in the ROM has a byte intended for critical rate, a pointer bug in the 6502 combat routine uses the weapon’s 1-based Inventory Index ID (1..40) out of 201 instead (Nunchaku = 1/201, Rapier = 6/201, Masamune = 40/201)."
             },
             {
-              "question": "In the NES ROM, which monster stat doubles as both physical evasion and turn-order initiative modifier (Stat + rand(0..49))?",
+              "question": "When a Black Mage casts FIRE (Effectividad/Power E=10, Spell Accuracy=24) against an IMP (Magic Defense M.D=16, neither weak nor resistant to Fire), how does the NES magic routine determine whether the spell deals normal (10..20) or doubled (20..40) damage?",
               "options": [
-                "Evade (EVA)",
-                "Morale (MOR)",
-                "Magic Defense (M.D)",
-                "Critical Rate (CRT)"
+                "It starts with Base Magic Accuracy 148 (0x94), adds Spell Accuracy (24), and subtracts Target M.D (16) for a threshold of 156; rolling 0..155 on rand(0..200) scores a magic \"hit\" that doubles the rand(E..2E) roll",
+                "It compares Caster Intelligence + Spell Accuracy (24) against Target M.D (16) on a d100 roll; if successful, the base damage E is multiplied by the caster’s current spell level",
+                "It rolls rand(0..255) against (128 + Caster Luck - Target EVA); magic defense (M.D) only applies to status spells like SLEEP and DARK rather than elemental damage spells",
+                "It calculates (Spell Power * 2) - Target M.D directly as flat deterministic damage and only rolls accuracy if the target has an active elemental resistance flag"
               ],
-              "answer": "Evade (EVA)",
-              "explanation": "Monsters in NES Final Fantasy do not have a separate Agility byte; Evade (EVA) is used for both physical evasion and turn-order initiative."
+              "answer": "It starts with Base Magic Accuracy 148 (0x94), adds Spell Accuracy (24), and subtracts Target M.D (16) for a threshold of 156; rolling 0..155 on rand(0..200) scores a magic \"hit\" that doubles the rand(E..2E) roll",
+              "explanation": "In the NES ROM (Intelligence is unused by the magic formula!), base magic accuracy is 148 (0 if resistant, 188 if weak to the element). Chance to hit = Base + Spell Accuracy - Target M.D = 148 + 24 - 16 = 156 on a 0..200 roll (where 200 always misses). A hit doubles the E..2E damage roll."
+            },
+            {
+              "question": "Why does robos:JRPGEnemy in our NES Knowledge Graph lack a standalone Agility property, and how is monster turn order computed at the start of each combat round?",
+              "options": [
+                "Monsters always act after all four Light Warriors in descending order of their 0-based formation slot index (0..8)",
+                "The NES ROM does not store a separate monster Agility byte; a monster’s Evade (EVA) stat serves as both its physical evasion percentage and its turn-order initiative base (EVA + rand(0..49))",
+                "Monsters use their Morale (MOR) stat divided by 2 plus rand(0..49) for initiative, while Evade (EVA) only affects physical dodge rolls",
+                "Monster initiative is derived from (ACC + Hits * 10) + rand(0..63), which is why high-hit bosses always act first"
+              ],
+              "answer": "The NES ROM does not store a separate monster Agility byte; a monster’s Evade (EVA) stat serves as both its physical evasion percentage and its turn-order initiative base (EVA + rand(0..49))",
+              "explanation": "While player characters have both Agility (AGL) and Evade (EVA), the 20-byte NES monster record stores only EVA, which doubles as physical evasion and turn-order initiative base (EVA + rand(0..49))."
             }
           ]
         },
@@ -1434,26 +1488,37 @@
           ],
           "quiz": [
             {
-              "question": "Why did rendering Temple of Fiends with the first 16 bytes of lut_SMPalettes cause treasure chests at (2, 3) and (3, 3) to appear as solid white/blank squares?",
+              "question": "When rendering Temple of Fiends (Map 12) from the 6502 ROM’s lut_SMPalettes table ($A000 in bank_00.dat, 48 bytes per map), why did reading bytes 0..15 cause the treasure chests at (2, 3) and (3, 3) to render as blank white squares?",
               "options": [
-                "Because bytes 0..3 are the outside-room Palette 0 ([0x0F, 0x30, 0x30, 0x30]) which masks indoor rooms and chests in solid white (0x30) until the inside-room palette at +0x20 ([0x0F, 0x10, 0x17, 0x0F]) is applied",
-                "Because treasure chests in NES Final Fantasy are drawn as sprites rather than background metatiles",
-                "Because the PNG file was saved in grayscale mode",
-                "Because Temple of Fiends has no treasure chests in the NES version"
+                "Because Temple of Fiends uses bank-switched CHR-RAM animation frames that overwrite tile 0x3F only after the player defeats Garland in the central chamber",
+                "Because treasure chests on the NES are rendered via OAM sprite slots (bytes 16..31) rather than background nametable metatiles, so background Palette 0 contains no chest colors",
+                "Because bytes 0..3 represent Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30]), which intentionally paints indoor room metatiles and chests in solid white (0x30) until the player steps inside and triggers the Inside-Room palette at offset +0x20 ([0x0F, 0x10, 0x17, 0x0F])",
+                "Because bytes 0..15 store the 4-color grayscale PPU attribute mask rather than NES master palette indices, requiring a bitwise XOR with 0x3F before RGB lookup"
               ],
-              "answer": "Because bytes 0..3 are the outside-room Palette 0 ([0x0F, 0x30, 0x30, 0x30]) which masks indoor rooms and chests in solid white (0x30) until the inside-room palette at +0x20 ([0x0F, 0x10, 0x17, 0x0F]) is applied",
-              "explanation": "The NES ROM stores outside-room palettes at +0x00 and inside-room palettes at +0x20 (32 bytes); using +0x20 for Palette 0 restores the silver (0x10) and brown (0x17) chest colors."
+              "answer": "Because bytes 0..3 represent Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30]), which intentionally paints indoor room metatiles and chests in solid white (0x30) until the player steps inside and triggers the Inside-Room palette at offset +0x20 ([0x0F, 0x10, 0x17, 0x0F])",
+              "explanation": "Each map entry in lut_SMPalettes is 0x30 (48) bytes: 0x00..0x0F are the 4 outside-room background palettes, 0x10..0x1F are sprite palettes, and 0x20..0x2F are the 4 inside-room background palettes. Replacing Palette 0 with in_room_pal[0:4] ([0x0F, 0x10, 0x17, 0x0F]) restores the black, silver, and brown chest pixels."
             },
             {
-              "question": "In Coneria Town (map_00_coneria.json), why did spawning the hero at (15, 22) trap the hero in a tree, and what is the correct entrance column?",
+              "question": "In Coneria Town (map_00_coneria.json), why did an initial spawn coordinate of Vector2i(15, 22) leave the hero stuck inside a tree at the end of Scenario 1, and how do the ROM entrance tables (lut_EntrTele_X / lut_EntrTele_Y) resolve this?",
               "options": [
-                "Column x=15 (and x=17) is a row of unwalkable trees (tileId=14) flanking the central walkable brick entrance road at column x=16 (tileId=16)",
-                "The entire bottom half of Coneria is water tiles",
-                "Coneria is only 10x10 tiles wide",
-                "Tile (15, 22) is inside the Castle throne room"
+                "Tile (15, 22) is the Coneria Castle moat bridge tile, which remains unwalkable until the King of Coneria sets the bridge_built story flag",
+                "Coneria’s 64x64 tile grid uses 1-based indexing in the NES ROM, so (15, 22) was off by one in both axes from the true town square center at (32, 32)",
+                "The VGMaps PNG for Coneria includes a 16-pixel decorative border around the outside of the 1024x1024 image that shifts all tile coordinates right by 1 column",
+                "Coneria’s south gate is a single-tile-wide walkable brick road at column x=16 (tileId=16, matching lut_EntrTele_X = 16), flanked immediately on both sides by unwalkable tree columns at x=15 and x=17 (tileId=14)"
               ],
-              "answer": "Column x=15 (and x=17) is a row of unwalkable trees (tileId=14) flanking the central walkable brick entrance road at column x=16 (tileId=16)",
-              "explanation": "Column x=16 is the walkable brick entrance street (matching lut_EntrTele_X = 16), whereas x=15 and x=17 are tree columns bordering the road."
+              "answer": "Coneria’s south gate is a single-tile-wide walkable brick road at column x=16 (tileId=16, matching lut_EntrTele_X = 16), flanked immediately on both sides by unwalkable tree columns at x=15 and x=17 (tileId=14)",
+              "explanation": "Inspecting map_00_coneria.json (and lut_EntrTele_X at $AC00) confirms that column x=16 is the walkable brick entrance street (tileId=16), whereas x=15 and x=17 are unwalkable border trees (tileId=14). Spawning at Vector2i(16, 21) places the hero cleanly on the road."
+            },
+            {
+              "question": "When slice_maps_to_tiles.py slices a 1024x1024 map PNG into 4,096 cells of 16x16 pixels, why does it compute hashlib.sha1(tile_img.tobytes()).hexdigest() for each cell before building tileset.png and the 64x64 grid array?",
+              "options": [
+                "To deduplicate identical 16x16 metatiles across the 4,096 cells into a compact unique tileset strip (e.g. 20–45 unique tile IDs) and assign each (x, y) grid cell a deterministic integer tileId",
+                "To verify that the PNG file was not modified by a man-in-the-middle attack during the urllib download from VGMaps",
+                "To encrypt the copyrighted tile graphics before writing them to ~/Downloads/ff1/maps/sliced/",
+                "To sort the tileset strip from darkest to brightest luminance so Godot’s GL Compatibility renderer can batch draw calls without shader switches"
+              ],
+              "answer": "To deduplicate identical 16x16 metatiles across the 4,096 cells into a compact unique tileset strip (e.g. 20–45 unique tile IDs) and assign each (x, y) grid cell a deterministic integer tileId",
+              "explanation": "A 64x64 NES map has 4,096 grid positions but reuses only a few dozen unique 16x16 metatiles. Hashing each 16x16 RGBA buffer with SHA-1 collapses duplicates into a compact tileset.png and produces a clean integer matrix where each tileId maps directly to walkability and trigger rules."
             }
           ]
         },
@@ -1471,26 +1536,37 @@
           ],
           "quiz": [
             {
-              "question": "How does the external Cucumber (behave) test runner communicate with the running Godot 4 game inside Xvfb?",
+              "question": "How does the external Python Cucumber (behave) test runner deterministically inspect scene state and drive player actions inside the running Godot 4 process under Xvfb?",
               "options": [
-                "Via the embedded HTTP/JSON server in GameControlServer.gd listening on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command)",
-                "By reading raw process memory with gdb",
-                "By simulating physical USB keyboard hardware interrupts in the Linux kernel",
-                "By modifying .tscn files while the game is running"
+                "By attaching a GDScript debugger over port 6007 and evaluating raw expression strings against the scene tree between physics ticks",
+                "Through the autoloaded GameControlServer.gd TCP HTTP/JSON bridge on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command), which polls non-blocking sockets inside _process()",
+                "By sending xdotool X11 keystrokes to the Xvfb display window and running Tesseract OCR on periodic ImageMagick screenshots to read dialogue text",
+                "By writing input commands to a shared SQLite WAL file in /tmp that FF1MapScene.gd polls every 500ms via OS.execute()"
               ],
-              "answer": "Via the embedded HTTP/JSON server in GameControlServer.gd listening on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command)",
-              "explanation": "GameControlServer.gd runs as a Godot autoload singleton listening on 127.0.0.1:8090, exposing deterministic JSON state queries and input injection."
+              "answer": "Through the autoloaded GameControlServer.gd TCP HTTP/JSON bridge on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command), which polls non-blocking sockets inside _process()",
+              "explanation": "GameControlServer.gd runs as a Godot autoload singleton listening on 127.0.0.1:8090 using TCPServer inside _process(). Unlike flaky X11 keystrokes or OCR, it provides exact JSON state snapshots (hero tile coordinates, active dialogue text, battle HP, party gold) and frame-accurate InputEventAction injection."
             },
             {
-              "question": "Why must you run godot4 --headless --path <project> --import after updating map PNG textures on disk?",
+              "question": "After re-rendering maps/temple_of_fiends.png on disk with the corrected inside-room palette, why did Godot 4’s --write-movie recording still show the old texture until godot4 --headless --path <project> --import was executed?",
               "options": [
-                "So Godot regenerates its internal .godot/imported/*.ctex compressed texture cache from the updated PNG files",
-                "To compile GDScript files into Windows .dll libraries",
-                "To upload the textures to GitHub Pages",
-                "Because Godot deletes PNG files after reading them once"
+                "Because Godot’s GL Compatibility renderer caches textures inside ~/.cache/mesa_shader_cache until --import clears the OpenGL context",
+                "Because GDScript preloads all PNG files into the Linux kernel page cache when Xvfb starts and requires a SIGHUP signal to flush /dev/shm",
+                "Because Godot 4 runtime scenes load pre-imported .godot/imported/*.ctex compressed texture caches referenced by .import sidecars rather than decoding raw res://maps/*.png files on the fly",
+                "Because build_ff1_godot_game.py embeds base64-encoded PNG strings directly inside .tscn scene files during generation"
               ],
-              "answer": "So Godot regenerates its internal .godot/imported/*.ctex compressed texture cache from the updated PNG files",
-              "explanation": "Godot 4 loads imported .ctex resources from .godot/imported/; running --import ensures modified PNGs (such as re-rendered inside-room palette maps) are updated in the cache."
+              "answer": "Because Godot 4 runtime scenes load pre-imported .godot/imported/*.ctex compressed texture caches referenced by .import sidecars rather than decoding raw res://maps/*.png files on the fly",
+              "explanation": "When load(\"res://maps/temple_of_fiends.png\") is called in Godot 4, the ResourceLoader reads the .import file and loads the binary .ctex artifact from .godot/imported/. Running godot4 --headless --path <project> --import rebuilds the .ctex cache whenever an underlying PNG is updated on disk."
+            },
+            {
+              "question": "When jrpg-parser.js publish --out ~/kgraphs/ff1 --to ~/kgraphs/ff1-clean prepares a Knowledge Graph for public redistribution, what transformation does it perform alongside clean-room art from jrpg-generate-art?",
+              "options": [
+                "It merges the raw VGMaps PNGs and NSF audio archives directly into a single monolithic .pck file for GitHub Releases",
+                "It compiles the JSON-LD graph into an encrypted WebAssembly binary so players cannot inspect monster stats in the browser",
+                "It replaces all D&D-inspired monster names with randomized UUIDs and scales all stats by 1.5x",
+                "It strips local file paths, SHA-256 source hashes, and verbatim guide quotes from every node while preserving the clean-room schema facts, formulas, and generated art references"
+              ],
+              "answer": "It strips local file paths, SHA-256 source hashes, and verbatim guide quotes from every node while preserving the clean-room schema facts, formulas, and generated art references",
+              "explanation": "During parsing, ~/kgraphs/ff1 records provenance (source filenames, hashes, and verbatim quotes used by the anti-hallucination gate). Running publish writes a clean graph that strips copyrighted verbatim prose and local scrape paths while keeping the clean-room structural facts and generated art."
             }
           ]
         },
@@ -1508,26 +1584,37 @@
           ],
           "quiz": [
             {
-              "question": "What combination of two issues caused the treasure chests in Temple of Fiends to appear as solid teal boxes before our fix?",
+              "question": "In Scenario 3 (open_a_treasure_chest_in_the_temple_of_fiends_and_defeat_garland.mp4), all Gherkin assertions for opening the chest and receiving a CURE Potion passed, yet the chest rendered as a solid teal box. What pair of interacting bugs caused that visual artifact?",
               "options": [
-                "Rendering the map with the outside-room 0x30 white ceiling Palette 0 AND drawing a semi-transparent colored ColorRect overlay (_chest_markers) on top of chest tiles in FF1MapScene.gd",
-                "Missing OpenGL drivers in Xvfb and a corrupted font file",
-                "Using a 16-color GIF instead of a 24-bit PNG",
-                "Setting Camera2D zoom to 0.1x"
+                "temple_of_fiends.png was rendered with Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30] white ceiling) AND FF1MapScene.gd drew a semi-transparent ColorRect debug marker (_chest_markers) over chest coordinates that blended with the white tile into a solid teal square",
+                "The treasure chest CHR tile IDs (0x2A, 0x2B, 0x3A, 0x3B) were accidentally mapped to Coneria Castle’s water fountain metatiles in lut_Tileirse",
+                "The Xvfb virtual framebuffer was started at 8-bit color depth (-screen 0 768x720x8) and FFmpeg’s yuv420p chroma subsampling quantized brown pixels into teal",
+                "Godot’s CanvasItem modulate property on the TileMap layer was set to Color(0, 1, 1, 1) whenever a chest contained a consumable item"
               ],
-              "answer": "Rendering the map with the outside-room 0x30 white ceiling Palette 0 AND drawing a semi-transparent colored ColorRect overlay (_chest_markers) on top of chest tiles in FF1MapScene.gd",
-              "explanation": "Using the inside-room Palette 0 (+0x20: [0x0F, 0x10, 0x17, 0x0F]) baked the authentic silver/brown chest pixel art into temple_of_fiends.png, and removing the ColorRect overlay let the pixel art show cleanly."
+              "answer": "temple_of_fiends.png was rendered with Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30] white ceiling) AND FF1MapScene.gd drew a semi-transparent ColorRect debug marker (_chest_markers) over chest coordinates that blended with the white tile into a solid teal square",
+              "explanation": "Two issues compounded: first, Outside-Room Palette 0 filled the chest tile with solid white (0x30); second, FF1MapScene.gd placed a semi-transparent colored ColorRect (_chest_markers) over every chest tile, which alpha-blended against the white square into a flat teal box. Switching to Inside-Room Palette 0 (+0x20: [0x0F, 0x10, 0x17, 0x0F]) and removing the ColorRect revealed the genuine silver-and-brown NES chest pixel art."
             },
             {
-              "question": "How does a RobOS agent visually verify that a recorded Cucumber MP4 video has no sprite-placement or palette defects after all Gherkin assertions pass?",
+              "question": "Why was the Cucumber assertion Then the current map scene should be \"Coneria\" insufficient on its own to catch the Coneria tree-spawn defect in Scenario 1, and what closed that verification gap?",
               "options": [
-                "By extracting key frames from the MP4 with ffmpeg (-frames:v 1) and visually inspecting the rendered PNG frames alongside the KGraph tile coordinates",
-                "By checking only the process exit code (0)",
-                "By counting the file size of the MP4 in bytes",
-                "By grepping project.godot for syntax errors"
+                "Because Coneria.tscn and TempleOfFiends.tscn share the same scene_file_path string in Godot 4",
+                "Because /api/v1/state only verified the scene name (\"Coneria\") without checking whether hero_position landed on a walkable brick road tile (x=16, tileId=16) or visually inspecting the final MP4 frame extracted via ffmpeg -sseof -0.3 -frames:v 1",
+                "Because GameControlServer.gd returns cached state from TitleScreen.tscn until at least 10 seconds of real-clock time have elapsed",
+                "Because behave skips all Then steps whenever Godot runs with --fixed-fps 60 inside a container"
               ],
-              "answer": "By extracting key frames from the MP4 with ffmpeg (-frames:v 1) and visually inspecting the rendered PNG frames alongside the KGraph tile coordinates",
-              "explanation": "Extracting key frames with ffmpeg allows the agent to visually inspect the rendered scene and verify that sprites, tiles, and palettes match the KGraph specification."
+              "answer": "Because /api/v1/state only verified the scene name (\"Coneria\") without checking whether hero_position landed on a walkable brick road tile (x=16, tileId=16) or visually inspecting the final MP4 frame extracted via ffmpeg -sseof -0.3 -frames:v 1",
+              "explanation": "Checking only the scene name (\"Coneria\") passed even when the hero spawned on an unwalkable border tree at (15, 22). Combining active movement steps (\"When the hero moves up 3 tiles\" to (16, 18)) with FFmpeg key-frame extraction (ffmpeg -sseof -0.3 ... -frames:v 1) verifies both walkability rules and visual rendering."
+            },
+            {
+              "question": "Why does the Cucumber test harness launch Godot with --write-movie <avi_path> --fixed-fps 60 inside Xvfb :98 and transcode the AVI to H.264 MP4 afterward, rather than capturing the X11 display with ffmpeg -f x11grab?",
+              "options": [
+                "Because x11grab cannot record windows rendered with the GL Compatibility OpenGL backend on Linux",
+                "Because Xvfb :98 does not allocate a virtual framebuffer in RAM unless --write-movie is passed on the Godot command line",
+                "Because --write-movie --fixed-fps 60 captures every rendered viewport frame and mixed audio buffer deterministically inside the engine loop regardless of host CPU load, whereas x11grab drops or duplicates frames under CI load",
+                "Because --write-movie automatically generates the Gherkin step definitions and JSON-LD Knowledge Graph nodes from the video stream"
+              ],
+              "answer": "Because --write-movie --fixed-fps 60 captures every rendered viewport frame and mixed audio buffer deterministically inside the engine loop regardless of host CPU load, whereas x11grab drops or duplicates frames under CI load",
+              "explanation": "Godot’s built-in Movie Maker (--write-movie with --fixed-fps 60) steps the simulation by a fixed 1/60s delta per frame and writes both exact viewport pixels and synchronized audio to the AVI stream before transcoding to H.264 MP4, eliminating wall-clock jitter and dropped frames."
             }
           ]
         }
@@ -1578,8 +1665,8 @@
               "answer": "The app's description in the knowledge graph (KGraph)",
               "explanation": "The KGraph records what the app is, how it works and how to test it. A change starts as an edit to that description.",
               "options": [
-                "The app's description in the knowledge graph (KGraph)",
                 "A cloud copy of your data that the agent edits",
+                "The app's description in the knowledge graph (KGraph)",
                 "A paid RobOS support plan",
                 "A screenshot of the app you send to the agent"
               ],
@@ -1589,10 +1676,10 @@
               "answer": "It works normally; AI features are optional extras",
               "explanation": "Every RobOS app must stay fully usable with no agent configured. AI is always behind an explicit action you choose to take.",
               "options": [
-                "It works normally; AI features are optional extras",
                 "It opens in a read-only demo mode",
-                "It asks you to subscribe before it starts",
-                "Only the developer apps keep working"
+                "Only the developer apps keep working",
+                "It works normally; AI features are optional extras",
+                "It asks you to subscribe before it starts"
               ],
               "question": "What happens to a RobOS app if you never set up an AI agent?"
             }
@@ -1619,8 +1706,8 @@
               "explanation": "Removing apps or the whole manager keeps ~/.config/robos/, so reinstalling picks up where you left off.",
               "options": [
                 "They stay in ~/.config/robos/",
-                "They are uploaded to rowbose.com first",
                 "They are deleted with the apps",
+                "They are uploaded to rowbose.com first",
                 "They move to the Trash"
               ],
               "question": "You uninstall RobOS from the App Manager. What happens to your personal app settings?"
@@ -1629,10 +1716,10 @@
               "answer": "Apps are separate downloads you choose in the App Manager",
               "explanation": "The manager ships with one shared runtime. Each app downloads only when you select it, and shared pieces download once.",
               "options": [
-                "Apps are separate downloads you choose in the App Manager",
-                "Apps stream from the cloud while you use them",
                 "Only a trial version is included",
-                "The apps are compressed until you pay"
+                "Apps are separate downloads you choose in the App Manager",
+                "The apps are compressed until you pay",
+                "Apps stream from the cloud while you use them"
               ],
               "question": "Why is the base download small?"
             }
@@ -1659,10 +1746,10 @@
               "answer": "A share",
               "explanation": "A share is a read-only bundle of selected settings that the other person merges into their own lists. A vault is your full private backup.",
               "options": [
-                "A share",
-                "A vault",
                 "A restore point",
-                "A pass entry"
+                "A pass entry",
+                "A vault",
+                "A share"
               ],
               "question": "You want a friend to get your café menu but not the rest of your settings. Which Config Sync target do you use?"
             },
@@ -1671,8 +1758,8 @@
               "explanation": "Credentials are removed by key name before anything is written to the cloud folder.",
               "options": [
                 "Strips them and never uploads them",
-                "Encrypts them and uploads them to the vault",
                 "Uploads them only to shares",
+                "Encrypts them and uploads them to the vault",
                 "Asks you each time"
               ],
               "question": "What does Config Sync do with credentials such as API keys?"
@@ -1700,10 +1787,10 @@
               "answer": "The app's knowledge graph",
               "explanation": "The request becomes an edit to the KGraph first, so the change is planned and reviewable before an agent writes code.",
               "options": [
-                "The app's knowledge graph",
                 "The app's code on your main branch",
-                "Your saved data",
-                "The App Manager"
+                "The App Manager",
+                "The app's knowledge graph",
+                "Your saved data"
               ],
               "question": "What is the first thing that changes when you ask for a new feature?"
             },
@@ -1711,10 +1798,10 @@
               "answer": "Throw the change away; your app is unchanged",
               "explanation": "The agent works on a branch. You only keep the change if the tests and walkthrough convince you.",
               "options": [
-                "Throw the change away; your app is unchanged",
                 "Restore your computer from a backup",
                 "Reinstall the app",
-                "Nothing; the change is already live"
+                "Nothing; the change is already live",
+                "Throw the change away; your app is unchanged"
               ],
               "question": "An agent finished your change and the walkthrough looks wrong. What do you do?"
             },
@@ -1724,8 +1811,8 @@
               "options": [
                 "The ones you already use, such as Claude Code, Codex, GitHub Copilot or Gemini CLI",
                 "Only a RobOS-hosted model",
-                "Only agents bought through RobOS",
-                "None; you must write the code yourself"
+                "None; you must write the code yourself",
+                "Only agents bought through RobOS"
               ],
               "question": "Which coding agents can RobOS run for you?"
             }
@@ -1752,9 +1839,9 @@
               "answer": "The key is replaced before the prompt is sent",
               "explanation": "Redact mode removes the secret and sends the rest. Block mode would stop the prompt entirely.",
               "options": [
+                "The app closes",
                 "The key is replaced before the prompt is sent",
                 "The prompt is sent as typed and logged",
-                "The app closes",
                 "The key is sent but encrypted"
               ],
               "question": "Your prompt accidentally contains an AWS secret key and the guard is in redact mode. What happens?"
@@ -1763,10 +1850,10 @@
               "answer": "Don't press its ✦ buttons; there is nothing else to switch off",
               "explanation": "AI only runs when you start it. An app with no agent configured is a normal app.",
               "options": [
-                "Don't press its ✦ buttons; there is nothing else to switch off",
+                "Disconnect from the internet",
                 "Uninstall the app's AI plug-in",
-                "Cancel a RobOS AI subscription",
-                "Disconnect from the internet"
+                "Don't press its ✦ buttons; there is nothing else to switch off",
+                "Cancel a RobOS AI subscription"
               ],
               "question": "How do you stop an app from ever calling AI?"
             }
@@ -1804,9 +1891,9 @@
               "answer": "Export website",
               "explanation": "Export website produces a self-contained HTML page. Copy course path and Copy KGraph URI are references for AI agents.",
               "options": [
+                "Save as PDF",
                 "Export website",
                 "Copy course path",
-                "Save as PDF",
                 "Copy KGraph URI"
               ],
               "question": "You want to put a course on your team's website. What do you use?"
@@ -1852,10 +1939,10 @@
               "answer": "System component managed under team frontend-guild utilizing TypeScript / React",
               "explanation": "Customer Portal SPA is governed under the frontend-guild team topology utilizing TypeScript / React.",
               "options": [
+                "Stateless API gateway proxy managed by platform-infra that only terminates TLS and forwards raw TCP frames",
                 "System component managed under team frontend-guild utilizing TypeScript / React",
-                "Unmanaged third-party binary",
-                "Ephemeral scratch script",
-                "Static mock proxy"
+                "Background batch ETL worker scheduled via cron to archive historical billing records into cold storage",
+                "Embedded SQLite storage engine running inside the cluster ingress controller"
               ],
               "question": "What is the primary architectural role of Customer Portal SPA?"
             }
@@ -1877,9 +1964,9 @@
               "explanation": "RobOS couples W3C SHACL and OpenAPI/Gherkin contract testing for total verification.",
               "options": [
                 "Through declarative contracts and BDD Gherkin test traceability",
-                "Manual code review only",
-                "Runtime monkey patching",
-                "Ignoring contract drift"
+                "By relying solely on browser-side TypeScript compile checks without server contract validation or E2E scenarios",
+                "By sampling 1% of production HTTP responses and logging schema mismatches to stdout",
+                "By disabling strict JSON schema validation in CI so frontend and backend teams can deploy independently"
               ],
               "question": "How does Customer Portal SPA enforce schema and behavioral guarantees in RobOS?"
             }
@@ -1900,10 +1987,10 @@
               "answer": ".robos/elearning.yaml",
               "explanation": "All RobOS eLearning curriculums serialize declaratively to .robos/elearning.yaml.",
               "options": [
-                ".robos/elearning.yaml",
-                "Temporary cookies",
-                "External unversioned wiki",
-                "Hardcoded bash comments"
+                "Inside git hook shell scripts under .git/hooks/post-commit",
+                "Inside unversioned CI runner environment variables injected at container startup",
+                "Inside ephemeral browser localStorage keys that remain local to each developer workstation",
+                ".robos/elearning.yaml"
               ],
               "question": "Where are declarative course definitions stored for GitOps synchronization in RobOS?"
             }
@@ -1944,7 +2031,14 @@
           "quiz": [
             {
               "answer": "Dual-State Knowledge Graph branches with semantic diff verification",
-              "question": "How does RobOS track Microservices & Distributed Systems across git branches?"
+              "question": "How does RobOS track Microservices & Distributed Systems across git branches?",
+              "options": [
+                "By storing serialized SQL database dumps inside git LFS branches and diffing row counts during pull requests",
+                "Dual-State Knowledge Graph branches with semantic diff verification",
+                "By polling live Kubernetes pod logs in production and reverse-engineering service dependencies from stack traces",
+                "By snapshotting container filesystem layers into OCI registries on every git push and comparing layer digests"
+              ],
+              "explanation": "RobOS models services, topics, and contracts as OSLC JSON-LD nodes across World 1 (main) and World 2 (feature branch), running semantic blast-radius diffs before code merges."
             }
           ],
           "title": "Module 1: Foundations & Architecture of Microservices & Distributed Systems"
@@ -1961,7 +2055,14 @@
           "quiz": [
             {
               "answer": "Strict RED phase assertion check",
-              "question": "What phase ensures no false positives occur during implementation?"
+              "question": "What phase ensures no false positives occur during implementation?",
+              "options": [
+                "Strict RED phase assertion check",
+                "Running mutation fuzzing after merging to main while bypassing pre-implementation failure checks",
+                "Mocking the assertion library itself so all steps return exit code 0 during scaffolding",
+                "Deferring all contract and Gherkin verification until manual staging sign-off"
+              ],
+              "explanation": "In RobOS End-to-End Driven Development (EDD), the Strict RED phase verifies that the new Gherkin scenario or contract test fails as expected before implementation code is written."
             }
           ],
           "title": "Module 2: Hands-On Implementation & Verification"
@@ -1978,7 +2079,14 @@
           "quiz": [
             {
               "answer": "Whenever Knowledge Graph objects are updated",
-              "question": "When should documentation be reviewed for noticeable updates?"
+              "question": "When should documentation be reviewed for noticeable updates?",
+              "options": [
+                "Only when a container image base OS is upgraded in the Dockerfile",
+                "Only during quarterly compliance audits after major version tags are cut",
+                "Manually at the end of a sprint when all feature branches have been deleted",
+                "Whenever Knowledge Graph objects are updated"
+              ],
+              "explanation": "Because RobOS couples living documentation directly to Knowledge Graph nodes (.robos/kgraphs/), any structural update to KGraph objects triggers a documentation impact check."
             }
           ],
           "title": "Module 3: GitOps Delivery & Automated Continuous Sync"
@@ -2022,20 +2130,20 @@
             {
               "answer": "So the Y-Sort engine sorts rendering depth by where characters contact the ground",
               "options": [
+                "To prevent sprites from rotating when moving diagonally",
                 "So the Y-Sort engine sorts rendering depth by where characters contact the ground",
-                "Because Godot physics engines only detect collisions at (0, 0)",
                 "To reduce texture memory usage during animation cycles",
-                "To prevent sprites from rotating when moving diagonally"
+                "Because Godot physics engines only detect collisions at (0, 0)"
               ],
               "question": "Why must character sprites in a 2.5D isometric game have their local origin (0, 0) placed at their feet rather than sprite center?"
             },
             {
               "answer": "In autoload singletons like GameState.gd registered in project.godot",
               "options": [
-                "In autoload singletons like GameState.gd registered in project.godot",
+                "Inside the CollisionShape2D user metadata",
                 "In local variables declared on the active scene root",
-                "In temporary environment variables passed through the OS shell",
-                "Inside the CollisionShape2D user metadata"
+                "In autoload singletons like GameState.gd registered in project.godot",
+                "In temporary environment variables passed through the OS shell"
               ],
               "question": "Where does persistent global state (party roster, gold, active quest stage) live across scene changes?"
             }
@@ -2056,18 +2164,18 @@
               "answer": "Area2D with body_entered signals",
               "options": [
                 "Area2D with body_entered signals",
+                "CanvasLayer with screen-pinned overlays",
                 "StaticBody2D with immovable colliders",
-                "CharacterBody2D with move_and_slide()",
-                "CanvasLayer with screen-pinned overlays"
+                "CharacterBody2D with move_and_slide()"
               ],
               "question": "What node type is used to construct trigger zones for doors, portals, and room transitions?"
             },
             {
               "answer": "Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates",
               "options": [
+                "Loaded as separate sub-scenes through external HTTP requests",
                 "Instantiated dynamically in _ready() adjacent to the hero's arrival coordinates",
                 "Hardcoded into every location scene file manually",
-                "Loaded as separate sub-scenes through external HTTP requests",
                 "Kept in an invisible queue until combat begins"
               ],
               "question": "How are recruited companions positioned when transitioning into a newly loaded zone?"
@@ -2088,10 +2196,10 @@
             {
               "answer": "Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs",
               "options": [
-                "Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs",
                 "Build building foundations using 3D meshes rather than 2D sprites",
+                "Lock camera zoom whenever characters are near building doors",
                 "Require all structures to share identical square dimensions",
-                "Lock camera zoom whenever characters are near building doors"
+                "Place colliders only on the bottom 25-35% base of buildings so characters can walk behind roofs"
               ],
               "question": "What is the Foundation Footprint Rule in 2.5D isometric geometry?"
             },
@@ -2099,9 +2207,9 @@
               "answer": "To prevent the viewport from scrolling past map edges and revealing black margins",
               "options": [
                 "To prevent the viewport from scrolling past map edges and revealing black margins",
-                "To lock the mouse cursor inside the operating system window",
                 "To improve frame rates by skipping invisible off-screen rendering",
-                "To enable hardware anti-aliasing on the ground texture"
+                "To enable hardware anti-aliasing on the ground texture",
+                "To lock the mouse cursor inside the operating system window"
               ],
               "question": "Why must Camera2D limits be clamped to (0, 0, 2560, 1440) on map load?"
             }
@@ -2121,20 +2229,20 @@
             {
               "answer": "In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore",
               "options": [
-                "In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore",
-                "Hardcoded directly inside GDScript weapon scripts",
                 "Stored in a remote PostgreSQL database queried over WebSockets",
-                "Embedded inside PNG texture EXIF metadata"
+                "Embedded inside PNG texture EXIF metadata",
+                "In declarative JSON files (data/v1/items.json and mods/) loaded by DataStore",
+                "Hardcoded directly inside GDScript weapon scripts"
               ],
               "question": "Where do item statistics, values, and equip slot properties live in cRPG Realm?"
             },
             {
               "answer": "It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)",
               "options": [
-                "It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)",
-                "It doubles the Dexterity modifier for reflex saves",
+                "It requires rolling a d20 every turn to check if the armor holds",
                 "It penalizes AC by the Dexterity modifier value",
-                "It requires rolling a d20 every turn to check if the armor holds"
+                "It doubles the Dexterity modifier for reflex saves",
+                "It provides a high flat base AC (18) and adds zero Dexterity bonus (maxDexBonus = 0)"
               ],
               "question": "In D&D 5e SRD, how does heavy armor like Full Plate interact with a character's Dexterity modifier?"
             }
@@ -2155,8 +2263,8 @@
             {
               "answer": "A pulsing red danger highlight outlining the hazard polygon with status text",
               "options": [
-                "A pulsing red danger highlight outlining the hazard polygon with status text",
                 "A full-screen flash and camera shake",
+                "A pulsing red danger highlight outlining the hazard polygon with status text",
                 "An immediate pause dialog asking to reload the save",
                 "A green waypoint marker on the minimap only"
               ],
@@ -2165,9 +2273,9 @@
             {
               "answer": "The delicate mechanism prematurely springs and detonates directly in the disarmer's face",
               "options": [
-                "The delicate mechanism prematurely springs and detonates directly in the disarmer's face",
                 "The thieves' tools are permanently destroyed with no damage taken",
                 "The trap is safely disarmed anyway due to passive proficiency",
+                "The delicate mechanism prematurely springs and detonates directly in the disarmer's face",
                 "The disarm attempt is cancelled with no consequence"
               ],
               "question": "What happens if a rogue critically fumbles (force_fumble or natural 1) while attempting to disarm a trap?"
@@ -2190,17 +2298,17 @@
               "options": [
                 "A boolean flag ignores incoming damage while a visual shield effect activates until summoned minions are slain",
                 "The boss teleported off-screen into an unreachable room",
-                "The game engine pauses all player input until a timer expires",
-                "Incoming damage is converted into healing hit points"
+                "Incoming damage is converted into healing hit points",
+                "The game engine pauses all player input until a timer expires"
               ],
               "question": "How is boss invulnerability handled during the Phase 2 shield transition?"
             },
             {
               "answer": "Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn",
               "options": [
+                "Spawns another identical boss in an infinite loop",
                 "Sets quest flag, plays victory fanfare, spawns legendary ground loot, and transitions to VictoryScreen.tscn",
                 "Immediately crashes the game engine to prevent save scumming",
-                "Spawns another identical boss in an infinite loop",
                 "Resets the hero to Act 1 Homestead"
               ],
               "question": "What happens when a boss reaches 0 HP in cRPG Realm?"
@@ -2222,10 +2330,10 @@
             {
               "answer": "It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests",
               "options": [
-                "It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests",
                 "It requires recompiling the Godot C++ engine binary with custom mod flags",
+                "It parses comments inside .tscn scene files",
                 "It downloads mods from an external proprietary cloud server on every boot",
-                "It parses comments inside .tscn scene files"
+                "It automatically scans res://mods/ and user://mods/ directories for valid mod.json manifests"
               ],
               "question": "How does the RobOS cRPG Mod Loader discover custom content packages?"
             },
@@ -2233,9 +2341,9 @@
               "answer": "To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors",
               "options": [
                 "To execute tests headlessly in CI/CD while capturing real 1080p video proof-of-work without physical monitors",
-                "To bypass Godot's graphics rendering pipeline completely",
+                "Because Godot cannot run on Linux without virtual framebuffers",
                 "To overclock the GPU for faster frame rates",
-                "Because Godot cannot run on Linux without virtual framebuffers"
+                "To bypass Godot's graphics rendering pipeline completely"
               ],
               "question": "Why does the RobOS verification harness run games inside an Xvfb virtual framebuffer?"
             }
@@ -2281,9 +2389,9 @@
               "answer": "SHA-256 content hash, repository context, relative path, and working-tree revision",
               "explanation": "RobOS attaches cryptographic SHA-256 digests along with repository context, relative path, line number, and revision status to guarantee absolute provenance.",
               "options": [
+                "Git commit hash without line or path information",
                 "SHA-256 content hash, repository context, relative path, and working-tree revision",
                 "MD5 checksum only",
-                "Git commit hash without line or path information",
                 "No evidence is stored to conserve disk space"
               ],
               "question": "What cryptographic evidence is attached to every ingested Linux file node in RobOS?"
@@ -2292,9 +2400,9 @@
               "answer": "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
               "explanation": "RobOS maps Linux IPC sockets to robos:LinuxSocket and named pipes to robos:LinuxNamedPipe with accurate inode MIME types.",
               "options": [
-                "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
-                "They are ignored and discarded during filesystem scans",
                 "As plain text documents",
+                "They are ignored and discarded during filesystem scans",
+                "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
                 "As generic database tables"
               ],
               "question": "How are Unix domain sockets and named pipes represented in the KGraph?"
@@ -2317,9 +2425,9 @@
               "explanation": "The disambiguation engine detects the Kubernetes schema and maps it directly to robos:GitOpsDeployment for automated cluster reconciliation.",
               "options": [
                 "robos:KubernetesManifest with targetClass robos:GitOpsDeployment",
-                "robos:HelmChartDefinition",
                 "Generic text/plain document",
-                "robos:ConfigurationFile without schema validation"
+                "robos:ConfigurationFile without schema validation",
+                "robos:HelmChartDefinition"
               ],
               "question": "When a YAML file contains apiVersion: and kind: Deployment, how is it classified?"
             },
@@ -2327,10 +2435,10 @@
               "answer": "MODULE.bazel or WORKSPACE",
               "explanation": "MODULE.bazel or WORKSPACE indicates a Bazel monorepo, enabling remote execution flags and build target analysis.",
               "options": [
+                "package.json",
                 "MODULE.bazel or WORKSPACE",
                 "pom.xml",
-                "Cargo.toml",
-                "package.json"
+                "Cargo.toml"
               ],
               "question": "What marker file signals a Bazel monorepo archetype to the directory scanner?"
             }
@@ -2351,10 +2459,10 @@
               "answer": "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes",
               "explanation": "Streaming large documents across HTTP/2 prevents Node.js heap bloat and isolates complex parser logic in an external daemon.",
               "options": [
-                "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes",
+                "It eliminates the need for schema validation",
                 "It converts all documents directly to PNG images",
                 "It requires zero network configuration",
-                "It eliminates the need for schema validation"
+                "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes"
               ],
               "question": "What is the primary architectural advantage of streaming documents over tika-grpc?"
             },
@@ -2363,9 +2471,9 @@
               "explanation": "TikaGrpcConnector identifies Protobuf service interfaces, RPC endpoints, and message schemas for microservice contract mapping.",
               "options": [
                 "Protobuf services, RPC method signatures, and message schemas",
-                "Only file comments and copyright notices",
+                "HTTP cookie headers",
                 "Binary machine opcodes",
-                "HTTP cookie headers"
+                "Only file comments and copyright notices"
               ],
               "question": "What symbol types does the polyglot AST parser extract from Protobuf definitions?"
             }
@@ -2386,9 +2494,9 @@
               "answer": "oci://ghcr.io/hermetiq/buildbarn",
               "explanation": "RobOS standardizes on Hermetiq's official OCI Helm distribution (oci://ghcr.io/hermetiq/buildbarn) for REAPI v2 cluster deployments.",
               "options": [
-                "oci://ghcr.io/hermetiq/buildbarn",
                 "docker.io/buildbarn/monolithic",
                 "helm.elastic.co/buildbarn",
+                "oci://ghcr.io/hermetiq/buildbarn",
                 "oci://quay.io/robos/buildbarn"
               ],
               "question": "What OCI registry chart is used to deploy Buildbarn Remote Build Execution in RobOS?"
@@ -2397,10 +2505,10 @@
               "answer": "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)",
               "explanation": "Buildbarn divides remote execution into CAS/AC storage, task scheduling queues, containerized worker execution, and frontend gRPC routing.",
               "options": [
-                "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)",
                 "PostgreSQL database and Redis cache only",
                 "Only bb-storage without a worker pool",
-                "A monolithic single-node executable"
+                "A monolithic single-node executable",
+                "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)"
               ],
               "question": "Which REAPI v2 components are deployed by the Hermetiq Buildbarn Helm chart?"
             }
@@ -2421,10 +2529,10 @@
               "answer": "Every node must pass through W3C SHACL shape validation gates before being committed",
               "explanation": "Ingestion endpoints enforce W3C SHACL shape validation (targetClass, required properties, datatype constraints) before mutating graph state.",
               "options": [
-                "Every node must pass through W3C SHACL shape validation gates before being committed",
                 "It bypasses all validation to maximize ingestion speed",
-                "It requires manual human approval for every individual file",
-                "It only allows ingestion of plain markdown files"
+                "Every node must pass through W3C SHACL shape validation gates before being committed",
+                "It only allows ingestion of plain markdown files",
+                "It requires manual human approval for every individual file"
               ],
               "question": "How does the KGraph Parse Portal guarantee that ingested nodes do not corrupt the Knowledge Graph?"
             },
@@ -2432,10 +2540,10 @@
               "answer": "packages/kgraph-parse-portal/bin/luxir-portal-cli.js",
               "explanation": "luxir-portal-cli.js enables searching, raw JSON document inspection, and daemon health checks directly from the command line.",
               "options": [
-                "packages/kgraph-parse-portal/bin/luxir-portal-cli.js",
+                "npm test",
                 "kubectl get pods",
-                "git log",
-                "npm test"
+                "packages/kgraph-parse-portal/bin/luxir-portal-cli.js",
+                "git log"
               ],
               "question": "Which CLI tool provides direct terminal access to search, inspect, and monitor the Luxir engine?"
             }
@@ -2481,30 +2589,30 @@
             {
               "answer": "8 + Proficiency Bonus + Spellcasting Ability Modifier",
               "options": [
+                "Armor Class + Wisdom Modifier - Spell Level",
                 "8 + Proficiency Bonus + Spellcasting Ability Modifier",
-                "10 + Spell Level + Intelligence Modifier",
                 "d20 + Proficiency Bonus + Caster Level",
-                "Armor Class + Wisdom Modifier - Spell Level"
+                "10 + Spell Level + Intelligence Modifier"
               ],
               "question": "In D&D 5e SRD, what is the exact formula for a character's Spell Save DC?"
             },
             {
               "answer": "6.0 seconds with visual round progress timer",
               "options": [
-                "6.0 seconds with visual round progress timer",
-                "10.0 seconds turn-based phase",
                 "1.0 second real-time tick",
-                "Variable based on Agility stat"
+                "Variable based on Agility stat",
+                "6.0 seconds with visual round progress timer",
+                "10.0 seconds turn-based phase"
               ],
               "question": "How long is a standard D&D 5e combat round in the tactical RTwP engine?"
             },
             {
               "answer": "Roll 2d20 and take the higher value",
               "options": [
-                "Roll 2d20 and take the higher value",
-                "Roll 1d20 and add a flat +5 modifier",
                 "Roll 2d20 and sum both values together",
-                "Double the damage dice if the roll hits"
+                "Double the damage dice if the roll hits",
+                "Roll 1d20 and add a flat +5 modifier",
+                "Roll 2d20 and take the higher value"
               ],
               "question": "When an attacker has Advantage on a d20 attack roll, how is the roll evaluated?"
             }
@@ -2526,8 +2634,8 @@
               "answer": "Guarantees seamless execution across low-spec hardware, virtualized Xvfb displays (:99), and avoids shader compilation stutter",
               "options": [
                 "Guarantees seamless execution across low-spec hardware, virtualized Xvfb displays (:99), and avoids shader compilation stutter",
-                "Vulkan does not support 2D sprite rendering in Godot 4",
                 "GL Compatibility allows higher polygon count 3D models",
+                "Vulkan does not support 2D sprite rendering in Godot 4",
                 "It enables Ray Tracing and DLSS by default"
               ],
               "question": "Why does RobOS cRPG Realm use the Godot 4 GL Compatibility renderer rather than Vulkan Forward+?"
@@ -2535,10 +2643,10 @@
             {
               "answer": "Fails direct raycast line-of-sight and routes through safe corridor waypoints via A* visibility graph",
               "options": [
+                "Reverses direction until clicking stops",
                 "Fails direct raycast line-of-sight and routes through safe corridor waypoints via A* visibility graph",
-                "Teleports the party directly to the target point",
                 "Disables building collision while moving",
-                "Reverses direction until clicking stops"
+                "Teleports the party directly to the target point"
               ],
               "question": "How does Pathfinder.gd prevent heroes from getting stuck when clicking on the far side of Brand's Forge?"
             }
@@ -2558,10 +2666,10 @@
             {
               "answer": "Small (124px combat), Medium (240px dialogue), Large (420px history & dice breakdown)",
               "options": [
-                "Small (124px combat), Medium (240px dialogue), Large (420px history & dice breakdown)",
                 "Collapsed, Windowed, Fullscreen",
+                "Combat Only, Chat Only, System Only",
                 "Debug, Trace, Error",
-                "Combat Only, Chat Only, System Only"
+                "Small (124px combat), Medium (240px dialogue), Large (420px history & dice breakdown)"
               ],
               "question": "What are the three distinct modes of the Infinity Engine Activity Log in cRPG Realm?"
             },
@@ -2569,9 +2677,9 @@
               "answer": "CC-BY-SA 3.0 / CC0 (Genuine Open Source)",
               "options": [
                 "CC-BY-SA 3.0 / CC0 (Genuine Open Source)",
-                "Proprietary Commercial License",
                 "GPL v2 only",
-                "MIT No-Attribution"
+                "MIT No-Attribution",
+                "Proprietary Commercial License"
               ],
               "question": "What license governs the Flare RPG creature spritesheets and modular paperdoll assets used in the game?"
             }
@@ -2591,20 +2699,20 @@
             {
               "answer": "140px proximity trigger with 200px pack alerting radius",
               "options": [
-                "140px proximity trigger with 200px pack alerting radius",
+                "Instant global aggro upon scene enter",
                 "50px melee range only",
-                "500px entire viewport scan",
-                "Instant global aggro upon scene enter"
+                "140px proximity trigger with 200px pack alerting radius",
+                "500px entire viewport scan"
               ],
               "question": "At what proximity distance does the Infinity AI Agent threat radar trigger hostile combat detection?"
             },
             {
               "answer": "When any companion drops below 40% maximum Hit Points",
               "options": [
-                "When any companion drops below 40% maximum Hit Points",
-                "Only after all enemies are dead",
                 "On round 1 regardless of health",
-                "Only when the Cleric itself is attacked"
+                "Only after all enemies are dead",
+                "Only when the Cleric itself is attacked",
+                "When any companion drops below 40% maximum Hit Points"
               ],
               "question": "In combined-arms AI tactics, when does the Cleric cast Cure Wounds during active combat?"
             }
@@ -2624,19 +2732,19 @@
             {
               "answer": "Provides static type safety, autocompletion in Godot editor, and eliminates runtime KeyError crashes",
               "options": [
-                "Provides static type safety, autocompletion in Godot editor, and eliminates runtime KeyError crashes",
-                "Compresses textures and sound files into binary blobs",
                 "Allows the game to bypass Godot engine lifecycle hooks",
-                "Enables multiplayer networking over WebSockets"
+                "Provides static type safety, autocompletion in Godot editor, and eliminates runtime KeyError crashes",
+                "Enables multiplayer networking over WebSockets",
+                "Compresses textures and sound files into binary blobs"
               ],
               "question": "What is the primary benefit of compiling game data from JSON Schemas into typed GDScript singletons (DataStoreV1.gd)?"
             },
             {
               "answer": "Broken dialogue tree references, missing sprite asset bindings, and monster stat imbalances",
               "options": [
-                "Broken dialogue tree references, missing sprite asset bindings, and monster stat imbalances",
                 "Syntax errors in Python packages",
                 "Network packet loss during multiplayer matchmaking",
+                "Broken dialogue tree references, missing sprite asset bindings, and monster stat imbalances",
                 "GPU driver incompatibilities"
               ],
               "question": "What does RobOS dual-state semantic diffing (kgraph diff main) catch before game code is deployed?"
@@ -2731,7 +2839,7 @@
       "robos:targetApplication": "urn:robos:app:kgraph-parse-portal",
       "robos:targetAudience": "Game Developers, Retro Preservationists, AI Agent Engineers, Context Engineers",
       "robos:topic": "Context-Engineered Classic JRPG Reconstruction & Automated Video Verification",
-      "robos:updatedAt": "2026-11-04T18:44:28.276Z",
+      "robos:updatedAt": "2026-11-04T18:57:34.465Z",
       "robos:modules": [
         {
           "id": "mod-01-browser-and-python-harvesting",
@@ -2747,26 +2855,37 @@
           ],
           "quiz": [
             {
-              "question": "How do we make the Python asset downloader reusable across any classic JRPG (such as Final Fantasy, Dragon Warrior, or Chrono Trigger) instead of hardcoding filenames?",
+              "question": "When adapting harvest_jrpg_assets.py from NES Final Fantasy to another classic JRPG on VGMaps and StrategyWiki (such as Dragon Warrior III or Chrono Trigger), which parameterization avoids rewriting the scraper while preserving deterministic SHA-256 verification?",
               "options": [
-                "By passing the index URL, filename prefix (--map-prefix), and wiki slug (--wiki-slug) to an HTMLParser link-discovery function that generates sources-manifest.json dynamically",
-                "By manually renaming every PNG file in MS Paint before running Python",
-                "By committing all commercial ROMs directly into the public Git repository",
-                "By hardcoding a 500-element array of URLs inside the Godot engine binary"
+                "Scraping the entire VGMaps console directory indiscriminately and filtering downloaded PNGs afterward by checking whether their pixel dimensions are powers of two",
+                "Passing --vgmaps-index, --map-prefix, and --wiki-slug into the HTMLParser link-discovery pipeline so it dynamically builds and hashes sources-manifest.json before fetching",
+                "Maintaining a per-game hardcoded dictionary of map filenames inside lib/maps.js and matching them against local files by fuzzy Levenshtein distance",
+                "Querying the MediaWiki action=parse API for image embeds and relying on StrategyWiki thumbnail URLs as the primary tile-slicing source"
               ],
-              "answer": "By passing the index URL, filename prefix (--map-prefix), and wiki slug (--wiki-slug) to an HTMLParser link-discovery function that generates sources-manifest.json dynamically",
-              "explanation": "Using HTMLParser link discovery (or a Browser DevTools manifest extractor) decouples the Python downloader from any single game so the same script harvests any JRPG."
+              "answer": "Passing --vgmaps-index, --map-prefix, and --wiki-slug into the HTMLParser link-discovery pipeline so it dynamically builds and hashes sources-manifest.json before fetching",
+              "explanation": "Passing --vgmaps-index, --map-prefix, and --wiki-slug lets HTMLParser discover all matching 1:1 map PNGs and sub-pages dynamically and write sources-manifest.json + download-receipt.json with SHA-256 hashes. StrategyWiki thumbnails are lossy/rescaled, and downloading entire console archives wastes bandwidth and mixes games."
             },
             {
-              "question": "Why does a default urllib.request.urlopen(url) call fail with HTTP 403 Forbidden on retro archives like VGMaps and Zophar, and how does harvest_jrpg_assets.py fix it?",
+              "question": "During an automated harvest run against retro game archives (VGMaps, Zophar, ReplacementDocs), urllib.request.urlopen(url) fails with HTTP 403 Forbidden or triggers upstream rate-limiting. Which request strategy in harvest_jrpg_assets.py resolves this reliably?",
               "options": [
-                "They block the default Python-urllib User-Agent; passing a standard browser User-Agent header in urllib.request.Request resolves it",
-                "They require OAuth2 bearer tokens generated via Google Cloud",
-                "They only serve files over FTP rather than HTTPS",
-                "They require WebSocket handshakes before downloading PNGs"
+                "Tunneling requests over HTTP/1.0 without Host headers so legacy Apache mod_security rules treat the client as an archival crawler",
+                "Switching to headless Chromium with stealth WebDriver plugins to execute JavaScript challenges before saving each PNG via canvas.toDataURL()",
+                "Constructing a urllib.request.Request with a standard desktop browser User-Agent and Accept header, paired with sequential polite delays (--delay 0.5) and existing-file SHA-256 cache skips",
+                "Using multi-threaded asyncio.gather() workers with randomized proxy rotation and a 50ms retry backoff across all map URLs simultaneously"
               ],
-              "answer": "They block the default Python-urllib User-Agent; passing a standard browser User-Agent header in urllib.request.Request resolves it",
-              "explanation": "Passing a standard desktop browser User-Agent header with polite rate limiting allows deterministic Python downloads without 403 blocks."
+              "answer": "Constructing a urllib.request.Request with a standard desktop browser User-Agent and Accept header, paired with sequential polite delays (--delay 0.5) and existing-file SHA-256 cache skips",
+              "explanation": "Static retro archives reject Python-urllib/3.x default User-Agent strings via simple mod_rewrite/WAF filters rather than JS challenges. Sending a standard browser User-Agent with sequential 0.5s rate limiting and skipping already-verified files avoids both 403 blocks and rate-limit bans."
+            },
+            {
+              "question": "Why does the Browser DevTools Console snippet filter anchor elements with new URL(a.href, location.href).href and a GamePrefix regex before writing sources-manifest.json, rather than exporting document.images directly?",
+              "options": [
+                "Because document.images only returns SVG vector nodes in Chromium unless the page is scrolled to the bottom first",
+                "Because StrategyWiki encrypts <img src> attributes with a session token that expires before Python urllib can download them",
+                "Because new URL() automatically converts indexed-color GIFs into 32-bit RGBA PNG buffers inside the browser memory",
+                "Because VGMaps index pages link to the full-resolution 1:1 pixel atlas PNGs via <a href=\"...\"> tags, whereas <img> tags on index pages are either absent or point to scaled-down preview thumbnails and UI icons"
+              ],
+              "answer": "Because VGMaps index pages link to the full-resolution 1:1 pixel atlas PNGs via <a href=\"...\"> tags, whereas <img> tags on index pages are either absent or point to scaled-down preview thumbnails and UI icons",
+              "explanation": "On VGMaps and similar retro atlas tables, the full 1024x1024 or 4096x4096 1:1 pixel rips are linked from table <a href=\"...\"> anchors, not inline <img> elements. Resolving a.href via new URL(..., location.href) yields canonical absolute URLs for the unscaled PNGs."
             }
           ]
         },
@@ -2784,26 +2903,37 @@
           ],
           "quiz": [
             {
-              "question": "How does packages/robos-jrpg-parser/bin/jrpg-parser.js prevent the AI agent from hallucinating game items, lore, or rules during the parse step?",
+              "question": "When jrpg-parser.js parse invokes robos-lib/ai-agent on unstructured walkthrough prose to extract story milestones and battle rules, what mechanism prevents the LLM from injecting training-set memories (such as GBA Dawn of Souls bonus dungeons or hallucinated spell names) into knowledge-graph.jsonld?",
               "options": [
-                "Every agent-extracted record must include a verbatim quote from the source file; if the quote is not literally present in the source text, the parser drops the record",
-                "It disables the AI agent completely and ignores all prose",
-                "It queries Wikipedia at runtime to vote on every item name",
-                "It randomly deletes 50% of the extracted nodes"
+                "Requiring every agent-returned JSON record to carry a verbatim quote field and programmatically verifying that the exact substring exists in the local source file before accepting the node",
+                "Running a secondary critic LLM pass that cross-checks every extracted node against an embedded SQLite database of NES ROM strings",
+                "Lowering the model temperature to 0.0 and passing a JSON Schema with additionalProperties: false so only valid schema keys can be emitted",
+                "Restricting the AI agent to only read HTML <table> elements while discarding all <p> and <li> narrative paragraphs before prompt construction"
               ],
-              "answer": "Every agent-extracted record must include a verbatim quote from the source file; if the quote is not literally present in the source text, the parser drops the record",
-              "explanation": "The parser enforces a strict verbatim source-quote gate on all LLM-extracted records and caches verified replies in <out>/.cache/agent."
+              "answer": "Requiring every agent-returned JSON record to carry a verbatim quote field and programmatically verifying that the exact substring exists in the local source file before accepting the node",
+              "explanation": "Temperature 0.0 and JSON Schema constraints enforce structure but cannot stop an LLM from recalling facts from other editions in its pretraining corpus. Requiring a verbatim quote and checking sourceText.includes(record.quote) guarantees every extracted fact is grounded in the local file."
             },
             {
-              "question": "Why did the initial StrategyWiki and PDF manual parse still block battles in the Completeness Gap Matrix?",
+              "question": "You scraped StrategyWiki’s Final Fantasy/Enemies page along with the official NES manual PDF, yielding 124 robos:JRPGEnemy nodes with HP, XP, Gold, and elemental weaknesses. Why does jrpg-parser.js coverage still flag Enemies and Encounters as \"Blocks battles\"?",
               "options": [
-                "Because basic enemy summary lists only had HP, XP, and Gold, lacking ATK, DEF, ACC, Hits, CRT, EVA, Magic Defense, and map encounter zone tables",
-                "Because StrategyWiki did not list weapon prices",
-                "Because the NES game had no random encounters",
-                "Because JSON-LD does not support integer properties"
+                "Because StrategyWiki lists monster names using the PlayStation Origins translation rather than the 6-character NES ASCII strings required by the SHACL validator",
+                "Because summary wiki tables omit internal combat bytes—specifically ATK, ACC, Hits per turn, CRT, DEF, EVA, Magic Defense (M.D), Morale (MOR), AI spell lists, and the 8-slot per-map encounter formation tables",
+                "Because the NES combat engine requires 3D skeletal animation hitboxes before it can resolve turn-based damage formulas",
+                "Because the PDF manual parser cannot extract integer columns unless OCR post-processing is enabled via Tika gRPC"
               ],
-              "answer": "Because basic enemy summary lists only had HP, XP, and Gold, lacking ATK, DEF, ACC, Hits, CRT, EVA, Magic Defense, and map encounter zone tables",
-              "explanation": "Executing actual NES combat formulas requires each enemy’s ATK, ACC, Hits, CRT, DEF, EVA, Magic Defense, Morale, and the 8-slot encounter formation tables per map."
+              "answer": "Because summary wiki tables omit internal combat bytes—specifically ATK, ACC, Hits per turn, CRT, DEF, EVA, Magic Defense (M.D), Morale (MOR), AI spell lists, and the 8-slot per-map encounter formation tables",
+              "explanation": "Basic wiki bestiaries and manuals list player-facing rewards (HP, XP, Gold) but omit the internal combat stats (ATK, ACC, Hits, CRT, DEF, EVA, M.D, MOR) needed to compute hit rolls, damage, initiative, and flee checks, as well as the 8-slot map formation tables."
+            },
+            {
+              "question": "Why does jrpg-parser.js separate scan (plus an optional manifest.json override) from parse when ingesting a multi-source ~/Downloads/<game-id> folder?",
+              "options": [
+                "Because Node.js cannot read HTML and PNG files in the same process without first generating an inode manifest on disk",
+                "Because scan uploads the directory listing to the RobOS Cloud Vault to reserve globally unique @id URNs before local parsing begins",
+                "Because mixed scrape folders often include remake/port pages (e.g., GBA Dawn of Souls or PSP Anniversary) whose altered shop prices and bonus bosses would pollute the NES KGraph unless inspected and excluded before parsing",
+                "Because scan pre-compiles all PNGs into Godot .ctex textures so parse can read their pixel buffers directly from .godot/imported/"
+              ],
+              "answer": "Because mixed scrape folders often include remake/port pages (e.g., GBA Dawn of Souls or PSP Anniversary) whose altered shop prices and bonus bosses would pollute the NES KGraph unless inspected and excluded before parsing",
+              "explanation": "Guides and wikis frequently mix NES original tables with GBA/PS1/PSP remake tables on sub-pages. Running scan first lets the agent inspect inferred roles and edition warnings and write manifest.json overrides ({ \"use\": false }) before parse merges data into the graph."
             }
           ]
         },
@@ -2821,26 +2951,37 @@
           ],
           "quiz": [
             {
-              "question": "Due to a pointer bug in the NES Final Fantasy combat routine, what value is actually used as a weapon’s base critical hit rate out of 201?",
+              "question": "In Disch’s 6502 NES disassembly of Final Fantasy, why does the Masamune have a 40/201 (~19.9%) base critical hit rate while the Vorpal sword has a lower critical rate than later weapons in the inventory table?",
               "options": [
-                "The weapon’s 1-based Inventory Index ID (1 to 40)",
-                "The weapon’s Gold price divided by 100",
-                "The wielder’s Intelligence stat multiplied by 2",
-                "A hardcoded 5% (10/201) for all weapons"
+                "Because critical hit rates on the NES are dynamically derived from (Weapon ATK - Target DEF) clamped to the 1..40 range before rolling 0..200",
+                "Because the weapon struct in Bank 06 omits the critical rate byte, so the combat routine reads the weapon’s 0-based accuracy modifier divided by 2 as the critical threshold",
+                "Because the NES PPU frame counter seeds the RNG with the weapon’s equip-slot memory offset plus the wielder’s Luck stat divided by 4",
+                "Because a pointer bug in the combat routine loads the weapon’s 1-based Inventory Index ID (1 to 40) instead of its critical rate byte from the weapon table"
               ],
-              "answer": "The weapon’s 1-based Inventory Index ID (1 to 40)",
-              "explanation": "In the NES ROM, the combat routine reads the weapon’s 1-based index ID (1..40) instead of a crit column, giving Masamune (ID 40) a 40/201 base critical hit rate."
+              "answer": "Because a pointer bug in the combat routine loads the weapon’s 1-based Inventory Index ID (1 to 40) instead of its critical rate byte from the weapon table",
+              "explanation": "Although the weapon data table in the ROM has a byte intended for critical rate, a pointer bug in the 6502 combat routine uses the weapon’s 1-based Inventory Index ID (1..40) out of 201 instead (Nunchaku = 1/201, Rapier = 6/201, Masamune = 40/201)."
             },
             {
-              "question": "In the NES ROM, which monster stat doubles as both physical evasion and turn-order initiative modifier (Stat + rand(0..49))?",
+              "question": "When a Black Mage casts FIRE (Effectividad/Power E=10, Spell Accuracy=24) against an IMP (Magic Defense M.D=16, neither weak nor resistant to Fire), how does the NES magic routine determine whether the spell deals normal (10..20) or doubled (20..40) damage?",
               "options": [
-                "Evade (EVA)",
-                "Morale (MOR)",
-                "Magic Defense (M.D)",
-                "Critical Rate (CRT)"
+                "It starts with Base Magic Accuracy 148 (0x94), adds Spell Accuracy (24), and subtracts Target M.D (16) for a threshold of 156; rolling 0..155 on rand(0..200) scores a magic \"hit\" that doubles the rand(E..2E) roll",
+                "It compares Caster Intelligence + Spell Accuracy (24) against Target M.D (16) on a d100 roll; if successful, the base damage E is multiplied by the caster’s current spell level",
+                "It rolls rand(0..255) against (128 + Caster Luck - Target EVA); magic defense (M.D) only applies to status spells like SLEEP and DARK rather than elemental damage spells",
+                "It calculates (Spell Power * 2) - Target M.D directly as flat deterministic damage and only rolls accuracy if the target has an active elemental resistance flag"
               ],
-              "answer": "Evade (EVA)",
-              "explanation": "Monsters in NES Final Fantasy do not have a separate Agility byte; Evade (EVA) is used for both physical evasion and turn-order initiative."
+              "answer": "It starts with Base Magic Accuracy 148 (0x94), adds Spell Accuracy (24), and subtracts Target M.D (16) for a threshold of 156; rolling 0..155 on rand(0..200) scores a magic \"hit\" that doubles the rand(E..2E) roll",
+              "explanation": "In the NES ROM (Intelligence is unused by the magic formula!), base magic accuracy is 148 (0 if resistant, 188 if weak to the element). Chance to hit = Base + Spell Accuracy - Target M.D = 148 + 24 - 16 = 156 on a 0..200 roll (where 200 always misses). A hit doubles the E..2E damage roll."
+            },
+            {
+              "question": "Why does robos:JRPGEnemy in our NES Knowledge Graph lack a standalone Agility property, and how is monster turn order computed at the start of each combat round?",
+              "options": [
+                "Monsters always act after all four Light Warriors in descending order of their 0-based formation slot index (0..8)",
+                "The NES ROM does not store a separate monster Agility byte; a monster’s Evade (EVA) stat serves as both its physical evasion percentage and its turn-order initiative base (EVA + rand(0..49))",
+                "Monsters use their Morale (MOR) stat divided by 2 plus rand(0..49) for initiative, while Evade (EVA) only affects physical dodge rolls",
+                "Monster initiative is derived from (ACC + Hits * 10) + rand(0..63), which is why high-hit bosses always act first"
+              ],
+              "answer": "The NES ROM does not store a separate monster Agility byte; a monster’s Evade (EVA) stat serves as both its physical evasion percentage and its turn-order initiative base (EVA + rand(0..49))",
+              "explanation": "While player characters have both Agility (AGL) and Evade (EVA), the 20-byte NES monster record stores only EVA, which doubles as physical evasion and turn-order initiative base (EVA + rand(0..49))."
             }
           ]
         },
@@ -2858,26 +2999,37 @@
           ],
           "quiz": [
             {
-              "question": "Why did rendering Temple of Fiends with the first 16 bytes of lut_SMPalettes cause treasure chests at (2, 3) and (3, 3) to appear as solid white/blank squares?",
+              "question": "When rendering Temple of Fiends (Map 12) from the 6502 ROM’s lut_SMPalettes table ($A000 in bank_00.dat, 48 bytes per map), why did reading bytes 0..15 cause the treasure chests at (2, 3) and (3, 3) to render as blank white squares?",
               "options": [
-                "Because bytes 0..3 are the outside-room Palette 0 ([0x0F, 0x30, 0x30, 0x30]) which masks indoor rooms and chests in solid white (0x30) until the inside-room palette at +0x20 ([0x0F, 0x10, 0x17, 0x0F]) is applied",
-                "Because treasure chests in NES Final Fantasy are drawn as sprites rather than background metatiles",
-                "Because the PNG file was saved in grayscale mode",
-                "Because Temple of Fiends has no treasure chests in the NES version"
+                "Because Temple of Fiends uses bank-switched CHR-RAM animation frames that overwrite tile 0x3F only after the player defeats Garland in the central chamber",
+                "Because treasure chests on the NES are rendered via OAM sprite slots (bytes 16..31) rather than background nametable metatiles, so background Palette 0 contains no chest colors",
+                "Because bytes 0..3 represent Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30]), which intentionally paints indoor room metatiles and chests in solid white (0x30) until the player steps inside and triggers the Inside-Room palette at offset +0x20 ([0x0F, 0x10, 0x17, 0x0F])",
+                "Because bytes 0..15 store the 4-color grayscale PPU attribute mask rather than NES master palette indices, requiring a bitwise XOR with 0x3F before RGB lookup"
               ],
-              "answer": "Because bytes 0..3 are the outside-room Palette 0 ([0x0F, 0x30, 0x30, 0x30]) which masks indoor rooms and chests in solid white (0x30) until the inside-room palette at +0x20 ([0x0F, 0x10, 0x17, 0x0F]) is applied",
-              "explanation": "The NES ROM stores outside-room palettes at +0x00 and inside-room palettes at +0x20 (32 bytes); using +0x20 for Palette 0 restores the silver (0x10) and brown (0x17) chest colors."
+              "answer": "Because bytes 0..3 represent Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30]), which intentionally paints indoor room metatiles and chests in solid white (0x30) until the player steps inside and triggers the Inside-Room palette at offset +0x20 ([0x0F, 0x10, 0x17, 0x0F])",
+              "explanation": "Each map entry in lut_SMPalettes is 0x30 (48) bytes: 0x00..0x0F are the 4 outside-room background palettes, 0x10..0x1F are sprite palettes, and 0x20..0x2F are the 4 inside-room background palettes. Replacing Palette 0 with in_room_pal[0:4] ([0x0F, 0x10, 0x17, 0x0F]) restores the black, silver, and brown chest pixels."
             },
             {
-              "question": "In Coneria Town (map_00_coneria.json), why did spawning the hero at (15, 22) trap the hero in a tree, and what is the correct entrance column?",
+              "question": "In Coneria Town (map_00_coneria.json), why did an initial spawn coordinate of Vector2i(15, 22) leave the hero stuck inside a tree at the end of Scenario 1, and how do the ROM entrance tables (lut_EntrTele_X / lut_EntrTele_Y) resolve this?",
               "options": [
-                "Column x=15 (and x=17) is a row of unwalkable trees (tileId=14) flanking the central walkable brick entrance road at column x=16 (tileId=16)",
-                "The entire bottom half of Coneria is water tiles",
-                "Coneria is only 10x10 tiles wide",
-                "Tile (15, 22) is inside the Castle throne room"
+                "Tile (15, 22) is the Coneria Castle moat bridge tile, which remains unwalkable until the King of Coneria sets the bridge_built story flag",
+                "Coneria’s 64x64 tile grid uses 1-based indexing in the NES ROM, so (15, 22) was off by one in both axes from the true town square center at (32, 32)",
+                "The VGMaps PNG for Coneria includes a 16-pixel decorative border around the outside of the 1024x1024 image that shifts all tile coordinates right by 1 column",
+                "Coneria’s south gate is a single-tile-wide walkable brick road at column x=16 (tileId=16, matching lut_EntrTele_X = 16), flanked immediately on both sides by unwalkable tree columns at x=15 and x=17 (tileId=14)"
               ],
-              "answer": "Column x=15 (and x=17) is a row of unwalkable trees (tileId=14) flanking the central walkable brick entrance road at column x=16 (tileId=16)",
-              "explanation": "Column x=16 is the walkable brick entrance street (matching lut_EntrTele_X = 16), whereas x=15 and x=17 are tree columns bordering the road."
+              "answer": "Coneria’s south gate is a single-tile-wide walkable brick road at column x=16 (tileId=16, matching lut_EntrTele_X = 16), flanked immediately on both sides by unwalkable tree columns at x=15 and x=17 (tileId=14)",
+              "explanation": "Inspecting map_00_coneria.json (and lut_EntrTele_X at $AC00) confirms that column x=16 is the walkable brick entrance street (tileId=16), whereas x=15 and x=17 are unwalkable border trees (tileId=14). Spawning at Vector2i(16, 21) places the hero cleanly on the road."
+            },
+            {
+              "question": "When slice_maps_to_tiles.py slices a 1024x1024 map PNG into 4,096 cells of 16x16 pixels, why does it compute hashlib.sha1(tile_img.tobytes()).hexdigest() for each cell before building tileset.png and the 64x64 grid array?",
+              "options": [
+                "To deduplicate identical 16x16 metatiles across the 4,096 cells into a compact unique tileset strip (e.g. 20–45 unique tile IDs) and assign each (x, y) grid cell a deterministic integer tileId",
+                "To verify that the PNG file was not modified by a man-in-the-middle attack during the urllib download from VGMaps",
+                "To encrypt the copyrighted tile graphics before writing them to ~/Downloads/ff1/maps/sliced/",
+                "To sort the tileset strip from darkest to brightest luminance so Godot’s GL Compatibility renderer can batch draw calls without shader switches"
+              ],
+              "answer": "To deduplicate identical 16x16 metatiles across the 4,096 cells into a compact unique tileset strip (e.g. 20–45 unique tile IDs) and assign each (x, y) grid cell a deterministic integer tileId",
+              "explanation": "A 64x64 NES map has 4,096 grid positions but reuses only a few dozen unique 16x16 metatiles. Hashing each 16x16 RGBA buffer with SHA-1 collapses duplicates into a compact tileset.png and produces a clean integer matrix where each tileId maps directly to walkability and trigger rules."
             }
           ]
         },
@@ -2895,26 +3047,37 @@
           ],
           "quiz": [
             {
-              "question": "How does the external Cucumber (behave) test runner communicate with the running Godot 4 game inside Xvfb?",
+              "question": "How does the external Python Cucumber (behave) test runner deterministically inspect scene state and drive player actions inside the running Godot 4 process under Xvfb?",
               "options": [
-                "Via the embedded HTTP/JSON server in GameControlServer.gd listening on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command)",
-                "By reading raw process memory with gdb",
-                "By simulating physical USB keyboard hardware interrupts in the Linux kernel",
-                "By modifying .tscn files while the game is running"
+                "By attaching a GDScript debugger over port 6007 and evaluating raw expression strings against the scene tree between physics ticks",
+                "Through the autoloaded GameControlServer.gd TCP HTTP/JSON bridge on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command), which polls non-blocking sockets inside _process()",
+                "By sending xdotool X11 keystrokes to the Xvfb display window and running Tesseract OCR on periodic ImageMagick screenshots to read dialogue text",
+                "By writing input commands to a shared SQLite WAL file in /tmp that FF1MapScene.gd polls every 500ms via OS.execute()"
               ],
-              "answer": "Via the embedded HTTP/JSON server in GameControlServer.gd listening on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command)",
-              "explanation": "GameControlServer.gd runs as a Godot autoload singleton listening on 127.0.0.1:8090, exposing deterministic JSON state queries and input injection."
+              "answer": "Through the autoloaded GameControlServer.gd TCP HTTP/JSON bridge on 127.0.0.1:8090 (/api/v1/state, /api/v1/input, /api/v1/command), which polls non-blocking sockets inside _process()",
+              "explanation": "GameControlServer.gd runs as a Godot autoload singleton listening on 127.0.0.1:8090 using TCPServer inside _process(). Unlike flaky X11 keystrokes or OCR, it provides exact JSON state snapshots (hero tile coordinates, active dialogue text, battle HP, party gold) and frame-accurate InputEventAction injection."
             },
             {
-              "question": "Why must you run godot4 --headless --path <project> --import after updating map PNG textures on disk?",
+              "question": "After re-rendering maps/temple_of_fiends.png on disk with the corrected inside-room palette, why did Godot 4’s --write-movie recording still show the old texture until godot4 --headless --path <project> --import was executed?",
               "options": [
-                "So Godot regenerates its internal .godot/imported/*.ctex compressed texture cache from the updated PNG files",
-                "To compile GDScript files into Windows .dll libraries",
-                "To upload the textures to GitHub Pages",
-                "Because Godot deletes PNG files after reading them once"
+                "Because Godot’s GL Compatibility renderer caches textures inside ~/.cache/mesa_shader_cache until --import clears the OpenGL context",
+                "Because GDScript preloads all PNG files into the Linux kernel page cache when Xvfb starts and requires a SIGHUP signal to flush /dev/shm",
+                "Because Godot 4 runtime scenes load pre-imported .godot/imported/*.ctex compressed texture caches referenced by .import sidecars rather than decoding raw res://maps/*.png files on the fly",
+                "Because build_ff1_godot_game.py embeds base64-encoded PNG strings directly inside .tscn scene files during generation"
               ],
-              "answer": "So Godot regenerates its internal .godot/imported/*.ctex compressed texture cache from the updated PNG files",
-              "explanation": "Godot 4 loads imported .ctex resources from .godot/imported/; running --import ensures modified PNGs (such as re-rendered inside-room palette maps) are updated in the cache."
+              "answer": "Because Godot 4 runtime scenes load pre-imported .godot/imported/*.ctex compressed texture caches referenced by .import sidecars rather than decoding raw res://maps/*.png files on the fly",
+              "explanation": "When load(\"res://maps/temple_of_fiends.png\") is called in Godot 4, the ResourceLoader reads the .import file and loads the binary .ctex artifact from .godot/imported/. Running godot4 --headless --path <project> --import rebuilds the .ctex cache whenever an underlying PNG is updated on disk."
+            },
+            {
+              "question": "When jrpg-parser.js publish --out ~/kgraphs/ff1 --to ~/kgraphs/ff1-clean prepares a Knowledge Graph for public redistribution, what transformation does it perform alongside clean-room art from jrpg-generate-art?",
+              "options": [
+                "It merges the raw VGMaps PNGs and NSF audio archives directly into a single monolithic .pck file for GitHub Releases",
+                "It compiles the JSON-LD graph into an encrypted WebAssembly binary so players cannot inspect monster stats in the browser",
+                "It replaces all D&D-inspired monster names with randomized UUIDs and scales all stats by 1.5x",
+                "It strips local file paths, SHA-256 source hashes, and verbatim guide quotes from every node while preserving the clean-room schema facts, formulas, and generated art references"
+              ],
+              "answer": "It strips local file paths, SHA-256 source hashes, and verbatim guide quotes from every node while preserving the clean-room schema facts, formulas, and generated art references",
+              "explanation": "During parsing, ~/kgraphs/ff1 records provenance (source filenames, hashes, and verbatim quotes used by the anti-hallucination gate). Running publish writes a clean graph that strips copyrighted verbatim prose and local scrape paths while keeping the clean-room structural facts and generated art."
             }
           ]
         },
@@ -2932,26 +3095,37 @@
           ],
           "quiz": [
             {
-              "question": "What combination of two issues caused the treasure chests in Temple of Fiends to appear as solid teal boxes before our fix?",
+              "question": "In Scenario 3 (open_a_treasure_chest_in_the_temple_of_fiends_and_defeat_garland.mp4), all Gherkin assertions for opening the chest and receiving a CURE Potion passed, yet the chest rendered as a solid teal box. What pair of interacting bugs caused that visual artifact?",
               "options": [
-                "Rendering the map with the outside-room 0x30 white ceiling Palette 0 AND drawing a semi-transparent colored ColorRect overlay (_chest_markers) on top of chest tiles in FF1MapScene.gd",
-                "Missing OpenGL drivers in Xvfb and a corrupted font file",
-                "Using a 16-color GIF instead of a 24-bit PNG",
-                "Setting Camera2D zoom to 0.1x"
+                "temple_of_fiends.png was rendered with Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30] white ceiling) AND FF1MapScene.gd drew a semi-transparent ColorRect debug marker (_chest_markers) over chest coordinates that blended with the white tile into a solid teal square",
+                "The treasure chest CHR tile IDs (0x2A, 0x2B, 0x3A, 0x3B) were accidentally mapped to Coneria Castle’s water fountain metatiles in lut_Tileirse",
+                "The Xvfb virtual framebuffer was started at 8-bit color depth (-screen 0 768x720x8) and FFmpeg’s yuv420p chroma subsampling quantized brown pixels into teal",
+                "Godot’s CanvasItem modulate property on the TileMap layer was set to Color(0, 1, 1, 1) whenever a chest contained a consumable item"
               ],
-              "answer": "Rendering the map with the outside-room 0x30 white ceiling Palette 0 AND drawing a semi-transparent colored ColorRect overlay (_chest_markers) on top of chest tiles in FF1MapScene.gd",
-              "explanation": "Using the inside-room Palette 0 (+0x20: [0x0F, 0x10, 0x17, 0x0F]) baked the authentic silver/brown chest pixel art into temple_of_fiends.png, and removing the ColorRect overlay let the pixel art show cleanly."
+              "answer": "temple_of_fiends.png was rendered with Outside-Room Palette 0 ([0x0F, 0x30, 0x30, 0x30] white ceiling) AND FF1MapScene.gd drew a semi-transparent ColorRect debug marker (_chest_markers) over chest coordinates that blended with the white tile into a solid teal square",
+              "explanation": "Two issues compounded: first, Outside-Room Palette 0 filled the chest tile with solid white (0x30); second, FF1MapScene.gd placed a semi-transparent colored ColorRect (_chest_markers) over every chest tile, which alpha-blended against the white square into a flat teal box. Switching to Inside-Room Palette 0 (+0x20: [0x0F, 0x10, 0x17, 0x0F]) and removing the ColorRect revealed the genuine silver-and-brown NES chest pixel art."
             },
             {
-              "question": "How does a RobOS agent visually verify that a recorded Cucumber MP4 video has no sprite-placement or palette defects after all Gherkin assertions pass?",
+              "question": "Why was the Cucumber assertion Then the current map scene should be \"Coneria\" insufficient on its own to catch the Coneria tree-spawn defect in Scenario 1, and what closed that verification gap?",
               "options": [
-                "By extracting key frames from the MP4 with ffmpeg (-frames:v 1) and visually inspecting the rendered PNG frames alongside the KGraph tile coordinates",
-                "By checking only the process exit code (0)",
-                "By counting the file size of the MP4 in bytes",
-                "By grepping project.godot for syntax errors"
+                "Because Coneria.tscn and TempleOfFiends.tscn share the same scene_file_path string in Godot 4",
+                "Because /api/v1/state only verified the scene name (\"Coneria\") without checking whether hero_position landed on a walkable brick road tile (x=16, tileId=16) or visually inspecting the final MP4 frame extracted via ffmpeg -sseof -0.3 -frames:v 1",
+                "Because GameControlServer.gd returns cached state from TitleScreen.tscn until at least 10 seconds of real-clock time have elapsed",
+                "Because behave skips all Then steps whenever Godot runs with --fixed-fps 60 inside a container"
               ],
-              "answer": "By extracting key frames from the MP4 with ffmpeg (-frames:v 1) and visually inspecting the rendered PNG frames alongside the KGraph tile coordinates",
-              "explanation": "Extracting key frames with ffmpeg allows the agent to visually inspect the rendered scene and verify that sprites, tiles, and palettes match the KGraph specification."
+              "answer": "Because /api/v1/state only verified the scene name (\"Coneria\") without checking whether hero_position landed on a walkable brick road tile (x=16, tileId=16) or visually inspecting the final MP4 frame extracted via ffmpeg -sseof -0.3 -frames:v 1",
+              "explanation": "Checking only the scene name (\"Coneria\") passed even when the hero spawned on an unwalkable border tree at (15, 22). Combining active movement steps (\"When the hero moves up 3 tiles\" to (16, 18)) with FFmpeg key-frame extraction (ffmpeg -sseof -0.3 ... -frames:v 1) verifies both walkability rules and visual rendering."
+            },
+            {
+              "question": "Why does the Cucumber test harness launch Godot with --write-movie <avi_path> --fixed-fps 60 inside Xvfb :98 and transcode the AVI to H.264 MP4 afterward, rather than capturing the X11 display with ffmpeg -f x11grab?",
+              "options": [
+                "Because x11grab cannot record windows rendered with the GL Compatibility OpenGL backend on Linux",
+                "Because Xvfb :98 does not allocate a virtual framebuffer in RAM unless --write-movie is passed on the Godot command line",
+                "Because --write-movie --fixed-fps 60 captures every rendered viewport frame and mixed audio buffer deterministically inside the engine loop regardless of host CPU load, whereas x11grab drops or duplicates frames under CI load",
+                "Because --write-movie automatically generates the Gherkin step definitions and JSON-LD Knowledge Graph nodes from the video stream"
+              ],
+              "answer": "Because --write-movie --fixed-fps 60 captures every rendered viewport frame and mixed audio buffer deterministically inside the engine loop regardless of host CPU load, whereas x11grab drops or duplicates frames under CI load",
+              "explanation": "Godot’s built-in Movie Maker (--write-movie with --fixed-fps 60) steps the simulation by a fixed 1/60s delta per frame and writes both exact viewport pixels and synchronized audio to the AVI stream before transcoding to H.264 MP4, eliminating wall-clock jitter and dropped frames."
             }
           ]
         }

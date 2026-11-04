@@ -1055,7 +1055,14 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
           quiz: [
             {
               question: `How does RobOS track ${topic} across git branches?`,
+              options: [
+                'By snapshotting container filesystem layers into OCI registries on every git push and comparing layer digests',
+                'Dual-State Knowledge Graph branches with semantic diff verification',
+                'By polling live Kubernetes pod logs in production and reverse-engineering service dependencies from stack traces',
+                'By storing serialized SQL database dumps inside git LFS branches and diffing row counts during pull requests',
+              ],
               answer: 'Dual-State Knowledge Graph branches with semantic diff verification',
+              explanation: `RobOS models ${topic} as OSLC JSON-LD nodes across World 1 (main) and World 2 (feature branch), running semantic blast-radius diffs before code merges.`,
             },
           ],
         },
@@ -1072,7 +1079,14 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
           quiz: [
             {
               question: 'What phase ensures no false positives occur during implementation?',
+              options: [
+                'Running mutation fuzzing after merging to main while bypassing pre-implementation failure checks',
+                'Mocking the assertion library itself so all steps return exit code 0 during scaffolding',
+                'Strict RED phase assertion check',
+                'Deferring all contract and Gherkin verification until manual staging sign-off',
+              ],
               answer: 'Strict RED phase assertion check',
+              explanation: 'In RobOS End-to-End Driven Development (EDD), the Strict RED phase verifies that the new Gherkin scenario or contract test fails as expected before implementation code is written.',
             },
           ],
         },
@@ -1089,7 +1103,14 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
           quiz: [
             {
               question: 'When should documentation be reviewed for noticeable updates?',
+              options: [
+                'Only during quarterly compliance audits after major version tags are cut',
+                'Whenever Knowledge Graph objects are updated',
+                'Only when a container image base OS is upgraded in the Dockerfile',
+                'Manually at the end of a sprint when all feature branches have been deleted',
+              ],
               answer: 'Whenever Knowledge Graph objects are updated',
+              explanation: 'Because RobOS couples living documentation directly to Knowledge Graph nodes (.robos/kgraphs/), any structural update to KGraph objects triggers a documentation impact check.',
             },
           ],
         },
@@ -1220,10 +1241,10 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
             {
               question: `What is the primary architectural role of ${appTitle}?`,
               options: [
+                'Stateless API gateway proxy managed by platform-infra that only terminates TLS and forwards raw TCP frames',
                 `System component managed under team ${ownerTeam} utilizing ${tech}`,
-                'Unmanaged third-party binary',
-                'Ephemeral scratch script',
-                'Static mock proxy'
+                'Background batch ETL worker scheduled via cron to archive historical billing records into cold storage',
+                'Embedded SQLite storage engine running inside the cluster ingress controller'
               ],
               answer: `System component managed under team ${ownerTeam} utilizing ${tech}`,
               explanation: `${appTitle} is governed under the ${ownerTeam} team topology utilizing ${tech}.`
@@ -1244,10 +1265,10 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
             {
               question: `How does ${appTitle} enforce schema and behavioral guarantees in RobOS?`,
               options: [
+                'By relying solely on browser-side compile checks without server contract validation or E2E scenarios',
+                'By sampling 1% of production HTTP responses and logging schema mismatches to stdout',
                 'Through declarative contracts and BDD Gherkin test traceability',
-                'Manual code review only',
-                'Runtime monkey patching',
-                'Ignoring contract drift'
+                'By disabling strict JSON schema validation in CI so frontend and backend teams can deploy independently'
               ],
               answer: 'Through declarative contracts and BDD Gherkin test traceability',
               explanation: 'RobOS couples W3C SHACL and OpenAPI/Gherkin contract testing for total verification.'
@@ -1268,10 +1289,10 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
             {
               question: 'Where are declarative course definitions stored for GitOps synchronization in RobOS?',
               options: [
+                'Inside ephemeral browser localStorage keys that remain local to each developer workstation',
                 '.robos/elearning.yaml',
-                'Temporary cookies',
-                'External unversioned wiki',
-                'Hardcoded bash comments'
+                'Inside unversioned CI runner environment variables injected at container startup',
+                'Inside git hook shell scripts under .git/hooks/post-commit'
               ],
               answer: '.robos/elearning.yaml',
               explanation: 'All RobOS eLearning curriculums serialize declaratively to .robos/elearning.yaml.'
