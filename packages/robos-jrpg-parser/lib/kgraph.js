@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { PACKAGES, ontologyDocument, coverage } = require('./ontology');
+const { writePlaythroughArtifacts } = require('./playthrough');
 const { slug } = require('./slug');
 
 const CONTEXT = {
@@ -287,9 +288,10 @@ function writeKgraph(outDir, parsed, art = { images: [] }) {
   const report = { game: parsed.game, nodeCount: nodes.length, assetTypes: cov, stillToCollect: cov.filter(c => !c.covered).map(c => ({ id: c.id, collect: c.collect })), warnings };
   fs.writeFileSync(path.join(outDir, 'coverage.json'), JSON.stringify(report, null, 2) + '\n');
   fs.writeFileSync(path.join(outDir, 'README.md'), readme(parsed, catalog, cov, warnings));
+  const playthrough = writePlaythroughArtifacts(outDir, parsed);
   // This folder holds downloaded material, so git must not pick it up. `publish` makes the copy to share.
   fs.writeFileSync(path.join(outDir, '.gitignore'), '# Private working folder. Use `jrpg-parser publish` to make a copy to share.\n*\n');
-  return { nodes, catalog, coverage: cov };
+  return { nodes, catalog, coverage: cov, playthrough };
 }
 
 module.exports = { buildNodes, writeKgraph };
