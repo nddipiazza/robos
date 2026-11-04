@@ -221,7 +221,8 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(siteHtml.includes('sources-manifest.json'), 'Must include reusable manifest extraction step');
     assert.ok(siteHtml.includes('jrpg-parser.js'), 'Must include jrpg-parser.js agent CLI orchestration');
     assert.ok(siteHtml.includes('robos-jrpg-parser'), 'Must include robos-jrpg-parser ingestion lesson');
-    assert.ok(siteHtml.includes('slice_maps_to_tiles.py'), 'Must include 16x16 tile slicing script');
+    assert.ok(siteHtml.includes('build_ff1_resources.py'), 'Must include 6502 ROM table and RLE map extraction script');
+    assert.ok(siteHtml.includes('build_ff1_godot_game.py'), 'Must include Godot 4 game generator script');
     assert.ok(siteHtml.includes('lut_SMPalettes'), 'Must include NES indoor vs outdoor palette decoding');
     assert.ok(siteHtml.includes('GameControlServer.gd'), 'Must include Godot 4 HTTP control bridge');
     assert.ok(siteHtml.includes('behave tests/e2e/features'), 'Must include Cucumber behave Xvfb runner');
@@ -230,13 +231,26 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(siteHtml.includes('jrpg-godot-cucumber-playthrough-harness.png'), 'Must include Stage 3 technical diagram');
     assert.ok(siteHtml.includes('getShuffledQuizOptions('), 'Must include session-salted quiz option shuffler');
     assert.ok(siteHtml.includes('robos_quiz_salt'), 'Must randomize quiz option ordering per learner session');
+    assert.ok(siteHtml.includes('lab-step-rich'), 'Must render rich lab exercise cards with description, code, expected output, and screenshot');
 
     const courseNode = store.getNode(`urn:robos:elearning:course:${courseSlug}`);
     assert.ok(courseNode && Array.isArray(courseNode['robos:modules']), 'Course node must have robos:modules');
     assert.strictEqual(courseNode['robos:modules'].length, 6, 'Must have 6 modules');
 
     const ansPositions = new Set();
+    let totalRichLabSteps = 0;
     for (const mod of courseNode['robos:modules']) {
+      assert.ok(Array.isArray(mod.labDetails) && mod.labDetails.length === 4, `${mod.id} must have 4 rich lab exercise steps`);
+      for (const step of mod.labDetails) {
+        assert.ok(step.title && step.title.length >= 15, `Lab step must have a descriptive title: ${step.title}`);
+        assert.ok(step.description && step.description.length >= 80, `Lab step must have a clear English description: ${step.title}`);
+        assert.ok(step.code && step.code.length >= 20, `Lab step must include runnable commands/code: ${step.title}`);
+        assert.ok(step.expected && step.expected.length >= 60, `Lab step must explain what to expect: ${step.title}`);
+        assert.ok(step.image && step.image.startsWith('/assets/elearning/jrpg-kgraph/labs/lab-m'), `Lab step must include a dedicated screenshot: ${step.title}`);
+        const imgDiskPath = path.join(__dirname, '../../../../site', step.image);
+        assert.ok(fs.existsSync(imgDiskPath), `Lab step screenshot must exist on disk: ${imgDiskPath}`);
+        totalRichLabSteps++;
+      }
       assert.ok(Array.isArray(mod.quiz) && mod.quiz.length >= 3, `${mod.id} must have at least 3 deep knowledge check questions`);
       for (const q of mod.quiz) {
         assert.strictEqual(q.options.length, 4, `Question must have 4 options: ${q.question}`);
@@ -249,6 +263,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
         assert.ok(q.explanation && q.explanation.length >= 80, `Question must have a detailed explanation: ${q.question}`);
       }
     }
+    assert.strictEqual(totalRichLabSteps, 24, 'Must have 24 illustrated lab steps across 6 modules');
     assert.ok(ansPositions.size >= 3, 'Correct answers must be distributed across multiple option indices rather than always index 0');
   });
 });

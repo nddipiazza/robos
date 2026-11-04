@@ -688,7 +688,7 @@ redirect_from:
     .lab-steps {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 14px;
       margin-bottom: 24px;
     }
     .lab-step {
@@ -700,6 +700,65 @@ redirect_from:
       border-radius: var(--radius-sm);
       padding: 12px 16px;
       transition: border-color 0.2s;
+    }
+    .lab-step.lab-step-rich {
+      flex-direction: column;
+      gap: 10px;
+      padding: 18px 20px;
+      border-radius: var(--radius-md);
+    }
+    .lab-step-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+    }
+    .lab-step-body {
+      padding-left: 30px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .lab-step-desc {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .lab-step-expect {
+      background: rgba(56, 189, 248, 0.07);
+      border-left: 3px solid var(--accent-cyan);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+    .lab-step-expect strong {
+      color: var(--accent-cyan);
+    }
+    .lab-step-figure {
+      margin: 4px 0 0;
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+    }
+    .lab-step-img {
+      width: 100%;
+      max-height: 440px;
+      object-fit: contain;
+      border-radius: 4px;
+      cursor: zoom-in;
+      display: block;
+      margin: 0 auto;
+    }
+    .lab-step-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      text-align: center;
     }
     .lab-step:hover { border-color: var(--border-accent); }
     .lab-checkbox {
@@ -2710,6 +2769,36 @@ flowchart LR
           <div class="lab-steps">
             ${(m.labSteps || []).map((step, sIdx) => {
               const isChecked = !!progress.completedLabs[currentModIdx + '-' + sIdx];
+              const detail = (Array.isArray(m.labDetails) && m.labDetails[sIdx]) ? m.labDetails[sIdx] : null;
+              if (detail) {
+                const escapedCode = detail.code
+                  ? String(detail.code).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  : '';
+                const escapedAlt = String(detail.imageAlt || step || '').replace(/"/g, '&quot;');
+                return `
+                  <div class="lab-step lab-step-rich">
+                    <div class="lab-step-header">
+                      <input type="checkbox" class="lab-checkbox" id="lab-${currentModIdx}-${sIdx}" ${isChecked ? 'checked' : ''}
+                             onchange="toggleLab(${currentModIdx}, ${sIdx})"
+                             aria-label="Mark lab step ${sIdx + 1} as completed">
+                      <label for="lab-${currentModIdx}-${sIdx}" class="lab-step-text">
+                        <strong>Step ${sIdx + 1}:</strong> ${formatStepText(step)}
+                      </label>
+                    </div>
+                    <div class="lab-step-body">
+                      ${detail.description ? `<p class="lab-step-desc">${formatStepText(detail.description)}</p>` : ''}
+                      ${escapedCode ? `<pre class="code-snippet" style="margin:2px 0;"><code>${escapedCode}</code></pre>` : ''}
+                      ${detail.expected ? `<div class="lab-step-expect"><strong>What to expect:</strong> ${formatStepText(detail.expected)}</div>` : ''}
+                      ${detail.image ? `
+                        <figure class="lab-step-figure">
+                          <img src="${detail.image}" alt="${escapedAlt}" class="lab-step-img" onclick="openLightbox(this.src, this.alt)">
+                          ${detail.caption ? `<figcaption class="lab-step-caption">${formatStepText(detail.caption)}</figcaption>` : ''}
+                        </figure>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }
               return `
                 <div class="lab-step">
                   <input type="checkbox" class="lab-checkbox" id="lab-${currentModIdx}-${sIdx}" ${isChecked ? 'checked' : ''}

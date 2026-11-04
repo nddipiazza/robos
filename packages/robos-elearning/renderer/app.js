@@ -865,10 +865,17 @@ function renderLesson(m, idx, total) {
         <ol class="lab-steps">
           ${labs.map((step, sIdx) => {
             const checked = !!rec.labs[`${st.key}:${sIdx}`];
+            const detail = (Array.isArray(m.labDetails) && m.labDetails[sIdx]) ? m.labDetails[sIdx] : null;
             return `
-            <li class="lab-step ${checked ? 'checked' : ''}">
+            <li class="lab-step ${checked ? 'checked' : ''} ${detail ? 'lab-step-rich' : ''}">
               <input type="checkbox" class="lab-checkbox" id="lab-${idx}-${sIdx}" ${checked ? 'checked' : ''} onchange="window.toggleLab(${idx}, ${sIdx})">
-              <label for="lab-${idx}-${sIdx}" class="lab-step-text"><span class="lab-num">${sIdx + 1}</span><span>${inlineMd(step)}</span></label>
+              <div class="lab-step-text">
+                <div><span class="lab-num">${sIdx + 1}</span><span>${inlineMd(step)}</span></div>
+                ${detail && detail.description ? `<p style="margin:6px 0 4px;font-size:13px;opacity:0.9;">${inlineMd(detail.description)}</p>` : ''}
+                ${detail && detail.code ? `<pre style="margin:6px 0;padding:8px 10px;background:#0d1117;border-radius:4px;font-size:12px;overflow-x:auto;"><code>${escapeHtml(detail.code)}</code></pre>` : ''}
+                ${detail && detail.expected ? `<div style="margin:6px 0;padding:6px 10px;border-left:3px solid #38bdf8;background:rgba(56,189,248,0.08);font-size:12.5px;"><strong>What to expect:</strong> ${inlineMd(detail.expected)}</div>` : ''}
+                ${detail && detail.image ? `<figure style="margin:8px 0 2px;"><img src="${escapeHtml(detail.image)}" alt="${escapeHtml(detail.imageAlt || step)}" style="max-width:100%;max-height:360px;border-radius:4px;border:1px solid #30363d;">${detail.caption ? `<figcaption style="font-size:11.5px;opacity:0.75;margin-top:4px;">${inlineMd(detail.caption)}</figcaption>` : ''}</figure>` : ''}
+              </div>
             </li>`;
           }).join('')}
         </ol>
