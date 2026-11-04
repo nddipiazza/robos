@@ -232,6 +232,10 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(siteHtml.includes('getShuffledQuizOptions('), 'Must include session-salted quiz option shuffler');
     assert.ok(siteHtml.includes('robos_quiz_salt'), 'Must randomize quiz option ordering per learner session');
     assert.ok(siteHtml.includes('lab-step-rich'), 'Must render rich lab exercise cards with description, code, expected output, and screenshot');
+    const beforeScript = siteHtml.slice(0, siteHtml.lastIndexOf('<script>'));
+    assert.strictEqual((beforeScript.match(/<title[\s>]/gi) || []).length, 1, 'Must have exactly 1 <title> opening tag before <script> so RCDATA parsing never swallows <script>');
+    assert.strictEqual((beforeScript.match(/<\/title>/gi) || []).length, 1, 'Must have exactly 1 </title> closing tag before <script>');
+    assert.ok(siteHtml.includes('<code>&lt;title&gt;</code>'), 'Inline code <title> in living docs must be HTML-escaped');
 
     const courseNode = store.getNode(`urn:robos:elearning:course:${courseSlug}`);
     assert.ok(courseNode && Array.isArray(courseNode['robos:modules']), 'Course node must have robos:modules');

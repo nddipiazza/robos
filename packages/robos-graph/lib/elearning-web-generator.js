@@ -2962,7 +2962,11 @@ flowchart LR
     }
 
     function formatStepText(text) {
-      return (text || '').replace(/\`([^\`]+)\`/g, '<code>$1</code>');
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\`([^\`]+)\`/g, '<code>$1</code>');
     }
 
     function completeModuleLabs(mIdx) {
@@ -3429,12 +3433,29 @@ flowchart LR
 /**
  * Lightweight helper to parse the Living Architecture markdown file into styled HTML.
  */
+function escapeHtmlEntities(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function renderInlineMarkdown(text) {
-  return text
+  const codeTokens = [];
+  const withCodeTokens = String(text || '').replace(/`([^`]+)`/g, (_match, code) => {
+    const placeholder = `\x01CODE_${codeTokens.length}\x01`;
+    codeTokens.push(`<code>${escapeHtmlEntities(code)}</code>`);
+    return placeholder;
+  });
+  const rendered = withCodeTokens
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, src) => {
+      const safeAlt = escapeHtmlEntities(alt).replace(/"/g, '&quot;');
+      return `<div class="doc-figure"><img src="${src}" alt="${safeAlt}" class="doc-img" onclick="openLightbox(this.src, this.alt)"><div class="doc-caption">${escapeHtmlEntities(alt)}</div></div>`;
+    })
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent-cyan);">$1</a>');
+  return rendered.replace(/\x01CODE_(\d+)\x01/g, (_m, idx) => codeTokens[Number(idx)]);
 }
 
 function parseLivingDocMarkdown(markdown) {
@@ -3477,6 +3498,17 @@ function parseLivingDocMarkdown(markdown) {
   // 4. HTML div blocks (like figures with images)
   clean = clean.replace(/<div[\s\S]*?<\/div>/gi, (match) => {
     return saveToken(match);
+  });
+
+  // 4b. Inline code spans: escape HTML entities (<title>, <table>, <a href>, etc.) and protect from $...$ math and *...* emphasis
+  clean = clean.replace(/`([^`\n]+)`/g, (_match, code) => {
+    return saveToken(`<code>${escapeHtmlEntities(code)}</code>`);
+  });
+
+  // 4c. Markdown images: ![alt](src)
+  clean = clean.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, src) => {
+    const safeAlt = escapeHtmlEntities(alt).replace(/"/g, '&quot;');
+    return saveToken(`<div class="doc-figure"><img src="${src}" alt="${safeAlt}" class="doc-img" onclick="openLightbox(this.src, this.alt)"><div class="doc-caption">${escapeHtmlEntities(alt)}</div></div>`);
   });
 
   // 5. Tables
@@ -3538,8 +3570,9 @@ function parseLivingDocMarkdown(markdown) {
 
   let result = chunks.join('\n\n');
 
-  // 12. Restore saved tokens
-  for (const { placeholder, html } of tokens) {
+  // 12. Restore saved tokens (reverse order so outer tokens like <table> expand before nested <code> tokens)
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const { placeholder, html } = tokens[i];
     result = result.replace(placeholder, () => html);
   }
 
