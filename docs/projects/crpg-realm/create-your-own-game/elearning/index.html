@@ -1123,6 +1123,8 @@ redirect_from:
         <span class="brand-badge">Projects</span>
       </a>
       <span style="color: var(--border);">/</span>
+      <a href="/elearning/" class="top-link">🎓 All Courses</a>
+      <span style="color: var(--border);">/</span>
       
       <a href="/v1/projects/crpg-realm/" class="top-link">⚔️ Tactical cRPG Realm</a>
       <span style="color: var(--border);">/</span>
@@ -1532,7 +1534,7 @@ curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40</co
     const GIT_INFO = {
       gitRemoteUrl: 'https://github.com/nddipiazza/robos',
       gitBranch: 'main',
-      gitopsPath: '.robos/elearning.yaml',
+      gitopsPath: '/home/ndipiazza/source/robos/.robos/elearning.yaml',
       gitopsRelative: '.robos/elearning.yaml'
     };
 
@@ -1848,6 +1850,10 @@ curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40</co
 
     // Rich Lesson Material for Each Module
     function getModuleLessonHtml(idx) {
+      const mCustom = MODULES_DATA[idx];
+      if (mCustom && mCustom.lessonHtml) {
+        return mCustom.lessonHtml;
+      }
       if (true) {
         if (idx === 0) {
           return `

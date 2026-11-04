@@ -10,6 +10,7 @@ function parseArgs() {
     appId: null,
     output: null,
     permalink: null,
+    all: false,
   };
 
   for (const arg of process.argv.slice(2)) {
@@ -22,6 +23,7 @@ Usage:
 
 Options:
   --course=<id>      Course ID or slug (default: robos-crpg)
+  --all              Export all robos:eLearningCourse nodes in the KGraph to /elearning/{course-id}
   --app=<id>         Target Application ID or slug
   --output=<path>    Target HTML output file path (default: docs/elearning/<slug>.html)
   --permalink=<uri>  Jekyll/GitHub Pages permalink (default: /elearning/<slug>)
@@ -29,6 +31,7 @@ Options:
 `);
       process.exit(0);
     }
+    if (arg === '--all') args.all = true;
     if (arg.startsWith('--course=')) args.courseId = arg.split('=')[1];
     if (arg.startsWith('--app=')) args.appId = arg.split('=')[1];
     if (arg.startsWith('--output=')) args.output = arg.split('=')[1];
@@ -39,7 +42,24 @@ Options:
 
 async function main() {
   const args = parseArgs();
-  const store = new SDLCKnowledgeGraphStore();
+  const fs = require('fs');
+  const repoGraphDir = path.join(process.cwd(), '.robos');
+  const store = (!process.env.ROBOS_GRAPH_ROOT && fs.existsSync(repoGraphDir))
+    ? new SDLCKnowledgeGraphStore({ graphRoot: repoGraphDir })
+    : new SDLCKnowledgeGraphStore();
+
+  if (args.all) {
+    const courses = store.getELearningNodes ? store.getELearningNodes() : [];
+    for (const c of courses) {
+      const res = store.generateELearningWebsite({ courseId: c['@id'] });
+      if (res.ok) {
+        console.log(`[robos-elearning] Exported ${c['@id']} -> ${res.siteUrl}`);
+      } else {
+        console.error(`[robos-elearning] Failed ${c['@id']}: ${res.error}`);
+      }
+    }
+    return;
+  }
 
   console.log(`[robos-elearning] Generating website version for course "${args.courseId}"…`);
   const result = store.generateELearningWebsite({
@@ -60,8 +80,11 @@ async function main() {
   if (result.indexFilePath) {
     console.log(`- Directory Index: ${result.indexFilePath}`);
   }
+  if (result.siteFilePath) {
+    console.log(`- Front Site File: ${result.siteFilePath}`);
+  }
   console.log(`- GitHub Pages Permalink: ${result.permalink}`);
-  console.log(`- URL: https://www.rowbose.com/v1${result.permalink}`);
+  console.log(`- URL: ${result.siteUrl || ('https://www.rowbose.com/v1' + result.permalink)}`);
 }
 
 main().catch((err) => {
