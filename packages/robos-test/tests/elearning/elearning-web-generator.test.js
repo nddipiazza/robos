@@ -217,7 +217,9 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
 
     const siteHtml = fs.readFileSync(result.siteFilePath, 'utf8');
     assert.ok(siteHtml.includes(`permalink: /elearning/${courseSlug}/`), 'Front-site permalink must match /elearning/<course-id>/');
-    assert.ok(siteHtml.includes('download_ff1_assets.py'), 'Must include Python asset acquisition pipeline');
+    assert.ok(siteHtml.includes('harvest_jrpg_assets.py'), 'Must include reusable Python asset acquisition pipeline');
+    assert.ok(siteHtml.includes('sources-manifest.json'), 'Must include reusable manifest extraction step');
+    assert.ok(siteHtml.includes('jrpg-parser.js'), 'Must include jrpg-parser.js agent CLI orchestration');
     assert.ok(siteHtml.includes('robos-jrpg-parser'), 'Must include robos-jrpg-parser ingestion lesson');
     assert.ok(siteHtml.includes('slice_maps_to_tiles.py'), 'Must include 16x16 tile slicing script');
     assert.ok(siteHtml.includes('lut_SMPalettes'), 'Must include NES indoor vs outdoor palette decoding');
