@@ -1555,7 +1555,7 @@ function buildStandaloneHtml(params) {
       <!-- Completion Certificate Summary Box -->
       <div class="cert-status-box" id="cert-status-box">
         <h4>🏆 Completion Credential</h4>
-        <p id="cert-status-text">Complete all 5 modules and score &ge; 80% on knowledge checks to claim your verified Knowledge Graph Credential.</p>
+        <p id="cert-status-text">Complete ${modules.length === 1 ? "the module" : `all ${modules.length} modules`} and score &ge; 80% on knowledge checks to claim your verified Knowledge Graph Credential.</p>
         <button class="btn btn-gold" id="btn-claim-cert" onclick="openCertificateModal()" style="display: none;">Claim Certificate</button>
       </div>
 
@@ -1667,7 +1667,7 @@ function buildStandaloneHtml(params) {
     const GIT_INFO = {
       gitRemoteUrl: 'https://github.com/nddipiazza/robos',
       gitBranch: 'main',
-      gitopsPath: '/home/ndipiazza/source/robos/.robos/elearning.yaml',
+      gitopsPath: '.robos/elearning.yaml',
       gitopsRelative: '.robos/elearning.yaml'
     };
 
