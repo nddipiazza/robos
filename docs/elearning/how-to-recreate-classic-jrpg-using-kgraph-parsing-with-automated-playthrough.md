@@ -85,113 +85,178 @@ To reconstruct an 8-bit JRPG completely, a developer or RobOS agent uses browser
 | **4. Music & Audio Data** | [Zophar's Domain `.NSF` Archive](https://www.zophar.net/music/nintendo-nes-nsf/final-fantasy) | Complete 6502 2A03 chiptune register program (`.nsf`) and track-split MP3 soundtrack (`1_-_the_prelude.mp3`, `7_-_town.mp3`, etc.) | Game-ready loop markers unless paired with an AudioStreamPlayer |
 | **5. Mechanics & Disassembly Tables** | **AstralEsper's NES Game Mechanics Guide** (v0.85, GameFAQs 57009) & **Disch's 6502 Disassembly** (`ff1_disassembly`) | Exact combat formulas, NES pointer bugs, monster stat bytes, 8-slot encounter tables, class starting stats, and 48-byte map palettes (`lut_SMPalettes`) | Visual layout unless combined with the VGMaps PNGs |
 
-### 2.3 Complete Python Acquisition Script (`download_ff1_assets.py`)
+### 2.3 Bridging Browser Discovery to Python: Extracting a Reusable `sources-manifest.json`
 
-When the RobOS agent was asked to download all assets to `/home/ndipiazza/Downloads/ff1`, it wrote and executed a deterministic Python downloader using `urllib.request` with browser `User-Agent` headers (required because sites like VGMaps and Zophar reject default `Python-urllib` user agents with HTTP 403), automatic directory organization, and HTML/PDF/image verification:
+How do you go from browsing an index page full of map and wiki links (like `vgmaps.com/Atlas/NES/index.htm#FinalFantasy` or `strategywiki.org/wiki/<Game>/Table_of_Contents`) to downloading them with Python—**without** hand-typing 50 filenames into a single-use script?
+
+We use a two-step **reusable discovery pattern** that works for any classic JRPG (*Final Fantasy*, *Dragon Warrior*, *Chrono Trigger*, *Phantasy Star*, *EarthBound*):
+
+#### Method A: Browser DevTools Console One-Liner (`F12` → Console)
+Open Chrome or Firefox DevTools (`F12`) on any VGMaps atlas page or wiki index, set `GAME_PREFIX`, and copy a structured JSON manifest straight to your clipboard:
+
+```javascript
+// Run in Browser DevTools Console (F12) on https://vgmaps.com/Atlas/NES/index.htm
+const GAME_PREFIX = "FinalFantasy-"; // Change to "DragonWarrior-", "ChronoTrigger-", etc.
+const maps = [...document.querySelectorAll("a[href]")]
+  .map(a => ({ url: a.href, name: a.getAttribute("href").split("/").pop(), label: a.textContent.trim() }))
+  .filter(x => x.name.startsWith(GAME_PREFIX) && /\.(png|gif)$/i.test(x.name));
+
+console.table(maps);
+copy(JSON.stringify({ gameId: "ff1", maps }, null, 2));
+```
+
+#### Method B: Reusable Python HTML Link Discovery (`harvest_jrpg_assets.py`)
+Even better, our reusable Python harvester (`harvest_jrpg_assets.py`) includes an `HTMLParser` link-discovery engine (`discover_vgmaps` and `discover_strategywiki`). You pass `--vgmaps-index`, `--map-prefix`, and `--wiki-slug` on the CLI, and it automatically discovers every matching map PNG/GIF and StrategyWiki subpage, spoofs a desktop Chrome `User-Agent` (to avoid `HTTP 403 Forbidden` blocks on VGMaps and Zophar), inspects PNG `IHDR` dimensions, verifies SHA-256 digests, and writes both `sources-manifest.json` and `download-receipt.json`:
 
 ```python
 #!/usr/bin/env python3
 """
-download_ff1_assets.py
-Downloads NES Final Fantasy maps (VGMaps), StrategyWiki shop/spell/walkthrough pages,
-official Nintendo PDF manual charts, and audio archives into /home/ndipiazza/Downloads/ff1.
+harvest_jrpg_assets.py — Reusable Multi-Source Classic JRPG Asset Harvester.
+Works for any classic JRPG via --vgmaps-index, --map-prefix, and --wiki-slug.
 """
-import os
-import time
-import hashlib
-import urllib.request
-from urllib.parse import urljoin
-
-BASE_DIR = "/home/ndipiazza/Downloads/ff1"
-DIRS = {
-    "maps": os.path.join(BASE_DIR, "maps"),
-    "ui_shops": os.path.join(BASE_DIR, "ui_shops"),
-    "manuals": os.path.join(BASE_DIR, "manuals"),
-    "audio": os.path.join(BASE_DIR, "audio"),
-    "rom_data": os.path.join(BASE_DIR, "rom_data"),
-}
-for d in DIRS.values():
-    os.makedirs(d, exist_ok=True)
+import argparse, hashlib, json, os, struct, time, urllib.parse, urllib.request
+from html.parser import HTMLParser
 
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept": "text/html,application/xhtml+xml,image/avif,image/webp,*/*;q=0.8",
 }
 
-VGMAPS_URLS = {
-    "FinalFantasy-World.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-World.png",
-    "FinalFantasy-Coneria.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-Coneria.png",
-    "FinalFantasy-CastleConeria.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-CastleConeria.png",
-    "FinalFantasy-TempleOfFiends.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-TempleOfFiends.png",
-    "FinalFantasy-MarshCave.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-MarshCave.png",
-    "FinalFantasy-EarthCave.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-EarthCave.png",
-    "FinalFantasy-GurguVolcano.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-GurguVolcano.png",
-    "FinalFantasy-IceCave.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-IceCave.png",
-    "FinalFantasy-CastleOfOrdeals.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-CastleOfOrdeals.png",
-    "FinalFantasy-SeaShrine.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-SeaShrine.png",
-    "FinalFantasy-FloatingCastle.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-FloatingCastle.png",
-    "FinalFantasy-TempleOfFiendsRevisited.png": "https://vgmaps.com/Atlas/NES/FinalFantasy-TempleOfFiendsRevisited.png",
-}
+class LinkExtractor(HTMLParser):
+    def __init__(self, base_url: str):
+        super().__init__()
+        self.base_url = base_url
+        self.links = []
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "a":
+            href = dict(attrs).get("href")
+            if href:
+                self.links.append(urllib.parse.urljoin(self.base_url, href.split("#")[0]))
 
-WIKI_URLS = {
-    "Shops.html": "https://strategywiki.org/wiki/Final_Fantasy/Shops",
-    "Weapons.html": "https://strategywiki.org/wiki/Final_Fantasy/Weapons",
-    "Armor.html": "https://strategywiki.org/wiki/Final_Fantasy/Armor",
-    "Spells.html": "https://strategywiki.org/wiki/Final_Fantasy/Spells",
-    "Enemies.html": "https://strategywiki.org/wiki/Final_Fantasy/Enemies",
-    "Walkthrough.html": "https://strategywiki.org/wiki/Final_Fantasy/Walkthrough",
-}
-
-MANUAL_URLS = {
-    "CLV-P-NAAAE.pdf": "https://www.nintendo.co.jp/clv/manuals/en/pdf/CLV-P-NAAAE.pdf",
-}
-
-def fetch_file(url: str, dest_path: str) -> dict:
+def fetch_bytes(url: str, timeout: int = 30) -> bytes:
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        data = resp.read()
-    with open(dest_path, "wb") as f:
-        f.write(data)
-    sha256 = hashlib.sha256(data).hexdigest()
-    print(f"[OK] {os.path.basename(dest_path)} ({len(data):,} bytes, sha256={sha256[:12]}...)")
-    return {"path": dest_path, "bytes": len(data), "sha256": sha256}
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read()
+
+def png_dimensions(data: bytes):
+    if len(data) >= 24 and data[:8] == b"\x89PNG\r\n\x1a\n":
+        w, h = struct.unpack(">II", data[16:24])
+        return {"width": w, "height": h}
+    return None
+
+def discover_vgmaps(index_url: str, prefix: str) -> list[dict]:
+    html = fetch_bytes(index_url).decode("utf-8", errors="ignore")
+    parser = LinkExtractor(index_url)
+    parser.feed(html)
+    seen, items = set(), []
+    for url in parser.links:
+        fname = os.path.basename(urllib.parse.urlparse(url).path)
+        if fname.startswith(prefix) and fname.lower().endswith((".png", ".gif")) and url not in seen:
+            seen.add(url)
+            items.append({"category": "maps", "url": url, "filename": fname})
+    return items
+
+def discover_strategywiki(wiki_slug: str) -> list[dict]:
+    base = f"https://strategywiki.org/wiki/{wiki_slug}"
+    subpages = ["", "Table_of_Contents", "Walkthrough", "Shops", "Weapons", "Armor", "Spells", "Enemies", "Characters"]
+    return [{
+        "category": "ui_shops",
+        "url": f"{base}/{sub}" if sub else base,
+        "filename": f"{wiki_slug.replace('/', '_')}_{sub or 'Overview'}.html"
+    } for sub in subpages]
+
+def harvest(out_dir: str, entries: list[dict], delay: float = 0.25) -> list[dict]:
+    receipt = []
+    for item in entries:
+        subdir = os.path.join(out_dir, item.get("category", "misc"))
+        os.makedirs(subdir, exist_ok=True)
+        dest = os.path.join(subdir, item["filename"])
+        data = fetch_bytes(item["url"])
+        with open(dest, "wb") as f:
+            f.write(data)
+        sha = hashlib.sha256(data).hexdigest()
+        dims = png_dimensions(data)
+        rec = {**item, "localPath": dest, "bytes": len(data), "sha256": sha, "dimensions": dims}
+        receipt.append(rec)
+        print(f"[OK] {item['category']}/{item['filename']} ({len(data):,} bytes, sha256={sha[:12]})")
+        time.sleep(delay)
+    with open(os.path.join(out_dir, "download-receipt.json"), "w") as f:
+        json.dump(receipt, f, indent=2)
+    return receipt
 
 if __name__ == "__main__":
-    for filename, url in VGMAPS_URLS.items():
-        fetch_file(url, os.path.join(DIRS["maps"], filename))
-        time.sleep(0.25)
-    for filename, url in WIKI_URLS.items():
-        fetch_file(url, os.path.join(DIRS["ui_shops"], filename))
-        time.sleep(0.25)
-    for filename, url in MANUAL_URLS.items():
-        fetch_file(url, os.path.join(DIRS["manuals"], filename))
+    ap = argparse.ArgumentParser(description="Reusable Classic JRPG Asset Harvester")
+    ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--vgmaps-index")
+    ap.add_argument("--map-prefix")
+    ap.add_argument("--wiki-slug")
+    ap.add_argument("--extra-url", action="append", default=[])
+    args = ap.parse_args()
+
+    out_dir = os.path.expanduser(args.out_dir)
+    manifest = []
+    if args.vgmaps_index and args.map_prefix:
+        manifest.extend(discover_vgmaps(args.vgmaps_index, args.map_prefix))
+    if args.wiki_slug:
+        manifest.extend(discover_strategywiki(args.wiki_slug))
+    for spec in args.extra_url:
+        cat, fname, url = spec.split(":", 2)
+        manifest.append({"category": cat, "filename": fname, "url": url})
+
+    os.makedirs(out_dir, exist_ok=True)
+    with open(os.path.join(out_dir, "sources-manifest.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    harvest(out_dir, manifest)
 ```
 
 ---
 
-## 3. Stage 2: Parsing Raw Assets into the Knowledge Graph (`robos-jrpg-parser`) & Auditing Gaps
+## 3. Stage 2: Using RobOS Agents to Run the Harvester & Fire Off `robos-jrpg-parser`
 
-### 3.1 Running `packages/robos-jrpg-parser` (`jrpg-parse-assets` Skill)
+### 3.1 Orchestrating Acquisition & Parsing with RobOS Agents (`jrpg-parse-assets` Skill)
 
-Once the raw files are in `/home/ndipiazza/Downloads/ff1`, we run the RobOS JRPG Parser CLI (`packages/robos-jrpg-parser/bin/jrpg-parse.js`) to ingest the folder into an OSLC JSON-LD Knowledge Graph at `/home/ndipiazza/kgraphs/final-fantasy-nes`:
+In RobOS, you do not have to run each script by hand. You can instruct a **RobOS Agent** (in **RobOS Agent Chat**, **Agents Manager**, or your signed-in coding-agent CLI: Google Antigravity `agy` / Gemini CLI, Claude Code, OpenAI Codex, or GitHub Copilot) to run the Python harvester and immediately fire off the `jrpg-parse-assets` skill (`.agents/skills/jrpg-parse-assets/SKILL.md`):
 
-```bash
-node packages/robos-jrpg-parser/bin/jrpg-parse.js \
-  --input /home/ndipiazza/Downloads/ff1 \
-  --out /home/ndipiazza/kgraphs/final-fantasy-nes \
-  --game-id final-fantasy-nes \
-  --title "Final Fantasy (NES)"
+```text
+Prompt to RobOS Agent:
+"1. Run harvest_jrpg_assets.py to download all VGMaps PNGs (prefix FinalFantasy- from
+   https://vgmaps.com/Atlas/NES/index.htm), StrategyWiki pages (Final_Fantasy), and the
+   NES Classic Mini manual PDF into /home/ndipiazza/Downloads/ff1.
+ 2. Use the /jrpg-parse-assets skill to scan and parse /home/ndipiazza/Downloads/ff1 into
+   /home/ndipiazza/kgraphs/ff1, and report the coverage matrix and any blockers."
 ```
 
-Internally, `packages/robos-jrpg-parser/lib/pipeline.js` orchestrates five specialized parsers:
-1. **`lib/classify.js`**: Scans all subdirectories, computes SHA-256 digests, and classifies each file into `map_image`, `chart_doc`, `walkthrough_doc`, `battle_mechanics_doc`, `sprite_sheet`, or `audio_archive`.
-2. **`lib/maps.js`**: Reads PNG headers and image dimensions, identifies single maps vs. multi-floor composite sheets (such as `FinalFantasy-TempleOfFiends.png` or `FinalFantasy-CastleConeria.png`), and emits `robos:JRPGMap` nodes.
-3. **`lib/charts.js`**: Parses HTML and Markdown tables into typed `robos:JRPGWeapon`, `robos:JRPGArmor`, `robos:JRPGSpell`, `robos:JRPGShop`, `robos:JRPGCharacterClass`, `robos:JRPGEnemy`, and `robos:JRPGEncounterZone` nodes.
-4. **`lib/walkthrough.js`**: Extracts ordered `robos:JRPGStoryMilestone` nodes, linking each milestone to its required items, boss encounters, and unlocked locations.
-5. **`lib/kgraph.js`**: Serializes the complete OSLC JSON-LD graph (`knowledge-graph.jsonld`) and generates `parse-report.json` + `SUMMARY.md`.
+When the RobOS Agent executes `.agents/skills/jrpg-parse-assets/SKILL.md`, it runs `packages/robos-jrpg-parser/bin/jrpg-parser.js` through four stages:
+
+```bash
+# 1. Scan the downloaded folder to inspect file roles, dimensions, and edition flags
+node packages/robos-jrpg-parser/bin/jrpg-parser.js scan /home/ndipiazza/Downloads/ff1
+
+# 2. Parse tables deterministically in code + invoke the active RobOS AI Agent for prose
+node packages/robos-jrpg-parser/bin/jrpg-parser.js parse /home/ndipiazza/Downloads/ff1 \
+  --out /home/ndipiazza/kgraphs/ff1 \
+  --title "Final Fantasy" \
+  --edition "NES"
+
+# 3. Inspect coverage.json and the "Still to collect by hand" gap list
+node packages/robos-jrpg-parser/bin/jrpg-parser.js coverage --out /home/ndipiazza/kgraphs/ff1
+
+# 4. Plan and generate clean-room art with Gemini via agy (jrpg-generate-art skill)
+node packages/robos-jrpg-parser/bin/jrpg-parser.js plan --out /home/ndipiazza/kgraphs/ff1
+node packages/robos-jrpg-parser/bin/jrpg-parser.js art --out /home/ndipiazza/kgraphs/ff1 --limit 3
+```
+
+### 3.2 How `jrpg-parser.js` Combines Deterministic Code with Quote-Verified Agent Calls
+
+Internally, `packages/robos-jrpg-parser/lib/pipeline.js` is a **two-tier hybrid parser**:
+1. **Tier 1 — Deterministic Code (`lib/classify.js`, `lib/maps.js`, `lib/charts.js`)**: Scans all subdirectories, computes SHA-256 digests, reads PNG dimensions (`1024x1024` vs `4096x4096`), and parses HTML/Markdown tables for Weapons, Armor, Spells, Shops, Enemies, Classes, Encounters, and Chests without touching an LLM.
+2. **Tier 2 — Quote-Verified RobOS Agent Extraction (`robos-lib/ai-agent`)**: For unstructured walkthrough prose, battle rules, places, and screen layouts, `pipeline.js` invokes `robos-lib/ai-agent` (`ask()`), which spawns your active CLI configured in `~/.config/robos/ai-provider.json` (`antigravity` / `agy`, `claude`, `codex`, or `copilot`).
+   - **Anti-Hallucination Quote Gate**: Every record returned by the agent must carry a verbatim `quote` from the source file. If that exact substring does not exist in the source text, `jrpg-parser.js` drops the record automatically and logs the count in parser notes.
+   - **Content-Addressed Agent Cache**: Verified agent responses are cached in `<out>/.cache/agent`, making reruns instantaneous and deterministic.
+3. **`lib/kgraph.js` & `publish`**: Serializes the OSLC JSON-LD graph (`knowledge-graph.jsonld`), validates nodes against W3C SHACL shapes, and supports `jrpg-parser.js publish --out ~/kgraphs/ff1 --to ~/kgraphs/ff1-clean` to export a shareable clean-room graph stripped of all source filenames, hashes, and verbatim quotes.
 
 <div class="doc-figure">
   <img src="/assets/elearning/jrpg-kgraph/jrpg-kgraph-parser-and-gap-analysis.png" alt="Stage 2: robos-jrpg-parser Ingestion, KGraph Ontology and Completeness Gap Matrix" class="doc-img" onclick="openLightbox(this.src, this.alt)">
