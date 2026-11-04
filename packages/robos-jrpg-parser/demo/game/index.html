@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Ember Quest</title>
+<style>
+  body { margin: 0; background: #14121c; color: #f2ecdc; font: 14px/1.4 Verdana, Geneva, sans-serif; display: flex; gap: 12px; padding: 10px; box-sizing: border-box; min-height: 100vh; }
+  #screen { width: 448px; flex: none; }
+  canvas { width: 448px; height: 336px; image-rendering: pixelated; background: #000; display: block; border: 2px solid #5a4b3a; box-sizing: border-box; }
+  #hud { display: flex; justify-content: space-between; padding: 6px 8px; background: #2a2433; margin-bottom: 6px; }
+  #message { min-height: 44px; padding: 8px; background: #23304f; margin-top: 6px; }
+  #menu { margin-top: 6px; }
+  #menu div { padding: 3px 8px; background: #2a2433; }
+  #menu div.on { background: #6b4a1f; }
+  #robot { flex: 1; min-width: 0; font-size: 13px; }
+  #robot h2 { font-size: 15px; margin: 0 0 6px; }
+  button { font: inherit; padding: 6px 12px; margin-bottom: 8px; background: #d9a441; color: #1b1408; border: 0; cursor: pointer; font-weight: bold; }
+  #steps div { padding: 2px 6px; border-left: 3px solid #3a3446; margin-bottom: 2px; color: #a59d8f; }
+  #steps div.running { border-color: #d9a441; color: #fff; background: #3a3020; }
+  #steps div.passed { border-color: #55c26b; color: #d6f2da; }
+  #steps div.failed { border-color: #e0584f; color: #ffd9d6; background: #472320; }
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="hud"><span id="place"></span><span id="stats"></span></div>
+  <canvas id="canvas" width="256" height="192"></canvas>
+  <div id="message"></div>
+  <div id="menu"></div>
+</div>
+<div id="robot">
+  <button id="play">Let the robot play</button>
+  <h2>The robot's script</h2>
+  <div id="steps"></div>
+</div>
+<script src="engine.js"></script>
+<script src="robot.js"></script>
+<script>
+'use strict';
+(async () => {
+  const data = await (await fetch('game-data.json')).json();
+  const feature = await (await fetch('first-adventure.feature')).text();
+  const params = new URLSearchParams(location.search);
+  const spawnAt = (params.get('spawn') || '').split(',').map(Number);
+  const game = EmberEngine.createGame(data, spawnAt.length === 2 ? { spawn: { x: spawnAt[0], y: spawnAt[1] } } : {});
+  window.__game = game;
+  const images = {};
+  await Promise.all(Object.entries(data.maps).map(([name, map]) => new Promise((resolve) => {
+    images[name] = new Image();
+    images[name].onload = resolve;
+    images[name].src = map.image;
+  })));
+  const ctx = document.getElementById('canvas').getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const block = (x, y, w, h, color) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
+
+  function drawHero(px, py, scale = 1) {
+    const s = scale;
+    block(px + 5 * s, py + 1 * s, 6 * s, 5 * s, '#f0c8a0');
+    block(px + 4 * s, py + 0 * s, 8 * s, 2 * s, '#b0402a');
+    block(px + 4 * s, py + 6 * s, 8 * s, 6 * s, '#2f6fd0');
+    block(px + 5 * s, py + 12 * s, 2 * s, 3 * s, '#3a2a20');
+    block(px + 9 * s, py + 12 * s, 2 * s, 3 * s, '#3a2a20');
+    if (game.state.weapon) block(px + 13 * s, py + 3 * s, 1 * s, 9 * s, '#dfe6f0');
+  }
+
+  function drawFoe(foe, px, py) {
+    if (foe.boss) {
+      block(px, py + 30, 96, 42, '#a8391c');
+      block(px + 62, py, 44, 40, '#c8501f');
+      block(px + 92, py + 12, 7, 7, '#ffe36e');
+      block(px + 10, py + 72, 16, 12, '#7a2a14');
+      block(px + 66, py + 72, 16, 12, '#7a2a14');
+      block(px - 22, py + 42, 24, 12, '#c8501f');
+      block(px + 20, py + 14, 34, 18, '#ef8a3a');
+    } else {
+      block(px + 18, py + 38, 60, 40, '#5d9c48');
+      block(px + 30, py + 28, 36, 14, '#79bb5c');
+      block(px + 34, py + 50, 8, 8, '#14121c');
+      block(px + 56, py + 50, 8, 8, '#14121c');
+    }
+  }
+
+  function render() {
+    const { state } = game;
+    document.getElementById('place').textContent = state.map;
+    document.getElementById('stats').textContent = `HP ${state.hp}/${state.maxHp}   Gold ${state.gold}   ${state.weapon ? state.weapon.name : 'Bare hands'}`;
+    document.getElementById('message').textContent = state.message;
+    const menu = document.getElementById('menu');
+    menu.innerHTML = state.mode === 'shop' ? data.weapons.map((w, i) => `<div class="${i === state.menuIndex ? 'on' : ''}">${w.name} (damage ${w.damage}): ${w.price} gold</div>`).join('') : '';
+    if (state.mode === 'battle' || state.mode === 'won' || state.mode === 'lost') {
+      block(0, 0, 256, 192, '#1a1420');
+      block(0, 130, 256, 62, '#2c2230');
+      if (state.battle) {
+        drawFoe(state.battle, 120, 34);
+        block(120, 18, 106, 6, '#47202a');
+        block(120, 18, 106 * state.battle.hp / state.battle.maxHp, 6, '#e0584f');
+      } else if (state.mode === 'won') {
+        ctx.fillStyle = '#ffe36e'; ctx.font = '16px Verdana'; ctx.fillText('VICTORY!', 90, 60);
+      }
+      drawHero(36, 104, 3);
+      return;
+    }
+    ctx.drawImage(images[state.map], 0, 0);
+    if (state.map === EmberEngine.MOSSLING_AT.map && !state.defeated.includes('Mossling')) {
+      block(EmberEngine.MOSSLING_AT.x * 16 + 3, EmberEngine.MOSSLING_AT.y * 16 + 6, 10, 8, '#79bb5c');
+    }
+    for (const id of state.openedChests) {
+      const [map, at] = id.split(':');
+      const [x, y] = at.split(',').map(Number);
+      if (map === state.map) block(x * 16 + 3, y * 16 + 5, 10, 3, '#14121c');
+    }
+    drawHero(state.x * 16, state.y * 16);
+  }
+
+  const steps = document.getElementById('steps');
+  const scenarios = EmberRobot.parseFeature(feature);
+  // A script can say the same sentence twice, so each row is found by its position.
+  const rows = scenarios.flatMap(s => s.steps).map((line) => {
+    const row = document.createElement('div');
+    row.textContent = line;
+    steps.appendChild(row);
+    return row;
+  });
+  let current = -1;
+
+  window.addEventListener('keydown', (e) => {
+    if (document.activeElement && document.activeElement.id === 'play') document.activeElement.blur();
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) {
+      e.preventDefault();
+      game.press(e.key);
+      render();
+    }
+  });
+
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const pace = Number(params.get('pace') || 170);
+  document.getElementById('play').addEventListener('click', async () => {
+    window.__robotDone = false;
+    const results = await EmberRobot.run(feature, {
+      game,
+      press: async (key) => { window.dispatchEvent(new KeyboardEvent('keydown', { key })); await wait(pace); },
+      onStep: ({ line, status, error }) => {
+        if (status === 'running') current++;
+        const row = rows[current];
+        row.className = status;
+        row.textContent = (status === 'passed' ? '✓ ' : status === 'failed' ? '✗ ' : '▶ ') + line + (error ? ` — ${error}` : '');
+        row.scrollIntoView({ block: 'nearest' });
+      },
+    });
+    window.__robotResults = results;
+    window.__robotDone = true;
+  });
+  render();
+  window.__ready = true;
+})();
+</script>
+</body>
+</html>

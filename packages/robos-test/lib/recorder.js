@@ -74,7 +74,7 @@ async function findWindowGeometry(title, { display, timeoutMs = 10000 } = {}) {
   throw new Error(`Window "${title}" not viewable within ${timeoutMs}ms: ${lastErr && lastErr.message}`);
 }
 
-function startRecording({ geometry, outPath, framerate = 30 }) {
+function startRecording({ geometry, outPath, framerate = 30, drawMouse = true }) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   const xauth = getXauth();
   const env = { ...process.env, DISPLAY: geometry.display };
@@ -107,6 +107,7 @@ function startRecording({ geometry, outPath, framerate = 30 }) {
     '-f', 'x11grab',
     '-framerate', String(framerate),
   ];
+  if (!drawMouse) args.push('-draw_mouse', '0');
   if (geometry.id) {
     args.push('-window_id', geometry.id, '-i', fullDisp);
   } else {
