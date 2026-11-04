@@ -1436,7 +1436,7 @@
 
 <table><thead><tr><th>Path in <code>games/crpg-realm/</code></th><th>What it holds</th></tr></thead><tbody><tr><td><code>project.godot</code></td><td>Engine settings, main scene (<code>CharacterSelect.tscn</code>) and the ten autoloads</td></tr><tr><td><code>scripts/</code></td><td>One script per location (<code>VillageSquare.gd</code>, <code>AncientCatacombs.gd</code>, ...), components (<code>DoorPortal.gd</code>, <code>Trap.gd</code>, <code>TacticalEnemy.gd</code>, <code>GroundItem.gd</code>), <code>GameState.gd</code>, <code>CombatManager.gd</code>, <code>Pathfinder.gd</code>, <code>FogOfWar.gd</code>, <code>GameControlServer.gd</code></td></tr><tr><td><code>scripts/engine/</code>, <code>scripts/demo/</code></td><td>The scenario engine, dice, cartridge manager and demo mode</td></tr><tr><td><code>scenes/</code></td><td>One <code>.tscn</code> per location, plus <code>HeroPlayer.tscn</code>, <code>PartyCompanion.tscn</code>, <code>ShadowHound.tscn</code>, <code>CharacterSelect.tscn</code>, <code>VictoryScreen.tscn</code>, <code>CartridgeWorld.tscn</code></td></tr><tr><td><code>scenes/components/</code></td><td>Building blocks to instance: <code>DoorPortal</code>, <code>Trap</code>, <code>GroundItem</code>, <code>TacticalEnemy</code>, <code>NPCCharacter</code>, <code>FogOfWar</code>, <code>ActionLog</code>, windows and toolbars</td></tr><tr><td><code>data/v1/</code></td><td>JSON content arrays. Which code reads which file is on the <a href="https://rowbose.com/v1/projects/crpg-realm/reference.html#data-v1-files" target="_blank" rel="noopener" style="color:var(--accent-cyan);">reference page</a>.</td></tr><tr><td><code>src/generated/v1/</code></td><td><code>DataStoreV1.gd</code> and the typed wrappers <code>ItemData</code>, <code>SpellData</code>, <code>MonsterData</code>, <code>NPCData</code></td></tr><tr><td><code>mods/</code></td><td>Drop-in mods. The loader reads only a <code>traps_file</code>.</td></tr><tr><td><code>tests/e2e/</code></td><td><code>behave</code> features, step definitions in <code>features/steps/</code>, the report generator</td></tr></tbody></table>
 
-<p><code>DataStoreV1.gd</code> starts with "Auto-generated", but it has been edited by hand (races, traps, mod loading). Do not regenerate it with <code>packages/crpg-builder</code>. The generator template would overwrite those edits.</p>
+<code>DataStoreV1.gd</code> starts with "Auto-generated", but it has been edited by hand (races, traps, mod loading). Do not regenerate it with <code>packages/crpg-builder</code>. The generator template would overwrite those edits.
 
 <h2>Rules the code depends on</h2>
 
@@ -1484,7 +1484,7 @@
        When the infinity ai agent enters door "door-id-your-room-exit"
        Then the current scene is "AncientCatacombs"</code></pre>
 
-<p>Scenario names must be unique across all features, because the video file name comes from the name. Run it with <code>python3 run_cucumber_tests.py tests/e2e/features/normal/<your-file>.feature</code>. The <code>enters door</code> step finds the node by <code>door_id</code>, walks the hero to it and calls <code>try_enter()</code>.</p>
+<p>Scenario names must be unique across all features, because the video file name comes from the name. Run it with <code>python3 run_cucumber_tests.py tests/e2e/features/normal/&lt;your-file&gt;.feature</code>. The <code>enters door</code> step finds the node by <code>door_id</code>, walks the hero to it and calls <code>try_enter()</code>.</p>
 
 <h2>Drive the game over HTTP</h2>
 
@@ -1496,7 +1496,7 @@ curl -s -X POST http://127.0.0.1:8080/api/v1/setup_state \
      -d '{"scene": "AncientCatacombs", "name": "Lieutenant Vance", "class": "fighter", "companions": ["elora"]}'
 curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40</code></pre>
 
-<p><code>setup_state</code> re-initialises the hero and loads the scene. A bare scene name becomes <code>res://scenes/<name>.tscn</code>. The full endpoint and action list is on the <a href="https://rowbose.com/v1/projects/crpg-realm/reference.html#http-control-api" target="_blank" rel="noopener" style="color:var(--accent-cyan);">reference page</a>.</p>
+<code>setup_state</code> re-initialises the hero and loads the scene. A bare scene name becomes <code>res://scenes/&lt;name&gt;.tscn</code>. The full endpoint and action list is on the <a href="https://rowbose.com/v1/projects/crpg-realm/reference.html#http-control-api" target="_blank" rel="noopener" style="color:var(--accent-cyan);">reference page</a>.
         </article>
       </section>
 
@@ -2876,7 +2876,11 @@ flowchart LR
     }
 
     function formatStepText(text) {
-      return (text || '').replace(/`([^`]+)`/g, '<code>$1</code>');
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
     }
 
     function completeModuleLabs(mIdx) {

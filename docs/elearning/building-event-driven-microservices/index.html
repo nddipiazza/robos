@@ -2719,7 +2719,11 @@ flowchart LR
     }
 
     function formatStepText(text) {
-      return (text || '').replace(/`([^`]+)`/g, '<code>$1</code>');
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
     }
 
     function completeModuleLabs(mIdx) {

@@ -1401,7 +1401,7 @@ redirect_from:
 
 <p>It listens on port <code>19192</code> on all network interfaces. Set <code>ROBOS_PARSE_PORT</code> to change the port. To use the window UI in a browser, open <code>http://localhost:19192/renderer/index.html</code>. The root URL <code>/</code> serves the same HTML, but its relative <code>style.css</code> and <code>app.js</code> links resolve to <code>/style.css</code> and <code>/app.js</code>, which return 404, so the page shows unstyled and does nothing.</p>
 
-<p>The server has no authentication, sends <code>Access-Control-Allow-Origin: <em></code>, and binds to every interface. <code>/api/v1/parse</code> returns the text of any readable file whose path you send, <code>/api/v1/crawl</code> and <code>/api/v1/ingest</code> read any directory the server's user can read, and <code>ingest</code> writes to the knowledge graph. Run it on a trusted machine, or put a firewall rule in front of the port.</p>
+<p>The server has no authentication, sends <code>Access-Control-Allow-Origin: *</code>, and binds to every interface. <code>/api/v1/parse</code> returns the text of any readable file whose path you send, <code>/api/v1/crawl</code> and <code>/api/v1/ingest</code> read any directory the server's user can read, and <code>ingest</code> writes to the knowledge graph. Run it on a trusted machine, or put a firewall rule in front of the port.</p>
 
 <p>To run the desktop window, use Electron. <code>npm run electron</code> inside the package runs <code>electron .</code>, and <code>scripts/dev-launch.sh kgraph-parse-portal</code> launches it with the usual RobOS flags. The package declares no Electron dependency, so Electron must already be installed where the script looks for it (<code>packages/kgraph-parse-portal/node_modules/.bin/electron</code>). In the Electron app, the REST server defaults to port <code>19193</code> and the app's debug server uses <code>19192</code>. The installed desktop entry, named KGraph Parse Portal, starts Electron from <code>/usr/local/share/robos/kgraph-parse-portal</code>.</p>
 
@@ -1411,7 +1411,8 @@ redirect_from:
 
 <table><thead><tr><th>Tab</th><th>What it does</th></tr></thead><tbody><tr><td><strong>Filesystem Crawler & Ingestion</strong></td><td>Scan a path, commit the nodes, or paste a snippet and click <strong>Parse Document via Tika gRPC</strong>. Output appears as JSON-LD on the right.</td></tr><tr><td><strong>MIME & Archetype Disambiguation</strong></td><td>A <strong>Classify File</strong> box and a static table.</td></tr><tr><td><strong>Luxir Search Explorer</strong></td><td>Query box and five facets: All Items, Contracts (OpenAPI/gRPC), Microservices, Source Files, Living Docs.</td></tr><tr><td><strong>Direct Luxir CLI</strong></td><td>A simulated terminal.</td></tr><tr><td><strong>Hermetiq Buildbarn RBE</strong></td><td><strong>Generate Helm Values</strong>, <strong>Probe Cluster Health</strong>, <strong>Register in KGraph</strong>.</td></tr><tr><td><strong>Documentation & Living Specs</strong></td><td>Static text.</td></tr></tbody></table>
 
-<p>!<a href="/v1/assets/images/screenshots/07_step6_luxir_faceted_filter.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">The Luxir Search Explorer tab with the query Contract and the Contracts (OpenAPI/gRPC) facet selected, showing openapi.yaml and tika-service.proto</a><br></em>Look at the badges at top right: Tika is in offline mode and Luxir is serving from its cache.<em></p>
+<div class="doc-figure"><img src="/v1/assets/images/screenshots/07_step6_luxir_faceted_filter.png" alt="The Luxir Search Explorer tab with the query Contract and the Contracts (OpenAPI/gRPC) facet selected, showing openapi.yaml and tika-service.proto" class="doc-img" onclick="openLightbox(this.src, this.alt)"><div class="doc-caption">The Luxir Search Explorer tab with the query Contract and the Contracts (OpenAPI/gRPC) facet selected, showing openapi.yaml and tika-service.proto</div></div>
+<em>Look at the badges at top right: Tika is in offline mode and Luxir is serving from its cache.</em>
 
 <p>Two things in the window are not what they look like.</p>
 
@@ -1451,22 +1452,23 @@ redirect_from:
 
 <p>The repository contains Luxir clients but no Luxir server. The core-platform graph lists Luxir (<code>urn:robos:search:luxir-kgraph-index</code>) as experimental, pre-release and not production-ready. The portal looks for it at <code>ROBOS_LUXIR_ENDPOINT</code> (default <code>http://127.0.0.1:8983</code>) and pings <code>GET /api/v1/health</code> with a 400 ms timeout. The index name the client uses is <code>robos_kgraph</code>.</p>
 
-<p><code>bin/luxir-portal-cli.js</code> queries the index from a terminal.</p>
+<code>bin/luxir-portal-cli.js</code> queries the index from a terminal.
 
 <pre><code class="language-bash">node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status [--json]
 node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "&lt;query&gt;" [--type &lt;class&gt;] [--json]
 node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect &lt;doc-id&gt;
 node packages/kgraph-parse-portal/bin/luxir-portal-cli.js curl "&lt;query&gt;"</code></pre>
 
-<p><code>search</code> and <code>status</code> try the portal on ports <code>19192</code> then <code>19193</code>. If neither answers, the CLI scans the portal's own package folder (depth 5) into a private index and answers from that, so the results are the portal's own files. <code>inspect</code> always uses that private index and matches a full id or a substring of an id or title. <code>curl</code> prints the equivalent <code>curl</code> line, then prints the query result without calling <code>curl</code>. For example, <code>search "tika" --type robos:Contract</code> returns <code>tika-service.proto</code>.</p>
+<code>search</code> and <code>status</code> try the portal on ports <code>19192</code> then <code>19193</code>. If neither answers, the CLI scans the portal's own package folder (depth 5) into a private index and answers from that, so the results are the portal's own files. <code>inspect</code> always uses that private index and matches a full id or a substring of an id or title. <code>curl</code> prints the equivalent <code>curl</code> line, then prints the query result without calling <code>curl</code>. For example, <code>search "tika" --type robos:Contract</code> returns <code>tika-service.proto</code>.
 
-<p>!<a href="/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">The Direct Luxir CLI tab after running status, with Engine State hybrid-local-cache (Standby Fallback)</a><br></em>Look at Engine State in the terminal: Standby Fallback means no Luxir server answered.<em></p>
+<div class="doc-figure"><img src="/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="The Direct Luxir CLI tab after running status, with Engine State hybrid-local-cache (Standby Fallback)" class="doc-img" onclick="openLightbox(this.src, this.alt)"><div class="doc-caption">The Direct Luxir CLI tab after running status, with Engine State hybrid-local-cache (Standby Fallback)</div></div>
+<em>Look at Engine State in the terminal: Standby Fallback means no Luxir server answered.</em>
 
 <p>To reindex the whole graph into a Luxir server, or to search it, use <code>index</code> and <code>search --engine luxir</code> in <code>packages/robos-graph/bin/kgraph-cli.js</code>. Those commands are separate from the portal.</p>
 
 <h2>Tika connector</h2>
 
-<p><code>lib/tika-grpc-connector.js</code> does two things. <code>isAvailable()</code> opens a TCP connection to <code>ROBOS_TIKA_GRPC_ENDPOINT</code> (default <code>localhost:50051</code>) with a 500 ms timeout. <code>parseDocument()</code> then classifies the input and extracts symbols locally, whether or not that port is open. The only difference is the label: <code>source</code> is <code>apache-tika-4.0-grpc</code> when the port accepts a connection and <code>tika-offline-engine</code> otherwise.</p>
+<code>lib/tika-grpc-connector.js</code> does two things. <code>isAvailable()</code> opens a TCP connection to <code>ROBOS_TIKA_GRPC_ENDPOINT</code> (default <code>localhost:50051</code>) with a 500 ms timeout. <code>parseDocument()</code> then classifies the input and extracts symbols locally, whether or not that port is open. The only difference is the label: <code>source</code> is <code>apache-tika-4.0-grpc</code> when the port accepts a connection and <code>tika-offline-engine</code> otherwise.
 
 <p>No gRPC client is called, and no <code>tika-grpc</code> server is shipped in this repository. <code>contracts/tika-service.proto</code> defines a <code>robos.tika.v1.TikaGrpcService</code> with <code>ParseDocumentStream</code> (client streaming) and <code>ExtractSymbols</code>, but nothing implements or calls it.</p>
 
@@ -1478,15 +1480,15 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js curl "&lt;query&gt;"</
 
 <h2>Buildbarn helper</h2>
 
-<p>The Buildbarn tab and <code>/api/v1/rbe/</em></code> endpoints produce a Helm values file, a <code>helm</code> command, a connectivity probe and a graph node. They do not talk to Kubernetes.</p>
+<p>The Buildbarn tab and <code>/api/v1/rbe/*</code> endpoints produce a Helm values file, a <code>helm</code> command, a connectivity probe and a graph node. They do not talk to Kubernetes.</p>
 
-<p><code>POST /api/v1/rbe/values</code> accepts these fields. <code>installCommand</code> uses the last three.</p>
+<code>POST /api/v1/rbe/values</code> accepts these fields. <code>installCommand</code> uses the last three.
 
 <table><thead><tr><th>Field</th><th>Default</th></tr></thead><tbody><tr><td><code>clusterName</code></td><td><code>hermetiq-buildbarn-rbe</code></td></tr><tr><td><code>replicaCount</code></td><td><code>2</code>, applied to storage, scheduler, worker and frontend</td></tr><tr><td><code>storageCapacity</code></td><td><code>100Gi</code></td></tr><tr><td><code>workerConcurrency</code></td><td><code>8</code></td></tr><tr><td><code>executionPort</code>, <code>casPort</code></td><td><code>8980</code>, <code>8981</code></td></tr><tr><td><code>releaseName</code>, <code>namespace</code>, <code>valuesFile</code></td><td><code>buildbarn</code>, <code>buildbarn</code>, <code>buildbarn-values.yaml</code></td></tr></tbody></table>
 
 <p>The resulting command is <code>helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn --namespace buildbarn --create-namespace -f buildbarn-values.yaml</code>. Several settings are fixed in the template in <code>lib/buildbarn-rbe.js</code>: <code>environment: production</code>, a content-addressable store limit of 100 GiB and an action cache limit of 10 GiB whatever <code>storageCapacity</code> says, worker resources of 1000m CPU and 2Gi memory requested and 4000m and 8Gi limited, and a worker runner that mounts <code>/var/run/docker.sock</code>. The portal does not check the values against the chart, so review the file before you install.</p>
 
-<p>The probe opens a TCP connection with a 600 ms timeout and reports <code>online</code>, <code>unreachable</code> or <code>offline</code>. Registering builds a node with id <code>urn:robos:cluster:<clusterId></code> and types <code>robos:RemoteExecutionCluster</code>, <code>robos:RemoteBuildCluster</code> and <code>schema:ComputerPlatform</code>, indexes it, and adds it to the graph store. The <code>committed</code> field in the response says whether the store was available.</p>
+<p>The probe opens a TCP connection with a 600 ms timeout and reports <code>online</code>, <code>unreachable</code> or <code>offline</code>. Registering builds a node with id <code>urn:robos:cluster:&lt;clusterId&gt;</code> and types <code>robos:RemoteExecutionCluster</code>, <code>robos:RemoteBuildCluster</code> and <code>schema:ComputerPlatform</code>, indexes it, and adds it to the graph store. The <code>committed</code> field in the response says whether the store was available.</p>
 
 <h2>Configuration</h2>
 
@@ -1500,7 +1502,7 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js curl "&lt;query&gt;"</
 
 <pre><code class="language-bash">node --test packages/robos-test/tests/sdlc-graph/kgraph-parse-portal.test.js</code></pre>
 
-<p><code>npm test</code> inside the package finds nothing to run, because the package's <code>tests/</code> folder holds only a Gherkin feature file.</p>
+<code>npm test</code> inside the package finds nothing to run, because the package's <code>tests/</code> folder holds only a Gherkin feature file.
         </article>
       </section>
 
@@ -2880,7 +2882,11 @@ flowchart LR
     }
 
     function formatStepText(text) {
-      return (text || '').replace(/`([^`]+)`/g, '<code>$1</code>');
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
     }
 
     function completeModuleLabs(mIdx) {

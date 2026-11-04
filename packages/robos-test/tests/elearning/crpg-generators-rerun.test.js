@@ -353,6 +353,18 @@ describe('cRPG eLearning generators are safe to rerun', () => {
       const html = parseLivingDocMarkdown('```sh\necho "$& $1"\n```\n');
       assert.ok(html.includes('echo "$&amp; $1"'));
     });
+
+    it('escapes HTML tags and protects asterisks and dollar signs inside inline code spans', () => {
+      const html = parseLivingDocMarkdown(
+        'Inspects HTML `<title>` and `<table>` tags, `file_*.png` and `other_*.png`, plus `$B100` and `$B400`.\n'
+      );
+      assert.ok(!html.includes('<code><title></code>'), 'Must not emit raw <title> RCDATA tag');
+      assert.ok(html.includes('<code>&lt;title&gt;</code>'));
+      assert.ok(html.includes('<code>&lt;table&gt;</code>'));
+      assert.ok(html.includes('<code>file_*.png</code>'));
+      assert.ok(html.includes('<code>$B100</code>'));
+      assert.ok(html.includes('<code>$B400</code>'));
+    });
   });
 
   it('never touches the real repository files', () => {
