@@ -27,26 +27,56 @@ function int(value) {
 
 function readBestiary(rows, source) {
   const header = rows[0];
-  const boss = /boss/i.test(header[0]);
+  const idCol = columnOf(header, /^id$/);
+  const nameCol = columnOf(header, /name|monster|enemy|boss/);
+  const nameIdx = nameCol >= 0 ? nameCol : (idCol === 0 ? 1 : 0);
+  const boss = /boss/i.test(header[nameIdx] || header[0]);
   const hp = columnOf(header, /^hp$|hit points/);
   const xp = columnOf(header, /exp|^xp$/);
   const gold = columnOf(header, /^gil$|^gold$|^gp$|^g$/);
+  const atk = columnOf(header, /^atk$|^attack$|^damage$/);
+  const acc = columnOf(header, /^acc$|^accuracy$|^hit%?$/);
+  const hits = columnOf(header, /^hits$/);
+  const crt = columnOf(header, /^crt$|^crit/);
+  const def = columnOf(header, /^def$|^defense$|^absorb$/);
+  const eva = columnOf(header, /^eva$|^evade$|^agility$/);
+  const md = columnOf(header, /^m\.?d\.?$|magic def/);
+  const mor = columnOf(header, /^mor$|^morale$/);
+  const typeCol = columnOf(header, /^type$|^category$/);
   const weak = columnOf(header, /weak/);
+  const resist = columnOf(header, /resist/);
+  const satk = columnOf(header, /status atk|^satk$/);
+  const aiCol = columnOf(header, /^ai|spells/);
+  const splitList = val => String(val || '').split(/[,/]/).map(s => s.trim()).filter(s => s && !/^none$/i.test(s));
   const out = [];
   for (const row of rows.slice(1)) {
-    const name = row[0];
+    const name = row[nameIdx];
     if (!name) continue;
     const parts = name.split(/\s+-\s+/);
-    out.push({
+    const entry = {
       name: parts.length > 1 ? parts[parts.length - 1] : name,
       altNames: parts.length > 1 ? parts.slice(0, -1) : [],
       boss,
       hp: int(row[hp]),
       xp: int(row[xp]),
       gold: gold >= 0 ? int(row[gold]) : null,
-      weakness: weak >= 0 ? String(row[weak] || '').split(/[,/]/).map(s => s.trim()).filter(Boolean) : [],
+      weakness: weak >= 0 ? splitList(row[weak]) : [],
       source,
-    });
+    };
+    if (idCol >= 0 && int(row[idCol]) !== null) entry.gameId = int(row[idCol]);
+    if (atk >= 0 && int(row[atk]) !== null) entry.attack = int(row[atk]);
+    if (acc >= 0 && int(row[acc]) !== null) entry.accuracy = int(row[acc]);
+    if (hits >= 0 && int(row[hits]) !== null) entry.hits = int(row[hits]);
+    if (crt >= 0 && int(row[crt]) !== null) entry.critRate = int(row[crt]);
+    if (def >= 0 && int(row[def]) !== null) entry.defense = int(row[def]);
+    if (eva >= 0 && int(row[eva]) !== null) entry.evade = int(row[eva]);
+    if (md >= 0 && int(row[md]) !== null) entry.magicDefense = int(row[md]);
+    if (mor >= 0 && int(row[mor]) !== null) entry.morale = int(row[mor]);
+    if (typeCol >= 0) entry.categories = splitList(row[typeCol]);
+    if (resist >= 0) entry.resistances = splitList(row[resist]);
+    if (satk >= 0) entry.statusAttack = splitList(row[satk]);
+    if (aiCol >= 0 && row[aiCol] && !/^none/i.test(row[aiCol])) entry.ai = row[aiCol];
+    out.push(entry);
   }
   return out;
 }
@@ -196,7 +226,125 @@ function readEquipment(rows, source, classKey) {
 
 /** "Spell | Fire | Thunder" tables, one spell per column: its names in each release and its effect. */
 function isSpellColumns(header) {
-  return /^spell$/i.test(header[0] || '') && header.length >= 2;
+  return /^spell$/i.test(header[0] || '') && header.length >= 2 && columnOf(header, /power|effectivity|accuracy/) < 0;
+}
+
+function isSpellTable(header) {
+  return columnOf(header, /^spell$|^magic$|^school$/) >= 0 && columnOf(header, /power|effectivity/) >= 0 && columnOf(header, /accuracy|^acc$/) >= 0;
+}
+
+function readSpellTable(rows, source) {
+  const header = rows[0];
+  const idCol = columnOf(header, /^id$/);
+  const nameCol = columnOf(header, /^spell$|^magic$|name/);
+  const schoolCol = columnOf(header, /school/);
+  const levelCol = columnOf(header, /^level|^lv/);
+  const priceCol = columnOf(header, /price|cost/);
+  const powerCol = columnOf(header, /power|effectivity/);
+  const accCol = columnOf(header, /accuracy|^acc$/);
+  const elemCol = columnOf(header, /element/);
+  const targetCol = columnOf(header, /target|range/);
+  const effectCol = columnOf(header, /effect|notes/);
+  return rows.slice(1).filter(r => r[nameCol]).map(row => ({
+    gameId: idCol >= 0 ? int(row[idCol]) : null,
+    name: row[nameCol].trim(),
+    school: schoolCol >= 0 && row[schoolCol] ? lower(row[schoolCol]).trim() : null,
+    level: levelCol >= 0 ? int(row[levelCol]) : null,
+    price: priceCol >= 0 ? int(row[priceCol]) : null,
+    power: powerCol >= 0 ? int(row[powerCol]) : null,
+    accuracy: accCol >= 0 ? int(row[accCol]) : null,
+    element: elemCol >= 0 && row[elemCol] && !/^none$/i.test(row[elemCol]) ? row[elemCol] : null,
+    range: targetCol >= 0 ? row[targetCol] : null,
+    description: effectCol >= 0 ? row[effectCol] : null,
+    source,
+  }));
+}
+
+function isClassStatsTable(header) {
+  return columnOf(header, /^class$/) >= 0 && columnOf(header, /^str$|strength/) >= 0 && columnOf(header, /^agi$|agility/) >= 0;
+}
+
+function readClassStatsTable(rows, source) {
+  const header = rows[0];
+  const clsCol = columnOf(header, /^class$/);
+  const upgCol = columnOf(header, /upgrade/);
+  const hpCol = columnOf(header, /^hp$/);
+  const strCol = columnOf(header, /^str$|strength/);
+  const agiCol = columnOf(header, /^agi$|agility/);
+  const intCol = columnOf(header, /^int$|intelligence/);
+  const vitCol = columnOf(header, /^vit$|vitality/);
+  const lckCol = columnOf(header, /^lck$|^luck$/);
+  const dmgCol = columnOf(header, /base dmg|damage/);
+  const hitCol = columnOf(header, /base hit/);
+  const hitLvCol = columnOf(header, /hit%\/lv/);
+  const evaCol = columnOf(header, /base eva/);
+  const mdCol = columnOf(header, /base m\.?d/);
+  const mdLvCol = columnOf(header, /m\.?d\/lv/);
+  const mpCol = columnOf(header, /starting mp/);
+  return rows.slice(1).filter(r => r[clsCol]).map(row => ({
+    name: row[clsCol].trim(),
+    upgradesTo: upgCol >= 0 && row[upgCol] && row[upgCol] !== '-' ? row[upgCol].trim() : null,
+    startingStats: {
+      hp: hpCol >= 0 ? int(row[hpCol]) : null,
+      str: strCol >= 0 ? int(row[strCol]) : null,
+      agi: agiCol >= 0 ? int(row[agiCol]) : null,
+      int: intCol >= 0 ? int(row[intCol]) : null,
+      vit: vitCol >= 0 ? int(row[vitCol]) : null,
+      luck: lckCol >= 0 ? int(row[lckCol]) : null,
+      damage: dmgCol >= 0 ? int(row[dmgCol]) : null,
+      baseHit: hitCol >= 0 ? int(row[hitCol]) : null,
+      hitGrowth: hitLvCol >= 0 ? int(row[hitLvCol]) : null,
+      baseEvade: evaCol >= 0 ? int(row[evaCol]) : null,
+      baseMagicDefense: mdCol >= 0 ? int(row[mdCol]) : null,
+      magicDefenseGrowth: mdLvCol >= 0 ? int(row[mdLvCol]) : null,
+      startingMp: mpCol >= 0 ? int(row[mpCol]) : null,
+    },
+    source,
+  }));
+}
+
+function isEncounterTable(header) {
+  return columnOf(header, /slot 1/i) >= 0 && columnOf(header, /slot 2/i) >= 0;
+}
+
+function readEncounterTable(rows, source) {
+  const header = rows[0];
+  const idCol = columnOf(header, /map id|domain/i);
+  const areaCol = columnOf(header, /area|dungeon|grid|region/i);
+  const rateCol = columnOf(header, /rate/i);
+  const slotCols = [];
+  header.forEach((h, idx) => {
+    const m = String(h).match(/slot\s*(\d+)/i);
+    if (m) slotCols.push({ slot: int(m[1]), index: idx });
+  });
+  return rows.slice(1).filter(r => r[areaCol >= 0 ? areaCol : 0]).map(row => ({
+    domainId: idCol >= 0 ? row[idCol].trim() : null,
+    area: row[areaCol >= 0 ? areaCol : 0].trim(),
+    rate: rateCol >= 0 ? int(row[rateCol]) : null,
+    slots: slotCols.map(sc => row[sc.index]).filter(s => s && s !== '-'),
+    source,
+  }));
+}
+
+function isChestTable(header) {
+  return columnOf(header, /chest id/i) >= 0 && columnOf(header, /contents/i) >= 0;
+}
+
+function readChestTable(rows, source) {
+  const header = rows[0];
+  const idCol = columnOf(header, /chest id/i);
+  const mapCol = columnOf(header, /map|location/i);
+  const coordCol = columnOf(header, /coord/i);
+  const contCol = columnOf(header, /contents/i);
+  const keyCol = columnOf(header, /mystic key|gate|req/i);
+  return rows.slice(1).filter(r => r[idCol] && r[contCol]).map(row => ({
+    chestId: row[idCol].replace(/`/g, '').trim(),
+    mapName: mapCol >= 0 ? row[mapCol].trim() : null,
+    coordinates: coordCol >= 0 ? row[coordCol].trim() : null,
+    contents: row[contCol].trim(),
+    requiresKey: keyCol >= 0 ? /^yes|mystic/i.test(row[keyCol]) : false,
+    source,
+  }));
 }
 
 function readSpellColumns(rows) {
@@ -220,7 +368,9 @@ function readSpellColumns(rows) {
 function isChartTable(rows) {
   if (!rows.length || !rows[0].length) return false;
   const header = rows[0];
-  return isBestiary(header) || isSpellChart(header) || isEquipmentTable(header) || isMusicTable(header) || isSpellColumns(header);
+  return isBestiary(header) || isSpellChart(header) || isSpellTable(header) || isEquipmentTable(header)
+    || isMusicTable(header) || isSpellColumns(header) || isClassStatsTable(header) || isEncounterTable(header)
+    || isChestTable(header);
 }
 
 function readMusic(rows, source) {
@@ -311,22 +461,40 @@ function checkShopPrices(shops, equipment) {
 function readCharts(tableRows, text, source) {
   const enemies = [];
   const spells = [];
+  const spellTableRows = [];
   const equipment = [];
   const music = [];
   const spellNames = [];
+  const classes = [];
+  const encounters = [];
+  const chests = [];
   const classKey = readClassKey(text);
   for (const rows of tableRows) {
     if (!rows.length) continue;
     if (isBestiary(rows[0])) enemies.push(...readBestiary(rows, source));
     else if (isSpellChart(rows[0])) spells.push(...readSpellChart(rows, source));
+    else if (isSpellTable(rows[0])) spellTableRows.push(...readSpellTable(rows, source));
     else if (isEquipmentTable(rows[0])) equipment.push(...readEquipment(rows, source, classKey));
     else if (isMusicTable(rows[0])) music.push(...readMusic(rows, source));
     else if (isSpellColumns(rows[0])) spellNames.push(...readSpellColumns(rows));
+    else if (isClassStatsTable(rows[0])) classes.push(...readClassStatsTable(rows, source));
+    else if (isEncounterTable(rows[0])) encounters.push(...readEncounterTable(rows, source));
+    else if (isChestTable(rows[0])) chests.push(...readChestTable(rows, source));
   }
   const descriptions = readSpellDescriptions(text);
   for (const spell of spells) spell.description = spellDescription(spell, descriptions);
+  for (const sr of spellTableRows) {
+    const existing = spells.find(s => slug(s.name) === slug(sr.name) && (!sr.school || !s.school || s.school === sr.school));
+    if (existing) {
+      for (const k of ['power', 'accuracy', 'element', 'range', 'description', 'price', 'level', 'school']) {
+        if (sr[k] !== null && sr[k] !== undefined && (existing[k] === null || existing[k] === undefined)) existing[k] = sr[k];
+      }
+    } else {
+      spells.push(sr);
+    }
+  }
   const shops = readShopSections(text, source);
-  return { enemies, spells, equipment, music, shops, spellNames, problems: checkShopPrices(shops, equipment) };
+  return { enemies, spells, equipment, music, shops, spellNames, classes, encounters, chests, problems: checkShopPrices(shops, equipment) };
 }
 
 /**

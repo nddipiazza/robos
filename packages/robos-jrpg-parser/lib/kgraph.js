@@ -96,13 +96,19 @@ function buildNodes(parsed, art = { images: [] }) {
       ['robos:GameMonster', 'schema:Person', 'jrpg:Enemy', ...(e.boss ? ['jrpg:Boss'] : [])], e.name, {
         'robos:hpMin': e.hp, 'robos:hpMax': e.hp, 'robos:xpReward': e.xp,
         'robos:goldMin': e.gold, 'robos:goldMax': e.gold,
-        'jrpg:weakness': e.weakness, 'jrpg:altName': e.altNames, 'jrpg:source': sourceRef(e.source),
+        'jrpg:gameId': e.gameId,
+        'jrpg:attack': e.attack, 'jrpg:accuracy': e.accuracy, 'jrpg:hits': e.hits, 'jrpg:critRate': e.critRate,
+        'jrpg:defense': e.defense, 'jrpg:evade': e.evade, 'jrpg:magicDefense': e.magicDefense, 'jrpg:morale': e.morale,
+        'jrpg:categories': e.categories, 'jrpg:weakness': e.weakness, 'jrpg:resistances': e.resistances,
+        'jrpg:statusAttack': e.statusAttack, 'jrpg:ai': e.ai,
+        'jrpg:altName': e.altNames, 'jrpg:source': sourceRef(e.source),
       });
   }
 
   for (const s of parsed.spells || []) {
     add(urn('spell', `${s.school || 'x'}-${s.level}-${s.name}`), 'magic', ['robos:GameSpell', 'schema:Action', 'jrpg:Spell'], s.name, {
       'jrpg:altName': s.otherNames || s.altName, 'jrpg:school': s.school, 'jrpg:spellLevel': s.level, 'jrpg:range': s.range,
+      'jrpg:power': s.power, 'jrpg:accuracy': s.accuracy, 'jrpg:element': s.element,
       'jrpg:soldIn': (parsed.shops || []).filter(shop => placeSlugs.has(slug(shop.town)) && (shop.stock || []).some(i => i && i.name === s.name)).map(shop => ref(urn('place', shop.town))),
       'robos:cost': s.price, 'dcterms:description': s.description, 'jrpg:source': sourceRef(s.source),
     });
@@ -111,6 +117,7 @@ function buildNodes(parsed, art = { images: [] }) {
   for (const c of parsed.classes || []) {
     add(urn('class', c.name), 'characters', ['robos:GameClass', 'schema:Role', 'jrpg:PlayableClass'], c.name, {
       'jrpg:altName': c.altNames, 'jrpg:upgradesTo': c.upgradesTo,
+      'jrpg:startingStats': c.startingStats,
       'dcterms:description': c.description, 'jrpg:evidence': c.evidence, 'jrpg:source': sourceRef(c.source),
     });
   }
@@ -164,6 +171,20 @@ function buildNodes(parsed, art = { images: [] }) {
     add(urn('menu', m.source.replace(/\.[^.]+$/, '')), 'ui', ['jrpg:MenuScreen'], m.title || m.source, {
       'dcterms:description': m.purpose, 'jrpg:commands': m.commands, 'jrpg:windows': m.windows,
       'jrpg:cursor': m.cursor, 'jrpg:palette': m.palette, 'jrpg:source': sourceRef(m.source),
+    });
+  }
+
+  for (const enc of parsed.encounters || []) {
+    add(urn('encounter', `${enc.domainId || ''}-${enc.area}`), 'bestiary', ['jrpg:EncounterZone'], `Encounter Table: ${enc.area}`, {
+      'jrpg:domainId': enc.domainId, 'jrpg:area': enc.area, 'jrpg:encounterRate': enc.rate,
+      'jrpg:formationSlots': enc.slots, 'jrpg:source': sourceRef(enc.source),
+    });
+  }
+
+  for (const ch of parsed.chests || []) {
+    add(urn('chest', `${ch.chestId}-${ch.mapName || 'world'}`), 'world', ['jrpg:TreasureChest'], `Chest ${ch.chestId}: ${ch.contents}`, {
+      'jrpg:chestId': ch.chestId, 'jrpg:mapName': ch.mapName, 'jrpg:coordinates': ch.coordinates,
+      'jrpg:contents': ch.contents, 'jrpg:requiresMysticKey': ch.requiresKey, 'jrpg:source': sourceRef(ch.source),
     });
   }
 

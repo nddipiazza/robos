@@ -44,6 +44,8 @@ const TYPE_HIERARCHY = [
   ['jrpg:StatusEffect', 'jrpg:Rule', 'Status Effect', 'A status ailment or buff.'],
   ['jrpg:Element', 'jrpg:Rule', 'Element', 'An element for weaknesses and resistances.'],
   ['jrpg:StoryMilestone', 'jrpg:Thing', 'Story Milestone', 'A step of the main quest, in order.'],
+  ['jrpg:EncounterZone', 'jrpg:Thing', 'Encounter Zone', 'An overworld or dungeon encounter slot table.'],
+  ['jrpg:TreasureChest', 'jrpg:Thing', 'Treasure Chest', 'A treasure chest with coordinates and contents.'],
 ];
 
 // What a remake needs. `types` are counted for coverage, `roles` count source
