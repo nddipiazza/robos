@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it, after } = require('node:test');
+const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
@@ -10,21 +10,17 @@ const {
   SDLCKnowledgeGraphStore,
   generateELearningWebsite,
 } = require('../../../robos-graph/index');
-const { createRepoFixture } = require('../../lib/repo-fixture');
 
 const rootRepo = path.resolve(__dirname, '../../../../');
+const graphFile = path.join(rootRepo, '.robos', 'knowledge-graph.jsonld');
 
 describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
-  const fixture = createRepoFixture();
   const store = new SDLCKnowledgeGraphStore({
-    filePath: fixture.graphFile,
-    rootDir: fixture.robosDir,
+    graphRoot: path.join(rootRepo, '.robos'),
   });
 
-  after(() => fixture.cleanup());
-
   it('1. Generates standalone interactive website for robos-crpg with Jekyll frontmatter for GitHub Pages', () => {
-    const targetHtmlPath = path.join(fixture.root, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
+    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
 
     const result = store.generateELearningWebsite({
       courseId: 'robos-crpg',
@@ -42,7 +38,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(fs.existsSync(targetHtmlPath), 'docs/projects/crpg-realm/elearning/index.html must exist on disk');
 
     // Verify NO stray sibling elearning.html exists that would cause Jekyll menu duplication
-    const straySibling = path.join(fixture.root, 'docs', 'projects', 'crpg-realm', 'elearning.html');
+    const straySibling = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning.html');
     assert.ok(!fs.existsSync(straySibling), 'Must NOT create duplicate elearning.html sibling file');
 
     const content = fs.readFileSync(targetHtmlPath, 'utf8');
@@ -163,7 +159,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
   });
 
   it('5. Generates standalone interactive website for kgraph-parse-portal with 5 comprehensive modules', () => {
-    const targetHtmlPath = path.join(fixture.root, 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html');
+    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html');
 
     const result = store.generateELearningWebsite({
       courseId: 'urn:robos:elearning:course:kgraph-parse-portal',
@@ -207,6 +203,29 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.includes('answerQuiz('), 'Must provide answerQuiz interactive handler');
     assert.ok(content.includes('ROBOS-CERT-'), 'Must include ROBOS-CERT- verification prefix');
     assert.ok(content.includes('showJsonLdModal'), 'Must provide JSON-LD credential inspector');
+  });
+
+  it('6. Publishes how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough to site/elearning/{course-id}', () => {
+    const courseSlug = 'how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough';
+    const result = store.generateELearningWebsite({
+      courseId: `urn:robos:elearning:course:${courseSlug}`,
+    });
+
+    assert.strictEqual(result.ok, true, 'Result ok must be true');
+    assert.strictEqual(result.siteUrl, `https://rowbose.com/elearning/${courseSlug}`);
+    assert.ok(result.siteFilePath && fs.existsSync(result.siteFilePath), 'Front-site index.html must exist on disk');
+
+    const siteHtml = fs.readFileSync(result.siteFilePath, 'utf8');
+    assert.ok(siteHtml.includes(`permalink: /elearning/${courseSlug}/`), 'Front-site permalink must match /elearning/<course-id>/');
+    assert.ok(siteHtml.includes('download_ff1_assets.py'), 'Must include Python asset acquisition pipeline');
+    assert.ok(siteHtml.includes('robos-jrpg-parser'), 'Must include robos-jrpg-parser ingestion lesson');
+    assert.ok(siteHtml.includes('slice_maps_to_tiles.py'), 'Must include 16x16 tile slicing script');
+    assert.ok(siteHtml.includes('lut_SMPalettes'), 'Must include NES indoor vs outdoor palette decoding');
+    assert.ok(siteHtml.includes('GameControlServer.gd'), 'Must include Godot 4 HTTP control bridge');
+    assert.ok(siteHtml.includes('behave tests/e2e/features'), 'Must include Cucumber behave Xvfb runner');
+    assert.ok(siteHtml.includes('jrpg-acquisition-and-rom-pipeline.png'), 'Must include Stage 1 technical diagram');
+    assert.ok(siteHtml.includes('jrpg-kgraph-parser-and-gap-analysis.png'), 'Must include Stage 2 technical diagram');
+    assert.ok(siteHtml.includes('jrpg-godot-cucumber-playthrough-harness.png'), 'Must include Stage 3 technical diagram');
   });
 });
 

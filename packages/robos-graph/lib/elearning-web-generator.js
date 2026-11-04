@@ -70,6 +70,8 @@ function generateELearningWebsite(store, options = {}) {
   let docMarkdown = '';
   const candidateDocPaths = [
     options.docFilePath,
+    course['robos:docPath'],
+    path.join(process.cwd(), 'docs', 'elearning', `${courseSlug}.md`),
     isCrpg ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', 'elearning-masterclass.md') : null,
     isParsePortal ? path.join(process.cwd(), 'docs', 'kgraph-parse-portal.md') : null,
     appNode && appNode['robos:hasDocumentationPage'] ? (store.getNode(appNode['robos:hasDocumentationPage']) || {})['robos:docPath'] : null,
@@ -136,14 +138,45 @@ function generateELearningWebsite(store, options = {}) {
     fs.writeFileSync(indexFilePath, htmlContent, 'utf8');
   }
 
+  // Also publish to front site (site/elearning/<courseSlug>/index.html) -> https://rowbose.com/elearning/<courseSlug>
+  let siteFilePath = null;
+  const siteRoot = path.join(process.cwd(), 'site');
+  if (options.publishToFrontSite !== false && fs.existsSync(siteRoot)) {
+    const sitePermalink = `/elearning/${courseSlug}/`;
+    const siteDir = path.join(siteRoot, 'elearning', courseSlug);
+    siteFilePath = path.join(siteDir, 'index.html');
+    const siteHtml = buildStandaloneHtml({
+      course,
+      appNode,
+      courseSlug,
+      courseTitle,
+      courseTopic,
+      courseDifficulty,
+      courseDuration,
+      courseDesc,
+      modules,
+      permalink: sitePermalink,
+      docMarkdown,
+      existingFrontMatter: null,
+      existingDocHtml: existingPage.docHtml,
+      isCrpg,
+      isParsePortal,
+      isFrontSite: true,
+    });
+    fs.mkdirSync(siteDir, { recursive: true });
+    fs.writeFileSync(siteFilePath, siteHtml, 'utf8');
+  }
+
   return {
     ok: true,
     filePath: outputPath,
     indexFilePath,
+    siteFilePath,
     permalink,
+    siteUrl: `https://rowbose.com/elearning/${courseSlug}`,
     course,
     application: appNode,
-    message: `Standalone interactive eLearning website generated at ${outputPath} (permalink: ${permalink}).`,
+    message: `Standalone interactive eLearning website generated at ${outputPath} and ${siteFilePath || 'docs'} (URL: https://rowbose.com/elearning/${courseSlug}).`,
   };
 }
 
@@ -172,7 +205,7 @@ function readMaintainedPageParts(filePath) {
 /**
  * Jekyll front matter for a page that has none yet.
  */
-function buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, isParsePortal }) {
+function buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, isParsePortal, isFrontSite }) {
   const cleanPermalink = permalink.endsWith('/') ? permalink : `${permalink}/`;
   const basePermalink = permalink.replace(/\/$/, '');
   const redirectList = [
@@ -180,7 +213,7 @@ function buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, i
     `${basePermalink}.html`,
     `${cleanPermalink}`,
   ];
-  if (isCrpg) {
+  if (isCrpg && !isFrontSite) {
     redirectList.push(
       '/projects/crpg-realm/robos-crpg-engine',
       '/projects/crpg-realm/robos-crpg-engine/'
@@ -188,18 +221,19 @@ function buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, i
   }
   const uniqueRedirects = Array.from(new Set(redirectList.filter(r => r !== permalink)));
   const description = (courseDesc || '').replace(/\s+/g, ' ').replace(/"/g, '\\"');
+  const navMeta = (!isFrontSite && isCrpg) ? `parent: Realm of Heroes CRPG
+grand_parent: Projects
+nav_order: 9
+` : ((!isFrontSite && isParsePortal) ? `parent: KGraph parse portal
+grand_parent: Build on RobOS
+nav_order: 1
+` : '');
 
   return `---
 layout: null
-title: "${isCrpg ? 'Tactical cRPG Codex' : (isParsePortal ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"')))}"
+title: "${(!isFrontSite && isCrpg) ? 'Tactical cRPG Codex' : ((!isFrontSite && isParsePortal) ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"')))}"
 ${description ? `description: "${description}"
-` : ''}${isCrpg ? `parent: Realm of Heroes CRPG
-grand_parent: Projects
-nav_order: 9
-` : (isParsePortal ? `parent: KGraph parse portal
-grand_parent: Build on RobOS
-nav_order: 1
-` : '')}permalink: ${permalink}
+` : ''}${navMeta}permalink: ${permalink}
 redirect_from:
 ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
 ---
@@ -227,10 +261,13 @@ function buildStandaloneHtml(params) {
     existingDocHtml,
     isCrpg,
     isParsePortal,
+    isFrontSite,
   } = params;
 
-  const appTitle = appNode ? (appNode['dcterms:title'] || 'Application') : 'Tactical cRPG Realm of Heroes';
-  const appTech = (appNode && (appNode['robos:technology'] || appNode['robos:desktopFramework'] || appNode['robos:frontendFramework'])) || 'Godot 4.3 / D&D 5e SRD';
+  const appTitle = appNode ? (appNode['dcterms:title'] || 'Application') : (course['robos:applicationTitle'] || 'RobOS KGraph & Game Engine');
+  const appTech = course['robos:technology'] || (appNode && (appNode['robos:technology'] || appNode['robos:desktopFramework'] || appNode['robos:frontendFramework'])) || 'Godot 4.3 / RobOS KGraph';
+  const canonicalUrl = isFrontSite ? `https://rowbose.com${permalink}` : `https://rowbose.com/v1${permalink}`;
+  const ogImageUrl = course['robos:ogImage'] || 'https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png';
 
   // Serialize course and modules JSON for client-side state
   const serializedCourse = JSON.stringify(course);
@@ -238,11 +275,16 @@ function buildStandaloneHtml(params) {
   const serializedApp = JSON.stringify(appNode || {});
 
   // Parse markdown documentation into structured sections. Without a source, keep the published doc tab.
-  const docHtml = docMarkdown ? parseLivingDocMarkdown(docMarkdown) : (existingDocHtml || parseLivingDocMarkdown(''));
+  const rawDocHtml = docMarkdown ? parseLivingDocMarkdown(docMarkdown) : (existingDocHtml || parseLivingDocMarkdown(''));
+  const docHtml = isFrontSite
+    ? rawDocHtml
+        .replace(/\{\{\s*site\.baseurl\s*\}\}\s*\{%\s*link\s+([^\s%]+?)\.md\s*%\}/g, '/v1/$1.html')
+        .replace(/\{\{\s*'([^']+)'\s*\|\s*relative_url\s*\}\}/g, '/v1$1')
+    : rawDocHtml;
 
   const frontMatter = existingFrontMatter
     ? existingFrontMatter.replace(/^permalink:.*$/m, () => `permalink: ${permalink}`)
-    : buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, isParsePortal });
+    : buildDefaultFrontMatter({ courseTitle, courseDesc, permalink, isCrpg, isParsePortal, isFrontSite });
 
   return `${frontMatter}<!DOCTYPE html>
 <html lang="en">
@@ -257,20 +299,20 @@ function buildStandaloneHtml(params) {
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="author" content="RobOS Project">
-  <link rel="canonical" href="https://rowbose.com/v1${permalink}">
+  <link rel="canonical" href="${canonicalUrl}">
   <link rel="sitemap" type="application/xml" title="Sitemap" href="https://rowbose.com/sitemap.xml">
   <meta property="og:site_name" content="RobOS">
   <meta property="og:locale" content="en_US">
-  <meta property="og:url" content="https://rowbose.com/v1${permalink}">
+  <meta property="og:url" content="${canonicalUrl}">
   <meta property="og:title" content="${courseTitle.replace(/"/g, '&quot;')}">
   <meta property="og:description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
   <meta property="og:type" content="article">
-  <meta property="og:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
+  <meta property="og:image" content="${ogImageUrl}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="https://rowbose.com/v1${permalink}">
+  <meta name="twitter:url" content="${canonicalUrl}">
   <meta name="twitter:title" content="${courseTitle.replace(/"/g, '&quot;')}">
   <meta name="twitter:description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
-  <meta name="twitter:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
+  <meta name="twitter:image" content="${ogImageUrl}">
 
   <!-- Mermaid.js for Interactive Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -1357,6 +1399,8 @@ function buildStandaloneHtml(params) {
         <span class="brand-badge">${isCrpg ? 'Projects' : 'eLearning Hub'}</span>
       </a>
       <span style="color: var(--border);">/</span>
+      <a href="/elearning/" class="top-link">🎓 All Courses</a>
+      <span style="color: var(--border);">/</span>
       ${isCrpg ? `
       <a href="/v1/projects/crpg-realm/" class="top-link">⚔️ Tactical cRPG Realm</a>
       <span style="color: var(--border);">/</span>
@@ -1564,7 +1608,7 @@ function buildStandaloneHtml(params) {
     const GIT_INFO = {
       gitRemoteUrl: 'https://github.com/nddipiazza/robos',
       gitBranch: 'main',
-      gitopsPath: '.robos/elearning.yaml',
+      gitopsPath: '/home/ndipiazza/source/robos/.robos/elearning.yaml',
       gitopsRelative: '.robos/elearning.yaml'
     };
 
@@ -1880,6 +1924,10 @@ function buildStandaloneHtml(params) {
 
     // Rich Lesson Material for Each Module
     function getModuleLessonHtml(idx) {
+      const mCustom = MODULES_DATA[idx];
+      if (mCustom && mCustom.lessonHtml) {
+        return mCustom.lessonHtml;
+      }
       if (${isCrpg ? 'true' : 'false'}) {
         if (idx === 0) {
           return \`
