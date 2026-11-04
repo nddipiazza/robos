@@ -62,7 +62,7 @@ async function parse(dirs, opts) {
   const cacheDir = path.join(out, '.cache', 'agent');
   const sources = scan(dirs, readManifest(opts.manifest), { edition });
   const warnings = [];
-  const parsed = { game: { title, edition: edition || 'unspecified' }, sources, enemies: [], spells: [], music: [], menus: [], warnings };
+  const parsed = { game: { title, edition: edition || 'unspecified' }, sources, enemies: [], spells: [], music: [], menus: [], encounters: [], chests: [], warnings };
   for (const kind of PROSE_KINDS) parsed[kind] = [];
 
   for (const s of sources) if (s.note) warnings.push(`${s.name}: ${s.note}`);
@@ -70,7 +70,7 @@ async function parse(dirs, opts) {
   // A page for this edition goes first, so its numbers win.
   const pages = sources.filter(s => s.kind === 'page' && s.use !== false)
     .sort((a, b) => Number(namesEdition(b, edition)) - Number(namesEdition(a, edition)));
-  const exactRows = { equipment: [], shops: [] };
+  const exactRows = { equipment: [], shops: [], classes: [] };
   const otherEquipment = [];
   const spellNames = [];
   for (const page of pages) {
@@ -79,6 +79,9 @@ async function parse(dirs, opts) {
     parsed.enemies.push(...charts.enemies);
     parsed.spells.push(...charts.spells);
     parsed.music.push(...charts.music);
+    if (charts.classes && charts.classes.length) exactRows.classes.push(...charts.classes);
+    if (charts.encounters && charts.encounters.length) parsed.encounters.push(...charts.encounters);
+    if (charts.chests && charts.chests.length) parsed.chests.push(...charts.chests);
     // Tables go first, so their numbers win when the agent finds the same thing in prose.
     (namesEdition(page, edition) ? exactRows.equipment : otherEquipment).push(...charts.equipment);
     spellNames.push(...charts.spellNames);
@@ -99,6 +102,15 @@ async function parse(dirs, opts) {
     if (unmatched) warnings.push(`Left out ${unmatched} equipment rows that only pages about other editions list.`);
   } else exactRows.equipment.push(...otherEquipment);
   applySpellNames(parsed.spells, spellNames, edition);
+  // Merge duplicate spells by school+name so chart spells and NES spell tables combine cleanly.
+  const mergedSpells = new Map();
+  for (const s of parsed.spells) {
+    const key = `${slug(s.school || 'x')}-${slug(s.name)}`;
+    if (mergedSpells.has(key)) mergeRecord(mergedSpells.get(key), s);
+    else mergedSpells.set(key, s);
+  }
+  parsed.spells = [...mergedSpells.values()];
+  parsed.classes = [...exactRows.classes, ...parsed.classes];
   parsed.equipment = [...exactRows.equipment, ...parsed.equipment];
   parsed.shops = [...exactRows.shops, ...parsed.shops];
   for (const kind of PROSE_KINDS) parsed[kind] = mergeByName(parsed[kind]);

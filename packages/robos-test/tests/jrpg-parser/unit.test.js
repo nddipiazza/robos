@@ -295,6 +295,37 @@ describe('jrpg parser: Markdown reference guides', () => {
     assert.equal(jobs[0].id, 'area-map-brindle');
     assert.deepEqual(jobs[0].altIds, ['area-map-brindlehaven']);
   });
+
+  it('reads extended monster stats, spell power/accuracy, class starting stats, encounters, and chests', () => {
+    const extMd = `# Extended Tables
+| ID | Name | HP | ATK | ACC | Hits | CRT | DEF | EVA | M.D | MOR | Type | Weak | Resist | SATK | XP | Gold | AI / Spells |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- | :--- | :---: | :---: | :--- |
+| 000 | Goblin | 8 | 4 | 2 | 1 | 1 | 4 | 6 | 16 | 106 | None | None | None | None | 6 | 6 | None |
+
+| School | Lv | Name | Price | Power | Accuracy | Element | Target | Effect / Routine |
+| :--- | :---: | :--- | :---: | :---: | :---: | :--- | :--- | :--- |
+| White | 1 | CURE | 100 | 16 | 0 | None | One Ally | Restore HP |
+
+| Class | Upgrade | HP | STR | AGI | INT | VIT | LCK | Base Dmg | Base Hit% | Hit%/Lv | Base Eva% | Base M.D | M.D/Lv | Starting MP |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Fighter | Knight | 35 | 20 | 5 | 1 | 10 | 5 | 10 | 10 | 3 | 53 | 15 | 3 | 0 |
+
+| Map ID | Dungeon / Area | Rate | Slot 1 | Slot 2 |
+| :---: | :--- | :---: | :--- | :--- |
+| 12 | Old Keep | 8 | Goblin (1-3) | Wolf (1-2) |
+
+| Chest ID | Map / Location | Coordinates | Contents | Mystic Key |
+| :---: | :--- | :---: | :--- | :---: |
+| \`0x01\` | Old Keep | \`(10, 5)\` | Tent | No |
+`;
+    const c = readCharts(markdownTables(extMd), extMd, 'ext.md');
+    assert.equal(c.enemies[0].attack, 4);
+    assert.equal(c.enemies[0].magicDefense, 16);
+    assert.equal(c.spells[0].power, 16);
+    assert.equal(c.classes[0].startingStats.str, 20);
+    assert.equal(c.encounters[0].area, 'Old Keep');
+    assert.equal(c.chests[0].contents, 'Tent');
+  });
 });
 
 describe('jrpg parser: a large collected folder', () => {
