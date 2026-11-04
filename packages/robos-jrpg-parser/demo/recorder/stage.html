@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Ember Quest demo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1117; color: #e6edf3; font: 14px Verdana, Geneva, sans-serif; }
+  #caption { height: 74px; padding: 9px 16px; background: #14304a; border-bottom: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: center; }
+  #step { font-size: 12px; color: #7dd3fc; letter-spacing: .04em; }
+  #text { font-size: 20px; font-weight: bold; line-height: 1.2; }
+  #stage { display: flex; height: calc(100% - 74px); }
+  #browser { width: 640px; flex: none; display: flex; flex-direction: column; border-right: 2px solid #30363d; position: relative; }
+  body.wide #browser { width: 860px; }
+  #chrome { height: 34px; background: #21262d; display: flex; align-items: center; gap: 8px; padding: 0 10px; }
+  #chrome i { width: 10px; height: 10px; border-radius: 50%; background: #484f58; }
+  #address { flex: 1; background: #0d1117; border-radius: 12px; padding: 3px 12px; font: 13px monospace; color: #a5d6ff; white-space: nowrap; overflow: hidden; }
+  webview { flex: 1; background: #fff; }
+  #right { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .pane { display: flex; flex-direction: column; min-height: 0; }
+  #termPane { flex: 62; }
+  #sidePane { flex: 38; border-top: 2px solid #30363d; }
+  .title { padding: 4px 10px; background: #21262d; font-size: 13px; font-weight: bold; color: #c9d1d9; flex: none; }
+  pre { margin: 0; padding: 7px 10px; font: 13.5px/1.32 "DejaVu Sans Mono", monospace; white-space: pre-wrap; word-break: break-all; overflow: hidden; flex: 1; min-height: 0; }
+  #term .cmd { color: #7ee787; }
+  #term .hot { color: #ffd33d; font-weight: bold; }
+  #side { color: #a5d6ff; }
+  #cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; z-index: 9; pointer-events: none; transition: transform .55s ease; }
+</style>
+</head>
+<body>
+<div id="caption"><div id="step"></div><div id="text"></div></div>
+<div id="stage">
+  <div id="browser">
+    <div id="chrome"><i></i><i></i><i></i><div id="address"></div></div>
+    <webview id="view" src="about:blank"></webview>
+  </div>
+  <div id="right">
+    <div class="pane" id="termPane"><div class="title" id="termTitle">Terminal (the real commands, running now)</div><pre id="term"></pre></div>
+    <div class="pane" id="sidePane"><div class="title" id="sideTitle"></div><pre id="side"></pre></div>
+  </div>
+</div>
+<svg id="cursor" viewBox="0 0 22 22"><path d="M2 1 L2 18 L7 13.5 L10.5 21 L14 19.5 L10.5 12 L17 12 Z" fill="#fff" stroke="#000" stroke-width="1.5"/></svg>
+<script>
+  const $ = id => document.getElementById(id);
+  const view = $('view');
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  view.addEventListener('did-navigate', e => { $('address').textContent = e.url; });
+  view.addEventListener('did-navigate-in-page', e => { $('address').textContent = e.url; });
+  const trim = el => { while (el.scrollHeight > el.clientHeight && el.firstChild) el.removeChild(el.firstChild); };
+  window.stage = {
+    guestReady: () => new Promise((resolve) => {
+      const done = () => resolve(view.getWebContentsId());
+      try { done(); } catch { view.addEventListener('dom-ready', done, { once: true }); }
+    }),
+    caption(step, text) { $('step').textContent = step; $('text').textContent = text; },
+    wide(on) { document.body.classList.toggle('wide', on); },
+    titles(term, side) { $('termTitle').textContent = term; $('sideTitle').textContent = side; },
+    clear() { $('term').innerHTML = ''; },
+    print(text, cls) {
+      for (const line of String(text).split('\n')) {
+        const row = document.createElement('div');
+        if (cls) row.className = cls;
+        row.textContent = line || ' ';
+        $('term').appendChild(row);
+      }
+      trim($('term'));
+    },
+    typeCommand: async (cmd) => {
+      const row = document.createElement('div');
+      row.className = 'cmd';
+      $('term').appendChild(row);
+      const text = `$ ${cmd}`;
+      for (let i = 0; i <= text.length; i += 3) {
+        row.textContent = text.slice(0, i);
+        trim($('term'));
+        await new Promise(r => setTimeout(r, 16));
+      }
+      row.textContent = text;
+    },
+    side(text) { $('side').textContent = text; },
+    sideLine(line) {
+      $('side').textContent += `${line}\n`;
+      const lines = $('side').textContent.trimEnd().split('\n');
+      const fit = Math.floor($('side').clientHeight / 18);
+      if (lines.length > fit) $('side').textContent = `${lines.slice(-fit).join('\n')}\n`;
+    },
+    cursor(x, y) { $('cursor').style.transform = `translate(${x}px, ${y}px)`; },
+    viewOrigin() { const r = view.getBoundingClientRect(); return { x: r.left, y: r.top }; },
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "ember-quest-demo-recorder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Drives an embedded browser and the real JRPG tools so the course can show them running",
+  "main": "main.js"
+}
