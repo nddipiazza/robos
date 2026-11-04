@@ -87,13 +87,16 @@ function describePage(file) {
   return out;
 }
 
+const SKIP_DIRS = new Set(['node_modules', 'reports', 'test_reports']);
+
 function walk(dir, found = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-    if (entry.name.startsWith('.')) continue;
+    if (entry.name.startsWith('.') || SKIP_DIRS.has(entry.name)) continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      // A browser's "Save page as" folder holds that page's scripts and styles.
-      if (!entry.name.endsWith('_files')) walk(full, found);
+      // Skip generated Godot project folders and browser "Save page as" asset folders.
+      if (entry.name.endsWith('_files') || fs.existsSync(path.join(full, 'project.godot'))) continue;
+      walk(full, found);
     } else if (entry.isFile()) found.push(full);
   }
   return found;

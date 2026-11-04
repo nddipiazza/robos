@@ -35,9 +35,13 @@ const settings = readJson(SETTINGS_FILE) || {};
 const isGameDir = (d) => !!d && fs.existsSync(path.join(d, 'tests', 'e2e', 'play_full_game.py'));
 
 function resolveGameDir() {
+  const rpt = argValue('--reports', process.env.REPORTS_DIR || '');
+  const fromReports = rpt ? path.resolve(rpt, '..', '..', '..', '..') : '';
   const candidates = [
     argValue('--game-dir', ''),
+    process.env.JRPG_GAME_DIR,
     process.env.DW_GAME_DIR,
+    fromReports,
     process.env.ROBOS_REPO && path.join(process.env.ROBOS_REPO, 'games', 'quest-warrior-dragon'),
     path.resolve(__dirname, '..', '..', 'games', 'quest-warrior-dragon'),
     settings.gameDir,
@@ -80,6 +84,12 @@ function readLive() {
 function readRegistry() {
   const data = GAME_DIR ? readJson(path.join(GAME_DIR, 'data', 'v1', 'milestones.json')) : null;
   return data ? data.milestones || [] : [];
+}
+
+function readGameTitle() {
+  const data = GAME_DIR ? readJson(path.join(GAME_DIR, 'data', 'v1', 'milestones.json')) : null;
+  if (data && data.game) return String(data.game);
+  return 'Quest: Warrior Dragon';
 }
 
 function httpJson(method, urlPath, body) {
@@ -535,7 +545,7 @@ function createTray() {
 
 // ── IPC for the renderer ──────────────────────────────────────────────────
 ipcMain.handle('dash:config', () => ({
-  reportsDir: reportsDir(), projectDir: GAME_DIR, port: gamePort, viewing: viewDir ? path.basename(viewDir) : '',
+  reportsDir: reportsDir(), projectDir: GAME_DIR, gameTitle: readGameTitle(), port: gamePort, viewing: viewDir ? path.basename(viewDir) : '',
   select: parseInt(argValue('--select', '0'), 10) || 0,   // debug: open this milestone's card on start
 }));
 ipcMain.handle('dash:live', () => readLive());

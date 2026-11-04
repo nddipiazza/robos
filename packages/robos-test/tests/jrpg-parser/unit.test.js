@@ -566,6 +566,33 @@ describe('jrpg parser: the whole pipeline', () => {
     assert.ok(!report.stillToCollect.some(c => c.id === 'bosses'));
   });
 
+  it('writes the AI playthrough milestones registry and checkpoint-chained Cucumber feature', () => {
+    const msFile = path.join(out, 'playthrough', 'milestones.json');
+    const featFile = path.join(out, 'playthrough', 'features', 'checkpoint_playthrough.feature');
+    assert.ok(fs.existsSync(msFile), 'playthrough/milestones.json must exist');
+    assert.ok(fs.existsSync(featFile), 'playthrough/features/checkpoint_playthrough.feature must exist');
+    const ms = JSON.parse(fs.readFileSync(msFile, 'utf8'));
+    assert.equal(ms.version, 1);
+    assert.ok(Array.isArray(ms.milestones) && ms.milestones.length >= 1);
+    const feat = fs.readFileSync(featFile, 'utf8');
+    assert.match(feat, /Given create fresh game/);
+    assert.match(feat, /When the in-engine AI plays until checkpoint/);
+    assert.match(feat, /And save game state to checkpoint/);
+    for (const fn of [
+      'start_new_game.feature',
+      'smoke_maps.feature',
+      'npc_dialogues.feature',
+      'shops.feature',
+      'treasure_chests.feature',
+      'random_encounters.feature',
+    ]) {
+      assert.ok(
+        fs.existsSync(path.join(out, 'playthrough', 'features', fn)),
+        `playthrough/features/${fn} must exist`
+      );
+    }
+  });
+
   it('marks a map with no reference image as text-only', () => {
     const jobs = planJobs(result.parsed);
     assert.equal(jobs.find(j => j.id === 'area-map-brindlehaven').basis, 'text-only');

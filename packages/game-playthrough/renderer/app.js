@@ -21,6 +21,11 @@ const fmtTime = (sec) => {
 
 // ── header ────────────────────────────────────────────────────────────────
 function renderHeader(live) {
+  const gameNameEl = document.querySelector('.game-name');
+  if (gameNameEl) {
+    const gTitle = (live && live.game) || (state.config && state.config.gameTitle) || 'Quest: Warrior Dragon';
+    if (gameNameEl.textContent !== gTitle) gameNameEl.textContent = gTitle;
+  }
   const status = live ? live.status : 'waiting';
   const pill = $('status');
   pill.textContent = status;
