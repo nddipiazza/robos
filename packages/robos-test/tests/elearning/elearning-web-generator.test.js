@@ -228,6 +228,29 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(siteHtml.includes('jrpg-acquisition-and-rom-pipeline.png'), 'Must include Stage 1 technical diagram');
     assert.ok(siteHtml.includes('jrpg-kgraph-parser-and-gap-analysis.png'), 'Must include Stage 2 technical diagram');
     assert.ok(siteHtml.includes('jrpg-godot-cucumber-playthrough-harness.png'), 'Must include Stage 3 technical diagram');
+    assert.ok(siteHtml.includes('getShuffledQuizOptions('), 'Must include session-salted quiz option shuffler');
+    assert.ok(siteHtml.includes('robos_quiz_salt'), 'Must randomize quiz option ordering per learner session');
+
+    const courseNode = store.getNode(`urn:robos:elearning:course:${courseSlug}`);
+    assert.ok(courseNode && Array.isArray(courseNode['robos:modules']), 'Course node must have robos:modules');
+    assert.strictEqual(courseNode['robos:modules'].length, 6, 'Must have 6 modules');
+
+    const ansPositions = new Set();
+    for (const mod of courseNode['robos:modules']) {
+      assert.ok(Array.isArray(mod.quiz) && mod.quiz.length >= 3, `${mod.id} must have at least 3 deep knowledge check questions`);
+      for (const q of mod.quiz) {
+        assert.strictEqual(q.options.length, 4, `Question must have 4 options: ${q.question}`);
+        const ansIdx = q.options.indexOf(q.answer);
+        assert.ok(ansIdx >= 0, `Correct answer must be in options: ${q.question}`);
+        ansPositions.add(ansIdx);
+        for (const opt of q.options) {
+          assert.ok(opt.length >= 60, `Every distractor/option must be substantive (>=60 chars), got ${opt.length}: ${opt}`);
+        }
+        assert.ok(q.explanation && q.explanation.length >= 80, `Question must have a detailed explanation: ${q.question}`);
+      }
+    }
+    assert.ok(ansPositions.size >= 3, 'Correct answers must be distributed across multiple option indices rather than always index 0');
   });
 });
+
 
