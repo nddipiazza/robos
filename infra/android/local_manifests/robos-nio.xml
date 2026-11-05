@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The G100's device trees and the proprietary hardware files LineageOS cannot ship. -->
+<manifest>
+  <remote name="themuppets" fetch="https://github.com" />
+  <project path="device/motorola/nio" name="LineageOS/android_device_motorola_nio" remote="github" revision="lineage-24.0" />
+  <project path="device/motorola/sm8250-common" name="LineageOS/android_device_motorola_sm8250-common" remote="github" revision="lineage-24.0" />
+  <project path="kernel/motorola/sm8250" name="LineageOS/android_kernel_motorola_sm8250" remote="github" revision="lineage-24.0" />
+  <project path="hardware/motorola" name="LineageOS/android_hardware_motorola" remote="github" revision="lineage-24.0" />
+  <project path="vendor/motorola/nio" name="TheMuppets/proprietary_vendor_motorola_nio" remote="themuppets" revision="lineage-24.0" />
+  <project path="vendor/motorola/sm8250-common" name="TheMuppets/proprietary_vendor_motorola_sm8250-common" remote="themuppets" revision="lineage-24.0" />
+</manifest>

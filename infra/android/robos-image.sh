@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the RobOS phone image for the Moto G10 (capri) from LineageOS source.
+# Builds the RobOS phone image from LineageOS source.
 #
 #   robos-image.sh check     report what is missing, without changing anything
 #   robos-image.sh parts     build the RobOS apps and boot animation
@@ -7,6 +7,7 @@
 #   robos-image.sh build     build the image (several hours the first time)
 #   robos-image.sh all       parts, sync, then build
 #
+# Set ROBOS_DEVICE to pick the phone: nio (Moto G100, the default) or capri (Moto G10).
 # Set ROBOS_ANDROID_TREE to change where the source goes (default ~/android/robos).
 set -euo pipefail
 
@@ -14,7 +15,12 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 TREE="${ROBOS_ANDROID_TREE:-$HOME/android/robos}"
 BRANCH=lineage-24.0
-DEVICE=capri
+DEVICE="${ROBOS_DEVICE:-nio}"
+case "$DEVICE" in
+  nio) SCREEN="1080 2520" ;;
+  capri) SCREEN="720 1600" ;;
+  *) echo "Unknown device: $DEVICE. Use nio or capri." >&2; exit 2 ;;
+esac
 VENDOR="$HERE/vendor/robos"
 
 check() {
@@ -41,7 +47,8 @@ parts() {
   (cd "$REPO_ROOT/packages/smart-home-android" && ./gradlew --console=plain assembleRelease)
   cp "$REPO_ROOT/packages/robos-launcher-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSHome.apk"
   cp "$REPO_ROOT/packages/smart-home-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSSmartHome.apk"
-  python3 "$HERE/tools/make-bootanimation.py" "$REPO_ROOT/robos-transparent-background.png" "$VENDOR/bootanimation/bootanimation.zip"
+  # shellcheck disable=SC2086
+  python3 "$HERE/tools/make-bootanimation.py" $SCREEN "$REPO_ROOT/robos-transparent-background.png" "$VENDOR/bootanimation/bootanimation.zip"
   ls -la "$VENDOR/prebuilt" "$VENDOR/bootanimation"
 }
 
@@ -49,7 +56,8 @@ sync() {
   mkdir -p "$TREE/.repo/local_manifests"
   cd "$TREE"
   repo init -u https://github.com/LineageOS/android.git -b "$BRANCH" --git-lfs --no-clone-bundle
-  cp "$HERE/local_manifests/robos.xml" .repo/local_manifests/robos.xml
+  rm -f .repo/local_manifests/robos.xml
+  cp "$HERE/local_manifests/robos-$DEVICE.xml" .repo/local_manifests/robos.xml
   repo sync -c --no-tags --force-sync -j"$(nproc)"
 }
 
@@ -79,5 +87,5 @@ case "${1:-}" in
   sync) check && sync ;;
   build) build ;;
   all) check && parts && sync && build ;;
-  *) sed -n 2,10p "$0"; exit 2 ;;
+  *) sed -n 2,11p "$0"; exit 2 ;;
 esac

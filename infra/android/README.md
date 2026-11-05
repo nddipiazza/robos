@@ -1,6 +1,6 @@
 # RobOS phone image
 
-Builds a RobOS Android image for the Motorola Moto G10 (`capri`, models XT2127-1 and XT2127-2): LineageOS with a RobOS boot animation and home screen, the RobOS phone apps, and the stock apps removed. It is Wi-Fi only for now.
+Builds a RobOS Android image for the Motorola Moto G100 (`nio`, model XT2125-4), or the Moto G10 (`capri`, models XT2127-1 and XT2127-2) with `ROBOS_DEVICE=capri`: LineageOS with a RobOS boot animation and home screen, the RobOS phone apps, and the stock apps removed. It is Wi-Fi only for now.
 
 ## Status
 
@@ -28,16 +28,17 @@ infra/android/robos-image.sh check
 infra/android/robos-image.sh all
 ```
 
-The result is `out/target/product/capri/lineage-*.zip` under `~/android/robos`. Set `ROBOS_ANDROID_TREE` to build somewhere else.
+The result is `out/target/product/nio/lineage-*.zip` under `~/android/robos`. Set `ROBOS_ANDROID_TREE` to build somewhere else.
 
 ## Install on the phone
 
-This erases the phone. Read the [LineageOS install guide for capri](https://wiki.lineageos.org/devices/capri/install/variant1/) first, since it has the exact commands.
+This erases the phone. Read the [LineageOS install guide for the G100](https://wiki.lineageos.org/devices/nio/install/variant2/) first, since it has the exact commands.
 
-1. Confirm the phone is `capri` and an XT2127 model, on Android 11 firmware, which LineageOS requires for this phone.
+1. Confirm the phone's codename with `adb shell getprop ro.product.device`. An image built for another model can brick it. Also confirm the required firmware: Android 12 on the G100, Android 11 on the G10.
 2. Unlock the bootloader through Motorola's support site. Motorola decides per device, and carrier phones may be refused.
 3. Flash the `dtbo` and `vendor_boot` partitions and the recovery from the build with `fastboot`.
-4. In recovery, factory reset, then sideload the zip with `adb sideload`.
+4. In recovery, copy the active slot's partitions to the other slot as the guide describes. The G100 needs this step.
+5. In recovery, factory reset, then sideload the zip with `adb sideload`.
 
 To go back, restore stock Android with Motorola's Rescue and Smart Assistant.
 
