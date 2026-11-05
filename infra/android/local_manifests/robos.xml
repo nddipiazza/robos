@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The G10's device trees and the proprietary hardware files LineageOS cannot ship. -->
+<manifest>
+  <remote name="themuppets" fetch="https://github.com" />
+  <project path="device/motorola/capri" name="LineageOS/android_device_motorola_capri" remote="github" revision="lineage-24.0" />
+  <project path="device/motorola/sm6225-common" name="LineageOS/android_device_motorola_sm6225-common" remote="github" revision="lineage-24.0" />
+  <project path="kernel/motorola/sm6225" name="LineageOS/android_kernel_motorola_sm6225" remote="github" revision="lineage-24.0" />
+  <project path="hardware/motorola" name="LineageOS/android_hardware_motorola" remote="github" revision="lineage-24.0" />
+  <project path="vendor/motorola/capri" name="TheMuppets/proprietary_vendor_motorola_capri" remote="themuppets" revision="lineage-24.0" />
+  <project path="vendor/motorola/sm6225-common" name="TheMuppets/proprietary_vendor_motorola_sm6225-common" remote="themuppets" revision="lineage-24.0" />
+</manifest>

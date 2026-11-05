@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Builds the RobOS phone image for the Moto G10 (capri) from LineageOS source.
+#
+#   robos-image.sh check     report what is missing, without changing anything
+#   robos-image.sh parts     build the RobOS apps and boot animation
+#   robos-image.sh sync      download LineageOS source (over 100 GB)
+#   robos-image.sh build     build the image (several hours the first time)
+#   robos-image.sh all       parts, sync, then build
+#
+# Set ROBOS_ANDROID_TREE to change where the source goes (default ~/android/robos).
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$HERE/../.." && pwd)"
+TREE="${ROBOS_ANDROID_TREE:-$HOME/android/robos}"
+BRANCH=lineage-24.0
+DEVICE=capri
+VENDOR="$HERE/vendor/robos"
+
+check() {
+  local missing=0
+  for tool in repo git git-lfs python3 bc bison flex ccache zip curl rsync; do
+    command -v "$tool" >/dev/null || { echo "Missing tool: $tool"; missing=1; }
+  done
+  python3 -c "import PIL" 2>/dev/null || { echo "Missing Python module: Pillow"; missing=1; }
+  local free_gb
+  mkdir -p "$TREE"
+  free_gb=$(df -BG --output=avail "$TREE" | tail -1 | tr -dc 0-9)
+  [ "$free_gb" -ge 400 ] || { echo "Only ${free_gb} GB free at $TREE; allow 400 GB."; missing=1; }
+  if [ "$missing" = 1 ]; then
+    echo "Install the tools with:"
+    echo "  sudo apt install repo git git-lfs bc bison flex ccache zip curl rsync build-essential libssl-dev libncurses-dev python3-pil"
+    return 1
+  fi
+  echo "Ready: ${free_gb} GB free at $TREE, $(nproc) cores, $(free -g | awk '/Mem:/{print $2}') GB memory."
+}
+
+parts() {
+  mkdir -p "$VENDOR/prebuilt" "$VENDOR/bootanimation"
+  (cd "$REPO_ROOT/packages/robos-launcher-android" && ./gradlew --console=plain assembleRelease)
+  (cd "$REPO_ROOT/packages/smart-home-android" && ./gradlew --console=plain assembleRelease)
+  cp "$REPO_ROOT/packages/robos-launcher-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSHome.apk"
+  cp "$REPO_ROOT/packages/smart-home-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSSmartHome.apk"
+  python3 "$HERE/tools/make-bootanimation.py" "$REPO_ROOT/robos-transparent-background.png" "$VENDOR/bootanimation/bootanimation.zip"
+  ls -la "$VENDOR/prebuilt" "$VENDOR/bootanimation"
+}
+
+sync() {
+  mkdir -p "$TREE/.repo/local_manifests"
+  cd "$TREE"
+  repo init -u https://github.com/LineageOS/android.git -b "$BRANCH" --git-lfs --no-clone-bundle
+  cp "$HERE/local_manifests/robos.xml" .repo/local_manifests/robos.xml
+  repo sync -c --no-tags --force-sync -j"$(nproc)"
+}
+
+build() {
+  [ -f "$VENDOR/prebuilt/RobOSHome.apk" ] || parts
+  cd "$TREE"
+  # Copied, because Soong does not follow symlinks when it looks for build files.
+  rsync -a --delete "$VENDOR/" vendor/robos/
+  set +u
+  # shellcheck disable=SC1091
+  source build/envsetup.sh
+  breakfast "$DEVICE" userdebug
+  # The device tree comes from LineageOS and a sync resets it, so this is added each build.
+  local product="device/motorola/$DEVICE/lineage_$DEVICE.mk"
+  grep -q 'vendor/robos/config/robos.mk' "$product" ||
+    echo '$(call inherit-product, vendor/robos/config/robos.mk)' >> "$product"
+  export TARGET_BOOTANIMATION=vendor/robos/bootanimation/bootanimation.zip
+  export USE_CCACHE=1
+  m bacon
+  set -u
+  ls -la "$TREE/out/target/product/$DEVICE/"lineage-*.zip
+}
+
+case "${1:-}" in
+  check) check ;;
+  parts) parts ;;
+  sync) check && sync ;;
+  build) build ;;
+  all) check && parts && sync && build ;;
+  *) sed -n 2,10p "$0"; exit 2 ;;
+esac
