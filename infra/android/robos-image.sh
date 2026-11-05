@@ -11,6 +11,7 @@
 # Set ROBOS_DEVICE to pick the phone: nio (Moto G100, the default) or capri (Moto G10).
 # Set ROBOS_ANDROID_TREE to change where the source goes (default ~/android/robos).
 # Set ROBOS_JOBS to change how many compile jobs run at once (default 6).
+# Set ROBOS_MEMORY_MAX to change the memory cap for robos-image.sh start (default 46G).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -86,6 +87,9 @@ build() {
     echo '$(call inherit-product, vendor/robos/config/robos.mk)' >> "$product"
   export TARGET_BOOTANIMATION=vendor/robos/bootanimation/bootanimation.zip
   export USE_CCACHE=1
+  # Android 17 turns this on by default. It speeds up rebuilds, which this image does not
+  # need, and analysis went past 50 GB of memory with it on.
+  export SOONG_INCREMENTAL_ANALYSIS=false
   CCACHE_EXEC="$(command -v ccache)"
   export CCACHE_EXEC
   ccache -M 50G >/dev/null
@@ -96,13 +100,15 @@ build() {
 
 # The build can use tens of gigabytes while it analyzes the source. Inside a desktop app's
 # group, the system's out-of-memory guard kills the app along with it, so it gets its own
-# capped service, which also keeps running if the terminal or app that started it closes.
+# service, which also keeps running if the terminal or app that started it closes. The cap
+# leaves room for everything else: at 50 GB the whole machine ran out, and the kernel killed
+# unrelated containers. With no swap allowed, hitting the cap only stops the build.
 start() {
   local log="$HOME/android/robos-build.log"
   [ -f "$log" ] && mv "$log" "$log.previous"
   systemctl --user reset-failed robos-image 2>/dev/null || true
   systemd-run --user --unit=robos-image \
-    --property=MemoryMax=50G --property=MemorySwapMax=2G --property=Nice=10 \
+    --property=MemoryMax="${ROBOS_MEMORY_MAX:-46G}" --property=MemorySwapMax=0 --property=Nice=10 \
     --property="StandardOutput=append:$log" --property="StandardError=append:$log" \
     --setenv=ROBOS_DEVICE="$DEVICE" --setenv=ROBOS_ANDROID_TREE="$TREE" --setenv=PATH="$PATH" \
     --working-directory="$REPO_ROOT" \
@@ -118,5 +124,5 @@ case "${1:-}" in
   sync) check && sync ;;
   build) build ;;
   all) check && parts && sync && build ;;
-  *) sed -n 2,13p "$0"; exit 2 ;;
+  *) sed -n 2,14p "$0"; exit 2 ;;
 esac

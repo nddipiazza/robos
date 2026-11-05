@@ -28,7 +28,7 @@ infra/android/robos-image.sh check
 infra/android/robos-image.sh all
 ```
 
-To rebuild after that, `robos-image.sh start` runs the build as its own background service, capped at 50 GB of memory. Inside a desktop app, the system's out-of-memory guard can kill the app along with the build. Watch it with `tools/progress.sh`.
+To rebuild after that, `robos-image.sh start` runs the build as its own background service, capped at 46 GB of memory. Inside a desktop app, the system's out-of-memory guard can kill the app along with the build. Watch it with `tools/progress.sh`.
 
 The result is `out/target/product/nio/lineage-*.zip` under `~/android/robos`. Set `ROBOS_ANDROID_TREE` to build somewhere else.
 
