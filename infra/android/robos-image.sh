@@ -96,6 +96,11 @@ build() {
   export SOONG_INCREMENTAL_ANALYSIS=false
   CCACHE_EXEC="$(command -v ccache)"
   export CCACHE_EXEC
+  # The build's sandbox can leave an empty file where the cache folder belongs, and then
+  # every compile fails with "ccache: error: Not a directory".
+  local cache_dir="$HOME/.cache/ccache"
+  if [ -f "$cache_dir" ] && [ ! -s "$cache_dir" ]; then rm "$cache_dir"; fi
+  mkdir -p "$cache_dir"
   ccache -M 50G >/dev/null
   m -j"${ROBOS_JOBS:-6}" bacon || { echo "The build failed."; return 1; }
   set -eu
