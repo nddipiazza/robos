@@ -18,7 +18,12 @@ The RobOS parts are built and tested on an emulator. The full image has not been
 
 ## Build
 
-You need about 400 GB free and a fast connection. The source download is over 100 GB, and the first build takes several hours.
+You need about 400 GB free and a fast connection. Android 17's analysis step alone can pass 50 GB of memory, so a machine with 64 GB or less should turn on compressed swap in RAM first. This lasts until the next restart:
+
+```bash
+sudo modprobe zram && sudo zramctl --size 48G --algorithm lz4 /dev/zram0 && sudo mkswap /dev/zram0 && sudo swapon --priority 100 /dev/zram0
+```
+ The source download is over 100 GB, and the first build takes several hours.
 
 ```bash
 infra/android/robos-image.sh check
@@ -28,7 +33,7 @@ infra/android/robos-image.sh check
 infra/android/robos-image.sh all
 ```
 
-To rebuild after that, `robos-image.sh start` runs the build as its own background service, capped at 46 GB of memory. Inside a desktop app, the system's out-of-memory guard can kill the app along with the build. Watch it with `tools/progress.sh`.
+To rebuild after that, `robos-image.sh start` runs the build as its own background service, capped at 44 GB of memory, or 36 GB plus swap when zram is on. Inside a desktop app, the system's out-of-memory guard can kill the app along with the build. Watch it with `tools/progress.sh`.
 
 The result is `out/target/product/nio/lineage-*.zip` under `~/android/robos`. Set `ROBOS_ANDROID_TREE` to build somewhere else.
 

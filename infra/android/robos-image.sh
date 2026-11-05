@@ -11,7 +11,8 @@
 # Set ROBOS_DEVICE to pick the phone: nio (Moto G100, the default) or capri (Moto G10).
 # Set ROBOS_ANDROID_TREE to change where the source goes (default ~/android/robos).
 # Set ROBOS_JOBS to change how many compile jobs run at once (default 6).
-# Set ROBOS_MEMORY_MAX to change the memory cap for robos-image.sh start (default 46G).
+# Set ROBOS_MEMORY_MAX to change the memory cap for robos-image.sh start (default 44G, or
+# 36G with zram swap on).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -85,6 +86,9 @@ build() {
   local product="device/motorola/$DEVICE/lineage_$DEVICE.mk"
   grep -q 'vendor/robos/config/robos.mk' "$product" ||
     echo '$(call inherit-product, vendor/robos/config/robos.mk)' >> "$product"
+  # A sync resets this too. Without it, analysis does not fit in 64 GB of memory.
+  grep -q 'SetMemoryLimit' build/soong/cmd/soong_build/main.go ||
+    git -C build/soong apply "$HERE/patches/soong-memory-limit.patch"
   export TARGET_BOOTANIMATION=vendor/robos/bootanimation/bootanimation.zip
   export USE_CCACHE=1
   # Android 17 turns this on by default. It speeds up rebuilds, which this image does not
@@ -107,8 +111,15 @@ start() {
   local log="$HOME/android/robos-build.log"
   [ -f "$log" ] && mv "$log" "$log.previous"
   systemctl --user reset-failed robos-image 2>/dev/null || true
+  # Compressed swap in RAM lets the build go past physical memory. Its pool also takes RAM,
+  # and is not counted against the service, so the cap is lower when it is on.
+  local memory_max=44G swap_max=0
+  if swapon --show=NAME --noheadings | grep -q zram; then
+    memory_max=36G
+    swap_max=48G
+  fi
   systemd-run --user --unit=robos-image \
-    --property=MemoryMax="${ROBOS_MEMORY_MAX:-46G}" --property=MemorySwapMax=0 --property=Nice=10 \
+    --property=MemoryMax="${ROBOS_MEMORY_MAX:-$memory_max}" --property=MemorySwapMax="$swap_max" --property=Nice=10 \
     --property="StandardOutput=append:$log" --property="StandardError=append:$log" \
     --setenv=ROBOS_DEVICE="$DEVICE" --setenv=ROBOS_ANDROID_TREE="$TREE" --setenv=PATH="$PATH" \
     --working-directory="$REPO_ROOT" \
@@ -124,5 +135,5 @@ case "${1:-}" in
   sync) check && sync ;;
   build) build ;;
   all) check && parts && sync && build ;;
-  *) sed -n 2,14p "$0"; exit 2 ;;
+  *) sed -n 2,15p "$0"; exit 2 ;;
 esac
