@@ -4,11 +4,13 @@
 #   robos-image.sh check     report what is missing, without changing anything
 #   robos-image.sh parts     build the RobOS apps and boot animation
 #   robos-image.sh sync      download LineageOS source (over 100 GB)
-#   robos-image.sh build     build the image (several hours the first time)
+#   robos-image.sh start     build in its own background service, and return
+#   robos-image.sh build     build in this shell (several hours the first time)
 #   robos-image.sh all       parts, sync, then build
 #
 # Set ROBOS_DEVICE to pick the phone: nio (Moto G100, the default) or capri (Moto G10).
 # Set ROBOS_ANDROID_TREE to change where the source goes (default ~/android/robos).
+# Set ROBOS_JOBS to change how many compile jobs run at once (default 6).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -87,16 +89,34 @@ build() {
   CCACHE_EXEC="$(command -v ccache)"
   export CCACHE_EXEC
   ccache -M 50G >/dev/null
-  m bacon || { echo "The build failed."; return 1; }
+  m -j"${ROBOS_JOBS:-6}" bacon || { echo "The build failed."; return 1; }
   set -eu
   ls -la "$TREE/out/target/product/$DEVICE/"lineage-*.zip
 }
 
+# The build can use tens of gigabytes while it analyzes the source. Inside a desktop app's
+# group, the system's out-of-memory guard kills the app along with it, so it gets its own
+# capped service, which also keeps running if the terminal or app that started it closes.
+start() {
+  local log="$HOME/android/robos-build.log"
+  [ -f "$log" ] && mv "$log" "$log.previous"
+  systemctl --user reset-failed robos-image 2>/dev/null || true
+  systemd-run --user --unit=robos-image \
+    --property=MemoryMax=50G --property=MemorySwapMax=2G --property=Nice=10 \
+    --property="StandardOutput=append:$log" --property="StandardError=append:$log" \
+    --setenv=ROBOS_DEVICE="$DEVICE" --setenv=ROBOS_ANDROID_TREE="$TREE" --setenv=PATH="$PATH" \
+    --working-directory="$REPO_ROOT" \
+    systemd-inhibit --what=idle:sleep --who="RobOS image build" --why="Building the RobOS phone image" \
+    "$HERE/robos-image.sh" build
+  echo "Started. Watch it with infra/android/tools/progress.sh. Stop it with: systemctl --user stop robos-image"
+}
+
 case "${1:-}" in
+  start) start ;;
   check) check ;;
   parts) parts ;;
   sync) check && sync ;;
   build) build ;;
   all) check && parts && sync && build ;;
-  *) sed -n 2,11p "$0"; exit 2 ;;
+  *) sed -n 2,13p "$0"; exit 2 ;;
 esac
