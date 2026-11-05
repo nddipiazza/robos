@@ -270,8 +270,15 @@ function buildStandaloneHtml(params) {
   const ogImageUrl = course['robos:ogImage'] || 'https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png';
 
   // Serialize course and modules JSON for client-side state
+  // A course whose lessons are titled "Lesson 1: ..." is called lessons throughout, and is not numbered twice.
+  const unitWord = /^Lesson\b/i.test((modules[0] && modules[0].title) || '') ? 'lesson' : 'module';
+  const unitLabel = unitWord === 'lesson' ? 'Lesson' : 'Module';
   const serializedCourse = JSON.stringify(course);
-  const serializedModules = JSON.stringify(modules);
+  // A lesson's `body` is Markdown, the field the desktop app shows and edits. Render it for the web
+  // unless the lesson carries hand-written `lessonHtml`.
+  const serializedModules = JSON.stringify(modules.map(m => (m && m.body && !m.lessonHtml
+    ? { ...m, lessonHtml: `<div class="lesson-section lesson-prose">${parseLivingDocMarkdown(m.body, { math: false })}</div>` }
+    : m)));
   const serializedApp = JSON.stringify(appNode || {});
 
   // Parse markdown documentation into structured sections. Without a source, keep the published doc tab.
@@ -1548,6 +1555,25 @@ function buildStandaloneHtml(params) {
     h2, h3, h4 { letter-spacing: -0.02em; }
     .lesson-subtitle { color: var(--text-bright); font-size: 1.15rem; font-weight: 600; margin-top: 24px; }
     .lesson-text, .lesson-section li { font-size: 16px; line-height: 1.7; color: var(--text); }
+    .lesson-prose p, .lesson-prose li, .lesson-prose td, .lesson-prose th { font-size: 16px; line-height: 1.7; color: var(--text); }
+    .lesson-prose p, .lesson-prose ul, .lesson-prose ol, .lesson-prose table { margin: 0 0 14px; }
+    .lesson-prose ul, .lesson-prose ol { padding-left: 24px; }
+    .lesson-prose li { margin-bottom: 6px; }
+    .lesson-prose h2 { font-size: 1.3rem; font-weight: 600; color: var(--text-bright); margin: 32px 0 10px; }
+    .lesson-prose h2:first-child { margin-top: 0; }
+    .lesson-prose h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-bright); margin: 22px 0 8px; }
+    .lesson-prose a { color: var(--accent-text); }
+    .lesson-prose table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
+    .lesson-prose th { text-align: left; font-weight: 600; color: var(--text-bright); border-bottom: 2px solid var(--border); padding: 7px 12px 7px 0; }
+    .lesson-prose td { border-bottom: 1px solid var(--border); padding: 8px 12px 8px 0; vertical-align: top; font-size: 15px; }
+    .lesson-prose blockquote { border-left: 4px solid var(--accent); background: var(--bg-surface); padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 15px; line-height: 1.65; color: var(--text); }
+    .lesson-prose pre { padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 0 0 14px; font-size: 13px; }
+    .lesson-prose .doc-figure { margin: 18px 0 22px; }
+    .lesson-prose .doc-img { display: block; margin: 0 auto; }
+    .lesson-prose .doc-caption { font-size: 13px; font-style: normal; text-align: left; line-height: 1.5; }
+    .lab-step-desc a { color: var(--accent-text); }
+    .key-ideas ul { margin: 6px 0 0; padding-left: 20px; }
+    .key-ideas li { margin-bottom: 4px; }
     .section-title { font-weight: 600; color: var(--text-bright); }
     .code-snippet, pre { background: var(--code-bg); color: var(--code-fg); border-color: var(--code-bg); }
     .code-snippet code, pre code { color: var(--code-fg); }
@@ -1630,7 +1656,7 @@ function buildStandaloneHtml(params) {
       <div>
         <h1 id="course-title">${courseTitle}</h1>
         <div class="course-meta">
-          <div class="course-meta-line">${courseDifficulty} &middot; ${courseDuration} &middot; ${modules.length} ${modules.length === 1 ? 'module' : 'modules'}</div>
+          <div class="course-meta-line">${courseDifficulty} &middot; ${courseDuration} &middot; ${modules.length} ${unitWord}${modules.length === 1 ? '' : 's'}</div>
         </div>
       </div>
     </div>
@@ -1665,7 +1691,7 @@ function buildStandaloneHtml(params) {
   <div class="app-body">
     <!-- Sidebar Navigation -->
     <aside class="sidebar" aria-label="Curriculum Navigation">
-      <h3 id="sidebar-curriculum-heading">Modules</h3>
+      <h3 id="sidebar-curriculum-heading">${unitLabel}s</h3>
       <ul class="module-list" id="module-nav-list" role="tablist" aria-labelledby="sidebar-curriculum-heading">
         ${modules.map((m, idx) => {
           const rawTitle = m.title ? m.title.replace(/^Module \d+:\s*/i, '') : 'Module ' + (idx + 1);
@@ -1682,7 +1708,7 @@ function buildStandaloneHtml(params) {
                     onkeydown="handleModuleKeyDown(event, ${idx})"
                     aria-label="${safeTitle}, ${m.durationMinutes || 15} minutes, ${(m.labSteps || []).length} labs, ${(m.quiz || []).length} quiz questions">
               <div class="module-item-title">
-                <span>${idx + 1}. ${rawTitle}</span>
+                <span>${unitWord === 'lesson' ? '' : `${idx + 1}. `}${rawTitle}</span>
               </div>
               <div class="module-item-meta">
                 <span>${m.durationMinutes || 15} mins</span>
@@ -2939,7 +2965,7 @@ flowchart LR
             <div>
               <h2 id="module-content-heading" tabindex="-1">\${m.title || 'Module ' + (currentModIdx + 1)}</h2>
               <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                Module \${currentModIdx + 1} of \${MODULES_DATA.length} &middot; Estimated Time: \${m.durationMinutes || 15} minutes
+                ${unitLabel} \${currentModIdx + 1} of \${MODULES_DATA.length} &middot; Estimated Time: \${m.durationMinutes || 15} minutes
               </div>
             </div>
             <div class="slide-header-actions">
@@ -2989,6 +3015,13 @@ flowchart LR
           <div class="module-lesson-body">
             \${getModuleLessonHtml(currentModIdx)}
           </div>
+
+          \${(m.keyPoints || []).length ? \`
+            <div class="callout key-ideas">
+              <strong>Key ideas</strong>
+              <ul>\${m.keyPoints.map(k => \`<li>\${formatStepText(k)}</li>\`).join('')}</ul>
+            </div>
+          \` : ''}
 
           <!-- Lab Steps -->
           <h3 id="section-labs" class="section-title">Try it yourself</h3>
@@ -3125,7 +3158,8 @@ flowchart LR
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
-        .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
+        .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')
+        .replace(/\\[([^\\]]+)\\]\\((https?:[^)\\s]+)\\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
     }
 
     function copyLabPrompt(button) {
@@ -3233,6 +3267,7 @@ flowchart LR
         m.overview || '',
         ''
       ];
+      if (m.body) lines.push(m.body, '');
       if (m.labSteps && m.labSteps.length) {
         lines.push('## Try it yourself');
         m.labSteps.forEach((s, sIdx) => {
@@ -3625,7 +3660,7 @@ function renderInlineMarkdown(text) {
   return rendered.replace(/\x01CODE_(\d+)\x01/g, (_m, idx) => codeTokens[Number(idx)]);
 }
 
-function parseLivingDocMarkdown(markdown) {
+function parseLivingDocMarkdown(markdown, { math = true } = {}) {
   if (!markdown) {
     return '<p>No living documentation markdown source attached.</p>';
   }
@@ -3657,10 +3692,12 @@ function parseLivingDocMarkdown(markdown) {
     return saveToken(`<pre><code class="language-${lang}">${esc}</code></pre>`);
   });
 
-  // 3. Math display blocks: $$...$$
-  clean = clean.replace(/\$\$([\s\S]*?)\$\$/g, (_match, math) => {
-    return saveToken(`<div class="formula-box">${math.trim().replace(/\n/g, '<br>')}</div>`);
-  });
+  // 3. Math display blocks: $$...$$ (lessons turn math off, because their dollar signs are prices)
+  if (math) {
+    clean = clean.replace(/\$\$([\s\S]*?)\$\$/g, (_match, formula) => {
+      return saveToken(`<div class="formula-box">${formula.trim().replace(/\n/g, '<br>')}</div>`);
+    });
+  }
 
   // 4. HTML div blocks (like figures with images)
   clean = clean.replace(/<div[\s\S]*?<\/div>/gi, (match) => {
@@ -3700,7 +3737,7 @@ function parseLivingDocMarkdown(markdown) {
   });
 
   // 6. Convert inline math: $...$
-  clean = clean.replace(/\$([^\$\n]+)\$/g, '<code class="math-inline">$1</code>');
+  if (math) clean = clean.replace(/\$([^\$\n]+)\$/g, '<code class="math-inline">$1</code>');
 
   // 7. Headers
   clean = clean.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
@@ -3713,6 +3750,16 @@ function parseLivingDocMarkdown(markdown) {
 
   // 9. Blockquotes
   clean = clean.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // 9b. Lists: consecutive "- item" or "1. item" lines
+  clean = clean.replace(/^(?:[-*] .+(?:\r?\n|$))+/gm, block => {
+    const items = block.trim().split('\n').map(line => `<li>${line.replace(/^[-*]\s+/, '').trim()}</li>`).join('');
+    return `<ul>${items}</ul>\n\n`;
+  });
+  clean = clean.replace(/^(?:\d+\. .+(?:\r?\n|$))+/gm, block => {
+    const items = block.trim().split('\n').map(line => `<li>${line.replace(/^\d+\.\s+/, '').trim()}</li>`).join('');
+    return `<ol>${items}</ol>\n\n`;
+  });
 
   // 10. Inline bold / italic / code / links
   clean = renderInlineMarkdown(clean);
