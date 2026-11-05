@@ -28,9 +28,11 @@ last_bytes=$(cat "$net_file" 2>/dev/null || echo 0)
 last_time=$(date +%s)
 build_start_time=0
 build_start_done=0
+build_total=0
+REAL_BUILD_STEPS=20000
 
 bar() { # percent
-  local width=40 filled=$(($1 * 40 / 100))
+  local width=30 filled=$(($1 * 30 / 100))
   printf '['
   printf '%*s' "$filled" '' | tr ' ' '#'
   printf '%*s' "$((width - filled))" '' | tr ' ' '-'
@@ -68,7 +70,13 @@ show() {
     done=$(echo "$line" | sed -E 's/.* ([0-9]+)\/[0-9]+/\1/')
     total=$(echo "$line" | sed -E 's/.*\/([0-9]+)/\1/')
     percent=$((done * 100 / total))
-    if [ "$build_start_done" = 0 ]; then
+    # Setup stages also print percentages, over a few hundred steps. Only the real compile is large.
+    if [ "$total" -lt "$REAL_BUILD_STEPS" ]; then
+      printf 'Step 3 of 3: Preparing the build (setup stage %d of %d)' "$done" "$total"
+      return 0
+    fi
+    if [ "$build_start_done" = 0 ] || [ "$total" != "$build_total" ]; then
+      build_total=$total
       build_start_time=$now
       build_start_done=$done
     fi
@@ -92,7 +100,7 @@ show() {
     else
       printf 'Step 2 of 3: Unpacking the source'
     fi
-    printf ', %s on disk, %d MB/s' "$(du -sh "$TREE" 2>/dev/null | cut -f1)" "$speed"
+    printf ', %d MB/s' "$speed"
   fi
   return 0
 }
@@ -103,7 +111,18 @@ if [ "${1:-}" = "--once" ]; then
   exit 0
 fi
 
-while show; do
-  printf '\033[K\r'
+# Each update replaces the last, cut to the tab's width so it cannot wrap onto a new line.
+frame=$(mktemp)
+trap 'rm -f "$frame"' EXIT
+while :; do
+  # Written to a file, not captured, so show keeps its speed and time-left counters.
+  show >"$frame"
+  status=$?
+  text=$(cat "$frame")
+  printf '\r\033[K%s' "$(printf '%s' "$text" | head -1 | cut -c"1-$(($(tput cols 2>/dev/null || echo 80) - 1))")"
+  if [ "$status" != 0 ]; then
+    printf '\n%s\n' "$(printf '%s' "$text" | tail -n +2)"
+    break
+  fi
   sleep "$INTERVAL"
 done
