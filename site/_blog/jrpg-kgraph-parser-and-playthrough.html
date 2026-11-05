@@ -1,0 +1,138 @@
+---
+title: "Turning Classic JRPG Guides into a Playable Godot Game: The JRPG KGraph Parser, Chained Cucumber Playthroughs, and a 12-Module Bootcamp"
+nav_label: "JRPG KGraph Parser & Bootcamp"
+date: 2026-11-05
+date_label: "Nov 5, 2026"
+tags:
+  - "Games"
+  - "Knowledge Graph"
+  - "Autonomous Agents"
+  - "eLearning"
+summary: "Classic 8-bit RPGs are thoroughly documented across fan wikis, atlas PNGs, manuals, and 6502 assembly guides, yet those sources disagree on tile coordinates, palettes, and stats. We built robos-jrpg-parser to ingest local resource folders into an OSLC JSON-LD Knowledge Graph, flag conflicts between tables and prose, emit chained Cucumber milestone suites plus isolated mechanic tests, and drive the resulting Godot 4 game through the RobOS Game Playthrough viewer—backed by a 12-module hands-on eLearning course and Godot bootcamp."
+description: "How robos-jrpg-parser ingests classic JRPG maps, tables, manuals, and walkthroughs into an OSLC JSON-LD Knowledge Graph, generates checkpoint-chained Cucumber E2E suites and isolated shop/NPC/chest tests, drives the game in the RobOS Game Playthrough viewer, and teaches the full workflow in a 12-module eLearning course."
+og_image: /assets/elearning/jrpg-kgraph/demo/qwd-tile-coordinates.png
+og_image_alt: "A classic JRPG town map sliced into 16x16 tiles with grid coordinates and teleport triggers inspected for Knowledge Graph ingestion"
+---
+<div class="blog-body">
+  <p>Recreating a classic 8-bit RPG from scratch sounds straightforward until you put the community sources side by side. A StrategyWiki table lists a weapon's price and attack bonus, the PDF manual omits who can equip a late-game sword, an atlas PNG from VGMaps mixes five floors onto one image sheet or includes GBA/PSP remake rooms, and a prose walkthrough describes a dungeon chest whose contents depend on whether the game's 6502 assembly applies an in-room or out-of-room palette. When an AI coding agent tries to build a game directly from raw web pages, those silent contradictions turn into soft-locks: heroes spawn on impassable border trees, shopkeepers never advance past their greeting, and chests open with the wrong palette.</p>
+
+  <p>To make classic JRPG reconstruction repeatable—and to keep third-party reference downloads strictly private on your own disk while publishing only clean-room code and art—we built <code>packages/robos-jrpg-parser</code>, extended the <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough</code>) to watch any KGraph-generated JRPG run milestone by milestone, and published a 12-module hands-on course and Godot 4 bootcamp at <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}"><code>/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/</code></a>.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/elearning/jrpg-kgraph/demo/playthrough.gif' | relative_url }}" alt="Animated recording of the milestone-driven JRPG playthrough harness advancing through town, shops, and battles" loading="lazy" style="object-fit:contain;max-height:none">
+    <figcaption>An automated milestone playthrough driven over HTTP IPC: the runner steps through each story objective, saves a JSON checkpoint and MP4 clip per milestone, and verifies that the game is actually beatable from New Game to the first boss.</figcaption>
+  </figure>
+
+  <h3>1. Harvesting Local Resources Without Polluting Your Git Repo</h3>
+  <p>The workflow starts outside the repository in a private local folder (for example, <code>~/Downloads/&lt;game-id&gt;/</code>). Instead of scraping sites inside a build step, a small Python harvester collects five categories of reference material into separate subdirectories: pixel-exact <code>16x16</code> atlas map PNGs, wiki HTML/Markdown tables (weapons, armor, magic, shops, monsters), scanned manuals, audio reference tracks, and assembly/mechanics notes (damage formulas, encounter tables, and tile walkability).</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/scrape-discover.gif' | relative_url }}" alt="Terminal recording of the resource discovery script inspecting map and wiki links before downloading" loading="lazy">
+      <figcaption>Step 1: Inspecting candidate atlas PNGs and wiki pages before downloading into <code>~/Downloads/&lt;game-id&gt;/</code>.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/scan-sets-remake-aside.png' | relative_url }}" alt="Edition filter separating original 8-bit NES maps from GBA Dawn of Souls and PSP anniversary remake files" loading="lazy">
+      <figcaption>Edition hygiene: the scanner quarantines GBA, PS1, and PSP remake sheets so 16-bit bonus dungeons and rebalanced prices never contaminate an 8-bit ruleset.</figcaption>
+    </figure>
+  </div>
+
+  <p>Crucially, raw reference downloads stay in <code>~/Downloads/&lt;game-id&gt;/</code> and are never committed to git. When <code>robos-jrpg-parser</code> runs with <code>--no-copy-assets</code> (now the safe default for public repos), the generated Knowledge Graph records clean metadata and relative logical IDs without copying third-party screenshots, manuals, or rips into your repository. The companion <code>jrpg-generate-art</code> skill then uses Gemini image generation to produce original, clean-room tilesets, battle backdrops, and sprite sheets matching the exact dimensions required by the graph.</p>
+
+  <h3>2. Parsing Tables, Slicing 16&times;16 Maps, and Catching Conflicts</h3>
+  <p>Pointing <code>packages/robos-jrpg-parser</code> at the local resource directory runs five specialized extractors (<code>classify.js</code>, <code>maps.js</code>, <code>charts.js</code>, <code>walkthrough.js</code>, and <code>playthrough.js</code>) and writes an OSLC JSON-LD Knowledge Graph alongside a human-readable completeness report:</p>
+  <pre><code>node packages/robos-jrpg-parser/bin/jrpg-parse.js \
+  --input ~/Downloads/my-jrpg \
+  --out ~/kgraphs/my-jrpg \
+  --game-id my-jrpg \
+  --title "My Classic JRPG"</code></pre>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/elearning/jrpg-kgraph/demo/parse.gif' | relative_url }}" alt="Terminal recording of robos-jrpg-parser classifying files, extracting monsters and spells, and reporting completeness gaps" loading="lazy" style="object-fit:contain;max-height:none">
+    <figcaption>Running <code>jrpg-parse.js</code>: the parser classifies every file in the folder, extracts typed nodes (maps, monsters, spells, weapons, armor, shops, classes, and story milestones), and prints a completeness audit table.</figcaption>
+  </figure>
+
+  <p>Rather than blindly trusting a single source, the parser cross-checks structured tables against prose walkthroughs and assembly notes:</p>
+  <ul>
+    <li><strong>Extended Combat &amp; Economy Ontology:</strong> Monster nodes (<code>robos:JRPGEnemy</code>) capture HP, attack, accuracy, hits-per-turn, critical rate, defense, evasion, magic defense, elemental weaknesses, status immunities, XP, and gold. Spells (<code>robos:JRPGSpell</code>) record MP/slot level, target scope, effect power, accuracy, and per-class permissions. Weapons and armor capture price, stat modifiers, and equip bitmasks.</li>
+    <li><strong>Conflict &amp; Completeness Auditing:</strong> When a prose walkthrough mentions a boss with 106 HP or a shop selling a spell for 100 G while a summary table says 120 HP or 400 G, the parser flags the discrepancy instead of silently picking whichever file sorted last. If a game lacks battle formulas or encounter rates, the completeness matrix marks whether the missing data blocks walking, shopping, or combat.</li>
+    <li><strong>16&times;16 Tile Slicing &amp; Coordinate Verification:</strong> Atlas maps are sliced on a <code>16x16</code> pixel grid, deduplicated by tile hash into a compact tileset atlas, and paired with walkability and trigger coordinates so doors, stairs, treasure chests, and NPCs sit on verified walkable tiles.</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/parser-flags-conflict.png' | relative_url }}" alt="Parser output highlighting a conflict between a structured stat table and prose walkthrough text" loading="lazy">
+      <figcaption>When a table and a walkthrough disagree on stats or prices, the parser surfaces the conflict for inspection before code generation.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/qwd-tile-coordinates.png' | relative_url }}" alt="Town map overlaid with 16x16 tile coordinates showing walkable paths, shop doors, and border trees" loading="lazy">
+      <figcaption>Every map is indexed on a <code>16x16</code> tile grid so spawn points, shop counters, and exits never land on unwalkable border trees.</figcaption>
+    </figure>
+  </div>
+
+  <h3>3. Isolated Mechanic E2E Tests First, Full Checkpoint Playthrough Second</h3>
+  <p>One of the biggest lessons from building our first automated playthrough (for <em>Quest: Warrior Dragon</em>) is that running a full-game AI playthrough before individual mechanics are verified wastes hours in retry loops. If the AI walks into a Weapon Shop and gets stuck in a loop because the shop dialog expects a two-step <code>Buy &rarr; Select Item &rarr; Exit</code> cursor flow, you do not want to discover that fifteen minutes into a full run.</p>
+
+  <p>Now, <code>packages/robos-jrpg-parser/lib/playthrough.js</code> emits both a milestone registry (<code>playthrough/milestones.json</code>) and a two-tier Cucumber BDD test suite right alongside the Knowledge Graph:</p>
+  <ol>
+    <li><strong>Isolated Headless Mechanic Features:</strong> Fast, targeted Gherkin suites that boot the Godot 4 game under <code>Xvfb</code>, jump straight to a specific mechanic via the local HTTP control server (<code>127.0.0.1:8090</code>), and verify it in seconds:
+      <ul>
+        <li><code>01_start_new_game_and_create_party.feature</code> — Title screen to party creation to overworld spawn on a verified walkable tile.</li>
+        <li><code>02_smoke_maps_and_transitions.feature</code> — Entering and exiting towns, castles, and multi-floor dungeons without getting trapped on border tiles.</li>
+        <li><code>03_npc_dialogues.feature</code> — Facing NPCs, opening dialogue boxes with <code>ui_accept</code>, and cleanly dismissing them.</li>
+        <li><code>04_shops_and_inn.feature</code> — Entering Weapon, Armor, White/Black Magic, Item, and Inn interiors, navigating the pointing-hand cursor through <code>Buy</code> and <code>Exit</code>, verifying Gold deduction, inventory/spell slot updates, and Inn HP/MP restoration.</li>
+        <li><code>05_treasure_chests.feature</code> — Stepping onto dungeon chests, opening them once, verifying item/gold rewards, and confirming the open-chest tile persists.</li>
+        <li><code>06_random_encounters_and_boss.feature</code> — Triggering overworld/dungeon encounters and boss fights, resolving turn-based combat rounds, and verifying XP/Gold awards.</li>
+      </ul>
+    </li>
+    <li><strong>Checkpoint-Chained Milestone Playthrough (<code>checkpoint_playthrough.feature</code>):</strong> Once every isolated feature passes headlessly, the full playthrough driver (<code>tests/e2e/play_full_game.py --fresh --stepped</code>) chains the milestones together—creating the party, visiting the Weapon, Armor, and Magic shops, speaking with the King, marching to the first dungeon, looting chests, and defeating the first boss—saving a JSON save-state checkpoint, PNG screenshot, and MP4 video after each milestone.</li>
+  </ol>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/robot-in-the-shop.png' | relative_url }}" alt="Automated E2E test inside a shop interior buying equipment and verifying gold deduction" loading="lazy">
+      <figcaption>Isolated shop E2E test: verifying the shop counter interior, pointing-hand cursor, equipment purchase, and live gold deduction before running the full playthrough.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/robot-fights-the-boss.png' | relative_url }}" alt="Automated E2E test fighting the first boss with party HP and combat log verified" loading="lazy">
+      <figcaption>Final checkpoint of the opening chapter: the AI party reaches the boss altar equipped with the gear and spells bought in earlier milestones and wins the fight.</figcaption>
+    </figure>
+  </div>
+
+  <h3>4. Watching Any JRPG Run in the RobOS Game Playthrough App</h3>
+  <p>Previously, the <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough</code>) was wired specifically to <em>Quest: Warrior Dragon</em>. We upgraded <code>packages/game-playthrough</code> so it can point at <strong>any</strong> JRPG project generated from a Knowledge Graph via <code>--game-dir /path/to/game</code> or the <code>JRPG_GAME_DIR</code> environment variable, dynamically reading the game's title and milestone registry from <code>data/v1/milestones.json</code>.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-live.png' | relative_url }}" alt="RobOS Game Playthrough desktop viewer showing the milestone checklist on the left and live game state, video playback, and checkpoint inspector on the right" loading="lazy" style="object-fit:contain;max-height:none">
+    <figcaption>The <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough</code>) watches live or archived stepped runs for any KGraph-driven JRPG, pairing each milestone card with its recorded MP4 clip, save-state checkpoint JSON, and one-click replay command.</figcaption>
+  </figure>
+
+  <p>During a stepped run, a GNOME tray icon shows a live progress ring while the main window lists every milestone on the left and streams the live game screen, party stats, inventory, and AI event log on the right. Clicking any completed milestone plays its recorded MP4 clip, inspects the exact JSON save checkpoint captured at the end of that milestone, and lets you replay a single milestone (<code>--stepped --only N</code>) or resume from that checkpoint (<code>--stepped --from N</code>) without re-running the earlier chapters.</p>
+
+  <h3>5. Take the 12-Module eLearning Course &amp; Godot 4 Bootcamp</h3>
+  <p>We wrote down the entire process—from zero prior Godot experience to a working, checkpoint-verified classic JRPG—in a new 12-module interactive course on the RobOS eLearning site: <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}"><strong>How to Recreate a Classic JRPG Using KGraph Parsing with Automated Playthrough</strong></a>.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/godot-editor.png' | relative_url }}" alt="Godot 4 editor showing the scene tree, tilemap layers, and GDScript controller explained in the course bootcamp" loading="lazy">
+      <figcaption>The course includes a three-part Godot 4 bootcamp covering scenes, <code>TileMapLayer</code>, <code>CanvasLayer</code> menus, and the HTTP control server before generating the game.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/demo/hero-in-a-tree.png' | relative_url }}" alt="Visual debugging example from the course showing a hero spawned inside an unwalkable tree tile before fixing the spawn coordinates" loading="lazy">
+      <figcaption>Real visual debugging from the course: catching an off-by-one spawn coordinate that dropped the party inside border trees, fixing the map metadata, and re-verifying with Cucumber.</figcaption>
+    </figure>
+  </div>
+
+  <p>The course is written for developers who work with AI coding agents (Claude Code, OpenAI Codex, GitHub Copilot, or Gemini CLI / Google Antigravity) and walks through every stage with real recordings, copy-pasteable agent prompts, and deeper scenario-based knowledge checks:</p>
+  <ul>
+    <li><strong>Modules 1–4 (Harvesting &amp; Parsing):</strong> Setting up a private <code>~/Downloads/&lt;game-id&gt;</code> workspace, discovering and downloading maps and wiki tables respectfully, separating original 8-bit editions from remakes, and running <code>robos-jrpg-parser</code> to produce the JSON-LD Knowledge Graph and conflict report.</li>
+    <li><strong>Modules 5–7 (Godot 4 Bootcamp):</strong> A ground-up walkthrough of how a 2D RPG works in Godot 4—<code>Node2D</code> scenes, <code>TileMapLayer</code> atlases, <code>CharacterBody2D</code> grid movement, <code>CanvasLayer</code> shop and command dialogs, turn-based battle state machines, and the 180-line <code>GameControlServer.gd</code> HTTP bridge that lets external tests read state and press buttons.</li>
+    <li><strong>Modules 8–12 (Clean-Room Art, Isolated Cucumber Tests &amp; Stepped Playthrough):</strong> Generating original sprites and tilesets with <code>jrpg-generate-art</code>, writing isolated Cucumber mechanic features for shops, inns, NPCs, and chests, chaining the milestone checkpoints to defeat the first boss, and inspecting every milestone clip in the <strong>RobOS Game Playthrough</strong> viewer.</li>
+  </ul>
+</div>
+<div class="blog-links">
+  <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}">Take the 12-Module JRPG KGraph &amp; Godot Bootcamp Course →</a>
+  <a href="{{ '/elearning/' | relative_url }}">All RobOS eLearning Courses →</a>
+  <a href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">AI Playthrough Viewer &amp; Gallery →</a>
+  <span class="blog-commits">Commits: 4c5adc85 · 6637fba5 · 606db9af · 68ef5965 · 7346eef4 · b987e741</span>
+</div>
