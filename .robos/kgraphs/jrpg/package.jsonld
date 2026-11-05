@@ -1718,6 +1718,20 @@
       "robos:itemCategory": "weapon",
       "robos:namespace": "robos.jrpg",
       "robos:package": "jrpg"
+    },
+    {
+      "@id": "urn:robos:library:robos-jrpg-parser",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Library",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Parses folders of classic JRPG resources that a person collected into a RobOS kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.",
+      "dcterms:title": "RobOS JRPG Parser",
+      "robos:namespace": "robos.jrpg",
+      "robos:package": "jrpg",
+      "robos:repository": "packages/robos-jrpg-parser",
+      "robos:technology": "Node.js / Python (Pillow)"
     }
   ],
   "robos:package": "jrpg",

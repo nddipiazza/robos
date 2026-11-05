@@ -10310,6 +10310,20 @@
       "robos:technology": "Custom Elements v1 / Vanilla JavaScript / Node.js"
     },
     {
+      "@id": "urn:robos:library:robos-jrpg-parser",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Library",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Parses folders of classic JRPG resources that a person collected into a RobOS kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.",
+      "dcterms:title": "RobOS JRPG Parser",
+      "robos:namespace": "robos.jrpg",
+      "robos:package": "jrpg",
+      "robos:repository": "packages/robos-jrpg-parser",
+      "robos:technology": "Node.js / Python (Pillow)"
+    },
+    {
       "@id": "urn:robos:library:robos-llm",
       "@type": [
         "robos:Library",
@@ -29584,6 +29598,20 @@
       "robos:repository": "https://github.com/nddipiazza/robos",
       "robos:sourcePath": "packages/robos-ui/robos-dashboard.js",
       "robos:technology": "Custom Elements v1 / Vanilla JavaScript / Node.js"
+    },
+    {
+      "@id": "urn:robos:library:robos-jrpg-parser",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Library",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:description": "Parses folders of classic JRPG resources that a person collected into a RobOS kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.",
+      "dcterms:title": "RobOS JRPG Parser",
+      "robos:namespace": "robos.jrpg",
+      "robos:package": "jrpg",
+      "robos:repository": "packages/robos-jrpg-parser",
+      "robos:technology": "Node.js / Python (Pillow)"
     },
     {
       "@id": "urn:robos:library:robos-llm",
