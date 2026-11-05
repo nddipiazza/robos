@@ -1,0 +1,23 @@
+diff --git a/cmd/soong_build/main.go b/cmd/soong_build/main.go
+index 335d3d8f2..b9ed99d03 100644
+--- a/cmd/soong_build/main.go
++++ b/cmd/soong_build/main.go
+@@ -22,6 +22,7 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 	"runtime"
++	"runtime/debug"
+ 	"strings"
+ 	"time"
+ 
+@@ -314,6 +315,10 @@ func parseAvailableEnv() map[string]string {
+ }
+ 
+ func main() {
++	// RobOS: finish analysis on a machine with 64 GB of memory. By default Go lets the
++	// heap grow to about twice the live data, so this makes it collect harder near a limit.
++	debug.SetMemoryLimit(40 << 30)
++
+ 	flag.Parse()
+ 
+ 	if cmdlineArgs.Memprofile == "" {
