@@ -49,6 +49,12 @@ class ConfigSyncError extends Error {
 
 // ── Paths & state ────────────────────────────────────────────────────────────
 
+// A typed folder such as ~/Dropbox belongs under the user's home, never under the app's working directory.
+function folderInHome(folder, home) {
+  const raw = String(folder || '').trim();
+  return path.resolve(home, raw === '~' || raw.startsWith('~/') ? raw.slice(raw.length > 1 ? 2 : 1) : raw);
+}
+
 function homeOf(opts = {}) { return opts.homeDir || process.env.HOME || os.homedir(); }
 function roots(home) { return { config: path.join(home, '.config', 'robos'), robos: path.join(home, '.robos') }; }
 function syncDir(home) { return path.join(roots(home).config, 'config-sync'); }
@@ -571,7 +577,7 @@ async function connectVault(opts = {}) {
       const created = await backends.createDriveFolder({ accountId: c.accountId, name: c.name || 'RobOS Config Vault', parentId: c.parentId, homeDir: home, fetchImpl: opts.fetchImpl });
       ref = { kind: 'gdrive', folderId: created.folderId, accountId: c.accountId, url: created.url, name: created.name };
     } else {
-      const dir = path.join(c.path, c.name || '');
+      const dir = path.join(folderInHome(c.path, home), c.name || '');
       fs.mkdirSync(dir, { recursive: true });
       ref = { kind: 'folder', path: dir, url: `file://${dir}`, name: path.basename(dir) };
     }
@@ -895,7 +901,7 @@ async function publishShare(opts = {}) {
     const created = await backends.createDriveFolder({ accountId: target.accountId, name: `RobOS Share — ${name}`, parentId: target.parentId, homeDir: home, fetchImpl: opts.fetchImpl });
     ref = { kind: 'gdrive', folderId: created.folderId, accountId: target.accountId, url: created.url, name: created.name };
   } else if (target.kind === 'folder') {
-    const dir = path.join(target.path, name.replace(/[^\w .-]+/g, '-'));
+    const dir = path.join(folderInHome(target.path, home), name.replace(/[^\w .-]+/g, '-'));
     fs.mkdirSync(dir, { recursive: true });
     ref = { kind: 'folder', path: dir, url: `file://${dir}`, name: path.basename(dir) };
   } else throw new ConfigSyncError('Choose where to publish the share.', 'INVALID');
