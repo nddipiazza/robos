@@ -1,0 +1,2614 @@
+{
+ "colors": {
+  "hexToRgb": [
+   {
+    "input": "#00bcd4",
+    "output": {
+     "r": 0,
+     "g": 188,
+     "b": 212
+    }
+   },
+   {
+    "input": "#abc",
+    "output": {
+     "r": 170,
+     "g": 187,
+     "b": 204
+    }
+   },
+   {
+    "input": "not-hex",
+    "output": {
+     "r": 0,
+     "g": 188,
+     "b": 212
+    }
+   },
+   {
+    "input": "7c3aed",
+    "output": {
+     "r": 124,
+     "g": 58,
+     "b": 237
+    }
+   }
+  ],
+  "rgbToHsv": [
+   {
+    "input": "#00bcd4",
+    "output": {
+     "hue": 187,
+     "saturation": 100,
+     "value": 83
+    }
+   },
+   {
+    "input": "#7c3aed",
+    "output": {
+     "hue": 262,
+     "saturation": 76,
+     "value": 93
+    }
+   },
+   {
+    "input": "#ff0000",
+    "output": {
+     "hue": 0,
+     "saturation": 100,
+     "value": 100
+    }
+   },
+   {
+    "input": "#808080",
+    "output": {
+     "hue": 0,
+     "saturation": 0,
+     "value": 50
+    }
+   },
+   {
+    "input": "#000000",
+    "output": {
+     "hue": 0,
+     "saturation": 0,
+     "value": 0
+    }
+   },
+   {
+    "input": "#ffffff",
+    "output": {
+     "hue": 0,
+     "saturation": 0,
+     "value": 100
+    }
+   },
+   {
+    "input": "#ec4899",
+    "output": {
+     "hue": 330,
+     "saturation": 69,
+     "value": 93
+    }
+   }
+  ],
+  "kelvinToHex": [
+   {
+    "input": 1800,
+    "output": "#ff7e00"
+   },
+   {
+    "input": 2000,
+    "output": "#ff890e"
+   },
+   {
+    "input": 2200,
+    "output": "#ff9227"
+   },
+   {
+    "input": 2700,
+    "output": "#ffa757"
+   },
+   {
+    "input": 3000,
+    "output": "#ffb16e"
+   },
+   {
+    "input": 4000,
+    "output": "#ffcea6"
+   },
+   {
+    "input": 5200,
+    "output": "#ffe8d5"
+   },
+   {
+    "input": 6500,
+    "output": "#fffefa"
+   },
+   {
+    "input": 6600,
+    "output": "#fffffd"
+   },
+   {
+    "input": 9000,
+    "output": "#d2dfff"
+   }
+  ]
+ },
+ "circadian": [
+  {
+   "input": 0,
+   "output": {
+    "hour": 0,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 0.5,
+   "output": {
+    "hour": 0.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 1,
+   "output": {
+    "hour": 1,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 1.5,
+   "output": {
+    "hour": 1.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 2,
+   "output": {
+    "hour": 2,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 2.5,
+   "output": {
+    "hour": 2.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 3,
+   "output": {
+    "hour": 3,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 3.5,
+   "output": {
+    "hour": 3.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 4,
+   "output": {
+    "hour": 4,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 4.5,
+   "output": {
+    "hour": 4.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 5,
+   "output": {
+    "hour": 5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 5.5,
+   "output": {
+    "hour": 5.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 6,
+   "output": {
+    "hour": 6,
+    "kelvin": 2500,
+    "brightness": 35,
+    "colorHex": "#ff9f46",
+    "phase": "Morning Sunrise Boost"
+   }
+  },
+  {
+   "input": 6.5,
+   "output": {
+    "hour": 6.5,
+    "kelvin": 2917,
+    "brightness": 44,
+    "colorHex": "#ffae68",
+    "phase": "Morning Sunrise Boost"
+   }
+  },
+  {
+   "input": 7,
+   "output": {
+    "hour": 7,
+    "kelvin": 3333,
+    "brightness": 53,
+    "colorHex": "#ffbc83",
+    "phase": "Morning Sunrise Boost"
+   }
+  },
+  {
+   "input": 7.5,
+   "output": {
+    "hour": 7.5,
+    "kelvin": 3750,
+    "brightness": 63,
+    "colorHex": "#ffc79a",
+    "phase": "Morning Sunrise Boost"
+   }
+  },
+  {
+   "input": 8,
+   "output": {
+    "hour": 8,
+    "kelvin": 4167,
+    "brightness": 72,
+    "colorHex": "#ffd2ae",
+    "phase": "Morning Sunrise Boost"
+   }
+  },
+  {
+   "input": 8.5,
+   "output": {
+    "hour": 8.5,
+    "kelvin": 4583,
+    "brightness": 81,
+    "colorHex": "#ffdbbf",
+    "phase": "Morning Sunrise Boost"
+   }
+  },
+  {
+   "input": 9,
+   "output": {
+    "hour": 9,
+    "kelvin": 5000,
+    "brightness": 88,
+    "colorHex": "#ffe4ce",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 9.5,
+   "output": {
+    "hour": 9.5,
+    "kelvin": 5207,
+    "brightness": 91,
+    "colorHex": "#ffe8d5",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 10,
+   "output": {
+    "hour": 10,
+    "kelvin": 5400,
+    "brightness": 94,
+    "colorHex": "#ffecdb",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 10.5,
+   "output": {
+    "hour": 10.5,
+    "kelvin": 5566,
+    "brightness": 96,
+    "colorHex": "#ffefe0",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 11,
+   "output": {
+    "hour": 11,
+    "kelvin": 5693,
+    "brightness": 98,
+    "colorHex": "#fff1e4",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 11.5,
+   "output": {
+    "hour": 11.5,
+    "kelvin": 5773,
+    "brightness": 100,
+    "colorHex": "#fff2e6",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 12,
+   "output": {
+    "hour": 12,
+    "kelvin": 5800,
+    "brightness": 100,
+    "colorHex": "#fff3e7",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 12.5,
+   "output": {
+    "hour": 12.5,
+    "kelvin": 5773,
+    "brightness": 100,
+    "colorHex": "#fff2e6",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 13,
+   "output": {
+    "hour": 13,
+    "kelvin": 5693,
+    "brightness": 98,
+    "colorHex": "#fff1e4",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 13.5,
+   "output": {
+    "hour": 13.5,
+    "kelvin": 5566,
+    "brightness": 96,
+    "colorHex": "#ffefe0",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 14,
+   "output": {
+    "hour": 14,
+    "kelvin": 5400,
+    "brightness": 94,
+    "colorHex": "#ffecdb",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 14.5,
+   "output": {
+    "hour": 14.5,
+    "kelvin": 5207,
+    "brightness": 91,
+    "colorHex": "#ffe8d5",
+    "phase": "Solar Noon Peak Focus"
+   }
+  },
+  {
+   "input": 15,
+   "output": {
+    "hour": 15,
+    "kelvin": 5000,
+    "brightness": 85,
+    "colorHex": "#ffe4ce",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 15.5,
+   "output": {
+    "hour": 15.5,
+    "kelvin": 4743,
+    "brightness": 82,
+    "colorHex": "#ffdfc5",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 16,
+   "output": {
+    "hour": 16,
+    "kelvin": 4486,
+    "brightness": 79,
+    "colorHex": "#ffd9bb",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 16.5,
+   "output": {
+    "hour": 16.5,
+    "kelvin": 4229,
+    "brightness": 76,
+    "colorHex": "#ffd3b0",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 17,
+   "output": {
+    "hour": 17,
+    "kelvin": 3971,
+    "brightness": 74,
+    "colorHex": "#ffcda5",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 17.5,
+   "output": {
+    "hour": 17.5,
+    "kelvin": 3714,
+    "brightness": 71,
+    "colorHex": "#ffc698",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 18,
+   "output": {
+    "hour": 18,
+    "kelvin": 3457,
+    "brightness": 68,
+    "colorHex": "#ffbf8a",
+    "phase": "Afternoon Transition"
+   }
+  },
+  {
+   "input": 18.5,
+   "output": {
+    "hour": 18.5,
+    "kelvin": 3200,
+    "brightness": 65,
+    "colorHex": "#ffb87b",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 19,
+   "output": {
+    "hour": 19,
+    "kelvin": 3071,
+    "brightness": 60,
+    "colorHex": "#ffb473",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 19.5,
+   "output": {
+    "hour": 19.5,
+    "kelvin": 2943,
+    "brightness": 55,
+    "colorHex": "#ffaf6a",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 20,
+   "output": {
+    "hour": 20,
+    "kelvin": 2814,
+    "brightness": 50,
+    "colorHex": "#ffab60",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 20.5,
+   "output": {
+    "hour": 20.5,
+    "kelvin": 2686,
+    "brightness": 45,
+    "colorHex": "#ffa656",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 21,
+   "output": {
+    "hour": 21,
+    "kelvin": 2557,
+    "brightness": 40,
+    "colorHex": "#ffa14b",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 21.5,
+   "output": {
+    "hour": 21.5,
+    "kelvin": 2429,
+    "brightness": 35,
+    "colorHex": "#ff9c3f",
+    "phase": "Golden Hour & Melatonin Prep"
+   }
+  },
+  {
+   "input": 22,
+   "output": {
+    "hour": 22,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 22.5,
+   "output": {
+    "hour": 22.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 23,
+   "output": {
+    "hour": 23,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  },
+  {
+   "input": 23.5,
+   "output": {
+    "hour": 23.5,
+    "kelvin": 2200,
+    "brightness": 20,
+    "colorHex": "#ff9227",
+    "phase": "Deep Night Rest"
+   }
+  }
+ ],
+ "kasa": [
+  {
+   "input": "{\"system\":{\"get_sysinfo\":{}}}",
+   "outputHex": "d0f281f88bff9af7d5ef94b6d1b4c09fec95e68fe187e8caf08bf68bf6"
+  },
+  {
+   "input": "{\"a\":1}",
+   "outputHex": "d0f293b18bbac7"
+  }
+ ],
+ "commands": [
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "wiz-udp",
+    "ip": "192.168.1.50",
+    "port": 38899,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "setPilot",
+    "params": {
+     "state": true,
+     "dimming": 75,
+     "temp": 2800
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "wiz-udp",
+    "ip": "192.168.1.50",
+    "port": 38899,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "setPilot",
+    "params": {
+     "state": true,
+     "dimming": 10,
+     "temp": 6500
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "wiz-udp",
+    "ip": "192.168.1.50",
+    "port": 38899,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "setPilot",
+    "params": {
+     "state": true,
+     "dimming": 100,
+     "r": 124,
+     "g": 58,
+     "b": 237
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "wiz-udp",
+    "ip": "192.168.1.50",
+    "port": 38899,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "setPilot",
+    "params": {
+     "state": true,
+     "dimming": 42,
+     "r": 0,
+     "g": 188,
+     "b": 212
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "wiz-udp",
+    "ip": "192.168.1.50",
+    "port": 38899,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "setPilot",
+    "params": {
+     "state": false,
+     "dimming": 42,
+     "r": 239,
+     "g": 68,
+     "b": 68
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "wled-http",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/json/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 191,
+    "transition": 4,
+    "seg": [
+     {
+      "id": 0,
+      "col": [
+       [
+        255,
+        170,
+        95
+       ]
+      ],
+      "fx": 0,
+      "sx": 128,
+      "ix": 128
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "wled-http",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/json/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 13,
+    "transition": 4,
+    "seg": [
+     {
+      "id": 0,
+      "col": [
+       [
+        255,
+        254,
+        250
+       ]
+      ],
+      "fx": 0,
+      "sx": 128,
+      "ix": 128
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "wled-http",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/json/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 255,
+    "transition": 4,
+    "seg": [
+     {
+      "id": 0,
+      "col": [
+       [
+        124,
+        58,
+        237
+       ]
+      ],
+      "fx": 38,
+      "sx": 128,
+      "ix": 128
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "wled-http",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/json/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 107,
+    "transition": 4,
+    "seg": [
+     {
+      "id": 0,
+      "col": [
+       [
+        0,
+        188,
+        212
+       ]
+      ],
+      "fx": 63,
+      "sx": 128,
+      "ix": 128
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "wled-http",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/json/state",
+   "headers": {},
+   "payload": {
+    "on": false,
+    "bri": 107,
+    "transition": 4,
+    "seg": [
+     {
+      "id": 0,
+      "col": [
+       [
+        239,
+        68,
+        68
+       ]
+      ],
+      "fx": 2,
+      "sx": 128,
+      "ix": 128
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "kasa-lan",
+    "ip": "192.168.1.50",
+    "port": 9999,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "smartlife.iot.smartbulb.lightingservice": {
+     "transition_light_state": {
+      "on_off": 1,
+      "brightness": 75,
+      "color_temp": 2800,
+      "hue": 0,
+      "saturation": 0,
+      "transition_period": 200
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "kasa-lan",
+    "ip": "192.168.1.50",
+    "port": 9999,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "smartlife.iot.smartbulb.lightingservice": {
+     "transition_light_state": {
+      "on_off": 1,
+      "brightness": 5,
+      "color_temp": 6500,
+      "hue": 0,
+      "saturation": 0,
+      "transition_period": 200
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "kasa-lan",
+    "ip": "192.168.1.50",
+    "port": 9999,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "smartlife.iot.smartbulb.lightingservice": {
+     "transition_light_state": {
+      "on_off": 1,
+      "brightness": 100,
+      "color_temp": 0,
+      "hue": 262,
+      "saturation": 76,
+      "transition_period": 200
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "kasa-lan",
+    "ip": "192.168.1.50",
+    "port": 9999,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "smartlife.iot.smartbulb.lightingservice": {
+     "transition_light_state": {
+      "on_off": 1,
+      "brightness": 42,
+      "color_temp": 0,
+      "hue": 187,
+      "saturation": 100,
+      "transition_period": 200
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "kasa-lan",
+    "ip": "192.168.1.50",
+    "port": 9999,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "smartlife.iot.smartbulb.lightingservice": {
+     "transition_light_state": {
+      "on_off": 0,
+      "brightness": 42,
+      "color_temp": 0,
+      "hue": 0,
+      "saturation": 72,
+      "transition_period": 200
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "hue-rest",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": "testuser|3"
+   },
+   "method": "PUT",
+   "path": "/api/testuser/lights/3/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 191,
+    "ct": 357
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "hue-rest",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": "testuser|3"
+   },
+   "method": "PUT",
+   "path": "/api/testuser/lights/3/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 13,
+    "ct": 154
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "hue-rest",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": "testuser|3"
+   },
+   "method": "PUT",
+   "path": "/api/testuser/lights/3/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 254,
+    "hue": 47695,
+    "sat": 193
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "hue-rest",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": "testuser|3"
+   },
+   "method": "PUT",
+   "path": "/api/testuser/lights/3/state",
+   "headers": {},
+   "payload": {
+    "on": true,
+    "bri": 107,
+    "hue": 34042,
+    "sat": 254
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "hue-rest",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": "testuser|3"
+   },
+   "method": "PUT",
+   "path": "/api/testuser/lights/3/state",
+   "headers": {},
+   "payload": {
+    "on": false,
+    "bri": 107,
+    "hue": 0,
+    "sat": 183
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "lifx-udp",
+    "ip": "192.168.1.50",
+    "port": 56700,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "message": "Light::SetColor (102)",
+    "hue": 28,
+    "saturation": 0,
+    "brightness": 75,
+    "kelvin": 2800
+   },
+   "binaryHex": "310000144f424f52000000000000000000000000000001000000000000000000660000000000000000ffbff00afa000000"
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "lifx-udp",
+    "ip": "192.168.1.50",
+    "port": 56700,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "message": "Light::SetColor (102)",
+    "hue": 48,
+    "saturation": 0,
+    "brightness": 5,
+    "kelvin": 6500
+   },
+   "binaryHex": "310000144f424f52000000000000000000000000000001000000000000000000660000000000000000cd0c6419fa000000"
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "lifx-udp",
+    "ip": "192.168.1.50",
+    "port": 56700,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "message": "Light::SetColor (102)",
+    "hue": 262,
+    "saturation": 76,
+    "brightness": 100,
+    "kelvin": 3200
+   },
+   "binaryHex": "310000144f424f5200000000000000000000000000000100000000000000000066000000004fba8fc2ffff800cfa000000"
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "lifx-udp",
+    "ip": "192.168.1.50",
+    "port": 56700,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "message": "Light::SetColor (102)",
+    "hue": 187,
+    "saturation": 100,
+    "brightness": 42,
+    "kelvin": 4000
+   },
+   "binaryHex": "310000144f424f520000000000000000000000000000010000000000000000006600000000fa84ffff856ba00ffa000000"
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "lifx-udp",
+    "ip": "192.168.1.50",
+    "port": 56700,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "message": "Light::SetColor (102)",
+    "hue": 0,
+    "saturation": 72,
+    "brightness": 0,
+    "kelvin": 4000
+   },
+   "binaryHex": "310000144f424f520000000000000000000000000000010000000000000000006600000000000051b80000a00ffa000000"
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "govee-udp",
+    "ip": "192.168.1.50",
+    "port": 4003,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "msg": {
+     "cmd": "colorwc",
+     "data": {
+      "color": {
+       "r": 255,
+       "g": 170,
+       "b": 95
+      },
+      "colorTemInKelvin": 2800
+     }
+    },
+    "turn": {
+     "msg": {
+      "cmd": "turn",
+      "data": {
+       "value": 1
+      }
+     }
+    },
+    "brightness": {
+     "msg": {
+      "cmd": "brightness",
+      "data": {
+       "value": 75
+      }
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "govee-udp",
+    "ip": "192.168.1.50",
+    "port": 4003,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "msg": {
+     "cmd": "colorwc",
+     "data": {
+      "color": {
+       "r": 255,
+       "g": 254,
+       "b": 250
+      },
+      "colorTemInKelvin": 6500
+     }
+    },
+    "turn": {
+     "msg": {
+      "cmd": "turn",
+      "data": {
+       "value": 1
+      }
+     }
+    },
+    "brightness": {
+     "msg": {
+      "cmd": "brightness",
+      "data": {
+       "value": 5
+      }
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "govee-udp",
+    "ip": "192.168.1.50",
+    "port": 4003,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "msg": {
+     "cmd": "colorwc",
+     "data": {
+      "color": {
+       "r": 124,
+       "g": 58,
+       "b": 237
+      },
+      "colorTemInKelvin": 0
+     }
+    },
+    "turn": {
+     "msg": {
+      "cmd": "turn",
+      "data": {
+       "value": 1
+      }
+     }
+    },
+    "brightness": {
+     "msg": {
+      "cmd": "brightness",
+      "data": {
+       "value": 100
+      }
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "govee-udp",
+    "ip": "192.168.1.50",
+    "port": 4003,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "msg": {
+     "cmd": "colorwc",
+     "data": {
+      "color": {
+       "r": 0,
+       "g": 188,
+       "b": 212
+      },
+      "colorTemInKelvin": 0
+     }
+    },
+    "turn": {
+     "msg": {
+      "cmd": "turn",
+      "data": {
+       "value": 1
+      }
+     }
+    },
+    "brightness": {
+     "msg": {
+      "cmd": "brightness",
+      "data": {
+       "value": 42
+      }
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "govee-udp",
+    "ip": "192.168.1.50",
+    "port": 4003,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "msg": {
+     "cmd": "colorwc",
+     "data": {
+      "color": {
+       "r": 239,
+       "g": 68,
+       "b": 68
+      },
+      "colorTemInKelvin": 0
+     }
+    },
+    "turn": {
+     "msg": {
+      "cmd": "turn",
+      "data": {
+       "value": 0
+      }
+     }
+    },
+    "brightness": {
+     "msg": {
+      "cmd": "brightness",
+      "data": {
+       "value": 42
+      }
+     }
+    }
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "elgato-http",
+    "ip": "192.168.1.50",
+    "port": 9123,
+    "deviceKey": ""
+   },
+   "method": "PUT",
+   "path": "/elgato/lights",
+   "headers": {},
+   "payload": {
+    "numberOfLights": 1,
+    "lights": [
+     {
+      "on": 1,
+      "brightness": 75,
+      "temperature": 344
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "elgato-http",
+    "ip": "192.168.1.50",
+    "port": 9123,
+    "deviceKey": ""
+   },
+   "method": "PUT",
+   "path": "/elgato/lights",
+   "headers": {},
+   "payload": {
+    "numberOfLights": 1,
+    "lights": [
+     {
+      "on": 1,
+      "brightness": 5,
+      "temperature": 154
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "elgato-http",
+    "ip": "192.168.1.50",
+    "port": 9123,
+    "deviceKey": ""
+   },
+   "method": "PUT",
+   "path": "/elgato/lights",
+   "headers": {},
+   "payload": {
+    "numberOfLights": 1,
+    "lights": [
+     {
+      "on": 1,
+      "brightness": 100,
+      "temperature": 313
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "elgato-http",
+    "ip": "192.168.1.50",
+    "port": 9123,
+    "deviceKey": ""
+   },
+   "method": "PUT",
+   "path": "/elgato/lights",
+   "headers": {},
+   "payload": {
+    "numberOfLights": 1,
+    "lights": [
+     {
+      "on": 1,
+      "brightness": 42,
+      "temperature": 250
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "elgato-http",
+    "ip": "192.168.1.50",
+    "port": 9123,
+    "deviceKey": ""
+   },
+   "method": "PUT",
+   "path": "/elgato/lights",
+   "headers": {},
+   "payload": {
+    "numberOfLights": 1,
+    "lights": [
+     {
+      "on": 0,
+      "brightness": 42,
+      "temperature": 250
+     }
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "yeelight-tcp",
+    "ip": "192.168.1.50",
+    "port": 55443,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "set_ct_abx",
+    "params": [
+     2800,
+     "smooth",
+     300
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "yeelight-tcp",
+    "ip": "192.168.1.50",
+    "port": 55443,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "set_ct_abx",
+    "params": [
+     6500,
+     "smooth",
+     300
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "yeelight-tcp",
+    "ip": "192.168.1.50",
+    "port": 55443,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "set_rgb",
+    "params": [
+     8141549,
+     "smooth",
+     300
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "yeelight-tcp",
+    "ip": "192.168.1.50",
+    "port": 55443,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "set_rgb",
+    "params": [
+     48340,
+     "smooth",
+     300
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "yeelight-tcp",
+    "ip": "192.168.1.50",
+    "port": 55443,
+    "deviceKey": ""
+   },
+   "method": null,
+   "path": null,
+   "headers": {},
+   "payload": {
+    "id": 1,
+    "method": "set_power",
+    "params": [
+     "off",
+     "smooth",
+     300
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "shelly",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/rpc/RGBW.Set",
+   "headers": {},
+   "payload": {
+    "id": 0,
+    "on": true,
+    "brightness": 75,
+    "rgb": [
+     255,
+     170,
+     95
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "shelly",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/rpc/RGBW.Set",
+   "headers": {},
+   "payload": {
+    "id": 0,
+    "on": true,
+    "brightness": 5,
+    "rgb": [
+     255,
+     254,
+     250
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "shelly",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/rpc/RGBW.Set",
+   "headers": {},
+   "payload": {
+    "id": 0,
+    "on": true,
+    "brightness": 100,
+    "rgb": [
+     124,
+     58,
+     237
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "shelly",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/rpc/RGBW.Set",
+   "headers": {},
+   "payload": {
+    "id": 0,
+    "on": true,
+    "brightness": 42,
+    "rgb": [
+     0,
+     188,
+     212
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "shelly",
+    "ip": "192.168.1.50",
+    "port": 80,
+    "deviceKey": ""
+   },
+   "method": "POST",
+   "path": "/rpc/RGBW.Set",
+   "headers": {},
+   "payload": {
+    "id": 0,
+    "on": false,
+    "brightness": 42,
+    "rgb": [
+     239,
+     68,
+     68
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 75,
+    "colorMode": "kelvin",
+    "colorHex": "#ffb76b",
+    "kelvin": 2800,
+    "effect": "solid",
+    "protocolId": "ha-rest",
+    "ip": "192.168.1.50",
+    "port": 8123,
+    "deviceKey": "light.office|secret-token"
+   },
+   "method": "POST",
+   "path": "/api/services/light/turn_on",
+   "headers": {
+    "Authorization": "Bearer secret-token"
+   },
+   "payload": {
+    "entity_id": "light.office",
+    "brightness_pct": 75,
+    "kelvin": 2800
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 5,
+    "colorMode": "kelvin",
+    "colorHex": "#ffffff",
+    "kelvin": 6500,
+    "effect": "solid",
+    "protocolId": "ha-rest",
+    "ip": "192.168.1.50",
+    "port": 8123,
+    "deviceKey": "light.office|secret-token"
+   },
+   "method": "POST",
+   "path": "/api/services/light/turn_on",
+   "headers": {
+    "Authorization": "Bearer secret-token"
+   },
+   "payload": {
+    "entity_id": "light.office",
+    "brightness_pct": 5,
+    "kelvin": 6500
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "colorHex": "#7c3aed",
+    "kelvin": 3200,
+    "effect": "aurora",
+    "protocolId": "ha-rest",
+    "ip": "192.168.1.50",
+    "port": 8123,
+    "deviceKey": "light.office|secret-token"
+   },
+   "method": "POST",
+   "path": "/api/services/light/turn_on",
+   "headers": {
+    "Authorization": "Bearer secret-token"
+   },
+   "payload": {
+    "entity_id": "light.office",
+    "brightness_pct": 100,
+    "rgb_color": [
+     124,
+     58,
+     237
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": true,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#00bcd4",
+    "kelvin": 4000,
+    "effect": "cyberpunk",
+    "protocolId": "ha-rest",
+    "ip": "192.168.1.50",
+    "port": 8123,
+    "deviceKey": "light.office|secret-token"
+   },
+   "method": "POST",
+   "path": "/api/services/light/turn_on",
+   "headers": {
+    "Authorization": "Bearer secret-token"
+   },
+   "payload": {
+    "entity_id": "light.office",
+    "brightness_pct": 42,
+    "rgb_color": [
+     0,
+     188,
+     212
+    ]
+   },
+   "binaryHex": null
+  },
+  {
+   "light": {
+    "on": false,
+    "brightness": 42,
+    "colorMode": "rgb",
+    "colorHex": "#ef4444",
+    "kelvin": 4000,
+    "effect": "breath",
+    "protocolId": "ha-rest",
+    "ip": "192.168.1.50",
+    "port": 8123,
+    "deviceKey": "light.office|secret-token"
+   },
+   "method": "POST",
+   "path": "/api/services/light/turn_off",
+   "headers": {
+    "Authorization": "Bearer secret-token"
+   },
+   "payload": {
+    "entity_id": "light.office"
+   },
+   "binaryHex": null
+  }
+ ],
+ "effects": [
+  {
+   "id": "solid",
+   "code": 0
+  },
+  {
+   "id": "breath",
+   "code": 2
+  },
+  {
+   "id": "rainbow",
+   "code": 9
+  },
+  {
+   "id": "aurora",
+   "code": 38
+  },
+  {
+   "id": "cyberpunk",
+   "code": 63
+  },
+  {
+   "id": "fireplace",
+   "code": 66
+  },
+  {
+   "id": "ocean",
+   "code": 101
+  },
+  {
+   "id": "meteor",
+   "code": 76
+  }
+ ],
+ "scenes": [
+  {
+   "id": "scene-deep-focus",
+   "preset": {
+    "on": true,
+    "brightness": 92,
+    "colorMode": "kelvin",
+    "kelvin": 5200,
+    "colorHex": "#00bcd4",
+    "stripColorHex": "#00bcd4",
+    "effect": "solid"
+   }
+  },
+  {
+   "id": "scene-movie-theater",
+   "preset": {
+    "on": true,
+    "brightness": 22,
+    "colorMode": "rgb",
+    "kelvin": 2400,
+    "colorHex": "#7c3aed",
+    "stripColorHex": "#7c3aed",
+    "effect": "breath"
+   }
+  },
+  {
+   "id": "scene-cozy-evening",
+   "preset": {
+    "on": true,
+    "brightness": 55,
+    "colorMode": "kelvin",
+    "kelvin": 2400,
+    "colorHex": "#ff9e44",
+    "stripColorHex": "#f97316",
+    "effect": "fireplace"
+   }
+  },
+  {
+   "id": "scene-cyberpunk",
+   "preset": {
+    "on": true,
+    "brightness": 85,
+    "colorMode": "rgb",
+    "kelvin": 4500,
+    "colorHex": "#ec4899",
+    "stripColorHex": "#00bcd4",
+    "effect": "cyberpunk"
+   }
+  },
+  {
+   "id": "scene-aurora-borealis",
+   "preset": {
+    "on": true,
+    "brightness": 72,
+    "colorMode": "rgb",
+    "kelvin": 4000,
+    "colorHex": "#14b8a6",
+    "stripColorHex": "#22c55e",
+    "effect": "aurora"
+   }
+  },
+  {
+   "id": "scene-night-reading",
+   "preset": {
+    "on": true,
+    "brightness": 48,
+    "colorMode": "kelvin",
+    "kelvin": 3000,
+    "colorHex": "#ffd29d",
+    "stripColorHex": "#ffb76b",
+    "effect": "solid"
+   }
+  },
+  {
+   "id": "scene-incident-alert",
+   "preset": {
+    "on": true,
+    "brightness": 100,
+    "colorMode": "rgb",
+    "kelvin": 3500,
+    "colorHex": "#ef4444",
+    "stripColorHex": "#ef4444",
+    "effect": "breath"
+   }
+  },
+  {
+   "id": "scene-goodnight",
+   "preset": {
+    "on": false,
+    "brightness": 10,
+    "colorMode": "kelvin",
+    "kelvin": 2200,
+    "colorHex": "#ff8a2b",
+    "stripColorHex": "#ff8a2b",
+    "effect": "solid",
+    "keepNightlightRoomId": "bedroom"
+   }
+  }
+ ],
+ "regions": [
+  {
+   "input": "US",
+   "output": "aic"
+  },
+  {
+   "input": "us",
+   "output": "aic"
+  },
+  {
+   "input": "DE",
+   "output": "eic"
+  },
+  {
+   "input": "KR",
+   "output": "kic"
+  },
+  {
+   "input": "ZZ",
+   "output": null
+  },
+  {
+   "input": "USA",
+   "output": null
+  },
+  {
+   "input": "",
+   "output": null
+  }
+ ],
+ "appliances": [
+  {
+   "device": {
+    "deviceId": "w1",
+    "deviceInfo": {
+     "deviceType": "DEVICE_WASHER",
+     "alias": "Washer",
+     "modelName": "WM4000"
+    }
+   },
+   "state": [
+    {
+     "runState": {
+      "currentState": "RUNNING"
+     },
+     "timer": {
+      "remainHour": 1,
+      "remainMinute": 5,
+      "totalHour": 0,
+      "totalMinute": 50
+     },
+     "remoteControlEnable": {
+      "remoteControlEnabled": true
+     },
+     "cycle": {
+      "cycleCount": 12
+     },
+     "detergent": {
+      "detergentSetting": "NORMAL_LOAD"
+     }
+    }
+   ],
+   "output": {
+    "id": "w1",
+    "kind": "washer",
+    "typeLabel": "Washer",
+    "name": "Washer",
+    "model": "WM4000",
+    "reachable": true,
+    "error": null,
+    "units": [
+     {
+      "label": null,
+      "status": "Running",
+      "facts": [
+       {
+        "label": "Time left",
+        "value": "1 hr 5 min"
+       },
+       {
+        "label": "Cycle length",
+        "value": "50 min"
+       },
+       {
+        "label": "Remote start",
+        "value": "On"
+       },
+       {
+        "label": "Cycles run",
+        "value": "12"
+       },
+       {
+        "label": "Detergent",
+        "value": "Normal load"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "device": {
+    "deviceId": "d1",
+    "deviceInfo": {
+     "deviceType": "DEVICE_DRYER",
+     "alias": "Dryer"
+    }
+   },
+   "state": [
+    {
+     "runState": {
+      "currentState": "END"
+     }
+    }
+   ],
+   "output": {
+    "id": "d1",
+    "kind": "dryer",
+    "typeLabel": "Dryer",
+    "name": "Dryer",
+    "model": null,
+    "reachable": true,
+    "error": null,
+    "units": [
+     {
+      "label": null,
+      "status": "Finished",
+      "facts": []
+     }
+    ]
+   }
+  },
+  {
+   "device": {
+    "deviceId": "t1",
+    "deviceInfo": {
+     "deviceType": "DEVICE_WASHTOWER",
+     "alias": "Tower"
+    }
+   },
+   "state": {
+    "washer": {
+     "runState": {
+      "currentState": "INITIAL"
+     }
+    },
+    "dryer": {
+     "runState": {
+      "currentState": "POWER_OFF"
+     },
+     "timer": {
+      "relativeHourToStop": 2
+     }
+    }
+   },
+   "output": {
+    "id": "t1",
+    "kind": "washtower",
+    "typeLabel": "WashTower",
+    "name": "Tower",
+    "model": null,
+    "reachable": true,
+    "error": null,
+    "units": [
+     {
+      "label": "Washer",
+      "status": "Ready",
+      "facts": []
+     },
+     {
+      "label": "Dryer",
+      "status": "Off",
+      "facts": [
+       {
+        "label": "Finishes in",
+        "value": "2 hr"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "device": {
+    "deviceId": "f1",
+    "deviceInfo": {
+     "deviceType": "DEVICE_REFRIGERATOR",
+     "alias": "Fridge",
+     "modelName": "LRF"
+    }
+   },
+   "state": {
+    "doorStatus": [
+     {
+      "doorState": "OPEN"
+     }
+    ],
+    "temperatureInUnits": [
+     {
+      "locationName": "FRIDGE",
+      "unit": "F",
+      "targetTemperatureF": 37
+     },
+     {
+      "locationName": "FREEZER",
+      "unit": "C",
+      "targetTemperatureC": -18
+     }
+    ],
+    "waterFilterInfo": {
+     "waterFilterState": "REPLACE",
+     "usedTime": 6,
+     "unit": "MONTH"
+    },
+    "refrigeration": {
+     "freshAirFilter": "ON",
+     "freshAirFilterRemainPercent": 40,
+     "expressMode": true,
+     "rapidFreeze": "OFF"
+    },
+    "powerSave": {
+     "powerSaveEnabled": false
+    }
+   },
+   "output": {
+    "id": "f1",
+    "kind": "refrigerator",
+    "typeLabel": "Refrigerator",
+    "name": "Fridge",
+    "model": "LRF",
+    "reachable": true,
+    "error": null,
+    "units": [
+     {
+      "label": null,
+      "status": "Door open",
+      "facts": [
+       {
+        "label": "Fridge set to",
+        "value": "37°F"
+       },
+       {
+        "label": "Freezer set to",
+        "value": "-18°C"
+       },
+       {
+        "label": "Water filter",
+        "value": "Replace"
+       },
+       {
+        "label": "Water filter used",
+        "value": "6 months"
+       },
+       {
+        "label": "Fresh air filter",
+        "value": "On, 40% left"
+       },
+       {
+        "label": "Express mode",
+        "value": "On"
+       },
+       {
+        "label": "Quick freeze",
+        "value": "OFF"
+       },
+       {
+        "label": "Power saving",
+        "value": "Off"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "device": {
+    "deviceId": "o1",
+    "deviceInfo": {
+     "deviceType": "DEVICE_AIR_CONDITIONER",
+     "alias": "AC"
+    }
+   },
+   "state": {
+    "operation": {
+     "airConOperationMode": "POWER_ON"
+    },
+    "temperature": {
+     "currentTemperature": 22
+    },
+    "nested": {
+     "someValue": true
+    }
+   },
+   "output": {
+    "id": "o1",
+    "kind": "other",
+    "typeLabel": "Air conditioner",
+    "name": "AC",
+    "model": null,
+    "reachable": true,
+    "error": null,
+    "units": [
+     {
+      "label": null,
+      "status": "Connected",
+      "facts": [
+       {
+        "label": "Air con operation mode",
+        "value": "Power on"
+       },
+       {
+        "label": "Current temperature",
+        "value": "22"
+       },
+       {
+        "label": "Some value",
+        "value": "On"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "device": {
+    "deviceId": "x1",
+    "deviceInfo": {
+     "deviceType": "DEVICE_DISH_WASHER"
+    }
+   },
+   "state": null,
+   "error": "This appliance is not connected to LG right now.",
+   "output": {
+    "id": "x1",
+    "kind": "other",
+    "typeLabel": "Dish washer",
+    "name": "Dish washer",
+    "model": null,
+    "reachable": false,
+    "error": "This appliance is not connected to LG right now.",
+    "units": []
+   }
+  }
+ ]
+}
