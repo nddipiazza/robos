@@ -58,7 +58,14 @@ sync() {
   repo init -u https://github.com/LineageOS/android.git -b "$BRANCH" --git-lfs --no-clone-bundle
   rm -f .repo/local_manifests/robos.xml
   cp "$HERE/local_manifests/robos-$DEVICE.xml" .repo/local_manifests/robos.xml
-  repo sync -c --no-tags --force-sync -j"$(nproc)"
+  # A download this large usually hits a dropped connection, and repo resumes where it stopped.
+  local attempt
+  for attempt in 1 2 3 4; do
+    repo sync -c --no-tags --force-sync -j"$(nproc)" && return 0
+    echo "Sync attempt $attempt failed. Retrying."
+    sleep 60
+  done
+  return 1
 }
 
 build() {
@@ -66,18 +73,22 @@ build() {
   cd "$TREE"
   # Copied, because Soong does not follow symlinks when it looks for build files.
   rsync -a --delete "$VENDOR/" vendor/robos/
-  set +u
+  # The Android build scripts assume a shell without these checks.
+  set +eu
   # shellcheck disable=SC1091
   source build/envsetup.sh
-  breakfast "$DEVICE" userdebug
+  breakfast "$DEVICE" userdebug || { echo "breakfast failed"; return 1; }
   # The device tree comes from LineageOS and a sync resets it, so this is added each build.
   local product="device/motorola/$DEVICE/lineage_$DEVICE.mk"
   grep -q 'vendor/robos/config/robos.mk' "$product" ||
     echo '$(call inherit-product, vendor/robos/config/robos.mk)' >> "$product"
   export TARGET_BOOTANIMATION=vendor/robos/bootanimation/bootanimation.zip
   export USE_CCACHE=1
-  m bacon
-  set -u
+  CCACHE_EXEC="$(command -v ccache)"
+  export CCACHE_EXEC
+  ccache -M 50G >/dev/null
+  m bacon || { echo "The build failed."; return 1; }
+  set -eu
   ls -la "$TREE/out/target/product/$DEVICE/"lineage-*.zip
 }
 
