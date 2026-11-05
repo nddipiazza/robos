@@ -359,6 +359,174 @@ test('startAutoSync syncs at login and soon after a backed-up file changes', asy
   } finally { loop.stop(); }
 });
 
+// A shop file big enough to count, seeded into a vault this machine has synced with.
+async function shopInVault(name) {
+  const vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), `robos-vault-${name}-`));
+  const orders = Array.from({ length: 80 }, (_, i) => ({ id: `o${i}`, total: 8.16 }));
+  const home = makeHome(name, { '.config/robos/point-of-sale/store.json': { orders }, '.config/robos/settings.json': { default_ide: 'zed' } });
+  await sync.connectVault({ homeDir: home, create: { kind: 'folder', path: vaultDir, name: 'V' } });
+  await sync.applyVaultSync({ homeDir: home, strategy: 'use-local' });
+  return { home, orders, ref: path.join(vaultDir, 'V'), store: path.join(home, '.config/robos/point-of-sale/store.json'), rel: 'config/point-of-sale/store.json' };
+}
+const vaultOrders = async (t) => {
+  const reader = makeHome('reader');
+  await sync.connectVault({ homeDir: reader, ref: t.ref });
+  await sync.applyVaultSync({ homeDir: reader, strategy: 'use-vault' });
+  return read(reader, '.config/robos/point-of-sale/store.json').orders.length;
+};
+
+test('a damaged, emptied or deleted file is held back for a choice; an ordinary edit is not', async () => {
+  const t = await shopInVault('suspect');
+  const planFor = async () => (await sync.planVaultSync({ homeDir: t.home })).actions.find(a => a.rel === t.rel);
+
+  fs.writeFileSync(t.store, 'garbage that is not json');
+  let a = await planFor();
+  assert.equal(a.action, 'push');
+  assert.equal(a.suspect.kind, 'unparseable');
+  await assert.rejects(sync.applyVaultSync({ homeDir: t.home }), err => err.code === 'SUSPECT_FILES' && err.conflicts[0].rel === t.rel);
+  assert.equal(await vaultOrders(t), 80, 'nothing reached the vault');
+
+  fs.writeFileSync(t.store, '');
+  assert.equal((await planFor()).suspect.kind, 'unparseable');
+  fs.writeFileSync(t.store, JSON.stringify({ orders: [] }));
+  assert.equal((await planFor()).suspect.kind, 'shrunk');
+  fs.rmSync(t.store);
+  a = await planFor();
+  assert.deepEqual([a.action, a.suspect.kind], ['delete-remote', 'deleted']);
+
+  // Ordinary edits still flow: one more order, or a small file changing size.
+  fs.writeFileSync(t.store, JSON.stringify({ orders: [...t.orders, { id: 'new', total: 1 }] }, null, 2));
+  assert.equal((await planFor()).suspect, undefined);
+  fs.writeFileSync(path.join(t.home, '.config/robos/settings.json'), '{}');
+  const plan = await sync.planVaultSync({ homeDir: t.home });
+  assert.deepEqual(plan.suspects, []);
+  const r = await sync.applyVaultSync({ homeDir: t.home });
+  assert.deepEqual(r.pushed.sort(), ['config/point-of-sale/store.json', 'config/settings.json']);
+
+  // Choosing to upload is allowed: the person meant it.
+  fs.writeFileSync(t.store, JSON.stringify({ orders: [] }));
+  const kept = await sync.applyVaultSync({ homeDir: t.home, resolutions: { [t.rel]: 'local' } });
+  assert.deepEqual(kept.pushed, [t.rel]);
+  assert.equal(await vaultOrders(t), 0);
+});
+
+test('a JSON file that never parsed is not reported as newly damaged', async () => {
+  const vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-jsonc-'));
+  const home = makeHome('jsonc', { '.config/robos/editor.json': '// comments are fine in this one\n{ "a": 1 }\n' });
+  await sync.connectVault({ homeDir: home, create: { kind: 'folder', path: vaultDir, name: 'V' } });
+  await sync.applyVaultSync({ homeDir: home, strategy: 'use-local' });
+  fs.writeFileSync(path.join(home, '.config/robos/editor.json'), '// still comments\n{ "a": 2 }\n');
+  const plan = await sync.planVaultSync({ homeDir: home });
+  assert.deepEqual(plan.actions.map(a => [a.action, a.suspect]), [['push', undefined]]);
+});
+
+test('recovering a damaged file: per file, or the whole machine, without disconnecting', async () => {
+  const t = await shopInVault('recover');
+  const settings = path.join(t.home, '.config/robos/settings.json');
+  fs.writeFileSync(t.store, 'garbage');
+  fs.writeFileSync(settings, JSON.stringify({ default_ide: 'helix' }));
+
+  // One file: the damaged one comes back and the good edit goes up.
+  const one = await sync.applyVaultSync({ homeDir: t.home, resolutions: { [t.rel]: 'remote' } });
+  assert.deepEqual([one.pulled, one.pushed], [[t.rel], ['config/settings.json']]);
+  assert.equal(read(t.home, '.config/robos/point-of-sale/store.json').orders.length, 80);
+  assert.ok(one.restorePointId, 'the damaged version is kept in a restore point');
+  assert.deepEqual((await sync.planVaultSync({ homeDir: t.home })).actions, []);
+
+  // The whole machine: everything that differs comes from the vault and nothing goes up.
+  const generation = sync.getVault({ homeDir: t.home }).lastGeneration;
+  fs.writeFileSync(t.store, 'garbage again');
+  fs.writeFileSync(settings, JSON.stringify({ default_ide: 'emacs' }));
+  fs.writeFileSync(path.join(t.home, '.config/robos/only-here.json'), '{"keep":true}');
+  const all = await sync.applyVaultSync({ homeDir: t.home, loadFromVault: true });
+  assert.deepEqual(all.pulled.sort(), [t.rel, 'config/settings.json']);
+  assert.deepEqual(all.pushed, []);
+  assert.equal(read(t.home, '.config/robos/settings.json').default_ide, 'helix');
+  assert.equal(read(t.home, '.config/robos/only-here.json').keep, true, 'a file the vault does not have is left alone');
+  assert.equal(sync.getVault({ homeDir: t.home }).lastGeneration, generation, 'the vault did not move');
+  assert.deepEqual((await sync.planVaultSync({ homeDir: t.home })).actions.map(a => [a.rel, a.action]), [['config/only-here.json', 'push']]);
+
+  // Conflicts do not stand in the way of loading the vault.
+  const other = makeHome('recover-other');
+  await sync.connectVault({ homeDir: other, ref: t.ref });
+  await sync.applyVaultSync({ homeDir: other, strategy: 'use-vault' });
+  fs.writeFileSync(path.join(other, '.config/robos/settings.json'), JSON.stringify({ default_ide: 'vim' }));
+  await sync.applyVaultSync({ homeDir: other });
+  fs.writeFileSync(settings, JSON.stringify({ default_ide: 'nano' }));
+  await assert.rejects(sync.applyVaultSync({ homeDir: t.home }), err => err.code === 'CONFLICTS');
+  await sync.applyVaultSync({ homeDir: t.home, loadFromVault: true });
+  assert.equal(read(t.home, '.config/robos/settings.json').default_ide, 'vim');
+});
+
+test('reconnecting to recover: damage makes Load the vault the recommendation, an ordinary edit stays merge', async () => {
+  const t = await shopInVault('reconnect');
+  fs.writeFileSync(path.join(t.home, '.config/robos/settings.json'), JSON.stringify({ default_ide: 'helix' }));
+  sync.disconnectVault({ homeDir: t.home });
+  let { plan } = await sync.connectVault({ homeDir: t.home, ref: t.ref });
+  assert.deepEqual([plan.recommended, plan.strategy, plan.suspects], ['merge', 'merge', []]);
+
+  fs.writeFileSync(t.store, 'garbage');
+  sync.disconnectVault({ homeDir: t.home });
+  ({ plan } = await sync.connectVault({ homeDir: t.home, ref: t.ref }));
+  assert.deepEqual([plan.recommended, plan.strategy], ['use-vault', 'use-vault']);
+  assert.deepEqual(plan.suspects.map(s => [s.rel, s.kind]), [[t.rel, 'unparseable']]);
+
+  // Uploading over the vault after a reconnect also takes a deliberate choice.
+  await assert.rejects(sync.applyVaultSync({ homeDir: t.home, strategy: 'use-local' }), err => err.code === 'SUSPECT_FILES');
+  const r = await sync.applyVaultSync({ homeDir: t.home, strategy: 'use-vault' });
+  assert.ok(r.pulled.includes(t.rel));
+  assert.equal(read(t.home, '.config/robos/point-of-sale/store.json').orders.length, 80);
+});
+
+test('background sync never uploads a damaged file: it notifies once and resumes after the choice', async () => {
+  const auto = require('./config-sync-auto');
+  const t = await shopInVault('auto-damage');
+  const notes = () => read(t.home, '.config/robos/notifications.json').filter(n => n.source === auto.SOURCE);
+  fs.writeFileSync(t.store, 'garbage');
+  fs.writeFileSync(path.join(t.home, '.config/robos/settings.json'), JSON.stringify({ default_ide: 'helix' }));
+
+  const res = await auto.runAutoSync({ homeDir: t.home });
+  assert.equal(res.outcome, 'suspect');
+  assert.equal(sync.getVault({ homeDir: t.home }).lastGeneration, 1, 'nothing was uploaded, not even the good edit');
+  assert.equal(notes().length, 1);
+  assert.equal(notes()[0].title, 'Config Sync needs you: 1 file may be damaged');
+  assert.match(notes()[0].body, /store\.json changed on this machine in a way that looks like damage/);
+  assert.deepEqual(notes()[0].action.open, { section: 'config_sync', tab: 'vault', reason: 'suspect' });
+  assert.equal((await auto.runAutoSync({ homeDir: t.home })).notified, false, 'announced once');
+  assert.equal(notes().length, 1);
+
+  await sync.applyVaultSync({ homeDir: t.home, resolutions: { [t.rel]: 'remote' } });
+  assert.deepEqual(auto.clearAttention({ homeDir: t.home }), { ok: true, cleared: true });
+  assert.equal(notes()[0].read, true);
+  assert.equal((await auto.runAutoSync({ homeDir: t.home })).outcome, 'up-to-date');
+  assert.equal(await vaultOrders(t), 80);
+});
+
+test('the status says whether anything is really running background sync', async () => {
+  const auto = require('./config-sync-auto');
+  const t = await shopInVault('agent');
+  const file = path.join(t.home, '.config/robos/config-sync/agent.json');
+  assert.equal(sync.getStatus({ homeDir: t.home }).agent, null, 'a ticked setting alone does not count');
+  assert.equal(sync.getVault({ homeDir: t.home }).auto.enabled, true);
+
+  const loop = auto.startAutoSync({ homeDir: t.home, host: 'desktop-manager', loginDelayMs: 60000, intervalMs: 60000 });
+  try {
+    const agent = sync.getStatus({ homeDir: t.home }).agent;
+    assert.deepEqual([agent.host, agent.pid], ['desktop-manager', process.pid]);
+    assert.deepEqual((await sync.planVaultSync({ homeDir: t.home })).actions, [], 'the record is never backed up');
+
+    const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+    fs.writeFileSync(file, JSON.stringify({ ...record, beatAt: new Date(Date.now() - 10 * 60000).toISOString() }));
+    assert.equal(sync.syncAgent({ homeDir: t.home }), null, 'a record that stopped moving is not a running process');
+    fs.writeFileSync(file, JSON.stringify({ ...record, pid: 999999999 }));
+    assert.equal(sync.syncAgent({ homeDir: t.home }), null, 'nor is one whose process has gone');
+    fs.writeFileSync(file, JSON.stringify(record));
+    assert.ok(sync.syncAgent({ homeDir: t.home }));
+  } finally { loop.stop(); }
+  assert.equal(sync.syncAgent({ homeDir: t.home }), null);
+  assert.equal(fs.existsSync(file), false);
+});
+
 test('the catalog puts unknown app files in "other" and excludes caches, logs and machine identity', () => {
   assert.equal(sync.categoryOf('config/brand-new-app.json'), 'other');
   assert.equal(sync.categoryOf('config/git-projects.json'), 'developer');

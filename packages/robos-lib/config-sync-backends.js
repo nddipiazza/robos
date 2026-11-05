@@ -38,11 +38,19 @@ function driveFolderUrl(folderId) {
  *   https://drive.google.com/open?id=<id>                      → gdrive
  *   gdrive:<id> or a bare Drive ID                              → gdrive
  *   /abs/path, ~/path, file:///path                             → folder
+ *   C:\path, \\server\share\path, "C:\path"                     → folder, on Windows
  */
-function parseFolderRef(input) {
-  const raw = String(input || '').trim();
+function parseFolderRef(input, { platform = process.platform } = {}) {
+  // File Explorer's "Copy as path" wraps the path in double quotes.
+  const raw = String(input || '').trim().replace(/^"(.*)"$/, '$1').trim();
   if (!raw) throw new Error('Paste a Google Drive folder link or ID, or a local folder path.');
-  if (raw.startsWith('file://')) return { kind: 'folder', path: decodeURIComponent(raw.slice(7)) };
+  if (raw.startsWith('file://')) return { kind: 'folder', path: fileUrlPath(raw, platform) };
+  if (/^[A-Za-z]:[\\/]/.test(raw) || /^\\\\[^\\/]+[\\/]+[^\\/]/.test(raw)) {
+    // Elsewhere this would create a folder with that odd name in the working directory.
+    if (platform !== 'win32') throw new Error(`"${raw}" is a Windows path, and this computer is not running Windows. Enter the folder's path on this computer.`);
+    return { kind: 'folder', path: path.win32.normalize(raw) };
+  }
+  if (platform === 'win32' && /^\/\/[^/]+\/+[^/]/.test(raw)) return { kind: 'folder', path: path.win32.normalize(raw) };
   if (raw.startsWith('/') || raw.startsWith('~')) {
     const home = process.env.HOME || require('node:os').homedir();
     return { kind: 'folder', path: raw.startsWith('~') ? path.join(home, raw.slice(1)) : raw };
@@ -60,6 +68,21 @@ function parseFolderRef(input) {
   throw new Error(`"${raw}" is not a Google Drive folder link, Drive folder ID or local folder path.`);
 }
 
+function fileUrlPath(raw, platform) {
+  const p = decodeURIComponent(raw.slice(7));
+  if (platform !== 'win32') return p;
+  if (/^\/[A-Za-z]:/.test(p)) return path.win32.normalize(p.slice(1));
+  if (/^[A-Za-z]:/.test(p)) return path.win32.normalize(p);
+  return p.startsWith('/') ? p : path.win32.normalize(`//${p}`); // file://server/share
+}
+
+/** The file:// link shown for a local folder. parseFolderRef reads it back. */
+function folderUrl(dir) {
+  if (/^[A-Za-z]:[\\/]/.test(dir)) return `file:///${dir.replace(/\\/g, '/')}`;
+  if (dir.startsWith('\\\\')) return `file:${dir.replace(/\\/g, '/')}`;
+  return `file://${dir}`;
+}
+
 // ── Local folder ─────────────────────────────────────────────────────────────
 
 function createFolderBackend({ path: dir, create = false, name }) {
@@ -69,7 +92,7 @@ function createFolderBackend({ path: dir, create = false, name }) {
   const blobDir = path.join(dir, BLOBS_DIR);
   return {
     kind: 'folder',
-    describe: () => ({ kind: 'folder', path: dir, url: `file://${dir}`, name: name || path.basename(dir) }),
+    describe: () => ({ kind: 'folder', path: dir, url: folderUrl(dir), name: name || path.basename(dir) }),
     async readManifest() {
       const p = path.join(dir, MANIFEST_NAME);
       return fs.existsSync(p) ? fs.readFileSync(p) : null;
@@ -346,6 +369,6 @@ function openBackend(ref, { homeDir, fetchImpl, create = false } = {}) {
 
 module.exports = {
   MANIFEST_NAME, BLOBS_DIR, FOLDER_MIME,
-  parseFolderRef, driveFolderUrl, createFolderBackend, createGDriveBackend, createDriveFolder, createDriveClient,
+  parseFolderRef, folderUrl, driveFolderUrl, createFolderBackend, createGDriveBackend, createDriveFolder, createDriveClient,
   googleTokenProvider, openBackend, DriveError,
 };

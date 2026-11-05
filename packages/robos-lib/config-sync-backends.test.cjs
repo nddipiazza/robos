@@ -41,6 +41,38 @@ test('parseFolderRef accepts the folder links Drive hands out', () => {
   ]) assert.deepEqual(backends.parseFolderRef(link), { kind: 'gdrive', folderId: id }, link);
 });
 
+test('parseFolderRef accepts Windows drive and network paths on Windows', () => {
+  const win = input => backends.parseFolderRef(input, { platform: 'win32' });
+  const vault = 'C:\\Users\\sam\\Dropbox\\RobOS Config Vault';
+  for (const input of [vault, `  ${vault}  `, `"${vault}"`, 'C:/Users/sam/Dropbox/RobOS Config Vault', 'file:///C:/Users/sam/Dropbox/RobOS%20Config%20Vault', `file://${vault}`]) {
+    assert.deepEqual(win(input), { kind: 'folder', path: vault }, input);
+  }
+  assert.deepEqual(win('d:\\Vault'), { kind: 'folder', path: 'd:\\Vault' });
+  const share = '\\\\nas\\backups\\RobOS Config Vault';
+  for (const input of [share, '//nas/backups/RobOS Config Vault', 'file://nas/backups/RobOS%20Config%20Vault']) {
+    assert.deepEqual(win(input), { kind: 'folder', path: share }, input);
+  }
+  // Drive links and IDs still work there, and a drive with no folder is still refused.
+  assert.deepEqual(win('1wvaduTXTtlB6RrM-0Eoqo03zXl5UGwlD'), { kind: 'gdrive', folderId: '1wvaduTXTtlB6RrM-0Eoqo03zXl5UGwlD' });
+  assert.throws(() => win('C:'), /not a Google Drive folder link/);
+});
+
+test('parseFolderRef refuses a Windows path on other systems instead of creating a folder named after it', () => {
+  for (const input of ['C:\\Users\\sam\\Vault', 'C:/Users/sam/Vault', '\\\\nas\\backups']) {
+    assert.throws(() => backends.parseFolderRef(input, { platform: 'linux' }), /is a Windows path/, input);
+  }
+  assert.deepEqual(backends.parseFolderRef('//srv/vault', { platform: 'linux' }), { kind: 'folder', path: '//srv/vault' });
+  assert.deepEqual(backends.parseFolderRef('"/home/sam/My Vault"', { platform: 'linux' }), { kind: 'folder', path: '/home/sam/My Vault' });
+});
+
+test('folderUrl gives a link parseFolderRef reads back to the same folder', () => {
+  for (const [dir, platform] of [['C:\\Users\\sam\\My Vault', 'win32'], ['\\\\nas\\backups\\Vault', 'win32'], ['/home/sam/My Vault', 'linux']]) {
+    assert.deepEqual(backends.parseFolderRef(backends.folderUrl(dir), { platform }), { kind: 'folder', path: dir }, dir);
+  }
+  assert.equal(backends.folderUrl('C:\\Users\\sam'), 'file:///C:/Users/sam');
+  assert.equal(backends.folderUrl('\\\\nas\\backups'), 'file://nas/backups');
+});
+
 test('rate-limit 403s are retried, and reported as rate limiting rather than "no access"', async () => {
   await withDrive({ users: { 'tok-alex': 'alex@example.com' } }, async drive => {
     const client = backends.createDriveClient({ tokens: staticTokens('tok-alex') });

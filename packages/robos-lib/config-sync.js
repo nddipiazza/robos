@@ -42,6 +42,13 @@ const RESTORE_POINT_LIMIT = 15;
 const AUTO_DEFAULTS = { enabled: true, intervalMinutes: 5, watch: true };
 const AUTO_INTERVALS = [1, 5, 15, 30, 60];
 const LOCK_STALE_MS = 10 * 60 * 1000;
+// The process running background sync rewrites its record this often; a record that has not
+// moved for AGENT_STALE_MS means nothing is running, even if its pid now belongs to something else.
+const AGENT_BEAT_MS = 60 * 1000;
+const AGENT_STALE_MS = 3 * 60 * 1000;
+// A vault keeps only the latest version, so an upload that looks like damage waits for a person.
+const SHRINK_MIN_BYTES = 1024;
+const SHRINK_RATIO = 4;
 
 class ConfigSyncError extends Error {
   constructor(message, code, extra = {}) { super(message); this.code = code; Object.assign(this, extra); }
@@ -52,7 +59,7 @@ class ConfigSyncError extends Error {
 // A typed folder such as ~/Dropbox belongs under the user's home, never under the app's working directory.
 function folderInHome(folder, home) {
   const raw = String(folder || '').trim();
-  return path.resolve(home, raw === '~' || raw.startsWith('~/') ? raw.slice(raw.length > 1 ? 2 : 1) : raw);
+  return path.resolve(home, raw === '~' || /^~[\\/]/.test(raw) ? raw.slice(raw.length > 1 ? 2 : 1) : raw);
 }
 
 function homeOf(opts = {}) { return opts.homeDir || process.env.HOME || os.homedir(); }
@@ -422,7 +429,7 @@ function normalizeRef(input, accountId) {
   if (ref.kind === 'gdrive') {
     ref.accountId = ref.accountId || accountId || null;
     ref.url = ref.url || backends.driveFolderUrl(ref.folderId);
-  } else if (ref.kind === 'folder') ref.url = `file://${ref.path}`;
+  } else if (ref.kind === 'folder') ref.url = backends.folderUrl(ref.path);
   return ref;
 }
 
@@ -546,12 +553,33 @@ function getStatus(opts = {}) {
     ok: true,
     machine: { id: state.machineId, name: machineName(), user: userLabel(home) },
     vault: publicVault(state.vault),
+    agent: syncAgent({ homeDir: home }),
     shares: state.shares.map(s => ({ ...s, ref: undefined, url: s.ref.url, kind: s.ref.kind })),
     subscriptions: state.subscriptions.map(s => ({ ...s, owned: undefined, ref: undefined, url: s.ref.url, kind: s.ref.kind, ownedItems: countOwned(s.owned) })),
     categories: describeCategories(home),
     templates: catalog.SHARE_TEMPLATES,
     restorePoints: listRestorePoints({ homeDir: home }).slice(0, 10),
   };
+}
+
+const agentFile = home => path.join(syncDir(home), 'agent.json');
+
+/** Records that this process is running background sync (called by config-sync-auto). */
+function markSyncAgent(opts = {}) {
+  writeJson(agentFile(homeOf(opts)), { host: opts.host, pid: process.pid, startedAt: opts.startedAt, beatAt: new Date().toISOString() });
+}
+
+function clearSyncAgent(opts = {}) {
+  const home = homeOf(opts);
+  if (readJson(agentFile(home), null)?.pid === process.pid) fs.rmSync(agentFile(home), { force: true });
+}
+
+/** What is running background sync on this machine right now, or null when nothing is. */
+function syncAgent(opts = {}) {
+  const a = readJson(agentFile(homeOf(opts)), null);
+  if (!a?.pid || !(Date.now() - Date.parse(a.beatAt) < AGENT_STALE_MS)) return null;
+  try { process.kill(a.pid, 0); } catch (err) { if (err.code !== 'EPERM') return null; }
+  return { host: a.host, pid: a.pid, startedAt: a.startedAt, beatAt: a.beatAt };
 }
 
 /** The connected vault as the UI sees it (null when none), without scanning local files. */
@@ -579,7 +607,7 @@ async function connectVault(opts = {}) {
     } else {
       const dir = path.join(folderInHome(c.path, home), c.name || '');
       fs.mkdirSync(dir, { recursive: true });
-      ref = { kind: 'folder', path: dir, url: `file://${dir}`, name: path.basename(dir) };
+      ref = { kind: 'folder', path: dir, url: backends.folderUrl(dir), name: path.basename(dir) };
     }
   } else {
     ref = normalizeRef(opts.ref, opts.accountId);
@@ -660,6 +688,27 @@ function recordAutoRun(opts = {}) {
   return autoOf(state.vault);
 }
 
+function parsesAsJson(buf) {
+  try { JSON.parse(buf.toString('utf8')); return true; } catch { return false; }
+}
+
+/**
+ * Why a local change looks like damage rather than an edit, or null. Sizes compare the same
+ * thing on both sides: the file as it is stored in the vault.
+ */
+async function suspectOf(rel, l, r, readRemote) {
+  if (!r) return null;
+  if (!l) return r.size >= SHRINK_MIN_BYTES ? { kind: 'deleted', localSize: 0, remoteSize: r.size } : null;
+  const sizes = { localSize: l.size, remoteSize: r.size };
+  if (/\.(json|jsonld)$/i.test(rel) && !parsesAsJson(l.buf)) {
+    // A file that never parsed is not newly damaged. If the vault's copy can't be read, assume it did.
+    const wasValid = await readRemote().then(parsesAsJson, () => true);
+    if (wasValid) return { kind: 'unparseable', ...sizes };
+  }
+  if ((l.size === 0 && r.size > 0) || (r.size >= SHRINK_MIN_BYTES && l.size * SHRINK_RATIO < r.size)) return { kind: 'shrunk', ...sizes };
+  return null;
+}
+
 /**
  * Compares this machine with the vault.
  * strategy only matters on the first sync, when there is no shared history:
@@ -667,6 +716,8 @@ function recordAutoRun(opts = {}) {
  *   'use-local'  files that differ come from this machine    (seeding a new vault)
  *   'merge'      files that differ are conflicts to resolve one by one
  * Nothing is deleted on a first sync: files only on one side are copied to the other.
+ * A local change that looks like damage carries `suspect` and needs a choice, like a conflict.
+ * It also makes 'use-vault' the recommendation, for someone reconnecting to recover a file.
  */
 async function planVaultSync(opts = {}) {
   const home = homeOf(opts);
@@ -685,18 +736,26 @@ async function planVaultSync(opts = {}) {
   // A machine that has much less configuration than the vault is new or rebuilt: its
   // sign-in, profile and the KGraph packages RobOS scaffolds on first launch do not count.
   const ownFiles = [...local.files.values()].filter(f => f.category !== 'cloud-accounts' && f.category !== 'profile' && !(f.category === 'kgraph' && remote.files[f.rel])).length;
-  const recommended = !firstSync ? null : remoteCount === 0 ? 'use-local' : ownFiles * 2 < remoteCount ? 'use-vault' : 'merge';
-  const strategy = firstSync ? (opts.strategy || recommended) : null;
 
-  const actions = [];
+  const rows = [];
   const rels = new Set([...local.files.keys(), ...Object.keys(remote.files)]);
   for (const rel of [...rels].sort()) {
     const l = local.files.get(rel);
     const r = remote.files[rel];
     const category = l?.category || r?.category || categoryOf(rel);
     if (!enabled.has(category) || isExcluded(rel)) continue;
+    if (l?.sha === r?.sha) continue;
+    const changedHere = firstSync ? Boolean(l) : l?.sha !== base[rel];
+    const suspect = changedHere ? await suspectOf(rel, l, r, () => fetchBlob(backend, r, read?.key || null)) : null;
+    rows.push({ rel, category, l, r, suspect });
+  }
+  const suspects = rows.filter(x => x.suspect).map(x => ({ rel: x.rel, ...x.suspect }));
+  const recommended = !firstSync ? null : remoteCount === 0 ? 'use-local' : ownFiles * 2 < remoteCount || suspects.length ? 'use-vault' : 'merge';
+  const strategy = firstSync ? (opts.strategy || recommended) : null;
+
+  const actions = [];
+  for (const { rel, category, l, r, suspect } of rows) {
     const L = l?.sha, R = r?.sha, B = base[rel];
-    if (L === R) continue;
     let action;
     if (firstSync) {
       if (L && !R) action = 'push';
@@ -710,20 +769,23 @@ async function planVaultSync(opts = {}) {
       local: l ? { sha: L, size: l.size, mtime: l.mtime } : null,
       remote: r ? { sha: R, size: r.size, mtime: r.mtime, by: r.by } : null,
       removedSecrets: l?.removed?.length || 0,
+      ...(suspect && action !== 'pull' ? { suspect } : {}),
     });
   }
   const counts = actions.reduce((acc, a) => { acc[a.action] = (acc[a.action] || 0) + 1; return acc; }, {});
   return {
-    ok: true, firstSync, recommended, strategy, actions, counts,
+    ok: true, firstSync, recommended, strategy, actions, counts, suspects,
     local: { files: localCount, skipped: local.skipped, removedSecrets: [...local.files.values()].reduce((n, f) => n + f.removed.length, 0) },
     remote: { files: remoteCount, generation: remote.generation, updatedAt: remote.updatedAt, updatedBy: remote.updatedBy || null, history: (remote.history || []).slice(-8).reverse() },
   };
 }
 
 /**
- * Runs a sync. `resolutions` maps a conflicting path to 'local' or 'remote'.
- * Throws CONFLICTS when a conflict is unresolved and REMOTE_CHANGED when another machine
- * pushed in between (plan again and retry).
+ * Runs a sync. `resolutions` maps a conflicting or suspect path to 'local' or 'remote'.
+ * Throws CONFLICTS when a conflict is unresolved, SUSPECT_FILES when only suspect files are,
+ * and REMOTE_CHANGED when another machine pushed in between (plan again and retry).
+ * `loadFromVault` recovers this machine without disconnecting: every file that differs comes
+ * from the vault, nothing is uploaded, and files the vault does not have are left alone.
  */
 async function applyVaultSync(opts = {}) {
   return withSyncLock(homeOf(opts), () => applyVaultSyncLocked(opts));
@@ -736,11 +798,13 @@ async function applyVaultSyncLocked(opts) {
   const v = state.vault;
   const plan = await planVaultSync(opts);
   const resolutions = opts.resolutions || {};
-  const unresolved = plan.actions.filter(a => a.action === 'conflict' && !['local', 'remote'].includes(resolutions[a.rel]));
-  if (unresolved.length) throw new ConfigSyncError(`${unresolved.length} file(s) changed on both this machine and the vault. Choose which version to keep.`, 'CONFLICTS', { conflicts: unresolved });
+  const needsChoice = a => a.action === 'conflict' || a.suspect;
+  const unresolved = opts.loadFromVault ? [] : plan.actions.filter(a => needsChoice(a) && !['local', 'remote'].includes(resolutions[a.rel]));
+  if (unresolved.some(a => a.action === 'conflict')) throw new ConfigSyncError(`${unresolved.length} file(s) changed on both this machine and the vault. Choose which version to keep.`, 'CONFLICTS', { conflicts: unresolved });
+  if (unresolved.length) throw new ConfigSyncError(`${unresolved.length} file(s) on this machine look damaged. Uploading would replace the vault's only copy, so choose which version to keep.`, 'SUSPECT_FILES', { conflicts: unresolved });
 
-  const steps = plan.actions.map(a => {
-    if (a.action !== 'conflict') return a;
+  const steps = opts.loadFromVault ? plan.actions.filter(a => a.remote).map(a => ({ ...a, action: 'pull', resolved: 'remote' })) : plan.actions.map(a => {
+    if (!needsChoice(a)) return a;
     const keep = resolutions[a.rel];
     if (keep === 'local') return { ...a, action: a.local ? 'push' : 'delete-remote', resolved: 'local' };
     return { ...a, action: a.remote ? 'pull' : 'delete-local', resolved: 'remote' };
@@ -903,7 +967,7 @@ async function publishShare(opts = {}) {
   } else if (target.kind === 'folder') {
     const dir = path.join(folderInHome(target.path, home), name.replace(/[^\w .-]+/g, '-'));
     fs.mkdirSync(dir, { recursive: true });
-    ref = { kind: 'folder', path: dir, url: `file://${dir}`, name: path.basename(dir) };
+    ref = { kind: 'folder', path: dir, url: backends.folderUrl(dir), name: path.basename(dir) };
   } else throw new ConfigSyncError('Choose where to publish the share.', 'INVALID');
 
   const backend = backendFor(ref, home, { ...opts, create: true });
@@ -1229,7 +1293,7 @@ function leaveShare(opts = {}) {
 module.exports = {
   ConfigSyncError, FORMAT, HOME_TOKEN, AUTO_DEFAULTS, AUTO_INTERVALS,
   // status
-  getStatus, getVault, describeCategories, listLocalFiles, categoryOf, isExcluded,
+  getStatus, getVault, describeCategories, listLocalFiles, categoryOf, isExcluded, syncAgent, markSyncAgent, clearSyncAgent, AGENT_BEAT_MS,
   // vault
   connectVault, disconnectVault, setVaultCategories, setAutoSync, recordAutoRun, planVaultSync, applyVaultSync,
   // shares

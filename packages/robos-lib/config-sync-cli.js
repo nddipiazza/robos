@@ -10,8 +10,9 @@
  *   node config-sync-cli.js vault connect <drive-folder-url|id|path> [--account <id>]
  *   node config-sync-cli.js vault plan [--use-vault|--use-local|--merge]
  *   node config-sync-cli.js vault sync [--use-vault|--use-local|--merge] [--keep local|remote] [--watch <seconds>]
+ *   node config-sync-cli.js vault sync --load-vault   recover: files that differ come from the vault, nothing is uploaded
  *   node config-sync-cli.js vault auto [on|off] [--every 1|5|15|30|60] [--watch on|off]
- *   node config-sync-cli.js vault auto run        one background pass: applies only a plan without conflicts
+ *   node config-sync-cli.js vault auto run        one background pass: applies only a plan without conflicts or damaged-looking files
  *   node config-sync-cli.js vault disconnect
  *   node config-sync-cli.js share publish --name <n> --template family|onboarding|coworker|custom
  *                                         [--categories a,b] [--to a@x.com,b@y.com] (--account <id> | --folder <dir>)
@@ -52,7 +53,7 @@ function printPlan(plan) {
   if (plan.firstSync) console.log(`First sync. Recommended: ${plan.recommended}. Using: ${plan.strategy}.`);
   console.log(`This machine: ${plan.local.files} files (${plan.local.removedSecrets} credentials stay local). Vault: ${plan.remote.files} files, generation ${plan.remote.generation}${plan.remote.updatedBy ? `, last pushed by ${plan.remote.updatedBy.machineName}` : ''}.`);
   if (!plan.actions.length) return console.log('Up to date.');
-  for (const a of plan.actions) console.log(`  ${(ICON[a.action] || a.action).padEnd(3)} ${a.rel}  (${a.category})`);
+  for (const a of plan.actions) console.log(`  ${(ICON[a.action] || a.action).padEnd(3)} ${a.rel}  (${a.category})${a.suspect ? `  may be damaged: ${a.suspect.kind}` : ''}`);
 }
 
 async function main() {
@@ -72,6 +73,7 @@ async function main() {
       console.log(`Machine: ${s.machine.name} (${s.machine.user.name})`);
       console.log(s.vault ? `Vault: ${s.vault.name} ${s.vault.url}${s.vault.encrypted ? ' [encrypted]' : ''}, last sync ${s.vault.lastSyncAt || 'never'}` : 'Vault: not connected');
       for (const sh of s.shares) console.log(`Published: ${sh.name} (gen ${sh.generation}) ${sh.url} → ${sh.recipients.map(r => r.email).join(', ') || 'nobody yet'}`);
+      if (s.vault) console.log(s.agent ? `Background sync: running in ${s.agent.host} (pid ${s.agent.pid})` : 'Background sync: nothing is running it on this computer');
       for (const j of s.subscriptions) console.log(`Joined: ${j.name} from ${j.publisher?.name || '?'} (gen ${j.appliedGeneration}/${j.latestGeneration})`);
     });
   }
@@ -91,8 +93,8 @@ async function main() {
       const run = async () => {
         const plan = await sync.planVaultSync({ strategy: strategyOf(flags) });
         const resolutions = {};
-        if (flags.keep === 'local' || flags.keep === 'remote') for (const a of plan.actions) if (a.action === 'conflict') resolutions[a.rel] = flags.keep;
-        const r = await sync.applyVaultSync({ strategy: strategyOf(flags), resolutions });
+        if (flags.keep === 'local' || flags.keep === 'remote') for (const a of plan.actions) if (a.action === 'conflict' || a.suspect) resolutions[a.rel] = flags.keep;
+        const r = await sync.applyVaultSync({ strategy: strategyOf(flags), resolutions, loadFromVault: Boolean(flags['load-vault']) });
         out(r, () => console.log(`Synced generation ${r.generation}: ↑${r.pushed.length} ↓${r.pulled.length} ✕${r.deletedLocal.length + r.deletedRemote.length}${r.restorePointId ? ` (restore point ${r.restorePointId})` : ''}`));
       };
       if (!flags.watch) return run();
@@ -107,7 +109,7 @@ async function main() {
         const r = await auto.runAutoSync({ force: true });
         return out(r, () => {
           console.log(`Background sync: ${r.outcome}${r.outcome === 'synced' ? ` ↑${r.pushed.length} ↓${r.pulled.length} ✕${r.deleted.length}` : ''}${r.error ? ` — ${r.error}` : ''}`);
-          for (const c of r.conflicts || []) console.log(`  ⚠ ${c.rel} — run "vault sync --keep local|remote" or review in Preferences`);
+          for (const c of [...(r.conflicts || []), ...(r.suspects || [])]) console.log(`  ⚠ ${c.rel} — run "vault sync --keep local|remote" or review in Preferences`);
         });
       }
       const patch = {};

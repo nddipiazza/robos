@@ -74,9 +74,11 @@ async function csTakeOpenRequest() {
   await csRefresh();
   document.getElementById('sidebar-item-config_sync')?.click();
   document.getElementById('section-config_sync')?.scrollIntoView({ block: 'start' });
-  if (cs.tab === 'vault' && cs.status.vault?.auto?.attention?.kind === 'conflicts') {
+  const kind = cs.status.vault?.auto?.attention?.kind;
+  if (cs.tab === 'vault' && (kind === 'conflicts' || kind === 'suspect')) {
     await csLoadPlan();
-    csSay('Background sync stopped because these files changed on this machine and in the vault. Choose which version to keep, then apply.', 'error');
+    csSay(kind === 'conflicts' ? 'Background sync stopped because these files changed on this machine and in the vault. Choose which version to keep, then apply.'
+      : 'Background sync stopped because these files look damaged. Choose which version to keep, then apply.', 'error');
   }
 }
 
@@ -178,14 +180,27 @@ function csVaultPanel() {
 const CS_OUTCOME = {
   'up-to-date': 'up to date', synced: 'synced', conflicts: 'paused for conflicts', locked: 'needs the vault passphrase',
   access: 'could not open the vault', error: 'failed, will retry', 'first-sync-pending': 'waiting for the first sync',
+  suspect: 'paused: a file may be damaged',
 };
+const CS_AGENT_HOST = { 'desktop-manager': 'Desktop Manager' };
+
+// Says what is really happening on this computer, not what the setting asks for.
+function csAgentView(a) {
+  const agent = cs.status.agent;
+  if (!a.enabled) return '';
+  const rules = 'Changes made on one side only are applied for you. When a file changed both here and in the vault, or a change looks like damage, nothing is overwritten and you get a notification.';
+  if (agent) return `<p class="cs-agent" id="cs-agent" data-state="running"><strong>Background sync is running</strong> in ${csEsc(CS_AGENT_HOST[agent.host] || agent.host)}, with or without Preferences open. ${rules}</p>`;
+  return `<p class="cs-agent cs-agent-stopped" id="cs-agent" data-state="stopped"><strong>Background sync is not running on this computer.</strong> It runs inside Desktop Manager, which starts by itself only on the RobOS desktop. Until it runs, your vault updates only when you press Sync now.</p>`;
+}
 
 function csAutoView(v) {
   const a = v.auto || {};
   const att = a.attention;
   const headline = !att ? '' : att.kind === 'conflicts' ? `Background sync is paused: ${att.count} conflict${att.count > 1 ? 's' : ''}`
+    : att.kind === 'suspect' ? `Background sync is paused: ${att.count} file${att.count > 1 ? 's' : ''} may be damaged`
     : att.kind === 'locked' ? 'Background sync is paused: the vault needs its passphrase' : 'Background sync is paused: the vault cannot be opened';
   const detail = !att ? '' : att.kind === 'conflicts' ? `${att.rels.map(r => r.split('/').pop()).join(', ')} changed on this machine and in the vault. Review changes, choose which version to keep and apply; background sync then resumes.`
+    : att.kind === 'suspect' ? `${att.rels.map(r => r.split('/').pop()).join(', ')} changed in a way that looks like damage, so nothing was uploaded. Review changes to load the vault's copy, or upload this machine's if the change was on purpose.`
     : att.kind === 'locked' ? 'This machine has no key for the encrypted vault. Disconnect and connect again with the passphrase.' : att.message;
   const last = !a.enabled ? 'Off: this machine syncs only when you click Sync now.'
     : !v.lastSyncAt ? 'Starts after the first sync.'
@@ -196,7 +211,7 @@ function csAutoView(v) {
       <label>every <select id="cs-auto-interval" class="select-input" ${a.enabled ? '' : 'disabled'}>${[1, 5, 15, 30, 60].map(n => `<option value="${n}" ${a.intervalMinutes === n ? 'selected' : ''}>${n === 60 ? '1 hour' : `${n} min`}</option>`).join('')}</select></label>
       <label><input type="checkbox" id="cs-auto-watch" ${a.watch ? 'checked' : ''} ${a.enabled ? '' : 'disabled'}> and soon after a change</label>
       <div class="cs-muted cs-small cs-auto-note" id="cs-auto-last">${csEsc(last)}</div>
-      <p class="cs-muted cs-small">RobOS syncs at login and in the background, even with Preferences closed. Changes made on one side only are applied for you; when a file changed both here and in the vault, nothing is overwritten and you get a notification.</p>
+      ${csAgentView(a)}
     </div>`;
 }
 
@@ -208,6 +223,31 @@ const CS_ACTION = {
   conflict: ['⚠', 'Changed on both', 'cs-act-conflict'],
 };
 
+function csSuspectText(s) {
+  if (s.kind === 'deleted') return `missing here, ${csBytes(s.remoteSize)} in the vault`;
+  if (s.kind === 'unparseable') return `no longer valid JSON (${csBytes(s.localSize)} here, ${csBytes(s.remoteSize)} in the vault)`;
+  return `shrank to ${csBytes(s.localSize)} from ${csBytes(s.remoteSize)} in the vault`;
+}
+
+const csNeedsChoice = a => a.action === 'conflict' || a.suspect;
+
+// The way back from a damaged file, without disconnecting: only offered when it would change something here.
+function csRecoverView(plan) {
+  const files = plan.actions.filter(a => a.remote);
+  if (plan.firstSync || !files.some(a => a.action !== 'pull')) return '';
+  return `<div class="cs-recover" id="cs-recover"><span class="cs-small"><strong>Something wrong with the files on this machine?</strong> This replaces ${files.length} file${files.length > 1 ? 's' : ''} here with the vault's copies and uploads nothing. A restore point is saved first.</span>
+    <button type="button" class="btn" id="cs-load-vault">${cs.armed === 'load-vault' ? 'Click again to load the vault' : 'Load the vault onto this machine'}</button></div>`;
+}
+
+function csSuspectsView(plan) {
+  const list = plan.suspects || [];
+  if (!list.length) return '';
+  const many = !plan.firstSync && list.length > 1 ? `<div class="cs-actions"><button type="button" class="cs-link" data-cs-res-all="remote">Use the vault's copy of all</button> <button type="button" class="cs-link" data-cs-res-all="local">Upload all of this machine's</button></div>` : '';
+  return `<div class="cs-attention" id="cs-suspects" role="alert"><strong>${list.length} file${list.length > 1 ? 's' : ''} on this machine may be damaged</strong>
+    <span class="cs-small">The vault keeps only the latest version, so uploading would replace its good copy for good. Upload only if you meant to make this change.</span>
+    <ul class="cs-rp-files">${list.map(s => `<li><code>${csEsc(s.rel.replace(/^config\//, '~/.config/robos/').replace(/^robos\//, '~/.robos/'))}</code>: ${csEsc(csSuspectText(s))}</li>`).join('')}</ul>${many}</div>`;
+}
+
 function csPlanView(plan) {
   const first = plan.firstSync ? `
     <div class="cs-first" id="cs-first-sync">
@@ -215,7 +255,7 @@ function csPlanView(plan) {
       <p class="cs-muted cs-small">This machine has ${plan.local.files} files; the vault has ${plan.remote.files}${plan.remote.updatedBy ? `, last pushed by <strong>${csEsc(plan.remote.updatedBy.machineName)}</strong> ${csAgo(plan.remote.updatedAt)}` : ''}. How should files that differ be combined?</p>
       <div class="cs-strategies">
         ${[
-          ['use-vault', 'Load the vault onto this machine', 'Files that differ come from the vault. Use this on a new or rebuilt machine.'],
+          ['use-vault', 'Load the vault onto this machine', 'Files that differ come from the vault. Use this on a new or rebuilt machine, or to recover from a damaged file.'],
           ['use-local', 'Upload this machine to the vault', 'Files that differ come from this machine.'],
           ['merge', 'Let me choose file by file', 'Files that differ are listed as conflicts below.'],
         ].map(([id, title, text]) => `<label class="cs-strategy ${plan.strategy === id ? 'active' : ''}"><input type="radio" name="cs-strategy" value="${id}" ${plan.strategy === id ? 'checked' : ''}>
@@ -231,21 +271,25 @@ function csPlanView(plan) {
     (c['delete-local'] || c['delete-remote']) && `<span class="cs-chip cs-act-del">✕ ${(c['delete-local'] || 0) + (c['delete-remote'] || 0)} deleted</span>`,
     c.conflict && `<span class="cs-chip cs-act-conflict">⚠ ${c.conflict} conflict${c.conflict > 1 ? 's' : ''}</span>`,
   ].filter(Boolean).join('');
+  const suspects = csSuspectsView(plan);
   if (!plan.actions.length) return `${first}${skipped}<div class="cs-uptodate" id="cs-uptodate">✓ This machine and the vault are in sync.</div>`;
   const byCat = new Map();
   for (const a of plan.actions) { if (!byCat.has(a.category)) byCat.set(a.category, []); byCat.get(a.category).push(a); }
   const label = id => cs.status.categories.find(x => x.id === id)?.label || id;
-  const unresolved = plan.actions.filter(a => a.action === 'conflict' && !cs.resolutions[a.rel]).length;
-  return `${first}${skipped}
+  const unresolved = plan.actions.filter(a => csNeedsChoice(a) && !cs.resolutions[a.rel]).length;
+  const keepLabels = a => (a.action === 'conflict'
+    ? [`Keep this machine's <span class="cs-muted">(${csAgo(a.local?.mtime)})</span>`, `Take the vault's <span class="cs-muted">(from ${csEsc(a.remote?.by || 'vault')}, ${csAgo(a.remote?.mtime)})</span>`]
+    : [`${a.local ? 'Upload this machine\'s anyway' : 'Delete it from the vault too'}`, `Use the vault's copy <span class="cs-muted">(from ${csEsc(a.remote?.by || 'vault')}, ${csAgo(a.remote?.mtime)})</span>`]);
+  return `${first}${skipped}${suspects}${csRecoverView(plan)}
     <div class="cs-plan-head"><div class="cs-chips">${chips}</div>
-      <button type="button" class="btn btn-primary" id="cs-apply" ${unresolved ? 'disabled' : ''}>${unresolved ? `Resolve ${unresolved} conflict${unresolved > 1 ? 's' : ''} first` : `Apply ${plan.actions.length} change${plan.actions.length > 1 ? 's' : ''}`}</button></div>
+      <button type="button" class="btn btn-primary" id="cs-apply" ${unresolved ? 'disabled' : ''}>${unresolved ? `Choose a version for ${unresolved} file${unresolved > 1 ? 's' : ''} first` : `Apply ${plan.actions.length} change${plan.actions.length > 1 ? 's' : ''}`}</button></div>
     <div class="cs-table" id="cs-plan-table">
       ${[...byCat.entries()].map(([cat, rows]) => `<div class="cs-group">${csEsc(label(cat))}</div>` + rows.map(a => {
         const [icon, text, cls] = CS_ACTION[a.action];
-        const detail = a.action === 'conflict'
+        const detail = csNeedsChoice(a)
           ? `<div class="cs-resolve" role="radiogroup" aria-label="Keep which version of ${csEsc(a.rel)}">
-              <label><input type="radio" name="cs-res-${csEsc(a.rel)}" data-cs-res="${csEsc(a.rel)}" value="local" ${cs.resolutions[a.rel] === 'local' ? 'checked' : ''}> Keep this machine's <span class="cs-muted">(${csAgo(a.local?.mtime)})</span></label>
-              <label><input type="radio" name="cs-res-${csEsc(a.rel)}" data-cs-res="${csEsc(a.rel)}" value="remote" ${cs.resolutions[a.rel] === 'remote' ? 'checked' : ''}> Take the vault's <span class="cs-muted">(from ${csEsc(a.remote?.by || 'vault')}, ${csAgo(a.remote?.mtime)})</span></label></div>`
+              <label><input type="radio" name="cs-res-${csEsc(a.rel)}" data-cs-res="${csEsc(a.rel)}" value="local" ${cs.resolutions[a.rel] === 'local' ? 'checked' : ''}> ${keepLabels(a)[0]}</label>
+              <label><input type="radio" name="cs-res-${csEsc(a.rel)}" data-cs-res="${csEsc(a.rel)}" value="remote" ${cs.resolutions[a.rel] === 'remote' ? 'checked' : ''}> ${keepLabels(a)[1]}</label></div>`
           : `<span class="cs-muted cs-small">${a.remote?.by && a.action === 'pull' ? `from ${csEsc(a.remote.by)}` : ''}${a.removedSecrets ? ` · ${a.removedSecrets} credential(s) stay on this machine` : ''}</span>`;
         return `<div class="cs-row" data-cs-row="${csEsc(a.rel)}"><span class="cs-act ${cls}" title="${text}">${icon} ${text}</span><code class="cs-path">${csEsc(a.rel.replace(/^config\//, '~/.config/robos/').replace(/^robos\//, '~/.robos/'))}</code>${detail}</div>`;
       }).join('')).join('')}
@@ -262,18 +306,18 @@ async function csLoadPlan(strategy) {
   }
   cs.plan = plan;
   cs.strategy = plan.strategy;
-  for (const rel of Object.keys(cs.resolutions)) if (!plan.actions.some(a => a.rel === rel && a.action === 'conflict')) delete cs.resolutions[rel];
+  for (const rel of Object.keys(cs.resolutions)) if (!plan.actions.some(a => a.rel === rel && csNeedsChoice(a))) delete cs.resolutions[rel];
   csRender();
   csSay(plan.actions.length ? `${plan.actions.length} change(s) to review.` : 'Up to date.');
   return plan;
 }
 
-async function csApply() {
+async function csApply(extra = {}) {
   csSay('Syncing…');
-  const res = await csCall('applyVaultSync', { strategy: cs.strategy, resolutions: cs.resolutions });
+  const res = await csCall('applyVaultSync', { strategy: cs.strategy, resolutions: cs.resolutions, ...extra });
   if (!res.ok) {
     if (res.code === 'REMOTE_CHANGED') { await csLoadPlan(cs.strategy); csSay(res.error, 'error'); return res; }
-    if (res.code === 'CONFLICTS') { await csLoadPlan(cs.strategy); csSay(res.error, 'error'); return res; }
+    if (res.code === 'CONFLICTS' || res.code === 'SUSPECT_FILES') { await csLoadPlan(cs.strategy); csSay(res.error, 'error'); return res; }
     csSay(res.error, 'error'); return res;
   }
   cs.plan = null; cs.resolutions = {};
@@ -327,20 +371,26 @@ const csBind = {
     document.getElementById('cs-sync').onclick = async () => {
       const plan = cs.plan || await csLoadPlan();
       if (!plan) return;
-      if (plan.actions.some(a => a.action === 'conflict' && !cs.resolutions[a.rel])) return csSay('Some files changed both here and in the vault. Choose which version to keep below.', 'error');
+      if (plan.actions.some(a => csNeedsChoice(a) && !cs.resolutions[a.rel])) return csSay('Some files changed both here and in the vault, or look damaged. Choose which version to keep below.', 'error');
       return csApply();
     };
     document.getElementById('cs-disconnect').onclick = () => csArm('disconnect', async () => {
       await csCall('disconnectVault'); cs.plan = null; await csRefresh(); csSay('Disconnected. The vault folder is still in your cloud storage.');
     });
-    document.getElementById('cs-apply')?.addEventListener('click', csApply);
+    document.getElementById('cs-apply')?.addEventListener('click', () => csApply());
+    document.getElementById('cs-load-vault')?.addEventListener('click', () => csArm('load-vault', () => csApply({ loadFromVault: true })));
+    document.querySelectorAll('[data-cs-res-all]').forEach(b => {
+      b.onclick = () => { for (const a of cs.plan.actions) if (a.suspect) cs.resolutions[a.rel] = b.dataset.csResAll; csRender(); };
+    });
     const setAuto = async patch => {
       const r = await csCall('setAutoSync', patch);
       if (!r.ok) return csSay(r.error, 'error');
       cs.status.vault = r.vault;
       csRender();
       const a = r.vault.auto;
-      csSay(a.enabled ? `✓ Syncs automatically every ${a.intervalMinutes === 60 ? 'hour' : `${a.intervalMinutes} min`}${a.watch ? ' and soon after a change' : ''}.` : 'Automatic sync is off.', 'good');
+      const when = `every ${a.intervalMinutes === 60 ? 'hour' : `${a.intervalMinutes} min`}${a.watch ? ' and soon after a change' : ''}`;
+      if (a.enabled && !cs.status.agent) return csSay(`Saved: sync ${when} when background sync runs. It is not running on this computer right now.`);
+      csSay(a.enabled ? `✓ Syncs automatically ${when}.` : 'Automatic sync is off.', 'good');
     };
     document.getElementById('cs-auto-enabled').onchange = e => setAuto({ enabled: e.target.checked });
     document.getElementById('cs-auto-interval').onchange = e => setAuto({ intervalMinutes: Number(e.target.value) });

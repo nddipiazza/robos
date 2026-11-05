@@ -4,14 +4,19 @@
  * RobOS Config Sync — background sync, so the backup vault stays mirrored without
  * opening Preferences (like the IntelliJ settings repository).
  *
- * Desktop Manager, which starts at login, calls startAutoSync(). It syncs:
- *   - shortly after login,
+ * Desktop Manager calls startAutoSync(). It syncs:
+ *   - shortly after Desktop Manager starts,
  *   - every vault.auto.intervalMinutes (default 5),
  *   - soon after a backed-up file under ~/.config/robos or ~/.robos changes (vault.auto.watch).
  *
+ * Only the RobOS desktop starts Desktop Manager at login (infra/desktop/robos-provision.sh).
+ * App Manager installs it as an optional app and registers no login items, so nothing may be
+ * running this at all. While it runs it keeps a record (sync.syncAgent) that Preferences shows.
+ *
  * A background run only applies a plan with no conflicts. When a file changed both here
- * and in the vault, the vault is encrypted and this machine has no key, or the vault
- * cannot be opened, nothing is written: it posts one RobOS notification
+ * and in the vault, a local change looks like damage (the vault keeps no history), the vault
+ * is encrypted and this machine has no key, or the vault cannot be opened, nothing is written:
+ * it posts one RobOS notification
  * ("Config Sync needs you: 1 conflict") whose action opens Preferences on the Backup
  * vault tab, and keeps that state in state.json (vault.auto.attention) until a sync succeeds.
  */
@@ -59,6 +64,13 @@ function attentionText(a) {
       body: `${names} changed on this machine and in your backup vault. Background sync is paused until you choose which version to keep.`,
     };
   }
+  if (a.kind === 'suspect') {
+    const names = a.rels.slice(0, 3).map(r => r.split('/').pop()).join(', ') + (a.rels.length > 3 ? ` and ${a.rels.length - 3} more` : '');
+    return {
+      title: `Config Sync needs you: ${a.count} file${a.count > 1 ? 's' : ''} may be damaged`,
+      body: `${names} changed on this machine in a way that looks like damage. Nothing was uploaded, because the vault keeps only the latest version. Background sync is paused until you choose which version to keep.`,
+    };
+  }
   if (a.kind === 'locked') {
     return { title: 'Config Sync needs you: vault passphrase', body: 'Your backup vault is encrypted and this machine has no key for it. Reconnect it with the passphrase to keep syncing.' };
   }
@@ -81,12 +93,15 @@ async function attempt(home, opts) {
     const plan = await sync.planVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl });
     const conflicts = plan.actions.filter(a => a.action === 'conflict');
     if (conflicts.length) return { outcome: 'conflicts', conflicts };
+    const suspects = plan.actions.filter(a => a.suspect);
+    if (suspects.length) return { outcome: 'suspect', suspects };
     if (!plan.actions.length) return { outcome: 'up-to-date' };
     try {
       const r = await sync.applyVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl });
       return { outcome: 'synced', generation: r.generation, pushed: r.pushed, pulled: r.pulled, deleted: [...r.deletedLocal, ...r.deletedRemote], restorePointId: r.restorePointId };
     } catch (err) {
       if (err.code === 'CONFLICTS') return { outcome: 'conflicts', conflicts: err.conflicts };
+      if (err.code === 'SUSPECT_FILES') return { outcome: 'suspect', suspects: err.conflicts };
       // Another machine pushed between the plan and the upload: plan once more.
       if (err.code === 'REMOTE_CHANGED' && i === 0) continue;
       throw err;
@@ -99,6 +114,10 @@ function attentionOf(res) {
     const rels = res.conflicts.map(c => c.rel).sort();
     return { kind: 'conflicts', count: rels.length, rels, signature: `conflicts:${rels.join('|')}` };
   }
+  if (res.outcome === 'suspect') {
+    const rels = res.suspects.map(c => c.rel).sort();
+    return { kind: 'suspect', count: rels.length, rels, signature: `suspect:${rels.join('|')}` };
+  }
   if (res.outcome === 'locked' || res.outcome === 'access') return { kind: res.outcome, count: 1, rels: [], message: res.error, signature: `${res.outcome}:${res.error}` };
   return null;
 }
@@ -106,7 +125,7 @@ function attentionOf(res) {
 /**
  * Runs one background sync if the vault has it turned on (or opts.force). Never resolves
  * conflicts and never throws for sync failures; returns { outcome, ... } where outcome is
- * no-vault | disabled | first-sync-pending | busy | up-to-date | synced | conflicts | locked | access | error.
+ * no-vault | disabled | first-sync-pending | busy | up-to-date | synced | conflicts | suspect | locked | access | error.
  */
 async function runAutoSync(opts = {}) {
   const home = homeOf(opts);
@@ -165,6 +184,8 @@ function clearAttention(opts = {}) {
 function startAutoSync(opts = {}) {
   const home = homeOf(opts);
   const log = opts.log || (() => {});
+  const host = opts.host || 'background';
+  const startedAt = new Date().toISOString();
   const loginDelayMs = opts.loginDelayMs ?? envMs('ROBOS_CONFIG_SYNC_LOGIN_DELAY_MS', 20000);
   const debounceMs = opts.debounceMs ?? envMs('ROBOS_CONFIG_SYNC_DEBOUNCE_MS', 15000);
   const intervalMs = opts.intervalMs ?? envMs('ROBOS_CONFIG_SYNC_INTERVAL_MS', 0);
@@ -248,11 +269,18 @@ function startAutoSync(opts = {}) {
   refresh();
   if (timer) schedule(loginDelayMs);
 
+  const beat = () => { try { sync.markSyncAgent({ homeDir: home, host, startedAt }); } catch {} };
+  beat();
+  const beatTimer = setInterval(beat, sync.AGENT_BEAT_MS);
+  beatTimer.unref?.();
+
   return {
     runNow: (reason = 'manual') => run(reason),
     stop() {
       stopped = true;
       clearTimeout(timer); clearTimeout(changeTimer); clearTimeout(stateTimer);
+      clearInterval(beatTimer);
+      try { sync.clearSyncAgent({ homeDir: home }); } catch {}
       stateWatcher?.close();
       unwatch();
     },

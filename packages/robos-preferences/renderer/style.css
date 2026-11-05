@@ -110,6 +110,9 @@ input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px;
 .cs-auto .select-input { width: auto; padding: 4px 8px; }
 .cs-auto-note { flex-basis: 100%; }
 .cs-auto p { flex-basis: 100%; margin: 0; }
+.cs-agent { color: var(--muted); font-size: 12px; }
+.cs-agent-stopped { padding: 8px 10px; border: 1px solid #5c4813; background: #2b220b; border-radius: 6px; color: #f2cc60; }
+.cs-recover { margin-top: 12px; padding: 10px 12px; border: 1px solid #29323e; border-radius: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .cs-attention { margin-top: 12px; padding: 12px 16px; border: 1px solid #8a5a12; background: #2b1f0b; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; color: #f2cc60; }
 .cs-cats { margin-top: 14px; border: 1px solid #29323e; border-radius: 8px; padding: 10px 14px; }
 .cs-cats summary { cursor: pointer; font-weight: 600; font-size: 13px; }

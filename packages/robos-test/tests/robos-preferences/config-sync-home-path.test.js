@@ -27,6 +27,16 @@ describe('Config Sync folders typed with ~', () => {
     }
   });
 
+  it('treats ~\\folder, as typed on Windows, the same way', async () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-home-'));
+    try {
+      await connectVault({ homeDir: home, create: { kind: 'folder', path: '~\\Dropbox', name: 'V' } });
+      assert.ok(fs.existsSync(path.join(home, 'Dropbox', 'V', 'robos-config.json')));
+    } finally {
+      fs.rmSync(home, { recursive: true, force: true });
+    }
+  });
+
   it('keeps a full path as typed', async () => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-home-'));
     const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-disk-'));

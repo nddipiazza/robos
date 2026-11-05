@@ -430,7 +430,7 @@ function startConfigSyncAuto() {
     '/usr/local/share/robos/robos-lib/config-sync-auto',
   ].filter(Boolean)) {
     try {
-      configSyncAuto = require(p).startAutoSync({ log: msg => console.log(`[dm] config-sync ${msg}`) });
+      configSyncAuto = require(p).startAutoSync({ host: 'desktop-manager', log: msg => console.log(`[dm] config-sync ${msg}`) });
       return;
     } catch (err) {
       if (err.code !== 'MODULE_NOT_FOUND') { console.error('[dm] config-sync auto failed to start:', err.message); return; }

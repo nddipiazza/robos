@@ -547,6 +547,7 @@ describe('Config Sync & Sharing — full backup, second machine, family, onboard
     const before = vaultOf(D).lastGeneration;
     let dm = await loginDesktopManager(D, 'alex-desktop', 600000);
     try {
+      await waitFor(() => readJson(D, '.config/robos/config-sync/agent.json').host === 'desktop-manager', 'Desktop Manager reporting that it runs background sync', why(D, dm));
       await waitFor(() => vaultOf(D).lastGeneration > before && vaultOf(D).auto.lastOutcome === 'synced', 'the desktop login sync', why(D, dm));
       const afterLogin = vaultOf(D).lastGeneration;
       await sleep(1700);
