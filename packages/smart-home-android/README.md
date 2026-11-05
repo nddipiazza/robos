@@ -53,6 +53,6 @@ tools/e2e.sh
 
 - Nothing here has been tested on real lights or a real Moto G10 yet. WiZ and Hue should be checked first.
 - Scan broadcasts and mDNS have not been tested on a real network; the emulator cannot carry them.
-- Schedules are not verified to survive a reboot, or to run during deep sleep.
+- Schedules are not verified to run during deep sleep. Their alarm is restored after a reboot, about a minute after boot on the emulator.
 - The app remembers what it last sent, and does not read back changes made with a wall switch or another app.
 - Hue usernames and Home Assistant tokens are saved in the app's private storage without extra encryption.

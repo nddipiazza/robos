@@ -48,3 +48,7 @@ _site/
 .robos/revisions/
 .robos/pending-import.json
 .robos/write.lock*
+
+# RobOS phone image: built by infra/android/robos-image.sh
+infra/android/vendor/robos/prebuilt/
+infra/android/vendor/robos/bootanimation/

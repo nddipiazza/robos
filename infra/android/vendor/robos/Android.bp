@@ -1,0 +1,47 @@
+// The apps in the RobOS phone image. The APKs are built by infra/android/robos-image.sh.
+soong_namespace {}
+
+android_app_import {
+    name: "RobOSHome",
+    apk: "prebuilt/RobOSHome.apk",
+    certificate: "testkey",
+    product_specific: true,
+    dex_preopt: {
+        enabled: true,
+    },
+    // The stock apps this image replaces. Overriding removes them from the build.
+    overrides: [
+        "Launcher3QuickStep",
+        "Launcher3QuickStepGo",
+        "Launcher3Overlay",
+        "ThemePicker",
+        "Backgrounds",
+        // It would replace RobOS with stock LineageOS on its next update.
+        "Updater",
+        "Jelly",
+        "ExactCalculator",
+        "Glimpse",
+        "Canvas",
+        "Gallery2",
+        "Aperture",
+        "Etar",
+        "DeskClock",
+        "Eleven",
+        "Recorder",
+        "Contacts",
+        // Wi-Fi only for now.
+        "Dialer",
+        "messaging",
+        "Stk",
+    ],
+}
+
+android_app_import {
+    name: "RobOSSmartHome",
+    apk: "prebuilt/RobOSSmartHome.apk",
+    certificate: "testkey",
+    product_specific: true,
+    dex_preopt: {
+        enabled: true,
+    },
+}

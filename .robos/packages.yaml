@@ -1,5 +1,10 @@
 kind: PackagesCatalog
 packages:
+  - id: "urn:robos:mobile-app:robos-launcher-android"
+    title: "RobOS Home for Android"
+    type: "robos:MobileApp"
+    repository: "packages/robos-launcher-android"
+    technology: "Kotlin / Jetpack Compose / Android"
   - id: "urn:robos:mobile-app:smart-home-android"
     title: "RobOS Smart Home for Android"
     type: "robos:MobileApp"
