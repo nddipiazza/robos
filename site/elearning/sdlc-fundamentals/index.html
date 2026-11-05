@@ -35,36 +35,65 @@ redirect_from:
   <meta name="twitter:description" content="Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.">
   <meta name="twitter:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>try{var t=localStorage.getItem('rb2-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}if(new URLSearchParams(location.search).has('dev'))document.documentElement.classList.add('show-dev');</script>
+
   <!-- Mermaid.js for Interactive Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
   <style>
-    :root {
-      --bg-primary: #0d1117;
-      --bg-surface: #161b22;
-      --bg-surface-hover: #21262d;
-      --bg-card: #1c2128;
-      --accent: #00bcd4;
-      --accent-glow: rgba(0, 188, 212, 0.25);
-      --accent-cyan: #38bdf8;
-      --border: #30363d;
-      --border-accent: rgba(0, 188, 212, 0.4);
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
-      --text-bright: #f0f6fc;
-      --success: #2ea043;
-      --success-glow: rgba(46, 160, 67, 0.2);
-      --purple: #a371f7;
-      --purple-glow: rgba(163, 113, 247, 0.2);
-      --gold: #f1e05a;
-      --gold-border: #d29922;
-      --danger: #f85149;
-      --danger-bg: rgba(248, 81, 73, 0.15);
+    :root, [data-theme="light"] {
+      --bg-primary: #f7f7f4;
+      --bg-surface: #f2f1ed;
+      --bg-surface-hover: #e9e8e2;
+      --bg-card: #fcfcfa;
+      --accent: #f54e00;
+      --accent-text: #c23e00;
+      --accent-glow: rgba(245, 78, 0, 0.12);
+      --accent-cyan: #c23e00;
+      --border: #e6e5e0;
+      --border-accent: rgba(245, 78, 0, 0.4);
+      --text: #26251e;
+      --text-primary: #26251e;
+      --text-muted: #6b6a64;
+      --text-bright: #26251e;
+      --code-bg: #1b1913;
+      --code-fg: #edecec;
+      --success: #2f7d4f;
+      --success-glow: rgba(47, 125, 79, 0.12);
+      --purple: #6b6a64;
+      --purple-glow: rgba(107, 106, 100, 0.12);
+      --gold: #8a6100;
+      --gold-border: #d8b95a;
+      --danger: #c0362c;
+      --danger-bg: rgba(192, 54, 44, 0.1);
       --radius-sm: 6px;
       --radius-md: 8px;
-      --radius-lg: 12px;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --radius-lg: 14px;
+      --font-sans: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-mono: 'Fira Code', ui-monospace, Menlo, Consolas, monospace;
+    }
+    [data-theme="dark"] {
+      --bg-primary: #14120b;
+      --bg-surface: #1b1913;
+      --bg-surface-hover: #2a2820;
+      --bg-card: #201e18;
+      --accent-text: #ff7a3d;
+      --accent-cyan: #ff7a3d;
+      --border: #2f2d26;
+      --text: #edecec;
+      --text-primary: #edecec;
+      --text-muted: #a09f98;
+      --text-bright: #edecec;
+      --code-bg: #0f0e09;
+      --success: #58b57d;
+      --success-glow: rgba(88, 181, 125, 0.14);
+      --purple: #a09f98;
+      --gold: #e0b84c;
+      --danger: #f0776c;
+      --danger-bg: rgba(240, 119, 108, 0.14);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,13 +115,13 @@ redirect_from:
       top: -60px;
       left: 16px;
       background: var(--accent);
-      color: #0d1117;
+      color: var(--bg-primary);
       padding: 10px 18px;
       font-weight: 700;
       border-radius: var(--radius-sm);
       z-index: 9999;
       text-decoration: none;
-      box-shadow: 0 4px 14px rgba(0, 188, 212, 0.4);
+      box-shadow: 0 4px 14px rgba(245, 78, 0, 0.4);
       transition: top 0.2s ease;
     }
     .skip-link:focus {
@@ -112,7 +141,7 @@ redirect_from:
 
     /* Top Brand Bar */
     .top-nav {
-      background: #090d13;
+      background: var(--code-bg);
       border-bottom: 1px solid var(--border);
       padding: 8px 24px;
       display: flex;
@@ -136,8 +165,8 @@ redirect_from:
     }
     .brand-link:hover { text-decoration: underline; }
     .brand-badge {
-      background: rgba(56, 189, 248, 0.15);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(245, 78, 0, 0.15);
+      border: 1px solid rgba(245, 78, 0, 0.3);
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 10px;
@@ -196,11 +225,11 @@ redirect_from:
       align-items: center;
       gap: 4px;
     }
-    .badge-tech { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-    .badge-difficulty { background: rgba(163, 113, 247, 0.15); color: var(--purple); border: 1px solid rgba(163, 113, 247, 0.3); }
-    .badge-duration { background: rgba(240, 246, 252, 0.08); color: var(--text); border: 1px solid var(--border); }
-    .badge-scorm { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.3); }
-    .badge-shacl { background: rgba(241, 224, 90, 0.15); color: var(--gold); border: 1px solid var(--gold-border); }
+    .badge-tech { background: rgba(245, 78, 0, 0.15); color: var(--accent-text); border: 1px solid rgba(245, 78, 0, 0.3); }
+    .badge-difficulty { background: rgba(107, 106, 100, 0.15); color: var(--purple); border: 1px solid rgba(107, 106, 100, 0.3); }
+    .badge-duration { background: var(--bg-surface-hover); color: var(--text); border: 1px solid var(--border); }
+    .badge-scorm { background: rgba(46, 160, 67, 0.15); color: var(--success); border: 1px solid rgba(46, 160, 67, 0.3); }
+    .badge-shacl { background: rgba(216, 185, 90, 0.15); color: var(--gold); border: 1px solid var(--gold-border); }
 
     /* Header Right: Mode Tabs & Progress */
     .header-right {
@@ -234,7 +263,7 @@ redirect_from:
     .tab-btn:hover { color: var(--text-bright); background: var(--bg-surface-hover); }
     .tab-btn.active {
       background: var(--accent);
-      color: #0d1117;
+      color: var(--bg-primary);
       box-shadow: 0 0 10px var(--accent-glow);
     }
     .progress-container {
@@ -250,14 +279,14 @@ redirect_from:
     .progress-bar-bg {
       width: 100%;
       height: 8px;
-      background: #21262d;
+      background: var(--bg-surface-hover);
       border-radius: 4px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid var(--bg-surface-hover);
     }
     .progress-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #00bcd4, #2ea043);
+      background: linear-gradient(90deg, var(--accent), var(--success));
       transition: width 0.3s ease;
     }
 
@@ -316,9 +345,9 @@ redirect_from:
       border-color: var(--accent);
     }
     .module-item.active {
-      background: rgba(0, 188, 212, 0.12);
+      background: rgba(245, 78, 0, 0.12);
       border-color: var(--accent);
-      box-shadow: 0 0 12px rgba(0, 188, 212, 0.15);
+      box-shadow: 0 0 12px rgba(245, 78, 0, 0.15);
     }
     .module-item.completed::after {
       content: '✓';
@@ -347,7 +376,7 @@ redirect_from:
 
     /* Certificate Status Box */
     .cert-status-box {
-      background: linear-gradient(145deg, rgba(22, 27, 34, 0.9), rgba(13, 17, 23, 0.95));
+      background: linear-gradient(145deg, var(--bg-surface), var(--bg-primary));
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       padding: 16px;
@@ -357,7 +386,7 @@ redirect_from:
     }
     .cert-status-box.unlocked {
       border-color: var(--gold-border);
-      box-shadow: 0 0 15px rgba(241, 224, 90, 0.15);
+      box-shadow: 0 0 15px rgba(216, 185, 90, 0.15);
     }
     .cert-status-box h4 {
       color: var(--gold);
@@ -386,7 +415,7 @@ redirect_from:
     }
     .btn-primary {
       background: var(--accent);
-      color: #0d1117;
+      color: var(--bg-primary);
       border-color: var(--accent);
     }
     .btn-primary:hover {
@@ -395,13 +424,13 @@ redirect_from:
     }
     .btn-gold {
       background: var(--gold);
-      color: #0d1117;
+      color: var(--bg-primary);
       border-color: var(--gold-border);
       font-weight: 700;
     }
     .btn-gold:hover {
       filter: brightness(1.15);
-      box-shadow: 0 0 12px rgba(241, 224, 90, 0.4);
+      box-shadow: 0 0 12px rgba(216, 185, 90, 0.4);
     }
     .btn-outline {
       background: transparent;
@@ -454,8 +483,8 @@ redirect_from:
       font-size: 11px;
       color: var(--accent);
       text-decoration: none;
-      background: rgba(0, 188, 212, 0.1);
-      border: 1px solid rgba(0, 188, 212, 0.3);
+      background: rgba(245, 78, 0, 0.1);
+      border: 1px solid rgba(245, 78, 0, 0.3);
       padding: 2px 7px;
       border-radius: var(--radius-sm);
       display: inline-flex;
@@ -466,7 +495,7 @@ redirect_from:
       user-select: none;
     }
     .copy-tab-path-link:hover {
-      background: rgba(0, 188, 212, 0.25);
+      background: rgba(245, 78, 0, 0.25);
       border-color: var(--accent);
       color: var(--text-bright);
       text-decoration: none;
@@ -487,7 +516,7 @@ redirect_from:
     }
     .btn-copy-tab-path:hover {
       border-color: var(--accent);
-      background: rgba(0, 188, 212, 0.1);
+      background: rgba(245, 78, 0, 0.1);
       color: var(--text-bright);
     }
     .slide-menu-container {
@@ -517,7 +546,7 @@ redirect_from:
       position: absolute;
       top: calc(100% + 4px);
       right: 0;
-      background: #161b22;
+      background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -552,7 +581,7 @@ redirect_from:
       transition: all 0.15s ease;
     }
     .slide-menu-item:hover {
-      background: rgba(0, 188, 212, 0.12);
+      background: rgba(245, 78, 0, 0.12);
       color: var(--text-bright);
     }
     .slide-menu-divider {
@@ -564,7 +593,7 @@ redirect_from:
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #161b22;
+      background: var(--bg-surface);
       border: 1px solid var(--accent);
       border-radius: var(--radius-md);
       padding: 12px 20px;
@@ -612,7 +641,7 @@ redirect_from:
     .nav-pill:hover, .nav-pill:focus-visible {
       color: var(--text-bright);
       border-color: var(--accent);
-      background: rgba(0, 188, 212, 0.1);
+      background: rgba(245, 78, 0, 0.1);
       outline: none;
     }
 
@@ -646,13 +675,13 @@ redirect_from:
       margin-bottom: 12px;
     }
     .code-snippet {
-      background: #090d13;
+      background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 14px 16px;
       font-family: var(--font-mono);
       font-size: 12px;
-      color: #79c0ff;
+      color: var(--code-fg);
       overflow-x: auto;
       margin: 14px 0;
     }
@@ -727,7 +756,7 @@ redirect_from:
       margin: 0;
     }
     .lab-step-expect {
-      background: rgba(56, 189, 248, 0.07);
+      background: rgba(245, 78, 0, 0.07);
       border-left: 3px solid var(--accent-cyan);
       padding: 10px 14px;
       border-radius: 0 6px 6px 0;
@@ -738,9 +767,60 @@ redirect_from:
     .lab-step-expect strong {
       color: var(--accent-cyan);
     }
+    .lab-who {
+      align-self: flex-start;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-bright);
+      background: var(--bg-surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 10px;
+    }
+    .lab-agent {
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-sm);
+      background: rgba(245, 78, 0, 0.08);
+      padding: 10px 14px;
+    }
+    .lab-agent-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+    }
+    .lab-agent-copy {
+      font: inherit;
+      color: var(--text-bright);
+      background: var(--bg-surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 10px;
+      cursor: pointer;
+    }
+    .lab-agent-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-bright);
+    }
+    .lab-explain {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+    .lab-self summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+    }
     .lab-step-figure {
       margin: 4px 0 0;
-      background: #090d13;
+      background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 10px;
@@ -774,7 +854,7 @@ redirect_from:
       cursor: pointer;
     }
     .lab-step-text code {
-      background: #21262d;
+      background: var(--bg-surface-hover);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: var(--font-mono);
@@ -847,7 +927,7 @@ redirect_from:
       display: block;
       background: rgba(46, 160, 67, 0.15);
       border: 1px solid var(--success);
-      color: #3fb950;
+      color: var(--success);
     }
     .quiz-feedback.fail {
       display: block;
@@ -885,7 +965,7 @@ redirect_from:
     .doc-article li { margin-bottom: 6px; }
     .doc-article blockquote {
       border-left: 4px solid var(--accent);
-      background: rgba(0, 188, 212, 0.08);
+      background: rgba(245, 78, 0, 0.08);
       padding: 12px 18px;
       border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
       margin-bottom: 20px;
@@ -903,14 +983,14 @@ redirect_from:
       text-align: left;
     }
     .doc-article th {
-      background: #21262d;
+      background: var(--bg-surface-hover);
       color: var(--text-bright);
     }
     .doc-article tr:nth-child(even) {
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--bg-surface-hover);
     }
     .doc-article pre {
-      background: #090d13;
+      background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       padding: 16px;
@@ -921,7 +1001,7 @@ redirect_from:
     }
     .doc-article code {
       font-family: var(--font-mono);
-      background: #21262d;
+      background: var(--bg-surface-hover);
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 12px;
@@ -948,8 +1028,8 @@ redirect_from:
       font-style: italic;
     }
     .formula-box {
-      background: #090d13;
-      border: 1px solid rgba(0, 188, 212, 0.3);
+      background: var(--code-bg);
+      border: 1px solid rgba(245, 78, 0, 0.3);
       border-radius: var(--radius-md);
       padding: 14px 20px;
       margin: 16px 0;
@@ -960,7 +1040,7 @@ redirect_from:
 
     /* Mermaid Container */
     .mermaid {
-      background: #090d13 !important;
+      background: var(--code-bg) !important;
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       padding: 20px;
@@ -1010,7 +1090,7 @@ redirect_from:
       border: 3px double var(--gold-border);
       margin: 24px;
       padding: 40px 32px;
-      background: radial-gradient(circle at center, #161f2e 0%, #0d1117 100%);
+      background: radial-gradient(circle at center, #161f2e 0%, var(--bg-primary) 100%);
       border-radius: var(--radius-md);
       text-align: center;
       position: relative;
@@ -1019,12 +1099,12 @@ redirect_from:
       content: '';
       position: absolute;
       top: 6px; left: 6px; right: 6px; bottom: 6px;
-      border: 1px solid rgba(241, 224, 90, 0.25);
+      border: 1px solid rgba(216, 185, 90, 0.25);
       pointer-events: none;
     }
     .cert-badge {
       display: inline-block;
-      background: rgba(241, 224, 90, 0.15);
+      background: rgba(216, 185, 90, 0.15);
       color: var(--gold);
       border: 1px solid var(--gold-border);
       padding: 4px 14px;
@@ -1086,7 +1166,7 @@ redirect_from:
       align-items: center;
       margin-top: 20px;
       padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,0.08);
+      border-top: 1px solid var(--bg-surface-hover);
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -1110,7 +1190,7 @@ redirect_from:
       max-height: 80vh;
       border-radius: var(--radius-md);
       border: 1px solid var(--border);
-      box-shadow: 0 0 30px rgba(0, 188, 212, 0.3);
+      box-shadow: 0 0 30px rgba(245, 78, 0, 0.3);
     }
     .lightbox-caption {
       margin-top: 12px;
@@ -1140,7 +1220,7 @@ redirect_from:
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: rgba(22, 27, 34, 0.95);
+      background: var(--bg-surface);
       border: 1px solid var(--accent);
       color: var(--text-bright);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
@@ -1163,7 +1243,78 @@ redirect_from:
       opacity: 1;
       transform: translateY(0);
     }
-  </style>
+  
+    /* RobOS site look: same tokens, type and components as site/assets/site.css */
+    body { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    code, pre { font-family: var(--font-mono); }
+    .top-nav { background: color-mix(in srgb, var(--bg-primary) 82%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); height: 60px; box-shadow: none; }
+    .brand-link { display: flex; align-items: center; gap: 10px; color: var(--text-bright); font-size: 1.1rem; font-weight: 700; }
+    .brand-link img { height: 30px; width: auto; display: block; }
+    .top-link { color: var(--text-muted); font-size: 14px; }
+    .top-link:hover { color: var(--text-bright); }
+    .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text-bright); cursor: pointer; }
+    .app-header { background: var(--bg-primary); border-bottom: 1px solid var(--border); padding: 28px 32px 20px; align-items: flex-end; box-shadow: none; }
+    .app-icon, .course-meta .badge { display: none; }
+    #course-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.12; color: var(--text-bright); max-width: 30ch; }
+    .course-meta-line { color: var(--text-muted); font-size: 14px; margin-top: 10px; }
+    .mode-tabs { background: transparent; border: 0; padding: 0; gap: 4px; }
+    .tab-btn { background: transparent; color: var(--text-muted); border-radius: 8px; font-weight: 600; box-shadow: none; }
+    .tab-btn.active { background: var(--text-bright); color: var(--bg-primary); box-shadow: none; outline: none; }
+    .tab-btn:hover:not(.active) { background: var(--bg-surface-hover); color: var(--text-bright); }
+    .sidebar { background: var(--bg-primary); }
+    .sidebar h3 { color: var(--accent-text); font-size: 12px; letter-spacing: 0.1em; }
+    .module-item { background: transparent; border-radius: 8px; color: var(--text); }
+    .module-item:hover { background: var(--bg-surface-hover); }
+    .module-item.active { background: var(--bg-card); border-color: var(--accent); box-shadow: none; }
+    h2, h3, h4 { letter-spacing: -0.02em; }
+    .lesson-subtitle { color: var(--text-bright); font-size: 1.15rem; font-weight: 600; margin-top: 24px; }
+    .lesson-text, .lesson-section li { font-size: 16px; line-height: 1.7; color: var(--text); }
+    .section-title { font-weight: 600; color: var(--text-bright); }
+    .code-snippet, pre { background: var(--code-bg); color: var(--code-fg); border-color: var(--code-bg); }
+    .code-snippet code, pre code { color: var(--code-fg); }
+    :not(pre) > code { background: var(--bg-surface-hover); color: var(--text-bright); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+    .btn { border-radius: 8px; box-shadow: none; }
+    .doc-img, .lab-step-img { box-shadow: none; border-color: var(--border); }
+    .doc-img:hover { border-color: var(--accent); }
+    .callout { border-left: 4px solid var(--accent); background: var(--bg-surface); padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 15px; line-height: 1.65; }
+    .callout strong:first-child { color: var(--accent-text); display: block; }
+    .callout.warn { border-left-color: var(--gold-border); }
+    .callout.warn strong:first-child { color: var(--gold); }
+    .graph-figure text { fill: var(--text-bright); font-family: var(--font-sans); }
+    .graph-figure .node { fill: var(--bg-card); stroke: var(--border); }
+    .graph-figure .node-main { fill: var(--accent); }
+    .graph-figure .node-main-label { fill: #fff; }
+    .graph-figure .edge { stroke: var(--text-muted); }
+    .top-link { white-space: nowrap; }
+    .top-nav-left > span:last-child { display: none; }
+    .module-card { background: transparent; border: 0; box-shadow: none; padding: 8px 0 40px; }
+    .module-lesson-body { background: transparent; border: 0; padding: 0; }
+    .module-overview { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .nav-pill { background: transparent; color: var(--text-muted); }
+    .nav-pill:hover { color: var(--text-bright); border-color: var(--text-muted); }
+    .content-panel { max-width: 860px; }
+    @media (max-width: 760px) {
+      .top-nav { padding: 0 16px; }
+      .top-nav-left { min-width: 0; gap: 10px; }
+      .top-nav-right { flex: none; }
+      .top-nav-right .top-link { display: none; }
+      .app-header { padding: 20px 16px; flex-direction: column; align-items: stretch; gap: 14px; }
+      .header-right { flex-direction: column; align-items: stretch; width: 100%; gap: 12px; }
+      .mode-tabs { flex-wrap: wrap; }
+      .tab-btn { white-space: nowrap; flex: 0 0 auto; }
+      .progress-container { width: 100%; }
+      .app-body { flex-direction: column; }
+      .sidebar { width: 100%; min-width: 0; max-width: 100%; border-right: 0; border-bottom: 1px solid var(--border); padding: 16px; }
+      .module-list { width: 100%; }
+      .module-item { width: 100%; white-space: normal; }
+      .content-panel { width: 100%; min-width: 0; max-width: 100%; padding: 16px; }
+      .module-card { min-width: 0; }
+    }
+    /* Authoring tools stay available with ?dev=1, out of a learner's way */
+    .slide-header-actions, .copy-tab-path-link { display: none; }
+    html.show-dev .slide-header-actions { display: flex; }
+    html.show-dev .copy-tab-path-link { display: inline-flex; }
+</style>
 </head>
 <body>
 
@@ -1173,13 +1324,9 @@ redirect_from:
   <!-- Top Universal Brand Nav -->
   <nav class="top-nav" aria-label="Global Brand Navigation">
     <div class="top-nav-left">
-      <a href="https://rowbose.com/" class="brand-link">
-        <span>⬡</span>
-        <strong>RobOS</strong>
-        <span class="brand-badge">eLearning Hub</span>
-      </a>
+      <a href="https://rowbose.com/" class="brand-link"><img src="/assets/logo-mark.png" alt=""><strong>RobOS</strong></a>
       <span style="color: var(--border);">/</span>
-      <a href="/elearning/" class="top-link">🎓 All Courses</a>
+      <a href="/elearning/" class="top-link">All courses</a>
       <span style="color: var(--border);">/</span>
       
       <span style="color: var(--text-bright); font-size: 13px; font-weight: 600;">RobOS Dual-State SDLC Fundamentals</span>
@@ -1187,23 +1334,20 @@ redirect_from:
     </div>
     <div class="top-nav-right">
       
-      <a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener" class="top-link">⭐ GitHub</a>
-      <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="top-link">💬 Discord</a>
+      <a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener" class="top-link">GitHub</a>
+      <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="top-link">Discord</a>
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" onclick="(function(){var d=document.documentElement;var n=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=n;try{localStorage.setItem('rb2-theme',n);}catch(e){}})()">&#9680;</button>
     </div>
   </nav>
 
   <!-- App Header -->
   <header class="app-header">
     <div class="header-left">
-      <div class="app-icon" aria-hidden="true">🎓</div>
+      <div class="app-icon" aria-hidden="true"></div>
       <div>
         <h1 id="course-title">RobOS Dual-State SDLC Fundamentals</h1>
         <div class="course-meta">
-          <span class="badge badge-tech">Godot 4.3 / RobOS KGraph</span>
-          <span class="badge badge-difficulty">Advanced</span>
-          <span class="badge badge-duration">⏱️ 60 minutes</span>
-          <span class="badge badge-scorm">SCORM 2004 Verified</span>
-          <span class="badge badge-shacl">W3C SHACL Conforming</span>
+          <div class="course-meta-line">Advanced &middot; 60 minutes &middot; 1 module</div>
         </div>
       </div>
     </div>
@@ -1211,13 +1355,13 @@ redirect_from:
       <!-- Mode View Tabs -->
       <div class="mode-tabs" role="tablist" aria-label="View Mode">
         <button class="tab-btn active" id="btn-tab-course" role="tab" aria-selected="true" aria-controls="view-course" onclick="switchView('course')">
-          <span>🎓</span> Course & Labs
+          Course &amp; labs
         </button>
         <button class="tab-btn" id="btn-tab-doc" role="tab" aria-selected="false" aria-controls="view-doc" onclick="switchView('doc')">
-          <span>📖</span> Full Specification
+          One-page guide
         </button>
         <button class="tab-btn" id="btn-tab-cert" role="button" onclick="openCertificateModal()">
-          <span>🏆</span> Credential
+          Certificate
         </button>
       </div>
 
@@ -1238,7 +1382,7 @@ redirect_from:
   <div class="app-body">
     <!-- Sidebar Navigation -->
     <aside class="sidebar" aria-label="Curriculum Navigation">
-      <h3 id="sidebar-curriculum-heading">Curriculum Modules</h3>
+      <h3 id="sidebar-curriculum-heading">Modules</h3>
       <ul class="module-list" id="module-nav-list" role="tablist" aria-labelledby="sidebar-curriculum-heading">
         
           <li role="presentation">
@@ -1255,10 +1399,10 @@ redirect_from:
                 <span>1. Dual-State Architecture</span>
               </div>
               <div class="module-item-meta">
-                <span>⏱️ 15 mins</span>
-                <span>🧪 0 labs</span>
-                <span>📝 0 quiz</span>
-                <span class="copy-tab-path-link" onclick="copyTabPath(event, 0)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
+                <span>15 mins</span>
+                <span>0 labs</span>
+                <span>0 quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, 0)" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path"></span>
               </div>
             </button>
           </li>
@@ -1267,7 +1411,7 @@ redirect_from:
 
       <!-- Completion Certificate Summary Box -->
       <div class="cert-status-box" id="cert-status-box">
-        <h4>🏆 Completion Credential</h4>
+        <h4>Completion Credential</h4>
         <p id="cert-status-text">Complete the module and score &ge; 80% on knowledge checks to claim your verified Knowledge Graph Credential.</p>
         <button class="btn btn-gold" id="btn-claim-cert" onclick="openCertificateModal()" style="display: none;">Claim Certificate</button>
       </div>
@@ -1332,12 +1476,12 @@ redirect_from:
 
         <div class="cert-footer">
           <div class="cert-seal">
-            <span>🛡️</span>
+            <span></span>
             <span>RobOS SDLC Knowledge Graph &middot; Cryptographically Verified</span>
           </div>
           <div style="display: flex; gap: 10px;">
-            <button class="btn btn-outline btn-sm" onclick="showJsonLdModal()">📜 JSON-LD</button>
-            <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="showJsonLdModal()">JSON-LD</button>
+            <button class="btn btn-primary btn-sm" onclick="window.print()">Print / PDF</button>
             <button class="btn btn-outline btn-sm" onclick="closeCertificateModal()">Close</button>
           </div>
         </div>
@@ -1484,7 +1628,7 @@ redirect_from:
         progress.isCertified = true;
         if (certBox) certBox.classList.add('unlocked');
         if (claimBtn) claimBtn.style.display = 'inline-flex';
-        if (certText) certText.innerHTML = '🎉 <strong>Congratulations!</strong> You have satisfied all masterclass requirements. Your credential is ready to claim.';
+        if (certText) certText.innerHTML = '<strong>Congratulations!</strong> You have satisfied all masterclass requirements. Your credential is ready to claim.';
       } else {
         if (certBox) certBox.classList.remove('unlocked');
         if (claimBtn) claimBtn.style.display = 'none';
@@ -1627,14 +1771,14 @@ redirect_from:
       if (fb) {
         if (isCorrect) {
           fb.className = 'quiz-feedback pass';
-          fb.innerHTML = '✅ <strong>Correct!</strong> ' + formatStepText(explanation || 'Verified architectural understanding.');
+          fb.innerHTML = '<strong>Correct!</strong> ' + formatStepText(explanation || 'Verified architectural understanding.');
           announceA11y('Question ' + (qIdx + 1) + ': Correct! ' + (explanation || ''));
         } else {
           const tries = progress.quizAttempts[key];
           fb.className = 'quiz-feedback fail';
           fb.innerHTML = tries >= 2 && explanation
-            ? '❌ <strong>Not quite (Attempt ' + tries + ').</strong> <em>Architectural Insight:</em> ' + formatStepText(explanation)
-            : '❌ <strong>Not quite.</strong> Re-examine the edge cases and architectural trade-offs in the lesson above and try another option.';
+            ? '<strong>Not quite (Attempt ' + tries + ').</strong> <em>Architectural Insight:</em> ' + formatStepText(explanation)
+            : '<strong>Not quite.</strong> Re-examine the edge cases and architectural trade-offs in the lesson above and try another option.';
           announceA11y('Question ' + (qIdx + 1) + ': Incorrect. Review the lesson materials above and try again.');
         }
       }
@@ -1758,7 +1902,7 @@ redirect_from:
         if (idx === 0) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">⚔️ 1. Real-Time with Pause (RTwP) & 6.0-Second Combat Round</h4>
+              <h4 class="lesson-subtitle">1. Real-Time with Pause (RTwP) & 6.0-Second Combat Round</h4>
               <p class="lesson-text">
                 RobOS cRPG executes an authentic Infinity Engine combat simulation adhering strictly to the <strong>D&D 5th Edition System Reference Document (SRD 5.1)</strong>. Combat is governed by a strict <strong>6.0-second round timer</strong>. Within each round, every character receives a structured mathematical action economy budget:
               </p>
@@ -1791,7 +1935,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📐 2. Mathematical Combat Formulas</h4>
+              <h4 class="lesson-subtitle">2. Mathematical Combat Formulas</h4>
               <p class="lesson-text">
                 All combat checks in <code>CombatEngine.gd</code> evaluate deterministic mathematical formulas:
               </p>
@@ -1811,7 +1955,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🎲 3. Advantage & Disadvantage Probability Shift</h4>
+              <h4 class="lesson-subtitle">3. Advantage & Disadvantage Probability Shift</h4>
               <p class="lesson-text">
                 When rolling with <strong>Advantage</strong> (such as attacking an unalerted target or flanking), the engine rolls two 20-sided dice and takes the maximum: <code>max(d20, d20)</code>. This non-linear probability curve dramatically skews rolls upward:
               </p>
@@ -1836,7 +1980,7 @@ flowchart TD
         } else if (idx === 1) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🏛️ 1. Why Godot 4.3 GL Compatibility Profile?</h4>
+              <h4 class="lesson-subtitle">1. Why Godot 4.3 GL Compatibility Profile?</h4>
               <p class="lesson-text">
                 Rather than using Vulkan Forward+, RobOS cRPG deliberately targets Godot 4's <strong>GL Compatibility profile (OpenGL 3.3 / ES 3.0 / WebGL 2.0)</strong> for critical architectural reasons:
               </p>
@@ -1848,7 +1992,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📐 2. 2560&times;1440 Pre-Rendered Plates & Viewport Clamping</h4>
+              <h4 class="lesson-subtitle">2. 2560&times;1440 Pre-Rendered Plates & Viewport Clamping</h4>
               <p class="lesson-text">
                 Maps are built using ultra-detailed 2560&times;1440 pre-rendered background plates (<code>village_open_world_2560.png</code>). The player Camera2D viewport is 1920&times;1080 native resolution and smoothly tracks heroes while strictly clamping to background boundaries so the void is never exposed:
               </p>
@@ -1862,7 +2006,7 @@ func _process(delta: float) -> void:
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🧱 3. Layer 1 Physical Building Collision Geometry</h4>
+              <h4 class="lesson-subtitle">3. Layer 1 Physical Building Collision Geometry</h4>
               <p class="lesson-text">
                 Every building in Oakhaven is a true physical obstacle with a <code>StaticBody2D</code> collider on <strong>Physics Layer 1</strong>, preventing characters and enemies from clipping through walls:
               </p>
@@ -1887,7 +2031,7 @@ func _process(delta: float) -> void:
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🧭 4. Two-Tier Pathfinder.gd & Dynamic Fog of War</h4>
+              <h4 class="lesson-subtitle">4. Two-Tier Pathfinder.gd & Dynamic Fog of War</h4>
               <p class="lesson-text">
                 When a user or AI agent clicks a waypoint, <code>Pathfinder.gd</code> performs a direct <code>RayCast2D</code> line-of-sight test against Layer 1. If clear, the character moves in a direct line. If the raycast intersects a building, the pathfinder switches to an A* corridor visibility graph, routing around building corners seamlessly. Simultaneously, <code>FogOfWar.gdshader</code> reveals shrouded terrain dynamically using hero light occluders.
               </p>
@@ -1906,7 +2050,7 @@ func _process(delta: float) -> void:
         } else if (idx === 2) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🎨 1. Genuine Open-Source Asset Harvesting Pipeline</h4>
+              <h4 class="lesson-subtitle">1. Genuine Open-Source Asset Harvesting Pipeline</h4>
               <p class="lesson-text">
                 RobOS enforces a strict 100% genuine open-source asset rule with zero proprietary copyright liabilities:
               </p>
@@ -1918,7 +2062,7 @@ func _process(delta: float) -> void:
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📜 2. Three-Mode Expandable Activity Log</h4>
+              <h4 class="lesson-subtitle">2. Three-Mode Expandable Activity Log</h4>
               <p class="lesson-text">
                 The game replicates the iconic Infinity Engine console at the bottom of the screen with three reactive expansion tiers:
               </p>
@@ -1936,7 +2080,7 @@ graph LR
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">💬 3. In-Log Numbered NPC Dialogue & HUD Controls</h4>
+              <h4 class="lesson-subtitle">3. In-Log Numbered NPC Dialogue & HUD Controls</h4>
               <p class="lesson-text">
                 Dialogue choices are displayed directly inside the 240px Activity Log console rather than intrusive full-screen popups. Players can select choices via numeric keys <code>1</code>–<code>9</code> or mouse click, maintaining visual connection to the surrounding world. HUD controls include Spacebar tactical RTwP pause, Shift-click waypoint queuing, and circle selection rings.
               </p>
@@ -1949,7 +2093,7 @@ graph LR
         } else if (idx === 3) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🤖 1. Autonomous Infinity AI Agent Architecture</h4>
+              <h4 class="lesson-subtitle">1. Autonomous Infinity AI Agent Architecture</h4>
               <p class="lesson-text">
                 Instead of brittle recorded clicks, RobOS features an autonomous decision-making AI agent (<code>qa_player/infinity_ai_agent.py</code>) that plays through the entire game slice via REST telemetry (<code>GET /api/v1/state</code>) and input commands (<code>POST /api/v1/input</code>).
               </p>
@@ -1974,7 +2118,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🎯 2. Spatial Threat Radar & Combined-Arms Tactics</h4>
+              <h4 class="lesson-subtitle">2. Spatial Threat Radar & Combined-Arms Tactics</h4>
               <p class="lesson-text">
                 The agent evaluates a spatial threat radar around the party:
               </p>
@@ -1988,7 +2132,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📹 3. Headless Xvfb & 1080p Video Proof-of-Work</h4>
+              <h4 class="lesson-subtitle">3. Headless Xvfb & 1080p Video Proof-of-Work</h4>
               <p class="lesson-text">
                 The entire campaign verification runs headlessly inside Docker containers using virtual X11 displays (Xvfb <code>:99</code>) and FFmpeg, outputting complete 1080p MP4 video proof-of-work with synchronized Piper TTS narration.
               </p>
@@ -2007,7 +2151,7 @@ flowchart TD
         } else if (idx === 4) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🧠 1. Knowledge Graph-First Game Architecture</h4>
+              <h4 class="lesson-subtitle">1. Knowledge Graph-First Game Architecture</h4>
               <p class="lesson-text">
                 All game definitions are modeled formally as linked data inside the RobOS Knowledge Graph (<code>.robos/kgraphs/crpg/package.jsonld</code>) conforming to W3C SHACL shapes (<code>CRPGGameShape</code>, <code>CRPGMonsterShape</code>, <code>CRPGSpellShape</code>).
               </p>
@@ -2020,7 +2164,7 @@ graph TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🔒 2. Strict Zero-Hardcoding Rule & DataStoreV1.gd</h4>
+              <h4 class="lesson-subtitle">2. Strict Zero-Hardcoding Rule & DataStoreV1.gd</h4>
               <p class="lesson-text">
                 No monster stats, ability modifiers, spell formulas, or dialogue trees may be hardcoded into Godot GDScript files. All data is compiled from JSON schemas into typed GDScript singletons (<code>DataStoreV1.gd</code>), providing static autocompletion and eliminating runtime KeyError crashes:
               </p>
@@ -2048,7 +2192,7 @@ static func get_class_data(class_id: String) -> Dictionary:
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🛡️ 3. W3C SHACL Validation Gate & Dual-State Diffing</h4>
+              <h4 class="lesson-subtitle">3. W3C SHACL Validation Gate & Dual-State Diffing</h4>
               <p class="lesson-text">
                 Before any pull request or deployment is approved, <code>kgraph validate</code> validates all shapes, and <code>kgraph diff main</code> checks for broken dialogue references, orphaned asset bindings, or stat imbalances across game revisions.
               </p>
@@ -2064,7 +2208,7 @@ static func get_class_data(class_id: String) -> Dictionary:
         if (idx === 0) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🐧 1. The Linux Operating System as a First-Class Knowledge Graph Entity</h4>
+              <h4 class="lesson-subtitle">1. The Linux Operating System as a First-Class Knowledge Graph Entity</h4>
               <p class="lesson-text">
                 In RobOS, an operating system is not merely an unmanaged execution substrate. Instead, <strong>every file, directory, and system primitive on a Linux system is extracted into the Knowledge Graph with verifiable linked data provenance</strong>.
               </p>
@@ -2095,7 +2239,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🔒 2. Cryptographic Provenance: The robos:evidence Schema</h4>
+              <h4 class="lesson-subtitle">2. Cryptographic Provenance: The robos:evidence Schema</h4>
               <p class="lesson-text">
                 Blind trust in AI diffs or unverified code updates is eliminated in RobOS. Every extracted node is stamped with a canonical, tamper-evident <code>robos:evidence</code> block:
               </p>
@@ -2114,7 +2258,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">⚙️ 3. Linux Virtual Filesystem Primitives & Special Inode Detection</h4>
+              <h4 class="lesson-subtitle">3. Linux Virtual Filesystem Primitives & Special Inode Detection</h4>
               <p class="lesson-text">
                 Unlike generic file tree indexers, the KGraph Parse Portal provides deep classification of Linux operating system primitives:
               </p>
@@ -2170,7 +2314,7 @@ flowchart TD
         } else if (idx === 1) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🧠 1. Moving Beyond Raw HTTP/2 MIME Headers</h4>
+              <h4 class="lesson-subtitle">1. Moving Beyond Raw HTTP/2 MIME Headers</h4>
               <p class="lesson-text">
                 A standard MIME type such as <code>application/json</code> or <code>text/yaml</code> carries zero architectural intent on its own. For example, a <code>package.json</code> file, an OpenAPI 3.1 contract, a <code>tsconfig.json</code>, and a test fixture all evaluate to <code>application/json</code>, yet each represents a completely distinct software lifecycle concern.
               </p>
@@ -2180,7 +2324,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📋 2. The Semantic Disambiguation Matrix</h4>
+              <h4 class="lesson-subtitle">2. The Semantic Disambiguation Matrix</h4>
               <table class="spec-table">
                 <thead>
                   <tr>
@@ -2256,7 +2400,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📁 3. Directory Archetype Detection Across 11+ Ecosystems</h4>
+              <h4 class="lesson-subtitle">3. Directory Archetype Detection Across 11+ Ecosystems</h4>
               <p class="lesson-text">
                 When pointed at any directory, <code>detectDirectoryArchetype()</code> scans root marker files to establish ecosystem context:
               </p>
@@ -2281,7 +2425,7 @@ graph TD
         } else if (idx === 2) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">⚡ 1. High-Throughput HTTP/2 gRPC Streaming Architecture</h4>
+              <h4 class="lesson-subtitle">1. High-Throughput HTTP/2 gRPC Streaming Architecture</h4>
               <p class="lesson-text">
                 Parsing multi-megabyte API contracts, database schemas, and hundreds of source code files inside the Node.js event loop causes severe memory spikes, event loop starvation, and potential process crashes. The Kgraph Parse Portal connects to an <strong>Apache Tika 4.0 streaming daemon</strong> listening on <code>localhost:50051</code>.
               </p>
@@ -2310,7 +2454,7 @@ sequenceDiagram
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🌳 2. Polyglot AST Symbol Extraction Engine</h4>
+              <h4 class="lesson-subtitle">2. Polyglot AST Symbol Extraction Engine</h4>
               <p class="lesson-text">
                 The portal's <code>TikaGrpcConnector</code> (<code>packages/kgraph-parse-portal/lib/tika-grpc-connector.js</code>) parses polyglot source trees into fine-grained AST symbols:
               </p>
@@ -2332,7 +2476,7 @@ const symbols = tikaConnector.extractAstSymbols(protoContent, '.proto');
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🛡️ 3. Resilient Zero-Downtime Offline Fallback Handling</h4>
+              <h4 class="lesson-subtitle">3. Resilient Zero-Downtime Offline Fallback Handling</h4>
               <p class="lesson-text">
                 In test environments, containerized Docker builds, or air-gapped developer laptops where the external Tika daemon is not running, the portal never throws an error or aborts crawling.
               </p>
@@ -2344,7 +2488,7 @@ const symbols = tikaConnector.extractAstSymbols(protoContent, '.proto');
         } else if (idx === 3) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🏗️ 1. Scaling Ingestion: Why Remote Execution API (REAPI v2)?</h4>
+              <h4 class="lesson-subtitle">1. Scaling Ingestion: Why Remote Execution API (REAPI v2)?</h4>
               <p class="lesson-text">
                 For enterprise monorepos (tens of thousands of source files, Protobuf schemas, and Bazel/Buck2 compilation units), local developer workstations quickly run out of RAM and CPU threads.
               </p>
@@ -2385,7 +2529,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">📦 2. Hermetiq Buildbarn OCI Helm Chart Architecture</h4>
+              <h4 class="lesson-subtitle">2. Hermetiq Buildbarn OCI Helm Chart Architecture</h4>
               <p class="lesson-text">
                 RobOS standardizes on Hermetiq's official OCI Helm distribution (<code>oci://ghcr.io/hermetiq/buildbarn</code>). The grid consists of four decoupled microservices:
               </p>
@@ -2398,7 +2542,7 @@ flowchart TD
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🛠️ 3. Automated Helm Values Generation & Cluster Lifecycle</h4>
+              <h4 class="lesson-subtitle">3. Automated Helm Values Generation & Cluster Lifecycle</h4>
               <p class="lesson-text">
                 The module in <code>packages/kgraph-parse-portal/lib/buildbarn-rbe.js</code> provides automated Helm values generation and CLI deployment helpers:
               </p>
@@ -2415,7 +2559,7 @@ helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn \
         } else if (idx === 4) {
           return `
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🔍 1. Sub-Millisecond Search via the Luxir C++ Engine</h4>
+              <h4 class="lesson-subtitle">1. Sub-Millisecond Search via the Luxir C++ Engine</h4>
               <p class="lesson-text">
                 Once files are crawled, disambiguated, and parsed into AST symbols, they are indexed into <strong>Luxir</strong>, RobOS's high-speed embedded C++ search engine running on port 8983.
               </p>
@@ -2438,7 +2582,7 @@ Index Document = {<br>
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🖥️ 2. Direct CLI Access via luxir-portal-cli.js</h4>
+              <h4 class="lesson-subtitle">2. Direct CLI Access via luxir-portal-cli.js</h4>
               <p class="lesson-text">
                 The portal includes a standalone CLI tool and in-app Tilix console tab:
               </p>
@@ -2467,7 +2611,7 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml</
             </div>
 
             <div class="lesson-section">
-              <h4 class="lesson-subtitle">🛡️ 3. W3C SHACL Validation Gates: Guaranteeing Zero Graph Corruption</h4>
+              <h4 class="lesson-subtitle">3. W3C SHACL Validation Gates: Guaranteeing Zero Graph Corruption</h4>
               <p class="lesson-text">
                 Autonomous agents and high-throughput crawlers must never mutate the canonical Knowledge Graph without strict schema enforcement.
               </p>
@@ -2491,7 +2635,7 @@ flowchart LR
       const m = MODULES_DATA[idx];
       return `
         <div class="lesson-section">
-          <h4 class="lesson-subtitle">📖 Module Overview & Core Architecture</h4>
+          <h4 class="lesson-subtitle">Module Overview & Core Architecture</h4>
           <p class="lesson-text">${m.overview || 'Review the attached living architecture documentation and complete the hands-on lab exercises below.'}</p>
         </div>
       `;
@@ -2513,9 +2657,9 @@ flowchart LR
             </div>
             <div class="slide-header-actions">
               <button class="btn-copy-tab-path" onclick="copySlidePath(${currentModIdx})" title="Copy file system path for AI agents">
-                📋 Copy as Path
+                Copy as Path
               </button>
-              <span class="badge badge-duration">⏱️ ${m.durationMinutes || 15} mins</span>
+              
               <div class="slide-menu-container">
                 <button class="btn-slide-menu" onclick="toggleSlideMenu(event, ${currentModIdx})" title="Slide Actions & Exports">
                   ⋮ Slide Actions ▾
@@ -2523,20 +2667,20 @@ flowchart LR
                 <div class="slide-dropdown-menu hidden" id="slide-dropdown-${currentModIdx}">
                   <div class="slide-menu-label">Slide &middot; Actions</div>
                   <button class="slide-menu-item" onclick="copySlidePath(${currentModIdx})">
-                    📋 <span>Copy Path on File System</span>
+                    <span>Copy Path on File System</span>
                   </button>
                   <button class="slide-menu-item" onclick="copySlideGitUrl(${currentModIdx})">
-                    🔗 <span>Copy Git URL Path</span>
+                    <span>Copy Git URL Path</span>
                   </button>
                   <button class="slide-menu-item" onclick="exportSlideAsZip(${currentModIdx})">
-                    📦 <span>Export as HTML Zip</span>
+                    <span>Export as HTML Zip</span>
                   </button>
                   <div class="slide-menu-divider"></div>
                   <button class="slide-menu-item" onclick="copySlideMarkdown(${currentModIdx})">
-                    📄 <span>Copy Slide Markdown</span>
+                    <span>Copy Slide Markdown</span>
                   </button>
                   <button class="slide-menu-item" onclick="copySlideUri(${currentModIdx})">
-                    🏷️ <span>Copy Slide KGraph URI</span>
+                    <span>Copy Slide KGraph URI</span>
                   </button>
                 </div>
               </div>
@@ -2548,19 +2692,19 @@ flowchart LR
           </div>
 
           <nav class="module-nav-pills" aria-label="Module Content Sections">
-            <a href="#section-lesson" class="nav-pill"><span>📖</span> Lesson Material</a>
-            <a href="#section-labs" class="nav-pill"><span>🧪</span> Hands-On Labs (${(m.labSteps || []).length})</a>
-            ${(m.quiz || []).length ? `<a href="#section-quiz" class="nav-pill"><span>📝</span> Knowledge Check (${(m.quiz || []).length})</a>` : ''}
+            <a href="#section-lesson" class="nav-pill">Lesson</a>
+            <a href="#section-labs" class="nav-pill">Try it yourself (${(m.labSteps || []).length})</a>
+            ${(m.quiz || []).length ? `<a href="#section-quiz" class="nav-pill">Check your understanding (${(m.quiz || []).length})</a>` : ''}
           </nav>
 
           <!-- Lesson Material & Architecture Walkthrough -->
-          <h3 id="section-lesson" class="section-title">📖 Lesson Material &amp; Architecture Walkthrough</h3>
+          <h3 id="section-lesson" class="section-title">Lesson</h3>
           <div class="module-lesson-body">
             ${getModuleLessonHtml(currentModIdx)}
           </div>
 
           <!-- Lab Steps -->
-          <h3 id="section-labs" class="section-title">🧪 Hands-On Lab Exercises</h3>
+          <h3 id="section-labs" class="section-title">Try it yourself</h3>
           <div class="lab-steps">
             ${(m.labSteps || []).map((step, sIdx) => {
               const isChecked = !!progress.completedLabs[currentModIdx + '-' + sIdx];
@@ -2581,8 +2725,22 @@ flowchart LR
                       </label>
                     </div>
                     <div class="lab-step-body">
+                      ${detail.who ? `<span class="lab-who">${formatStepText(detail.who)}</span>` : ''}
                       ${detail.description ? `<p class="lab-step-desc">${formatStepText(detail.description)}</p>` : ''}
-                      ${escapedCode ? `<pre class="code-snippet" style="margin:2px 0;"><code>${escapedCode}</code></pre>` : ''}
+                      ${detail.agentPrompt ? `
+                        <div class="lab-agent">
+                          <div class="lab-agent-head"><span>Ask your AI agent</span><button type="button" class="lab-agent-copy" onclick="copyLabPrompt(this)">Copy</button></div>
+                          <div class="lab-agent-text">${formatStepText(detail.agentPrompt)}</div>
+                        </div>
+                      ` : ''}
+                      ${detail.explain ? `<div class="lab-explain"><strong>What this does:</strong> ${formatStepText(detail.explain)}</div>` : ''}
+                      ${escapedCode && detail.agentPrompt ? `
+                        <details class="lab-self">
+                          <summary>Prefer to type it yourself? Show the command</summary>
+                          <pre class="code-snippet" style="margin:2px 0;"><code>${escapedCode}</code></pre>
+                        </details>
+                      ` : ''}
+                      ${escapedCode && !detail.agentPrompt ? `<pre class="code-snippet" style="margin:2px 0;"><code>${escapedCode}</code></pre>` : ''}
                       ${detail.expected ? `<div class="lab-step-expect"><strong>What to expect:</strong> ${formatStepText(detail.expected)}</div>` : ''}
                       ${detail.image ? `
                         <figure class="lab-step-figure">
@@ -2609,7 +2767,7 @@ flowchart LR
 
           <!-- Quizzes -->
           ${m.quiz && m.quiz.length ? `
-            <h3 id="section-quiz" class="section-title">📝 Module Knowledge Check</h3>
+            <h3 id="section-quiz" class="section-title">Check your understanding</h3>
             <div class="quiz-section">
               ${m.quiz.map((q, qIdx) => {
                 const key = currentModIdx + '-' + qIdx;
@@ -2635,7 +2793,7 @@ flowchart LR
                       }).join('')}
                     </div>
                     <div class="quiz-feedback ${passed ? 'pass' : ''}" id="quiz-feedback-${currentModIdx}-${qIdx}" role="status" aria-live="polite">
-                      ${passed ? '✅ <strong>Correct!</strong> ' + formatStepText(q.explanation || '') : ''}
+                      ${passed ? '<strong>Correct!</strong> ' + formatStepText(q.explanation || '') : ''}
                     </div>
                   </fieldset>
                 `;
@@ -2655,7 +2813,7 @@ flowchart LR
               ${currentModIdx < MODULES_DATA.length - 1 ? `
                 <button class="btn btn-primary" onclick="selectModule(${currentModIdx + 1})">Next Module &rarr;</button>
               ` : `
-                <button class="btn btn-gold" onclick="openCertificateModal()">Review Verified Credential 🏆</button>
+                <button class="btn btn-gold" onclick="openCertificateModal()">Review Verified Credential </button>
               `}
             </div>
           </div>
@@ -2679,7 +2837,16 @@ flowchart LR
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/`([^`]+)`/g, '<code>$1</code>');
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }
+
+    function copyLabPrompt(button) {
+      const text = button.closest('.lab-agent').querySelector('.lab-agent-text').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied';
+        setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+      });
     }
 
     function completeModuleLabs(mIdx) {
@@ -2754,7 +2921,7 @@ flowchart LR
       const slideId = (m && m.id) || ('slide-' + (idx + 1));
       const fullPath = GIT_INFO.gitopsPath + '#' + slideId;
       await copyToClipboard(fullPath);
-      showWebToast('📋 Copied file system path: ' + fullPath);
+      showWebToast('Copied file system path: ' + fullPath);
     }
 
     async function copySlideGitUrl(idx) {
@@ -2763,7 +2930,7 @@ flowchart LR
       const slideId = (m && m.id) || ('slide-' + (idx + 1));
       const gitUrl = GIT_INFO.gitRemoteUrl + '/blob/' + GIT_INFO.gitBranch + '/' + GIT_INFO.gitopsRelative + '#' + slideId;
       await copyToClipboard(gitUrl);
-      showWebToast('🔗 Copied Git URL path: ' + gitUrl);
+      showWebToast('Copied Git URL path: ' + gitUrl);
     }
 
     async function copySlideMarkdown(idx) {
@@ -2780,7 +2947,7 @@ flowchart LR
         ''
       ];
       if (m.labSteps && m.labSteps.length) {
-        lines.push('## Hands-On Lab Exercises');
+        lines.push('## Try it yourself');
         m.labSteps.forEach((s, sIdx) => {
           lines.push((sIdx + 1) + '. ' + s);
         });
@@ -2800,7 +2967,7 @@ flowchart LR
       }
       const md = lines.join('\n');
       await copyToClipboard(md);
-      showWebToast('📄 Copied Slide Markdown to clipboard!');
+      showWebToast('Copied Slide Markdown to clipboard!');
     }
 
     async function copySlideUri(idx) {
@@ -2808,7 +2975,7 @@ flowchart LR
       const m = MODULES_DATA[idx];
       const uri = (COURSE_DATA['@id'] || 'urn:robos:elearning') + '#' + ((m && m.id) || ('slide-' + (idx + 1)));
       await copyToClipboard(uri);
-      showWebToast('🏷️ Copied Slide KGraph URI: ' + uri);
+      showWebToast('Copied Slide KGraph URI: ' + uri);
     }
 
     function createZipBlob(files) {
@@ -2916,19 +3083,19 @@ flowchart LR
       document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
       const m = MODULES_DATA[idx];
       if (!m) return;
-      showWebToast('⏳ Packaging slide as offline HTML zip…');
+      showWebToast('Packaging slide as offline HTML zip…');
 
       const slideTitle = m.title || ('Slide ' + (idx + 1));
       const safeSlug = slideTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('slide-' + (idx + 1));
       const filename = 'elearning-slide-' + (idx + 1) + '-' + safeSlug + '.zip';
 
       const labsHtml = (m.labSteps && m.labSteps.length) ?
-        '<h3 style="color:var(--accent); font-size:16px; margin:24px 0 12px;">🧪 Hands-On Lab Exercises</h3><ol style="padding-left:24px; display:flex; flex-direction:column; gap:8px;">' +
+        '<h3 style="color:var(--accent); font-size:16px; margin:24px 0 12px;">Try it yourself</h3><ol style="padding-left:24px; display:flex; flex-direction:column; gap:8px;">' +
         m.labSteps.map(s => '<li>' + s + '</li>').join('') +
         '</ol>' : '';
 
       const quizzesHtml = (m.quiz && m.quiz.length) ?
-        '<h3 style="color:var(--gold); font-size:16px; margin:24px 0 12px;">📝 Knowledge Check</h3><div style="display:flex; flex-direction:column; gap:16px;">' +
+        '<h3 style="color:var(--gold); font-size:16px; margin:24px 0 12px;">Knowledge Check</h3><div style="display:flex; flex-direction:column; gap:16px;">' +
         m.quiz.map((q, qIdx) => {
           const optsHtml = q.options ? '<ul style="list-style:none; padding-left:0; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">' +
             q.options.map(opt => '<li style="background:#0d1117; border:1px solid #30363d; padding:6px 10px; border-radius:4px; font-size:13px;">' + opt + '</li>').join('') + '</ul>' : '';
@@ -2936,7 +3103,7 @@ flowchart LR
           return '<div style="background:#161b22; border:1px solid #30363d; border-radius:6px; padding:14px;">' +
             '<p style="font-weight:600; margin-bottom:8px;">Q' + (qIdx + 1) + ': ' + q.question + '</p>' +
             optsHtml +
-            '<div style="font-size:12px; color:var(--success);">✅ <strong>Answer:</strong> ' + q.answer + '</div>' +
+            '<div style="font-size:12px; color:var(--success);"><strong>Answer:</strong> ' + q.answer + '</div>' +
             expHtml +
             '</div>';
         }).join('') +
@@ -3053,9 +3220,9 @@ flowchart LR
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showWebToast('📦 Successfully downloaded: ' + filename);
+        showWebToast('Successfully downloaded: ' + filename);
       } catch (err) {
-        showWebToast('❌ Failed to create zip: ' + err.message);
+        showWebToast('Failed to create zip: ' + err.message);
       }
     }
 
@@ -3073,7 +3240,7 @@ flowchart LR
         document.body.appendChild(indicator);
       }
       const pct = Math.round(currentZoomFactor * 100);
-      indicator.textContent = '🔍 ' + pct + '%' + (pct === 100 ? ' (Default)' : '');
+      indicator.textContent = '' + pct + '%' + (pct === 100 ? ' (Default)' : '');
       indicator.classList.add('visible');
 
       if (zoomIndicatorTimeout) clearTimeout(zoomIndicatorTimeout);
@@ -3133,7 +3300,7 @@ flowchart LR
       updateProgressDisplay();
       if (window.mermaid) {
         try {
-          window.mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+          window.mermaid.initialize({ startOnLoad: true, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'neutral' });
         } catch {}
       }
     });
