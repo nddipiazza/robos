@@ -13,7 +13,6 @@ const demo = path.resolve(__dirname, '..');
 const repo = path.resolve(demo, '../../..');
 const { build } = require(path.join(demo, 'practice-site'));
 const { serve } = require(path.join(demo, 'serve'));
-const { addGuidePages } = require(path.join(demo, 'collect'));
 const { buildGame } = require(path.join(demo, 'build-game'));
 const { startRecording, stopRecording } = require(path.join(repo, 'packages/robos-test/lib/recorder'));
 
@@ -108,6 +107,7 @@ async function record(name, prepare, scene) {
   await stopRecording(rec);
 }
 
+const COLLECT = 'packages/robos-jrpg-parser/demo/collect.js';
 const HARVESTER = 'packages/robos-jrpg-parser/tools/harvest_jrpg_assets.py';
 const PARSER = 'packages/robos-jrpg-parser/bin/jrpg-parser.js';
 const SITE = `http://127.0.0.1:${SITE_PORT}`;
@@ -116,16 +116,16 @@ const kgraph = path.join(workDir, 'kgraph');
 const manifest = path.join(collection, 'sources-manifest.json');
 
 async function discoverStart() {
-  await stage('titles', 'Terminal (the real commands, running now)', 'What the website sees (its own log)');
+  await stage('titles', 'Terminal: the commands your AI agent runs for you', 'What the website sees (its own log)');
   siteRequests = r => stage('sideLine', `${r.status} ${r.url}`);
-  await stage('caption', 'Step 1 of 2: find what to download', 'A person opens the fan site in a browser, just to look around.');
+  await stage('caption', 'Step 1 of 2: find what to download', 'You can look at the site in a browser. You will not download anything by hand.');
   await load(`${SITE}/`);
 }
 
 async function discoverScene() {
   const label = 'Step 1 of 2: find what to download';
   await sleep(1800);
-  await stage('caption', label, 'They click through to the page that lists every map.');
+  await stage('caption', label, 'This page lists every map. A program will read this same page.');
   await clickLink('Map atlas');
   await sleep(1800);
   await parkCursor();
@@ -138,12 +138,12 @@ async function discoverScene() {
   })`);
   await sleep(4200);
   await still('atlas-keep-and-ignore');
-  await stage('caption', label, 'The harvester program reads that same page and writes a shopping list. It downloads nothing yet.');
+  await stage('caption', label, 'Your agent runs a program called the harvester. It reads the page and writes a shopping list. Nothing is downloaded yet.');
   await run('python3', [HARVESTER, '--out-dir', collection, '--vgmaps-index', `${SITE}/atlas/`, '--base-url', `${SITE}/atlas/`, '--map-prefix', 'EmberQuest-', '--discover-only'],
     { shown: `python3 harvest_jrpg_assets.py --out-dir ${collection} --vgmaps-index ${SITE}/atlas/ --map-prefix EmberQuest- --discover-only` });
   await sleep(1800);
   await stage('caption', label, 'Here is the list. Three Ember Quest maps, and nothing from the other game.');
-  await run('python3', ['-c', `import json;[print(m['file']) for m in json.load(open(${JSON.stringify(manifest)}))['maps']]`], { shown: 'list the files in sources-manifest.json' });
+  await run('python3', ['-c', `import json;[print(m['file']) for m in json.load(open(${JSON.stringify(manifest)}))['maps']]`], { shown: '# show the files on the list (sources-manifest.json)' });
   await sleep(1500);
   await still('harvester-shopping-list');
   await sleep(2500);
@@ -156,17 +156,18 @@ const showFolder = () => {
 };
 
 async function downloadStart() {
-  addGuidePages(collection, SITE);
-  await stage('titles', 'Terminal (the real commands, running now)', 'The collection folder on our disk');
+  await stage('titles', 'Terminal: the commands your AI agent runs for you', 'The collection folder on our disk');
   await showFolder();
-  await stage('caption', 'Step 2 of 2: download everything on the list', 'A person also lists the guide pages. The folder starts empty.');
+  await stage('caption', 'Step 2 of 2: download everything on the list', 'The folder on your computer starts empty. Next, a small helper program adds the guide pages to the list.');
   await load(`${SITE}/guide/weapons.html`);
 }
 
 async function downloadScene() {
   const label = 'Step 2 of 2: download everything on the list';
   await sleep(2400);
-  await stage('caption', label, 'The harvester fetches each file in turn, pausing between requests to be polite.');
+  await run('node', [COLLECT, collection, SITE], { shown: `node collect.js ${collection} ${SITE}` });
+  await sleep(1800);
+  await stage('caption', label, 'Now the harvester downloads everything on the list, one file at a time, pausing between each.');
   siteRequests = () => {};
   const follow = {
     'EmberQuest-World.png': `${SITE}/atlas/EmberQuest-World.png`,
@@ -191,7 +192,7 @@ async function downloadScene() {
 }
 
 async function parseStart() {
-  await stage('titles', 'Terminal (the real commands, running now)', 'What the parser noticed');
+  await stage('titles', 'Terminal: the commands your AI agent runs for you', 'What the parser noticed');
   await stage('caption', 'Turning the pile of files into facts', 'The guide says an Iron Sword costs 40 gold. Remember that number.');
   await load(`${SITE}/guide/weapons.html`);
   await markRow('Iron Sword', '#fff59d', '40 gold');
@@ -201,7 +202,7 @@ async function parseScene() {
   const label = 'Turning the pile of files into facts';
   const parsedFile = path.join(kgraph, 'parsed.json');
   await sleep(2800);
-  await stage('caption', label, 'First the parser sorts the pile. The remake page gets set aside: its prices belong to a different game.');
+  await stage('caption', label, 'Your agent runs the parser. First it sorts the files. The remake page is set aside: its prices belong to a different game.');
   await run('node', [PARSER, 'scan', collection], { shown: `node jrpg-parser.js scan ${collection}` });
   await load(`${SITE}/guide/anniversary-prices.html`, 400);
   await markRow('Iron Sword', '#ffcdd2', 'skipped');
@@ -219,7 +220,7 @@ async function parseScene() {
   await still('parser-flags-conflict');
   await stage('clear');
   await stage('caption', label, 'The Iron Sword is now a fact a program can use, and it remembers which page it came from.');
-  await run('python3', ['-c', `import json;e=[x for x in json.load(open(${JSON.stringify(parsedFile)}))['equipment'] if x['name']=='Iron Sword'][0];print(json.dumps({k:e[k] for k in ['name','kind','damage','price','source']},indent=2))`], { shown: 'show the Iron Sword in parsed.json' });
+  await run('python3', ['-c', `import json;e=[x for x in json.load(open(${JSON.stringify(parsedFile)}))['equipment'] if x['name']=='Iron Sword'][0];print(json.dumps({k:e[k] for k in ['name','kind','damage','price','source']},indent=2))`], { shown: '# show the Iron Sword in parsed.json' });
   await sleep(5500);
   await still('iron-sword-as-data');
 }
@@ -230,7 +231,7 @@ async function playStart() {
   await stage('wide', true);
   await stage('titles', 'The game\'s live state, read while it runs', 'The numbers came from the guide');
   await stage('side', `Iron Sword price 40: guide/weapons.html\nMossling HP 12: guide/bestiary.html\nCinder Wyrm HP 40: guide/bestiary.html`);
-  await stage('caption', 'The automated playthrough', 'A robot plays the game by pressing keys, and checks each sentence in its script as it goes.');
+  await stage('caption', 'The automated playthrough', 'You click one button. A robot inside the page presses the keys and checks each sentence in its script.');
   await load(`http://127.0.0.1:${GAME_PORT}/?pace=190`, 800);
 }
 

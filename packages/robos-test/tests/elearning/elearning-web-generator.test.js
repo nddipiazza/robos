@@ -84,7 +84,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.includes('5. Knowledge Graph-First Game Development') || content.includes('Knowledge Graph-First Game Architecture'), 'Module 5 must be present');
 
     // 5. Verify Comprehensive Lesson Content & Architecture Walkthrough for all 5 modules
-    assert.ok(content.includes('Lesson Material &amp; Architecture Walkthrough'), 'Must render Lesson Material header');
+    assert.ok(content.includes('id="section-lesson"'), 'Must render the lesson section');
     assert.ok(content.includes('Real-Time with Pause (RTwP) &amp; 6.0-Second Combat Round') || content.includes('Real-Time with Pause (RTwP) & 6.0-Second Combat Round'), 'Module 1 RTwP lesson must be present');
     assert.ok(content.includes('Ability Score - 10'), 'Must include Ability Modifier formula');
     assert.ok(content.includes('max(d20, d20)'), 'Must include Advantage probability curve');
@@ -225,6 +225,10 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
       assert.ok(siteHtml.includes(`/assets/elearning/jrpg-kgraph/demo/${clip}.gif`), `Must embed the ${clip} recording`);
     }
     assert.ok(!siteHtml.includes('/home/ndipiazza'), 'Must not mention a personal home folder');
+    assert.ok(!/SCORM 2004 Verified|W3C SHACL Conforming/.test(siteHtml), 'Must not show decorative tags');
+    assert.ok(!/[\u{1F000}-\u{1FAFF}\u2B50\u23F1]/u.test(siteHtml), 'Must not use emoji');
+    assert.ok(siteHtml.includes('--accent: #f54e00'), 'Must use the RobOS site theme');
+    assert.ok(siteHtml.includes('lab-agent'), 'Must render the agent prompt cards');
     assert.ok(!siteHtml.includes('/assets/elearning/jrpg-kgraph/labs/'), 'Must not use images that show the original game');
     assert.ok(siteHtml.includes('getShuffledQuizOptions('), 'Must include session-salted quiz option shuffler');
     assert.ok(siteHtml.includes('robos_quiz_salt'), 'Must randomize quiz option ordering per learner session');
@@ -238,7 +242,9 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     const courseNode = store.getNode(`urn:robos:elearning:course:${courseSlug}`);
     assert.ok(courseNode && Array.isArray(courseNode['robos:modules']), 'Course node must have robos:modules');
     assert.strictEqual(courseNode['robos:difficulty'], 'Beginner', 'Must be written for beginners');
-    assert.strictEqual(courseNode['robos:modules'].length, 7, 'Must have 7 modules');
+    assert.strictEqual(courseNode['robos:modules'].length, 12, 'Must have 12 modules');
+    assert.ok(/Game Programming Concepts/.test(courseNode['robos:modules'][7].title), 'Must follow the pipeline with game programming concepts');
+    assert.ok(courseNode['robos:modules'].slice(8).every(m => /Godot Bootcamp/.test(m.title)), 'Must end with the Godot bootcamp');
     assert.ok(/Start Here/.test(courseNode['robos:modules'][0].title), 'Must open with the plain-English introduction');
     assert.ok(/Before You Begin/.test(courseNode['robos:modules'][1].title), 'Must follow with the prerequisites');
 
@@ -246,9 +252,14 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     for (const mod of courseNode['robos:modules']) {
       assert.ok(Array.isArray(mod.labDetails) && mod.labDetails.length >= 2 && mod.labDetails.length === mod.labSteps.length, `${mod.id} must describe each of its lab steps`);
       for (const step of mod.labDetails) {
-        assert.ok(step.title && step.title.length >= 15, `Lab step must have a descriptive title: ${step.title}`);
-        assert.ok(step.description && step.description.length >= 80, `Lab step must have a clear English description: ${step.title}`);
-        assert.ok(step.expected && step.expected.length >= 60, `Lab step must explain what to expect: ${step.title}`);
+        assert.ok(step.who, `Lab step must say who acts: ${step.title}`);
+        if (step.code) {
+          assert.ok(step.explain && step.explain.length >= 40, `Lab step must explain the program it runs: ${step.title}`);
+          assert.ok(step.agentPrompt, `Lab step that runs a program must offer an agent prompt: ${step.title}`);
+        }
+        assert.ok(step.title && step.title.length >= 10, `Lab step must have a descriptive title: ${step.title}`);
+        assert.ok(step.description && step.description.length >= 30, `Lab step must have a clear English description: ${step.title}`);
+        assert.ok(step.expected && step.expected.length >= 30, `Lab step must explain what to expect: ${step.title}`);
         if (step.image) {
           assert.ok(step.image.startsWith('/assets/elearning/jrpg-kgraph/demo/'), `Lab step must only use the Ember Quest recordings: ${step.title}`);
           assert.ok(fs.existsSync(path.join(__dirname, '../../../../site', step.image)), `Lab step screenshot must exist on disk: ${step.image}`);

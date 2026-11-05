@@ -4,13 +4,15 @@ This page tells the whole story in one go. For step-by-step lessons, clips you c
 
 **In one sentence:** we collect what fans have written about an old game, turn it into organized facts, rebuild the game from those facts, and have a robot play it to check our work.
 
+**You don't need to type commands.** Each hands-on step gives you a sentence to paste into an AI agent, such as Claude Code, GitHub Copilot, Codex or Gemini, and explains what it will do. The examples were tested with Claude Code, and any agent that can read files and run commands should handle them.
+
 ---
 
 ## The five stages
 
 | Stage | In plain English | The tool |
 | --- | --- | --- |
-| 1. Collect | Gather maps and guide pages into one private folder | A person; in this course, the harvester on the practice site |
+| 1. Collect | Gather maps and guide pages into one private folder | On a real game, you, by hand. In this course, a program on a practice site |
 | 2. Read | Pull exact facts out of messy pages | The parser |
 | 3. Organize | Connect every fact to what it relates to, and where it came from | The knowledge graph |
 | 4. Rebuild | Turn the facts into maps, shops and battles | A build step and a game engine |
@@ -80,6 +82,20 @@ But a test only checks what you asked it to. Here, the hero is standing inside a
 
 Fan guides covered shops and story, but not exact walls, monster accuracy or level-up growth. Those came from the game's own data tables, read with the help of fans' notes and kept private. The robot-tested part of the real game is its opening chapter. Only parsed facts and newly generated art are ever published, through the `jrpg-parser publish` command.
 
+## Then: game programming and Godot
+
+Modules 8 to 12 teach you to work on a real game, using Quest: Warrior Dragon, a complete fan remake of Dragon Warrior in this project.
+
+| Module | What you learn |
+| --- | --- |
+| 8. Game programming concepts | The game loop, state, input, tile grids, collision, interpolation, state machines, randomness, events, and data |
+| 9. The editor | Nodes, scenes, scripts, autoloads and just enough GDScript |
+| 10. One key press | Following a key press through the real code, and controlling a game from outside it |
+| 11. Battles and data | Where a monster's numbers come from, and how to find which code really runs |
+| 12. Make a change | Describe, change, test, watch and undo, by breaking a real test and fixing it |
+
+![A test run of Quest Warrior Dragon: the hero opens a chest next to them and finds a Torch](/assets/elearning/jrpg-kgraph/demo/qwd-chest.gif)
+
 ## Glossary
 
 | Word | Meaning |
@@ -89,12 +105,16 @@ Fan guides covered shops and story, but not exact walls, monster accuracy or lev
 | Manifest | A list of the files to download |
 | Parser | A program that pulls facts out of messy pages |
 | Knowledge graph | Facts stored as a web of connections |
-| Node | One item in a knowledge graph |
 | Tile | One small square of a map |
 | Sprite | A small moving picture of a character |
 | HP | How much damage something can take |
 | JSON | A way of writing facts that people and programs can both read |
 | Gherkin | Near-plain English for writing test scripts |
 | Cucumber | A tool family that runs those scripts |
+| AI agent | An assistant that can read a project's files and run programs |
+| Godot | A free game engine, used for Quest: Warrior Dragon |
+| Node | In Godot, one small part of a game. In a knowledge graph, one item |
+| Scene | In Godot, a saved tree of nodes, such as a room |
+| Autoload | In Godot, code that stays running across scene changes |
 | ROM | A copy of the data on an old game cartridge |
 | Clean-room art | New images we made, instead of the original game's |
