@@ -64,6 +64,8 @@ Then the hero has 10 gold
 
 ![A robot plays Ember Quest from the first town to the boss, ticking off each line of its script](/assets/elearning/jrpg-kgraph/demo/playthrough.gif)
 
+The robot reads the game state: the small set of values, such as position, gold and HP, that holds everything true about the game right now. The hero's 50 starting gold is a setting typed in by hand and copied onto that state, while prices and monster numbers come from the fan site through the parser.
+
 But a test only checks what you asked it to. Here, the hero is standing inside a tree, and the check that the map name is correct still passes. That really happened on the Final Fantasy build, which is why a person watches the recordings.
 
 ![The hero standing inside a tree while the check on the map name passes](/assets/elearning/jrpg-kgraph/demo/hero-in-a-tree.png)
