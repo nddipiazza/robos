@@ -368,3 +368,11 @@ test('the catalog puts unknown app files in "other" and excludes caches, logs an
   }
   assert.equal(sync.isExcluded('config/movie-cache-settings.json'), false);
 });
+
+test('device keys and settings backups never go to a vault', () => {
+  const { isExcluded } = require('./config-sync');
+  assert.equal(isExcluded('config/tuya.json'), true);
+  assert.equal(isExcluded('config/lg-thinq.json'), true);
+  assert.equal(isExcluded('config/smart-lights.json.bak-20261106-134254'), true);
+  assert.equal(isExcluded('config/smart-lights.json'), false);
+});
