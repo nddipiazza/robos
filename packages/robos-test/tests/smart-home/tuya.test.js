@@ -144,6 +144,11 @@ describe('Tuya local protocol', () => {
     }
   });
 
+  it('does not mistake the Smart Life app asking for lights for a light', () => {
+    const probe = tuya.encode6699({ seq: 0, cmd: 0x25, plaintext: Buffer.from('{"from":"app","ip":"192.168.1.18"}'), key: tuya.BROADCAST_KEY });
+    assert.strictEqual(tuya.parseBroadcast(probe, '192.168.1.18'), null);
+  });
+
   it('reads the broadcast a real version 3.5 bulb sends', () => {
     const json = { ip: '192.168.1.11', gwId: DEV_ID, active: 2, encrypt: true, productKey: 'keytfesxxsqewnqy', version: '3.5' };
     const frame = tuya.encode6699({ seq: 0, cmd: 0x13, plaintext: Buffer.concat([RET_OK, Buffer.from(JSON.stringify(json))]), key: tuya.BROADCAST_KEY });

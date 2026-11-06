@@ -365,7 +365,22 @@ function parseBroadcast(buf, fromIp) {
   }
 }
 
-/** Listens for Tuya broadcasts. Lights send one every few seconds. */
+/** The "where are you?" call the Smart Life app broadcasts on port 7000. */
+function appProbe(localIp) {
+  return encode6699({ seq: 0, cmd: 0x25, plaintext: Buffer.from(JSON.stringify({ from: 'app', ip: localIp })), key: BROADCAST_KEY });
+}
+
+function localIpv4Addresses() {
+  return Object.values(require('node:os').networkInterfaces())
+    .flat()
+    .filter((a) => a && a.family === 'IPv4' && !a.internal)
+    .map((a) => a.address);
+}
+
+/**
+ * Finds Tuya devices. Older ones broadcast every few seconds; newer version 3.5 ones
+ * stay quiet until an app asks, so this asks the way the Smart Life app does.
+ */
 function discoverTuyaDevices({ windowMs = 7000, ports = BROADCAST_PORTS } = {}) {
   return new Promise((resolve) => {
     const found = new Map();
@@ -387,7 +402,16 @@ function discoverTuyaDevices({ windowMs = 7000, ports = BROADCAST_PORTS } = {}) 
         if (device) found.set(device.id, device);
       });
       try {
-        sock.bind(port);
+        sock.bind(port, () => {
+          if (port !== 7000) return;
+          sock.setBroadcast(true);
+          const ask = () => {
+            for (const ip of localIpv4Addresses()) sock.send(appProbe(ip), 7000, '255.255.255.255', () => {});
+          };
+          ask();
+          setTimeout(ask, 1500);
+          setTimeout(ask, 3500);
+        });
       } catch {}
     }
     setTimeout(finish, windowMs);
