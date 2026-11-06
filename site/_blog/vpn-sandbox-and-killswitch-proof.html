@@ -9,7 +9,8 @@ tags:
   - "Linux ip-netns &amp; iptables"
   - "Security Proof"
 summary: "Two new desktop apps—<strong>RobOS VPN Servers</strong> (<code>packages/vpn-servers</code>) and <strong>RobOS VPN Sandbox</strong> (<code>packages/vpn-sandbox</code>)—let you launch individual desktop or CLI applications (such as Firefox, Transmission, or <code>curl</code>) inside an isolated Linux network namespace (<code>ip netns</code>) routed exclusively through OpenVPN (with all 3,598 official IPVanish server profiles bundled out of the box). An automated 5-step fault-injection proof kills the OpenVPN daemon mid-flight and verifies at the kernel packet counter level that zero bytes ever fall back to your normal public IP."
-description: "Two new desktop apps—RobOS VPN Servers (packages/vpn-servers) and RobOS VPN Sandbox (packages/vpn-sandbox)—let you launch individual desktop or CLI applications (such as Firefox, Transmission, or curl) inside an isolated Linux network namespace (ip netns) routed exclusively through OpenVPN (with all 3,598 official IPVanish server profiles bundled out of the box). An automated 5-step fault-injection proof kills the OpenVPN daemon mid-flight and verifies at the kernel packet counter level that zero bytes ever fall back to your normal public IP."
+description: "Run individual Linux apps through OpenVPN in isolated network namespaces. See the live fault-injection test that checks for leaks when the VPN disconnects."
+seo_title: "Per-App VPN Sandbox and Kill Switch Test · RobOS"
 og_image: /assets/security/vpn-sandbox-killswitch-proven.png
 og_image_alt: "RobOS VPN Sandbox showing Firefox running inside an isolated VPN namespace and the live 5-step Kill-Switch Proof banner"
 ---
