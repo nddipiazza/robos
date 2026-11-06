@@ -21,9 +21,15 @@ const crypto = require('node:crypto');
 const { driveFetch, driveFetchJson, readDriveError } = require('./google-drive-fetch');
 
 // Built-in desktop OAuth 2.0 clients:
-// 1. Drive desktop client (used by Data Sources & Audio Player)
+// 1. Drive desktop client (used by Data Sources & Audio Player). This is rclone's public,
+//    open-source desktop client (rclone backend/drive), so Google's sign-in and consent pages
+//    name the app "rclone": that name is registered on rclone's Google Cloud project and code
+//    cannot change it. A user's own client (account.clientId) shows their own app name. See
+//    docs/development/google-oauth-client.md.
 const DEFAULT_GDRIVE_CLIENT_ID = '202264815644.apps.googleusercontent.com';
 const DEFAULT_GDRIVE_OBSCURED_SECRET = 'eX8GpZTVx3vxMWVkuuBdDWmAUE6rGhTwVrvG9GhllYccSdj2-mvHVg';
+/** The app name Google shows on its sign-in pages for DEFAULT_GDRIVE_CLIENT_ID. */
+const BUILTIN_GOOGLE_CLIENT_APP_NAME = 'rclone';
 
 // 2. Thunderbird open-source Google Workspace OAuth 2.0 client (supports Calendar CalDAV, Contacts CardDAV, Gmail IMAP/SMTP)
 const THUNDERBIRD_GOOGLE_CLIENT_ID = '406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com';
@@ -553,7 +559,12 @@ function syncAccountToDataSources(account, options = {}) {
         matched = true;
         if (account.email) ds.user = account.email;
         if (account.accessToken) ds.accessToken = account.accessToken;
-        if (account.refreshToken) ds.refreshToken = account.refreshToken;
+        if (account.refreshToken) {
+          ds.refreshToken = account.refreshToken;
+          // A refresh token only works with the OAuth client that issued it.
+          ds.clientId = account.clientId || '';
+          ds.clientSecret = account.clientSecret || '';
+        }
         if (account.loggedIn) {
           ds.loggedIn = true;
           ds.authStatus = 'authenticated';
@@ -577,6 +588,8 @@ function syncAccountToDataSources(account, options = {}) {
         user: account.email || '',
         accessToken: account.accessToken || '',
         refreshToken: account.refreshToken || '',
+        clientId: account.clientId || '',
+        clientSecret: account.clientSecret || '',
         authStatus: account.loggedIn ? 'authenticated' : 'logged_out',
         loggedIn: Boolean(account.loggedIn),
         status: account.loggedIn ? 'Connected' : 'Login Required',
@@ -625,6 +638,22 @@ function sanitizeAccountForRenderer(acc) {
     thunderbirdProfilePath: normalized.thunderbirdProfilePath,
     lastVerifiedAt: normalized.lastVerifiedAt,
     updatedAt: normalized.updatedAt,
+    ...(normalized.provider === 'google' ? { oauthClient: describeGoogleOAuthClient(normalized) } : {}),
+  };
+}
+
+/**
+ * Which Google OAuth client an account signs in with, for the UI. The built-in client is
+ * rclone's, so Google's pages say "rclone"; with the user's own client they show the app
+ * name the user registered. Never includes the secret.
+ */
+function describeGoogleOAuthClient(account = {}) {
+  const clientId = account.clientId || '';
+  const custom = Boolean(clientId) && clientId !== DEFAULT_GDRIVE_CLIENT_ID;
+  return {
+    custom,
+    clientId: custom ? clientId : DEFAULT_GDRIVE_CLIENT_ID,
+    appName: custom ? null : BUILTIN_GOOGLE_CLIENT_APP_NAME,
   };
 }
 
@@ -1046,12 +1075,22 @@ async function startGoogleBrowserOAuth(params = {}, options = {}) {
     ? params.suites
     : ['drive', 'calendar', 'contacts'];
 
-  const activeClientId = params.clientId || existing?.clientId || DEFAULT_GDRIVE_CLIENT_ID;
-  const activeClientSecret = params.clientSecret || existing?.clientSecret || getDefaultGDriveClientSecret();
+  // params.clientId: the user's own Google OAuth client. params.useBuiltInClient: go back to
+  // the built-in (rclone) client. Otherwise keep whichever client the account already uses.
+  const paramClientId = String(params.clientId || '').trim();
+  const paramClientSecret = String(params.clientSecret || '').trim();
+  if (paramClientId && !paramClientSecret) {
+    throw new Error('Enter the client secret that goes with your Google OAuth client ID.');
+  }
+  const keptClientId = params.useBuiltInClient ? '' : (existing?.clientId || '');
+  const customClientId = paramClientId || keptClientId;
+  const customClientSecret = paramClientId ? paramClientSecret : (keptClientId ? existing?.clientSecret || '' : '');
+  const activeClientId = customClientId || DEFAULT_GDRIVE_CLIENT_ID;
+  const activeClientSecret = customClientSecret || getDefaultGDriveClientSecret();
 
   // If using the built-in Drive client ID without custom client credentials, request Drive scope
   // (or requested custom scopes when custom OAuth client is supplied)
-  const useMultiScope = Boolean(params.clientId || existing?.clientId || params.includeSuiteScopes);
+  const useMultiScope = Boolean(customClientId || params.includeSuiteScopes);
   const scopeList = useMultiScope
     ? requestedSuites.map(s => GOOGLE_SUITE_SCOPES[s]).filter(Boolean)
     : [GOOGLE_SUITE_SCOPES.drive];
@@ -1107,7 +1146,12 @@ async function startGoogleBrowserOAuth(params = {}, options = {}) {
             provider: 'google',
             email: googleEmail,
             accessToken: tokenData.access_token,
-            refreshToken: tokenData.refresh_token || existing?.refreshToken || '',
+            // Never keep a refresh token issued to a different client: it would not refresh.
+            refreshToken: tokenData.refresh_token ||
+              (existing && (existing.clientId || '') === customClientId ? existing.refreshToken : '') || '',
+            // Saved so token refreshes use the client that issued the tokens.
+            clientId: customClientId,
+            clientSecret: customClientSecret,
             scopes: grantedScopes,
             loggedIn: true,
             authStatus: 'authenticated',
@@ -1176,7 +1220,8 @@ async function startGoogleBrowserOAuth(params = {}, options = {}) {
       }
     });
 
-    server.listen(53682, '127.0.0.1', openAuthUrl);
+    // 53682 is the loopback port rclone's client is used with; tests pass options.oauthPort.
+    server.listen(options.oauthPort ?? 53682, '127.0.0.1', openAuthUrl);
 
     setTimeout(() => {
       try { server.close(); } catch {}
@@ -1189,6 +1234,8 @@ module.exports = {
   CLOUD_PROVIDERS,
   GOOGLE_SUITE_SCOPES,
   DEFAULT_GDRIVE_CLIENT_ID,
+  BUILTIN_GOOGLE_CLIENT_APP_NAME,
+  describeGoogleOAuthClient,
   THUNDERBIRD_GOOGLE_CLIENT_ID,
   THUNDERBIRD_GOOGLE_CLIENT_SECRET,
   getDefaultGDriveClientSecret,

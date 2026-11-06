@@ -130,6 +130,7 @@ function csVaultPanel() {
           The first computer creates a private <strong>RobOS Config Vault</strong> folder there; your other computers find it and load it. Then your settings, Audio Player and Movie Player libraries,
           playlists and watch history stay in sync automatically.</p>
         <button type="button" class="btn btn-primary" id="cs-gdrive">${g ? 'Use my Google Drive' : 'Sign in with Google and use my Drive'}</button>
+        ${g ? '' : `<p class="cs-muted">Google's sign-in page names the app “rclone”: RobOS uses rclone's open-source Google sign-in. <button type="button" class="cs-link" id="cs-why-rclone">Why, and how to use your own</button></p>`}
       </div>
     <details class="cs-more"><summary>Other ways: another folder, a passphrase, or a vault link</summary>
     ${csNoAccountHint()}
@@ -340,6 +341,11 @@ function csArm(id, fn) {
 const csBind = {
   vault() {
     document.getElementById('cs-goto-accounts')?.addEventListener('click', () => document.getElementById('section-cloud_accounts')?.scrollIntoView());
+    document.getElementById('cs-why-rclone')?.addEventListener('click', () => {
+      const own = document.getElementById('cloud-google-own-client');
+      if (own) own.open = true;
+      document.getElementById('cloud-google-client')?.scrollIntoView();
+    });
     const gdrive = document.getElementById('cs-gdrive');
     if (gdrive) gdrive.onclick = () => csUseGoogleDrive(gdrive);
     const target = document.getElementById('cs-create-target');
