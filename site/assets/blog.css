@@ -30,6 +30,7 @@
 
 .blog-fig{margin:22px 0;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .blog-fig img{display:block;width:100%;height:auto;max-height:520px;object-fit:cover;object-position:top}
+.blog-fig.documentary img{max-height:none;object-fit:contain}
 .blog-fig figcaption{padding:10px 16px;font-size:.82rem;color:var(--muted);border-top:1px solid var(--line)}
 
 .blog-fig-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}

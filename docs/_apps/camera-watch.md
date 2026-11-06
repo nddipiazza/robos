@@ -2,6 +2,7 @@
 title: "RobOS Camera Watch"
 package: camera-watch
 category: household
+landing: /camera-watcher/
 icon: camera-watch.svg
 summary: "Watches and records the IP cameras on your network: finds ONVIF cameras, shows a live grid, detects motion, records clips and drives pan/tilt/zoom cameras."
 description: "RobOS Camera Watch is a local network video recorder in the spirit of iSpy. It finds ONVIF cameras with WS-Discovery, shows any RTSP or MJPEG camera in a live grid, detects motion on your computer, records motion and manual clips, and moves PTZ cameras. Video stays on your machine."
@@ -12,6 +13,8 @@ related:
 ---
 
 RobOS Camera Watch (`packages/camera-watch`) watches the IP cameras on your home or office network. It uses two open-source pieces: the [`onvif`](https://github.com/agsh/onvif) package (MIT) for everything ONVIF, and `ffmpeg` for video. Nothing goes through a vendor cloud.
+
+Start with the illustrated [Camera Watch setup and permissions guide](https://rowbose.com/camera-watcher/), including photographs of camera sharing and a live view on a second RobOS computer. Read the [camera network story](https://rowbose.com/blog/your-cameras-your-private-network/) for how scoped invites and per-camera access work together.
 
 ## What you need
 
