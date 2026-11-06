@@ -303,7 +303,7 @@ describe('cRPG eLearning generators are safe to rerun', () => {
     });
 
     it('reuses the published permalink when the caller does not give one', () => {
-      assert.ok(publishedPage().includes(`<link rel="canonical" href="https://rowbose.com/v1${permalink}">`));
+      assert.ok(publishedPage().includes(`<link rel="canonical" href="https://rowbose.com${permalink}">`));
     });
 
     it('replaces the doc tab when a source exists and still keeps the front matter', () => {
@@ -321,7 +321,7 @@ describe('cRPG eLearning generators are safe to rerun', () => {
       generate(root, { courseId: BUILDER_ID, outputFilePath: path.resolve(root, output), permalink: '/moved/course/' });
       const moved = frontMatterOf(publishedPage());
       assert.strictEqual(moved, frontMatter.replace(`permalink: ${permalink}`, 'permalink: /moved/course/'));
-      assert.ok(publishedPage().includes('<link rel="canonical" href="https://rowbose.com/v1/moved/course/">'));
+      assert.ok(publishedPage().includes('<link rel="canonical" href="https://rowbose.com/moved/course/">'));
     });
   });
 

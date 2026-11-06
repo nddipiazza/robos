@@ -25,7 +25,7 @@ The [Code Review guide](https://rowbose.com/code-review/) walks through the same
 
 ## What it is
 
-The app is [`packages/pr-review`](https://github.com/nddipiazza/robos/tree/main/packages/pr-review). It appears in the launcher as Agent Code Review Platform, and its window title is "RobOS Agent-Generated Code Review Platform". The app page is [Agent Code Review]({{ '/apps/pr-review/' | relative_url }}).
+The app is [`packages/pr-review`](https://github.com/nddipiazza/robos/tree/main/packages/pr-review). It appears in the launcher as Agent Code Review Platform, and its window title is "RobOS Agent-Generated Code Review Platform". The app page is [Agent Code Review]({{ '/pr-review/' | relative_url }}).
 
 A review opens in one of two modes, and the mode decides which tabs you get.
 

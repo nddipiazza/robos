@@ -39,7 +39,7 @@ description: "Realm of Heroes: a party-based, real-time-with-pause RPG on Godot 
 | Understand collision, pathfinding, fog of war and NPCs | [CRPG world systems]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }}) |
 | Write or run tests, or use the Infinity AI engine | [CRPG testing and Infinity AI]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}) |
 
-The Godot project and the editor are separate programs. The editor ([`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor), also listed as [RobOS cRPG Editor]({{ '/apps/crpg-editor/' | relative_url }}) in the app catalog) writes JSON-LD files into `games/crpg-realm/`, and the game plays them.
+The Godot project and the editor are separate programs. The editor ([`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor), also listed as [RobOS cRPG Editor]({{ '/crpg-editor/' | relative_url }}) in the app catalog) writes JSON-LD files into `games/crpg-realm/`, and the game plays them.
 
 ## What is in the repository
 

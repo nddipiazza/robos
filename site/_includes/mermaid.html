@@ -1,0 +1,17 @@
+{%- if content contains 'language-mermaid' %}
+<script type="module">
+  // Fenced ```mermaid blocks arrive as Rouge-highlighted code; swap each for a plain <pre class="mermaid">
+  // first, so the diagram source still reads cleanly if the renderer can't load.
+  document.querySelectorAll('.language-mermaid').forEach((block) => {
+    if (block.parentElement?.closest('.language-mermaid')) return;
+    const pre = document.createElement('pre');
+    pre.className = 'mermaid';
+    pre.textContent = block.textContent;
+    block.replaceWith(pre);
+  });
+  const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.esm.min.mjs');
+  const dark = document.documentElement.dataset.theme === 'dark';
+  mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral' });
+  mermaid.run({ querySelector: 'pre.mermaid' });
+</script>
+{%- endif %}

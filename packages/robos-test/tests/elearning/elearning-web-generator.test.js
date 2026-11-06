@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
@@ -11,7 +11,11 @@ const {
   generateELearningWebsite,
 } = require('../../../robos-graph/index');
 
-const rootRepo = path.resolve(__dirname, '../../../../');
+const { createRepoFixture, enterCwd } = require('../../lib/repo-fixture');
+const fixture = createRepoFixture({ copy: ['.robos', 'docs/projects', 'docs/elearning', 'site/elearning'] });
+const rootRepo = fixture.root;
+const leaveCwd = enterCwd(rootRepo);
+after(() => { leaveCwd(); fixture.cleanup(); });
 const graphFile = path.join(rootRepo, '.robos', 'knowledge-graph.jsonld');
 
 describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
@@ -56,7 +60,10 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.includes('https://rowbose.com/'), 'Must link back to root domain');
     assert.ok(content.includes('RobOS Interactive eLearning'), 'Must show RobOS brand header');
     assert.ok(content.includes('Tactical cRPG Realm'), 'Must include breadcrumb link to project');
+    assert.ok(!/(?:href|src)=["'](?:https?:\/\/rowbose\.com)?\/v1\//.test(content), 'Generated courses must use current site URLs');
     assert.ok(content.includes('Interactive Masterclass'), 'Must include breadcrumb title');
+
+    assert.ok(content.includes('rel="canonical" href="https://rowbose.com/projects/crpg-realm/elearning/"'), 'Canonical URL must use the root site');
 
     // 3. Verify Accessibility (WCAG 2.1 AA) Structure
     assert.ok(content.includes('class="skip-link"'), 'Must include accessible skip link');

@@ -28,7 +28,7 @@ Open **RobOS Create Project & App Wizard** from the App Launcher, or run it from
 electron packages/app-wizard
 ```
 
-Click **Create New Project** in the header. The wizard writes to `packages/<slug>/` under the nearest `.robos` directory (the working directory or up to four parents; see [Building apps]({{ site.baseurl }}{% link app-development-flow.md %})). The generated projects need Node.js 20 or later. The app page is [App Wizard]({{ '/apps/app-wizard/' | relative_url }}).
+Click **Create New Project** in the header. The wizard writes to `packages/<slug>/` under the nearest `.robos` directory (the working directory or up to four parents; see [Building apps]({{ site.baseurl }}{% link app-development-flow.md %})). The generated projects need Node.js 20 or later. The app page is [App Wizard]({{ '/app-wizard/' | relative_url }}).
 
 The header also has a **Simple Mode** and **Advanced Mode** toggle. Advanced Mode adds three fields and a contract editor, described below.
 
@@ -87,7 +87,7 @@ After writing files the generator also updates these. A target that does not exi
 The repository is always `nddipiazza/<slug>`, because the wizard has no repository field. It appears as the `github.com/project-slug` annotation in `catalog-info.yaml` and as `repository` in `.robos/packages.yaml` and the graph node. Edit it after generation.
 
 {: .note }
-Git Projects stores its list as `{ "projects": [...] }` in `git-projects.json`, while the wizard reads and writes the file as a bare array. If Git Projects has already created the file, the wizard's entry is skipped. If the wizard creates the file first, Git Projects will not list the project. Add the repository in [Git Projects]({{ '/apps/git-projects/' | relative_url }}) yourself.
+Git Projects stores its list as `{ "projects": [...] }` in `git-projects.json`, while the wizard reads and writes the file as a bare array. If Git Projects has already created the file, the wizard's entry is skipped. If the wizard creates the file first, Git Projects will not list the project. Add the repository in [Git Projects]({{ '/git-projects/' | relative_url }}) yourself.
 
 `catalog-info.yaml` and `dev-setup.sh` are written every time, so re-running the wizard for an existing folder overwrites them. The Electron, CLI and HTTP-service templates overwrite their files too. Only the Next.js template skips files that already exist.
 

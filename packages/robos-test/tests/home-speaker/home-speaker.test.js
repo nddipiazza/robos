@@ -58,9 +58,9 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(content.includes('**RobOS Home Speaker**'), 'AGENTS.md should list RobOS Home Speaker');
     });
 
-    it('documentation page exists in docs/_apps/home-speaker.md', () => {
-      const docPath = path.resolve(__dirname, '../../../../docs/_apps/home-speaker.md');
-      assert.ok(fs.existsSync(docPath), 'docs/_apps/home-speaker.md should exist');
+    it('documentation page exists in site/_apps/home-speaker.md', () => {
+      const docPath = path.resolve(__dirname, '../../../../site/_apps/home-speaker.md');
+      assert.ok(fs.existsSync(docPath), 'site/_apps/home-speaker.md should exist');
       const content = fs.readFileSync(docPath, 'utf8');
       assert.ok(content.includes('package: home-speaker'), 'Documentation should specify package: home-speaker');
     });

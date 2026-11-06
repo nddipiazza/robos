@@ -43,8 +43,8 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /404.html
-Disallow: /v1/404.html
+Disallow: /404/
 
 Host: https://rowbose.com
 Sitemap: https://rowbose.com/sitemap.xml
-Sitemap: https://rowbose.com/v1/sitemap.xml
+Sitemap: https://rowbose.com/blog/sitemap.xml

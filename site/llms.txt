@@ -12,7 +12,7 @@
 - [Build Apps as a Team (Team Guide)](https://rowbose.com/build-apps/teams/): Step-by-step team workflow guide with Dev Central and Reviewer mode
 - [Task Planner](https://rowbose.com/task-planner/): Turn a description or one of 67 templates into epics and tasks, edit them, and create GitHub or Jira issues; developer personas and KGraph project plans
 - [Task Implementer](https://rowbose.com/task-implementer/): Pick a GitHub or Jira issue, choose a developer persona and coding agent (Codex, AGY, Claude Code or GitHub Copilot), and let it branch, test, commit and push without opening a pull request
-- [Documentation Hub](https://rowbose.com/docs/): Entry point to RobOS user guides, architecture, schemas, and reference docs
+- [Apps and components](https://rowbose.com/apps/): Guides for every app, shared library, CLI and service, each at https://rowbose.com/<package-name>/
 - [RobOS on Your Smart TV](https://rowbose.com/tv/): Developer Mode sideloading (LG webOS, Samsung Tizen, Google TV / Android TV ADB, Roku OS), 10-Foot Big-Screen Portal (:19210), and Moonlight/Sunshine 4K game streaming
 - [RobOS Zero-Trust P2P App Mesh](https://rowbose.com/p2p/): Provider-agnostic Zero-Trust App & IPC Port Mesh (`packages/app-mesh`, `robos-lib/app-mesh-engine.js`) using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard to bridge RobOS app IPC ports and stream 1080p/4K movies across RobOS PCs
 - [Security & Isolation Proofs](https://rowbose.com/security/): Live kernel E2E proofs for the RobOS VPN Sandbox (`ip netns` + 3-barrier `iptables` kill-switch) and RobOS VPN Servers
@@ -57,16 +57,14 @@
 - [RobOS Party Game](https://rowbose.com/games/party-game/): AI-hosted party game on RobOS TVs with phones as controllers; mini games written from the guests' survey and the house
 - [RobOS Party Game Docs](https://rowbose.com/games/party-game/docs/): Setup, how a party runs, the mini games and the mini game template
 
-## Classic Documentation & Reference (/v1/)
-- [Classic Docs Index](https://rowbose.com/v1/): Complete RobOS v1 documentation, architecture, and 85+ app reference pages
-- [Get Started & Installation](https://rowbose.com/v1/getting-started.html): Windows, Linux, GNOME, and QEMU VM setup
-- [Architecture](https://rowbose.com/v1/architecture.html): Electron apps, shared libraries, KGraph, and MCP servers
-- [Knowledge Graph](https://rowbose.com/v1/knowledge-graph.html): Dual-state OSLC JSON-LD graph and W3C SHACL validation
-- [Schemas Reference](https://rowbose.com/v1/schemas.html): All KGraph packages and SHACL shape definitions
-- [PR Review Theater](https://rowbose.com/v1/pr-review-theater.html): Autonomous pull request review and video proof-of-work
-- [Training Courses](https://rowbose.com/v1/training/): Non-developer and developer training tracks
+## Guides and reference
+- [Get Started & Installation](https://rowbose.com/getting-started/): Windows, Linux, GNOME, and QEMU VM setup
+- [Architecture](https://rowbose.com/architecture/): Electron apps, shared libraries, KGraph, and MCP servers
+- [Knowledge Graph](https://rowbose.com/knowledge-graph/): Dual-state OSLC JSON-LD graph and W3C SHACL validation
+- [Schemas Reference](https://rowbose.com/schemas/): All KGraph packages and SHACL shape definitions
+- [PR Review Theater](https://rowbose.com/pr-review-theater/): Autonomous pull request review and video proof-of-work
+- [Training Courses](https://rowbose.com/training/): Non-developer and developer training tracks
 
 ## Sitemaps & Source
 - [Main Sitemap](https://rowbose.com/sitemap.xml)
-- [Documentation Sitemap](https://rowbose.com/v1/sitemap.xml)
 - [GitHub Repository](https://github.com/nddipiazza/robos)

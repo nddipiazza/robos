@@ -42,25 +42,25 @@ const CATEGORIES = [
   {
     id: 'movie-library',
     label: 'Movie Player library',
-    description: 'Movie folders, playlists, watch history and the library index.',
+    description: 'Movie and TV folders (including Google Drive folders), playlists and watch history: which episode you left off on, resume points and what you finished. Every computer rebuilds its own library index from the folders.',
     include: [
-      'config/movie-folders.json', 'config/movie-playlists.json', 'config/movie-track-stats.json',
-      'config/movie-library.json', 'config/movie-cache-settings.json', 'config/movie-subtitles/**',
-      'config/movie-player/**',
+      'config/movie-folders.json', 'config/movie-playlists.json', 'config/media-history/movie-player.json',
+      'config/movie-cache-settings.json', 'config/movie-subtitles/**', 'config/movie-player/**',
     ],
     shareable: true,
-    shareExclude: ['config/movie-track-stats.json'],
+    // Watch history is yours; a share gives the folders and playlists only.
+    shareExclude: ['config/media-history/movie-player.json'],
   },
   {
     id: 'audio-library',
     label: 'Audio Player library',
-    description: 'Music folders, playlists, play counts, lyrics and the library index.',
+    description: 'Music folders (including Google Drive folders), playlists, play history, loved songs and lyrics. Every computer rebuilds its own library index from the folders.',
     include: [
-      'config/audio-folders.json', 'config/audio-playlists.json', 'config/audio-track-stats.json',
-      'config/audio-library.json', 'config/audio-cache-settings.json', 'config/audio-lyrics/**',
+      'config/audio-folders.json', 'config/audio-playlists.json', 'config/media-history/audio-player.json',
+      'config/audio-cache-settings.json', 'config/audio-lyrics/**',
     ],
     shareable: true,
-    shareExclude: ['config/audio-track-stats.json'],
+    shareExclude: ['config/media-history/audio-player.json'],
   },
   {
     id: 'private-network',
@@ -74,10 +74,10 @@ const CATEGORIES = [
   {
     id: 'smart-home',
     label: 'Smart home & TVs',
-    description: 'Smart lights and scenes, home speakers and schedules, Smart TV Studio and dashboards.',
+    description: 'Smart lights and scenes, home speakers and schedules, Smart TV Studio, dashboards and Camera Watch cameras (without their passwords).',
     include: [
       'config/smart-lights.json', 'config/home-speakers.json', 'config/speaker-schedules.json',
-      'config/tv-studio.json', 'config/dashboards.json',
+      'config/tv-studio.json', 'config/dashboards.json', 'config/camera-watch/cameras.json',
     ],
     shareable: true,
   },
@@ -160,8 +160,16 @@ const EXCLUDE = [
   // Machine identity: the mesh private key and live invite belong to this machine only.
   'config/app-mesh/identity.json', 'config/app-mesh/live-invite.json',
   'config/movie-player/active-peer-bridge.json',
+  // The players' library indexes and per-file stats name files by their path on this computer
+  // (tens of MB, rewritten during every scan). What follows you instead: the folders, the
+  // playlists and config/media-history/*.json, keyed by show/season/episode, movie or song.
+  'config/movie-library.json', 'config/audio-library.json',
+  'config/movie-track-stats.json', 'config/audio-track-stats.json',
+  'config/movie-player-control.json', 'config/audio-player-control.json',
   // The LG ThinQ personal access token stays on the computer it was entered on.
   'config/lg-thinq.json',
+  // Camera Watch's motion event log points at this machine's recordings.
+  'config/camera-watch/events.json',
   // Caches, audit logs and live state.
   'config/**/*-cache.json', 'config/**/cache/**', 'config/prompt-security-audit.json',
   'config/notifications.json', 'config/voice-bubbles-live.json', 'config/journal-events.json',
@@ -197,13 +205,22 @@ const LOCAL_KEYS = {
   'config/cloud-accounts.json': ['updatedAt', 'createdAt', 'lastVerifiedAt', 'loggedIn', 'authStatus', 'status', 'isDefault', 'defaultAccountId', 'dataSourceCredentials', 'thunderbirdConfigured', 'thunderbirdLastSyncedAt', 'thunderbirdProfilePath'],
   'config/data-sources.json': ['lastChecked', 'authStatus', 'loggedIn', 'status', 'localMountPath'],
   'config/cloud-folders.json': ['syncedAt', 'localPath'],
-  'config/movie-folders.json': ['lastSynced'],
-  'config/audio-folders.json': ['lastSynced'],
+  'config/movie-folders.json': ['lastSynced', 'syncError', 'aliasRoots'],
+  'config/audio-folders.json': ['lastSynced', 'syncError', 'aliasRoots'],
   'config/tv-studio.json': ['lastRemoteKey', 'webosSessionRemainingHours', 'webosLastRenewedAt', 'activeTileId', 'activeDashboardCast', 'appCasts', 'activeCinemaCast', 'moviePlayerServer', 'moviePlayerLibrarySnapshot', 'activeCinemaLibrary', 'tabloCinemaItemsSnapshot'],
   'config/dashboards.json': ['lastCastTvId', 'lastCastAt'],
   'config/app-mesh/mesh-state.json': ['listenHost', 'listenPort', 'tunnels'],
   'config/home-speakers.json': ['updatedAt'],
   'config/hardware-keys.json': ['touchHistory', 'lastSeenAt'],
+  'config/camera-watch/settings.json': ['recordingsDir', 'ffmpegPath'],
+};
+
+/**
+ * Files RobOS combines entry by entry when this machine and the vault both changed them,
+ * instead of asking which version to keep (see config-sync.js MERGERS).
+ */
+const MERGE_RULES = {
+  'config/media-history/*.json': 'media-history',
 };
 
 /** Keys that identify an item in a list, in priority order, used to merge shared lists. */
@@ -255,5 +272,5 @@ const FILE_LABELS = {
 };
 
 module.exports = {
-  CATEGORIES, EXCLUDE, MAX_FILE_BYTES, SECRET_KEY_RE, SECRET_KEY_ALLOW, LOCAL_KEYS, ID_KEYS, SHARE_TEMPLATES, FILE_LABELS,
+  CATEGORIES, EXCLUDE, MERGE_RULES, MAX_FILE_BYTES, SECRET_KEY_RE, SECRET_KEY_ALLOW, LOCAL_KEYS, ID_KEYS, SHARE_TEMPLATES, FILE_LABELS,
 };

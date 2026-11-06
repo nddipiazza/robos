@@ -234,3 +234,59 @@ test('Cross-network joinPrivateNetwork over HTTP 101 Upgrade + mTLS 1.3 + Revers
   }
 });
 
+
+test('a scoped invite grants only its apps, both ways, and cannot be widened by naming another port', async () => {
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-app-mesh-scoped-'));
+  const meshA = createAppMeshEngine({ configDir: path.join(tmpRoot, 'a'), listenPort: 0 });
+  const meshB = createAppMeshEngine({ configDir: path.join(tmpRoot, 'b'), listenPort: 0 });
+  try {
+    const gwA = await meshA.startGateway(0);
+    await meshB.startGateway(0);
+    const full = meshA.generateEnrollmentToken('127.0.0.1');
+    const { token, invite, payload } = meshA.createScopedInvite({ allowedAppIds: ['camera-watch-share'], label: 'Cameras for B', customHost: '127.0.0.1' });
+    assert.equal(payload.port, gwA.port);
+    assert.notEqual(payload.enrollToken, full.payload.enrollToken, 'the invite does not carry the network-wide enroll secret');
+
+    // B joins with the invite and lets A reach only B's camera share.
+    const joined = await meshB.joinPrivateNetwork(token, {
+      reverseMux: false,
+      peerAccess: { allowAllApps: false, allowedAppIds: ['camera-watch-share'] },
+    });
+    assert.equal(joined.ok, true);
+    const bOnA = meshA.listPeers().find(p => p.nodeId === meshB.identity.nodeId);
+    assert.equal(bOnA.allowAllApps, false);
+    assert.deepEqual(bOnA.allowedAppIds, ['camera-watch-share']);
+    assert.equal(bOnA.inviteId, invite.id);
+    const aOnB = meshB.listPeers().find(p => p.nodeId === meshA.identity.nodeId);
+    assert.equal(aOnB.allowAllApps, false);
+    assert.deepEqual(aOnB.allowedAppIds, ['camera-watch-share']);
+
+    // B may connect to A's camera share (nothing listens in this test, so the
+    // gateway reports the upstream, not an ACL denial) and nothing else.
+    const share = await meshB.requestPeerGateway(aOnB, { op: 'connect', appId: 'camera-watch-share' });
+    assert.notEqual(share.error, 'ACL_PORT_DENIED');
+    assert.equal((await meshB.requestPeerGateway(aOnB, { op: 'connect', appId: 'dev-central' })).error, 'ACL_PORT_DENIED');
+    assert.equal((await meshB.requestPeerGateway(aOnB, { op: 'connect', appId: 'camera-watch-share', port: 19220 })).error, 'ACL_PORT_DENIED', 'naming an allowed app with another port is denied');
+    assert.equal((await meshB.requestPeerGateway(aOnB, { op: 'connect', port: 5432 })).error, 'ACL_PORT_DENIED', 'raw ports are denied');
+    const catalog = await meshB.requestPeerGateway(aOnB, { op: 'catalog' });
+    assert.deepEqual(catalog.apps.map(a => a.appId), ['camera-watch-share']);
+
+    // A's view of B is limited the same way.
+    assert.equal((await meshA.requestPeerGateway(bOnA, { op: 'connect', appId: 'dev-central' })).error, 'ACL_PORT_DENIED');
+
+    // Joining again with the same invite does not widen access.
+    await meshB.joinPrivateNetwork(token, { reverseMux: false, peerAccess: { allowAllApps: false, allowedAppIds: ['camera-watch-share'] } });
+    assert.equal(meshA.listPeers().find(p => p.nodeId === meshB.identity.nodeId).allowAllApps, false);
+
+    // Revoking the invite removes B, and the invite no longer works.
+    assert.equal(meshA.listInvites().length, 1);
+    assert.equal(meshA.revokeInvite(invite.id).removedPeers, 1);
+    assert.equal(meshA.listPeers().some(p => p.nodeId === meshB.identity.nodeId), false);
+    assert.equal(meshA.listInvites().length, 0);
+    await assert.rejects(meshB.joinPrivateNetwork(token, { reverseMux: false }), /UNTRUSTED|Failed to join/);
+  } finally {
+    await meshA.stopGateway();
+    await meshB.stopGateway();
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});

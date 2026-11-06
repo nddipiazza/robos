@@ -11,6 +11,10 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function courseAssetUrl(src) {
+  return String(src).startsWith('/assets/') ? `https://rowbose.com${src}` : String(src);
+}
+
 function renderOverviewContent(raw) {
   if (!raw) return '';
   let content = String(raw).trim();
@@ -48,6 +52,12 @@ function renderOverviewContent(raw) {
   content = content.replace(/<details[\s\S]*?<\/details>/gi, (match) => saveToken(match));
   content = content.replace(/<div[\s\S]*?<\/div>/gi, (match) => saveToken(match));
   content = content.replace(/<(?:video|iframe|audio)[\s\S]*?<\/(?:video|iframe|audio)>/gi, (match) => saveToken(match));
+
+  // 3b. Markdown images. Course pictures live on the website, so a site path needs its full address here.
+  content = content.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_match, alt, src) => {
+    const safeAlt = alt.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    return saveToken(`<figure><img src="${courseAssetUrl(src)}" alt="${safeAlt}" loading="lazy"><figcaption>${safeAlt}</figcaption></figure>`);
+  });
 
   // 4. Markdown tables (| col | col |)
   content = content.replace(/((?:\|[^\n]+\|\r?\n)+)/g, (match) => {
@@ -874,7 +884,7 @@ function renderLesson(m, idx, total) {
                 ${detail && detail.description ? `<p style="margin:6px 0 4px;font-size:13px;opacity:0.9;">${inlineMd(detail.description)}</p>` : ''}
                 ${detail && detail.code ? `<pre style="margin:6px 0;padding:8px 10px;background:#0d1117;border-radius:4px;font-size:12px;overflow-x:auto;"><code>${escapeHtml(detail.code)}</code></pre>` : ''}
                 ${detail && detail.expected ? `<div style="margin:6px 0;padding:6px 10px;border-left:3px solid #38bdf8;background:rgba(56,189,248,0.08);font-size:12.5px;"><strong>What to expect:</strong> ${inlineMd(detail.expected)}</div>` : ''}
-                ${detail && detail.image ? `<figure style="margin:8px 0 2px;"><img src="${escapeHtml(detail.image)}" alt="${escapeHtml(detail.imageAlt || step)}" style="max-width:100%;max-height:360px;border-radius:4px;border:1px solid #30363d;">${detail.caption ? `<figcaption style="font-size:11.5px;opacity:0.75;margin-top:4px;">${inlineMd(detail.caption)}</figcaption>` : ''}</figure>` : ''}
+                ${detail && detail.image ? `<figure style="margin:8px 0 2px;"><img src="${escapeHtml(courseAssetUrl(detail.image))}" alt="${escapeHtml(detail.imageAlt || step)}" style="max-width:100%;max-height:360px;border-radius:4px;border:1px solid #30363d;">${detail.caption ? `<figcaption style="font-size:11.5px;opacity:0.75;margin-top:4px;">${inlineMd(detail.caption)}</figcaption>` : ''}</figure>` : ''}
               </div>
             </li>`;
           }).join('')}

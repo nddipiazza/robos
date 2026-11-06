@@ -1,10 +1,9 @@
 # Front site (rowbose.com)
 
-Jekyll site served at `https://rowbose.com/`. The classic docs live in `../docs`
-and are published under `/v1/`. Build both with `scripts/build-docs.sh`.
+The single Jekyll site served at `https://rowbose.com/`. Build it with `scripts/build-docs.sh`.
 
 Release labels and download URLs come from `VERSION`. `node scripts/stage-release-data.cjs`
-updates both sites' `_data/release.json` and pins the website's Windows bootstrap to that tag.
+updates `site/_data/release.json` and pins the website's Windows bootstrap to that tag.
 The local build and Pages workflow run this automatically. Use `site.data.release` in Liquid
 instead of hardcoding versions. Native Windows setup assets are linked directly; Linux distro
 downloads lead to the release asset list so pending image builds do not produce broken links.
@@ -15,18 +14,24 @@ both EXEs, checksums and source provenance. It runs on version tags; its manual 
 can add EXEs to an existing release matching `VERSION`. These EXEs are separate from
 the Linux-distro USB flasher built by `release.yml`.
 
-## App pages (`/apps/` and `/apps/<slug>/`)
+## App and component pages (`/<package>/`)
 
-Every app's page is written once, in `docs/_apps/<slug>.md`. `scripts/stage-site-data.sh` copies those files,
-bodies included, into `site/_apps/` (gitignored) and rewrites links that only work on the v1 site
-(`scripts/stage-site-apps.cjs`): `{% raw %}{% link %}{% endraw %}` tags and `relative_url` paths go to `/v1/…`, except `/apps/<slug>/`,
-which stays on this site. Each app is then published at `/apps/<slug>/` with `_layouts/app.html` and
-`assets/app.css`, and the same page stays at `/v1/apps/<slug>/`. In app bodies, link to front-site pages
-(`/config-management/`, `/games/…`) with a plain markdown path so the link works from both sites.
+Every package in `packages/` has a tracked source page in `site/_apps/<package>.md`.
+Run `node scripts/sync-app-docs.js` to create missing pages, or pass `--check` to verify coverage.
+Libraries, CLIs and services are included, alongside desktop apps. Set `category:` from
+`site/_data/app_categories.yml`, and write the usage guide in the body. The shared app layout
+provides the current navigation, theme, source link, related pages and responsive styles.
 
-An app with a hand-made guide sets `landing:` in its front matter (for example `landing: /point-of-sale/`).
-The directory, "Related" and "More in" cards then link to the guide, and the app page shows a **Read the guide**
-button. Link to `/apps/<slug>/` from front-site pages, not `/v1/apps/<slug>/`.
+Pages publish at `https://rowbose.com/<package>/`. If a detailed hand-written guide already
+owns that URL (for example `/point-of-sale/`), it stays there, and the package reference uses
+`/<package>/reference/`. `landing:` can link to an additional walkthrough, such as `/tv/`;
+the app directory still links to the package's root URL. Link directly to these root URLs.
+
+`docs/` retains generated references, screenshot sources and internal project notes.
+`scripts/stage-site-data.sh` stages public reference pages into gitignored `site/_guides/`,
+converts their links, applies the current guide layout and copies their assets. Project
+plans, issues and idea inbox notes are excluded. There is no separate docs theme or v1 build.
+The Pages workflow runs the same staging and rendered-page checks as the local build.
 
 ## Engineering blog (`/blog/`)
 
@@ -35,13 +40,20 @@ Each post is its own file, `_blog/<slug>.html`, published at `/blog/<slug>/` wit
 from the same day) and has no post content of its own. Old `/blog/#<slug>` links are forwarded to the
 post's page by a script on the index. The `robos-blog` skill describes the front matter.
 
+Posts include article and breadcrumb structured data. Set `last_modified_at:` only when a post's
+content changes significantly; it updates the article metadata and `/blog/sitemap.xml` without
+pretending every deployment rewrote every post. The main sitemap also includes all posts.
+Submit both `/sitemap.xml` and `/blog/sitemap.xml` in Google Search Console; the latter lets you
+check blog indexing separately. The home page's verification tag comes from
+`google_site_verification` in `_config.yml` and must stay in place to retain verification.
+
 ## Home page vision (`/#vision`) and share card
 
 The home page leads with the two-move plan: **Move 1**, one open-source suite that replaces the apps people
 pay for, one at a time (ships today); **Move 2**, keep and reuse what AI produces so each new app needs less
 AI and less electricity (the Skill Commons proposal on `/future/`, not built yet). Keep that split honest in
 copy: Move 2 claims must say what exists today. App counts come from `site.apps | size`, so they track
-`docs/_apps` automatically.
+`site/_apps` automatically.
 
 `assets/landing/vision-roadmap.jpg` is an AI-generated illustration in the same style as the `/future/`
 figures. Its exact content, for regenerating or redrawing it:

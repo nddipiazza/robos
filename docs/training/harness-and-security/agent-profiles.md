@@ -106,4 +106,4 @@ packages/robos-profiled/robos-profile terminate my-agent-tester
 
 If an agent needs a display that does not appear on your desktop, that comes from a virtual X server, not from a profile. The built-in Non-Headless Developer persona sets `DISPLAY=:99` and expects you to run one yourself. See [Choose and customize agent personas]({{ '/training/agent-tasks/agent-personas.html' | relative_url }}). The Docker test image starts `Xvfb :99 -screen 0 1920x1080x24+32` in `infra/docker/entrypoint.sh`.
 
-The source is in [`packages/robos-profiled`](https://github.com/nddipiazza/robos/tree/main/packages/robos-profiled), and the app page is [robos-profiled]({{ '/apps/robos-profiled/' | relative_url }}).
+The source is in [`packages/robos-profiled`](https://github.com/nddipiazza/robos/tree/main/packages/robos-profiled), and the app page is [robos-profiled]({{ '/robos-profiled/' | relative_url }}).

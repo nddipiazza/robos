@@ -477,7 +477,7 @@
       exports.useTransition = function() {
         return ReactSharedInternals.H.useTransition();
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -931,7 +931,7 @@
       exports.useFormStatus = function() {
         return ReactSharedInternals.H.useHostTransitionStatus();
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -14407,12 +14407,12 @@
         }
       };
       var isomorphicReactPackageVersion$jscomp$inline_2043 = React20.version;
-      if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
+      if ("19.3.1" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
             527,
             isomorphicReactPackageVersion$jscomp$inline_2043,
-            "19.3.0"
+            "19.3.1"
           )
         );
       ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -14430,10 +14430,10 @@
       };
       var internals$jscomp$inline_2586 = {
         bundleType: 0,
-        version: "19.3.0",
+        version: "19.3.1",
         rendererPackageName: "react-dom",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0"
+        reconcilerVersion: "19.3.1"
       };
       if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
         hook$jscomp$inline_2587 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14501,7 +14501,7 @@
         listenToAllSupportedEvents(container2);
         return new ReactDOMHydrationRoot(initialChildren);
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -22350,6 +22350,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       const cleanups = [];
       if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
+      if (window.robosAudio?.onTrackStatsUpdated) {
+        cleanups.push(window.robosAudio.onTrackStatsUpdated((changed) => {
+          if (!changed || !Object.keys(changed).length) return;
+          setStats((prev) => ({ ...prev, ...changed }));
+          const from = Object.values(changed).map((e) => e && e.syncedFrom).find(Boolean);
+          if (from) showStatus(`Watch history updated from ${from}`);
+        }));
+      }
+      if (window.robosAudio?.onPlaylistsUpdated) cleanups.push(window.robosAudio.onPlaylistsUpdated((list) => setPlaylists(list || [])));
       if (window.robosAudio?.onLibraryScanDiscovered) {
         cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {
           setIsScanningLibrary(true);

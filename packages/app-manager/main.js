@@ -66,8 +66,32 @@ if (id) {
         for (const item of Object.values(manager.installed)) if (item.kind === 'app') native.writeEntry(item);
       }
       if (fromDiskImage) native.installManager(macBundle);
+      // Keep Start menu shortcuts current (names and target) across upgrades.
+      if (process.platform === 'win32') for (const item of Object.values(manager.installed)) if (item.kind === 'app') { try { native.shortcut(item); } catch (error) { logger.warn({ err: error, id: item.id }, 'Could not refresh Start menu shortcut'); } }
       ipcMain.handle('manager:state', () => manager.state());
-      ipcMain.handle('manager:refresh', () => manager.refresh());
+      // First launch: install the default apps (RobOS Preferences) and open Preferences on
+      // cloud backup, so connecting Google Drive is the first thing offered.
+      async function setUpDefaults() {
+        if (activeApps(locations.root).length) return;
+        let ids = [];
+        try { ids = await manager.installDefaults(); } catch (error) { logger.warn({ err: error }, 'Could not install default apps'); return; }
+        if (!ids.length) return;
+        const labels = ids.map(id => manager.installed[id]?.label || id).join(', ');
+        if (!window.isDestroyed()) window.webContents.send('manager:notice', `${labels} installed. Back up your RobOS settings, libraries and watch history to Google Drive there.`);
+        if (ids.includes('robos-preferences') && !process.env.ROBOS_NO_DEFAULT_LAUNCH) {
+          try {
+            const file = path.join(os.homedir(), '.config/robos/open-requests/robos-preferences.json');
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.writeFileSync(file, JSON.stringify({ section: 'config_sync', tab: 'vault', reason: 'first-run', at: Date.now() }));
+          } catch {}
+          launchApp('robos-preferences').catch(error => logger.warn({ err: error }, 'Could not open RobOS Preferences'));
+        }
+      }
+      ipcMain.handle('manager:refresh', async () => {
+        const state = await manager.refresh();
+        setUpDefaults();
+        return state;
+      });
       ipcMain.handle('manager:preview', (_event, ids) => manager.preview(ids));
       ipcMain.handle('manager:install', (_event, ids) => {
         const active = activeApps(locations.root);
@@ -77,7 +101,8 @@ if (id) {
       ipcMain.handle('manager:cancel', () => manager.cancel());
       ipcMain.handle('manager:uninstall', (_event, id) => remove(id));
       ipcMain.handle('manager:uninstall-all', () => remove([], true));
-      ipcMain.handle('manager:launch', (_event, id) => {
+      ipcMain.handle('manager:launch', (_event, id) => launchApp(id));
+      async function launchApp(id) {
         if (!manager.installed[id] || manager.installed[id].kind !== 'app') throw new Error('Install this app first');
         if (activeApps(locations.root).includes(id)) throw new Error('This app is already running. Switch to its open window.');
         const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
@@ -94,7 +119,7 @@ if (id) {
           child.once('error', error => finish(error)); child.once('exit', failed);
           child.on('message', message => { if (message?.type === 'robos:window-ready' && message.id === id) finish(); });
         });
-      });
+      }
       ipcMain.handle('manager:remove-all', async () => {
         if (activeApps(locations.root).length) throw new Error('Close your running RobOS apps first');
         const { response } = await dialog.showMessageBox(window, { type: 'warning', buttons: ['Keep RobOS', 'Uninstall RobOS'], defaultId: 0, cancelId: 0,

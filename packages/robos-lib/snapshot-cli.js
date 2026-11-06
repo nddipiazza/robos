@@ -136,6 +136,7 @@ const PORT_REGISTRY = {
   'app-mesh':          19216,
   'private-networks':  19217,
   'hardware-keys':     19218,
+  'camera-watch':      19220,
 };
 
 

@@ -12,7 +12,7 @@
 #   personas.<id>   the headline, the feature that should wow this visitor and what to read next.
 #   apps.<id>       one card in "Apps for you". `preview: true` marks a demo with sample data.
 #
-# Links are site paths. Pages under /v1/ are the classic docs built from ../docs.
+# Links point to the current site and its app/component pages.
 
 start: tech
 
@@ -195,11 +195,11 @@ personas:
       - { label: "Code Review Theater, tab by tab", url: "/code-review/" }
     apps: [task-planner, task-implementer, pr-review, dev-central, git-projects, agents-manager]
     read:
-      - { label: "A day with RobOS: one task from plan to merge", url: "/v1/day-in-the-life.html" }
+      - { label: "A day with RobOS: one task from plan to merge", url: "/day-in-the-life/" }
       - { label: "Task Planner", url: "/task-planner/" }
       - { label: "Task Implementer", url: "/task-implementer/" }
-      - { label: "The knowledge graph (KGraph)", url: "/v1/knowledge-graph.html" }
-      - { label: "Build a new app with the App Wizard", url: "/v1/new-app-wizard.html" }
+      - { label: "The knowledge graph (KGraph)", url: "/knowledge-graph/" }
+      - { label: "Build a new app with the App Wizard", url: "/new-app-wizard/" }
       - { label: "Security: sandboxes and the prompt guard", url: "/security/" }
   lead:
     eyebrow: "Your guide · Tech lead or evaluator"
@@ -207,13 +207,13 @@ personas:
     wow_title: "What will impress you: every agent change arrives with evidence"
     wow: "Agents work in throwaway sandboxes with a prompt security guard in front of them. Agent branches come back to Code Review Theater with before-and-after evidence and a walkthrough, so reviewers judge what happened instead of guessing. Dev Central and the Manager Dashboard show the team's tasks, pull requests and cycle time in one place."
     wow_links:
-      - { label: "RobOS for Teams", url: "/v1/robos-for-teams.html" }
+      - { label: "RobOS for Teams", url: "/robos-for-teams/" }
       - { label: "Build apps as a team", url: "/build-apps/teams/" }
-      - { label: "Why RobOS, and its limits", url: "/v1/why-robos.html" }
+      - { label: "Why RobOS, and its limits", url: "/why-robos/" }
     apps: [pr-review, dev-central, manager-dashboard, task-planner, agents-manager, ci-monitor]
     read:
-      - { label: "Set up a team from an existing company", url: "/v1/existing-company-setup.html" }
-      - { label: "Developer personas for agents", url: "/v1/personas.html" }
+      - { label: "Set up a team from an existing company", url: "/existing-company-setup/" }
+      - { label: "Developer personas for agents", url: "/personas/" }
       - { label: "Code Review Theater", url: "/code-review/" }
       - { label: "Security and isolation proofs", url: "/security/" }
       - { label: "Share settings with new teammates", url: "/config-management/" }
@@ -223,15 +223,15 @@ personas:
     wow_title: "What will impress you: one window for the data you chase across a dozen tabs"
     wow: "Clusters, CI runs, deployments, logs, secrets and network links usually mean a browser window per vendor. RobOS brings them into native desktop apps on your own machine, signed in once and backed by one knowledge graph. RobOS Dashboards then puts widgets from any of them on one wall, and can cast it to a TV in the team room."
     wow_links:
-      - { label: "RobOS Dashboards", url: "/apps/robos-dashboards/" }
+      - { label: "RobOS Dashboards", url: "/robos-dashboards/" }
       - { label: "Zero-trust app mesh between machines", url: "/p2p/" }
       - { label: "Security and isolation proofs", url: "/security/" }
     apps: [kube-studio, ci-monitor, deploy-tracker, robos-logs, robos-dashboards, pass-manager]
     read:
-      - { label: "Architecture", url: "/v1/architecture.html" }
+      - { label: "Architecture", url: "/architecture/" }
       - { label: "Back up and share your RobOS settings", url: "/config-management/" }
       - { label: "Physical keys (YubiKey, FIDO2)", url: "/physical-keys/" }
-      - { label: "AI agents and API mode", url: "/v1/ai-providers.html" }
+      - { label: "AI agents and API mode", url: "/ai-providers/" }
       - { label: "Every app in the directory", url: "/apps/" }
   home:
     eyebrow: "Your guide · Home and family"
@@ -276,11 +276,11 @@ personas:
     wow_title: "What will impress you: describe the world, and it becomes a playable game"
     wow: "In RobOS, heroes, monsters, maps, quests and rules are validated data in a knowledge graph. Editors let you draw maps and place monsters without code. AI agents write the Godot engine code from that model, and a test harness plays the result and records it to video, so you see proof that your quest can be finished."
     wow_links:
-      - { label: "How RobOS does game development", url: "/v1/game-development.html" }
+      - { label: "How RobOS does game development", url: "/game-development/" }
       - { label: "All games", url: "/games/" }
     apps: []
     read:
-      - { label: "Game development overview", url: "/v1/game-development.html" }
+      - { label: "Game development overview", url: "/game-development/" }
       - { label: "Ask a question on Discord", url: "https://discord.gg/6PjxzkHujE" }
 
 # Extra content chosen by a single answer.
@@ -296,11 +296,11 @@ extras:
       apps: [robos-tabletop, tabletop-blockmap-creator, tabletop-quest-editor, crpg-editor]
       links:
         - { label: "Make your own Tabletop quest", url: "/games/tabletop-rpg/#build" }
-        - { label: "cRPG campaign editor tutorial", url: "/v1/projects/crpg-realm/campaign-editor-tutorial.html" }
+        - { label: "cRPG campaign editor tutorial", url: "/projects/crpg-realm/campaign-editor-tutorial/" }
     code:
       apps: [crpg-builder, crpg-editor, game-playthrough, agents-manager]
       links:
-        - { label: "Create your own game (cRPG)", url: "/v1/projects/crpg-realm/create-your-own-game.html" }
+        - { label: "Create your own game (cRPG)", url: "/projects/crpg-realm/create-your-own-game/" }
         - { label: "Starfall Command: map editor and gameplay tests", url: "/games/robos-rts/" }
         - { label: "Quest: Warrior Dragon AI playthrough", url: "/games/quest-warrior-dragon/#ai-playthrough" }
     party:
@@ -309,12 +309,12 @@ extras:
         - { label: "Party Game docs", url: "/games/party-game/docs/" }
         - { label: "The mini game template", url: "https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/minigames/template.js" }
   agent:
-    claude: { label: "Connect Claude Code", url: "/v1/getting-started.html#set-up-an-ai-agent" }
-    codex: { label: "Connect OpenAI Codex", url: "/v1/getting-started.html#set-up-an-ai-agent" }
-    copilot: { label: "Connect GitHub Copilot CLI", url: "/v1/getting-started.html#set-up-an-ai-agent" }
-    gemini: { label: "Connect Gemini CLI or Antigravity", url: "/v1/getting-started.html#set-up-an-ai-agent" }
-    ollama: { label: "Use local Ollama models (optional API mode)", url: "/v1/ai-providers.html#optional-api-mode" }
-    none: { label: "Pick and install a coding agent", url: "/v1/ai-providers.html" }
+    claude: { label: "Connect Claude Code", url: "/getting-started/#set-up-an-ai-agent" }
+    codex: { label: "Connect OpenAI Codex", url: "/getting-started/#set-up-an-ai-agent" }
+    copilot: { label: "Connect GitHub Copilot CLI", url: "/getting-started/#set-up-an-ai-agent" }
+    gemini: { label: "Connect Gemini CLI or Antigravity", url: "/getting-started/#set-up-an-ai-agent" }
+    ollama: { label: "Use local Ollama models (optional API mode)", url: "/ai-providers/#optional-api-mode" }
+    none: { label: "Pick and install a coding agent", url: "/ai-providers/" }
   team:
     solo: { label: "Build apps on your own: step by step", url: "/build-apps/solo/" }
     team: { label: "Build apps as a team: step by step", url: "/build-apps/teams/" }
@@ -341,39 +341,39 @@ apps:
   task-planner: { name: "Task Planner", url: "/task-planner/", text: "Turn a description into epics and tasks on GitHub or Jira." }
   task-implementer: { name: "Task Implementer", url: "/task-implementer/", text: "Hand one issue to a coding agent: it branches, tests, commits and pushes." }
   pr-review: { name: "Code Review Theater", url: "/code-review/", text: "Diff, before-and-after evidence and the agent's walkthrough for every branch." }
-  dev-central: { name: "Dev Central", url: "/apps/dev-central/", text: "Your daily task list, with buttons to start agents." }
-  git-projects: { name: "Git Projects", url: "/apps/git-projects/", text: "Clone, pull and open all your repositories in an IDE." }
-  agents-manager: { name: "Agents Manager", url: "/apps/agents-manager/", text: "Sessions, logins, models and MCP servers for each agent CLI." }
-  manager-dashboard: { name: "Manager Dashboard", url: "/apps/manager-dashboard/", text: "Issues, merged PRs, cycle time and deploy frequency for a repo." }
+  dev-central: { name: "Dev Central", url: "/dev-central/", text: "Your daily task list, with buttons to start agents." }
+  git-projects: { name: "Git Projects", url: "/git-projects/", text: "Clone, pull and open all your repositories in an IDE." }
+  agents-manager: { name: "Agents Manager", url: "/agents-manager/", text: "Sessions, logins, models and MCP servers for each agent CLI." }
+  manager-dashboard: { name: "Manager Dashboard", url: "/manager-dashboard/", text: "Issues, merged PRs, cycle time and deploy frequency for a repo." }
   # Operations
-  kube-studio: { name: "Kube Studio", url: "/apps/kube-studio/", text: "Browse a local Kind or Minikube cluster with real kubectl. Remote, Helm and ArgoCD panels are previews." }
-  remote-execution-studio: { name: "Remote Execution Studio", url: "/apps/remote-execution-studio/", text: "Bazel and Buck2 remote build clusters and their config." }
-  ci-monitor: { name: "CI Monitor", url: "/apps/ci-monitor/", text: "GitHub Actions and Buildkite runs, failed-job logs and re-runs." }
-  deploy-tracker: { name: "Deploy Tracker", url: "/apps/deploy-tracker/", text: "Deployments, releases and merged PRs for a repository." }
-  robos-logs: { name: "System Logs Viewer", url: "/apps/robos-logs/", text: "Search and filter the structured logs every RobOS app writes." }
-  robos-dashboards: { name: "RobOS Dashboards", url: "/apps/robos-dashboards/", text: "Compose any RobOS widget into one wall and cast it to a TV." }
-  data-sources: { name: "Data Sources", url: "/apps/data-sources/", text: "Google Drive, OneDrive, SFTP, FTP and local folders in one catalog." }
-  db-manager: { name: "Relational DB Manager", url: "/apps/db-manager/", text: "SQL studio with a schema tree and console.", preview: true }
-  nosql-manager: { name: "NoSQL DB Manager", url: "/apps/nosql-manager/", text: "MongoDB documents and Redis keys.", preview: true }
-  rest-client: { name: "REST API Client", url: "/apps/rest-client/", text: "Request editor and collection runner.", preview: true }
-  grpc-client: { name: "gRPC Client", url: "/apps/grpc-client/", text: "Browse protobuf services.", preview: true }
-  graphql-client: { name: "GraphQL Client", url: "/apps/graphql-client/", text: "Query editor, variables and schema.", preview: true }
-  pass-manager: { name: "Pass Manager", url: "/apps/pass-manager/", text: "The standard Unix password store, encrypted with GPG." }
+  kube-studio: { name: "Kube Studio", url: "/kube-studio/", text: "Browse a local Kind or Minikube cluster with real kubectl. Remote, Helm and ArgoCD panels are previews." }
+  remote-execution-studio: { name: "Remote Execution Studio", url: "/remote-execution-studio/", text: "Bazel and Buck2 remote build clusters and their config." }
+  ci-monitor: { name: "CI Monitor", url: "/ci-monitor/", text: "GitHub Actions and Buildkite runs, failed-job logs and re-runs." }
+  deploy-tracker: { name: "Deploy Tracker", url: "/deploy-tracker/", text: "Deployments, releases and merged PRs for a repository." }
+  robos-logs: { name: "System Logs Viewer", url: "/robos-logs/", text: "Search and filter the structured logs every RobOS app writes." }
+  robos-dashboards: { name: "RobOS Dashboards", url: "/robos-dashboards/", text: "Compose any RobOS widget into one wall and cast it to a TV." }
+  data-sources: { name: "Data Sources", url: "/data-sources/", text: "Google Drive, OneDrive, SFTP, FTP and local folders in one catalog." }
+  db-manager: { name: "Relational DB Manager", url: "/db-manager/", text: "SQL studio with a schema tree and console.", preview: true }
+  nosql-manager: { name: "NoSQL DB Manager", url: "/nosql-manager/", text: "MongoDB documents and Redis keys.", preview: true }
+  rest-client: { name: "REST API Client", url: "/rest-client/", text: "Request editor and collection runner.", preview: true }
+  grpc-client: { name: "gRPC Client", url: "/grpc-client/", text: "Browse protobuf services.", preview: true }
+  graphql-client: { name: "GraphQL Client", url: "/graphql-client/", text: "Query editor, variables and schema.", preview: true }
+  pass-manager: { name: "Pass Manager", url: "/pass-manager/", text: "The standard Unix password store, encrypted with GPG." }
   hardware-keys: { name: "Hardware Keys", url: "/physical-keys/", text: "YubiKey and FIDO2 keys for SSH, signing and approvals." }
   vpn-sandbox: { name: "VPN Sandbox", url: "/security/", text: "Run any app inside an isolated network with a kill switch." }
   app-mesh: { name: "App Mesh & Private Networks", url: "/p2p/", text: "Link RobOS machines across networks with mutual TLS." }
-  mcp-manager: { name: "MCP Manager", url: "/apps/mcp-manager/", text: "See, test and assign the MCP servers on this machine." }
+  mcp-manager: { name: "MCP Manager", url: "/mcp-manager/", text: "See, test and assign the MCP servers on this machine." }
   # Everyday and business
   point-of-sale: { name: "Point of Sale", url: "/point-of-sale/", text: "Touchscreen register with self-checkout, scanning, tabs and tips." }
   auto-center: { name: "Auto Center", url: "/auto-center/", text: "Front desk, mechanic bench with OBD-II, estimates and checkout." }
   household: { name: "Household", url: "/family-finances/", text: "Import statements, sort spending and estimate your taxes." }
-  audio-player: { name: "Audio Player", url: "/apps/audio-player/", text: "Your music library, lyrics, and casting to Google speakers." }
+  audio-player: { name: "Audio Player", url: "/audio-player/", text: "Your music library, lyrics, and casting to Google speakers." }
   movie-player: { name: "Movie Player", url: "/movie-player/", text: "Your movies and shows with posters, subtitles and TV casting." }
   robos-tv: { name: "Smart TV Studio", url: "/tv/", text: "Pair your TV and put RobOS apps on the big screen." }
-  smart-home: { name: "Smart Home", url: "/apps/smart-home/", text: "Wi-Fi lights by room, scenes, a daylight schedule and LG appliance status." }
-  home-speaker: { name: "Home Speaker", url: "/apps/home-speaker/", text: "Intercom, voice notes and announcements on your speakers." }
-  cloud-accounts: { name: "Cloud Accounts", url: "/apps/cloud-accounts/", text: "Sign in to Google, Microsoft and others once, for every app." }
-  google-calendar: { name: "Google Calendar", url: "/apps/google-calendar/", text: "Sets up your Google calendar, contacts and mail in Thunderbird." }
+  smart-home: { name: "Smart Home", url: "/smart-home/", text: "Wi-Fi lights by room, scenes, a daylight schedule and LG appliance status." }
+  home-speaker: { name: "Home Speaker", url: "/home-speaker/", text: "Intercom, voice notes and announcements on your speakers." }
+  cloud-accounts: { name: "Cloud Accounts", url: "/cloud-accounts/", text: "Sign in to Google, Microsoft and others once, for every app." }
+  google-calendar: { name: "Google Calendar", url: "/google-calendar/", text: "Sets up your Google calendar, contacts and mail in Thunderbird." }
   # Games
   party-game: { name: "Party Game", url: "/games/party-game/", text: "An AI host runs mini games about your guests on your TVs." }
   crpg: { name: "Realm of Heroes", url: "/games/crpg/", text: "Party-based RPG with real-time-with-pause combat." }
@@ -381,9 +381,9 @@ apps:
   robos-rts: { name: "Starfall Command", url: "/games/robos-rts/", text: "One player against the AI on a huge strategy map." }
   quest-warrior-dragon: { name: "Quest: Warrior Dragon", url: "/games/quest-warrior-dragon/", text: "A retro console RPG across 29 maps." }
   # Game tools
-  robos-tabletop: { name: "Tabletop Studio", url: "/apps/robos-tabletop/", text: "Quests, heroes, monsters and boards, then launch the game." }
-  tabletop-blockmap-creator: { name: "Blockmap Creator", url: "/apps/tabletop-blockmap-creator/", text: "Line a grid up with a board image and mark the rooms." }
-  tabletop-quest-editor: { name: "Quest Map Editor", url: "/apps/tabletop-quest-editor/", text: "Place doors, monsters, traps and stairs on a map." }
-  crpg-editor: { name: "cRPG Editor", url: "/apps/crpg-editor/", text: "Campaigns, characters, items, spells and battle maps." }
-  crpg-builder: { name: "cRPG Builder", url: "/apps/crpg-builder/", text: "Turn the game's knowledge graph into a Godot 4 project." }
-  game-playthrough: { name: "Game Playthrough", url: "/apps/game-playthrough/", text: "Watch an AI play the game end to end, with videos per milestone." }
+  robos-tabletop: { name: "Tabletop Studio", url: "/robos-tabletop/", text: "Quests, heroes, monsters and boards, then launch the game." }
+  tabletop-blockmap-creator: { name: "Blockmap Creator", url: "/tabletop-blockmap-creator/", text: "Line a grid up with a board image and mark the rooms." }
+  tabletop-quest-editor: { name: "Quest Map Editor", url: "/tabletop-quest-editor/", text: "Place doors, monsters, traps and stairs on a map." }
+  crpg-editor: { name: "cRPG Editor", url: "/crpg-editor/", text: "Campaigns, characters, items, spells and battle maps." }
+  crpg-builder: { name: "cRPG Builder", url: "/crpg-builder/", text: "Turn the game's knowledge graph into a Godot 4 project." }
+  game-playthrough: { name: "Game Playthrough", url: "/game-playthrough/", text: "Watch an AI play the game end to end, with videos per milestone." }

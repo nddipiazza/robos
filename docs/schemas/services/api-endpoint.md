@@ -33,7 +33,7 @@ Count is the minimum and maximum number of values (`*` means no maximum). The va
 | Property | Count | Type | Rule or description |
 |---|---|---|---|
 | `dcterms:title` | `1..*` | `xsd:string` | API Endpoint must have a title or summary. |
-| `robos:pathPattern` | `1..*` | `xsd:string` | API Endpoint must declare path pattern (e.g. /api/v1/orders). |
+| `robos:pathPattern` | `1..*` | `xsd:string` | API Endpoint must declare path pattern (e.g. /api/orders). |
 | `robos:httpMethod` | `1..*` | `xsd:string` | API Endpoint must declare HTTP method (GET, POST, etc.). |
 
 ## Example node
@@ -51,7 +51,7 @@ This node comes from `.robos/kgraphs/services/package.jsonld` in the RobOS repos
   ],
   "dcterms:title": "Query Orders",
   "dcterms:description": "Retrieve customer purchase orders.",
-  "robos:pathPattern": "/api/v1/orders",
+  "robos:pathPattern": "/api/orders",
   "robos:httpMethod": "GET",
   "robos:service": {
     "@id": "urn:robos:service:order-service"

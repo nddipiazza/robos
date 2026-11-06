@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const version = fs.readFileSync(path.resolve(__dirname, '../VERSION'), 'utf8').trim();
 const output = path.resolve(process.argv[2] || '_site');
 
-for (const file of ['index.html', 'download/index.html', 'v1/getting-started.html']) {
+for (const file of ['index.html', 'download/index.html', 'getting-started/index.html']) {
   const html = fs.readFileSync(path.join(output, file), 'utf8');
   assert.ok(!html.includes('0.0.7'), `${file}: stale version`);
   assert.ok(!html.includes('{{ site.data.release'), `${file}: unrendered release data`);
@@ -31,26 +31,7 @@ for (const file of ['Install-RobOS.cmd', 'Install-RobOS.ps1', 'WINDOWS-SHA256SUM
 assert.ok(download.includes('id="windows"') && download.includes('id="ubuntu"') && download.includes('id="linux-distro"'));
 assert.ok(download.includes(`RobOS-v${version}-Linux-amd64.deb`), 'Missing Ubuntu package');
 
-// Merge /v1/sitemap.xml entries into root /sitemap.xml so a single sitemap submission indexes the whole site.
 const rootSitemapPath = path.join(output, 'sitemap.xml');
-const v1SitemapPath = path.join(output, 'v1/sitemap.xml');
-if (fs.existsSync(rootSitemapPath) && fs.existsSync(v1SitemapPath)) {
-  const rootSitemap = fs.readFileSync(rootSitemapPath, 'utf8');
-  const v1Sitemap = fs.readFileSync(v1SitemapPath, 'utf8');
-  const v1Urls = v1Sitemap.match(/<url>[\s\S]*?<\/url>/g) || [];
-  const missingUrls = v1Urls.filter((u) => {
-    const loc = u.match(/<loc>(.*?)<\/loc>/);
-    return loc && !rootSitemap.includes(`<loc>${loc[1]}</loc>`);
-  });
-  if (missingUrls.length > 0 && rootSitemap.includes('</urlset>')) {
-    const merged = rootSitemap.replace('</urlset>', `${missingUrls.join('\n')}\n</urlset>`);
-    try {
-      fs.writeFileSync(rootSitemapPath, merged, 'utf8');
-    } catch (_) {
-      // Ignore EACCES when _site/sitemap.xml was written by root in the jekyll-build-pages container
-    }
-  }
-}
 
 // Verify search engine & AI crawler discovery files at the site root.
 assert.ok(fs.existsSync(path.join(output, 'robots.txt')), 'Missing robots.txt');
@@ -64,7 +45,6 @@ const seoCheckedPages = [
   'build-apps/index.html',
   'build-apps/solo/index.html',
   'build-apps/teams/index.html',
-  'docs/index.html',
   'tv/index.html',
   'security/index.html',
   'download/index.html',
@@ -95,11 +75,10 @@ const seoCheckedPages = [
   'games/quest-warrior-dragon/docs/index.html',
   'games/quest-warrior-dragon/ai-playthrough/index.html',
   'games/quest-warrior-dragon/proof-of-viability.html',
-  'v1/index.html',
-  'v1/getting-started.html',
-  'v1/schemas.html',
-  'v1/system-documentation/index.html',
-  'v1/projects/crpg-realm/elearning/index.html',
+  'getting-started/index.html',
+  'schemas/index.html',
+  'system-documentation/index.html',
+  'projects/crpg-realm/elearning/index.html',
 ];
 // Every blog post has its own page at /blog/<slug>/ (site/_blog/<slug>.html).
 const blogPosts = fs.readdirSync(path.resolve(__dirname, '../site/_blog')).filter((f) => f.endsWith('.html'));

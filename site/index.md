@@ -62,7 +62,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
           <li><span>Repair-shop management software</span><a href="{{ '/auto-center/' | relative_url }}">Auto Center</a></li>
           <li><span>Budgeting and tax-prep apps</span><a href="{{ '/family-finances/' | relative_url }}">Household</a></li>
           <li><span>Locked-in music and movie apps</span><a href="{{ '/movie-player/' | relative_url }}">Audio &amp; Movie Player</a></li>
-          <li><span>Vendor smart-home and TV apps</span><a href="{{ '/apps/smart-home/' | relative_url }}">Smart Home &amp; Smart TV</a></li>
+          <li><span>Vendor smart-home and TV apps</span><a href="{{ '/smart-home/' | relative_url }}">Smart Home &amp; Smart TV</a></li>
           <li><span>Paid course platforms</span><a href="{{ '/elearning/' | relative_url }}">eLearning</a></li>
           <li><span>Per-seat developer tools</span><a href="{{ '/build-apps/' | relative_url }}">Developer suite</a></li>
         </ul>
@@ -340,9 +340,9 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
     <p class="eyebrow">Start here</p>
     <h2 class="h2">Pick your path</h2>
     <div class="grid3">
-      <a class="card" href="{{ '/v1/use-robos.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/desktop.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Use the apps</h3><p>Install RobOS, tour the suites, and turn on AI wherever you want it.</p><span class="go">Start using →</span></a>
+      <a class="card" href="{{ '/use-robos/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/desktop.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Use the apps</h3><p>Install RobOS, tour the suites, and turn on AI wherever you want it.</p><span class="go">Start using →</span></a>
       <a class="card" href="{{ '/build-apps/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/wizard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Build apps</h3><p>Plan tasks, let an agent implement them, and review every branch before it becomes a pull request. Guides for solo developers and teams.</p><span class="go">Start building →</span></a>
-      <a class="card" href="{{ '/v1/robos-for-teams.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/building.svg" alt="" width="48" height="48" loading="lazy"></div><h3>RobOS for Teams</h3><p>Govern coding agents and roll RobOS out across your org.</p><span class="go">See why →</span></a>
+      <a class="card" href="{{ '/robos-for-teams/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/building.svg" alt="" width="48" height="48" loading="lazy"></div><h3>RobOS for Teams</h3><p>Govern coding agents and roll RobOS out across your org.</p><span class="go">See why →</span></a>
     </div>
   </div>
 </section>

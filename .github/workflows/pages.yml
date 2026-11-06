@@ -9,6 +9,12 @@ on:
       - "VERSION"
       - "scripts/stage-release-data.cjs"
       - "scripts/check-install-docs.cjs"
+      - "scripts/check-site-pages.cjs"
+      - "scripts/check-blog-seo.cjs"
+      - "scripts/stage-site-guides.cjs"
+      - "scripts/stage-site-data.sh"
+      - "scripts/sync-app-docs.js"
+      - "packages/*/package.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -37,8 +43,8 @@ jobs:
       - name: Stage release version and installation paths
         run: node scripts/stage-release-data.cjs
 
-      # Front site -> https://rowbose.com/ (reads app data from the v1 docs)
-      - name: Stage app data for the front site
+      # One site, including app/component pages and generated references.
+      - name: Stage reference guides and assets
         run: scripts/stage-site-data.sh
 
       - name: Build front site
@@ -47,16 +53,12 @@ jobs:
           source: ./site
           destination: ./_site
 
-      # Classic docs -> https://rowbose.com/v1/ (baseurl is set in docs/_config.yml)
-      - name: Build classic docs (v1)
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./docs
-          destination: ./_site/v1
-
       - name: Upload artifact
         # Validate the rendered pages before publishing them.
-        run: node scripts/check-install-docs.cjs
+        run: |
+          node scripts/check-install-docs.cjs
+          node scripts/check-site-pages.cjs
+          node scripts/check-blog-seo.cjs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

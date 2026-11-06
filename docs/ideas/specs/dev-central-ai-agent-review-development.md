@@ -25,7 +25,7 @@ Proposal, not built. The dashboard exists; the agent-facing parts below do not.
 
 ## What exists today
 
-- [Dev Central]({{ '/apps/dev-central/' | relative_url }}) (`packages/dev-central`) has tabs for tasks, pull requests, notifications, blockers, standup and activity. It loads your issues, pull requests and review requests (`dc-get-my-issues`, `dc-get-my-prs`, `dc-get-review-requests` in `main.js`).
+- [Dev Central]({{ '/dev-central/' | relative_url }}) (`packages/dev-central`) has tabs for tasks, pull requests, notifications, blockers, standup and activity. It loads your issues, pull requests and review requests (`dc-get-my-issues`, `dc-get-my-prs`, `dc-get-review-requests` in `main.js`).
 - A list headed "In code review" shows saved reviews with CI state and an Open Code Review button (`renderer/task-reviews.js`).
 - The walkthrough viewer (`renderer/walkthrough-viewer.js`) is wired to `dc-review-get-task-proof`, which returns one hardcoded sample (`TASK-201`).
 - `packages/dev-central` has no goal dispatcher, plan review screen or agent monitor.

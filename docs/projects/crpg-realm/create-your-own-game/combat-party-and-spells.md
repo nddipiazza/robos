@@ -75,7 +75,7 @@ flowchart TD
 ```
 
 - A click from anywhere starts it. There is no range check.
-- The `malakor-showdown` tree in `data/v1/dialogue.json` runs first. Its `node_fight` has an empty `choices` array, which makes the log show one continue button; closing the dialogue emits `dialogue_ended` and starts the loop. If you rename the tree, change the id in `confront_malakor()` too. If the tree is missing, the dialogue closes before the signal is connected and the fight never starts.
+- The `malakor-showdown` tree in `data/dialogue.json` runs first. Its `node_fight` has an empty `choices` array, which makes the log show one continue button; closing the dialogue emits `dialogue_ended` and starts the loop. If you rename the tree, change the id in `confront_malakor()` too. If the tree is missing, the dialogue closes before the signal is connected and the fight never starts.
 - The loop alternates a hero swing and a Malakor swing until his HP is 0, then sets `flags.malakor_slain`, calls `GameState.advance_quest(5)` and loads `VictoryScreen.tscn`, which shows name, class, kills, chests and gold, with a replay button.
 - The loop ignores party defeat, and it does not stop if the `attack_malakor` API action starts a second loop beside it, which can run the victory function twice. Not built: boss phases, shields, summoned minions, initiative.
 
@@ -166,7 +166,7 @@ Spells in the real-time scenes are resolved by `match` blocks on the spell id in
 
 Before the `match`, `execute_cast_spell` refuses a target that is invisible (unless the caster can see invisible) or under Sanctuary (except for `cure-wounds`, `healing-word` and `sanctuary`). An id with no branch hits the default: it logs "X casts Y!" and returns `success: true` without doing anything.
 
-`data/v1/spells.json` has 26 entries. Each now has a `mechanics` block that the scenario engine reads, but `DataStore.spells` is not read by any gameplay script. So a new spell for the real-time scenes needs a branch in `CombatManager.gd`. Add the JSON entry as well, so the scenario engine and the lists know the spell.
+`data/spells.json` has 26 entries. Each now has a `mechanics` block that the scenario engine reads, but `DataStore.spells` is not read by any gameplay script. So a new spell for the real-time scenes needs a branch in `CombatManager.gd`. Add the JSON entry as well, so the scenario engine and the lists know the spell.
 
 `TacticalBattle.execute_spell_cast()` is what the HTTP `cast_spell` action calls in `TacticalBattle`. It sends the seven area ids to `execute_aoe_spell(..., hero)` and everything else to `execute_cast_spell()`. Radius and save: `fireball` 180 px (DC 14 DEX), `burning-hands` 150 px (DEX), `thunderwave` 150 px (CON), `lightning-bolt` 450 px (DEX), and `blizzard`, `stinking-cloud` and `sleep` from `GameState.SPELL_AOE_FEET`, which is 20 ft at 9 px per foot, so 180 px (`stinking-cloud` saves with CON).
 
@@ -184,7 +184,7 @@ Before the `match`, `execute_cast_spell` refuses a target that is invisible (unl
 
 ### Add a spell
 
-1. Add an object to `data/v1/spells.json`. Include a `mechanics` block if you want the scenario engine to cast it.
+1. Add an object to `data/spells.json`. Include a `mechanics` block if you want the scenario engine to cast it.
 2. In `CombatManager.execute_cast_spell()`, add a branch above the final `_:` branch. Follow `magic-missile`: log with `_log_combat`, play `spell_cast` and `spell_impact` through `AudioManager.play_sfx`, apply damage with `target_node.take_damage(...)`, and return a dictionary with `success`. `ShadowHound.take_damage(amount)` takes one argument and `TacticalEnemy.take_damage(amount, attacker = null)` takes two.
 3. Test it with a feature under `tests/e2e/features/spells/`. Use the existing steps from `spell_01_magic_missile.feature`: `Given an isolated tactical spell encounter "combat_dummy" with hero "Ignis" class "wizard" and 35 HP`, `When the hero targets "dummy_1" and casts spell "<id>"`, `Then the spell "<id>" resolves successfully`. `resolves successfully` alone proves little, because the default branch also returns success, so add checks on damage or log text.
 

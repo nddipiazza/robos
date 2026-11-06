@@ -1,0 +1,60 @@
+---
+title: "Your webcam just became a private camera network"
+nav_label: "Your cameras, your network"
+date: 2026-11-06 17:00:00 +0000
+date_label: "Nov 6, 2026"
+tags:
+  - "Camera Watch"
+  - "Private Networks"
+  - "Scoped permissions"
+  - "Local video"
+summary: "A desk webcam, two RobOS computers, and one private invite. Camera Watch shares chosen views over encrypted connections, with permission checks at both the service and camera level—and a way to take access back."
+description: "Turn a webcam into a private camera network with RobOS Camera Watch: selected-camera sharing, mutual TLS, scoped invites, per-camera secrets and revocation."
+og_image: /assets/camera-watch/remote-live-view.png
+og_image_alt: "A shared Desk webcam live in Camera Watch on another RobOS computer"
+---
+<div class="blog-body">
+  <p>There is a pleasingly ridiculous moment when a webcam points at a monitor showing its own feed. The room folds into the screen, then into the phone held in front of it, then back into the room. In the photos below, that loop is real. So is the more useful thing underneath it: a camera attached to one RobOS computer can show up live on another.</p>
+  <p><strong>Pick a camera. Make an invite. Paste it on the other computer. Watch.</strong> That is the whole user-facing idea behind sharing in RobOS Camera Watch. Underneath those few clicks is a private network with a deliberately narrow grant: access to the camera-sharing service, plus the secrets for the specific views you chose.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig documentary"><a href="{{ '/assets/camera-watch/desk-camera-in-action.jpg' | relative_url }}"><img src="{{ '/assets/camera-watch/desk-camera-in-action.jpg' | relative_url }}" alt="Real photograph of a desk webcam feed repeated on a monitor while a person holds a phone in front of it" width="3072" height="4080" loading="lazy"></a><figcaption>The camera loop, in the actual room. The phone is photographing the setup; it is not a Camera Watch mobile client.</figcaption></figure>
+    <figure class="blog-fig documentary"><a href="{{ '/assets/camera-watch/share-camera-invite-redacted.png' | relative_url }}"><img src="{{ '/assets/camera-watch/share-camera-invite-redacted.png' | relative_url }}" alt="Camera Watch sharing Desk webcam with Viewer test machine, with the invite hidden and revocation controls visible" width="1088" height="1445" loading="lazy"></a><figcaption>The sharing screen: choose Desk webcam, label the invite, and keep the Revoke control close by. Supplied photo edited with AI to hide the invite token.</figcaption></figure>
+  </div>
+
+  <h2>A webcam is enough to start</h2>
+  <p>You do not need to begin with a rack of cameras. A USB webcam gives you the first view. ONVIF discovery adds compatible network cameras, and a known RTSP or MJPEG address works too. Camera Watch uses ffmpeg to bring the pictures into a live grid, compares frames locally for motion, and saves snapshots or clips on your computer.</p>
+  <p>Now imagine the workshop while you are at your desk, a shop entrance shared with the person opening up, or a front-door view for a neighbour while you are away. Those are examples of what you could configure. The run here was simpler and concrete: <strong>Desk webcam on the host, Camera Watch on a second computer, one camera invite.</strong></p>
+  <figure class="blog-fig"><a href="{{ '/assets/camera-watch/remote-live-view.png' | relative_url }}"><img src="{{ '/assets/camera-watch/remote-live-view.png' | relative_url }}" alt="Receiving Camera Watch application showing Desk webcam live, with one of one cameras connected" width="1320" height="860" loading="lazy"></a><figcaption>The receiving computer in the local run: 960 × 540 video at about 8 fps. Successive sampled JPEGs changed, and motion detection responded. Both computers were on the same LAN.</figcaption></figure>
+
+  <h2>The interesting part is what the invite grants</h2>
+  <p>Sharing starts with a checkbox beside each camera. That is a small interface choice with a useful consequence: the thing you hand over describes the views you selected. You can send one person the entrance and another person the workshop, with separate invites you can manage later.</p>
+  <p>There are two permission checks in the path. First, <strong>App Mesh checks the allowed service</strong>. A newly enrolled camera-only peer is limited to <code>camera-watch-share</code>; the camera invite does not grant access to the rest of the RobOS apps or their debug ports. The gateway checks the actual destination service and port, so naming an allowed app cannot disguise a request for a different port.</p>
+  <p>Second, <strong>the share service checks the camera secret</strong>. Each camera has its own. Holding the front door's secret does not unlock the garage, even through an otherwise valid camera tunnel. Wrong secrets, cameras that are not shared, and nonexistent cameras receive the same refusal. The service provides status, a still frame and live JPEG video; it does not hand over camera passwords, the host's recording archive or remote pan/tilt/zoom controls.</p>
+  <p>That is the practical meaning of fine-grained permissions here: <strong>which machine, which service, which camera.</strong> It is not a schedule-based policy editor or a set of job roles. A machine you previously trusted with full network access keeps that trust; a narrower camera invite does not silently rewrite an existing relationship.</p>
+
+  <h2>Private network, without a camera account</h2>
+  <p>On the receiving computer, <strong>Add camera → Shared with me</strong> accepts the <code>robos-cam://…</code> invite. Camera Watch uses its scoped network invitation to enrol the peer and pin certificates. RobOS-to-RobOS traffic uses <strong>mutual TLS 1.3</strong>: both ends authenticate, and the video travels inside that encrypted connection.</p>
+  <p>For a recipient on another network, the sharer ticks <strong>They are on a different network</strong> before creating the invite. RobOS opens an outbound relay through localhost.run. The relay forwards the inner encrypted connection without decrypting the video, so this path does not require exposing the camera's RTSP port on a home router. It still depends on the relay and outbound network access; metadata such as connection timing and traffic volume remains observable.</p>
+  <p>The photos and measured live feed in this post document a same-LAN run. Different-network sharing is a supported relay path in the implementation, not a cellular demonstration performed for this post. And the encrypted mesh covers the hop between RobOS computers—the camera's own connection to its host still depends on the camera protocol you use.</p>
+
+  <h2>An invitation should come with a way out</h2>
+  <p>The share dialog has a <strong>Who can watch</strong> section for a reason. It lists the invites, machines enrolled through them and current viewer counts. <strong>Revoke</strong> invalidates an invite and removes its scoped peers, closing their connections. Separately trusted full-network peers remain trusted. <strong>Stop sharing</strong> disables sharing for that camera and rotates its secret so existing invites lose access to it.</p>
+  <p>The label “Viewer test machine” is a reminder for the owner, not identity verification. The invite is a bearer credential: whoever holds it can join until it is revoked. It is not single-use, and there is no automatic expiry. Send it privately, and make a separate invite when you want separate revocation.</p>
+  <p>There is another boundary worth being direct about: <strong>someone who can watch can save what they see.</strong> Shared cameras start with motion recording off on the receiving computer, but the viewer can enable recording or save a still. Revocation stops access; it cannot reach backwards and erase copies already made.</p>
+
+  <h2>Try it with the camera already on your desk</h2>
+  <p>Get a camera live on the first computer. Click Share, select it, label the invite, and send it to your second RobOS computer. Paste it into Shared with me. Then look at the live viewer count and the permissions that made the connection possible. A useful private network can begin with one view and one carefully bounded invitation.</p>
+  <p>The <a href="{{ '/camera-watcher/' | relative_url }}">Camera Watch guide</a> walks through the complete setup, local recording, different-network sharing and troubleshooting. For developers, the existing tests exercise the camera share through real local mesh connections with synthetic camera frames:</p>
+  <div class="blog-log"># From the repository root; install the camera app dependencies first
+npm install --prefix packages/camera-watch
+node --test packages/robos-test/tests/camera-watch/unit.test.js
+node --test packages/robos-lib/app-mesh-engine.test.cjs</div>
+  <p>Those tests cover selected-camera access and invite revocation without presenting synthetic frames as physical-camera footage. The real camera evidence is the local run and supplied photographs above.</p>
+</div>
+<div class="blog-links">
+  <a href="{{ '/camera-watcher/' | relative_url }}">Camera Watch setup &amp; permissions →</a>
+  <a href="{{ '/camera-watch/' | relative_url }}">App reference →</a>
+  <a href="{{ '/private-networks/' | relative_url }}">Private Networks →</a>
+  <span class="blog-commits">Camera sharing: <a href="https://github.com/nddipiazza/robos/commit/d72161750efa9ca4ca0a3a2be9e587769e8810be">d7216175</a></span>
+</div>

@@ -3,7 +3,7 @@ title: Google OAuth client and Drive quota
 layout: default
 parent: Build on RobOS
 nav_order: 11
-description: "Why RobOS's Google Drive calls get rate-limited with the default OAuth client, what the shared retry helper does about it, and the recommendation to let users bring their own client ID and to register a RobOS-owned client."
+description: "Why Google's sign-in page says rclone and RobOS's Google Drive calls get rate-limited with the default OAuth client, what the shared retry helper and the own-client option do about it, and the recommendation to register a RobOS-owned client."
 ---
 
 # Google OAuth client and Drive quota
@@ -23,6 +23,16 @@ RobOS signs in to Google with rclone's public desktop OAuth client (`DEFAULT_GDR
 
 The error is a 403 with status `PERMISSION_DENIED`, but the cause is quota, not access. Code that treats every 403 as "no access" tells users that a working account is broken.
 
+## Why Google's sign-in page says "rclone"
+
+Google's account chooser ("Choose an account to continue to rclone") and consent page ("rclone wants to access your Google Account") show the app name registered on the OAuth client's Google Cloud project. `DEFAULT_GDRIVE_CLIENT_ID` and `DEFAULT_GDRIVE_OBSCURED_SECRET` are rclone's public Drive client, copied from rclone's `backend/drive` (the secret is decrypted with rclone's `obscure` key, and the loopback port 53682 is rclone's too). The same client is duplicated in `packages/data-sources/lib/remote-storage.js`. RobOS cannot change that name in code: only the owner of project `202264815644` can. `DEFAULT_ONEDRIVE_CLIENT_ID` is rclone's OneDrive client, so Microsoft's sign-in page names rclone in the same way.
+
+Every Google sign-in in RobOS goes through this client unless the account has its own: Preferences → Cloud Suite Accounts and Config Sync's "Back up to my Google Drive" (both through `startGoogleBrowserOAuth`), the Cloud Accounts and Google Calendar apps, and the Data Sources sign-in page.
+
+What RobOS itself shows never says rclone: the account label is `Google (<email>)` (`normalizeAccountRecord`), and the Data Sources connection made at sign-in (`gdrive-google-<email-slug>`) takes that label as its name. Tokens go from Google straight to the loopback server on the user's computer; rclone's developers get no tokens or files, only aggregate request counts in their Cloud console.
+
+The UI now says this where people sign in: a notice in Preferences → Cloud Suite Accounts, a one-line hint on Config Sync's Google Drive card, and, on each Google account row, which client it uses (`account.oauthClient` from `describeGoogleOAuthClient`).
+
 ## What the code does now
 
 All Drive calls go through `packages/robos-lib/google-drive-fetch.js`:
@@ -39,15 +49,21 @@ Retries make the shared client usable, but they do not add quota. Busy minutes a
 
 Do both. They fix different users.
 
-### 1. Let users bring their own OAuth client ID (short term)
+### 1. Let users bring their own OAuth client ID (short term, shipped)
 
-A personal Google Cloud project gets its own Drive quota (about 12,000 queries per minute per project by default), so rate limiting stops. The account fields already exist (`clientId`, `clientSecret` on each Cloud Accounts record), and `refreshGoogleAccountToken` and `startGoogleAccountOAuth` already read them. Three things are missing:
+A personal Google Cloud project gets its own Drive quota (about 12,000 queries per minute per project by default), so rate limiting stops, and Google's pages show the app name the user registers (for example "RobOS").
 
-1. **Save the client on sign-in.** `startGoogleAccountOAuth` uses `params.clientId`, but the `saveAccount` call after the token exchange does not store `clientId` / `clientSecret`. For a new account, the next token refresh then uses the rclone client. A refresh token only works with the client that issued it, so the refresh fails (`unauthorized_client`). Add both fields to that `saveAccount` call. Keep the secret in the same `0600` file as the tokens.
-2. **Add an "Advanced: use my own Google client" section** to Preferences → Cloud Suite Accounts, with Client ID and Client secret fields. The section should include a short how-to: create a Cloud project, enable the Drive API, set up the OAuth consent screen (External, Testing mode, add yourself as a test user), and create a *Desktop app* OAuth client. The loopback redirect `http://127.0.0.1:<port>/` that RobOS uses works with Desktop clients without registering it.
-3. **Point users to it when rate limiting shows up.** When `checks.drive.rateLimited` is true, or Config Sync reports rate limiting, the message should link to that section.
+What is in place:
 
-Cost: about a day of work, and nothing to run. Drawback: setting up a Cloud project takes 10 minutes and will lose non-technical users. Testing-mode refresh tokens expire after 7 days unless the user publishes the app, which for the `drive` scope means Google verification.
+1. **Preferences → Cloud Suite Accounts → "Use my own Google OAuth client"** takes a client ID and secret, with the setup steps, and calls `startGoogleBrowserOAuth({ clientId, clientSecret })`. A client ID without a secret is refused. "Go back to the built-in client" calls it with `useBuiltInClient: true`.
+2. **The client is saved with the tokens it issued.** `startGoogleBrowserOAuth` stores `clientId` / `clientSecret` on the account (same `0600` file as the tokens), and `syncAccountToDataSources` copies them to the Drive data source whenever it copies a refresh token. A refresh token only works with the client that issued it, so before this a new account signed in with its own client failed its first refresh (`unauthorized_client`). Signing in again keeps the account's client; a refresh token from another client is never kept.
+3. **With its own client, sign-in asks for Drive, Calendar and Contacts at once** (`useMultiScope`).
+
+Still to do: point users to the section when rate limiting shows up (`checks.drive.rateLimited`, or Config Sync reporting rate limits).
+
+Setting up the client (the user does this in Google Cloud Console; RobOS cannot): create a project, enable the Google Drive API (and the Calendar / People APIs if used), under Google Auth Platform set the app name to "RobOS", choose External and add yourself as a test user, then create an OAuth client of type *Desktop app*. The loopback redirect `http://127.0.0.1:<port>/` works with Desktop clients without registering it.
+
+Drawbacks: the setup takes about 10 minutes and will lose non-technical users. In Testing mode Google shows "Google hasn't verified this app" (the user chooses Continue) and refresh tokens expire after 7 days. Publishing the app (In production) without verification stops the 7-day expiry but keeps the warning, and caps an app that asks for restricted scopes such as full `drive` at 100 users, which is fine for one person. Config Sync on several computers needs the same client on each, since every computer refreshes its own tokens.
 
 ### 2. Register a RobOS-owned OAuth client (long term)
 
@@ -58,4 +74,8 @@ This is the fix for everyone who will not set up their own project. RobOS gets i
 - The client secret of a desktop app is not secret (Google treats installed-app secrets as public), so shipping it obscured in the binary, as is done for rclone's today, is acceptable.
 - Ask Google for a quota increase on the project once real usage shows up in the Cloud console.
 
-Until one of these ships, keep the default as is: the rclone client with `driveFetch` retries is slow under load, but it works.
+### 3. Keep rclone's client as the default
+
+This is today's default and needs nothing from anyone. rclone's client is verified by Google for full `drive`, so users see no "unverified app" warning and tokens do not expire after 7 days. The costs: Google's pages say "rclone", Drive quota is shared with every rclone user (`driveFetch` retries make it slow under load, not broken), and rclone's maintainers can rotate or restrict the client at any time, which would sign every RobOS user out.
+
+Until the RobOS-owned client ships, keep it as the default and offer option 1 to anyone who wants their own name and quota.

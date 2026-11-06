@@ -3,25 +3,21 @@ description: "RobOS is one open-source app suite built to replace the apps you p
 url: "https://rowbose.com"
 baseurl: ""
 author: "RobOS Project"
+google_site_verification: "YyFlWcvXEJtngCsJqPDBc163MvN_eRY_KWDKjP7WTk0"
 og_image: "/assets/og.png"
 keywords: "RobOS, Rowbose, rowbose.com, www.rowbose.com, open-source app suite, knowledge graph, KGraph, context engineering, Point of Sale, Auto Center, Household finances, Audio Player, Virtual DJ, Godot 4 games, AI coding agents, developer tools"
 
 plugins:
   - jekyll-sitemap
+  - jekyll-redirect-from
 
-# This is the front site at https://rowbose.com/. The classic (v1) docs are
-# a separate Jekyll site in ../docs, built with baseurl /v1 and published
-# under /v1/. See .github/workflows/pages.yml.
-#
-# The App Directory reads the app pages in ../docs/_apps. The workflow (and
-# scripts/build-docs.sh) stage them into site/_apps via scripts/stage-site-data.sh,
-# and each one is published at /apps/<slug>/ with _layouts/app.html. An app whose
-# front matter sets `landing:` (a hand-made guide such as /point-of-sale/) is linked
-# there from the directory instead.
+# One site, with tracked app/component pages and staged generated references.
 collections:
   apps:
     output: true
-    permalink: /apps/:name/
+    permalink: /:name/
+  guides:
+    output: true
   # Engineering blog posts: one file per post in _blog/, published at /blog/<file name>/.
   # /blog/ lists them newest first by `date`.
   blog:
@@ -29,6 +25,14 @@ collections:
     permalink: /blog/:name/
 
 defaults:
+  - scope:
+      path: ""
+      type: guides
+    values:
+      layout: guide
+      body_class: guide
+      extra_css: /assets/app.css
+      schema_type: TechArticle
   - scope:
       path: ""
       type: apps

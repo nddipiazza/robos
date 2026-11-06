@@ -53,9 +53,9 @@ Without `CRPG_MODE=backend` the same features run with video and on-screen overl
 
 | App | What it edits |
 |:---|:---|
-| [cRPG Editor]({{ '/apps/crpg-editor/' | relative_url }}) | Campaigns, characters, inventory and blockmaps for the cRPG. |
-| [Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}) | HeroQuest and tabletop RPG cartridges, through a form editor. |
-| [Tabletop Blockmap Creator]({{ '/apps/tabletop-blockmap-creator/' | relative_url }}) | Grid tile size and offsets for a dungeon image, plus corridors and rooms drawn over it. |
+| [cRPG Editor]({{ '/crpg-editor/' | relative_url }}) | Campaigns, characters, inventory and blockmaps for the cRPG. |
+| [Tabletop Studio]({{ '/robos-tabletop/' | relative_url }}) | HeroQuest and tabletop RPG cartridges, through a form editor. |
+| [Tabletop Blockmap Creator]({{ '/tabletop-blockmap-creator/' | relative_url }}) | Grid tile size and offsets for a dungeon image, plus corridors and rooms drawn over it. |
 
 ## Game packages in the knowledge graph
 
@@ -81,7 +81,7 @@ Task Planner has six templates in its Game Development category, defined in `pac
 - **Plan to Create an Unreal Engine 5 PC Action Game**
 - **Plan to Create a Rust Bevy ECS Game**
 
-See [Task Planner]({{ '/apps/task-planner/' | relative_url }}).
+See [Task Planner]({{ '/task-planner/' | relative_url }}).
 
 ## Not built yet
 

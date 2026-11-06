@@ -101,8 +101,8 @@ RobOS starts the agent CLIs directly. There is no router in between, and nothing
 
 | Work | Agent | Model |
 |:---|:---|:---|
-| [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) | Chosen in `<robos-agent-selector>`: `codex`, `agy`, `claude` or `copilot` | Chosen in the panel, or that CLI's default |
-| [Dev Central]({{ '/apps/dev-central/' | relative_url }}) work tasks | `codex` or `claude`, from `~/.config/robos/work-task-settings.json` (see below) | That CLI's configured model |
+| [Task Implementer]({{ '/task-implementer/' | relative_url }}) | Chosen in `<robos-agent-selector>`: `codex`, `agy`, `claude` or `copilot` | Chosen in the panel, or that CLI's default |
+| [Dev Central]({{ '/dev-central/' | relative_url }}) work tasks | `codex` or `claude`, from `~/.config/robos/work-task-settings.json` (see below) | That CLI's configured model |
 | PR Review CI recovery | Codex, from the catalog in `robos-agent-client/providers.js` | Chosen in the panel |
 | One-shot requests: generate buttons, the text box quick-ask, the Knowledge Graph AI Co-Pilot, Import & Refine | `robos-lib/ai-agent`: the CLI set as active in RobOS Agents, or the optional API mode | The CLI's configured model, or the API model setting |
 
@@ -114,7 +114,7 @@ The last row is described in [AI agents and API mode]({{ site.baseurl }}{% link 
 
 ## Where task agents are chosen today
 
-[Dev Central]({{ '/apps/dev-central/' | relative_url }}) does not use the tier settings. It reads `backend` from `~/.config/robos/work-task-settings.json`, which defaults to `codex` and also accepts `claude`, and starts that CLI directly. For `codex`, design runs use `--sandbox read-only` and implementation runs use `--sandbox workspace-write` with network access on. For `claude`, design runs add `--permission-mode plan` and implementation runs add `--permission-mode acceptEdits`. The model is whatever that CLI is configured to use.
+[Dev Central]({{ '/dev-central/' | relative_url }}) does not use the tier settings. It reads `backend` from `~/.config/robos/work-task-settings.json`, which defaults to `codex` and also accepts `claude`, and starts that CLI directly. For `codex`, design runs use `--sandbox read-only` and implementation runs use `--sandbox workspace-write` with network access on. For `claude`, design runs add `--permission-mode plan` and implementation runs add `--permission-mode acceptEdits`. The model is whatever that CLI is configured to use.
 
 `providers.js` in `robos-agent-client` lists Codex, AGY (Antigravity), Claude Code and GitHub Copilot with their model catalogs for the shared `<robos-agent-selector>` (used by Task Implementer, Audio Player, Movie Player, Party Game and the PR Review CI recovery panel; CI recovery offers Codex only). It requires a signed-in CLI and caches each catalog for 24 hours in `~/.config/robos/provider-model-cache.json`.
 

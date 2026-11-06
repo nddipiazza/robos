@@ -18,7 +18,7 @@ Proposal, not built. This page replaces two older specs, an LMS proposal and a U
 
 ## Proposal
 
-The older LMS spec described a new app, `packages/robos-lms`. The eLearning Hub now provides the player, so the items below would extend [RobOS eLearning Hub]({{ '/apps/robos-elearning/' | relative_url }}) instead.
+The older LMS spec described a new app, `packages/robos-lms`. The eLearning Hub now provides the player, so the items below would extend [RobOS eLearning Hub]({{ '/robos-elearning/' | relative_url }}) instead.
 
 **Authoring**
 
@@ -33,7 +33,7 @@ The older LMS spec described a new app, `packages/robos-lms`. The eLearning Hub 
 
 **Teams**
 
-- Assign a course to a person or group from [People Directory]({{ '/apps/people-directory/' | relative_url }}) and [Group Manager]({{ '/apps/group-manager/' | relative_url }}), with a due date.
+- Assign a course to a person or group from [People Directory]({{ '/people-directory/' | relative_url }}) and [Group Manager]({{ '/group-manager/' | relative_url }}), with a due date.
 - A completion and score report per team, and overdue alerts.
 - Export completion records as xAPI or SCORM events.
 - Player extras: synchronized transcript highlighting for narrated lessons and playback speed control.

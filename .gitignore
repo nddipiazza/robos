@@ -40,8 +40,6 @@ run/
 # Personal / sensitive files
 *.pdf
 !site/future/skill-commons-whitepaper.pdf
-site/_apps/
-site/_data/app_categories.yml
 _site/
 
 # GraphWorkspace write-ahead journal, lock and per-apply proposal copies. .robos/import-state.json is tracked.
@@ -52,3 +50,18 @@ _site/
 # RobOS phone image: built by infra/android/robos-image.sh
 infra/android/vendor/robos/prebuilt/
 infra/android/vendor/robos/bootanimation/
+
+# Generated public reference pages and staged docs assets
+site/_guides/
+site/assets/images/
+site/assets/videos/
+site/assets/evidence/
+site/assets/js/
+site/mcp/
+site/schemas/ontology.jsonld
+site/.jekyll-cache/
+site/site.webmanifest
+site/favicon.ico
+
+# Windows icons App Manager makes from icon.png (packages/app-manager/lib/win-icon.cjs)
+packages/*/icon.ico
