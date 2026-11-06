@@ -168,6 +168,11 @@ const EXCLUDE = [
   'config/movie-player-control.json', 'config/audio-player-control.json',
   // The LG ThinQ personal access token stays on the computer it was entered on.
   'config/lg-thinq.json',
+  // Feit / Smart Life: the Tuya cloud keys and each light's local key. Every device
+  // fetches its own from the Tuya cloud project, so they never need to travel.
+  'config/tuya.json',
+  // Backups apps make of their own settings before rewriting them.
+  'config/*.bak-*',
   // Camera Watch's motion event log points at this machine's recordings.
   'config/camera-watch/events.json',
   // Caches, audit logs and live state.
