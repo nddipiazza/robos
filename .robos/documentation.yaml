@@ -8,7 +8,7 @@ entries:
   - id: "robos-documentation"
     title: "RobOS Documentation Hub Architecture"
     targetEntity: "urn:robos:app:robos-documentation"
-    docPath: "docs/_apps/robos-documentation.md"
+    docPath: "site/_apps/robos-documentation.md"
     category: "Applications"
     gitopsFile: ".robos/documentation.yaml"
     lastUpdated: "2026-09-25T12:00:00.000Z"

@@ -21,11 +21,11 @@ Proposal, not built. No cloud resource types, HCL generator or IaC app exists in
 - An agent step that runs `tofu plan` in a temporary `tmpfs` sandbox and reads the JSON plan before opening a pull request.
 - A view in Dev Central that lists the resources a plan would add, change or destroy, shown before approval.
 - Cloud credentials and remote state settings read from the `pass` store, not from files.
-- The spec leaves open whether this lives in [Kube Studio]({{ '/apps/kube-studio/' | relative_url }}) or in a new `packages/iac-studio`.
+- The spec leaves open whether this lives in [Kube Studio]({{ '/kube-studio/' | relative_url }}) or in a new `packages/iac-studio`.
 
 ## What exists today
 
-- [Dev Tools MCP]({{ '/apps/dev-tools-mcp/' | relative_url }}) lists `terraform` among the tools it can check for (`packages/dev-tools-mcp/server.js`).
+- [Dev Tools MCP]({{ '/dev-tools-mcp/' | relative_url }}) lists `terraform` among the tools it can check for (`packages/dev-tools-mcp/server.js`).
 - Task Planner has a template, "Plan to Create a Terraform / OpenTofu Cloud Infrastructure Stack" (`packages/task-planner/lib/default-templates.js`). It produces a plan, not infrastructure code.
 - None of the `robos:` cloud resource types above exists in `packages/robos-graph` or `.robos`.
 

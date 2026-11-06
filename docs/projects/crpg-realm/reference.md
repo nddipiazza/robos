@@ -35,9 +35,9 @@ games/crpg-realm/
   scenes/              16 top-level .tscn scenes, 4 .jsonld scene files
     components/        18 reusable scenes: DoorPortal, Trap, TacticalEnemy, NPCCharacter, ...
   scripts/             GDScript for scenes and components; engine/ and demo/ subfolders
-  src/generated/v1/    DataStoreV1.gd and typed wrappers (ItemData, MonsterData, NPCData, SpellData)
-  data/v1/             game content as JSON arrays
-  schemas/v1/          3 JSON Schemas (game, monsters, races)
+  src/generated/    DataStoreV1.gd and typed wrappers (ItemData, MonsterData, NPCData, SpellData)
+  data/             game content as JSON arrays
+  schemas/          3 JSON Schemas (game, monsters, races)
   campaigns/ characters/ items/ enemies/ spells/ abilities/ events/ maps/
                        KGraph JSON-LD content authored in the editor
   cartridges/          bundled campaigns (*.cartridge.json)
@@ -55,7 +55,7 @@ Declared in `project.godot`. They exist for the whole run and survive scene chan
 
 | Name | Script | Role |
 |:---|:---|:---|
-| `DataStore` | `src/generated/v1/DataStoreV1.gd` | Loads `data/v1/*.json` and mods into dictionaries keyed by `id` |
+| `DataStore` | `src/generated/DataStoreV1.gd` | Loads `data/*.json` and mods into dictionaries keyed by `id` |
 | `GameState` | `scripts/GameState.gd` | Party, inventory, equipment, gold, quests, flags, pause, formations, spawn position |
 | `GameControlServer` | `scripts/GameControlServer.gd` | Local HTTP API used by the tests |
 | `AudioManager` | `scripts/AudioManager.gd` | Music and sound effects by key. Unknown keys do nothing. |
@@ -72,7 +72,7 @@ Declared in `project.godot`. They exist for the whole run and survive scene chan
 
 The game has two ways to describe content, and they do not share a loader.
 
-1. `data/v1/*.json` files are JSON arrays of objects with an `id`. `DataStore` loads them for the hand-built scenes. `ScenarioEngine` reads a subset for the rules engine.
+1. `data/*.json` files are JSON arrays of objects with an `id`. `DataStore` loads them for the hand-built scenes. `ScenarioEngine` reads a subset for the rules engine.
 2. KGraph JSON-LD files in `campaigns/`, `characters/`, `items/`, `enemies/`, `spells/`, `abilities/`, `events/` and `maps/` are what the [campaign editor]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}) reads and writes. The cartridge bundler compiles them into `cartridges/*.cartridge.json`, which `CartridgeWorld` plays.
 
 ### data/v1 files
@@ -98,7 +98,7 @@ The game has two ways to describe content, and they do not share a loader.
 `ScenarioEngine` loads `spells`, `monsters`, `classes`, `races`, `items`, `traps` and `status_effects` (`CONTENT_KINDS` in `ScenarioEngine.gd`).
 
 {: .warning }
-Do not run `packages/crpg-builder` with `generate` or `create-game` against `games/crpg-realm`. Its default target is this folder, and it overwrites `data/v1/*.json`, `schemas/v1/`, `src/generated/v1/*.gd` (including `DataStoreV1.gd`, whose generated version has no trap or mod loading) and `project.godot`. The game was bootstrapped from the builder and then edited by hand. To try the builder, use `--target-dir` with a scratch folder. The builder reads the package at `.robos/kgraphs/crpg/package.jsonld`, which models only the original three-map slice.
+Do not run `packages/crpg-builder` with `generate` or `create-game` against `games/crpg-realm`. Its default target is this folder, and it overwrites `data/*.json`, `schemas/`, `src/generated/*.gd` (including `DataStoreV1.gd`, whose generated version has no trap or mod loading) and `project.godot`. The game was bootstrapped from the builder and then edited by hand. To try the builder, use `--target-dir` with a scratch folder. The builder reads the package at `.robos/kgraphs/crpg/package.jsonld`, which models only the original three-map slice.
 
 `python3 tests/validate_schemas.py` checks that ten data files parse and spot-checks a few records. It does not validate against the JSON Schemas, and `traps.json` is not in its list.
 

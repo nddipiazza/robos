@@ -100,7 +100,7 @@ The normal-speed probe used Godot 4.7.2's compatibility renderer on a GTX 1050 T
   <track kind="captions" src="/assets/games/rts/frontier-hunters-live.vtt" srclang="en" label="English walkthrough" default>
 </video>
 
-*The complete live match, captured at 1080p and 10 FPS with on-screen step narration. These media files are served by the front site at `/assets/games/rts/`; the guide itself lives under `/v1/`.*
+*The complete live match, captured at 1080p and 10 FPS with on-screen step narration. These media files are served by the front site at `/assets/games/rts/`; the guide itself lives under `/`.*
 
 Download the [recorded match proof](/assets/games/rts/frontier-hunters-live-proof.json) and [normal-speed frame samples](/assets/games/rts/frontier-hunters-performance.json). The match proof includes paid commands, progression events, the terminal observation and frame measurements from the video run.
 

@@ -84,7 +84,7 @@ async function main() {
     console.log(`- Front Site File: ${result.siteFilePath}`);
   }
   console.log(`- GitHub Pages Permalink: ${result.permalink}`);
-  console.log(`- URL: ${result.siteUrl || ('https://www.rowbose.com/v1' + result.permalink)}`);
+  console.log(`- URL: ${result.siteUrl || ('https://rowbose.com/' + result.permalink)}`);
 }
 
 main().catch((err) => {

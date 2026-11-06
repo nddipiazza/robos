@@ -52,7 +52,7 @@ Headless is the label used when a persona sets no mode. The three modes differ o
 | `ephemeral-gui` | `:99`, or `ROBOS_XVFB_DISPLAY` | You must run an X server there, for example `Xvfb :99 -screen 0 1920x1080x24 &`. |
 | `desktop-session` | Your current `DISPLAY`, or `:0` | Same as headless. The persona text asks the agent to pair with you in your open IDE. |
 
-The Non-Headless Developer and Co-Pilot prompts tell the agent to use the IDE bridge tools (`robos_ide_set_breakpoint`, `robos_ide_get_thread_state`, the `robos_ide_refactor_*` tools) and the Chrome DevTools MCP. Those tools exist only if you have installed and enabled the [IDE Bridge MCP]({{ '/apps/ide-bridge-mcp/' | relative_url }}) and a Chrome DevTools MCP server for your agent. The persona does not install them.
+The Non-Headless Developer and Co-Pilot prompts tell the agent to use the IDE bridge tools (`robos_ide_set_breakpoint`, `robos_ide_get_thread_state`, the `robos_ide_refactor_*` tools) and the Chrome DevTools MCP. Those tools exist only if you have installed and enabled the [IDE Bridge MCP]({{ '/ide-bridge-mcp/' | relative_url }}) and a Chrome DevTools MCP server for your agent. The persona does not install them.
 
 ## How a persona is chosen for an issue
 

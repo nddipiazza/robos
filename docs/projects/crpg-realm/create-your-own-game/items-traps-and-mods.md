@@ -21,7 +21,7 @@ How items, loot, traps and mods work in the hand-built scenes of `games/crpg-rea
 
 ### items.json
 
-`data/v1/items.json` is a JSON array. `DataStoreV1.load_all_data()` turns each entry into `DataStore.items[id] = ItemData.from_dict(entry)`. A record:
+`data/items.json` is a JSON array. `DataStoreV1.load_all_data()` turns each entry into `DataStore.items[id] = ItemData.from_dict(entry)`. A record:
 
 ```json
 {
@@ -41,7 +41,7 @@ How items, loot, traps and mods work in the hand-built scenes of `games/crpg-rea
 }
 ```
 
-`ItemData` (`src/generated/v1/ItemData.gd`) keeps these keys and drops the rest. It also accepts the `robos:`-prefixed keys of the editor's JSON-LD items.
+`ItemData` (`src/generated/ItemData.gd`) keeps these keys and drops the rest. It also accepts the `robos:`-prefixed keys of the editor's JSON-LD items.
 
 | Key | `ItemData` field | Used by |
 |:---|:---|:---|
@@ -80,7 +80,7 @@ The inventory window shows a 16-slot backpack grid with a weapon and an armor sl
 
 ### Add an item
 
-1. Append an object to `data/v1/items.json`. Mind the comma. Check the file with `python3 -m json.tool data/v1/items.json > /dev/null`.
+1. Append an object to `data/items.json`. Mind the comma. Check the file with `python3 -m json.tool data/items.json > /dev/null`.
 2. To place it on the floor, instance `GroundItem.tscn` as a direct child of a scene root and set `item_id`, `item_name` and `icon_texture`. Always add the item to `items.json` first. The village's `GroundItem_Sword` uses `item-id-iron-sword`, which is not in `items.json`, so after pickup the inventory shows the raw id.
 3. To put it in a chest, connect `chest_opened` in the scene script and call `GameState.add_gold()` and `GameState.add_item()`.
 4. To sell it, add the id to `shop_items` in `ShopWindow.gd`.
@@ -104,7 +104,7 @@ A trap is an instance of `scenes/components/Trap.tscn`: an `Area2D` running `scr
 
 ### Data
 
-`Trap.gd` exports every number it needs: `trap_id`, `trap_name`, `trap_type`, `detect_dc` (13), `disarm_dc` (14), `save_stat` (`CON`), `save_dc` (13), `damage_dice_min` (2), `damage_dice_max` (12), `damage_type`, `status_effect`, `status_duration`, `detection_radius` (650 px) and `disarm_reach` (80 px). In `_ready()`, if `DataStore.traps` has an entry for `trap_id`, its values overwrite the exports. `data/v1/traps.json` has four: `poison-dart-trap`, `glyph-of-warding`, `spike-pit-trap` and `acid-spray-trap`. The last is not placed in any scene.
+`Trap.gd` exports every number it needs: `trap_id`, `trap_name`, `trap_type`, `detect_dc` (13), `disarm_dc` (14), `save_stat` (`CON`), `save_dc` (13), `damage_dice_min` (2), `damage_dice_max` (12), `damage_type`, `status_effect`, `status_duration`, `detection_radius` (650 px) and `disarm_reach` (80 px). In `_ready()`, if `DataStore.traps` has an entry for `trap_id`, its values overwrite the exports. `data/traps.json` has four: `poison-dart-trap`, `glyph-of-warding`, `spike-pit-trap` and `acid-spray-trap`. The last is not placed in any scene.
 
 ```json
 {
@@ -150,7 +150,7 @@ The save bonus is 2 for everyone except the hero, whose bonus is the ability mod
 
 ### Add a trap
 
-1. Append an entry to `data/v1/traps.json` with a unique `id` and the keys above.
+1. Append an entry to `data/traps.json` with a unique `id` and the keys above.
 2. Instance `Trap.tscn` as a direct child of the scene root, name it, and set `trap_id`. Set the other exports to the same values: the JSON wins at runtime, but the exports are the fallback and what the editor shows.
 3. In a scene other than `AncientCatacombs`, copy its loop in `_ready()` that connects `trap_detected`, `trap_disarmed` and `trap_triggered` on every `Trap` child (with `const TrapClass = preload("res://scripts/Trap.gd")`).
 4. Give the scene a `CombatManager` child. Without one, `Trap` builds a detached `CombatManager.new()` each time.

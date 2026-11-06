@@ -29,7 +29,7 @@ How to add locations, items, traps, enemies and spells to the hand-built scenes 
 | You want to | Use |
 |:---|:---|
 | Add maps, characters or items as data and play them | The [editor and cartridges]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}). Read its last section first: NPCs and quests in cartridges are still coded per story. |
-| Add a rule, spell, monster or AI behaviour and prove it with a test | `data/v1/*.json`, `ScenarioEngine.gd` and a feature in `tests/e2e/features/engine/`. See [testing]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}). |
+| Add a rule, spell, monster or AI behaviour and prove it with a test | `data/*.json`, `ScenarioEngine.gd` and a feature in `tests/e2e/features/engine/`. See [testing]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}). |
 | Add a location, trap, enemy or spell to the real-time scenes | This guide and its three pages. |
 
 The three pages:
@@ -47,8 +47,8 @@ The three pages:
 | `scripts/engine/`, `scripts/demo/` | The scenario engine, dice, cartridge manager and demo mode |
 | `scenes/` | One `.tscn` per location, plus `HeroPlayer.tscn`, `PartyCompanion.tscn`, `ShadowHound.tscn`, `CharacterSelect.tscn`, `VictoryScreen.tscn`, `CartridgeWorld.tscn` |
 | `scenes/components/` | Building blocks to instance: `DoorPortal`, `Trap`, `GroundItem`, `TacticalEnemy`, `NPCCharacter`, `FogOfWar`, `ActionLog`, windows and toolbars |
-| `data/v1/` | JSON content arrays. Which code reads which file is on the [reference page]({{ '/projects/crpg-realm/reference.html#data-v1-files' | relative_url }}). |
-| `src/generated/v1/` | `DataStoreV1.gd` and the typed wrappers `ItemData`, `SpellData`, `MonsterData`, `NPCData` |
+| `data/` | JSON content arrays. Which code reads which file is on the [reference page]({{ '/projects/crpg-realm/reference.html#data-v1-files' | relative_url }}). |
+| `src/generated/` | `DataStoreV1.gd` and the typed wrappers `ItemData`, `SpellData`, `MonsterData`, `NPCData` |
 | `mods/` | Drop-in mods. The loader reads only a `traps_file`. |
 | `tests/e2e/` | `behave` features, step definitions in `features/steps/`, the report generator |
 
@@ -59,12 +59,12 @@ The three pages:
 
 Breaking these does not raise an error. The affected feature just stops seeing your nodes.
 
-- Keep gameplay nodes flat. Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. `GameState.get_scene_traps()`, the `battle.enemies` list in `/api/v1/state`, fireball targeting, enemy pack alerts and party lookup all scan `get_tree().current_scene.get_children()`. A trap under a `Traps` group node is never detected, and an enemy under an `Enemies` node never hears an alert.
+- Keep gameplay nodes flat. Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. `GameState.get_scene_traps()`, the `battle.enemies` list in `/api/state`, fireball targeting, enemy pack alerts and party lookup all scan `get_tree().current_scene.get_children()`. A trap under a `Traps` group node is never detected, and an enemy under an `Enemies` node never hears an alert.
 - Add a `CombatManager` child node to any scene with combat. It is a `class_name`, not an autoload, and scene scripts reach it as `$CombatManager`.
 - Name the player node `HeroPlayer`. `GameState.get_scene_party_nodes()`, `TacticalEnemy` and the HTTP API look it up by that name. Its `Camera2D` is the scene camera.
-- The root node name is the scene name. `/api/v1/state` reports it, and the test step `the current scene is "X"` compares against it.
+- The root node name is the scene name. `/api/state` reports it, and the test step `the current scene is "X"` compares against it.
 - Set `mouse_filter = 2` (Ignore) on the map's `Ground` node. Otherwise it swallows clicks before `HeroPlayer._unhandled_input` sees them and click-to-move stops working.
-- Put content in `data/v1/*.json`, but expect some behaviour to be keyed by id in code. Potion effects are in `GameState.use_item()`, spells in `CombatManager.gd`. Adding JSON alone is not always enough; each page says when.
+- Put content in `data/*.json`, but expect some behaviour to be keyed by id in code. Potion effects are in `GameState.use_item()`, spells in `CombatManager.gd`. Adding JSON alone is not always enough; each page says when.
 
 ## Checklist: a new location
 
@@ -123,11 +123,11 @@ This is the shortest path to a new playable scene. The details of each step are 
 The "verify it" steps on the other pages use the control server. It listens on port 8080 by default (18090 under the test harness).
 
 ```bash
-curl -s http://127.0.0.1:8080/api/v1/health
-curl -s -X POST http://127.0.0.1:8080/api/v1/setup_state \
+curl -s http://127.0.0.1:8080/api/health
+curl -s -X POST http://127.0.0.1:8080/api/setup_state \
      -H 'Content-Type: application/json' \
      -d '{"scene": "AncientCatacombs", "name": "Lieutenant Vance", "class": "fighter", "companions": ["elora"]}'
-curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40
+curl -s http://127.0.0.1:8080/api/state | python3 -m json.tool | head -40
 ```
 
 `setup_state` re-initialises the hero and loads the scene. A bare scene name becomes `res://scenes/<name>.tscn`. The full endpoint and action list is on the [reference page]({{ '/projects/crpg-realm/reference.html#http-control-api' | relative_url }}).

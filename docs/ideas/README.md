@@ -7,7 +7,7 @@ description: "Proposals for RobOS features that are not built, or only partly bu
 
 # Ideas folder
 
-Proposals for RobOS features that are not built, or only partly built. The published index is the [Ideas page](https://rowbose.com/v1/ideas.html). The [Roadmap](https://rowbose.com/v1/roadmap.html) summarizes what is built, in progress and planned.
+Proposals for RobOS features that are not built, or only partly built. The published index is the [Ideas page](https://rowbose.com/ideas/). The [Roadmap](https://rowbose.com/roadmap/) summarizes what is built, in progress and planned.
 
 ## Layout
 

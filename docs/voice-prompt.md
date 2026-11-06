@@ -22,7 +22,7 @@ RobOS Voice is a desktop app that transcribes your speech on the machine, runs s
 
 ## What it is
 
-The package is [`packages/voice-prompt`](https://github.com/nddipiazza/robos/tree/main/packages/voice-prompt) (desktop entry name "RobOS Voice"; app page: [Voice Prompt]({{ '/apps/voice-prompt/' | relative_url }})). Starting it does three things:
+The package is [`packages/voice-prompt`](https://github.com/nddipiazza/robos/tree/main/packages/voice-prompt) (desktop entry name "RobOS Voice"; app page: [Voice Prompt]({{ '/voice-prompt/' | relative_url }})). Starting it does three things:
 
 - It opens a small always-on-top window (380 by 520 pixels, bottom-right by default) where recognized speech appears as text bubbles.
 - It registers the push-to-talk hotkey `Super+V`.

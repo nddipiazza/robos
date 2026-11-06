@@ -233,7 +233,7 @@
     if (tech) {
       h += '<details class="qs-more"' + (persona === 'dev' ? ' open' : '') + '><summary>Prefer running from source?</summary><p>Needs Node.js 20+, Git and a desktop session. Each app is its own Electron package; the script installs its dependencies the first time. Run it with no argument to list the apps.</p>' +
         codeBlock('git clone https://github.com/nddipiazza/robos.git\ncd robos\nscripts/dev-launch.sh ' + (SOURCE_APP[persona] || 'pr-review')) +
-        '<p class="qs-sub">' + link({ label: 'GNOME launcher, the VM and the Linux appliance', url: '/download/#linux-distro' }) + ' · ' + link({ label: 'Full install guide', url: '/v1/getting-started.html' }) + '</p></details>';
+        '<p class="qs-sub">' + link({ label: 'GNOME launcher, the VM and the Linux appliance', url: '/download/#linux-distro' }) + ' · ' + link({ label: 'Full install guide', url: '/getting-started/' }) + '</p></details>';
     }
     if (A.agent && D.extras.agent[A.agent]) h += '<p class="qs-sub"><b>Then connect your agent:</b> ' + link(D.extras.agent[A.agent]) + '. RobOS runs the CLI you are already signed in to.</p>';
     if (apps.indexOf('party-game') !== -1) h += '<p class="qs-sub"><b>Party Game needs two things first:</b> a TV paired in ' + link({ label: 'Smart TV Studio', url: '/tv/' }) + ', and an AI agent signed in under RobOS Agents, because the AI hosts the show.</p>';

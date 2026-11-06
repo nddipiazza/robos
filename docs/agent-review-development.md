@@ -29,7 +29,7 @@ An agent does the implementation. A person decides whether the result is good en
 
 For a step-by-step version of this loop, see the Build apps guides: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
 
-The apps are described on their own pages: [Task Planner]({{ '/apps/task-planner/' | relative_url }}), [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) and [Agent Code Review & PR Review Theater]({{ '/apps/pr-review/' | relative_url }}).
+The apps are described on their own pages: [Task Planner]({{ '/task-planner/' | relative_url }}), [Task Implementer]({{ '/task-implementer/' | relative_url }}) and [Agent Code Review & PR Review Theater]({{ '/pr-review/' | relative_url }}).
 
 ## How review and proof of work fit together
 

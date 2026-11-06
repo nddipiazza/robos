@@ -32,7 +32,7 @@ keywords: "Quest Warrior Dragon, RobOS 2D JRPG, Dragon Warrior clean-room RPG, G
     <div class="panel-g">
       <p class="eyebrow">The game</p>
       <h2 class="h2">The 1986 console RPG classic, engineered as verifiable data</h2>
-      <p class="sec-p">Every map, staircase, locked door, treasure chest, shop inventory, monster stat block, and spell formula lives in typed JSON registries under <code>data/v1/</code>. The Godot 4 engine renders clean-room procedural tilemaps, executes authentic turn-based battles and dungeon darkness radii, and exposes a live HTTP telemetry &amp; AI control server.</p>
+      <p class="sec-p">Every map, staircase, locked door, treasure chest, shop inventory, monster stat block, and spell formula lives in typed JSON registries under <code>data/</code>. The Godot 4 engine renders clean-room procedural tilemaps, executes authentic turn-based battles and dungeon darkness radii, and exposes a live HTTP telemetry &amp; AI control server.</p>
       <div class="grid3">
         <div class="card"><h3>29 Connected Maps</h3><p>Explore the 124×124 Alefgard overworld, 6 towns, Tantegel Castle &amp; Basement, 4-floor Garin's Grave, Mountain Cave, Erdrick's Cave, Swamp Cave, 2 holy shrines, and 8 floors of Charlock Castle.</p></div>
         <div class="card"><h3>In-Engine Stride AI</h3><p><code>AIEngine.gd</code> plays the game strictly via real player inputs (<code>move_up/down/left/right</code>, <code>ui_accept</code>, <code>cmd_menu</code>), holding continuous multi-tile strides across straightaways.</p></div>
@@ -140,9 +140,9 @@ xvfb-run -a behave games/quest-warrior-dragon/tests/e2e/features/king_to_world_m
 # Let the robos-jrpg AI play the ENTIRE game as a user would ("play the game" mode: real inputs + IPC state only)
 python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py
 python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --stepped   # one video + checkpoint per milestone, tray icon + dashboard</code></pre>
-      <p class="sec-p">The BFS audit proves every tile is reachable; the <strong><a href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">AI full-game playthrough</a></strong> proves the game is beatable. <code>PlayGameBrain.gd</code> takes over the controller and seeks the next entry of an ordered milestone registry (<code>data/v1/milestones.json</code>: every weapon and armor purchase, every treasure chest, each quest, the Dragonlord, the ending) from King Lorik's throne room to the credits &mdash; no teleports, no stat edits. A Python driver watches over the IPC web service, asserts invariants (never standing on water, HP never negative) and writes a JSON report with a video, a save checkpoint and a screenshot per milestone.</p>
+      <p class="sec-p">The BFS audit proves every tile is reachable; the <strong><a href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">AI full-game playthrough</a></strong> proves the game is beatable. <code>PlayGameBrain.gd</code> takes over the controller and seeks the next entry of an ordered milestone registry (<code>data/milestones.json</code>: every weapon and armor purchase, every treasure chest, each quest, the Dragonlord, the ending) from King Lorik's throne room to the credits &mdash; no teleports, no stat edits. A Python driver watches over the IPC web service, asserts invariants (never standing on water, HP never negative) and writes a JSON report with a video, a save checkpoint and a screenshot per milestone.</p>
       <div class="cta" style="justify-content:flex-start;margin-top:18px">
-        <a class="btn" href="{{ '/v1/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; Architecture Guide</a>
+        <a class="btn" href="{{ '/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; Architecture Guide</a>
         <a class="btn btn-ghost" href="{{ '/games/quest-warrior-dragon/proof-of-viability.html' | relative_url }}">Interactive 20-Slide Report</a>
         <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/quest-warrior-dragon" target="_blank" rel="noopener">Source on GitHub</a>
       </div>

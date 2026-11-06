@@ -16,26 +16,26 @@ keywords: "Realm of Heroes CRPG docs, cRPG level editor, Godot 4 cRPG tutorials,
   <h1 class="g-title" style="font-size:clamp(2rem,5vw,3.4rem)">Documentation</h1>
   <p class="lead" style="margin-top:14px;color:#c9c2b2;max-width:60ch">Everything for playing, modding and understanding the cRPG.</p>
   <div class="grid3">
-    <a class="card" href="{{ '/v1/projects/crpg-realm/quick-start.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/rocket.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Quick start</h3><p>Run the game and the test suite.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/projects/crpg-realm/controls.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/keyboard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Controls</h3><p>Keys, mouse and pause commands.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/map.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Campaign editor tutorial</h3><p>Step-by-step "Rescue the Princess".</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/projects/crpg-realm/quick-start/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/rocket.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Quick start</h3><p>Run the game and the test suite.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/projects/crpg-realm/controls/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/keyboard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Controls</h3><p>Keys, mouse and pause commands.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/projects/crpg-realm/campaign-editor-tutorial/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/map.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Campaign editor tutorial</h3><p>Step-by-step "Rescue the Princess".</p><span class="go">Open →</span></a>
   </div>
   <div class="doc-list" style="margin-top:44px">
     <div>
       <h3>Build</h3>
-      <a href="{{ '/v1/projects/crpg-realm/create-your-own-game.html' | relative_url }}"><b>Creating your own game</b><span>→</span></a>
-      <a href="{{ '/v1/projects/crpg-realm/reference.html' | relative_url }}"><b>Reference: autoloads, data, endpoints</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/create-your-own-game/' | relative_url }}"><b>Creating your own game</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/reference/' | relative_url }}"><b>Reference: autoloads, data, endpoints</b><span>→</span></a>
     </div>
     <div>
       <h3>Understand</h3>
-      <a href="{{ '/v1/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }}"><b>World systems &amp; pathfinding</b><span>→</span></a>
-      <a href="{{ '/v1/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}"><b>Infinity AI agent &amp; BDD harness</b><span>→</span></a>
-      <a href="{{ '/v1/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html' | relative_url }}"><b>Combat, party and spells</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/world-systems-and-pathfinding/' | relative_url }}"><b>World systems &amp; pathfinding</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/infinity-ai-agent-harness/' | relative_url }}"><b>Infinity AI agent &amp; BDD harness</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/create-your-own-game/combat-party-and-spells/' | relative_url }}"><b>Combat, party and spells</b><span>→</span></a>
     </div>
     <div>
       <h3>Learn interactively</h3>
-      <a href="{{ '/v1/projects/crpg-realm/elearning/' | relative_url }}"><b>Tactical cRPG Codex</b><span>→</span></a>
-      <a href="{{ '/v1/projects/crpg-realm/create-your-own-game/elearning/' | relative_url }}"><b>Game Builder Academy</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/elearning/' | relative_url }}"><b>Tactical cRPG Codex</b><span>→</span></a>
+      <a href="{{ '/projects/crpg-realm/create-your-own-game/elearning/' | relative_url }}"><b>Game Builder Academy</b><span>→</span></a>
     </div>
     <div>
       <h3>Project</h3>

@@ -45,7 +45,7 @@ npm install
 npm start
 ```
 
-`npm start` runs `electron . --no-sandbox --disable-gpu --disable-dev-shm-usage`. Installed RobOS desktops also list it as the app [RobOS cRPG Editor]({{ '/apps/crpg-editor/' | relative_url }}).
+`npm start` runs `electron . --no-sandbox --disable-gpu --disable-dev-shm-usage`. Installed RobOS desktops also list it as the app [RobOS cRPG Editor]({{ '/crpg-editor/' | relative_url }}).
 
 ## Open the shipped campaign
 
@@ -184,7 +184,7 @@ cd games/crpg-realm
 ./play.sh --cartridge rescue-the-princess
 ```
 
-**Render as Game** in the editor does three things. It saves the campaign, rebundles the cartridge into `games/crpg-realm/cartridges/`, and overwrites `games/crpg-realm/data/v1/active_campaign.json`. Then it starts Godot with `--path games/crpg-realm --cartridge <slug>`, looking for the binary in `$GODOT_BIN`, `~/.local/bin/godot`, `~/.local/bin/godot4`, `~/apps/godot4`, `/usr/bin/godot4`, `/usr/local/bin/godot4` and `/usr/bin/godot`, and falling back to `play.sh`.
+**Render as Game** in the editor does three things. It saves the campaign, rebundles the cartridge into `games/crpg-realm/cartridges/`, and overwrites `games/crpg-realm/data/active_campaign.json`. Then it starts Godot with `--path games/crpg-realm --cartridge <slug>`, looking for the binary in `$GODOT_BIN`, `~/.local/bin/godot`, `~/.local/bin/godot4`, `~/apps/godot4`, `/usr/bin/godot4`, `/usr/local/bin/godot4` and `/usr/bin/godot`, and falling back to `play.sh`.
 
 In the cartridge map, left-click to move and click NPCs, chests, items and passages to walk to them. Space or P starts and stops auto-play. See [controls]({{ '/projects/crpg-realm/controls.html#cartridge-maps' | relative_url }}).
 

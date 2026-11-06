@@ -28,7 +28,7 @@ All logging would stay local.
 ## What exists today
 
 - `<robos-ai-textarea>` is a shared element in `packages/robos-ui` and is used in many app windows.
-- [AI Prompt]({{ '/apps/ai-prompt/' | relative_url }}) keeps its last 50 runs (`packages/ai-prompt/main.js`).
+- [AI Prompt]({{ '/ai-prompt/' | relative_url }}) keeps its last 50 runs (`packages/ai-prompt/main.js`).
 - `packages/robos-graph` defines `robos:PromptStrategy`, `robos:PromptOptimizer` and `robos:PromptCompiler`. These describe prompting techniques, not individual runs. There is no `robos:Prompt` type and no `.robos/prompts/` directory.
 
 ## Source

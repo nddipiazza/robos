@@ -20,7 +20,7 @@ Proposal, not built. People Directory has no linked accounts and no package impl
 - A guided connection screen per provider: required scopes, the redirect URL to register, copy buttons for client IDs, and a status check that shows whether a token is still valid.
 - A local redirect listener for the authorization-code flow with PKCE, and a device-code flow for headless machines.
 - Tokens stored in the GPG-backed `pass` store or the Linux Secret Service, not in plain files.
-- [People Directory]({{ '/apps/people-directory/' | relative_url }}) and [Group Manager]({{ '/apps/group-manager/' | relative_url }}) would show each person's handles and match teams across providers, for example a GitHub team with a Slack user group.
+- [People Directory]({{ '/people-directory/' | relative_url }}) and [Group Manager]({{ '/group-manager/' | relative_url }}) would show each person's handles and match teams across providers, for example a GitHub team with a Slack user group.
 
 Cloud file sharing in [cloud file storage and sharing]({{ '/ideas/specs/robos-file-storage-and-agent-sharing.html' | relative_url }}) would use this to find the right account for a recipient.
 

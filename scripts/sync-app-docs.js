@@ -1,80 +1,50 @@
 #!/usr/bin/env node
-/**
- * Creates a docs page in docs/_apps/ for every RobOS app package that doesn't have one yet.
- *
- * An app is any package under packages/ with a renderer/ directory or a *.desktop file.
- * New pages get their title and summary from the .desktop entry (falling back to
- * package.json) and land in the "More apps" section of the App Directory until you
- * give them a `category:` from docs/_data/app_categories.yml. Existing pages are never
- * touched.
- *
- * Usage:
- *   node scripts/sync-app-docs.js           # create missing pages
- *   node scripts/sync-app-docs.js --check   # list missing pages, exit 1 if any
- */
-const fs = require('fs');
-const path = require('path');
-
+'use strict';
+// Every package (desktop app, service, CLI or library) has a tracked site page.
+// Existing hand-written content is never replaced.
+const fs = require('node:fs');
+const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const packagesDir = path.join(root, 'packages');
-const appsDir = path.join(root, 'docs', '_apps');
-const iconsDir = path.join(root, 'docs', 'assets', 'images', 'icons');
-const checkOnly = process.argv.includes('--check');
-
-function readDesktopEntry(dir) {
-  const file = fs.readdirSync(dir).find((f) => f.endsWith('.desktop'));
-  if (!file) return null;
-  const entry = {};
-  for (const line of fs.readFileSync(path.join(dir, file), 'utf8').split('\n')) {
-    const m = line.match(/^(Name|Comment)=(.*)$/);
-    if (m && !(m[1] in entry)) entry[m[1]] = m[2].trim();
-  }
-  return entry;
-}
-
-const ACRONYMS = new Set(['mcp', 'ci', 'cli', 'ide', 'api', 'ai', 'db', 'pr', 'ui']);
-function titleCase(name) {
-  return name
-    .replace(/^robos-/, '')
-    .split('-')
-    .map((w) => (ACRONYMS.has(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
-    .join(' ');
-}
-
+const packages = path.join(root, 'packages');
+const pages = path.join(root, 'site/_apps');
+const icons = path.join(root, 'docs/assets/images/icons');
+const check = process.argv.includes('--check');
 const missing = [];
-for (const name of fs.readdirSync(packagesDir).sort()) {
-  const dir = path.join(packagesDir, name);
+const acronyms = new Set(['mcp', 'ci', 'cli', 'ide', 'api', 'ai', 'db', 'pr', 'ui', 'llm', 'jrpg']);
+const titleCase = name => name.split('-').map(w => w === 'robos' ? 'RobOS' : acronyms.has(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)).join(' ');
+for (const name of fs.readdirSync(packages).sort()) {
+  const dir = path.join(packages, name);
   if (!fs.statSync(dir).isDirectory()) continue;
-  const desktop = readDesktopEntry(dir);
-  const isApp = desktop || fs.existsSync(path.join(dir, 'renderer'));
-  if (!isApp || fs.existsSync(path.join(appsDir, `${name}.md`))) continue;
+  const page = path.join(pages, `${name}.md`);
+  if (fs.existsSync(page)) continue;
   missing.push(name);
-  if (checkOnly) continue;
-
+  if (check) continue;
   let pkg = {};
-  try {
-    pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
-  } catch {}
-  const title = (desktop && desktop.Name) || pkg.productName || titleCase(name);
-  const summary = (desktop && desktop.Comment) || pkg.description || '';
-
-  let icon = `${name}.svg`;
-  if (!fs.existsSync(path.join(iconsDir, icon))) {
-    const src = path.join(dir, 'icon.svg');
-    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(iconsDir, icon));
-    else icon = null;
+  try { pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')); } catch {}
+  const desktopFile = fs.readdirSync(dir).find(f => f.endsWith('.desktop'));
+  const desktop = desktopFile ? fs.readFileSync(path.join(dir, desktopFile), 'utf8') : '';
+  const title = desktop.match(/^Name=(.*)$/m)?.[1] || pkg.productName || titleCase(name);
+  const summary = desktop.match(/^Comment=(.*)$/m)?.[1] || pkg.description || `Source component for ${title}.`;
+  const isApp = Boolean(desktopFile || fs.existsSync(path.join(dir, 'renderer')));
+  const category = isApp ? '' : 'libraries';
+  const source = `https://github.com/nddipiazza/robos/tree/main/packages/${name}`;
+  const entry = pkg.main && fs.existsSync(path.join(dir, pkg.main)) ? pkg.main : null;
+  const meta = ['---', `title: ${JSON.stringify(title)}`, `package: ${name}`, `category: ${JSON.stringify(category)}`,
+    `component_type: ${isApp ? 'app' : 'component'}`, `permalink: /${name}/`, `summary: ${JSON.stringify(summary)}`, `description: ${JSON.stringify(summary)}`];
+  if (fs.existsSync(path.join(dir, 'icon.svg'))) {
+    fs.copyFileSync(path.join(dir, 'icon.svg'), path.join(icons, `${name}.svg`));
+    meta.push(`icon: ${name}.svg`);
   }
-
-  const lines = ['---', `title: ${JSON.stringify(title)}`, `package: ${name}`, 'category: ""'];
-  if (icon) lines.push(`icon: ${icon}`);
-  lines.push(`summary: ${JSON.stringify(summary)}`);
-  lines.push(`description: ${JSON.stringify(summary)}`, '---', '');
-  fs.writeFileSync(path.join(appsDir, `${name}.md`), lines.join('\n'));
-  console.log(`created docs/_apps/${name}.md`);
+  meta.push('---', '', summary, '', '## Source and integration', '', `The component lives in [\`packages/${name}\`](${source}).`);
+  if (entry) meta.push('', `Its entry point is [\`${entry}\`](${source}/${entry}).`);
+  if (fs.existsSync(path.join(dir, 'README.md'))) meta.push('', `See the [package README](${source}/README.md) for setup and usage.`);
+  if (pkg.scripts?.start && (!pkg.main || entry)) meta.push('', '## Run from source', '', `From \`packages/${name}\`, install the dependencies and run:`, '', '```bash', 'npm install', 'npm start', '```');
+  if (pkg.scripts?.test) meta.push('', '## Validation', '', `Run \`npm test\` from \`packages/${name}\`. The command is defined in the [package manifest](${source}/package.json).`);
+  if (!entry && pkg.main) meta.push('', `The manifest declares \`${pkg.main}\`, but that file is not present in the checkout. This package is incomplete.`);
+  fs.writeFileSync(page, meta.join('\n') + '\n');
+  console.log(`Created site/_apps/${name}.md`);
 }
-
-if (checkOnly && missing.length) {
-  console.error(`Apps without a docs page: ${missing.join(', ')}\nRun: node scripts/sync-app-docs.js`);
-  process.exit(1);
-}
-if (!missing.length) console.log('Every app has a docs page.');
+if (missing.length && check) {
+  console.error(`Packages without a page: ${missing.join(', ')}\nRun node scripts/sync-app-docs.js`);
+  process.exitCode = 1;
+} else console.log('Every app and component has a site page.');
