@@ -10326,6 +10326,33 @@
       "robos:technology": "Custom Elements v1 / Vanilla JavaScript / Node.js"
     },
     {
+      "@id": "urn:robos:library:robos-jrpg-parser",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareSourceCode"
+      ],
+      "dcterms:description": "Parses folders of classic JRPG resources that a person collected into a RobOS kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.",
+      "dcterms:title": "RobOS JRPG Parser",
+      "robos:domainStandard": "https://schema.org/SoftwareSourceCode",
+      "robos:evidence": [
+        {
+          "line": 2,
+          "path": "packages/robos-jrpg-parser/package.json",
+          "repository": "github.com/nddipiazza/robos",
+          "revision": "ae3c4836e99f492d25c049cf9fb1df94b2a349c6",
+          "sha256": "857b77ba5a4876cd70c1f9d9e1e0a9ec0693667c83216aae54e2739fd046f398"
+        }
+      ],
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:sourcePath": "packages/robos-jrpg-parser",
+      "robos:technology": "Node.js / Python (Pillow)"
+    },
+    {
       "@id": "urn:robos:library:robos-llm",
       "@type": [
         "robos:Library",
@@ -29616,6 +29643,33 @@
       "robos:repository": "https://github.com/nddipiazza/robos",
       "robos:sourcePath": "packages/robos-ui/robos-dashboard.js",
       "robos:technology": "Custom Elements v1 / Vanilla JavaScript / Node.js"
+    },
+    {
+      "@id": "urn:robos:library:robos-jrpg-parser",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareSourceCode"
+      ],
+      "dcterms:description": "Parses folders of classic JRPG resources that a person collected into a RobOS kgraph, and generates backgrounds, sprites and menu screens from them with Gemini.",
+      "dcterms:title": "RobOS JRPG Parser",
+      "robos:domainStandard": "https://schema.org/SoftwareSourceCode",
+      "robos:evidence": [
+        {
+          "line": 2,
+          "path": "packages/robos-jrpg-parser/package.json",
+          "repository": "github.com/nddipiazza/robos",
+          "revision": "ae3c4836e99f492d25c049cf9fb1df94b2a349c6",
+          "sha256": "857b77ba5a4876cd70c1f9d9e1e0a9ec0693667c83216aae54e2739fd046f398"
+        }
+      ],
+      "robos:namespace": "robos.platform",
+      "robos:package": "core-platform",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:sourcePath": "packages/robos-jrpg-parser",
+      "robos:technology": "Node.js / Python (Pillow)"
     },
     {
       "@id": "urn:robos:library:robos-llm",
