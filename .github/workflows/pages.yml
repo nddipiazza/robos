@@ -10,6 +10,7 @@ on:
       - "scripts/stage-release-data.cjs"
       - "scripts/check-install-docs.cjs"
       - "scripts/check-site-pages.cjs"
+      - "scripts/check-blog-seo.cjs"
       - "scripts/stage-site-guides.cjs"
       - "scripts/stage-site-data.sh"
       - "scripts/sync-app-docs.js"
@@ -57,6 +58,7 @@ jobs:
         run: |
           node scripts/check-install-docs.cjs
           node scripts/check-site-pages.cjs
+          node scripts/check-blog-seo.cjs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

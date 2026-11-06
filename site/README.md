@@ -40,6 +40,13 @@ Each post is its own file, `_blog/<slug>.html`, published at `/blog/<slug>/` wit
 from the same day) and has no post content of its own. Old `/blog/#<slug>` links are forwarded to the
 post's page by a script on the index. The `robos-blog` skill describes the front matter.
 
+Posts include article and breadcrumb structured data. Set `last_modified_at:` only when a post's
+content changes significantly; it updates the article metadata and `/blog/sitemap.xml` without
+pretending every deployment rewrote every post. The main sitemap also includes all posts.
+Submit both `/sitemap.xml` and `/blog/sitemap.xml` in Google Search Console; the latter lets you
+check blog indexing separately. The home page's verification tag comes from
+`google_site_verification` in `_config.yml` and must stay in place to retain verification.
+
 ## Home page vision (`/#vision`) and share card
 
 The home page leads with the two-move plan: **Move 1**, one open-source suite that replaces the apps people

@@ -47,3 +47,4 @@ Disallow: /404/
 
 Host: https://rowbose.com
 Sitemap: https://rowbose.com/sitemap.xml
+Sitemap: https://rowbose.com/blog/sitemap.xml
