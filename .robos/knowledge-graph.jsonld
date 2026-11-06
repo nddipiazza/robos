@@ -4903,6 +4903,22 @@
       "robos:technology": "Electron 28 / Mutual TLS 1.3 / OpenZiti / Tailscale / NetBird / WireGuard"
     },
     {
+      "@id": "urn:robos:desktop-app:camera-watch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Camera Watch",
+      "dcterms:description": "Watch and record the IP cameras on your network: ONVIF WS-Discovery, live MJPEG grid, local motion detection with zones, motion-triggered and manual MP4 recording, snapshots, ONVIF camera motion alarms and PTZ with presets. Video stays on the machine.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/camera-watch",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
+    },
+    {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
@@ -24177,6 +24193,22 @@
       "robos:repository": "packages/app-mesh",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 28 / Mutual TLS 1.3 / OpenZiti / Tailscale / NetBird / WireGuard"
+    },
+    {
+      "@id": "urn:robos:desktop-app:camera-watch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Camera Watch",
+      "dcterms:description": "Watch and record the IP cameras on your network: ONVIF WS-Discovery, live MJPEG grid, local motion detection with zones, motion-triggered and manual MP4 recording, snapshots, ONVIF camera motion alarms and PTZ with presets. Video stays on the machine.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/camera-watch",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
     },
     {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
