@@ -34,6 +34,8 @@ class SkillsExecutor {
       { id: 'stop-speaking', label: 'Stop Audio Playback', intent: 'Silence current TTS playback', patterns: ['stop speaking', 'silence', 'be quiet'] },
       { id: 'audio-play', label: 'Play Music from Library', intent: 'Find and play the best matching song, artist, album, or genre in RobOS Audio Player', patterns: ['play [song/artist/album]', 'play some [music]', 'listen to [artist]'] },
       { id: 'movie-play', label: 'Play Movie from Library', intent: 'Find and play the best matching movie or film in RobOS Movie Player', patterns: ['play movie [title]', 'watch [movie]', 'put on movie [title]'] },
+      { id: 'media-watch-status', label: 'Where Did We Leave Off?', intent: 'Answer which season and episode of a show you left off on (on any of your computers), what is next, or whether you watched a movie', patterns: ['what season of [show] did we leave off on', 'where did we leave off on [show]', 'what episode are we on in [show]', 'have we seen [movie]', 'what are we watching'] },
+      { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
       { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['hello robos', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
@@ -67,7 +69,8 @@ class SkillsExecutor {
       const { classifyVoiceCommand, executeNabuCommand, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
       const cleanedMedia = stripWakePhrase(query);
       const mediaIntent = classifyVoiceCommand(cleanedMedia);
-      if (mediaIntent.type === 'play-movie' || mediaIntent.type === 'play-media' || mediaIntent.type === 'transport') {
+      // "what season of The Office did we leave off on?" and "continue watching The Office" too.
+      if (['play-movie', 'play-media', 'transport', 'watch-status', 'play-next-episode'].includes(mediaIntent.type)) {
         const res = await executeNabuCommand(cleanedMedia, { skillsExecutor: this });
         return {
           ok: res.ok,

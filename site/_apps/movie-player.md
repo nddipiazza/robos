@@ -100,12 +100,19 @@ flowchart TD
 - **Broadcast Recording Thumbnails + Live Frame Capture**: Caches 16:9 broadcast recording snapshots (`~/.cache/robos/tablo-images/`) and automatically captures a live 640×360 JPEG frame via `ffmpeg -frames:v 1` for active in-progress (`state: "recording"`) broadcasts.
 - **Dual-Path Streaming & 3rd Roku Top Tab (`TABLO DVR`)**: Adds a 3rd top-level `TABLO DVR` tab to the 3-row Roku OS SceneGraph channel and `:19210/movie-player` portal, serving real-time `H.264/AAC` fragmented MP4 streams (`/api/tablo/stream`) to desktop players and rewritten native 60fps `MPEG-2/AC-3` HLS playlists (`/api/tablo/roku.m3u8`) to Roku TVs.
 
+### 8. Same Library and Watch History on Every Computer
+- **Portable watch history (`packages/robos-lib/media-history.js`)**: every resume point, finished episode, unwatched mark and loved title is also kept by what it is (`tv:the office:s3:e12`, `movie:dune:2021`) rather than by its file path, so another computer that streams the same Google Drive folder knows where you left off.
+- **Google Drive sync**: with RobOS Preferences → Config Sync → **Back up to my Google Drive** on each computer, the player syncs its folders, playlists and watch history with the vault itself (a few seconds after it opens, every 2 minutes, and shortly after you watch something). Watch history changed on two computers merges entry by entry, so it never needs a conflict decision. Folders added on the other computer are indexed when they arrive, and the open window shows "Watch history updated from <computer>".
+- **Where did we leave off?**: RobOS Voice and Home Speaker answer "what season of The Office did we leave off on?", "what episode are we on in Severance?", "have we seen Dune?", "what are we watching?" and "continue watching The Office". Agents use the `robos-media` MCP server (`node packages/movie-player/bin/media-mcp.js`) or the CLI (`node packages/movie-player/bin/watch-status.js show "the office"`); see the `media-watch-status` skill.
+- **Control API**: `GET /api/watch-status?show=`, `/api/movie-status?title=`, `/api/continue-watching`, `/api/history`, `/api/shows`, `/api/media-sync`; `POST /api/set-watched`, `/api/play-next-episode`, `/api/media-sync-now` (token in `~/.config/robos/movie-player-control.json`).
+
 ## Files & Configuration
 
 - **App directory**: `packages/movie-player/`
-- **Library cache**: `~/.config/robos/movie-library.json`
+- **Library cache**: `~/.config/robos/movie-library.json` (stays on each computer; rebuilt from the folders)
 - **Watchlists storage**: `~/.config/robos/movie-playlists.json`
-- **Watch counts & Loved marks**: `~/.config/robos/movie-track-stats.json`
+- **Watch history (synced)**: `~/.config/robos/media-history/movie-player.json`
+- **Watch counts & Loved marks (this computer's track IDs)**: `~/.config/robos/movie-track-stats.json`
 - **Managed folders**: `~/.config/robos/movie-folders.json`
 - **Poster art cache**: `~/.cache/robos/movie-player/art/`
 - **Subtitles cache**: `~/.cache/robos/movie-subtitles/`

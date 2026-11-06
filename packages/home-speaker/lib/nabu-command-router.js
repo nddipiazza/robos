@@ -1062,6 +1062,90 @@ async function ensureMediaPlayerRunning(appId, createClient, { configDir, timeou
   return createClient({ configDir });
 }
 
+// ── Watch status questions ("what season of The Office did we leave off on?") ──
+
+function requireMediaWatch() {
+  const candidates = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'media-watch'),
+    path.resolve(__dirname, '..', '..', 'robos-lib', 'media-watch'),
+    '/usr/local/share/robos/robos-lib/media-watch',
+  ].filter(Boolean);
+  for (const p of candidates) {
+    try { return require(p); } catch (err) { if (err.code !== 'MODULE_NOT_FOUND') throw err; }
+  }
+  return null;
+}
+
+// Speech-to-text gives "we", "I" or "you" for the same question.
+const WE = String.raw`(?:we|i|you|us|me)`;
+const LEFT = String.raw`(?:leave\s+off|left\s+off|stop|stopped|get\s+to|got\s+to)`;
+const WATCH_STATUS_PATTERNS = [
+  // what season / episode of X did we leave off on | are we on | were we up to
+  new RegExp(String.raw`^(?:what|which)\s+(?:season|episode|part)\s+(?:of|in|on)\s+(.+?)\s+(?:did|do|were|are|was|am|have)\s+${WE}\s+(?:${LEFT}(?:\s+(?:on|at|with|in))?|on|at|up\s+to|watching|in)$`),
+  // what season / episode did we leave off on (in|of|with) X | what episode are we on in X
+  new RegExp(String.raw`^(?:what|which)\s+(?:season|episode|part)\s+(?:did|do|were|are|was|am|have)\s+${WE}\s+(?:${LEFT}|on|at|up\s+to)(?:\s+(?:on|at))?\s+(?:in|of|with|for|on)\s+(.+)$`),
+  // where did we leave off (on|in|with) X | where were we in X | where are we in X
+  new RegExp(String.raw`^where\s+(?:did|do|were|are|was|am|have)\s+${WE}(?:\s+${LEFT})?\s+(?:on|in|with|at|for)\s+(.+)$`),
+  // how far (along) into X are we | how far are we in X
+  new RegExp(String.raw`^how\s+far\s+(?:along\s+)?(?:into|in|through|with)\s+(.+?)(?:\s+(?:are|am|were|did|have)\s+${WE}(?:\s+gotten|\s+got)?)?$`),
+  new RegExp(String.raw`^how\s+far\s+(?:are|am|were|did|have)\s+${WE}\s+(?:get\s+|gotten\s+|got\s+)?(?:into|in|through|with)\s+(.+)$`),
+  // what's next (on|in|for) X | what episode is next (in|of) X
+  /^(?:whats|what\s+is|what\s+s)\s+next\s+(?:on|in|for|of)\s+(.+)$/,
+  /^(?:what|which)\s+episode\s+(?:is|comes)\s+next\s+(?:on|in|for|of)\s+(.+)$/,
+  // what was the last episode of X (we watched)
+  new RegExp(String.raw`^(?:what|which)\s+(?:was|is)\s+the\s+last\s+episode\s+(?:of|in)\s+(.+?)(?:\s+(?:that\s+)?${WE}\s+(?:watched|saw|finished))?$`),
+];
+const MOVIE_STATUS_PATTERNS = [
+  // have we seen / watched / finished X | did we finish X (yet)
+  new RegExp(String.raw`^(?:have|did|has)\s+${WE}\s+(?:already\s+)?(?:seen|see|watched|watch|finished|finish)\s+(.+?)(?:\s+(?:yet|already|before))?$`),
+];
+const CONTINUE_PATTERNS = [
+  new RegExp(String.raw`^(?:what|which)\s+(?:shows?\s+|series\s+|movies?\s+)?(?:are|were)\s+${WE}\s+(?:watching|in\s+the\s+middle\s+of)(?:\s+right\s+now|\s+now|\s+lately)?$`),
+  /^(?:whats|what\s+is)\s+(?:on\s+)?(?:my|our)\s+continue\s+watching(?:\s+list)?$/,
+];
+const NEXT_EPISODE_PATTERNS = [
+  /^(?:play|watch|put\s+on|start)\s+(?:the\s+)?next\s+episode\s+(?:of|in)\s+(.+)$/,
+  /^(?:continue|resume|keep)\s+watching\s+(.+)$/,
+  /^(?:pick\s+up|start)\s+(.+?)\s+where\s+(?:we|i)\s+left\s+off$/,
+];
+
+function cleanWatchTitle(t) {
+  return String(t || '')
+    .replace(/^(?:the\s+(?:show|series|tv\s+show|movie|film)\s+|(?:show|series|movie|film)\s+)/, '')
+    .replace(/\s+(?:yet|already|again|please|now|right\s+now|on\s+(?:the\s+)?(?:tv|roku|chromecast|television))$/, '')
+    .replace(/\s+(?:on|at|in|with)$/, '')
+    .trim();
+}
+
+/** "what season of breaking bad did we leave off on" → { type: 'watch-status', scope: 'show', title: 'breaking bad' } */
+function parseWatchStatusQuery(cleanedText) {
+  const q = foldText(cleanedText).replace(/\s+(?:please|robos|nabu)$/, '');
+  if (!q) return null;
+  for (const re of CONTINUE_PATTERNS) if (re.test(q)) return { type: 'watch-status', scope: 'continue', title: '' };
+  for (const re of NEXT_EPISODE_PATTERNS) { const m = q.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'play-next-episode', title: cleanWatchTitle(m[1]) }; }
+  for (const re of WATCH_STATUS_PATTERNS) { const m = q.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'watch-status', scope: 'show', title: cleanWatchTitle(m[1]) }; }
+  for (const re of MOVIE_STATUS_PATTERNS) { const m = q.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'watch-status', scope: /\b(?:movie|film)\b/.test(q) ? 'movie' : 'any', title: cleanWatchTitle(m[1]) }; }
+  return null;
+}
+
+/** Answers a watch-status intent from the synced watch history (every computer). */
+async function answerWatchStatus(intent, { configDir } = {}) {
+  const watch = requireMediaWatch();
+  if (!watch) return { ok: false, response: 'RobOS media history is not installed on this computer.' };
+  const opts = { configDir };
+  let res;
+  if (intent.scope === 'continue') res = await watch.continueWatching(opts);
+  else if (intent.scope === 'movie') res = await watch.movieStatus(intent.title, opts);
+  else {
+    res = await watch.watchStatus(intent.title, opts);
+    if (!res.ok || res.matchScore < 0.8) {
+      const movie = await watch.movieStatus(intent.title, opts);
+      if (movie.ok) res = movie;
+    }
+  }
+  return { ok: Boolean(res.ok), response: res.spoken || res.error || 'I could not find that in your watch history.', data: res };
+}
+
 /**
  * Classify whether a cleaned voice command is a media transport command, a movie play
  * command, a music/media play command (including phonetic ASR mishearings like "place some..."
@@ -1096,6 +1180,10 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   if (enrollMatch) {
     return { type: 'voice-enroll', targetName: enrollMatch[1].trim(), query: cleanedText };
   }
+
+  // 1.6 Watch status questions and "continue watching X"
+  const watchIntent = parseWatchStatusQuery(cleanedText);
+  if (watchIntent) return { ...watchIntent, query: cleanedText };
 
   // 2. If it's a genuine Tabletop Quest Editor command ("place 2 skeletons in room 1"), let Tabletop handle it
   if (isGenuineTabletopCommand(q)) {
@@ -1343,6 +1431,25 @@ async function executeNabuCommand(rawTranscript, {
   const { createAudioPlayerClient } = require('../../audio-player/lib/control-server');
   const { createAudioPlayerClient: createMoviePlayerClient } = require('../../movie-player/lib/control-server');
 
+  // ── 0.5 Watch status ("what season of The Office did we leave off on?") ────
+  if (intent.type === 'watch-status') {
+    const answer = await answerWatchStatus(intent, { configDir });
+    return { ok: answer.ok, skill: 'media-watch-status', cleanedCommand: cleaned, robosUser: activeUser, response: answer.response, data: answer.data || null };
+  }
+
+  // ── 0.6 Continue watching / play the next episode of a show ───────────────
+  if (intent.type === 'play-next-episode') {
+    const watch = requireMediaWatch();
+    if (!watch) return { ok: false, skill: 'media-next-episode', cleanedCommand: cleaned, robosUser: activeUser, response: 'RobOS media history is not installed on this computer.' };
+    if (autoLaunchPlayers) await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
+    const { targetDevice } = extractDeviceFromCommand(cleaned, { configDir, devices: castDevices });
+    const res = await watch.playNextEpisode({ show: intent.title, targetIp: (targetDevice && targetDevice.ip) || null, configDir });
+    return {
+      ok: Boolean(res.ok), skill: 'media-next-episode', cleanedCommand: cleaned, robosUser: activeUser,
+      response: res.spoken || res.error || `I could not start ${intent.title}.`, data: res,
+    };
+  }
+
   // ── 1. Transport controls (pause / resume / next / previous) ────────────────
   if (intent.type === 'transport') {
     const audioClient = createAudioPlayerClient({ configDir });
@@ -1468,6 +1575,8 @@ async function executeNabuCommand(rawTranscript, {
 }
 
 module.exports = {
+  parseWatchStatusQuery,
+  answerWatchStatus,
   stripWakePhrase,
   phoneticCode,
   jaroWinkler,

@@ -161,3 +161,8 @@ input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px;
 .cs-note { padding: 8px 12px; border-left: 3px solid var(--accent); background: #10262c; font-size: 13px; border-radius: 0 6px 6px 0; }
 .cs-status.good { color: #94e6b5; } .cs-status.error { color: #ffb4b4; }
 .cs-rp-files { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+.cs-gdrive { border-color: #1f6f7a; margin-bottom: 14px; }
+.cs-gdrive h3 { margin: 0; }
+.cs-gdrive .btn { align-self: flex-start; }
+.cs-more { margin-top: 4px; }
+.cs-more > summary { cursor: pointer; color: var(--muted, #8b949e); font-size: 13px; margin-bottom: 12px; }

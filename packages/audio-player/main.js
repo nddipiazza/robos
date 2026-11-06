@@ -87,6 +87,44 @@ castService.mediaLibrary = mediaLibrary;
 castService.cloudStorage = cloud;
 const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
 
+// ── Cloud library & play history ────────────────────────────────────────────
+// Plays and loved songs are also kept in ~/.config/robos/media-history/audio-player.json,
+// keyed by artist/album/title, so they follow you to another computer. When RobOS
+// Preferences has a backup vault (for example on Google Drive), this player keeps its
+// folders, playlists and that history synced with it (robos-lib/media-cloud-sync).
+const mediaHistoryLib = requireShared('robos-lib/media-history');
+const mediaCloudSyncLib = requireShared('robos-lib/media-cloud-sync');
+let mediaSync = null;
+if (mediaHistoryLib) {
+  try {
+    mediaHistoryLib.attachHistory(mediaLibrary, { app: 'audio-player', onChange: () => mediaSync && mediaSync.notifyLocalChange() });
+  } catch (err) { console.warn('[AudioPlayer] Play history unavailable:', err.message); }
+}
+
+function applyHistoryFromOtherComputers() {
+  if (typeof mediaLibrary.syncHistory !== 'function') return {};
+  const changed = mediaLibrary.syncHistory();
+  if (Object.keys(changed).length) sendToWindow('audio:track-stats-updated', changed);
+  return changed;
+}
+
+// Another computer changed the library or the play history and it just arrived here.
+function onVaultPulled(rels) {
+  if (rels.some(r => r.startsWith('config/media-history/'))) applyHistoryFromOtherComputers();
+  if (rels.includes('config/audio-playlists.json')) {
+    mediaLibrary._loadPlaylists();
+    sendToWindow('audio:playlists-updated', mediaLibrary.getPlaylists());
+  }
+  if (rels.includes('config/audio-folders.json')) {
+    libraryFolders.folders = libraryFolders._load();
+    const fresh = libraryFolders.list().filter(f => f.syncEnabled !== false && f.trackCount === 0);
+    scanLocalFolders(fresh);
+    syncCloudFolders(fresh)
+      .catch(err => console.warn('[AudioPlayer] Indexing folders from the vault failed:', err.message))
+      .finally(() => sendToWindow('audio:folders-updated', folderState({ withLibrary: true })));
+  }
+}
+
 // Refresh cloud track stream URLs once CastService streamServer allocates its port,
 // and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
 function refreshCloudTrackUrls() {
@@ -194,6 +232,14 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
+  if (mediaCloudSyncLib && !process.env.ROBOS_MEDIA_SYNC_DISABLED) {
+    mediaSync = mediaCloudSyncLib.startMediaCloudSync({
+      category: 'audio-library',
+      onPulled: onVaultPulled,
+      onStatus: (st) => sendToWindow('audio:media-sync-status', st),
+      log: (m) => console.log('[AudioPlayer]', m),
+    });
+  }
   // Wait until the renderer subscribes; checks run without blocking first paint.
   mainWindow.webContents.once('did-finish-load', () => {
     libraryFolders.list();
@@ -213,6 +259,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   try { mediaLibrary.flush(); } catch {}
   try { controlServer.stop(); } catch {}
+  try { mediaSync && mediaSync.stop(); } catch {}
 });
 
 // ── Control API for other RobOS apps (lib/control-server.js) ────────────────
@@ -240,8 +287,7 @@ ipcMain.handle('audio:control-reply', async (_evt, { requestId, result } = {}) =
   return true;
 });
 
-const controlServer = createControlServer({
-  handlers: {
+const controlHandlers = {
     status: () => askRenderer('status'),
     speakClip: (clip) => askRenderer('speak-clip', clip, 60000),
     play: async (body = {}) => {
@@ -269,7 +315,26 @@ const controlServer = createControlServer({
     previous: (body = {}) => askRenderer('previous', { robosUser: body.robosUser || null }),
     pause: (body = {}) => askRenderer('pause', { robosUser: body.robosUser || null }),
     resume: (body = {}) => askRenderer('resume', { robosUser: body.robosUser || null }),
+};
+
+// Play history, answered from the portable history file without the renderer.
+//   GET  /api/history[?limit=n]   recently played songs, newest first
+//   GET  /api/media-sync          last cloud sync of library and history
+//   POST /api/media-sync-now
+controlHandlers.queries = {
+  '/api/history': (q) => {
+    if (!mediaHistoryLib) return { ok: false, error: 'RobOS media history is not installed' };
+    const entries = mediaLibrary.history ? mediaLibrary.history.entries() : mediaHistoryLib.readEntries('audio-player');
+    return { ok: true, items: mediaHistoryLib.recentHistory(entries, { kind: 'audio', limit: Number(q.limit) || 20 }) };
   },
+  '/api/media-sync': () => ({ ok: true, ...(mediaSync ? mediaSync.status() : { outcome: 'unavailable' }) }),
+};
+controlHandlers.actions = {
+  '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
+};
+
+const controlServer = createControlServer({
+  handlers: controlHandlers,
   log: (entry) => console.warn('[AudioPlayer] control:', JSON.stringify(entry)),
 });
 
@@ -575,7 +640,7 @@ function scanLocalFolders(folders) {
   const paths = folders.filter(f => f.kind === 'local' && fs.existsSync(f.path)).map(f => f.path);
   if (!paths.length) return;
   mediaLibrary.scanFoldersInBackground(paths, scanUpdates({
-    onDone: () => folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id)),
+    onDone: () => { folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id)); applyHistoryFromOtherComputers(); },
   }));
 }
 
@@ -590,6 +655,7 @@ async function syncCloudFolders(folders) {
     }
   }
   readCloudTagsInBackground();
+  applyHistoryFromOtherComputers();
   return results;
 }
 
@@ -888,6 +954,9 @@ ipcMain.handle('audio:get-track-stats', async () => mediaLibrary.getStats());
 ipcMain.handle('audio:record-play', async (_evt, trackId) => mediaLibrary.recordPlay(trackId));
 
 ipcMain.handle('audio:set-loved', async (_evt, { ids, loved }) => mediaLibrary.setLoved(ids, loved));
+
+ipcMain.handle('audio:media-sync-status', async () => controlHandlers.queries['/api/media-sync']());
+ipcMain.handle('audio:media-sync-now', async () => controlHandlers.actions['/api/media-sync-now']());
 
 ipcMain.handle('audio:show-in-folder', async (_evt, filePath) => {
   if (!filePath || typeof filePath !== 'string' || !fs.existsSync(filePath)) return { ok: false };

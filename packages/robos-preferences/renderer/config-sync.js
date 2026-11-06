@@ -123,7 +123,16 @@ function csNoAccountHint() {
 function csVaultPanel() {
   const v = cs.status.vault;
   if (!v) {
-    return `${csNoAccountHint()}
+    const g = cs.accounts[0];
+    return `<div class="cs-card cs-gdrive" id="cs-gdrive-card">
+        <h3>Back up to my Google Drive</h3>
+        <p class="cs-muted">One step for every computer you use: ${g ? `RobOS uses <strong>${csEsc(g.email)}</strong>'s Google Drive.` : 'sign in with Google (this also adds your Google Drive as a Data Source).'}
+          The first computer creates a private <strong>RobOS Config Vault</strong> folder there; your other computers find it and load it. Then your settings, Audio Player and Movie Player libraries,
+          playlists and watch history stay in sync automatically.</p>
+        <button type="button" class="btn btn-primary" id="cs-gdrive">${g ? 'Use my Google Drive' : 'Sign in with Google and use my Drive'}</button>
+      </div>
+    <details class="cs-more"><summary>Other ways: another folder, a passphrase, or a vault link</summary>
+    ${csNoAccountHint()}
     <div class="cs-two">
       <div class="cs-card" id="cs-create-card">
         <h3>Create a new vault</h3>
@@ -142,7 +151,7 @@ function csVaultPanel() {
         <label class="cs-field"><span>Passphrase <span class="cs-muted">(only if the vault has one)</span></span><input id="cs-connect-pass" type="password" class="text-input" autocomplete="off"></label>
         <button type="button" class="btn btn-primary" id="cs-connect">Connect</button>
       </div>
-    </div>`;
+    </div></details>`;
   }
   const enabled = new Set(v.categories);
   const cats = cs.status.categories;
@@ -196,7 +205,9 @@ function csAutoView(v) {
       <label>every <select id="cs-auto-interval" class="select-input" ${a.enabled ? '' : 'disabled'}>${[1, 5, 15, 30, 60].map(n => `<option value="${n}" ${a.intervalMinutes === n ? 'selected' : ''}>${n === 60 ? '1 hour' : `${n} min`}</option>`).join('')}</select></label>
       <label><input type="checkbox" id="cs-auto-watch" ${a.watch ? 'checked' : ''} ${a.enabled ? '' : 'disabled'}> and soon after a change</label>
       <div class="cs-muted cs-small cs-auto-note" id="cs-auto-last">${csEsc(last)}</div>
-      <p class="cs-muted cs-small">RobOS syncs at login and in the background, even with Preferences closed. Changes made on one side only are applied for you; when a file changed both here and in the vault, nothing is overwritten and you get a notification.</p>
+      <p class="cs-muted cs-small">${/Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent)
+        ? 'RobOS syncs at login and in the background, even with Preferences closed.'
+        : 'RobOS syncs in the background while Preferences is open; the Movie Player and Audio Player sync their library and watch history whenever they run.'} Watch history from two computers is merged. Other changes made on one side only are applied for you; when a file changed both here and in the vault, nothing is overwritten and you get a notification.</p>
     </div>`;
 }
 
@@ -206,6 +217,7 @@ const CS_ACTION = {
   'delete-local': ['✕', 'Delete here', 'cs-act-del'],
   'delete-remote': ['✕', 'Delete in vault', 'cs-act-del'],
   conflict: ['⚠', 'Changed on both', 'cs-act-conflict'],
+  merge: ['⇄', 'Merge both', 'cs-act-push'],
 };
 
 function csPlanView(plan) {
@@ -229,6 +241,7 @@ function csPlanView(plan) {
     c.pull && `<span class="cs-chip cs-act-pull">↓ ${c.pull} from vault</span>`,
     c.push && `<span class="cs-chip cs-act-push">↑ ${c.push} to vault</span>`,
     (c['delete-local'] || c['delete-remote']) && `<span class="cs-chip cs-act-del">✕ ${(c['delete-local'] || 0) + (c['delete-remote'] || 0)} deleted</span>`,
+    c.merge && `<span class="cs-chip cs-act-push">⇄ ${c.merge} merged</span>`,
     c.conflict && `<span class="cs-chip cs-act-conflict">⚠ ${c.conflict} conflict${c.conflict > 1 ? 's' : ''}</span>`,
   ].filter(Boolean).join('');
   if (!plan.actions.length) return `${first}${skipped}<div class="cs-uptodate" id="cs-uptodate">✓ This machine and the vault are in sync.</div>`;
@@ -279,8 +292,43 @@ async function csApply() {
   cs.plan = null; cs.resolutions = {};
   await csRefresh();
   await csLoadPlan();
-  csSay(`✓ Synced: ${res.pulled.length} file(s) from the vault, ${res.pushed.length} to the vault${res.deletedLocal.length + res.deletedRemote.length ? `, ${res.deletedLocal.length + res.deletedRemote.length} deleted` : ''}. Generation ${res.generation}.${res.restorePointId ? ' A restore point was saved.' : ''}`, 'good');
+  csSay(`✓ Synced: ${res.pulled.length} file(s) from the vault, ${res.pushed.length} to the vault${res.merged?.length ? `, ${res.merged.length} merged` : ''}${res.deletedLocal.length + res.deletedRemote.length ? `, ${res.deletedLocal.length + res.deletedRemote.length} deleted` : ''}. Generation ${res.generation}.${res.restorePointId ? ' A restore point was saved.' : ''}`, 'good');
   return res;
+}
+
+/**
+ * "Back up to my Google Drive": sign in with Google if needed (which also adds the Drive as
+ * a Data Source), then use the vault another computer made there or create one, and run the
+ * first sync when it needs no decision.
+ */
+async function csUseGoogleDrive(button) {
+  button.disabled = true;
+  try {
+    if (!cs.accounts.length) {
+      csSay('Finish signing in with Google in your browser…');
+      const signIn = await window.api.startGoogleOAuth({});
+      if (!signIn || signIn.ok === false) return csSay(signIn?.error || 'Google sign-in did not finish.', 'error');
+      await csRefresh();
+    }
+    const accountId = cs.accounts[0]?.id;
+    if (!accountId) return csSay('No Google account is signed in yet.', 'error');
+    csSay('Looking for your RobOS Config Vault in Google Drive…');
+    const res = await csCall('connectGoogleDrive', { accountId });
+    if (!res.ok) return csSay(res.code === 'PASSPHRASE_REQUIRED' ? 'Your vault has a passphrase. Use "Other ways" → Use an existing vault, paste its link and enter the passphrase.' : res.error, 'error');
+    cs.plan = res.plan; cs.strategy = res.plan?.strategy || null; cs.resolutions = {};
+    await csRefresh();
+    if (res.synced) {
+      const s = res.synced;
+      await csLoadPlan();
+      csSay(res.created
+        ? `✓ Created ${res.vault.name} in Google Drive and backed up ${s.pushed.length} file(s). Your other computers find it with the same button.`
+        : `✓ Connected to ${res.vault.name} and loaded ${s.pulled.length} file(s) from your other computer${s.merged?.length ? ` (${s.merged.length} merged)` : ''}. Automatic sync is on.`, 'good');
+    } else {
+      csSay(`✓ Connected to ${res.vault.name}. Both computers have changes: choose how to combine them below.`, 'good');
+    }
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function csArm(id, fn) {
@@ -292,6 +340,8 @@ function csArm(id, fn) {
 const csBind = {
   vault() {
     document.getElementById('cs-goto-accounts')?.addEventListener('click', () => document.getElementById('section-cloud_accounts')?.scrollIntoView());
+    const gdrive = document.getElementById('cs-gdrive');
+    if (gdrive) gdrive.onclick = () => csUseGoogleDrive(gdrive);
     const target = document.getElementById('cs-create-target');
     if (target) {
       const sync = () => document.getElementById('cs-create-path-row').classList.toggle('hidden', !target.value.startsWith('folder:'));

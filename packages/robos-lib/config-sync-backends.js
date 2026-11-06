@@ -42,7 +42,12 @@ function driveFolderUrl(folderId) {
 function parseFolderRef(input) {
   const raw = String(input || '').trim();
   if (!raw) throw new Error('Paste a Google Drive folder link or ID, or a local folder path.');
-  if (raw.startsWith('file://')) return { kind: 'folder', path: decodeURIComponent(raw.slice(7)) };
+  if (raw.startsWith('file://')) {
+    try { return { kind: 'folder', path: require('node:url').fileURLToPath(raw) }; } catch {}
+    return { kind: 'folder', path: decodeURIComponent(raw.slice(7)) };
+  }
+  // Windows: C:\Users\me\Dropbox, C:/Users/me/Dropbox or a \\server\share UNC path.
+  if (/^[A-Za-z]:[\\/]/.test(raw) || raw.startsWith('\\\\')) return { kind: 'folder', path: raw };
   if (raw.startsWith('/') || raw.startsWith('~')) {
     const home = process.env.HOME || require('node:os').homedir();
     return { kind: 'folder', path: raw.startsWith('~') ? path.join(home, raw.slice(1)) : raw };
@@ -172,6 +177,20 @@ function createDriveClient({ tokens, fetchImpl, maxRetries = Number(process.env.
     return out;
   }
 
+  /** Searches the whole Drive (what this account can see) by name. */
+  async function findByName(name) {
+    const parts = [`name = ${q(name)}`, 'trashed = false'];
+    const out = [];
+    let pageToken = '';
+    do {
+      const url = `/drive/v3/files?q=${encodeURIComponent(parts.join(' and '))}&fields=${encodeURIComponent('nextPageToken,files(id,name,mimeType,parents,modifiedTime)')}&pageSize=100&${common}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+      const page = await call('GET', url);
+      out.push(...(page.files || []));
+      pageToken = page.nextPageToken || '';
+    } while (pageToken && out.length < 500);
+    return out;
+  }
+
   async function getFile(fileId, fields = 'id,name,mimeType,owners(emailAddress,displayName),capabilities(canEdit,canShare)') {
     return call('GET', `/drive/v3/files/${encodeURIComponent(fileId)}?fields=${encodeURIComponent(fields)}&supportsAllDrives=true`);
   }
@@ -226,7 +245,32 @@ function createDriveClient({ tokens, fetchImpl, maxRetries = Number(process.env.
     return res.permissions || [];
   }
 
-  return { listChildren, getFile, createFolder, upload, updateContent, download, remove, share, listPermissions };
+  return { listChildren, findByName, getFile, createFolder, upload, updateContent, download, remove, share, listPermissions };
+}
+
+/**
+ * Lists the RobOS config folders (vaults and shares) this Google account can see: every
+ * folder that holds a robos-config.json. Lets a second computer find your vault after
+ * you sign in, without pasting a link.
+ */
+async function findDriveConfigFolders({ accountId, homeDir, fetchImpl, tokens }) {
+  const drive = createDriveClient({ tokens: tokens || googleTokenProvider(accountId, { homeDir }), fetchImpl });
+  const manifests = await drive.findByName(MANIFEST_NAME);
+  const out = [];
+  for (const m of manifests) {
+    const folderId = (m.parents || [])[0];
+    if (!folderId) continue;
+    let outer = null;
+    try { outer = JSON.parse((await drive.download(m.id)).toString('utf8')); } catch { continue; }
+    let name = folderId;
+    try { name = (await drive.getFile(folderId, 'id,name')).name || folderId; } catch {}
+    out.push({
+      kind: 'gdrive', folderId, name, url: driveFolderUrl(folderId), accountId,
+      configKind: outer.kind || null, encrypted: Boolean(outer.encrypted), id: outer.id || null,
+      updatedAt: outer.updatedAt || m.modifiedTime || null, updatedBy: outer.updatedBy?.machineName || null,
+    });
+  }
+  return out.sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
 }
 
 /** Creates a new Drive folder (optionally inside `parentId`) and returns its reference. */
@@ -346,6 +390,6 @@ function openBackend(ref, { homeDir, fetchImpl, create = false } = {}) {
 
 module.exports = {
   MANIFEST_NAME, BLOBS_DIR, FOLDER_MIME,
-  parseFolderRef, driveFolderUrl, createFolderBackend, createGDriveBackend, createDriveFolder, createDriveClient,
+  parseFolderRef, driveFolderUrl, createFolderBackend, createGDriveBackend, createDriveFolder, createDriveClient, findDriveConfigFolders,
   googleTokenProvider, openBackend, DriveError,
 };

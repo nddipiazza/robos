@@ -102,10 +102,10 @@ class LibraryFolders {
           }
         } else {
           this.folders.push({
-            id: `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}${idx}`,
+            // The same id and no timestamp on every computer, so two computers that both
+            // pick up this Data Sources folder write the same entry (RobOS Config Sync).
+            id: `fld_ds_${require('crypto').createHash('sha1').update(`${conn.id}:${lf.remotePath}`).digest('hex').slice(0, 12)}`,
             label: lf.label || path.basename(lf.remotePath) || lf.remotePath,
-            addedAt: new Date().toISOString(),
-            lastSynced: null,
             kind: 'cloud',
             connectionId: conn.id,
             path: lf.remotePath,
