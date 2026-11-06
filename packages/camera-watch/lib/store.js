@@ -36,6 +36,12 @@ function defaultMotion() {
   };
 }
 
+function defaultDeviceFormat(platform = process.platform) {
+  if (platform === 'win32') return 'dshow';
+  if (platform === 'darwin') return 'avfoundation';
+  return 'v4l2';
+}
+
 function newId() {
   return `cam-${crypto.randomBytes(4).toString('hex')}`;
 }
@@ -52,7 +58,8 @@ function num(v, fallback, lo, hi) {
 
 function normalizeCamera(input = {}, existing = null) {
   const base = existing || { id: newId(), createdAt: new Date().toISOString() };
-  const kind = input.kind === 'onvif' ? 'onvif' : 'url';
+  const kindIn = input.kind ?? base.kind;
+  const kind = ['onvif', 'device'].includes(kindIn) ? kindIn : 'url';
   const cam = {
     ...base,
     name: cleanText(input.name ?? base.name, 80) || 'Camera',
@@ -75,8 +82,26 @@ function normalizeCamera(input = {}, existing = null) {
           model: cleanText(input.onvif?.model ?? base.onvif?.model, 120),
         }
       : null,
+    // A webcam or capture card attached to this computer, read by ffmpeg's
+    // DirectShow (Windows), V4L2 (Linux) or AVFoundation (macOS) input.
+    device: kind === 'device'
+      ? {
+          format: ['dshow', 'v4l2', 'avfoundation'].includes(input.device?.format ?? base.device?.format)
+            ? (input.device?.format ?? base.device?.format)
+            : defaultDeviceFormat(),
+          name: cleanText(input.device?.name ?? base.device?.name, 255),
+          // Optional "1280x720"; empty lets the camera pick.
+          videoSize: /^\d{2,5}x\d{2,5}$/.test(String(input.device?.videoSize ?? base.device?.videoSize ?? ''))
+            ? String(input.device?.videoSize ?? base.device?.videoSize)
+            : '',
+        }
+      : null,
     motion: (() => {
-      const m = { ...defaultMotion(), ...(base.motion || {}), ...(input.motion || {}) };
+      const defaults = defaultMotion();
+      // A new webcam on this computer usually points at the person using it:
+      // detect motion, but do not record clips of them unless they turn it on.
+      if (!existing && kind === 'device') defaults.record = false;
+      const m = { ...defaults, ...(base.motion || {}), ...(input.motion || {}) };
       return {
         enabled: Boolean(m.enabled),
         sensitivity: num(m.sensitivity, 60, 1, 100),
@@ -110,6 +135,11 @@ function normalizeCamera(input = {}, existing = null) {
     } catch { /* not a URL */ }
   }
   if (cam.kind === 'onvif' && !cam.onvif.hostname) throw new Error('Enter the camera address.');
+  if (cam.kind === 'device' && !cam.device.name) throw new Error('Pick the webcam to use.');
+  if (cam.kind === 'device') {
+    cam.streamUrl = '';
+    cam.snapshotUrl = '';
+  }
   return cam;
 }
 
@@ -203,4 +233,4 @@ function createStore({ configDir, homeDir = os.homedir() }) {
   };
 }
 
-module.exports = { createStore, normalizeCamera, publicCamera, defaultSettings, defaultMotion };
+module.exports = { createStore, normalizeCamera, publicCamera, defaultSettings, defaultMotion, defaultDeviceFormat };

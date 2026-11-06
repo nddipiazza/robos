@@ -183,6 +183,15 @@
         <div class="seg" id="f-kind-seg">
           <button type="button" data-kind="onvif" class="active">ONVIF camera</button>
           <button type="button" data-kind="url">Stream address</button>
+          <button type="button" data-kind="device">Webcam on this computer</button>
+        </div>
+        <div id="f-device-fields" class="hidden">
+          <div class="row">
+            <label class="grow">Webcam<select id="f-device"><option value="">Looking for webcams…</option></select></label>
+            <button type="button" class="btn" id="f-device-refresh">Refresh</button>
+          </div>
+          <label>Picture size (optional)<input id="f-device-size" type="text" placeholder="Camera default, e.g. 1280x720" /></label>
+          <div class="muted small">A webcam can usually be used by one program at a time. Close video calls and camera apps that have it open.</div>
         </div>
         <div id="f-onvif-fields">
           <div class="row">
@@ -196,11 +205,11 @@
           <label>Stream address<input id="f-url" type="text" placeholder="rtsp://192.168.1.64:554/stream1" /></label>
           <div class="muted small">Any address ffmpeg can open: <code>rtsp://</code>, <code>rtsps://</code>, or an MJPEG <code>http://</code> stream.</div>
         </div>
-        <div class="row">
+        <div class="row" id="f-login-row">
           <label class="grow">User name<input id="f-user" type="text" autocomplete="off" placeholder="admin" /></label>
           <label class="grow">Password<input id="f-pass" type="password" autocomplete="new-password" /></label>
         </div>
-        <label>RTSP transport
+        <label id="f-transport-row">RTSP transport
           <select id="f-transport"><option value="tcp">TCP (most reliable)</option><option value="udp">UDP</option></select>
         </label>
         <div class="test-result hidden" id="f-test-result"></div>

@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('robos', {
   setMotion: call('camera:setMotion'),
   testCamera: call('camera:test'),
   discover: call('camera:discover'),
+  listLocalDevices: call('camera:listLocalDevices'),
   ptzMove: call('camera:ptzMove'),
   ptzStop: call('camera:ptzStop'),
   ptzPresets: call('camera:ptzPresets'),

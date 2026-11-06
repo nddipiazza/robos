@@ -8,8 +8,9 @@ const { EventEmitter } = require('node:events');
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createStore, publicCamera } = require('./store');
-const { CameraRunner, clipPaths } = require('./camera-runner');
+const { createStore, publicCamera, defaultDeviceFormat } = require('./store');
+const { CameraRunner, clipPaths, explainFfmpeg } = require('./camera-runner');
+const { inputArgs, listLocalDevices } = require('./local-devices');
 const { createStreamServer, isInside } = require('./stream-server');
 const onvif = require('./onvif-bridge');
 
@@ -52,6 +53,9 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
   }
 
   async function resolveInput(cam, attempt) {
+    if (cam.kind === 'device') {
+      return { kind: 'device', format: cam.device.format, name: cam.device.name, videoSize: cam.device.videoSize };
+    }
     if (cam.kind === 'url') {
       return { url: onvif.withCredentials(cam.streamUrl, cam.username, cam.password), transport: cam.rtspTransport };
     }
@@ -293,12 +297,11 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
   }
 
   // ── Test a camera before saving ────────────────────────────────────────────
-  function grabFrame(url, transport) {
+  function grabFrame(input) {
     return new Promise((resolve, reject) => {
       const settings = store.getSettings();
-      const args = ['-hide_banner', '-loglevel', 'error', '-nostdin'];
-      if (/^rtsps?:/i.test(url)) args.push('-rtsp_transport', transport || 'tcp');
-      args.push('-i', url, '-frames:v', '1', '-vf', "scale='min(640,iw)':-2", '-f', 'image2', '-c:v', 'mjpeg', 'pipe:1');
+      const args = ['-hide_banner', '-loglevel', 'error', '-nostdin', ...inputArgs(input)];
+      args.push('-frames:v', '1', '-vf', "scale='min(640,iw)':-2", '-f', 'image2', '-c:v', 'mjpeg', 'pipe:1');
       let proc;
       try {
         proc = spawnFn(settings.ffmpegPath || 'ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
@@ -316,7 +319,7 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
         clearTimeout(timer);
         const buf = Buffer.concat(chunks);
         if (buf.length > 100) resolve(buf);
-        else reject(new Error(onvif.redactUrl(stderr.trim().split('\n').pop() || 'The camera sent no picture within 15 seconds.')));
+        else reject(new Error(explainFfmpeg(stderr.trim().split('\n').pop() || 'The camera sent no picture within 15 seconds.')));
       });
     });
   }
@@ -325,6 +328,16 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
     const existing = input.id ? store.getCamera(input.id) : null;
     const password = input.password || existing?.password || '';
     const result = { ok: false };
+    if (input.kind === 'device') {
+      if (!input.device?.name) throw new Error('Pick the webcam to use.');
+      // The webcam may already be open for this camera's live view; use its picture.
+      const runner = existing ? runners.get(existing.id) : null;
+      const sameDevice = runner && JSON.stringify(runner.camera.device?.name) === JSON.stringify(input.device.name);
+      const jpeg = sameDevice && runner.latestFrame
+        ? runner.latestFrame
+        : await grabFrame({ kind: 'device', format: input.device.format || defaultDeviceFormat(), name: input.device.name, videoSize: input.device.videoSize });
+      return { ok: true, preview: `data:image/jpeg;base64,${jpeg.toString('base64')}`, streamUri: input.device.name };
+    }
     let url = input.streamUrl;
     if (input.kind === 'onvif') {
       const session = await onvif.openSession({
@@ -343,7 +356,7 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
       }
     }
     if (!url) throw new Error('No stream URL to test.');
-    const jpeg = await grabFrame(onvif.withCredentials(url, input.username, password), input.rtspTransport);
+    const jpeg = await grabFrame({ url: onvif.withCredentials(url, input.username, password), transport: input.rtspTransport });
     result.ok = true;
     result.preview = `data:image/jpeg;base64,${jpeg.toString('base64')}`;
     result.streamUri = onvif.redactUrl(url);
@@ -431,6 +444,13 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
     testCamera,
 
     discover: (opts) => onvif.discover(opts),
+
+    /** Webcams attached to this computer, marking the ones already added. */
+    async listLocalDevices() {
+      const devices = await listLocalDevices({ ffmpegPath: store.getSettings().ffmpegPath || 'ffmpeg', spawnFn });
+      const used = new Map(store.listCameras().filter((c) => c.kind === 'device').map((c) => [c.device.name, c.name]));
+      return devices.map((d) => ({ ...d, usedBy: used.get(d.name) || '' }));
+    },
 
     async ptzMove(id, { pan = 0, tilt = 0, zoom = 0 } = {}) {
       const cam = store.getCamera(id);

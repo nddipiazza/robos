@@ -14,6 +14,7 @@ const path = require('node:path');
 const { JpegSplitter } = require('./jpeg-splitter');
 const { createMotionDetector } = require('./motion-detector');
 const { redactUrl } = require('./onvif-bridge');
+const { inputArgs } = require('./local-devices');
 
 const MOTION_W = 96;
 const MOTION_H = 54;
@@ -33,10 +34,21 @@ function clipPaths(recordingsDir, cameraName, reason, when = new Date()) {
   return { dir, video: path.join(dir, `${base}.mp4`), thumb: path.join(dir, `${base}.jpg`) };
 }
 
+/** Turn ffmpeg's last error line into a plain sentence (passwords hidden). */
+function explainFfmpeg(line) {
+  const l = redactUrl(String(line));
+  if (/401|Unauthorized/i.test(l)) return 'The camera refused the user name or password (401 Unauthorized).';
+  if (/Connection refused/i.test(l)) return 'The camera refused the connection. Check the address and port.';
+  if (/timed out|Operation timed out|No route to host/i.test(l)) return 'The camera did not answer. Is it on and on this network?';
+  if (/404|Not Found/i.test(l)) return 'The camera has no stream at that path (404).';
+  if (/Could not find video device|No such file or directory.*video/i.test(l)) return 'That webcam is not plugged in (or has another name now).';
+  if (/Could not run graph|Device or resource busy|already in use/i.test(l)) return 'Another program is using the webcam. Close it (video call, camera app) and Camera Watch will retry.';
+  if (/Could not set video options|Invalid argument.*video_size/i.test(l)) return 'The webcam does not support that picture size. Clear the size to let it choose.';
+  return l;
+}
+
 function liveArgs(input, settings) {
-  const args = ['-hide_banner', '-loglevel', 'error', '-nostdin'];
-  if (/^rtsps?:/i.test(input.url)) args.push('-rtsp_transport', input.transport || 'tcp');
-  args.push('-fflags', 'nobuffer', '-i', input.url);
+  const args = ['-hide_banner', '-loglevel', 'error', '-nostdin', '-fflags', 'nobuffer', ...inputArgs(input)];
   const fps = Number(settings.liveFps) || 8;
   const width = Number(settings.liveWidth) || 960;
   args.push(
@@ -49,15 +61,25 @@ function liveArgs(input, settings) {
 
 function recordArgs(input, file, maxSeconds) {
   const args = ['-hide_banner', '-loglevel', 'error'];
+  const tail = ['-movflags', '+frag_keyframe+empty_moov+default_base_moof', '-f', 'mp4', '-y', file];
+  if (input.kind === 'device') {
+    // A webcam can usually be opened by one program at a time, and the live
+    // view already has it. Record by encoding the live JPEG frames, which
+    // arrive on stdin, timed by when they arrive.
+    return [
+      ...args, '-use_wallclock_as_timestamps', '1', '-f', 'mjpeg', '-i', 'pipe:0',
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24', '-pix_fmt', 'yuv420p', '-fps_mode', 'vfr',
+      '-t', String(Math.max(5, Math.round(maxSeconds))), ...tail,
+    ];
+  }
   const rtsp = /^rtsps?:/i.test(input.url);
-  if (rtsp) args.push('-rtsp_transport', input.transport || 'tcp');
-  args.push('-i', input.url, '-map', '0:v:0', '-map', '0:a?');
+  args.push(...inputArgs(input), '-map', '0:v:0', '-map', '0:a?');
   // RTSP cameras send H.264/H.265: copy it. MJPEG-over-HTTP cameras need encoding for MP4.
   if (rtsp) args.push('-c:v', 'copy');
   else args.push('-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-pix_fmt', 'yuv420p');
   args.push('-c:a', 'aac', '-b:a', '64k', '-t', String(Math.max(5, Math.round(maxSeconds))));
   // Fragmented MP4 stays playable even if ffmpeg is killed mid-clip.
-  args.push('-movflags', '+frag_keyframe+empty_moov+default_base_moof', '-f', 'mp4', '-y', file);
+  args.push(...tail);
   return args;
 }
 
@@ -107,7 +129,8 @@ class CameraRunner extends EventEmitter {
       || camera.username !== this.camera.username
       || camera.password !== this.camera.password
       || camera.rtspTransport !== this.camera.rtspTransport
-      || JSON.stringify(camera.onvif) !== JSON.stringify(this.camera.onvif);
+      || JSON.stringify(camera.onvif) !== JSON.stringify(this.camera.onvif)
+      || JSON.stringify(camera.device) !== JSON.stringify(this.camera.device);
     this.camera = camera;
     this.detector.configure(this._motionOptions());
     if (restart && this.wanted) this.restart();
@@ -238,12 +261,7 @@ class CameraRunner extends EventEmitter {
   }
 
   _explain(line) {
-    const l = redactUrl(String(line));
-    if (/401|Unauthorized/i.test(l)) return 'The camera refused the user name or password (401 Unauthorized).';
-    if (/Connection refused/i.test(l)) return 'The camera refused the connection. Check the address and port.';
-    if (/timed out|Operation timed out|No route to host/i.test(l)) return 'The camera did not answer. Is it on and on this network?';
-    if (/404|Not Found/i.test(l)) return 'The camera has no stream at that path (404).';
-    return l;
+    return explainFfmpeg(line);
   }
 
   _fail(message) {
@@ -271,6 +289,10 @@ class CameraRunner extends EventEmitter {
       this._emitStatus();
     }
     if (first) this._setState('live');
+    const rec = this.recording;
+    if (rec?.feed && rec.proc.stdin?.writable && !rec.proc.stdin.writableNeedDrain) {
+      try { rec.proc.stdin.write(frame); } catch {}
+    }
     for (const res of this.clients) {
       if (res.writableNeedDrain) continue; // slow viewer: skip frames instead of buffering
       try {
@@ -332,7 +354,16 @@ class CameraRunner extends EventEmitter {
       stdio: ['pipe', 'ignore', 'pipe'],
       windowsHide: true,
     });
-    const rec = { reason, startedAt: when.toISOString(), video: paths.video, thumb: this.latestFrame ? paths.thumb : '', proc };
+    const rec = {
+      reason,
+      startedAt: when.toISOString(),
+      video: paths.video,
+      thumb: this.latestFrame ? paths.thumb : '',
+      proc,
+      // Webcams: the recorder is fed the live frames (see recordArgs).
+      feed: this.input.kind === 'device',
+    };
+    proc.stdin?.on('error', () => {}); // the recorder may exit before we stop writing
     let stderr = '';
     proc.stderr?.on('data', (d) => { stderr = (stderr + d.toString()).slice(-1000); });
     proc.on('error', (err) => { stderr += this._ffmpegError(err); });
@@ -361,7 +392,10 @@ class CameraRunner extends EventEmitter {
     const rec = this.recording;
     const finish = () => {
       this.stopTimer = null;
-      try { rec.proc.stdin.write('q'); } catch {}
+      // Frame-fed recorders finish when their input ends; the others quit on "q".
+      if (rec.feed) { rec.feed = false; try { rec.proc.stdin.end(); } catch {} } else {
+        try { rec.proc.stdin.write('q'); } catch {}
+      }
       setTimeout(() => { try { rec.proc.kill('SIGKILL'); } catch {} }, 4000).unref?.();
     };
     if (delaySeconds > 0) this.stopTimer = setTimeout(finish, delaySeconds * 1000);
@@ -370,4 +404,4 @@ class CameraRunner extends EventEmitter {
   }
 }
 
-module.exports = { CameraRunner, liveArgs, recordArgs, clipPaths, safeFolderName, MOTION_W, MOTION_H };
+module.exports = { CameraRunner, liveArgs, recordArgs, clipPaths, safeFolderName, explainFfmpeg, MOTION_W, MOTION_H };
