@@ -1,0 +1,133 @@
+---
+layout: default
+title: "RobOS phone — Put RobOS on an old Android phone"
+permalink: /phone/
+body_class: guide
+extra_css: /assets/phone.css
+description: "Turn an old Motorola Moto G100 into a RobOS phone: a LineageOS 24 (Android 17) image with RobOS Home, Smart Home and Preferences, which restores your lights from your RobOS Config Sync backup."
+og_image: /assets/phone/boot-animation.jpg
+og_image_alt: "A Motorola Moto G100 on a desk showing the RobOS boot animation"
+og_type: article
+schema_type: TechArticle
+---
+<section class="cr-page"><div class="wrap"><article class="guide-body cr-body phone-guide">
+  <header class="cr-hero">
+    <p class="eyebrow">RobOS phone · Moto G100 guide</p>
+    <h1>Your old phone,<br>running RobOS.</h1>
+    <p class="lead">A phone in a drawer still has a good screen, Wi-Fi and a fast processor. The RobOS phone replaces its software with an open-source version of Android that starts with the RobOS logo, opens to the RobOS home screen, controls your lights over Wi-Fi, and picks up your settings from your RobOS computers. It runs today on a Motorola Moto G100.</p>
+    <div class="phone-actions"><a class="btn" href="#get">How to get it</a><a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">Read how we built it →</a></div>
+  </header>
+
+  <div class="phone-grid">
+    <figure class="guide-shot"><a href="{{ '/assets/phone/boot-animation.jpg' | relative_url }}"><img src="{{ '/assets/phone/boot-animation.jpg' | relative_url }}" alt="Photograph of a Moto G100 on a desk showing the RobOS logo while it starts up" width="898" height="1132" fetchpriority="high"></a><figcaption>Starting up. The RobOS logo fades in and pulses while the phone boots.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/photo-smart-home.jpg' | relative_url }}"><img src="{{ '/assets/phone/photo-smart-home.jpg' | relative_url }}" alt="Photograph of the phone running RobOS Smart Home with a Feit Color Light switched on in the Living Room" width="900" height="1200" loading="lazy"></a><figcaption>Smart Home switching a Feit Electric color bulb over Wi-Fi.</figcaption></figure>
+    <figure class="guide-shot wide-on-phone"><a href="{{ '/assets/phone/photo-preferences.jpg' | relative_url }}"><img src="{{ '/assets/phone/photo-preferences.jpg' | relative_url }}" alt="Photograph of RobOS Preferences on the phone listing what is in the RobOS Config Vault backup" width="900" height="1195" loading="lazy"></a><figcaption>Preferences reading the RobOS Config Sync backup from Google Drive.</figcaption></figure>
+  </div>
+  <p>These are photographs of the real phone, taken on November 6, 2026.</p>
+
+  <ul class="cr-nav">
+    <li><a href="#what"><b>What it is</b><span>A plain-English overview</span></a></li>
+    <li><a href="#apps"><b>What it does</b><span>Home, Smart Home and Preferences</span></a></li>
+    <li><a href="#need"><b>What you need</b><span>The phone, a computer and time</span></a></li>
+    <li><a href="#get"><b>How to get it</b><span>Build the image, then install it</span></a></li>
+    <li><a href="#limits"><b>Honest limits</b><span>What it doesn't do yet</span></a></li>
+  </ul>
+
+  <h2 id="what">1. What the RobOS phone is</h2>
+  <p>Every Android phone runs a copy of Android that its maker put together. Once the maker stops sending updates, the phone usually ends up in a drawer. <strong>LineageOS</strong> is a free, community-built version of Android that keeps many of those phones up to date. The RobOS phone is LineageOS 24, the Android 17 release, with a RobOS layer built in:</p>
+  <ul>
+    <li>the RobOS start-up animation, in place of the LineageOS one;</li>
+    <li><strong>RobOS Home</strong> as the home screen, in place of the usual Android launcher;</li>
+    <li><strong>RobOS Smart Home</strong>, which controls your lights directly over Wi-Fi;</li>
+    <li><strong>RobOS Preferences</strong>, which signs in to Google Drive and restores the settings your RobOS computers backed up with <a href="{{ '/config-management/' | relative_url }}">Config Sync</a>.</li>
+  </ul>
+  <p>Here is the whole idea in one example. You add a Feit Electric bulb in Smart Home on your RobOS computer. Config Sync copies your settings to your Google Drive. On the phone, you sign in once in Preferences and tap restore. Smart Home on the phone now shows that bulb, in the same room, and switches it on and off without the computer.</p>
+
+  <h2 id="apps">2. What it does</h2>
+  <div class="phone-grid four">
+    <figure class="guide-shot"><a href="{{ '/assets/phone/robos-home.jpg' | relative_url }}"><img src="{{ '/assets/phone/robos-home.jpg' | relative_url }}" alt="RobOS Home showing 9:14 PM, Friday, November 6, and app icons for Smart Home, AudioFX, Files, Firefox, Music and Settings" width="540" height="1260" loading="lazy"></a><figcaption>RobOS Home: the time, the date and every app, RobOS apps first.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/preferences-sign-in.jpg' | relative_url }}"><img src="{{ '/assets/phone/preferences-sign-in.jpg' | relative_url }}" alt="RobOS Preferences sign-in screen with a Sign in with Google button" width="540" height="1260" loading="lazy"></a><figcaption>Preferences: sign in with the Google account your computers back up to.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/smart-home-feit-dialog.jpg' | relative_url }}"><img src="{{ '/assets/phone/smart-home-feit-dialog.jpg' | relative_url }}" alt="Smart Home's Add Feit or Smart Life lights dialog with five numbered steps and Access ID and Access Secret fields" width="540" height="1260" loading="lazy"></a><figcaption>Adding Feit or Smart Life lights on the phone itself.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/smart-home-restored-light.jpg' | relative_url }}"><img src="{{ '/assets/phone/smart-home-restored-light.jpg' | relative_url }}" alt="Smart Home listing Color Light in the Living Room, Feit / Smart Life, switched on, with Lights, Scenes, Schedules and Appliances tabs" width="540" height="1260" loading="lazy"></a><figcaption>The light restored from the backup, ready to switch.</figcaption></figure>
+  </div>
+  <h3>RobOS Home</h3>
+  <p>The first thing you see. It shows the time, the date and every app on the phone, with the RobOS apps first. It comes with the LineageOS basics: Files, Music, Settings and the AudioFX equalizer. You can add more apps from a computer with <code>adb install</code>; our phone has Firefox, downloaded from Mozilla's official archive.</p>
+  <h3>RobOS Smart Home</h3>
+  <p>Controls lights straight over your home Wi-Fi. It doesn't need a RobOS computer to be switched on, and it doesn't send commands through anyone's cloud. It works with these brands:</p>
+  <div class="phone-table"><table class="wide">
+    <thead><tr><th>Brand</th><th>How it connects</th></tr></thead>
+    <tbody>
+      <tr><td>Feit Electric, Smart Life and other Tuya lights</td><td>A one-time setup fetches each light's key from a free Tuya developer account. After that, the phone talks to the light directly on your network.</td></tr>
+      <tr><td>Philips Hue</td><td>Press the button on the Hue Bridge to pair.</td></tr>
+      <tr><td>WiZ, WLED, TP-Link Kasa, LIFX, Govee, Elgato, Yeelight, Shelly</td><td>Found on your Wi-Fi with <strong>Scan</strong>.</td></tr>
+      <tr><td>Home Assistant</td><td>Uses your Home Assistant server's address and a long-lived access token.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Lights can be grouped into rooms and saved as scenes. Schedules can fade lights up or down at set times, and they run even when the app is closed. The <strong>Appliances</strong> tab shows your LG ThinQ appliances, read only.</p>
+  <h3>RobOS Preferences</h3>
+  <p>Brings your RobOS settings to the phone. Tap <strong>Sign in with Google</strong> and the phone's browser opens Google's sign-in page, just as it does on a RobOS computer. Preferences then finds your Config Sync backups in Google Drive, opens them (including backups protected with a passphrase), and shows what each one holds. Today it restores what phone apps can use: Smart Home's lights, rooms, scenes and schedules. The rest of the backup stays on your computers until a phone app can use it.</p>
+  <div class="phone-note"><strong>What stays private.</strong> Config Sync never uploads the keys for Feit and Smart Life lights. Each device fetches its own copy from your Tuya account, so the phone asks for your Tuya Access ID and Access Secret once, even when your computer already has them.</div>
+
+  <h2 id="need">3. What you need</h2>
+  <ul>
+    <li><strong>A Motorola Moto G100.</strong> Its codename is <code>nio</code> and its model number is XT2125-4. Other phones need their own build. A Moto G10 (<code>capri</code>) build is included but has not been tested on a real G10.</li>
+    <li><strong>A phone whose bootloader can be unlocked.</strong> The bootloader is the small program that starts Android. Motorola unlocks it for free through its website, but it decides phone by phone, and phones sold by some carriers are refused.</li>
+    <li><strong>Android 12 firmware on the phone.</strong> Ours had Motorola's S1RTS32.41-20-16-1-9. If the phone is on an older Android version, update it from Motorola first.</li>
+    <li><strong>A USB-C cable, plugged straight into the computer.</strong> Not through a hub or dock.</li>
+    <li><strong>A big Linux computer to build the image.</strong> There is no ready-made download yet, so you build the image yourself. Ours had 59 GB of memory and still needed compressed swap. Plan for about 60 GB of memory, 300 GB or more of free disk, and a day of build time.</li>
+    <li><strong>Backups of anything on the phone.</strong> Installing erases it completely.</li>
+    <li><strong>For Feit or Smart Life lights:</strong> a free Tuya developer account at iot.tuya.com. Setting it up takes about 20 minutes, once.</li>
+  </ul>
+  <p>Check the phone's codename before you do anything else. Turn on <strong>USB debugging</strong> in the phone's Developer options, connect it, and run:</p>
+<pre><code>adb shell getprop ro.product.device</code></pre>
+  <p>It must print <code>nio</code>. We thought our phone was a Moto G10 until this command said otherwise. An image built for another model can leave a phone unable to start.</p>
+
+  <h2 id="get">4. How to get it</h2>
+  <h3>Build the image</h3>
+  <p>The build script is in the RobOS repository, in <code>infra/android/</code>. It downloads LineageOS (over 100 GB), builds the RobOS apps and start-up animation, and builds the image. On a computer with 64 GB of memory or less, first turn on compressed swap in memory. This lasts until you restart:</p>
+<pre><code>sudo modprobe zram &amp;&amp; sudo zramctl --size 48G --algorithm lz4 /dev/zram0 &amp;&amp; sudo mkswap /dev/zram0 &amp;&amp; sudo swapon --priority 100 /dev/zram0</code></pre>
+  <p>Then check the computer is ready, and build:</p>
+<pre><code>infra/android/robos-image.sh check
+infra/android/robos-image.sh all</code></pre>
+  <p>To build again later, <code>robos-image.sh start</code> runs the build as its own background service with a memory limit, and <code>infra/android/tools/progress.sh</code> shows a progress bar. The result is <code>~/android/robos/out/target/product/nio/lineage-24.0-…-UNOFFICIAL-nio.zip</code>, about 1 GB. Our first full build took about a day.</p>
+  <h3>Install it on the phone</h3>
+  <p>This erases the phone. The <a href="https://wiki.lineageos.org/devices/nio/install/variant2/">LineageOS install guide for the Moto G100</a> has every step with pictures; read it first. In short:</p>
+  <ol>
+    <li><strong>Unlock the bootloader</strong> with Motorola's official unlock-code process on its support website.</li>
+    <li><strong>Start the phone in its bootloader</strong> (hold Volume Down while turning it on) and flash three parts of the image from the build folder. On this phone, the recovery program lives in the boot partition.
+<pre><code>fastboot flash dtbo dtbo.img
+fastboot flash vendor_boot vendor_boot.img
+fastboot reboot bootloader
+fastboot flash boot boot.img</code></pre></li>
+    <li><strong>Start Recovery mode</strong> from the bootloader menu.</li>
+    <li><strong>Copy the partitions to the second slot.</strong> In recovery choose <strong>Apply update</strong>, then <strong>Apply from ADB</strong>, and send LineageOS's <code>copy-partitions</code> zip (ours was <code>copy-partitions-20261011-signed.zip</code>, linked from the install guide): <code>adb -d sideload copy-partitions-20261011-signed.zip</code>.</li>
+    <li><strong>Erase the phone</strong> with <strong>Factory reset</strong>, then <strong>Format data</strong>.</li>
+    <li><strong>Install RobOS:</strong> choose <strong>Apply from ADB</strong> again and run <code>adb -d sideload lineage-24.0-20261106-UNOFFICIAL-nio.zip</code> with your zip's name.</li>
+    <li><strong>Reboot.</strong> After Motorola's warning screen, the RobOS logo appears, then RobOS Home.</li>
+  </ol>
+  <div class="phone-note"><strong>If fastboot says <code>Protocol error</code>.</strong> Our first attempt failed with <code>reap_urb</code> errors because the phone was plugged into a USB dock. Plugging the cable straight into the laptop fixed it.</div>
+  <h3>Bring over your settings</h3>
+  <ol>
+    <li>On your RobOS computer, open <strong>Preferences → Config Sync &amp; Sharing</strong> and apply the sync to your Google Drive. A progress bar shows each file as it uploads.</li>
+    <li>On the phone, open <strong>Preferences</strong>, tap <strong>Sign in with Google</strong>, sign in in the browser, and come back to Preferences when Google says you are signed in.</li>
+    <li>Choose your backup. Enter its passphrase if it has one.</li>
+    <li>Under <strong>Use on this phone</strong>, tap <strong>Restore to this phone</strong> on the Smart Home card. On our phone it reported "Smart Home: 1 light added."</li>
+    <li>Open Smart Home. For Feit or Smart Life lights, tap <strong>Add Feit or Smart Life lights</strong> once and enter your Tuya Access ID and Access Secret.</li>
+  </ol>
+  <figure class="guide-shot"><a href="{{ '/assets/phone/desktop-config-sync-progress.jpg' | relative_url }}"><img src="{{ '/assets/phone/desktop-config-sync-progress.jpg' | relative_url }}" alt="RobOS Preferences on the desktop, Config Sync and Sharing, uploading 12 of 47 files to the vault, currently smart-lights.json" width="1200" height="499" loading="lazy"></a><figcaption>Config Sync on the RobOS computer, uploading the backup the phone restores from.</figcaption></figure>
+  <p>To return the phone to Motorola's own software, use Motorola's Rescue and Smart Assistant.</p>
+
+  <h2 id="limits">5. Honest limits</h2>
+  <ul>
+    <li><strong>Installing erases the phone</strong>, and it only works on a phone whose bootloader Motorola will unlock.</li>
+    <li><strong>It is a test build.</strong> It is a <code>userdebug</code> build signed with Android's public test keys. That suits your own phone; a phone you hand to someone else should be built with your own keys.</li>
+    <li><strong>Motorola shows its unlocked-bootloader warning</strong> every time the phone starts, before the RobOS logo.</li>
+    <li><strong>No Google Play.</strong> There are no Google Play services or Play Store. Install other apps from their makers' official downloads with <code>adb install</code>.</li>
+    <li><strong>The Recents button doesn't open an app switcher.</strong> The app switcher belongs to the stock launcher, which RobOS Home replaces. Navigation uses the three-button bar.</li>
+    <li><strong>Building needs a big computer:</strong> about 60 GB of memory (with compressed swap), 300 GB or more of disk, and a day of build time.</li>
+    <li><strong>Feit and Smart Life lights need a free Tuya cloud project</strong>, about 20 minutes to set up once. Each device fetches the light keys itself; they are never synced.</li>
+    <li><strong>Only Smart Home settings restore today.</strong> Preferences lists everything in the backup, but other categories stay on your computers until a phone app uses them.</li>
+    <li><strong>One phone model.</strong> The Moto G100 is the only phone this image has been built and installed on.</li>
+  </ul>
+  <p>For the full story of the build, including the memory problems it took to get through it, read <a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">how we built the RobOS phone</a>. See also <a href="{{ '/smart-home/' | relative_url }}">Smart Home</a>, <a href="{{ '/config-management/' | relative_url }}">Config Sync</a> and <a href="{{ '/tv/' | relative_url }}">RobOS on your TV</a>.</p>
+</article></div></section>
