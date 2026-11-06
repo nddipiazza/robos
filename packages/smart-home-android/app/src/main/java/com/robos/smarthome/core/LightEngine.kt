@@ -51,6 +51,23 @@ class FileStateStore(private val file: File) : StateStore {
     }
 }
 
+/** Desktop files carry fields the phone does not use, and may hold nulls where the phone has defaults. */
+private val DESKTOP_JSON = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+    explicitNulls = false
+}
+
+data class ImportSummary(val lightsAdded: Int, val lightsUpdated: Int, val roomsAdded: Int, val scenes: Int, val schedules: Int) {
+    fun describe(): String = buildList {
+        add("${lightsAdded} light${if (lightsAdded == 1) "" else "s"} added")
+        if (lightsUpdated > 0) add("$lightsUpdated updated")
+        if (roomsAdded > 0) add("$roomsAdded room${if (roomsAdded == 1) "" else "s"}")
+        add("$scenes scene${if (scenes == 1) "" else "s"}")
+        add("$schedules schedule${if (schedules == 1) "" else "s"}")
+    }.joinToString(", ") + "."
+}
+
 data class HuePairResult(
     val ok: Boolean,
     val message: String,
@@ -240,6 +257,59 @@ class LightEngine(
     suspend fun removeLight(lightId: String) {
         releaseFromFades(lightId)
         mutate { home -> home.copy(lights = home.lights.filter { it.id != lightId }) }
+    }
+
+    /**
+     * Adds the lights, rooms, scenes and schedules from a desktop smart-lights.json (restored
+     * by RobOS Preferences). Nothing on the phone is removed. A desktop light replaces the
+     * phone light with the same ID, or the same kind, address and device key.
+     */
+    suspend fun importDesktopHome(text: String): ImportSummary {
+        val desktop = DESKTOP_JSON.decodeFromString(HomeState.serializer(), text)
+        var summary = ImportSummary(0, 0, 0, 0, 0)
+        mutate { home ->
+            val rooms = home.rooms.toMutableList()
+            var newRooms = 0
+            for (room in desktop.rooms) {
+                val i = rooms.indexOfFirst { it.id == room.id }
+                if (i >= 0) rooms[i] = room else {
+                    rooms.add(rooms.size - (if (rooms.lastOrNull()?.id == UNASSIGNED_ROOM_ID) 1 else 0), room)
+                    newRooms += 1
+                }
+            }
+            val lights = home.lights.toMutableList()
+            var added = 0
+            var updated = 0
+            for (light in desktop.lights) {
+                val i = lights.indexOfFirst {
+                    it.id == light.id || (it.protocolId == light.protocolId && it.ip == light.ip && it.deviceKey == light.deviceKey)
+                }
+                val roomId = if (rooms.any { it.id == light.roomId }) light.roomId else UNASSIGNED_ROOM_ID
+                if (i >= 0) {
+                    val mine = lights[i]
+                    lights[i] = light.copy(
+                        id = mine.id,
+                        roomId = roomId,
+                        // Keys are not backed up, so a key the phone already has stays.
+                        deviceKey = light.deviceKey.ifEmpty { mine.deviceKey },
+                        tuyaVersion = light.tuyaVersion.ifEmpty { mine.tuyaVersion },
+                        tuyaSchema = light.tuyaSchema.ifEmpty { mine.tuyaSchema },
+                        lastError = null,
+                    )
+                    updated += 1
+                } else {
+                    lights += light.copy(roomId = roomId, lastError = null)
+                    added += 1
+                }
+            }
+            val scenes = home.customScenes.associateBy { it.id }.toMutableMap()
+            desktop.customScenes.forEach { scenes[it.id] = it.copy(isCustom = true) }
+            val schedules = home.schedules.associateBy { it.id }.toMutableMap()
+            desktop.schedules.forEach { schedules[it.id] = it }
+            summary = ImportSummary(added, updated, newRooms, desktop.customScenes.size, desktop.schedules.size)
+            home.copy(rooms = rooms, lights = lights, customScenes = scenes.values.toList(), schedules = schedules.values.toList())
+        }
+        return summary
     }
 
     suspend fun addRoom(name: String): Room {

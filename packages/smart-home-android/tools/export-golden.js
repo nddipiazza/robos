@@ -115,6 +115,19 @@ function tuyaGolden() {
   };
 }
 
+// What the desktop saves in smart-lights.json, for the phone's restore from a Drive backup.
+function desktopHome() {
+  const os = require('node:os');
+  const { sampleHome } = require('../../robos-lib/smart-light-engine.fixtures.cjs');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-golden-'));
+  const e = engine.createSmartLightEngine({ configDir: dir, apiPort: 0, skipLanNetwork: true, ...sampleHome() });
+  e.saveCustomScene({ name: 'Reading Nook', roomScope: 'all' });
+  e.stopScheduler();
+  const text = fs.readFileSync(path.join(dir, 'smart-lights.json'), 'utf8');
+  fs.rmSync(dir, { recursive: true, force: true });
+  return JSON.parse(text);
+}
+
 const golden = {
   colors: {
     hexToRgb: ['#00bcd4', '#abc', 'not-hex', '7c3aed'].map((input) => ({ input, output: engine.hexToRgb(input) })),
@@ -129,6 +142,7 @@ const golden = {
   regions: ['US', 'us', 'DE', 'KR', 'ZZ', 'USA', ''].map((input) => ({ input, output: thinq.regionForCountry(input) })),
   appliances: appliances.map((a) => ({ ...a, output: thinq.normalizeAppliance(a.device, a.state, a.error || null) })),
   tuya: tuyaGolden(),
+  desktopHome: desktopHome(),
 };
 
 const out = path.join(__dirname, '..', 'app', 'src', 'test', 'resources', 'golden.json');

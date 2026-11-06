@@ -52,6 +52,36 @@ class LightEngineTest {
     private suspend fun LightEngine.wiz(name: String = "Lamp", room: String = "bedroom", form: String = "bulb") =
         saveLight(null, name, room, "wiz-udp", form, "192.168.1.50", null, "")
 
+    /** The smart-lights.json the desktop engine wrote (tools/export-golden.js). */
+    private val desktopHome: String = kotlinx.serialization.json.Json.parseToJsonElement(
+        javaClass.classLoader!!.getResource("golden.json")!!.readText(),
+    ).let { (it as kotlinx.serialization.json.JsonObject)["desktopHome"].toString() }
+
+    @Test
+    fun restoringTheDesktopHomeAddsItsLightsAndKeepsThePhones() = runTest {
+        val e = engine()
+        val mine = e.saveLight(null, "Phone-only Lamp", UNASSIGNED_ROOM_ID, "lifx-udp", "bulb", "192.168.1.200", null, "")
+        // The same WiZ lamp the desktop has, added on the phone under another name.
+        val sofa = e.saveLight(null, "Sofa", UNASSIGNED_ROOM_ID, "wiz-udp", "lamp", "192.168.1.83", null, "")
+        val summary = e.importDesktopHome(desktopHome)
+        val home = e.state.value
+        // The phone already has the same five room IDs as the desktop, so only their names change.
+        assertEquals(ImportSummary(lightsAdded = 6, lightsUpdated = 1, roomsAdded = 0, scenes = 1, schedules = 3), summary)
+        assertEquals(8, home.lights.size)
+        assertTrue(home.lights.any { it.id == mine.id && it.name == "Phone-only Lamp" })
+        val restoredSofa = home.lights.single { it.ip == "192.168.1.83" }
+        assertEquals(sofa.id, restoredSofa.id)
+        assertEquals("Sofa Floor Lamp (Philips WiZ)", restoredSofa.name)
+        assertEquals("living-room", restoredSofa.roomId)
+        assertTrue(home.customScenes.single().isCustom)
+        assertEquals(UNASSIGNED_ROOM_ID, home.rooms.last().id)
+        assertTrue("restoring sends lights nothing", transport.sent.isEmpty())
+
+        // Restoring again changes nothing.
+        assertEquals(ImportSummary(0, 7, 0, 1, 3), e.importDesktopHome(desktopHome))
+        assertEquals(8, e.state.value.lights.size)
+    }
+
     @Test
     fun aNewPhoneStartsWithNoLightsAndNoSchedules() = runTest {
         val home = engine().state.value

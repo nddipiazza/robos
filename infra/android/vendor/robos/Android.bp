@@ -38,3 +38,17 @@ android_app_import {
         "androidx.window.sidecar",
     ],
 }
+
+android_app_import {
+    name: "RobOSPreferences",
+    apk: "prebuilt/RobOSPreferences.apk",
+    certificate: "testkey",
+    product_specific: true,
+    dex_preopt: {
+        enabled: true,
+    },
+    optional_uses_libs: [
+        "androidx.window.extensions",
+        "androidx.window.sidecar",
+    ],
+}

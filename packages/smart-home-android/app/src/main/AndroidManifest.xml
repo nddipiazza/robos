@@ -16,6 +16,11 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
 
+    <!-- Lets RobOS Preferences hand this app settings restored from Google Drive. -->
+    <permission
+        android:name="com.robos.permission.MANAGE_SETTINGS"
+        android:protectionLevel="signature" />
+
     <application
         android:name=".android.HomeApp"
         android:allowBackup="false"
@@ -42,6 +47,12 @@
             android:foregroundServiceType="connectedDevice" />
 
         <receiver android:name=".android.AlarmReceiver" android:exported="false" />
+
+        <provider
+            android:name=".android.SettingsProvider"
+            android:authorities="com.robos.smarthome.settings"
+            android:exported="true"
+            android:permission="com.robos.permission.MANAGE_SETTINGS" />
 
         <receiver android:name=".android.RearmReceiver" android:exported="false">
             <intent-filter>
