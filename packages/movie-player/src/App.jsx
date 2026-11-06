@@ -205,6 +205,16 @@ export default function App() {
 
     const cleanups = [];
     if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
+    // Watched on another computer: the history arrived through the RobOS backup vault.
+    if (window.robosAudio?.onTrackStatsUpdated) {
+      cleanups.push(window.robosAudio.onTrackStatsUpdated((changed) => {
+        if (!changed || !Object.keys(changed).length) return;
+        setStats(prev => ({ ...prev, ...changed }));
+        const from = Object.values(changed).map(e => e && e.syncedFrom).find(Boolean);
+        if (from) showStatus(`Watch history updated from ${from}`);
+      }));
+    }
+    if (window.robosAudio?.onPlaylistsUpdated) cleanups.push(window.robosAudio.onPlaylistsUpdated((list) => setPlaylists(list || [])));
 
     if (window.robosAudio?.onLibraryScanDiscovered) {
       cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {

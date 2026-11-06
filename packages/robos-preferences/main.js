@@ -289,8 +289,17 @@ app.whenReady().then(() => {
   });
 
   if (_debugServer) _debugServer.startDebugServer(win, 19116);
+
+  // On Linux, Desktop Manager keeps the backup vault synced in the background. Windows and
+  // macOS have no Desktop Manager, so Preferences does it while it is open (the media players
+  // sync their own library and watch history whenever they run).
+  if (process.platform !== 'linux' && !process.env.ROBOS_TEST) {
+    try { autoSync = configSyncAutoLib()?.startAutoSync({ log: m => console.log('[ConfigSync]', m) }) || null; } catch (error) { console.warn('[ConfigSync] background sync unavailable:', error.message); }
+  }
 });
 
+let autoSync = null;
+app.on('before-quit', () => { try { autoSync?.stop(); } catch {} });
 app.on('window-all-closed', () => app.quit());
 app.on('second-instance', () => {
   if (win && !win.isDestroyed?.()) {
@@ -485,7 +494,7 @@ function configSyncAutoLib() {
 
 // Errors keep their code (CONFLICTS, PASSPHRASE_REQUIRED, WRONG_KIND, ...) so the page can react.
 const CONFIG_SYNC_CALLS = [
-  'getStatus', 'connectVault', 'disconnectVault', 'setVaultCategories', 'setAutoSync', 'planVaultSync', 'applyVaultSync',
+  'getStatus', 'connectVault', 'connectGoogleDrive', 'findDriveVaults', 'disconnectVault', 'setVaultCategories', 'setAutoSync', 'planVaultSync', 'applyVaultSync',
   'previewShare', 'publishShare', 'updateShare', 'grantShare', 'forgetShare',
   'previewJoin', 'joinShare', 'checkSubscriptions', 'updateSubscription', 'leaveShare',
   'listRestorePoints', 'restoreRestorePoint',

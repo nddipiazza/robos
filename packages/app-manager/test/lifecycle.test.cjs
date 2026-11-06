@@ -106,6 +106,26 @@ test('install all and uninstall all work offline and retain personal data and th
   fs.mkdirSync(m.destination(m.installed.shared), { recursive: true });
   await m.uninstallAll(); assert.deepEqual(m.installed, {});
 });
+test('first launch installs the default apps (RobOS Preferences) once, and an uninstall is respected', async t => {
+  const { manager: m, make } = await fixture(t);
+  m.catalog.components.push(make('robos-preferences', 'app', ['shared']));
+  assert.deepEqual(m.pendingDefaults(), ['robos-preferences']);
+  assert.deepEqual(await m.installDefaults(), ['robos-preferences']);
+  assert.ok(m.installed['robos-preferences'] && m.installed.shared, 'installed with its shared components');
+  assert.deepEqual(await m.installDefaults(), [], 'nothing to do on the next launch');
+  await m.uninstall(['robos-preferences']);
+  assert.deepEqual(await m.installDefaults(), [], 'an app the person removed stays removed');
+  assert.equal(m.installed['robos-preferences'], undefined);
+});
+test('a default app installed before this release counts as done, and a catalog without it is skipped', async t => {
+  const { manager: m, make } = await fixture(t);
+  assert.deepEqual(await m.installDefaults(), [], 'not in the catalog: nothing installed');
+  m.catalog.components.push(make('robos-preferences', 'app', ['shared']));
+  await m.install(['robos-preferences']);
+  assert.deepEqual(m.pendingDefaults(), []);
+  await m.uninstall(['robos-preferences']);
+  assert.deepEqual(await m.installDefaults(), [], 'already had it once, so it is not reinstalled');
+});
 test('batch uninstall can be cancelled between apps and resumed without losing remaining state', async t => {
   const { manager: m } = await fixture(t); await m.install(['one', 'two']);
   const cancel = event => { if (event.phase === 'Uninstalling') m.cancel(); };

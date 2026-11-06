@@ -29,6 +29,26 @@ contextBridge.exposeInMainWorld('robosAudio', {
   getLyrics: (track) => ipcRenderer.invoke('audio:get-lyrics', track),
   getArtBase: () => ipcRenderer.invoke('audio:get-art-base'),
   getTrackStats: () => ipcRenderer.invoke('audio:get-track-stats'),
+  // Play / watch state that arrived from another computer (RobOS backup vault).
+  onTrackStatsUpdated: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:track-stats-updated', handler);
+    return () => ipcRenderer.removeListener('audio:track-stats-updated', handler);
+  },
+  onPlaylistsUpdated: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:playlists-updated', handler);
+    return () => ipcRenderer.removeListener('audio:playlists-updated', handler);
+  },
+  onMediaSyncStatus: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:media-sync-status', handler);
+    return () => ipcRenderer.removeListener('audio:media-sync-status', handler);
+  },
+  mediaSyncStatus: () => ipcRenderer.invoke('audio:media-sync-status'),
+  mediaSyncNow: () => ipcRenderer.invoke('audio:media-sync-now'),
+  watchStatus: (show) => ipcRenderer.invoke('audio:watch-status', show),
+  continueWatching: (limit) => ipcRenderer.invoke('audio:continue-watching', limit),
   recordPlay: (trackId) => ipcRenderer.invoke('audio:record-play', trackId),
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
   saveProgress: (trackId, progress) => ipcRenderer.invoke('audio:save-progress', { trackId, ...(progress || {}) }),

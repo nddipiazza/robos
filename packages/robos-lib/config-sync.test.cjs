@@ -90,8 +90,8 @@ test('vault: machine 1 seeds a folder vault, machine 2 does a full load, then ch
   const s2 = await sync.applyVaultSync({ homeDir: m2, strategy: 'use-vault' });
   assert.ok(s2.pulled.includes('config/git-projects.json'));
   assert.ok(s2.restorePointId);
-  assert.equal(read(m2, '.config/robos/git-projects.json').projects[0].localPath, `${m2}/source/petstore-api`, 'paths follow the new home');
-  assert.equal(read(m2, '.robos/kgraphs/core/package.jsonld')['@graph'][0].path, `${m2}/.robos/kgraphs/core`);
+  assert.equal(read(m2, '.config/robos/git-projects.json').projects[0].localPath, `${m2}/source/petstore-api`.replace(/\\/g, '/'), 'paths follow the new home');
+  assert.equal(read(m2, '.robos/kgraphs/core/package.jsonld')['@graph'][0].path, `${m2}/.robos/kgraphs/core`.replace(/\\/g, '/'));
   const accounts = read(m2, '.config/robos/cloud-accounts.json').accounts;
   assert.equal(accounts.find(a => a.id === 'google-alex').accessToken, 'tok-alex-m2', 'pulling keeps this machine sign-in');
   assert.equal(accounts.find(a => a.id === 'google-work').accessToken, 'tok-work', 'a sign-in that only exists here is kept');
@@ -213,7 +213,7 @@ test('shares over Google Drive: access is enforced, items merge by id, updates a
     assert.ok(onboard.requires.some(r => r.rel === 'config/db-manager-connections.json' && r.keys.includes('password')));
     await sync.joinShare({ homeDir: bob, ref: onboard.url, accountId: 'google-bob' });
     assert.deepEqual(read(bob, '.config/robos/git-projects.json').projects.map(p => p.id), ['mine', 'p1']);
-    assert.equal(read(bob, '.config/robos/git-projects.json').projects[1].localPath, `${bob}/source/petstore-api`);
+    assert.equal(read(bob, '.config/robos/git-projects.json').projects[1].localPath, `${bob}/source/petstore-api`.replace(/\\/g, '/'));
 
     // Alex adds a repository and republishes; Bob sees an update and applies it.
     const gp = read(alex, '.config/robos/git-projects.json');

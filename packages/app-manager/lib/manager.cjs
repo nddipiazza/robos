@@ -5,6 +5,10 @@ const { EventEmitter } = require('node:events');
 const { plan, validateCatalog, ORIGIN, packagesTag } = require('./catalog.cjs');
 const { download, extract } = require('./download.cjs');
 function atomic(file, value) { fs.writeFileSync(`${file}.tmp`, JSON.stringify(value, null, 2)); fs.renameSync(`${file}.tmp`, file); }
+// Apps every RobOS installation starts with. Each is installed automatically once, the first
+// time the catalog is available; if someone uninstalls one later, it stays uninstalled.
+// RobOS Preferences is where cloud backup (Google Drive) and sign-ins are set up.
+const DEFAULT_APPS = ['robos-preferences'];
 class Manager extends EventEmitter {
   constructor({ locations, native, version, platform = process.platform, arch = process.arch, downloader = download, extractor = extract, logger = { info() {}, error() {} } }) {
     super(); Object.assign(this, { locations, native, version, platform, arch, downloader, extractor, logger });
@@ -78,6 +82,28 @@ class Manager extends EventEmitter {
     return this.state();
   }
   cancel() { this.controller?.abort(); }
+  defaultsFile() { return path.join(this.locations.root, 'defaults.json'); }
+  /** Default apps not yet installed automatically on this computer (and present in the catalog). */
+  pendingDefaults(defaults = DEFAULT_APPS) {
+    let done = [];
+    try { done = JSON.parse(fs.readFileSync(this.defaultsFile(), 'utf8')).installed || []; } catch {}
+    // One that is already installed (by hand, or before this existed) counts as done.
+    const already = defaults.filter(id => this.installed[id] && !done.includes(id));
+    if (already.length) atomic(this.defaultsFile(), { installed: [...done, ...already] });
+    return defaults.filter(id => !done.includes(id) && !this.installed[id] && this.catalog?.components.some(item => item.id === id && item.kind === 'app'));
+  }
+  /** Installs the default apps once. Returns the ids it installed (empty when there was nothing to do). */
+  async installDefaults(defaults = DEFAULT_APPS) {
+    if (!this.catalog || this.busy) return [];
+    const ids = this.pendingDefaults(defaults);
+    if (!ids.length) return [];
+    await this.install(ids);
+    let done = [];
+    try { done = JSON.parse(fs.readFileSync(this.defaultsFile(), 'utf8')).installed || []; } catch {}
+    atomic(this.defaultsFile(), { installed: [...new Set([...done, ...ids])] });
+    this.logger.info({ ids }, 'Installed default apps');
+    return ids;
+  }
   async install(ids) {
     const { items } = this.preview(ids);
     return this.exclusive(async () => {
@@ -170,4 +196,4 @@ class Manager extends EventEmitter {
     });
   }
 }
-module.exports = { Manager };
+module.exports = { Manager, DEFAULT_APPS };

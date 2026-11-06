@@ -17,6 +17,8 @@ Use the same RobOS App Manager on Windows, Ubuntu GNOME and macOS. The base down
 5. In **Installed**, use **Uninstall all apps** to clear the entire library while keeping App Manager ready to install apps again. This also works offline.
 6. Choose **Uninstall RobOS** to remove App Manager and its entire managed library together. Personal settings are retained.
 
+The first time App Manager can read the app catalog it installs **RobOS Preferences** by itself and opens it on Config Sync, where **Back up to my Google Drive** keeps your settings, Audio Player and Movie Player libraries and watch history the same on every computer. It does this once: if you uninstall Preferences later, it stays uninstalled.
+
 Each installed app has its own native launcher. The table header checkbox selects visible rows; **Select all apps** selects the entire library even when search hides some apps. In the Installed view, **Select all installed** selects every installed app.
 
 On Ubuntu GNOME, install the `.deb` by double-clicking it or with `sudo apt install ./RobOS-*-Linux-amd64.deb`. App Manager pins itself to the dock on first launch, and later unpinning is respected. Each installed app appears in the app grid in a **RobOS Apps** folder and in search, and the dock shows it with its own icon while it runs.

@@ -182,6 +182,7 @@ plugins/
 | **`robos-blog`** | `/robos-blog`, `/blog` | Write and publish a new Engineering Blog post as its own page in `site/_blog/` with E2E screenshots, reproducible CLI commands, and commit references |
 | **`jrpg-parse-assets`** | `/jrpg-parse-assets` | Parse folders of classic JRPG resources a person collected into a kgraph with the JRPG schema, and report what is missing. |
 | **`jrpg-generate-art`** | `/jrpg-generate-art` | Generate maps, dungeons, battle backdrops, character sprites and menu screens for a parsed JRPG with a Gemini image model. |
+| **`media-watch-status`** | `/media-watch-status` | Where did we leave off? Show / season / episode watch status across all your computers (synced through the RobOS backup vault on Google Drive), movie status, continue watching, history, mark watched, play next episode. MCP server: `node packages/movie-player/bin/media-mcp.js` |
 | **`fix-media-metadata`** | `/fix-media-metadata` | Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB) |
 
 ---

@@ -94,6 +94,72 @@ castService.cloudStorage = cloud;
 const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
 const publicMetadata = new PublicMetadataService({ mediaLibrary, castService });
 
+// ── Cloud library & watch history ───────────────────────────────────────────
+// What you watch is also kept in ~/.config/robos/media-history/movie-player.json, keyed by
+// show/season/episode or movie, so another computer can tell where you left off. When
+// RobOS Preferences has a backup vault (for example on Google Drive), this player keeps
+// its folders, playlists and that history synced with it (robos-lib/media-cloud-sync).
+const mediaHistoryLib = requireShared('robos-lib/media-history');
+const mediaCloudSyncLib = requireShared('robos-lib/media-cloud-sync');
+let mediaSync = null;
+if (mediaHistoryLib) {
+  try {
+    mediaHistoryLib.attachHistory(mediaLibrary, { app: 'movie-player', onChange: () => mediaSync && mediaSync.notifyLocalChange() });
+  } catch (err) { console.warn('[MoviePlayer] Watch history unavailable:', err.message); }
+}
+
+function applyHistoryFromOtherComputers() {
+  if (typeof mediaLibrary.syncHistory !== 'function') return {};
+  const changed = mediaLibrary.syncHistory();
+  if (Object.keys(changed).length) sendToWindow('audio:track-stats-updated', changed);
+  return changed;
+}
+
+// Another computer changed the library or the watch history and it just arrived here.
+function onVaultPulled(rels) {
+  if (rels.some(r => r.startsWith('config/media-history/'))) applyHistoryFromOtherComputers();
+  if (rels.includes('config/movie-playlists.json')) {
+    mediaLibrary._loadPlaylists();
+    sendToWindow('audio:playlists-updated', mediaLibrary.getPlaylists());
+  }
+  if (rels.includes('config/movie-folders.json')) {
+    libraryFolders.folders = libraryFolders._load();
+    // A folder added on the other computer has no tracks here yet: index it now.
+    const fresh = libraryFolders.list().filter(f => f.syncEnabled !== false && f.trackCount === 0);
+    scanLocalFolders(fresh);
+    syncCloudFolders(fresh)
+      .catch(err => console.warn('[MoviePlayer] Indexing folders from the vault failed:', err.message))
+      .finally(() => sendToWindow('audio:folders-updated', folderState({ withLibrary: true })));
+  }
+}
+
+function watchQueries() {
+  if (!mediaHistoryLib) throw new Error('RobOS media history is not installed');
+  const entries = mediaLibrary.history ? mediaLibrary.history.entries() : mediaHistoryLib.readEntries('movie-player');
+  return { lib: mediaHistoryLib, entries, tracks: mediaLibrary.tracks };
+}
+
+// Marks a show, one season or one episode watched (or not) by name.
+function setShowWatched({ show, season = null, episode = null, watched = true } = {}) {
+  const { lib, tracks } = watchQueries();
+  if (!show) return { ok: false, error: 'Say which show' };
+  const found = lib.findEpisodeTracks(show, { tracks, season, episode });
+  if (!found.tracks.length) return { ok: false, error: `No episodes of "${show}"${season !== null ? ` season ${season}` : ''}${episode !== null ? ` episode ${episode}` : ''} are in this library.` };
+  const changed = mediaLibrary.setWatched(found.tracks.map(t => t.id), watched !== false);
+  sendToWindow('audio:track-stats-updated', changed);
+  return { ok: true, show: found.show, season, episode, watched: watched !== false, count: found.tracks.length };
+}
+
+async function playNextEpisode({ show, targetIp = null } = {}) {
+  const { lib, entries, tracks } = watchQueries();
+  const status = lib.showStatus(show, { entries, tracks });
+  if (!status.ok) return status;
+  const next = status.nextUp;
+  if (!next || !next.trackId) return { ok: false, error: status.finished ? `You're caught up on ${status.show}.` : `The next episode of ${status.show} is not in this library.`, status };
+  const result = await controlHandlers.play({ trackIds: [next.trackId], targetIp });
+  return { ...result, show: status.show, season: next.season, episode: next.episode, resume: next.resume, spoken: `Playing ${status.show} season ${next.season}, episode ${next.episode}${next.episodeTitle ? `, "${next.episodeTitle}"` : ''}${next.resume ? ', from where you left off' : ''}.` };
+}
+
 // Refresh cloud track stream URLs once CastService streamServer allocates its port,
 // and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
 function refreshCloudTrackUrls() {
@@ -228,6 +294,14 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
+  if (mediaCloudSyncLib && !process.env.ROBOS_MEDIA_SYNC_DISABLED) {
+    mediaSync = mediaCloudSyncLib.startMediaCloudSync({
+      category: 'movie-library',
+      onPulled: onVaultPulled,
+      onStatus: (s) => sendToWindow('audio:media-sync-status', s),
+      log: (m) => console.log('[MoviePlayer]', m),
+    });
+  }
   try {
     const tvMod = requireShared('robos-lib/tv-engine');
     if (tvMod && typeof tvMod.createTvEngine === 'function') {
@@ -251,6 +325,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   try { mediaLibrary.flush(); } catch {}
   try { controlServer.stop(); } catch {}
+  try { mediaSync && mediaSync.stop(); } catch {}
 });
 
 // ── Control API for other RobOS apps (lib/control-server.js) ────────────────
@@ -278,8 +353,7 @@ ipcMain.handle('audio:control-reply', async (_evt, { requestId, result } = {}) =
   return true;
 });
 
-const controlServer = createControlServer({
-  handlers: {
+const controlHandlers = {
     status: () => askRenderer('status'),
     speakClip: (clip) => askRenderer('speak-clip', clip, 60000),
     play: async (body = {}) => {
@@ -307,7 +381,34 @@ const controlServer = createControlServer({
     previous: (body = {}) => askRenderer('previous', { robosUser: body.robosUser || null }),
     pause: (body = {}) => askRenderer('pause', { robosUser: body.robosUser || null }),
     resume: (body = {}) => askRenderer('resume', { robosUser: body.robosUser || null }),
-  },
+};
+
+// Watch status: answered from the portable history and this library, no renderer needed.
+//   GET  /api/watch-status?show=<name>       where you left off, what is next, per-season counts
+//   GET  /api/movie-status?title=<name>      finished, in progress or not watched
+//   GET  /api/continue-watching[?limit=n]    in-progress shows and movies
+//   GET  /api/history[?kind=tv|movie&limit=n]
+//   GET  /api/shows                          every show with watched / in-progress counts
+//   GET  /api/media-sync                     last cloud sync of library and history
+//   POST /api/set-watched      { show, season?, episode?, watched? }
+//   POST /api/play-next-episode { show, targetIp? }
+//   POST /api/media-sync-now
+controlHandlers.queries = {
+  '/api/watch-status': (q) => { const { lib, entries, tracks } = watchQueries(); return lib.showStatus(q.show || q.q || '', { entries, tracks }); },
+  '/api/movie-status': (q) => { const { lib, entries, tracks } = watchQueries(); return lib.movieStatus(q.title || q.q || '', { entries, tracks }); },
+  '/api/continue-watching': (q) => { const { lib, entries } = watchQueries(); return { ok: true, items: lib.continueWatching(entries, { limit: Number(q.limit) || 10 }) }; },
+  '/api/history': (q) => { const { lib, entries } = watchQueries(); return { ok: true, items: lib.recentHistory(entries, { kind: q.kind || undefined, limit: Number(q.limit) || 20 }) }; },
+  '/api/shows': () => { const { lib, entries, tracks } = watchQueries(); return { ok: true, shows: lib.listShows({ entries, tracks }) }; },
+  '/api/media-sync': () => ({ ok: true, ...(mediaSync ? mediaSync.status() : { outcome: 'unavailable' }) }),
+};
+controlHandlers.actions = {
+  '/api/set-watched': (body) => setShowWatched(body),
+  '/api/play-next-episode': (body) => playNextEpisode(body),
+  '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
+};
+
+const controlServer = createControlServer({
+  handlers: controlHandlers,
   log: (entry) => console.warn('[AudioPlayer] control:', JSON.stringify(entry)),
 });
 
@@ -701,6 +802,7 @@ function scanLocalFolders(folders) {
   mediaLibrary.scanFoldersInBackground(paths, scanUpdates({
     onDone: () => {
       folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id));
+      applyHistoryFromOtherComputers();
       maybeAutoFetchPublicMetadata();
     },
   }));
@@ -725,6 +827,7 @@ async function syncCloudFolders(folders) {
     }
   }
   readCloudTagsInBackground();
+  applyHistoryFromOtherComputers();
   maybeAutoFetchPublicMetadata();
   return results;
 }
@@ -1117,6 +1220,12 @@ ipcMain.handle('audio:set-watched', async (_evt, { ids, watched } = {}) => {
   castService._saveStreamServerEndpoint();
   return changed;
 });
+
+// Watch status for the renderer (the same answers as the control API and the media MCP server).
+ipcMain.handle('audio:watch-status', async (_evt, show) => { try { return controlHandlers.queries['/api/watch-status']({ show }); } catch (err) { return { ok: false, error: err.message }; } });
+ipcMain.handle('audio:continue-watching', async (_evt, limit) => { try { return controlHandlers.queries['/api/continue-watching']({ limit }); } catch (err) { return { ok: false, error: err.message }; } });
+ipcMain.handle('audio:media-sync-status', async () => controlHandlers.queries['/api/media-sync']());
+ipcMain.handle('audio:media-sync-now', async () => controlHandlers.actions['/api/media-sync-now']());
 
 ipcMain.handle('audio:show-in-folder', async (_evt, filePath) => {
   if (!filePath || typeof filePath !== 'string' || !fs.existsSync(filePath)) return { ok: false };

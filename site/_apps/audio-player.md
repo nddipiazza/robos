@@ -161,7 +161,8 @@ The player automatically probes and connects to:
 - **App directory**: `packages/audio-player/`
 - **Playlists storage**: `~/.config/robos/audio-playlists.json`
 - **Library cache**: `~/.config/robos/audio-library.json`
-- **Play counts & loved tracks**: `~/.config/robos/audio-track-stats.json`
+- **Play counts & loved tracks**: `~/.config/robos/audio-track-stats.json` (this computer's track IDs)
+- **Play history (synced)**: `~/.config/robos/media-history/audio-player.json`, keyed by artist, album and title. With RobOS Preferences → Config Sync → **Back up to my Google Drive**, the player syncs it, its folders and its playlists with the vault itself, so another computer shows the same plays and loved songs. `GET /api/history` on the control API lists recent plays.
 - **Cover art cache**: `~/.cache/robos/audio-player/art/`
 - **Snapshot debug port**: `19196`
 - **Control API**: loopback port and token in `~/.config/robos/audio-player-control.json` (see *Control API for other RobOS apps*)

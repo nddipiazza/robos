@@ -15,6 +15,10 @@
 //   POST /api/pause        pauses the music
 //   POST /api/resume       resumes it
 //
+// Apps can add read-only queries (handlers.queries: { '/api/x': (query) => result }) and
+// actions (handlers.actions: { '/api/y': (body) => result }); the Movie Player answers
+// watch status this way (/api/watch-status?show=…, /api/continue-watching, …).
+//
 // The same module has the client side (createAudioPlayerClient) other apps use.
 
 const fs = require('node:fs');
@@ -111,8 +115,12 @@ function createControlServer({ handlers, configDir = defaultConfigDir(), port = 
   async function route(req) {
     const url = new URL(req.url, 'http://127.0.0.1');
     if (req.method === 'GET' && url.pathname === '/api/status') return [200, await handlers.status()];
+    const query = handlers.queries && Object.prototype.hasOwnProperty.call(handlers.queries, url.pathname) ? handlers.queries[url.pathname] : null;
+    if (req.method === 'GET' && query) return [200, await query(Object.fromEntries(url.searchParams))];
     if (req.method !== 'POST') return [404, { ok: false, error: 'Not found' }];
     const body = await readBody(req);
+    const action = handlers.actions && Object.prototype.hasOwnProperty.call(handlers.actions, url.pathname) ? handlers.actions[url.pathname] : null;
+    if (action) return [200, await action(body || {})];
     if (url.pathname === '/api/speak-clip') {
       const { clip, error } = await validateClip(body, { probe });
       if (error) return [400, { ok: false, error }];
@@ -237,6 +245,14 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     previous: (opts = {}) => call('POST', '/api/previous', opts),
     pause: (opts = {}) => call('POST', '/api/pause', opts),
     resume: (opts = {}) => call('POST', '/api/resume', opts),
+    // Movie Player watch status (null when the app is not running).
+    watchStatus: (show) => call('GET', `/api/watch-status?show=${encodeURIComponent(show || '')}`),
+    movieStatus: (title) => call('GET', `/api/movie-status?title=${encodeURIComponent(title || '')}`),
+    continueWatching: (limit = 10) => call('GET', `/api/continue-watching?limit=${Number(limit) || 10}`),
+    history: ({ kind = '', limit = 20 } = {}) => call('GET', `/api/history?kind=${encodeURIComponent(kind)}&limit=${Number(limit) || 20}`),
+    setWatched: (opts = {}) => call('POST', '/api/set-watched', opts),
+    playNextEpisode: (opts = {}) => call('POST', '/api/play-next-episode', opts),
+    mediaSyncNow: () => call('POST', '/api/media-sync-now', {}),
   };
 }
 
