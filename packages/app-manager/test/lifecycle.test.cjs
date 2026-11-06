@@ -274,6 +274,34 @@ test('Windows shortcuts point directly to app and its uninstall command', async 
   native.shortcut({ id: 'one', label: 'One App' });
   assert.equal(links.length, 2); assert.equal(links[0].args, '"--app=one"'); assert.equal(links[1].args, '"--remove=one"');
   assert.equal(links[0].appUserModelId, 'com.rowbose.robos.one');
+  assert.equal(path.basename(links[0].file), 'RobOS One App.lnk', 'found by typing "RobOS" in Start');
+  assert.equal(path.basename(links[1].file), 'Uninstall RobOS One App.lnk');
+  // A label that already says RobOS is kept, and an old shortcut name is replaced.
+  fs.mkdirSync(path.join(locations.shortcuts, 'two'), { recursive: true });
+  fs.writeFileSync(path.join(locations.shortcuts, 'two', 'Two.lnk'), '');
+  native.shortcut({ id: 'two', label: 'RobOS Two' });
+  assert.equal(path.basename(links[2].file), 'RobOS Two.lnk');
+  assert.ok(!fs.existsSync(path.join(locations.shortcuts, 'two', 'Two.lnk')));
+  assert.equal(links[0].icon, 'C:\\RobOS\\RobOS.exe', 'no icon.png: falls back to the executable');
+});
+test('Windows shortcuts and windows use the app\'s own icon, made from its icon.png', async t => {
+  const { locations } = await fixture(t), links = [];
+  const { pngToIco, ensureAppIco } = require('../lib/win-icon.cjs');
+  const appDir = path.join(locations.root, 'packages', 'one'); fs.mkdirSync(appDir, { recursive: true });
+  const png = fs.readFileSync(path.join(__dirname, '..', 'icon.png'));
+  fs.writeFileSync(path.join(appDir, 'icon.png'), png);
+  const native = integration({ locations, executable: 'C:\\RobOS\\RobOS.exe', packaged: true, platform: 'win32',
+    shell: { writeShortcutLink: (file, _mode, options) => { links.push({ file, ...options }); return true; } } });
+  native.shortcut({ id: 'one', label: 'One App' });
+  const ico = path.join(appDir, 'icon.ico');
+  assert.equal(links[0].icon, ico);
+  const bytes = fs.readFileSync(ico);
+  assert.deepEqual([bytes.readUInt16LE(0), bytes.readUInt16LE(2), bytes.readUInt16LE(4)], [0, 1, 1], 'an icon file with one image');
+  assert.equal(bytes[6], 0, '256 px is stored as 0');
+  assert.equal(bytes.readUInt32LE(14), png.length);
+  assert.ok(bytes.subarray(22).equals(png), 'the PNG is embedded unchanged');
+  assert.equal(ensureAppIco(path.join(locations.root, 'packages', 'missing')), null);
+  assert.throws(() => pngToIco(Buffer.from('not a png')), /Not a PNG/);
 });
 test('macOS apps get native application bundles with safely quoted launchers', async t => {
   const { locations } = await fixture(t);

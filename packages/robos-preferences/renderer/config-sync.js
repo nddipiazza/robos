@@ -36,11 +36,26 @@ function csAgo(iso) {
 }
 const csBytes = n => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`);
 
+// kind 'busy' shows a spinner and how long it has been waiting, so a slow Google Drive call
+// never looks frozen. Any later message replaces it.
+let csBusyTimer = null;
 function csSay(msg, kind = '') {
   const el = document.getElementById('cs-status');
   if (!el) return;
-  el.textContent = msg || '';
+  clearInterval(csBusyTimer); csBusyTimer = null;
   el.className = `section-status cs-status ${kind}`;
+  if (kind !== 'busy') { el.textContent = msg || ''; return; }
+  const started = Date.now();
+  el.innerHTML = `<span class="cs-spinner" aria-hidden="true"></span><span class="cs-busy-text"></span><span class="cs-muted cs-busy-time"></span>`;
+  el.querySelector('.cs-busy-text').textContent = msg;
+  const tick = () => {
+    const s = Math.round((Date.now() - started) / 1000);
+    const t = el.querySelector('.cs-busy-time');
+    if (!t) return clearInterval(csBusyTimer);
+    t.textContent = s < 3 ? '' : s < 20 ? ` still working, ${s}s` : ` still working, ${s}s (Google Drive can be slow the first time; this usually takes under a minute)`;
+  };
+  tick();
+  csBusyTimer = setInterval(tick, 1000);
 }
 
 function configSyncSection() {
@@ -267,7 +282,7 @@ function csPlanView(plan) {
 }
 
 async function csLoadPlan(strategy) {
-  csSay('Comparing this machine with the vault…');
+  csSay('Comparing this machine with the vault…', 'busy');
   const plan = await csCall('planVaultSync', { strategy });
   if (!plan.ok) {
     if (plan.code === 'PASSPHRASE_REQUIRED' || plan.code === 'WRONG_PASSPHRASE') csSay(`${plan.error} Disconnect and connect again with the passphrase.`, 'error');
@@ -283,7 +298,7 @@ async function csLoadPlan(strategy) {
 }
 
 async function csApply() {
-  csSay('Syncing…');
+  csSay('Syncing…', 'busy');
   const res = await csCall('applyVaultSync', { strategy: cs.strategy, resolutions: cs.resolutions });
   if (!res.ok) {
     if (res.code === 'REMOTE_CHANGED') { await csLoadPlan(cs.strategy); csSay(res.error, 'error'); return res; }
@@ -304,16 +319,18 @@ async function csApply() {
  */
 async function csUseGoogleDrive(button) {
   button.disabled = true;
+  const label = button.innerHTML;
+  button.innerHTML = '<span class="cs-spinner" aria-hidden="true"></span>Working…';
   try {
     if (!cs.accounts.length) {
-      csSay('Finish signing in with Google in your browser…');
+      csSay('Finish signing in with Google in your browser…', 'busy');
       const signIn = await window.api.startGoogleOAuth({});
       if (!signIn || signIn.ok === false) return csSay(signIn?.error || 'Google sign-in did not finish.', 'error');
       await csRefresh();
     }
     const accountId = cs.accounts[0]?.id;
     if (!accountId) return csSay('No Google account is signed in yet.', 'error');
-    csSay('Looking for your RobOS Config Vault in Google Drive…');
+    csSay('Looking for your RobOS Config Vault in Google Drive, then syncing this computer with it…', 'busy');
     const res = await csCall('connectGoogleDrive', { accountId });
     if (!res.ok) return csSay(res.code === 'PASSPHRASE_REQUIRED' ? 'Your vault has a passphrase. Use "Other ways" → Use an existing vault, paste its link and enter the passphrase.' : res.error, 'error');
     cs.plan = res.plan; cs.strategy = res.plan?.strategy || null; cs.resolutions = {};
@@ -328,7 +345,7 @@ async function csUseGoogleDrive(button) {
       csSay(`✓ Connected to ${res.vault.name}. Both computers have changes: choose how to combine them below.`, 'good');
     }
   } finally {
-    button.disabled = false;
+    if (button.isConnected) { button.disabled = false; button.innerHTML = label; }
   }
 }
 
@@ -357,7 +374,7 @@ const csBind = {
         const name = document.getElementById('cs-create-name').value.trim() || 'RobOS Config Vault';
         const create = kind === 'gdrive' ? { kind, accountId, name } : { kind: 'folder', path: document.getElementById('cs-create-path').value.trim(), name };
         if (kind === 'folder' && !create.path) return csSay('Enter the folder on this computer to keep the vault in.', 'error');
-        csSay('Creating the vault folder…');
+        csSay('Creating the vault folder…', 'busy');
         const res = await csCall('connectVault', { create, passphrase: document.getElementById('cs-create-pass').value || undefined });
         if (!res.ok) return csSay(res.error, 'error');
         cs.plan = res.plan; cs.strategy = res.plan.strategy; cs.resolutions = {};
@@ -367,7 +384,7 @@ const csBind = {
       document.getElementById('cs-connect').onclick = async () => {
         const accountId = document.getElementById('cs-connect-account').value.replace(/^gdrive:/, '') || undefined;
         const ref = document.getElementById('cs-connect-ref').value.trim();
-        csSay('Opening the vault…');
+        csSay('Opening the vault…', 'busy');
         const res = await csCall('connectVault', { ref, accountId, passphrase: document.getElementById('cs-connect-pass').value || undefined });
         if (!res.ok) {
           if (res.code === 'PASSPHRASE_REQUIRED') document.getElementById('cs-connect-pass').focus();

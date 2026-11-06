@@ -66,6 +66,8 @@ if (id) {
         for (const item of Object.values(manager.installed)) if (item.kind === 'app') native.writeEntry(item);
       }
       if (fromDiskImage) native.installManager(macBundle);
+      // Keep Start menu shortcuts current (names and target) across upgrades.
+      if (process.platform === 'win32') for (const item of Object.values(manager.installed)) if (item.kind === 'app') { try { native.shortcut(item); } catch (error) { logger.warn({ err: error, id: item.id }, 'Could not refresh Start menu shortcut'); } }
       ipcMain.handle('manager:state', () => manager.state());
       // First launch: install the default apps (RobOS Preferences) and open Preferences on
       // cloud backup, so connecting Google Drive is the first thing offered.
