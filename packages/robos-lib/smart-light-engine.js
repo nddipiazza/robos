@@ -26,6 +26,7 @@ const path = require('node:path');
 const os = require('node:os');
 const http = require('node:http');
 const net = require('node:net');
+const { dpsFromLight: tuyaDpsFromLight } = require('./tuya');
 const dgram = require('node:dgram');
 
 const DEFAULT_API_PORT = 19219;
@@ -154,6 +155,19 @@ const LIGHT_PROTOCOLS = [
     setupSteps: [
       'In Home Assistant → Profile → Long-Lived Access Tokens, create a token.',
       'Set the entity ID (e.g. `light.office_ceiling`) in the Device ID / Token field (`entity_id|token`).',
+    ],
+  },
+  {
+    id: 'tuya-lan',
+    name: 'Feit Electric / Smart Life / Tuya (TCP :6668)',
+    vendor: 'Feit Electric, Smart Life, Globe, Gosund, Treatlife, Merkury and other Tuya brands',
+    transport: 'TCP :6668 Tuya local protocol 3.3 to 3.5',
+    defaultPort: 6668,
+    capabilities: ['power', 'brightness', 'kelvin', 'rgb'],
+    setupSteps: [
+      'Pair the light in the Smart Life app.',
+      'Link that Smart Life account to a free Tuya cloud project, then use Add a light, Feit / Smart Life, to fetch each light\'s local key once.',
+      'After that, every command goes straight to the light on your network.',
     ],
   },
 ];
@@ -770,6 +784,18 @@ function buildProtocolCommand(light) {
       };
     }
 
+    case 'tuya-lan': {
+      const payload = { dps: tuyaDpsFromLight(light, light.tuyaSchema || 'v2') };
+      return {
+        protocolId: 'tuya-lan',
+        transport: 'TCP',
+        ip,
+        port: port || 6668,
+        payload,
+        cliPreview: `python3 -m tinytuya set ${light.deviceKey} ${ip} <local key> ${light.tuyaVersion || '3.3'} '${JSON.stringify(payload.dps)}'`,
+      };
+    }
+
     case 'ha-rest':
     default: {
       const [entityId, token] = String(light.deviceKey || 'light.studio_desk|').split('|');
@@ -1051,6 +1077,8 @@ function createSmartLightEngine(options = {}) {
     process.env.ROBOS_CONFIG_DIR ||
     path.join(process.env.HOME || os.homedir(), '.config', 'robos');
   const stateFile = path.join(configDir, 'smart-lights.json');
+  // Feit / Smart Life lights go through the Tuya service, which holds their keys.
+  const tuya = options.tuya || null;
   // A new home starts with no lights or schedules. Tests pass sample ones here.
   const initialLights = Array.isArray(options.initialLights) ? options.initialLights : [];
   const initialSchedules = Array.isArray(options.initialSchedules) ? options.initialSchedules : [];
@@ -1251,12 +1279,15 @@ function createSmartLightEngine(options = {}) {
 
     state.lights[idx] = next;
     const cmd = buildProtocolCommand(next);
-    const netRes = await dispatchLightCommandOnLan(cmd, skipLanNetwork);
+    const netRes = await sendToLight(next, cmd);
     const logEntry = recordProtocolEvent(next, cmd, netRes);
     saveState();
 
     return {
       ok: true,
+      // Whether the light took the change. UDP lights never confirm, so they count as sent.
+      delivered: netRes?.ok !== false,
+      error: netRes?.ok === false ? netRes.error || 'The light did not answer.' : null,
       light: {
         ...next,
         displayHex: next.colorMode === 'kelvin' ? kelvinToHex(next.kelvin) : next.colorHex,
@@ -1265,6 +1296,15 @@ function createSmartLightEngine(options = {}) {
       logEntry,
       overview: getOverview(),
     };
+  }
+
+  async function sendToLight(light, cmd) {
+    if (light.protocolId === 'tuya-lan') {
+      if (skipLanNetwork) return { ok: true, simulated: true };
+      if (!tuya) return { ok: false, error: 'Feit / Smart Life support is not available in this app.' };
+      return tuya.sendLight(light);
+    }
+    return dispatchLightCommandOnLan(cmd, skipLanNetwork);
   }
 
   async function setRoomState(roomId, patch = {}) {
@@ -1315,6 +1355,10 @@ function createSmartLightEngine(options = {}) {
       online: true,
       wattsMax: Number(input.wattsMax) || 12,
     };
+    if (proto.id === 'tuya-lan') {
+      lightObj.tuyaVersion = String(input.tuyaVersion || '3.3');
+      lightObj.tuyaSchema = input.tuyaSchema || 'v2';
+    }
 
     const existingIdx = state.lights.findIndex((l) => l.id === id);
     if (existingIdx >= 0) {
@@ -1322,9 +1366,12 @@ function createSmartLightEngine(options = {}) {
     } else {
       state.lights.push(lightObj);
     }
-    const cmd = buildProtocolCommand(lightObj);
-    const netRes = await dispatchLightCommandOnLan(cmd, skipLanNetwork);
-    recordProtocolEvent(lightObj, cmd, netRes);
+    // A light read from the network already shows its real state, so it is not changed.
+    if (!input.skipSend) {
+      const cmd = buildProtocolCommand(lightObj);
+      const netRes = await sendToLight(lightObj, cmd);
+      recordProtocolEvent(lightObj, cmd, netRes);
+    }
     saveState();
 
     return {
@@ -1332,6 +1379,51 @@ function createSmartLightEngine(options = {}) {
       light: lightObj,
       overview: getOverview(),
     };
+  }
+
+  /**
+   * Adds Feit / Smart Life lights found by the Tuya service. Each one is read over the
+   * network first, so it appears with its real on/off state, brightness and color.
+   */
+  async function addTuyaLights({ devices = [], roomId = null } = {}) {
+    if (!tuya) return { ok: false, error: 'Feit / Smart Life support is not available in this app.', overview: getOverview() };
+    const added = [];
+    const failed = [];
+    for (const device of devices) {
+      if (!device?.id) continue;
+      if (!device.ip) {
+        failed.push({ name: device.name, error: 'It was not found on this network. Turn it on and find your lights again.' });
+        continue;
+      }
+      let read;
+      try {
+        read = await tuya.readDevice({ id: device.id, ip: device.ip, version: device.version || '3.3' });
+      } catch (err) {
+        failed.push({ name: device.name, error: err.message });
+        continue;
+      }
+      const existing = state.lights.find((l) => l.protocolId === 'tuya-lan' && l.deviceKey === device.id);
+      const res = await addOrUpdateLight({
+        id: existing?.id,
+        name: existing?.name || device.name,
+        roomId: existing?.roomId || roomId || state.rooms[0]?.id,
+        protocolId: 'tuya-lan',
+        formFactor: device.kind === 'switch' ? 'lamp' : 'bulb',
+        ip: device.ip,
+        port: 6668,
+        deviceKey: device.id,
+        tuyaVersion: device.version || '3.3',
+        tuyaSchema: read.schema,
+        on: read.state.on ?? false,
+        brightness: read.state.brightness ?? 100,
+        kelvin: read.state.kelvin ?? 4000,
+        colorMode: read.state.colorMode || 'kelvin',
+        colorHex: read.state.colorHex || '#ffffff',
+        skipSend: true,
+      });
+      if (res.ok) added.push(res.light.name);
+    }
+    return { ok: added.length > 0, added, failed, overview: getOverview() };
   }
 
   function removeLight(lightId) {
@@ -2063,6 +2155,7 @@ function createSmartLightEngine(options = {}) {
     updateLight,
     setRoomState,
     addOrUpdateLight,
+    addTuyaLights,
     removeLight,
     applyScene,
     saveCustomScene,

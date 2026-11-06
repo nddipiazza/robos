@@ -757,3 +757,126 @@ body {
   margin: 0;
   text-align: right;
 }
+
+/* Add-light wizard */
+.wizard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px;
+  background: rgba(1, 4, 9, 0.72);
+  overflow-y: auto;
+}
+
+.wizard-overlay.hidden {
+  display: none;
+}
+
+.wizard {
+  width: min(720px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.wizard-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.wizard-head .card-title {
+  flex: 1;
+}
+
+.wizard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wizard-brands {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.wizard-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.wizard-brand:hover,
+.wizard-brand:focus-visible {
+  border-color: var(--accent);
+}
+
+.wizard-brand span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.wizard-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 22px;
+  line-height: 1.5;
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wizard-device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wizard-device {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wizard-device > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wizard-device.is-off {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error-text {
+  color: var(--danger);
+  line-height: 1.5;
+}
+
+.error-text.hidden {
+  display: none;
+}

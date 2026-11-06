@@ -20,6 +20,15 @@ function showBanner(msg) {
   banner.classList.remove('hidden');
 }
 
+/** Shows the result of changing a light, or why the light did not take it. */
+function reportLightChange(res, okMessage) {
+  if (res?.delivered === false) {
+    showBanner(`${res?.light?.name || 'The light'} did not change: ${res.error}`);
+    return;
+  }
+  showBanner(okMessage);
+}
+
 function getFixtureIcon(formFactor) {
   switch (formFactor) {
     case 'strip':
@@ -244,7 +253,11 @@ function renderLightsGrid(overview) {
       if (!light) return;
       const res = await window.robos.updateLight(id, { on: !light.on });
       if (res?.overview) renderAll(res.overview);
-      showBanner(`${light.name} turned ${!light.on ? 'ON' : 'OFF'} (${res?.command?.transport || 'LAN'}).`);
+      if (res?.delivered === false) {
+        showBanner(`${light.name} did not change: ${res.error}`);
+        return;
+      }
+      showBanner(`${light.name} turned ${!light.on ? 'on' : 'off'}.`);
     });
   });
 
@@ -263,7 +276,7 @@ function renderLightsGrid(overview) {
       const val = Number(input.value);
       const res = await window.robos.updateLight(id, { brightness: val, on: true });
       if (res?.overview) renderAll(res.overview);
-      showBanner(`Updated brightness to ${val}% on ${res?.light?.name || id}.`);
+      reportLightChange(res, `Updated brightness to ${val}% on ${res?.light?.name || id}.`);
     });
   });
 
@@ -273,7 +286,7 @@ function renderLightsGrid(overview) {
       const val = Number(input.value);
       const res = await window.robos.updateLight(id, { kelvin: val, colorMode: 'kelvin', on: true });
       if (res?.overview) renderAll(res.overview);
-      showBanner(`Updated color temperature to ${val}K on ${res?.light?.name || id}.`);
+      reportLightChange(res, `Updated color temperature to ${val}K on ${res?.light?.name || id}.`);
     });
   });
 
@@ -283,7 +296,7 @@ function renderLightsGrid(overview) {
       const hex = btn.getAttribute('data-swatch-hex');
       const res = await window.robos.updateLight(id, { colorHex: hex, colorMode: 'rgb', on: true });
       if (res?.overview) renderAll(res.overview);
-      showBanner(`Applied RGB ${hex} to ${res?.light?.name || id}.`);
+      reportLightChange(res, `Applied RGB ${hex} to ${res?.light?.name || id}.`);
     });
   });
 
@@ -293,7 +306,7 @@ function renderLightsGrid(overview) {
       const hex = input.value;
       const res = await window.robos.updateLight(id, { colorHex: hex, colorMode: 'rgb', on: true });
       if (res?.overview) renderAll(res.overview);
-      showBanner(`Applied custom RGB ${hex} to ${res?.light?.name || id}.`);
+      reportLightChange(res, `Applied custom RGB ${hex} to ${res?.light?.name || id}.`);
     });
   });
 
@@ -303,7 +316,7 @@ function renderLightsGrid(overview) {
       const fx = sel.value;
       const res = await window.robos.updateLight(id, { effect: fx, on: true });
       if (res?.overview) renderAll(res.overview);
-      showBanner(`Activated "${fx}" effect on ${res?.light?.name || id}.`);
+      reportLightChange(res, `Activated "${fx}" effect on ${res?.light?.name || id}.`);
     });
   });
 }
@@ -671,32 +684,6 @@ function bindStaticEvents() {
     const res = await window.robos.setRoomState(selectedRoomId, { on: true, brightness: 25 });
     if (res?.overview) renderAll(res.overview);
     showBanner('Dimmed active room selection to 25%.');
-  });
-
-  // Add Light
-  document.getElementById('btn-add-light')?.addEventListener('click', async () => {
-    const name = document.getElementById('input-light-name')?.value?.trim();
-    const roomId = document.getElementById('select-light-room')?.value || 'studio';
-    const formFactor = document.getElementById('select-light-form')?.value || 'bulb';
-    const protocolId = document.getElementById('select-light-protocol')?.value || 'wiz-udp';
-    const ip = document.getElementById('input-light-ip')?.value?.trim() || '192.168.1.92';
-    const deviceKey = document.getElementById('input-light-key')?.value?.trim() || '';
-
-    const res = await window.robos.addOrUpdateLight({
-      name,
-      roomId,
-      formFactor,
-      protocolId,
-      ip,
-      deviceKey,
-    });
-    if (!res?.ok) {
-      showBanner(res?.error || 'Could not pair light.');
-      return;
-    }
-    document.getElementById('input-light-name').value = '';
-    renderAll(res.overview);
-    showBanner(`Paired "${res.light.name}" (${res.light.protocolId} at ${res.light.ip}:${res.light.port}).`);
   });
 
   // Pair Hue Bridge

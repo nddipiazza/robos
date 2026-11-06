@@ -81,45 +81,8 @@
                 <h2 class="card-title">Add a light</h2>
                 <span class="badge" id="paired-count-badge">7 Lights</span>
               </div>
-              <p class="muted-text">Add any local Wi-Fi or Zigbee Bridge light by IP. Zero cloud accounts required.</p>
-              <div class="form-stack">
-                <div class="field">
-                  <label for="input-light-name">Light Name</label>
-                  <input type="text" id="input-light-name" class="input" placeholder="e.g. Bookshelf Accent Strip" />
-                </div>
-                <div class="form-row-2">
-                  <div class="field">
-                    <label for="select-light-room">Room / Zone</label>
-                    <select id="select-light-room" class="select"></select>
-                  </div>
-                  <div class="field">
-                    <label for="select-light-form">Fixture Type</label>
-                    <select id="select-light-form" class="select">
-                      <option value="bulb">A19 / BR30 Bulb</option>
-                      <option value="strip">Addressable LED Strip</option>
-                      <option value="bar">Light Bar / Sconce</option>
-                      <option value="panel">Studio Key Light Panel</option>
-                      <option value="lamp">Floor / Desk Lamp</option>
-                      <option value="pendant">Ceiling Pendant</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="select-light-protocol">LAN Protocol</label>
-                  <select id="select-light-protocol" class="select"></select>
-                </div>
-                <div class="form-row-2">
-                  <div class="field">
-                    <label for="input-light-ip">LAN IP Address</label>
-                    <input type="text" id="input-light-ip" class="input" placeholder="e.g. 192.168.1.92" />
-                  </div>
-                  <div class="field">
-                    <label for="input-light-key">Light ID / Bridge Key (Optional)</label>
-                    <input type="text" id="input-light-key" class="input" placeholder="e.g. 1 or entity_id" />
-                  </div>
-                </div>
-                <button type="button" class="btn btn-primary" id="btn-add-light">Pair &amp; Save Light</button>
-              </div>
+              <p class="muted-text">Choose the brand of your light. The steps for that brand walk you through adding it.</p>
+              <button type="button" class="btn btn-primary" id="btn-open-add-wizard">Add a light</button>
             </div>
 
             <div class="card">
@@ -375,6 +338,17 @@
       </section>
     </main>
   </div>
+  <div id="add-wizard" class="wizard-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="wizard-title">
+    <div class="wizard">
+      <div class="wizard-head">
+        <button type="button" class="btn btn-sm hidden" id="wizard-back">Back</button>
+        <h2 id="wizard-title" class="card-title">Add a light</h2>
+        <button type="button" class="btn btn-sm" id="wizard-close">Close</button>
+      </div>
+      <div id="wizard-body" class="wizard-body"></div>
+    </div>
+  </div>
   <script src="app.js"></script>
+  <script src="add-wizard.js"></script>
 </body>
 </html>
