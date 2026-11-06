@@ -38,14 +38,18 @@ schema_type: TechArticle
     <li><strong>ONVIF camera:</strong> enable ONVIF in the camera's settings, then use <strong>Find cameras</strong> on its local network. Select the camera, supply its credentials, and choose a stream profile.</li>
     <li><strong>Known stream:</strong> choose <strong>Add camera → Stream address</strong> for an RTSP, RTSPS or MJPEG HTTP address. Use <strong>Test connection</strong> to see a frame before saving.</li>
   </ol>
+  <figure class="guide-shot">
+    <a href="{{ '/assets/camera-watch/add-camera.gif' | relative_url }}"><img src="{{ '/assets/camera-watch/add-camera.gif' | relative_url }}" alt="Animated Camera Watch walkthrough: Add camera, choose Stream address, enter a name and address, test the connection, save, and see the camera live" width="1056" height="688" loading="lazy"></a>
+    <figcaption>Adding a camera in the actual app: enter the stream address, test the picture, then save. This local recording uses a live MJPEG demonstration stream with a moving test pattern.</figcaption>
+  </figure>
   <p>The <strong>Live</strong> tab shows the cameras in a grid. Click a tile for a larger view and camera controls; double-click for full screen. Start with the camera live on its own computer before sharing it.</p>
 
   <h2 id="share">2. Invite another RobOS computer</h2>
   <p>You can build a small camera network around the views you actually need: a front entrance for a neighbour, the workshop for a colleague, or a desk webcam on a second computer. Create separate invites for separate recipients so you can revoke each invite independently.</p>
-  <div class="camera-photo-grid">
-    <figure class="guide-shot"><a href="{{ '/assets/camera-watch/desk-camera-in-action.jpg' | relative_url }}"><img src="{{ '/assets/camera-watch/desk-camera-in-action.jpg' | relative_url }}" alt="Photograph of a desk camera live view on a monitor, with the person holding a phone in front of the screen" width="3072" height="4080" loading="lazy"></a><figcaption>The physical setup in action. The phone is taking a photograph; this guide's receiving client is Camera Watch on another RobOS computer.</figcaption></figure>
-    <figure class="guide-shot"><a href="{{ '/assets/camera-watch/share-camera-invite-redacted.png' | relative_url }}"><img src="{{ '/assets/camera-watch/share-camera-invite-redacted.png' | relative_url }}" alt="Camera Watch sharing dialog with Desk webcam selected, an invite for Viewer test machine, and Stop sharing and Revoke controls; invite hidden" width="1088" height="1445" loading="lazy"></a><figcaption>Select a camera and create an invite. Supplied photograph edited with AI to obscure the invite token; it is not a credential you can copy.</figcaption></figure>
-  </div>
+  <figure class="guide-shot">
+    <a href="{{ '/assets/camera-watch/share-camera-dialog.png' | relative_url }}"><img src="{{ '/assets/camera-watch/share-camera-dialog.png' | relative_url }}" alt="Share cameras with another RobOS dialog: Demo camera selected, Workshop viewer entered as the recipient label, different-network option checked, and Create invite ready" width="960" height="740" loading="lazy"></a>
+    <figcaption>The Share dialog in Camera Watch. Select the camera, label the recipient, and choose whether they are on another network. Captured with the demonstration camera before creating an invite; no access token is shown.</figcaption>
+  </figure>
   <ol>
     <li>On the camera computer, click <strong>Share</strong> and tick only the cameras you want to share.</li>
     <li>Enter a useful label under <strong>Who is this for?</strong> The label helps you recognise the invite later; it does not verify the recipient's identity.</li>
@@ -53,6 +57,10 @@ schema_type: TechArticle
     <li>Click <strong>Create invite</strong>, then <strong>Copy invite</strong>. Send the <code>robos-cam://…</code> link privately. Anyone holding it can enrol and watch those cameras until access is revoked.</li>
     <li>On the receiving RobOS computer, choose <strong>Add camera → Shared with me</strong>. Paste the invite, wait for the camera preview, and save. Camera Watch joins the private network and adds the shared views.</li>
   </ol>
+  <div class="camera-photo-grid">
+    <figure class="guide-shot"><a href="{{ '/assets/camera-watch/desk-camera-in-action.jpg' | relative_url }}"><img src="{{ '/assets/camera-watch/desk-camera-in-action.jpg' | relative_url }}" alt="Photograph of a desk camera live view on a monitor, with the person holding a phone in front of the screen" width="3072" height="4080" loading="lazy"></a><figcaption>The physical setup in action. The phone is taking a photograph; this guide's receiving client is Camera Watch on another RobOS computer.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/camera-watch/share-camera-invite-redacted.png' | relative_url }}"><img src="{{ '/assets/camera-watch/share-camera-invite-redacted.png' | relative_url }}" alt="Camera Watch sharing dialog with Desk webcam selected, an invite for Viewer test machine, and Stop sharing and Revoke controls; invite hidden" width="1088" height="1445" loading="lazy"></a><figcaption>Select a camera and create an invite. Supplied photograph edited with AI to obscure the invite token; it is not a credential you can copy.</figcaption></figure>
+  </div>
   <div class="camera-note"><strong>Same network or different networks?</strong> The live run shown here used two computers on the same LAN. The different-network option uses the built-in relay to carry the encrypted connection; these photos do not demonstrate an internet or cellular test.</div>
 
   <h2 id="permissions">3. Give access to a view, with clear boundaries</h2>
