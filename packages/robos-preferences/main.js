@@ -282,6 +282,11 @@ app.whenReady().then(() => {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
+  // Help links (Google Cloud Console, rclone.org) open in the system browser, not in a new window.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https:\/\//i.test(url)) require('electron').shell.openExternal(url).catch(() => {});
+    return { action: 'deny' };
+  });
 
   win.once('ready-to-show', () => {
     win.show();
