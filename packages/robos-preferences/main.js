@@ -505,9 +505,14 @@ const CONFIG_SYNC_CALLS = [
   'listRestorePoints', 'restoreRestorePoint',
 ];
 for (const name of CONFIG_SYNC_CALLS) {
-  ipcMain.handle(`config-sync:${name}`, async (_, opts) => {
+  ipcMain.handle(`config-sync:${name}`, async (event, opts) => {
     try {
-      const result = await configSyncLib()[name](opts || {});
+      // Syncs report each file as they go, so the page can show a progress bar.
+      const callOpts = { ...(opts || {}) };
+      if (name === 'applyVaultSync' || name === 'connectGoogleDrive') {
+        callOpts.onProgress = p => { try { if (!event.sender.isDestroyed()) event.sender.send('config-sync:progress', p); } catch {} };
+      }
+      const result = await configSyncLib()[name](callOpts);
       // A sync from here settles what background sync was waiting on ("Config Sync needs you").
       if (name === 'applyVaultSync') { try { configSyncAutoLib()?.clearAttention({}); } catch {} }
       return Array.isArray(result) ? { ok: true, items: result } : result;

@@ -376,3 +376,32 @@ test('device keys and settings backups never go to a vault', () => {
   assert.equal(isExcluded('config/smart-lights.json.bak-20261106-134254'), true);
   assert.equal(isExcluded('config/smart-lights.json'), false);
 });
+
+test('a sync reports what it is doing, file by file, for the progress bar', async () => {
+  const vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vault-'));
+  const m1 = makeHome('p1');
+  for (const [rel, c] of Object.entries(alexFiles(m1))) { fs.mkdirSync(path.dirname(path.join(m1, rel)), { recursive: true }); fs.writeFileSync(path.join(m1, rel), typeof c === 'string' ? c : JSON.stringify(c, null, 2)); }
+  await sync.connectVault({ homeDir: m1, create: { kind: 'folder', path: vaultDir, name: 'v' } });
+  const up = [];
+  const s1 = await sync.applyVaultSync({ homeDir: m1, strategy: 'use-local', onProgress: p => up.push(p) });
+  assert.equal(up[0].stage, 'compare');
+  const uploads = up.filter(p => p.stage === 'upload');
+  assert.ok(uploads.length > 1);
+  assert.equal(uploads.at(-1).done, uploads.at(-1).total, 'the last upload event says all are done');
+  assert.ok(uploads.some(p => p.rel === 'config/settings.json'));
+  assert.ok(uploads.at(-1).total <= s1.pushed.length);
+  assert.equal(up.at(-1).stage, 'finish');
+
+  const m2 = makeHome('p2');
+  await sync.connectVault({ homeDir: m2, ref: path.join(vaultDir, 'v') });
+  const down = [];
+  const s2 = await sync.applyVaultSync({ homeDir: m2, strategy: 'use-vault', onProgress: p => down.push(p) });
+  const downloads = down.filter(p => p.stage === 'download');
+  assert.equal(downloads.at(-1).total, s2.pulled.length);
+  assert.ok(downloads.every((p, i) => i === 0 || p.done >= downloads[i - 1].done), 'counts only go up');
+
+  // A progress callback that throws never breaks the sync.
+  fs.writeFileSync(path.join(m1, '.config/robos/settings.json'), JSON.stringify({ theme: 'light' }));
+  const s3 = await sync.applyVaultSync({ homeDir: m1, onProgress: () => { throw new Error('ui gone'); } });
+  assert.ok(s3.pushed.includes('config/settings.json'));
+});

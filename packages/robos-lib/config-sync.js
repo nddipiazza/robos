@@ -422,15 +422,25 @@ async function writeManifest(backend, manifest, key, kdf) {
 
 function newKdf() { return { ...KDF, salt: crypto.randomBytes(16).toString('base64') }; }
 
-/** Uploads the bodies the remote does not have yet. */
-async function uploadBlobs(backend, entries, key) {
+/** Uploads the bodies the remote does not have yet. `progress(done, total, rel)` follows each file. */
+async function uploadBlobs(backend, entries, key, progress = () => {}) {
   const have = await backend.listBlobs();
+  const todo = entries.filter(e => !have.has(blobIdFor(e.sha, key)));
   let uploaded = 0;
-  for (const e of entries) {
+  for (const e of todo) {
     const id = blobIdFor(e.sha, key);
-    if (!have.has(id)) { await backend.writeBlob(id, packBlob(e.buf, key)); have.add(id); uploaded++; }
+    if (have.has(id)) continue; // Two files with the same contents share one body.
+    progress(uploaded, todo.length, e.rel);
+    await backend.writeBlob(id, packBlob(e.buf, key)); have.add(id); uploaded++;
   }
+  progress(todo.length, todo.length, null);
   return uploaded;
+}
+
+/** Calls opts.onProgress({ stage, done, total, rel }) and never lets it break a sync. */
+function progressOf(opts) {
+  const fn = typeof opts?.onProgress === 'function' ? opts.onProgress : null;
+  return (stage, done = 0, total = 0, rel = null) => { if (fn) try { fn({ stage, done, total, rel }); } catch {} };
 }
 
 async function fetchBlob(backend, entry, key) {
@@ -679,7 +689,7 @@ async function connectGoogleDrive(opts = {}) {
   const plan = res.plan;
   const decided = plan.recommended === 'use-local' || plan.recommended === 'use-vault' || !plan.actions.some(a => a.action === 'conflict');
   let synced = null;
-  if (opts.autoFirstSync !== false && decided) synced = await applyVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl, strategy: plan.recommended || undefined });
+  if (opts.autoFirstSync !== false && decided) synced = await applyVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl, strategy: plan.recommended || undefined, onProgress: opts.onProgress });
   return { ok: true, created: !pick, foundVaults: found.length, vault: getVault({ homeDir: home }), plan: synced ? null : plan, synced };
 }
 
@@ -812,6 +822,8 @@ async function applyVaultSyncLocked(opts) {
   const state = loadState(home);
   if (!state.vault) throw new ConfigSyncError('Connect a backup vault first.', 'NO_VAULT');
   const v = state.vault;
+  const report = progressOf(opts);
+  report('compare');
   const plan = await planVaultSync(opts);
   const resolutions = opts.resolutions || {};
   const unresolved = plan.actions.filter(a => a.action === 'conflict' && !['local', 'remote'].includes(resolutions[a.rel]));
@@ -840,7 +852,12 @@ async function applyVaultSyncLocked(opts) {
 
   // Download everything first so a network failure leaves local files untouched.
   const incoming = new Map();
-  for (const s of [...pulls, ...merges]) incoming.set(s.rel, await fetchBlob(backend, before.files[s.rel], key));
+  const downloads = [...pulls, ...merges];
+  for (const [i, s] of downloads.entries()) {
+    report('download', i, downloads.length, s.rel);
+    incoming.set(s.rel, await fetchBlob(backend, before.files[s.rel], key));
+  }
+  if (downloads.length) report('download', downloads.length, downloads.length);
 
   let restorePointId = null;
   if (pulls.length || merges.length || localDeletes.length) {
@@ -867,7 +884,8 @@ async function applyVaultSyncLocked(opts) {
   let after = before;
   if (pushes.length || remoteDeletes.length) {
     const entries = pushes.map(s => local.files.get(s.rel));
-    await uploadBlobs(backend, entries, key);
+    await uploadBlobs(backend, entries, key, (done, total, rel) => report('upload', done, total, rel));
+    report('finish');
     after = JSON.parse(JSON.stringify(before));
     const by = machineName();
     for (const e of entries) after.files[e.rel] = { sha: e.sha, blob: blobIdFor(e.sha, key), size: e.size, category: e.category, mtime: e.mtime, by };
