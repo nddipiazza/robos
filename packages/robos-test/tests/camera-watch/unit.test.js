@@ -590,3 +590,135 @@ describe('ONVIF with the real onvif package', { skip: !onvifInstalled && 'onvif 
     }
   });
 });
+
+describe('sharing cameras between RobOS machines over the private network', () => {
+  const { decodeInvite } = require(path.join(appDir, 'lib', 'camera-invite'));
+  const loadMesh = () => require(path.resolve(appDir, '..', 'robos-lib', 'app-mesh-engine'));
+  const net = require('node:net');
+
+  const portFree = (port) => new Promise((resolve) => {
+    const s = net.createServer();
+    s.once('error', () => resolve(false));
+    s.listen(port, '127.0.0.1', () => s.close(() => resolve(true)));
+  });
+
+  function readFirstJpeg(url) {
+    return new Promise((resolve, reject) => {
+      const req = http.get(url, (res) => {
+        if (res.statusCode !== 200) { res.resume(); resolve({ status: res.statusCode }); return; }
+        let buf = Buffer.alloc(0);
+        res.on('data', (c) => {
+          buf = Buffer.concat([buf, c]);
+          const end = buf.indexOf(Buffer.from([0xff, 0xd9]));
+          if (end > 0) { req.destroy(); resolve({ status: 200, contentType: res.headers['content-type'], jpeg: buf.subarray(buf.indexOf(Buffer.from([0xff, 0xd8])), end + 2) }); }
+        });
+      });
+      req.setTimeout(10000, () => req.destroy(new Error('timed out')));
+      req.on('error', reject);
+    });
+  }
+
+  it('shares one camera with an invite; the viewer watches it through a mesh tunnel and loses it when the invite is revoked', async (t) => {
+    if (!(await portFree(19221))) { t.skip('port 19221 is in use (is Camera Watch sharing on this machine?)'); return; }
+    const sharerSpawn = makeFakeSpawn();
+    const viewerSpawn = makeFakeSpawn();
+    const sharer = createCameraManager({ configDir: path.join(tmpHome, 'share-a'), homeDir: tmpHome, spawnFn: sharerSpawn, loadMesh });
+    const viewer = createCameraManager({ configDir: path.join(tmpHome, 'share-b'), homeDir: tmpHome, spawnFn: viewerSpawn, loadMesh });
+    sharer.store.saveSettings({ recordingsDir: path.join(tmpHome, 'share-a-rec') });
+    viewer.store.saveSettings({ recordingsDir: path.join(tmpHome, 'share-b-rec') });
+    await sharer.init();
+    await viewer.init();
+    let pump = null;
+    try {
+      const door = await sharer.saveCamera({ name: 'Front door', kind: 'url', streamUrl: 'rtsp://10.0.0.9/live' });
+      const garage = await sharer.saveCamera({ name: 'Garage', kind: 'url', streamUrl: 'rtsp://10.0.0.10/live' });
+      await wait(30);
+      const live = sharerSpawn.procs.find((p) => p.args.includes('rtsp://10.0.0.9/live'));
+      let n = 0;
+      pump = setInterval(() => live.proc.stdout.write(jpeg(++n % 200)), 50);
+      await wait(120);
+      assert.strictEqual(sharer.listCameras().find((c) => c.id === door.id).status.state, 'live');
+
+      // Share only the front door.
+      const share = await sharer.createShareInvite({ cameraIds: [door.id], label: 'For my neighbour' });
+      assert.match(share.invite, /^robos-cam:\/\//);
+      assert.strictEqual(share.sameNetworkOnly, true);
+      const inv = decodeInvite(share.invite);
+      assert.deepStrictEqual(inv.cameras.map((c) => c.name), ['Front door']);
+      assert.ok(!JSON.stringify(sharer.listCameras()).includes(inv.cameras[0].secret), 'share secrets never go to the window');
+
+      // The viewer sees what is in the invite, then adds it.
+      const preview = viewer.previewInvite(share.invite);
+      assert.deepStrictEqual(preview.cameras.map((c) => [c.name, c.added]), [['Front door', false]]);
+      const added = await viewer.addSharedCameras(share.invite);
+      assert.strictEqual(added.length, 1);
+      assert.strictEqual(added[0].kind, 'remote');
+      assert.strictEqual(added[0].motion.record, false, 'the viewer does not record a shared camera unless they choose to');
+      assert.strictEqual(added[0].remote.secret, undefined);
+
+      // Both machines pinned each other, limited to the camera share.
+      const meshA = loadMesh().createAppMeshEngine({ configDir: path.join(tmpHome, 'share-a') });
+      const viewerOnSharer = meshA.listPeers()[0];
+      assert.strictEqual(viewerOnSharer.allowAllApps, false);
+      assert.deepStrictEqual(viewerOnSharer.allowedAppIds, ['camera-watch-share']);
+
+      // The viewer's ffmpeg reads the shared live view through a local mesh tunnel.
+      let remoteLive = null;
+      for (let i = 0; i < 60 && !remoteLive; i++) {
+        await wait(100);
+        remoteLive = viewerSpawn.procs.find((p) => p.args.includes('mpjpeg'));
+      }
+      assert.ok(remoteLive, 'viewer started reading the shared camera');
+      const url = remoteLive.args[remoteLive.args.indexOf('-i') + 1];
+      assert.match(url, /^http:\/\/127\.0\.0\.1:\d+\/cameras\/cam-[\w]+\/live\?s=/);
+      const got = await readFirstJpeg(url);
+      assert.strictEqual(got.status, 200);
+      assert.match(got.contentType, /multipart\/x-mixed-replace/);
+      assert.strictEqual(got.jpeg[0], 0xff);
+      assert.strictEqual(got.jpeg[1], 0xd8);
+
+      // The garage was not in the invite: the same tunnel cannot see it, even with the door's secret.
+      const garageUrl = url.replace(/\/cameras\/[^/]+\//, `/cameras/${garage.id}/`);
+      assert.strictEqual((await readFirstJpeg(garageUrl)).status, 403);
+
+      // The sharer sees who is watching and which invite they used.
+      const status = sharer.sharingStatus();
+      assert.deepStrictEqual(status.cameras.map((c) => c.name), ['Front door']);
+      assert.strictEqual(status.invites.length, 1);
+      assert.strictEqual(status.invites[0].label, 'For my neighbour');
+      assert.strictEqual(status.invites[0].peers.length, 1);
+
+      // Revoking the invite removes the viewer from the sharer's private network,
+      // and cuts off a live stream that is already open.
+      const openStream = await new Promise((resolve, reject) => {
+        const req = http.get(url, { agent: false }, (res) => {
+          let bytes = 0;
+          res.on('data', (c) => { bytes += c.length; });
+          const closed = new Promise((r) => res.on('close', () => r(bytes)));
+          res.once('data', () => resolve({ closed, req }));
+        });
+        req.on('error', reject);
+      });
+      await sharer.revokeShareInvite(share.inviteId);
+      const ended = await Promise.race([openStream.closed.then(() => true), wait(3000).then(() => false)]);
+      openStream.req.destroy();
+      assert.strictEqual(ended, true, 'the open live stream ends when the invite is revoked');
+      const after = await readFirstJpeg(url).catch((e) => ({ error: e.message }));
+      assert.ok(after.error || after.status !== 200, 'new requests no longer reach the camera');
+
+      // Stopping sharing changes the secret.
+      await sharer.stopSharingCamera(door.id);
+      assert.strictEqual(sharer.sharingStatus().cameras.length, 0);
+    } finally {
+      clearInterval(pump);
+      await viewer.shutdown();
+      await sharer.shutdown();
+    }
+  });
+
+  it('rejects things that are not camera invites with a plain message', () => {
+    assert.throws(() => decodeInvite('robos-net://abc'), /Private Network invite, not a camera invite/);
+    assert.throws(() => decodeInvite('hello'), /starts with robos-cam:\/\//);
+    assert.throws(() => decodeInvite('robos-cam://bm90LWpzb24'), /damaged/);
+  });
+});

@@ -25,8 +25,16 @@ function inputArgs(input) {
     }
     return ['-f', 'v4l2', ...size, '-i', input.name];
   }
+  if (input?.kind === 'remote') {
+    // Another Camera Watch's shared live view (multipart MJPEG through the mesh tunnel).
+    // MJPEG has no timestamps and ffmpeg would assume 25 fps; time frames by arrival
+    // instead, or the live view's fps filter drops most of them.
+    return ['-use_wallclock_as_timestamps', '1', '-f', 'mpjpeg', '-reconnect', '0', '-i', input.url];
+  }
   const args = [];
   if (/^rtsps?:/i.test(input?.url || '')) args.push('-rtsp_transport', input.transport || 'tcp');
+  // MJPEG-over-HTTP cameras send no timestamps either (see above).
+  if (/^https?:/i.test(input?.url || '')) args.push('-use_wallclock_as_timestamps', '1');
   args.push('-i', input?.url || '');
   return args;
 }

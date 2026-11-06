@@ -184,6 +184,7 @@ const EXTRA_APP_PORTS = {
   'smart-tv-portal':        { port: 19210, label: 'Smart TV & 10-Foot Dashboard Portal', category: 'System', kind: 'service' },
   'party-game-server':      { port: 19213, label: 'Party Game Phone Controller Server', category: 'Party Games', kind: 'service' },
   'movie-player-stream':    { port: 19215, label: 'RobOS Movie Player HTTP Range Stream & Cinema Library Server', category: 'Tools', kind: 'service' },
+  'camera-watch-share':     { port: 19221, label: 'RobOS Camera Watch Shared Cameras (live MJPEG, per-camera secret)', category: 'Security', kind: 'service' },
   'intellij-ipc-bridge':    { port: 63343, label: 'IntelliJ IDEA / IDE IPC Bridge', category: 'Dev', kind: 'ipc' },
 };
 
@@ -428,6 +429,8 @@ function createAppMeshEngine(options = {}) {
     sharedAppIds: Object.keys(PORT_REGISTRY).concat(Object.keys(EXTRA_APP_PORTS)),
     peers: [],
     tunnels: [],
+    // Scoped invites: each has its own enroll token and grants only its allowedAppIds.
+    invites: [],
     zitiControllerUrl: 'https://ziti-controller.robos.internal:1280',
     zitiServicePrefix: 'robos.ipc',
   });
@@ -443,6 +446,7 @@ function createAppMeshEngine(options = {}) {
           networkSecret: raw.networkSecret || def.networkSecret,
           peers: Array.isArray(raw.peers) ? raw.peers : [],
           tunnels: Array.isArray(raw.tunnels) ? raw.tunnels : [],
+          invites: Array.isArray(raw.invites) ? raw.invites : [],
           sharedAppIds: Array.isArray(raw.sharedAppIds) ? raw.sharedAppIds : def.sharedAppIds,
         };
       }
@@ -648,6 +652,54 @@ function createAppMeshEngine(options = {}) {
     return state.sharedAppIds.includes(appId);
   }
 
+  /**
+   * Check a `join-network` request. A proof made with the network-wide enroll
+   * token grants full access; a proof made with a scoped invite's token
+   * (`req.inviteId`) grants only that invite's apps. Returns null if neither matches.
+   */
+  function verifyJoinRequest(req, peerFp) {
+    if (!req || !req.nodeId || !req.enrollProof) return null;
+    if (req.inviteId) {
+      const invite = (state.invites || []).find(i => i.id === req.inviteId && !i.revokedAt);
+      if (!invite) return null;
+      const expected = computeEnrollProof(invite.enrollToken, req.nodeId, peerFp);
+      return safeEqual(req.enrollProof, expected) ? { kind: 'invite', invite } : null;
+    }
+    const expected = computeEnrollProof(computeEnrollToken(), req.nodeId, peerFp);
+    return safeEqual(req.enrollProof, expected) ? { kind: 'full' } : null;
+  }
+
+  /** The access a verified join gives, merged with what an existing peer already has. */
+  function joinAccess(join, existingPeer) {
+    const hadAll = existingPeer ? (existingPeer.allowAllApps !== false && !(existingPeer.allowedAppIds || []).length) : false;
+    if (join.kind === 'full' || hadAll) return { allowAllApps: true, allowedAppIds: [] };
+    const apps = new Set([...(existingPeer?.allowedAppIds || []), ...join.invite.allowedAppIds]);
+    return { allowAllApps: false, allowedAppIds: [...apps], inviteGrantId: join.invite.id };
+  }
+
+  function safeEqual(a, b) {
+    const x = Buffer.from(String(a || ''));
+    const y = Buffer.from(String(b || ''));
+    return x.length === y.length && x.length > 0 && crypto.timingSafeEqual(x, y);
+  }
+
+  /**
+   * What a `connect` request may reach. The ACL is checked against the app that owns
+   * the port actually dialed, so naming an allowed app with another port cannot
+   * reach that other port.
+   */
+  function resolveConnectTarget(reqAppId, reqPort) {
+    const catalog = getAppPortCatalog();
+    const byId = reqAppId ? catalog.find(c => c.appId === reqAppId) : null;
+    const port = Number(reqPort) || 0;
+    if (byId && (!port || port === byId.port)) return { appId: byId.appId, port: byId.port };
+    if (port) {
+      const byPort = catalog.find(c => c.port === port);
+      return { appId: byPort ? byPort.appId : `port-${port}`, port };
+    }
+    return { appId: String(reqAppId || ''), port: 0 };
+  }
+
   function findCatalogEntryByAppOrPort(targetAppId, targetPort) {
     const catalog = getAppPortCatalog();
     if (targetAppId) {
@@ -689,6 +741,8 @@ function createAppMeshEngine(options = {}) {
     tlsSocket.once('close', () => activeGatewaySockets.delete(tlsSocket));
     const peerCert = tlsSocket.getPeerCertificate(true);
     const peerFp = computeCertFingerprint(peerCert);
+    // Removing the peer closes its open connections (see removePeer).
+    tlsSocket.robosPeerFingerprint = peerFp;
 
     // Match either a trusted peer or our own local node identity (for loopback self-test & local bridging)
     let matchedPeer = state.peers.find(p => p.fingerprint === peerFp && p.enabled !== false);
@@ -748,11 +802,10 @@ function createAppMeshEngine(options = {}) {
         return;
       }
 
+      const join = req && req.op === 'join-network' ? verifyJoinRequest(req, peerFp) : null;
+
       if (!matchedPeer) {
-        const expectedProof = req && req.nodeId
-          ? computeEnrollProof(computeEnrollToken(), req.nodeId, peerFp)
-          : null;
-        if (req && req.op === 'join-network' && expectedProof && req.enrollProof === expectedProof) {
+        if (join) {
           matchedPeer = addOrUpdatePeer({
             nodeId: req.nodeId,
             name: req.nodeName || req.nodeId,
@@ -760,6 +813,7 @@ function createAppMeshEngine(options = {}) {
             port: req.port || DEFAULT_MESH_PORT,
             relayUrl: req.relayUrl || null,
             fingerprint: peerFp,
+            ...joinAccess(join, null),
           });
         } else {
           rejectUntrustedSocket(tlsSocket, peerFp);
@@ -768,7 +822,7 @@ function createAppMeshEngine(options = {}) {
       }
 
       if (req.op === 'join-network') {
-        if (req.relayUrl || req.host) {
+        if (req.relayUrl || req.host || join) {
           matchedPeer = addOrUpdatePeer({
             nodeId: req.nodeId || matchedPeer.nodeId,
             name: req.nodeName || matchedPeer.name,
@@ -776,6 +830,8 @@ function createAppMeshEngine(options = {}) {
             port: req.port || matchedPeer.port || DEFAULT_MESH_PORT,
             relayUrl: req.relayUrl || matchedPeer.relayUrl || null,
             fingerprint: peerFp,
+            // Re-joining keeps the peer's access unless this join proves more (never less).
+            ...(join ? joinAccess(join, matchedPeer) : {}),
           });
         }
         recordAudit({
@@ -876,9 +932,7 @@ function createAppMeshEngine(options = {}) {
       }
 
       if (req.op === 'connect') {
-        const entry = findCatalogEntryByAppOrPort(req.appId, req.port);
-        const targetPort = Number(req.port) || (entry ? entry.port : 0);
-        const targetAppId = entry ? entry.appId : String(req.appId || `port-${targetPort}`);
+        const { appId: targetAppId, port: targetPort } = resolveConnectTarget(req.appId, req.port);
 
         if (!targetPort || !isAppPortAllowedForPeer(targetAppId, targetPort, matchedPeer)) {
           recordAudit({
@@ -901,6 +955,7 @@ function createAppMeshEngine(options = {}) {
 
         const upstream = net.connect({ host: '127.0.0.1', port: targetPort });
         upstream.once('connect', () => {
+          upstream.robosConnected = true;
           recordAudit({
             type: 'IPC_TUNNEL_OPENED',
             severity: 'success',
@@ -932,7 +987,12 @@ function createAppMeshEngine(options = {}) {
           } catch {}
         });
 
+        // Either side closing (including removePeer destroying the peer's socket)
+        // closes the other, so a cut-off peer's stream does not keep running here.
         tlsSocket.once('error', () => upstream.destroy());
+        tlsSocket.once('close', () => upstream.destroy());
+        // (Only once connected: before that the error reply above must reach the peer.)
+        upstream.once('close', () => { if (upstream.robosConnected) { try { tlsSocket.destroy(); } catch {} } });
         return;
       }
 
@@ -1733,6 +1793,77 @@ function createAppMeshEngine(options = {}) {
     };
   }
 
+  /**
+   * Create an invite that only grants some apps, for example one shared service
+   * (`camera-watch-share`). Unlike the network token it does not carry the
+   * network-wide enroll secret, so whoever joins with it can reach only
+   * `allowedAppIds` on this machine. Invites stay valid until revoked.
+   */
+  function createScopedInvite({ allowedAppIds, label, customHost, customRelayUrl } = {}) {
+    const apps = (Array.isArray(allowedAppIds) ? allowedAppIds : []).map(String).filter(Boolean);
+    if (!apps.length) throw new Error('A scoped invite needs at least one app');
+    const invite = {
+      id: `inv_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
+      label: String(label || apps.join(', ')).slice(0, 120),
+      allowedAppIds: apps,
+      enrollToken: crypto.randomBytes(32).toString('hex'),
+      createdAt: new Date().toISOString(),
+    };
+    state.invites = [...(state.invites || []), invite];
+    saveState();
+    const netInfo = detectNetworkAddresses();
+    const payload = {
+      v: 1,
+      networkName: state.networkName || 'RobOS Private Network',
+      nodeId: identity.nodeId,
+      name: identity.nodeName,
+      host: customHost || netInfo.overlayIp || netInfo.lanIp || '127.0.0.1',
+      port: gatewayListeningPort || state.listenPort || DEFAULT_MESH_PORT,
+      relayUrl: customRelayUrl || wanRelayUrl || null,
+      fingerprint: identity.fingerprint,
+      enrollToken: invite.enrollToken,
+      inviteId: invite.id,
+      scope: apps,
+      driver: state.activeDriver,
+      issuedAt: invite.createdAt,
+    };
+    recordAudit({
+      type: 'SCOPED_INVITE_CREATED',
+      severity: 'info',
+      detail: `Created invite "${invite.label}" granting ${apps.join(', ')}`,
+    });
+    const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+    return { invite: publicInvite(invite), token: `robos-net://${encoded}`, payload };
+  }
+
+  function publicInvite(invite) {
+    const { enrollToken, ...rest } = invite;
+    return { ...rest, peers: state.peers.filter(p => p.inviteId === invite.id).map(p => ({ nodeId: p.nodeId, name: p.name, addedAt: p.addedAt })) };
+  }
+
+  function listInvites() {
+    return (state.invites || []).filter(i => !i.revokedAt).map(publicInvite);
+  }
+
+  /** Revoke an invite; by default the peers that joined with it are removed too. */
+  function revokeInvite(inviteId, { removePeers = true } = {}) {
+    const invite = (state.invites || []).find(i => i.id === inviteId);
+    if (!invite) return { ok: false, error: 'Invite not found' };
+    invite.revokedAt = new Date().toISOString();
+    let removed = 0;
+    if (removePeers) {
+      for (const p of state.peers.filter(x => x.inviteId === inviteId)) {
+        // A peer that also has full access (joined with the network token) stays.
+        if (p.allowAllApps !== false && !(p.allowedAppIds || []).length) continue;
+        removePeer(p.id);
+        removed++;
+      }
+    }
+    saveState();
+    recordAudit({ type: 'SCOPED_INVITE_REVOKED', severity: 'info', detail: `Revoked invite "${invite.label}" (${removed} peer(s) removed)` });
+    return { ok: true, removedPeers: removed };
+  }
+
   function parseEnrollmentToken(tokenStr) {
     const raw = String(tokenStr || '').trim();
     const b64 = raw.replace(/^robos-(mesh|net):\/\//i, '');
@@ -1759,6 +1890,17 @@ function createAppMeshEngine(options = {}) {
     }
 
     const existingIdx = state.peers.findIndex(p => p.nodeId === nodeId || p.fingerprint === fingerprint);
+    const existing = existingIdx >= 0 ? state.peers[existingIdx] : null;
+    // Updating a peer (new address, relay, name) keeps its access unless the caller sets it.
+    const access = parsed.allowAllApps !== undefined || Array.isArray(parsed.allowedAppIds)
+      ? {
+          allowAllApps: parsed.allowAllApps !== undefined ? Boolean(parsed.allowAllApps) : !(parsed.allowedAppIds || []).length,
+          allowedAppIds: Array.isArray(parsed.allowedAppIds) ? parsed.allowedAppIds : [],
+        }
+      : {
+          allowAllApps: existing ? existing.allowAllApps !== false : true,
+          allowedAppIds: existing && Array.isArray(existing.allowedAppIds) ? existing.allowedAppIds : [],
+        };
     const peerRecord = {
       id: existingIdx >= 0 ? state.peers[existingIdx].id : `peer_${Date.now().toString(36)}_${crypto.randomBytes(2).toString('hex')}`,
       nodeId,
@@ -1770,8 +1912,9 @@ function createAppMeshEngine(options = {}) {
       enrollToken: parsed.enrollToken || (existingIdx >= 0 ? state.peers[existingIdx].enrollToken : null),
       fingerprint,
       driver: parsed.driver || state.activeDriver,
-      allowAllApps: parsed.allowAllApps !== undefined ? Boolean(parsed.allowAllApps) : true,
-      allowedAppIds: Array.isArray(parsed.allowedAppIds) ? parsed.allowedAppIds : [],
+      ...access,
+      // The scoped invite this peer joined with, so revoking the invite can remove it.
+      inviteId: parsed.inviteGrantId || (existing ? existing.inviteId : undefined),
       enabled: parsed.enabled !== undefined ? Boolean(parsed.enabled) : true,
       addedAt: existingIdx >= 0 ? state.peers[existingIdx].addedAt : new Date().toISOString(),
     };
@@ -1803,7 +1946,18 @@ function createAppMeshEngine(options = {}) {
    */
   async function joinPrivateNetwork(input, opts = {}) {
     await startGateway();
-    const peer = addOrUpdatePeer(input);
+    // A scoped invite token names its invite; the proof is made with that invite's token.
+    let inviteId = null;
+    try {
+      const raw = typeof input === 'string' ? input : input && input.token;
+      if (raw) inviteId = parseEnrollmentToken(raw).inviteId || null;
+    } catch {}
+    // opts.peerAccess limits what the joined peer may reach on this machine
+    // ({ allowAllApps, allowedAppIds }); without it the peer gets full access.
+    const peerInput = opts.peerAccess
+      ? { ...(typeof input === 'string' ? { token: input } : input), ...opts.peerAccess }
+      : input;
+    const peer = addOrUpdatePeer(peerInput);
     const netInfo = detectNetworkAddresses();
     const enrollProof = peer.enrollToken
       ? computeEnrollProof(peer.enrollToken, identity.nodeId, identity.fingerprint)
@@ -1818,6 +1972,7 @@ function createAppMeshEngine(options = {}) {
       relayUrl: wanRelayUrl || null,
       fingerprint: identity.fingerprint,
       enrollProof,
+      ...(inviteId ? { inviteId } : {}),
     }, 10000);
 
     if (!joinRes || !joinRes.ok) {
@@ -1869,6 +2024,21 @@ function createAppMeshEngine(options = {}) {
     if (idx === -1) return { ok: false, error: 'Peer not found' };
     const [removed] = state.peers.splice(idx, 1);
     saveState();
+    // Access ends now, not at the peer's next connection: close the tunnels and
+    // streams it already has open, and its reverse-mux session.
+    let closed = 0;
+    for (const sock of Array.from(activeGatewaySockets)) {
+      if (removed.fingerprint && sock.robosPeerFingerprint === removed.fingerprint) {
+        try { sock.destroy(); } catch {}
+        closed++;
+      }
+    }
+    const mux = reverseMuxSessions.get(removed.nodeId);
+    if (mux && mux.close) {
+      try { mux.close(); } catch {}
+      reverseMuxSessions.delete(removed.nodeId);
+    }
+    if (closed) removed.closedConnections = closed;
     recordAudit({
       type: 'PEER_REVOKED',
       severity: 'info',
@@ -2165,6 +2335,9 @@ function createAppMeshEngine(options = {}) {
     getStatusSnapshot,
     getLocalCatalogStatus,
     generateEnrollmentToken,
+    createScopedInvite,
+    listInvites,
+    revokeInvite,
     parseEnrollmentToken,
     addOrUpdatePeer,
     listPeers,
