@@ -51,10 +51,10 @@ private val Muted = Color(0xFF8B949E)
 
 private class HomeApp(val label: String, val icon: ImageBitmap, val component: ComponentName)
 
-/** RobOS apps, plus Settings because a phone with no other way to join Wi-Fi needs it. */
-internal fun belongsOnHome(packageName: String): Boolean =
-    packageName == "com.android.settings" ||
-        (packageName.startsWith("com.robos.") && packageName != "com.robos.launcher")
+/** Every app on the phone except this home screen itself. */
+internal fun belongsOnHome(packageName: String): Boolean = packageName != "com.robos.launcher"
+
+internal fun isRobosApp(packageName: String): Boolean = packageName.startsWith("com.robos.")
 
 class HomeActivity : ComponentActivity() {
     private var apps by mutableStateOf(emptyList<HomeApp>())
@@ -78,8 +78,8 @@ class HomeActivity : ComponentActivity() {
         getSystemService(LauncherApps::class.java)
             .getActivityList(null, Process.myUserHandle())
             .filter { belongsOnHome(it.applicationInfo.packageName) }
-            // Settings goes last, after the apps people opened the phone for.
-            .sortedWith(compareBy({ it.applicationInfo.packageName == "com.android.settings" }, { it.label.toString() }))
+            // RobOS apps first, then the LineageOS apps, each in alphabetical order.
+            .sortedWith(compareBy({ !isRobosApp(it.applicationInfo.packageName) }, { it.label.toString().lowercase() }))
             .map { HomeApp(it.label.toString(), it.getIcon(0).toBitmap(192, 192).asImageBitmap(), it.componentName) }
 
     private fun open(app: HomeApp) {
