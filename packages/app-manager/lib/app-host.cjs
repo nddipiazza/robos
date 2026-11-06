@@ -51,7 +51,7 @@ function start(id, locations) {
   if (process.platform === 'win32') app.setAppUserModelId(`com.rowbose.robos.${id}`);
   // Windows shows a window's icon on its taskbar button and in Alt+Tab. Every managed app runs
   // in the same executable, so without this each one shows that executable's icon.
-  const windowIcon = process.platform === 'win32' ? require('./win-icon.cjs').ensureAppIco(dir) : null;
+  const windowIcon = process.platform === 'win32' ? require('./win-icon.cjs').ensureAppIco(dir, { into: locations.icons, name: id }) : null;
   app.on('browser-window-created', (_event, window) => {
     if (windowIcon) { try { window.setIcon(windowIcon); } catch {} }
     window.webContents.once('did-finish-load', () => {

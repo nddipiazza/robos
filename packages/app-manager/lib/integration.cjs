@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { ID } = require('./catalog.cjs');
 const { gnome, MANAGER_ENTRY } = require('./gnome.cjs');
-const { ensureAppIco } = require('./win-icon.cjs');
+const { ensureAppIco, removeIcons } = require('./win-icon.cjs');
 const quoteShell = value => "'" + value.replace(/'/g, "'\\''") + "'";
 const xml = value => value.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
 function quoteDesktop(value) {
@@ -21,14 +21,14 @@ function integration({ locations, executable, host, packaged, shell, platform = 
     if (!ID.test(item.id)) throw new Error('Invalid shortcut ID');
     if (platform === 'win32') {
       const dir = path.join(locations.shortcuts, item.id);
-      if (remove) { fs.rmSync(dir, { recursive: true, force: true }); return; }
+      if (remove) { fs.rmSync(dir, { recursive: true, force: true }); if (locations.icons) removeIcons(locations.icons, item.id); return; }
       fs.mkdirSync(dir, { recursive: true });
       // Start menu search matches shortcut names, so every app is found by typing "RobOS".
       const name = (/^robos\b/i.test(item.label) ? item.label : `RobOS ${item.label}`).replace(/[<>:"/\\|?*]/g, '_');
       // A shortcut written under an older name would show up twice.
       for (const old of fs.readdirSync(dir)) if (old.endsWith('.lnk') && old !== `${name}.lnk` && old !== `Uninstall ${name}.lnk`) fs.rmSync(path.join(dir, old), { force: true });
       // The app's own icon, not the shared executable's (which would make every app look alike).
-      const icon = ensureAppIco(path.join(locations.root, 'packages', item.id)) || executable;
+      const icon = ensureAppIco(path.join(locations.root, 'packages', item.id), { into: locations.icons, name: item.id }) || executable;
       for (const [label, arg] of [[name, `--app=${item.id}`], [`Uninstall ${name}`, `--remove=${item.id}`]]) {
         // All generated arguments are fixed switches/validated IDs, plus a quoted dev host.
         const args = command([arg]).map(a => '"' + a.replace(/"/g, '\\"') + '"').join(' ');
@@ -67,6 +67,7 @@ function integration({ locations, executable, host, packaged, shell, platform = 
   }
   function removeAll() {
     if (platform === 'win32' || platform === 'darwin') fs.rmSync(locations.shortcuts, { recursive: true, force: true });
+    if (platform === 'win32' && locations.icons) fs.rmSync(locations.icons, { recursive: true, force: true });
     else if (fs.existsSync(locations.shortcuts)) for (const file of fs.readdirSync(locations.shortcuts)) {
       if (/^robos-managed-[a-z0-9-]+\.desktop$/.test(file)) fs.rmSync(path.join(locations.shortcuts, file));
     }
