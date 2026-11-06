@@ -76,7 +76,7 @@ Other skills that read or write the graph:
 
 ## Project plans
 
-These skills read and write saved project plans in a graph workspace. Set `ROBOS_GRAPH_ROOT` to a directory that contains `.robos`. The view, update and remove skills also expect `ROBOS_SOURCE_ROOT`, the absolute path of the RobOS checkout whose CLI you run. The plan format and the headless commands are in `packages/task-planner/PROJECT-PLANS.md`. The matching UI is the Task Planner app; see its [app page]({{ '/apps/task-planner/' | relative_url }}).
+These skills read and write saved project plans in a graph workspace. Set `ROBOS_GRAPH_ROOT` to a directory that contains `.robos`. The view, update and remove skills also expect `ROBOS_SOURCE_ROOT`, the absolute path of the RobOS checkout whose CLI you run. The plan format and the headless commands are in `packages/task-planner/PROJECT-PLANS.md`. The matching UI is the Task Planner app; see its [app page]({{ '/task-planner/' | relative_url }}).
 
 | Skill | What it does | Invoke |
 | --- | --- | --- |

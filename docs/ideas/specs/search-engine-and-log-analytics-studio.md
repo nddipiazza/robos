@@ -26,8 +26,8 @@ Proposal, not built. There is no `packages/search-studio` in the repository.
 
 ## What exists today
 
-- [DB Manager]({{ '/apps/db-manager/' | relative_url }}) (relational) and [NoSQL DB Manager]({{ '/apps/nosql-manager/' | relative_url }}) (MongoDB and Redis) cover other data stores.
-- [Search Indexer]({{ '/apps/search-index/' | relative_url }}) (`packages/search-index`) indexes files and symbols for @-mentions. It is unrelated to search clusters.
+- [DB Manager]({{ '/db-manager/' | relative_url }}) (relational) and [NoSQL DB Manager]({{ '/nosql-manager/' | relative_url }}) (MongoDB and Redis) cover other data stores.
+- [Search Indexer]({{ '/search-index/' | relative_url }}) (`packages/search-index`) indexes files and symbols for @-mentions. It is unrelated to search clusters.
 - The knowledge graph already defines `robos:SearchCluster` and `robos:SearchIndex` with SHACL shapes (`packages/robos-graph/lib/shacl-validator.js`, `.robos/ontology.jsonld`). The cluster shape requires an engine: `luxir`, `solr`, `elasticsearch` or `opensearch`.
 - `robos:LogAnalyticsSink`, `robos:VectorStore` and the three edges above are not defined anywhere in `packages` or `.robos`.
 

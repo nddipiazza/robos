@@ -2,7 +2,7 @@
 layout: default
 title: Apps
 permalink: /apps/
-description: Every RobOS desktop app, domain sandbox, game studio and MCP server, grouped by what it does.
+description: Every RobOS app, library, CLI, service and MCP server, grouped by what it does.
 og_image: /assets/og.png
 og_image_width: 1200
 og_image_height: 630
@@ -13,7 +13,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
 <div class="page-h wrap">
   <p class="eyebrow">App Directory</p>
   <h1>The app suite</h1>
-  <p>Desktop applications, domain sandboxes, game studios and MCP servers that share one knowledge graph.</p>
+  <p>Apps, libraries, CLIs and services that share one knowledge graph.</p>
   <input class="search" id="app-q" type="search" placeholder="Search apps by name, package or what they do" aria-label="Search apps" autocomplete="off">
   <nav class="app-pills" aria-label="App categories">
   {%- for cat in site.data.app_categories -%}
@@ -33,7 +33,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     </div>
     <div class="grid2" style="display:grid;gap:14px">
       <a class="card app-card" href="{{ '/point-of-sale/' | relative_url }}" data-s="robos point of sale point-of-sale cash register retail cafe bar self-checkout kiosk barcode qr webcam scanner inventory open checkout api">
-        <img src="{{ '/v1/assets/images/icons/point-of-sale.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/point-of-sale.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Point of Sale</h3>
           <code class="app-pkg">Walkthrough · /point-of-sale/</code>
@@ -41,7 +41,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/auto-center/' | relative_url }}" data-s="robos auto center auto-center vehicle owner maintenance invoice ocr nhtsa recall remedies repair shop floor profit reports">
-        <img src="{{ '/v1/assets/images/icons/auto-center.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/auto-center.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Auto Center</h3>
           <code class="app-pkg">Walkthrough · /auto-center/</code>
@@ -49,7 +49,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/family-finances/' | relative_url }}" data-s="robos household family finances checking savings credit card loan statement reconciliation spending categories split transactions w-2 1099 pdf tax estimate opentaxsolver tenforty">
-        <img src="{{ '/v1/assets/images/icons/household.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/household.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Household</h3>
           <code class="app-pkg">Walkthrough · /family-finances/</code>
@@ -57,7 +57,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/games/' | relative_url }}" data-s="robos games realm of heroes crpg tabletop rpg heroquest starfall command rts godot 4">
-        <img src="{{ '/v1/assets/images/icons/robos-tabletop.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/robos-tabletop.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Games</h3>
           <code class="app-pkg">Showcase · /games/</code>
@@ -65,7 +65,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}" data-s="robos vpn sandbox vpn servers openvpn ipvanish network namespace ip netns iptables kill switch zero leak firefox transmission">
-        <img src="{{ '/v1/assets/images/icons/vpn-sandbox.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/vpn-sandbox.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS VPN Sandbox &amp; VPN Servers</h3>
           <code class="app-pkg">Security Proof · /security/</code>
@@ -73,7 +73,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/tv/' | relative_url }}" data-s="robos smart tv studio robos-tv developer mode sideload lg webos ipk ares-install samsung tizen wgt sdb google android tv adb leanback roku 10-foot portal moonlight sunshine">
-        <img src="{{ '/v1/assets/images/icons/robos-tv.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/robos-tv.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Smart TV Studio</h3>
           <code class="app-pkg">Big-Screen Guide · /tv/</code>
@@ -81,7 +81,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/movie-player/' | relative_url }}" data-s="robos movie player video player cinema stage tv shows seasons episodes roku smart tv cast subtitles srt vtt ai watchlist virtual cinema host sftp cloud">
-        <img src="{{ '/v1/assets/images/icons/movie-player.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/movie-player.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Movie &amp; Video Player</h3>
           <code class="app-pkg">Home Theater Guide · /movie-player/ · /video-player/</code>
@@ -89,7 +89,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
         </div>
       </a>
       <a class="card app-card" href="{{ '/p2p/' | relative_url }}" data-s="robos app mesh p2p zero trust mtls openziti tailscale headscale netbird wireguard cross machine ipc bridge movie streaming">
-        <img src="{{ '/v1/assets/images/icons/app-mesh.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <img src="{{ '/assets/images/icons/app-mesh.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS App Mesh (Zero-Trust P2P)</h3>
           <code class="app-pkg">P2P &amp; Streaming Guide · /p2p/</code>
@@ -107,8 +107,8 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     <h2>{{ cat.name }}</h2>
     <div class="app-grid">
     {%- for app in apps %}
-      <a class="card app-card" href="{{ app.landing | default: app.url | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: cat.name | append: ' ' | append: app.summary | downcase | escape }}">
-        {%- if app.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
+      <a class="card app-card" href="{{ '/' | append: app.package | append: '/' | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: cat.name | append: ' ' | append: app.summary | downcase | escape }}">
+        {%- if app.icon -%}<img src="{{ '/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
         <div>
           <h3>{{ app.title }}</h3>
           <code class="app-pkg">{{ app.package }}</code>
@@ -128,8 +128,8 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     <div class="app-grid">
     {%- assign others = others | sort_natural: "title" -%}
     {%- for app in others %}
-      <a class="card app-card" href="{{ app.landing | default: app.url | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: app.summary | downcase | escape }}">
-        {%- if app.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
+      <a class="card app-card" href="{{ '/' | append: app.package | append: '/' | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.package | append: ' ' | append: app.summary | downcase | escape }}">
+        {%- if app.icon -%}<img src="{{ '/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
         <div>
           <h3>{{ app.title }}</h3>
           <code class="app-pkg">{{ app.package }}</code>

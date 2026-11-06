@@ -1,0 +1,13 @@
+---
+layout: default
+body_class: guide
+extra_css: /assets/app.css
+---
+<section class="cr-page app-page"><div class="wrap">
+<article class="guide-body cr-body">
+<nav class="app-crumbs" aria-label="Breadcrumb"><a href="{{ '/apps/' | relative_url }}">Apps &amp; components</a> / {{ page.title }}</nav>
+<header class="app-hero"><div><h1>{{ page.title }}</h1>{% if page.summary %}<p class="lead">{{ page.summary }}</p>{% endif %}</div></header>
+<div class="app-content">{{ content }}</div>
+</article>
+</div></section>
+{% include mermaid.html %}

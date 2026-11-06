@@ -31,8 +31,8 @@ The crawler is a filesystem scan. The code is `scanPathToGraphNodes` in `package
 
 | Operation | Endpoint | Window button | Effect |
 |:---|:---|:---|:---|
-| Preview | `POST /api/v1/crawl` | **Scan & Extract Nodes** | Returns the nodes and adds them to the portal's in-memory search index. Writes nothing to the graph. |
-| Commit | `POST /api/v1/ingest` | **Commit to RobOS KGraph** | Does the same, then calls `addNode` on the knowledge graph store for every node. |
+| Preview | `POST /api/crawl` | **Scan & Extract Nodes** | Returns the nodes and adds them to the portal's in-memory search index. Writes nothing to the graph. |
+| Commit | `POST /api/ingest` | **Commit to RobOS KGraph** | Does the same, then calls `addNode` on the knowledge graph store for every node. |
 
 For each directory the crawl detects a project type, creates one root node, then creates one node per file with a classification and a SHA-256 hash of the file. It does not read file contents into entities: an OpenAPI file becomes one `robos:Contract` node, not a set of endpoint nodes.
 
@@ -43,7 +43,7 @@ For other sources, use what exists:
 | Source | Use today |
 |:---|:---|
 | Local Git checkouts | The [Company KGraph Import skill]({{ '/skills/import-company-kgraph.html' | relative_url }}), which builds a reviewable proposal from declarations in tracked files. |
-| Databases, S3 buckets, Kafka topics | The [Data Sources Explorer]({{ '/apps/data-sources/' | relative_url }}) app. |
+| Databases, S3 buckets, Kafka topics | The [Data Sources Explorer]({{ '/data-sources/' | relative_url }}) app. |
 | Anything you can describe as nodes | `kgraph insert` from `packages/robos-graph/bin/kgraph-cli.js`, which runs the SHACL gate. See [Schemas]({{ site.baseurl }}{% link schemas.md %}). |
 
 ## Run a crawl
@@ -61,14 +61,14 @@ You need Node.js and a checkout of the RobOS repository. The server uses only No
 2. Preview a directory.
 
    ```bash
-   curl -s -X POST http://localhost:19192/api/v1/crawl \
+   curl -s -X POST http://localhost:19192/api/crawl \
      -H 'Content-Type: application/json' \
      -d '{"directoryPath": "/path/to/repo", "maxDepth": 5, "package": "core-platform"}'
    ```
 
    The response has `ok`, `archetype`, `fileCount`, `nodeCount` and `nodes`. A path that does not exist returns HTTP 500 with `{"ok": false, "error": "Target path does not exist: ..."}`.
 
-3. Commit the nodes by sending the same body to `/api/v1/ingest`. The response has `ok`, `committedToGraph`, `nodesCommitted`, `archetype` and `nodes`. Check `committedToGraph`: if the graph store cannot be loaded, the endpoint still answers `ok: true` with `committedToGraph: false` and `nodesCommitted: 0`.
+3. Commit the nodes by sending the same body to `/api/ingest`. The response has `ok`, `committedToGraph`, `nodesCommitted`, `archetype` and `nodes`. Check `committedToGraph`: if the graph store cannot be loaded, the endpoint still answers `ok: true` with `committedToGraph: false` and `nodesCommitted: 0`.
 
 4. Validate. The commit does not.
 

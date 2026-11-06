@@ -39,9 +39,9 @@ Task Planner and Task Implementer both read the active task server from `~/.conf
 
 | Lesson | Apps used |
 |:---|:---|
-| [Plan a feature in Task Planner]({{ '/training/agent-tasks/plan-a-feature.html' | relative_url }}) | [Task Planner]({{ '/apps/task-planner/' | relative_url }}), [Task Servers]({{ '/apps/task-servers/' | relative_url }}) |
-| [Check impact with the kgraph CLI]({{ '/training/agent-tasks/check-impact-with-kgraph.html' | relative_url }}) | [Knowledge Graph Explorer]({{ '/apps/robos-graph/' | relative_url }}) (the same graph, as a CLI) |
-| [Run an agent on a task]({{ '/training/agent-tasks/run-an-agent.html' | relative_url }}) | [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}), [PR Review]({{ '/apps/pr-review/' | relative_url }}) |
+| [Plan a feature in Task Planner]({{ '/training/agent-tasks/plan-a-feature.html' | relative_url }}) | [Task Planner]({{ '/task-planner/' | relative_url }}), [Task Servers]({{ '/task-servers/' | relative_url }}) |
+| [Check impact with the kgraph CLI]({{ '/training/agent-tasks/check-impact-with-kgraph.html' | relative_url }}) | [Knowledge Graph Explorer]({{ '/robos-graph/' | relative_url }}) (the same graph, as a CLI) |
+| [Run an agent on a task]({{ '/training/agent-tasks/run-an-agent.html' | relative_url }}) | [Task Implementer]({{ '/task-implementer/' | relative_url }}), [PR Review]({{ '/pr-review/' | relative_url }}) |
 | [Choose and customize agent personas]({{ '/training/agent-tasks/agent-personas.html' | relative_url }}) | Task Implementer, Task Planner |
 
 Reviewing the branch an agent pushes is covered on the [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) page.

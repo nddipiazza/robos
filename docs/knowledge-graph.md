@@ -211,7 +211,7 @@ The `import-company-kgraph` skill builds a proposal from local Git checkouts. Yo
 
 Older flags for importing from an S3 bucket, an HTTP catalog or a directory scan exist only in a demo mode that needs `--demo`. They are not the source-backed workflow and their output is not evidence of anything.
 
-The [KGraph parse portal]({{ '/kgraph-parse-portal.html' | relative_url }}) is a separate service. Its `POST /api/v1/ingest` route scans a directory and adds the resulting nodes to the graph at `.robos/knowledge-graph.jsonld` in the RobOS checkout.
+The [KGraph parse portal]({{ '/kgraph-parse-portal.html' | relative_url }}) is a separate service. Its `POST /api/ingest` route scans a directory and adds the resulting nodes to the graph at `.robos/knowledge-graph.jsonld` in the RobOS checkout.
 
 ## Compare two versions
 

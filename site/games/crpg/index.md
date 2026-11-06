@@ -44,11 +44,11 @@ keywords: "Realm of Heroes CRPG, RobOS cRPG, A Night Without Memory, real-time w
     <p class="eyebrow">Five acts</p>
     <h2 class="h2">From the Homestead to the Garrison Keep</h2>
     <div class="shots">
-      <figure class="wide"><img loading="lazy" src="{{ '/v1/assets/images/crpg-realm/village_square_overview.png' | relative_url }}" alt="Oakhaven Village Square"><figcaption>Oakhaven Village Square, the hub map, with party HUD and activity log.</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/v1/assets/images/crpg-realm/character_status_sheet.png' | relative_url }}" alt="Character sheet"><figcaption>Character sheet</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/v1/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}" alt="Combat"><figcaption>Real-time-with-pause combat</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/v1/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}" alt="Fog of war"><figcaption>Fog of war reveal</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/v1/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}" alt="Dialogue"><figcaption>Dialogue in the activity log</figcaption></figure>
+      <figure class="wide"><img loading="lazy" src="{{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}" alt="Oakhaven Village Square"><figcaption>Oakhaven Village Square, the hub map, with party HUD and activity log.</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/images/crpg-realm/character_status_sheet.png' | relative_url }}" alt="Character sheet"><figcaption>Character sheet</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}" alt="Combat"><figcaption>Real-time-with-pause combat</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}" alt="Fog of war"><figcaption>Fog of war reveal</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}" alt="Dialogue"><figcaption>Dialogue in the activity log</figcaption></figure>
     </div>
     <table class="t" style="margin-top:34px;background:rgba(8,9,14,.7)">
       <tr><th>Act</th><th>Scene</th><th>Highlights</th></tr>
@@ -70,7 +70,7 @@ keywords: "Realm of Heroes CRPG, RobOS cRPG, A Night Without Memory, real-time w
       <pre class="code"><button data-copy>Copy</button><code>git clone https://github.com/nddipiazza/robos.git
 cd robos/games/crpg-realm
 GODOT_BIN=/path/to/godot4 ./play.sh</code></pre>
-      <div class="cta" style="justify-content:flex-start;margin-top:18px"><a class="btn" href="{{ '/v1/projects/crpg-realm/quick-start.html' | relative_url }}">Quick start guide</a><a class="btn btn-ghost" href="{{ '/v1/projects/crpg-realm/controls.html' | relative_url }}">Controls</a></div>
+      <div class="cta" style="justify-content:flex-start;margin-top:18px"><a class="btn" href="{{ '/projects/crpg-realm/quick-start/' | relative_url }}">Quick start guide</a><a class="btn btn-ghost" href="{{ '/projects/crpg-realm/controls/' | relative_url }}">Controls</a></div>
     </div>
   </div>
 </section>
@@ -81,7 +81,7 @@ GODOT_BIN=/path/to/godot4 ./play.sh</code></pre>
       <p class="eyebrow">Make your own</p>
       <h2 class="h2">Make your own campaign</h2>
       <p class="sec-p">Maps, characters, quests and items are JSON-LD data that the campaign editor can edit. Some changes, such as a new spell in the hand-built scenes, still need GDScript; the guide says which. Start with the editor tutorial, or read how scenes, items, traps and combat are put together.</p>
-      <div class="cta" style="justify-content:flex-start"><a class="btn" href="{{ '/v1/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}">Campaign editor tutorial</a><a class="btn btn-ghost" href="{{ '/v1/projects/crpg-realm/create-your-own-game.html' | relative_url }}">Create your own game</a></div>
+      <div class="cta" style="justify-content:flex-start"><a class="btn" href="{{ '/projects/crpg-realm/campaign-editor-tutorial/' | relative_url }}">Campaign editor tutorial</a><a class="btn btn-ghost" href="{{ '/projects/crpg-realm/create-your-own-game/' | relative_url }}">Create your own game</a></div>
     </div>
   </div>
 </section>

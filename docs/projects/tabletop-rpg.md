@@ -70,8 +70,8 @@ The four heroes in the Quest 1 cartridge:
 | Game | `games/tabletop-rpg` | Godot project. Main scene `TabletopWorld.tscn`; autoloads for dice, cartridges, spells, equipment and the control server. |
 | Shared library | `packages/robos-gaming` | Node.js code for dice, a board grid with walls and doors, three map configurations, a cartridge bundler that validates a cartridge, and the gaming ontology with its SHACL shapes. |
 | Knowledge graph | `.robos/kgraphs/tabletop-game` | The `robos.tabletop` package: heroes, monsters, spell cards, furniture, map configurations and test scenarios. Hero nodes refer to starting weapons defined in the `robos.game` package in `.robos/kgraphs/game`. |
-| Cartridge editor | [RobOS Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}) | Electron app for editing cartridge data. |
-| Map tool | [Tabletop Blockmap Creator]({{ '/apps/tabletop-blockmap-creator/' | relative_url }}) | Electron app for calibrating a grid over a dungeon image and drawing corridors and rooms. |
+| Cartridge editor | [RobOS Tabletop Studio]({{ '/robos-tabletop/' | relative_url }}) | Electron app for editing cartridge data. |
+| Map tool | [Tabletop Blockmap Creator]({{ '/tabletop-blockmap-creator/' | relative_url }}) | Electron app for calibrating a grid over a dungeon image and drawing corridors and rooms. |
 
 ## Control API
 
@@ -79,12 +79,12 @@ While the game runs, `GameControlServer.gd` listens on `127.0.0.1:18092`. Set `T
 
 | Request | Purpose |
 |:---|:---|
-| `GET /api/v1/health` | Liveness check. |
-| `GET /api/v1/state` | Current game state as JSON. |
-| `GET /api/v1/cartridges` | Discovered cartridges and the active one. |
-| `POST /api/v1/action` | Run a game action, such as rolling movement, moving, opening a door or attacking. |
-| `POST /api/v1/cartridge/insert` | Load a different cartridge. |
-| `POST /api/v1/screenshot` | Save a PNG to the path in the request body. |
+| `GET /api/health` | Liveness check. |
+| `GET /api/state` | Current game state as JSON. |
+| `GET /api/cartridges` | Discovered cartridges and the active one. |
+| `POST /api/action` | Run a game action, such as rolling movement, moving, opening a door or attacking. |
+| `POST /api/cartridge/insert` | Load a different cartridge. |
+| `POST /api/screenshot` | Save a PNG to the path in the request body. |
 
 `rpc_ai/tabletop_qa_player.py` is a Python client for this API. `rpc_ai/tabletop_rpc_ai.py` builds on it to play whole turns.
 

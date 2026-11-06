@@ -1,4 +1,4 @@
-/* rowbose.com/apps/<slug>/: one page per app (layout _layouts/app.html), on the shared guide styles */
+/* rowbose.com/<package>/: one page per app (layout _layouts/app.html), on the shared guide styles */
 @import url("code-review.css");
 .app-crumbs{font-size:.85rem;color:var(--muted);margin-bottom:22px}
 .app-crumbs a{color:var(--muted)!important;text-decoration:none!important}.app-crumbs a:hover{color:var(--accent)!important}

@@ -107,8 +107,8 @@ On GNOME, `scripts/install-local.sh` adds the apps to the application launcher.
 | `.robos/` | This repository's own knowledge graph |
 | `plugins/` | The agent skill library (`plugins/robos/skills/`), its installer, and the IntelliJ IDEA plugin |
 | `.agents/`, `.claude/`, `.antigravity/`, `.gemini/`, `.github/skills/` | The same skills, in the form each agent reads |
-| `docs/` | Documentation site (Jekyll), published at [rowbose.com/v1/](https://rowbose.com/v1/) |
-| `site/` | Front site (Jekyll), published at [rowbose.com](https://rowbose.com/) |
+| `docs/` | Generated references, screenshot sources and internal project notes |
+| `site/` | The website, app/component pages and guides published at [rowbose.com](https://rowbose.com/) |
 | `games/` | Godot games and their tooling |
 | `infra/docker/` | The containerized E2E runner |
 | `infra/desktop/` | The appliance VM image build |
@@ -239,7 +239,7 @@ The `build-vm`, `start-vm`, `stop-vm`, `vm-status`, `vm-ssh` and `deploy-to-vm` 
 scripts/build-docs.sh
 ```
 
-That builds `site/` to `_site/` and `docs/` to `_site/v1/`, as the `pages.yml` workflow does. It needs Jekyll and the gems in `docs/Gemfile`. Two docs pages are generated:
+That stages the generated references and builds `site/` to `_site/`, as the `pages.yml` workflow does. It needs Jekyll, `jekyll-sitemap` and `jekyll-redirect-from`. Rendered-page checks verify package coverage, root URLs, links and release information. To add package pages or refresh the generated MCP reference:
 
 ```bash
 node scripts/sync-app-docs.js
@@ -249,7 +249,7 @@ node scripts/sync-app-docs.js
 node scripts/generate-mcp-docs.js
 ```
 
-The first refreshes the per-app pages in `docs/_apps/`. The second rebuilds the MCP reference (see [MCP servers](#mcp-servers)); `--check` fails if it is out of date.
+The first refreshes the per-app pages in `site/_apps/`. The second rebuilds the MCP reference (see [MCP servers](#mcp-servers)); `--check` fails if it is out of date.
 
 ## CI
 
@@ -336,7 +336,7 @@ To do it by hand:
 6. The app's node in `.robos/kgraphs/`, plus `.robos/kgraph.yaml` and `.robos/packages.yaml`
 7. A debug port in `PORT_REGISTRY` in `packages/robos-lib/snapshot-cli.js`, and in `PORT_MAP` in `packages/robos-test/lib/harness.js` if it has shared E2E tests
 
-Then run `node scripts/sync-app-docs.js` to create its page in `docs/_apps/`.
+Then run `node scripts/sync-app-docs.js` to create its page in `site/_apps/`.
 
 ## Change an existing app
 
@@ -482,11 +482,11 @@ The App Wizard (`packages/app-wizard`) generates a starter project and registers
 scripts/dev-launch.sh app-wizard
 ```
 
-Choose **Create New Project**. It writes to `packages/<slug>/` under the nearest `.robos` directory. Templates: a Next.js web app (the launch kit in `packages/app-wizard/templates/nextjs-vercel-web`, with auth, abuse controls, SEO and recorded Playwright tests), an Electron desktop app, a Node.js CLI and a Node.js HTTP service. Each comes with a Backstage `catalog-info.yaml` and a `dev-setup.sh`. Details, including which project types don't have their own template yet: [New app wizard](https://rowbose.com/v1/new-app-wizard.html).
+Choose **Create New Project**. It writes to `packages/<slug>/` under the nearest `.robos` directory. Templates: a Next.js web app (the launch kit in `packages/app-wizard/templates/nextjs-vercel-web`, with auth, abuse controls, SEO and recorded Playwright tests), an Electron desktop app, a Node.js CLI and a Node.js HTTP service. Each comes with a Backstage `catalog-info.yaml` and a `dev-setup.sh`. Details, including which project types don't have their own template yet: [New app wizard](https://rowbose.com/new-app-wizard/).
 
 ## Import an existing project
 
-Choose **Import Existing Code** in the App Wizard to add repositories, URLs, databases and services to the knowledge graph. It builds nodes mostly from names and top-level files, so check the result: [Import an existing app](https://rowbose.com/v1/app-import-wizard.html).
+Choose **Import Existing Code** in the App Wizard to add repositories, URLs, databases and services to the knowledge graph. It builds nodes mostly from names and top-level files, so check the result: [Import an existing app](https://rowbose.com/app-import-wizard/).
 
 For evidence-backed import of whole repository catalogs (GitHub or GitLab orgs, local folders, S3 or HTTP), use the `import-company-kgraph` skill.
 
@@ -526,7 +526,7 @@ node ~/robos/packages/robos-graph/bin/kgraph-cli.js diff my-branch
 node ~/robos/packages/robos-graph/bin/kgraph-cli.js visualize --direction LR
 ```
 
-Open KGraph Explorer (`scripts/dev-launch.sh robos-graph`) with the same `ROBOS_GRAPH_ROOT` to browse it and use **Import & Refine**. Agents reach the same workspace through the `robos_sdlc_*` MCP tools. The full model, including evidence rules and conflict handling, is in [WORKSPACES.md](packages/robos-graph/WORKSPACES.md). The node types and shapes are in [Schemas](https://rowbose.com/v1/schemas.html).
+Open KGraph Explorer (`scripts/dev-launch.sh robos-graph`) with the same `ROBOS_GRAPH_ROOT` to browse it and use **Import & Refine**. Agents reach the same workspace through the `robos_sdlc_*` MCP tools. The full model, including evidence rules and conflict handling, is in [WORKSPACES.md](packages/robos-graph/WORKSPACES.md). The node types and shapes are in [Schemas](https://rowbose.com/schemas/).
 
 ---
 
@@ -547,7 +547,7 @@ $ARGUMENTS — `<app-id>` optionally followed by `--json` or `--screenshot`
 ...
 ```
 
-**Skill library: [`plugins/robos/skills/`](plugins/robos/skills/)**, with every skill listed in the [skills catalog](docs/skills/skills-catalog.md) ([on the docs site](https://rowbose.com/v1/robos-skills.html)).
+**Skill library: [`plugins/robos/skills/`](plugins/robos/skills/)**, with every skill listed in the [skills catalog](docs/skills/skills-catalog.md) ([on the docs site](https://rowbose.com/robos-skills/)).
 
 Skills are written once there and installed in the place each agent reads:
 
@@ -615,14 +615,14 @@ The `robos_sdlc_*` graph tools are only offered when `ROBOS_GRAPH_ROOT` points a
 # Documentation
 
 - [rowbose.com](https://rowbose.com/): what RobOS is, the apps and the downloads
-- [Documentation](https://rowbose.com/v1/): installation, architecture, the knowledge graph, schemas and every app
+- [Apps and components](https://rowbose.com/apps/): every app and library, with its own page at `rowbose.com/<package-name>/`
 - [Build apps](https://rowbose.com/build-apps/): the plan, implement and review guides
-- [System architecture](https://rowbose.com/v1/architecture.html)
-- [Knowledge graph](https://rowbose.com/v1/knowledge-graph.html) and [schemas](https://rowbose.com/v1/schemas.html)
-- [AI agents and API mode](https://rowbose.com/v1/ai-providers.html)
-- [Skills](https://rowbose.com/v1/robos-skills.html) and the [skills catalog](docs/skills/skills-catalog.md)
+- [System architecture](https://rowbose.com/architecture/)
+- [Knowledge graph](https://rowbose.com/knowledge-graph/) and [schemas](https://rowbose.com/schemas/)
+- [AI agents and API mode](https://rowbose.com/ai-providers/)
+- [Skills](https://rowbose.com/robos-skills/) and the [skills catalog](docs/skills/skills-catalog.md)
 - [MCP server reference](docs/mcp-servers.md)
-- [Game development](https://rowbose.com/v1/game-development.html) and the [cRPG guide](games/crpg-realm/AGENTS.md)
+- [Game development](https://rowbose.com/game-development/) and the [cRPG guide](games/crpg-realm/AGENTS.md)
 - [AGENTS.md](AGENTS.md): the reference for agents and contributors
 
 # Community

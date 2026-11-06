@@ -25,7 +25,7 @@ A local HTTP server and desktop window that scan files into knowledge graph node
 
 ## What it does today
 
-The package is [`packages/kgraph-parse-portal`](https://github.com/nddipiazza/robos/tree/main/packages/kgraph-parse-portal), listed in the app catalog as [KGraph Parse Portal]({{ '/apps/kgraph-parse-portal/' | relative_url }}). `server.js` is a plain Node HTTP server that uses only built-in modules, plus `packages/robos-graph` when it commits nodes. `main.js` wraps it in an Electron window. The table separates what the code does from what the labels in the window suggest.
+The package is [`packages/kgraph-parse-portal`](https://github.com/nddipiazza/robos/tree/main/packages/kgraph-parse-portal), listed in the app catalog as [KGraph Parse Portal]({{ '/kgraph-parse-portal/' | relative_url }}). `server.js` is a plain Node HTTP server that uses only built-in modules, plus `packages/robos-graph` when it commits nodes. `main.js` wraps it in an Electron window. The table separates what the code does from what the labels in the window suggest.
 
 | Feature | What the code does | Caveat |
 |:---|:---|:---|
@@ -47,7 +47,7 @@ node packages/kgraph-parse-portal/server.js
 It listens on port `19192` on all network interfaces. Set `ROBOS_PARSE_PORT` to change the port. To use the window UI in a browser, open `http://localhost:19192/renderer/index.html`. The root URL `/` serves the same HTML, but its relative `style.css` and `app.js` links resolve to `/style.css` and `/app.js`, which return 404, so the page shows unstyled and does nothing.
 
 {: .warning }
-The server has no authentication, sends `Access-Control-Allow-Origin: *`, and binds to every interface. `/api/v1/parse` returns the text of any readable file whose path you send, `/api/v1/crawl` and `/api/v1/ingest` read any directory the server's user can read, and `ingest` writes to the knowledge graph. Run it on a trusted machine, or put a firewall rule in front of the port.
+The server has no authentication, sends `Access-Control-Allow-Origin: *`, and binds to every interface. `/api/parse` returns the text of any readable file whose path you send, `/api/crawl` and `/api/ingest` read any directory the server's user can read, and `ingest` writes to the knowledge graph. Run it on a trusted machine, or put a firewall rule in front of the port.
 
 To run the desktop window, use Electron. `npm run electron` inside the package runs `electron .`, and `scripts/dev-launch.sh kgraph-parse-portal` launches it with the usual RobOS flags. The package declares no Electron dependency, so Electron must already be installed where the script looks for it (`packages/kgraph-parse-portal/node_modules/.bin/electron`). In the Electron app, the REST server defaults to port `19193` and the app's debug server uses `19192`. The installed desktop entry, named KGraph Parse Portal, starts Electron from `/usr/local/share/robos/kgraph-parse-portal`.
 
@@ -78,21 +78,21 @@ All endpoints return JSON. Errors return HTTP 500 with `{"ok": false, "error": "
 
 | Endpoint | Input | Returns |
 |:---|:---|:---|
-| `GET /health` or `GET /api/v1/status` | none | `ok`, `service`, `version`, `tika` (`endpoint`, `online`, `mode`), `luxir` (`indexedCount`, `luxirOnline`, `endpoint`, `engine`), `buildbarn` |
-| `POST /api/v1/parse` | `filePath` (or `fileName`), `content`, `repository` | `ok`, `parseResult`, `graphNode`. If `content` is empty and `filePath` is an existing file, the file is read. The node is added to the search index only. |
-| `POST /api/v1/crawl` | `directoryPath` (or `path`), `maxDepth`, `repository`, `package` | `ok`, `archetype`, `fileCount`, `nodeCount`, `nodes` |
-| `POST /api/v1/ingest` | same as `crawl` | `ok`, `committedToGraph`, `nodesCommitted`, `archetype`, `nodes` |
-| `GET /api/v1/search` | `q`, `type`, `mimeType`, `semanticRole`, `archetype`, `protocol` | `ok`, `query`, `count`, `results` |
-| `GET /api/v1/rbe/status` | `endpoint` (default `127.0.0.1:8980`) | `ok`, `rbe` (`ok`, `status`, `endpoint`, `protocol`, `provider`, `chart`) |
-| `POST /api/v1/rbe/values` | see [Buildbarn helper](#buildbarn-helper) | `ok`, `chart`, `valuesYaml`, `installCommand` |
-| `POST /api/v1/rbe/register-cluster` | `clusterId`, `title`, `executionEndpoint`, `casEndpoint` | `ok`, `clusterNode`, `committed` |
+| `GET /health` or `GET /api/status` | none | `ok`, `service`, `version`, `tika` (`endpoint`, `online`, `mode`), `luxir` (`indexedCount`, `luxirOnline`, `endpoint`, `engine`), `buildbarn` |
+| `POST /api/parse` | `filePath` (or `fileName`), `content`, `repository` | `ok`, `parseResult`, `graphNode`. If `content` is empty and `filePath` is an existing file, the file is read. The node is added to the search index only. |
+| `POST /api/crawl` | `directoryPath` (or `path`), `maxDepth`, `repository`, `package` | `ok`, `archetype`, `fileCount`, `nodeCount`, `nodes` |
+| `POST /api/ingest` | same as `crawl` | `ok`, `committedToGraph`, `nodesCommitted`, `archetype`, `nodes` |
+| `GET /api/search` | `q`, `type`, `mimeType`, `semanticRole`, `archetype`, `protocol` | `ok`, `query`, `count`, `results` |
+| `GET /api/rbe/status` | `endpoint` (default `127.0.0.1:8980`) | `ok`, `rbe` (`ok`, `status`, `endpoint`, `protocol`, `provider`, `chart`) |
+| `POST /api/rbe/values` | see [Buildbarn helper](#buildbarn-helper) | `ok`, `chart`, `valuesYaml`, `installCommand` |
+| `POST /api/rbe/register-cluster` | `clusterId`, `title`, `executionEndpoint`, `casEndpoint` | `ok`, `clusterNode`, `committed` |
 
 Request and response details for `crawl` and `ingest` are on the [KGraph crawler]({{ site.baseurl }}{% link kgraph-crawler.md %}) page. The package's `contracts/openapi.yaml` describes only `crawl` and `search`.
 
 A parse request and the part of the response that matters:
 
 ```bash
-curl -s -X POST http://localhost:19192/api/v1/parse \
+curl -s -X POST http://localhost:19192/api/parse \
   -H 'Content-Type: application/json' \
   -d '{"filePath": "petstore.proto", "content": "syntax = \"proto3\"; service PetService { rpc GetPet(Id) returns (Pet); }"}'
 ```
@@ -118,7 +118,7 @@ The search index is a JavaScript `Map` of nodes keyed by `@id`, held in the serv
 {: .note }
 The portal only pings Luxir. Its search always reads the in-memory index. The bridge indexes through `indexer.indexNodes`, which `LuxirIndexer` does not define, and the resulting error is caught and ignored. So scan and parse results are never sent to a Luxir server, even when one is running. Nodes written through `ingest` and `register-cluster` do go through `SDLCKnowledgeGraphStore.addNode`, which sends each node to Luxir without waiting for the result when a server answers.
 
-The repository contains Luxir clients but no Luxir server. The core-platform graph lists Luxir (`urn:robos:search:luxir-kgraph-index`) as experimental, pre-release and not production-ready. The portal looks for it at `ROBOS_LUXIR_ENDPOINT` (default `http://127.0.0.1:8983`) and pings `GET /api/v1/health` with a 400 ms timeout. The index name the client uses is `robos_kgraph`.
+The repository contains Luxir clients but no Luxir server. The core-platform graph lists Luxir (`urn:robos:search:luxir-kgraph-index`) as experimental, pre-release and not production-ready. The portal looks for it at `ROBOS_LUXIR_ENDPOINT` (default `http://127.0.0.1:8983`) and pings `GET /api/health` with a 400 ms timeout. The index name the client uses is `robos_kgraph`.
 
 `bin/luxir-portal-cli.js` queries the index from a terminal.
 
@@ -158,9 +158,9 @@ PDF and ELF input is not parsed. The text becomes a placeholder such as `[PDF Do
 
 ## Buildbarn helper
 
-The Buildbarn tab and `/api/v1/rbe/*` endpoints produce a Helm values file, a `helm` command, a connectivity probe and a graph node. They do not talk to Kubernetes.
+The Buildbarn tab and `/api/rbe/*` endpoints produce a Helm values file, a `helm` command, a connectivity probe and a graph node. They do not talk to Kubernetes.
 
-`POST /api/v1/rbe/values` accepts these fields. `installCommand` uses the last three.
+`POST /api/rbe/values` accepts these fields. `installCommand` uses the last three.
 
 | Field | Default |
 |:---|:---|

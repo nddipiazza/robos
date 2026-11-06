@@ -16,7 +16,7 @@ Proposal, not built. No session size or waste analysis exists in the repository.
 
 ## Proposal
 
-A view attached to each session in [Agents Manager]({{ '/apps/agents-manager/' | relative_url }}), with these parts:
+A view attached to each session in [Agents Manager]({{ '/agents-manager/' | relative_url }}), with these parts:
 
 - **Composition.** Split the session into tool output, repeated file reads, content never referenced again, reasoning, system prompt and tool schemas, and the useful working set. Show total size, estimated tokens and a waste ratio.
 - **Largest calls.** A ranked list of tool calls and commands by output size, with a preview.

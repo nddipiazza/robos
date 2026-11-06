@@ -147,8 +147,8 @@ ROBOS_VPN_LIVE_E2E=1 node --test tests/e2e/vpn-sandbox-killswitch-proof.test.cjs
     </div>
 
     <div class="blog-links">
-      <a href="{{ '/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox app page →</a>
-      <a href="{{ '/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers app page →</a>
+      <a href="{{ '/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox app page →</a>
+      <a href="{{ '/vpn-servers/' | relative_url }}">RobOS VPN Servers app page →</a>
       <a href="https://github.com/nddipiazza/robos/blob/main/tests/e2e/vpn-sandbox-killswitch-proof.test.cjs">E2E Kill-Switch Proof test source →</a>
       <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/vpn-sandbox-engine.js">Sandbox Engine source →</a>
       <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/b0215d20">b0215d20</a> · <a href="https://github.com/nddipiazza/robos/commit/a0cc08a3">a0cc08a3</a></span>

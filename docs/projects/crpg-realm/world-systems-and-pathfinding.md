@@ -58,7 +58,7 @@ The meshes are in `assets/models/`: pawns for a knight, wizard, rogue, king and 
 
 ## NPCs and dialogue
 
-`data/v1/npcs.json` has 18 records and `data/v1/dialogue.json` has 18 trees. In the village, `VillageSquare.tscn` holds 12 townsfolk: eleven `NPCCharacter` nodes named `NPC_*` and Blacksmith Brand, a `ClickableObject`. The forest has three NPC nodes and the catacombs one (`SirJustinGhost`). Elora is a `ClickableObject` in `Homestead`.
+`data/npcs.json` has 18 records and `data/dialogue.json` has 18 trees. In the village, `VillageSquare.tscn` holds 12 townsfolk: eleven `NPCCharacter` nodes named `NPC_*` and Blacksmith Brand, a `ClickableObject`. The forest has three NPC nodes and the catacombs one (`SirJustinGhost`). Elora is a `ClickableObject` in `Homestead`.
 
 **`NPCCharacter`** (`scenes/components/NPCCharacter.tscn`) is a `CharacterBody2D`. Its exports include `npc_id`, `npc_name`, `custom_sprite_path`, `portrait_path`, `dialogue_text`, `dialogue_choices` and `waypoints`. On a click, `interact()` faces the NPC toward the hero, then looks for a dialogue tree in this order:
 

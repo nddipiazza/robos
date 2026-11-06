@@ -64,7 +64,7 @@ In PR Review, the evidence runner (`packages/robos-lib/evidence-runner.js`) reje
 
 ## Review gates in PR Review Theater
 
-The [PR Review app]({{ '/apps/pr-review/' | relative_url }}) shows a review as a sequence of steps: Description, Overview, Documentation, Changes, Open in IDE, Evidence, Walkthrough and Approve. Local reviews that have no pull request yet also get a Pull Request step. For pull requests with knowledge graph context, the default team configuration adds a reviewer knowledge check in the Overview step, with a pass score of 80, that locks the diffs and sign-off until it is passed, and it marks the evidence step as required. The Walkthrough step has an agent demonstrate the change in a real browser one checkpoint at a time, and it can run the same checkpoints against a separate checkout of the base revision.
+The [PR Review app]({{ '/pr-review/' | relative_url }}) shows a review as a sequence of steps: Description, Overview, Documentation, Changes, Open in IDE, Evidence, Walkthrough and Approve. Local reviews that have no pull request yet also get a Pull Request step. For pull requests with knowledge graph context, the default team configuration adds a reviewer knowledge check in the Overview step, with a pass score of 80, that locks the diffs and sign-off until it is passed, and it marks the evidence step as required. The Walkthrough step has an agent demonstrate the change in a real browser one checkpoint at a time, and it can run the same checkpoints against a separate checkout of the base revision.
 
 These gates live in the app. They are not GitHub branch protection rules. Local reviews, which have no pull request yet, turn the knowledge check off. Details are on [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}).
 
@@ -83,7 +83,7 @@ node packages/robos-graph/bin/kgraph-cli.js diff feature/TASK-101-auth --base ma
 
 The "dual state" is only partly built. The branches that the graph app and `kgraph diff` compare are in-memory copies of the loaded graph plus a few built-in sample branches. They are not read from your Git branches, so a diff does not yet reflect a real feature branch. The plain-text output of `kgraph diff` also prints zero counts, so use `--json`. Schema drift detection is not implemented.
 
-Two parts are solid. Imports into an external graph workspace (`ROBOS_GRAPH_ROOT`) go through `kgraph propose` and `kgraph apply`, with hash-checked proposals, three-way conflict detection, a write lock and `kgraph recover` for interrupted writes. External knowledge graph repositories can be pinned by Git tag and are cloned shallowly into `~/.robos/cache/kgraphs/<repo>@<tag>/`, but if the clone fails the code creates a stub package with a placeholder node instead of reporting an error. See [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}) and the [robos-graph app page]({{ '/apps/robos-graph/' | relative_url }}).
+Two parts are solid. Imports into an external graph workspace (`ROBOS_GRAPH_ROOT`) go through `kgraph propose` and `kgraph apply`, with hash-checked proposals, three-way conflict detection, a write lock and `kgraph recover` for interrupted writes. External knowledge graph repositories can be pinned by Git tag and are cloned shallowly into `~/.robos/cache/kgraphs/<repo>@<tag>/`, but if the clone fails the code creates a stub package with a placeholder node instead of reporting an error. See [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}) and the [robos-graph app page]({{ '/robos-graph/' | relative_url }}).
 
 ## Sandboxes for agent runs
 
@@ -96,7 +96,7 @@ This keeps stray files out of your home folder. It is not a security boundary:
 - The profile uses the host display, with a copy of your X authority file, not a private display.
 - It forwards your SSH agent socket, GPG agent socket and `.gitconfig`, and writes `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` and `GITHUB_TOKEN` into the profile's `.bashrc`. If a variable is unset, a placeholder value is written.
 
-For stronger isolation, run agents and tests in the Docker container (`./scripts/e2e-container.sh`, built from `infra/docker`). It mounts the repository at `/workspace` read-write and discards everything else when the container exits. See the [robos-profiled app page]({{ '/apps/robos-profiled/' | relative_url }}).
+For stronger isolation, run agents and tests in the Docker container (`./scripts/e2e-container.sh`, built from `infra/docker`). It mounts the repository at `/workspace` read-write and discards everything else when the container exits. See the [robos-profiled app page]({{ '/robos-profiled/' | relative_url }}).
 
 ## Prompt security
 
@@ -114,7 +114,7 @@ Limit: there is no shared session or routing layer. Each app starts its CLI itse
 
 ## Generating apps from the knowledge graph
 
-The [App Wizard]({{ '/apps/app-wizard/' | relative_url }}) (`packages/app-wizard`) is where "knowledge graph first" exists today, in a narrow form. For a new app, `generateNewApp()` writes files for the chosen archetype, then registers a node in the `applications` or `services` graph package, adds an entry to `.robos/packages.yaml`, writes `catalog-info.yaml` and `dev-setup.sh`, and adds the folder to `~/.config/robos/git-projects.json`. Front-end apps get a Next.js template for Vercel with end-to-end test and evidence scripts. Desktop apps get an Electron skeleton, console apps a Node CLI skeleton, and microservices a plain Node HTTP server with an `openapi.yaml` stub and a Dockerfile.
+The [App Wizard]({{ '/app-wizard/' | relative_url }}) (`packages/app-wizard`) is where "knowledge graph first" exists today, in a narrow form. For a new app, `generateNewApp()` writes files for the chosen archetype, then registers a node in the `applications` or `services` graph package, adds an entry to `.robos/packages.yaml`, writes `catalog-info.yaml` and `dev-setup.sh`, and adds the folder to `~/.config/robos/git-projects.json`. Front-end apps get a Next.js template for Vercel with end-to-end test and evidence scripts. Desktop apps get an Electron skeleton, console apps a Node CLI skeleton, and microservices a plain Node HTTP server with an `openapi.yaml` stub and a Dockerfile.
 
 The flow runs from wizard to files to graph, not from graph to code. TypeSpec models, API controllers, database migrations, devcontainers and consumer contract tests are not generated. The PC game, mobile app, data pipeline and library archetypes are offered in the wizard, but they receive the same Node server skeleton as microservices and no graph node. The wizard can also import existing code. See [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}) and [Building apps]({{ site.baseurl }}{% link app-development-flow.md %}).
 
@@ -122,7 +122,7 @@ The flow runs from wizard to files to graph, not from graph to code. TypeSpec mo
 
 `packages/remote-execution-studio` stores descriptions of Remote Execution API (REAPI v2) clusters, Buildbarn or NativeLink, and of Bazel or Buck2 build systems, and generates configuration text from them: `.bazelrc` with `build:remote` and `build:cache` profiles, `.buckconfig`, Buildbarn component configs (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`) and a NativeLink config. Definitions are saved to `~/.config/robos/remote-execution.json` and as `robos:RemoteExecutionCluster` nodes in the `devops` graph package.
 
-It does not deploy or monitor a cluster. The **Test REAPI Endpoints** button returns fixed sample results (healthy, 14 ms and 11 ms) without contacting anything, and the two bundled sample clusters carry fixed sample cache hit ratios. There is no live telemetry. See the [app page]({{ '/apps/remote-execution-studio/' | relative_url }}).
+It does not deploy or monitor a cluster. The **Test REAPI Endpoints** button returns fixed sample results (healthy, 14 ms and 11 ms) without contacting anything, and the two bundled sample clusters carry fixed sample cache hit ratios. There is no live telemetry. See the [app page]({{ '/remote-execution-studio/' | relative_url }}).
 
 ## Agents that drive RobOS apps
 
@@ -140,7 +140,7 @@ The Unified MCP Router (`packages/robos-mcp-router`) is a stdio JSON-RPC server 
 
 ## Credentials in `pass`
 
-DevOps integrations in the graph save tokens with `pass insert` under `devops/<category>/<provider>/<account>/<key>`, and the graph stores only the `pass` path. This needs `pass` and a GPG key set up. If `pass insert` fails, the code writes a base64-encoded, unencrypted placeholder file into the password store folder instead, so confirm `pass` works before you save credentials. The [Pass Manager]({{ '/apps/pass-manager/' | relative_url }}) app is a front end for the same store.
+DevOps integrations in the graph save tokens with `pass insert` under `devops/<category>/<provider>/<account>/<key>`, and the graph stores only the `pass` path. This needs `pass` and a GPG key set up. If `pass insert` fails, the code writes a base64-encoded, unencrypted placeholder file into the password store folder instead, so confirm `pass` works before you save credentials. The [Pass Manager]({{ '/pass-manager/' | relative_url }}) app is a front end for the same store.
 
 ## The rest of the suite
 

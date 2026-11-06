@@ -28,7 +28,7 @@ Start the wizard from inside the repository whose knowledge graph you want to up
 electron packages/app-wizard
 ```
 
-The wizard looks for `.robos` in the working directory and up to four parent directories. The sidebar steps are What to Import, Deep Inspection and Catalog & Ingest. The app page is [App Wizard]({{ '/apps/app-wizard/' | relative_url }}).
+The wizard looks for `.robos` in the working directory and up to four parent directories. The sidebar steps are What to Import, Deep Inspection and Catalog & Ingest. The app page is [App Wizard]({{ '/app-wizard/' | relative_url }}).
 
 {: .warning }
 Do not queue a database connection string that contains a password. The importer copies the full URI into the node's `dcterms:description`, which is saved in `.robos/kgraphs/core-platform/package.jsonld`. The built-in sample stack contains one such string (`admin:secret`), so do not load it into a graph you commit.
@@ -116,7 +116,7 @@ It also flags `openapi.yaml`, `openapi.json` or `swagger.json` (shown as "OpenAP
 
 It then appends an entry to `.robos/packages.yaml` if the URN is not already there, and tries to append one to `~/.config/robos/git-projects.json`. The `repository` in that entry is always `github.com/acme/<slug>`; edit it.
 
-The console box prints "Registered in .robos/packages.yaml" and "Added to ~/.config/robos/git-projects.json" whether or not those writes succeeded. Git Projects stores `{ "projects": [...] }` in that file and the wizard treats it as a bare array, so the entry is skipped when Git Projects has created the file and is not listed by Git Projects otherwise. Add the repository in [Git Projects]({{ '/apps/git-projects/' | relative_url }}) yourself.
+The console box prints "Registered in .robos/packages.yaml" and "Added to ~/.config/robos/git-projects.json" whether or not those writes succeeded. Git Projects stores `{ "projects": [...] }` in that file and the wizard treats it as a bare array, so the entry is skipped when Git Projects has created the file and is not listed by Git Projects otherwise. Add the repository in [Git Projects]({{ '/git-projects/' | relative_url }}) yourself.
 
 If the inspected source is not a local path (for example a URL), step 3 writes nothing, although the console still prints "Synthesized Backstage catalog metadata". Only the graph nodes from step 2 exist.
 
@@ -126,7 +126,7 @@ The importer does not clone repositories, call the Confluence or GitHub APIs, co
 
 | Target | What you get |
 |:---|:---|
-| Repository URL | One node. The archetype is guessed from the repository name (for example `cli`, `sdk`, `worker`, `mobile`, `game`) and defaults to Microservice. Two example URLs (`acme-retail/checkout-api` and a GitLab `acme-devops/gitops-deployments`) have canned titles. For Microservice and Library nodes it also creates a placeholder OpenAPI contract with made-up endpoints (`/api/v1/<name>`, `/healthz`). |
+| Repository URL | One node. The archetype is guessed from the repository name (for example `cli`, `sdk`, `worker`, `mobile`, `game`) and defaults to Microservice. Two example URLs (`acme-retail/checkout-api` and a GitLab `acme-devops/gitops-deployments`) have canned titles. For Microservice and Library nodes it also creates a placeholder OpenAPI contract with made-up endpoints (`/api/<name>`, `/healthz`). |
 | GitHub organization | Built-in sample data for `acme-payments` and `acme-identity`. Any other organization gets one placeholder repository named `<org>-service`. |
 | Confluence space | The same sample pages and ADRs for any Confluence URL. |
 | Database | A node with the engine, host, port and database name parsed from the URI. |
@@ -134,6 +134,6 @@ The importer does not clone repositories, call the Confluence or GitHub APIs, co
 | Kubernetes cluster | A node with the fixed namespaces `default` and `production`. |
 | Local directory | A scan of its subfolders for projects (those with `.git`, `package.json` or `pom.xml`), plus one ADR node per Markdown file in `docs/adr/`. |
 
-Treat the graph after an import as a draft. Review and edit the nodes in [Knowledge Graph Explorer]({{ '/apps/robos-graph/' | relative_url }}). When you need source evidence on every node, use the reviewed two-step import (propose, then apply) described in [`WORKSPACES.md`](https://github.com/nddipiazza/robos/blob/main/packages/robos-graph/WORKSPACES.md); see also [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}).
+Treat the graph after an import as a draft. Review and edit the nodes in [Knowledge Graph Explorer]({{ '/robos-graph/' | relative_url }}). When you need source evidence on every node, use the reviewed two-step import (propose, then apply) described in [`WORKSPACES.md`](https://github.com/nddipiazza/robos/blob/main/packages/robos-graph/WORKSPACES.md); see also [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}).
 
 The wizard's tests are `packages/robos-test/tests/app-wizard/import-mode-e2e.test.js` and `multi-resource-import.test.js`.

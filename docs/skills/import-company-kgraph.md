@@ -148,7 +148,7 @@ Use refinement to correct or extend the graph from evidence, one reviewed step a
 
 Repeat with fresh context as needed.
 
-The Knowledge Graph Explorer has the same review flow in its UI. Open it with `ROBOS_GRAPH_ROOT` set to the workspace and click **Import & Refine**. See `packages/robos-graph/WORKSPACES.md` and the [Knowledge Graph Explorer app page]({{ '/apps/robos-graph/' | relative_url }}).
+The Knowledge Graph Explorer has the same review flow in its UI. Open it with `ROBOS_GRAPH_ROOT` set to the workspace and click **Import & Refine**. See `packages/robos-graph/WORKSPACES.md` and the [Knowledge Graph Explorer app page]({{ '/robos-graph/' | relative_url }}).
 
 ## What the extractor reads
 
