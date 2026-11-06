@@ -1,0 +1,123 @@
+{
+ "scrypt": [
+  {
+   "password": "password",
+   "salt": "NaCl",
+   "N": 1024,
+   "r": 8,
+   "p": 16,
+   "dkLen": 64,
+   "keyHex": "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640"
+  },
+  {
+   "password": "correct horse battery staple",
+   "salt": "mvRktJiJSXIY84qMnZWLpA==",
+   "N": 32768,
+   "r": 8,
+   "p": 1,
+   "dkLen": 32,
+   "saltBase64": true,
+   "keyHex": "f7601ca1c7256e1879b9688764fdb2a190a816fc7b50aff38a4771429c8bb42b"
+  }
+ ],
+ "vault": {
+  "passphrase": "correct horse battery staple",
+  "keyHex": "f7601ca1c7256e1879b9688764fdb2a190a816fc7b50aff38a4771429c8bb42b",
+  "outerEncrypted": {
+   "format": "robos-config/1",
+   "kind": "vault",
+   "id": "v1",
+   "encrypted": {
+    "alg": "aes-256-gcm",
+    "kdf": "scrypt",
+    "N": 32768,
+    "r": 8,
+    "p": 1,
+    "salt": "mvRktJiJSXIY84qMnZWLpA=="
+   },
+   "payload": "GzgJDWm2xEcTVI/RliQrxr0EK48ifsQzldBgIrH38lVKgxDCSvakM3JflwBiYjbn6sXLg9bbolUy3Q5eMF62oQsgGi79KytPc2MnF5/K6B03tCOOEVld6z2M5dJwctehaL7RkGF0w3IfYcASd3y6JHlg/hhOYhUXHLonQ99ZaBX6hD8CGlle8tz7Ldq+pkQMD33jA9jcWC2+auabk0AatSFX7r9jFa+fJiqSYEvMldlCCrjf0zfI7zfNE7ZBECScE8PY3pLxTCspOa7RpSX+AepVymZusGn0vHJH7m3aE+K4IWTJtfFHoQQgmSJ8mXjmY7QO+0NZASPl+SSybBLPgTaG8q5KV3sUGvwny8ejH15H1uOfk9ckTsVjaAC/S379+r2/4rlXUOnCRKmBqgXu+ncv6pgTj7fXn2UGTH4Jxv+cJ7i0yCBv4PcjLIELpIQdRDWUcw4z1fHA3BdqGMhvUAc6zxPFWGkw5xKfT4URvweLbm2JOhvyWuX/V+tOfYvh+OzvB9xyPC2TMZpQoJYfOKijneGD/6+IOc64vVgC6uR/DkkyQUef/bSXr5nMUhce4vN7hjd//ZX/rVrdJrkDzyo="
+  },
+  "outerPlain": {
+   "format": "robos-config/1",
+   "kind": "vault",
+   "id": "v1",
+   "name": "Home backup",
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "updatedAt": "2026-11-06T12:00:00.000Z",
+   "generation": 3,
+   "files": {
+    "config/smart-lights.json": {
+     "sha": "244a68497de53712240a37816a6581925b75c6b809cd21c96a3eb95e78c48371",
+     "blob": "244a68497de53712240a37816a6581925b75c6b809cd21c96a3eb95e78c48371",
+     "size": 57,
+     "category": "smart-home",
+     "mtime": 1,
+     "by": "desk"
+    }
+   },
+   "history": []
+  },
+  "blobEncryptedHex": "f4a14ef7a4a2e3dcf43ea7c253dcdb01ac2db688be33737e1650088381c36c1443dc59b66729aa77f68fcb9ca238c6dcb9b47c8d45e32d6d0330f26a0cb1fc4aae67c5635a0c56a0d7f208c61b16277da803056796ac987e5143914b30515749",
+  "blobPlainHex": "1f8b0800000000000003ab562acacfcf2d56b28aae56ca4c51b252cace2c49ce48cd53d251ca4bcc4d050a7843056a6375947232d3334a408a636b01d9115ecc39000000",
+  "content": "{\"rooms\":[{\"id\":\"kitchen\",\"name\":\"Kitchen\"}],\"lights\":[]}"
+ },
+ "categories": [
+  {
+   "id": "preferences",
+   "label": "Preferences"
+  },
+  {
+   "id": "profile",
+   "label": "Your profile"
+  },
+  {
+   "id": "cloud-accounts",
+   "label": "Cloud accounts & data sources"
+  },
+  {
+   "id": "movie-library",
+   "label": "Movie Player library"
+  },
+  {
+   "id": "audio-library",
+   "label": "Audio Player library"
+  },
+  {
+   "id": "private-network",
+   "label": "Private Network & App Mesh"
+  },
+  {
+   "id": "smart-home",
+   "label": "Smart home & TVs"
+  },
+  {
+   "id": "developer",
+   "label": "Developer tools"
+  },
+  {
+   "id": "agents",
+   "label": "Agents & skills"
+  },
+  {
+   "id": "team",
+   "label": "Team & organization"
+  },
+  {
+   "id": "kgraph",
+   "label": "Knowledge Graph workspace"
+  },
+  {
+   "id": "business",
+   "label": "Business apps"
+  },
+  {
+   "id": "games",
+   "label": "Games"
+  },
+  {
+   "id": "other",
+   "label": "Other app settings"
+  }
+ ],
+ "clientSecretSha256": "b8062fa7796044a0caa0a96a0be46698d6e205be610ec4bc86ef0ec72bbbef99"
+}

@@ -49,8 +49,10 @@ parts() {
   mkdir -p "$VENDOR/prebuilt" "$VENDOR/bootanimation"
   (cd "$REPO_ROOT/packages/robos-launcher-android" && ./gradlew --console=plain assembleRelease)
   (cd "$REPO_ROOT/packages/smart-home-android" && ./gradlew --console=plain assembleRelease)
+  (cd "$REPO_ROOT/packages/robos-preferences-android" && ./gradlew --console=plain assembleRelease)
   cp "$REPO_ROOT/packages/robos-launcher-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSHome.apk"
   cp "$REPO_ROOT/packages/smart-home-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSSmartHome.apk"
+  cp "$REPO_ROOT/packages/robos-preferences-android/app/build/outputs/apk/release/app-release-unsigned.apk" "$VENDOR/prebuilt/RobOSPreferences.apk"
   # shellcheck disable=SC2086
   python3 "$HERE/tools/make-bootanimation.py" $SCREEN "$REPO_ROOT/robos-transparent-background.png" "$VENDOR/bootanimation/bootanimation.zip"
   ls -la "$VENDOR/prebuilt" "$VENDOR/bootanimation"
