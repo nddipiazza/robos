@@ -122,9 +122,9 @@
 .l-mosaic-new a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-style:dashed;border-width:2px;color:var(--muted)}
 .l-mosaic-new b{font-size:2rem;line-height:1;color:var(--accent);font-weight:500}
 .l-mosaic-new span{position:static;background:none;color:var(--fg);padding:0}
-/* "Build apps" leads the mosaic; under the tiles, a full-width row of two buttons: More apps, Add your own app */
+/* "Build apps" leads the mosaic; the two buttons (More apps, Add your own app) fill the last row beside the final tile, and stack beside it on phones */
 .l-mosaic-build a{border-color:var(--accent)}
-.l-mosaic-new{grid-column:1/-1;display:flex;gap:12px}
+.l-mosaic-new{grid-column:span 2;display:flex;gap:12px}
 .l-mosaic-new a{flex:1;aspect-ratio:auto;flex-direction:row;gap:10px;padding:12px}
 .l-mosaic-new b{font-size:1.5rem}
 .l-mosaic-new .l-mosaic-more{border-style:solid;border-width:1px}
@@ -167,6 +167,6 @@
 #vision .l-note a{color:var(--accent);font-weight:600;text-decoration:underline}
 @media(max-width:860px){.l-moves{grid-template-columns:1fr}}
 @media(max-width:520px){.l-swaps li{grid-template-columns:1fr;gap:2px}.l-swaps li:before{display:none}.l-swaps span,.l-swaps a{grid-column:1;grid-row:auto;justify-self:start}}
-@media(max-width:600px){.l-mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}.l-mosaic-build{grid-column:1/-1}.l-mosaic-build a{aspect-ratio:8/3}}
+@media(max-width:600px){.l-mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}.l-mosaic-build{grid-column:1/-1}.l-mosaic-build a{aspect-ratio:8/3}.l-mosaic-new{grid-column:auto;flex-direction:column}}
 /* the "your idea" suite card closes the grid on its own row: lay it out side by side */
 @media(min-width:861px){.suite-grid > .card.suite:last-child:nth-child(odd){grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.suite-grid > .card.suite:last-child:nth-child(odd) .suite-shot{aspect-ratio:auto;border-bottom:0;border-right:1px solid var(--line)}}
