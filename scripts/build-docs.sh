@@ -8,4 +8,5 @@ scripts/stage-site-data.sh
 jekyll build -s site -d "$OUT"
 node scripts/check-install-docs.cjs "$OUT"
 node scripts/check-site-pages.cjs "$OUT"
+node scripts/check-blog-seo.cjs "$OUT"
 echo "Built $OUT/"
