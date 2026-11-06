@@ -155,6 +155,15 @@ function renderLightsGrid(overview) {
     (l) => selectedRoomId === 'all' || l.roomId === selectedRoomId
   );
 
+  if (filtered.length === 0) {
+    container.innerHTML = `<p class="muted-text">${
+      (overview.lights || []).length === 0
+        ? 'No lights yet. Scan to find lights on this network, or add one by its IP address.'
+        : 'No lights in this room.'
+    }</p>`;
+    return;
+  }
+
   container.innerHTML = filtered
     .map((light) => {
       const room = roomMap.get(light.roomId);
@@ -432,7 +441,8 @@ function renderIntegrations(overview) {
   const container = document.getElementById('ci-status-cards');
   if (!container) return;
   const catalog = overview.ciStatusCatalog || {};
-  const activeStatus = overview.ciSync?.currentStatus || 'passing';
+  // No status is current until a build result has been sent to a light.
+  const activeStatus = overview.ciSync?.currentStatus || null;
 
   container.innerHTML = Object.values(catalog)
     .map((st) => {
@@ -691,7 +701,11 @@ function bindStaticEvents() {
 
   // Pair Hue Bridge
   document.getElementById('btn-pair-hue')?.addEventListener('click', async () => {
-    const bridgeIp = document.getElementById('input-hue-bridge-ip')?.value?.trim() || '192.168.1.87';
+    const bridgeIp = document.getElementById('input-hue-bridge-ip')?.value?.trim() || '';
+    if (!bridgeIp) {
+      showBanner('Enter the Hue Bridge IP address first. Your router app lists it.');
+      return;
+    }
     showBanner(`Contacting Hue Bridge at ${bridgeIp}…`);
     const res = await window.robos.pairHueBridge({ bridgeIp });
     if (res?.overview) renderAll(res.overview);

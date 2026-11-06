@@ -18,6 +18,7 @@ const {
   buildProtocolCommand,
   createSmartLightEngine,
 } = require('./smart-light-engine');
+const { sampleHome } = require('./smart-light-engine.fixtures.cjs');
 
 test('color, kelvin, Kasa XOR-171, and LIFX binary encoders produce valid wire frames', () => {
   const rgb = hexToRgb('#00bcd4');
@@ -95,6 +96,7 @@ test('SmartLightEngine manages rooms, lights, scenes, AI mood synthesis, circadi
     configDir: tmpDir,
     skipLanNetwork: true,
     apiPort: 0,
+    ...sampleHome(),
   });
 
   const initial = engine.getOverview();

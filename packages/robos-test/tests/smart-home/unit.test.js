@@ -22,6 +22,7 @@ process.env.ROBOS_CONFIG_DIR = path.join(tmpHome, '.config', 'robos');
 
 const libDir = path.resolve(__dirname, '..', '..', '..', 'robos-lib');
 const sl = require(path.join(libDir, 'smart-light-engine'));
+const { sampleHome } = require(path.join(libDir, 'smart-light-engine.fixtures.cjs'));
 const dashboard = require(path.join(libDir, 'dashboard-engine'));
 
 const cleanups = [];
@@ -40,7 +41,7 @@ function tempConfigDir() {
 
 function makeEngine(opts = {}) {
   const configDir = opts.configDir || tempConfigDir();
-  const engine = sl.createSmartLightEngine({ configDir, apiPort: 0, skipLanNetwork: true, ...opts });
+  const engine = sl.createSmartLightEngine({ configDir, apiPort: 0, skipLanNetwork: true, ...sampleHome(), ...opts });
   cleanups.push(() => engine.stopScheduler());
   return { engine, configDir };
 }
@@ -85,6 +86,26 @@ function fakeBridge(reply) {
     });
   });
 }
+
+describe('a new home', () => {
+  it('starts with no lights, no schedules and no CI or TV light', () => {
+    const engine = sl.createSmartLightEngine({ configDir: tempConfigDir(), apiPort: 0, skipLanNetwork: true });
+    cleanups.push(() => engine.stopScheduler());
+    const ov = engine.getOverview();
+    assert.deepStrictEqual(ov.lights, []);
+    assert.deepStrictEqual(ov.schedules, []);
+    assert.strictEqual(ov.ciSync.enabled, false);
+    assert.strictEqual(ov.tvBiasSync.enabled, false);
+  });
+
+  it('stays empty after the last light is removed and the app restarts', () => {
+    const { engine, configDir } = makeEngine();
+    for (const light of engine.getOverview().lights) engine.removeLight(light.id);
+    const reopened = sl.createSmartLightEngine({ configDir, apiPort: 0, skipLanNetwork: true });
+    cleanups.push(() => reopened.stopScheduler());
+    assert.deepStrictEqual(reopened.getOverview().lights, []);
+  });
+});
 
 describe('Hue Bridge pairing', () => {
   it('returns ok:false and leaves light keys unchanged when the bridge is unreachable', async () => {
