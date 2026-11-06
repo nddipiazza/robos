@@ -20,6 +20,7 @@ import com.robos.preferences.core.openManifest
 import com.robos.preferences.core.unpackBlob
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -44,6 +45,9 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
     val busy = MutableStateFlow<String?>(null)
     val problem = MutableStateFlow<String?>(null)
     val restored = MutableStateFlow<Map<String, String>>(emptyMap())
+
+    /** Whether the app is on screen. Android blocks its internet while it is not. */
+    val onScreen = MutableStateFlow(false)
 
     /** Asks the activity to open a page in the browser. */
     val openPage = MutableStateFlow<String?>(null)
@@ -77,7 +81,12 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             problem.value = null
             try {
-                val signedIn = withContext(Dispatchers.IO) { attempt.awaitAccount() }
+                val code = withContext(Dispatchers.IO) { attempt.awaitCode() }
+                // Google's answer arrives while the browser is in front; finish once the app is back.
+                onScreen.first { it }
+                busy.value = "Finishing sign-in"
+                val signedIn = withContext(Dispatchers.IO) { attempt.exchange(code) }
+                busy.value = null
                 store.save(signedIn)
                 account = signedIn
                 email.value = signedIn.email
