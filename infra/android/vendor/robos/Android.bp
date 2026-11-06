@@ -14,30 +14,13 @@ android_app_import {
         "androidx.window.extensions",
         "androidx.window.sidecar",
     ],
-    // The stock apps this image replaces. Overriding removes them from the build.
+    // RobOS Home replaces the stock home screen. The other LineageOS apps stay and show on RobOS Home.
     overrides: [
         "Launcher3QuickStep",
         "Launcher3QuickStepGo",
         "Launcher3Overlay",
-        "ThemePicker",
-        "Backgrounds",
         // It would replace RobOS with stock LineageOS on its next update.
         "Updater",
-        "Jelly",
-        "ExactCalculator",
-        "Glimpse",
-        "Canvas",
-        "Gallery2",
-        "Aperture",
-        "Etar",
-        "DeskClock",
-        "Eleven",
-        "Recorder",
-        "Contacts",
-        // Wi-Fi only for now.
-        "Dialer",
-        "messaging",
-        "Stk",
     ],
 }
 
