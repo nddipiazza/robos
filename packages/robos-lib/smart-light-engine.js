@@ -177,135 +177,6 @@ const DEFAULT_ROOMS = [
   { id: 'basement', name: 'Basement Theater', icon: '🎬', floor: 'Basement' },
 ];
 
-const DEFAULT_LIGHTS = [
-  {
-    id: 'light-studio-wled-strip',
-    name: 'Dev Desk Halo Strip (WLED)',
-    roomId: 'studio',
-    protocolId: 'wled-http',
-    formFactor: 'strip',
-    ip: '192.168.1.81',
-    port: 80,
-    deviceKey: '',
-    on: true,
-    brightness: 88,
-    colorMode: 'rgb',
-    colorHex: '#00bcd4',
-    kelvin: 5000,
-    effect: 'cyberpunk',
-    online: true,
-    wattsMax: 18,
-  },
-  {
-    id: 'light-studio-keylight',
-    name: 'Elgato Studio Key Light',
-    roomId: 'studio',
-    protocolId: 'elgato-http',
-    formFactor: 'panel',
-    ip: '192.168.1.82',
-    port: 9123,
-    deviceKey: '',
-    on: true,
-    brightness: 70,
-    colorMode: 'kelvin',
-    colorHex: '#fff4e0',
-    kelvin: 5200,
-    effect: 'solid',
-    online: true,
-    wattsMax: 25,
-  },
-  {
-    id: 'light-living-wiz-sofa',
-    name: 'Sofa Floor Lamp (Philips WiZ)',
-    roomId: 'living-room',
-    protocolId: 'wiz-udp',
-    formFactor: 'lamp',
-    ip: '192.168.1.83',
-    port: 38899,
-    deviceKey: '',
-    on: true,
-    brightness: 75,
-    colorMode: 'kelvin',
-    colorHex: '#ffb76b',
-    kelvin: 2800,
-    effect: 'solid',
-    online: true,
-    wattsMax: 11,
-  },
-  {
-    id: 'light-living-govee-tv',
-    name: '65" Roku TV Bias Backlight (Govee)',
-    roomId: 'living-room',
-    protocolId: 'govee-udp',
-    formFactor: 'strip',
-    ip: '192.168.1.84',
-    port: 4003,
-    deviceKey: '',
-    on: true,
-    brightness: 65,
-    colorMode: 'rgb',
-    colorHex: '#7c3aed',
-    kelvin: 3200,
-    effect: 'aurora',
-    online: true,
-    wattsMax: 15,
-  },
-  {
-    id: 'light-bedroom-lifx-nightstand',
-    name: 'Nightstand Globe (LIFX Color)',
-    roomId: 'bedroom',
-    protocolId: 'lifx-udp',
-    formFactor: 'bulb',
-    ip: '192.168.1.85',
-    port: 56700,
-    deviceKey: '',
-    on: false,
-    brightness: 35,
-    colorMode: 'kelvin',
-    colorHex: '#ff9e44',
-    kelvin: 2400,
-    effect: 'solid',
-    online: true,
-    wattsMax: 9,
-  },
-  {
-    id: 'light-kitchen-kasa-island',
-    name: 'Kitchen Island Pendants (TP-Link Kasa)',
-    roomId: 'kitchen',
-    protocolId: 'kasa-lan',
-    formFactor: 'pendant',
-    ip: '192.168.1.86',
-    port: 9999,
-    deviceKey: '',
-    on: true,
-    brightness: 90,
-    colorMode: 'kelvin',
-    colorHex: '#fff1d6',
-    kelvin: 4200,
-    effect: 'solid',
-    online: true,
-    wattsMax: 14,
-  },
-  {
-    id: 'light-basement-hue-play',
-    name: 'Basement Cinema Sconces (Philips Hue)',
-    roomId: 'basement',
-    protocolId: 'hue-rest',
-    formFactor: 'bar',
-    ip: '192.168.1.87',
-    port: 80,
-    deviceKey: '1',
-    on: true,
-    brightness: 45,
-    colorMode: 'rgb',
-    colorHex: '#3b82f6',
-    kelvin: 3000,
-    effect: 'breath',
-    online: true,
-    wattsMax: 12,
-  },
-];
-
 const BUILTIN_SCENES = [
   {
     id: 'scene-deep-focus',
@@ -443,42 +314,6 @@ const BUILTIN_SCENES = [
       effect: 'solid',
       keepNightlightRoomId: 'bedroom',
     },
-  },
-];
-
-const DEFAULT_SCHEDULES = [
-  {
-    id: 'sched-sunrise-wakeup',
-    name: 'Sunrise Wake-Up Fade',
-    time: '07:00',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    roomScope: 'bedroom',
-    sceneId: 'scene-deep-focus',
-    fadeMinutes: 20,
-    enabled: true,
-    lastTriggeredAt: null,
-  },
-  {
-    id: 'sched-evening-warmth',
-    name: 'Golden Hour Wind-Down',
-    time: '18:30',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    roomScope: 'all',
-    sceneId: 'scene-cozy-evening',
-    fadeMinutes: 10,
-    enabled: true,
-    lastTriggeredAt: null,
-  },
-  {
-    id: 'sched-goodnight',
-    name: 'Late Night Auto-Off',
-    time: '23:30',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    roomScope: 'all',
-    sceneId: 'scene-goodnight',
-    fadeMinutes: 5,
-    enabled: true,
-    lastTriggeredAt: null,
   },
 ];
 
@@ -1216,6 +1051,9 @@ function createSmartLightEngine(options = {}) {
     process.env.ROBOS_CONFIG_DIR ||
     path.join(process.env.HOME || os.homedir(), '.config', 'robos');
   const stateFile = path.join(configDir, 'smart-lights.json');
+  // A new home starts with no lights or schedules. Tests pass sample ones here.
+  const initialLights = Array.isArray(options.initialLights) ? options.initialLights : [];
+  const initialSchedules = Array.isArray(options.initialSchedules) ? options.initialSchedules : [];
   const skipLanNetwork =
     options.skipLanNetwork !== undefined
       ? Boolean(options.skipLanNetwork)
@@ -1239,23 +1077,23 @@ function createSmartLightEngine(options = {}) {
     try {
       if (fs.existsSync(stateFile)) {
         const parsed = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-        if (parsed && Array.isArray(parsed.lights) && parsed.lights.length > 0) {
+        if (parsed && Array.isArray(parsed.lights)) {
           return {
             rooms: Array.isArray(parsed.rooms) && parsed.rooms.length ? parsed.rooms : DEFAULT_ROOMS,
             lights: parsed.lights,
             customScenes: Array.isArray(parsed.customScenes) ? parsed.customScenes : [],
-            schedules: Array.isArray(parsed.schedules) ? parsed.schedules : DEFAULT_SCHEDULES,
+            schedules: Array.isArray(parsed.schedules) ? parsed.schedules : [],
             activeSceneId: parsed.activeSceneId || 'scene-deep-focus',
             circadianEnabled: Boolean(parsed.circadianEnabled),
             ciSync: {
               enabled: parsed.ciSync?.enabled !== false,
-              targetLightId: parsed.ciSync?.targetLightId || 'light-studio-wled-strip',
-              currentStatus: parsed.ciSync?.currentStatus || 'passing',
-              lastSyncedAt: parsed.ciSync?.lastSyncedAt || new Date().toISOString(),
+              targetLightId: parsed.ciSync?.targetLightId || null,
+              currentStatus: parsed.ciSync?.currentStatus || null,
+              lastSyncedAt: parsed.ciSync?.lastSyncedAt || null,
             },
             tvBiasSync: {
               enabled: parsed.tvBiasSync?.enabled !== false,
-              targetLightId: parsed.tvBiasSync?.targetLightId || 'light-living-govee-tv',
+              targetLightId: parsed.tvBiasSync?.targetLightId || null,
               mode: parsed.tvBiasSync?.mode || 'cinema-purple',
             },
             protocolLog: Array.isArray(parsed.protocolLog) ? parsed.protocolLog.slice(0, 35) : [],
@@ -1266,20 +1104,20 @@ function createSmartLightEngine(options = {}) {
 
     return {
       rooms: DEFAULT_ROOMS.map((r) => ({ ...r })),
-      lights: DEFAULT_LIGHTS.map((l) => ({ ...l })),
+      lights: initialLights.map((l) => ({ ...l })),
       customScenes: [],
-      schedules: DEFAULT_SCHEDULES.map((s) => ({ ...s })),
+      schedules: initialSchedules.map((s) => ({ ...s })),
       activeSceneId: 'scene-deep-focus',
       circadianEnabled: false,
       ciSync: {
-        enabled: true,
-        targetLightId: 'light-studio-wled-strip',
-        currentStatus: 'passing',
-        lastSyncedAt: new Date().toISOString(),
+        enabled: false,
+        targetLightId: null,
+        currentStatus: null,
+        lastSyncedAt: null,
       },
       tvBiasSync: {
-        enabled: true,
-        targetLightId: 'light-living-govee-tv',
+        enabled: false,
+        targetLightId: null,
         mode: 'cinema-purple',
       },
       protocolLog: [],
@@ -1587,8 +1425,10 @@ function createSmartLightEngine(options = {}) {
     const roomScope = input.roomScope || 'all';
     const refLight =
       state.lights.find((l) => l.on && (roomScope === 'all' || l.roomId === roomScope)) ||
-      state.lights[0] ||
-      DEFAULT_LIGHTS[0];
+      state.lights[0];
+    if (!refLight) {
+      return { ok: false, error: 'Add a light first. A scene copies how your lights look now.' };
+    }
     const stripLight =
       state.lights.find((l) => l.formFactor === 'strip' && l.on) || refLight;
 
@@ -2050,7 +1890,7 @@ function createSmartLightEngine(options = {}) {
    * and returns ok:false with the reason. With LAN traffic disabled (ROBOS_TEST /
    * skipLanNetwork) pairing is simulated and flagged `simulated: true`.
    */
-  async function pairHueBridge({ bridgeIp = '192.168.1.87', bridgePort = 80, timeoutMs = 2500 } = {}) {
+  async function pairHueBridge({ bridgeIp = '', bridgePort = 80, timeoutMs = 2500 } = {}) {
     const ip = String(bridgeIp || '').trim();
     const port = Number(bridgePort) || 80;
     if (!ip) {
@@ -2247,7 +2087,6 @@ module.exports = {
   LIGHT_PROTOCOLS,
   WLED_EFFECTS,
   DEFAULT_ROOMS,
-  DEFAULT_LIGHTS,
   BUILTIN_SCENES,
   CI_STATUS_STATES,
   SCHEDULER_INTERVAL_MS,
