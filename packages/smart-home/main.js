@@ -57,8 +57,11 @@ try {
 } catch {}
 
 const lightEngineModule = requireShared('smart-light-engine');
+const tuyaModule = requireShared('tuya');
+const tuyaService = tuyaModule.createTuyaService({ configDir: CONFIG_DIR });
 const lightEngine = lightEngineModule.createSmartLightEngine({
   configDir: CONFIG_DIR,
+  tuya: tuyaService,
   apiPort: Number(process.env.ROBOS_SMART_LIGHT_API_PORT || lightEngineModule.DEFAULT_API_PORT),
 });
 
@@ -228,6 +231,21 @@ ipcMain.handle('lights:scanLan', async () => {
 
 ipcMain.handle('lights:pairHueBridge', async (_e, payload) => {
   return lightEngine.pairHueBridge(payload);
+});
+
+// Feit / Smart Life (Tuya). Keys stay in the main process; the window only sees names and addresses.
+ipcMain.handle('tuya:getSetup', async () => tuyaService.getSetup());
+ipcMain.handle('tuya:findLights', async (_e, payload) => tuyaService.findLights(payload || {}));
+ipcMain.handle('tuya:addLights', async (_e, payload) => lightEngine.addTuyaLights(payload || {}));
+ipcMain.handle('tuya:forget', async () => tuyaService.forget());
+
+// Only these pages open from the Add-light wizard.
+const WIZARD_PAGES = {
+  'tuya-iot': 'https://iot.tuya.com/',
+};
+ipcMain.handle('wizard:openPage', async (_e, pageId) => {
+  const url = WIZARD_PAGES[pageId];
+  if (url) await shell.openExternal?.(url);
 });
 
 ipcMain.handle('appliances:getOverview', async () => {

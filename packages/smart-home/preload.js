@@ -25,4 +25,9 @@ contextBridge.exposeInMainWorld('robos', {
   refreshAppliances: (opts) => ipcRenderer.invoke('appliances:refresh', opts),
   disconnectAppliances: () => ipcRenderer.invoke('appliances:disconnect'),
   openApplianceTokenPage: () => ipcRenderer.invoke('appliances:openTokenPage'),
+  tuyaGetSetup: () => ipcRenderer.invoke('tuya:getSetup'),
+  tuyaFindLights: (payload) => ipcRenderer.invoke('tuya:findLights', payload),
+  tuyaAddLights: (payload) => ipcRenderer.invoke('tuya:addLights', payload),
+  tuyaForget: () => ipcRenderer.invoke('tuya:forget'),
+  openWizardPage: (pageId) => ipcRenderer.invoke('wizard:openPage', pageId),
 });
