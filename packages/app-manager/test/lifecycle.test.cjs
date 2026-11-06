@@ -295,11 +295,25 @@ test('Windows shortcuts and windows use the app\'s own icon, made from its icon.
   native.shortcut({ id: 'one', label: 'One App' });
   const ico = path.join(appDir, 'icon.ico');
   assert.equal(links[0].icon, ico);
-  const bytes = fs.readFileSync(ico);
-  assert.deepEqual([bytes.readUInt16LE(0), bytes.readUInt16LE(2), bytes.readUInt16LE(4)], [0, 1, 1], 'an icon file with one image');
-  assert.equal(bytes[6], 0, '256 px is stored as 0');
-  assert.equal(bytes.readUInt32LE(14), png.length);
-  assert.ok(bytes.subarray(22).equals(png), 'the PNG is embedded unchanged');
+  const bytes = fs.readFileSync(ico), count = bytes.readUInt16LE(4);
+  assert.deepEqual([bytes.readUInt16LE(0), bytes.readUInt16LE(2)], [0, 1], 'an icon file');
+  const entries = Array.from({ length: count }, (_, i) => { const at = 6 + 16 * i; return { size: bytes[at] || 256, length: bytes.readUInt32LE(at + 8), offset: bytes.readUInt32LE(at + 12) }; });
+  // The Start menu shows a blank page for an icon that only has a 256 px image.
+  assert.deepEqual(entries.map(e => e.size), [16, 20, 24, 32, 40, 48, 64, 256]);
+  const largest = entries.at(-1);
+  assert.ok(bytes.subarray(largest.offset, largest.offset + largest.length).equals(png), 'the 256 px PNG is embedded unchanged');
+  const small = entries[0], bitmap = bytes.subarray(small.offset, small.offset + small.length);
+  assert.deepEqual([bitmap.readUInt32LE(0), bitmap.readInt32LE(4), bitmap.readInt32LE(8), bitmap.readUInt16LE(14)], [40, 16, 32, 32], '16 px is a 32-bit bitmap');
+  assert.equal(bitmap.length, 40 + 16 * 16 * 4 + 4 * 16);
+  // Its pixels are the PNG's, scaled down: the middle pixel matches the source's middle.
+  const { decodePng } = require('../lib/win-icon.cjs'), source = decodePng(png);
+  const mid = (128 * 256 + 128) * 4, row = 16 - 1 - 8, px = 40 + (row * 16 + 8) * 4;
+  assert.ok(Math.abs(bitmap[px + 2] - source.rgba[mid]) < 40 && Math.abs(bitmap[px + 1] - source.rgba[mid + 1]) < 40 && Math.abs(bitmap[px] - source.rgba[mid + 2]) < 40, 'the bitmap shows the icon');
+  // An icon written by an older RobOS (one image) is rebuilt; an up-to-date one is kept.
+  const stale = Buffer.alloc(6); stale.writeUInt16LE(1, 2); stale.writeUInt16LE(1, 4); fs.writeFileSync(ico, stale);
+  ensureAppIco(appDir);
+  assert.equal(fs.readFileSync(ico).readUInt16LE(4), 8);
+  const before = fs.statSync(ico).mtimeMs; ensureAppIco(appDir); assert.equal(fs.statSync(ico).mtimeMs, before);
   assert.equal(ensureAppIco(path.join(locations.root, 'packages', 'missing')), null);
   assert.throws(() => pngToIco(Buffer.from('not a png')), /Not a PNG/);
 });
