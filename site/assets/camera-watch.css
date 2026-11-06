@@ -1,0 +1,15 @@
+@import url("code-review.css");
+.camera-guide .cr-hero{max-width:850px}
+.camera-guide .cr-hero h1{font-size:clamp(2.7rem,6vw,4.6rem);line-height:1.04}
+.camera-actions{display:flex;flex-wrap:wrap;align-items:center;gap:22px}
+.camera-guide .guide-shot img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
+.camera-guide .guide-shot figcaption{margin-top:10px;font-size:.88rem;line-height:1.6;color:var(--muted)}
+.camera-photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.camera-note{margin:26px 0;padding:20px 24px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;background:var(--card);line-height:1.7}
+.camera-table{overflow-x:auto;margin:24px 0}
+.camera-table table{width:100%;border-collapse:collapse;font-size:.94rem;line-height:1.65}
+.camera-table th,.camera-table td{text-align:left;vertical-align:top;padding:14px 16px;border:1px solid var(--line)}
+.camera-table th{background:var(--card)}
+.camera-table td:first-child{min-width:140px;font-weight:600}
+.camera-guide code{overflow-wrap:anywhere}
+@media(max-width:700px){.camera-photo-grid{grid-template-columns:1fr}.camera-note{padding:16px}.camera-table th,.camera-table td{padding:10px}}

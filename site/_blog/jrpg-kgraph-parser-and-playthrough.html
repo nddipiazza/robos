@@ -9,7 +9,8 @@ tags:
   - "Autonomous Agents"
   - "eLearning"
 summary: "Classic 8-bit RPGs are thoroughly documented across fan wikis, atlas PNGs, manuals, and 6502 assembly guides, yet those sources disagree on tile coordinates, palettes, and stats. We built robos-jrpg-parser to ingest local resource folders into an OSLC JSON-LD Knowledge Graph, flag conflicts between tables and prose, emit chained Cucumber milestone suites plus isolated mechanic tests, and drive the resulting Godot 4 game through the RobOS Game Playthrough viewer—backed by a 12-module hands-on eLearning course and Godot bootcamp."
-description: "How robos-jrpg-parser ingests classic JRPG maps, tables, manuals, and walkthroughs into an OSLC JSON-LD Knowledge Graph, generates checkpoint-chained Cucumber E2E suites and isolated shop/NPC/chest tests, drives the game in the RobOS Game Playthrough viewer, and teaches the full workflow in a 12-module eLearning course."
+description: "Turn classic JRPG maps, manuals and walkthroughs into a knowledge graph, a playable Godot game, and automated playthroughs with checkpoints and video evidence."
+seo_title: "From JRPG Guides to a Playable Godot Game · RobOS"
 og_image: /assets/elearning/jrpg-kgraph/demo/qwd-tile-coordinates.png
 og_image_alt: "A classic JRPG town map sliced into 16x16 tiles with grid coordinates and teleport triggers inspected for Knowledge Graph ingestion"
 ---
@@ -100,7 +101,7 @@ og_image_alt: "A classic JRPG town map sliced into 16x16 tiles with grid coordin
   </div>
 
   <h3>4. Watching Any JRPG Run in the RobOS Game Playthrough App</h3>
-  <p>Previously, the <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough</code>) was wired specifically to <em>Quest: Warrior Dragon</em>. We upgraded <code>packages/game-playthrough</code> so it can point at <strong>any</strong> JRPG project generated from a Knowledge Graph via <code>--game-dir /path/to/game</code> or the <code>JRPG_GAME_DIR</code> environment variable, dynamically reading the game's title and milestone registry from <code>data/v1/milestones.json</code>.</p>
+  <p>Previously, the <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough</code>) was wired specifically to <em>Quest: Warrior Dragon</em>. We upgraded <code>packages/game-playthrough</code> so it can point at <strong>any</strong> JRPG project generated from a Knowledge Graph via <code>--game-dir /path/to/game</code> or the <code>JRPG_GAME_DIR</code> environment variable, dynamically reading the game's title and milestone registry from <code>data/milestones.json</code>.</p>
 
   <figure class="blog-fig">
     <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-live.png' | relative_url }}" alt="RobOS Game Playthrough desktop viewer showing the milestone checklist on the left and live game state, video playback, and checkpoint inspector on the right" loading="lazy" style="object-fit:contain;max-height:none">

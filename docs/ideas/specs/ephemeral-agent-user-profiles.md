@@ -33,11 +33,11 @@ Proposal, not built. The directory-and-environment version of agent profiles exi
 
 ## What exists today
 
-- [Agent Profile Daemon]({{ '/apps/robos-profiled/' | relative_url }}) (`packages/robos-profiled`) builds a profile that is a directory plus environment variables. It mounts a `tmpfs` home when the daemon runs as root and otherwise uses a plain directory (`tmpfs-manager.js`). It copies the X authority file and links audio sockets into it (`display-bridge.js`), and forwards SSH, GPG and git identity (`identity-forwarder.js`). `robos-run-as --agent NAME COMMAND` runs a command with that environment. `spawnSwarm` in `daemon.js` creates several profiles at once.
+- [Agent Profile Daemon]({{ '/robos-profiled/' | relative_url }}) (`packages/robos-profiled`) builds a profile that is a directory plus environment variables. It mounts a `tmpfs` home when the daemon runs as root and otherwise uses a plain directory (`tmpfs-manager.js`). It copies the X authority file and links audio sockets into it (`display-bridge.js`), and forwards SSH, GPG and git identity (`identity-forwarder.js`). `robos-run-as --agent NAME COMMAND` runs a command with that environment. `spawnSwarm` in `daemon.js` creates several profiles at once.
 - The profile's UID is a random number between 15000 and 24999. The code never calls `useradd` and sets no cgroup limits, so commands run as the host user with a different `HOME`.
 - The taskbar (`packages/robos-desktop`) shows a count of active agent profiles and a "Kill & Wipe" button for each.
-- [Agent Daemon]({{ '/apps/robos-agentd/' | relative_url }}) (`packages/robos-agentd`) keeps a registry of agent sessions behind a Unix socket and tunnels SSH and GPG sockets into each session's home. Its display engine only assigns display numbers and stream URLs. Nothing starts an X server or serves a stream.
-- [Desktop Agents Viewer]({{ '/apps/desktop-agents/' | relative_url }}) (`packages/desktop-agents`) draws simulated screens on canvases from sample data.
+- [Agent Daemon]({{ '/robos-agentd/' | relative_url }}) (`packages/robos-agentd`) keeps a registry of agent sessions behind a Unix socket and tunnels SSH and GPG sockets into each session's home. Its display engine only assigns display numbers and stream URLs. Nothing starts an X server or serves a stream.
+- [Desktop Agents Viewer]({{ '/desktop-agents/' | relative_url }}) (`packages/desktop-agents`) draws simulated screens on canvases from sample data.
 
 ## Source
 

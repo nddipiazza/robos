@@ -7,4 +7,4 @@ const listen = name => callback => {
 };
 contextBridge.exposeInMainWorld('robosManager', { state: invoke('state'), refresh: invoke('refresh'), preview: invoke('preview'),
   install: invoke('install'), cancel: invoke('cancel'), uninstall: invoke('uninstall'), uninstallAll: invoke('uninstall-all'), launch: invoke('launch'), removeAll: invoke('remove-all'),
-  onState: listen('state'), onProgress: listen('progress') });
+  onState: listen('state'), onProgress: listen('progress'), onNotice: listen('notice') });

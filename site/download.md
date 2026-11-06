@@ -55,7 +55,7 @@ keywords: "download RobOS, Windows installer, Ubuntu deb package, Linux app suit
   <div class="wrap">
     <h2 class="h2">Install the RobOS Linux GNOME distro</h2>
     <p>This is a separate installation option: create a bootable USB drive and install the RobOS Linux appliance on a dedicated PC. Flashing erases the selected USB drive, and the unattended OS installation can erase the target PC.</p>
-    <p><a class="btn" href="{{ site.data.release.url }}">View Windows USB flasher</a> <a href="{{ '/v1/getting-started.html#install-the-appliance-from-a-usb-drive' | relative_url }}">Linux distro installation guide</a></p>
+    <p><a class="btn" href="{{ site.data.release.url }}">View Windows USB flasher</a> <a href="{{ '/getting-started/#install-the-appliance-from-a-usb-drive' | relative_url }}">Linux distro installation guide</a></p>
     <p class="muted">The Windows USB flasher cannot write the drive itself. Use <a href="https://rufus.ie/">Rufus</a> with <a href="{{ site.data.release.url }}">the bootable ISO</a> to finish on Windows.</p>
   </div>
 </section>
@@ -91,7 +91,7 @@ scripts/install-local.sh</code></pre>
   -net nic -net user,hostfwd=tcp::2224-:22</code></pre>
       </div>
     </div>
-    <p class="muted" style="margin-top:20px">Every method, with prerequisites, is covered in the <a style="color:var(--accent)" href="{{ '/v1/getting-started.html' | relative_url }}">Get started guide</a>.</p>
+    <p class="muted" style="margin-top:20px">Every method, with prerequisites, is covered in the <a style="color:var(--accent)" href="{{ '/getting-started/' | relative_url }}">Get started guide</a>.</p>
   </div>
 </section>
 

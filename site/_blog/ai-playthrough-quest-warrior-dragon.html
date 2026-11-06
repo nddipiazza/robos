@@ -8,7 +8,8 @@ tags:
   - "Autonomous Agents"
   - "Proof of Work"
 summary: "Proving every tile was reachable did not prove the game could be won. So we taught the robos-jrpg engine to play Quest: Warrior Dragon from King Lorik's throne room to the Dragonlord with real inputs only, cut the two-hour run into one video and one save checkpoint per milestone, added deadlock watchdogs on both sides of the IPC boundary, and put the whole thing in a GNOME tray icon so you can follow it without watching it."
-description: "Proving every tile was reachable did not prove the game could be won. So we taught the robos-jrpg engine to play Quest: Warrior Dragon from King Lorik's throne room to the Dragonlord with real inputs only, cut the two-hour run into one video and one save checkpoint per milestone, added deadlock watchdogs on both sides of the IPC boundary, and put the whole thing in a GNOME tray icon so you can follow it without watching it."
+description: "How RobOS plays Quest: Warrior Dragon with real game inputs, records each milestone, and saves checkpoints for a complete, reproducible AI playthrough."
+seo_title: "Quest: Warrior Dragon AI Playthrough · RobOS"
 og_image: /assets/games/quest-warrior-dragon/playthrough/filmstrip-milestone-videos.jpg
 og_image_alt: "Filmstrip: one frame from each of the 74 milestone videos of the winning run, with each clip's length"
 ---
@@ -21,7 +22,7 @@ og_image_alt: "Filmstrip: one frame from each of the 74 milestone videos of the 
   </figure>
 
   <h3>A brain that only wants the next milestone</h3>
-  <p><code>PlayGameBrain.gd</code> is a "play the game" mode of the in-engine <code>AIEngine.gd</code>. It has exactly the affordances a human has: <code>move_up/down/left/right</code>, <code>ui_accept</code> and <code>cmd_menu</code>, and the state the game exposes through its IPC web service (<code>GameControlServer.gd</code>, <code>GET /api/v1/state</code>). No teleports, no stat edits, no reading hidden RNG. What makes it finish the game is not cleverness but a registry: <code>tools/gen_milestones.py</code> derives <code>data/v1/milestones.json</code>, an ordered list of 70 objectives, from the chest, shop, quest and level-curve data: every weapon, armor and shield purchase, every chest, each quest item, a level gate before each dangerous zone, the Dragonlord and the ending. Each entry says where to stand, which command to use, what level and gold are needed, and a <code>done_when</code> predicate. The brain always seeks the next unfinished one.</p>
+  <p><code>PlayGameBrain.gd</code> is a "play the game" mode of the in-engine <code>AIEngine.gd</code>. It has exactly the affordances a human has: <code>move_up/down/left/right</code>, <code>ui_accept</code> and <code>cmd_menu</code>, and the state the game exposes through its IPC web service (<code>GameControlServer.gd</code>, <code>GET /api/state</code>). No teleports, no stat edits, no reading hidden RNG. What makes it finish the game is not cleverness but a registry: <code>tools/gen_milestones.py</code> derives <code>data/milestones.json</code>, an ordered list of 70 objectives, from the chest, shop, quest and level-curve data: every weapon, armor and shield purchase, every chest, each quest item, a level gate before each dangerous zone, the Dragonlord and the ending. Each entry says where to stand, which command to use, what level and gold are needed, and a <code>done_when</code> predicate. The brain always seeks the next unfinished one.</p>
   <ul>
     <li><strong>Routing:</strong> <code>RoutePlanner.gd</code> plans multi-map routes over the real walkability grids (stairs, doors, bridges, the Rainbow Bridge); the brain walks them with the same stride inputs the demo AI uses.</li>
     <li><strong>Survival:</strong> kill-before-die battle maths from <code>combat_formulas.json</code>, zone-aware heal thresholds (survive two worst-case hits from the local encounter pool), tiered HEAL / herb / HEALMORE, inn trips only when out of heal MP and herbs, herb restocks at every item shop, MP conservation inside Charlock and HEALMORE-only healing against the Dragonlord.</li>
@@ -128,6 +129,6 @@ og_image_alt: "Filmstrip: one frame from each of the 74 milestone videos of the 
 <div class="blog-links">
   <a href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">AI Playthrough docs, dashboard walkthrough and full gallery →</a>
   <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}">Quest: Warrior Dragon game page →</a>
-  <a href="{{ '/v1/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; architecture guide →</a>
+  <a href="{{ '/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; architecture guide →</a>
   <span class="blog-commits">Commits: 489d3d67 · f8369a3e · db03cfd8 · 10f31281 · 528bdc62 · 72d4225d</span>
 </div>

@@ -110,4 +110,4 @@ Demo mode (see the [quick start]({{ '/projects/crpg-realm/quick-start.html#demo-
 
 Only Space is registered in Godot's Input Map (`toggle_pause` in `project.godot`). Every other key is matched on `event.keycode` in the scripts listed above. To rebind one, change the `KEY_*` constant in that script's handler. To make it remappable, add an action under Project, Project Settings, Input Map, and switch the handler to `event.is_action_pressed("your_action")`.
 
-The BDD tests do not press keys. They call the HTTP control API (for example `/api/v1/user_input/pan_camera`), so rebinding a key does not break them.
+The BDD tests do not press keys. They call the HTTP control API (for example `/api/user_input/pan_camera`), so rebinding a key does not break them.

@@ -55,7 +55,7 @@ This node comes from `.robos/kgraphs/services/package.jsonld` in the RobOS repos
   "dcterms:title": "Acme Orders gRPC Protobuf Contract",
   "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
   "robos:protocol": "grpc-protobuf",
-  "robos:specFile": "proto/orders/v1/orders.proto",
+  "robos:specFile": "proto/orders/orders.proto",
   "robos:packageName": "acme.orders.v1",
   "robos:rpcMethods": [
     "CreateOrder",

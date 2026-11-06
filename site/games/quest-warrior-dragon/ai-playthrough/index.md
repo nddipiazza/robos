@@ -45,7 +45,7 @@ keywords: "Quest Warrior Dragon AI playthrough, autonomous RPG playthrough, 74 m
       <p class="eyebrow">Why</p>
       <h2 class="h2">Reachable is not the same as beatable</h2>
       <p class="sec-p">The <a href="{{ '/games/quest-warrior-dragon/proof-of-viability.html' | relative_url }}">BFS proof of viability</a> walks every connected <code>(map, col, row)</code> state and proves every chest, stair, door and the Dragonlord's altar can be <em>reached</em>. It says nothing about whether a hero with the gold, levels, spells and herbs the game actually hands out can <em>get there alive</em>, afford the Broad Sword, survive Charlock's basement, or beat the Dragonlord's second form. Those are economy, combat-formula and inventory questions, and the only honest way to answer them is to play the game.</p>
-      <p class="sec-p">So the game plays itself. <code>PlayGameBrain.gd</code> is a "play the game" mode of the in-engine <code>AIEngine.gd</code>: it presses <code>move_up/down/left/right</code>, <code>ui_accept</code> and <code>cmd_menu</code>, and reads state through the same HTTP IPC web service the E2E tests use (<code>GameControlServer.gd</code>, <code>GET /api/v1/state</code>). No teleports, no stat edits, no peeking at hidden RNG. If it cannot finish, the game has a bug.</p>
+      <p class="sec-p">So the game plays itself. <code>PlayGameBrain.gd</code> is a "play the game" mode of the in-engine <code>AIEngine.gd</code>: it presses <code>move_up/down/left/right</code>, <code>ui_accept</code> and <code>cmd_menu</code>, and reads state through the same HTTP IPC web service the E2E tests use (<code>GameControlServer.gd</code>, <code>GET /api/state</code>). No teleports, no stat edits, no peeking at hidden RNG. If it cannot finish, the game has a bug.</p>
       <div class="facts">
         <div><b>70</b><span>Milestones in the registry (every chest, purchase, quest item, level gate, boss)</span></div>
         <div><b>~2 h</b><span>Wall-clock for a full run at time-scale 8</span></div>
@@ -73,16 +73,16 @@ flowchart LR
   subgraph Driver["tests/e2e/play_full_game.py (Python)"]
     D1[boot Godot on Xvfb]
     D2[start_play_game]
-    D3[poll /api/v1/state + get_milestones]
+    D3[poll /api/state + get_milestones]
     D4[assert invariants<br>stall-timeout watchdog]
     D5[ffmpeg per-milestone video<br>export_save_state checkpoint<br>screenshot]
     D6[live.json every 1 s<br>playthrough.json]
   end
   subgraph Godot["Godot 4 · games/quest-warrior-dragon"]
-    W["GameControlServer.gd<br>GET /api/v1/state<br>POST /api/v1/command"]
+    W["GameControlServer.gd<br>GET /api/state<br>POST /api/command"]
     B["PlayGameBrain.gd<br>(AIEngine play-the-game mode)"]
     R["RoutePlanner.gd"]
-    M["data/v1/milestones.json<br>70 ordered objectives"]
+    M["data/milestones.json<br>70 ordered objectives"]
     G["Game scenes · CombatEngine · PlayerState"]
     B -->|real inputs| G
     G -->|state| B
@@ -103,7 +103,7 @@ flowchart LR
   V --> T
       </pre>
       <div class="grid3" style="margin-top:28px">
-        <div class="card"><h3>Milestone registry</h3><p><code>tools/gen_milestones.py</code> derives <code>data/v1/milestones.json</code> from the chest, shop, quest and level-curve registries: every weapon, armor and shield purchase, every chest, each quest item, level gates before dangerous zones, the Dragonlord and the ending. Each entry says where to stand, which command to use, the <code>min_level</code> and gold needed, and a <code>done_when</code> predicate the brain checks against game state.</p></div>
+        <div class="card"><h3>Milestone registry</h3><p><code>tools/gen_milestones.py</code> derives <code>data/milestones.json</code> from the chest, shop, quest and level-curve registries: every weapon, armor and shield purchase, every chest, each quest item, level gates before dangerous zones, the Dragonlord and the ending. Each entry says where to stand, which command to use, the <code>min_level</code> and gold needed, and a <code>done_when</code> predicate the brain checks against game state.</p></div>
         <div class="card"><h3>The brain</h3><p><code>PlayGameBrain.gd</code> always seeks the next unfinished milestone. <code>RoutePlanner.gd</code> plans the multi-map route (stairs, doors, bridges, the Rainbow Bridge) over the real walkability grids; the brain walks it one tile at a time with the same stride inputs the demo AI uses.</p></div>
         <div class="card"><h3>Survival policy</h3><p>Kill-before-die battle maths from <code>combat_formulas.json</code>; zone-aware heal thresholds (survive two worst-case hits from the local encounter pool); tiered HEAL / herb / HEALMORE; inn trips only when out of heal MP and herbs; herb restock from every item shop; MP conservation inside Charlock and HEALMORE-only healing against the Dragonlord. NES pack rules hold: eight tool slots, six per stack, no dropping.</p></div>
         <div class="card"><h3>Deadlock watchdog (brain)</h3><p>A wall-clock progress watchdog fires after 90&nbsp;s with no change in milestone, battles, level, gold, map, tile, herbs or HP. It drops the current objective and plan, blacklists an unreachable supply shop, and after three stalls on one milestone skips it if optional or fails the run.</p></div>
@@ -161,7 +161,7 @@ python3 tools/gen_milestones.py</code></pre>
     <div class="panel-g">
       <p class="eyebrow">Following a run</p>
       <h2 class="h2">The tray icon and the live dashboard</h2>
-      <p class="sec-p">A two-hour autonomous run has a visibility problem: you want to know <em>at a glance</em> whether it is still alive, how far along it is, and what it is doing, without a terminal scrolling JSON. The RobOS <a href="{{ '/apps/game-playthrough/' | relative_url }}">Game Playthrough</a> app (<code>packages/game-playthrough</code>) is a small Electron app that stepped and recorded runs start automatically (<code>--dashboard on|off|auto</code>). It stays open after the run; quit it from the tray menu.</p>
+      <p class="sec-p">A two-hour autonomous run has a visibility problem: you want to know <em>at a glance</em> whether it is still alive, how far along it is, and what it is doing, without a terminal scrolling JSON. The RobOS <a href="{{ '/game-playthrough/' | relative_url }}">Game Playthrough</a> app (<code>packages/game-playthrough</code>) is a small Electron app that stepped and recorded runs start automatically (<code>--dashboard on|off|auto</code>). It stays open after the run; quit it from the tray menu.</p>
 
       <div class="pt-step">
         <figure><img loading="lazy" src="{{ '/assets/games/quest-warrior-dragon/playthrough/tray-menu.png' | relative_url }}" alt="GNOME top bar with the Game Playthrough tray icon and its context menu after the winning run"><figcaption>The tray icon's progress ring and context menu, rendered from the winning run's <code>live.json</code> with the menu the app builds.</figcaption></figure>
@@ -186,7 +186,7 @@ python3 tools/gen_milestones.py</code></pre>
       <div class="grid3" style="margin-top:22px">
         <div class="card"><h3>Header</h3><p>Status pill (<code>RUNNING</code>, <code>DONE</code>, <code>STALLED</code>, <code>CRASHED</code>), elapsed time and time scale, a progress bar over the 74 milestones, and stat chips: level, HP, MP, gold, EXP, ATK/DEF, battles, deaths, scene and tile. The "Now:" line names the current milestone and the brain's sub-objective.</p></div>
         <div class="card"><h3>Live game</h3><p>A screenshot refreshed every 1.5&nbsp;s through <code>capture_screenshot</code> (it writes <code>live.png</code> in the reports folder), with the scene and map key beside the heading.</p></div>
-        <div class="card"><h3>Battle</h3><p>Current monster and its HP, monster ATK/DEF, hero HP/MP and whether STOPSPELL landed, straight from <code>/api/v1/state</code>'s battle block.</p></div>
+        <div class="card"><h3>Battle</h3><p>Current monster and its HP, monster ATK/DEF, hero HP/MP and whether STOPSPELL landed, straight from <code>/api/state</code>'s battle block.</p></div>
         <div class="card"><h3>Equipment &amp; pack</h3><p>Weapon, armor, shield and the full pack with stacks collapsed (<code>Herb ×5</code>), so you can see the NES eight-slot rule and herb restocks working.</p></div>
         <div class="card"><h3>AI inputs</h3><p>The last ~20 inputs the brain pressed, including stride targets (<code>move_up(stride:9-&gt;100,16)</code>) and the current stride target tile.</p></div>
         <div class="card"><h3>Brain event log</h3><p>The brain's own event log (<code>L11 cast: hurt vs scorpion (hp 44/59 mp 12)</code>, field heals, inn trips, watchdog stalls, skipped milestones) plus any invariant violations the driver recorded.</p></div>
@@ -297,7 +297,7 @@ npx electron --no-sandbox . --select 44 --snapshot out.png   # open milestone 44
       <h2 class="h2">What a passing run looks like</h2>
       <p class="sec-p">With the game data fixed, the brain clears all 74 milestones and beats the Dragonlord at level 21 in a single Charlock expedition. The run that produced every image on this page took 2&nbsp;h&nbsp;34&nbsp;min at time-scale 8, with 2,621 battles and 6 deaths, and you can <a href="https://www.youtube.com/watch?v=o6RHKMKD2AU">watch all of it on YouTube</a>. The <code>playthrough.json</code> report, the per-milestone videos and checkpoints are the proof of work; the dashboard is how you read it.</p>
       <div class="cta" style="justify-content:flex-start;margin-top:22px">
-        <a class="btn" href="{{ '/v1/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; Architecture Guide</a>
+        <a class="btn" href="{{ '/projects/quest-warrior-dragon/' | relative_url }}">Engine &amp; Architecture Guide</a>
         <a class="btn btn-ghost" href="{{ '/games/quest-warrior-dragon/proof-of-viability.html' | relative_url }}">BFS Proof of Viability</a>
         <a class="btn btn-ghost" href="{{ '/blog/ai-playthrough-quest-warrior-dragon/' | relative_url }}">Read the blog post</a>
         <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/quest-warrior-dragon" target="_blank" rel="noopener">Source on GitHub</a>

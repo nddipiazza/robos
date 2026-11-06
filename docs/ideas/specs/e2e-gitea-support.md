@@ -30,8 +30,8 @@ The goal is to exercise clone, push, issue and pull request flows against a real
 - `./scripts/e2e-container.sh` runs the tests in Docker through `infra/docker/run.sh`. The image files in `infra/docker` do not mention Gitea.
 - `packages/robos-test/fixtures` holds `sample-robos-root` and `standalone-ide-window` only. No code in `packages` reads `ROBOS_GIT_FORGE_URL` or `ROBOS_GITHUB_API_BASE`.
 - Issue Manager runs the `gh` CLI (`packages/issue-manager/main.js`).
-- [Task Servers]({{ '/apps/task-servers/' | relative_url }}) offers a "Gitea (Local OSS Forge)" entry, but `createAdapter` in `packages/robos-task-client/index.js` only supports `jira` and `github`.
-- [Gitea Browser]({{ '/apps/gitea-browser/' | relative_url }}) (`packages/gitea-browser`) is a static page that looks like a Gitea issue list at `http://localhost:3000`. It makes no network calls and is not a forge.
+- [Task Servers]({{ '/task-servers/' | relative_url }}) offers a "Gitea (Local OSS Forge)" entry, but `createAdapter` in `packages/robos-task-client/index.js` only supports `jira` and `github`.
+- [Gitea Browser]({{ '/gitea-browser/' | relative_url }}) (`packages/gitea-browser`) is a static page that looks like a Gitea issue list at `http://localhost:3000`. It makes no network calls and is not a forge.
 
 ## Source
 

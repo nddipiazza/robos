@@ -483,13 +483,52 @@ function cloudAccountSection() {
       <button type="button" class="btn" id="btn-open-google-calendar-app">Open Google Calendar &amp; Thunderbird Setup</button>
     </div>
     <p class="section-status" id="cloud-accounts-status" role="status" aria-live="polite">Loading unified cloud accounts…</p>
+    ${googleClientNotice()}
   </section>`;
+}
+
+/**
+ * Google's sign-in page names the OAuth client's app, and RobOS's built-in client is
+ * rclone's public one, so Google says "rclone". This explains that and lets the user sign
+ * in with their own Google OAuth client instead (which shows their own app name).
+ */
+function googleClientNotice() {
+  return `<div id="cloud-google-client" style="margin-top:12px;padding:10px 14px;border:1px solid #29323e;border-radius:6px;font-size:12.5px;line-height:1.5;">
+      <p style="margin:0;"><strong>Why Google's sign-in page says “rclone”:</strong> RobOS signs in to Google through
+        <a href="https://rclone.org/" target="_blank" rel="noopener">rclone</a>'s public, open-source Google client, so Google shows that app's name.
+        The sign-in goes straight from Google to RobOS on this computer: rclone's developers don't get your password, tokens or files.
+        To see your own app name there (for example “RobOS”), and to get your own Google Drive quota, sign in with your own Google client below.</p>
+      <details id="cloud-google-own-client" style="margin-top:8px;">
+        <summary style="cursor:pointer;">Use my own Google OAuth client</summary>
+        <ol style="margin:8px 0;padding-left:20px;color:var(--muted);">
+          <li>In <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>, create a project and enable the Google Drive API (and the Calendar and People APIs if you use them).</li>
+          <li>Under Google Auth Platform → Branding, set the app name to “RobOS”. Under Audience, choose External and add your Google account as a test user.</li>
+          <li>Under Clients, create an OAuth client of type <strong>Desktop app</strong>. Copy its client ID and secret here.</li>
+        </ol>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <input id="cloud-google-client-id" class="text-input" placeholder="Client ID (…apps.googleusercontent.com)" autocomplete="off" spellcheck="false" style="flex:2 1 260px;">
+          <input id="cloud-google-client-secret" class="text-input" type="password" placeholder="Client secret" autocomplete="off" spellcheck="false" style="flex:1 1 160px;">
+          <button type="button" class="btn" id="btn-cloud-google-own-client">Sign in with my client</button>
+          <button type="button" class="btn" id="btn-cloud-google-builtin-client" style="display:none;">Go back to the built-in client</button>
+        </div>
+        <p style="margin:8px 0 0;color:var(--muted);">Google shows “Google hasn't verified this app” for a client in Testing mode: choose Continue. In Testing mode Google signs you out after 7 days; publish the app in the console to stop that.
+          If Config Sync uses this account, sign in with the same client on each computer.</p>
+      </details>
+    </div>`;
+}
+
+/** The Google account the sign-in buttons act on: the default one, else the first. */
+function defaultGoogleAccount(state) {
+  const google = (state?.accounts || []).filter(a => a.provider === 'google');
+  return google.find(a => a.isDefault) || google[0] || null;
 }
 
 function renderCloudAccountsSection(state) {
   const listWrap = document.getElementById('cloud-accounts-list-wrap');
   if (!listWrap) return;
   const accounts = state.accounts || [];
+  const builtinClientBtn = document.getElementById('btn-cloud-google-builtin-client');
+  if (builtinClientBtn) builtinClientBtn.style.display = defaultGoogleAccount(state)?.oauthClient?.custom ? '' : 'none';
   if (!accounts.length) {
     listWrap.innerHTML = `<div style="padding:10px 12px;border:1px solid #29323e;border-radius:6px;color:var(--muted);font-size:13px;margin-bottom:8px;">No cloud accounts connected yet. Sign in with Google or open RobOS Cloud Accounts.</div>`;
     return;
@@ -513,6 +552,7 @@ function renderCloudAccountsSection(state) {
             </div>
             <div style="font-size:12px;color:var(--muted);margin-top:3px;">
               Account: <code>${esc(acc.email || acc.user)}</code> · Active Suites: <strong>${esc(suiteBadges.join(', ') || 'Drive')}</strong>
+              ${acc.oauthClient ? ` · Google client: <span data-cloud-client="${esc(acc.id)}">${acc.oauthClient.custom ? 'your own' : `built-in (Google shows it as “${esc(acc.oauthClient.appName)}”)`}</span>` : ''}
             </div>
           </div>
           <div class="cloud-account-actions" style="display:flex;gap:6px;flex:none;">
@@ -635,17 +675,52 @@ async function loadCloudAccounts() {
     statusEl.textContent = err.message;
   }
 
-  const signInBtn = document.getElementById('btn-cloud-google-signin');
-  if (signInBtn) {
-    signInBtn.onclick = async () => {
-      statusEl.textContent = 'Opening Google OAuth 2.0 sign-in in your browser…';
-      const res = await window.api.startGoogleOAuth({});
+  const googleSignIn = async (params, button) => {
+    if (button) button.disabled = true;
+    statusEl.textContent = 'Opening Google OAuth 2.0 sign-in in your browser…';
+    try {
+      const res = await window.api.startGoogleOAuth(params);
       if (res.ok) {
         renderCloudAccountsSection(res);
         statusEl.textContent = `✓ Signed in as ${res.email}.`;
       } else {
         statusEl.textContent = `Sign-in error: ${res.error}`;
       }
+      return res;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  };
+
+  const signInBtn = document.getElementById('btn-cloud-google-signin');
+  if (signInBtn) signInBtn.onclick = () => googleSignIn({}, signInBtn);
+
+  const ownClientBtn = document.getElementById('btn-cloud-google-own-client');
+  if (ownClientBtn) {
+    ownClientBtn.onclick = async () => {
+      const idEl = document.getElementById('cloud-google-client-id');
+      const secretEl = document.getElementById('cloud-google-client-secret');
+      const clientId = idEl.value.trim();
+      const clientSecret = secretEl.value.trim();
+      if (!/\.apps\.googleusercontent\.com$/.test(clientId)) {
+        statusEl.textContent = 'Paste the client ID of a Desktop app OAuth client: it ends in .apps.googleusercontent.com.';
+        return idEl.focus();
+      }
+      if (!clientSecret) {
+        statusEl.textContent = 'Paste the client secret that goes with this client ID.';
+        return secretEl.focus();
+      }
+      const res = await googleSignIn({ clientId, clientSecret }, ownClientBtn);
+      if (res?.ok) secretEl.value = '';
+    };
+  }
+
+  const builtinClientBtn = document.getElementById('btn-cloud-google-builtin-client');
+  if (builtinClientBtn) {
+    builtinClientBtn.onclick = async () => {
+      const current = await window.api.cloudAccounts();
+      const acc = defaultGoogleAccount(current);
+      googleSignIn({ accountId: acc?.id, useBuiltInClient: true }, builtinClientBtn);
     };
   }
 

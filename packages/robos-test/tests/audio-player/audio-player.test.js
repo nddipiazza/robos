@@ -92,9 +92,9 @@ describe('RobOS Audio Player Tests', () => {
       assert.ok(content.includes('**RobOS Audio Player**'), 'AGENTS.md should list RobOS Audio Player');
     });
 
-    it('documentation page exists in docs/_apps/audio-player.md', () => {
-      const docPath = path.resolve(__dirname, '../../../../docs/_apps/audio-player.md');
-      assert.ok(fs.existsSync(docPath), 'docs/_apps/audio-player.md should exist');
+    it('documentation page exists in site/_apps/audio-player.md', () => {
+      const docPath = path.resolve(__dirname, '../../../../site/_apps/audio-player.md');
+      assert.ok(fs.existsSync(docPath), 'site/_apps/audio-player.md should exist');
     });
 
     it('.robos/packages.yaml lists audio-player', () => {

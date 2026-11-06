@@ -93,5 +93,6 @@ $('uninstall-all').onclick = () => attempt(async () => { notice(''); const resul
 $('cancel').onclick = () => attempt(() => api.cancel());
 $('remove-all').onclick = () => attempt(() => api.removeAll());
 api.onState(value => { state = value; render(); });
+if (api.onNotice) api.onNotice(message => notice(message));
 api.onProgress(value => { $('progress-label').textContent = `${value.phase}: ${value.label || state.catalog?.components.find(item => item.id === value.id)?.label || value.id}`; if (value.total) $('progress').value = value.received / value.total * 100; else if (value.count) $('progress').value = value.completed / value.count * 100; else $('progress').removeAttribute('value'); });
 attempt(async () => { state = await api.state(); render(); try { state = await api.refresh(); render(); } catch (error) { notice(`${error.message}\n${state.catalog ? 'Showing the saved catalog. Installed apps can still be opened.' : 'Your installed apps remain on this computer.'}`); } });

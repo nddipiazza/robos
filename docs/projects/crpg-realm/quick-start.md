@@ -167,8 +167,8 @@ Environment variables the test harness reads:
 Every desktop run starts `GameControlServer` on `127.0.0.1`. Outside the tests it listens on port 8080 and tries up to 8089 if that is busy. The port is printed in the Godot output.
 
 ```bash
-curl -s http://127.0.0.1:8080/api/v1/health
-curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40
+curl -s http://127.0.0.1:8080/api/health
+curl -s http://127.0.0.1:8080/api/state | python3 -m json.tool | head -40
 ```
 
 Choose the port with `CRPG_WEB_SERVICE_PORT=18090 ./play.sh` or `./play.sh --port 18090`. The endpoint list is on the [reference page]({{ '/projects/crpg-realm/reference.html#http-control-api' | relative_url }}).

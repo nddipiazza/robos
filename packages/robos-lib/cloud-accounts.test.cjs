@@ -172,3 +172,112 @@ test('Dev Central unified calendar events store seeds, adds, and deletes events 
   const afterDel = await thunderbirdGoogle.getUnifiedCalendarEvents(null, { ...env, skipNetwork: true });
   assert.ok(!afterDel.events.some(e => e.id === added.event.id));
 });
+
+// ── Google sign-in client: why Google's pages say "rclone", and the user's own client ──
+
+/**
+ * Runs startGoogleBrowserOAuth against a stubbed Google: returns the consent URL RobOS
+ * redirects to and the token-exchange request, plus the sign-in result.
+ */
+async function runGoogleSignIn(params, env, { email = 'me@example.com', refreshToken = '1//new_refresh' } = {}) {
+  const realFetch = globalThis.fetch;
+  const tokenRequests = [];
+  globalThis.fetch = async (url, init = {}) => {
+    const u = String(url);
+    if (u === 'https://oauth2.googleapis.com/token') {
+      tokenRequests.push(Object.fromEntries(new URLSearchParams(String(init.body))));
+      return new Response(JSON.stringify({ access_token: 'ya29.test_signin', refresh_token: refreshToken, scope: 'https://www.googleapis.com/auth/drive' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    if (u.includes('/drive/v3/about')) {
+      return new Response(JSON.stringify({ user: { emailAddress: email } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return realFetch(url, init);
+  };
+  try {
+    let gotLoginUrl;
+    const loginUrlP = new Promise(r => { gotLoginUrl = r; });
+    const resultP = cloudAccounts.startGoogleBrowserOAuth({ ...params, onOpenExternal: gotLoginUrl }, { ...env, oauthPort: 0 });
+    const loginUrl = await Promise.race([loginUrlP, resultP.then(() => { throw new Error('sign-in finished before opening the browser'); })]);
+    const redirect = await realFetch(loginUrl, { redirect: 'manual' });
+    const consentUrl = new URL(redirect.headers.get('location'));
+    await realFetch(`${new URL(loginUrl).origin}/?code=test-code`);
+    const result = await resultP;
+    return { consentUrl, tokenRequests, result };
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+test('the built-in Google client is rclone\'s, so the account says Google shows it as "rclone"', async () => {
+  const env = createTempHome();
+  const { consentUrl, tokenRequests, result } = await runGoogleSignIn({}, env);
+
+  // Google's consent page names the app registered for this client ID: rclone's.
+  assert.equal(consentUrl.origin + consentUrl.pathname, 'https://accounts.google.com/o/oauth2/v2/auth');
+  assert.equal(consentUrl.searchParams.get('client_id'), cloudAccounts.DEFAULT_GDRIVE_CLIENT_ID);
+  assert.equal(tokenRequests[0].client_id, cloudAccounts.DEFAULT_GDRIVE_CLIENT_ID);
+  assert.equal(cloudAccounts.BUILTIN_GOOGLE_CLIENT_APP_NAME, 'rclone');
+
+  // Everything RobOS itself shows names Google and the email, never rclone.
+  assert.equal(result.account.label, 'Google (me@example.com)');
+  assert.deepEqual(result.account.oauthClient, { custom: false, clientId: cloudAccounts.DEFAULT_GDRIVE_CLIENT_ID, appName: 'rclone' });
+  const ds = JSON.parse(fs.readFileSync(path.join(env.configDir, 'data-sources.json'), 'utf8'));
+  assert.equal(ds.length, 1);
+  assert.equal(ds[0].id, 'gdrive-google-me-example-com');
+  assert.equal(ds[0].name, 'Google (me@example.com)');
+  assert.doesNotMatch(JSON.stringify({ label: result.account.label, name: ds[0].name }), /rclone/i);
+});
+
+test('signing in with the user\'s own Google client uses it, saves it, and refreshes with it', async () => {
+  const env = createTempHome();
+  const own = { clientId: '123-own.apps.googleusercontent.com', clientSecret: 'GOCSPX-own-secret' };
+  const { consentUrl, tokenRequests, result } = await runGoogleSignIn(own, env);
+
+  assert.equal(consentUrl.searchParams.get('client_id'), own.clientId);
+  assert.equal(tokenRequests[0].client_id, own.clientId);
+  assert.equal(tokenRequests[0].client_secret, own.clientSecret);
+  // An own client can ask for the whole suite at once.
+  assert.match(consentUrl.searchParams.get('scope'), /calendar/);
+  assert.deepEqual(result.account.oauthClient, { custom: true, clientId: own.clientId, appName: null });
+  assert.equal(JSON.stringify(result.account).includes(own.clientSecret), false, 'the renderer never gets the secret');
+
+  // The client is stored with the tokens it issued, on the account and its Drive data source.
+  const raw = cloudAccounts.getAccountById(result.account.id, env);
+  assert.equal(raw.clientId, own.clientId);
+  assert.equal(raw.clientSecret, own.clientSecret);
+  const ds = JSON.parse(fs.readFileSync(path.join(env.configDir, 'data-sources.json'), 'utf8'));
+  assert.equal(ds[0].clientId, own.clientId);
+  assert.equal(ds[0].clientSecret, own.clientSecret);
+
+  // A refresh uses the same client: rclone's would get unauthorized_client.
+  const realFetch = globalThis.fetch;
+  let refreshBody;
+  globalThis.fetch = async (url, init) => {
+    refreshBody = Object.fromEntries(new URLSearchParams(String(init.body)));
+    return new Response(JSON.stringify({ access_token: 'ya29.test_refreshed', expires_in: 3599 }), { status: 200 });
+  };
+  try { await cloudAccounts.refreshGoogleAccountToken(result.account.id, env); } finally { globalThis.fetch = realFetch; }
+  assert.equal(refreshBody.client_id, own.clientId);
+  assert.equal(refreshBody.client_secret, own.clientSecret);
+  assert.equal(refreshBody.refresh_token, '1//new_refresh');
+
+  // Signing in again keeps the user's client; useBuiltInClient switches back to rclone's.
+  const again = await runGoogleSignIn({ accountId: result.account.id }, env, { refreshToken: '1//again' });
+  assert.equal(again.consentUrl.searchParams.get('client_id'), own.clientId);
+  const back = await runGoogleSignIn({ accountId: result.account.id, useBuiltInClient: true }, env, { refreshToken: '1//builtin' });
+  assert.equal(back.consentUrl.searchParams.get('client_id'), cloudAccounts.DEFAULT_GDRIVE_CLIENT_ID);
+  assert.equal(back.result.account.oauthClient.custom, false);
+  const after = cloudAccounts.getAccountById(result.account.id, env);
+  assert.equal(after.clientId, '');
+  assert.equal(after.refreshToken, '1//builtin');
+  const dsAfter = JSON.parse(fs.readFileSync(path.join(env.configDir, 'data-sources.json'), 'utf8'));
+  assert.equal(dsAfter[0].clientId, '');
+});
+
+test('an own client ID without its secret is refused before the browser opens', async () => {
+  const env = createTempHome();
+  await assert.rejects(
+    cloudAccounts.startGoogleBrowserOAuth({ clientId: '123-own.apps.googleusercontent.com', onOpenExternal: () => assert.fail('opened the browser') }, { ...env, oauthPort: 0 }),
+    /client secret/,
+  );
+});

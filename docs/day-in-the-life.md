@@ -33,19 +33,19 @@ Nothing is deployed in the recording. The last slide shows the sample app starte
 
 ### 1. Plan the task in Task Explorer
 
-Chapter: Task created. App: RobOS Task Explorer, package [`task-planner`]({{ '/apps/task-planner/' | relative_url }}).
+Chapter: Task created. App: RobOS Task Explorer, package [`task-planner`]({{ '/task-planner/' | relative_url }}).
 
 You type the goal into the prompt box and click **Generate with AI**. The planner returns an epic and a task. The task body holds acceptance criteria plus a happy-path, a negative and an edge case. Click **Sync All to Server** to file them. In the recording the epic becomes issue #41 and the task #42.
 
 ### 2. Implement it in Task Implementer
 
-Chapter: Task implemented. App: [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}).
+Chapter: Task implemented. App: [Task Implementer]({{ '/task-implementer/' | relative_url }}).
 
 Pick issue #42 from the list. The agent persona comes from the issue's `role:` label. Click **Start Agent**. The agent creates the branch `codex/42`, makes the change, runs the project's tests, commits and pushes. It does not open a pull request. The **Review branch…** button next to **Start Agent** hands the branch to the review app.
 
 ### 3. Review as the author in PR Review
 
-Chapters: Owner reviews the changes, Owner checks the evidence, Owner takes the walkthrough. App: [Agent Code Review Platform]({{ '/apps/pr-review/' | relative_url }}), using the stages described on [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}).
+Chapters: Owner reviews the changes, Owner checks the evidence, Owner takes the walkthrough. App: [Agent Code Review Platform]({{ '/pr-review/' | relative_url }}), using the stages described on [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}).
 
 - **Changes** tab: a file tree and the full diff of the pushed branch, in unified or split view. **Suggest changes** opens a chat with an agent. In the recording the owner asks it to remove comments that only restate the code. The agent edits the file, runs the tests and commits, and the diff refreshes.
 - **Evidence** tab: before and after results for each scenario, tied to one commit. The agent's new commit makes the existing evidence stale, so the owner asks for fresh evidence plus a new case that combines a text search with a species filter. Scenarios appear as the agent captures them.

@@ -65,15 +65,15 @@ The scenario names must be unique across all features, because the video file na
 
 `tests/e2e/features/environment.py` wraps the run:
 
-1. `before_all` starts Godot once for the whole run, with `--path <game> --port 18090` (plus `--headless` in backend mode). In human mode it first starts Xvfb (`:99`, 1920x1080x24) and runs Godot windowed on it. It waits up to 12 seconds for `GET /api/v1/health`.
-2. `before_scenario` puts the game in a known state. Playthroughs and character-creation scenarios get `POST /api/v1/reset`. Engine scenarios load their own state in their `Given` steps. Other scenarios get `POST /api/v1/setup_state` with a scene taken from an `@scene:<Name>` tag, or guessed from the feature file name and step text (a default of `Homestead`). In human mode it then starts `ffmpeg` (x11grab, 30 fps, libx264) and posts a splash card.
-3. `before_step` posts the step text to `/api/v1/qa/set_step`, which the `QAOverlay` shows as the step banner.
-4. `after_scenario` saves `GET /api/v1/state` to `gamestate_<key>.json` and stops ffmpeg.
+1. `before_all` starts Godot once for the whole run, with `--path <game> --port 18090` (plus `--headless` in backend mode). In human mode it first starts Xvfb (`:99`, 1920x1080x24) and runs Godot windowed on it. It waits up to 12 seconds for `GET /api/health`.
+2. `before_scenario` puts the game in a known state. Playthroughs and character-creation scenarios get `POST /api/reset`. Engine scenarios load their own state in their `Given` steps. Other scenarios get `POST /api/setup_state` with a scene taken from an `@scene:<Name>` tag, or guessed from the feature file name and step text (a default of `Homestead`). In human mode it then starts `ffmpeg` (x11grab, 30 fps, libx264) and posts a splash card.
+3. `before_step` posts the step text to `/api/qa/set_step`, which the `QAOverlay` shows as the step banner.
+4. `after_scenario` saves `GET /api/state` to `gamestate_<key>.json` and stops ffmpeg.
 5. `after_all` stops Godot and Xvfb.
 
-The step files (`steps/crpg_steps.py`, `infinity_ai_steps.py`, `scenario_steps.py`, `engine_steps.py`, `proof_steps.py`) use `urllib.request`. Most steps are an action (`POST /api/v1/action` with `{"action": ..., "args": {...}}`) or an assertion on `GET /api/v1/state`. The endpoints are on the [reference page]({{ '/projects/crpg-realm/reference.html#http-control-api' | relative_url }}).
+The step files (`steps/crpg_steps.py`, `infinity_ai_steps.py`, `scenario_steps.py`, `engine_steps.py`, `proof_steps.py`) use `urllib.request`. Most steps are an action (`POST /api/action` with `{"action": ..., "args": {...}}`) or an assertion on `GET /api/state`. The endpoints are on the [reference page]({{ '/projects/crpg-realm/reference.html#http-control-api' | relative_url }}).
 
-Tests do not play through earlier zones. They inject state with `POST /api/v1/setup_state`, which accepts `name`, `class`, `race`, `gold`, `inventory` (item ids), `quest_stage`, `flags`, `companions` (`elora` and `thrumbar` are recognized), `scene` (a scene name or a `res://` path) and `state_spec` (a JSON string, or keywords such as `village`, `forest`, `catacomb`, `keep`, `homestead`, `arena`). The steps expose it as:
+Tests do not play through earlier zones. They inject state with `POST /api/setup_state`, which accepts `name`, `class`, `race`, `gold`, `inventory` (item ids), `quest_stage`, `flags`, `companions` (`elora` and `thrumbar` are recognized), `scene` (a scene name or a `res://` path) and `state_spec` (a JSON string, or keywords such as `village`, `forest`, `catacomb`, `keep`, `homestead`, `arena`). The steps expose it as:
 
 ```gherkin
 Given an isolated test starting in scene "AncientCatacombs" with party "Bramble" the "rogue"
@@ -88,7 +88,7 @@ Other behavior to know:
 - One Godot process runs for the whole run. State carries over between scenarios except what `reset` or `setup_state` overwrites. Set the state a scenario needs in its `Given` step.
 - If port 18090 is busy the game binds the next free port up to +9, and the tests still call 18090.
 - `REPORTS_DIR` is honored by `environment.py` but not by the runner or the report generator, so a custom value splits videos from the report.
-- Scene-layer steps wait with `time.sleep()`. Poll `/api/v1/state` in new steps where timing matters.
+- Scene-layer steps wait with `time.sleep()`. Poll `/api/state` in new steps where timing matters.
 
 ## The Infinity AI scenario engine
 
@@ -181,7 +181,7 @@ If you add a step whose text starts with `"{actor}" is`, register it above the c
 
 ### Add content or rules
 
-1. Put the mechanics in the data: `mechanics` in `data/v1/spells.json`, `creatureType` and resistances in `monsters.json`, `armorType`, `rangeFeet`, `use` and `grants` in `items.json`. Do not change existing fields, because the hand-built scenes read them.
+1. Put the mechanics in the data: `mechanics` in `data/spells.json`, `creatureType` and resistances in `monsters.json`, `armorType`, `rangeFeet`, `use` and `grants` in `items.json`. Do not change existing fields, because the hand-built scenes read them.
 2. If it needs a new rule, add it in `scripts/engine/ScenarioEngine.gd` and mark each new path with `_cov_rule(...)`.
 3. Add a feature in `features/engine/` with scripted dice and exact numbers, then run the whole folder so the coverage gate sees it.
 4. For a reusable fight, add `scenarios/<slug>.jsonld` and an example row in `01_kgraph_drop_in_scenarios.feature`.
@@ -203,7 +203,7 @@ The visible cursor in the videos is the `QAOverlay` autoload's, not the X pointe
 
 ## Write a scene-layer scenario
 
-This example asserts a trap's disarm DC. It adds a step to `crpg_steps.py`, which exposes each trap's `disarm_dc` in `/api/v1/state`.
+This example asserts a trap's disarm DC. It adds a step to `crpg_steps.py`, which exposes each trap's `disarm_dc` in `/api/state`.
 
 1. Write the scenario in a new `normal/<nn>_<name>.feature` (or add it to an existing file):
 
@@ -223,7 +223,7 @@ This example asserts a trap's disarm DC. It adds a step to `crpg_steps.py`, whic
    ```python
    @then('the trap "{trap_id}" has disarm DC {dc:d}')
    def step_trap_has_disarm_dc(context, trap_id, dc):
-       state = api_get(context.web_port, "/api/v1/state")
+       state = api_get(context.web_port, "/api/state")
        found = next((t for t in state.get("traps", []) if t.get("id") == trap_id), None)
        assert found is not None, f"Trap '{trap_id}' not found"
        assert found.get("disarm_dc") == dc, f"Expected disarm DC {dc}, got: {found}"

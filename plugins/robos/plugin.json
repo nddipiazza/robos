@@ -50,7 +50,8 @@
     "fix-media-metadata",
     "robos-blog",
     "jrpg-parse-assets",
-    "jrpg-generate-art"
+    "jrpg-generate-art",
+    "media-watch-status"
   ],
   "commands": [
     "view-task-plan",
@@ -94,7 +95,8 @@
     "robos-blog",
     "blog",
     "jrpg-parse-assets",
-    "jrpg-generate-art"
+    "jrpg-generate-art",
+    "media-watch-status"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

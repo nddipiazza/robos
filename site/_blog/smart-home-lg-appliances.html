@@ -8,7 +8,8 @@ tags:
   - "LG ThinQ Connect"
   - "Read-only appliance status"
 summary: "<strong>RobOS Smart Light</strong> is now <strong>RobOS Smart Home</strong>, with a new <strong>Appliances</strong> tab that reads LG washers, dryers and refrigerators through LG ThinQ. It only reads status. We checked it against a real LG account: the dryer reported its cycle live and the washer correctly showed as offline. That account has no refrigerator, so the refrigerator card has only been tested with simulated responses."
-description: "RobOS Smart Light is now RobOS Smart Home, with a new Appliances tab that reads LG washers, dryers and refrigerators through LG ThinQ. It only reads status. We checked it against a real LG account: the dryer reported its cycle live and the washer correctly showed as offline. That account has no refrigerator, so the refrigerator card has only been tested with simulated responses."
+description: "Read LG ThinQ washer and dryer status in RobOS Smart Home alongside local smart lights. See what we verified with real appliances and what remains simulated."
+seo_title: "LG Washer and Dryer Status · RobOS Smart Home"
 og_image: /assets/blog/smart-home-lg-appliances/appliances.png
 og_image_alt: "RobOS Smart Home Appliances tab showing a washer marked offline and a dryer running with 13 minutes left"
 ---
@@ -44,6 +45,6 @@ node --test packages/robos-test/tests/smart-home/lg-thinq.test.js
 scripts/dev-launch.sh smart-home</div>
 </div>
 <div class="blog-links">
-  <a href="{{ '/apps/smart-home/' | relative_url }}">App docs →</a>
+  <a href="{{ '/smart-home/' | relative_url }}">App docs →</a>
   <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/6903f3d3">6903f3d3</a></span>
 </div>

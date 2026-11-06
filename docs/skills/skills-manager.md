@@ -38,7 +38,7 @@ npm start
 
 `npm start` runs `electron .`. On the RobOS VM the app is installed at `/usr/local/share/robos/skills-manager`, with a desktop entry named RobOS Skills Manager in the AI category. Only one instance runs at a time. A second launch focuses the open window.
 
-The package is also listed on its [app page]({{ '/apps/skills-manager/' | relative_url }}).
+The package is also listed on its [app page]({{ '/skills-manager/' | relative_url }}).
 
 ## Find a command
 
@@ -140,7 +140,7 @@ Installing a pattern adds an entry to the `custom` array in `skills.json`. Its c
 
 | App or library | How it uses the skills |
 | --- | --- |
-| AI Prompt | Loads the built-in list from `skills-data.js` and the custom list from `skills.json`. You select skills in its sidebar and it shows an input for each `$NAME` placeholder. It sends the skill names and filled-in commands to the agent as hints. See the [AI Prompt app page]({{ '/apps/ai-prompt/' | relative_url }}). The **Open AI Prompt** button here launches it from `/usr/local/share/robos/ai-prompt`, so the button works only on an installed RobOS VM. |
+| AI Prompt | Loads the built-in list from `skills-data.js` and the custom list from `skills.json`. You select skills in its sidebar and it shows an input for each `$NAME` placeholder. It sends the skill names and filled-in commands to the agent as hints. See the [AI Prompt app page]({{ '/ai-prompt/' | relative_url }}). The **Open AI Prompt** button here launches it from `/usr/local/share/robos/ai-prompt`, so the button works only on an installed RobOS VM. |
 | `<robos-ai-textarea>` | Typing `/skills` opens a **Choose a skill** dialog, if the host app provides a skills list. **Use skill** inserts `@skill(<id>)` into the message. |
 | `packages/robos-lib/skill-catalog.js` | Merges the built-in skills, your custom skills and the `SKILL.md` files in `.agents/skills/` into one list. PR Review serves this list to its prompt box and expands `@skill(<id>)` references when it builds the agent prompt. |
 

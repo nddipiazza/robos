@@ -48,7 +48,7 @@ The root has `y_sort_enabled = true`, so children are drawn in order of their `y
 
 ### Why the scene must stay flat
 
-Several systems find gameplay nodes with `get_tree().current_scene.get_children()`, which returns direct children only: `GameState.get_scene_traps()`, the `battle.enemies` list that `GameControlServer` builds for `/api/v1/state`, party lookup, fireball targeting and enemy pack alerts. Put a trap or an enemy under a grouping node and these systems silently stop seeing it.
+Several systems find gameplay nodes with `get_tree().current_scene.get_children()`, which returns direct children only: `GameState.get_scene_traps()`, the `battle.enemies` list that `GameControlServer` builds for `/api/state`, party lookup, fireball targeting and enemy pack alerts. Put a trap or an enemy under a grouping node and these systems silently stop seeing it.
 
 ### Autoloads and what is not one
 
@@ -138,4 +138,4 @@ Only layer-1 bodies block routes. Characters are on layer 1 too, so an NPC stand
 3. Use your plate size in `set_camera_limits()` and on `FogOfWar`.
 4. Run the scene and click on the far side of each obstacle. The cyan line from `PathVisualizer` shows the route. If the hero walks into a wall and stops, a collider is missing or off the layer.
 
-To check collision in the tests, the feature `normal/10_house_wall_collision_pathfinding.feature` walks the hero around the village houses to a door and an item. Its item and door steps call `pickup()` and `try_enter()` after the walk even if the hero stopped short, so a pass does not prove the route. Watch the video or assert on the hero's position in `/api/v1/state`.
+To check collision in the tests, the feature `normal/10_house_wall_collision_pathfinding.feature` walks the hero around the village houses to a door and an item. Its item and door steps call `pickup()` and `try_enter()` after the walk even if the hero stopped short, so a pass does not prove the route. Watch the video or assert on the hero's position in `/api/state`.

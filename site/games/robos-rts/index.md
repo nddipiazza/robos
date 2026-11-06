@@ -56,7 +56,7 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
       <figure><img loading="lazy" src="{{ '/assets/games/rts/frontier-map-editor.png' | relative_url }}" alt="The Frontier Hunters document open in the Godot map editor"><figcaption>Terrain, starts and resources in the reusable map editor.</figcaption></figure>
     </div>
     <p class="sec-p">The editor preserves campaign and future multiplayer metadata. Campaign scripting and network multiplayer still need engine work. The current playable focus is one player against one AI.</p>
-    <a class="btn btn-ghost" href="{{ '/v1/projects/robos-rts/#map-editor' | relative_url }}">Map editor tools &amp; controls →</a>
+    <a class="btn btn-ghost" href="{{ '/projects/robos-rts/#map-editor' | relative_url }}">Map editor tools &amp; controls →</a>
   </div>
 </section>
 
@@ -208,7 +208,7 @@ c.screenshot("/tmp/frame.png")</code></pre>
 python run_cucumber_tests.py --backend
 python run_cucumber_tests.py --realtime-headless --speed=8
 python run_cucumber_tests.py --realtime --speed=8 --record</code></pre>
-      <p class="sec-p">On October 23, 2026, the backend passed 20 scenarios / 128 steps and the live suite passed 6 scenarios / 40 steps. A normal-speed paid army probe with roughly 80 units observed 49–60 FPS on a local GTX 1050 Ti at 1080p; its final rolling frame sample had a 26.952 ms p95. See the <a href="{{ '/v1/projects/robos-rts/#verified-run-october-23-2026' | relative_url }}">verification report</a> for hardware, budgets and recording limits.</p>
+      <p class="sec-p">On October 23, 2026, the backend passed 20 scenarios / 128 steps and the live suite passed 6 scenarios / 40 steps. A normal-speed paid army probe with roughly 80 units observed 49–60 FPS on a local GTX 1050 Ti at 1080p; its final rolling frame sample had a 26.952 ms p95. See the <a href="{{ '/projects/robos-rts/#verified-run-october-23-2026' | relative_url }}">verification report</a> for hardware, budgets and recording limits.</p>
     </div>
   </div>
 </section>
@@ -222,7 +222,7 @@ python run_cucumber_tests.py --realtime --speed=8 --record</code></pre>
       <pre class="code"><button data-copy>Copy</button><code>git clone https://github.com/nddipiazza/robos.git
 cd robos/games/robos-rts
 GODOT_BIN=/path/to/godot4 ./play.sh</code></pre>
-      <div class="cta" style="justify-content:flex-start;margin-top:18px"><a class="btn" href="{{ '/v1/projects/robos-rts/' | relative_url }}">Full guide &amp; controls</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/robos-rts" target="_blank" rel="noopener">Source on GitHub</a></div>
+      <div class="cta" style="justify-content:flex-start;margin-top:18px"><a class="btn" href="{{ '/projects/robos-rts/' | relative_url }}">Full guide &amp; controls</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/robos-rts" target="_blank" rel="noopener">Source on GitHub</a></div>
     </div>
   </div>
 </section>

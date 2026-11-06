@@ -106,6 +106,26 @@ test('install all and uninstall all work offline and retain personal data and th
   fs.mkdirSync(m.destination(m.installed.shared), { recursive: true });
   await m.uninstallAll(); assert.deepEqual(m.installed, {});
 });
+test('first launch installs the default apps (RobOS Preferences) once, and an uninstall is respected', async t => {
+  const { manager: m, make } = await fixture(t);
+  m.catalog.components.push(make('robos-preferences', 'app', ['shared']));
+  assert.deepEqual(m.pendingDefaults(), ['robos-preferences']);
+  assert.deepEqual(await m.installDefaults(), ['robos-preferences']);
+  assert.ok(m.installed['robos-preferences'] && m.installed.shared, 'installed with its shared components');
+  assert.deepEqual(await m.installDefaults(), [], 'nothing to do on the next launch');
+  await m.uninstall(['robos-preferences']);
+  assert.deepEqual(await m.installDefaults(), [], 'an app the person removed stays removed');
+  assert.equal(m.installed['robos-preferences'], undefined);
+});
+test('a default app installed before this release counts as done, and a catalog without it is skipped', async t => {
+  const { manager: m, make } = await fixture(t);
+  assert.deepEqual(await m.installDefaults(), [], 'not in the catalog: nothing installed');
+  m.catalog.components.push(make('robos-preferences', 'app', ['shared']));
+  await m.install(['robos-preferences']);
+  assert.deepEqual(m.pendingDefaults(), []);
+  await m.uninstall(['robos-preferences']);
+  assert.deepEqual(await m.installDefaults(), [], 'already had it once, so it is not reinstalled');
+});
 test('batch uninstall can be cancelled between apps and resumed without losing remaining state', async t => {
   const { manager: m } = await fixture(t); await m.install(['one', 'two']);
   const cancel = event => { if (event.phase === 'Uninstalling') m.cancel(); };
@@ -254,6 +274,60 @@ test('Windows shortcuts point directly to app and its uninstall command', async 
   native.shortcut({ id: 'one', label: 'One App' });
   assert.equal(links.length, 2); assert.equal(links[0].args, '"--app=one"'); assert.equal(links[1].args, '"--remove=one"');
   assert.equal(links[0].appUserModelId, 'com.rowbose.robos.one');
+  assert.equal(path.basename(links[0].file), 'RobOS One App.lnk', 'found by typing "RobOS" in Start');
+  assert.equal(path.basename(links[1].file), 'Uninstall RobOS One App.lnk');
+  // A label that already says RobOS is kept, and an old shortcut name is replaced.
+  fs.mkdirSync(path.join(locations.shortcuts, 'two'), { recursive: true });
+  fs.writeFileSync(path.join(locations.shortcuts, 'two', 'Two.lnk'), '');
+  native.shortcut({ id: 'two', label: 'RobOS Two' });
+  assert.equal(path.basename(links[2].file), 'RobOS Two.lnk');
+  assert.ok(!fs.existsSync(path.join(locations.shortcuts, 'two', 'Two.lnk')));
+  assert.equal(links[0].icon, 'C:\\RobOS\\RobOS.exe', 'no icon.png: falls back to the executable');
+});
+test('Windows shortcuts and windows use the app\'s own icon, made from its icon.png', async t => {
+  const { locations } = await fixture(t), links = [];
+  const { pngToIco, ensureAppIco } = require('../lib/win-icon.cjs');
+  locations.icons = path.join(path.dirname(locations.root), 'Programs', 'RobOS', 'icons');
+  const appDir = path.join(locations.root, 'packages', 'one'); fs.mkdirSync(appDir, { recursive: true });
+  const png = fs.readFileSync(path.join(__dirname, '..', 'icon.png'));
+  fs.writeFileSync(path.join(appDir, 'icon.png'), png);
+  fs.writeFileSync(path.join(appDir, 'icon.ico'), 'from an older RobOS');
+  const native = integration({ locations, executable: 'C:\\RobOS\\RobOS.exe', packaged: true, platform: 'win32',
+    shell: { writeShortcutLink: (file, _mode, options) => { links.push({ file, ...options }); return true; } } });
+  native.shortcut({ id: 'one', label: 'One App' });
+  const ico = links[0].icon;
+  // Start menu search leaves icons blank under AppData\Local, which sandboxes may be allowed to write.
+  assert.equal(path.dirname(ico), locations.icons);
+  assert.match(path.basename(ico), /^one-[0-9a-f]{10}\.ico$/, 'named by content, so Windows never shows a cached older icon');
+  assert.ok(!fs.existsSync(path.join(appDir, 'icon.ico')), 'the icon an older RobOS wrote next to the app is removed');
+  assert.equal(links[1].icon, ico, 'the uninstall shortcut shows the same icon');
+  const bytes = fs.readFileSync(ico), count = bytes.readUInt16LE(4);
+  assert.deepEqual([bytes.readUInt16LE(0), bytes.readUInt16LE(2)], [0, 1], 'an icon file');
+  const entries = Array.from({ length: count }, (_, i) => { const at = 6 + 16 * i; return { size: bytes[at] || 256, length: bytes.readUInt32LE(at + 8), offset: bytes.readUInt32LE(at + 12) }; });
+  // The Start menu shows a blank page for an icon that only has a 256 px image.
+  assert.deepEqual(entries.map(e => e.size), [16, 20, 24, 32, 40, 48, 64, 256]);
+  const largest = entries.at(-1);
+  assert.ok(bytes.subarray(largest.offset, largest.offset + largest.length).equals(png), 'the 256 px PNG is embedded unchanged');
+  const small = entries[0], bitmap = bytes.subarray(small.offset, small.offset + small.length);
+  assert.deepEqual([bitmap.readUInt32LE(0), bitmap.readInt32LE(4), bitmap.readInt32LE(8), bitmap.readUInt16LE(14)], [40, 16, 32, 32], '16 px is a 32-bit bitmap');
+  assert.equal(bitmap.length, 40 + 16 * 16 * 4 + 4 * 16);
+  // Its pixels are the PNG's, scaled down: the middle pixel matches the source's middle.
+  const { decodePng } = require('../lib/win-icon.cjs'), source = decodePng(png);
+  const mid = (128 * 256 + 128) * 4, row = 16 - 1 - 8, px = 40 + (row * 16 + 8) * 4;
+  assert.ok(Math.abs(bitmap[px + 2] - source.rgba[mid]) < 40 && Math.abs(bitmap[px + 1] - source.rgba[mid + 1]) < 40 && Math.abs(bitmap[px] - source.rgba[mid + 2]) < 40, 'the bitmap shows the icon');
+  // The same PNG keeps its icon file; a changed PNG gets a new file and the old one goes.
+  const into = { into: locations.icons, name: 'one' };
+  const before = fs.statSync(ico).mtimeMs; assert.equal(ensureAppIco(appDir, into), ico); assert.equal(fs.statSync(ico).mtimeMs, before);
+  fs.writeFileSync(path.join(appDir, 'icon.png'), fs.readFileSync(path.join(__dirname, '..', '..', 'movie-player', 'icon.png')));
+  const changed = ensureAppIco(appDir, into);
+  assert.notEqual(changed, ico);
+  assert.deepEqual(fs.readdirSync(locations.icons), [path.basename(changed)]);
+  // Another app whose ID starts the same keeps its icon; removing the app removes its icon.
+  fs.writeFileSync(path.join(locations.icons, 'one-two-0123456789.ico'), '');
+  native.shortcut({ id: 'one' }, true);
+  assert.deepEqual(fs.readdirSync(locations.icons), ['one-two-0123456789.ico']);
+  assert.equal(ensureAppIco(path.join(locations.root, 'packages', 'missing')), null);
+  assert.throws(() => pngToIco(Buffer.from('not a png')), /Not a PNG/);
 });
 test('macOS apps get native application bundles with safely quoted launchers', async t => {
   const { locations } = await fixture(t);

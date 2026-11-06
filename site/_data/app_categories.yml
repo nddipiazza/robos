@@ -1,0 +1,36 @@
+# Categories for the App Directory (apps.md), in display order.
+# Each app page in _apps/ sets `category:` to one of these ids.
+# Apps with an unknown or missing category are listed under "More apps".
+- id: core-desktop
+  name: Desktop & Command Center
+- id: ai-agents
+  name: AI & Agent Workflows
+- id: arch-planning
+  name: Architecture & Planning
+- id: code-review
+  name: Code, Repositories & Review
+- id: databases-streams
+  name: Databases & Event Streams
+- id: apis-testing
+  name: APIs, Contracts & Testing
+- id: devops-cloud
+  name: DevOps, Cloud & Builds
+- id: security-vault
+  name: Security & Credentials
+- id: learning
+  name: Learning & Training
+- id: services
+  name: Agent Services & MCP Servers
+- id: point-of-sale
+  name: Point of Sale & Commerce
+- id: auto
+  name: Auto Center & Vehicle Care
+- id: household
+  name: Household & Personal Finance
+- id: games
+  name: Game Studios & Level Editors
+- id: party-games
+  name: Party Games
+
+- id: libraries
+  name: Libraries, CLIs & Components

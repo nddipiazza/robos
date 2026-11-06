@@ -55,7 +55,7 @@ keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tab
         <div><b>Recorded</b><span>playthrough tests</span></div>
         <div><b>Apache-2.0</b><span>open source</span></div>
       </div>
-      <p style="margin-top:26px"><a class="btn btn-ghost" href="{{ '/v1/game-development.html' | relative_url }}">How RobOS does game development</a></p>
+      <p style="margin-top:26px"><a class="btn btn-ghost" href="{{ '/game-development/' | relative_url }}">How RobOS does game development</a></p>
     </div>
   </div>
 </section>

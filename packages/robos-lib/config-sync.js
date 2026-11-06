@@ -49,6 +49,12 @@ class ConfigSyncError extends Error {
 
 // ── Paths & state ────────────────────────────────────────────────────────────
 
+// A typed folder such as ~/Dropbox belongs under the user's home, never under the app's working directory.
+function folderInHome(folder, home) {
+  const raw = String(folder || '').trim();
+  return path.resolve(home, raw === '~' || raw.startsWith('~/') ? raw.slice(raw.length > 1 ? 2 : 1) : raw);
+}
+
 function homeOf(opts = {}) { return opts.homeDir || process.env.HOME || os.homedir(); }
 function roots(home) { return { config: path.join(home, '.config', 'robos'), robos: path.join(home, '.robos') }; }
 function syncDir(home) { return path.join(roots(home).config, 'config-sync'); }
@@ -146,6 +152,25 @@ function globRe(glob) {
 const matchAny = (rel, globs) => globs.some(g => globRe(g).test(rel));
 
 function isExcluded(rel) { return matchAny(rel, catalog.EXCLUDE); }
+
+// Files that can be combined when both sides changed them (catalog.MERGE_RULES).
+const MERGERS = {
+  'media-history': (mine, theirs) => require('./media-history').mergeDocs(mine, theirs),
+};
+function mergerFor(rel) {
+  const rule = Object.entries(catalog.MERGE_RULES || {}).find(([glob]) => globRe(glob).test(rel));
+  return rule ? MERGERS[rule[1]] || null : null;
+}
+/** Combines this machine's copy and the vault's (already imported for this machine). */
+function mergeBuffers(rel, mineBuf, theirsBuf) {
+  const merge = mergerFor(rel);
+  let mine, theirs;
+  try { mine = JSON.parse(mineBuf.toString('utf8')); } catch { mine = null; }
+  try { theirs = JSON.parse(theirsBuf.toString('utf8')); } catch { theirs = null; }
+  if (!merge || !mine) return theirsBuf;
+  if (!theirs) return mineBuf;
+  return Buffer.from(JSON.stringify(merge(mine, theirs), null, 2) + '\n');
+}
 function categoryOf(rel) { return catalog.CATEGORIES.find(c => matchAny(rel, c.include))?.id || 'other'; }
 function categoryById(id) { return catalog.CATEGORIES.find(c => c.id === id); }
 
@@ -190,8 +215,21 @@ function hasValue(v) {
   return true;
 }
 
-function homeRe(home) { return new RegExp(home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=/|$|[\\s"\'])', 'g'); }
+// The home directory as it appears in a file: C:\Users\me on Windows is also written
+// C:/Users/me, and Windows paths compare without case. A path that continues past the
+// home folder (with either separator) or ends a value is replaced.
+function homeRe(home) {
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const forms = [...new Set([home, home.replace(/\\/g, '/')])].sort((a, b) => b.length - a.length).map(esc);
+  return new RegExp(`(?:${forms.join('|')})(?=[\\\\/]|$|[\\s"'])`, /^[A-Za-z]:[\\/]/.test(home) ? 'gi' : 'g');
+}
 const TOKEN_RE = /\$\{HOME\}/g;
+// In a stored file, the part of a path after ${HOME} always uses '/', so a path written on
+// Windows still works on Linux and macOS (Windows itself accepts '/').
+const portablePath = s => s.replace(/\$\{HOME\}[^\s"']*/g, m => m.replace(/\\/g, '/'));
+// What ${HOME} becomes on this machine: forward slashes, which every platform accepts and
+// which need no escaping inside JSON or YAML strings.
+const homeValue = home => home.replace(/\\/g, '/');
 
 function isTextPath(rel) { return /\.(json|jsonld|ya?ml|txt|md|toml|ini|conf|srt|vtt|lrc|csv)$/i.test(rel); }
 
@@ -215,12 +253,12 @@ function exportBuffer(rel, buf, { home, sealable = [] }) {
           }
           return out;
         }
-        return typeof node === 'string' ? node.replace(re, HOME_TOKEN) : node;
+        return typeof node === 'string' ? portablePath(node.replace(re, HOME_TOKEN)) : node;
       };
       return { buf: Buffer.from(JSON.stringify(walk(data, []), null, 2) + '\n'), removed };
     }
   }
-  if (isTextPath(rel)) return { buf: Buffer.from(buf.toString('utf8').replace(homeRe(home), HOME_TOKEN)), removed };
+  if (isTextPath(rel)) return { buf: Buffer.from(portablePath(buf.toString('utf8').replace(homeRe(home), HOME_TOKEN))), removed };
   return { buf, removed };
 }
 
@@ -231,7 +269,7 @@ function itemLabel(v, i) {
 
 function expandHome(rel, buf, home) {
   if (!isTextPath(rel)) return buf;
-  return Buffer.from(buf.toString('utf8').replace(TOKEN_RE, home));
+  return Buffer.from(buf.toString('utf8').replace(TOKEN_RE, homeValue(home)));
 }
 
 const NO_KEYS = new Set();
@@ -571,7 +609,7 @@ async function connectVault(opts = {}) {
       const created = await backends.createDriveFolder({ accountId: c.accountId, name: c.name || 'RobOS Config Vault', parentId: c.parentId, homeDir: home, fetchImpl: opts.fetchImpl });
       ref = { kind: 'gdrive', folderId: created.folderId, accountId: c.accountId, url: created.url, name: created.name };
     } else {
-      const dir = path.join(c.path, c.name || '');
+      const dir = path.join(folderInHome(c.path, home), c.name || '');
       fs.mkdirSync(dir, { recursive: true });
       ref = { kind: 'folder', path: dir, url: `file://${dir}`, name: path.basename(dir) };
     }
@@ -603,6 +641,46 @@ async function connectVault(opts = {}) {
   saveState(home, state);
   const plan = await planVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl });
   return { ok: true, vault: publicVault(state.vault), plan };
+}
+
+const DEFAULT_VAULT_NAME = 'RobOS Config Vault';
+
+/** The signed-in Google account to use: the Cloud Accounts default, else the first one with a token. */
+function defaultGoogleAccountId(home) {
+  const data = readJson(path.join(roots(home).config, 'cloud-accounts.json'), {});
+  const google = (data.accounts || []).filter(a => a && a.provider === 'google' && (a.accessToken || a.refreshToken));
+  return (google.find(a => a.id === data.defaultAccountId) || google[0])?.id || null;
+}
+
+/** RobOS backup vaults in a Google account's Drive, newest first. */
+async function findDriveVaults(opts = {}) {
+  const home = homeOf(opts);
+  const accountId = opts.accountId || defaultGoogleAccountId(home);
+  if (!accountId) throw new ConfigSyncError('Sign in with Google first (Preferences → Cloud Suite Accounts).', 'NO_GOOGLE_ACCOUNT');
+  const found = await backends.findDriveConfigFolders({ accountId, homeDir: home, fetchImpl: opts.fetchImpl });
+  return found.filter(f => f.configKind === 'vault');
+}
+
+/**
+ * "Back up to my Google Drive" in one step. Uses the vault another of your computers
+ * already made in this Google Drive (the newest), or creates "RobOS Config Vault". Then
+ * runs the first sync when it needs no decision (a new vault, or a nearly empty computer
+ * loading the vault); otherwise returns the plan for the person to review.
+ */
+async function connectGoogleDrive(opts = {}) {
+  const home = homeOf(opts);
+  const accountId = opts.accountId || defaultGoogleAccountId(home);
+  if (!accountId) throw new ConfigSyncError('Sign in with Google first (Preferences → Cloud Suite Accounts).', 'NO_GOOGLE_ACCOUNT');
+  const found = await findDriveVaults({ ...opts, homeDir: home, accountId });
+  const pick = found[0] || null;
+  const res = pick
+    ? await connectVault({ ...opts, homeDir: home, accountId, ref: { kind: 'gdrive', folderId: pick.folderId, accountId, url: pick.url, name: pick.name } })
+    : await connectVault({ ...opts, homeDir: home, create: { kind: 'gdrive', accountId, name: opts.name || DEFAULT_VAULT_NAME } });
+  const plan = res.plan;
+  const decided = plan.recommended === 'use-local' || plan.recommended === 'use-vault' || !plan.actions.some(a => a.action === 'conflict');
+  let synced = null;
+  if (opts.autoFirstSync !== false && decided) synced = await applyVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl, strategy: plan.recommended || undefined });
+  return { ok: true, created: !pick, foundVaults: found.length, vault: getVault({ homeDir: home }), plan: synced ? null : plan, synced };
 }
 
 function disconnectVault(opts = {}) {
@@ -670,8 +748,11 @@ async function planVaultSync(opts = {}) {
   const backend = backendFor(v.ref, home, opts);
   const read = await readManifest(backend, { home, key: loadKey(home, v.id), passphrase: opts.passphrase });
   const remote = read?.manifest || newManifest('vault', v.ref.name);
-  const enabled = new Set(v.categories);
-  const local = snapshotLocal({ home, mode: 'vault', categories: v.categories });
+  // opts.categories limits a run to some categories (the media players sync only their
+  // own library and history, so a conflict elsewhere does not hold them up).
+  const scoped = Array.isArray(opts.categories) ? v.categories.filter(c => opts.categories.includes(c)) : v.categories;
+  const enabled = new Set(scoped);
+  const local = snapshotLocal({ home, mode: 'vault', categories: scoped });
   const base = v.base || {};
   const firstSync = !v.lastSyncAt;
   const localCount = local.files.size;
@@ -699,6 +780,9 @@ async function planVaultSync(opts = {}) {
     } else if (L !== B && R === B) action = L ? 'push' : 'delete-remote';
     else if (R !== B && L === B) action = R ? 'pull' : 'delete-local';
     else action = 'conflict';
+    // Files both sides changed that RobOS can combine (watch history) are merged, not asked about.
+    // On a first sync they are merged whichever side "wins", so neither machine's history is lost.
+    if ((action === 'conflict' || firstSync) && L && R && mergerFor(rel)) action = 'merge';
     actions.push({
       rel, category, action,
       local: l ? { sha: L, size: l.size, mtime: l.mtime } : null,
@@ -747,26 +831,38 @@ async function applyVaultSyncLocked(opts) {
   const kdf = read?.kdf || (key ? readJson(keyFile(home), {})[v.id]?.kdf : null);
   if (before.generation !== plan.remote.generation) throw new ConfigSyncError('Another machine synced while you were reviewing. Review the changes again.', 'REMOTE_CHANGED');
 
-  const local = snapshotLocal({ home, mode: 'vault', categories: v.categories });
+  const scoped = Array.isArray(opts.categories) ? v.categories.filter(c => opts.categories.includes(c)) : v.categories;
   const pulls = steps.filter(s => s.action === 'pull');
+  const merges = steps.filter(s => s.action === 'merge');
   const localDeletes = steps.filter(s => s.action === 'delete-local');
   const pushes = steps.filter(s => s.action === 'push');
   const remoteDeletes = steps.filter(s => s.action === 'delete-remote');
 
   // Download everything first so a network failure leaves local files untouched.
   const incoming = new Map();
-  for (const s of pulls) incoming.set(s.rel, await fetchBlob(backend, before.files[s.rel], key));
+  for (const s of [...pulls, ...merges]) incoming.set(s.rel, await fetchBlob(backend, before.files[s.rel], key));
 
   let restorePointId = null;
-  if (pulls.length || localDeletes.length) {
-    restorePointId = createRestorePoint(home, `Vault sync from ${before.updatedBy?.machineName || 'vault'}`, [...pulls, ...localDeletes].map(s => s.rel));
+  if (pulls.length || merges.length || localDeletes.length) {
+    restorePointId = createRestorePoint(home, `Vault sync from ${before.updatedBy?.machineName || 'vault'}`, [...pulls, ...merges, ...localDeletes].map(s => s.rel));
   }
   for (const s of pulls) {
     const abs = absPath(home, s.rel);
     const localBuf = fs.existsSync(abs) ? fs.readFileSync(abs) : null;
     writeLocal(home, s.rel, importBuffer(s.rel, incoming.get(s.rel), localBuf, { home }));
   }
+  // A merged file is written here and then uploaded, so both sides end up with the union.
+  for (const s of merges) {
+    const abs = absPath(home, s.rel);
+    const localBuf = fs.readFileSync(abs);
+    const theirs = importBuffer(s.rel, incoming.get(s.rel), localBuf, { home });
+    writeLocal(home, s.rel, mergeBuffers(s.rel, localBuf, theirs));
+  }
   for (const s of localDeletes) fs.rmSync(absPath(home, s.rel), { force: true });
+
+  // Read after the writes above so a merged file is uploaded as merged.
+  const local = snapshotLocal({ home, mode: 'vault', categories: scoped });
+  for (const s of merges) if (local.files.get(s.rel)?.sha !== before.files[s.rel]?.sha) pushes.push(s);
 
   let after = before;
   if (pushes.length || remoteDeletes.length) {
@@ -789,10 +885,11 @@ async function applyVaultSyncLocked(opts) {
   // The new base: files identical on both sides, plus what was just pulled as the vault
   // had it. A pulled file that kept a local-only sign-in then reads as a local edit and
   // is uploaded on the next sync, instead of looking like a conflict.
-  const nowLocal = snapshotLocal({ home, mode: 'vault', categories: v.categories });
+  const nowLocal = snapshotLocal({ home, mode: 'vault', categories: scoped });
   const base = { ...(v.base || {}) };
   for (const [rel, f] of Object.entries(after.files)) if (nowLocal.files.get(rel)?.sha === f.sha) base[rel] = f.sha;
   for (const s of pulls) base[s.rel] = before.files[s.rel].sha;
+  for (const s of merges) if (after.files[s.rel]) base[s.rel] = after.files[s.rel].sha;
   for (const s of [...localDeletes, ...remoteDeletes]) delete base[s.rel];
   state.vault.base = base;
   state.vault.lastSyncAt = new Date().toISOString();
@@ -801,7 +898,7 @@ async function applyVaultSyncLocked(opts) {
 
   return {
     ok: true, restorePointId, generation: after.generation,
-    pushed: pushes.map(s => s.rel), pulled: pulls.map(s => s.rel),
+    pushed: pushes.map(s => s.rel), pulled: pulls.map(s => s.rel), merged: merges.map(s => s.rel),
     deletedLocal: localDeletes.map(s => s.rel), deletedRemote: remoteDeletes.map(s => s.rel),
   };
 }
@@ -895,7 +992,7 @@ async function publishShare(opts = {}) {
     const created = await backends.createDriveFolder({ accountId: target.accountId, name: `RobOS Share — ${name}`, parentId: target.parentId, homeDir: home, fetchImpl: opts.fetchImpl });
     ref = { kind: 'gdrive', folderId: created.folderId, accountId: target.accountId, url: created.url, name: created.name };
   } else if (target.kind === 'folder') {
-    const dir = path.join(target.path, name.replace(/[^\w .-]+/g, '-'));
+    const dir = path.join(folderInHome(target.path, home), name.replace(/[^\w .-]+/g, '-'));
     fs.mkdirSync(dir, { recursive: true });
     ref = { kind: 'folder', path: dir, url: `file://${dir}`, name: path.basename(dir) };
   } else throw new ConfigSyncError('Choose where to publish the share.', 'INVALID');
@@ -1225,12 +1322,12 @@ module.exports = {
   // status
   getStatus, getVault, describeCategories, listLocalFiles, categoryOf, isExcluded,
   // vault
-  connectVault, disconnectVault, setVaultCategories, setAutoSync, recordAutoRun, planVaultSync, applyVaultSync,
+  connectVault, connectGoogleDrive, findDriveVaults, disconnectVault, setVaultCategories, setAutoSync, recordAutoRun, planVaultSync, applyVaultSync,
   // shares
   previewShare, publishShare, updateShare, grantShare, forgetShare,
   previewJoin, joinShare, checkSubscriptions, updateSubscription, leaveShare,
   // restore points
   listRestorePoints, restoreRestorePoint, createRestorePoint,
   // internals exposed for tests
-  _internal: { exportBuffer, importBuffer, restoreSecrets, mergeIncoming, removeOwned, snapshotLocal, globRe, isSecretKey, encrypt, decrypt, deriveKey, newKdf },
+  _internal: { exportBuffer, importBuffer, mergeBuffers, mergerFor, restoreSecrets, mergeIncoming, removeOwned, snapshotLocal, globRe, isSecretKey, encrypt, decrypt, deriveKey, newKdf },
 };

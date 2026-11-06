@@ -40,7 +40,7 @@ It plays the way the NES game did. Caves are pitch black until you light a torch
 
 ## How we built it
 
-We started from data rather than art. The game's facts (monsters and their stats, spells, the experience table, every shop's stock and price, every chest, door and staircase, what each townsperson says) were taken from public strategy guides, cleaned up, and written out as JSON under `data/v1/`. Each file has a JSON Schema in `schemas/v1/`. Damage, dodging, criticals and spell resistance follow Ryan8bit's NES formula guide, recorded in `combat_formulas.json` along with where each formula came from.
+We started from data rather than art. The game's facts (monsters and their stats, spells, the experience table, every shop's stock and price, every chest, door and staircase, what each townsperson says) were taken from public strategy guides, cleaned up, and written out as JSON under `data/`. Each file has a JSON Schema in `schemas/`. Damage, dodging, criticals and spell resistance follow Ryan8bit's NES formula guide, recorded in `combat_formulas.json` along with where each formula came from.
 
 Nothing in the game is ripped from the cartridge. `tools/generate_original_assets.py` draws every tile, map, sprite, monster, spell effect and the title screen with Pillow, and synthesizes the chiptune music and sound effects, all from the semantic data. If a chest moves or a map changes, you regenerate the art rather than repainting it. That keeps the project original work while staying faithful to the layout of the original world.
 
@@ -62,7 +62,7 @@ Every town and dungeon floor extends one shared base, `DungeonMap.gd`. A town sc
 
 ### What you can walk on
 
-Walkability comes from `data/v1/map_grids.json`, which stores every interior map as a grid of tile ids, and `tile_walkability.json`, which says which ids are floor. The `TileWalkability` autoload answers the question for any tile, and NPCs block the tile they stand on. The overworld is different: `assets/maps/worldmap_terrain.json` holds its grid of terrain codes (water, forest, bridge, grass, desert, mountain, swamp, hills, wall), and water, mountains and walls stop you. Doors are locked until a key is spent on them, and unlocked doors are remembered in the save.
+Walkability comes from `data/map_grids.json`, which stores every interior map as a grid of tile ids, and `tile_walkability.json`, which says which ids are floor. The `TileWalkability` autoload answers the question for any tile, and NPCs block the tile they stand on. The overworld is different: `assets/maps/worldmap_terrain.json` holds its grid of terrain codes (water, forest, bridge, grass, desert, mountain, swamp, hills, wall), and water, mountains and walls stop you. Doors are locked until a key is spent on them, and unlocked doors are remembered in the save.
 
 ### Encounters and battles
 
@@ -80,11 +80,11 @@ Every window with a cursor (the command grid, shop lists, the item and spell lis
 
 ### The data layer
 
-`DataManager.gd` loads every dataset at startup through typed classes generated from the schemas (`src/generated/v1/`), so a malformed file fails loudly instead of misbehaving later. Those classes are produced by `./generate-schema-classes.sh`, which runs a pinned release of json-schema-to-gdscript; never edit them by hand. `tools/validate_v1_schemas.py` checks the data against the schemas, and `tools/generate_kgraph_package.py` publishes the game's monsters, items and places into the RobOS knowledge graph.
+`DataManager.gd` loads every dataset at startup through typed classes generated from the schemas (`src/generated/`), so a malformed file fails loudly instead of misbehaving later. Those classes are produced by `./generate-schema-classes.sh`, which runs a pinned release of json-schema-to-gdscript; never edit them by hand. `tools/validate_v1_schemas.py` checks the data against the schemas, and `tools/generate_kgraph_package.py` publishes the game's monsters, items and places into the RobOS knowledge graph.
 
 ### Controlling the game from outside
 
-`GameControlServer.gd` is a small HTTP server built into the game. `GET /api/v1/state` returns what's on screen: the scene, the hero's tile and facing, stats, which window is open and where its cursor is, the current battle, the shop's stock, the light level, and a save of the current moment. `POST /api/v1/input` presses a button for a moment, the same way a keyboard would. `POST /api/v1/command` does the rest: take a screenshot, save or load a checkpoint, start or stop the AI, read its progress. The full contract is in `docs/api_contract.yaml` and `GET /contract` serves it live. The port is set with `--web-service-port` or `DW_WEB_SERVICE_PORT`. Tests, the AI driver and the Game Playthrough app all talk to the game through this.
+`GameControlServer.gd` is a small HTTP server built into the game. `GET /api/state` returns what's on screen: the scene, the hero's tile and facing, stats, which window is open and where its cursor is, the current battle, the shop's stock, the light level, and a save of the current moment. `POST /api/input` presses a button for a moment, the same way a keyboard would. `POST /api/command` does the rest: take a screenshot, save or load a checkpoint, start or stop the AI, read its progress. The full contract is in `docs/api_contract.yaml` and `GET /contract` serves it live. The port is set with `--web-service-port` or `DW_WEB_SERVICE_PORT`. Tests, the AI driver and the Game Playthrough app all talk to the game through this.
 
 ## How the AI plays
 
@@ -96,7 +96,7 @@ The thinking happens in `PlayGameBrain.gd`, which only returns decisions such as
 
 ### What it's trying to do
 
-The goals come from `data/v1/milestones.json`, which `tools/gen_milestones.py` writes from the shops, chests and quest data. It's the quest in story order: hear King Lorik, take the throne-room chests, buy each better weapon, armour and shield as they become affordable, open every chest, find the Fairy Flute, rescue Gwaelin, gather the Stones of Sunlight, the Staff of Rain and Erdrick's Token, put the Golem to sleep, build the Rainbow Bridge, take Erdrick's Sword, defeat the Dragonlord and watch the credits. Each goal says where to stand, which way to face, what to do there and how to tell it's done, such as "the hero owns a Broad Sword" or "the bridge is built". Some carry a minimum level, so the AI doesn't walk into Charlock at level ten. The brain checks goals against the real game state, never against what it thinks it did.
+The goals come from `data/milestones.json`, which `tools/gen_milestones.py` writes from the shops, chests and quest data. It's the quest in story order: hear King Lorik, take the throne-room chests, buy each better weapon, armour and shield as they become affordable, open every chest, find the Fairy Flute, rescue Gwaelin, gather the Stones of Sunlight, the Staff of Rain and Erdrick's Token, put the Golem to sleep, build the Rainbow Bridge, take Erdrick's Sword, defeat the Dragonlord and watch the credits. Each goal says where to stand, which way to face, what to do there and how to tell it's done, such as "the hero owns a Broad Sword" or "the bridge is built". Some carry a minimum level, so the AI doesn't walk into Charlock at level ten. The brain checks goals against the real game state, never against what it thinks it did.
 
 When a goal is out of reach it grinds. If it needs gold for a sword or levels for a dangerous area, it picks a patch of the overworld whose monsters suit its level, walks there and fights until it has enough. It keeps track of how much each fight hurts. If monsters barely scratch it, it moves to a tougher zone; if fights get expensive, it drops back. A death makes it more careful for a while, and the goal it died on demands one more level next time. The run's milestone list marks those goals "Grind +" so you can see where the levelling happened.
 

@@ -266,20 +266,29 @@ function buildStandaloneHtml(params) {
 
   const appTitle = appNode ? (appNode['dcterms:title'] || 'Application') : (course['robos:applicationTitle'] || 'RobOS KGraph & Game Engine');
   const appTech = course['robos:technology'] || (appNode && (appNode['robos:technology'] || appNode['robos:desktopFramework'] || appNode['robos:frontendFramework'])) || 'Godot 4.3 / RobOS KGraph';
-  const canonicalUrl = isFrontSite ? `https://rowbose.com${permalink}` : `https://rowbose.com/v1${permalink}`;
-  const ogImageUrl = course['robos:ogImage'] || 'https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png';
+  const canonicalUrl = `https://rowbose.com${permalink}`;
+  const ogImageUrl = course['robos:ogImage'] || 'https://rowbose.com/assets/images/crpg-realm/village_square_overview.png';
 
   // Serialize course and modules JSON for client-side state
+  // A course whose lessons are titled "Lesson 1: ..." is called lessons throughout, and is not numbered twice.
+  const unitWord = /^Lesson\b/i.test((modules[0] && modules[0].title) || '') ? 'lesson' : 'module';
+  const unitLabel = unitWord === 'lesson' ? 'Lesson' : 'Module';
   const serializedCourse = JSON.stringify(course);
-  const serializedModules = JSON.stringify(modules);
+  // A lesson's `body` is Markdown, the field the desktop app shows and edits. Render it for the web
+  // unless the lesson carries hand-written `lessonHtml`.
+  const serializedModules = JSON.stringify(modules.map(m => (m && m.body && !m.lessonHtml
+    ? { ...m, lessonHtml: `<div class="lesson-section lesson-prose">${parseLivingDocMarkdown(m.body, { math: false })}</div>` }
+    : m)));
   const serializedApp = JSON.stringify(appNode || {});
 
   // Parse markdown documentation into structured sections. Without a source, keep the published doc tab.
   const rawDocHtml = docMarkdown ? parseLivingDocMarkdown(docMarkdown) : (existingDocHtml || parseLivingDocMarkdown(''));
   const docHtml = isFrontSite
     ? rawDocHtml
-        .replace(/\{\{\s*site\.baseurl\s*\}\}\s*\{%\s*link\s+([^\s%]+?)\.md\s*%\}/g, '/v1/$1.html')
-        .replace(/\{\{\s*'([^']+)'\s*\|\s*relative_url\s*\}\}/g, '/v1$1')
+        .replace(/\{\{\s*site\.baseurl\s*\}\}\s*\{%\s*link\s+([^\s%]+?)\.md\s*%\}/g, '/$1/')
+        .replace(/\{\{\s*'([^']+)'\s*\|\s*relative_url\s*\}\}/g, '$1')
+        .replace(/((?:href|src)=["'])(\/[^"']+)\.html([#?][^"']*)?(["'])/g, '$1$2/$3$4')
+        .replace(/((?:href|src)=["'])\/(?:apps|_apps)\/([^/"']+)\//g, '$1/$2/')
     : rawDocHtml;
 
   const frontMatter = existingFrontMatter
@@ -292,7 +301,7 @@ function buildStandaloneHtml(params) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${courseTitle} — RobOS Interactive eLearning</title>
-  <link rel="icon" type="image/x-icon" href="/v1/assets/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
 
   <!-- Open Graph / Meta -->
   <meta name="description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
@@ -1548,6 +1557,25 @@ function buildStandaloneHtml(params) {
     h2, h3, h4 { letter-spacing: -0.02em; }
     .lesson-subtitle { color: var(--text-bright); font-size: 1.15rem; font-weight: 600; margin-top: 24px; }
     .lesson-text, .lesson-section li { font-size: 16px; line-height: 1.7; color: var(--text); }
+    .lesson-prose p, .lesson-prose li, .lesson-prose td, .lesson-prose th { font-size: 16px; line-height: 1.7; color: var(--text); }
+    .lesson-prose p, .lesson-prose ul, .lesson-prose ol, .lesson-prose table { margin: 0 0 14px; }
+    .lesson-prose ul, .lesson-prose ol { padding-left: 24px; }
+    .lesson-prose li { margin-bottom: 6px; }
+    .lesson-prose h2 { font-size: 1.3rem; font-weight: 600; color: var(--text-bright); margin: 32px 0 10px; }
+    .lesson-prose h2:first-child { margin-top: 0; }
+    .lesson-prose h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-bright); margin: 22px 0 8px; }
+    .lesson-prose a { color: var(--accent-text); }
+    .lesson-prose table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
+    .lesson-prose th { text-align: left; font-weight: 600; color: var(--text-bright); border-bottom: 2px solid var(--border); padding: 7px 12px 7px 0; }
+    .lesson-prose td { border-bottom: 1px solid var(--border); padding: 8px 12px 8px 0; vertical-align: top; font-size: 15px; }
+    .lesson-prose blockquote { border-left: 4px solid var(--accent); background: var(--bg-surface); padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 15px; line-height: 1.65; color: var(--text); }
+    .lesson-prose pre { padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 0 0 14px; font-size: 13px; }
+    .lesson-prose .doc-figure { margin: 18px 0 22px; }
+    .lesson-prose .doc-img { display: block; margin: 0 auto; }
+    .lesson-prose .doc-caption { font-size: 13px; font-style: normal; text-align: left; line-height: 1.5; }
+    .lab-step-desc a { color: var(--accent-text); }
+    .key-ideas ul { margin: 6px 0 0; padding-left: 20px; }
+    .key-ideas li { margin-bottom: 4px; }
     .section-title { font-weight: 600; color: var(--text-bright); }
     .code-snippet, pre { background: var(--code-bg); color: var(--code-fg); border-color: var(--code-bg); }
     .code-snippet code, pre code { color: var(--code-fg); }
@@ -1608,7 +1636,7 @@ function buildStandaloneHtml(params) {
       <a href="/elearning/" class="top-link">All courses</a>
       <span style="color: var(--border);">/</span>
       ${isCrpg ? `
-      <a href="/v1/projects/crpg-realm/" class="top-link">Tactical cRPG Realm</a>
+      <a href="/projects/crpg-realm/" class="top-link">Tactical cRPG Realm</a>
       <span style="color: var(--border);">/</span>
       <span style="color: #38bdf8; font-size: 13px; font-weight: 600;">Interactive Masterclass</span>
       ` : `
@@ -1616,7 +1644,7 @@ function buildStandaloneHtml(params) {
       `}
     </div>
     <div class="top-nav-right">
-      ${isCrpg ? `<a href="/v1/projects/crpg-realm/elearning-masterclass.html" class="top-link">Living Architecture Guide</a>` : ''}
+      ${isCrpg ? `<a href="/projects/crpg-realm/create-your-own-game/combat-party-and-spells/" class="top-link">Living Architecture Guide</a>` : ''}
       <a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener" class="top-link">GitHub</a>
       <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="top-link">Discord</a>
       <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" onclick="(function(){var d=document.documentElement;var n=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=n;try{localStorage.setItem('rb2-theme',n);}catch(e){}})()">&#9680;</button>
@@ -1630,7 +1658,7 @@ function buildStandaloneHtml(params) {
       <div>
         <h1 id="course-title">${courseTitle}</h1>
         <div class="course-meta">
-          <div class="course-meta-line">${courseDifficulty} &middot; ${courseDuration} &middot; ${modules.length} ${modules.length === 1 ? 'module' : 'modules'}</div>
+          <div class="course-meta-line">${courseDifficulty} &middot; ${courseDuration} &middot; ${modules.length} ${unitWord}${modules.length === 1 ? '' : 's'}</div>
         </div>
       </div>
     </div>
@@ -1665,7 +1693,7 @@ function buildStandaloneHtml(params) {
   <div class="app-body">
     <!-- Sidebar Navigation -->
     <aside class="sidebar" aria-label="Curriculum Navigation">
-      <h3 id="sidebar-curriculum-heading">Modules</h3>
+      <h3 id="sidebar-curriculum-heading">${unitLabel}s</h3>
       <ul class="module-list" id="module-nav-list" role="tablist" aria-labelledby="sidebar-curriculum-heading">
         ${modules.map((m, idx) => {
           const rawTitle = m.title ? m.title.replace(/^Module \d+:\s*/i, '') : 'Module ' + (idx + 1);
@@ -1682,7 +1710,7 @@ function buildStandaloneHtml(params) {
                     onkeydown="handleModuleKeyDown(event, ${idx})"
                     aria-label="${safeTitle}, ${m.durationMinutes || 15} minutes, ${(m.labSteps || []).length} labs, ${(m.quiz || []).length} quiz questions">
               <div class="module-item-title">
-                <span>${idx + 1}. ${rawTitle}</span>
+                <span>${unitWord === 'lesson' ? '' : `${idx + 1}. `}${rawTitle}</span>
               </div>
               <div class="module-item-meta">
                 <span>${m.durationMinutes || 15} mins</span>
@@ -2254,11 +2282,11 @@ flowchart TD
               </ul>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 1.1: Complete D&D 5e Character Sheet tracking ability scores, modifiers, AC, saving throws, and status conditions.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 1.2: RTwP battlefield with 6.0s round timer, threat indicators, and spell targeting.</div>
                 </div>
               </div>
@@ -2324,11 +2352,11 @@ func _process(delta: float) -> void:
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.1: Physical house footprints blocking movement; party routes through safe street corridors.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/crpg-realm/fog_of_war_reveal.png" alt="Fog of War Reveal" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/crpg-realm/fog_of_war_reveal.png" alt="Fog of War Reveal" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.2: Dynamic Fog of War shader revealing shrouded terrain as heroes advance.</div>
                 </div>
               </div>
@@ -2372,7 +2400,7 @@ graph LR
                 Dialogue choices are displayed directly inside the 240px Activity Log console rather than intrusive full-screen popups. Players can select choices via numeric keys <code>1</code>–<code>9</code> or mouse click, maintaining visual connection to the surrounding world. HUD controls include Spacebar tactical RTwP pause, Shift-click waypoint queuing, and circle selection rings.
               </p>
               <div class="doc-figure" style="margin: 14px 0 0;">
-                <img src="/v1/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 3.1: Multi-branch dialogue with Blacksmith Brand inside the 240px Activity Log.</div>
               </div>
             </div>
@@ -2425,11 +2453,11 @@ flowchart TD
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.1: BDD scenario verifying enemy pack aggro alerting and fighter peeling.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/crpg-realm/victory_screen.png" alt="Victory Screen" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/crpg-realm/victory_screen.png" alt="Victory Screen" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.2: Campaign victory achieved with 100% test pass rate across 482 steps.</div>
                 </div>
               </div>
@@ -2484,7 +2512,7 @@ static func get_class_data(class_id: String) -> Dictionary:
                 Before any pull request or deployment is approved, <code>kgraph validate</code> validates all shapes, and <code>kgraph diff main</code> checks for broken dialogue references, orphaned asset bindings, or stat imbalances across game revisions.
               </p>
               <div class="doc-figure" style="margin: 14px 0 0;">
-                <img src="/v1/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 5.1: The 4-Phase RobOS Knowledge Graph-First Game Generation Paradigm.</div>
               </div>
             </div>
@@ -2593,7 +2621,7 @@ flowchart TD
               </table>
 
               <div class="doc-figure">
-                <img src="/v1/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 1.1: Stage 1 of the Ingestion Pipeline extracting Linux filesystem entities into the RobOS Knowledge Graph.</div>
               </div>
             </div>
@@ -2887,11 +2915,11 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml</
 
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 5.1: Direct Luxir CLI search returning indexed OpenAPI and Protobuf contracts.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 5.2: Luxir engine status report showing READY state, :8983 endpoint, and type counts.</div>
                 </div>
               </div>
@@ -2939,7 +2967,7 @@ flowchart LR
             <div>
               <h2 id="module-content-heading" tabindex="-1">\${m.title || 'Module ' + (currentModIdx + 1)}</h2>
               <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                Module \${currentModIdx + 1} of \${MODULES_DATA.length} &middot; Estimated Time: \${m.durationMinutes || 15} minutes
+                ${unitLabel} \${currentModIdx + 1} of \${MODULES_DATA.length} &middot; Estimated Time: \${m.durationMinutes || 15} minutes
               </div>
             </div>
             <div class="slide-header-actions">
@@ -2989,6 +3017,13 @@ flowchart LR
           <div class="module-lesson-body">
             \${getModuleLessonHtml(currentModIdx)}
           </div>
+
+          \${(m.keyPoints || []).length ? \`
+            <div class="callout key-ideas">
+              <strong>Key ideas</strong>
+              <ul>\${m.keyPoints.map(k => \`<li>\${formatStepText(k)}</li>\`).join('')}</ul>
+            </div>
+          \` : ''}
 
           <!-- Lab Steps -->
           <h3 id="section-labs" class="section-title">Try it yourself</h3>
@@ -3125,7 +3160,8 @@ flowchart LR
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
-        .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
+        .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')
+        .replace(/\\[([^\\]]+)\\]\\((https?:[^)\\s]+)\\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
     }
 
     function copyLabPrompt(button) {
@@ -3233,6 +3269,7 @@ flowchart LR
         m.overview || '',
         ''
       ];
+      if (m.body) lines.push(m.body, '');
       if (m.labSteps && m.labSteps.length) {
         lines.push('## Try it yourself');
         m.labSteps.forEach((s, sIdx) => {
@@ -3625,7 +3662,7 @@ function renderInlineMarkdown(text) {
   return rendered.replace(/\x01CODE_(\d+)\x01/g, (_m, idx) => codeTokens[Number(idx)]);
 }
 
-function parseLivingDocMarkdown(markdown) {
+function parseLivingDocMarkdown(markdown, { math = true } = {}) {
   if (!markdown) {
     return '<p>No living documentation markdown source attached.</p>';
   }
@@ -3657,10 +3694,12 @@ function parseLivingDocMarkdown(markdown) {
     return saveToken(`<pre><code class="language-${lang}">${esc}</code></pre>`);
   });
 
-  // 3. Math display blocks: $$...$$
-  clean = clean.replace(/\$\$([\s\S]*?)\$\$/g, (_match, math) => {
-    return saveToken(`<div class="formula-box">${math.trim().replace(/\n/g, '<br>')}</div>`);
-  });
+  // 3. Math display blocks: $$...$$ (lessons turn math off, because their dollar signs are prices)
+  if (math) {
+    clean = clean.replace(/\$\$([\s\S]*?)\$\$/g, (_match, formula) => {
+      return saveToken(`<div class="formula-box">${formula.trim().replace(/\n/g, '<br>')}</div>`);
+    });
+  }
 
   // 4. HTML div blocks (like figures with images)
   clean = clean.replace(/<div[\s\S]*?<\/div>/gi, (match) => {
@@ -3700,7 +3739,7 @@ function parseLivingDocMarkdown(markdown) {
   });
 
   // 6. Convert inline math: $...$
-  clean = clean.replace(/\$([^\$\n]+)\$/g, '<code class="math-inline">$1</code>');
+  if (math) clean = clean.replace(/\$([^\$\n]+)\$/g, '<code class="math-inline">$1</code>');
 
   // 7. Headers
   clean = clean.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
@@ -3713,6 +3752,16 @@ function parseLivingDocMarkdown(markdown) {
 
   // 9. Blockquotes
   clean = clean.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // 9b. Lists: consecutive "- item" or "1. item" lines
+  clean = clean.replace(/^(?:[-*] .+(?:\r?\n|$))+/gm, block => {
+    const items = block.trim().split('\n').map(line => `<li>${line.replace(/^[-*]\s+/, '').trim()}</li>`).join('');
+    return `<ul>${items}</ul>\n\n`;
+  });
+  clean = clean.replace(/^(?:\d+\. .+(?:\r?\n|$))+/gm, block => {
+    const items = block.trim().split('\n').map(line => `<li>${line.replace(/^\d+\.\s+/, '').trim()}</li>`).join('');
+    return `<ol>${items}</ol>\n\n`;
+  });
 
   // 10. Inline bold / italic / code / links
   clean = renderInlineMarkdown(clean);
