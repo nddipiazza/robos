@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('api', {
   syncOvpnProfiles: providerId => ipcRenderer.invoke('ovpn-profiles-sync', providerId),
   testOvpnAccount: payload => ipcRenderer.invoke('ovpn-accounts-test', payload),
   configSync: (call, opts) => ipcRenderer.invoke(`config-sync:${call}`, opts),
+  onConfigSyncProgress: callback => ipcRenderer.on('config-sync:progress', (_event, progress) => callback(progress)),
   takeOpenRequest: () => ipcRenderer.invoke('take-open-request'),
   onOpenRequest: callback => ipcRenderer.on('open-request', callback),
   getSchema:     ()        => ipcRenderer.invoke('get-schema'),

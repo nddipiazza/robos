@@ -46,7 +46,8 @@ function csSay(msg, kind = '') {
   el.className = `section-status cs-status ${kind}`;
   if (kind !== 'busy') { el.textContent = msg || ''; return; }
   const started = Date.now();
-  el.innerHTML = `<span class="cs-spinner" aria-hidden="true"></span><span class="cs-busy-text"></span><span class="cs-muted cs-busy-time"></span>`;
+  el.innerHTML = `<span class="cs-spinner" aria-hidden="true"></span><span class="cs-busy-text"></span><span class="cs-muted cs-busy-time"></span>` +
+    '<span class="cs-progress hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span class="cs-progress-fill"></span></span>';
   el.querySelector('.cs-busy-text').textContent = msg;
   const tick = () => {
     const s = Math.round((Date.now() - started) / 1000);
@@ -297,18 +298,77 @@ async function csLoadPlan(strategy) {
   return plan;
 }
 
+// What a running sync is doing, from the progress events main.js forwards.
+function csProgressText(p) {
+  const n = Math.min(p.done + 1, p.total);
+  const file = p.rel ? ` · ${p.rel.replace(/^config\//, '').replace(/^robos\//, '~/.robos/')}` : '';
+  if (p.stage === 'compare') return { short: 'Comparing', long: 'Comparing this machine with the vault…' };
+  if (p.stage === 'download' && p.done < p.total) return { short: `Downloading ${n} of ${p.total}`, long: `Downloading ${n} of ${p.total} files from the vault${file}` };
+  if (p.stage === 'upload' && p.done < p.total) return { short: `Uploading ${n} of ${p.total}`, long: `Uploading ${n} of ${p.total} files to the vault${file}` };
+  if (p.stage === 'download') return { short: 'Writing files', long: 'Writing the downloaded files on this machine…' };
+  return { short: 'Saving', long: "Saving the vault's list of files…" };
+}
+
+function csShowProgress(p) {
+  const { short, long } = csProgressText(p);
+  const pct = p.total ? Math.round((p.done / p.total) * 100) : null;
+  const status = document.getElementById('cs-status');
+  const text = status?.querySelector('.cs-busy-text');
+  if (text) text.textContent = long;
+  const bar = status?.querySelector('.cs-progress');
+  if (bar) {
+    bar.classList.toggle('hidden', pct === null);
+    if (pct !== null) { bar.setAttribute('aria-valuenow', String(pct)); bar.querySelector('.cs-progress-fill').style.width = `${pct}%`; }
+  }
+  const button = document.getElementById('cs-apply');
+  if (button?.getAttribute('aria-busy') === 'true') {
+    button.dataset.csProgress = pct === null ? short : `${short} (${pct}%)`;
+  }
+}
+window.api?.onConfigSyncProgress?.(csShowProgress);
+
+// Brings the status line into view: after a long list of changes it is far above the button.
+function csShowStatus() {
+  document.getElementById('cs-status')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
 async function csApply() {
-  csSay('Syncing…', 'busy');
-  const res = await csCall('applyVaultSync', { strategy: cs.strategy, resolutions: cs.resolutions });
+  // The button is where the person is looking, so it shows the work and how long it has taken.
+  const button = document.getElementById('cs-apply');
+  const count = cs.plan?.actions?.length || 0;
+  const what = `Applying ${count} change${count === 1 ? '' : 's'}`;
+  let timer = null;
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    delete button.dataset.csProgress;
+    const started = Date.now();
+    const draw = () => {
+      const s = Math.round((Date.now() - started) / 1000);
+      button.innerHTML = `<span class="cs-spinner" aria-hidden="true"></span>${button.dataset.csProgress || what}…${s >= 3 ? ` ${s}s` : ''}`;
+    };
+    draw();
+    timer = setInterval(draw, 1000);
+  }
+  csSay(`${what} with the vault…`, 'busy');
+  let res;
+  try {
+    res = await csCall('applyVaultSync', { strategy: cs.strategy, resolutions: cs.resolutions });
+  } finally {
+    clearInterval(timer);
+  }
   if (!res.ok) {
-    if (res.code === 'REMOTE_CHANGED') { await csLoadPlan(cs.strategy); csSay(res.error, 'error'); return res; }
-    if (res.code === 'CONFLICTS') { await csLoadPlan(cs.strategy); csSay(res.error, 'error'); return res; }
-    csSay(res.error, 'error'); return res;
+    if (res.code === 'REMOTE_CHANGED' || res.code === 'CONFLICTS') await csLoadPlan(cs.strategy);
+    else if (button) { button.disabled = false; button.removeAttribute('aria-busy'); button.textContent = `Apply ${count} change${count === 1 ? '' : 's'}`; }
+    csSay(`Sync did not finish: ${res.error}`, 'error');
+    csShowStatus();
+    return res;
   }
   cs.plan = null; cs.resolutions = {};
   await csRefresh();
   await csLoadPlan();
   csSay(`✓ Synced: ${res.pulled.length} file(s) from the vault, ${res.pushed.length} to the vault${res.merged?.length ? `, ${res.merged.length} merged` : ''}${res.deletedLocal.length + res.deletedRemote.length ? `, ${res.deletedLocal.length + res.deletedRemote.length} deleted` : ''}. Generation ${res.generation}.${res.restorePointId ? ' A restore point was saved.' : ''}`, 'good');
+  csShowStatus();
   return res;
 }
 
