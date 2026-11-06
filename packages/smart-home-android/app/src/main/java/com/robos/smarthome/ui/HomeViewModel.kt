@@ -19,6 +19,8 @@ import com.robos.smarthome.core.ScanTargets
 import com.robos.smarthome.core.Schedule
 import com.robos.smarthome.core.UdpDiscovery
 import com.robos.smarthome.core.computeCircadianTarget
+import com.robos.smarthome.core.TuyaFindResult
+import com.robos.smarthome.core.TuyaFoundDevice
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -172,6 +174,46 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             if (result.ok) say(result.message)
             failed(if (result.ok) null else result.message)
         }
+    }
+
+    // ── Feit / Smart Life ────────────────────────────────────────────────────
+
+    val tuyaSetup = MutableStateFlow(app.tuya.setup())
+
+    fun findTuyaLights(accessId: String, accessSecret: String, region: String, done: (TuyaFindResult) -> Unit) {
+        viewModelScope.launch {
+            val result = withMulticast(app) { app.tuya.findLights(accessId, accessSecret, region) }
+            tuyaSetup.value = app.tuya.setup()
+            done(result)
+        }
+    }
+
+    /** Reads each chosen light over Wi-Fi and adds it with its current state. Reports the ones that failed. */
+    fun addTuyaLights(devices: List<TuyaFoundDevice>, roomId: String, done: (failed: List<String>) -> Unit) {
+        viewModelScope.launch {
+            val failed = mutableListOf<String>()
+            val added = mutableListOf<String>()
+            for (device in devices) {
+                val ip = device.ip
+                if (ip == null) {
+                    failed += "${device.name}: it was not found on this Wi-Fi network. Turn it on and find your lights again."
+                    continue
+                }
+                try {
+                    val read = app.tuya.readDevice(device.id, ip, device.version ?: "3.3")
+                    added += engine.saveTuyaLight(device, read, roomId).name
+                } catch (e: Exception) {
+                    failed += "${device.name}: ${e.message ?: "it did not answer."}"
+                }
+            }
+            if (added.isNotEmpty()) say("Added ${added.joinToString()}.")
+            done(failed)
+        }
+    }
+
+    fun forgetTuya() {
+        app.tuya.forget()
+        tuyaSetup.value = app.tuya.setup()
     }
 
     fun refreshAppliances(force: Boolean = false) {

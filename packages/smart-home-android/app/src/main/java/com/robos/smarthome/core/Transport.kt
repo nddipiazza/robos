@@ -46,7 +46,11 @@ const val UDP_ATTEMPTS = 2
 const val TCP_TIMEOUT_MS = 1500
 const val HTTP_TIMEOUT_MS = 2000
 
-class SocketTransport(private val binder: NetworkBinder = object : NetworkBinder {}) : LanTransport {
+class SocketTransport(
+    private val binder: NetworkBinder = object : NetworkBinder {},
+    /** Feit / Smart Life: the local key of a device, by device ID. */
+    private val tuyaKey: (String) -> String? = { null },
+) : LanTransport {
 
     override suspend fun send(step: WireStep): SendResult = withContext(Dispatchers.IO) {
         try {
@@ -54,7 +58,10 @@ class SocketTransport(private val binder: NetworkBinder = object : NetworkBinder
                 is WireStep.Udp -> sendUdp(step)
                 is WireStep.Tcp -> sendTcp(step)
                 is WireStep.Http -> sendHttp(step)
+                is WireStep.Tuya -> sendTuya(step)
             }
+        } catch (e: TuyaException) {
+            SendResult.Failed(e.message ?: "The light did not answer.")
         } catch (e: Exception) {
             SendResult.Failed(unreachable(step, e))
         }
@@ -94,6 +101,16 @@ class SocketTransport(private val binder: NetworkBinder = object : NetworkBinder
             output.flush()
             return SendResult.Sent
         }
+    }
+
+    private fun sendTuya(step: WireStep.Tuya): SendResult {
+        val key = tuyaKey(step.deviceId)
+            ?: return SendResult.Failed("No key for this light. Open Add Feit or Smart Life lights and find your lights again.")
+        TuyaConnection(step.deviceId, step.ip, key, step.version, step.port, binder = binder).use { conn ->
+            conn.connect()
+            conn.setDps(step.dps)
+        }
+        return SendResult.Confirmed
     }
 
     private fun sendHttp(step: WireStep.Http): SendResult {

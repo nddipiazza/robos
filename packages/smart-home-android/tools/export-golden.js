@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const engine = require('../../robos-lib/smart-light-engine');
 const thinq = require('../../robos-lib/lg-thinq');
+const tuyaLib = require('../../robos-lib/tuya');
 
 const PORTS = {
   'wiz-udp': 38899, 'wled-http': 80, 'kasa-lan': 9999, 'hue-rest': 80, 'lifx-udp': 56700,
@@ -70,6 +71,50 @@ const appliances = [
   { device: { deviceId: 'x1', deviceInfo: { deviceType: 'DEVICE_DISH_WASHER' } }, state: null, error: 'This appliance is not connected to LG right now.' },
 ];
 
+// Feit / Smart Life. The JavaScript side was checked against a real Feit bulb (protocol 3.5).
+function tuyaGolden() {
+  const key = Buffer.from('abcdefghijklmnop');
+  const iv = Buffer.from('000102030405060708090a0b', 'hex');
+  const dps = [];
+  for (const schema of ['v2', 'v1', 'switch']) {
+    for (const shape of SHAPES) {
+      const out = tuyaLib.dpsFromLight(shape, schema);
+      dps.push({ light: shape, schema, dps: out, back: tuyaLib.lightFromDps(out, schema) });
+    }
+  }
+  const plain = Buffer.from('3.5\0\0\0\0\0\0\0\0\0\0\0\0{"protocol":5,"t":1,"data":{"dps":{"20":true}}}');
+  const frames = [
+    { kind: '6699', seq: 5, cmd: 13, plainHex: plain.toString('hex'), frameHex: tuyaLib.encode6699({ seq: 5, cmd: 13, plaintext: plain, key, iv }).toString('hex') },
+    { kind: '55aa-crc', seq: 3, cmd: 10, plainHex: '7b7d', frameHex: tuyaLib.encode55aa({ seq: 3, cmd: 10, payload: Buffer.from('{}') }).toString('hex') },
+    { kind: '55aa-hmac', seq: 3, cmd: 16, plainHex: '7b7d', frameHex: tuyaLib.encode55aa({ seq: 3, cmd: 16, payload: Buffer.from('{}'), hmacKey: key }).toString('hex') },
+  ];
+  const sign = [
+    { accessToken: '', t: '1700000000000', method: 'GET', urlPath: '/v1.0/token?grant_type=1' },
+    { accessToken: 'TOKEN1', t: '1700000000001', method: 'GET', urlPath: '/v2.0/cloud/thing/device?page_size=20' },
+  ].map((c) => ({ ...c, accessId: 'ACCESSID', accessSecret: 'SECRET', sign: tuyaLib.signTuyaRequest({ accessId: 'ACCESSID', accessSecret: 'SECRET', ...c }) }));
+  const announce = { ip: '192.168.1.66', gwId: 'eb95f73583c1a3f1a5bedo', active: 2, encrypt: true, productKey: 'keytfesxxsqewnqy', version: '3.5' };
+  const announceFrame = tuyaLib.encode6699({ seq: 0, cmd: 0x13, plaintext: Buffer.concat([Buffer.alloc(4), Buffer.from(JSON.stringify(announce))]), key: tuyaLib.BROADCAST_KEY, iv });
+  return {
+    dps,
+    frames,
+    sign,
+    broadcast: { frameHex: announceFrame.toString('hex'), parsed: tuyaLib.parseBroadcast(announceFrame, '192.168.1.66') },
+    sessionKeys: (() => {
+      // What both sides derive from the two nonces, for 3.4 (ECB) and 3.5 (GCM).
+      const local = Buffer.from('0123456789abcdef');
+      const remote = Buffer.from('fedcba9876543210');
+      const mixed = Buffer.from(local.map((b, i) => b ^ remote[i]));
+      const gcm = require('node:crypto').createCipheriv('aes-128-gcm', key, local.subarray(0, 12));
+      return {
+        localHex: local.toString('hex'),
+        remoteHex: remote.toString('hex'),
+        v34Hex: tuyaLib.aesEcb(key, mixed, true, false).toString('hex'),
+        v35Hex: Buffer.concat([gcm.update(mixed), gcm.final()]).toString('hex'),
+      };
+    })(),
+  };
+}
+
 const golden = {
   colors: {
     hexToRgb: ['#00bcd4', '#abc', 'not-hex', '7c3aed'].map((input) => ({ input, output: engine.hexToRgb(input) })),
@@ -83,6 +128,7 @@ const golden = {
   scenes: engine.BUILTIN_SCENES.map((s) => ({ id: s.id, preset: s.preset })),
   regions: ['US', 'us', 'DE', 'KR', 'ZZ', 'USA', ''].map((input) => ({ input, output: thinq.regionForCountry(input) })),
   appliances: appliances.map((a) => ({ ...a, output: thinq.normalizeAppliance(a.device, a.state, a.error || null) })),
+  tuya: tuyaGolden(),
 };
 
 const out = path.join(__dirname, '..', 'app', 'src', 'test', 'resources', 'golden.json');

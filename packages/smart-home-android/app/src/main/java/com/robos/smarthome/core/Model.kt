@@ -25,6 +25,10 @@ data class Light(
     val effect: String = "solid",
     /** Why the last command did not reach this light; null when it did. */
     val lastError: String? = null,
+    /** Feit / Smart Life lights: Tuya protocol version, such as "3.5". */
+    val tuyaVersion: String = "",
+    /** Feit / Smart Life lights: which data points the light uses ("v2", "v1" or "switch"). */
+    val tuyaSchema: String = "",
 ) {
     val displayHex: String get() = if (colorMode == "kelvin") kelvinToHex(kelvin) else colorHex
 }
@@ -154,6 +158,10 @@ val LIGHT_PROTOCOLS = listOf(
         "ha-rest", "Home Assistant", 8123, hasKelvin = true, hasRgb = true,
         keyLabel = "entity_id|access token",
         setupHint = "In Home Assistant, open your profile and create a long-lived access token.",
+    ),
+    LightProtocol(
+        "tuya-lan", "Feit / Smart Life", TUYA_PORT, hasKelvin = true, hasRgb = true,
+        setupHint = "Add these with Add Feit or Smart Life lights. It fetches each light's key from your Tuya cloud project.",
     ),
 )
 

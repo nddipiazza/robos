@@ -27,6 +27,15 @@ sealed interface WireStep {
 
     data class Tcp(override val ip: String, override val port: Int, val lines: List<String>) : WireStep
 
+    /** A Feit / Smart Life light: the data points to set, sent over Tuya's local protocol. */
+    data class Tuya(
+        override val ip: String,
+        override val port: Int,
+        val deviceId: String,
+        val version: String,
+        val dps: JsonObject,
+    ) : WireStep
+
     data class Http(
         override val ip: String,
         override val port: Int,
@@ -307,6 +316,16 @@ fun buildCommand(light: Light): LightCommand {
                 put("rgb", ints(rgb.r, rgb.g, rgb.b))
             },
         )
+
+        "tuya-lan" -> {
+            if (light.deviceKey.isBlank()) {
+                return LightCommand(id, emptyList(), notReady = "This light has no Tuya device ID. Add it again with Add Feit or Smart Life lights.")
+            }
+            LightCommand(
+                id,
+                listOf(WireStep.Tuya(ip, port, light.deviceKey, light.tuyaVersion.ifEmpty { "3.3" }, tuyaDpsFromLight(light, light.tuyaSchema.ifEmpty { "v2" }))),
+            )
+        }
 
         else -> {
             val parts = light.deviceKey.split("|", limit = 2)
