@@ -41,6 +41,7 @@
       { hostname: '192.168.1.64', port: 80, path: '/onvif/device_service', name: 'Front door', hardware: 'RLC-510A' },
       { hostname: '192.168.1.80', port: 8899, path: '/onvif/device_service', name: 'IPCAM', hardware: 'C6CN' },
     ] }), 600)),
+    listLocalDevices: () => ok([{ format: 'dshow', name: 'Integrated Webcam', label: 'Integrated Webcam', usedBy: '' }]),
     ptzMove: () => ok(true), ptzStop: () => ok(true),
     ptzPresets: () => ok([{ token: '1', name: 'Gate' }, { token: '2', name: 'Street' }]), ptzGoto: () => ok(true),
     startRecording: (id) => ok({ cameraId: id, state: 'live', recording: { reason: 'manual' } }),

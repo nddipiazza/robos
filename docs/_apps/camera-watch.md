@@ -22,6 +22,7 @@ RobOS Camera Watch (`packages/camera-watch`) watches the IP cameras on your home
 
 - **Find cameras** sends a WS-Discovery probe (UDP multicast `239.255.255.250:3702`) and lists the ONVIF cameras that answer, with their names and models. Pick one, enter its user name and password, and Camera Watch asks the camera for its stream address, snapshot address, profiles and PTZ support.
 - **Add camera → Stream address** takes any address ffmpeg can open: `rtsp://`, `rtsps://` or an MJPEG `http://` stream. Use this for cameras without ONVIF.
+- **Add camera → Webcam on this computer** lists the USB webcams and capture cards ffmpeg can open (DirectShow on Windows, V4L2 on Linux, AVFoundation on macOS) and lets you pick a picture size. A webcam can usually be open in one program at a time, so close video calls first. Webcam clips are made from the live view's frames, so they have its frame rate and size (Settings → Live view). New webcams detect motion but don't record it until you turn on **Record when motion starts**, since a desk webcam usually points at you.
 - **Test connection** grabs one frame and shows it, so a wrong address or password shows up before you save. For ONVIF cameras you can pick the stream profile here (for example the camera's lower-resolution sub stream, which uses less CPU).
 
 Camera passwords are saved in `~/.config/robos/camera-watch/cameras.json` (readable only by you) and are never sent to the window or included in Config Sync backups.

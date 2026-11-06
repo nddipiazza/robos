@@ -64,6 +64,7 @@ function fmtSize(bytes) {
 }
 function cameraAddress(cam) {
   if (cam.kind === 'onvif') return `${cam.onvif?.hostname}:${cam.onvif?.port} (ONVIF)`;
+  if (cam.kind === 'device') return `Webcam: ${cam.device?.name}${cam.device?.videoSize ? ` · ${cam.device.videoSize}` : ''}`;
   try {
     const u = new URL(cam.streamUrl);
     u.password = '';
@@ -461,7 +462,41 @@ function setKind(kind) {
   document.querySelectorAll('#f-kind-seg button').forEach((b) => b.classList.toggle('active', b.dataset.kind === kind));
   $('f-onvif-fields').classList.toggle('hidden', kind !== 'onvif');
   $('f-url-fields').classList.toggle('hidden', kind !== 'url');
+  $('f-device-fields').classList.toggle('hidden', kind !== 'device');
+  $('f-login-row').classList.toggle('hidden', kind === 'device');
+  $('f-transport-row').classList.toggle('hidden', kind === 'device');
+  if (kind === 'device' && !state.devicesLoaded) loadLocalDevices();
 }
+
+async function loadLocalDevices() {
+  const sel = $('f-device');
+  const keep = sel.value || state.editing?.device?.name || '';
+  sel.innerHTML = '<option value="">Looking for webcams…</option>';
+  try {
+    const devices = await call(api.listLocalDevices);
+    state.devicesLoaded = true;
+    state.devices = devices;
+    if (!devices.length) {
+      sel.innerHTML = '<option value="">No webcams found</option>';
+      return;
+    }
+    sel.innerHTML = devices.map((d) => {
+      const taken = d.usedBy && d.name !== state.editing?.device?.name;
+      return `<option value="${esc(d.name)}" data-format="${esc(d.format)}" ${taken ? 'disabled' : ''}>${esc(d.label)}${taken ? ` (already added as ${esc(d.usedBy)})` : ''}</option>`;
+    }).join('');
+    if (keep && devices.some((d) => d.name === keep)) sel.value = keep;
+    else {
+      const free = devices.find((d) => !d.usedBy);
+      if (free) sel.value = free.name;
+    }
+    if (!$('f-name').value && sel.value) {
+      $('f-name').value = devices.find((d) => d.name === sel.value)?.label || '';
+    }
+  } catch (err) {
+    sel.innerHTML = `<option value="">${esc(err.message)}</option>`;
+  }
+}
+$('f-device-refresh').addEventListener('click', () => { state.devicesLoaded = false; loadLocalDevices(); });
 $('f-kind-seg').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-kind]');
   if (b) setKind(b.dataset.kind);
@@ -485,6 +520,9 @@ function openCamDialog(cam = null, prefill = {}) {
   if (cam?.onvif?.profileToken) profSel.insertAdjacentHTML('beforeend', `<option value="${esc(cam.onvif.profileToken)}">${esc(cam.onvif.profileToken)}</option>`);
   profSel.value = cam?.onvif?.profileToken || '';
   $('f-test-result').classList.add('hidden');
+  $('f-device-size').value = cam?.device?.videoSize || '';
+  state.devicesLoaded = false;
+  if (cam?.kind === 'device') $('f-device').innerHTML = `<option value="${esc(cam.device.name)}">${esc(cam.device.name)}</option>`;
   setKind(cam?.kind || prefill.kind || 'onvif');
   $('cam-dialog').classList.remove('hidden');
   $('f-name').focus();
@@ -506,6 +544,13 @@ function formInput() {
     rtspTransport: $('f-transport').value,
     onvif: state.kind === 'onvif'
       ? { hostname: $('f-host').value.trim(), port: Number($('f-port').value) || 80, path: $('f-path').value.trim(), profileToken: $('f-profile').value }
+      : undefined,
+    device: state.kind === 'device'
+      ? {
+          name: $('f-device').value,
+          format: $('f-device').selectedOptions[0]?.dataset.format || state.editing?.device?.format || undefined,
+          videoSize: $('f-device-size').value.trim(),
+        }
       : undefined,
   };
 }

@@ -286,6 +286,92 @@ describe('ffmpeg arguments', () => {
   });
 });
 
+describe('webcams on this computer', () => {
+  const { parseDshowList, parseAvfoundationList, inputArgs } = require(path.join(appDir, 'lib', 'local-devices'));
+
+  it('reads the DirectShow device list from new and old ffmpeg output', () => {
+    const modern = [
+      '[dshow @ 000001] "OBSBOT Tiny 2 Lite StreamCamera" (video)',
+      '[dshow @ 000001]   Alternative name "@device_pnp_\\\\?\\usb#vid_6e30"',
+      '[dshow @ 000001] "Microphone (OBSBOT Tiny 2 Lite)" (audio)',
+      '[dshow @ 000001] "OBS Virtual Camera" (none)',
+      'dummy: Immediate exit requested',
+    ].join('\r\n');
+    assert.deepStrictEqual(parseDshowList(modern).map((d) => d.name), ['OBSBOT Tiny 2 Lite StreamCamera']);
+    // ffmpeg 9 on Windows, with a virtual camera's driver logging into the same output.
+    const ffmpeg9 = [
+      '[in#0 @ 0000016621df89c0] "OBSBOT Tiny 2 Lite StreamCamera" (video)',
+      '[in#0 @ 0000016621df89c0]   Alternative name "@device_pnp_\\\\?\\usb#vid_3564&pid_fef9&mi_00#7&378d8911&0&0000#{65e8773d}\\global"',
+      'I2026-11-06 10:23:59.612057 (12348) [INFO] [VCAMDS] ffmpeg.exe',
+      'E2026-11-06 10:23:59.612057 (12348)  [ERR] [VCAMDS] Failed to open settings hive',
+      '[in#0 @ 0000016621df89c0] "Camera (NVIDIA Broadcast)" (video)',
+      '[in#0 @ 0000016621df89c0] "OBSBOT Tiny 2 Lite Microphone (OBSBOT Tiny 2 Lite Audio)" (audio)',
+      'Error opening input file dummy.',
+    ].join('\r\n');
+    assert.deepStrictEqual(parseDshowList(ffmpeg9).map((d) => d.name), ['OBSBOT Tiny 2 Lite StreamCamera', 'Camera (NVIDIA Broadcast)']);
+    const old = [
+      '[dshow @ 01] DirectShow video devices (some may be both video and audio devices)',
+      '[dshow @ 01]  "Integrated Webcam"',
+      '[dshow @ 01] DirectShow audio devices',
+      '[dshow @ 01]  "Microphone Array"',
+    ].join('\n');
+    assert.deepStrictEqual(parseDshowList(old).map((d) => d.name), ['Integrated Webcam']);
+  });
+
+  it('reads the AVFoundation device list and skips screen capture', () => {
+    const text = [
+      '[AVFoundation indev @ 0x1] AVFoundation video devices:',
+      '[AVFoundation indev @ 0x1] [0] FaceTime HD Camera',
+      '[AVFoundation indev @ 0x1] [1] Capture screen 0',
+      '[AVFoundation indev @ 0x1] AVFoundation audio devices:',
+      '[AVFoundation indev @ 0x1] [0] MacBook Pro Microphone',
+    ].join('\n');
+    assert.deepStrictEqual(parseAvfoundationList(text), [{ format: 'avfoundation', name: '0', label: 'FaceTime HD Camera' }]);
+  });
+
+  it('opens a webcam with the right ffmpeg input and records from the live frames', () => {
+    assert.deepStrictEqual(
+      inputArgs({ kind: 'device', format: 'dshow', name: 'OBSBOT Tiny 2 Lite StreamCamera', videoSize: '1280x720' }),
+      ['-f', 'dshow', '-rtbufsize', '256M', '-video_size', '1280x720', '-i', 'video=OBSBOT Tiny 2 Lite StreamCamera'],
+    );
+    assert.deepStrictEqual(inputArgs({ kind: 'device', format: 'v4l2', name: '/dev/video0' }), ['-f', 'v4l2', '-i', '/dev/video0']);
+    const rec = recordArgs({ kind: 'device', format: 'dshow', name: 'Cam' }, '/x.mp4', 60);
+    assert.ok(rec.includes('pipe:0') && !rec.some((a) => a.startsWith('video=')), 'does not open the webcam a second time');
+  });
+
+  it('saves a webcam camera and feeds live frames into its recording', async () => {
+    const spawnFn = makeFakeSpawn();
+    const recordingsDir = path.join(tmpHome, 'webcam-rec');
+    const mgr = createCameraManager({ configDir: path.join(tmpHome, 'webcam'), homeDir: tmpHome, spawnFn });
+    mgr.store.saveSettings({ recordingsDir });
+    await mgr.init();
+    try {
+      assert.throws(() => mgr.store.saveCamera({ name: 'x', kind: 'device', device: {} }), /Pick the webcam/);
+      const view = await mgr.saveCamera({ name: 'Desk', kind: 'device', device: { format: 'dshow', name: 'OBSBOT Tiny 2 Lite StreamCamera' } });
+      assert.strictEqual(view.kind, 'device');
+      assert.strictEqual(view.streamUrl, '');
+      await wait(20);
+      const live = spawnFn.procs.find((p) => p.args.includes('pipe:3'));
+      assert.ok(live.args.includes('video=OBSBOT Tiny 2 Lite StreamCamera'));
+      live.proc.stdout.write(jpeg(1));
+      await wait(10);
+      mgr.startRecording(view.id);
+      const rec = spawnFn.procs.find((p) => p.args.includes('-movflags'));
+      live.proc.stdout.write(jpeg(2));
+      live.proc.stdout.write(jpeg(3));
+      await wait(10);
+      assert.ok(rec.proc.stdinData.length >= jpeg(2).length * 2, 'live frames go to the recorder');
+      // A test while the webcam is live reuses its picture instead of opening it again.
+      const before = spawnFn.procs.length;
+      const t = await mgr.testCamera({ id: view.id, kind: 'device', device: { name: 'OBSBOT Tiny 2 Lite StreamCamera' } });
+      assert.ok(t.ok && t.preview.startsWith('data:image/jpeg;base64,'));
+      assert.strictEqual(spawnFn.procs.length, before);
+    } finally {
+      await mgr.shutdown();
+    }
+  });
+});
+
 describe('camera manager with a pretend ffmpeg', () => {
   it('goes live, logs motion, records a clip and links it to the event', async () => {
     const spawnFn = makeFakeSpawn();

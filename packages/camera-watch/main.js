@@ -183,6 +183,7 @@ handle('camera:setEnabled', (id, enabled) => manager.setEnabled(id, enabled));
 handle('camera:setMotion', (id, patch) => manager.setMotion(id, patch));
 handle('camera:test', (input) => manager.testCamera(input));
 handle('camera:discover', (opts) => manager.discover(opts));
+handle('camera:listLocalDevices', () => manager.listLocalDevices());
 handle('camera:ptzMove', (id, v) => manager.ptzMove(id, v));
 handle('camera:ptzStop', (id) => manager.ptzStop(id));
 handle('camera:ptzPresets', (id) => manager.ptzPresets(id));
