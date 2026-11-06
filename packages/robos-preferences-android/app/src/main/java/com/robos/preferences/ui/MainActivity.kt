@@ -280,9 +280,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.contents(vm: Preferen
         Section {
             Muted("Other settings stay on your computers for now. Phone apps will use them as they are added.")
             byCategory.entries.sortedBy { categoryLabel(it.key) }.forEach { (category, files) ->
-                Row {
-                    Text(categoryLabel(category), Modifier.weight(1f))
-                    Muted("${files.size} file${if (files.size == 1) "" else "s"}")
+                Column(Modifier.padding(top = 4.dp)) {
+                    Row {
+                        Text(categoryLabel(category), Modifier.weight(1f))
+                        Muted("${files.size} file${if (files.size == 1) "" else "s"}")
+                    }
+                    files.forEach { f -> Muted(f.path.removePrefix("config/"), Modifier.padding(start = 12.dp)) }
                 }
             }
         }
