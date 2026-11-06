@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.TimeUnit
 
 /**
  * Takes settings that RobOS Preferences restored from a Google Drive backup. Only apps
@@ -21,6 +22,9 @@ class SettingsProvider : ContentProvider() {
         if (arg != "config/smart-lights.json") return Bundle().apply { putString("error", "Smart Home does not use $arg.") }
         val json = extras?.getString("json") ?: return Bundle().apply { putString("error", "Nothing to restore.") }
         val app = context!!.applicationContext as HomeApp
+        if (!app.ready.await(15, TimeUnit.SECONDS)) {
+            return Bundle().apply { putString("error", "Smart Home is still starting. Try again in a moment.") }
+        }
         return try {
             val summary = runBlocking { app.engine.importDesktopHome(json) }
             Bundle().apply { putString("summary", "Smart Home: ${summary.describe()}") }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.concurrent.CountDownLatch
 
 class HomeApp : Application() {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -28,6 +29,12 @@ class HomeApp : Application() {
         private set
     lateinit var tuya: TuyaService
         private set
+
+    /**
+     * Opens once onCreate has run. Android creates content providers, and can hand them
+     * calls from other apps, before Application.onCreate, so SettingsProvider waits on this.
+     */
+    val ready = CountDownLatch(1)
 
     override fun onCreate() {
         super.onCreate()
@@ -46,5 +53,6 @@ class HomeApp : Application() {
                 ScheduleAlarms.arm(this@HomeApp, engine)
             }
         }
+        ready.countDown()
     }
 }
