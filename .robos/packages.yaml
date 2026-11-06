@@ -360,5 +360,10 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/hardware-keys"
     technology: "Electron 30 / YubiKey Manager (ykman) / python3-fido2 CTAP2 / OpenSSH FIDO2 (-sk) / PAM U2F"
+  - id: "urn:robos:desktop-app:camera-watch"
+    title: "RobOS Camera Watch"
+    type: "robos:DesktopApp"
+    repository: "packages/camera-watch"
+    technology: "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
 
 

@@ -74,10 +74,10 @@ const CATEGORIES = [
   {
     id: 'smart-home',
     label: 'Smart home & TVs',
-    description: 'Smart lights and scenes, home speakers and schedules, Smart TV Studio and dashboards.',
+    description: 'Smart lights and scenes, home speakers and schedules, Smart TV Studio, dashboards and Camera Watch cameras (without their passwords).',
     include: [
       'config/smart-lights.json', 'config/home-speakers.json', 'config/speaker-schedules.json',
-      'config/tv-studio.json', 'config/dashboards.json',
+      'config/tv-studio.json', 'config/dashboards.json', 'config/camera-watch/cameras.json',
     ],
     shareable: true,
   },
@@ -162,6 +162,8 @@ const EXCLUDE = [
   'config/movie-player/active-peer-bridge.json',
   // The LG ThinQ personal access token stays on the computer it was entered on.
   'config/lg-thinq.json',
+  // Camera Watch's motion event log points at this machine's recordings.
+  'config/camera-watch/events.json',
   // Caches, audit logs and live state.
   'config/**/*-cache.json', 'config/**/cache/**', 'config/prompt-security-audit.json',
   'config/notifications.json', 'config/voice-bubbles-live.json', 'config/journal-events.json',
@@ -204,6 +206,7 @@ const LOCAL_KEYS = {
   'config/app-mesh/mesh-state.json': ['listenHost', 'listenPort', 'tunnels'],
   'config/home-speakers.json': ['updatedAt'],
   'config/hardware-keys.json': ['touchHistory', 'lastSeenAt'],
+  'config/camera-watch/settings.json': ['recordingsDir', 'ffmpegPath'],
 };
 
 /** Keys that identify an item in a list, in priority order, used to merge shared lists. */

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://127.0.0.1:*; media-src http://127.0.0.1:*;" />
+  <title>Camera Watch</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand-row">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 48 48" fill="none" stroke="#14b8a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15l25-7 3.5 11.5-25 7z" fill="#14b8a6" fill-opacity="0.18"/><path d="M33 8l6.5-1.5 3 10.5-6 2.5"/><circle cx="30" cy="15.5" r="2.5" stroke="#00bcd4"/><circle cx="13.5" cy="17" r="1" fill="#ef4444" stroke="#ef4444"/><path d="M19 24.5V35H10"/><rect x="6" y="29" width="4" height="12" rx="1"/></svg>
+        </div>
+        <h1 class="title">Camera Watch</h1>
+      </div>
+      <div class="header-right">
+        <div class="kpi-strip">
+          <div class="kpi-chip"><span class="kpi-label">Cameras live</span><strong id="kpi-live">0 / 0</strong></div>
+          <div class="kpi-chip"><span class="kpi-label">Motion now</span><strong id="kpi-motion">0</strong></div>
+          <div class="kpi-chip"><span class="kpi-label">Events today</span><strong id="kpi-events">0</strong></div>
+        </div>
+        <button type="button" class="btn" id="btn-discover">Find cameras</button>
+        <button type="button" class="btn btn-primary" id="btn-add">Add camera</button>
+      </div>
+    </header>
+
+    <div id="banner" class="banner hidden" role="status" aria-live="polite"></div>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="live" role="tab">Live</button>
+      <button type="button" class="tab-btn" data-tab="cameras" role="tab">Cameras</button>
+      <button type="button" class="tab-btn" data-tab="events" role="tab">Motion events</button>
+      <button type="button" class="tab-btn" data-tab="recordings" role="tab">Recordings</button>
+      <button type="button" class="tab-btn" data-tab="settings" role="tab">Settings</button>
+    </nav>
+
+    <main class="main">
+      <!-- Live -->
+      <section class="tab-panel active" id="tab-live">
+        <div class="toolbar">
+          <div class="seg" id="layout-seg" aria-label="Grid layout">
+            <button type="button" data-cols="1">1</button>
+            <button type="button" data-cols="2" class="active">2×2</button>
+            <button type="button" data-cols="3">3×3</button>
+            <button type="button" data-cols="4">4×4</button>
+          </div>
+          <span class="muted" id="live-hint">Click a camera to make it big. Double-click for full screen.</span>
+        </div>
+        <div class="grid" id="live-grid"></div>
+        <div class="empty hidden" id="live-empty">
+          <h2>No cameras yet</h2>
+          <p>Use <b>Find cameras</b> to look for ONVIF cameras on your network, or <b>Add camera</b> to enter an RTSP or MJPEG address.</p>
+        </div>
+      </section>
+
+      <!-- Cameras -->
+      <section class="tab-panel" id="tab-cameras">
+        <div class="cam-list" id="cam-list"></div>
+      </section>
+
+      <!-- Events -->
+      <section class="tab-panel" id="tab-events">
+        <div class="toolbar">
+          <select id="events-camera"><option value="">All cameras</option></select>
+          <button type="button" class="btn" id="btn-clear-events">Clear list</button>
+          <span class="muted">Clearing the list keeps the recordings.</span>
+        </div>
+        <div class="event-list" id="event-list"></div>
+      </section>
+
+      <!-- Recordings -->
+      <section class="tab-panel" id="tab-recordings">
+        <div class="toolbar">
+          <select id="rec-camera"><option value="">All cameras</option></select>
+          <select id="rec-kind">
+            <option value="">Clips and stills</option>
+            <option value="video">Clips only</option>
+            <option value="snapshot">Stills only</option>
+          </select>
+          <button type="button" class="btn" id="btn-open-folder">Open folder</button>
+          <span class="muted" id="rec-summary"></span>
+        </div>
+        <div class="rec-layout">
+          <div class="rec-list" id="rec-list"></div>
+          <div class="rec-player card">
+            <video id="rec-video" controls preload="metadata" class="hidden"></video>
+            <img id="rec-image" class="hidden" alt="" />
+            <div class="muted" id="rec-player-empty">Pick a recording to play it here.</div>
+            <div class="rec-player-meta" id="rec-player-meta"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="tab-panel" id="tab-settings">
+        <form class="card settings-form" id="settings-form">
+          <h2>Recording</h2>
+          <label>Recordings folder
+            <span class="row"><input id="set-recordingsDir" type="text" /><button type="button" class="btn" id="btn-pick-folder">Choose…</button></span>
+          </label>
+          <label>Keep recordings for (days, 0 = forever)<input id="set-retentionDays" type="number" min="0" max="3650" /></label>
+          <label>Keep recording after motion stops (seconds)<input id="set-postMotionSeconds" type="number" min="0" max="600" /></label>
+          <label>Longest clip (minutes)<input id="set-maxClipMinutes" type="number" min="1" max="240" /></label>
+          <h2>Live view</h2>
+          <label>Live frames per second<input id="set-liveFps" type="number" min="1" max="30" /></label>
+          <label>Live picture width (pixels)<input id="set-liveWidth" type="number" min="160" max="3840" /></label>
+          <label>Motion checks per second<input id="set-motionFps" type="number" min="1" max="15" /></label>
+          <h2>ffmpeg</h2>
+          <label>ffmpeg program
+            <span class="row"><input id="set-ffmpegPath" type="text" /><button type="button" class="btn" id="btn-check-ffmpeg">Check</button></span>
+          </label>
+          <div class="muted" id="ffmpeg-status"></div>
+          <div class="form-actions"><button type="submit" class="btn btn-primary">Save settings</button></div>
+        </form>
+        <div class="card about">
+          <h2>How it works</h2>
+          <p>Camera Watch finds ONVIF cameras with WS-Discovery and reads their stream addresses, snapshots and PTZ controls through the open-source <code>onvif</code> library. ffmpeg reads each camera's video, so any RTSP, RTSPS or MJPEG-over-HTTP camera works too.</p>
+          <p>Motion is detected on this computer by comparing small grey copies of each frame with a slowly-updated background. ONVIF cameras can also send their own motion alarms. Clips are copied from the camera's stream without re-encoding, so recording uses little CPU.</p>
+          <p>Video stays on this computer. Camera passwords are stored in your RobOS config folder and are never included in Config Sync backups.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Focused camera overlay -->
+    <div class="overlay hidden" id="focus-overlay">
+      <div class="focus-panel">
+        <div class="focus-head">
+          <strong id="focus-title"></strong>
+          <span class="pill" id="focus-state"></span>
+          <span class="spacer"></span>
+          <button type="button" class="btn" id="focus-snapshot">Snapshot</button>
+          <button type="button" class="btn" id="focus-record">Record</button>
+          <button type="button" class="btn" id="focus-full">Full screen</button>
+          <button type="button" class="btn" id="focus-close" aria-label="Close">✕</button>
+        </div>
+        <div class="focus-body">
+          <div class="focus-video" id="focus-video-wrap">
+            <img id="focus-img" alt="" />
+            <canvas id="zone-canvas" class="hidden"></canvas>
+          </div>
+          <aside class="focus-side">
+            <div class="side-block">
+              <h3>Motion</h3>
+              <div class="meter"><div class="meter-fill" id="focus-meter"></div><div class="meter-mark" id="focus-meter-mark"></div></div>
+              <label class="check"><input type="checkbox" id="m-enabled" /> Detect motion</label>
+              <label class="check"><input type="checkbox" id="m-record" /> Record when motion starts</label>
+              <label class="check" id="m-camera-wrap"><input type="checkbox" id="m-camera" /> Also use the camera's own motion alarms</label>
+              <label>Sensitivity <span id="m-sens-val"></span><input type="range" id="m-sensitivity" min="1" max="100" /></label>
+              <label>Area that must change <span id="m-area-val"></span><input type="range" id="m-area" min="0.2" max="20" step="0.1" /></label>
+              <div class="row">
+                <button type="button" class="btn btn-small" id="m-zones-edit">Draw zones</button>
+                <button type="button" class="btn btn-small" id="m-zones-clear">Whole picture</button>
+              </div>
+              <div class="muted small" id="m-zones-hint">Zones limit motion detection to parts of the picture. Drag on the video to add one.</div>
+            </div>
+            <div class="side-block" id="ptz-block">
+              <h3>Pan, tilt, zoom</h3>
+              <div class="ptz-pad">
+                <span></span><button type="button" data-ptz="0,1,0" aria-label="Up">▲</button><span></span>
+                <button type="button" data-ptz="-1,0,0" aria-label="Left">◀</button><button type="button" data-ptz-home aria-label="Stop">■</button><button type="button" data-ptz="1,0,0" aria-label="Right">▶</button>
+                <span></span><button type="button" data-ptz="0,-1,0" aria-label="Down">▼</button><span></span>
+              </div>
+              <div class="row">
+                <button type="button" class="btn btn-small" data-ptz="0,0,1">Zoom in</button>
+                <button type="button" class="btn btn-small" data-ptz="0,0,-1">Zoom out</button>
+              </div>
+              <label>Speed<input type="range" id="ptz-speed" min="0.1" max="1" step="0.1" value="0.5" /></label>
+              <select id="ptz-presets"><option value="">Go to preset…</option></select>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add / edit camera dialog -->
+    <div class="overlay hidden" id="cam-dialog">
+      <form class="dialog" id="cam-form">
+        <h2 id="cam-dialog-title">Add camera</h2>
+        <input type="hidden" id="f-id" />
+        <label>Name<input id="f-name" type="text" placeholder="Front door" required /></label>
+        <div class="seg" id="f-kind-seg">
+          <button type="button" data-kind="onvif" class="active">ONVIF camera</button>
+          <button type="button" data-kind="url">Stream address</button>
+        </div>
+        <div id="f-onvif-fields">
+          <div class="row">
+            <label class="grow">Camera address<input id="f-host" type="text" placeholder="192.168.1.64" /></label>
+            <label class="narrow">Port<input id="f-port" type="number" value="80" /></label>
+          </div>
+          <label>Service path<input id="f-path" type="text" value="/onvif/device_service" /></label>
+          <label>Stream profile<select id="f-profile"><option value="">Camera default</option></select></label>
+        </div>
+        <div id="f-url-fields" class="hidden">
+          <label>Stream address<input id="f-url" type="text" placeholder="rtsp://192.168.1.64:554/stream1" /></label>
+          <div class="muted small">Any address ffmpeg can open: <code>rtsp://</code>, <code>rtsps://</code>, or an MJPEG <code>http://</code> stream.</div>
+        </div>
+        <div class="row">
+          <label class="grow">User name<input id="f-user" type="text" autocomplete="off" placeholder="admin" /></label>
+          <label class="grow">Password<input id="f-pass" type="password" autocomplete="new-password" /></label>
+        </div>
+        <label>RTSP transport
+          <select id="f-transport"><option value="tcp">TCP (most reliable)</option><option value="udp">UDP</option></select>
+        </label>
+        <div class="test-result hidden" id="f-test-result"></div>
+        <div class="form-actions">
+          <button type="button" class="btn" id="f-test">Test connection</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn" id="f-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="f-save">Save camera</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Discovery dialog -->
+    <div class="overlay hidden" id="discover-dialog">
+      <div class="dialog">
+        <h2>Find cameras on your network</h2>
+        <p class="muted">Looks for ONVIF cameras with WS-Discovery. Cameras that do not speak ONVIF can be added with their stream address.</p>
+        <div id="discover-list" class="discover-list"></div>
+        <div class="form-actions">
+          <button type="button" class="btn" id="discover-again">Search again</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn" id="discover-close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+  </div>
+  <script src="demo-bridge.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
