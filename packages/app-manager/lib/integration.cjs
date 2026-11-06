@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { ID } = require('./catalog.cjs');
 const { gnome, MANAGER_ENTRY } = require('./gnome.cjs');
+const { ensureAppIco } = require('./win-icon.cjs');
 const quoteShell = value => "'" + value.replace(/'/g, "'\\''") + "'";
 const xml = value => value.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
 function quoteDesktop(value) {
@@ -22,12 +23,17 @@ function integration({ locations, executable, host, packaged, shell, platform = 
       const dir = path.join(locations.shortcuts, item.id);
       if (remove) { fs.rmSync(dir, { recursive: true, force: true }); return; }
       fs.mkdirSync(dir, { recursive: true });
-      const name = item.label.replace(/[<>:"/\\|?*]/g, '_');
+      // Start menu search matches shortcut names, so every app is found by typing "RobOS".
+      const name = (/^robos\b/i.test(item.label) ? item.label : `RobOS ${item.label}`).replace(/[<>:"/\\|?*]/g, '_');
+      // A shortcut written under an older name would show up twice.
+      for (const old of fs.readdirSync(dir)) if (old.endsWith('.lnk') && old !== `${name}.lnk` && old !== `Uninstall ${name}.lnk`) fs.rmSync(path.join(dir, old), { force: true });
+      // The app's own icon, not the shared executable's (which would make every app look alike).
+      const icon = ensureAppIco(path.join(locations.root, 'packages', item.id)) || executable;
       for (const [label, arg] of [[name, `--app=${item.id}`], [`Uninstall ${name}`, `--remove=${item.id}`]]) {
         // All generated arguments are fixed switches/validated IDs, plus a quoted dev host.
         const args = command([arg]).map(a => '"' + a.replace(/"/g, '\\"') + '"').join(' ');
         if (!shell.writeShortcutLink(path.join(dir, `${label}.lnk`), 'create', { target: executable, args,
-          description: label, appUserModelId: `com.rowbose.robos.${item.id}`, icon: executable, iconIndex: 0 })) throw new Error('Could not create Start menu shortcut');
+          description: label, appUserModelId: `com.rowbose.robos.${item.id}`, icon, iconIndex: 0 })) throw new Error('Could not create Start menu shortcut');
       }
     } else if (platform === 'darwin') {
       const bundle = path.join(locations.shortcuts, `${item.id}.app`);

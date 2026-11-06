@@ -58,3 +58,6 @@ site/schemas/ontology.jsonld
 site/.jekyll-cache/
 site/site.webmanifest
 site/favicon.ico
+
+# Windows icons App Manager makes from icon.png (packages/app-manager/lib/win-icon.cjs)
+packages/*/icon.ico
