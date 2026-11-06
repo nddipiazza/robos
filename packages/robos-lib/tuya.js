@@ -175,12 +175,21 @@ function createTuyaCloud({ accessId, accessSecret, region, fetchImpl = globalThi
 
   async function listDevices() {
     await login();
-    let raw;
+    let raw = [];
+    let firstError = null;
     try {
       raw = await listLinkedDevices();
     } catch (err) {
       if (err.code === 'unreachable' || err.code === '1004') throw err;
-      raw = await listAssociatedDevices();
+      firstError = err;
+    }
+    // Some projects only list linked-account devices through the older API.
+    if (!raw.length) {
+      try {
+        raw = await listAssociatedDevices();
+      } catch (err) {
+        if (firstError) throw firstError;
+      }
     }
     return raw.map(normalizeCloudDevice).filter((d) => d.id);
   }
