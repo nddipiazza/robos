@@ -7,9 +7,11 @@
 // The Start menu and search list do not scale a lone 256 px image down: an .ico holding only
 // that shows as a blank page there. So the .ico carries 16–64 px images as 32-bit bitmaps (the
 // form Windows' own small icons use) next to the 256 px PNG, which Vista and later read as is.
+// Shortcut icons go in paths().icons, where Start menu search will load them (see paths.cjs).
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const crypto = require('node:crypto');
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const SMALL_SIZES = [16, 20, 24, 32, 40, 48, 64];
@@ -127,19 +129,45 @@ function pngToIco(png) {
   return icoFile([...small, largest]);
 }
 
-const imageCount = file => { try { const fd = fs.openSync(file, 'r'), b = Buffer.alloc(6); fs.readSync(fd, b, 0, 6, 0); fs.closeSync(fd); return b.readUInt16LE(4); } catch { return 0; } };
+// Bumped when pngToIco's output changes, so every app gets a freshly named icon.
+const FORMAT = 2;
 
-/** Writes <dir>/icon.ico from <dir>/icon.png when needed. Returns its path, or null without a PNG. */
-function ensureAppIco(dir) {
-  const ico = path.join(dir, 'icon.ico'), png = path.join(dir, 'icon.png');
-  if (!fs.existsSync(png)) return fs.existsSync(ico) ? ico : null;
-  // Rebuilt when the PNG changed, or when an older RobOS wrote a single-image icon.
-  if (fs.existsSync(ico) && fs.statSync(ico).mtimeMs >= fs.statSync(png).mtimeMs && imageCount(ico) > 1) return ico;
-  try {
-    fs.writeFileSync(`${ico}.tmp`, pngToIco(fs.readFileSync(png)));
-    fs.renameSync(`${ico}.tmp`, ico);
-    return ico;
-  } catch { fs.rmSync(`${ico}.tmp`, { force: true }); return fs.existsSync(ico) ? ico : null; }
+const escape = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Writes <into>/<name>-<hash>.ico from <dir>/icon.png when needed and returns its path, or null
+ * without a PNG. Windows caches shortcut icons by file path and does not notice the file
+ * changing, so an icon that changes gets a new name: the hash covers the PNG and FORMAT.
+ * Older icons of the same name in <into> are removed (one still open is left for next time).
+ */
+function ensureAppIco(dir, { into = dir, name = 'icon' } = {}) {
+  const png = path.join(dir, 'icon.png');
+  if (!fs.existsSync(png)) return null;
+  const source = fs.readFileSync(png);
+  const hash = crypto.createHash('sha1').update(`${FORMAT}:`).update(source).digest('hex').slice(0, 10);
+  const ico = path.join(into, `${name}-${hash}.ico`);
+  if (!fs.existsSync(ico)) {
+    try {
+      fs.mkdirSync(into, { recursive: true });
+      fs.writeFileSync(`${ico}.tmp`, pngToIco(source));
+      fs.renameSync(`${ico}.tmp`, ico);
+    } catch { fs.rmSync(`${ico}.tmp`, { force: true }); return null; }
+  }
+  removeIcons(into, name, ico);
+  // An icon.ico written next to icon.png by earlier versions of App Manager.
+  if (into !== dir) { try { fs.rmSync(path.join(dir, 'icon.ico'), { force: true }); } catch {} }
+  return ico;
 }
 
-module.exports = { pngToIco, pngSize, decodePng, ensureAppIco };
+/** Removes <into>/<name>-<hash>.ico files (and a plain <name>.ico), except `keep`. */
+function removeIcons(into, name, keep = null) {
+  const pattern = new RegExp(`^${escape(name)}(-[0-9a-f]{10})?\\.ico$`);
+  let files = [];
+  try { files = fs.readdirSync(into); } catch { return; }
+  for (const file of files) {
+    const full = path.join(into, file);
+    if (pattern.test(file) && full !== keep) { try { fs.rmSync(full); } catch {} }
+  }
+}
+
+module.exports = { pngToIco, pngSize, decodePng, ensureAppIco, removeIcons };

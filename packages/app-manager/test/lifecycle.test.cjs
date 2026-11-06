@@ -287,14 +287,20 @@ test('Windows shortcuts point directly to app and its uninstall command', async 
 test('Windows shortcuts and windows use the app\'s own icon, made from its icon.png', async t => {
   const { locations } = await fixture(t), links = [];
   const { pngToIco, ensureAppIco } = require('../lib/win-icon.cjs');
+  locations.icons = path.join(path.dirname(locations.root), 'Programs', 'RobOS', 'icons');
   const appDir = path.join(locations.root, 'packages', 'one'); fs.mkdirSync(appDir, { recursive: true });
   const png = fs.readFileSync(path.join(__dirname, '..', 'icon.png'));
   fs.writeFileSync(path.join(appDir, 'icon.png'), png);
+  fs.writeFileSync(path.join(appDir, 'icon.ico'), 'from an older RobOS');
   const native = integration({ locations, executable: 'C:\\RobOS\\RobOS.exe', packaged: true, platform: 'win32',
     shell: { writeShortcutLink: (file, _mode, options) => { links.push({ file, ...options }); return true; } } });
   native.shortcut({ id: 'one', label: 'One App' });
-  const ico = path.join(appDir, 'icon.ico');
-  assert.equal(links[0].icon, ico);
+  const ico = links[0].icon;
+  // Start menu search leaves icons blank under AppData\Local, which sandboxes may be allowed to write.
+  assert.equal(path.dirname(ico), locations.icons);
+  assert.match(path.basename(ico), /^one-[0-9a-f]{10}\.ico$/, 'named by content, so Windows never shows a cached older icon');
+  assert.ok(!fs.existsSync(path.join(appDir, 'icon.ico')), 'the icon an older RobOS wrote next to the app is removed');
+  assert.equal(links[1].icon, ico, 'the uninstall shortcut shows the same icon');
   const bytes = fs.readFileSync(ico), count = bytes.readUInt16LE(4);
   assert.deepEqual([bytes.readUInt16LE(0), bytes.readUInt16LE(2)], [0, 1], 'an icon file');
   const entries = Array.from({ length: count }, (_, i) => { const at = 6 + 16 * i; return { size: bytes[at] || 256, length: bytes.readUInt32LE(at + 8), offset: bytes.readUInt32LE(at + 12) }; });
@@ -309,11 +315,17 @@ test('Windows shortcuts and windows use the app\'s own icon, made from its icon.
   const { decodePng } = require('../lib/win-icon.cjs'), source = decodePng(png);
   const mid = (128 * 256 + 128) * 4, row = 16 - 1 - 8, px = 40 + (row * 16 + 8) * 4;
   assert.ok(Math.abs(bitmap[px + 2] - source.rgba[mid]) < 40 && Math.abs(bitmap[px + 1] - source.rgba[mid + 1]) < 40 && Math.abs(bitmap[px] - source.rgba[mid + 2]) < 40, 'the bitmap shows the icon');
-  // An icon written by an older RobOS (one image) is rebuilt; an up-to-date one is kept.
-  const stale = Buffer.alloc(6); stale.writeUInt16LE(1, 2); stale.writeUInt16LE(1, 4); fs.writeFileSync(ico, stale);
-  ensureAppIco(appDir);
-  assert.equal(fs.readFileSync(ico).readUInt16LE(4), 8);
-  const before = fs.statSync(ico).mtimeMs; ensureAppIco(appDir); assert.equal(fs.statSync(ico).mtimeMs, before);
+  // The same PNG keeps its icon file; a changed PNG gets a new file and the old one goes.
+  const into = { into: locations.icons, name: 'one' };
+  const before = fs.statSync(ico).mtimeMs; assert.equal(ensureAppIco(appDir, into), ico); assert.equal(fs.statSync(ico).mtimeMs, before);
+  fs.writeFileSync(path.join(appDir, 'icon.png'), fs.readFileSync(path.join(__dirname, '..', '..', 'movie-player', 'icon.png')));
+  const changed = ensureAppIco(appDir, into);
+  assert.notEqual(changed, ico);
+  assert.deepEqual(fs.readdirSync(locations.icons), [path.basename(changed)]);
+  // Another app whose ID starts the same keeps its icon; removing the app removes its icon.
+  fs.writeFileSync(path.join(locations.icons, 'one-two-0123456789.ico'), '');
+  native.shortcut({ id: 'one' }, true);
+  assert.deepEqual(fs.readdirSync(locations.icons), ['one-two-0123456789.ico']);
   assert.equal(ensureAppIco(path.join(locations.root, 'packages', 'missing')), null);
   assert.throws(() => pngToIco(Buffer.from('not a png')), /Not a PNG/);
 });
