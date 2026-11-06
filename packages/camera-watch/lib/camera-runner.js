@@ -35,8 +35,15 @@ function clipPaths(recordingsDir, cameraName, reason, when = new Date()) {
 }
 
 /** Turn ffmpeg's last error line into a plain sentence (passwords hidden). */
-function explainFfmpeg(line) {
-  const l = redactUrl(String(line));
+function explainFfmpeg(line, kind = '') {
+  // Share secrets ride in the query string of shared-camera URLs; never show them.
+  const l = redactUrl(String(line)).replace(/([?&]s=)[^&\s'"]+/g, '$1***');
+  if (kind === 'remote') {
+    if (/403|Forbidden/i.test(l)) return 'The other machine no longer shares this camera with you.';
+    if (/503|Service Unavailable/i.test(l)) return 'The camera is turned off on the machine that shares it.';
+    if (/Connection refused|reset|End of file|Invalid data/i.test(l)) return 'Could not reach the machine that shares this camera. Is Camera Watch running there?';
+    if (/exited with code 0/i.test(l)) return 'The shared stream stopped. Reconnecting…';
+  }
   if (/401|Unauthorized/i.test(l)) return 'The camera refused the user name or password (401 Unauthorized).';
   if (/Connection refused/i.test(l)) return 'The camera refused the connection. Check the address and port.';
   if (/timed out|Operation timed out|No route to host/i.test(l)) return 'The camera did not answer. Is it on and on this network?';
@@ -62,7 +69,7 @@ function liveArgs(input, settings) {
 function recordArgs(input, file, maxSeconds) {
   const args = ['-hide_banner', '-loglevel', 'error'];
   const tail = ['-movflags', '+frag_keyframe+empty_moov+default_base_moof', '-f', 'mp4', '-y', file];
-  if (input.kind === 'device') {
+  if (input.kind === 'device' || input.kind === 'remote') {
     // A webcam can usually be opened by one program at a time, and the live
     // view already has it. Record by encoding the live JPEG frames, which
     // arrive on stdin, timed by when they arrive.
@@ -130,7 +137,8 @@ class CameraRunner extends EventEmitter {
       || camera.password !== this.camera.password
       || camera.rtspTransport !== this.camera.rtspTransport
       || JSON.stringify(camera.onvif) !== JSON.stringify(this.camera.onvif)
-      || JSON.stringify(camera.device) !== JSON.stringify(this.camera.device);
+      || JSON.stringify(camera.device) !== JSON.stringify(this.camera.device)
+      || JSON.stringify(camera.remote) !== JSON.stringify(this.camera.remote);
     this.camera = camera;
     this.detector.configure(this._motionOptions());
     if (restart && this.wanted) this.restart();
@@ -261,7 +269,7 @@ class CameraRunner extends EventEmitter {
   }
 
   _explain(line) {
-    return explainFfmpeg(line);
+    return explainFfmpeg(line, this.camera.kind);
   }
 
   _fail(message) {
@@ -361,7 +369,7 @@ class CameraRunner extends EventEmitter {
       thumb: this.latestFrame ? paths.thumb : '',
       proc,
       // Webcams: the recorder is fed the live frames (see recordArgs).
-      feed: this.input.kind === 'device',
+      feed: this.input.kind === 'device' || this.input.kind === 'remote',
     };
     proc.stdin?.on('error', () => {}); // the recorder may exit before we stop writing
     let stderr = '';

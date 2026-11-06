@@ -63,7 +63,12 @@ try {
 } catch {}
 
 const { createCameraManager } = require('./lib/camera-manager');
-const manager = createCameraManager({ configDir: CONFIG_DIR, homeDir: HOME_DIR });
+const manager = createCameraManager({
+  configDir: CONFIG_DIR,
+  homeDir: HOME_DIR,
+  // Sharing cameras between RobOS machines uses the App Mesh / Private Networks engine.
+  loadMesh: () => requireShared('app-mesh-engine'),
+});
 
 const userDataDir = path.join(CONFIG_DIR, 'electron', APP_ID);
 app.setName?.(`robos-${APP_ID}`);
@@ -91,15 +96,28 @@ manager.on('status', (s) => send('camera:status', s));
 manager.on('score', (s) => send('camera:score', s));
 manager.on('log', (line) => send('camera:log', line));
 manager.on('recordings-changed', () => send('camera:recordings-changed'));
+manager.on('sharing-changed', () => send('camera:sharing-changed'));
 manager.on('event', (evt) => {
   send('camera:event', { ...evt, thumbUrl: manager.mediaUrl(evt.thumb), videoUrl: manager.mediaUrl(evt.video) });
-  // A desktop notification when motion starts and the window is not focused.
-  if (evt.type === 'motion' && !evt.endedAt && Notification?.isSupported?.() && !mainWindow?.isFocused?.()) {
-    try {
-      new Notification({ title: 'Motion detected', body: `${evt.cameraName} · ${new Date(evt.startedAt).toLocaleTimeString()}` }).show();
-    } catch {}
-  }
+  maybeNotifyMotion(evt);
 });
+
+// A desktop notification when motion starts, only for cameras with "Notify me"
+// turned on, never while the window is in front, and at most once per camera
+// every NOTIFY_GAP_MS so a busy room does not flood the desktop.
+const NOTIFY_GAP_MS = 10 * 60 * 1000;
+const lastNotifiedAt = new Map();
+function maybeNotifyMotion(evt) {
+  if (evt.type !== 'motion' || evt.endedAt || evt.notified) return;
+  const cam = manager.store.getCamera(evt.cameraId);
+  if (!cam?.motion?.notify || !Notification?.isSupported?.() || mainWindow?.isFocused?.()) return;
+  const now = Date.now();
+  if (now - (lastNotifiedAt.get(cam.id) || 0) < NOTIFY_GAP_MS) return;
+  lastNotifiedAt.set(cam.id, now);
+  try {
+    new Notification({ title: 'Motion detected', body: `${cam.name} · ${new Date(evt.startedAt).toLocaleTimeString()}` }).show();
+  } catch {}
+}
 
 function createWindow() {
   const iconPng = path.join(__dirname, 'icon.png');
@@ -184,6 +202,13 @@ handle('camera:setMotion', (id, patch) => manager.setMotion(id, patch));
 handle('camera:test', (input) => manager.testCamera(input));
 handle('camera:discover', (opts) => manager.discover(opts));
 handle('camera:listLocalDevices', () => manager.listLocalDevices());
+handle('share:createInvite', (opts) => manager.createShareInvite(opts));
+handle('share:status', () => manager.sharingStatus());
+handle('share:revokeInvite', (inviteId) => manager.revokeShareInvite(inviteId));
+handle('share:stopCamera', (id) => manager.stopSharingCamera(id));
+handle('share:previewInvite', (text) => manager.previewInvite(text));
+handle('share:addCameras', (text, opts) => manager.addSharedCameras(text, opts));
+handle('share:copy', (text) => { require('electron').clipboard.writeText(String(text || '')); return true; });
 handle('camera:ptzMove', (id, v) => manager.ptzMove(id, v));
 handle('camera:ptzStop', (id) => manager.ptzStop(id));
 handle('camera:ptzPresets', (id) => manager.ptzPresets(id));

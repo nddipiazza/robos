@@ -51,6 +51,21 @@ With **Record when motion starts** on, a clip starts when motion starts and stop
 
 Recordings go to `~/Videos/Camera Watch/<camera>/<date>/` by default. The **Recordings** tab plays clips and shows stills, and Camera Watch deletes its own clips and stills older than the number of days set in **Settings** (14 by default, 0 keeps everything). Other files in that folder are left alone.
 
+## Sharing cameras with another RobOS
+
+You can let someone on another RobOS machine watch some of your cameras, on your network or on theirs, through the RobOS private network ([App Mesh](/apps/app-mesh/)).
+
+1. **Share** → tick the cameras → say who it is for → **Create invite**. If they are on a different network, tick **They are on a different network**. That opens an encrypted relay through localhost.run (needs `ssh`), so the invite works from anywhere. The relay only forwards the encrypted mutual-TLS connection; it cannot see the video.
+2. Send them the `robos-cam://…` invite privately. Anyone who has it can watch those cameras until you take it back.
+3. They choose **Add camera → Shared with me**, paste it and save. Their Camera Watch joins your private network and the cameras show up in their grid with live view, motion detection and (if they turn it on) recording.
+
+What the invite allows:
+
+- It is a *scoped* invite: their machine and yours pin each other's certificates with access to Camera Watch's share service (`camera-watch-share`, `127.0.0.1:19221`) **only**, in both directions. It does not reach your other RobOS apps, their debug ports or anything else on your machine, and a full `robos-net://` network invite is not needed.
+- Each shared camera has its own secret, so they see only the cameras in their invite.
+- **Share → Who can watch** lists each invite, who joined with it and how many people are watching now. **Revoke** removes those machines from your private network and closes the streams they have open right away. **Stop sharing** on a camera changes its secret, so every invite loses that camera.
+- Shared video is the same JPEG frames your own live view uses, so sharing adds no encoding work, and it never goes through a cloud service.
+
 ## Pan, tilt and zoom
 
 For ONVIF cameras with PTZ, hold an arrow or zoom button to move and release to stop. Moves time out on the camera after two seconds in case the stop request is lost. Presets saved on the camera appear in **Go to preset**.

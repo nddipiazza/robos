@@ -21,6 +21,7 @@
           <div class="kpi-chip"><span class="kpi-label">Motion now</span><strong id="kpi-motion">0</strong></div>
           <div class="kpi-chip"><span class="kpi-label">Events today</span><strong id="kpi-events">0</strong></div>
         </div>
+        <button type="button" class="btn" id="btn-share">Share</button>
         <button type="button" class="btn" id="btn-discover">Find cameras</button>
         <button type="button" class="btn btn-primary" id="btn-add">Add camera</button>
       </div>
@@ -146,6 +147,7 @@
               <div class="meter"><div class="meter-fill" id="focus-meter"></div><div class="meter-mark" id="focus-meter-mark"></div></div>
               <label class="check"><input type="checkbox" id="m-enabled" /> Detect motion</label>
               <label class="check"><input type="checkbox" id="m-record" /> Record when motion starts</label>
+              <label class="check" title="At most one notification per camera every 10 minutes, and none while this window is in front."><input type="checkbox" id="m-notify" /> Notify me when motion starts</label>
               <label class="check" id="m-camera-wrap"><input type="checkbox" id="m-camera" /> Also use the camera's own motion alarms</label>
               <label>Sensitivity <span id="m-sens-val"></span><input type="range" id="m-sensitivity" min="1" max="100" /></label>
               <label>Area that must change <span id="m-area-val"></span><input type="range" id="m-area" min="0.2" max="20" step="0.1" /></label>
@@ -184,6 +186,13 @@
           <button type="button" data-kind="onvif" class="active">ONVIF camera</button>
           <button type="button" data-kind="url">Stream address</button>
           <button type="button" data-kind="device">Webcam on this computer</button>
+          <button type="button" data-kind="remote">Shared with me</button>
+        </div>
+        <div id="f-remote-fields" class="hidden">
+          <label>Camera invite
+            <textarea id="f-invite" rows="3" placeholder="Paste the robos-cam://… invite someone sent you"></textarea>
+          </label>
+          <div id="f-invite-preview" class="muted small">The invite comes from Share in the other person's Camera Watch. It lets you watch only the cameras in it.</div>
         </div>
         <div id="f-device-fields" class="hidden">
           <div class="row">
@@ -220,6 +229,27 @@
           <button type="submit" class="btn btn-primary" id="f-save">Save camera</button>
         </div>
       </form>
+    </div>
+
+    <!-- Share dialog -->
+    <div class="overlay hidden" id="share-dialog">
+      <div class="dialog">
+        <h2>Share cameras with another RobOS</h2>
+        <p class="muted">Make an invite and send it to the person. Their Camera Watch joins your private network with access to these cameras only, not to your other apps or files, and you can take it back at any time.</p>
+        <div id="share-camera-list" class="share-list"></div>
+        <label>Who is this for?<input id="share-label" type="text" placeholder="e.g. Mum, the neighbours" /></label>
+        <label class="check"><input type="checkbox" id="share-relay" /> They are on a different network (opens an encrypted relay through localhost.run)</label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="share-create">Create invite</button>
+        </div>
+        <div id="share-result" class="test-result hidden"></div>
+        <h3>Who can watch</h3>
+        <div id="share-status" class="share-list"></div>
+        <div class="form-actions">
+          <span class="spacer"></span>
+          <button type="button" class="btn" id="share-close">Close</button>
+        </div>
+      </div>
     </div>
 
     <!-- Discovery dialog -->

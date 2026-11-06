@@ -65,6 +65,7 @@ function fmtSize(bytes) {
 function cameraAddress(cam) {
   if (cam.kind === 'onvif') return `${cam.onvif?.hostname}:${cam.onvif?.port} (ONVIF)`;
   if (cam.kind === 'device') return `Webcam: ${cam.device?.name}${cam.device?.videoSize ? ` · ${cam.device.videoSize}` : ''}`;
+  if (cam.kind === 'remote') return `Shared by ${cam.remote?.peerName || 'another RobOS'} over your private network`;
   try {
     const u = new URL(cam.streamUrl);
     u.password = '';
@@ -235,6 +236,7 @@ function fillMotionControls(cam) {
   $('m-enabled').checked = Boolean(m.enabled);
   $('m-record').checked = Boolean(m.record);
   $('m-camera').checked = Boolean(m.useCameraEvents);
+  $('m-notify').checked = Boolean(m.notify);
   $('m-sensitivity').value = m.sensitivity ?? 60;
   $('m-area').value = m.minAreaPercent ?? 1.5;
   $('m-sens-val').textContent = String(m.sensitivity ?? 60);
@@ -261,6 +263,7 @@ $('focus-overlay').addEventListener('click', (e) => { if (e.target.id === 'focus
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (!$('cam-dialog').classList.contains('hidden')) closeCamDialog();
+  else if (!$('share-dialog').classList.contains('hidden')) $('share-dialog').classList.add('hidden');
   else if (!$('discover-dialog').classList.contains('hidden')) $('discover-dialog').classList.add('hidden');
   else if (state.focusId) closeFocus();
 });
@@ -285,6 +288,7 @@ $('focus-record').addEventListener('click', async () => {
 $('m-enabled').addEventListener('change', (e) => saveMotion({ enabled: e.target.checked }));
 $('m-record').addEventListener('change', (e) => saveMotion({ record: e.target.checked }));
 $('m-camera').addEventListener('change', (e) => saveMotion({ useCameraEvents: e.target.checked }));
+$('m-notify').addEventListener('change', (e) => saveMotion({ notify: e.target.checked }));
 $('m-sensitivity').addEventListener('input', (e) => { $('m-sens-val').textContent = e.target.value; });
 $('m-sensitivity').addEventListener('change', (e) => saveMotion({ sensitivity: Number(e.target.value) }));
 $('m-area').addEventListener('input', (e) => { $('m-area-val').textContent = `${e.target.value}%`; });
@@ -393,7 +397,7 @@ function renderCameraList() {
           ? `<img class="thumb" alt="" src="${esc(/^http/.test(cam.frameUrl) ? `${cam.frameUrl}&r=${Date.now()}` : cam.frameUrl)}" />`
           : '<div class="thumb"></div>'}
         <div class="info">
-          <div class="row" style="align-items:center"><strong>${esc(cam.name)}</strong><span class="pill ${lbl.cls}">${esc(lbl.text)}</span>${cam.onvif?.ptz ? '<span class="pill">PTZ</span>' : ''}${cam.motion?.enabled ? '<span class="pill">Motion</span>' : ''}</div>
+          <div class="row" style="align-items:center"><strong>${esc(cam.name)}</strong><span class="pill ${lbl.cls}">${esc(lbl.text)}</span>${cam.onvif?.ptz ? '<span class="pill">PTZ</span>' : ''}${cam.motion?.enabled ? '<span class="pill">Motion</span>' : ''}${cam.share?.enabled ? `<span class="pill live" title="Shared with other RobOS machines">Shared${cam.shareViewers ? ` · ${cam.shareViewers} watching` : ''}</span>` : ''}</div>
           <div class="addr" title="${esc(cameraAddress(cam))}">${esc(cameraAddress(cam))}</div>
           ${model ? `<div class="muted small">${esc(model)}</div>` : ''}
           ${st.state === 'error' && st.error ? `<div class="err">${esc(st.error)}</div>` : ''}
@@ -463,10 +467,31 @@ function setKind(kind) {
   $('f-onvif-fields').classList.toggle('hidden', kind !== 'onvif');
   $('f-url-fields').classList.toggle('hidden', kind !== 'url');
   $('f-device-fields').classList.toggle('hidden', kind !== 'device');
-  $('f-login-row').classList.toggle('hidden', kind === 'device');
-  $('f-transport-row').classList.toggle('hidden', kind === 'device');
+  $('f-remote-fields').classList.toggle('hidden', kind !== 'remote' || Boolean(state.editing));
+  $('f-login-row').classList.toggle('hidden', kind === 'device' || kind === 'remote');
+  $('f-transport-row').classList.toggle('hidden', kind === 'device' || kind === 'remote');
+  $('f-test').classList.toggle('hidden', kind === 'remote');
+  // A shared camera's details come from its invite; editing it changes only the name.
+  $('f-kind-seg').classList.toggle('hidden', state.editing?.kind === 'remote');
   if (kind === 'device' && !state.devicesLoaded) loadLocalDevices();
 }
+
+let invitePreviewTimer = null;
+$('f-invite').addEventListener('input', () => {
+  clearTimeout(invitePreviewTimer);
+  invitePreviewTimer = setTimeout(async () => {
+    const text = $('f-invite').value.trim();
+    const out = $('f-invite-preview');
+    if (!text) { out.textContent = 'The invite comes from Share in the other person\'s Camera Watch.'; return; }
+    try {
+      const p = await call(api.previewInvite, text);
+      out.innerHTML = `From <b>${esc(p.from || 'another RobOS')}</b>: ${p.cameras.map((c) => `${esc(c.name)}${c.added ? ' (already added)' : ''}`).join(', ')}`;
+      if (!$('f-name').value && p.cameras.length === 1) $('f-name').value = p.cameras[0].name;
+    } catch (err) {
+      out.innerHTML = `<span class="err">${esc(err.message)}</span>`;
+    }
+  }, 250);
+});
 
 async function loadLocalDevices() {
   const sel = $('f-device');
@@ -520,6 +545,8 @@ function openCamDialog(cam = null, prefill = {}) {
   if (cam?.onvif?.profileToken) profSel.insertAdjacentHTML('beforeend', `<option value="${esc(cam.onvif.profileToken)}">${esc(cam.onvif.profileToken)}</option>`);
   profSel.value = cam?.onvif?.profileToken || '';
   $('f-test-result').classList.add('hidden');
+  $('f-invite').value = prefill.invite || '';
+  $('f-invite-preview').textContent = 'The invite comes from Share in the other person\'s Camera Watch. It lets you watch only the cameras in it.';
   $('f-device-size').value = cam?.device?.videoSize || '';
   state.devicesLoaded = false;
   if (cam?.kind === 'device') $('f-device').innerHTML = `<option value="${esc(cam.device.name)}">${esc(cam.device.name)}</option>`;
@@ -588,6 +615,14 @@ $('cam-form').addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'Saving…';
   try {
+    if (state.kind === 'remote' && !state.editing) {
+      btn.textContent = 'Connecting…';
+      const added = await call(api.addSharedCameras, $('f-invite').value.trim());
+      added.forEach(replaceCamera);
+      closeCamDialog();
+      toast(`Added ${added.map((c) => c.name).join(', ')}.`);
+      return;
+    }
     const saved = await call(api.saveCamera, formInput());
     replaceCamera(saved);
     closeCamDialog();
@@ -635,6 +670,91 @@ async function runDiscovery() {
 $('btn-discover').addEventListener('click', () => { $('discover-dialog').classList.remove('hidden'); runDiscovery(); });
 $('discover-again').addEventListener('click', runDiscovery);
 $('discover-close').addEventListener('click', () => $('discover-dialog').classList.add('hidden'));
+
+// ── Sharing with other RobOS machines ────────────────────────────────────────
+async function openShareDialog() {
+  const own = state.cameras.filter((c) => c.kind !== 'remote');
+  $('share-camera-list').innerHTML = own.length
+    ? own.map((c) => `<label class="check share-row"><input type="checkbox" value="${esc(c.id)}" ${c.share?.enabled ? 'checked' : ''} /> <span class="grow">${esc(c.name)}</span><span class="muted small">${esc(cameraAddress(c))}</span></label>`).join('')
+    : '<div class="muted">Add a camera first.</div>';
+  $('share-result').classList.add('hidden');
+  $('share-dialog').classList.remove('hidden');
+  await renderShareStatus();
+}
+
+async function renderShareStatus() {
+  const box = $('share-status');
+  let s;
+  try { s = await call(api.sharingStatus); } catch (err) { box.innerHTML = `<div class="err">${esc(err.message)}</div>`; return; }
+  $('share-relay').checked = Boolean(s.relayWanted);
+  if (!s.cameras.length && !s.invites.length) {
+    box.innerHTML = '<div class="muted">Nobody yet. Nothing is shared.</div>';
+    return;
+  }
+  const cams = s.cameras.map((c) => `
+    <div class="share-row"><span class="grow"><b>${esc(c.name)}</b> <span class="muted small">shared${c.viewers ? ` · ${c.viewers} watching now` : ''}</span></span>
+      <button type="button" class="btn btn-small btn-danger" data-stop="${esc(c.id)}">Stop sharing</button></div>`).join('');
+  const invites = s.invites.map((i) => `
+    <div class="share-row"><span class="grow"><b>${esc(i.label)}</b>
+      <div class="muted small">Invite made ${esc(new Date(i.createdAt).toLocaleString())} · ${i.peers.length ? `joined by ${i.peers.map((p) => esc(p.name)).join(', ')}` : 'not used yet'}</div></span>
+      <button type="button" class="btn btn-small btn-danger" data-revoke="${esc(i.id)}">Revoke</button></div>`).join('');
+  box.innerHTML = cams + invites + (s.relayUrl ? `<div class="muted small">Reachable from other networks through ${esc(s.relayUrl)}</div>` : '');
+}
+
+$('btn-share').addEventListener('click', openShareDialog);
+$('share-close').addEventListener('click', () => $('share-dialog').classList.add('hidden'));
+$('share-create').addEventListener('click', async () => {
+  const ids = [...document.querySelectorAll('#share-camera-list input:checked')].map((i) => i.value);
+  const out = $('share-result');
+  const btn = $('share-create');
+  btn.disabled = true;
+  btn.textContent = $('share-relay').checked ? 'Opening the relay…' : 'Creating…';
+  try {
+    const r = await call(api.createShareInvite, { cameraIds: ids, label: $('share-label').value.trim(), relay: $('share-relay').checked });
+    out.className = 'test-result ok invite';
+    out.innerHTML = `
+      <strong>Send this invite to them privately</strong>
+      <textarea id="share-invite-text" readonly rows="4">${esc(r.invite)}</textarea>
+      <div class="row"><button type="button" class="btn btn-small btn-primary" id="share-copy">Copy invite</button>
+      <span class="muted small">${r.sameNetworkOnly ? 'Works on this network only. Tick "different network" for someone elsewhere.' : 'Works from any network.'} Anyone with it can watch these cameras until you revoke it.</span></div>`;
+    $('share-copy').addEventListener('click', async () => {
+      await call(api.copyText, r.invite);
+      toast('Invite copied.');
+    });
+    renderShareStatus();
+    state.cameras = await call(api.listCameras);
+    renderAll();
+  } catch (err) {
+    out.className = 'test-result fail';
+    out.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create invite';
+  }
+});
+$('share-status').addEventListener('click', async (e) => {
+  const stop = e.target.closest('[data-stop]');
+  const revoke = e.target.closest('[data-revoke]');
+  try {
+    if (stop) {
+      if (!window.confirm('Stop sharing this camera? Everyone you invited loses it.')) return;
+      await call(api.stopSharingCamera, stop.dataset.stop);
+    } else if (revoke) {
+      if (!window.confirm('Revoke this invite? The machines that joined with it are removed from your private network right away.')) return;
+      await call(api.revokeShareInvite, revoke.dataset.revoke);
+    } else return;
+    await renderShareStatus();
+    state.cameras = await call(api.listCameras);
+    renderAll();
+    openShareDialogCheckboxesFromState();
+  } catch (err) { toast(err.message, true); }
+});
+function openShareDialogCheckboxesFromState() {
+  document.querySelectorAll('#share-camera-list input').forEach((i) => {
+    i.checked = Boolean(state.cameras.find((c) => c.id === i.value)?.share?.enabled);
+  });
+}
+api.onSharingChanged?.(() => { if (!$('share-dialog').classList.contains('hidden')) renderShareStatus(); });
 
 // ── Events ───────────────────────────────────────────────────────────────────
 async function loadEvents() {

@@ -12,11 +12,19 @@ const { createStore, publicCamera, defaultDeviceFormat } = require('./store');
 const { CameraRunner, clipPaths, explainFfmpeg } = require('./camera-runner');
 const { inputArgs, listLocalDevices } = require('./local-devices');
 const { createStreamServer, isInside } = require('./stream-server');
+const { createShareServer } = require('./share-server');
+const { encodeInvite, decodeInvite, SHARE_APP_ID } = require('./camera-invite');
 const onvif = require('./onvif-bridge');
+const http = require('node:http');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
+/**
+ * @param {object} o
+ * @param {() => object} [o.loadMesh] returns robos-lib/app-mesh-engine; needed only
+ *   for sharing cameras with, or watching cameras from, other RobOS machines
+ */
+function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = null }) {
   const store = createStore({ configDir, homeDir });
   const emitter = new EventEmitter();
   const runners = new Map();
@@ -52,7 +60,103 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
     try { s.session.close(); } catch {}
   }
 
+  // ── Sharing over the RobOS private network (App Mesh) ─────────────────────
+  let mesh = null;
+  const tunnels = new Map(); // peerNodeId -> tunnel record
+  const shareServer = createShareServer({
+    getCamera: (id) => store.getCamera(id),
+    getRunner: (id) => runners.get(id) || null,
+    onAccess: (a) => { if (!a.ok) emitter.emit('log', `Refused a request for shared camera ${a.cameraId}: wrong or old secret.`); },
+  });
+
+  function getMesh() {
+    if (mesh) return mesh;
+    if (!loadMesh) throw new Error('Sharing needs RobOS Private Networks (robos-lib/app-mesh-engine), which is not installed.');
+    mesh = loadMesh().createAppMeshEngine({ configDir });
+    return mesh;
+  }
+
+  function sharedCameras() {
+    return store.listCameras().filter((c) => c.kind !== 'remote' && c.share?.enabled);
+  }
+
+  /** Run what other machines need to reach shared cameras: the share server and the mesh gateway. */
+  async function startSharingServices({ relay = store.getSettings().shareRelay } = {}) {
+    await shareServer.start();
+    const m = getMesh();
+    await m.startGateway();
+    let relayUrl = null;
+    if (relay) {
+      try {
+        relayUrl = (await m.startWanRelay()).relayUrl || null;
+      } catch (err) {
+        throw new Error(`Could not open the relay for other networks (${err.message}). Cameras can still be shared on this network.`);
+      }
+    }
+    return { relayUrl };
+  }
+
+  async function stopSharingServicesIfIdle() {
+    if (sharedCameras().length) return;
+    await shareServer.stop();
+    // Watching remote cameras needs only outbound tunnels, so with nothing shared
+    // and nothing watched, this process's mesh gateway can close.
+    if (mesh && !store.listCameras().some((c) => c.kind === 'remote')) {
+      try { await mesh.stopGateway(); } catch {}
+    }
+  }
+
+  /** A local port that reaches peerNodeId's camera share through the mesh. */
+  async function ensureTunnel(peerNodeId, force = false) {
+    const m = getMesh();
+    const existing = tunnels.get(peerNodeId);
+    if (existing && !force && m.listActiveTunnels().some((t) => t.id === existing.id)) return existing;
+    if (existing) { try { m.stopLocalBridgeTunnel(existing.id); } catch {} }
+    const t = await m.startLocalBridgeTunnel({ peerId: peerNodeId, remoteAppId: SHARE_APP_ID });
+    tunnels.set(peerNodeId, t);
+    return t;
+  }
+
+  function getJson(url, timeoutMs = 10000) {
+    return new Promise((resolve, reject) => {
+      const req = http.get(url, (res) => {
+        let body = '';
+        res.on('data', (c) => { body += c; });
+        res.on('end', () => {
+          let data = null;
+          try { data = JSON.parse(body); } catch {}
+          resolve({ status: res.statusCode, data });
+        });
+      });
+      req.setTimeout(timeoutMs, () => req.destroy(new Error('timed out')));
+      req.on('error', reject);
+    });
+  }
+
+  async function resolveRemoteInput(cam, attempt) {
+    const r = cam.remote;
+    const t = await ensureTunnel(r.peerNodeId, attempt >= 2);
+    const base = `http://127.0.0.1:${t.localPort}/cameras/${encodeURIComponent(r.cameraId)}`;
+    const q = `s=${encodeURIComponent(r.secret)}`;
+    // Ask first, so "not shared any more" and "camera is off" get plain messages.
+    let info;
+    try {
+      info = await getJson(`${base}?${q}`);
+    } catch {
+      const why = getMesh().listActiveTunnels().find((x) => x.id === t.id)?.stats?.lastError || '';
+      if (/UNTRUSTED|ACL_PORT_DENIED/.test(why)) {
+        throw new Error(`${r.peerName || 'The other machine'} took back your invite, so its cameras are no longer shared with you.`);
+      }
+      throw new Error(`Could not reach ${r.peerName || 'the machine that shares this camera'}. Is it on, with Camera Watch running?`);
+    }
+    if (info.status === 403) throw new Error(`${r.peerName || 'The other machine'} no longer shares this camera with you.`);
+    if (info.status !== 200) throw new Error(`Could not reach ${r.peerName || 'the machine that shares this camera'} (${info.data?.error || `HTTP ${info.status}`}).`);
+    if (!info.data?.live) throw new Error(`The camera is ${info.data?.state === 'stopped' ? 'turned off' : 'not live'} on ${r.peerName || 'the other machine'}.`);
+    return { kind: 'remote', url: `${base}/live?${q}` };
+  }
+
   async function resolveInput(cam, attempt) {
+    if (cam.kind === 'remote') return resolveRemoteInput(cam, attempt);
     if (cam.kind === 'device') {
       return { kind: 'device', format: cam.device.format, name: cam.device.name, videoSize: cam.device.videoSize };
     }
@@ -207,6 +311,7 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
     return {
       ...publicCamera(cam),
       status: runner ? runner.status() : { cameraId: cam.id, state: cam.enabled ? 'connecting' : 'disabled', error: '' },
+      shareViewers: cam.share?.enabled ? shareServer.viewerCount(cam.id) : 0,
       // g changes when the camera is restarted, which closes open live streams.
       liveUrl: `${server.baseUrl}/live/${cam.id}?t=${server.token}&g=${runner?.generation || 0}`,
       frameUrl: `${server.baseUrl}/frame/${cam.id}.jpg?t=${server.token}`,
@@ -375,12 +480,125 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
       sweepRetention();
       retentionTimer = setInterval(() => sweepRetention(), 60 * 60 * 1000);
       retentionTimer.unref?.();
+      if (sharedCameras().length) {
+        startSharingServices().catch((err) => emitter.emit('log', `Sharing: ${err.message}`));
+      }
     },
 
     async shutdown() {
       clearInterval(retentionTimer);
       for (const id of [...runners.keys()]) await stopRunner(id);
       await server.stop();
+      await shareServer.stop();
+      if (mesh) { try { await mesh.stopGateway(); } catch {} }
+    },
+
+    // ── Sharing (this machine's cameras) ─────────────────────────────────────
+    /**
+     * Share cameras and make an invite for one person (or household). The invite
+     * lets its holder reach only Camera Watch's share service on this machine,
+     * and only the cameras listed in it.
+     */
+    async createShareInvite({ cameraIds = [], label = '', relay = false } = {}) {
+      const cams = cameraIds.map((id) => store.getCamera(id)).filter((c) => c && c.kind !== 'remote');
+      if (!cams.length) throw new Error('Pick at least one of your cameras to share.');
+      const shared = cams.map((c) => store.saveCamera({ ...c, share: { ...c.share, enabled: true } }));
+      if (relay) store.saveSettings({ shareRelay: true });
+      const { relayUrl } = await startSharingServices({ relay });
+      const m = getMesh();
+      const { token, invite } = m.createScopedInvite({
+        allowedAppIds: [SHARE_APP_ID],
+        label: label || `Cameras: ${shared.map((c) => c.name).join(', ')}`,
+      });
+      emitter.emit('sharing-changed');
+      return {
+        invite: encodeInvite({ from: m.identity.nodeName, net: token, cameras: shared.map((c) => ({ id: c.id, name: c.name, secret: c.share.secret })) }),
+        inviteId: invite.id,
+        relayUrl,
+        sameNetworkOnly: !relayUrl,
+      };
+    },
+
+    /** Who can watch: shared cameras, live viewers, and the invites with the machines that joined. */
+    sharingStatus() {
+      const cams = sharedCameras().map((c) => ({ id: c.id, name: c.name, viewers: shareServer.viewerCount(c.id) }));
+      if (!mesh && !cams.length) return { sharing: false, cameras: [], invites: [] };
+      let invites = [];
+      let relayUrl = null;
+      try {
+        const m = getMesh();
+        invites = m.listInvites().filter((i) => i.allowedAppIds.includes(SHARE_APP_ID));
+      } catch {}
+      try { relayUrl = mesh?.generateEnrollmentToken().payload.relayUrl || null; } catch {}
+      return { sharing: shareServer.running, relayUrl, relayWanted: Boolean(store.getSettings().shareRelay), cameras: cams, invites };
+    },
+
+    /** Revoke an invite: the machines that joined with it are removed from the private network. */
+    async revokeShareInvite(inviteId) {
+      const res = getMesh().revokeInvite(inviteId);
+      if (!res.ok) throw new Error(res.error || 'Could not revoke that invite.');
+      emitter.emit('sharing-changed');
+      return res;
+    },
+
+    /** Stop sharing a camera. Its secret changes, so every invite that had it stops working for it. */
+    async stopSharingCamera(id) {
+      const cam = store.getCamera(id);
+      if (!cam || cam.kind === 'remote') throw new Error('No such camera.');
+      store.saveCamera({ ...cam, share: { enabled: false, secret: '' } });
+      await stopSharingServicesIfIdle();
+      emitter.emit('sharing-changed');
+      return true;
+    },
+
+    // ── Watching cameras another machine shares ──────────────────────────────
+    /** What an invite contains, without connecting. */
+    previewInvite(text) {
+      const inv = decodeInvite(text);
+      const existing = new Set(store.listCameras().filter((c) => c.kind === 'remote').map((c) => `${c.remote.peerNodeId}/${c.remote.cameraId}`));
+      let nodeId = '';
+      try { nodeId = getMesh().parseEnrollmentToken(inv.net).nodeId; } catch {}
+      return {
+        from: inv.from,
+        cameras: inv.cameras.map((c) => ({ id: c.id, name: c.name, added: existing.has(`${nodeId}/${c.id}`) })),
+      };
+    },
+
+    /**
+     * Join the sharer's private network with the invite and add its cameras.
+     * Both machines pin each other with access limited to the camera share, so
+     * neither can reach the other's other apps through this invite.
+     */
+    async addSharedCameras(text, { cameraIds } = {}) {
+      const inv = decodeInvite(text);
+      const m = getMesh();
+      const parsed = m.parseEnrollmentToken(inv.net);
+      const known = m.listPeers().find((p) => p.nodeId === parsed.nodeId);
+      const fullPeer = known && known.allowAllApps !== false && !(known.allowedAppIds || []).length;
+      const joined = await m.joinPrivateNetwork(inv.net, {
+        reverseMux: false,
+        // Never narrow a machine the user already trusts fully on the private network.
+        ...(fullPeer ? {} : { peerAccess: { allowAllApps: false, allowedAppIds: [SHARE_APP_ID] } }),
+      });
+      const peer = joined.peer;
+      const wanted = inv.cameras.filter((c) => !cameraIds || cameraIds.includes(c.id));
+      const added = [];
+      for (const c of wanted) {
+        const existing = store.listCameras().find((x) => x.kind === 'remote' && x.remote.peerNodeId === peer.nodeId && x.remote.cameraId === c.id);
+        const saved = store.saveCamera({
+          ...(existing || {}),
+          id: existing?.id,
+          kind: 'remote',
+          name: existing?.name || c.name,
+          remote: { peerNodeId: peer.nodeId, peerName: inv.from || peer.name, cameraId: c.id, secret: c.secret },
+          // Motion detection runs here too; recording it is up to the viewer.
+          motion: existing?.motion || { record: false },
+        });
+        if (existing) await stopRunner(saved.id);
+        if (saved.enabled) startRunner(saved);
+        added.push(cameraView(saved));
+      }
+      return added;
     },
 
     listCameras: () => store.listCameras().map(cameraView),
@@ -417,7 +635,9 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn }) {
 
     async removeCamera(id) {
       await stopRunner(id);
-      return store.removeCamera(id);
+      const removed = store.removeCamera(id);
+      await stopSharingServicesIfIdle();
+      return removed;
     },
 
     async setEnabled(id, enabled) {

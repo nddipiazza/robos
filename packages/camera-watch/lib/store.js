@@ -32,6 +32,8 @@ function defaultMotion() {
     cooldownSeconds: 5,
     record: true,
     useCameraEvents: false,
+    // Desktop notification when motion starts: off unless asked for, and rate-limited.
+    notify: false,
     zones: [],
   };
 }
@@ -59,7 +61,7 @@ function num(v, fallback, lo, hi) {
 function normalizeCamera(input = {}, existing = null) {
   const base = existing || { id: newId(), createdAt: new Date().toISOString() };
   const kindIn = input.kind ?? base.kind;
-  const kind = ['onvif', 'device'].includes(kindIn) ? kindIn : 'url';
+  const kind = ['onvif', 'device', 'remote'].includes(kindIn) ? kindIn : 'url';
   const cam = {
     ...base,
     name: cleanText(input.name ?? base.name, 80) || 'Camera',
@@ -96,6 +98,24 @@ function normalizeCamera(input = {}, existing = null) {
             : '',
         }
       : null,
+    // A camera another RobOS machine shares with this one over the private
+    // network. "secret" is the per-camera share secret from the invite.
+    remote: kind === 'remote'
+      ? {
+          peerNodeId: cleanText(input.remote?.peerNodeId ?? base.remote?.peerNodeId, 200),
+          peerName: cleanText(input.remote?.peerName ?? base.remote?.peerName, 120),
+          cameraId: cleanText(input.remote?.cameraId ?? base.remote?.cameraId, 80),
+          secret: cleanText(input.remote?.secret ?? base.remote?.secret, 200),
+        }
+      : null,
+    // Sharing this camera with other RobOS machines. The secret goes into invites;
+    // changing it cuts off everyone who had the old one.
+    share: kind === 'remote'
+      ? null
+      : {
+          enabled: Boolean(input.share?.enabled ?? base.share?.enabled),
+          secret: cleanText(input.share?.secret ?? base.share?.secret, 200) || crypto.randomBytes(24).toString('base64url'),
+        },
     motion: (() => {
       const defaults = defaultMotion();
       // A new webcam on this computer usually points at the person using it:
@@ -110,6 +130,7 @@ function normalizeCamera(input = {}, existing = null) {
         record: Boolean(m.record),
         // ONVIF cameras only: also listen to the camera's own motion alarms.
         useCameraEvents: Boolean(m.useCameraEvents),
+        notify: Boolean(m.notify),
         zones: Array.isArray(m.zones)
           ? m.zones.slice(0, 16).map((z) => ({
               x: num(z.x, 0, 0, 1), y: num(z.y, 0, 0, 1), w: num(z.w, 1, 0, 1), h: num(z.h, 1, 0, 1),
@@ -136,7 +157,10 @@ function normalizeCamera(input = {}, existing = null) {
   }
   if (cam.kind === 'onvif' && !cam.onvif.hostname) throw new Error('Enter the camera address.');
   if (cam.kind === 'device' && !cam.device.name) throw new Error('Pick the webcam to use.');
-  if (cam.kind === 'device') {
+  if (cam.kind === 'remote' && !(cam.remote.peerNodeId && cam.remote.cameraId && cam.remote.secret)) {
+    throw new Error('This shared camera is missing its invite details. Add it again from the invite.');
+  }
+  if (cam.kind === 'device' || cam.kind === 'remote') {
     cam.streamUrl = '';
     cam.snapshotUrl = '';
   }
@@ -146,7 +170,10 @@ function normalizeCamera(input = {}, existing = null) {
 /** Camera without its password, for the renderer. */
 function publicCamera(cam) {
   const { password, ...rest } = cam;
-  return { ...rest, hasPassword: Boolean(password) };
+  const out = { ...rest, hasPassword: Boolean(password) };
+  if (out.share) out.share = { enabled: out.share.enabled };
+  if (out.remote) { const { secret, ...remote } = out.remote; out.remote = remote; }
+  return out;
 }
 
 function createStore({ configDir, homeDir = os.homedir() }) {
@@ -208,6 +235,8 @@ function createStore({ configDir, homeDir = os.homedir() }) {
         motionFps: num(patch.motionFps ?? settings.motionFps, d.motionFps, 1, 15),
         postMotionSeconds: num(patch.postMotionSeconds ?? settings.postMotionSeconds, d.postMotionSeconds, 0, 600),
         maxClipMinutes: num(patch.maxClipMinutes ?? settings.maxClipMinutes, d.maxClipMinutes, 1, 240),
+        // Open a public relay so invites work from other networks (not just this LAN).
+        shareRelay: Boolean(patch.shareRelay ?? settings.shareRelay),
       };
       writeJson(files.settings, settings);
       return { ...settings };
