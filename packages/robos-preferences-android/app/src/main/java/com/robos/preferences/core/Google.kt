@@ -122,11 +122,14 @@ class GoogleSignIn(private val http: WebHttp = DefaultWebHttp) {
         )
     }
 
+    /** Waits for the browser to come back from Google, then trades the code for tokens. Blocks. */
+    fun awaitAccount(timeoutMs: Int = 10 * 60 * 1000): GoogleAccount = exchange(awaitCode(timeoutMs))
+
     /**
-     * Waits for the browser to come back from Google, then trades the code for tokens.
-     * Blocks; call it off the main thread.
+     * Waits for the browser to come back from Google with a sign-in code. Uses no internet,
+     * so it works while the browser is in front. Blocks; call it off the main thread.
      */
-    fun awaitAccount(timeoutMs: Int = 10 * 60 * 1000): GoogleAccount {
+    fun awaitCode(timeoutMs: Int = 10 * 60 * 1000): String {
         server.soTimeout = timeoutMs
         val code = try {
             server.accept().use { socket ->
@@ -146,6 +149,14 @@ class GoogleSignIn(private val http: WebHttp = DefaultWebHttp) {
         } finally {
             runCatching { server.close() }
         }
+        return code
+    }
+
+    /**
+     * Trades the code for tokens. Android blocks the internet for apps in the background,
+     * so call this once the app is back on screen.
+     */
+    fun exchange(code: String): GoogleAccount {
         val reply = http.request(
             "POST", "https://oauth2.googleapis.com/token",
             mapOf("Content-Type" to "application/x-www-form-urlencoded"),

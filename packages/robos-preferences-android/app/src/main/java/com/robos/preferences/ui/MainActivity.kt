@@ -91,6 +91,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        vm.onScreen.value = true
+    }
+
+    override fun onPause() {
+        vm.onScreen.value = false
+        super.onPause()
+    }
 }
 
 @Composable
