@@ -2610,5 +2610,366 @@
     "units": []
    }
   }
- ]
+ ],
+ "tuya": {
+  "dps": [
+   {
+    "light": {
+     "on": true,
+     "brightness": 75,
+     "colorMode": "kelvin",
+     "colorHex": "#ffb76b",
+     "kelvin": 2800,
+     "effect": "solid"
+    },
+    "schema": "v2",
+    "dps": {
+     "20": true,
+     "21": "white",
+     "22": 750,
+     "23": 26
+    },
+    "back": {
+     "on": true,
+     "brightness": 75,
+     "kelvin": 2800,
+     "colorMode": "kelvin"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 5,
+     "colorMode": "kelvin",
+     "colorHex": "#ffffff",
+     "kelvin": 6500,
+     "effect": "solid"
+    },
+    "schema": "v2",
+    "dps": {
+     "20": true,
+     "21": "white",
+     "22": 50,
+     "23": 1000
+    },
+    "back": {
+     "on": true,
+     "brightness": 5,
+     "kelvin": 6500,
+     "colorMode": "kelvin"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 100,
+     "colorMode": "rgb",
+     "colorHex": "#7c3aed",
+     "kelvin": 3200,
+     "effect": "aurora"
+    },
+    "schema": "v2",
+    "dps": {
+     "20": true,
+     "21": "colour",
+     "24": "010602f303e8"
+    },
+    "back": {
+     "on": true,
+     "colorMode": "rgb",
+     "colorHex": "#853eff",
+     "brightness": 100
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 42,
+     "colorMode": "rgb",
+     "colorHex": "#00bcd4",
+     "kelvin": 4000,
+     "effect": "cyberpunk"
+    },
+    "schema": "v2",
+    "dps": {
+     "20": true,
+     "21": "colour",
+     "24": "00bb03e801a4"
+    },
+    "back": {
+     "on": true,
+     "colorMode": "rgb",
+     "colorHex": "#00e1ff",
+     "brightness": 42
+    }
+   },
+   {
+    "light": {
+     "on": false,
+     "brightness": 42,
+     "colorMode": "rgb",
+     "colorHex": "#ef4444",
+     "kelvin": 4000,
+     "effect": "breath"
+    },
+    "schema": "v2",
+    "dps": {
+     "20": false
+    },
+    "back": {
+     "on": false,
+     "colorMode": "kelvin"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 75,
+     "colorMode": "kelvin",
+     "colorHex": "#ffb76b",
+     "kelvin": 2800,
+     "effect": "solid"
+    },
+    "schema": "v1",
+    "dps": {
+     "1": true,
+     "2": "white",
+     "3": 197,
+     "4": 7
+    },
+    "back": {
+     "on": true,
+     "brightness": 75,
+     "kelvin": 2800,
+     "colorMode": "kelvin"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 5,
+     "colorMode": "kelvin",
+     "colorHex": "#ffffff",
+     "kelvin": 6500,
+     "effect": "solid"
+    },
+    "schema": "v1",
+    "dps": {
+     "1": true,
+     "2": "white",
+     "3": 34,
+     "4": 255
+    },
+    "back": {
+     "on": true,
+     "brightness": 5,
+     "kelvin": 6500,
+     "colorMode": "kelvin"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 100,
+     "colorMode": "rgb",
+     "colorHex": "#7c3aed",
+     "kelvin": 3200,
+     "effect": "aurora"
+    },
+    "schema": "v1",
+    "dps": {
+     "1": true,
+     "2": "colour",
+     "5": "853eff0106c1ff"
+    },
+    "back": {
+     "on": true,
+     "colorMode": "rgb",
+     "colorHex": "#853eff"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 42,
+     "colorMode": "rgb",
+     "colorHex": "#00bcd4",
+     "kelvin": 4000,
+     "effect": "cyberpunk"
+    },
+    "schema": "v1",
+    "dps": {
+     "1": true,
+     "2": "colour",
+     "5": "005f6b00bbff6b"
+    },
+    "back": {
+     "on": true,
+     "colorMode": "rgb",
+     "colorHex": "#005f6b"
+    }
+   },
+   {
+    "light": {
+     "on": false,
+     "brightness": 42,
+     "colorMode": "rgb",
+     "colorHex": "#ef4444",
+     "kelvin": 4000,
+     "effect": "breath"
+    },
+    "schema": "v1",
+    "dps": {
+     "1": false
+    },
+    "back": {
+     "on": false,
+     "colorMode": "kelvin"
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 75,
+     "colorMode": "kelvin",
+     "colorHex": "#ffb76b",
+     "kelvin": 2800,
+     "effect": "solid"
+    },
+    "schema": "switch",
+    "dps": {
+     "1": true
+    },
+    "back": {
+     "on": true
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 5,
+     "colorMode": "kelvin",
+     "colorHex": "#ffffff",
+     "kelvin": 6500,
+     "effect": "solid"
+    },
+    "schema": "switch",
+    "dps": {
+     "1": true
+    },
+    "back": {
+     "on": true
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 100,
+     "colorMode": "rgb",
+     "colorHex": "#7c3aed",
+     "kelvin": 3200,
+     "effect": "aurora"
+    },
+    "schema": "switch",
+    "dps": {
+     "1": true
+    },
+    "back": {
+     "on": true
+    }
+   },
+   {
+    "light": {
+     "on": true,
+     "brightness": 42,
+     "colorMode": "rgb",
+     "colorHex": "#00bcd4",
+     "kelvin": 4000,
+     "effect": "cyberpunk"
+    },
+    "schema": "switch",
+    "dps": {
+     "1": true
+    },
+    "back": {
+     "on": true
+    }
+   },
+   {
+    "light": {
+     "on": false,
+     "brightness": 42,
+     "colorMode": "rgb",
+     "colorHex": "#ef4444",
+     "kelvin": 4000,
+     "effect": "breath"
+    },
+    "schema": "switch",
+    "dps": {
+     "1": false
+    },
+    "back": {
+     "on": false
+    }
+   }
+  ],
+  "frames": [
+   {
+    "kind": "6699",
+    "seq": 5,
+    "cmd": 13,
+    "plainHex": "332e350000000000000000000000007b2270726f746f636f6c223a352c2274223a312c2264617461223a7b22647073223a7b223230223a747275657d7d7d",
+    "frameHex": "000066990000000000050000000d0000005a000102030405060708090a0b94ecaf7130f7c6fc8c0906b76cdf395e09508186c865328c4a9f90df867ac5add341b4b5e761055a8c51c4c76adb1872c3752201ecbe058386640392e044360dd16f55a8522fbc06feb848e5bf8d00009966"
+   },
+   {
+    "kind": "55aa-crc",
+    "seq": 3,
+    "cmd": 10,
+    "plainHex": "7b7d",
+    "frameHex": "000055aa000000030000000a0000000a7b7da62c78290000aa55"
+   },
+   {
+    "kind": "55aa-hmac",
+    "seq": 3,
+    "cmd": 16,
+    "plainHex": "7b7d",
+    "frameHex": "000055aa0000000300000010000000267b7dc4ca5e8b21b243a1626e11eb853b316bab38c0c1aa0e3551ad5b8c34db3add240000aa55"
+   }
+  ],
+  "sign": [
+   {
+    "accessToken": "",
+    "t": "1700000000000",
+    "method": "GET",
+    "urlPath": "/v1.0/token?grant_type=1",
+    "accessId": "ACCESSID",
+    "accessSecret": "SECRET",
+    "sign": "3E9F4F56889C82980AE8B8A9236A666B7C9019A2FF871C5BE9E11DDD6B86694A"
+   },
+   {
+    "accessToken": "TOKEN1",
+    "t": "1700000000001",
+    "method": "GET",
+    "urlPath": "/v2.0/cloud/thing/device?page_size=20",
+    "accessId": "ACCESSID",
+    "accessSecret": "SECRET",
+    "sign": "4BC357C3C2E8A537340AD8B403356864FDFB2167899B908A1874A1577931329F"
+   }
+  ],
+  "broadcast": {
+   "frameHex": "00006699000000000000000000130000009f000102030405060708090a0bbc1f1632acba90a1ab2922d1efc70fc6e74308b9a755cb8035d9910c63243e291aad39c3a105e9d5011b0cd1d329791000d939c28ef830d69543093e592a2346d0c9d27ef8659f9e77d4b19e142c61f975ba6f2de978ef219c6a0fa2d26e26e6079f6b9a5710d11aa188a54779e088dd448471cf820a005bc5594d3040eed218b06d2019b5937746cf288f2a1dc9fa968aad3100009966",
+   "parsed": {
+    "id": "eb95f73583c1a3f1a5bedo",
+    "ip": "192.168.1.66",
+    "version": "3.5",
+    "productKey": "keytfesxxsqewnqy"
+   }
+  },
+  "sessionKeys": {
+   "localHex": "30313233343536373839616263646566",
+   "remoteHex": "66656463626139383736353433323130",
+   "v34Hex": "37a5bffc2a6c8f9cbe40564cadb4357f",
+   "v35Hex": "faebc23be583dd17c89801cdbbf7e9c1"
+  }
+ }
 }

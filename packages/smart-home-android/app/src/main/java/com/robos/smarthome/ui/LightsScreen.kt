@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -39,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,6 +55,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
 import com.robos.smarthome.core.ALL_ROOMS
 import com.robos.smarthome.core.FORM_FACTORS
@@ -61,6 +65,9 @@ import com.robos.smarthome.core.LIGHT_PROTOCOLS
 import com.robos.smarthome.core.Light
 import com.robos.smarthome.core.LightPatch
 import com.robos.smarthome.core.QUICK_COLORS
+import com.robos.smarthome.core.TUYA_REGIONS
+import com.robos.smarthome.core.TuyaFindResult
+import com.robos.smarthome.core.TuyaFoundDevice
 import com.robos.smarthome.core.Room
 import com.robos.smarthome.core.UNASSIGNED_ROOM_ID
 import com.robos.smarthome.core.WLED_EFFECTS
@@ -79,6 +86,7 @@ fun LightsScreen(
     var editing by remember { mutableStateOf<Light?>(null) }
     var adding by rememberSaveable { mutableStateOf(false) }
     var pairing by rememberSaveable { mutableStateOf(false) }
+    var addingTuya by rememberSaveable { mutableStateOf(false) }
     val visible = home.lights.filter { selectedRoom == ALL_ROOMS || it.roomId == selectedRoom }
 
     LazyColumn(
@@ -100,7 +108,7 @@ fun LightsScreen(
         }
 
         if (home.lights.isEmpty()) {
-            item { EmptyLights(scanning, onScan = vm::scan, onAdd = { adding = true }, onPair = { pairing = true }) }
+            item { EmptyLights(scanning, onScan = vm::scan, onAdd = { adding = true }, onPair = { pairing = true }, onTuya = { addingTuya = true }) }
         } else {
             item {
                 RoomFilter(home, selectedRoom) { selectedRoom = it }
@@ -121,9 +129,11 @@ fun LightsScreen(
                 LightCard(light, home.rooms, vm, onEdit = { editing = light })
             }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { adding = true }, modifier = Modifier.testTag("add-light")) { Text("Add a light") }
                     OutlinedButton(onClick = { pairing = true }, modifier = Modifier.testTag("pair-hue")) { Text("Pair Hue Bridge") }
+                    OutlinedButton(onClick = { addingTuya = true }, modifier = Modifier.testTag("add-tuya")) { Text("Add Feit or Smart Life lights") }
                 }
             }
         }
@@ -143,10 +153,13 @@ fun LightsScreen(
     if (pairing) {
         HueDialog(hueBridge, vm, onClose = { pairing = false })
     }
+    if (addingTuya) {
+        TuyaDialog(home.rooms, vm, onClose = { addingTuya = false })
+    }
 }
 
 @Composable
-private fun EmptyLights(scanning: Boolean, onScan: () -> Unit, onAdd: () -> Unit, onPair: () -> Unit) {
+private fun EmptyLights(scanning: Boolean, onScan: () -> Unit, onAdd: () -> Unit, onPair: () -> Unit, onTuya: () -> Unit) {
     SectionCard {
         Text("No lights yet", style = MaterialTheme.typography.titleLarge)
         MutedText("Scan to find lights on this Wi-Fi network. If a light does not appear, add it by its IP address.")
@@ -158,6 +171,9 @@ private fun EmptyLights(scanning: Boolean, onScan: () -> Unit, onAdd: () -> Unit
         OutlinedButton(onClick = onPair, modifier = Modifier
             .fillMaxWidth()
             .testTag("pair-hue")) { Text("Pair Hue Bridge") }
+        OutlinedButton(onClick = onTuya, modifier = Modifier
+            .fillMaxWidth()
+            .testTag("add-tuya")) { Text("Add Feit or Smart Life lights") }
         OutlinedButton(onClick = onAdd, modifier = Modifier
             .fillMaxWidth()
             .testTag("add-light")) { Text("Add a light by IP address") }
@@ -350,7 +366,8 @@ private fun LightEditor(light: Light?, rooms: List<Room>, vm: HomeViewModel, onC
                 Choice("Fixture", FORM_FACTORS, form, { form = it })
                 Choice(
                     "Brand",
-                    LIGHT_PROTOCOLS.map { it.id to it.name },
+                    // Feit / Smart Life lights need their key from Tuya, so they are added in their own dialog.
+                    LIGHT_PROTOCOLS.filter { it.id != "tuya-lan" || light?.protocolId == "tuya-lan" }.map { it.id to it.name },
                     protocolId,
                     {
                         protocolId = it
@@ -447,6 +464,130 @@ private fun HueDialog(found: String?, vm: HomeViewModel, onClose: () -> Unit) {
                     }
                 },
             ) { Text(if (busy) "Pairing" else "Pair") }
+        },
+        dismissButton = { TextButton(onClick = onClose) { Text("Cancel") } },
+    )
+}
+
+private val TUYA_STEPS = listOf(
+    "Put the light in pairing mode. If it is in the Feit Electric app, remove it there first. Then turn it off and on at its switch three times, ending on, until it blinks quickly.",
+    "Pair it in the Smart Life app and give it the name you want to see here.",
+    "Once only: sign up at iot.tuya.com on a computer, then Cloud, Development, Create Cloud Project. Choose Smart Home for Industry and Development Method, and the data center for your country (United States: Western America).",
+    "In the project, open Devices, then Link App Account, then Add App Account. In Smart Life, tap Me, then the scan icon, and scan the code.",
+    "Type the Access ID and Access Secret from the project's Overview page below. RobOS Smart Home on the desktop uses the same keys.",
+)
+
+@Composable
+private fun TuyaDialog(rooms: List<Room>, vm: HomeViewModel, onClose: () -> Unit) {
+    val setup by vm.tuyaSetup.collectAsStateWithLifecycle()
+    var accessId by rememberSaveable { mutableStateOf("") }
+    var secret by rememberSaveable { mutableStateOf("") }
+    var region by rememberSaveable { mutableStateOf(setup.region) }
+    var roomId by rememberSaveable { mutableStateOf(UNASSIGNED_ROOM_ID) }
+    var busy by remember { mutableStateOf(false) }
+    var problem by remember { mutableStateOf<String?>(null) }
+    var found by remember { mutableStateOf<List<TuyaFoundDevice>?>(null) }
+    val chosen = remember { mutableStateMapOf<String, Boolean>() }
+
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(if (found == null) "Add Feit or Smart Life lights" else "Your Smart Life devices") },
+        text = {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .testTag("tuya-dialog"),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                val list = found
+                if (list == null) {
+                    if (setup.connected) {
+                        MutedText("Your Tuya project (Access ID ending ${setup.accessIdEnding}) is saved. For a new light, do steps 1 and 2, then tap Find my lights.")
+                    }
+                    TUYA_STEPS.forEachIndexed { i, step -> Text("${i + 1}. $step", style = MaterialTheme.typography.bodyMedium) }
+                    OutlinedTextField(
+                        value = accessId, onValueChange = { accessId = it.trim() }, singleLine = true,
+                        label = { Text(if (setup.connected) "Access ID (saved)" else "Access ID") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("field-tuya-id"),
+                    )
+                    OutlinedTextField(
+                        value = secret, onValueChange = { secret = it.trim() }, singleLine = true,
+                        label = { Text(if (setup.connected) "Access Secret (saved)" else "Access Secret") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("field-tuya-secret"),
+                    )
+                    Choice("Data center", TUYA_REGIONS.map { it.id to it.name }, region, { region = it })
+                    if (setup.connected) {
+                        TextButton(onClick = vm::forgetTuya) { Text("Forget the saved keys") }
+                    }
+                } else {
+                    MutedText("Choose the ones to add. A device that is not on this Wi-Fi network cannot be added until it is on.")
+                    list.forEach { d ->
+                        val usable = d.ip != null && d.hasKey
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = chosen[d.id] == true,
+                                onCheckedChange = { chosen[d.id] = it },
+                                enabled = usable,
+                                modifier = Modifier.testTag("tuya-device:${d.name}"),
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(d.name)
+                                MutedText(if (d.ip != null) "On this network at ${d.ip}" else "Not found on this network right now")
+                            }
+                        }
+                    }
+                    Choice("Room", rooms.map { it.id to it.name }, roomId, { roomId = it })
+                }
+                problem?.let { ErrorText(it, Modifier.testTag("tuya-problem")) }
+            }
+        },
+        confirmButton = {
+            val list = found
+            Button(
+                enabled = !busy,
+                modifier = Modifier.testTag("tuya-confirm"),
+                onClick = {
+                    busy = true
+                    problem = null
+                    if (list == null) {
+                        vm.findTuyaLights(accessId, secret, region) { result ->
+                            busy = false
+                            when (result) {
+                                is TuyaFindResult.Failed -> problem = result.message
+                                is TuyaFindResult.Found -> {
+                                    result.devices.forEach { chosen[it.id] = it.ip != null && it.hasKey && it.kind != "other" }
+                                    found = result.devices
+                                }
+                            }
+                        }
+                    } else {
+                        val picked = list.filter { chosen[it.id] == true }
+                        if (picked.isEmpty()) {
+                            busy = false
+                            problem = "Choose at least one device."
+                        } else {
+                            vm.addTuyaLights(picked, roomId) { failed ->
+                                busy = false
+                                if (failed.isEmpty()) onClose() else problem = failed.joinToString("\n")
+                            }
+                        }
+                    }
+                },
+            ) {
+                Text(
+                    when {
+                        busy && list == null -> "Searching"
+                        busy -> "Adding"
+                        list == null -> "Find my lights"
+                        else -> "Add selected"
+                    },
+                )
+            }
         },
         dismissButton = { TextButton(onClick = onClose) { Text("Cancel") } },
     )

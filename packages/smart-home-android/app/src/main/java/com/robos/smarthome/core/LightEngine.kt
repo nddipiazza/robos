@@ -207,6 +207,36 @@ class LightEngine(
         return saved!!
     }
 
+    /**
+     * Saves a Feit / Smart Life light with the state just read from it, without sending it
+     * anything. Adding the same device again refreshes its address but keeps its name and room.
+     */
+    suspend fun saveTuyaLight(device: TuyaFoundDevice, read: TuyaRead, roomId: String): Light {
+        val ip = device.ip ?: error("A Tuya light needs an address.")
+        var saved: Light? = null
+        mutate { home ->
+            val existing = home.lights.firstOrNull { it.protocolId == "tuya-lan" && it.deviceKey == device.id }
+            val s = read.state
+            val light = (existing ?: Light(id = newId("light"), name = device.name, roomId = roomId, protocolId = "tuya-lan", ip = ip, port = TUYA_PORT)).copy(
+                ip = ip,
+                port = TUYA_PORT,
+                deviceKey = device.id,
+                formFactor = existing?.formFactor ?: if (device.kind == "switch") "lamp" else "bulb",
+                tuyaVersion = device.version ?: existing?.tuyaVersion ?: "3.3",
+                tuyaSchema = read.schema,
+                on = s.on ?: existing?.on ?: false,
+                brightness = s.brightness ?: existing?.brightness ?: 100,
+                kelvin = s.kelvin ?: existing?.kelvin ?: 4000,
+                colorMode = s.colorMode ?: existing?.colorMode ?: "kelvin",
+                colorHex = s.colorHex ?: existing?.colorHex ?: "#ffffff",
+                lastError = null,
+            )
+            saved = light
+            home.copy(lights = if (existing != null) home.lights.map { if (it.id == existing.id) light else it } else home.lights + light)
+        }
+        return saved!!
+    }
+
     suspend fun removeLight(lightId: String) {
         releaseFromFades(lightId)
         mutate { home -> home.copy(lights = home.lights.filter { it.id != lightId }) }
