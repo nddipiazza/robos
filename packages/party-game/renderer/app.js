@@ -241,9 +241,45 @@ function showCastResults(results) {
     `<div>${r.ok ? '✅' : '⚠️'} <b>${esc(r.name || r.tvId)}</b> (${esc(r.screen)}): ${esc(r.message || '')}</div>`).join('');
 }
 
-// ── Guests ─────────────────────────────────────────────────────────────────
+// ── Guests & RobOS Users ───────────────────────────────────────────────────
+
+function renderRobosUsers(st) {
+  const users = st.robosUsers || [];
+  const editable = ['setup', 'lobby'].includes(st.phase);
+  if ($('onboardCoupleBtn')) $('onboardCoupleBtn').disabled = !editable;
+  if ($('onboardCoupleControllersBtn')) $('onboardCoupleControllersBtn').disabled = !editable;
+  const listEl = $('robosUserList');
+  if (!listEl) return;
+  if (!users.length) {
+    listEl.innerHTML = '<div class="muted small">No RobOS Users found yet.</div>';
+    return;
+  }
+  listEl.innerHTML = users.map((u) => {
+    const av = u.photoUrl
+      ? `<span class="ru-avatar" style="--c:${esc(u.color || '#00bcd4')}"><img src="${esc(u.photoUrl)}" alt="${esc(u.name)}"></span>`
+      : `<span class="ru-avatar" style="--c:${esc(u.color || '#00bcd4')}">${esc(u.avatar || '🎉')}</span>`;
+    const joined = Boolean(u.joinedGuestId);
+    return `<div class="ru-row ${joined ? 'joined' : ''}">
+      ${av}
+      <div class="ru-main">
+        <div><b>${esc(u.name)}</b> ${u.gamerTag ? `<span class="ru-tag">@${esc(u.gamerTag)}</span>` : ''} ${u.isPartyHost ? '<span class="host-badge">🏠 host</span>' : ''}</div>
+        <div class="muted small">${esc(u.archetype || u.title || '')}</div>
+        ${u.rpgCharacter ? `<div class="ru-rpg small">🎲 ${esc(u.rpgCharacter)} · ${u.surveyAnsweredCount} survey answers · ${u.customFactsCount || 0} facts</div>` : ''}
+      </div>
+      <div class="ru-actions">
+        ${joined
+          ? `<span class="pill ai-ready">Onboarded ✓</span>
+             <button type="button" class="ghost small-btn" data-controller="${esc(u.joinedGuestId)}" title="Open player controller window">🎮 Controller</button>`
+          : (editable
+            ? `<button type="button" class="primary small-btn" data-onboard="${esc(u.uid)}" data-as-host="${u.hasHouseDefaults && !st.partyHost ? '1' : ''}">+ Onboard${u.hasHouseDefaults && !st.partyHost ? ' (Host)' : ''}</button>`
+            : '')}
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function renderGuests(st) {
+  renderRobosUsers(st);
   const editable = ['setup', 'lobby'].includes(st.phase);
   $('guestCount').textContent = `${st.guestsDetail.length} joined`;
   $('guestList').innerHTML = st.guestsDetail.map((g) => {
@@ -251,16 +287,22 @@ function renderGuests(st) {
     const role = g.role ? `<span class="role" style="color:${esc(g.role.color)}">${esc(g.role.emoji)} ${esc(g.role.title)}</span>` : '';
     const live = st.phase === 'question' ? `<span class="small ${g.answered ? 'ok' : 'muted'}">${g.answered ? 'answered' : '…'}</span>` : '';
     const hostBadge = g.isPartyHost ? '<span class="host-badge" title="Party host">🏠 party host</span>' : '';
+    const photoSrc = g.photoUrl ? (g.photoUrl.startsWith('http') ? g.photoUrl : `http://127.0.0.1:${st.gamePort}${g.photoUrl}`) : null;
+    const av = photoSrc
+      ? `<span class="g-avatar photo" style="--c:${esc(g.color || '#00bcd4')}"><img src="${esc(photoSrc)}" alt="${esc(g.name)}"></span>`
+      : `<span class="g-avatar">${esc(g.avatar)}</span>`;
     return `<div class="guest">
-      <span class="g-avatar">${esc(g.avatar)}</span>
-      <div class="g-main"><b>${esc(g.name)}</b> ${hostBadge} ${role} ${live}
+      ${av}
+      <div class="g-main"><b>${esc(g.name)}</b> ${g.gamerTag ? `<span class="ru-tag">@${esc(g.gamerTag)}</span>` : ''} ${hostBadge} ${role} ${live}
+        ${g.archetype ? `<div class="muted small">${esc(g.archetype)}</div>` : ''}
         <div class="bar"><i style="width:${pct}%"></i></div>
-        <span class="muted small">${g.surveyComplete ? 'Survey done' : `${g.progress.answered}/${g.progress.total} answers`}</span>
+        <span class="muted small">${g.surveyComplete ? 'Survey done ✓' : `${g.progress.answered}/${g.progress.total} answers`}</span>
       </div>
       <span class="g-score">${g.score}</span>
-      ${editable ? `<button type="button" class="link" data-survey="${g.id}">Answers</button>${g.isPartyHost ? '' : `<button type="button" class="link" data-host="${g.id}" title="Make party host">🏠</button>`}<button type="button" class="link danger" data-remove="${g.id}">Remove</button>` : ''}
+      <button type="button" class="link" data-controller="${g.id}" title="Open player controller window">🎮 Controller</button>
+      ${editable ? `<button type="button" class="link" data-survey="${g.id}">Answers</button><button type="button" class="link" data-save-profile="${g.id}" title="Save survey answers to RobOS User profile">💾</button>${g.isPartyHost ? '' : `<button type="button" class="link" data-host="${g.id}" title="Make party host">🏠</button>`}<button type="button" class="link danger" data-remove="${g.id}">Remove</button>` : ''}
     </div>`;
-  }).join('') || '<div class="muted">Nobody yet. Open the lobby and share the QR code.</div>';
+  }).join('') || '<div class="muted">Nobody yet. Click “⚡ Onboard Nicholas & Diana” above or share the QR code.</div>';
   $('startHint').textContent = st.canStart && !st.canStart.ok ? st.canStart.reasons.join(' · ') : '';
   const ph = st.partyHost;
   $('houseStatus').innerHTML = ph
@@ -270,6 +312,35 @@ function renderGuests(st) {
 }
 
 function wireGuests() {
+  if ($('onboardCoupleBtn')) {
+    $('onboardCoupleBtn').onclick = async () => {
+      const res = await call(api.onboardGameNight, { openControllers: false });
+      if (res && res.ok) fillForm(res.state);
+    };
+  }
+  if ($('onboardCoupleControllersBtn')) {
+    $('onboardCoupleControllersBtn').onclick = async () => {
+      const res = await call(api.onboardGameNight, { openControllers: true });
+      if (res && res.ok) fillForm(res.state);
+    };
+  }
+  if ($('openPeopleDirBtn')) {
+    $('openPeopleDirBtn').onclick = () => call(api.openPeopleDirectory);
+  }
+  if ($('robosUserList')) {
+    $('robosUserList').addEventListener('click', (e) => {
+      const ob = e.target.closest('[data-onboard]');
+      if (ob) {
+        call(api.onboardUser, {
+          uid: ob.dataset.onboard,
+          setAsPartyHost: ob.dataset.asHost === '1',
+          applyHouse: true,
+        });
+      }
+      const ctrl = e.target.closest('[data-controller]');
+      if (ctrl) call(api.openController, ctrl.dataset.controller);
+    });
+  }
   $('addGuestForm').onsubmit = async (e) => {
     e.preventDefault();
     const name = $('guestName').value.trim();
@@ -287,6 +358,10 @@ function wireGuests() {
     if (sv) openSurvey(sv.dataset.survey);
     const host = e.target.closest('[data-host]');
     if (host) call(api.setPartyHost, host.dataset.host);
+    const ctrl = e.target.closest('[data-controller]');
+    if (ctrl) call(api.openController, ctrl.dataset.controller);
+    const sp = e.target.closest('[data-save-profile]');
+    if (sp) call(api.saveGuestToUserProfile, sp.dataset.saveProfile);
   });
   $('houseBtn').onclick = openHouse;
 }

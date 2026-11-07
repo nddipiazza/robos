@@ -56,7 +56,13 @@ module.exports = defineMiniGame({
   buildRounds(ctx, count) {
     const { guests, pick, shuffle } = ctx;
     let quests = (ctx.script?.houseQuests || []).filter((q) => q.performers.every((id) => guests.some((g) => g.id === id)));
-    if (!quests.length) quests = fallbackQuests(ctx.house || {}, guests, pick, shuffle);
+    if (!quests.length) {
+      const profileQuests = guests.flatMap((g) => (g.customQuests || []).map((q) => ({
+        ...q,
+        performers: guests.length >= 2 ? guests.slice(0, 2).map((x) => x.id) : [g.id],
+      })));
+      quests = profileQuests.length ? profileQuests : fallbackQuests(ctx.house || {}, guests, pick, shuffle);
+    }
     return quests.slice(0, count).map((q) => {
       const performers = q.performers.map((id) => guests.find((g) => g.id === id));
       const duel = performers.length > 1;
@@ -73,7 +79,7 @@ module.exports = defineMiniGame({
           caption: `${performers.map((g) => g.name).join(' vs ')} · Judges: ${q.judging}`,
           subjectId: performers[0].id,
           options,
-          excludeGuestIds: performers.map((g) => g.id),
+          excludeGuestIds: guests.length <= 2 ? [] : performers.map((g) => g.id),
           layout: duel ? 'guests' : 'statements',
           seconds: q.seconds + 20, // performance plus time to vote
           waitForTimer: true,

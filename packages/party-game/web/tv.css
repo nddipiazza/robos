@@ -71,9 +71,10 @@ h1 { margin: 0.4rem 0; font-size: 4rem; line-height: 1.1; }
 
 .avatar {
   display: inline-flex; align-items: center; justify-content: center; flex: none;
-  width: 3.4rem; height: 3.4rem; border-radius: 50%; font-size: 2rem;
+  width: 3.4rem; height: 3.4rem; border-radius: 50%; font-size: 2rem; overflow: hidden;
   background: color-mix(in srgb, var(--c) 25%, #0b1220); border: 0.2rem solid var(--c);
 }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar.sm { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
 .avatar.xl { width: 7rem; height: 7rem; font-size: 4rem; }
 .avatar.xxl { width: 16rem; height: 16rem; font-size: 9rem; border-width: 0.5rem; box-shadow: 0 0 4rem var(--c); }

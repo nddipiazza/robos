@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -8,51 +8,33 @@ const cp   = require('child_process');
 
 app.setName('robos-people-directory');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'people-directory'));
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); process.exit(0); }
+if (process.env.ROBOS_TEST !== '1') {
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) { app.quit(); process.exit(0); }
+}
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
-// ── Shared AI library ─────────────────────────────────────────────────────────
-let aiAgent = null;
-try {
-  const libPaths = [
-    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-agent'),
-    path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
-    '/usr/local/share/robos/robos-lib/ai-agent',
+function requireShared(relPath) {
+  const candidates = [
+    process.env.ROBOS_LIB_PATH && relPath.startsWith('robos-lib/') && path.join(process.env.ROBOS_LIB_PATH, relPath.slice('robos-lib/'.length)),
+    path.resolve(__dirname, '..', relPath),
+    path.join('/usr/local/share/robos', relPath),
   ].filter(Boolean);
-  for (const p of libPaths) {
-    try { aiAgent = require(p); break; } catch {}
+  for (const p of candidates) {
+    try { return require(p); } catch {}
   }
-} catch {}
+  return null;
+}
 
-// ── AI JSON utilities (shared robos-lib/ai-json) ──────────────────────────────
-let aiJson = null;
-try {
-  const libPaths = [
-    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-json'),
-    path.resolve(__dirname, '..', 'robos-lib', 'ai-json'),
-    '/usr/local/share/robos/robos-lib/ai-json',
-  ].filter(Boolean);
-  for (const p of libPaths) {
-    try { aiJson = require(p); break; } catch {}
-  }
-} catch {}
-
-// ── Debug snapshot server ─────────────────────────────────────────────────────
-let _debugServer = null;
-try {
-  const libPaths = [
-    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
-    path.resolve(__dirname, '..', 'robos-lib', 'dom-snapshot'),
-    '/usr/local/share/robos/robos-lib/dom-snapshot',
-  ].filter(Boolean);
-  for (const p of libPaths) {
-    try { _debugServer = require(p); break; } catch {}
-  }
-} catch {}
+const aiAgent      = requireShared('robos-lib/ai-agent');
+const aiJson       = requireShared('robos-lib/ai-json');
+const _debugServer = requireShared('robos-lib/dom-snapshot');
+const peopleStore  = requireShared('robos-lib/people-store');
+const partySurvey  = requireShared('party-game/lib/survey');
+const partyRoles   = requireShared('party-game/lib/roles');
 
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
@@ -70,12 +52,13 @@ const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 // ── Window ────────────────────────────────────────────────────────────────────
 let win;
 app.whenReady().then(() => {
+  ensureDataDir();
   win = new BrowserWindow({
-    skipTaskbar: true,
-    width: 1100, height: 680,
-    title: 'RobOS People Directory',
+    skipTaskbar: false,
+    width: 1240, height: 820,
+    title: 'RobOS People & User Profiles',
     backgroundColor: '#0d1117',
-    icon: path.join(__dirname, 'icon.svg'),
+    icon: fs.existsSync(path.join(__dirname, 'icon.png')) ? path.join(__dirname, 'icon.png') : path.join(__dirname, 'icon.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -93,6 +76,10 @@ app.on('window-all-closed', () => app.quit());
 
 // ── Filesystem backend ────────────────────────────────────────────────────────
 function ensureDataDir() {
+  if (peopleStore) {
+    peopleStore.ensureDefaultProfiles();
+    return;
+  }
   fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(CONFIG_FILE)) {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify({ backend: 'filesystem' }, null, 2));
@@ -100,6 +87,7 @@ function ensureDataDir() {
 }
 
 function loadAllPeople() {
+  if (peopleStore) return peopleStore.loadAllPeople({ includePhotoDataUrl: true });
   ensureDataDir();
   const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json') && f !== 'config.json');
   return files.map(f => {
@@ -111,7 +99,7 @@ function loadAllPeople() {
 function buildPeopleIndex() {
   try {
     const people = loadAllPeople();
-    const lines = people.map(p => `person:${p.username || ''}:${p.displayName || ''}`).filter(l => l !== 'person::');
+    const lines = people.map(p => `person:${p.username || p.uid || ''}:${p.displayName || ''}`).filter(l => l !== 'person::');
     const indexDir = path.join(os.homedir(), '.config', 'robos', 'search-index');
     fs.mkdirSync(indexDir, { recursive: true });
     fs.writeFileSync(path.join(indexDir, 'people.txt'), lines.join('\n') + (lines.length ? '\n' : ''));
@@ -121,10 +109,15 @@ function buildPeopleIndex() {
 function savePerson(person) {
   ensureDataDir();
   if (!person.uid) throw new Error('uid required');
-  const file = path.join(DATA_DIR, `${person.uid}.json`);
-  fs.writeFileSync(file, JSON.stringify(person, null, 2));
+  let saved = person;
+  if (peopleStore) {
+    saved = peopleStore.savePerson(person);
+  } else {
+    const file = path.join(DATA_DIR, `${person.uid}.json`);
+    fs.writeFileSync(file, JSON.stringify(person, null, 2));
+  }
   buildPeopleIndex();
-  return person;
+  return saved;
 }
 
 function deletePerson(uid) {
@@ -159,6 +152,73 @@ ipcMain.handle('pd-set-my-profile',  (_, uid)      => {
   const s = loadSettings(); s.myProfileUid = uid || null; saveSettings(s); return { ok: true };
 });
 
+ipcMain.handle('pd-pick-photo', async (_, { uid, caption, setPrimary = true } = {}) => {
+  if (!win) return { ok: false, error: 'Window not ready' };
+  const res = await dialog.showOpenDialog(win, {
+    title: 'Select Profile Photo',
+    properties: ['openFile'],
+    filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'svg'] }],
+  });
+  if (res.canceled || !res.filePaths.length) return { ok: false, canceled: true };
+  try {
+    if (uid && peopleStore) {
+      const updated = peopleStore.savePersonPhoto(uid, {
+        sourcePath: res.filePaths[0],
+        caption: caption || '',
+        setPrimary: setPrimary !== false,
+      });
+      return { ok: true, person: updated };
+    }
+    const ext = path.extname(res.filePaths[0]).toLowerCase();
+    const mime = ext === '.png' ? 'image/png' : ext === '.svg' ? 'image/svg+xml' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+    const dataUrl = `data:${mime};base64,${fs.readFileSync(res.filePaths[0]).toString('base64')}`;
+    return { ok: true, dataUrl, sourcePath: res.filePaths[0] };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('pd-upload-photo', async (_, { uid, dataUrl, caption, setPrimary = true } = {}) => {
+  try {
+    if (!peopleStore) return { ok: false, error: 'people-store not available' };
+    const updated = peopleStore.savePersonPhoto(uid, { dataUrl, caption, setPrimary });
+    return { ok: true, person: updated };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('pd-get-party-schema', () => {
+  return {
+    questions: partySurvey ? partySurvey.getSurvey() : [],
+    roles: partyRoles ? partyRoles.ROLE_CATALOG : [],
+  };
+});
+
+ipcMain.handle('pd-launch-party-game', () => {
+  try {
+    const electronBin = path.resolve(__dirname, '..', '..', 'scripts', 'source-shortcuts', 'node_modules', 'electron', 'dist', 'electron');
+    const sourceHost  = path.resolve(__dirname, '..', '..', 'scripts', 'source-shortcuts', 'source-host.cjs');
+    const partyDir    = path.resolve(__dirname, '..', 'party-game');
+    if (fs.existsSync(electronBin) && fs.existsSync(sourceHost)) {
+      const child = cp.spawn(electronBin, ['--no-sandbox', '--class=robos-source-party-game', sourceHost, '--app=party-game'], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+      return { ok: true };
+    }
+    const child = cp.spawn(process.execPath, [partyDir, '--no-sandbox'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('pd-list-ai-providers', async () => {
   if (!aiAgent) return { activeName: 'GitHub Copilot', providers: [] };
   return aiAgent.listProviders();
@@ -167,13 +227,45 @@ ipcMain.handle('pd-list-ai-providers', async () => {
 ipcMain.handle('pd-ai-add-person', async (_, { prompt, providerId }) => {
   if (!aiAgent) return { ok: false, error: 'AI library not available' };
   const rulesPrompt = aiJson ? aiJson.JSON_RULES_PROMPT : '';
-  const systemPrompt = `You are a people-directory assistant. Given a description of one or more people, return ONLY a JSON array where each element is an object with these fields:
-uid (kebab-case unique id), displayName, firstName, lastName, email, title, department, phone, location, username, bio.
+  const systemPrompt = `You are a RobOS People & Game Profile assistant. Given a description of one or more people, return ONLY a JSON array where each element is an object with these fields:
+uid (kebab-case unique id), displayName, firstName, lastName, nickname, email, title, department, phone, location, username, avatar (single emoji), color (hex color), bio,
+personality: { archetype, tagline, traits (string[]), quirks (string[]), petPeeves (string[]), boundaries (string[]), adaptability, communicationStyle },
+interests: { expertTopics (string[]), hobbies (string[]), musicLikes (string[]), musicDislikes (string[]), favoriteBands (string[]), booksAndGenres (string[]), gamesAndPlatforms (string[]), foodAndTextureNotes, environmentPreferences },
+family: { partnerName, children (string[]), householdRoutines, relationshipDynamic, sharedActivities (string[]) },
+gameProfile: {
+  gamerTag, avatar, color,
+  rpgCharacter: { game, characterClass, subclass, platform, playstyle, blurb },
+  favoriteGames (string[]),
+  partyGame: {
+    enabled: true,
+    preferredRole (one of: detective, wildcard, trickster, diplomat, champion, storyteller, underdog),
+    surveyAnswers: {
+      "party-arrival": "snacks"|"host"|"corner"|"dj",
+      "competitive": 1..5,
+      "secret-talent": string,
+      "superpower": "invisibility"|"mind-reading"|"flight"|"time"|"healing",
+      "group-chat": "memes"|"planner"|"lurker"|"essay",
+      "hobby": string,
+      "fav-show": string,
+      "music": string,
+      "expert-topic": string,
+      "travel": string,
+      "worst-job": string,
+      "embarrassing": string,
+      "rule-breaker": 1..5,
+      "guilty-pleasure": string,
+      "zombie": "leader"|"medic"|"engineer"|"first"|"traitor",
+      "spontaneous": 1..5,
+      "dinner-guest": string,
+      "storytelling": 1..5
+    },
+    customFacts: [ { id, prompt, answer, text, interest (boolean) } ]
+  }
+}.
 If only one person is described, still return a JSON array with one element. Fill in reasonable values for any missing fields.
 
 IMPORTANT OUTPUT RULES:
 - Output ONLY the raw JSON array — no markdown fences, no explanation, no comments
-- Use plain ASCII text only — no emoji, no Unicode symbols, no special characters
 - Do not include any ANSI escape codes or control characters${rulesPrompt ? '\n\n' + rulesPrompt : ''}`;
   const fullPrompt = `${systemPrompt}\n\nDescription: ${prompt}`;
   try {
@@ -203,8 +295,8 @@ IMPORTANT OUTPUT RULES:
       if (!person.lastName && person.sn) { person.lastName = person.sn; delete person.sn; }
       if (!person.email && person.mail) { person.email = person.mail; delete person.mail; }
       if (!person.phone && person.telephoneNumber) { person.phone = person.telephoneNumber; delete person.telephoneNumber; }
-      savePerson(person);
-      people.push(person);
+      const saved = savePerson(person);
+      people.push(saved);
     }
     return { ok: true, people, person: people[0] };
   } catch (e) {
@@ -274,7 +366,7 @@ function pdGetTaskServerSuggestions(prefix) {
       const sName = (s.name || '').toLowerCase();
       const sSan  = pdSanitizeTaskServerName(s.name).toLowerCase();
       if (slashIdx >= 0) {
-        if (sType !== typePart) return false;
+        if (sType !== sType) return false;
         if (!namePart) return true;
         return sSan.includes(namePart) || sName.includes(namePart);
       }
@@ -335,19 +427,6 @@ ipcMain.handle('pd-list-path', (_, prefix) => {
           }
           if (items.length >= 30) break;
         }
-      }
-      if (!items.length) {
-        const result = cp.spawnSync('find', [
-          home, '-maxdepth', '6',
-          '-not', '-path', '*/node_modules/*', '-not', '-path', '*/.git/*',
-          '-not', '-path', '*/dist/*', '-not', '-path', '*/.cache/*',
-          '-not', '-name', '.*', '-iname', `*${partial}*`,
-        ], { encoding: 'utf8', timeout: 4000 });
-        items = (result.stdout || '').split('\n').filter(Boolean).slice(0, 30).map(p => {
-          let isDirectory = false;
-          try { isDirectory = fs.statSync(p).isDirectory(); } catch {}
-          return { name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true };
-        });
       }
       return { ok: true, items: [...taskServers, ...items] };
     }

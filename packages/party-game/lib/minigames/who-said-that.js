@@ -11,12 +11,13 @@ module.exports = defineMiniGame({
     'The host reads a survey answer out loud. Guess which guest wrote it. ' +
     '+2 for a correct guess. The guest it belongs to sits the round out.',
   icon: '🗣️',
-  minGuests: 3,
+  minGuests: 2,
   defaultRounds: 4,
   answerSeconds: 25,
 
   buildRounds(ctx, count) {
     const { guests, shuffle } = ctx;
+    const excludeFor = (gid) => (guests.length <= 2 ? [] : [gid]);
     // The AI writers pick the most surprising answers and phrase them as teasers.
     const written = (ctx.script?.whoSaidThat || [])
       .map((w) => {
@@ -38,7 +39,7 @@ module.exports = defineMiniGame({
           caption: w.fact.prompt,
           subjectId: null,
           options: guestOptions(guests),
-          excludeGuestIds: [w.guest.id],
+          excludeGuestIds: excludeFor(w.guest.id),
           layout: 'guests',
         },
       }));
@@ -67,7 +68,7 @@ module.exports = defineMiniGame({
             caption: item.fact.prompt,
             subjectId: null, // stays hidden until the reveal
             options: guestOptions(guests),
-            excludeGuestIds: [item.guest.id],
+            excludeGuestIds: excludeFor(item.guest.id),
             layout: 'guests',
           },
         });
@@ -81,9 +82,10 @@ module.exports = defineMiniGame({
   score(round, answers) {
     const awards = {};
     const fooled = [];
+    const excluded = round.prompt?.excludeGuestIds || [round.subjectId];
     for (const [gid, choice] of Object.entries(answers)) {
-      if (gid === round.subjectId) continue;
-      if (choice === round.subjectId) awards[gid] = 2;
+      if (excluded.includes(gid)) continue;
+      if (choice === round.subjectId) awards[gid] = gid === round.subjectId ? 1 : 2;
       else fooled.push(gid);
     }
     return {

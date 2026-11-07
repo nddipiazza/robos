@@ -34,16 +34,17 @@ for (const p of [
 
 function parseJson(text) {
   if (!text) return null;
-  if (parseAIJson) {
-    const r = parseAIJson(text);
-    return r.ok ? r.data : null;
-  }
   const s = String(text).replace(/^```\w*\s*|```\s*$/gm, '');
   const start = s.indexOf('{');
   const end = s.lastIndexOf('}');
   if (start < 0 || end <= start) return null;
+  const slice = s.slice(start, end + 1);
+  if (parseAIJson) {
+    const r = parseAIJson(slice);
+    if (r.ok && r.data && typeof r.data === 'object' && !Array.isArray(r.data)) return r.data;
+  }
   try {
-    return JSON.parse(s.slice(start, end + 1));
+    return JSON.parse(slice);
   } catch {
     return null;
   }
@@ -77,7 +78,8 @@ function profiles(guests, roleTitle = () => null) {
       .slice(0, 3)
       .map(([t]) => t)
       .join(', ');
-    return `${key} ${g.name}${role ? ` (role: ${role})` : ''}; strongest traits: ${traits || 'balanced'}; answers: ${facts}`;
+    const extra = g.profileSummary ? `; profile: ${g.profileSummary}` : '';
+    return `${key} ${g.name}${role ? ` (role: ${role})` : ''}; strongest traits: ${traits || 'balanced'}; answers: ${facts}${extra}`;
   });
   return { text: lines.join('\n'), keyOf, idOf };
 }

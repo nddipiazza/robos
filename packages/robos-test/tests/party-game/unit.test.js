@@ -536,5 +536,68 @@ describe('RobOS Party Game', () => {
         await server.stop();
       }
     });
+
+    it('onboards Nicholas DiPiazza and Diana Arrington from RobOS Users and plays a complete 2-player Game Night', async () => {
+      const os = require('node:os');
+      const peopleStore = require('../../../robos-lib/people-store');
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-people-test-'));
+      try {
+        peopleStore.ensureDefaultProfiles(dir);
+        const nickPerson = peopleStore.getPerson('nicholas-dipiazza', dir);
+        const dianaPerson = peopleStore.getPerson('diana-arrington', dir);
+        assert.ok(nickPerson && dianaPerson, 'Default profiles for Nicholas and Diana exist');
+        assert.strictEqual(nickPerson.personality.archetype, 'The Pragmatic, Loudmouthed Engineer');
+        assert.strictEqual(dianaPerson.personality.archetype, 'The Particular, Hygiene-Conscious Realist');
+        assert.ok(dianaPerson.interests.musicDislikes.some((m) => /female vocal/i.test(m)));
+        assert.ok(dianaPerson.interests.favoriteBands.includes('Polyphia'));
+        const nickProfile = peopleStore.buildPartyGuestProfile(nickPerson);
+        const dianaProfile = peopleStore.buildPartyGuestProfile(dianaPerson);
+        assert.ok(nickProfile.rpgCharacter.includes('Illusionist Wizard'));
+        assert.ok(dianaProfile.rpgCharacter.includes('Oath of the Ancients Paladin'));
+
+        const e = createPartyEngine({
+          seed: 42,
+          settings: {
+            title: "Nick & Diana's Game Night",
+            agent: { provider: 'stub' },
+            minGuests: 2,
+            roundsPerGame: 2,
+            miniGames: ['who-said-that', 'most-likely-to', 'house-quest', 'interest-trivia', 'truth-or-bot'],
+          },
+          ai: async () => null, // verify profile custom material works even without live AI response
+        });
+        e.selectTvs([{ tvId: 'tv-livingroom-webos', name: 'Living Room LG OLED' }]);
+        await e.openLobby();
+
+        const gNick = await e.onboardUser(nickProfile, { setAsPartyHost: true, applyHouse: true });
+        const gDiana = await e.onboardUser(dianaProfile, { setAsPartyHost: false, applyHouse: false });
+
+        assert.strictEqual(gNick.surveyComplete, true);
+        assert.strictEqual(gDiana.surveyComplete, true);
+        assert.strictEqual(e.canStart().ok, true, `Should be ready to start: ${e.canStart().reasons.join(', ')}`);
+
+        await e.startGame();
+        assert.strictEqual(e.state.phase, 'roles');
+        assert.strictEqual(gNick.roleId, 'wildcard');
+        assert.strictEqual(gDiana.roleId, 'detective');
+
+        let safety = 0;
+        while (e.state.phase !== 'finale' && safety++ < 80) {
+          if (e.state.phase === 'question') {
+            for (const g of e.state.guests) {
+              const pv = e.playerView(g.id);
+              if (!pv.me.sittingOut && pv.round.options.length) {
+                e.submitAnswer(g.id, pv.round.options[0].id);
+              }
+            }
+          }
+          await e.next();
+        }
+        assert.strictEqual(e.state.phase, 'finale');
+        assert.strictEqual(e.state.history.length, 10, '2 rounds across all 5 mini games completed in 2-player mode');
+      } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    });
   });
 });
