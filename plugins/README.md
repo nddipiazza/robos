@@ -162,7 +162,7 @@ plugins/
 | **`import-company-kgraph`** | `/import-company-kgraph` | Import tracked local sources with provenance into an explicit workspace; review and refine revisions iteratively |
 | **`ide-java`** | `/ide-java` | Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces |
 | **`install-desktop-app`** | `/install-desktop-app` | Install .desktop entries, icons, desktop shortcuts, and GNOME Shell favorites |
-| **`install-source-shortcuts`** | `/install-source-shortcuts` | Run apps from a git clone; add "RobOS <App> (From Source)" Start menu / app grid / Applications entries and desktop icons with correct taskbar, dock and window icons on Windows, Linux and macOS |
+| **`install-source-shortcuts`** | `/install-source-shortcuts` | Run apps from a git clone; add "RobOS <App> (From Source)" (dependencies installed on first launch) Start menu / app grid / Applications entries and desktop icons with correct taskbar, dock and window icons on Windows, Linux and macOS |
 | **`install-dev-deps`** | `/install-dev-deps` | Audit and install host dev dependencies (QEMU, Electron, Java, Node) |
 | **`manage-robos-skill`** | `/manage-robos-skill` | Add, update, or remove a RobOS skill in the marketplace |
 | **`manage-agent-personas`** | `/manage-agent-personas` | Add, customize, and configure Developer Agent Personas, execution modes (Xvfb ephemeral GUI vs desktop session), and token-saving IDE refactoring suites |

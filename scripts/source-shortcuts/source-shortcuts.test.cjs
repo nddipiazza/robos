@@ -7,15 +7,16 @@ const path = require('node:path');
 const icons = require('./icons.cjs');
 const common = require('./common.cjs');
 const { install, remove } = require('./source-shortcuts.cjs');
+const { missingDeps } = require('./deps.cjs');
 const { decodePng, pngSize } = require('../../packages/app-manager/lib/win-icon.cjs');
 
-const APP = { id: 'camera-watch', label: 'Camera Watch', group: 'Developer tools', description: 'Watch cameras' };
+const APP = { id: 'camera-watch', label: 'Camera Watch', group: 'Developer tools', description: 'Watch cameras', libs: () => ['robos-lib'] };
 const ICON = path.join(common.repo, 'packages/camera-watch/icon.png');
 
 function stubSystem(extra = {}) {
   const calls = [];
   return { calls, run: (cmd, args) => { calls.push([cmd, ...args]); return cmd === 'gsettings' && args[0] === 'get' ? "['Utilities']" : ''; },
-    electron: () => '/opt/electron/electron', windowsDesktop: () => null, linuxDesktop: () => null,
+    sharedElectron: () => '/opt/electron/electron', windowsDesktop: () => null, linuxDesktop: () => null,
     writeLinks: (_electron, links) => { calls.push(['links', links]); return links.map(link => ({ file: link.file, ok: true })); }, ...extra };
 }
 const tempHome = () => fs.mkdtempSync(path.join(os.tmpdir(), 'robos-src-'));
@@ -110,4 +111,24 @@ test('Windows: Start menu and desktop shortcuts carry the AppUserModelID and the
   assert.strictEqual(sys.calls.filter(call => call[0] === 'links').pop()[1].length, 2);
   remove({ platform: 'win32', home, env, sys, log: () => {} });
   assert.deepStrictEqual(fs.readdirSync(path.join(env.LOCALAPPDATA, 'Programs/RobOS/icons')), []);
+});
+
+test('missingDeps ignores electron and finds runtime dependencies not yet installed', () => {
+  const dir = tempHome();
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ dependencies: { electron: '33', marked: '1', diff: '2' }, devDependencies: { esbuild: '1' } }));
+  assert.deepStrictEqual(missingDeps(dir), ['marked', 'diff']);
+  fs.mkdirSync(path.join(dir, 'node_modules/marked'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'node_modules/marked/package.json'), '{}');
+  assert.deepStrictEqual(missingDeps(dir), ['diff']);
+});
+
+test('shortcuts all run the shared Electron; the manifest records Node and the libraries to set up', () => {
+  const home = tempHome(), sys = stubSystem(), env = {};
+  install({ ids: ['camera-watch'], platform: 'linux', home, env, sys, apps: [APP], log: () => {}, node: '/opt/node/bin/node' });
+  const manifest = JSON.parse(fs.readFileSync(path.join(home, '.local/share/robos/source-shortcuts.json'), 'utf8'));
+  assert.strictEqual(manifest.node, '/opt/node/bin/node');
+  assert.deepStrictEqual(manifest.apps['camera-watch'].libs, ['robos-lib']);
+  const entry = fs.readFileSync(path.join(home, '.local/share/applications/robos-source-camera-watch.desktop'), 'utf8');
+  assert.ok(entry.includes('Exec="/opt/electron/electron" "--no-sandbox"'));
+  assert.throws(() => install({ ids: ['camera-watch'], platform: 'linux', home, env, sys: stubSystem({ sharedElectron: () => null }), apps: [APP], log: () => {} }), /Could not install Electron/);
 });

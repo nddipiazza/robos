@@ -1,6 +1,6 @@
 ---
 name: install-source-shortcuts
-description: Run RobOS apps from a git clone, and install "RobOS <App> (From Source)" Start menu / GNOME app grid / macOS Applications entries and desktop icons for them on Windows, Linux (GNOME) and macOS, with each app's own icon on the menu entry, desktop icon, taskbar/dock button and window.
+description: Run RobOS apps from a git clone, and install "RobOS <App> (From Source)" Start menu / GNOME app grid / macOS Applications entries and desktop icons for them on Windows, Linux (GNOME) and macOS. Shortcuts take seconds to create; each app installs its own dependencies the first time it is opened, and shows its own icon on the menu entry, desktop icon, taskbar/dock button and window.
 ---
 
 # Run RobOS Apps From Source & Install "(From Source)" Shortcuts
@@ -16,10 +16,9 @@ App Manager (`robos-managed-*`) or the release builds.
 `$ARGUMENTS`: a subcommand and options passed straight to the script:
 - `install [app-id ...]`: create or refresh shortcuts (every app when no IDs are given)
 - `--desktop`: also put an icon on the desktop (kept on later refreshes)
-- `--no-install`: skip apps whose dependencies are not installed instead of running `npm install`
 - `--dry-run`: print what would be created
 - `remove [app-id ...]`: delete what the script created (everything when no IDs are given)
-- `list`: show every app, whether its dependencies are installed, and which shortcuts exist
+- `list`: show every app, `ready` or `setup` (installs on first launch), and which shortcuts exist
 
 If the user gives no arguments, run `list` first, then ask which apps they want and whether
 they want desktop icons too. All ~100 apps on the desktop is rarely what they want.
@@ -41,13 +40,33 @@ scripts/dev-launch.sh <app-id>
 scripts/dev-launch.sh            # lists the app IDs
 ```
 
-The shortcuts run the same code through `scripts/source-shortcuts/source-host.cjs`, which
-gives the window its icon and identity (see below). To launch one by hand exactly as its
-shortcut does:
+The shortcuts run the same code through `scripts/source-shortcuts/source-host.cjs` on one
+shared Electron (33.4.11, the version App Manager runs every installed app on). The host
+gives the window its icon and identity (see below) and does the lazy setup. To launch an app
+by hand exactly as its shortcut does:
 
 ```bash
-packages/<app-id>/node_modules/.bin/electron scripts/source-shortcuts/source-host.cjs --app=<app-id>
+# Windows: scripts/source-shortcuts/node_modules/electron/dist/electron.exe …
+scripts/source-shortcuts/node_modules/.bin/electron scripts/source-shortcuts/source-host.cjs --app=<app-id>
 ```
+
+### Lazy setup (nothing is npm-installed up front)
+
+On every launch the host checks the package's runtime `dependencies` (except `electron`)
+and those of the sibling libraries it loads (`robos-lib`, `robos-ui`, …, recorded per app in
+the manifest when the shortcuts are created; same scan App Manager uses). If any are missing
+it opens a small **"Setting up RobOS <App> (From Source)"** window that already carries the
+app's icon, runs `npm install` in each package that needs it (streaming the output), then
+relaunches into the app. A first launch typically adds 1–3 s. Details:
+- Packages with no `node_modules` get `npm install --omit=dev`; packages that already have some
+  get a plain `npm install` so dev dependencies are not pruned.
+- `ELECTRON_SKIP_BINARY_DOWNLOAD=1`: apps run on the shared Electron, so the package's own
+  copy is not downloaded. To use `npm start` in that package later, run
+  `node node_modules/electron/install.js` there first.
+- The Node that ran `install` is recorded and put first on PATH for npm, because a desktop
+  menu's PATH can lack Node from nvm/fnm/Volta.
+- Output goes to `<RobOS data>/source-shortcuts-logs/<id>-setup.log`. On failure the window
+  stays open with the reason.
 
 Apps look for shared libraries (`robos-lib`, `robos-ui`, …) in the neighbouring `packages/`
 folder first, so nothing else needs installing. Data goes where `npm start` puts it: the
@@ -58,14 +77,16 @@ folder first, so nothing else needs installing. Data goes where `npm start` puts
 ```bash
 node scripts/source-shortcuts/source-shortcuts.cjs list
 node scripts/source-shortcuts/source-shortcuts.cjs install dev-central pr-review --desktop
-node scripts/source-shortcuts/source-shortcuts.cjs install          # every app (runs npm install where needed, slow)
-node scripts/source-shortcuts/source-shortcuts.cjs install --no-install   # every app that already has node_modules
+node scripts/source-shortcuts/source-shortcuts.cjs install          # every app, ~15 s (setup happens per app on first launch)
 node scripts/source-shortcuts/source-shortcuts.cjs remove dev-central
 node scripts/source-shortcuts/source-shortcuts.cjs remove           # everything it created
 ```
 
-On Windows run it from PowerShell or Git Bash with the same arguments. The script needs only
-Node, plus each app's own Electron (it writes Windows `.lnk` files through Electron, see below).
+On Windows run it from PowerShell or Git Bash with the same arguments. The first run installs
+the shared Electron into `scripts/source-shortcuts/node_modules` (once, about 100 MB). If npm
+holds back Electron's postinstall (npm 11 `install-scripts` approval) or its unzip step fails
+(seen on Node 26), `fetch-electron.cjs` downloads it with Electron's own `@electron/get` and
+unpacks it with `tar.exe` / `ditto` / `unzip`.
 What it created is recorded in `<RobOS data>/source-shortcuts.json` (`%LOCALAPPDATA%\RobOS`,
 `~/.local/share/robos`, `~/Library/Application Support/RobOS`), so `remove` deletes exactly that.
 Re-run `install` after moving the clone or changing an app's `icon.png`.
@@ -87,6 +108,8 @@ as its shortcut, or the taskbar/dock shows a generic Electron icon in a separate
 | Window / Alt+Tab icon | `window.setIcon(<the .ico>)` on every BrowserWindow | `window.setIcon(icon.png)` (Electron's `_NET_WM_ICON` needs a raster) | from the Dock icon |
 
 Lessons that are baked in. Don't undo them:
+- **`HOME` is set** (`os.homedir()`) before `main.js` runs, as App Manager does. Apps build
+  paths from `HOME`, which Windows does not set (PR Review crashed with "Path must be absolute").
 - **Windows `.lnk` must carry the AppUserModelID.** Only Electron's `shell.writeShortcutLink`
   sets it (`win-lnk.cjs`). `WScript.Shell` cannot. Without it the running window does not
   group with its pinned shortcut and shows electron.exe's icon.
@@ -108,7 +131,8 @@ Lessons that are baked in. Don't undo them:
 
 1. `node --test scripts/source-shortcuts/source-shortcuts.test.cjs` passes.
 2. `node scripts/source-shortcuts/source-shortcuts.cjs list` shows the app as `menu` (or `menu+desktop`).
-3. Open the app from its menu entry/desktop icon, then check the taskbar/dock button shows the
+3. Open the app from its menu entry/desktop icon. On first launch the setup window appears and
+   the app opens by itself afterwards (`list` then shows `ready`). Check the taskbar/dock button shows the
    app's own icon (not the Electron atom) and groups with the pinned shortcut:
    - Windows: the window's process runs with `--app-user-model-id=com.rowbose.robos.source.<id>`
      (visible in its renderer's command line), and the `.lnk`'s `System.AppUserModel.ID` matches:
@@ -121,7 +145,13 @@ Lessons that are baked in. Don't undo them:
 
 ## Troubleshooting
 
-- **Skipped (no dependencies)**: run `npm install` in `packages/<id>` or drop `--no-install`.
+- **Setup window shows an npm error**: read `<RobOS data>/source-shortcuts-logs/<id>-setup.log`,
+  fix the cause (e.g. Node/npm not installed), and open the app again; it retries.
+- **Windows Firewall asks about "Electron"** the first time an app opens a network port: that is
+  the shared Electron (`scripts/source-shortcuts/node_modules/electron/dist/electron.exe`), asked
+  once for all (From Source) apps. It is the user's choice; never answer it for them.
+- **An app works with `npm start` but not from its shortcut**: run the host command above in a
+  terminal to see the error. Apps may assume Linux-only paths or environment variables.
 - **Windows Start menu search does not list it yet**: indexing can take a minute; the Start
   menu's All list shows it immediately.
 - **GNOME shows a gear icon**: run `gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor`,
