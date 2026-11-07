@@ -57,7 +57,7 @@ install_app() {
 
 uninstall_all() {
   echo "Removing RobOS .desktop files from $APPS_DIR..."
-  find "$APPS_DIR" -maxdepth 1 -name "robos-*.desktop" -delete
+  find "$APPS_DIR" -maxdepth 1 -name "robos-*.desktop" ! -name "robos-source-*.desktop" -delete  # robos-source-*: scripts/source-shortcuts
   update-desktop-database "$APPS_DIR" 2>/dev/null || true
   echo "Done."
   exit 0

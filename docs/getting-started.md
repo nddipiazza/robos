@@ -120,6 +120,19 @@ scripts/install-local.sh dev-central  # one app
 scripts/install-local.sh --uninstall  # remove the entries again
 ```
 
+## Add "(From Source)" shortcuts on Windows, GNOME or macOS
+
+`scripts/source-shortcuts/source-shortcuts.cjs` adds a `RobOS <App> (From Source)` entry for apps in your clone: to the Start menu on Windows, to a **RobOS (From Source)** folder in the GNOME app grid, or to `~/Applications/RobOS (From Source)` on macOS. Add `--desktop` to put an icon on the desktop as well. Each entry starts the app from your clone with the package's own Electron. Its icon is the app's own icon in the menu, on the desktop, on the taskbar or dock button and on the window. The script runs `npm install` in a package that has no dependencies yet.
+
+```bash
+node scripts/source-shortcuts/source-shortcuts.cjs list                            # apps and existing shortcuts
+node scripts/source-shortcuts/source-shortcuts.cjs install dev-central --desktop  # one app, with a desktop icon
+node scripts/source-shortcuts/source-shortcuts.cjs install --no-install           # every app whose dependencies are installed
+node scripts/source-shortcuts/source-shortcuts.cjs remove                         # remove everything it created
+```
+
+AI agents can do the same with the `install-source-shortcuts` skill.
+
 ## Install development dependencies
 
 `scripts/install-dev-deps.sh` is for Debian and Ubuntu machines. It installs the apt packages the apps and tests use, adds your user to the `kvm` group, installs Node.js 20 from NodeSource when no `node` is on the path, and runs `npm install` in `installer/` and in every package that declares dependencies. It uses `sudo` and takes a while, so check first.

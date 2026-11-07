@@ -170,4 +170,4 @@ function removeIcons(into, name, keep = null) {
   }
 }
 
-module.exports = { pngToIco, pngSize, decodePng, ensureAppIco, removeIcons };
+module.exports = { pngToIco, pngSize, decodePng, resize, ensureAppIco, removeIcons };
