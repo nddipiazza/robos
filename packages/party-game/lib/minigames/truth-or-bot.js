@@ -64,7 +64,7 @@ module.exports = defineMiniGame({
     'Three statements about one guest appear on the TV. Two came from their survey; ' +
     'the AI host invented the other. Find the fake for +2. The guest earns +1 for everyone fooled.',
   icon: '🤖',
-  minGuests: 3,
+  minGuests: 2,
   defaultRounds: 3,
   answerSeconds: 30,
 
@@ -78,7 +78,8 @@ module.exports = defineMiniGame({
     });
     // Ask the AI host for every lie at once; any that fail fall back to survey bluffs.
     // The writers' room usually has a bluff ready; ask live only for the rest.
-    const aiLies = await Promise.all(plans.map((p) => ctx.script?.bluffs?.[p.guest.id]
+    const aiLies = await Promise.all(plans.map((p, idx) => ctx.script?.bluffs?.[p.guest.id]
+      || (p.guest.customBluffs && p.guest.customBluffs[idx % p.guest.customBluffs.length])
       || aiFake(p.guest, p.truths, ctx).catch(() => null)));
     return plans.map(({ guest, truths, source }, i) => {
       const question = questions.find((q) => q.id === source.questionId);

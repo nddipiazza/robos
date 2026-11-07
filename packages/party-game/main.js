@@ -57,6 +57,7 @@ const tvEngineModule = requireShared('robos-lib/tv-engine');
 const agentProviders = requireShared('robos-agent-client/providers');
 const agentOneShot = requireShared('robos-agent-client/one-shot');
 const aiAgent = requireShared('robos-lib/ai-agent');
+const peopleStore = requireShared('robos-lib/people-store');
 
 const tvEngine = tvEngineModule
   ? tvEngineModule.createTvEngine({ configDir: CONFIG_DIR, portalPort: tvEngineModule.DEFAULT_PORTAL_PORT })
@@ -139,6 +140,7 @@ const server = createGameServer({
   engine,
   port: GAME_PORT,
   log,
+  peopleStore,
   getNarrationAudio: (id, format) => narration.clip(id, format),
 });
 // The host's voice goes to this computer, the TVs and/or an Audio Player speaker.
@@ -166,9 +168,134 @@ const bridge = createTvBridge({
 });
 
 let mainWindow = null;
+const controllerWindows = new Map(); // guestId -> BrowserWindow
 
 function sendToRenderer(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+}
+
+function listRobosUsers() {
+  if (!peopleStore) return [];
+  try {
+    const people = peopleStore.loadAllPeople();
+    return people.map((p) => {
+      const gp = peopleStore.buildPartyGuestProfile(p);
+      const existing = engine.state.guests.find((g) => g.userId === p.uid || g.name.toLowerCase() === String(p.name || '').toLowerCase());
+      return {
+        uid: p.uid,
+        name: p.name,
+        title: p.title || '',
+        gamerTag: gp.gamerTag || '',
+        archetype: gp.archetype || '',
+        rpgCharacter: gp.rpgCharacter || '',
+        avatar: gp.avatar,
+        color: gp.color,
+        photoUrl: p.photo ? `http://127.0.0.1:${gamePort}/api/user-photo/${encodeURIComponent(p.uid)}` : null,
+        preferredRole: gp.preferredRole || null,
+        surveyAnsweredCount: Object.keys(gp.surveyAnswers || {}).length,
+        customFactsCount: (gp.customFacts || []).length,
+        hasHouseDefaults: Boolean(gp.houseDefaults && Object.keys(gp.houseDefaults).length),
+        joinedGuestId: existing ? existing.id : null,
+        isPartyHost: Boolean(existing && engine.state.partyHostId === existing.id),
+      };
+    });
+  } catch (err) {
+    log({ msg: 'listRobosUsers failed', err: err.message });
+    return [];
+  }
+}
+
+async function onboardUserByUid(uid, { setAsPartyHost = false, applyHouse = true } = {}) {
+  if (!peopleStore) throw new Error('RobOS Users library is not available');
+  const person = peopleStore.getPerson(uid);
+  if (!person) throw new Error(`RobOS user "${uid}" not found`);
+  const profile = peopleStore.buildPartyGuestProfile(person);
+  const g = await engine.onboardUser(profile, { setAsPartyHost, applyHouse });
+  return { id: g.id, userId: g.userId, name: g.name };
+}
+
+async function onboardGameNight({ openControllers = false } = {}) {
+  if (!peopleStore) throw new Error('RobOS Users library is not available');
+  peopleStore.ensureDefaultProfiles?.();
+  // Ensure 2-player settings and AI agent are ready
+  const curSettings = engine.state.settings;
+  let agent = curSettings.agent;
+  if (!agent || !agent.provider) {
+    if (agentProviders) {
+      const list = await agentProviders.options({ refresh: false }).catch(() => []);
+      const avail = (list || []).find((p) => p.available) || (list || [])[0];
+      if (avail) agent = { provider: avail.id, model: avail.defaultModel || '', effort: '' };
+    }
+    if (!agent || !agent.provider) agent = { provider: 'agy', model: '', effort: '' };
+  }
+  const nextSettings = engine.updateSettings({
+    minGuests: 2,
+    title: curSettings.title === 'RobOS Party Game' ? "Nick & Diana's Game Night" : curSettings.title,
+    agent,
+  });
+  saveSettings(nextSettings);
+
+  // Ensure at least one TV is selected so the lobby can open
+  if (!engine.state.tvs.length) {
+    const tvs = bridge.listTvs();
+    const pickTv = tvs.find((t) => t.id === 'tv-livingroom-webos') || tvs[0] || {
+      id: 'preview-stage',
+      name: 'Living Room Stage (Desktop Preview)',
+      platformId: 'webos',
+    };
+    engine.selectTvs([{ tvId: pickTv.id, screen: 'stage', name: pickTv.name, platformId: pickTv.platformId }]);
+  }
+
+  // Open lobby if currently in setup
+  if (engine.state.phase === 'setup') {
+    await engine.openLobby();
+    await bridge.castAll(engine.state.tvs).catch(() => {});
+  }
+
+  // Onboard Nicholas (as Party Host with house survey defaults) and Diana
+  const nick = await onboardUserByUid('nicholas-dipiazza', { setAsPartyHost: true, applyHouse: true });
+  const diana = await onboardUserByUid('diana-arrington', { setAsPartyHost: false, applyHouse: false });
+
+  if (openControllers) {
+    openGuestControllerWindow(nick.id);
+    openGuestControllerWindow(diana.id);
+  }
+  return { nick, diana };
+}
+
+function openGuestControllerWindow(guestId) {
+  if (!BrowserWindow) throw new Error('Electron BrowserWindow unavailable');
+  const g = engine.state.guests.find((x) => x.id === guestId);
+  if (!g) throw new Error('Unknown guest');
+  const existing = controllerWindows.get(g.id);
+  if (existing && !existing.isDestroyed()) {
+    existing.show();
+    existing.focus();
+    return { guestId: g.id, name: g.name };
+  }
+  const idx = engine.state.guests.findIndex((x) => x.id === g.id);
+  const iconPng = path.join(__dirname, 'icon.png');
+  const win = new BrowserWindow({
+    title: `${g.name} — RobOS Party Game Controller`,
+    width: 430,
+    height: 820,
+    x: 60 + (idx >= 0 ? idx * 450 : 0),
+    y: 80,
+    minWidth: 340,
+    minHeight: 560,
+    backgroundColor: '#0d1117',
+    icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  win.setMenuBarVisibility(false);
+  const url = `http://127.0.0.1:${gamePort}/join?guest=${encodeURIComponent(g.id)}&token=${encodeURIComponent(g.token)}`;
+  win.loadURL(url);
+  controllerWindows.set(g.id, win);
+  win.on('closed', () => controllerWindows.delete(g.id));
+  return { guestId: g.id, name: g.name, url };
 }
 
 function hostState() {
@@ -183,6 +310,7 @@ function hostState() {
     speakers: narration.listSpeakers(),
     speakersAvailable: narration.speakersAvailable(),
     agentToolsInstalled: Boolean(agentOneShot || aiAgent),
+    robosUsers: listRobosUsers(),
   };
 }
 
@@ -251,6 +379,51 @@ function registerIpc() {
   ipcMain.handle('party:recast', wrap(() => bridge.castAll(engine.state.tvs)));
   ipcMain.handle('party:addGuest', wrap((name) => {
     return engine.addGuest({ name }).then((g) => ({ id: g.id, name: g.name }));
+  }));
+  ipcMain.handle('party:onboardUser', wrap((opts) => {
+    const uid = typeof opts === 'string' ? opts : opts?.uid;
+    return onboardUserByUid(uid, {
+      setAsPartyHost: Boolean(opts?.setAsPartyHost),
+      applyHouse: opts?.applyHouse !== false,
+    });
+  }));
+  ipcMain.handle('party:onboardGameNight', wrap((opts) => onboardGameNight(opts || {})));
+  ipcMain.handle('party:openController', wrap((guestId) => openGuestControllerWindow(guestId)));
+  ipcMain.handle('party:saveGuestToUserProfile', wrap((guestId) => {
+    if (!peopleStore) throw new Error('RobOS Users library is not available');
+    const g = engine.state.guests.find((x) => x.id === guestId);
+    if (!g) throw new Error('Unknown guest');
+    const uid = g.userId || g.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const existing = peopleStore.getPerson(uid) || { uid, name: g.name, avatar: g.avatar, color: g.color };
+    existing.gameProfile = existing.gameProfile || {};
+    existing.gameProfile.partyGame = existing.gameProfile.partyGame || {};
+    existing.gameProfile.partyGame.surveyAnswers = { ...(existing.gameProfile.partyGame.surveyAnswers || {}), ...(g.answers || {}) };
+    if (g.id === engine.state.partyHostId && engine.state.house && Object.keys(engine.state.house).length) {
+      existing.gameProfile.partyGame.houseDefaults = { ...(existing.gameProfile.partyGame.houseDefaults || {}), ...engine.state.house };
+    }
+    peopleStore.savePerson(existing);
+    g.userId = existing.uid;
+    return { uid: existing.uid, name: existing.name };
+  }));
+  ipcMain.handle('party:openPeopleDirectory', wrap(() => {
+    const { spawn } = require('node:child_process');
+    const electronBin = path.resolve(__dirname, '..', '..', 'scripts', 'source-shortcuts', 'node_modules', 'electron', 'dist', 'electron');
+    const sourceHost = path.resolve(__dirname, '..', '..', 'scripts', 'source-shortcuts', 'source-host.cjs');
+    const pdDir = path.resolve(__dirname, '..', 'people-directory');
+    if (fs.existsSync(electronBin) && fs.existsSync(sourceHost)) {
+      const child = spawn(electronBin, ['--no-sandbox', '--class=robos-source-people-directory', sourceHost, '--app=people-directory'], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+      return { launched: true };
+    }
+    const child = spawn(process.execPath, [pdDir, '--no-sandbox'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    return { launched: true };
   }));
   ipcMain.handle('party:removeGuest', wrap((id) => engine.removeGuest(id)));
   ipcMain.handle('party:getGuestSurvey', wrap((id) => {
@@ -343,6 +516,13 @@ if (app) {
       gamePort = await server.start();
       engine.setJoinUrl(`http://${lanIp()}:${gamePort}/join`);
       log({ msg: 'party server listening', port: gamePort, joinUrl: engine.state.joinUrl });
+      if (process.env.ROBOS_PARTY_AUTO_ONBOARD === '1') {
+        try {
+          await onboardGameNight({ openControllers: process.env.ROBOS_PARTY_OPEN_CONTROLLERS === '1' });
+        } catch (err) {
+          log({ msg: 'auto-onboard failed', err: err.message });
+        }
+      }
       createWindow();
     });
     app.on('window-all-closed', async () => {

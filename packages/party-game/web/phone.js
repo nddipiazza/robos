@@ -4,6 +4,10 @@
 
   var STORE = 'robos-party-guest';
   var app = document.getElementById('app');
+  var urlParams = new URLSearchParams(location.search);
+  var urlGuest = urlParams.get('guest');
+  var urlToken = urlParams.get('token');
+  var useSessionOnly = Boolean(urlGuest && urlToken);
   var me = load();
   var view = null;
   var qIndex = 0;
@@ -13,11 +17,26 @@
   var houseSaveTimer = null;
 
   function load() {
+    if (urlGuest && urlToken) {
+      var fromUrl = { guestId: urlGuest, token: urlToken };
+      try { sessionStorage.setItem(STORE, JSON.stringify(fromUrl)); } catch (e) {}
+      return fromUrl;
+    }
+    try {
+      var s = sessionStorage.getItem(STORE);
+      if (s) return JSON.parse(s);
+    } catch (e) {}
     try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; }
   }
   function save(v) {
     me = v;
-    try { v ? localStorage.setItem(STORE, JSON.stringify(v)) : localStorage.removeItem(STORE); } catch (e) {}
+    try {
+      if (v) sessionStorage.setItem(STORE, JSON.stringify(v));
+      else sessionStorage.removeItem(STORE);
+    } catch (e) {}
+    if (!useSessionOnly) {
+      try { v ? localStorage.setItem(STORE, JSON.stringify(v)) : localStorage.removeItem(STORE); } catch (e) {}
+    }
   }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -48,7 +67,10 @@
     app.innerHTML =
       '<div class="hero"><div class="hero-emoji">🎉</div><h1>RobOS Party Game</h1>' +
       '<p class="muted">Tell the host about yourself. It will be used for comedy.</p></div>' +
-      '<form id="joinForm" class="card"><label for="name">Your name</label>' +
+      '<div id="robosUsersJoin" class="card hidden"><div class="kicker">⚡ Quick Join with your RobOS Profile</div>' +
+      '<p class="muted" style="margin:0.3rem 0 0.8rem;font-size:0.88rem">Loads your full game profile, survey answers, RPG class, and facts in one tap.</p>' +
+      '<div id="robosUserCards" class="user-join-list"></div></div>' +
+      '<form id="joinForm" class="card"><label for="name">Or enter a guest name</label>' +
       '<input id="name" maxlength="24" autocomplete="nickname" placeholder="e.g. Sam" required>' +
       (error ? '<div class="error">' + esc(error) + '</div>' : '') +
       '<button class="primary" type="submit">Join the party</button></form>';
@@ -61,6 +83,36 @@
         connect();
       }).catch(function (err) { renderJoin(err.message); });
     };
+    fetch('/api/users').then(function (r) { return r.json(); }).then(function (j) {
+      var users = (j && j.users) || [];
+      var box = document.getElementById('robosUsersJoin');
+      var list = document.getElementById('robosUserCards');
+      if (!box || !list || !users.length) return;
+      box.classList.remove('hidden');
+      list.innerHTML = users.map(function (u) {
+        var avHtml = u.photoUrl
+          ? '<img class="u-photo" src="' + esc(u.photoUrl) + '" alt="' + esc(u.name) + '">'
+          : '<span class="u-emoji">' + esc(u.avatar || '🎉') + '</span>';
+        return '<button type="button" class="user-join-card" data-uid="' + esc(u.uid) + '" style="--c:' + esc(u.color || '#00bcd4') + '">' +
+          '<span class="u-avatar">' + avHtml + '</span>' +
+          '<span class="u-info"><b>' + esc(u.name) + '</b>' +
+          (u.gamerTag ? ' <small class="u-tag">@' + esc(u.gamerTag) + '</small>' : '') +
+          '<small class="u-sub">' + esc(u.archetype || u.title || '') + '</small>' +
+          (u.rpgCharacter ? '<small class="u-rpg">🎲 ' + esc(u.rpgCharacter) + '</small>' : '') +
+          '</span>' +
+          '<span class="u-cta">' + (u.joinedGuestId ? 'Reconnect →' : 'Join →') + '</span>' +
+          '</button>';
+      }).join('');
+      Array.prototype.forEach.call(list.querySelectorAll('.user-join-card'), function (btn) {
+        btn.onclick = function () {
+          var uid = btn.getAttribute('data-uid');
+          post('/api/join-user', { uid: uid }).then(function (r) {
+            save({ guestId: r.guestId, token: r.token });
+            connect();
+          }).catch(function (err) { renderJoin(err.message); });
+        };
+      });
+    }).catch(function () {});
   }
 
   // ── Survey ───────────────────────────────────────────────────────────────
@@ -229,13 +281,21 @@
     var hostLine = view.partyHost
       ? '<p class="muted">🏠 Party host: <b>' + esc(view.partyHost.name) + '</b> · house ' + view.partyHost.house.percent + '% described</p>'
       : '';
-    app.innerHTML = hostClaimBanner() + '<div class="hero"><div class="hero-emoji">' + esc(view.me.avatar) + '</div><h1>You\'re in, ' + esc(view.me.name) + '!</h1>' +
+    var heroAvatar = view.me.photoUrl
+      ? '<div class="hero-photo" style="--c:' + esc(view.me.color || '#00bcd4') + '"><img src="' + esc(view.me.photoUrl) + '" alt="' + esc(view.me.name) + '"></div>'
+      : '<div class="hero-emoji">' + esc(view.me.avatar) + '</div>';
+    var subInfo = view.me.archetype ? '<div class="kicker" style="margin-bottom:0.3rem">' + esc(view.me.archetype) + '</div>' : '';
+    app.innerHTML = hostClaimBanner() + '<div class="hero">' + heroAvatar + subInfo + '<h1>You\'re in, ' + esc(view.me.name) + '!</h1>' +
       '<p class="muted">Watch the TV. ' + ready + ' of ' + view.guests.length + ' guests are ready.</p>' + hostLine +
-      '<button type="button" id="edit" class="ghost">Change my answers</button>' +
-      (view.isPartyHost ? ' <button type="button" id="editHouse" class="ghost">Edit house details</button>' : '') + '</div>';
+      '<div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-top:0.8rem">' +
+      '<button type="button" id="edit" class="ghost">Review my survey answers</button>' +
+      (view.isPartyHost ? '<button type="button" id="editHouse" class="ghost">Edit house details</button>' : '') +
+      '<button type="button" id="switchPlayer" class="ghost">Switch profile</button></div></div>';
     document.getElementById('edit').onclick = function () { qIndex = 0; renderSurvey(true); };
     var eh = document.getElementById('editHouse');
     if (eh) eh.onclick = function () { houseMode = true; renderKey = ''; render(); };
+    var sp = document.getElementById('switchPlayer');
+    if (sp) sp.onclick = function () { save(null); if (es) es.close(); renderJoin(); };
     wireHostClaim();
   }
 
@@ -304,7 +364,11 @@
     var m = view.me;
     document.getElementById('bar').classList.remove('hidden');
     var av = document.getElementById('meAvatar');
-    av.textContent = m.avatar;
+    if (m.photoUrl) {
+      av.innerHTML = '<img src="' + esc(m.photoUrl) + '" alt="' + esc(m.name) + '">';
+    } else {
+      av.textContent = m.avatar;
+    }
     av.style.setProperty('--c', m.color);
     document.getElementById('meName').textContent = m.name;
     document.getElementById('meScore').textContent = view.phase === 'lobby' || view.phase === 'setup' ? '' : m.score + ' pts · #' + m.rank;
