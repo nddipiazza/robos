@@ -426,6 +426,8 @@ class SkillsExecutor {
       'speaker': { id: 'home-speaker', label: 'RobOS Home Speaker' },
       'pass manager': { id: 'pass-manager', label: 'RobOS Pass Manager' },
       'hardware keys': { id: 'hardware-keys', label: 'RobOS Hardware Keys' },
+      'messaging': { id: 'messaging', label: 'RobOS Messaging' },
+      'messages': { id: 'messaging', label: 'RobOS Messaging' },
       'smart home': { id: 'smart-home', label: 'RobOS Smart Home' },
       'smart light': { id: 'smart-home', label: 'RobOS Smart Home' },
       'smart tv': { id: 'robos-tv', label: 'RobOS Smart TV Studio' },

@@ -246,6 +246,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 12h10"/><path d="M12 7v10"/><circle cx="8" cy="8" r="1.5" fill="#00bcd4"/><circle cx="16" cy="16" r="1.5" fill="#00bcd4"/></svg>'
   },
   {
+    appId: 'messaging',
+    label: 'RobOS Messaging',
+    category: 'Internet',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M30 18V10a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h3v6l6-6h3" fill="#ec4899" fill-opacity="0.18"/><path d="M39 18H24a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h9l6 6v-6a3 3 0 0 0 3-3V21a3 3 0 0 0-3-3z" stroke="#00bcd4"/><path d="M27 26h9M27 30h5" stroke="#00bcd4"/></svg>'
+  },
+  {
     appId: 'notifications',
     label: 'Notifications',
     category: 'System',

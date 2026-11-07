@@ -137,6 +137,7 @@ const PORT_REGISTRY = {
   'private-networks':  19217,
   'hardware-keys':     19218,
   'camera-watch':      19220,
+  'messaging':         19223,
 };
 
 

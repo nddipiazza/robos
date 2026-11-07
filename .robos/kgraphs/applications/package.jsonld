@@ -336,6 +336,22 @@
       "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
     },
     {
+      "@id": "urn:robos:desktop-app:messaging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Messaging",
+      "dcterms:description": "One window for Messenger, Instagram, Snapchat, Signal and SMS. Personal accounts use each network's web client in an isolated session; connectors (Meta Page inbox, Instagram API with Instagram Login, signal-cli linked device, KDE Connect SMS) feed a unified inbox and the robos-messaging CLI that agents use to read and send. Tokens stay in a 0600 file that Config Sync never copies.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/messaging",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / webview partitions / Meta Graph API / signal-cli / KDE Connect"
+    },
+    {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
@@ -875,6 +891,22 @@
       "robos:repository": "packages/camera-watch",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
+    },
+    {
+      "@id": "urn:robos:desktop-app:messaging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Messaging",
+      "dcterms:description": "One window for Messenger, Instagram, Snapchat, Signal and SMS. Personal accounts use each network's web client in an isolated session; connectors (Meta Page inbox, Instagram API with Instagram Login, signal-cli linked device, KDE Connect SMS) feed a unified inbox and the robos-messaging CLI that agents use to read and send. Tokens stay in a 0600 file that Config Sync never copies.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/messaging",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / webview partitions / Meta Graph API / signal-cli / KDE Connect"
     },
     {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",

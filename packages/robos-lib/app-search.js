@@ -101,6 +101,7 @@ const ALIASES = {
   'game-playthrough': 'game playthrough|dragon warrior|dragon quest|watch gameplay|game checkpoints|replay adventures',
   'robos-tv': 'smart tv|televisions|roku|webos|tizen|tv apps|pair tv|tv remote|moonlight|sunshine',
   'camera-watch': 'cameras|security cameras|ip cameras|cctv|nvr|ispy|onvif|rtsp|motion detection|surveillance|doorbell camera|baby monitor|record video|ptz',
+  'messaging': 'messaging|messages|chat|texting|sms|text messages|messenger|facebook messenger|instagram|instagram dms|direct messages|snapchat|signal|google messages|inbox',
   'smart-home': 'smart home|smart lights|lighting|light bulbs|room lights|hue|color lights|lg thinq|washer|dryer|laundry|fridge|refrigerator|appliances',
   'vpn-sandbox': 'vpn sandbox|isolated network|private browsing|network namespace|kill switch|sandbox apps',
   'vpn-servers': 'vpn servers|vpn providers|openvpn|ipvanish|vpn accounts|vpn locations',

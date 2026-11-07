@@ -380,5 +380,10 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/camera-watch"
     technology: "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
+  - id: "urn:robos:desktop-app:messaging"
+    title: "RobOS Messaging"
+    type: "robos:DesktopApp"
+    repository: "packages/messaging"
+    technology: "Electron 28 / webview partitions / Meta Graph API / signal-cli / KDE Connect"
 
 

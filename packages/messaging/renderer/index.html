@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+  <title>RobOS Messaging</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 48 48" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M30 18V10a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h3v6l6-6h3" fill="#ec4899" fill-opacity="0.18"/><path d="M39 18H24a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h9l6 6v-6a3 3 0 0 0 3-3V21a3 3 0 0 0-3-3z" stroke="#00bcd4"/><path d="M27 26h9M27 30h5" stroke="#00bcd4"/></svg>
+        <span class="brand-name">Messaging</span>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item active" id="nav-inbox" data-view="inbox">
+          <span class="nav-label">Inbox</span>
+          <span class="nav-count" id="inbox-count" hidden></span>
+        </button>
+        <div class="nav-heading">Networks</div>
+        <div id="network-list"></div>
+      </nav>
+
+      <div class="sidebar-foot">
+        <button class="link-button" id="nav-help" data-view="help">How RobOS uses these</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Inbox: conversations from connected networks -->
+      <section class="view" id="view-inbox">
+        <div class="inbox">
+          <div class="conv-pane">
+            <div class="conv-toolbar">
+              <select id="inbox-filter" aria-label="Show conversations from">
+                <option value="">All networks</option>
+              </select>
+              <button class="btn" id="btn-refresh" title="Check for new messages">Refresh</button>
+              <button class="btn primary" id="btn-new">New message</button>
+            </div>
+            <div class="conv-list" id="conv-list"></div>
+            <div class="empty" id="inbox-empty" hidden>
+              <h3>No conversations yet</h3>
+              <p>Connect Signal, SMS, a Facebook Page or an Instagram professional account and their messages show up here. Personal Messenger, Instagram and Snapchat chats stay in their own pages on the left.</p>
+            </div>
+          </div>
+
+          <div class="thread-pane" id="thread-pane">
+            <div class="thread-empty" id="thread-empty">
+              <p>Pick a conversation.</p>
+            </div>
+            <div class="thread" id="thread" hidden>
+              <header class="thread-head">
+                <div>
+                  <div class="thread-title" id="thread-title"></div>
+                  <div class="thread-sub" id="thread-sub"></div>
+                </div>
+              </header>
+              <div class="messages" id="messages"></div>
+              <form class="composer" id="composer">
+                <textarea id="composer-text" rows="2" placeholder="Write a message" aria-label="Message"></textarea>
+                <button class="btn primary" type="submit" id="btn-send">Send</button>
+              </form>
+              <div class="composer-error" id="composer-error" hidden></div>
+            </div>
+
+            <div class="thread new-message" id="new-message" hidden>
+              <header class="thread-head">
+                <div class="thread-title">New message</div>
+              </header>
+              <form class="form" id="new-form">
+                <label>Send with
+                  <select id="new-network"></select>
+                </label>
+                <label>To
+                  <input id="new-to" placeholder="+15551234567" autocomplete="off" />
+                </label>
+                <p class="hint" id="new-hint"></p>
+                <label>Message
+                  <textarea id="new-text" rows="4"></textarea>
+                </label>
+                <div class="form-actions">
+                  <button class="btn" type="button" id="new-cancel">Cancel</button>
+                  <button class="btn primary" type="submit">Send</button>
+                </div>
+                <div class="form-error" id="new-error" hidden></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- One network: its web sign-in and its connector -->
+      <section class="view" id="view-network" hidden>
+        <header class="network-head">
+          <div class="network-title">
+            <span class="dot" id="network-dot"></span>
+            <h2 id="network-name"></h2>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" id="tab-web" data-tab="web">Web sign-in</button>
+            <button class="tab" role="tab" id="tab-api" data-tab="api">Connector</button>
+          </div>
+        </header>
+
+        <div class="network-body">
+          <div class="panel" id="panel-web">
+            <div class="web-host" id="web-host"></div>
+            <div class="card intro" id="web-intro" hidden>
+              <h3 id="web-intro-title"></h3>
+              <p id="web-intro-text"></p>
+              <div class="form-actions start">
+                <button class="btn primary" id="btn-web-on">Open the web sign-in</button>
+              </div>
+            </div>
+            <div class="card intro" id="web-none" hidden>
+              <h3>No web client</h3>
+              <p id="web-none-text"></p>
+            </div>
+            <div class="web-bar" id="web-bar" hidden>
+              <span class="muted" id="web-bar-text"></span>
+              <span class="spacer"></span>
+              <button class="btn small" id="btn-web-reload">Reload</button>
+              <button class="btn small" id="btn-web-off">Close</button>
+              <button class="btn small danger" id="btn-web-signout">Sign out</button>
+            </div>
+          </div>
+
+          <div class="panel" id="panel-api" hidden>
+            <div class="card" id="api-card"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-help" hidden>
+        <div class="help">
+          <h2>How RobOS uses these</h2>
+          <p>Each network can be reached in up to two ways.</p>
+          <h3>Web sign-in</h3>
+          <p>The network's own website, signed in here with your personal account. Every network gets its own private browser storage, so Messenger never sees your Instagram or Snapchat sign-in. RobOS shows the unread count and passes on the network's notifications, but cannot read or send these chats itself.</p>
+          <h3>Connector</h3>
+          <p>A link RobOS can use itself. Conversations show in the Inbox, and RobOS agents and scripts can read and send with the <code>robos-messaging</code> command:</p>
+          <pre>robos-messaging conversations
+robos-messaging read signal:+15551234567
+robos-messaging send --network signal --to +15551234567 "On my way"</pre>
+          <table class="help-table">
+            <thead><tr><th>Network</th><th>Web sign-in</th><th>Connector</th></tr></thead>
+            <tbody>
+              <tr><td>Messenger</td><td>Personal account</td><td>A Facebook Page you manage</td></tr>
+              <tr><td>Instagram</td><td>Personal account</td><td>A business or creator account</td></tr>
+              <tr><td>Snapchat</td><td>Personal account</td><td>None: Snapchat has no messaging API</td></tr>
+              <tr><td>Signal</td><td>None: Signal has no website</td><td>signal-cli, linked to your phone</td></tr>
+              <tr><td>SMS</td><td>Google Messages for Web</td><td>KDE Connect, send only</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">Access tokens are kept in <code>~/.config/robos/messaging/secrets.json</code>, readable only by you, and Config Sync never copies them or your messages.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

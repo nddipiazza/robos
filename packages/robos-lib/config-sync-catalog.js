@@ -171,6 +171,8 @@ const EXCLUDE = [
   // Feit / Smart Life: the Tuya cloud keys and each light's local key. Every device
   // fetches its own from the Tuya cloud project, so they never need to travel.
   'config/tuya.json',
+  // RobOS Messaging: access tokens stay on this computer, and so do the messages.
+  'config/messaging/secrets.json', 'config/messaging/messages-cache.json',
   // Backups apps make of their own settings before rewriting them.
   'config/*.bak-*',
   // Camera Watch's motion event log points at this machine's recordings.
