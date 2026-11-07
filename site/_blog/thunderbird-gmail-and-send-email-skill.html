@@ -1,0 +1,86 @@
+---
+title: "Thunderbird on Windows: Software Center install, automatic Gmail setup, and an AI skill that sends mail"
+nav_label: "Thunderbird + send-email skill"
+date: 2026-11-07 20:00:00 +0000
+date_label: "Nov 7, 2026"
+tags:
+  - "Software Center"
+  - "Cloud Accounts"
+  - "Thunderbird"
+  - "AI Skills"
+summary: "Mozilla Thunderbird now installs on Windows from the <a href=\"/software-center/\">Software Center</a> through WinGet, and the Google account you add in <a href=\"/cloud-accounts/\">Cloud Accounts</a> sets up Gmail, Calendar and Contacts in it on Windows and macOS, not only Linux. Thunderbird has no SDK that outside programs can call, so we built the <strong>RobOS Thunderbird Bridge</strong>: a small Thunderbird add-on plus a helper that Thunderbird starts. Through it, the new <code>/send-email-thunderbird</code> skill sends mail from your own Gmail account. Tested end to end on a Windows 11 laptop."
+description: "Thunderbird now installs from the RobOS Software Center on Windows, a RobOS Google account sets up Gmail in it automatically, and a new AI skill sends email through Thunderbird with a MailExtension add-on and native messaging."
+og_image: /assets/blog/thunderbird-gmail-and-send-email-skill/software-center-thunderbird.png
+og_image_alt: "RobOS Software Center on Windows showing Mozilla Thunderbird as installed through WinGet package Mozilla.Thunderbird"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/thunderbird-gmail-and-send-email-skill/software-center-thunderbird.png' | relative_url }}" alt="RobOS Software Center on Windows. The Mozilla Thunderbird card is highlighted, shows the source WinGet · Mozilla.Thunderbird, an Installed badge, and Update and Uninstall buttons" loading="lazy" width="884" height="585">
+    <figcaption><strong>Installed from the Software Center.</strong> The Software Center running from source on Windows 11, after its own Install button put Thunderbird 159.0 on the machine through WinGet and checked that it was there.</figcaption>
+  </figure>
+
+  <p><strong>The goal.</strong> RobOS already had a Google account → Thunderbird integration: add your Google account in <a href="{{ '/cloud-accounts/' | relative_url }}">Cloud Accounts</a> and RobOS writes the Gmail, Google Calendar and Google Contacts settings into Thunderbird for you. It only worked on Linux. We wanted three things on a Windows laptop: install Thunderbird from the RobOS Software Center, connect it to Gmail with no manual account setup, and give AI agents a skill that sends email through it.</p>
+
+  <h2>1. Thunderbird in the Software Center</h2>
+  <p>Thunderbird was already in the catalog, but on Windows its card said "No Windows installer". On Windows the <a href="{{ '/software-center/' | relative_url }}">Software Center</a> installs everything through WinGet, using exact package IDs from one table in <code>packages/software-center/windows-tools.js</code>. Two lines fixed it: <code>thunderbird: 'Mozilla.Thunderbird'</code> for the install, and a display name pattern so the Software Center can tell it is installed. The install runs <code>winget install --id Mozilla.Thunderbird --exact --source winget</code> with the agreement and silent flags, then checks that WinGet lists it.</p>
+
+  <h2>2. Google account → Thunderbird, now on Windows</h2>
+  <p>The setup code, <code>packages/robos-lib/thunderbird-google.js</code>, assumed Linux everywhere: the profile folder in <code>~/.thunderbird</code>, the program found with <code>which</code>, and an install through the package manager. It now knows the profile folders on all three systems (<code>%APPDATA%\Thunderbird</code>, <code>~/Library/Thunderbird</code> and <code>~/.thunderbird</code>), finds <code>thunderbird.exe</code> under Program Files, and installs with WinGet when it is missing. Testing it on a real machine found two more bugs:</p>
+  <ul>
+    <li><strong>Windows ignored the profile we made.</strong> Since version 67, Thunderbird on Windows and macOS gives each install its own profile. A new install only uses an existing default profile if that profile's <code>compatibility.ini</code> says it was last used by the same install. Ours had none, so the first start created a new, empty profile, and the Gmail settings sat in a profile nobody opened. RobOS now writes <code>compatibility.ini</code> (version and build ID, OS and platform, and the install folder) when it creates a profile, and Thunderbird adopts it: <code>profiles.ini</code> gets an <code>[Install…]</code> section that points at the RobOS profile.</li>
+    <li><strong>The account was never in the account list.</strong> RobOS wrote the Gmail server settings into <code>user.js</code>, but not into <code>mail.accountmanager.accounts</code>, the list of accounts Thunderbird actually loads. Putting the list in <code>user.js</code> is no good either, because Thunderbird applies <code>user.js</code> at every start and would drop any account you add yourself. RobOS now merges its accounts into the lists in <code>prefs.js</code>, and only while Thunderbird is closed. If Thunderbird is running, it says so instead of writing to a file Thunderbird is about to overwrite.</li>
+  </ul>
+  <p>Gmail uses OAuth, so the one step left to you is signing in to Google in the window Thunderbird opens. Your RobOS sign-in only gives RobOS access to Google Drive, and RobOS never stores or types your password. After that, the window title read <em>Inbox - Gmail (…) - Mozilla Thunderbird</em> and all the Gmail folders synced.</p>
+
+  <h2>3. Sending mail from an AI skill</h2>
+  <p>We looked for a Thunderbird SDK and there isn't one that outside programs can call. The supported way to drive Thunderbird from code is its add-on interface, MailExtensions, which only add-ons can use. <code>messenger.compose.beginNew()</code> opens a message and <code>messenger.compose.sendMessage(tab, {mode: 'sendNow'})</code> sends it through the account's own SMTP server and OAuth login, exactly as if you had clicked Send. To make that reachable from a script, the RobOS Thunderbird Bridge has three parts:</p>
+  <ol>
+    <li><strong>An add-on</strong> (<code>packages/robos-lib/thunderbird-bridge/extension/</code>) with the permissions <code>compose.send</code>, <code>accountsRead</code> and <code>nativeMessaging</code>. It answers <code>ping</code>, <code>identities</code> and <code>send</code>, picks the default Gmail identity unless you give a From address, and attaches files.</li>
+    <li><strong>A native messaging host</strong> (<code>host.cjs</code>). Thunderbird starts it when the add-on calls <code>connectNative()</code>. It talks to Thunderbird over stdin/stdout and listens on a per-user named pipe (<code>\\.\pipe\robos-thunderbird-bridge-&lt;user&gt;</code>) or Unix socket. No network port is opened, so only programs running as you can reach it. Its log records the action and the number of recipients, never addresses or message text.</li>
+    <li><strong>A CLI and Node API</strong> (<code>packages/robos-lib/thunderbird-mail.js</code>): <code>install</code>, <code>status</code> and <code>send</code> with <code>--to/--cc/--bcc</code>, HTML bodies, attachments and send-later. If Thunderbird is closed, it starts it and waits for the bridge.</li>
+  </ol>
+  <p><code>thunderbird-mail.js install</code> copies the add-on into <code>~/.config/robos/thunderbird-bridge/</code>, registers the host (on Windows under <code>HKCU\Software\Mozilla\NativeMessagingHosts</code>), and puts a pointer file for the add-on in the profile's <code>extensions</code> folder.</p>
+
+  <p><strong>You approve the add-on, not RobOS.</strong> Thunderbird keeps add-ons it didn't install itself switched off until you turn them on and accept their permissions. Our first version set two Thunderbird settings so add-ons like ours would switch on by themselves. Claude Code's safety check stopped that change, and it was right to: those settings would have stayed for every add-on that ever lands in the profile, which is exactly how malware gets into a mail program. Now you turn on <em>RobOS Thunderbird Bridge</em> once in <em>Add-ons and Themes</em>, and a test checks that RobOS never writes those settings. This add-on can send mail as you, so that question should be yours to answer.</p>
+
+  <div class="blog-log"># once: install the bridge, then turn the add-on on in Thunderbird
+node packages/robos-lib/thunderbird-mail.js install
+
+$ node packages/robos-lib/thunderbird-mail.js status
+{
+  "thunderbirdVersion": "Mozilla Thunderbird 159.0",
+  "bridgeInstalled": true,
+  "socket": "\\\\.\\pipe\\robos-thunderbird-bridge-&lt;user&gt;",
+  "running": true,
+  "bridge": { "bridge": "1.0.0", "thunderbird": "159.0" },
+  "identities": [ { "email": "you@gmail.com", "accountType": "imap", ... } ]
+}
+
+$ node packages/robos-lib/thunderbird-mail.js send --to you@gmail.com \
+    --subject "RobOS Thunderbird Bridge test" --body "This is a test email ..."
+{ "ok": true, "mode": "sendNow", "headerMessageId": "b590daae-…@gmail.com", "from": "you@gmail.com" }</div>
+  <p>The test message took about four seconds from request to Gmail's reply, and it arrived in the inbox. The bridge log for that run, in full:</p>
+  <div class="blog-log">listening on \\.\pipe\robos-thunderbird-bridge-&lt;user&gt; (pid 16840)
+request ping
+reply ping ok=true
+request identities
+reply identities ok=true
+request ping
+reply ping ok=true
+request send to=1 recipient(s)
+reply send ok=true</div>
+
+  <h2>The skill</h2>
+  <p><code>/send-email-thunderbird</code> (<code>plugins/robos/skills/send-email-thunderbird/SKILL.md</code>) works the same in Claude Code, Codex, Antigravity, Copilot and Gemini CLI. It checks <code>status</code>, does the one-time setup if needed, and sends. Its rules require the agent to show you the recipients, subject and body and get a clear yes before anything is sent.</p>
+
+  <div class="blog-log"># tests: host relay against a fake Thunderbird, setup on Windows/macOS paths, prefs.js merge, WinGet table
+node --test packages/robos-lib/thunderbird-mail.test.cjs packages/robos-lib/cloud-accounts.test.cjs \
+  packages/robos-test/tests/google-calendar/unit.test.js packages/software-center/windows-tools.test.js
+# ℹ tests 31  ℹ pass 31  ℹ fail 0</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/software-center/' | relative_url }}">Software Center →</a>
+  <a href="{{ '/cloud-accounts/' | relative_url }}">Cloud Accounts →</a>
+  <a href="{{ '/google-calendar/' | relative_url }}">Google Calendar →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/46a334edb980b1ab87d7722cdc8afb8d354b7eb8">46a334ed</a></span>
+</div>
