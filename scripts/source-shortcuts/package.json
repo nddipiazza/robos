@@ -1,0 +1,9 @@
+{
+  "name": "robos-source-shortcuts",
+  "private": true,
+  "description": "Shared Electron that runs RobOS apps from this clone for the (From Source) shortcuts. Same version App Manager runs every installed app on.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "electron": "33.4.11"
+  }
+}

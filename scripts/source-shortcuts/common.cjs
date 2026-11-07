@@ -8,6 +8,12 @@ const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const repo = path.resolve(__dirname, '../..');
 const host = path.join(__dirname, 'source-host.cjs');
 
+/** The shared Electron every shortcut runs (scripts/source-shortcuts/node_modules/electron), or null. */
+function sharedElectron() {
+  const pkg = path.join(__dirname, 'node_modules/electron');
+  try { delete require.cache[require.resolve(pkg)]; const bin = require(pkg); return require('node:fs').existsSync(bin) ? bin : null; } catch { return null; }
+}
+
 /** "RobOS Dev Central (From Source)": Start menu and GNOME search find every app by typing "RobOS". */
 const displayName = label => `${/^robos\b/i.test(label) ? label : `RobOS ${label}`} (From Source)`;
 const fileName = label => displayName(label).replace(/[<>:"/\\|?*]/g, '_');
@@ -37,4 +43,4 @@ function locations({ platform = process.platform, home = os.homedir(), env = pro
   return { data: path.join(xdg, 'robos'), menu: path.join(xdg, 'applications'), icons: path.join(xdg, 'icons/hicolor') };
 }
 
-module.exports = { ID, repo, host, displayName, fileName, appUserModelId, wmClass, iconName, icoName, locations };
+module.exports = { ID, repo, host, sharedElectron, displayName, fileName, appUserModelId, wmClass, iconName, icoName, locations };

@@ -4,20 +4,22 @@
 // RobOS app from this git clone. Every entry is named "RobOS <App> (From Source)" and uses
 // the app's own icon on the menu entry, the desktop icon, the taskbar/dock and the window.
 //
-//   node scripts/source-shortcuts/source-shortcuts.cjs install [app-id ...] [--desktop] [--no-install] [--dry-run]
+//   node scripts/source-shortcuts/source-shortcuts.cjs install [app-id ...] [--desktop] [--dry-run]
 //   node scripts/source-shortcuts/source-shortcuts.cjs remove  [app-id ...]
 //   node scripts/source-shortcuts/source-shortcuts.cjs list
 //
 // With no app IDs, install covers every app and remove covers every entry it created.
-// Launching goes through source-host.cjs with the package's own Electron, which npm installs
-// on demand (skip with --no-install). What was created is recorded in
-// <RobOS data dir>/source-shortcuts.json so remove deletes exactly that.
+// Every shortcut runs source-host.cjs on one shared Electron (installed here once, by npm, in
+// scripts/source-shortcuts/node_modules). Apps are not npm-installed up front: the host
+// installs a package's dependencies the first time its shortcut is opened. What was created
+// is recorded in <RobOS data dir>/source-shortcuts.json so remove deletes exactly that.
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync, execFileSync } = require('node:child_process');
 const common = require('./common.cjs');
 const icons = require('./icons.cjs');
+const { missingDeps } = require('./deps.cjs');
 const { parseList, formatList } = require('../../packages/app-manager/lib/gnome.cjs');
 
 const MENU_CATEGORIES = { 'Everyday & business': 'Office', 'Games & game tools': 'Game', 'AI & agents': 'Development',
@@ -25,8 +27,11 @@ const MENU_CATEGORIES = { 'Everyday & business': 'Office', 'Games & game tools':
 
 /** Every Electron app in packages/, named the way App Manager names it. */
 function catalog(root = common.repo) {
-  return require('../app-manager/publish-catalog.cjs').sourceCatalog(root).map(item => ({
-    id: item.sourceId, label: item.label, group: item.group, description: item.description }));
+  const { sourceCatalog, dependencies } = require('../app-manager/publish-catalog.cjs');
+  return sourceCatalog(root).map(item => ({ id: item.sourceId, label: item.label, group: item.group, description: item.description,
+    // Sibling packages the app loads by path (robos-lib, robos-ui, …); their npm dependencies
+    // are set up on first launch along with the app's. Same scan App Manager packages apps by.
+    libs: () => dependencies(item.id, root).filter(lib => fs.existsSync(path.join(root, 'packages', lib, 'package.json'))) }));
 }
 
 // ── Desktop Entry escaping (same rules as packages/app-manager/lib/integration.cjs) ──
@@ -39,15 +44,18 @@ function defaultSystem() {
   const quiet = (cmd, args) => { try { return execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15000, windowsHide: true }).trim(); } catch { return null; } };
   return {
     run: quiet,
-    /** Path to the package's Electron binary, installing the package's dependencies when allowed. */
-    electron(dir, { install, log }) {
-      const find = () => { try { const bin = require(path.join(dir, 'node_modules/electron')); return fs.existsSync(bin) ? bin : null; } catch { return null; } };
-      let bin = find();
-      if (!bin && install) {
-        log(`  npm install in packages/${path.basename(dir)} …`);
-        const result = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['install', '--no-audit', '--no-fund'],
-          { cwd: dir, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32', windowsHide: true });
-        if (result.status === 0) { delete require.cache[require.resolve(path.join(dir, 'node_modules/electron'))]; bin = find(); }
+    /** The shared Electron all shortcuts run, npm-installed into scripts/source-shortcuts on first use. */
+    sharedElectron({ log }) {
+      let bin = common.sharedElectron();
+      if (!bin) {
+        log('Installing the shared Electron for (From Source) shortcuts (once) …');
+        spawnSync('npm install --no-audit --no-fund --package-lock=false', { cwd: __dirname, stdio: ['ignore', 'ignore', 'inherit'], shell: true, windowsHide: true });
+        // npm 11 can hold back Electron's postinstall (the binary download), and its unzip step
+        // breaks on recent Node; fetch-electron.cjs does that part with the OS's unzip tool.
+        if (!common.sharedElectron() && fs.existsSync(path.join(__dirname, 'node_modules/electron/package.json'))) {
+          spawnSync(process.execPath, [path.join(__dirname, 'fetch-electron.cjs')], { stdio: ['ignore', 'inherit', 'inherit'], windowsHide: true });
+        }
+        bin = common.sharedElectron();
       }
       return bin;
     },
@@ -170,15 +178,20 @@ function windowsLink(app, { dir, electron, loc, desktopDir }) {
   return { links, icon: icon === electron ? null : icon };
 }
 
-function install({ ids = [], desktop = false, npm = true, dryRun = false, platform = process.platform, home = os.homedir(),
-  env = process.env, sys = defaultSystem(), apps = catalog(), log = console.log } = {}) {
+function install({ ids = [], desktop = false, dryRun = false, platform = process.platform, home = os.homedir(),
+  env = process.env, sys = defaultSystem(), apps = catalog(), log = console.log, node = process.execPath } = {}) {
   const loc = common.locations({ platform, home, env });
   const byId = new Map(apps.map(app => [app.id, app]));
   const unknown = ids.filter(id => !byId.has(id));
   if (unknown.length) throw new Error(`Unknown app${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')} (see "list")`);
   const chosen = ids.length ? ids.map(id => byId.get(id)) : apps;
   const manifest = readManifest(loc);
-  const done = [], skipped = [], windows = [];
+  const done = [], windows = [];
+  const electron = dryRun ? null : sys.sharedElectron({ log });
+  if (!dryRun && !electron) throw new Error(`Could not install Electron in ${__dirname} (run npm install there and retry)`);
+  // The host puts this Node first on PATH when it installs an app's dependencies, since a
+  // desktop menu's PATH can lack a Node installed by nvm, fnm, Volta and the like.
+  manifest.node = node;
   let desktopPath = null;
   const desktopFor = () => desktopPath ??= platform === 'win32' ? (sys.windowsDesktop() || path.join(home, 'Desktop')) :
     platform === 'darwin' ? loc.desktop : (sys.linuxDesktop() || path.join(home, 'Desktop'));
@@ -188,23 +201,21 @@ function install({ ids = [], desktop = false, npm = true, dryRun = false, platfo
     // A desktop icon, once asked for, is kept when the entry is refreshed later.
     const wantDesktop = desktop || !!old?.desktop;
     if (dryRun) { log(`would install ${common.displayName(app.label)}${wantDesktop ? ' (+ desktop icon)' : ''}`); continue; }
-    const electron = sys.electron(dir, { install: npm, log });
-    if (!electron) { skipped.push(app.id); log(`  skip ${app.id}: no Electron in packages/${app.id}/node_modules (run npm install there${npm ? '' : ' or drop --no-install'})`); continue; }
     const options = { dir, electron, loc, desktopDir: wantDesktop ? desktopFor() : null };
     let files;
     if (platform === 'win32') {
       const { links, icon } = windowsLink(app, options);
-      windows.push({ app, links, electron });
+      windows.push({ app, links });
       files = [...links.map(link => link.file), ...(icon ? [icon] : [])];
     } else files = platform === 'darwin' ? macApp(app, options) : linuxApp(app, options);
     for (const file of old?.files || []) if (!files.includes(file)) rm(file);
-    manifest.apps[app.id] = { label: app.label, files, desktop: wantDesktop, repo: common.repo };
+    manifest.apps[app.id] = { label: app.label, files, desktop: wantDesktop, repo: common.repo, libs: app.libs ? app.libs() : [] };
     done.push(app);
   }
-  if (dryRun) return { done, skipped };
+  if (dryRun) return { done };
   if (platform === 'win32' && windows.length) {
     fs.mkdirSync(loc.menu, { recursive: true });
-    const results = sys.writeLinks(windows[0].electron, windows.flatMap(item => item.links));
+    const results = sys.writeLinks(electron, windows.flatMap(item => item.links));
     const failed = new Set(results.filter(result => !result.ok).map(result => result.file));
     for (const { app, links } of windows) if (links.some(link => failed.has(link.file))) {
       log(`  ${app.id}: Windows refused to write ${links.filter(link => failed.has(link.file)).map(link => link.file).join(', ')}`);
@@ -226,7 +237,7 @@ function install({ ids = [], desktop = false, npm = true, dryRun = false, platfo
   }
   writeManifest(loc, manifest);
   for (const app of done) log(`  ✓ ${common.displayName(app.label)}`);
-  return { done, skipped, menu: loc.menu };
+  return { done, menu: loc.menu };
 }
 
 function remove({ ids = [], platform = process.platform, home = os.homedir(), env = process.env, sys = defaultSystem(), log = console.log } = {}) {
@@ -258,7 +269,9 @@ function list({ platform = process.platform, home = os.homedir(), env = process.
   const manifest = readManifest(common.locations({ platform, home, env }));
   for (const app of apps) {
     const dir = path.join(common.repo, 'packages', app.id);
-    const deps = fs.existsSync(path.join(dir, 'node_modules/electron')) ? 'deps' : '    ';
+    // "setup" = dependencies get installed the first time the app is opened.
+    const libs = manifest.apps[app.id]?.libs || [];
+    const deps = [dir, ...libs.map(lib => path.join(common.repo, 'packages', lib))].some(d => missingDeps(d).length) ? 'setup' : 'ready';
     const mark = manifest.apps[app.id] ? (manifest.apps[app.id].desktop ? 'menu+desktop' : 'menu') : '-';
     log(`${app.id.padEnd(34)} ${deps}  ${mark.padEnd(12)}  ${common.displayName(app.label)}`);
   }
@@ -266,26 +279,25 @@ function list({ platform = process.platform, home = os.homedir(), env = process.
 
 function main(argv) {
   const flags = new Set(argv.filter(arg => arg.startsWith('--')));
-  const known = new Set(['--desktop', '--no-install', '--dry-run', '--help']);
+  const known = new Set(['--desktop', '--dry-run', '--help']);
   const bad = [...flags].filter(flag => !known.has(flag));
   const [command = 'install', ...ids] = argv.filter(arg => !arg.startsWith('--'));
   if (flags.has('--help') || bad.length || !['install', 'remove', 'list'].includes(command)) {
-    console.log(`Usage: node scripts/source-shortcuts/source-shortcuts.cjs <install|remove|list> [app-id ...] [--desktop] [--no-install] [--dry-run]
+    console.log(`Usage: node scripts/source-shortcuts/source-shortcuts.cjs <install|remove|list> [app-id ...] [--desktop] [--dry-run]
   install   Add "RobOS <App> (From Source)" to the Start menu / app grid / ~/Applications (all apps when no IDs).
+            Takes seconds: each app's dependencies are installed the first time it is opened.
             --desktop     also put an icon on the desktop
-            --no-install  skip apps whose packages/<id>/node_modules has no Electron instead of running npm install
             --dry-run     only print what would be installed
   remove    Delete the entries, desktop icons and icon files this script created (all when no IDs).
-  list      Show every app, whether its dependencies are installed, and which shortcuts exist.`);
+  list      Show every app, "ready" or "setup" (installs on first launch), and which shortcuts exist.`);
     if (bad.length) console.error(`Unknown option: ${bad.join(', ')}`);
     return flags.has('--help') && !bad.length ? 0 : 2;
   }
   if (command === 'list') { list(); return 0; }
   if (command === 'remove') { remove({ ids }); return 0; }
   console.log(`RobOS (From Source) shortcuts for ${common.repo}`);
-  const { skipped, menu } = install({ ids, desktop: flags.has('--desktop'), npm: !flags.has('--no-install'), dryRun: flags.has('--dry-run') });
+  const { menu } = install({ ids, desktop: flags.has('--desktop'), dryRun: flags.has('--dry-run') });
   if (menu) console.log(`\nEntries: ${menu}`);
-  if (skipped.length) console.log(`Skipped (no dependencies): ${skipped.join(', ')}`);
   return process.exitCode || 0;
 }
 

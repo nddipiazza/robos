@@ -1,10 +1,10 @@
 # Run RobOS Apps From Source & Install "(From Source)" Shortcuts
 
-Run RobOS apps from this git clone, and create `RobOS <App> (From Source)` Start menu (Windows), GNOME app grid (Linux) or `~/Applications` (macOS) entries, plus optional desktop icons. Each one uses the app's own icon on the entry, the desktop icon, the taskbar/dock button and the window.
+Run RobOS apps from this git clone, and create `RobOS <App> (From Source)` Start menu (Windows), GNOME app grid (Linux) or `~/Applications` (macOS) entries, plus optional desktop icons. Creating them takes seconds: each app installs its own dependencies the first time it is opened. Each one uses the app's own icon on the entry, the desktop icon, the taskbar/dock button and the window.
 
 ## Input
 
-$ARGUMENTS: `install [app-id ...] [--desktop] [--no-install] [--dry-run]`, `remove [app-id ...]`, or `list`. With no arguments, run `list` and ask which apps to add and whether to add desktop icons.
+$ARGUMENTS: `install [app-id ...] [--desktop] [--dry-run]`, `remove [app-id ...]`, or `list`. With no arguments, run `list` and ask which apps to add and whether to add desktop icons.
 
 ## Procedure
 
