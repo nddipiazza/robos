@@ -52,7 +52,8 @@
     "robos-blog",
     "jrpg-parse-assets",
     "jrpg-generate-art",
-    "media-watch-status"
+    "media-watch-status",
+    "send-email-thunderbird"
   ],
   "commands": [
     "view-task-plan",
@@ -98,7 +99,8 @@
     "blog",
     "jrpg-parse-assets",
     "jrpg-generate-art",
-    "media-watch-status"
+    "media-watch-status",
+    "send-email-thunderbird"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

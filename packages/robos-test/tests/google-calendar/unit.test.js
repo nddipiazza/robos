@@ -14,8 +14,9 @@ process.env.HOME = TMP_HOME;
 const ca = require(path.resolve(__dirname, '../../../robos-lib/cloud-accounts'));
 const tb = require(path.resolve(__dirname, '../../../robos-lib/thunderbird-google'));
 
-// mockBinaryPath: null skips probing for a real Thunderbird install.
-const OPTS = { homeDir: TMP_HOME, mockBinaryPath: null };
+// mockBinaryPath: null skips probing for a real Thunderbird install; platform pins the
+// Linux profile layout (~/.thunderbird) that readUserJs() reads on every host OS.
+const OPTS = { homeDir: TMP_HOME, mockBinaryPath: null, platform: 'linux' };
 
 function readUserJs() {
   const userJs = path.join(TMP_HOME, '.thunderbird', 'robos001.default-release', 'user.js');
