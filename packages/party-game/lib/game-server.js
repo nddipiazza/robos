@@ -22,10 +22,22 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
   '.wav': 'audio/wav',
   '.mp3': 'audio/mpeg',
   '.mp4': 'video/mp4',
 };
+
+let defaultPeopleStore = null;
+for (const p of [
+  path.join(__dirname, '..', '..', 'robos-lib', 'people-store'),
+  '/usr/local/share/robos/robos-lib/people-store',
+]) {
+  try { defaultPeopleStore = require(p); break; } catch {}
+}
 
 let QRCode = null;
 try {
@@ -96,10 +108,45 @@ function sendJson(res, status, body) {
   res.end(data);
 }
 
-function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarrationAudio = () => null, log = () => {} }) {
+function createGameServer({
+  engine,
+  port = 19213,
+  host = '0.0.0.0',
+  getNarrationAudio = () => null,
+  peopleStore = defaultPeopleStore,
+  log = () => {},
+}) {
   const clients = new Set(); // { res, kind: 'tv'|'player'|'host', screen, guestId }
   let server = null;
   let tickTimer = null;
+
+  function listUserProfiles() {
+    if (!peopleStore) return [];
+    try {
+      const people = peopleStore.loadAllPeople();
+      return people.map((p) => {
+        const gp = peopleStore.buildPartyGuestProfile(p);
+        const existing = engine.state.guests.find((g) => g.userId === p.uid || g.name.toLowerCase() === String(p.name || '').toLowerCase());
+        return {
+          uid: p.uid,
+          name: p.name,
+          title: p.title || '',
+          gamerTag: gp.gamerTag || '',
+          archetype: gp.archetype || '',
+          rpgCharacter: gp.rpgCharacter || '',
+          avatar: gp.avatar,
+          color: gp.color,
+          photoUrl: p.photo ? `/api/user-photo/${encodeURIComponent(p.uid)}` : null,
+          preferredRole: gp.preferredRole || null,
+          surveyAnsweredCount: Object.keys(gp.surveyAnswers || {}).length,
+          hasHouseDefaults: Boolean(gp.houseDefaults && Object.keys(gp.houseDefaults).length),
+          joinedGuestId: existing ? existing.id : null,
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
 
   function viewFor(client) {
     if (client.kind === 'player') return engine.playerView(client.guestId);
@@ -222,6 +269,21 @@ function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarration
       }
 
       if (p === '/api/health') return sendJson(res, 200, { ok: true, phase: engine.state.phase });
+      if (p === '/api/users') return sendJson(res, 200, { ok: true, users: listUserProfiles() });
+      if (p.startsWith('/api/user-photo/')) {
+        const uid = decodeURIComponent(p.slice('/api/user-photo/'.length)).replace(/[^a-zA-Z0-9_-]/g, '');
+        if (!peopleStore || !uid) return sendJson(res, 404, { error: 'no photo' });
+        const person = peopleStore.getPerson(uid);
+        if (!person || !person.photo) return sendJson(res, 404, { error: 'no photo' });
+        const candidates = [
+          person.photo,
+          path.join(peopleStore.PHOTOS_DIR || '', path.basename(person.photo)),
+          path.join(__dirname, '..', '..', 'people-directory', 'assets', 'photos', path.basename(person.photo)),
+        ];
+        const found = candidates.find((c) => c && fs.existsSync(c));
+        if (!found) return sendJson(res, 404, { error: 'photo file not found' });
+        return sendFileWithRanges(req, res, found);
+      }
     }
 
     if (req.method === 'POST' && p.startsWith('/api/')) {
@@ -235,6 +297,18 @@ function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarration
         if (p === '/api/join') {
           const g = await engine.addGuest({ name: body.name });
           log({ msg: 'guest joined', name: g.name });
+          return sendJson(res, 200, { ok: true, guestId: g.id, token: g.token });
+        }
+        if (p === '/api/join-user') {
+          if (!peopleStore) throw new Error('RobOS Users store unavailable');
+          const person = peopleStore.getPerson(body.uid);
+          if (!person) throw new Error('RobOS user profile not found');
+          const profile = peopleStore.buildPartyGuestProfile(person);
+          const g = await engine.onboardUser(profile, {
+            setAsPartyHost: Boolean(body.setAsPartyHost),
+            applyHouse: true,
+          });
+          log({ msg: 'robos user onboarded', uid: person.uid, name: g.name });
           return sendJson(res, 200, { ok: true, guestId: g.id, token: g.token });
         }
         const g = engine.authGuest(body.guestId, body.token);

@@ -33,6 +33,9 @@ module.exports = defineMiniGame({
   buildRounds(ctx, count) {
     const { guests, shuffle } = ctx;
     let items = (ctx.script?.trivia || []).filter((t) => guests.some((g) => g.id === t.guestId));
+    if (!items.length) {
+      items = guests.flatMap((g) => (g.customTrivia || []).map((t) => ({ ...t, guestId: g.id })));
+    }
     // Spread experts across guests before repeating anyone.
     const ordered = [];
     const byGuest = {};

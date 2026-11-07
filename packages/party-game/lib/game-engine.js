@@ -242,11 +242,39 @@ function createPartyEngine({
     const qs = questions();
     g.answers = survey.normalizeAnswers(qs, g.answers);
     g.traits = survey.scoreTraits(qs, g.answers);
-    g.facts = survey.extractFacts(qs, g.answers);
+    const surveyFacts = survey.extractFacts(qs, g.answers);
+    const customFacts = (g.customFacts || [])
+      .filter((f) => f && (f.answer || f.text))
+      .map((f, i) => ({
+        questionId: String(f.id || `profile-fact-${i + 1}`),
+        kind: 'text',
+        interest: Boolean(f.interest),
+        prompt: String(f.prompt || 'About them'),
+        answer: String(f.answer || f.text),
+        text: String(f.text || f.answer),
+      }));
+    g.facts = [...surveyFacts, ...customFacts];
     g.surveyComplete = survey.surveyProgress(qs, g.answers).complete;
   }
 
-  async function addGuest({ name } = {}) {
+  async function addGuest({
+    name,
+    userId = null,
+    avatar = null,
+    color = null,
+    photoUrl = null,
+    gamerTag = null,
+    archetype = null,
+    preferredRole = null,
+    surveyAnswers = null,
+    customFacts = null,
+    customTrivia = null,
+    customSuperlatives = null,
+    customBluffs = null,
+    customQuests = null,
+    houseDefaults = null,
+    profileSummary = null,
+  } = {}) {
     if (!['setup', 'lobby'].includes(state.phase)) throw new Error('The game already started');
     const clean = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 24);
     if (!clean) throw new Error('Name is required');
@@ -258,10 +286,22 @@ function createPartyEngine({
     const g = {
       id: `g_${crypto.randomBytes(4).toString('hex')}`,
       token: crypto.randomBytes(12).toString('hex'),
+      userId: userId ? String(userId) : null,
       name: clean,
-      avatar: AVATARS[i % AVATARS.length],
-      color: COLORS[i % COLORS.length],
-      answers: {},
+      gamerTag: gamerTag ? String(gamerTag) : null,
+      archetype: archetype ? String(archetype) : null,
+      avatar: avatar || AVATARS[i % AVATARS.length],
+      color: color || COLORS[i % COLORS.length],
+      photoUrl: photoUrl || null,
+      preferredRole: preferredRole || null,
+      answers: surveyAnswers && typeof surveyAnswers === 'object' ? { ...surveyAnswers } : {},
+      customFacts: Array.isArray(customFacts) ? [...customFacts] : [],
+      customTrivia: Array.isArray(customTrivia) ? [...customTrivia] : [],
+      customSuperlatives: Array.isArray(customSuperlatives) ? [...customSuperlatives] : [],
+      customBluffs: Array.isArray(customBluffs) ? [...customBluffs] : [],
+      customQuests: Array.isArray(customQuests) ? [...customQuests] : [],
+      houseDefaults: houseDefaults && typeof houseDefaults === 'object' ? { ...houseDefaults } : {},
+      profileSummary: profileSummary ? String(profileSummary) : null,
       traits: {},
       facts: [],
       surveyComplete: false,
@@ -269,8 +309,66 @@ function createPartyEngine({
       score: 0,
       joinedAt: new Date(now()).toISOString(),
     };
+    refreshGuestSurvey(g);
     state.guests.push(g);
-    if (state.phase === 'lobby') await narrate('guestJoined', { name: g.name });
+    if (state.phase === 'lobby') {
+      await narrate('guestJoined', { name: g.name });
+      if (g.surveyComplete) introduceGuest(g);
+      scheduleScript();
+    }
+    emit();
+    return g;
+  }
+
+  async function onboardUser(profile, { setAsPartyHost = false, applyHouse = false } = {}) {
+    if (!profile || !profile.name) throw new Error('Valid user profile is required');
+    let g = state.guests.find((x) => (profile.uid && x.userId === profile.uid) || x.name.toLowerCase() === String(profile.name).toLowerCase());
+    const photoUrl = profile.uid && (profile.photo || profile.photoDataUrl) ? `/api/user-photo/${encodeURIComponent(profile.uid)}` : null;
+    if (g) {
+      g.userId = profile.uid || g.userId;
+      g.avatar = profile.avatar || g.avatar;
+      g.color = profile.color || g.color;
+      g.photoUrl = photoUrl || g.photoUrl;
+      g.gamerTag = profile.gamerTag || g.gamerTag;
+      g.archetype = profile.archetype || g.archetype;
+      g.preferredRole = profile.preferredRole || g.preferredRole;
+      g.customFacts = Array.isArray(profile.customFacts) ? [...profile.customFacts] : g.customFacts;
+      g.customTrivia = Array.isArray(profile.customTrivia) ? [...profile.customTrivia] : g.customTrivia;
+      g.customSuperlatives = Array.isArray(profile.customSuperlatives) ? [...profile.customSuperlatives] : g.customSuperlatives;
+      g.customBluffs = Array.isArray(profile.customBluffs) ? [...profile.customBluffs] : g.customBluffs;
+      g.customQuests = Array.isArray(profile.customQuests) ? [...profile.customQuests] : g.customQuests;
+      g.houseDefaults = profile.houseDefaults || g.houseDefaults;
+      g.profileSummary = profile.profileSummary || g.profileSummary;
+      if (profile.surveyAnswers && Object.keys(profile.surveyAnswers).length) {
+        submitSurvey(g.id, profile.surveyAnswers);
+      }
+    } else {
+      g = await addGuest({
+        name: profile.name,
+        userId: profile.uid,
+        avatar: profile.avatar,
+        color: profile.color,
+        photoUrl,
+        gamerTag: profile.gamerTag,
+        archetype: profile.archetype,
+        preferredRole: profile.preferredRole,
+        surveyAnswers: profile.surveyAnswers,
+        customFacts: profile.customFacts,
+        customTrivia: profile.customTrivia,
+        customSuperlatives: profile.customSuperlatives,
+        customBluffs: profile.customBluffs,
+        customQuests: profile.customQuests,
+        houseDefaults: profile.houseDefaults,
+        profileSummary: profile.profileSummary,
+      });
+    }
+    if (setAsPartyHost || (!state.partyHostId && applyHouse)) {
+      state.partyHostId = g.id;
+      const hd = profile.houseDefaults || g.houseDefaults;
+      if (hd && Object.keys(hd).length) {
+        submitHouse(g.id, hd);
+      }
+    }
     emit();
     return g;
   }
@@ -320,7 +418,28 @@ function createPartyEngine({
   function plannedRoles() {
     const enabled = state.settings.enabledRoles
       || roles.ROLE_CATALOG.filter((r) => state.settings.secretRoles || !r.secretRole).map((r) => r.id);
-    return roles.assignRoles(state.guests, { enabledRoles: enabled, seed: state.seed });
+    const autoAssigned = roles.assignRoles(state.guests, { enabledRoles: enabled, seed: state.seed });
+    const used = new Set();
+    const out = {};
+    for (const g of state.guests) {
+      if (g.preferredRole && enabled.includes(g.preferredRole) && !used.has(g.preferredRole)) {
+        out[g.id] = g.preferredRole;
+        used.add(g.preferredRole);
+      }
+    }
+    for (const g of state.guests) {
+      if (out[g.id]) continue;
+      const auto = autoAssigned[g.id];
+      if (auto && !used.has(auto)) {
+        out[g.id] = auto;
+        used.add(auto);
+      } else {
+        const fallback = enabled.find((id) => !used.has(id)) || auto || enabled[0] || 'detective';
+        out[g.id] = fallback;
+        used.add(fallback);
+      }
+    }
+    return out;
   }
 
   function scriptKey() {
@@ -337,7 +456,13 @@ function createPartyEngine({
     const key = scriptKey();
     if (scriptJob && scriptJob.key === key) return scriptJob.promise;
     const assignment = plannedRoles();
-    const snapshot = state.guests.map((g) => ({ id: g.id, name: g.name, traits: g.traits, facts: g.facts }));
+    const snapshot = state.guests.map((g) => ({
+      id: g.id,
+      name: g.name,
+      traits: g.traits,
+      facts: g.facts,
+      profileSummary: g.profileSummary,
+    }));
     state.ai.status = 'writing';
     state.ai.scriptKey = key;
     state.ai.script = null;
@@ -361,7 +486,15 @@ function createPartyEngine({
         ? aiHost.writeHouseQuests({ guests: snapshot, house: houseContext(), count: rounds + 1 }).catch(() => [])
         : [],
     ]).then(([show, trivia, houseQuests]) => {
-      const script = show || (trivia.length || houseQuests.length ? { roleReveals: {}, whoSaidThat: [], mostLikelyTo: [], bluffs: {}, gameIntros: {} } : null);
+      const hasProfileMaterial = state.guests.some((g) =>
+        (g.customTrivia && g.customTrivia.length)
+        || (g.customSuperlatives && g.customSuperlatives.length)
+        || (g.customBluffs && g.customBluffs.length)
+        || (g.customQuests && g.customQuests.length)
+      );
+      const script = show || ((trivia.length || houseQuests.length || hasProfileMaterial)
+        ? { roleReveals: {}, whoSaidThat: [], mostLikelyTo: [], bluffs: {}, gameIntros: {} }
+        : null);
       if (state.ai.scriptKey !== key) return script; // superseded by newer answers
       state.ai.script = script && { ...script, trivia, houseQuests, roles: assignment };
       state.ai.status = script ? 'ready' : 'failed';
@@ -534,7 +667,21 @@ function createPartyEngine({
 
   function buildCtx() {
     return {
-      guests: state.guests.map((g) => ({ id: g.id, name: g.name, traits: g.traits, facts: g.facts, roleId: g.roleId })),
+      guests: state.guests.map((g) => ({
+        id: g.id,
+        userId: g.userId,
+        name: g.name,
+        gamerTag: g.gamerTag,
+        archetype: g.archetype,
+        traits: g.traits,
+        facts: g.facts,
+        roleId: g.roleId,
+        profileSummary: g.profileSummary,
+        customTrivia: g.customTrivia,
+        customSuperlatives: g.customSuperlatives,
+        customBluffs: g.customBluffs,
+        customQuests: g.customQuests,
+      })),
       questions: questions(),
       settings: state.settings,
       rand,
@@ -854,9 +1001,13 @@ function createPartyEngine({
     const role = roles.roleById(g.roleId);
     return {
       id: g.id,
+      userId: g.userId,
       name: g.name,
+      gamerTag: g.gamerTag,
+      archetype: g.archetype,
       avatar: g.avatar,
       color: g.color,
+      photoUrl: g.photoUrl,
       score: g.score,
       surveyComplete: g.surveyComplete,
       role: revealRoles ? roles.publicRole(role) : null,
@@ -947,9 +1098,13 @@ function createPartyEngine({
       ...base,
       me: {
         id: g.id,
+        userId: g.userId,
         name: g.name,
+        gamerTag: g.gamerTag,
+        archetype: g.archetype,
         avatar: g.avatar,
         color: g.color,
+        photoUrl: g.photoUrl,
         score: g.score,
         rank: rankedGuests().findIndex((x) => x.id === g.id) + 1,
         answers: g.answers,
@@ -984,14 +1139,21 @@ function createPartyEngine({
       guestsDetail: state.guests.map((g) => ({
         isPartyHost: g.id === state.partyHostId,
         id: g.id,
+        userId: g.userId,
         name: g.name,
+        gamerTag: g.gamerTag,
+        archetype: g.archetype,
         avatar: g.avatar,
+        color: g.color,
+        photoUrl: g.photoUrl,
         score: g.score,
         surveyComplete: g.surveyComplete,
         progress: survey.surveyProgress(questions(), g.answers),
         role: g.roleId ? roles.roleById(g.roleId) : null,
         traits: g.traits,
         answered: Boolean(state.answers[g.id]),
+        answers: g.answers,
+        joinQuery: `?guest=${encodeURIComponent(g.id)}&token=${encodeURIComponent(g.token)}`,
       })),
       history: state.history,
       error: state.error,
@@ -1024,7 +1186,7 @@ function createPartyEngine({
       settings: state.settings,
       partyHost: guest(state.partyHostId)?.name || null,
       house: state.house,
-      guests: rankedGuests().map((g) => ({ name: g.name, score: g.score, role: g.roleId })),
+      guests: rankedGuests().map((g) => ({ name: g.name, userId: g.userId, score: g.score, role: g.roleId })),
       winners: state.winnerIds.map((id) => guest(id)?.name),
       history: state.history,
     };
@@ -1037,6 +1199,7 @@ function createPartyEngine({
     selectTvs,
     openLobby,
     addGuest,
+    onboardUser,
     removeGuest,
     submitSurvey,
     authGuest,

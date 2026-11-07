@@ -23,14 +23,19 @@ module.exports = defineMiniGame({
     'The AI host writes superlatives about your group. Vote for who fits best: +1 for voting with the room, ' +
     '+2 more if you match the AI host\'s pick.',
   icon: '🏅',
-  minGuests: 3,
+  minGuests: 2,
   defaultRounds: 4,
   answerSeconds: 20,
 
   buildRounds(ctx, count) {
     const { guests, shuffle } = ctx;
     // AI-written superlatives tailored to this group, with the AI's own pick.
-    const written = (ctx.script?.mostLikelyTo || [])
+    const profileSups = guests.flatMap((g) => (g.customSuperlatives || []).map((s) => ({
+      superlative: s.superlative,
+      guestId: g.id,
+      reason: s.reason,
+    })));
+    const written = [...(ctx.script?.mostLikelyTo || []), ...shuffle(profileSups)]
       .filter((w) => guests.some((g) => g.id === w.guestId))
       .slice(0, count);
     if (written.length >= Math.min(count, 2)) {

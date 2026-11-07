@@ -45,7 +45,10 @@
     return Math.max(0, Math.ceil((view.phaseEndsAt - (Date.now() + clockOffset)) / 1000));
   }
   function avatar(g, extra) {
-    return '<span class="avatar ' + (extra || '') + '" style="--c:' + esc(g.color) + '">' + esc(g.avatar) + '</span>';
+    var inner = g.photoUrl
+      ? '<img src="' + esc(g.photoUrl) + '" alt="' + esc(g.name) + '">'
+      : esc(g.avatar);
+    return '<span class="avatar ' + (extra || '') + '" style="--c:' + esc(g.color) + '">' + inner + '</span>';
   }
   function flash() {
     var f = document.getElementById('flash');
