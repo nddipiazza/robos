@@ -255,6 +255,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `import-company-kgraph` — Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files
 - `ide-java` — Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces
 - `install-desktop-app` — Install .desktop entries, icons, desktop shortcuts with GIO trust, and GNOME Shell favorites
+- `install-source-shortcuts` — Run apps from a git clone and add "RobOS <App> (From Source)" Start menu / GNOME app grid / macOS Applications entries and desktop icons, with each app's own icon on the taskbar, dock and window (`scripts/source-shortcuts/`)
 - `install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
 - `kgraph-delete` — Safely remove an entity node from the Knowledge Graph with optional cascade reference pruning
 - `kgraph-diff` — Semantic blast radius diff comparing World 1 (main) against World 2 (feature branch)

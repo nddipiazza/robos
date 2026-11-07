@@ -4,7 +4,7 @@ on:
     tags: ['v*']
     branches: ['codex/modular-app-manager', 'codex/release-*']
   pull_request:
-    paths: ['packages/**', 'scripts/app-manager/**', 'scripts/windows/**', '.github/workflows/app-manager.yml', '.github/workflows/windows-apps.yml']
+    paths: ['packages/**', 'scripts/app-manager/**', 'scripts/source-shortcuts/**', 'scripts/windows/**', '.github/workflows/app-manager.yml', '.github/workflows/windows-apps.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -61,7 +61,7 @@ jobs:
         working-directory: packages/app-manager
         run: npm install --no-audit --no-fund
       - name: Verify lifecycle, installer boundaries and release assets
-        run: node --test packages/app-manager/test/*.test.cjs scripts/app-manager/publish-release.test.cjs
+        run: node --test packages/app-manager/test/*.test.cjs scripts/app-manager/publish-release.test.cjs scripts/source-shortcuts/source-shortcuts.test.cjs
       - name: Build platform app manager
         run: node scripts/app-manager/build.cjs
       - name: Smoke test packaged manager
