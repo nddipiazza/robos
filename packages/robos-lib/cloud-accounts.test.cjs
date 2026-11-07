@@ -281,3 +281,48 @@ test('an own client ID without its secret is refused before the browser opens', 
     /client secret/,
   );
 });
+
+test('Windows and macOS Thunderbird profiles live under %APPDATA%\Thunderbird and ~/Library/Thunderbird', () => {
+  const env = createTempHome();
+  const win = thunderbirdGoogle.defaultProfileRoots({ ...env, platform: 'win32' });
+  assert.deepEqual(win, [path.join(env.homeDir, 'AppData', 'Roaming', 'Thunderbird')]);
+  assert.deepEqual(thunderbirdGoogle.defaultProfileRoots({ ...env, platform: 'darwin' }), [path.join(env.homeDir, 'Library', 'Thunderbird')]);
+
+  cloudAccounts.saveAccount({ provider: 'google', email: 'user@example.com', loggedIn: true }, env);
+  const res = thunderbirdGoogle.configureThunderbirdForGoogleAccount('user@example.com', { enableMail: true },
+    { ...env, platform: 'win32', mockBinaryPath: null });
+  assert.equal(res.writtenFiles.length, 1);
+  assert.ok(res.writtenFiles[0].startsWith(win[0]));
+  assert.ok(fs.existsSync(path.join(win[0], 'profiles.ini')));
+});
+
+test('Gmail accounts are activated in prefs.js, merged with accounts Thunderbird already has', () => {
+  const env = createTempHome();
+  cloudAccounts.saveAccount({ provider: 'google', email: 'user@example.com', loggedIn: true }, env);
+  const opts = { ...env, platform: 'linux', mockBinaryPath: null };
+  const [profile] = thunderbirdGoogle.ensureThunderbirdProfiles(opts);
+  fs.writeFileSync(path.join(profile.fullPath, 'prefs.js'), [
+    '// Mozilla User Preferences',
+    'user_pref("mail.accountmanager.accounts", "account1");',
+    'user_pref("mail.smtpservers", "smtp1");',
+    'user_pref("mail.smtp.defaultserver", "smtp1");',
+    '',
+  ].join('\n'));
+
+  const res = thunderbirdGoogle.configureThunderbirdForGoogleAccount('user@example.com', { enableMail: true }, opts);
+  assert.equal(res.mailAccountsActivated, true);
+  const prefs = fs.readFileSync(path.join(profile.fullPath, 'prefs.js'), 'utf8');
+  const [accountKey] = res.mailActivation[0].accountKeys;
+  const [smtpKey] = res.mailActivation[0].smtpKeys;
+  assert.match(prefs, new RegExp(`mail\.accountmanager\.accounts", "account1,${accountKey}"`));
+  assert.match(prefs, new RegExp(`mail\.smtpservers", "smtp1,${smtpKey}"`));
+  assert.match(prefs, /mail\.smtp\.defaultserver", "smtp1"/);
+
+  // Lists stay out of user.js so accounts added in Thunderbird survive restarts.
+  const userJs = fs.readFileSync(path.join(profile.fullPath, 'user.js'), 'utf8');
+  assert.doesNotMatch(userJs, /mail\.accountmanager\.accounts/);
+
+  // Re-configuring is idempotent.
+  const again = thunderbirdGoogle.configureThunderbirdForGoogleAccount('user@example.com', { enableMail: true }, opts);
+  assert.equal(again.mailActivation[0].changed, false);
+});

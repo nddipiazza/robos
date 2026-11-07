@@ -57,7 +57,7 @@ const PACKAGES = {
   'pycharm-community': 'JetBrains.PyCharm.Community',
   webstorm: 'JetBrains.WebStorm', goland: 'JetBrains.GoLand', clion: 'JetBrains.CLion',
   rider: 'JetBrains.Rider', rustrover: 'JetBrains.RustRover',
-  firefox: 'Mozilla.Firefox', chromium: 'Hibbiki.Chromium', 'google-chrome': 'Google.Chrome',
+  firefox: 'Mozilla.Firefox', thunderbird: 'Mozilla.Thunderbird', chromium: 'Hibbiki.Chromium', 'google-chrome': 'Google.Chrome',
   'gh-cli': 'GitHub.cli', docker: 'Docker.DockerDesktop', lazygit: 'JesseDuffield.lazygit',
   transmission: 'Transmission.Transmission',
   flameshot: 'Flameshot.Flameshot', vlc: 'VideoLAN.VLC',
@@ -79,6 +79,7 @@ const UNSUPPORTED = {
 const DISPLAY_NAMES = {
   vscode: /^Microsoft Visual Studio Code(?: \(User\))?$/i,
   'google-chrome': /^Google Chrome$/i, firefox: /^Mozilla Firefox\b/i,
+  thunderbird: /^Mozilla Thunderbird\b/i,
   chromium: /^Chromium$/i, vlc: /^VLC media player$/i,
   docker: /^Docker Desktop$/i, flameshot: /^Flameshot$/i,
   'intellij-idea-community': /^IntelliJ IDEA Community Edition\b/i,

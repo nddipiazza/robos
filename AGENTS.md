@@ -284,6 +284,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `update-app-icon` — Update an app's SVG icon
 - `vpn-sandbox` — Configure OpenVPN accounts/servers, launch apps inside isolated `ip netns` namespaces, and run the live 5-step E2E mid-session VPN drop kill-switch proof
 - `publish-blog-post`, `robos-blog` (`/blog`) — Write and publish a new Engineering Blog post as its own page, `site/_blog/<slug>.html`, with E2E visual evidence, docs links, and commit hashes
+- `send-email-thunderbird` — Send email through Mozilla Thunderbird with the user's Gmail account (RobOS Cloud Accounts) via the RobOS Thunderbird Bridge add-on and Thunderbird's MailExtension compose API (CLI `packages/robos-lib/thunderbird-mail.js`)
 - `media-watch-status` — Where did we leave off? Show/season/episode watch status, movie status, continue watching and play history from Movie Player and Audio Player, the same on every computer (CLI `packages/movie-player/bin/watch-status.js`, MCP server `packages/movie-player/bin/media-mcp.js`)
 - `fix-media-metadata` — Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB)
 

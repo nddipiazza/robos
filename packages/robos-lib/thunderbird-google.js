@@ -42,6 +42,61 @@ function getHomeDir(options = {}) {
   return options.homeDir || process.env.HOME || os.homedir();
 }
 
+function getPlatform(options = {}) {
+  return options.platform || process.platform;
+}
+
+// %APPDATA% — under a test homeDir, the same layout relative to that home.
+function getWindowsAppDataDir(options = {}) {
+  if (options.appDataDir) return options.appDataDir;
+  if (!options.homeDir && process.env.APPDATA) return process.env.APPDATA;
+  return path.join(getHomeDir(options), 'AppData', 'Roaming');
+}
+
+/**
+ * Where Thunderbird keeps `profiles.ini` on each platform:
+ *   Linux    ~/.thunderbird (deb / Mozilla tarball) and ~/snap/thunderbird/common/.thunderbird (snap)
+ *   Windows  %APPDATA%\Thunderbird
+ *   macOS    ~/Library/Thunderbird
+ */
+function defaultProfileRoots(options = {}) {
+  const home = getHomeDir(options);
+  const platform = getPlatform(options);
+  if (platform === 'win32') return [path.join(getWindowsAppDataDir(options), 'Thunderbird')];
+  if (platform === 'darwin') return [path.join(home, 'Library', 'Thunderbird')];
+  return [
+    path.join(home, '.thunderbird'),
+    path.join(home, 'snap', 'thunderbird', 'common', '.thunderbird'),
+  ];
+}
+
+function thunderbirdBinaryCandidates(options = {}) {
+  const home = getHomeDir(options);
+  const platform = getPlatform(options);
+  if (platform === 'win32') {
+    const programDirs = [
+      process.env.ProgramFiles || 'C:\\Program Files',
+      process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)',
+      process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'),
+      path.join(process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'), 'Programs'),
+    ];
+    return programDirs.map((dir) => path.join(dir, 'Mozilla Thunderbird', 'thunderbird.exe'));
+  }
+  if (platform === 'darwin') {
+    return [
+      '/Applications/Thunderbird.app/Contents/MacOS/thunderbird',
+      path.join(home, 'Applications', 'Thunderbird.app', 'Contents', 'MacOS', 'thunderbird'),
+    ];
+  }
+  return [
+    path.join(home, '.local', 'bin', 'thunderbird'),
+    path.join(home, '.local', 'opt', 'thunderbird', 'thunderbird'),
+    '/usr/bin/thunderbird',
+    '/snap/bin/thunderbird',
+    '/usr/local/bin/thunderbird',
+  ];
+}
+
 /**
  * Computes a deterministic UUID v4-format string from a seed (e.g., `caldav:email`)
  * so re-applying configuration for the same Google account updates the same calendar entry
@@ -77,14 +132,8 @@ function detectThunderbird(options = {}) {
     version = options.mockVersion || (binaryPath ? 'Thunderbird 128.0esr' : null);
     packageType = binaryPath ? 'apt' : null;
   } else {
-    const candidates = [
-      path.join(home, '.local', 'bin', 'thunderbird'),
-      path.join(home, '.local', 'opt', 'thunderbird', 'thunderbird'),
-      '/usr/bin/thunderbird',
-      '/snap/bin/thunderbird',
-      '/usr/local/bin/thunderbird',
-    ];
-    for (const c of candidates) {
+    const platform = getPlatform(options);
+    for (const c of thunderbirdBinaryCandidates(options)) {
       if (fs.existsSync(c)) {
         binaryPath = c;
         break;
@@ -92,17 +141,25 @@ function detectThunderbird(options = {}) {
     }
     if (!binaryPath) {
       try {
-        const out = execFileSync('which', ['thunderbird'], { encoding: 'utf8', timeout: 3000 }).trim();
+        const finder = platform === 'win32' ? 'where.exe' : 'which';
+        const out = execFileSync(finder, ['thunderbird'], { encoding: 'utf8', timeout: 3000, windowsHide: true })
+          .split(/\r?\n/)[0].trim();
         if (out) binaryPath = out;
       } catch {}
     }
     if (binaryPath) {
-      packageType = binaryPath.includes('/snap/')
-        ? 'snap'
-        : binaryPath.includes('.local/')
-          ? 'mozilla-official'
-          : 'apt';
+      packageType = platform === 'win32'
+        ? 'windows'
+        : platform === 'darwin'
+          ? 'macos'
+          : binaryPath.includes('/snap/')
+            ? 'snap'
+            : binaryPath.includes('.local/')
+              ? 'mozilla-official'
+              : 'apt';
       const appIniCandidates = [
+        path.join(path.dirname(binaryPath), 'application.ini'),
+        path.join(path.dirname(binaryPath), '..', 'Resources', 'application.ini'),
         path.join(home, '.local', 'opt', 'thunderbird', 'application.ini'),
         '/usr/lib/thunderbird/application.ini',
       ];
@@ -118,6 +175,8 @@ function detectThunderbird(options = {}) {
           } catch {}
         }
       }
+      // thunderbird.exe is a GUI-subsystem binary: `--version` prints nothing on Windows.
+      if (!version && platform === 'win32') version = 'Mozilla Thunderbird';
       if (!version) {
         try {
           version = execFileSync(binaryPath, ['--version'], {
@@ -132,10 +191,7 @@ function detectThunderbird(options = {}) {
     }
   }
 
-  const profileRoots = options.profileRoots || [
-    path.join(home, '.thunderbird'),
-    path.join(home, 'snap', 'thunderbird', 'common', '.thunderbird'),
-  ];
+  const profileRoots = options.profileRoots || defaultProfileRoots(options);
 
   const discoveredProfiles = [];
   for (const root of profileRoots) {
@@ -148,7 +204,12 @@ function detectThunderbird(options = {}) {
     }
   }
 
-  const primaryProfile = discoveredProfiles.find(p => p.isDefault) || discoveredProfiles[0] || null;
+  // An [Install<hash>] section names the profile that Thunderbird install actually opens
+  // (Windows / macOS "dedicated profiles"); it wins over a legacy Default=1 profile.
+  const primaryProfile = discoveredProfiles.find(p => p.isInstallDefault)
+    || discoveredProfiles.find(p => p.isDefault)
+    || discoveredProfiles[0]
+    || null;
   let configuredAccounts = [];
   if (primaryProfile && fs.existsSync(path.join(primaryProfile.fullPath, 'user.js'))) {
     try {
@@ -208,16 +269,50 @@ function parseProfilesIni(iniContent, rootDir) {
     if (!relOrAbs) continue;
     const isRel = s.props.IsRelative !== '0';
     const fullPath = isRel ? path.join(rootDir, relOrAbs) : relOrAbs;
-    const isDefault = s.props.Default === '1' || installDefaultPaths.has(relOrAbs);
+    const isInstallDefault = installDefaultPaths.has(relOrAbs);
+    const isDefault = s.props.Default === '1' || isInstallDefault;
     profiles.push({
       name: s.props.Name || 'default-release',
       path: relOrAbs,
       fullPath,
       rootDir,
       isDefault,
+      isInstallDefault,
     });
   }
   return profiles;
+}
+
+/**
+ * Windows and macOS builds give each install a "dedicated profile". On first start an install
+ * only takes over an existing default profile whose compatibility.ini says that same install
+ * last used it; otherwise it creates a new empty profile and ignores ours. Writing the file the
+ * way Thunderbird does makes the first start open the RobOS-configured profile.
+ */
+function writeCompatibilityIni(profileDir, binaryPath, platform) {
+  const binDir = path.dirname(binaryPath);
+  // Thunderbird.app/Contents/MacOS/thunderbird keeps omni.ja and application.ini in Contents/Resources.
+  const appDir = platform === 'darwin' ? path.join(binDir, '..', 'Resources') : binDir;
+  let version = '';
+  let buildId = '';
+  try {
+    const ini = fs.readFileSync(path.join(appDir, 'application.ini'), 'utf8');
+    version = (ini.match(/^Version=(.+)$/m) || [])[1]?.trim() || '';
+    buildId = (ini.match(/^BuildID=(.+)$/m) || [])[1]?.trim() || '';
+  } catch {}
+  if (!version || !buildId) return false;
+  const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
+  const abi = platform === 'darwin' ? `Darwin_${arch}-gcc3` : `WINNT_${arch}-msvc`;
+  const resolvedAppDir = path.resolve(appDir);
+  fs.writeFileSync(path.join(profileDir, 'compatibility.ini'), [
+    '[Compatibility]',
+    `LastVersion=${version}_${buildId}/${buildId}`,
+    `LastOSABI=${abi}`,
+    `LastPlatformDir=${resolvedAppDir}`,
+    `LastAppDir=${resolvedAppDir}`,
+    '',
+  ].join(platform === 'win32' ? '\r\n' : '\n'), 'utf8');
+  return true;
 }
 
 /**
@@ -235,11 +330,8 @@ function ensureThunderbirdProfiles(options = {}) {
     return status.profiles;
   }
 
-  const home = getHomeDir(options);
-  const roots = options.profileRoots || [
-    path.join(home, '.thunderbird'),
-    path.join(home, 'snap', 'thunderbird', 'common', '.thunderbird'),
-  ];
+  const roots = options.profileRoots || defaultProfileRoots(options);
+  const platform = getPlatform(options);
 
   const created = [];
   const profileDirName = 'robos001.default-release';
@@ -262,6 +354,9 @@ function ensureThunderbirdProfiles(options = {}) {
       ].join('\n');
       fs.writeFileSync(iniPath, iniContent, 'utf8');
     }
+    if ((platform === 'win32' || platform === 'darwin') && status.binaryPath) {
+      writeCompatibilityIni(fullPath, status.binaryPath, platform);
+    }
     created.push({
       name: 'default-release',
       path: profileDirName,
@@ -283,6 +378,41 @@ function installThunderbird(options = {}) {
   if (options.dryRun) {
     onLog('[dry-run] Would install Mozilla Thunderbird into ~/.local/opt/thunderbird or via apt-get\n');
     return Promise.resolve({ ok: true, dryRun: true });
+  }
+
+  const collect = (child, resolve) => {
+    let log = '';
+    const onChunk = (chunk) => {
+      const text = chunk.toString();
+      log += text;
+      onLog(text);
+    };
+    child.stdout.on('data', onChunk);
+    child.stderr.on('data', onChunk);
+    child.on('error', (err) => resolve({ ok: false, error: err.message, log }));
+    child.on('close', (code) => {
+      const after = detectThunderbird(options);
+      resolve({
+        // WinGet exits 0x8A15002B when the newest version is already installed.
+        ok: (code === 0 || (code >>> 0) === 0x8A15002B) && after.installed,
+        exitCode: code,
+        installed: after.installed,
+        binaryPath: after.binaryPath,
+        version: after.version,
+        log: log.slice(-4000),
+      });
+    });
+  };
+
+  if (getPlatform(options) === 'win32') {
+    // Same exact-ID WinGet install the RobOS Software Center runs for its Thunderbird card.
+    onLog('$ winget install --id Mozilla.Thunderbird --exact --source winget\n');
+    return new Promise((resolve) => {
+      const child = spawn('winget.exe', ['install', '--id', 'Mozilla.Thunderbird', '--exact', '--source', 'winget',
+        '--accept-source-agreements', '--accept-package-agreements', '--disable-interactivity', '--silent'],
+      { windowsHide: true, shell: false });
+      collect(child, resolve);
+    });
   }
 
   return new Promise((resolve) => {
@@ -310,31 +440,7 @@ function installThunderbird(options = {}) {
     const child = spawn('bash', ['-lc', cmd], {
       env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' },
     });
-    let log = '';
-    child.stdout.on('data', (chunk) => {
-      const text = chunk.toString();
-      log += text;
-      onLog(text);
-    });
-    child.stderr.on('data', (chunk) => {
-      const text = chunk.toString();
-      log += text;
-      onLog(text);
-    });
-    child.on('error', (err) => {
-      resolve({ ok: false, error: err.message, log });
-    });
-    child.on('close', (code) => {
-      const after = detectThunderbird(options);
-      resolve({
-        ok: code === 0 && after.installed,
-        exitCode: code,
-        installed: after.installed,
-        binaryPath: after.binaryPath,
-        version: after.version,
-        log: log.slice(-4000),
-      });
-    });
+    collect(child, resolve);
   });
 }
 
@@ -510,6 +616,77 @@ function mergeUserJsContent(existingContent, email, newBlock) {
 }
 
 /**
+ * True while a running Thunderbird holds the profile. Windows keeps `parent.lock` open
+ * without sharing; Linux and macOS point the `lock` symlink at the owning process id.
+ */
+function isProfileInUse(profilePath) {
+  const parentLock = path.join(profilePath, 'parent.lock');
+  if (process.platform === 'win32') {
+    if (!fs.existsSync(parentLock)) return false;
+    try {
+      fs.closeSync(fs.openSync(parentLock, 'r+'));
+      return false;
+    } catch (err) {
+      return ['EBUSY', 'EPERM', 'EACCES'].includes(err.code);
+    }
+  }
+  try {
+    const target = fs.readlinkSync(path.join(profilePath, 'lock'));
+    const pid = Number((target.match(/\+(\d+)$/) || [])[1]);
+    if (!pid) return false;
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readPrefValue(content, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = String(content || '').match(new RegExp(`^user_pref\\("${escaped}",\\s*"([^"]*)"\\);`, 'm'));
+  return m ? m[1] : null;
+}
+
+function writePrefValue(content, name, value) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const line = `user_pref("${name}", ${JSON.stringify(value)});`;
+  const re = new RegExp(`^user_pref\\("${escaped}",[^\\n]*$`, 'm');
+  if (re.test(content)) return content.replace(re, line);
+  return `${String(content || '').trimEnd()}\n${line}\n`.replace(/^\n/, '');
+}
+
+/**
+ * Thunderbird only loads mail accounts and SMTP servers named in `mail.accountmanager.accounts`
+ * and `mail.smtpservers`. Those lists also grow when the user adds accounts in Thunderbird, so
+ * they go into `prefs.js` (merged with what Thunderbird already has), never into `user.js`,
+ * whose values would replace Thunderbird's list on every start. Thunderbird rewrites
+ * `prefs.js` from memory when it quits, so the profile must not be in use.
+ */
+function activateMailAccountsInProfile(profilePath, userJsContent) {
+  const accountKeys = [...new Set([...String(userJsContent).matchAll(/user_pref\("mail\.account\.(account_[0-9a-f]{8})\.server"/g)].map((m) => m[1]))];
+  const smtpKeys = [...new Set([...String(userJsContent).matchAll(/user_pref\("mail\.smtpserver\.(smtp_[0-9a-f]{8})\.hostname"/g)].map((m) => m[1]))];
+  if (accountKeys.length === 0) return { activated: true, changed: false, accountKeys, smtpKeys };
+
+  const prefsPath = path.join(profilePath, 'prefs.js');
+  const before = fs.existsSync(prefsPath) ? fs.readFileSync(prefsPath, 'utf8') : '';
+  const union = (existing, keys) => {
+    const list = String(existing || '').split(',').map((s) => s.trim()).filter(Boolean);
+    for (const k of keys) if (!list.includes(k)) list.push(k);
+    return list.join(',');
+  };
+  let after = before || '// Mozilla User Preferences\n';
+  after = writePrefValue(after, 'mail.accountmanager.accounts', union(readPrefValue(before, 'mail.accountmanager.accounts'), accountKeys));
+  if (smtpKeys.length) {
+    after = writePrefValue(after, 'mail.smtpservers', union(readPrefValue(before, 'mail.smtpservers'), smtpKeys));
+    if (!readPrefValue(before, 'mail.smtp.defaultserver')) after = writePrefValue(after, 'mail.smtp.defaultserver', smtpKeys[0]);
+  }
+  if (after === before) return { activated: true, changed: false, accountKeys, smtpKeys };
+  if (isProfileInUse(profilePath)) return { activated: false, changed: false, accountKeys, smtpKeys, profileInUse: true };
+  fs.writeFileSync(prefsPath, after, 'utf8');
+  return { activated: true, changed: true, accountKeys, smtpKeys };
+}
+
+/**
  * Configures Thunderbird profiles for the specified Google Cloud Account and persists
  * the updated integration status back to `robos-lib/cloud-accounts`.
  */
@@ -525,6 +702,7 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
   const generated = generateThunderbirdUserJsBlock(account, configOptions);
   const profiles = ensureThunderbirdProfiles(options);
   const writtenFiles = [];
+  const mailActivation = [];
 
   for (const prof of profiles) {
     const userJsPath = path.join(prof.fullPath, 'user.js');
@@ -548,7 +726,9 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
 
     fs.writeFileSync(userJsPath, merged, 'utf8');
     writtenFiles.push(userJsPath);
+    mailActivation.push({ profilePath: prof.fullPath, ...activateMailAccountsInProfile(prof.fullPath, merged) });
   }
+  const mailAccountsActivated = mailActivation.every((m) => m.activated);
 
   // Persist suite toggles and Thunderbird sync metadata on the Cloud Account
   const saved = cloudAccounts.saveAccount({
@@ -579,6 +759,11 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
     refreshMinutes: generated.refreshMinutes,
     userJsBlock: generated.userJsBlock,
     writtenFiles,
+    mailAccountsActivated,
+    mailActivation,
+    ...(mailAccountsActivated ? {} : {
+      note: 'Thunderbird is running, so Gmail could not be added to its account list yet. Quit Thunderbird and configure again.',
+    }),
     primaryProfilePath: profiles[0]?.fullPath || null,
     account: saved.account,
   };
@@ -1384,8 +1569,11 @@ module.exports = {
   ROBOS_BLOCK_END,
   DEFAULT_CALENDAR_REFRESH_MINUTES,
   deterministicUuid,
+  defaultProfileRoots,
   detectThunderbird,
   parseProfilesIni,
+  isProfileInUse,
+  activateMailAccountsInProfile,
   ensureThunderbirdProfiles,
   installThunderbird,
   generateThunderbirdUserJsBlock,

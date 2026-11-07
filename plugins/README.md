@@ -179,6 +179,7 @@ plugins/
 | **`update-app-icon`** | `/update-app-icon` | Replace 48x48 Lucide SVG icon and sync to icon registries |
 | **`vm-ssh`** | `/vm-ssh` | Execute shell commands on the RobOS VM via SSH (port 2224) |
 | **`vm-status`** | `/vm-status` | Check VM running state, SSH connectivity, memory, and disk usage |
+| **`send-email-thunderbird`** | `/send-email-thunderbird` | Send email through Mozilla Thunderbird with the user's Gmail account via the RobOS Thunderbird Bridge add-on (MailExtension compose API over native messaging) |
 | **`vpn-sandbox`** | `/vpn-sandbox` | Configure OpenVPN accounts/servers, launch apps inside isolated `ip netns` namespaces, and run the 5-step live E2E kill-switch proof |
 | **`publish-blog-post`** | `/publish-blog-post` | Write and publish a new Engineering Blog post as its own page in `site/_blog/` with E2E screenshots and commit references |
 | **`robos-blog`** | `/robos-blog`, `/blog` | Write and publish a new Engineering Blog post as its own page in `site/_blog/` with E2E screenshots, reproducible CLI commands, and commit references |
