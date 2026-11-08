@@ -187,10 +187,11 @@ function createNarrationRouter({
     const spokenText = cleanSpeechForNaturalVoice(narration.text);
     const job = tts
       .synthesize(spokenText, {
-        engine: 'kokoro',
-        voice: pers.ttsVoice || '0.6*am_puck+0.4*am_michael',
+        engine: 'edge-tts',
+        voice: pers.edgeVoice || 'en-US-AndrewMultilingualNeural',
+        kokoroVoice: pers.ttsVoice || '0.6*am_puck+0.4*am_michael',
         speed: pers.ttsSpeed || 1.05,
-        kokoroTimeoutMs: 30000,
+        kokoroTimeoutMs: 25000,
       })
       .then((res) => (res && res.ok && res.engine !== 'fallback' ? toMp3(res.filePath, narration.id) : null))
       .catch(() => null);

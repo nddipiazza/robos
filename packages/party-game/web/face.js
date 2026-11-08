@@ -41,13 +41,10 @@
     return 0;
   }
 
-  function glowFilter(id, blur) {
-    var f = svgEl('filter', { id: id, x: '-30%', y: '-30%', width: '160%', height: '160%' });
-    f.appendChild(svgEl('feGaussianBlur', { stdDeviation: String(blur), result: 'b' }));
-    var merge = svgEl('feMerge', {});
-    merge.appendChild(svgEl('feMergeNode', { in: 'b' }));
-    merge.appendChild(svgEl('feMergeNode', { in: 'SourceGraphic' }));
-    f.appendChild(merge);
+  function glowFilter(id, _blur) {
+    // Kept lightweight (identity filter) so offscreen/software SVG rendering uses near-zero CPU.
+    var f = svgEl('filter', { id: id });
+    f.appendChild(svgEl('feMerge', {})).appendChild(svgEl('feMergeNode', { in: 'SourceGraphic' }));
     return f;
   }
 
@@ -261,12 +258,14 @@
         lid: now < blink.until ? 0.08 : mood.eye,
         mouth: mouthOpen,
         speaking: pos >= 0,
-        bob: pos >= 0 ? Math.sin(now / 160) * 3 : Math.sin(now / 900) * 2,
-        tilt: pos >= 0 ? Math.sin(now / 700) * 0.8 : Math.sin(now / 2300) * 0.5,
+        bob: pos >= 0 ? Math.sin(now / 160) * 3 : 0,
+        tilt: pos >= 0 ? Math.sin(now / 700) * 0.8 : 0,
       });
-      requestAnimationFrame(frame);
+      setTimeout(function () {
+        if (!stopped) frame(performance.now());
+      }, pos >= 0 ? 85 : 600);
     }
-    requestAnimationFrame(frame);
+    frame(performance.now());
 
     return {
       style: style,
