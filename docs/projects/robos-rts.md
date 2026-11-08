@@ -201,6 +201,8 @@ With a worker-producing building selected, right-click a visible crystal field o
 
 Right-click a friendly mobile unit to follow it. With a production building selected, the same click rallies new units to follow that unit as it moves. If the target dies, future units move to the original rally point. Hold **Shift** when setting a rally to append up to eight waypoints. A follow or gather target can end the route.
 
+At a finished Workshop, press **W** for weapons research or **G** for armor research. Each of the three levels adds one damage per hit or one armor to Meridian Guard combat units, including units already in the field. Research costs crystal and aether, shares the Workshop queue with Howitzers, and can be cancelled for a refund while queued or in progress.
+
 ![Muster Hall with four units queued]({{ '/assets/images/robos-rts/07-production-queue.jpg' | relative_url }}){: .robos-zoomable-img }
 
 When you cannot afford something, or you are at your supply cap, the game says so:

@@ -772,6 +772,8 @@ func _has_structure(owner_id: int, type_id: String) -> bool:
 	return false
 
 func ability_cost(adef: Dictionary) -> Dictionary:
+	if adef.has("upgrade"):
+		return SimEngine.research_offer(local_player, adef.upgrade)
 	var def_id := str(adef.get("unit", adef.get("structure", "")))
 	if def_id == "":
 		return {}
@@ -790,6 +792,12 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return ""
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
+	if adef.has("upgrade"):
+		var reason := SimEngine.research_block_reason(local_player, adef.upgrade)
+		if not reason.is_empty():
+			return reason
+		if not selected_owned().any(func(unit): return unit.unit_type == "workshop" and unit.build_progress >= 1.0 and unit.production_queue.size() < 5):
+			return "Workshop queue is full."
 	var p: Dictionary = SimEngine.players.get(local_player, {})
 	var cost := ability_cost(adef)
 	if not cost.is_empty():
@@ -856,7 +864,7 @@ func _trigger_card_button(btn: Dictionary) -> void:
 		if RTSAudio:
 			RTSAudio.play_ui("ui_select")
 		return
-	if abil_id.begins_with("train_"):
+	if abil_id.begins_with("train_") or adef.has("upgrade"):
 		_train_on_best(abil_id)
 		if RTSAudio:
 			RTSAudio.play_ui("ui_select")
@@ -1289,7 +1297,7 @@ func _draw_rally_and_orders() -> void:
 			continue
 		var sp := world_to_screen(u["pos"], 0.2)
 		if u["is_structure"]:
-			if RTSData.get_unit_def(u.unit_type).has("trains"):
+			if u.build_progress >= 1.0 and RTSData.get_unit_def(u.unit_type).has("trains"):
 				_draw_rally_route(u, sp)
 			continue
 		var prev := sp

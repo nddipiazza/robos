@@ -424,7 +424,7 @@ var units: Dictionary = {
 	"workshop": {
 		"id": "workshop",
 		"name": "Workshop",
-		"blurb": "Builds Howitzers. Requires a Muster Hall.",
+		"blurb": "Builds Howitzers and researches Meridian Guard weapon and armor upgrades. Requires a Muster Hall.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"requires": ["muster_hall"],
@@ -441,7 +441,7 @@ var units: Dictionary = {
 		"sight_range": 20.0,
 		"push_priority": 100,
 		"trains": ["howitzer"],
-		"abilities": ["train_howitzer", "rally"]
+		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor"]
 	},
 
 	# =========================================================================
@@ -833,6 +833,8 @@ var abilities: Dictionary = {
 	"train_rifleman": {"id": "train_rifleman", "name": "Train Rifleman", "hotkey": "A", "target": "none", "unit": "rifleman"},
 	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
+	"research_weapons": {"id": "research_weapons", "name": "Research Weapons", "hotkey": "W", "target": "none", "upgrade": "weapons", "desc": "Each level adds one damage per hit to Meridian Guard combat units. Applies to units already in the field."},
+	"research_armor": {"id": "research_armor", "name": "Research Armor", "hotkey": "G", "target": "none", "upgrade": "armor", "desc": "Each level adds one armor to Meridian Guard combat units. Applies to units already in the field."},
 	"train_forager": {"id": "train_forager", "name": "Spawn Forager", "hotkey": "D", "target": "none", "unit": "forager"},
 	"train_skitterling": {"id": "train_skitterling", "name": "Spawn Skitterling", "hotkey": "Z", "target": "none", "unit": "skitterling"},
 	"train_bile_crawler": {"id": "train_bile_crawler", "name": "Spawn Bile Crawler", "hotkey": "R", "target": "none", "unit": "bile_crawler"},
