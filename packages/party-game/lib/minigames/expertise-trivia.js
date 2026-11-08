@@ -317,7 +317,7 @@ module.exports = defineMiniGame({
 
   narration: {
     intro: () => 'Game two: Expertise Turf War! We are alternating between Anatomy, X-Ray, and Medical Science versus I T and Computer Tech. You get one point on your own turf—or three points if you nail a question in the other person’s expertise!',
-    round: (r) => `${r.ownerName}’s expertise: ${r.category}. One point for ${r.ownerName}, or three points if ${r.challengerName} steals it! ${r.prompt.body}`,
-    reveal: (r, res) => `${res.reveal.headline} ${r.funFact}`,
+    round: (r) => `${r.ownerName}’s expertise: ${r.category}! One point for ${r.ownerName}, or three points if ${r.challengerName} steals it!`,
+    reveal: (_r, res) => `${res.reveal.headline}`,
   },
 });

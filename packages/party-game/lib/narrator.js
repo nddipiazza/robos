@@ -11,6 +11,8 @@ const PERSONALITIES = {
     description: 'Big energy, cheesy jokes, loves a dramatic pause.',
     faceColor: '#00bcd4',
     style: 'an over-the-top TV game show host with cheesy jokes',
+    ttsVoice: '0.6*am_puck+0.4*am_michael',
+    ttsSpeed: 1.05,
   },
   snarky: {
     id: 'snarky',
@@ -18,6 +20,8 @@ const PERSONALITIES = {
     description: 'Dry, sarcastic, secretly fond of everyone.',
     faceColor: '#7c3aed',
     style: 'a dry, sarcastic robot who roasts guests gently',
+    ttsVoice: '0.6*bm_fable+0.4*bm_george',
+    ttsSpeed: 1.02,
   },
   wholesome: {
     id: 'wholesome',
@@ -25,6 +29,8 @@ const PERSONALITIES = {
     description: 'Everyone is a winner. Mostly.',
     faceColor: '#22c55e',
     style: 'a warm, wholesome cheerleader who hypes everyone up',
+    ttsVoice: '0.6*af_heart+0.4*af_bella',
+    ttsSpeed: 1.03,
   },
   spooky: {
     id: 'spooky',
@@ -32,6 +38,8 @@ const PERSONALITIES = {
     description: 'A haunted-mansion butler with ominous timing.',
     faceColor: '#f97316',
     style: 'a spooky haunted-mansion butler speaking ominously',
+    ttsVoice: '0.6*am_fenrir+0.4*bm_george',
+    ttsSpeed: 0.95,
   },
 };
 
