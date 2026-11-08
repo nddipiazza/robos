@@ -560,6 +560,7 @@
     render();
   }
 
+  var pollTimer = null;
   function connect() {
     if (!me) return renderJoin();
     var qs = 'role=player&guest=' + encodeURIComponent(me.guestId) + '&token=' + encodeURIComponent(me.token);
@@ -576,6 +577,13 @@
       if (es) es.close();
       es = new EventSource('/events?' + qs);
       es.onmessage = function (e) { try { onView(JSON.parse(e.data)); } catch (err) {} };
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(function () {
+        if (!me) return;
+        fetch('/api/view?' + qs).then(function (r) { return r.ok ? r.json() : null; }).then(function (pv) {
+          if (pv) onView(pv);
+        }).catch(function () {});
+      }, 2000);
     }).catch(function () {
       app.innerHTML = '<div class="center muted">Can\'t reach the party. Retrying…</div>';
       setTimeout(connect, 2000);
