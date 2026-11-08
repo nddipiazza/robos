@@ -532,7 +532,7 @@ func _spawn_marker(pos: Vector2, kind: String) -> void:
 			if utype != "" and kind in ["move", "gather"]:
 				RTSAudio.play_unit_dialogue(utype, "move")
 
-func _issue_rally_at(tags: Array, position: Vector2) -> void:
+func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true) -> void:
 	var best_distance := INF
 	var target_tag := 0
 	# A worker rally can bind to a visible deposit or a finished friendly tap.
@@ -549,8 +549,13 @@ func _issue_rally_at(tags: Array, position: Vector2) -> void:
 			best_distance = distance
 	if target_tag > 0:
 		position = SimEngine.worker_rally_resource(local_player, target_tag).pos
-	SimEngine.issue_command(tags, "rally", position, target_tag)
-	_spawn_marker(position, "rally")
+	elif allow_unit:
+		var unit := _order_target_at(position)
+		if not unit.is_empty() and unit.owner == local_player and not unit.is_structure:
+			target_tag = unit.tag
+			position = unit.pos
+	if SimEngine.issue_command(tags, "rally", position, target_tag, "", queue).ok:
+		_spawn_marker(position, "rally")
 
 func _order_target_at(position: Vector2) -> Dictionary:
 	var target := _unit_at_screen(world_to_screen(position, 1.2))
@@ -574,7 +579,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		_issue_rally_at(tags, wpos)
+		_issue_rally_at(tags, wpos, queue)
 		return
 
 	var target := _order_target_at(wpos)
@@ -627,6 +632,9 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 				if tags.is_empty():
 					_spawn_marker(target.pos, "gather")
 					return
+		elif not target.is_structure and SimEngine.issue_command(tags, "follow", target.pos, target.tag, "", queue).ok:
+			_spawn_marker(target.pos, "move")
+			return
 
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
@@ -660,7 +668,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
 	elif abil == "rally":
 		pending_ability = ""
-		_issue_rally_at(tags, wpos)
+		_issue_rally_at(tags, wpos, queue, not minimap)
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -1281,12 +1289,8 @@ func _draw_rally_and_orders() -> void:
 			continue
 		var sp := world_to_screen(u["pos"], 0.2)
 		if u["is_structure"]:
-			if u["unit_type"] != "silo" and u["unit_type"] != "silo_retracted" and RTSData.get_unit_def(u["unit_type"]).has("trains"):
-				var rp := world_to_screen(u["rally_pos"], 0.2)
-				var rally_color := Color("#5eead4") if u.rally_resource_tag > 0 else Color("#fbbf24")
-				draw_dashed_line(sp, rp, rally_color, 1.5, 6.0)
-				draw_line(rp, rp + Vector2(0, -26), rally_color, 2.0)
-				draw_colored_polygon(PackedVector2Array([rp + Vector2(0, -26), rp + Vector2(16, -21), rp + Vector2(0, -15)]), rally_color)
+			if RTSData.get_unit_def(u.unit_type).has("trains"):
+				_draw_rally_route(u, sp)
 			continue
 		var prev := sp
 		for ord in u["orders"]:
@@ -1309,9 +1313,28 @@ func _draw_rally_and_orders() -> void:
 				col = Color(0.98, 0.8, 0.25, 0.8)
 			elif ot == "patrol":
 				col = Color("#b9a3ef")
+			elif ot == "follow":
+				col = Color("#9eb5ff")
 			draw_line(prev, tp, col, 1.4)
 			draw_circle(tp, 3.0, col)
 			prev = tp
+
+func _draw_rally_route(unit: Dictionary, start: Vector2) -> void:
+	var route: Array = unit.rally_route
+	if route.is_empty():
+		route = [{"kind": "move", "pos": SimEngine.default_rally_position(unit)}]
+	var last := start
+	for waypoint in route:
+		var end := world_to_screen(SimEngine.rally_waypoint_position(waypoint), 0.2)
+		var color := Color("#fbbf24")
+		if waypoint.kind == "harvest":
+			color = Color("#5eead4")
+		elif waypoint.kind == "follow":
+			color = Color("#9eb5ff")
+		draw_dashed_line(last, end, color, 1.5, 6.0)
+		draw_line(end, end + Vector2(0, -26), color, 2.0)
+		draw_colored_polygon(PackedVector2Array([end + Vector2(0, -26), end + Vector2(16, -21), end + Vector2(0, -15)]), color)
+		last = end
 
 func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var is_sel := selected_tags.has(u["tag"])

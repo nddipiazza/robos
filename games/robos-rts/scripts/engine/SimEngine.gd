@@ -29,6 +29,7 @@ const HARVEST_REACH := 1.2
 const CRYSTAL_LINE_RADIUS := 26.0
 const CONSTRUCTION_REFUND := 0.75
 const REPAIR_HP_PER_SECOND := 12.0
+const MAX_RALLY_WAYPOINTS := 8
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -656,9 +657,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"build_progress": build_progress,
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
-		"rally_pos": pos + (Vector2(8.0, 0.0) if owner_id == 1 else Vector2(-8.0, 0.0)),
-		"rally_resource_tag": 0,
-		"rally_explicit": false,
+		"rally_route": [],
 		"kills": 0,
 		"damage_dealt": 0.0
 	}
@@ -951,23 +950,24 @@ func _update_structures(dt: float) -> void:
 			if item["progress"] >= item["total_time"]:
 				var utype = str(item["unit_type"])
 				queue.pop_front()
-				var spawn_dir = (u["rally_pos"] - u["pos"]).normalized()
+				var route: Array = u.rally_route
+				var first := default_rally_position(u)
+				if not route.is_empty():
+					first = rally_waypoint_position(route.front())
+				var spawn_dir = (first - u.pos).normalized()
 				if spawn_dir.length_squared() < 0.01:
 					spawn_dir = Vector2.RIGHT if u["owner"] == 1 else Vector2.LEFT
 				var spawn_pos = u["pos"] + spawn_dir * (u["radius"] + 1.8)
 				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
-				if not new_unit.is_empty():
-					emit_signal("unit_production_finished", new_unit, u)
-				if new_unit.get("is_worker", false):
-					var resource := worker_rally_resource(u.owner, u.rally_resource_tag)
-					if not resource.is_empty():
-						issue_command([new_unit.tag], "harvest", resource.pos, resource.tag)
-						continue
-					if not match_state.is_empty() and not u.rally_explicit:
-						issue_SmartHarvest(new_unit.tag)
-						continue
-				if not new_unit.is_empty() and u["rally_pos"].distance_to(u["pos"]) > u["radius"] + 1.5:
-					issue_command([new_unit["tag"]], "move", u["rally_pos"])
+				if new_unit.is_empty():
+					continue
+				emit_signal("unit_production_finished", new_unit, u)
+				if not route.is_empty():
+					_apply_rally_route(new_unit, route)
+				elif new_unit.is_worker and not match_state.is_empty():
+					issue_SmartHarvest(new_unit.tag)
+				elif first.distance_to(u.pos) > u.radius + 1.5:
+					issue_command([new_unit.tag], "move", first)
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u["surge_timer"] > 0.0:
@@ -1112,6 +1112,20 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			if _deliver_worker_cargo(u, dt, order.target_tag):
 				u.orders.pop_front()
 				u.path.clear()
+
+		"follow":
+			var leader: Dictionary = units.get(order.target_tag, {})
+			if not _is_friendly_mobile(leader, u.owner):
+				u.orders.pop_front()
+				u.path.clear()
+			elif _edge_distance(u, leader) > 1.5:
+				if u.get("nav_goal", Vector2.INF).distance_squared_to(leader.pos) > 1.0:
+					u.path.clear()
+				_follow_order_path(u, leader.pos, dt)
+			else:
+				u.path.clear()
+				if u.orders.size() > 1:
+					u.orders.pop_front()
 
 		"build":
 			_process_worker_build_order(u, order, dt)
@@ -1689,6 +1703,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "repair" and not can_repair(u, units.get(target_tag, {})):
 			continue
+		if ctype == "follow" and (u.is_structure or u.is_immobile or u.tag == target_tag or not _is_friendly_mobile(units.get(target_tag, {}), u.owner)):
+			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
 			continue
 		if ctype == "return_cargo":
@@ -1803,16 +1819,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "rally":
-			if u["is_structure"]:
-				if target_tag > 0:
-					var resource := worker_rally_resource(u.owner, target_tag)
-					if resource.is_empty() or not can_see_position(u.owner, resource.pos):
-						continue
-					u["rally_pos"] = resource.pos
-				else:
-					u["rally_pos"] = target_pos
-				u["rally_resource_tag"] = target_tag
-				u["rally_explicit"] = true
+			if _set_rally(u, target_pos, target_tag, queue):
 				accepted += 1
 			continue
 
@@ -1851,6 +1858,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype == "patrol":
 			var waypoint := _clamp_to_walkable(target_pos, u.radius, u.unit_type == "spire_walker")
 			u.orders.append({"type": "patrol", "target_pos": waypoint})
+			u.has_home_pos = false
+			accepted += 1
+
+		elif ctype == "follow":
+			u.orders.append({"type": "follow", "target_tag": target_tag})
 			u.has_home_pos = false
 			accepted += 1
 
@@ -1929,6 +1941,57 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		command_history.pop_front()
 
 	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
+
+func _is_friendly_mobile(unit: Dictionary, owner_id: int) -> bool:
+	return not unit.is_empty() and unit.owner == owner_id and not unit.is_structure and unit.hp > 0.0
+
+func default_rally_position(structure: Dictionary) -> Vector2:
+	return structure.pos + (Vector2(8.0, 0.0) if structure.owner == 1 else Vector2(-8.0, 0.0))
+
+func rally_waypoint_position(waypoint: Dictionary) -> Vector2:
+	if waypoint.kind == "follow" and units.has(waypoint.target_tag):
+		return units[waypoint.target_tag].pos
+	return waypoint.pos
+
+func _set_rally(structure: Dictionary, position: Vector2, target_tag: int, append: bool) -> bool:
+	if not structure.is_structure or structure.build_progress < 1.0 or not RTSData.get_unit_def(structure.unit_type).has("trains"):
+		return false
+	var route: Array = structure.rally_route
+	if append and route.size() >= MAX_RALLY_WAYPOINTS:
+		emit_signal("notice", structure.owner, "Rally route already has eight waypoints.", "warn")
+		return false
+	var kind := "move"
+	if target_tag > 0:
+		var resource := worker_rally_resource(structure.owner, target_tag)
+		var unit: Dictionary = units.get(target_tag, {})
+		if not resource.is_empty() and can_see_position(structure.owner, resource.pos):
+			kind = "harvest"
+			position = resource.pos
+		elif _is_friendly_mobile(unit, structure.owner):
+			kind = "follow"
+			position = unit.pos
+		else:
+			return false
+	if not position.is_finite():
+		return false
+	if not append:
+		route.clear()
+	elif not route.is_empty() and route.back().kind != "move":
+		# A gather or follow order persists, so only the final waypoint may use it.
+		route[-1] = {"kind": "move", "target_tag": 0, "pos": rally_waypoint_position(route.back())}
+	route.append({"kind": kind, "target_tag": target_tag, "pos": position})
+	return true
+
+func _apply_rally_route(unit: Dictionary, route: Array) -> void:
+	for waypoint in route:
+		var target_tag: int = waypoint.target_tag
+		var position := rally_waypoint_position(waypoint)
+		var command := "move"
+		if waypoint.kind == "follow" and _is_friendly_mobile(units.get(target_tag, {}), unit.owner):
+			command = "follow"
+		elif waypoint.kind == "harvest" and unit.is_worker and not worker_rally_resource(unit.owner, target_tag).is_empty():
+			command = "harvest"
+		issue_command([unit.tag], command, position, target_tag if command != "move" else 0, "", not unit.orders.is_empty())
 
 func worker_rally_resource(owner_id: int, target_tag: int) -> Dictionary:
 	var deposit: Dictionary = resources.get(target_tag, {})
@@ -2165,6 +2228,12 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"production_queue_len": 0 if limited and u.owner != perspective_player else u["production_queue"].size(),
 			"kills": u["kills"]
 		})
+		if not u.rally_route.is_empty() and (not limited or u.owner == perspective_player):
+			var route := []
+			for waypoint in u.rally_route:
+				var position := rally_waypoint_position(waypoint)
+				route.append({"kind": waypoint.kind, "target_tag": waypoint.target_tag, "x": position.x, "y": position.y})
+			unit_list.back()["rally_route"] = route
 
 	var res_list: Array = []
 	for r in resources.values():

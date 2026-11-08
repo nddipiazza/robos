@@ -199,6 +199,8 @@ Right-click a queued unit in the selected building's production panel to cancel 
 
 With a worker-producing building selected, right-click a visible crystal field or your completed Aether Tap to rally new workers straight to gathering. The teal rally flag marks a resource target. Rally to open ground to move new workers there instead.
 
+Right-click a friendly mobile unit to follow it. With a production building selected, the same click rallies new units to follow that unit as it moves. If the target dies, future units move to the original rally point. Hold **Shift** when setting a rally to append up to eight waypoints. A follow or gather target can end the route.
+
 ![Muster Hall with four units queued]({{ '/assets/images/robos-rts/07-production-queue.jpg' | relative_url }}){: .robos-zoomable-img }
 
 When you cannot afford something, or you are at your supply cap, the game says so:
