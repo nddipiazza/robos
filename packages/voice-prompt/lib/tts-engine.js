@@ -61,11 +61,7 @@ class TTSEngine extends EventEmitter {
     this.kokoroPending = new Map();
     this.kokoroSeq = 0;
 
-    if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
-      setTimeout(() => {
-        try { this._getKokoroWorker(); } catch {}
-      }, 10);
-    }
+    // Lazily spawn kokoro-worker only when _synthesizeKokoro is actually invoked.
   }
 
   getPrefs() {
@@ -153,6 +149,13 @@ class TTSEngine extends EventEmitter {
         if (!poisoned) {
           const durationMs = this._getAudioDurationMs(cachedFilePath);
           return { ok: true, filePath: cachedFilePath, durationMs, engine: 'cache' };
+        }
+      }
+      if (options.kokoroVoice) {
+        const kokoroCached = path.join(AUDIO_CACHE_DIR, getCacheKey(cleanText, 'kokoro', options.kokoroVoice, speed));
+        if (fs.existsSync(kokoroCached) && fs.statSync(kokoroCached).size > 100 && this._getWavSampleRate(kokoroCached) !== 22050) {
+          const durationMs = this._getAudioDurationMs(kokoroCached);
+          return { ok: true, filePath: kokoroCached, durationMs, engine: 'cache' };
         }
       }
     } catch {}
@@ -480,7 +483,9 @@ except Exception as e:
         '--volume', volStr,
       ];
 
-      const proc = spawn('edge-tts', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+      const localEdgeBin = path.join(os.homedir(), '.local', 'bin', 'edge-tts');
+      const edgeBin = fs.existsSync(localEdgeBin) ? localEdgeBin : 'edge-tts';
+      const proc = spawn(edgeBin, args, { stdio: ['ignore', 'pipe', 'pipe'] });
       let stderr = '';
       proc.stderr.on('data', d => { stderr += d.toString(); });
       proc.on('close', code => {

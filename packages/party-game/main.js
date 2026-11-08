@@ -153,10 +153,6 @@ function getTts() {
   }
   return ttsEngine;
 }
-// Pre-warm the persistent Kokoro-82M neural worker immediately on app launch
-if (process.env.ROBOS_TEST !== '1') {
-  try { getTts(); } catch {}
-}
 
 // ── Engine, server, TVs ────────────────────────────────────────────────────
 

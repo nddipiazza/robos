@@ -169,6 +169,7 @@ module.exports = defineMiniGame({
   minGuests: 2,
   defaultRounds: 3,
   preserveAllRounds: true,
+  noTimer: true,
   answerSeconds: 45,
 
   async buildRounds(ctx, count = 3) {
@@ -201,7 +202,7 @@ module.exports = defineMiniGame({
           options: allSuggestions.map((label, idx) => ({ id: `sug_${idx}`, label })),
           excludeGuestIds: [],
           layout: 'statements',
-          seconds: 45,
+          noTimer: true,
         },
       };
     });
@@ -240,7 +241,7 @@ module.exports = defineMiniGame({
             options: [],
             excludeGuestIds: [subject.id],
             layout: 'statements',
-            seconds: 40,
+            noTimer: true,
           },
         });
       }
