@@ -111,7 +111,7 @@ function sendJson(res, status, body) {
 function createGameServer({
   engine,
   port = 19213,
-  host = '0.0.0.0',
+  host,
   getNarrationAudio = () => null,
   peopleStore = defaultPeopleStore,
   log = () => {},
