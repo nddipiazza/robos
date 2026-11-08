@@ -422,6 +422,7 @@ func _order_label(u: Dictionary) -> String:
 		"move": return "Moving"
 		"attack_move": return "Attack-moving"
 		"patrol": return "Patrolling"
+		"follow": return "Following"
 		"attack_target": return "Attacking"
 		"harvest": return "Gathering"
 		"return_cargo": return "Returning cargo"
