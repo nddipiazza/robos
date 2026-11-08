@@ -48,6 +48,8 @@ var _attack_msg_cd: float = 0.0
 var _last_group_press: Dictionary = {}
 var _camera_bookmarks: Dictionary = {}
 var _last_base_tag := 0
+var _saturation := {}
+var _saturation_refresh := 0.0
 
 func _ready() -> void:
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
@@ -91,6 +93,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	_last_group_press.clear()
 	_camera_bookmarks.clear()
 	_last_base_tag = 0
+	_saturation_refresh = 0.0
 	messages.clear()
 	alerts.clear()
 	click_markers.clear()
@@ -216,6 +219,10 @@ func hover_pos() -> Vector2:
 # ---------------------------------------------------------------------------
 func _process(delta: float) -> void:
 	_handle_camera_pan(delta)
+	_saturation_refresh -= delta
+	if _saturation_refresh <= 0.0 and not hud_hidden:
+		_saturation = SimEngine.worker_saturation(local_player)
+		_saturation_refresh = 0.25
 	_attack_msg_cd = maxf(0.0, _attack_msg_cd - delta)
 	banner_ttl = maxf(0.0, banner_ttl - delta)
 	for i in range(messages.size() - 1, -1, -1):
@@ -545,6 +552,18 @@ func _issue_rally_at(tags: Array, position: Vector2) -> void:
 	SimEngine.issue_command(tags, "rally", position, target_tag)
 	_spawn_marker(position, "rally")
 
+func _order_target_at(position: Vector2) -> Dictionary:
+	var target := _unit_at_screen(world_to_screen(position, 1.2))
+	if not target.is_empty():
+		return target
+	var best_distance := INF
+	for unit in SimEngine.units.values():
+		var distance: float = position.distance_to(unit.pos)
+		if distance < best_distance and distance <= float(unit.radius) + 1.0 and SimEngine.can_see_unit(local_player, unit):
+			target = unit
+			best_distance = distance
+	return target
+
 func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	var own := selected_owned()
 	if own.is_empty():
@@ -558,6 +577,24 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 		_issue_rally_at(tags, wpos)
 		return
 
+	var target := _order_target_at(wpos)
+	if not target.is_empty() and target.owner == local_player:
+		var builder := {}
+		var repairers: Array = []
+		for unit in own:
+			if SimEngine.can_resume_construction(unit, target) and (builder.is_empty() or unit.pos.distance_squared_to(wpos) < builder.pos.distance_squared_to(wpos)):
+				builder = unit
+			elif SimEngine.can_repair(unit, target):
+				repairers.append(unit.tag)
+		if not builder.is_empty():
+			SimEngine.issue_command([builder.tag], "resume_construction", target.pos, target.tag, "", queue)
+			_spawn_marker(target.pos, "move")
+			return
+		if not repairers.is_empty():
+			SimEngine.issue_command(repairers, "repair", target.pos, target.tag, "", queue)
+			_spawn_marker(target.pos, "move")
+			return
+
 	for r in SimEngine.resources.values():
 		if SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
 			var workers: Array = []
@@ -569,12 +606,6 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 				_spawn_marker(r["pos"], "gather")
 				return
 
-	var target := _unit_at_screen(world_to_screen(wpos, 1.2))
-	if target.is_empty():
-		for u in SimEngine.units.values():
-			if SimEngine.can_see_unit(local_player, u) and wpos.distance_to(u["pos"]) <= float(u["radius"]) + 1.0:
-				target = u
-				break
 	if not target.is_empty():
 		if target["owner"] != local_player:
 			SimEngine.issue_command(tags, "attack_target", target["pos"], target["tag"], "", queue)
@@ -584,6 +615,18 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "gather")
 			return
+		elif SimEngine.is_dropoff(target, local_player):
+			var carrying: Array = []
+			for unit in own:
+				if unit.is_worker and unit.cargo_amount > 0:
+					carrying.append(unit.tag)
+			if not carrying.is_empty():
+				SimEngine.issue_command(carrying, "return_cargo", target.pos, target.tag, "", queue)
+				for tag in carrying:
+					tags.erase(tag)
+				if tags.is_empty():
+					_spawn_marker(target.pos, "gather")
+					return
 
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
@@ -626,6 +669,13 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 				_spawn_marker(r["pos"], "gather")
 				return
 		push_message("Select a crystal field or aether vent.", "warn")
+	elif abil == "repair":
+		var target := _order_target_at(wpos)
+		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag, "", queue).ok:
+			push_message("Select a damaged friendly mechanical unit or building.", "warn")
+			return
+		pending_ability = ""
+		_spawn_marker(target.pos, "move")
 	elif abil.begins_with("build_"):
 		var sdef_id := str(RTSData.get_ability_def(abil).get("structure", abil.replace("build_", "")))
 		var placement := placement_for(sdef_id, wpos)
@@ -634,7 +684,6 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			if RTSAudio:
 				RTSAudio.play_ui("ui_error")
 			return
-		pending_ability = ""
 		var best: Dictionary = {}
 		var best_d := 1e9
 		for u in own:
@@ -643,8 +692,9 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 				if d < best_d:
 					best_d = d
 					best = u
-		if not best.is_empty():
-			SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue)
+		if not best.is_empty() and SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue).ok:
+			if not queue:
+				pending_ability = ""
 			if RTSAudio:
 				RTSAudio.play_ui("ui_build_place")
 			_spawn_marker(placement["pos"], "move")
@@ -673,7 +723,7 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 						found = true
 		if not found:
 			return {"ok": false, "pos": pos, "reason": "An Aether Tap must be built on a free aether vent."}
-		return {"ok": true, "pos": pos, "reason": ""}
+		return _check_planned_placement(structure_id, pos, r)
 	if pos.x < r or pos.y < r or pos.x > SimEngine.map_width - r or pos.y > SimEngine.map_height - r:
 		return {"ok": false, "pos": pos, "reason": "Cannot build outside the map."}
 	for obs in SimEngine.terrain_obstacles:
@@ -685,7 +735,21 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 	for res in SimEngine.resources.values():
 		if pos.distance_to(res["pos"]) < r + float(res["radius"]):
 			return {"ok": false, "pos": pos, "reason": "Too close to a resource."}
-	return {"ok": true, "pos": pos, "reason": ""}
+	return _check_planned_placement(structure_id, pos, r)
+
+func _check_planned_placement(structure_id: String, position: Vector2, radius: float) -> Dictionary:
+	if not SimEngine.can_place_structure(structure_id, position):
+		return {"ok": false, "pos": position, "reason": "Cannot build there."}
+	for worker in SimEngine.units.values():
+		if not worker.is_worker or worker.owner != local_player:
+			continue
+		for order in worker.orders:
+			if order.type != "build" or int(order.structure_tag) > 0:
+				continue
+			var other_radius: float = RTSData.get_unit_def(order.structure_type).get("radius", 2.0)
+			if position.distance_to(order.target_pos) < radius + other_radius + 1.0:
+				return {"ok": false, "pos": position, "reason": "Too close to a queued building."}
+	return {"ok": true, "pos": position, "reason": ""}
 
 # ---------------------------------------------------------------------------
 # Command card
@@ -714,6 +778,8 @@ func ability_cost(adef: Dictionary) -> Dictionary:
 	}
 
 func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
+	if adef.id == "cancel_construction":
+		return ""
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
 	var p: Dictionary = SimEngine.players.get(local_player, {})
@@ -729,6 +795,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more Provision Silos."
 	match str(adef.get("id", "")):
+		"return_cargo":
+			if not selected_owned().any(func(unit): return unit.is_worker and unit.cargo_amount > 0):
+				return "No worker is carrying resources."
 		"phase_step":
 			if float(pu["phase_cooldown"]) > 0.0:
 				return "Phase Step is recharging."
@@ -743,8 +812,14 @@ func get_card_buttons() -> Array[Dictionary]:
 	if pu.is_empty() or pu["owner"] != local_player:
 		return buttons
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
+	if pu.is_structure and pu.build_progress < 1.0:
+		abils = ["cancel_construction"]
 	if abils.has("move"):
 		abils = abils + ["patrol"]
+	if pu.is_worker:
+		abils = abils + ["return_cargo"]
+		if pu.unit_type == "pioneer":
+			abils = abils + ["repair"]
 	for i in range(mini(15, abils.size())):
 		var row := i / 5
 		var col := i % 5
@@ -768,7 +843,7 @@ func _trigger_card_button(btn: Dictionary) -> void:
 			RTSAudio.play_ui("ui_error")
 		return
 	var target_mode := str(adef.get("target", "none"))
-	if target_mode in ["point", "point_or_unit", "resource"]:
+	if target_mode in ["point", "point_or_unit", "resource", "unit"]:
 		pending_ability = abil_id
 		if RTSAudio:
 			RTSAudio.play_ui("ui_select")
@@ -780,7 +855,7 @@ func _trigger_card_button(btn: Dictionary) -> void:
 		return
 	var tags: Array = []
 	for u in selected_owned():
-		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id):
+		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	SimEngine.issue_command(tags, abil_id)
 
@@ -1071,6 +1146,7 @@ func ui_state() -> Dictionary:
 		"messages": msgs,
 		"camera_focus": [f.x, f.y],
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
+		"worker_saturation": SimEngine.worker_saturation(local_player),
 		"control_groups": control_groups.keys().size(),
 		"control_group_members": control_groups.duplicate(true)
 	}
@@ -1128,6 +1204,10 @@ func _draw() -> void:
 	for u in SimEngine.units.values():
 		if SimEngine.can_see_unit(local_player, u):
 			_draw_unit_bars(u, font)
+			if u.owner == local_player and _saturation.has(u.tag):
+				var site: Dictionary = _saturation[u.tag]
+				if site.ideal > 0:
+					_draw_saturation(u, site, font)
 	_draw_build_ghost()
 	_draw_click_markers()
 	if show_names:
@@ -1139,6 +1219,17 @@ func _draw() -> void:
 		)
 		draw_rect(sel_rect, Color(0.45, 1.0, 0.55, 0.08))
 		draw_rect(sel_rect, Color(0.55, 1.0, 0.65, 0.9), false, 1.5)
+
+func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
+	var label := "%d/%d" % [site.assigned, site.ideal]
+	var center := world_to_screen(unit.pos, unit_height(unit) + 1.8)
+	var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 20.0
+	var badge := Rect2(center - Vector2(width * 0.5, 11.0), Vector2(width, 22.0))
+	var color := Color("#52e08a") if site.type == "aether" else Color("#5eead4")
+	if site.assigned > site.ideal:
+		color = Color("#fbbf24")
+	draw_rect(badge, Color(0.03, 0.06, 0.09, 0.92))
+	draw_string(font, badge.position + Vector2(0.0, 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, width, 16, color)
 
 func _draw_building_memory(font: Font) -> void:
 	for building in SimEngine.remembered_buildings(local_player):

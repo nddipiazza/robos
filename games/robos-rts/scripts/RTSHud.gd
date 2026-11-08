@@ -424,7 +424,9 @@ func _order_label(u: Dictionary) -> String:
 		"patrol": return "Patrolling"
 		"attack_target": return "Attacking"
 		"harvest": return "Gathering"
+		"return_cargo": return "Returning cargo"
 		"build": return "Constructing"
+		"repair": return "Repairing"
 		"hold_position": return "Holding position"
 	return "Active"
 
@@ -634,6 +636,15 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_line(c + Vector2(-20, -11) * u, c + Vector2(-11, -20) * u, Color("#e0b24a"), 4.0 * u)
 		"harvest":
 			_gem(c, 17.0 * u)
+		"return_cargo":
+			_gem(c + Vector2(5, -3) * u, 12.0 * u)
+			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
+		"repair":
+			draw_line(c - Vector2(13, 0) * u, c + Vector2(13, 0) * u, C_AETHER, 5.0 * u)
+			draw_line(c - Vector2(0, 13) * u, c + Vector2(0, 13) * u, C_AETHER, 5.0 * u)
+		"cancel_construction":
+			draw_line(c - Vector2(13, 13) * u, c + Vector2(13, 13) * u, C_RED, 5.0 * u)
+			draw_line(c - Vector2(-13, 13) * u, c + Vector2(-13, 13) * u, C_RED, 5.0 * u)
 		"surge":
 			draw_colored_polygon(P.call([[5, -22], [-13, 3], [-2, 3], [-6, 22], [14, -5], [2, -5]]), Color("#ffd24a"))
 		"phase_step":
