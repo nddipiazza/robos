@@ -1789,9 +1789,11 @@ end sub
         if (stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.defaultTab) {
           initialCinemaLibDefaultTab = String(stDisk.activeCinemaLibrary.defaultTab);
         }
+        const hasActiveAppCast = Object.values(stDisk.appCasts || {}).some((c) => c && c.active);
         if (
-          (stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.active !== false) ||
-          (stDisk.activeCinemaCast && stDisk.activeCinemaCast.active !== false)
+          !hasActiveAppCast &&
+          ((stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.active !== false) ||
+            (stDisk.activeCinemaCast && stDisk.activeCinemaCast.active !== false))
         ) {
           initialCinemaLibActive = true;
         }
@@ -2056,9 +2058,6 @@ ${voiceSlide2RowsXml}
       <Label id="wallCardSub5" translation="[1700, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 3 Dashboard" />
     </Group>
 
-    <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
-    <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
-    <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
     <!-- Interactive 10-Foot Movie Player & Tablo DVR Library Browser Overlay (3-Row 100% Visual Image-Card Architecture: Row 0 Tabs <-> Row 1 Category/Season Image Cards <-> Row 2 Large Poster Cards) -->
     <Group id="cinemaLibraryGroup" visible="${initialCinemaLibActive ? 'true' : 'false'}">
       <!-- Warm Obsidian Theater Backdrop (#110E0B) -->
@@ -2384,6 +2383,9 @@ ${voiceSlide2RowsXml}
       <Label id="cinemaLibFooter" translation="[56, 1035]" scale="[0.50, 0.50]" width="3500" height="28" numLines="1" color="0xF1E9DCFF" text="RobOS Cinema+  |  [UP/DOWN] Move Between [Row 1: Movies/TV Shows Tabs] - [Row 2: Category/Season Cards] - [Row 3: Poster Cards]  |  [LEFT/RIGHT] Move Across Row" />
       <Label id="cinemaLibCountLabel" translation="[56, 1035]" scale="[0.50, 0.50]" width="10" height="10" visible="false" text="" />
     </Group>
+    <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer (placed above wallboard & cinemaLibraryGroup so app casts always take top priority) -->
+    <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
+    <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
     <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player Cast -->
     <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="true" />
     <Timer id="clockTimer" repeat="true" duration="1.0" />
@@ -4415,9 +4417,18 @@ sub onPayloadUpdated()
     if json.cinemaLibrary <> invalid and json.cinemaLibrary.items <> invalid
         m.latestCinemaLibrary = json.cinemaLibrary
     end if
+    if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
+        if m.cinemaVideoActive = true then stopCinemaVideo()
+        if m.cinemaLibraryActive = true then hideCinemaLibrary()
+        showAppCastFrame(json.appCast.frameUrl)
+        if json.appCast.narration <> invalid then playAppCastAudio(json.appCast.narration)
+        return
+    end if
     if json.cinemaLibrary <> invalid and json.cinemaLibrary.active = true
         hideAppCastFrames()
         showCinemaLibrary(json.cinemaLibrary)
+    else if m.cinemaLibraryActive = true and m.localLibraryOpened <> true
+        hideCinemaLibrary()
     end if
     if json.cinemaCast <> invalid and json.cinemaCast.active = true and json.cinemaCast.mediaUrl <> invalid
         cKey = ""
@@ -4434,11 +4445,6 @@ sub onPayloadUpdated()
         stopCinemaVideo()
     end if
     if m.cinemaLibraryActive = true
-        return
-    end if
-    if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
-        showAppCastFrame(json.appCast.frameUrl)
-        if json.appCast.narration <> invalid then playAppCastAudio(json.appCast.narration)
         return
     end if
     hideAppCastFrames()
@@ -5427,8 +5433,14 @@ function createTvEngine({
       castAt: new Date().toISOString(),
     };
     state.appCasts = { ...(state.appCasts || {}), [tv.id]: appCast };
+    if (state.activeCinemaCast && state.activeCinemaCast.active !== false) {
+      state.activeCinemaCast = { ...state.activeCinemaCast, active: false };
+    }
+    if (state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false) {
+      state.activeCinemaLibrary = { ...state.activeCinemaLibrary, active: false };
+    }
     state.lastRemoteKey = `SHOW ${appCast.title} → ${tv.name}`;
-    saveState();
+    saveState({ overwriteCinemaState: true });
 
     let note = 'The TV opens it from the RobOS portal within a few seconds.';
     if (process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
@@ -5654,7 +5666,7 @@ function createTvEngine({
             if (!val || typeof val !== 'string') return val;
             return val.replace(/^http:\/\/(\d+\.\d+\.\d+\.\d+|localhost|127\.0\.0\.1):(\d+)\//i, `http://${hostIp}:$2/`);
           };
-          const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
+          const activeCinema = !rokuAppCast && state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
             ? { ...state.activeCinemaCast, mediaUrl: fixHostUrl(state.activeCinemaCast.mediaUrl), active: true }
             : null;
           const rawCinemaItems = [
@@ -5678,7 +5690,7 @@ function createTvEngine({
               : undefined,
           }));
           const cinemaLibrary = {
-            active: Boolean(state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
+            active: Boolean(!rokuAppCast && state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
             defaultTab: state.activeCinemaLibrary?.defaultTab || null,
             tvIp: state.activeCinemaLibrary?.tvIp || null,
             tvName: state.activeCinemaLibrary?.tvName || null,
