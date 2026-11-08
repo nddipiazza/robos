@@ -430,6 +430,6 @@ module.exports = defineMiniGame({
       }
       return `Turn ${r.turnNumber}: ${r.guesserNames}, five of these answers were written by A I and only one was really written by ${r.subjectName}. Which one is real?`;
     },
-    reveal: (r, res) => `${res.reveal.headline} ${res.reveal.detail}`,
+    reveal: (_r, res) => `${res.reveal.headline}`,
   },
 });

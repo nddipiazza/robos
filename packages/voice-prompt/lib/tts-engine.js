@@ -56,13 +56,15 @@ class TTSEngine extends EventEmitter {
     this._speechCounter = 0;
     this._activeSpeechId = 0;
     this.kokoroWorker = null;
+    this.kokoroReadyPromise = null;
+    this.kokoroQueue = Promise.resolve();
     this.kokoroPending = new Map();
     this.kokoroSeq = 0;
 
     if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
       setTimeout(() => {
         try { this._getKokoroWorker(); } catch {}
-      }, 100);
+      }, 10);
     }
   }
 
@@ -146,8 +148,12 @@ class TTSEngine extends EventEmitter {
       const cacheFilename = getCacheKey(cleanText, engine, voice, speed);
       cachedFilePath = path.join(AUDIO_CACHE_DIR, cacheFilename);
       if (fs.existsSync(cachedFilePath) && fs.statSync(cachedFilePath).size > 100) {
-        const durationMs = this._getAudioDurationMs(cachedFilePath);
-        return { ok: true, filePath: cachedFilePath, durationMs, engine: 'cache' };
+        // Never serve a 22050Hz robotic Piper fallback file if the caller asked for 24000Hz Kokoro
+        const poisoned = engine === 'kokoro' && this._getWavSampleRate(cachedFilePath) === 22050;
+        if (!poisoned) {
+          const durationMs = this._getAudioDurationMs(cachedFilePath);
+          return { ok: true, filePath: cachedFilePath, durationMs, engine: 'cache' };
+        }
       }
     } catch {}
 
@@ -171,7 +177,7 @@ class TTSEngine extends EventEmitter {
       try {
         const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
         if (!fs.existsSync(KOKORO_MODEL)) throw new Error(`model not installed (${KOKORO_MODEL})`);
-        await this._synthesizeKokoro(cleanText, outWav, { voice, speed, timeoutMs: options.kokoroTimeoutMs || 6500 });
+        await this._synthesizeKokoro(cleanText, outWav, { voice, speed, timeoutMs: options.kokoroTimeoutMs || 45000 });
         if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
           if (cachedFilePath) {
             try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
@@ -185,25 +191,7 @@ class TTSEngine extends EventEmitter {
       }
     }
 
-    // 2. Try Piper Neural TTS (fast ~120ms local neural fallback — no cloud latency)
-    if (engine === 'piper' || engine === 'kokoro' || fs.existsSync(PIPER_DEFAULT_MODEL)) {
-      try {
-        const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
-        await this._synthesizePiper(cleanText, outWav, { voice: /^(?:af_|am_|bf_|bm_|en-)/.test(voice) ? 'en_US-lessac-medium' : voice, speed });
-        if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
-          if (cachedFilePath) {
-            try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
-          }
-          const durationMs = this._getAudioDurationMs(outWav);
-          return { ok: true, filePath: outWav, durationMs, engine: 'piper' };
-        }
-      } catch (err) {
-        console.warn('[tts-engine] Piper synthesis error, falling back:', err.message);
-        errors.push({ engine: 'piper', error: err.message });
-      }
-    }
-
-    // 3. Try Edge-TTS only if explicitly requested
+    // 2. Try Edge-TTS if explicitly requested
     if (engine === 'edge-tts') {
       try {
         const outMp3 = path.join(os.tmpdir(), `${tmpId}.mp3`);
@@ -219,6 +207,25 @@ class TTSEngine extends EventEmitter {
       } catch (err) {
         console.warn('[tts-engine] Edge-TTS synthesis error, falling back:', err.message);
         errors.push({ engine: 'edge-tts', error: err.code === 'ENOENT' ? 'edge-tts is not installed' : err.message });
+      }
+    }
+
+    // 3. Try Piper Neural TTS (fast ~120ms local neural fallback — no cloud latency)
+    if (engine === 'piper' || engine === 'kokoro' || fs.existsSync(PIPER_DEFAULT_MODEL)) {
+      try {
+        const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
+        await this._synthesizePiper(cleanText, outWav, { voice: /^(?:af_|am_|bf_|bm_|en-)/.test(voice) || voice.includes('+') ? 'en_US-lessac-medium' : voice, speed });
+        if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
+          // Only cache Piper output if the requested engine was actually 'piper' (never poison Kokoro cache!)
+          if (cachedFilePath && engine === 'piper') {
+            try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
+          }
+          const durationMs = this._getAudioDurationMs(outWav);
+          return { ok: true, filePath: outWav, durationMs, engine: 'piper' };
+        }
+      } catch (err) {
+        console.warn('[tts-engine] Piper synthesis error, falling back:', err.message);
+        errors.push({ engine: 'piper', error: err.message });
       }
     }
 
@@ -343,6 +350,10 @@ class TTSEngine extends EventEmitter {
       try {
         const workerScript = path.join(__dirname, 'kokoro-worker.py');
         if (fs.existsSync(workerScript)) {
+          let resolveReady;
+          this.kokoroReadyPromise = new Promise((r) => { resolveReady = r; });
+          const readySafety = setTimeout(() => resolveReady(), 12000);
+
           const proc = spawn('python3', [workerScript], { stdio: ['pipe', 'pipe', 'pipe'] });
           if (proc.stderr) {
             proc.stderr.on('data', () => {}); // Drain onnxruntime stderr warnings so pipe buffer never blocks
@@ -358,7 +369,10 @@ class TTSEngine extends EventEmitter {
             for (const line of lines) {
               try {
                 const msg = JSON.parse(line);
-                if (msg.id && this.kokoroPending.has(msg.id)) {
+                if (msg.type === 'ready') {
+                  clearTimeout(readySafety);
+                  resolveReady();
+                } else if (msg.id && this.kokoroPending.has(msg.id)) {
                   const handler = this.kokoroPending.get(msg.id);
                   this.kokoroPending.delete(msg.id);
                   if (msg.ok) handler.resolve(msg);
@@ -369,9 +383,13 @@ class TTSEngine extends EventEmitter {
           });
           proc.on('error', (err) => {
             console.warn('[tts-engine] Kokoro worker process error:', err.message);
+            clearTimeout(readySafety);
+            resolveReady();
             this.kokoroWorker = null;
           });
           proc.on('exit', () => {
+            clearTimeout(readySafety);
+            resolveReady();
             this.kokoroWorker = null;
           });
           this.kokoroWorker = proc;
@@ -384,31 +402,35 @@ class TTSEngine extends EventEmitter {
     return this.kokoroWorker;
   }
 
-  _synthesizeKokoro(text, outWav, { voice = 'af_heart', speed = 1.0, timeoutMs = 12000 } = {}) {
-    const worker = this._getKokoroWorker();
-    if (worker && worker.stdin && !worker.killed) {
-      return new Promise((resolve, reject) => {
-        const id = `kreq-${++this.kokoroSeq}-${Date.now()}`;
-        const timeout = setTimeout(() => {
-          this.kokoroPending.delete(id);
-          reject(new Error('Kokoro worker timeout'));
-        }, timeoutMs || 12000);
-        this.kokoroPending.set(id, {
-          resolve: () => { clearTimeout(timeout); resolve(); },
-          reject: (err) => { clearTimeout(timeout); reject(err); },
-        });
-        try {
-          worker.stdin.write(JSON.stringify({ id, text, outWav, voice, speed }) + '\n');
-        } catch (err) {
-          clearTimeout(timeout);
-          this.kokoroPending.delete(id);
-          reject(err);
+  _synthesizeKokoro(text, outWav, { voice = 'af_heart', speed = 1.0, timeoutMs = 18000 } = {}) {
+    const runOne = async () => {
+      const worker = this._getKokoroWorker();
+      if (worker && worker.stdin && !worker.killed) {
+        if (this.kokoroReadyPromise) {
+          await this.kokoroReadyPromise;
         }
-      });
-    }
+        return new Promise((resolve, reject) => {
+          const id = `kreq-${++this.kokoroSeq}-${Date.now()}`;
+          const timeout = setTimeout(() => {
+            this.kokoroPending.delete(id);
+            reject(new Error('Kokoro worker timeout'));
+          }, timeoutMs || 18000);
+          this.kokoroPending.set(id, {
+            resolve: () => { clearTimeout(timeout); resolve(); },
+            reject: (err) => { clearTimeout(timeout); reject(err); },
+          });
+          try {
+            worker.stdin.write(JSON.stringify({ id, text, outWav, voice, speed }) + '\n');
+          } catch (err) {
+            clearTimeout(timeout);
+            this.kokoroPending.delete(id);
+            reject(err);
+          }
+        });
+      }
 
-    return new Promise((resolve, reject) => {
-      const pyScript = `
+      return new Promise((resolve, reject) => {
+        const pyScript = `
 import soundfile as sf
 from kokoro_onnx import Kokoro
 import sys
@@ -422,15 +444,20 @@ except Exception as e:
     sys.stderr.write(str(e))
     sys.exit(1)
 `;
-      const proc = spawn('python3', ['-c', pyScript, text], { stdio: ['ignore', 'pipe', 'pipe'] });
-      let stderr = '';
-      proc.stderr.on('data', d => { stderr += d.toString(); });
-      proc.on('close', code => {
-        if (code === 0 && fs.existsSync(outWav)) resolve();
-        else reject(new Error(stderr || `Kokoro exited with code ${code}`));
+        const proc = spawn('python3', ['-c', pyScript, text], { stdio: ['ignore', 'pipe', 'pipe'] });
+        let stderr = '';
+        proc.stderr.on('data', d => { stderr += d.toString(); });
+        proc.on('close', code => {
+          if (code === 0 && fs.existsSync(outWav)) resolve();
+          else reject(new Error(stderr || `Kokoro exited with code ${code}`));
+        });
+        proc.on('error', reject);
       });
-      proc.on('error', reject);
-    });
+    };
+
+    const next = this.kokoroQueue.then(runOne, runOne);
+    this.kokoroQueue = next.catch(() => {});
+    return next;
   }
 
   _synthesizeEdgeTTS(text, outMp3, { voice = 'en-US-AndrewMultilingualNeural', speed = 1.0, pitch = 0, volume = 100 } = {}) {
@@ -575,12 +602,28 @@ except Exception as e:
     });
   }
 
+  _getWavSampleRate(filePath) {
+    try {
+      if (!filePath || !filePath.endsWith('.wav') || !fs.existsSync(filePath)) return null;
+      const fd = fs.openSync(filePath, 'r');
+      const buf = Buffer.alloc(32);
+      const bytesRead = fs.readSync(fd, buf, 0, 32, 0);
+      fs.closeSync(fd);
+      if (bytesRead >= 28 && buf.toString('ascii', 0, 4) === 'RIFF') {
+        return buf.readUInt32LE(24);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   _getAudioDurationMs(filePath) {
     try {
       if (filePath.endsWith('.wav') && fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
-        const sampleRate = filePath.includes('16k') ? 16000 : 24000;
-        const dur = Math.round(((stats.size - 44) / (sampleRate * 2)) * 1000);
+        const sr = this._getWavSampleRate(filePath) || (filePath.includes('16k') ? 16000 : 24000);
+        const dur = Math.round(((stats.size - 44) / (sr * 2)) * 1000);
         if (dur > 0) return Math.max(300, dur);
       }
       return 1200;

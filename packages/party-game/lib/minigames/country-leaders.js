@@ -286,7 +286,7 @@ module.exports = defineMiniGame({
 
   narration: {
     intro: () => 'Game three: Co-Leaders in Crisis! You and your partner co-lead a country. For each national crisis, choose the best three policies out of twenty options. The A I has rated all twenty from number one, worth twenty points, down to number twenty, worth one point, based on data!',
-    round: (r) => `${r.prompt.kicker}. ${r.prompt.headline}. ${r.prompt.body} Pick your top three options on your controller now!`,
-    reveal: (r, res) => `${res.reveal.headline}. ${r.dataSummary}`,
+    round: (r) => `Crisis number ${r.crisisIndex}: ${r.prompt.headline}. Co-Leaders, lock in your top three policies out of twenty!`,
+    reveal: (_r, res) => `${res.reveal.headline}`,
   },
 });
