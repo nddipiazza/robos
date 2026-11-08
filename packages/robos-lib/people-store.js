@@ -57,7 +57,12 @@ const DEFAULT_PROFILES = [
       {
         id: 'nick-main',
         url: 'photos/nicholas-dipiazza.jpg',
-        caption: 'Nicholas — Pragmatic Engineer, Illusionist Wizard & Rock Invasion Drummer',
+        caption: 'Nicholas DiPiazza — Profile Photo',
+      },
+      {
+        id: 'nick-rpg',
+        url: 'photos/nicholas-dipiazza-rpg.jpg',
+        caption: 'Nicholas — Illusionist Wizard & Rock Invasion Drummer (Game Night Avatar)',
       },
     ],
     bio: 'Pragmatic, analytical software engineer in his 40s (Java expert, IT expert, DevOps & Linux systems), drummer in the band Rock Invasion, and involved dad to Bella, Leo, and Viv. Loves RPGs and plays an Illusionist Wizard in co-op Baldur\'s Gate 3 on PS5 with Diana.',
@@ -329,7 +334,12 @@ const DEFAULT_PROFILES = [
       {
         id: 'diana-main',
         url: 'photos/diana-arrington.jpg',
-        caption: 'Diana — Radiologic X-Ray Tech, Oath of the Ancients Paladin, Bookworm & Polyphia Fan',
+        caption: 'Diana Arrington — Profile Photo',
+      },
+      {
+        id: 'diana-rpg',
+        url: 'photos/diana-arrington-rpg.jpg',
+        caption: 'Diana — Oath of the Ancients Paladin, X-Ray Tech & Polyphia Fan (Game Night Avatar)',
       },
     ],
     bio: 'Radiologic X-ray technologist in the Madison area who takes X-rays all day and knows everything about bone anatomy, breaks, and fractures. Devoted mother, huge romance and fantasy book reader, fan of Polyphia and instrumental metal (hates female vocals!), and plays an Oath of the Ancients Paladin in Baldur\'s Gate 3 co-op on PS5 with Nicholas.',
@@ -744,7 +754,7 @@ function ensureDefaultProfiles(opts = {}) {
     fs.writeFileSync(cfgFile, JSON.stringify({ backend: 'filesystem' }, null, 2));
   }
 
-  for (const filename of ['nicholas-dipiazza.jpg', 'diana-arrington.jpg']) {
+  for (const filename of ['nicholas-dipiazza.jpg', 'nicholas-dipiazza-rpg.jpg', 'diana-arrington.jpg', 'diana-arrington-rpg.jpg']) {
     const src = path.join(ASSETS_PHOTOS_DIR, filename);
     const dest = path.join(photosDir, filename);
     try {
