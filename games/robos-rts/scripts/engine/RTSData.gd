@@ -817,6 +817,7 @@ var abilities: Dictionary = {
 	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none", "desc": "Cancel the current order."},
 	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies that come into range."},
 	"attack": {"id": "attack", "name": "Attack", "hotkey": "A", "target": "point_or_unit", "desc": "Attack-move to a point, engaging anything met on the way, or focus a single target."},
+	"patrol": {"id": "patrol", "name": "Patrol", "hotkey": "P", "target": "point", "desc": "Travel back and forth, engaging visible enemies along the route."},
 	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},
 	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},
 	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0, "sfx": "phase_step"},

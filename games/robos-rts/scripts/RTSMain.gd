@@ -394,7 +394,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 
 	if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 		if pending_ability != "":
-			_execute_pending_ability_at(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
+			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed)
 			return
 		is_box_selecting = true
 		_box_pick_type = mb.ctrl_pressed or mb.meta_pressed
@@ -404,7 +404,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		if pending_ability != "":
 			pending_ability = ""
 			return
-		_issue_smart_right_click(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
+		_issue_smart_right_click(screen_to_world(mpos), mb.shift_pressed)
 
 # Returns true when the click landed on a HUD element.
 func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
@@ -416,10 +416,13 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if MINIMAP.grow(6.0).has_point(mpos):
 		_last_group_press.clear()
 		if left:
-			mm_dragging = true
-			world_3d.set_focus(minimap_to_world(mpos))
+			if pending_ability in ["attack", "move", "patrol", "rally"]:
+				_execute_pending_ability_at(minimap_to_world(mpos), mb.shift_pressed, true)
+			elif world_3d:
+				mm_dragging = true
+				world_3d.set_focus(minimap_to_world(mpos))
 		elif right:
-			_issue_smart_right_click(minimap_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
+			_issue_smart_right_click(minimap_to_world(mpos), mb.shift_pressed)
 		return true
 
 	if left and idle_workers().size() > 0 and IDLE_BTN.has_point(mpos):
@@ -509,7 +512,7 @@ func _spawn_marker(pos: Vector2, kind: String) -> void:
 			RTSAudio.play_ui("ui_command_attack")
 			if utype != "":
 				RTSAudio.play_unit_dialogue(utype, "attack")
-		elif kind in ["move", "gather", "rally"]:
+		elif kind in ["move", "gather", "rally", "patrol"]:
 			RTSAudio.play_ui("ui_command_move")
 			if utype != "" and kind in ["move", "gather"]:
 				RTSAudio.play_unit_dialogue(utype, "move")
@@ -558,7 +561,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
 
-func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
+func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false) -> void:
 	var own := selected_owned()
 	if own.is_empty():
 		pending_ability = ""
@@ -569,21 +572,22 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 		tags.append(u["tag"])
 	if abil == "attack":
 		pending_ability = ""
-		var tgt := _unit_at_screen(world_to_screen(wpos, 1.2))
+		var tgt := {} if minimap else _unit_at_screen(world_to_screen(wpos, 1.2))
 		if not tgt.is_empty() and tgt["owner"] != local_player:
 			SimEngine.issue_command(tags, "attack_target", tgt["pos"], tgt["tag"], "", queue)
 			_spawn_marker(tgt["pos"], "attack")
 		else:
 			SimEngine.issue_command(tags, "attack_move", wpos, 0, "", queue)
 			_spawn_marker(wpos, "attack")
-	elif abil == "move" or abil == "phase_step":
+	elif abil in ["move", "phase_step", "patrol"]:
 		pending_ability = ""
 		var ability_tags: Array = []
 		for u in own:
-			if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil):
+			var unit_abilities: Array = RTSData.get_unit_def(u.unit_type).get("abilities", [])
+			if unit_abilities.has(abil) or (abil == "patrol" and unit_abilities.has("move")):
 				ability_tags.append(u["tag"])
 		SimEngine.issue_command(ability_tags, abil, wpos, 0, "", queue)
-		_spawn_marker(wpos, "move")
+		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
 	elif abil == "rally":
 		pending_ability = ""
 		SimEngine.issue_command(tags, "rally", wpos)
@@ -713,6 +717,8 @@ func get_card_buttons() -> Array[Dictionary]:
 	if pu.is_empty() or pu["owner"] != local_player:
 		return buttons
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
+	if abils.has("move"):
+		abils = abils + ["patrol"]
 	for i in range(mini(15, abils.size())):
 		var row := i / 5
 		var col := i % 5
@@ -1146,6 +1152,7 @@ func _draw_click_markers() -> void:
 		match str(m["kind"]):
 			"attack": col = Color("#f87171")
 			"gather": col = Color("#5eead4")
+			"patrol": col = Color("#b9a3ef")
 			"rally": col = Color("#fbbf24")
 		col.a = 1.0 - t
 		_ellipse(sp, lerpf(26.0, 8.0, t), col, 2.5)
@@ -1182,6 +1189,8 @@ func _draw_rally_and_orders() -> void:
 				col = Color(0.37, 0.92, 0.83, 0.7)
 			elif ot == "build":
 				col = Color(0.98, 0.8, 0.25, 0.8)
+			elif ot == "patrol":
+				col = Color("#b9a3ef")
 			draw_line(prev, tp, col, 1.4)
 			draw_circle(tp, 3.0, col)
 			prev = tp

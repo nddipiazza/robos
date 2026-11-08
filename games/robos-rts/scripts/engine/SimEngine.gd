@@ -1044,8 +1044,10 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			if not enemy.is_empty():
 				_begin_attack_on(u, enemy)
 
-		"attack_move":
+		"attack_move", "patrol":
 			var target_pos: Vector2 = order.get("target_pos", u["pos"])
+			if otype == "patrol" and not order.has("patrol_origin"):
+				order["patrol_origin"] = u.pos
 			var enemy = _find_best_attack_target(u, false)
 			if not enemy.is_empty():
 				var wpn_range = _get_weapon_range(u)
@@ -1056,8 +1058,13 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			else:
 				var arrival_rad: float = float(order.get("arrival_radius", 1.5))
 				if u["pos"].distance_to(target_pos) <= arrival_rad:
-					u["orders"].pop_front()
-					u["home_pos"] = u["pos"]
+					if otype == "patrol" and target_pos.distance_to(order.patrol_origin) > arrival_rad:
+						order.target_pos = order.patrol_origin
+						order.patrol_origin = target_pos
+						u.path.clear()
+					else:
+						u["orders"].pop_front()
+						u["home_pos"] = u["pos"]
 				else:
 					_follow_order_path(u, target_pos, dt)
 
@@ -1552,6 +1559,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "patrol" and (u.is_immobile or u.is_structure or not target_pos.is_finite()):
+			continue
 		if vision != null and (ctype == "attack_target" or (ctype in ["attack", "attack_move"] and target_tag > 0)):
 			var target: Dictionary = units.get(target_tag, {})
 			if target.is_empty() or target.owner == u.owner or not can_see_unit(u.owner, target):
@@ -1561,7 +1570,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if not _can_build(u, stype_check, target_pos):
 				continue
 
-		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "phase_step"]:
+		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "patrol", "phase_step"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 			if players.has(u["owner"]):
@@ -1672,6 +1681,12 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				"arrival_radius": dynamic_arrival
 			})
 			u["has_home_pos"] = false
+			accepted += 1
+
+		elif ctype == "patrol":
+			var waypoint := _clamp_to_walkable(target_pos, u.radius, u.unit_type == "spire_walker")
+			u.orders.append({"type": "patrol", "target_pos": waypoint})
+			u.has_home_pos = false
 			accepted += 1
 
 		elif ctype in ["attack", "attack_move"]:

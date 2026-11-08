@@ -356,6 +356,8 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Ctrl + click / double click | Select friendly units of the clicked type on screen. Shift adds them to the selection. |
 | Ctrl + F3 / F4 / F9 / F11 | Save the current camera position and zoom. Press the same function key alone to return. |
 | Backspace | Cycle through completed friendly bases without changing selection or zoom. |
+| P, then click terrain | Patrol between the starting point and the clicked point, engaging visible enemies along the way. Stop or give a new order to end the patrol. |
+| M / A / P / Y, then click the minimap | Place a move, attack-move, patrol or rally order without moving the camera. Hold Shift to queue unit orders. |
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
 
 ## Scripting and bots
