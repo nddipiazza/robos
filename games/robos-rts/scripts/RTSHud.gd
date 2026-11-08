@@ -483,13 +483,13 @@ func _draw_single(u: Dictionary) -> void:
 	var col_a: Array = []
 	var col_b: Array = []
 	if not wpn.is_empty():
-		var dmg := float(wpn.get("damage", 0))
+		var dmg := float(wpn.get("damage", 0)) + SimEngine.unit_upgrade_level(u, "weapons")
 		var atk := int(wpn.get("attacks", 1))
 		var dps := dmg * float(atk) / maxf(0.1, float(wpn.get("period", 1.0)))
 		col_a.append(["Damage", "%d" % int(dmg) if atk == 1 else "%d x %d" % [int(dmg), atk]])
 		col_b.append(["DPS", "%.1f" % dps])
 		col_a.append(["Range", "%.1f" % float(wpn.get("range", 0))])
-	col_a.append(["Armor", "%d" % int(u["armor"])])
+	col_a.append(["Armor", "%d" % (int(u["armor"]) + SimEngine.unit_upgrade_level(u, "armor"))])
 	if float(def.get("speed", 0.0)) > 0.0:
 		col_b.append(["Speed", "%.1f" % float(u["speed"])])
 	for i in range(col_a.size()):
@@ -521,15 +521,20 @@ func _draw_single(u: Dictionary) -> void:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
 		if not queue.is_empty():
-			_text(Vector2(rx + 100.0, ry + 12), "Right-click a unit to cancel and refund", 15, C_MUTED)
+			_text(Vector2(rx + 100.0, ry + 12), "Right-click a slot to cancel and refund", 15, C_MUTED)
 		for i in range(5):
 			var qr := _production_rect(i)
 			_vgrad(qr, Color("#252c37"), Color("#12161c"))
 			draw_rect(qr, C_EDGE_HI if i < queue.size() else C_EDGE, false, 1.0)
 			if i < queue.size():
-				var qt := _icon_for(str(queue[i]["unit_type"]))
-				if qt:
-					draw_texture_rect(qt, qr.grow(-3.0), false)
+				var item: Dictionary = queue[i]
+				if item.has("upgrade"):
+					_glyph("research_" + item.upgrade, qr)
+					_text_r(qr.end.x - 5, qr.position.y + 16, str(item.level), 14, C_GOLD)
+				else:
+					var qt := _icon_for(str(item.unit_type))
+					if qt:
+						draw_texture_rect(qt, qr.grow(-3.0), false)
 				if i == 0:
 					var prog := clampf(float(queue[i]["progress"]) / maxf(0.1, float(queue[i]["total_time"])), 0.0, 1.0)
 					_bar(Rect2(qr.position.x, qr.end.y + 3, qr.size.x, 6), prog, Color("#e5e7eb"))
@@ -538,6 +543,9 @@ func _draw_single(u: Dictionary) -> void:
 		ry += 4.0
 
 	var status: Array = []
+	if is_own and u.unit_type == "workshop" and not building:
+		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
+		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
 	if is_own and not u["is_structure"]:
 		status.append(_order_label(u))
 		if int(u["cargo_amount"]) > 0:
@@ -635,6 +643,12 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_line(c + Vector2(-17, -17) * u, c + Vector2(15, 15) * u, col, 5.0 * u)
 			draw_line(c + Vector2(-20, 11) * u, c + Vector2(-11, 20) * u, Color("#e0b24a"), 4.0 * u)
 			draw_line(c + Vector2(-20, -11) * u, c + Vector2(-11, -20) * u, Color("#e0b24a"), 4.0 * u)
+		"research_weapons":
+			draw_polyline(P.call([[-19, 12], [-7, 0], [0, 7], [20, -13]]), C_GOLD, 4.0 * u, true)
+			draw_polyline(P.call([[10, -13], [20, -13], [20, -3]]), C_GOLD, 4.0 * u, true)
+		"research_armor":
+			draw_colored_polygon(P.call([[-16, -16], [16, -16], [16, 5], [0, 20], [-16, 5]]), Color("#6688b7"))
+			draw_polyline(P.call([[-8, 1], [-2, 7], [9, -6]]), col, 3.0 * u, true)
 		"harvest":
 			_gem(c, 17.0 * u)
 		"return_cargo":
@@ -732,7 +746,10 @@ func _draw_tooltip() -> void:
 	draw_rect(r, Color("#10141a", 0.97))
 	draw_rect(r, C_EDGE_HI, false, 1.5)
 	var y := r.position.y + 28.0
-	_text(Vector2(r.position.x + 14, y), str(adef.get("name", "")), 20, C_TEXT)
+	var title := str(adef.get("name", ""))
+	if cost.has("level"):
+		title += " %d" % int(cost.level)
+	_text(Vector2(r.position.x + 14, y), title, 20, C_TEXT)
 	var hk := str(adef.get("hotkey", ""))
 	if hk != "":
 		_text_r(r.end.x - 14, y, "[%s]" % hk, 18, C_GOLD)
@@ -756,7 +773,9 @@ func _draw_tooltip() -> void:
 			_text(Vector2(x + 22, y), str(cost["supply"]), 17, C_TEXT)
 			x += 22.0 + _text_w(str(cost["supply"]), 17) + 18.0
 		if float(cost["time"]) > 0.0:
-			var secs: float = maxf(2.5, float(cost["time"]) * 0.25) if adef.has("unit") else float(cost["time"]) * 0.25
+			var secs: float = float(cost["time"]) * SimEngine.build_time_scale()
+			if adef.has("unit"):
+				secs = maxf(2.5, secs)
 			_text_r(r.end.x - 14, y, "%.0f s" % secs, 16, C_MUTED)
 		y += 8.0
 	if stats != "":

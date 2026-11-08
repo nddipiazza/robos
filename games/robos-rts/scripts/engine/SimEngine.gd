@@ -30,6 +30,7 @@ const CRYSTAL_LINE_RADIUS := 26.0
 const CONSTRUCTION_REFUND := 0.75
 const REPAIR_HP_PER_SECOND := 12.0
 const MAX_RALLY_WAYPOINTS := 8
+const MAX_UPGRADE_LEVEL := 3
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -167,6 +168,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 			"aether": 150,
 			"supply_used": 0,
 			"supply_cap": 0,
+			"upgrades": {"weapons": 0, "armor": 0},
 			"crystal_collected": 0,
 			"aether_collected": 0,
 			"units_killed": 0,
@@ -940,7 +942,7 @@ func _update_structures(dt: float) -> void:
 			continue
 		if u["build_progress"] < 1.0:
 			if bool(u.get("auto_summon", false)):
-				var rate = dt / maxf(1.0, float(u.build_total_time) * _build_time_scale())
+				var rate = dt / maxf(1.0, float(u.build_total_time) * build_time_scale())
 				u.build_progress = minf(1.0, u.build_progress + rate)
 				u.hp = minf(u.max_hp, u.hp + u.max_hp * rate)
 				if u.build_progress >= 1.0:
@@ -953,8 +955,12 @@ func _update_structures(dt: float) -> void:
 			var item = queue[0]
 			item["progress"] += dt
 			if item["progress"] >= item["total_time"]:
-				var utype = str(item["unit_type"])
 				queue.pop_front()
+				if item.has("upgrade"):
+					players[u.owner].upgrades[item.upgrade] = item.level
+					emit_signal("notice", u.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
+					continue
+				var utype = str(item["unit_type"])
 				var route: Array = u.rally_route
 				var first := default_rally_position(u)
 				if not route.is_empty():
@@ -1296,7 +1302,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			s_unit["builder_tag"] = u.tag
 			u["vel"] = Vector2.ZERO
 			u["facing"] = (s_unit["pos"] - u["pos"]).angle()
-			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * _build_time_scale())
+			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * build_time_scale())
 			s_unit["build_progress"] = min(1.0, s_unit["build_progress"] + rate)
 			s_unit["hp"] = min(s_unit["max_hp"], s_unit["hp"] + s_unit["max_hp"] * rate)
 			if s_unit["build_progress"] >= 1.0:
@@ -1604,7 +1610,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 	if wpn.is_empty():
 		return
 
-	var base_dmg = float(wpn.get("damage", 6.0))
+	var base_dmg = float(wpn.get("damage", 6.0)) + unit_upgrade_level(attacker, "weapons")
 	var bonus_dict: Dictionary = wpn.get("bonus", {})
 	var splash_rad = float(wpn.get("splash_radius", 0.0))
 	var slow_factor = float(wpn.get("concussive_slow", 0.0))
@@ -1665,7 +1671,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 			target["shields"] = 0.0
 			dmg = overflow
 
-	var hp_dmg = max(0.5, dmg - float(target.get("armor", 0.0)))
+	var hp_dmg = max(0.5, dmg - float(target.get("armor", 0.0)) - unit_upgrade_level(target, "armor"))
 	target["hp"] = max(0.0, target["hp"] - hp_dmg)
 	attacker["damage_dealt"] += hp_dmg
 
@@ -1815,6 +1821,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype.begins_with("train_"):
 			var train_type = ctype.replace("train_", "")
 			if _enqueue_unit_production(u, train_type):
+				accepted += 1
+			continue
+
+		elif ctype.begins_with("research_"):
+			if _enqueue_research(u, ctype.trim_prefix("research_")):
 				accepted += 1
 			continue
 
@@ -2068,9 +2079,50 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		"crystal_cost": m_cost,
 		"aether_cost": v_cost,
 		"progress": 0.0,
-		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * _build_time_scale())
+		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * build_time_scale())
 	})
 	_recompute_supplies()
+	return true
+
+func unit_upgrade_level(unit: Dictionary, upgrade: String) -> int:
+	if unit.faction != "humans" or unit.is_structure or unit.is_worker:
+		return 0
+	return players.get(unit.owner, {}).get("upgrades", {}).get(upgrade, 0)
+
+func research_offer(owner_id: int, upgrade: String) -> Dictionary:
+	var completed: int = players[owner_id].upgrades.get(upgrade, 0)
+	if completed >= MAX_UPGRADE_LEVEL:
+		return {}
+	return {"level": completed + 1, "crystal": 100 + completed * 75, "aether": 100 + completed * 75,
+		"supply": 0, "time": 40.0 + completed * 15.0, "requires": []}
+
+func research_block_reason(owner_id: int, upgrade: String) -> String:
+	if players[owner_id].upgrades[upgrade] >= MAX_UPGRADE_LEVEL:
+		return "All levels researched."
+	for structure in units.values():
+		if structure.owner != owner_id or structure.unit_type != "workshop":
+			continue
+		for item in structure.production_queue:
+			if item.get("upgrade") == upgrade:
+				return "Research already queued."
+	return ""
+
+func _enqueue_research(structure: Dictionary, upgrade: String) -> bool:
+	if structure.unit_type != "workshop" or structure.build_progress < 1.0 or not players[structure.owner].upgrades.has(upgrade):
+		return false
+	if not research_block_reason(structure.owner, upgrade).is_empty() or structure.production_queue.size() >= 5:
+		return false
+	var offer := research_offer(structure.owner, upgrade)
+	var player: Dictionary = players[structure.owner]
+	if player.crystal < offer.crystal or player.aether < offer.aether:
+		return false
+	player.crystal -= offer.crystal
+	player.aether -= offer.aether
+	structure.production_queue.append({
+		"upgrade": upgrade, "level": offer.level,
+		"crystal_cost": offer.crystal, "aether_cost": offer.aether,
+		"progress": 0.0, "total_time": offer.time * build_time_scale(),
+	})
 	return true
 
 func _cancel_training(structure: Dictionary, index: int) -> bool:
@@ -2081,13 +2133,13 @@ func _cancel_training(structure: Dictionary, index: int) -> bool:
 	if player.is_empty():
 		return false
 	var item: Dictionary = queue.pop_at(index)
-	var definition: Dictionary = RTSData.get_unit_def(item.unit_type)
+	var definition: Dictionary = RTSData.get_unit_def(item.get("unit_type", ""))
 	player.crystal += int(item.get("crystal_cost", definition.get("crystal_cost", 50)))
 	player.aether += int(item.get("aether_cost", definition.get("aether_cost", 0)))
 	_recompute_supplies()
 	return true
 
-func _build_time_scale() -> float:
+func build_time_scale() -> float:
 	return 1.0 if not match_state.is_empty() else 0.25
 
 func _recompute_supplies() -> void:
@@ -2104,6 +2156,8 @@ func _recompute_supplies() -> void:
 			if u["build_progress"] >= 1.0:
 				players[pid]["supply_cap"] += int(def.get("supply_provided", 0))
 			for q in u["production_queue"]:
+				if q.has("upgrade"):
+					continue
 				var q_def = RTSData.get_unit_def(str(q["unit_type"]))
 				players[pid]["supply_used"] += int(q_def.get("supply_cost", 1))
 		else:
