@@ -45,6 +45,8 @@ The window opens with match setup. Choose Easy, Normal or Hard AI, its Rush, Bal
 
 ## Frontier Hunters
 
+The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, and two river crossings. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
+
 This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two distinct starting sites are selected randomly from the map's eight perimeter bases. Each commander starts with one Colony Hub, **12 Pioneers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are **inexhaustible**. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
 
 ![Frontier Hunters: the full 256×256 battlefield with waterways, crossings and expansion resources]({{ '/assets/images/robos-rts/34-frontier-hunters-map.png' | relative_url }}){: .robos-zoomable-img }
@@ -54,6 +56,8 @@ This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two di
 ### Scouting and fog of war
 
 With fog enabled, a unit on low ground needs a friendly spotter or a recon sweep to see uphill. Units on high ground share their sight with the rest of the army. Select a completed Colony Hub, press **E** and click the battlefield or minimap to reveal an area for 10 seconds. The Hub starts with 50 energy, regenerates 0.75 energy per second and can store 200.
+
+Skirmishers can use **C** to toggle Phase Cloak. Activation costs 25 energy and sustaining it costs four energy per second. Finished Sentry Turrets and active recon sweeps reveal cloaked units in visible areas. Select your turret to see its detection radius. Skirmishers are playable in the three-faction showcase and editor scenarios.
 
 Black terrain is unexplored. Dim terrain has been explored, and lit terrain is within friendly sight. Send a Pioneer ahead to find the opposing base or check an expansion. Enemy troops disappear when they leave sight, and combat outside your vision produces no new visible effects or world sounds. A building you previously saw leaves a **Last seen** footprint and a minimap marker until you scout the site again. A unit that loses sight of its focus-fire target moves to the last known position and attacks enemies it spots on the way.
 
@@ -223,6 +227,8 @@ Pioneers can repair damaged friendly mechanical units and buildings. Right-click
 
 Press **Q** on a Pioneer to toggle Auto-Repair. Idle Pioneers repair nearby friendly machinery using the same crystal costs. Explicit orders take priority.
 
+With a Muster Hall finished, select a Pioneer and press **T** to build a Sentry Turret. It costs 125 crystal, fires automatically on visible targets, and can be repaired like other mechanical structures.
+
 ![Placement footprint shown in green for a Provision Silo]({{ '/assets/images/robos-rts/09-build-placement.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ![Placement footprint in red next to a crystal field, with the message "Too close to a resource"]({{ '/assets/images/robos-rts/10-build-placement-blocked.jpg' | relative_url }}){: .robos-zoomable-img }
@@ -230,6 +236,8 @@ Press **Q** on a Pioneer to toggle Auto-Repair. Idle Pioneers repair nearby frie
 ![A Provision Silo under construction with a progress bar in the selection panel]({{ '/assets/images/robos-rts/11-construction-in-progress.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ### Other views
+
+The **F8** menu saves your overhead health-bar preference. Choose selected or damaged units, always show, or off. The selection panel still shows health and shields, and construction and production still show progress.
 
 ![The whole canyon at maximum zoom with the minimap showing the camera outline]({{ '/assets/images/robos-rts/03-canyon-overview.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -337,6 +345,8 @@ Shielded warriors. Every unit and structure has an Aegis Shield that absorbs dam
 
 ## Combat
 
+Press **K** to toggle Hold Fire on armed combat units and finished Sentry Turrets. Explicit targeting still works. To deliberately attack a friendly unit or structure, press **A** and **Alt-click** the target. Friendly losses do not count as enemy kills.
+
 Weapons have a wind-up before damage lands and a recovery after it. Moving during the recovery cancels it, which is what makes stutter-step kiting work: the built-in AI does it, and so can a player or a bot.
 
 ![Riflemen holding range against a pack of Skitterlings]({{ '/assets/images/robos-rts/26-kiting-approach.jpg' | relative_url }}){: .robos-zoomable-img }
@@ -378,7 +388,9 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | F1 | Controls overlay |
 | F8 | Match settings, new game, surrender, map editor and completed match results |
 | Ctrl + Enter on the scorecard | Rematch the same AI settings, map seed and start positions with fresh scores |
+| O after the match | Enter Observer mode from the scorecard. Press again to cycle full visibility, player vision and AI vision. |
 | F2 / Ctrl + F2 | Select all friendly army units. Ctrl + F2 switches the viewed faction in showcase scenarios. |
+| Shift + F2 | Select friendly combat units that are outside every control group. |
 | Ctrl + click / double click | Select friendly units of the clicked type on screen. Shift adds them to the selection. |
 | Ctrl + F3 / F4 / F9 / F11 | Save the current camera position and zoom. Press the same function key alone to return. |
 | Backspace | Cycle through completed friendly bases without changing selection or zoom. |
@@ -397,7 +409,7 @@ The game runs an HTTP/JSON server (port 18095, or `RTS_WEB_SERVICE_PORT`). The C
 | `POST /step`, `POST /pause` | Advance ticks; pause real-time play (`/step` still works) |
 | `POST /playback`, `GET /performance` | Control live speed/pause without stepping; inspect frame timings |
 | `POST /scenario` | Load a scenario by slug (`default` for the main map) or an inline definition |
-| `POST /match` | Start or surrender a skirmish, or send `{"action":"rematch"}` after it ends to replay the opening. The finished match contains both sides' scorecard totals. |
+| `POST /match` | Start or surrender a skirmish, or send `{"action":"rematch"}` after it ends to replay the opening. New games accept `map_id` and `unlimited_resources` overrides. The finished match contains both sides' scorecard totals. |
 | `POST /directive` | Turn a built-in AI mode on or off for a player |
 | `POST /select`, `POST /camera`, `POST /ui` | Selection, camera and HUD state |
 | `POST /input` | Inject mouse and key events through the real input handlers |

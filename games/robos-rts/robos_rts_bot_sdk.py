@@ -49,10 +49,20 @@ class RTSClient:
     def load_scenario_slug(self, slug: str) -> Dict[str, Any]:
         return self._request("POST", "/scenario", {"slug": slug})
 
-    def new_match(self, difficulty: str = "normal", strategy: str = "balanced", seed: Optional[int] = None) -> Dict[str, Any]:
-        payload = {"difficulty": difficulty, "strategy": strategy}
+    def new_match(
+        self,
+        difficulty: str = "normal",
+        strategy: str = "balanced",
+        seed: Optional[int] = None,
+        *,
+        map_id: str = "frontier-hunters",
+        unlimited_resources: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        payload = {"difficulty": difficulty, "strategy": strategy, "map_id": map_id}
         if seed is not None:
             payload["seed"] = seed
+        if unlimited_resources is not None:
+            payload["unlimited_resources"] = unlimited_resources
         return self._request("POST", "/match", payload)
 
     def surrender(self, player: int = 1) -> Dict[str, Any]:

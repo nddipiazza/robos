@@ -17,6 +17,7 @@ const SOUND_FILES: Dictionary = {
 	"rifle_fire": "res://assets/audio/sfx/rifle_fire.wav",
 	"breach_charge": "res://assets/audio/sfx/breach_charge.wav",
 	"autocannon_fire": "res://assets/audio/sfx/autocannon_fire.wav",
+	"sentry_fire": "res://assets/audio/sfx/sentry_fire.wav",
 	"mortar_fire": "res://assets/audio/sfx/mortar_fire.wav",
 	"acid_spit": "res://assets/audio/sfx/acid_spit.wav",
 	"corrosive_lob": "res://assets/audio/sfx/corrosive_lob.wav",
@@ -73,6 +74,7 @@ const WEAPON_NAME_TO_SFX: Dictionary = {
 	"Burst Rifle": "rifle_fire",
 	"Breach Charge": "breach_charge",
 	"Mobile Autocannon": "autocannon_fire",
+	"Sentry Coilgun": "sentry_fire",
 	"155mm Siege Mortar": "mortar_fire",
 	"Mandibles": "mandible_bite",
 	"Razor Claws": "claw_slash",
@@ -641,7 +643,7 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	if hit_shields or float(target.get("shields", 0.0)) > 0.0:
 		play_at("shield_hit", target_pos, -2.0, 0.05)
 
-	if int(attacker.get("owner", 0)) == local_player_id and str(attacker.get("faction", "")) == RTSData.FACTION_HUMANS:
+	if not attacker.is_structure and int(attacker.get("owner", 0)) == local_player_id and str(attacker.get("faction", "")) == RTSData.FACTION_HUMANS:
 		var now_sec: float = float(Time.get_ticks_msec()) * 0.001
 		if not cooldown_enabled or (now_sec - _last_auto_attack_voice_sec >= 7.0 and now_sec - _last_voice_time_sec >= 2.5):
 			if _compute_spatial_db(attacker_pos) > -79.0:

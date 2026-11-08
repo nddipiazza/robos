@@ -1,0 +1,22 @@
+{
+  "@context": {"robos": "https://robos.dev/schema#"},
+  "@id": "robos:scenario-iron-narrows",
+  "@type": "robos:RTSScenario",
+  "name": "Iron Narrows — 1 Player vs AI",
+  "mode": "skirmish",
+  "map_id": "iron-narrows",
+  "difficulty": "normal",
+  "strategy": "balanced",
+  "unlimited_resources": false,
+  "map": {
+    "width": 128,
+    "height": 96,
+    "starts": [{"x": 25, "y": 48}, {"x": 103, "y": 48}],
+    "expansions": [{"x": 34, "y": 21}, {"x": 94, "y": 75}],
+    "water_channels": [{"width": 10, "points": [[64, 0], [64, 96]]}],
+    "bridges": [
+      {"x": 54, "y": 16, "w": 20, "h": 16},
+      {"x": 54, "y": 64, "w": 20, "h": 16}
+    ]
+  }
+}

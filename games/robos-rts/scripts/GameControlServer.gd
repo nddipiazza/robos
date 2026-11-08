@@ -278,11 +278,7 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			elif action == "rematch":
 				_send_json(client, 200, SimEngine.rematch())
 			else:
-				var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/frontier-hunters.jsonld"))
-				for key in ["seed", "difficulty", "strategy"]:
-					if body_dict.has(key):
-						data[key] = body_dict[key]
-				_send_json(client, 200, SimEngine.load_scenario_dict(data))
+				_send_json(client, 200, SimEngine.start_skirmish(str(body_dict.get("map_id", "frontier-hunters")), body_dict))
 
 		"/playback":
 			var speed = float(body_dict.get("speed", SimEngine.sim_speed))

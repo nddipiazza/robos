@@ -156,6 +156,19 @@ def gen_autocannon_fire() -> list[float]:
     return out
 
 
+def gen_sentry_fire() -> list[float]:
+    """A short coil discharge with a dry kinetic snap and a descending whine."""
+    length = int(0.19 * SAMPLE_RATE)
+    noise = _one_pole_hp(_make_noise(length, 906), 720.0)
+    result = []
+    for i, sample in enumerate(noise):
+        t = i / SAMPLE_RATE
+        snap = sample * _env_ad(t, 0.001, 0.064, 2.2)
+        chirp = math.sin(2 * math.pi * (820.0 * t - 1650.0 * t * t))
+        result.append(_soft_clip(1.3 * snap + 0.45 * chirp * _env_ad(t, 0.003, 0.16, 1.8)))
+    return result
+
+
 def gen_mortar_fire() -> list[float]:
     """Emplaced Mortar: deep siege artillery cannon blast with incoming whistle and heavy shell impact."""
     dur = 0.52
@@ -807,6 +820,7 @@ GENERATORS = {
     "rifle_fire": (gen_rifle_fire, 0.90),
     "breach_charge": (gen_breach_charge, 0.92),
     "autocannon_fire": (gen_autocannon_fire, 0.92),
+    "sentry_fire": (gen_sentry_fire, 0.84),
     "mortar_fire": (gen_mortar_fire, 0.95),
     "acid_spit": (gen_acid_spit, 0.85),
     "corrosive_lob": (gen_corrosive_lob, 0.88),

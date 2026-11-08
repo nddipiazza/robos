@@ -38,7 +38,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	var gas_workers = 0
 	var gas_tap: Dictionary = {}
 	for u in mine:
-		if u.unit_type == "aether_tap" and u.build_progress >= 1.0:
+		if u.unit_type == "aether_tap" and u.build_progress >= 1.0 and (SimEngine.unlimited_resources or not SimEngine.worker_rally_resource(pid, u.tag).is_empty()):
 			gas_tap = u
 	for worker in workers:
 		if not worker.orders.is_empty() and worker.orders[0].type == "build":
@@ -64,7 +64,9 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 		_build(workers, "aether_tap", base)
 		return
 	# Reserve the expansion cost instead of spending every income tick on units.
-	if strategy == "economy" and int(counts.get("colony_hub", 0)) < 2 and workers.size() >= 18 and SimEngine.sim_time >= 90:
+	var planned_expansion := strategy == "economy" and int(counts.get("colony_hub", 0)) < 2 and workers.size() >= 18 and SimEngine.sim_time >= 90
+	var depleted := not SimEngine.unlimited_resources and workers.size() >= 12 and int(counts.get("colony_hub", 0)) == halls.size() and _needs_new_mineral_line(halls)
+	if planned_expansion or depleted:
 		var expansion = _expansion_position(pid, base)
 		if expansion != Vector2.ZERO:
 			_build(workers, "colony_hub", expansion, true)
@@ -135,6 +137,8 @@ func _expansion_position(pid: int, base: Vector2) -> Vector2:
 			known.append(u)
 	for start in SimEngine.match_state.get("starts", []) + SimEngine.match_state.get("expansions", []):
 		var pos = Vector2(float(start.x), float(start.y))
+		if not SimEngine.unlimited_resources and _crystal_near(pos) < 2500:
+			continue
 		var occupied = false
 		for u in known:
 			if u.pos.distance_to(pos) < 26:
@@ -143,6 +147,23 @@ func _expansion_position(pid: int, base: Vector2) -> Vector2:
 			best = pos
 			distance = pos.distance_to(base)
 	return best
+
+func _crystal_near(base: Vector2) -> int:
+	var total := 0
+	for deposit in SimEngine.resources.values():
+		if deposit.resource_type != "crystal_field":
+			continue
+		var anchor: Vector2 = deposit.get("line_origin", deposit.pos)
+		var reach := 6.0 if deposit.has("line_origin") else 26.0
+		if anchor.distance_squared_to(base) <= reach * reach:
+			total += deposit.amount
+	return total
+
+func _needs_new_mineral_line(halls: Array) -> bool:
+	for hall in halls:
+		if hall.build_progress < 1.0 or _crystal_near(hall.pos) >= 2500:
+			return false
+	return true
 
 func _known_enemy_buildings(pid: int) -> Array:
 	var known: Array = SimEngine.remembered_buildings(pid)

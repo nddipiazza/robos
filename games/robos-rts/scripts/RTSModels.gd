@@ -137,6 +137,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"aether_tap": _aether_tap(root, r, team)
 		"muster_hall": _muster_hall(root, r, team)
 		"workshop": _workshop(root, r, team)
+		"sentry_turret": _sentry_turret(root, r, team)
 		"forager": _forager(root, glow)
 		"skitterling": _skitterling(root, glow)
 		"bile_crawler": _bile_crawler(root, glow)
@@ -263,6 +264,20 @@ static func _silo(root: Node3D, r: float, team: Material, retracted: bool) -> vo
 	for i in range(3):
 		var a := TAU * float(i) / 3.0
 		box(root, Vector3(0.22, 0.5, 0.22), dark, Vector3(cos(a) * r * 0.7, 0.25, sin(a) * r * 0.7))
+
+static func _sentry_turret(root: Node3D, r: float, team: Material) -> void:
+	var armor := mat("h_armor", STEEL, Color.BLACK, 1.0, 0.35, 0.55)
+	var dark := mat("h_dark", STEEL_DARK, Color.BLACK, 1.0, 0.4, 0.6)
+	var sensor := mat("sentry_sensor", Color("#8cf2fc"), Color("#22d3ee"), 1.7)
+	cyl(root, r * 0.85, r, 0.45, dark, Vector3(0, 0.23, 0), Vector3.ZERO, 12)
+	cyl(root, 0.72, 1.03, 1.4, armor, Vector3(0, 1.0, 0), Vector3.ZERO, 10)
+	box(root, Vector3(1.65, 0.68, 1.35), armor, Vector3(0, 1.9, 0))
+	box(root, Vector3(1.3, 0.12, 1.2), team, Vector3(0, 2.26, 0))
+	for side in [-1, 1]:
+		box(root, Vector3(1.85, 0.24, 0.26), dark, Vector3(1.18, 1.92, side * 0.42))
+		box(root, Vector3(0.16, 0.13, 0.16), sensor, Vector3(2.1, 1.92, side * 0.42))
+	cyl(root, 0.06, 0.1, 0.5, dark, Vector3(-0.48, 2.5, 0), Vector3.ZERO, 8)
+	sph(root, 0.24, sensor, Vector3(-0.48, 2.82, 0))
 
 static func _aether_tap(root: Node3D, r: float, team: Material) -> void:
 	var armor := mat("h_armor", STEEL, Color.BLACK, 1.0, 0.35, 0.55)

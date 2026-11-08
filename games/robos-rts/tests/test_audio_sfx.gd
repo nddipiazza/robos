@@ -21,12 +21,12 @@ func _run() -> void:
 	_test_abilities_and_deaths_sfx()
 	_test_economy_and_ui_sfx()
 	_test_human_unit_dialogues_and_voices()
-	print("PASS test_audio_sfx (all 36 SFX + 71 human voice dialogue WAV streams verified)")
+	print("PASS test_audio_sfx (all 37 SFX + 71 human voice dialogue WAV streams verified)")
 	quit(0)
 
 func _test_all_wav_files_loaded() -> void:
 	assert(audio != null, "RTSAudio autoload must be registered")
-	assert(audio.SOUND_FILES.size() == 36, "Expected 36 sound files in catalog")
+	assert(audio.SOUND_FILES.size() == 37, "Expected 37 sound files in catalog")
 	for key in audio.SOUND_FILES.keys():
 		var path: String = str(audio.SOUND_FILES[key])
 		assert(FileAccess.file_exists(path), "Missing WAV file on disk: %s" % path)
@@ -74,6 +74,7 @@ func _test_ranged_gunfire_and_splash_sfx() -> void:
 	_assert_combat_sfx("rifleman", "bile_crawler", ["rifle_fire"])
 	_assert_combat_sfx("breacher", "bile_crawler", ["breach_charge"])
 	_assert_combat_sfx("howitzer", "bile_crawler", ["autocannon_fire"])
+	_assert_combat_sfx("sentry_turret", "bile_crawler", ["sentry_fire"])
 	_assert_combat_sfx("howitzer_emplaced", "bile_crawler", ["mortar_fire", "explosion_splash"])
 	_assert_combat_sfx("bile_crawler", "rifleman", ["acid_spit"])
 	_assert_combat_sfx("blight_hurler", "rifleman", ["corrosive_lob", "explosion_splash"])

@@ -85,6 +85,10 @@ func _draw_match_status() -> void:
 	var state: Dictionary = SimEngine.match_state
 	if state.is_empty():
 		return
+	if main.observer_player >= 0:
+		var perspective: String = ["All units", "Your vision", "AI vision"][main.observer_player]
+		_text(Vector2(32, 55), "Observer  ·  %s  ·  O switches view" % perspective, 17, C_GOLD)
+		return
 	if state.status == "finished":
 		var outcome := "Victory" if state.winner == 1 else ("Draw" if state.winner == 0 else "Defeat")
 		_text(Vector2(32, 55), "%s  ·  F8 Match menu" % outcome, 17, C_GOLD)
@@ -328,11 +332,12 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 
 func _draw_minimap_units() -> void:
 	var mm: Rect2 = main.MINIMAP
-	for building in SimEngine.remembered_buildings(main.local_player):
+	var viewer: int = main.viewing_player()
+	for building in SimEngine.remembered_buildings(viewer):
 		var up: Vector2 = main.world_to_minimap(building.pos)
 		draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), C_MUTED, false, 1.0)
 	for u in SimEngine.units.values():
-		if not SimEngine.can_see_unit(main.local_player, u):
+		if not SimEngine.can_see_unit(viewer, u):
 			continue
 		var up: Vector2 = main.world_to_minimap(u["pos"])
 		var col := RTSData.get_player_color(int(u["owner"]))
@@ -429,6 +434,7 @@ func _order_label(u: Dictionary) -> String:
 		"patrol": return "Patrolling"
 		"follow": return "Following"
 		"attack_target": return "Attacking"
+		"force_attack": return "Force-firing"
 		"harvest": return "Gathering"
 		"return_cargo": return "Returning cargo"
 		"build": return "Constructing"
@@ -481,9 +487,10 @@ func _draw_single(u: Dictionary) -> void:
 	var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
 	var hcol := Color("#3fcf6a") if ratio > 0.5 else (Color("#f0b232") if ratio > 0.25 else Color("#ee4b3f"))
 	_bar(Rect2(x0, by, 360, 15), ratio, hcol, "Health  %d / %d" % [int(ceil(u["hp"])), int(u["max_hp"])])
-	if is_own and u.unit_type == "colony_hub":
+	if is_own and u.unit_type in ["colony_hub", "skirmisher"]:
+		var energy_limit := SimEngine.HUB_ENERGY_MAX if u.unit_type == "colony_hub" else SimEngine.CLOAK_ENERGY_MAX
 		by += 19.0
-		_bar(Rect2(x0, by, 360, 15), u.energy / SimEngine.HUB_ENERGY_MAX, Color("#6d8fe3"), "Energy  %d / %d" % [int(u.energy), int(SimEngine.HUB_ENERGY_MAX)])
+		_bar(Rect2(x0, by, 360, 15), u.energy / energy_limit, Color("#6d8fe3"), "Energy  %d / %d" % [int(u.energy), int(energy_limit)])
 	by += 30.0
 
 	# Stats: two columns, labels muted, values bright
@@ -551,6 +558,10 @@ func _draw_single(u: Dictionary) -> void:
 		ry += 4.0
 
 	var status: Array = []
+	if is_own and u.get("hold_fire", false):
+		status.append("Holding fire")
+	if u.get("cloaked", false):
+		status.append("Cloaked")
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
@@ -620,7 +631,7 @@ func _draw_command_card() -> void:
 		if pending:
 			border = C_GOLD
 			bw = 3.0
-		if not pu.is_empty() and ((btn.ability_id == "auto_repair" and pu.get("auto_repair", false)) or (btn.ability_id == "salvage" and pu.get("salvage_finish", 0) > SimEngine.tick)):
+		if not pu.is_empty() and ((btn.ability_id == "auto_repair" and pu.get("auto_repair", false)) or (btn.ability_id == "salvage" and pu.get("salvage_finish", 0) > SimEngine.tick) or (btn.ability_id == "hold_fire" and pu.get("hold_fire", false)) or (btn.ability_id == "phase_cloak" and pu.get("cloaked", false))):
 			border = C_AETHER
 			bw = 3.0
 		draw_rect(r, border, false, bw)
@@ -658,6 +669,12 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_line(c + Vector2(-17, -17) * u, c + Vector2(15, 15) * u, col, 5.0 * u)
 			draw_line(c + Vector2(-20, 11) * u, c + Vector2(-11, 20) * u, Color("#e0b24a"), 4.0 * u)
 			draw_line(c + Vector2(-20, -11) * u, c + Vector2(-11, -20) * u, Color("#e0b24a"), 4.0 * u)
+		"hold_fire":
+			draw_arc(c, 18.0 * u, 0.0, TAU, 24, C_RED, 3.0 * u, true)
+			draw_line(c - Vector2(13, 13) * u, c + Vector2(13, 13) * u, C_RED, 3.0 * u)
+		"phase_cloak":
+			draw_arc(c, 18.0 * u, -2.8, 2.8, 24, accent, 3.0 * u, true)
+			draw_arc(c, 11.0 * u, 0.8, 5.4, 18, col, 2.0 * u, true)
 		"research_weapons":
 			draw_polyline(P.call([[-19, 12], [-7, 0], [0, 7], [20, -13]]), C_GOLD, 4.0 * u, true)
 			draw_polyline(P.call([[10, -13], [20, -13], [20, -3]]), C_GOLD, 4.0 * u, true)
@@ -849,7 +866,7 @@ func _draw_help() -> void:
 		["F3 · F4 · F9 · F11", "Jump to a saved view. Hold Ctrl to save."],
 	]
 	if not SimEngine.match_state.is_empty():
-		right[6] = ["F2", "Select every friendly combat unit"]
+		right[6] = ["F2 / Shift + F2", "Select the army / only ungrouped combat units"]
 		right[7] = ["F8", "Match setup, speed, restart and surrender"]
 	_text(r.position + Vector2(28, 634), "Groups 1-9, 0: recall; Shift adds selection; Alt moves units; double tap centers. Hover for controls.", 17, C_GOLD)
 	for i in range(left.size()):

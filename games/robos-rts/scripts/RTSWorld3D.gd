@@ -83,7 +83,7 @@ func _sync_fog(local_player: int) -> void:
 	if _fog_quad == null:
 		return
 	var sight = SimEngine.vision
-	if sight == null:
+	if sight == null or local_player == 0:
 		_fog_quad.hide()
 		fog_texture = null
 		_fog_cells.clear()
