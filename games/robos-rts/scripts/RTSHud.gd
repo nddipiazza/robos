@@ -421,6 +421,7 @@ func _order_label(u: Dictionary) -> String:
 	match str(u["orders"][0]["type"]):
 		"move": return "Moving"
 		"attack_move": return "Attack-moving"
+		"patrol": return "Patrolling"
 		"attack_target": return "Attacking"
 		"harvest": return "Gathering"
 		"build": return "Constructing"
@@ -605,6 +606,10 @@ func _glyph(id: String, r: Rect2) -> void:
 	match id:
 		"move":
 			draw_colored_polygon(P.call([[-20, -6], [3, -6], [3, -17], [22, 0], [3, 17], [3, 6], [-20, 6]]), accent)
+		"patrol":
+			var route := Color("#b9a3ef")
+			draw_polyline(P.call([[-19, -7], [19, -7], [10, -16]]), route, 4.0 * u, true)
+			draw_polyline(P.call([[19, 7], [-19, 7], [-10, 16]]), route, 4.0 * u, true)
 		"stop":
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color("#e06a5e"))
 			draw_rect(Rect2(c - Vector2(15, 15) * u, Vector2(30, 30) * u), Color(0, 0, 0, 0.5), false, 1.0)
@@ -758,7 +763,7 @@ func _draw_help() -> void:
 		["Shift + click", "Queue orders, add to or remove from selection"],
 		["Mouse wheel", "Zoom"],
 		["Middle drag", "Pan the camera"],
-		["Minimap", "Left click jumps there, right click orders"],
+		["Minimap", "Pan or place a targeted move, attack, patrol or rally"],
 		["Command card", "Click, or press the letter in the corner"],
 		["Backspace", "Cycle through your completed bases"],
 	]

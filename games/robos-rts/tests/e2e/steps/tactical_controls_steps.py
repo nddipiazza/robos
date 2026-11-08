@@ -1,3 +1,5 @@
+from math import hypot
+
 from behave import then, when
 
 
@@ -26,3 +28,37 @@ def ctrl_click_unit(context, name):
 def active_subgroup(context, unit_type):
     view = context.client.ui()["state"]
     assert view["primary_type"] == unit_type, view
+
+
+@when("the commander targets minimap point ({x:d}, {y:d})")
+@when("the commander targets minimap point ({x:d}, {y:d}) with {modifier}")
+def target_minimap(context, x, y, modifier=""):
+    game_map = context.client.get_observation()["map"]
+    sx = 26 + 252 * x / game_map["width"]
+    sy = 876 + 189 * y / game_map["height"]
+    context.client.mouse(sx, sy, shift=modifier == "Shift")
+    context.client.mouse(sx, sy, pressed=False)
+
+
+def find_unit(context, name):
+    return next(unit for unit in context.client.get_observation()["units"] if unit["id"] == name)
+
+
+@then('"{name}" has orders "{orders}"')
+def unit_orders(context, name, orders):
+    expected = [] if orders == "none" else orders.split(",")
+    actual = [order["type"] for order in find_unit(context, name)["orders"]]
+    assert actual == expected, actual
+
+
+@then('"{name}" reaches ({x:d}, {y:d}) and returns to ({origin_x:d}, {origin_y:d}) while patrolling')
+def patrol_round_trip(context, name, x, y, origin_x, origin_y):
+    for goal in [(x, y), (origin_x, origin_y)]:
+        for _ in range(40):
+            context.client.step(24)
+            unit = find_unit(context, name)
+            assert unit["orders"][0]["type"] == "patrol", unit
+            if hypot(unit["pos"]["x"] - goal[0], unit["pos"]["y"] - goal[1]) < 2:
+                break
+        else:
+            raise AssertionError(f"{name} never patrolled to {goal}")
