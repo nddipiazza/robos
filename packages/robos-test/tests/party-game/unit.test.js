@@ -597,8 +597,11 @@ describe('RobOS Party Game', () => {
             const v = e.tvView();
             if (v.round.inputMode === 'text') {
               seenTextPrompt += 1;
+              assert.strictEqual(v.phaseEndsAt, null, 'Game 1 (real-or-ai) text input has no countdown timer before votes lock in');
               e.submitAnswer(gNick.id, `Nick real answer #${seenTextPrompt}`);
+              assert.strictEqual(e.tvView().phaseEndsAt, null, 'Timer stays null when only 1 of 2 players locked in');
               e.submitAnswer(gDiana.id, `Diana real answer #${seenTextPrompt}`);
+              assert.ok(e.tvView().phaseEndsAt !== null, 'Proceeds once all players lock in');
             } else if (v.round.inputMode === 'multi') {
               seenMulti20Options += 1;
               assert.strictEqual(v.round.options.length, 20, 'country-leaders presents 20 policy options');
@@ -608,6 +611,7 @@ describe('RobOS Party Game', () => {
             } else {
               if (v.game.id === 'real-or-ai') {
                 seenGuess6Options += 1;
+                assert.strictEqual(v.phaseEndsAt, null, 'Game 1 (real-or-ai) guessing turn has no countdown timer before votes lock in');
                 assert.strictEqual(v.round.options.length, 6, 'real-or-ai displays 5 AI answers + 1 real answer');
               }
               for (const g of e.state.guests) {

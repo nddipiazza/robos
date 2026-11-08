@@ -717,9 +717,13 @@ function createPartyEngine({
     }
     const custom = game.narration?.round?.(round, index, buildCtx()) || null;
     await narrate('round', {}, custom || round.prompt.headline + ' ' + (round.prompt.body || ''));
-    // A round can set its own clock (House Quest challenges do).
-    const secs = round.prompt.seconds || state.settings.answerSeconds || game.answerSeconds || 30;
-    state.phaseEndsAt = now() + secs * 1000 + estimateSpeechMs(state.narration.text);
+    // A round or mini game can disable the countdown timer so it only advances when all votes lock in.
+    if (round.prompt.noTimer || game.noTimer) {
+      state.phaseEndsAt = null;
+    } else {
+      const secs = round.prompt.seconds || state.settings.answerSeconds || game.answerSeconds || 30;
+      state.phaseEndsAt = now() + secs * 1000 + estimateSpeechMs(state.narration.text);
+    }
   }
 
   function eligibleGuests() {

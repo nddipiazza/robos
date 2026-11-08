@@ -8,6 +8,15 @@ Reads JSON lines from stdin, synthesizes, and writes JSON lines to stdout.
 import sys
 import json
 import os
+
+os.environ.setdefault("OMP_NUM_THREADS", "2")
+os.environ.setdefault("MKL_NUM_THREADS", "2")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "2")
+try:
+    os.nice(10)
+except Exception:
+    pass
+
 import wave
 import soundfile as sf
 from kokoro_onnx import Kokoro

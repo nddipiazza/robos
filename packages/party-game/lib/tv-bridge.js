@@ -9,7 +9,7 @@
 
 const http = require('node:http');
 
-const FRAME_INTERVAL_MS = 700;
+const FRAME_INTERVAL_MS = 1000;
 
 function postFrame(portalPort, tvId, jpg) {
   return new Promise((resolve) => {
@@ -67,8 +67,8 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
     // (a hidden normal window only paints its first frame, which froze the TV
     // whenever the console was minimized).
     const win = new BrowserWindow({
-      width: 1920,
-      height: 1080,
+      width: 1280,
+      height: 720,
       show: false,
       frame: false,
       backgroundColor: '#070b12',
@@ -109,7 +109,7 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
         flushFrame();
       }
     });
-    win.webContents.setFrameRate(10);
+    win.webContents.setFrameRate(2);
     win.loadURL(`${tvPageUrl(screen, '127.0.0.1')}&capture=1`);
     win.webContents.setAudioMuted(true);
     const timer = setInterval(flushFrame, FRAME_INTERVAL_MS);

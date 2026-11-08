@@ -12,6 +12,7 @@ const PERSONALITIES = {
     faceColor: '#00bcd4',
     style: 'an over-the-top TV game show host with cheesy jokes',
     ttsVoice: '0.6*am_puck+0.4*am_michael',
+    edgeVoice: 'en-US-AndrewMultilingualNeural',
     ttsSpeed: 1.05,
   },
   snarky: {
@@ -21,6 +22,7 @@ const PERSONALITIES = {
     faceColor: '#7c3aed',
     style: 'a dry, sarcastic robot who roasts guests gently',
     ttsVoice: '0.6*bm_fable+0.4*bm_george',
+    edgeVoice: 'en-GB-RyanNeural',
     ttsSpeed: 1.02,
   },
   wholesome: {
@@ -30,6 +32,7 @@ const PERSONALITIES = {
     faceColor: '#22c55e',
     style: 'a warm, wholesome cheerleader who hypes everyone up',
     ttsVoice: '0.6*af_heart+0.4*af_bella',
+    edgeVoice: 'en-US-AvaMultilingualNeural',
     ttsSpeed: 1.03,
   },
   spooky: {
@@ -39,6 +42,7 @@ const PERSONALITIES = {
     faceColor: '#f97316',
     style: 'a spooky haunted-mansion butler speaking ominously',
     ttsVoice: '0.6*am_fenrir+0.4*bm_george',
+    edgeVoice: 'en-US-ChristopherNeural',
     ttsSpeed: 0.95,
   },
 };
