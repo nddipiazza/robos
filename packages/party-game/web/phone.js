@@ -274,7 +274,8 @@
 
   function renderWaiting() {
     var hostInfo = view.partyHost ? view.partyHost.name + ':' + view.partyHost.house.percent : 'none';
-    var key = 'waiting:' + view.guests.length + ':' + view.phase + ':' + hostInfo + ':' + view.canClaimPartyHost;
+    var canStartKey = view.canStart ? (view.canStart.ok ? 'ok' : (view.canStart.reasons || []).join('|')) : 'na';
+    var key = 'waiting:' + view.guests.length + ':' + view.phase + ':' + hostInfo + ':' + view.canClaimPartyHost + ':' + view.isPartyHost + ':' + canStartKey;
     if (key === renderKey) return;
     renderKey = key;
     var ready = view.guests.filter(function (g) { return g.surveyComplete; }).length;
@@ -285,12 +286,38 @@
       ? '<div class="hero-photo" style="--c:' + esc(view.me.color || '#00bcd4') + '"><img src="' + esc(view.me.photoUrl) + '" alt="' + esc(view.me.name) + '"></div>'
       : '<div class="hero-emoji">' + esc(view.me.avatar) + '</div>';
     var subInfo = view.me.archetype ? '<div class="kicker" style="margin-bottom:0.3rem">' + esc(view.me.archetype) + '</div>' : '';
+    var startCard = '';
+    if (view.isPartyHost) {
+      var canGo = view.canStart && view.canStart.ok;
+      var reasons = (view.canStart && view.canStart.reasons) || [];
+      startCard = '<div class="card" style="margin-top:0.8rem;text-align:center;border-color:' + (canGo ? '#22c55e' : 'rgba(255,255,255,0.14)') + '">' +
+        '<div class="kicker" style="margin-bottom:0.35rem">👑 Party Host Controls</div>' +
+        (canGo
+          ? '<p class="muted" style="margin:0 0 0.7rem;font-size:0.9rem">Everyone is ready! Launch the show right from your phone.</p>' +
+            '<button type="button" id="startPartyBtn" class="primary" style="width:100%;font-size:1.05rem;padding:0.85rem 1rem">🚀 Start the Party!</button>'
+          : '<p class="muted" style="margin:0 0 0.6rem;font-size:0.88rem">' + esc(reasons.join(' · ') || 'Waiting for players…') + '</p>' +
+            '<button type="button" class="primary" disabled style="width:100%;opacity:0.5">Waiting for everyone to be ready…</button>') +
+        '</div>';
+    }
     app.innerHTML = hostClaimBanner() + '<div class="hero">' + heroAvatar + subInfo + '<h1>You\'re in, ' + esc(view.me.name) + '!</h1>' +
       '<p class="muted">Watch the TV. ' + ready + ' of ' + view.guests.length + ' guests are ready.</p>' + hostLine +
+      startCard +
       '<div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-top:0.8rem">' +
       '<button type="button" id="edit" class="ghost">Review my survey answers</button>' +
       (view.isPartyHost ? '<button type="button" id="editHouse" class="ghost">Edit house details</button>' : '') +
       '<button type="button" id="switchPlayer" class="ghost">Switch profile</button></div></div>';
+    var startBtn = document.getElementById('startPartyBtn');
+    if (startBtn) {
+      startBtn.onclick = function () {
+        startBtn.disabled = true;
+        startBtn.textContent = 'Starting the party…';
+        post('/api/start', authed({})).catch(function (err) {
+          toast(err.message);
+          renderKey = '';
+          render();
+        });
+      };
+    }
     document.getElementById('edit').onclick = function () { qIndex = 0; renderSurvey(true); };
     var eh = document.getElementById('editHouse');
     if (eh) eh.onclick = function () { houseMode = true; renderKey = ''; render(); };
@@ -466,9 +493,23 @@
     if (dd) dd.onclick = function () { post('/api/double-down', authed({})).catch(function (err) { toast(err.message); }); };
   }
 
+  function hostNextControls(label) {
+    if (!view || !view.isPartyHost || ['setup', 'lobby', 'finale'].indexOf(view.phase) >= 0) return '';
+    return '<div style="margin-top:1rem;text-align:center"><button type="button" id="hostNextBtn" class="ghost">' + esc(label || '👑 Host: Next →') + '</button></div>';
+  }
+
+  function wireHostNext() {
+    var nb = document.getElementById('hostNextBtn');
+    if (!nb) return;
+    nb.onclick = function () {
+      nb.disabled = true;
+      post('/api/next', authed({})).catch(function (err) { toast(err.message); nb.disabled = false; });
+    };
+  }
+
   function renderReveal() {
     var d = view.me.delta;
-    var key = 'reveal:' + view.game.id + ':' + view.round.number;
+    var key = 'reveal:' + view.game.id + ':' + view.round.number + ':' + view.isPartyHost;
     if (key === renderKey) return;
     renderKey = key;
     var res = view.result || {};
@@ -476,14 +517,18 @@
       '<h1>' + (d ? (d.points > 0 ? '+' : '') + d.points + ' points' : 'No points') + '</h1>' +
       (d ? '<p class="muted">' + esc(d.reasons.join(' · ')) + '</p>' : '') +
       '<div class="card"><b>' + esc(res.reveal ? res.reveal.headline : '') + '</b> ' + esc(res.correctLabel || '') +
-      '<div class="muted">' + esc(res.reveal ? res.reveal.detail : '') + '</div></div></div>';
+      '<div class="muted">' + esc(res.reveal ? res.reveal.detail : '') + '</div></div>' +
+      hostNextControls('👑 Host: Next Round →') + '</div>';
+    wireHostNext();
   }
 
   function renderStatus(emoji, title, sub) {
-    var key = 'status:' + title + ':' + sub;
+    var key = 'status:' + view.phase + ':' + title + ':' + sub + ':' + view.isPartyHost;
     if (key === renderKey) return;
     renderKey = key;
-    app.innerHTML = '<div class="hero"><div class="hero-emoji">' + emoji + '</div><h1>' + esc(title) + '</h1><p class="muted">' + esc(sub || '') + '</p></div>';
+    app.innerHTML = '<div class="hero"><div class="hero-emoji">' + emoji + '</div><h1>' + esc(title) + '</h1><p class="muted">' + esc(sub || '') + '</p>' +
+      hostNextControls('👑 Host: Continue →') + '</div>';
+    wireHostNext();
   }
 
   function renderBar() {
@@ -532,10 +577,11 @@
         return renderSurvey(false);
       case 'roles':
         if (m.role) {
-          var key = 'role:' + m.role.id;
+          var key = 'role:' + m.role.id + ':' + view.isPartyHost;
           if (key !== renderKey) {
             renderKey = key;
-            app.innerHTML = roleCard(m.role) + '<p class="muted center">Keep your phone private. Watch the TV!</p>';
+            app.innerHTML = roleCard(m.role) + '<p class="muted center">Keep your phone private. Watch the TV!</p>' + hostNextControls('👑 Host: Next Role →');
+            wireHostNext();
           }
           return;
         }

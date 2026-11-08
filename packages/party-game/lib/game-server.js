@@ -327,6 +327,19 @@ function createGameServer({
         if (p === '/api/double-down') return sendJson(res, 200, engine.useDoubleDown(g.id));
         if (p === '/api/claim-host') return sendJson(res, 200, engine.claimPartyHost(g.id));
         if (p === '/api/house') return sendJson(res, 200, { ok: true, progress: engine.submitHouse(g.id, body.answers || {}) });
+        if (p === '/api/start') {
+          if (!engine.state.partyHostId) engine.claimPartyHost(g.id);
+          if (engine.state.partyHostId !== g.id) throw new Error('Only the party host can start the game');
+          if (engine.state.phase === 'setup') await engine.openLobby();
+          await engine.startGame();
+          log({ msg: 'party started from host device', guestId: g.id, name: g.name });
+          return sendJson(res, 200, { ok: true, phase: engine.state.phase });
+        }
+        if (p === '/api/next') {
+          if (engine.state.partyHostId !== g.id) throw new Error('Only the party host can advance the game');
+          await engine.next();
+          return sendJson(res, 200, { ok: true, phase: engine.state.phase });
+        }
       } catch (err) {
         return sendJson(res, 400, { error: err.message });
       }
