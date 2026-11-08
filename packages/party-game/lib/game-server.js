@@ -314,7 +314,16 @@ function createGameServer({
         const g = engine.authGuest(body.guestId, body.token);
         if (!g) return sendJson(res, 401, { error: 'unknown-guest' });
         if (p === '/api/survey') return sendJson(res, 200, { ok: true, progress: engine.submitSurvey(g.id, body.answers || {}) });
-        if (p === '/api/answer') return sendJson(res, 200, engine.submitAnswer(g.id, String(body.optionId || '')));
+        if (p === '/api/answer') {
+          const payload = body.answer !== undefined
+            ? body.answer
+            : Array.isArray(body.optionIds)
+              ? body.optionIds
+              : body.text !== undefined
+                ? String(body.text)
+                : String(body.optionId || '');
+          return sendJson(res, 200, engine.submitAnswer(g.id, payload));
+        }
         if (p === '/api/double-down') return sendJson(res, 200, engine.useDoubleDown(g.id));
         if (p === '/api/claim-host') return sendJson(res, 200, engine.claimPartyHost(g.id));
         if (p === '/api/house') return sendJson(res, 200, { ok: true, progress: engine.submitHouse(g.id, body.answers || {}) });

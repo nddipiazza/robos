@@ -140,26 +140,50 @@
     var r = view.round;
     if (!r) return '';
     var res = view.result;
-    var html = '<div class="question">';
-    html += '<div class="q-top"><span class="kicker">' + esc(view.game.icon + ' ' + view.game.title) + ' · Round ' + r.number + '/' + r.total + '</span>' + (revealing ? '' : timerHtml()) + '</div>';
+    var layoutCls = r.layout || 'statements';
+    if (layoutCls === 'statements' && r.options && r.options.length >= 6) layoutCls = 'statements statements-6';
+    var html = '<div class="question ' + (r.layout === 'grid-20' ? 'question-dense' : '') + '">';
+    var topKicker = r.kicker
+      ? esc(view.game.icon + ' ' + view.game.title + ' · ' + r.kicker)
+      : esc(view.game.icon + ' ' + view.game.title) + ' · Round ' + r.number + '/' + r.total;
+    html += '<div class="q-top"><span class="kicker">' + topKicker + '</span>' + (revealing ? '' : timerHtml()) + '</div>';
     html += '<h1 class="q-head">' + esc(r.headline) + '</h1>';
     if (r.body) html += '<div class="q-body">' + esc(r.body) + '</div>';
     if (r.caption) html += '<div class="q-caption">' + esc(r.caption) + '</div>';
-    html += '<div class="options ' + esc(r.layout) + '">';
-    r.options.forEach(function (o) {
-      var g = o.guestId ? guestById(o.guestId) : null;
-      var cls = 'option';
-      var votes = 0;
-      if (revealing && res) {
-        if (o.id === res.correct) cls += ' correct';
-        else cls += ' dim';
-        for (var k in res.answers) if (res.answers[k] === o.id) votes++;
-      }
-      if (!revealing && r.excludeGuestIds.indexOf(o.guestId) >= 0 && o.guestId && view.game.id !== 'who-said-that') cls += ' muted';
-      html += '<div class="' + cls + '">' + (g ? avatar(g) : '') + '<span class="olabel">' + esc(o.label) + '</span>' +
-        (revealing ? '<span class="votes">' + votes + ' vote' + (votes === 1 ? '' : 's') + '</span>' : '') + '</div>';
-    });
-    html += '</div>';
+    if (r.inputMode === 'text' && !revealing) {
+      html += '<div class="text-stage-box"><div class="ts-icon">✍️🤖</div>' +
+        '<div class="ts-text"><b>Write your real answer on your controller now!</b>' +
+        '<span>Once both players lock in, the AI will generate 5 convincing decoy answers in your style.</span></div></div>';
+    } else {
+      html += '<div class="options ' + esc(layoutCls) + '">';
+      r.options.forEach(function (o) {
+        var g = o.guestId ? guestById(o.guestId) : null;
+        var cls = 'option';
+        var votes = 0;
+        if (revealing && res) {
+          if (o.id === res.correct || o.badgeKind === 'real' || o.badgeKind === 'rank-top') cls += ' correct';
+          else if (o.badgeKind === 'rank-good') cls += ' good-pick';
+          else cls += ' dim';
+          for (var k in res.answers) {
+            var ans = res.answers[k];
+            if (Array.isArray(ans) ? ans.indexOf(o.id) >= 0 : ans === o.id) votes++;
+          }
+        }
+        if (!revealing && r.excludeGuestIds.indexOf(o.guestId) >= 0 && o.guestId && view.game.id !== 'who-said-that') cls += ' muted';
+        var badgeHtml = revealing && o.badge
+          ? '<span class="obadge ' + esc(o.badgeKind || '') + '">' + esc(o.badge) + '</span>'
+          : '';
+        var pickedHtml = '';
+        if (revealing && o.pickedBy && o.pickedBy.length) {
+          pickedHtml = '<span class="opicked">🎯 ' + esc(o.pickedBy.join(', ')) + '</span>';
+        } else if (revealing && !o.badge) {
+          pickedHtml = '<span class="votes">' + votes + ' vote' + (votes === 1 ? '' : 's') + '</span>';
+        }
+        html += '<div class="' + cls + '">' + (g ? avatar(g) : '') + '<span class="olabel">' + esc(o.label) + '</span>' +
+          badgeHtml + pickedHtml + '</div>';
+      });
+      html += '</div>';
+    }
     if (revealing && res) {
       html += '<div class="reveal-box"><div class="rv-head">' + esc(res.reveal.headline) + ' ' +
         (res.correctLabel && res.reveal.headline.indexOf(res.correctLabel) < 0 && res.reveal.detail.indexOf(res.correctLabel) < 0 ? '<b>' + esc(res.correctLabel) + '</b>' : '') + '</div>' +
@@ -178,7 +202,7 @@
       var d = res.deltas[id];
       if (!g) return;
       html += '<div class="delta ' + (d.points < 0 ? 'neg' : '') + '">' + avatar(g, 'sm') + '<b>' + (d.points > 0 ? '+' : '') + d.points + '</b>' +
-        '<small>' + esc(d.reasons.slice(1).join(' · ')) + '</small></div>';
+        '<small>' + esc(d.reasons.join(' · ')) + '</small></div>';
     });
     return html + '</div>';
   }
