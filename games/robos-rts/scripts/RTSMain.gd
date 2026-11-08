@@ -432,6 +432,14 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 			_select_next_idle_worker()
 		return true
 
+	if right and hud and selected_tags.size() == 1:
+		var unit := primary_unit()
+		if not unit.is_empty() and unit.owner == local_player and unit.is_structure:
+			var slot: int = hud.production_slot_at(mpos, unit.production_queue.size())
+			if slot >= 0:
+				SimEngine.issue_command([unit.tag], "cancel_training", Vector2.ZERO, 0, str(slot))
+				return true
+
 	if left:
 		for g in hud.group_tab_rects().keys():
 			if hud.group_tab_rects()[g].has_point(mpos):
@@ -517,6 +525,26 @@ func _spawn_marker(pos: Vector2, kind: String) -> void:
 			if utype != "" and kind in ["move", "gather"]:
 				RTSAudio.play_unit_dialogue(utype, "move")
 
+func _issue_rally_at(tags: Array, position: Vector2) -> void:
+	var best_distance := INF
+	var target_tag := 0
+	# A worker rally can bind to a visible deposit or a finished friendly tap.
+	var candidates: Array = SimEngine.resources.values()
+	for unit in SimEngine.units.values():
+		if unit.unit_type == "aether_tap" and unit.owner == local_player:
+			candidates.append(unit)
+	for candidate in candidates:
+		var distance: float = position.distance_to(candidate.pos)
+		if distance >= best_distance or distance > float(candidate.radius) + 1.6:
+			continue
+		if SimEngine.can_see_position(local_player, candidate.pos) and not SimEngine.worker_rally_resource(local_player, candidate.tag).is_empty():
+			target_tag = candidate.tag
+			best_distance = distance
+	if target_tag > 0:
+		position = SimEngine.worker_rally_resource(local_player, target_tag).pos
+	SimEngine.issue_command(tags, "rally", position, target_tag)
+	_spawn_marker(position, "rally")
+
 func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	var own := selected_owned()
 	if own.is_empty():
@@ -527,8 +555,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		SimEngine.issue_command(tags, "rally", wpos)
-		_spawn_marker(wpos, "rally")
+		_issue_rally_at(tags, wpos)
 		return
 
 	for r in SimEngine.resources.values():
@@ -590,8 +617,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
 	elif abil == "rally":
 		pending_ability = ""
-		SimEngine.issue_command(tags, "rally", wpos)
-		_spawn_marker(wpos, "rally")
+		_issue_rally_at(tags, wpos)
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -1166,9 +1192,10 @@ func _draw_rally_and_orders() -> void:
 		if u["is_structure"]:
 			if u["unit_type"] != "silo" and u["unit_type"] != "silo_retracted" and RTSData.get_unit_def(u["unit_type"]).has("trains"):
 				var rp := world_to_screen(u["rally_pos"], 0.2)
-				draw_dashed_line(sp, rp, Color(0.98, 0.8, 0.25, 0.8), 1.5, 6.0)
-				draw_line(rp, rp + Vector2(0, -26), Color("#fbbf24"), 2.0)
-				draw_colored_polygon(PackedVector2Array([rp + Vector2(0, -26), rp + Vector2(16, -21), rp + Vector2(0, -15)]), Color("#fbbf24"))
+				var rally_color := Color("#5eead4") if u.rally_resource_tag > 0 else Color("#fbbf24")
+				draw_dashed_line(sp, rp, rally_color, 1.5, 6.0)
+				draw_line(rp, rp + Vector2(0, -26), rally_color, 2.0)
+				draw_colored_polygon(PackedVector2Array([rp + Vector2(0, -26), rp + Vector2(16, -21), rp + Vector2(0, -15)]), rally_color)
 			continue
 		var prev := sp
 		for ord in u["orders"]:

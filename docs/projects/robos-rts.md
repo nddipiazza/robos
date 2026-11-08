@@ -195,6 +195,10 @@ Each button on the command card shows its hotkey in the corner. Hover one for th
 
 Structures have a five-slot production queue. The first slot shows progress. The structure also shows a progress bar in the world while it is producing.
 
+Right-click a queued unit in the selected building's production panel to cancel that slot. Its crystal and aether costs are refunded, its reserved supply is released, and the rest of the queue keeps its order.
+
+With a worker-producing building selected, right-click a visible crystal field or your completed Aether Tap to rally new workers straight to gathering. The teal rally flag marks a resource target. Rally to open ground to move new workers there instead.
+
 ![Muster Hall with four units queued]({{ '/assets/images/robos-rts/07-production-queue.jpg' | relative_url }}){: .robos-zoomable-img }
 
 When you cannot afford something, or you are at your supply cap, the game says so:

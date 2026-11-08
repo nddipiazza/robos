@@ -653,6 +653,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
 		"rally_pos": pos + (Vector2(8.0, 0.0) if owner_id == 1 else Vector2(-8.0, 0.0)),
+		"rally_resource_tag": 0,
+		"rally_explicit": false,
 		"kills": 0,
 		"damage_dealt": 0.0
 	}
@@ -947,9 +949,15 @@ func _update_structures(dt: float) -> void:
 				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
 				if not new_unit.is_empty():
 					emit_signal("unit_production_finished", new_unit, u)
-				if new_unit.get("is_worker", false) and not match_state.is_empty():
-					issue_SmartHarvest(new_unit.tag)
-				elif not new_unit.is_empty() and u["rally_pos"].distance_to(u["pos"]) > u["radius"] + 1.5:
+				if new_unit.get("is_worker", false):
+					var resource := worker_rally_resource(u.owner, u.rally_resource_tag)
+					if not resource.is_empty():
+						issue_command([new_unit.tag], "harvest", resource.pos, resource.tag)
+						continue
+					if not match_state.is_empty() and not u.rally_explicit:
+						issue_SmartHarvest(new_unit.tag)
+						continue
+				if not new_unit.is_empty() and u["rally_pos"].distance_to(u["pos"]) > u["radius"] + 1.5:
 					issue_command([new_unit["tag"]], "move", u["rally_pos"])
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
@@ -1648,9 +1656,22 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 
+		elif ctype == "cancel_training":
+			if (extra.is_empty() or extra.is_valid_int()) and _cancel_training(u, int(extra) if not extra.is_empty() else u.production_queue.size() - 1):
+				accepted += 1
+			continue
+
 		elif ctype == "rally":
 			if u["is_structure"]:
-				u["rally_pos"] = target_pos
+				if target_tag > 0:
+					var resource := worker_rally_resource(u.owner, target_tag)
+					if resource.is_empty() or not can_see_position(u.owner, resource.pos):
+						continue
+					u["rally_pos"] = resource.pos
+				else:
+					u["rally_pos"] = target_pos
+				u["rally_resource_tag"] = target_tag
+				u["rally_explicit"] = true
 				accepted += 1
 			continue
 
@@ -1752,6 +1773,17 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
 
+func worker_rally_resource(owner_id: int, target_tag: int) -> Dictionary:
+	var deposit: Dictionary = resources.get(target_tag, {})
+	if not deposit.is_empty() and deposit.resource_type == "crystal_field" and (unlimited_resources or deposit.amount > 0):
+		return deposit
+	var tap: Dictionary = units.get(target_tag, {})
+	if not tap.is_empty() and tap.owner == owner_id and tap.unit_type == "aether_tap" and tap.hp > 0 and tap.build_progress >= 1.0:
+		var vent: Dictionary = resources.get(_gas_source_by_tap.get(target_tag, 0), {})
+		if not vent.is_empty() and (unlimited_resources or vent.amount > 0):
+			return tap
+	return {}
+
 func issue_SmartHarvest(worker_tag: int) -> void:
 	if not units.has(worker_tag):
 		return
@@ -1806,9 +1838,25 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	p["aether"] -= v_cost
 	structure["production_queue"].append({
 		"unit_type": unit_type,
+		"crystal_cost": m_cost,
+		"aether_cost": v_cost,
 		"progress": 0.0,
 		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * _build_time_scale())
 	})
+	_recompute_supplies()
+	return true
+
+func _cancel_training(structure: Dictionary, index: int) -> bool:
+	var queue: Array = structure.production_queue
+	if not structure.is_structure or index < 0 or index >= queue.size():
+		return false
+	var player: Dictionary = players.get(structure.owner, {})
+	if player.is_empty():
+		return false
+	var item: Dictionary = queue.pop_at(index)
+	var definition: Dictionary = RTSData.get_unit_def(item.unit_type)
+	player.crystal += int(item.get("crystal_cost", definition.get("crystal_cost", 50)))
+	player.aether += int(item.get("aether_cost", definition.get("aether_cost", 0)))
 	_recompute_supplies()
 	return true
 
