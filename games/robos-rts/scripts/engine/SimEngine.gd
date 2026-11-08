@@ -376,17 +376,22 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(float(obs.x), float(obs.y), float(obs.w), float(obs.h)))
 	var resource_sites = starts + map_cfg.get("expansions", [])
+	var crystal_lines := {}
 	for slot in range(resource_sites.size()):
 		var site: Dictionary = resource_sites[slot]
 		var base = Vector2(float(site.x), float(site.y))
 		var outward = (base - Vector2(map_width, map_height) * 0.5).normalized()
 		var tangent = Vector2(-outward.y, outward.x)
 		for i in range(8):
-			spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), 50000, "start_%d_crystal_%d" % [slot, i])
+			var patch := spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), 50000, "start_%d_crystal_%d" % [slot, i])
+			patch["line_origin"] = base
+			if i == 0:
+				crystal_lines[slot] = patch
 		for side in [-1, 1]:
 			spawn_resource("aether_vent", _resource_land_position(base + tangent * side * 17.0), 50000, "start_%d_aether_%d" % [slot, side])
 	if data.has("resources"):
 		resources.clear()
+		crystal_lines.clear()
 		next_tag = 1001
 		for resource in data.resources:
 			spawn_resource(str(resource.type), Vector2(float(resource.x), float(resource.y)), int(resource.get("amount", 1500)), str(resource.get("id", "")))
@@ -401,7 +406,7 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		for i in range(12):
 			var angle = TAU * float(i) / 12.0
 			var worker = spawn_unit("pioneer", pid, base + Vector2(cos(angle), sin(angle)) * 7.0)
-			issue_SmartHarvest(worker.tag)
+			issue_SmartHarvest(worker.tag, crystal_lines.get(slots[pid - 1], {}))
 	_rebuild_astar_grid()
 	_recompute_supplies()
 	RTSCommanderAI.configure_from_scenario([])
@@ -2004,11 +2009,13 @@ func worker_rally_resource(owner_id: int, target_tag: int) -> Dictionary:
 			return tap
 	return {}
 
-func issue_SmartHarvest(worker_tag: int) -> void:
+func issue_SmartHarvest(worker_tag: int, preferred: Dictionary = {}) -> void:
 	if not units.has(worker_tag):
 		return
 	var u = units[worker_tag]
-	var nearest := _pick_local_crystal(u, _find_nearest_crystal(u.pos))
+	if preferred.is_empty():
+		preferred = _find_nearest_crystal(u.pos)
+	var nearest := _pick_local_crystal(u, preferred)
 	if not nearest.is_empty():
 		issue_command([worker_tag], "harvest", nearest["pos"], nearest["tag"])
 
@@ -2138,8 +2145,12 @@ func worker_saturation(owner_id: int) -> Dictionary:
 			continue
 		if vision != null and vision.state_at(owner_id, patch.pos) == Vision.UNEXPLORED:
 			continue
-		var hall := _find_nearest_town_hall(owner_id, patch.pos)
-		if not hall.is_empty() and hall.pos.distance_squared_to(patch.pos) <= CRYSTAL_LINE_RADIUS * CRYSTAL_LINE_RADIUS:
+		var origin: Vector2 = patch.get("line_origin", patch.pos)
+		var hall := _find_nearest_town_hall(owner_id, origin)
+		if hall.is_empty():
+			continue
+		var reach: float = hall.radius + 2.0 if patch.has("line_origin") else CRYSTAL_LINE_RADIUS
+		if hall.pos.distance_squared_to(origin) <= reach * reach:
 			sites[hall.tag].ideal += 2
 			deposits[patch.tag] = hall.tag
 	for worker in units.values():
@@ -2180,7 +2191,10 @@ func _pick_local_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionar
 	for patch in resources.values():
 		if patch.resource_type != "crystal_field" or (patch.amount <= 0 and not unlimited_resources):
 			continue
-		if patch.pos.distance_squared_to(preferred.pos) > CRYSTAL_LINE_RADIUS * CRYSTAL_LINE_RADIUS:
+		if preferred.has("line_origin"):
+			if patch.get("line_origin") != preferred.line_origin:
+				continue
+		elif patch.pos.distance_squared_to(preferred.pos) > CRYSTAL_LINE_RADIUS * CRYSTAL_LINE_RADIUS:
 			continue
 		if vision != null and vision.state_at(worker.owner, patch.pos) == Vision.UNEXPLORED:
 			continue

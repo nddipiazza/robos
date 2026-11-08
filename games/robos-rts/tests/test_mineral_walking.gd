@@ -65,14 +65,25 @@ func _run() -> void:
 	sim.step_ticks(1)
 	check(patch.mining_worker == second.tag and first.harvest_timer == 0.0, "Stopping mid-drill must free the slot for a waiting worker")
 
-	sim.load_scenario_file("frontier-hunters")
-	for player in [1, 2]:
-		var assignments := {}
-		for worker in sim.units.values():
-			if worker.owner == player and worker.is_worker:
-				var target: int = worker.orders[0].target_tag
-				assignments[target] = int(assignments.get(target, 0)) + 1
-		check(assignments.size() == 8 and assignments.values().max() <= 2, "The 12 opening workers must spread across all eight local patches")
+	var scenario: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/frontier-hunters.jsonld"))
+	var covered := {}
+	for seed in [0, 2, 3, 4, 6]:
+		scenario.seed = seed
+		sim.load_scenario_dict(scenario)
+		for player in [1, 2]:
+			var slot: int = sim.match_state.assigned_starts[str(player)]
+			covered[slot] = true
+			var assignments := {}
+			for worker in sim.units.values():
+				if worker.owner == player and worker.is_worker:
+					var target: int = worker.orders[0].target_tag
+					var patch_id: String = sim.resources[target].id
+					check(patch_id.begins_with("start_%d_crystal_" % slot), "Opening workers must stay in their own mineral line")
+					assignments[target] = int(assignments.get(target, 0)) + 1
+			check(assignments.size() == 8 and assignments.values().max() <= 2, "The 12 opening workers must spread across all eight local patches")
+			var saturation: Dictionary = sim.worker_saturation(player).values().front()
+			check(saturation.assigned == 12 and saturation.ideal == 16, "The starting base must show 12/16 workers")
+	check(covered.size() == 8, "The fixture must exercise all eight starts")
 
 	print("Mineral walking checks: ", "passed" if failures.is_empty() else failures)
 	quit(0 if failures.is_empty() else 1)
