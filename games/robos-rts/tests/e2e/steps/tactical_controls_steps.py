@@ -62,3 +62,45 @@ def patrol_round_trip(context, name, x, y, origin_x, origin_y):
                 break
         else:
             raise AssertionError(f"{name} never patrolled to {goal}")
+
+
+@when("the commander right-clicks terrain at ({x:d}, {y:d})")
+def right_click_terrain(context, x, y):
+    sx, sy = context.client.project((x, y))[0]
+    context.client.mouse(sx, sy, button=2)
+    context.client.mouse(sx, sy, button=2, pressed=False)
+
+
+@when("the commander cancels production slot {slot:d}")
+def cancel_slot(context, slot):
+    x = 937 + (slot - 1) * 72
+    context.client.mouse(x, 931, button=2)
+    context.client.mouse(x, 931, button=2, pressed=False)
+
+
+@then('"{name}" has {count:d} units in production')
+def production_count(context, name, count):
+    assert find_unit(context, name)["production_queue_len"] == count
+
+
+@then("the production controls are captured")
+def capture_production(context):
+    context.client.ui(banner=0, clear_messages=True, hover=[1450, 820])
+    result = context.client.screenshot(str(context.reports_dir / "production-controls.png"))
+    assert result.get("ok"), result
+
+
+@then("player 1 has {crystal:d} crystal, {aether:d} aether and {supply:d} supply used")
+def paid_state(context, crystal, aether, supply):
+    player = context.client.get_observation()["players"]["1"]
+    assert (player["crystal"], player["aether"], player["supply_used"]) == (crystal, aether, supply), player
+
+
+@then('a newly trained Pioneer gathers from "{resource}"')
+def worker_rally(context, resource):
+    view = context.client.get_observation()
+    target = next(entity for entity in view["units"] + view["resources"] if entity["id"] == resource)
+    workers = [unit for unit in view["units"] if unit["owner"] == 1 and unit["unit_type"] == "pioneer"]
+    assert len(workers) == 1, workers
+    order = workers[0]["orders"][0]
+    assert order["type"] == "harvest" and order["target_tag"] == target["tag"], order

@@ -428,6 +428,15 @@ func _order_label(u: Dictionary) -> String:
 		"hold_position": return "Holding position"
 	return "Active"
 
+func _production_rect(index: int) -> Rect2:
+	return Rect2(main.SEL_PANEL.position + Vector2(600.0 + index * 72.0, 42.0), Vector2(66, 66))
+
+func production_slot_at(position: Vector2, count: int) -> int:
+	for index in range(mini(count, 5)):
+		if _production_rect(index).has_point(position):
+			return index
+	return -1
+
 func _draw_single(u: Dictionary) -> void:
 	var sp: Rect2 = main.SEL_PANEL
 	var def: Dictionary = RTSData.get_unit_def(str(u["unit_type"]))
@@ -508,8 +517,10 @@ func _draw_single(u: Dictionary) -> void:
 	elif def.has("trains") and is_own:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
+		if not queue.is_empty():
+			_text(Vector2(rx + 100.0, ry + 12), "Right-click a unit to cancel and refund", 15, C_MUTED)
 		for i in range(5):
-			var qr := Rect2(rx + float(i) * 72.0, ry + 20.0, 66.0, 66.0)
+			var qr := _production_rect(i)
 			_vgrad(qr, Color("#252c37"), Color("#12161c"))
 			draw_rect(qr, C_EDGE_HI if i < queue.size() else C_EDGE, false, 1.0)
 			if i < queue.size():

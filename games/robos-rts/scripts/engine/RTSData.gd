@@ -846,7 +846,7 @@ var abilities: Dictionary = {
 	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},
 	"build_resonator": {"id": "build_resonator", "name": "Summon Resonator", "hotkey": "E", "target": "point", "structure": "resonator"},
 	"build_waystone": {"id": "build_waystone", "name": "Summon Waystone", "hotkey": "G", "target": "point", "structure": "waystone"},
-	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "New units gather at this point."}
+	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "New units move here. Rally to a crystal field or friendly Aether Tap to send new workers straight to gathering."}
 }
 
 var faction_info: Dictionary = {
