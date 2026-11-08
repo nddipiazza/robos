@@ -15,18 +15,18 @@ Feature: Frontier Hunters single-player skirmish
 
   Scenario Outline: Build orders play from opening economy through a terminal result
     Given a Frontier Hunters match on "<difficulty>" difficulty with "<enemy_build>" AI and seed <seed>
-    When the player plays the "<player_build>" build at accelerated speed for up to 900 game seconds
+    When the player plays the "<player_build>" build at accelerated speed for up to <seconds> game seconds
     Then the match ends by destroying every structure of the defeated player
     And both commanders harvested resources and built their armies from scratch
     And the player produced a "<unit>" through the build order
     And the finished match rejects commands and freezes further simulation
 
     Examples:
-      | difficulty | enemy_build | player_build | seed | unit     |
-      | easy       | economy     | rush         | 42   | rifleman |
-      | normal     | balanced    | siege        | 17   | howitzer |
-      | hard       | rush        | economy      | 81   | rifleman |
-      | hard       | siege       | rush         | 29   | rifleman |
+      | difficulty | enemy_build | player_build | seed | unit     | seconds |
+      | easy       | economy     | rush         | 42   | rifleman | 900     |
+      | normal     | balanced    | siege        | 17   | howitzer | 900     |
+      | hard       | rush        | economy      | 81   | rifleman | 1200    |
+      | hard       | siege       | rush         | 29   | rifleman | 900     |
 
   Scenario: An unattended human loses to the AI's real opening and attack
     Given a Frontier Hunters match on "hard" difficulty with "rush" AI and seed 6

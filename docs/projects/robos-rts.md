@@ -227,6 +227,8 @@ Select a Pioneer, press the build hotkey and place the structure. The footprint 
 
 Pioneers gather **crystal** from fields and **aether** through an Aether Tap built on a vent, and carry it back to the nearest main base. Supply comes from main bases and Provision Silos; units and queued units count against it.
 
+During a crystal harvest order, workers pass through mobile units on both the outbound and delivery legs. Terrain and buildings still shape their route, and workers remain targetable. Each patch serves one miner at a time, so automatic assignments and group gather orders fill open local patches first. A teal load shows which workers are returning with crystal. Stop or move a worker to restore normal body blocking.
+
 ![Pioneers mining crystal beside the Colony Hub]({{ '/assets/images/robos-rts/02-gathering-crystal.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ![An Aether Tap on a vent beside the Workshop]({{ '/assets/images/robos-rts/22-aether-tap.jpg' | relative_url }}){: .robos-zoomable-img }

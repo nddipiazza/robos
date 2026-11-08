@@ -25,6 +25,8 @@ const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
+const HARVEST_REACH := 1.2
+const CRYSTAL_LINE_RADIUS := 26.0
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -587,7 +589,7 @@ func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_i
 		"pos": pos,
 		"amount": amount,
 		"radius": 1.8 if res_type == "crystal_field" else 2.6,
-		"harvesters": []
+		"mining_worker": 0
 	}
 	resources[tag] = r
 	nav_dirty = true
@@ -704,6 +706,7 @@ func _step_single_tick() -> void:
 	var all_tags = units.keys()
 	all_tags.sort()
 	var orders_started = Time.get_ticks_usec()
+	var mineral_walkers := {}
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
@@ -713,10 +716,14 @@ func _step_single_tick() -> void:
 		if u["is_structure"]:
 			continue
 		_update_unit_orders(u, TICK_DT)
+		if u.is_worker and not u.orders.is_empty() and u.orders[0].type == "harvest":
+			var deposit: Dictionary = resources.get(int(u.orders[0].target_tag), {})
+			if (u.cargo_amount > 0 and u.cargo_type == "crystal") or (u.cargo_amount == 0 and deposit.get("resource_type") == "crystal_field"):
+				mineral_walkers[tag] = true
 
 	profile_usec.orders += Time.get_ticks_usec() - orders_started
 	var steering_started = Time.get_ticks_usec()
-	_apply_steering_and_push_resolution(all_tags, TICK_DT)
+	_apply_steering_and_push_resolution(all_tags, TICK_DT, mineral_walkers)
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
 	if vision != null and tick % VISION_UPDATE_TICKS == 0:
 		vision.update(units, tick)
@@ -1102,6 +1109,28 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"build":
 			_process_worker_build_order(u, order, dt)
 
+func _release_mining_slot(worker: Dictionary) -> void:
+	if worker.harvest_timer <= 0.0:
+		return
+	if not worker.orders.is_empty() and worker.orders[0].type == "harvest":
+		var patch: Dictionary = resources.get(int(worker.orders[0].target_tag), {})
+		if int(patch.get("mining_worker", 0)) == worker.tag:
+			patch.mining_worker = 0
+	worker.harvest_timer = 0.0
+
+func _claim_mining_slot(worker: Dictionary, patch: Dictionary) -> bool:
+	var holder: int = patch.mining_worker
+	if holder == worker.tag:
+		return true
+	var miner: Dictionary = units.get(holder, {})
+	if not miner.is_empty() and miner.hp > 0.0 and miner.cargo_amount == 0 and not miner.orders.is_empty():
+		var active: Dictionary = miner.orders[0]
+		if active.type == "harvest" and active.target_tag == patch.tag and _edge_distance(miner, patch) <= HARVEST_REACH:
+			return false
+	patch.mining_worker = worker.tag
+	worker.harvest_timer = 0.0
+	return true
+
 func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
@@ -1117,6 +1146,8 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 				players[u["owner"]]["crystal_collected"] += u["cargo_amount"]
 			u["cargo_amount"] = 0
 			u["cargo_type"] = ""
+		elif u.cargo_type == "crystal":
+			_follow_order_path(u, th.pos, dt)
 		else:
 			_approach_target(u, th["pos"], dt)
 		return
@@ -1130,11 +1161,13 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		target_entity = units[res_tag]
 		is_gas = true
 	else:
-		var nearest_res = _find_nearest_crystal(u["pos"])
+		_release_mining_slot(u)
+		var nearest_res := _pick_local_crystal(u, _find_nearest_crystal(u.pos))
 		if nearest_res.is_empty():
 			u["orders"].pop_front()
 			return
 		order["target_tag"] = nearest_res["tag"]
+		res_tag = nearest_res.tag
 		u["harvest_target_tag"] = nearest_res["tag"]
 		target_entity = nearest_res
 
@@ -1150,19 +1183,23 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			return
 		source_tag = int(_gas_source_by_tap.get(tap_tag, res_tag))
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
+		_release_mining_slot(u)
 		u.orders.pop_front()
 		issue_SmartHarvest(u.tag)
 		return
-	if dist <= 1.2:
+	if dist <= HARVEST_REACH:
 		u["vel"] = Vector2.ZERO
 		u["facing"] = (target_entity["pos"] - u["pos"]).angle()
+		if not is_gas and not _claim_mining_slot(u, target_entity):
+			u.harvest_timer = 0.0
+			return
 		var prev_timer: float = float(u["harvest_timer"])
 		u["harvest_timer"] += dt
 		if not is_gas and prev_timer <= 0.0 and u["harvest_timer"] > 0.0:
 			if not resources.has(source_tag) or int(resources[source_tag].amount) > 0 or unlimited_resources:
 				emit_signal("resource_gathered", u, "crystal", target_entity["pos"])
 		if u["harvest_timer"] >= 1.75:
-			u["harvest_timer"] = 0.0
+			_release_mining_slot(u)
 			if is_gas:
 				u["cargo_type"] = "aether"
 				u["cargo_amount"] = 4
@@ -1172,6 +1209,9 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			if resources.has(source_tag) and not unlimited_resources:
 				u.cargo_amount = mini(u.cargo_amount, int(resources[source_tag].amount))
 				resources[source_tag].amount -= u.cargo_amount
+	elif not is_gas:
+		_release_mining_slot(u)
+		_follow_order_path(u, target_entity.pos, dt)
 	else:
 		_approach_target(u, target_entity["pos"], dt)
 
@@ -1291,7 +1331,7 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 				return true
 	return false
 
-func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
+func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_walkers: Dictionary = {}) -> void:
 	var neighbors_by_tag: Dictionary = {}
 	for tag in all_tags:
 		if not units.has(tag):
@@ -1310,11 +1350,15 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 		neighbors_by_tag[tag] = neighbors
 
 		var steer_force: Vector2 = Vector2.ZERO
+		var mineral_walking := mineral_walkers.has(tag)
 		for neighbor in neighbors:
 			var n: Dictionary = neighbor
 			if n["tag"] == tag:
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
+				continue
+			# Mineral walking is a pair rule. Neither mobile gets to push the other.
+			if not n.is_structure and (mineral_walking or mineral_walkers.has(n.tag)):
 				continue
 
 			var neighbor_position: Vector2 = n["pos"]
@@ -1361,10 +1405,13 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 		# Structures never moved between the passes; nearby mobiles moved by less
 		# than a tick. The wider steering query already covers collision contacts.
 		var neighbors: Array = neighbors_by_tag[tag] if neighbors_by_tag.has(tag) else query_units_in_radius(u["pos"], u["radius"] + 1.8)
+		var mineral_walking := mineral_walkers.has(tag)
 		for n in neighbors:
 			if n["tag"] <= u["tag"]:
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
+				continue
+			if not n.is_structure and (mineral_walking or mineral_walkers.has(n.tag)):
 				continue
 			var diff: Vector2 = u["pos"] - n["pos"]
 			var dist: float = diff.length()
@@ -1567,6 +1614,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
+			continue
 		if ctype == "patrol" and (u.is_immobile or u.is_structure or not target_pos.is_finite()):
 			continue
 		if vision != null and (ctype == "attack_target" or (ctype in ["attack", "attack_move"] and target_tag > 0)):
@@ -1676,6 +1725,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "stop":
+			_release_mining_slot(u)
 			u["orders"].clear()
 			u["path"].clear()
 			u["vel"] = Vector2.ZERO
@@ -1684,6 +1734,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		elif ctype == "hold_position":
+			_release_mining_slot(u)
 			u["orders"] = [{"type": "hold_position"}]
 			u["path"].clear()
 			u["vel"] = Vector2.ZERO
@@ -1692,6 +1743,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 
 		if not queue:
+			_release_mining_slot(u)
 			u["orders"].clear()
 			u["path"].clear()
 
@@ -1736,10 +1788,14 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 
 		elif ctype == "harvest":
-			u["harvest_target_tag"] = target_tag
+			var harvest_tag := target_tag
+			var deposit: Dictionary = resources.get(target_tag, {})
+			if group_size > 1 and not queue and deposit.get("resource_type") == "crystal_field":
+				harvest_tag = _pick_local_crystal(u, deposit).tag
+			u["harvest_target_tag"] = harvest_tag
 			u["orders"].append({
 				"type": "harvest",
-				"target_tag": target_tag
+				"target_tag": harvest_tag
 			})
 			accepted += 1
 
@@ -1788,7 +1844,7 @@ func issue_SmartHarvest(worker_tag: int) -> void:
 	if not units.has(worker_tag):
 		return
 	var u = units[worker_tag]
-	var nearest = _find_nearest_crystal(u["pos"])
+	var nearest := _pick_local_crystal(u, _find_nearest_crystal(u.pos))
 	if not nearest.is_empty():
 		issue_command([worker_tag], "harvest", nearest["pos"], nearest["tag"])
 
@@ -1899,11 +1955,39 @@ func _find_nearest_crystal(pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d: float = 999999.0
 	for r in resources.values():
-		if r["resource_type"] == "crystal_field" and r["amount"] > 0:
+		if r["resource_type"] == "crystal_field" and (r["amount"] > 0 or unlimited_resources):
 			var d = pos.distance_to(r["pos"])
 			if d < best_d:
 				best_d = d
 				best = r
+	return best
+
+func _pick_local_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionary:
+	if preferred.is_empty():
+		return {}
+	var assignments := {}
+	for other in units.values():
+		if other.tag == worker.tag or other.owner != worker.owner or not other.is_worker or other.orders.is_empty():
+			continue
+		var order: Dictionary = other.orders[0]
+		if order.type == "harvest":
+			assignments[order.target_tag] = int(assignments.get(order.target_tag, 0)) + 1
+	var best := preferred
+	var best_count := 2147483647
+	var best_distance := INF
+	for patch in resources.values():
+		if patch.resource_type != "crystal_field" or (patch.amount <= 0 and not unlimited_resources):
+			continue
+		if patch.pos.distance_squared_to(preferred.pos) > CRYSTAL_LINE_RADIUS * CRYSTAL_LINE_RADIUS:
+			continue
+		if vision != null and vision.state_at(worker.owner, patch.pos) == Vision.UNEXPLORED:
+			continue
+		var count: int = assignments.get(patch.tag, 0)
+		var distance: float = patch.pos.distance_squared_to(worker.pos)
+		if count < best_count or (count == best_count and distance < best_distance):
+			best = patch
+			best_count = count
+			best_distance = distance
 	return best
 
 func get_observation(perspective_player: int = 0) -> Dictionary:

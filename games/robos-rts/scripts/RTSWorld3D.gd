@@ -36,6 +36,7 @@ var mat_cache: Dictionary = {}
 var _last_pos: Dictionary = {}
 var _unit_mesh_cache: Dictionary = {}
 var _unit_batches: Dictionary = {}
+var _crystal_cargo_mesh: BoxMesh
 var fog_texture: ImageTexture
 var _fog_quad: MeshInstance3D
 var _fog_material: ShaderMaterial
@@ -604,6 +605,8 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		var hover := u_node.get_node_or_null("Hover")
 		if hover:
 			hover.position.y = 1.1 + sin(anim_time * 2.4 + float(u_tag)) * 0.12
+		if u.is_worker:
+			u_node.get_node("CrystalCargo").visible = u.cargo_amount > 0 and u.cargo_type == "crystal"
 
 		var sel_ring: MeshInstance3D = u_node.get_node_or_null("SelectionRing")
 		if sel_ring:
@@ -673,6 +676,20 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 	else:
 		root = Models.build(str(u["unit_type"]), int(u["owner"]))
 	root.set_meta("unit_type", u["unit_type"])
+
+	if u.is_worker:
+		if _crystal_cargo_mesh == null:
+			_crystal_cargo_mesh = BoxMesh.new()
+			_crystal_cargo_mesh.size = Vector3(0.52, 0.66, 0.50)
+		var cargo := MeshInstance3D.new()
+		cargo.name = "CrystalCargo"
+		cargo.mesh = _crystal_cargo_mesh
+		cargo.position = Vector3(-0.59, 0.96, 0.0)
+		cargo.rotation = Vector3(0.2, 0.45, 0.4)
+		cargo.material_override = Models.mat("worker_crystal_cargo", Color("#5eead4"), Color("#0d9488"), 0.9, 0.1, 0.35)
+		cargo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		cargo.hide()
+		root.add_child(cargo)
 
 	var sel_mi := MeshInstance3D.new()
 	sel_mi.name = "SelectionRing"
