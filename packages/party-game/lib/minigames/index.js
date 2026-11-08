@@ -3,6 +3,12 @@
 // Mini game registry. To add a mini game, create a file in this folder with
 // defineMiniGame() (see template.js) and add it to this list.
 const MINI_GAMES = [
+  require('./real-or-ai'),
+  require('./expertise-trivia'),
+  require('./country-leaders'),
+];
+
+const LEGACY_MINI_GAMES = [
   require('./who-said-that'),
   require('./most-likely-to'),
   require('./house-quest'),
@@ -11,7 +17,7 @@ const MINI_GAMES = [
 ];
 
 function getMiniGame(id) {
-  return MINI_GAMES.find((m) => m.id === id) || null;
+  return MINI_GAMES.find((m) => m.id === id) || LEGACY_MINI_GAMES.find((m) => m.id === id) || null;
 }
 
 function listMiniGames() {
@@ -20,4 +26,4 @@ function listMiniGames() {
   }));
 }
 
-module.exports = { MINI_GAMES, getMiniGame, listMiniGames };
+module.exports = { MINI_GAMES, LEGACY_MINI_GAMES, getMiniGame, listMiniGames };

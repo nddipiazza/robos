@@ -307,18 +307,144 @@
       (role.secretRole ? '<div class="warn">Keep this hidden! The TV says you are “' + esc(role.publicTitle) + '”.</div>' : '') + '</div>';
   }
 
+  var multiDraftRoundKey = '';
+  var multiDraftIds = [];
+
   function renderQuestion() {
     var r = view.round;
     var m = view.me;
-    var key = 'q:' + view.game.id + ':' + r.number + ':' + (m.answer || '') + ':' + m.doubledThisRound + ':' + m.canDoubleDown;
+    var ansKey = Array.isArray(m.answer) ? m.answer.join(',') : (m.answer || '');
+    var mode = r.inputMode || 'single';
+    var roundIdKey = view.game.id + ':' + r.number;
+    var key = 'q:' + roundIdKey + ':' + mode + ':' + ansKey + ':' + m.doubledThisRound + ':' + m.canDoubleDown + ':' + (r.options ? r.options.length : 0);
     if (key === renderKey) return;
+
+    // Preserve any text being typed in text mode if the same round re-renders
+    var existingTextEl = document.getElementById('freeTextInput');
+    var preservedText = existingTextEl && renderKey.indexOf('q:' + roundIdKey + ':text:') === 0
+      ? existingTextEl.value
+      : null;
+
     renderKey = key;
+    var topKicker = r.kicker
+      ? esc(view.game.icon + ' ' + view.game.title + ' · ' + r.kicker)
+      : esc(view.game.icon + ' ' + view.game.title) + ' · ' + r.number + '/' + r.total;
+
     if (m.sittingOut) {
-      app.innerHTML = '<div class="hero"><div class="hero-emoji">🤫</div><h1>This one is about you</h1><p class="muted">Sit back. Keep a straight face.</p></div>';
+      var sitHtml = '<div class="kicker">' + topKicker + '</div>';
+      sitHtml += '<div class="hero" style="padding:1rem 0 0.5rem"><div class="hero-emoji">🤫</div><h1>Your Partner Is Guessing!</h1>' +
+        '<p class="muted">Keep a poker face while they try to spot your 1 real answer among the 5 AI-generated decoys.</p></div>';
+      if (r.body) sitHtml += '<div class="q-body">' + esc(r.body) + '</div>';
+      if (r.options && r.options.length) {
+        sitHtml += '<div class="choices">' + r.options.map(function (o) {
+          return '<div class="choice self" style="opacity:0.85">' + esc(o.label) + '</div>';
+        }).join('') + '</div>';
+      }
+      app.innerHTML = sitHtml;
       return;
     }
-    var html = '<div class="kicker">' + esc(view.game.icon + ' ' + view.game.title) + ' · ' + r.number + '/' + r.total + '</div>';
+
+    var html = '<div class="kicker">' + topKicker + '</div>';
     html += '<h2>' + esc(r.headline) + '</h2>' + (r.body ? '<div class="q-body">' + esc(r.body) + '</div>' : '');
+    if (r.caption) html += '<p class="muted" style="margin:-0.4rem 0 0.8rem;font-size:0.9rem">' + esc(r.caption) + '</p>';
+
+    if (mode === 'text') {
+      var initialText = preservedText != null ? preservedText : (typeof m.answer === 'string' ? m.answer : '');
+      html += '<form id="freeTextForm" class="card" style="margin-top:0.4rem">' +
+        '<label for="freeTextInput">✍️ Your Real Answer</label>' +
+        '<textarea id="freeTextInput" rows="3" maxlength="240" placeholder="' + esc(r.placeholder || 'Type your real answer…') + '">' + esc(initialText) + '</textarea>' +
+        '<button type="submit" class="primary" style="margin-top:0.6rem">' + (m.answer ? 'Update Locked-In Answer 🔒' : 'Lock In Real Answer 🔒') + '</button>' +
+        '</form>';
+      var sugs = r.suggestions || [];
+      if (sugs.length) {
+        html += '<div class="card" style="margin-top:0.8rem"><div class="kicker" style="margin-bottom:0.4rem">⚡ Quick-Fill Ideas (Tap to use or edit)</div>' +
+          '<div class="choices">' + sugs.map(function (s) {
+            var isSel = m.answer === s;
+            return '<button type="button" class="choice sug-btn ' + (isSel ? 'sel' : '') + '" data-sug="' + esc(s) + '">“' + esc(s) + '”</button>';
+          }).join('') + '</div></div>';
+      }
+      if (m.answer) html += '<div class="locked-in">🔒 Locked in: “' + esc(m.answer) + '”</div>';
+      app.innerHTML = html;
+
+      var fForm = document.getElementById('freeTextForm');
+      var fInput = document.getElementById('freeTextInput');
+      fForm.onsubmit = function (e) {
+        e.preventDefault();
+        var val = fInput.value.trim();
+        if (!val) return toast('Type an answer or tap a quick-fill idea below!');
+        post('/api/answer', authed({ text: val })).catch(function (err) { toast(err.message); });
+      };
+      Array.prototype.forEach.call(app.querySelectorAll('.sug-btn'), function (b) {
+        b.onclick = function () {
+          var s = b.getAttribute('data-sug');
+          fInput.value = s;
+          post('/api/answer', authed({ text: s })).catch(function (err) { toast(err.message); });
+        };
+      });
+      return;
+    }
+
+    if (mode === 'multi') {
+      var pickLimit = r.pickCount || 3;
+      if (multiDraftRoundKey !== roundIdKey) {
+        multiDraftRoundKey = roundIdKey;
+        multiDraftIds = Array.isArray(m.answer) ? m.answer.slice(0, pickLimit) : [];
+      } else if (Array.isArray(m.answer) && m.answer.length && !multiDraftIds.length) {
+        multiDraftIds = m.answer.slice(0, pickLimit);
+      }
+
+      html += '<div class="multi-bar">' +
+        '<span id="multiCount">Selected: <b>' + multiDraftIds.length + ' / ' + pickLimit + '</b> policies</span>' +
+        '<button type="button" id="lockMultiBtn" class="primary multi-lock-btn">' +
+        (Array.isArray(m.answer) && m.answer.length === pickLimit ? 'Locked In Top ' + pickLimit + ' 🔒' : 'Lock In Picks 🔒') +
+        '</button></div>';
+      if (Array.isArray(m.answer) && m.answer.length) {
+        html += '<div class="locked-in" style="margin:0.4rem 0 0.6rem">🔒 Saved ' + m.answer.length + ' of ' + pickLimit + ' policy picks.</div>';
+      }
+      html += '<div class="choices answers multi-choices">' + r.options.map(function (o) {
+        var idx = multiDraftIds.indexOf(o.id);
+        var cls = 'choice multi-choice' + (idx >= 0 ? ' sel' : '');
+        var badge = idx >= 0 ? '<span class="pick-pill">Pick #' + (idx + 1) + '</span>' : '';
+        return '<button type="button" class="' + cls + '" data-id="' + esc(o.id) + '">' +
+          '<span class="mc-text">' + esc(o.label) + '</span>' + badge + '</button>';
+      }).join('') + '</div>';
+      app.innerHTML = html;
+
+      function syncMultiToServer(ids) {
+        if (!ids.length) return;
+        post('/api/answer', authed({ optionIds: ids })).catch(function (err) { toast(err.message); });
+      }
+
+      Array.prototype.forEach.call(app.querySelectorAll('.multi-choice'), function (b) {
+        b.onclick = function () {
+          var id = b.getAttribute('data-id');
+          var pos = multiDraftIds.indexOf(id);
+          if (pos >= 0) {
+            multiDraftIds.splice(pos, 1);
+          } else {
+            if (multiDraftIds.length >= pickLimit) {
+              toast('You already picked ' + pickLimit + ' options — tap one to deselect it first.');
+              return;
+            }
+            multiDraftIds.push(id);
+          }
+          renderKey = '';
+          renderQuestion();
+          if (multiDraftIds.length === pickLimit) {
+            syncMultiToServer(multiDraftIds);
+          }
+        };
+      });
+      var lockBtn = document.getElementById('lockMultiBtn');
+      if (lockBtn) {
+        lockBtn.onclick = function () {
+          if (!multiDraftIds.length) return toast('Pick up to ' + pickLimit + ' options first!');
+          syncMultiToServer(multiDraftIds);
+        };
+      }
+      return;
+    }
+
     html += '<div class="choices answers">' + r.options.map(function (o) {
       var cls = 'choice';
       if (m.answer === o.id) cls += ' sel';

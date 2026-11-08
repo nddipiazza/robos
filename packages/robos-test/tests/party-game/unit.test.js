@@ -12,7 +12,7 @@ const { createGameServer } = require(path.join(APP_DIR, 'lib', 'game-server'));
 const survey = require(path.join(APP_DIR, 'lib', 'survey'));
 const roles = require(path.join(APP_DIR, 'lib', 'roles'));
 const { defineMiniGame } = require(path.join(APP_DIR, 'lib', 'minigames', 'template'));
-const { MINI_GAMES, listMiniGames } = require(path.join(APP_DIR, 'lib', 'minigames'));
+const { MINI_GAMES, getMiniGame, listMiniGames } = require(path.join(APP_DIR, 'lib', 'minigames'));
 const { parseJson } = require(path.join(APP_DIR, 'lib', 'ai-host'));
 
 const NAMES = ['Ana', 'Ben', 'Cleo', 'Dev', 'Eli'];
@@ -153,7 +153,7 @@ describe('RobOS Party Game', () => {
     });
 
     it('scores House Quest duels and solo challenges', () => {
-      const quest = MINI_GAMES.find((m) => m.id === 'house-quest');
+      const quest = getMiniGame('house-quest');
       const ctx = { guests: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }, { id: 'd', name: 'D' }] };
       const duel = { duel: true, performers: ['a', 'b'] };
       assert.deepStrictEqual(quest.score(duel, { c: 'a', d: 'a' }, ctx).awards, { a: 3, c: 1, d: 1 });
@@ -172,7 +172,7 @@ describe('RobOS Party Game', () => {
     });
 
     it('scores trivia with expert bonus and out-nerding', () => {
-      const trivia = MINI_GAMES.find((m) => m.id === 'interest-trivia');
+      const trivia = getMiniGame('interest-trivia');
       const round = { expertId: 'e', correctId: 'c1', funFact: 'x', prompt: { options: [{ id: 'c0', label: 'A. No' }, { id: 'c1', label: 'B. Yes' }] } };
       const ctx = { guests: [{ id: 'e', name: 'Exp' }, { id: 'a', name: 'A' }, { id: 'b', name: 'B' }] };
       assert.deepStrictEqual(trivia.score(round, { e: 'c1', a: 'c1', b: 'c0' }, ctx).awards, { e: 3, a: 2 });
@@ -205,8 +205,8 @@ describe('RobOS Party Game', () => {
     it('validates definitions and ships three mini games', () => {
       assert.throws(() => defineMiniGame({ id: 'Bad Id', title: 'x', buildRounds() {}, score() {} }), /kebab-case/);
       assert.throws(() => defineMiniGame({ id: 'x' }), /missing "title"/);
-      assert.deepStrictEqual(MINI_GAMES.map((m) => m.id), ['who-said-that', 'most-likely-to', 'house-quest', 'interest-trivia', 'truth-or-bot']);
-      assert.strictEqual(listMiniGames().length, 5);
+      assert.deepStrictEqual(MINI_GAMES.map((m) => m.id), ['real-or-ai', 'expertise-trivia', 'country-leaders']);
+      assert.strictEqual(listMiniGames().length, 3);
     });
   });
 
@@ -272,7 +272,14 @@ describe('RobOS Party Game', () => {
   describe('AI-hosted full game', () => {
     it('plays lobby → roles → five mini games → finale with the AI writers room', async () => {
       const prompts = [];
-      const e = createPartyEngine({ seed: 42, settings: { agent: { provider: 'stub' } }, ai: stubAgent(prompts) });
+      const e = createPartyEngine({
+        seed: 42,
+        settings: {
+          agent: { provider: 'stub' },
+          miniGames: ['who-said-that', 'most-likely-to', 'house-quest', 'interest-trivia', 'truth-or-bot'],
+        },
+        ai: stubAgent(prompts),
+      });
       const spoken = [];
       e.events.on('narration', (n) => spoken.push(n.text));
       await playFullGame(e);
@@ -332,7 +339,7 @@ describe('RobOS Party Game', () => {
       await e.next();
       await joinGuests(e, 5);
       await e.next(); // roles
-      while (e.state.phase !== 'question') await e.next();
+      while (e.state.phase !== 'question' || e.tvView().round.inputMode !== 'single') await e.next();
       const detective = e.state.guests.find((g) => roles.hasPerk(g.roleId, 'hint') && !e.tvView().round.excludeGuestIds.includes(g.id));
       if (detective) {
         const pv = e.playerView(detective.id);
@@ -561,12 +568,12 @@ describe('RobOS Party Game', () => {
             title: "Nick & Diana's Game Night",
             agent: { provider: 'stub' },
             minGuests: 2,
-            roundsPerGame: 2,
-            miniGames: ['who-said-that', 'most-likely-to', 'house-quest', 'interest-trivia', 'truth-or-bot'],
+            roundsPerGame: 3,
+            miniGames: ['real-or-ai', 'expertise-trivia', 'country-leaders'],
           },
           ai: async () => null, // verify profile custom material works even without live AI response
         });
-        e.selectTvs([{ tvId: 'tv-livingroom-webos', name: 'Living Room LG OLED' }]);
+        e.selectTvs([{ tvId: 'tv-livingroom-tcl-roku', name: '65" TCL Roku TV (Living room)' }]);
         await e.openLobby();
 
         const gNick = await e.onboardUser(nickProfile, { setAsPartyHost: true, applyHouse: true });
@@ -582,22 +589,80 @@ describe('RobOS Party Game', () => {
         assert.strictEqual(gDiana.roleId, 'detective');
 
         let safety = 0;
-        while (e.state.phase !== 'finale' && safety++ < 80) {
+        let seenTextPrompt = 0;
+        let seenGuess6Options = 0;
+        let seenMulti20Options = 0;
+        while (e.state.phase !== 'finale' && safety++ < 120) {
           if (e.state.phase === 'question') {
-            for (const g of e.state.guests) {
-              const pv = e.playerView(g.id);
-              if (!pv.me.sittingOut && pv.round.options.length) {
-                e.submitAnswer(g.id, pv.round.options[0].id);
+            const v = e.tvView();
+            if (v.round.inputMode === 'text') {
+              seenTextPrompt += 1;
+              e.submitAnswer(gNick.id, `Nick real answer #${seenTextPrompt}`);
+              e.submitAnswer(gDiana.id, `Diana real answer #${seenTextPrompt}`);
+            } else if (v.round.inputMode === 'multi') {
+              seenMulti20Options += 1;
+              assert.strictEqual(v.round.options.length, 20, 'country-leaders presents 20 policy options');
+              assert.strictEqual(v.round.pickCount, 3, 'country-leaders asks for best 3 options');
+              e.submitAnswer(gNick.id, [v.round.options[0].id, v.round.options[1].id, v.round.options[2].id]);
+              e.submitAnswer(gDiana.id, [v.round.options[1].id, v.round.options[3].id, v.round.options[4].id]);
+            } else {
+              if (v.game.id === 'real-or-ai') {
+                seenGuess6Options += 1;
+                assert.strictEqual(v.round.options.length, 6, 'real-or-ai displays 5 AI answers + 1 real answer');
+              }
+              for (const g of e.state.guests) {
+                const pv = e.playerView(g.id);
+                if (!pv.me.sittingOut && pv.round.options.length) {
+                  e.submitAnswer(g.id, pv.round.options[0].id);
+                }
               }
             }
           }
           await e.next();
         }
         assert.strictEqual(e.state.phase, 'finale');
-        assert.strictEqual(e.state.history.length, 10, '2 rounds across all 5 mini games completed in 2-player mode');
+        assert.strictEqual(seenTextPrompt, 3, 'Game 1 asks 3 free-text questions first');
+        assert.strictEqual(seenGuess6Options, 6, 'Game 1 has 6 alternating guessing turns (3 per player) with 6 options');
+        assert.strictEqual(seenMulti20Options, 3, 'Game 3 has 3 crisis rounds with 20 AI-ranked options');
+        const historyGames = [...new Set(e.state.history.map((h) => h.game))];
+        assert.deepStrictEqual(historyGames, ['real-or-ai', 'expertise-trivia', 'country-leaders']);
       } finally {
         fs.rmSync(dir, { recursive: true, force: true });
       }
+    });
+
+    it('scores Expertise Turf War (+1 own expertise, +3 other person expertise) and Co-Leaders 1-20 AI ratings', async () => {
+      const expertiseGame = getMiniGame('expertise-trivia');
+      const leadersGame = getMiniGame('country-leaders');
+      const ctx = {
+        guests: [
+          { id: 'nick', name: 'Nicholas DiPiazza', userId: 'nicholas-dipiazza', archetype: 'Software Engineer' },
+          { id: 'diana', name: 'Diana Arrington', userId: 'diana-arrington', archetype: 'Rad X-Ray Tech' },
+        ],
+        shuffle: (a) => [...a],
+      };
+      const turfRounds = await expertiseGame.buildRounds(ctx, 3);
+      assert.strictEqual(turfRounds.length, 6, 'Alternates 3 Medical/Anatomy and 3 IT/Computer Tech questions');
+      assert.strictEqual(turfRounds[0].ownerId, 'diana');
+      assert.strictEqual(turfRounds[1].ownerId, 'nick');
+      // On Diana's turf (round 0), Diana gets +1 for right answer, Nick gets +3 for stealing it
+      const r0Score = expertiseGame.score(turfRounds[0], { diana: turfRounds[0].correctId, nick: turfRounds[0].correctId }, ctx);
+      assert.deepStrictEqual(r0Score.awards, { diana: 1, nick: 3 });
+      // On Nick's turf (round 1), Nick gets +1 for right answer, Diana gets +3 for stealing it
+      const r1Score = expertiseGame.score(turfRounds[1], { diana: turfRounds[1].correctId, nick: turfRounds[1].correctId }, ctx);
+      assert.deepStrictEqual(r1Score.awards, { nick: 1, diana: 3 });
+
+      // Co-Leaders: Rank 1 = 20 pts, Rank 2 = 19 pts, Rank 3 = 18 pts (57 pts) + consensus bonus
+      const leaderRounds = await leadersGame.buildRounds(ctx, 3);
+      assert.strictEqual(leaderRounds.length, 3);
+      assert.strictEqual(leaderRounds[0].prompt.options.length, 20);
+      // Since shuffle is identity in this test ctx, pol_1 is Rank 1 (20), pol_2 is Rank 2 (19), pol_3 is Rank 3 (18), pol_20 is Rank 20 (1)
+      const lScore = leadersGame.score(leaderRounds[0], {
+        diana: ['pol_1', 'pol_2', 'pol_3'], // 20 + 19 + 18 = 57
+        nick: ['pol_18', 'pol_19', 'pol_20'], // 3 + 2 + 1 = 6
+      }, ctx);
+      assert.strictEqual(lScore.awards.diana, 57);
+      assert.strictEqual(lScore.awards.nick, 6);
     });
   });
 });

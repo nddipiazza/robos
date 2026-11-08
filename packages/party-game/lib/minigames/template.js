@@ -82,8 +82,14 @@ function guestOptions(guests) {
 
 function tallyVotes(answers) {
   const counts = {};
-  for (const optionId of Object.values(answers || {})) {
-    if (optionId) counts[optionId] = (counts[optionId] || 0) + 1;
+  for (const val of Object.values(answers || {})) {
+    if (Array.isArray(val)) {
+      for (const optionId of val) {
+        if (optionId) counts[optionId] = (counts[optionId] || 0) + 1;
+      }
+    } else if (val) {
+      counts[val] = (counts[val] || 0) + 1;
+    }
   }
   return counts;
 }

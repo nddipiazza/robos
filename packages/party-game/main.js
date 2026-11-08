@@ -69,7 +69,12 @@ const lanIp = () => (tvEngineModule ? tvEngineModule.detectLanIp() : '127.0.0.1'
 
 function loadSettings() {
   try {
-    return normalizeSettings(JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')));
+    const raw = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+    const legacyIds = new Set(['who-said-that', 'most-likely-to', 'house-quest', 'interest-trivia', 'truth-or-bot']);
+    if (Array.isArray(raw.miniGames) && raw.miniGames.every((id) => legacyIds.has(id))) {
+      raw.miniGames = [...DEFAULT_SETTINGS.miniGames];
+    }
+    return normalizeSettings(raw);
   } catch {
     return normalizeSettings({});
   }
@@ -247,6 +252,7 @@ async function onboardGameNight({ openControllers = false } = {}) {
   }
   const nextSettings = engine.updateSettings({
     minGuests: 2,
+    miniGames: [...DEFAULT_SETTINGS.miniGames],
     title: curSettings.title === 'RobOS Party Game' ? "Nick & Diana's Game Night" : curSettings.title,
     agent,
   });

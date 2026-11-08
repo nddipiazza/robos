@@ -84,18 +84,10 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
     });
     let latest = null;
     let fresh = false;
-    win.webContents.on('paint', (_e, _dirty, image) => {
-      latest = image;
-      fresh = true;
-    });
-    win.webContents.setFrameRate(10);
-    win.loadURL(`${tvPageUrl(screen, '127.0.0.1')}&capture=1`);
-    win.webContents.setAudioMuted(true);
     let busy = false;
     let lastPost = 0;
-    const timer = setInterval(async () => {
+    async function flushFrame() {
       if (busy || win.isDestroyed() || !latest) return;
-      // Re-send an unchanged frame every few seconds so the portal keeps it live.
       if (!fresh && Date.now() - lastPost < 5000) return;
       busy = true;
       fresh = false;
@@ -109,7 +101,18 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
       } finally {
         busy = false;
       }
-    }, FRAME_INTERVAL_MS);
+    }
+    win.webContents.on('paint', (_e, _dirty, image) => {
+      latest = image;
+      fresh = true;
+      if (lastPost === 0 && !busy) {
+        flushFrame();
+      }
+    });
+    win.webContents.setFrameRate(10);
+    win.loadURL(`${tvPageUrl(screen, '127.0.0.1')}&capture=1`);
+    win.webContents.setAudioMuted(true);
+    const timer = setInterval(flushFrame, FRAME_INTERVAL_MS);
     streams.set(tvId, { win, timer });
     return true;
   }
@@ -134,11 +137,12 @@ function createTvBridge({ tvEngine, BrowserWindow = null, getGamePort, getLanIp,
         continue;
       }
       const url = tvPageUrl(sel.screen, getLanIp());
+      if (!tv.browser) startFrameStream(tv.id, sel.screen);
       let res = { ok: false, error: 'RobOS TV engine is not installed' };
       if (tvEngine) {
         res = await tvEngine.castAppToTv({ tvId: tv.id, appId: 'party-game', title: `Party Game · ${sel.screen}`, url });
       }
-      if (res.ok && !tv.browser) startFrameStream(tv.id, sel.screen);
+      if (!res.ok && !tv.browser) stopFrameStream(tv.id);
       results.push({ tvId: tv.id, name: tv.name, screen: sel.screen, url, ok: res.ok, mode: tv.browser ? 'url' : 'frames', message: res.message || res.error });
     }
     return results;

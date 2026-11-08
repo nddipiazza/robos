@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   agent: null, // { provider, model, effort } from <robos-agent-selector>; required to play
   surveyPacks: [...survey.DEFAULT_PACKS],
   customQuestions: [],
-  miniGames: ['who-said-that', 'most-likely-to', 'house-quest', 'interest-trivia', 'truth-or-bot'],
+  miniGames: ['real-or-ai', 'expertise-trivia', 'country-leaders'],
   roundsPerGame: 3,
   answerSeconds: 0, // 0 = each mini game's default
   autoAdvance: true,
@@ -658,7 +658,8 @@ function createPartyEngine({
     } catch (err) {
       state.error = `${game.title}: ${err.message}`;
     }
-    state.rounds = (rounds || []).slice(0, state.settings.roundsPerGame);
+    const maxRounds = game.preserveAllRounds ? (rounds || []).length : state.settings.roundsPerGame;
+    state.rounds = (rounds || []).slice(0, maxRounds);
     const introText = state.ai.script?.gameIntros?.[game.id] || game.narration?.intro?.(ctx) || null;
     await narrate('gameIntro', { number: index + 1, title: game.title, tagline: game.tagline }, introText);
     setTimer(7);
@@ -702,12 +703,15 @@ function createPartyEngine({
     state.lastResult = null;
     state.phase = 'question';
     const round = currentRound();
+    if (typeof game.onBeforeRound === 'function') {
+      await game.onBeforeRound(round, index, buildCtx(), state);
+    }
     // Detective: one wrong option crossed out on their phone.
     const correct = game.correctOption ? game.correctOption(round) : null;
-    if (correct) {
+    if (correct && (round.prompt.inputMode || 'single') === 'single') {
       for (const g of state.guests) {
         if (!roles.hasPerk(g.roleId, 'hint') || round.prompt.excludeGuestIds?.includes(g.id)) continue;
-        const wrong = round.prompt.options.filter((o) => o.id !== correct && o.guestId !== g.id);
+        const wrong = (round.prompt.options || []).filter((o) => o.id !== correct && o.guestId !== g.id);
         if (wrong.length) state.hints[g.id] = pick(wrong).id;
       }
     }
@@ -724,17 +728,48 @@ function createPartyEngine({
     return state.guests.filter((g) => !excluded.has(g.id));
   }
 
-  function submitAnswer(guestId, optionId) {
+  function submitAnswer(guestId, rawAnswer) {
     if (state.phase !== 'question') throw new Error('Not accepting answers right now');
     const round = currentRound();
     if (!eligibleGuests().some((g) => g.id === guestId)) throw new Error('You sit this round out');
-    if (!round.prompt.options.some((o) => o.id === optionId)) throw new Error('Unknown option');
-    state.answers[guestId] = optionId;
+    const mode = round.prompt.inputMode || 'single';
+    if (mode === 'text') {
+      const textVal = typeof rawAnswer === 'string'
+        ? rawAnswer
+        : rawAnswer && typeof rawAnswer === 'object'
+          ? String(rawAnswer.text || rawAnswer.optionId || '')
+          : '';
+      const clean = textVal.trim().replace(/\s+/g, ' ').slice(0, 240);
+      if (!clean) throw new Error('Please enter an answer');
+      const matchedOpt = (round.prompt.options || []).find((o) => o.id === clean);
+      state.answers[guestId] = matchedOpt ? matchedOpt.label : clean;
+    } else if (mode === 'multi') {
+      const maxPicks = Math.max(1, Number(round.prompt.pickCount) || 3);
+      const rawList = Array.isArray(rawAnswer)
+        ? rawAnswer
+        : Array.isArray(rawAnswer?.optionIds)
+          ? rawAnswer.optionIds
+          : typeof rawAnswer === 'string' && rawAnswer
+            ? [rawAnswer]
+            : [];
+      const validIds = new Set((round.prompt.options || []).map((o) => o.id));
+      const cleanList = [...new Set(rawList.map((x) => String(x || '')))].filter((id) => validIds.has(id));
+      if (cleanList.length === 0) throw new Error('Pick at least one option');
+      if (cleanList.length > maxPicks) throw new Error(`Pick at most ${maxPicks} options`);
+      state.answers[guestId] = cleanList;
+    } else {
+      const optionId = typeof rawAnswer === 'string' ? rawAnswer : String(rawAnswer?.optionId || '');
+      if (!round.prompt.options.some((o) => o.id === optionId)) throw new Error('Unknown option');
+      state.answers[guestId] = optionId;
+    }
     emit();
     // Rounds performed in real life (House Quest) wait for the timer instead.
-    if (!round.prompt.waitForTimer && eligibleGuests().every((g) => state.answers[g.id])) {
+    if (!round.prompt.waitForTimer && eligibleGuests().every((g) => {
+      const a = state.answers[g.id];
+      return Array.isArray(a) ? a.length > 0 : Boolean(a);
+    })) {
       // Everyone answered: shorten the clock so the reveal comes quickly.
-      state.phaseEndsAt = Math.min(state.phaseEndsAt || Infinity, now() + 1500);
+      state.phaseEndsAt = Math.min(state.phaseEndsAt || Infinity, now() + (round.prompt.skipReveal ? 800 : 1500));
     }
     return { ok: true };
   }
@@ -769,11 +804,17 @@ function createPartyEngine({
     const lastPlace = new Set(state.guests.filter((g) => g.score === minScore).map((g) => g.id));
     const majority = majorityOptions(state.answers);
 
-    for (const [gid, pts] of Object.entries(result.awards || {})) add(gid, pts, game.title);
+    for (const [gid, pts] of Object.entries(result.awards || {})) {
+      const reason = result.awardReasons?.[gid] || game.title;
+      add(gid, pts, reason);
+    }
     for (const g of state.guests) {
       const answer = state.answers[g.id];
       const earned = result.awards?.[g.id] || 0;
-      if (roles.hasPerk(g.roleId, 'crowdBonus') && answer && majority.includes(answer) && majority.length === 1) {
+      const ansMatchesMajority = Array.isArray(answer)
+        ? answer.some((a) => majority.includes(a))
+        : Boolean(answer && majority.includes(answer));
+      if (roles.hasPerk(g.roleId, 'crowdBonus') && ansMatchesMajority && majority.length === 1) {
         add(g.id, 1, 'Diplomat: voted with the room');
       }
       if (roles.hasPerk(g.roleId, 'underdog') && earned > 0 && lastPlace.has(g.id) && state.guests.length > 1) {
@@ -796,7 +837,9 @@ function createPartyEngine({
     }
     for (const [gid, d] of Object.entries(deltas)) guest(gid).score += d.points;
 
-    const correctCount = Object.entries(state.answers).filter(([, c]) => c === result.correct).length;
+    const correctCount = Object.entries(state.answers).filter(([, c]) =>
+      Array.isArray(c) ? c.includes(result.correct) : c === result.correct
+    ).length;
     state.lastResult = {
       ...result,
       answers: { ...state.answers },
@@ -920,9 +963,20 @@ function createPartyEngine({
           else if (state.gameIndex + 1 < state.settings.miniGames.length) await startMiniGame(state.gameIndex + 1);
           else await finale();
           break;
-        case 'question':
-          await revealRound();
+        case 'question': {
+          const r = currentRound();
+          if (r && r.prompt && r.prompt.skipReveal) {
+            const game = currentGame();
+            if (typeof game?.onCollect === 'function') {
+              await game.onCollect(r, { ...state.answers }, buildCtx());
+            }
+            if (state.roundIndex + 1 < state.rounds.length) await startRound(state.roundIndex + 1);
+            else await showScores();
+          } else {
+            await revealRound();
+          }
           break;
+        }
         case 'reveal':
           if (state.roundIndex + 1 < state.rounds.length) await startRound(state.roundIndex + 1);
           else await showScores();
@@ -1023,12 +1077,21 @@ function createPartyEngine({
     const round = currentRound();
     if (!round || !['question', 'reveal'].includes(state.phase)) return null;
     const p = round.prompt;
+    const revealMeta = state.phase === 'reveal' ? (state.lastResult?.optionMeta || null) : null;
     return {
+      kicker: p.kicker || '',
       headline: p.headline,
       body: p.body,
       caption: p.caption || '',
       layout: p.layout,
-      options: p.options,
+      inputMode: p.inputMode || 'single',
+      pickCount: p.pickCount || 1,
+      placeholder: p.placeholder || '',
+      suggestions: p.suggestions || [],
+      options: (p.options || []).map((o) => {
+        const meta = revealMeta && revealMeta[o.id];
+        return meta ? { ...o, ...meta } : o;
+      }),
       // The spotlight guest is only public once the answer is revealed (unless the prompt shows it).
       subjectId: state.phase === 'reveal' ? state.lastResult?.subjectId || p.subjectId : p.subjectId,
       excludeGuestIds: p.excludeGuestIds || [],
@@ -1094,8 +1157,10 @@ function createPartyEngine({
     const qs = questions();
     const round = currentRound();
     const excluded = round?.prompt?.excludeGuestIds?.includes(g.id);
+    const guestSuggestions = round?.prompt?.suggestionsByGuest?.[g.id] || round?.prompt?.suggestions || [];
     return {
       ...base,
+      round: base.round ? { ...base.round, suggestions: guestSuggestions } : null,
       me: {
         id: g.id,
         userId: g.userId,
