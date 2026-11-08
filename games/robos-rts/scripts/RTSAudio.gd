@@ -480,6 +480,8 @@ func play_ui(sfx_key: String, volume_offset_db: float = 0.0, pitch_scale: float 
 	return true
 
 func play_at(sfx_key: String, world_pos: Vector2, volume_offset_db: float = 0.0, pitch_jitter: float = 0.05) -> bool:
+	if not SimEngine.can_see_position(local_player_id, world_pos):
+		return false
 	var resolved := resolve_sfx_key(sfx_key)
 	if not sound_streams.has(resolved):
 		return false

@@ -295,6 +295,9 @@ func _draw_minimap() -> void:
 	draw_rect(mm.grow(6.0), Color("#07090c"))
 	draw_rect(mm.grow(6.0), C_EDGE_HI, false, 1.5)
 	draw_texture_rect(_minimap_texture(), mm, false)
+	if main.world_3d.fog_texture:
+		var map_cells := Vector2(SimEngine.map_width, SimEngine.map_height) / SimEngine.Vision.CELL_SIZE
+		draw_texture_rect_region(main.world_3d.fog_texture, mm, Rect2(Vector2.ZERO, map_cells))
 	_draw_minimap_units()
 
 func _draw_minimap_terrain(canvas: Node2D) -> void:
@@ -324,7 +327,12 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 
 func _draw_minimap_units() -> void:
 	var mm: Rect2 = main.MINIMAP
+	for building in SimEngine.remembered_buildings(main.local_player):
+		var up: Vector2 = main.world_to_minimap(building.pos)
+		draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), C_MUTED, false, 1.0)
 	for u in SimEngine.units.values():
+		if not SimEngine.can_see_unit(main.local_player, u):
+			continue
 		var up: Vector2 = main.world_to_minimap(u["pos"])
 		var col := RTSData.get_player_color(int(u["owner"]))
 		if u["is_structure"]:

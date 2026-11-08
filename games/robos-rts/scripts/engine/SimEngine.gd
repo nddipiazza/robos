@@ -25,6 +25,8 @@ const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
+const Vision = preload("res://scripts/engine/RTSVision.gd")
+const VISION_UPDATE_TICKS := 8
 
 var tick: int = 0
 var sim_time: float = 0.0
@@ -66,6 +68,7 @@ var _accum_time: float = 0.0
 # Map Editor <-> playtest handoff: holds the editor document while RTSMain playtests it.
 var editor_session: Dictionary = {}
 var match_state: Dictionary = {}
+var vision: Vision
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
 var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
@@ -137,6 +140,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
+	vision = null
 	_accum_time = 0.0
 	sim_speed = 1.0
 	manual_step_requests = 0
@@ -316,6 +320,7 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	_rebuild_astar_grid()
 	_recompute_supplies()
 	RTSCommanderAI.configure_from_scenario(data.get("directives", []))
+	_start_vision(bool(data.get("fog_of_war", false)))
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "unit_count": units.size()}
 
@@ -396,8 +401,25 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	_recompute_supplies()
 	RTSCommanderAI.configure_from_scenario([])
 	RTSCommanderAI.set_skirmish_directive(2, difficulty, strategy)
+	_start_vision(bool(data.get("fog_of_war", true)))
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "match": match_state.duplicate(true)}
+
+func _start_vision(enabled: bool) -> void:
+	if enabled:
+		vision = Vision.new(map_width, map_height, players.keys())
+		vision.update(units, tick)
+
+func can_see_position(player: int, pos: Vector2) -> bool:
+	return vision == null or player == 0 or vision.state_at(player, pos) == Vision.VISIBLE
+
+func can_see_unit(player: int, unit: Dictionary) -> bool:
+	return unit.owner == player or can_see_position(player, unit.pos)
+
+func remembered_buildings(player: int) -> Array:
+	if vision == null:
+		return []
+	return vision.buildings_for(player).filter(func(building): return not can_see_position(player, building.pos))
 
 func _check_match_result() -> void:
 	if match_state.get("status", "") != "playing":
@@ -694,6 +716,8 @@ func _step_single_tick() -> void:
 	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT)
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
+	if vision != null and tick % VISION_UPDATE_TICKS == 0:
+		vision.update(units, tick)
 	_check_match_result()
 	emit_signal("simulation_ticked", tick)
 
@@ -955,7 +979,7 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 
 	if u["attack_state"] == "windup":
 		var target = units.get(u["attack_target_tag"], {})
-		if target.is_empty() or target["hp"] <= 0.0:
+		if target.is_empty() or target["hp"] <= 0.0 or not can_see_unit(u.owner, target):
 			u["attack_state"] = "idle"
 		else:
 			u["attack_state_timer"] -= dt
@@ -1039,6 +1063,14 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 
 		"attack_target":
 			var t_tag = int(order.get("target_tag", 0))
+			if vision != null:
+				var live: Dictionary = units.get(t_tag, {})
+				if live.is_empty() or not can_see_unit(u.owner, live):
+					# Continue to the last observed location, never the hidden unit.
+					u.orders[0] = {"type": "attack_move", "target_pos": order.target_pos}
+					u.path.clear()
+					return
+				order.target_pos = live.pos
 			if not units.has(t_tag) or units[t_tag]["hp"] <= 0.0:
 				u["orders"].pop_front()
 				return
@@ -1383,7 +1415,7 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 	var best_score: float = -999999.0
 
 	for c in candidates:
-		if c["owner"] == u["owner"] or c["hp"] <= 0.0:
+		if c["owner"] == u["owner"] or c["hp"] <= 0.0 or not can_see_unit(u.owner, c):
 			continue
 		var d_edge = _edge_distance(u, c)
 		if d_edge < min_range:
@@ -1520,6 +1552,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if vision != null and (ctype == "attack_target" or (ctype in ["attack", "attack_move"] and target_tag > 0)):
+			var target: Dictionary = units.get(target_tag, {})
+			if target.is_empty() or target.owner == u.owner or not can_see_unit(u.owner, target):
+				continue
 		if ctype.begins_with("build_") or ctype == "build":
 			var stype_check = ctype.trim_prefix("build_") if ctype != "build" else extra
 			if not _can_build(u, stype_check, target_pos):
@@ -1644,6 +1680,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 					"type": "attack_target",
 					"target_tag": target_tag
 				})
+				if vision != null:
+					u.orders.back()["target_pos"] = units[target_tag].pos
 			else:
 				u["orders"].append({
 					"type": "attack_move",
@@ -1657,6 +1695,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				"type": "attack_target",
 				"target_tag": target_tag
 			})
+			if vision != null:
+				u.orders.back()["target_pos"] = units[target_tag].pos
 			accepted += 1
 
 		elif ctype == "harvest":
@@ -1804,11 +1844,14 @@ func _find_nearest_crystal(pos: Vector2) -> Dictionary:
 	return best
 
 func get_observation(perspective_player: int = 0) -> Dictionary:
+	var limited := vision != null and perspective_player != 0
 	var unit_list: Array = []
 	var all_tags = units.keys()
 	all_tags.sort()
 	for tag in all_tags:
 		var u = units[tag]
+		if limited and not can_see_unit(perspective_player, u):
+			continue
 		unit_list.append({
 			"tag": u["tag"],
 			"id": u["id"],
@@ -1832,13 +1875,15 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"surge_timer": snappedf(u["surge_timer"], 0.01),
 			"cargo_type": u["cargo_type"],
 			"cargo_amount": u["cargo_amount"],
-			"orders": u["orders"].duplicate(true),
-			"production_queue_len": u["production_queue"].size(),
+			"orders": [] if limited and u.owner != perspective_player else u["orders"].duplicate(true),
+			"production_queue_len": 0 if limited and u.owner != perspective_player else u["production_queue"].size(),
 			"kills": u["kills"]
 		})
 
 	var res_list: Array = []
 	for r in resources.values():
+		if limited and not can_see_position(perspective_player, r.pos):
+			continue
 		res_list.append({
 			"tag": r["tag"],
 			"id": r["id"],
@@ -1848,9 +1893,25 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"unlimited": unlimited_resources
 		})
 
-	return {
+	var match_view := match_state.duplicate(true)
+	var player_view := players.duplicate(true)
+	var events := recent_events.slice(max(0, recent_events.size() - 15))
+	var memory := []
+	if limited:
+		if match_view.has("assigned_starts"):
+			var slot = match_view.assigned_starts.get(str(perspective_player))
+			match_view.assigned_starts = {str(perspective_player): slot} if slot != null else {}
+		for player in player_view.keys():
+			if player != perspective_player:
+				player_view[player] = {"id": player, "name": players[player].name, "faction": players[player].faction}
+		events = []
+		for building in remembered_buildings(perspective_player):
+			var snapshot: Dictionary = building.duplicate()
+			snapshot.pos = {"x": building.pos.x, "y": building.pos.y}
+			memory.append(snapshot)
+	var observation := {
 		"tick": tick,
-		"match": match_state.duplicate(true),
+		"match": match_view,
 		"sim_time": snappedf(sim_time, 0.01),
 		"scenario": scenario_name,
 		"rts_mode": rts_mode,
@@ -1864,11 +1925,18 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"water": _water_to_arrays(), "bridges": _rects_to_dicts(land_bridges),
 			"terrain_tiles": terrain_tiles.duplicate(true)
 		},
-		"players": players.duplicate(true),
+		"players": player_view,
 		"units": unit_list,
 		"resources": res_list,
-		"recent_events": recent_events.slice(max(0, recent_events.size() - 15))
+		"recent_events": events
 	}
+	if limited:
+		observation["vision"] = {
+			"width": vision.size.x, "height": vision.size.y, "cell_size": Vision.CELL_SIZE,
+			"cells": Array(vision.cells_for(perspective_player)),
+			"last_seen_buildings": memory,
+		}
+	return observation
 
 func _water_to_arrays() -> Array:
 	var out: Array = []

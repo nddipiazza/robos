@@ -65,7 +65,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 		return
 	# Reserve the expansion cost instead of spending every income tick on units.
 	if strategy == "economy" and int(counts.get("colony_hub", 0)) < 2 and workers.size() >= 18 and SimEngine.sim_time >= 90:
-		var expansion = _expansion_position(base)
+		var expansion = _expansion_position(pid, base)
 		if expansion != Vector2.ZERO:
 			_build(workers, "colony_hub", expansion, true)
 			_attack(pid, army, cfg, false)
@@ -126,18 +126,64 @@ func _build(workers: Array, structure_type: String, base: Vector2, exact: bool =
 			SimEngine.issue_command([worker.tag], "build_" + structure_type, candidate)
 			return
 
-func _expansion_position(base: Vector2) -> Vector2:
+func _expansion_position(pid: int, base: Vector2) -> Vector2:
 	var best = Vector2.ZERO
 	var distance = INF
+	var known := _known_enemy_buildings(pid)
+	for u in SimEngine.units.values():
+		if u.owner == pid and u.is_structure:
+			known.append(u)
 	for start in SimEngine.match_state.get("starts", []) + SimEngine.match_state.get("expansions", []):
 		var pos = Vector2(float(start.x), float(start.y))
 		var occupied = false
-		for u in SimEngine.units.values():
-			if u.is_structure and u.pos.distance_to(pos) < 26:
+		for u in known:
+			if u.pos.distance_to(pos) < 26:
 				occupied = true
 		if not occupied and pos.distance_to(base) < distance:
 			best = pos
 			distance = pos.distance_to(base)
+	return best
+
+func _known_enemy_buildings(pid: int) -> Array:
+	var known: Array = SimEngine.remembered_buildings(pid)
+	for enemy in SimEngine.units.values():
+		if enemy.owner != pid and enemy.is_structure and SimEngine.can_see_unit(pid, enemy):
+			known.append(enemy)
+	return known
+
+func _scout_position(pid: int, from: Vector2, cfg: Dictionary) -> Vector2:
+	var previous: Vector2 = cfg.get("scout_position", Vector2.ZERO)
+	if previous != Vector2.ZERO and SimEngine.vision.last_seen_at(pid, previous) == cfg.get("scout_seen", -1):
+		return previous
+	var best := Vector2.ZERO
+	var best_seen := 2147483647
+	var best_distance := INF
+	# Check plausible bases first, without reading which start the opponent got.
+	var sites: Array = SimEngine.match_state.get("starts", []) + SimEngine.match_state.get("expansions", [])
+	for site in sites:
+		var pos := Vector2(site.x, site.y)
+		var seen: int = SimEngine.vision.last_seen_at(pid, pos)
+		var distance := from.distance_squared_to(pos)
+		if seen < best_seen or (seen == best_seen and distance < best_distance):
+			best = pos
+			best_seen = seen
+			best_distance = distance
+	# Once the starts are checked, sweep walkable areas for off-site buildings.
+	if best_seen > 0:
+		for y in range(8, int(SimEngine.map_height), 20):
+			for x in range(8, int(SimEngine.map_width), 20):
+				var pos := Vector2(x, y)
+				var cell := Vector2i(pos / SimEngine.PATH_CELL_SIZE)
+				if SimEngine.astar_grid.is_point_solid(cell):
+					continue
+				var seen: int = SimEngine.vision.last_seen_at(pid, pos)
+				var distance := from.distance_squared_to(pos)
+				if seen < best_seen or (seen == best_seen and distance < best_distance):
+					best = pos
+					best_seen = seen
+					best_distance = distance
+	cfg["scout_position"] = best
+	cfg["scout_seen"] = best_seen
 	return best
 
 func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
@@ -147,14 +193,19 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 	if army.size() < threshold and not desperate and not bool(cfg.get("attacking", false)):
 		return
 	cfg["attacking"] = true
+	var known := _known_enemy_buildings(pid)
 	for soldier in army:
 		if not soldier.orders.is_empty():
 			continue
 		var closest: Dictionary = {}
 		var distance = INF
-		for enemy in SimEngine.units.values():
-			if enemy.owner != pid and enemy.is_structure and soldier.pos.distance_to(enemy.pos) < distance:
+		for enemy in known:
+			if soldier.pos.distance_to(enemy.pos) < distance:
 				closest = enemy
 				distance = soldier.pos.distance_to(enemy.pos)
 		if not closest.is_empty():
 			SimEngine.issue_command([soldier.tag], "attack_move", closest.pos)
+		elif SimEngine.vision != null:
+			var target := _scout_position(pid, soldier.pos, cfg)
+			if target != Vector2.ZERO:
+				SimEngine.issue_command([soldier.tag], "attack_move", target)
