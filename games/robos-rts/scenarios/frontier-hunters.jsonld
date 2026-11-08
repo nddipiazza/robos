@@ -4,6 +4,7 @@
   "@type": "robos:RTSScenario",
   "name": "Frontier Hunters — 1 Player vs AI",
   "mode": "skirmish",
+  "map_id": "frontier-hunters",
   "difficulty": "normal",
   "strategy": "balanced",
   "unlimited_resources": true,

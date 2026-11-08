@@ -44,6 +44,12 @@ func add_sweep(owner: int, position: Vector2, radius: float, expires: int) -> vo
 func sweeps_for(owner: int) -> Array[Dictionary]:
 	return _sweeps.filter(func(sweep): return sweep.owner == owner)
 
+func sweep_detects(owner: int, position: Vector2) -> bool:
+	for sweep in _sweeps:
+		if sweep.owner == owner and position.distance_squared_to(sweep.pos) <= sweep.radius * sweep.radius:
+			return true
+	return false
+
 func _cell(pos: Vector2) -> Vector2i:
 	return Vector2i((pos / CELL_SIZE).floor()).clamp(Vector2i.ZERO, size - Vector2i.ONE)
 

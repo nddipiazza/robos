@@ -46,7 +46,7 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop", "build_sentry_turret"],
 		"dialogues": {
 			"select": [
 				{"id": "pioneer_select_1", "text": "What's up, Commander?"},
@@ -443,6 +443,31 @@ var units: Dictionary = {
 		"trains": ["howitzer"],
 		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor"]
 	},
+	"sentry_turret": {
+		"id": "sentry_turret",
+		"name": "Sentry Turret",
+		"blurb": "Automated defensive cannon that reveals cloaked enemies in its sensor range. Requires a Muster Hall.",
+		"faction": FACTION_HUMANS,
+		"is_structure": true,
+		"is_immobile": true,
+		"requires": ["muster_hall"],
+		"attributes": ["Armored", "Mechanical", "Structure", "Detector"],
+		"crystal_cost": 125,
+		"aether_cost": 0,
+		"build_time": 28.0,
+		"max_hp": 350.0,
+		"armor": 1.0,
+		"radius": 1.65,
+		"footprint": Vector2i(2, 2),
+		"sight_range": 17.0,
+		"detection_radius": 14.0,
+		"weapon": {
+			"name": "Sentry Coilgun", "sfx": "sentry_fire", "attack_type": "ranged",
+			"damage": 12.0, "range": 13.0, "period": 0.9,
+			"damage_point": 0.09, "backswing": 0.2, "attacks": 1
+		},
+		"abilities": ["attack", "stop"]
+	},
 
 	# =========================================================================
 	# 2. MONSTERS (Gnarl Brood — Fast Organic Melee & Acid Pack)
@@ -710,7 +735,7 @@ var units: Dictionary = {
 			"sfx": "needler_fire",
 			"attack_type": "ranged"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "phase_step"]
+		"abilities": ["move", "stop", "hold_position", "attack", "phase_step", "phase_cloak"]
 	},
 	"spire_walker": {
 		"id": "spire_walker",
@@ -828,6 +853,8 @@ var abilities: Dictionary = {
 	"cancel_construction": {"id": "cancel_construction", "name": "Cancel Construction", "hotkey": "X", "target": "none", "desc": "Remove the foundation and refund 75% of the paid construction costs."},
 	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},
 	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0, "sfx": "phase_step"},
+	"phase_cloak": {"id": "phase_cloak", "name": "Phase Cloak", "hotkey": "C", "target": "none", "desc": "Spend 25 energy to cloak. Cloak drains 4 energy per second. Detectors and recon sweeps can reveal this unit.", "sfx": "phase_step"},
+	"hold_fire": {"id": "hold_fire", "name": "Hold Fire", "hotkey": "K", "target": "none", "desc": "Toggle automatic attacks. Explicit attack orders can still fire."},
 	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5, "sfx": "charge_activate"},
 	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31 with splash, minimum range 5. Cannot move while emplaced.", "morph_to": "howitzer_emplaced", "sfx": "siege_transform"},
 	"mobilize": {"id": "mobilize", "name": "Mobilize", "hotkey": "D", "target": "none", "desc": "Pack up so the howitzer can move again.", "morph_to": "howitzer", "sfx": "siege_transform"},
@@ -851,6 +878,7 @@ var abilities: Dictionary = {
 	"build_aether_tap": {"id": "build_aether_tap", "name": "Build Aether Tap", "hotkey": "R", "target": "point", "structure": "aether_tap"},
 	"build_muster_hall": {"id": "build_muster_hall", "name": "Build Muster Hall", "hotkey": "X", "target": "point", "structure": "muster_hall"},
 	"build_workshop": {"id": "build_workshop", "name": "Build Workshop", "hotkey": "F", "target": "point", "structure": "workshop"},
+	"build_sentry_turret": {"id": "build_sentry_turret", "name": "Build Sentry Turret", "hotkey": "T", "target": "point", "structure": "sentry_turret"},
 	"build_colony_hub": {"id": "build_colony_hub", "name": "Build Colony Hub", "hotkey": "C", "target": "point", "structure": "colony_hub"},
 	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},
 	"build_resonator": {"id": "build_resonator", "name": "Summon Resonator", "hotkey": "E", "target": "point", "structure": "resonator"},

@@ -24,6 +24,8 @@ var hud: Node2D
 var match_menu: CanvasLayer
 
 var local_player: int = 1
+var observer_player := -1
+var health_bar_mode := 0
 var selected_tags: Array[int] = []
 var control_groups: Dictionary = {}
 var active_type: String = ""
@@ -81,6 +83,9 @@ func _ready() -> void:
 	add_child(hud)
 	match_menu = preload("res://scripts/RTSMatchMenu.gd").new()
 	add_child(match_menu)
+	match_menu.observe_requested.connect(_enter_observer)
+	match_menu.health_mode_changed.connect(func(mode): health_bar_mode = mode)
+	health_bar_mode = match_menu.health_bars.selected
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
@@ -103,6 +108,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	_attack_cursor = -1
 	_attack_msg_cd = 0.0
 	_tracked_tag = 0
+	observer_player = -1
 	click_markers.clear()
 	active_type = ""
 	banner_ttl = 4.5
@@ -296,7 +302,7 @@ func _process(delta: float) -> void:
 	_prune_control_groups()
 
 	if world_3d:
-		world_3d.sync_3d_entities(selected_tags, delta, local_player)
+		world_3d.sync_3d_entities(selected_tags, delta, viewing_player())
 	queue_redraw()
 	if hud:
 		hud.queue_redraw()
@@ -344,7 +350,7 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d := 1e9
 	for u in SimEngine.units.values():
-		if not SimEngine.can_see_unit(local_player, u):
+		if not SimEngine.can_see_unit(viewing_player(), u):
 			continue
 		var center := world_to_screen(u["pos"], unit_height(u) * 0.45)
 		var edge := world_to_screen(u["pos"] + Vector2(float(u["radius"]), 0.0), unit_height(u) * 0.45)
@@ -377,14 +383,21 @@ func idle_workers() -> Array[Dictionary]:
 			out.append(u)
 	return out
 
-func _select_all_army() -> void:
+func _select_all_army(ungrouped_only: bool = false) -> void:
+	var assigned := {}
+	if ungrouped_only:
+		for members in control_groups.values():
+			for tag in members:
+				assigned[tag] = true
 	var tags: Array[int] = []
 	for unit in SimEngine.units.values():
-		if unit.owner == local_player and unit.hp > 0.0 and not unit.is_worker and not unit.is_structure:
+		if unit.owner == local_player and unit.hp > 0.0 and not unit.is_worker and not unit.is_structure and not assigned.has(unit.tag):
 			tags.append(unit.tag)
 	if not tags.is_empty():
 		pending_ability = ""
 		_select_tags(tags)
+	elif ungrouped_only:
+		push_message("No ungrouped army units.", "info")
 
 func _select_all_idle_workers() -> void:
 	var idle := idle_workers()
@@ -417,6 +430,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				match_menu.toggle()
 			elif match_menu.result_panel.visible and event.keycode == KEY_ENTER and (event.ctrl_pressed or event.meta_pressed):
 				match_menu.restart()
+			elif match_menu.result_panel.visible and event.keycode == KEY_O:
+				_enter_observer()
 		return
 	if event is InputEventMouseButton:
 		_on_mouse_button(event as InputEventMouseButton)
@@ -462,7 +477,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 
 	if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 		if pending_ability != "":
-			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed)
+			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed, false, mb.alt_pressed)
 			return
 		is_box_selecting = true
 		_box_pick_type = mb.ctrl_pressed or mb.meta_pressed
@@ -640,7 +655,13 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		_issue_rally_at(tags, wpos, queue)
+		var target := _order_target_at(wpos)
+		if not target.is_empty() and target.owner != local_player and own.any(func(unit): return unit.armed_structure):
+			var turrets := tags.filter(func(tag): return SimEngine.units[tag].armed_structure)
+			SimEngine.issue_command(turrets, "attack_target", target.pos, target.tag, "", queue)
+			_spawn_marker(target.pos, "attack")
+		else:
+			_issue_rally_at(tags, wpos, queue)
 		return
 
 	var target := _order_target_at(wpos)
@@ -700,7 +721,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
 
-func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false) -> void:
+func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false, force: bool = false) -> void:
 	var own := selected_owned()
 	if own.is_empty():
 		pending_ability = ""
@@ -711,10 +732,13 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		tags.append(u["tag"])
 	if abil == "attack":
 		pending_ability = ""
-		var tgt := {} if minimap else _unit_at_screen(world_to_screen(wpos, 1.2))
+		var tgt := {} if minimap else _order_target_at(wpos)
 		if not tgt.is_empty() and tgt["owner"] != local_player:
 			SimEngine.issue_command(tags, "attack_target", tgt["pos"], tgt["tag"], "", queue)
 			_spawn_marker(tgt["pos"], "attack")
+		elif force and not tgt.is_empty():
+			if SimEngine.issue_command(tags, "force_attack", tgt.pos, tgt.tag, "", queue).ok:
+				_spawn_marker(tgt.pos, "attack")
 		else:
 			SimEngine.issue_command(tags, "attack_move", wpos, 0, "", queue)
 			_spawn_marker(wpos, "attack")
@@ -895,6 +919,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		"phase_step":
 			if float(pu["phase_cooldown"]) > 0.0:
 				return "Phase Step is recharging."
+		"phase_cloak":
+			if not pu.get("cloaked", false) and pu.energy < SimEngine.CLOAK_START_ENERGY:
+				return "Requires 25 energy."
 		"surge":
 			if float(pu["hp"]) <= 10.0:
 				return "Not enough health."
@@ -903,11 +930,13 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 func get_card_buttons() -> Array[Dictionary]:
 	var buttons: Array[Dictionary] = []
 	var pu := primary_unit()
-	if pu.is_empty() or pu["owner"] != local_player:
+	if pu.is_empty() or pu["owner"] != local_player or observer_player >= 0:
 		return buttons
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
 	if pu.is_structure and pu.build_progress < 1.0:
 		abils = ["cancel_construction"]
+	elif not pu.is_worker and RTSData.get_unit_def(pu.unit_type).has("weapon"):
+		abils = abils + ["hold_fire"]
 	if abils.has("move"):
 		abils = abils + ["patrol"]
 	if pu.is_worker:
@@ -949,7 +978,8 @@ func _trigger_card_button(btn: Dictionary, bulk: bool = false) -> void:
 		return
 	var tags: Array = []
 	for u in selected_owned():
-		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
+		var def: Dictionary = RTSData.get_unit_def(u.unit_type)
+		if def.get("abilities", []).has(abil_id) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	SimEngine.issue_command(tags, abil_id)
 
@@ -983,7 +1013,7 @@ func _living_tags(tags: Array, owned_only: bool = false) -> Array[int]:
 			continue
 		if owned_only and int(u["owner"]) != local_player:
 			continue
-		if not SimEngine.can_see_unit(local_player, u):
+		if not SimEngine.can_see_unit(viewing_player(), u):
 			continue
 		if not seen.has(t):
 			out.append(t)
@@ -1137,7 +1167,12 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 					_set_local_player(local_player % 3 + 1)
 					focus_on_base()
 			else:
-				_select_all_army()
+				_select_all_army(ke.shift_pressed)
+			return
+		KEY_O:
+			if observer_player >= 0:
+				observer_player = (observer_player + 1) % 3
+				_prune_control_groups()
 			return
 		KEY_SPACE:
 			_jump_to_attack()
@@ -1240,6 +1275,10 @@ func ui_state() -> Dictionary:
 	return {
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"scorecard_visible": match_menu != null and match_menu.result_panel.visible,
+		"setup_map": SimEngine.SKIRMISH_MAPS.keys()[match_menu.map_picker.selected] if match_menu != null else "",
+		"setup_unlimited_resources": match_menu != null and match_menu.deposit_rules.selected == 0,
+		"observer_player": observer_player,
+		"health_bar_mode": health_bar_mode,
 		"local_player": local_player,
 		"selected": tags,
 		"primary_type": primary_type(),
@@ -1306,8 +1345,10 @@ func _draw() -> void:
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
 	for u in SimEngine.units.values():
-		if SimEngine.can_see_unit(local_player, u):
+		if SimEngine.can_see_unit(viewing_player(), u):
 			_draw_unit_bars(u, font)
+			if u.get("cloaked", false):
+				_ellipse(world_to_screen(u.pos, 0.3), 12.0, Color(0.58, 0.83, 1.0, 0.7), 1.5)
 			if u.owner == local_player and _saturation.has(u.tag):
 				var site: Dictionary = _saturation[u.tag]
 				if site.ideal > 0:
@@ -1327,12 +1368,15 @@ func _draw() -> void:
 func _draw_recon_sweeps() -> void:
 	if SimEngine.vision == null:
 		return
-	for sweep in SimEngine.vision.sweeps_for(local_player):
-		var outline := PackedVector2Array()
-		for i in range(33):
-			var offset := Vector2.from_angle(TAU * i / 32.0) * float(sweep.radius)
-			outline.append(world_to_screen(sweep.pos + offset, 0.2))
-		draw_polyline(outline, Color("#6fb6ff"), 1.5, true)
+	for sweep in SimEngine.vision.sweeps_for(viewing_player()):
+		_draw_range_ring(sweep.pos, sweep.radius, Color("#6fb6ff"))
+
+func _draw_range_ring(position: Vector2, radius: float, color: Color) -> void:
+	var outline := PackedVector2Array()
+	for i in range(33):
+		var offset := Vector2.from_angle(TAU * i / 32.0) * radius
+		outline.append(world_to_screen(position + offset, 0.2))
+	draw_polyline(outline, color, 1.5, true)
 
 func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
 	var label := "%d/%d" % [site.assigned, site.ideal]
@@ -1345,8 +1389,18 @@ func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
 	draw_rect(badge, Color(0.03, 0.06, 0.09, 0.92))
 	draw_string(font, badge.position + Vector2(0.0, 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, width, 16, color)
 
+func viewing_player() -> int:
+	return observer_player if observer_player >= 0 else local_player
+
+func _enter_observer() -> void:
+	if SimEngine.match_state.get("status") != "finished" or not match_menu:
+		return
+	match_menu.result_panel.hide()
+	pending_ability = ""
+	observer_player = 0
+
 func _draw_building_memory(font: Font) -> void:
-	for building in SimEngine.remembered_buildings(local_player):
+	for building in SimEngine.remembered_buildings(viewing_player()):
 		var center := world_to_screen(building.pos)
 		if not Rect2(0.0, 46.0, 1920.0, HUD_TOP - 46.0).has_point(center):
 			continue
@@ -1359,7 +1413,7 @@ func _draw_building_memory(font: Font) -> void:
 # Optional labels under visible units (scripted roster screenshots); off by default.
 func _draw_name_labels(font: Font) -> void:
 	for u in SimEngine.units.values():
-		if not SimEngine.can_see_unit(local_player, u):
+		if not SimEngine.can_see_unit(viewing_player(), u):
 			continue
 		var sp := world_to_screen(u["pos"], -0.2)
 		if sp.y > HUD_TOP - 10.0 or sp.y < 50.0:
@@ -1395,6 +1449,8 @@ func _draw_rally_and_orders() -> void:
 			continue
 		var sp := world_to_screen(u["pos"], 0.2)
 		if u["is_structure"]:
+			if u.build_progress >= 1.0 and u.detection_radius > 0.0:
+				_draw_range_ring(u.pos, u.detection_radius, Color(0.35, 0.87, 1.0, 0.7))
 			if u.build_progress >= 1.0 and RTSData.get_unit_def(u.unit_type).has("trains"):
 				_draw_rally_route(u, sp)
 			continue
@@ -1411,7 +1467,7 @@ func _draw_rally_and_orders() -> void:
 				continue
 			var col := Color(0.35, 0.9, 0.5, 0.75)
 			var ot := str(ord["type"])
-			if ot.begins_with("attack"):
+			if ot.begins_with("attack") or ot == "force_attack":
 				col = Color(0.97, 0.45, 0.45, 0.8)
 			elif ot == "harvest":
 				col = Color(0.37, 0.92, 0.83, 0.7)
@@ -1445,10 +1501,11 @@ func _draw_rally_route(unit: Dictionary, start: Vector2) -> void:
 func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var is_sel := selected_tags.has(u["tag"])
 	var hurt: bool = u["hp"] < u["max_hp"] - 0.5 or (u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] - 0.5)
+	var health := health_bar_mode == 1 or (health_bar_mode == 0 and (is_sel or hurt))
 	var building: bool = u["is_structure"] and u["build_progress"] < 1.0
 	var producing: bool = u["is_structure"] and u["production_queue"].size() > 0 and is_sel
 	var salvage: int = maxi(0, int(u.get("salvage_finish", 0)) - SimEngine.tick)
-	if not (is_sel or hurt or building or producing or salvage > 0):
+	if not (health or building or producing or salvage > 0):
 		return
 	var sp_head := world_to_screen(u["pos"], unit_height(u) + 0.6)
 	if sp_head.y > HUD_TOP - 6.0 or sp_head.y < 10.0 or sp_head.x < -40.0 or sp_head.x > 1960.0:
@@ -1465,16 +1522,17 @@ func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	elif salvage > 0:
 		_bar(Rect2(x0, y, bar_w, bar_h), 1.0 - float(salvage) / SimEngine.SALVAGE_TICKS, Color("#fbbf24"))
 		y -= bar_h + 2.0
-	if u["max_shields"] > 0.0:
-		_bar(Rect2(x0, y, bar_w, bar_h), clampf(u["shields"] / u["max_shields"], 0.0, 1.0), Color("#5ab8f5"))
-		y -= bar_h + 1.0
-	var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
-	var hp_col := Color("#4ade80") if is_own else Color("#ef6b5c")
-	if is_own and ratio <= 0.25:
-		hp_col = Color("#ef4444")
-	elif is_own and ratio <= 0.5:
-		hp_col = Color("#f5b941")
-	_bar(Rect2(x0, y, bar_w, bar_h), ratio, hp_col)
+	if health:
+		if u["max_shields"] > 0.0:
+			_bar(Rect2(x0, y, bar_w, bar_h), clampf(u["shields"] / u["max_shields"], 0.0, 1.0), Color("#5ab8f5"))
+			y -= bar_h + 1.0
+		var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
+		var hp_col := Color("#4ade80") if is_own else Color("#ef6b5c")
+		if is_own and ratio <= 0.25:
+			hp_col = Color("#ef4444")
+		elif is_own and ratio <= 0.5:
+			hp_col = Color("#f5b941")
+		_bar(Rect2(x0, y, bar_w, bar_h), ratio, hp_col)
 
 	if producing:
 		var q: Dictionary = u["production_queue"][0]

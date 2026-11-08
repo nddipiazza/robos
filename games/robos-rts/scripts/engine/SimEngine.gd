@@ -39,6 +39,10 @@ const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
 const SALVAGE_TICKS := 5 * TICK_RATE
 const REINFORCED_SUPPLY := 8
+const CLOAK_ENERGY_MAX := 100.0
+const CLOAK_START_ENERGY := 25.0
+const CLOAK_DRAIN := 4.0
+const SKIRMISH_MAPS := {"frontier-hunters": "Frontier Hunters", "iron-narrows": "Iron Narrows"}
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -90,6 +94,7 @@ var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai
 var _static_structures: Array[Dictionary] = []
 var _max_unit_radius: float = 4.5
 var _town_halls: Array[Dictionary] = []
+var _detectors: Array[Dictionary] = []
 var _gas_source_by_tap: Dictionary = {}
 var _gas_tap_by_vent: Dictionary = {}
 
@@ -361,7 +366,16 @@ func load_scenario_file(slug_or_path: String) -> Dictionary:
 		return {"ok": false, "error": "Scenario is not a JSON object: " + file_path}
 	return load_scenario_dict(parsed)
 
-# Only the two assigned seats participate; the six unoccupied pockets are expansions.
+func start_skirmish(map_id: String = "frontier-hunters", options: Dictionary = {}) -> Dictionary:
+	if not SKIRMISH_MAPS.has(map_id):
+		return {"ok": false, "error": "Unknown skirmish map."}
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/%s.jsonld" % map_id))
+	for key in ["seed", "difficulty", "strategy", "unlimited_resources"]:
+		if options.has(key):
+			data[key] = options[key]
+	return _load_skirmish(data)
+
+# Only the two assigned seats participate; unoccupied sites are expansions.
 # A provided seed replays the same assignment; ordinary new games use fresh seeds.
 func _load_skirmish(data: Dictionary) -> Dictionary:
 	var map_cfg: Dictionary = data.get("map", {})
@@ -385,6 +399,7 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		slots[i] = slots[j]
 		slots[j] = temp
 	match_state = {"mode": "1p_vs_ai", "status": "playing", "winner": 0, "reason": "", "seed": match_seed,
+		"map_id": str(data.get("map_id", "custom")),
 		"difficulty": difficulty, "strategy": strategy, "unlimited_resources": unlimited_resources,
 		"starts": starts.duplicate(true), "expansions": map_cfg.get("expansions", []).duplicate(true),
 		"assigned_starts": {"1": slots[0], "2": slots[1]}}
@@ -392,18 +407,20 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		terrain_obstacles.append(Rect2(float(obs.x), float(obs.y), float(obs.w), float(obs.h)))
 	var resource_sites = starts + map_cfg.get("expansions", [])
 	var crystal_lines := {}
+	var crystal_stock := 50000 if unlimited_resources else 1500
+	var aether_stock := 50000 if unlimited_resources else 2250
 	for slot in range(resource_sites.size()):
 		var site: Dictionary = resource_sites[slot]
 		var base = Vector2(float(site.x), float(site.y))
 		var outward = (base - Vector2(map_width, map_height) * 0.5).normalized()
 		var tangent = Vector2(-outward.y, outward.x)
 		for i in range(8):
-			var patch := spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), 50000, "start_%d_crystal_%d" % [slot, i])
+			var patch := spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), crystal_stock, "start_%d_crystal_%d" % [slot, i])
 			patch["line_origin"] = base
 			if i == 0:
 				crystal_lines[slot] = patch
 		for side in [-1, 1]:
-			spawn_resource("aether_vent", _resource_land_position(base + tangent * side * 17.0), 50000, "start_%d_aether_%d" % [slot, side])
+			spawn_resource("aether_vent", _resource_land_position(base + tangent * side * 17.0), aether_stock, "start_%d_aether_%d" % [slot, side])
 	if data.has("resources"):
 		resources.clear()
 		crystal_lines.clear()
@@ -441,7 +458,20 @@ func can_see_position(player: int, pos: Vector2) -> bool:
 	return vision == null or player == 0 or vision.state_at(player, pos) == Vision.VISIBLE
 
 func can_see_unit(player: int, unit: Dictionary) -> bool:
-	return unit.owner == player or can_see_position(player, unit.pos)
+	if player == 0 or unit.owner == player:
+		return true
+	if not can_see_position(player, unit.pos):
+		return false
+	if not unit.get("cloaked", false):
+		return true
+	if vision != null and vision.sweep_detects(player, unit.pos):
+		return true
+	for detector in _detectors:
+		if detector.owner == player and detector.hp > 0.0 and detector.build_progress >= 1.0:
+			var radius: float = detector.detection_radius
+			if unit.pos.distance_squared_to(detector.pos) <= radius * radius:
+				return true
+	return false
 
 func remembered_buildings(player: int) -> Array:
 	if vision == null:
@@ -674,6 +704,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"is_walkable_structure": bool(def.get("is_walkable_structure", false)),
 		"is_worker": bool(def.get("is_worker", false)),
 		"is_immobile": bool(def.get("is_immobile", false)),
+		"armed_structure": bool(def.get("is_structure", false)) and def.has("weapon"),
+		"detection_radius": float(def.get("detection_radius", 0.0)),
 		"attributes": def.get("attributes", []).duplicate(),
 		"orders": [],
 		"path": [],
@@ -692,7 +724,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"cargo_amount": 0,
 		"harvest_timer": 0.0,
 		"harvest_target_tag": 0,
-		"energy": HUB_POWER_COST if unit_type == "colony_hub" else 0.0,
+		"energy": _starting_energy(unit_type),
 		"build_progress": build_progress,
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
@@ -701,11 +733,19 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"damage_dealt": 0.0
 	}
 	units[tag] = u
+	if u.detection_radius > 0.0:
+		_detectors.append(u)
 	if u["is_structure"]:
 		nav_dirty = true
 	_recompute_supplies()
 	emit_signal("unit_spawned", u)
 	return u
+
+func _starting_energy(unit_type: String) -> float:
+	match unit_type:
+		"colony_hub": return HUB_POWER_COST
+		"skirmisher": return 75.0
+	return 0.0
 
 func get_elevation_at(pos: Vector2) -> float:
 	for rmp in ramps:
@@ -753,7 +793,7 @@ func _step_single_tick() -> void:
 		var u = units[tag]
 		u["prev_pos"] = u["pos"]
 		_update_unit_timers(u, TICK_DT)
-		if u["is_structure"]:
+		if u.is_structure and (not u.armed_structure or u.build_progress < 1.0):
 			continue
 		_update_unit_orders(u, TICK_DT)
 		if u.is_worker and not u.orders.is_empty() and u.orders[0].type in ["harvest", "return_cargo"]:
@@ -772,6 +812,7 @@ func _step_single_tick() -> void:
 
 func _rebuild_astar_grid() -> void:
 	_static_structures.clear()
+	_detectors.clear()
 	_town_halls.clear()
 	_gas_source_by_tap.clear()
 	_gas_tap_by_vent.clear()
@@ -790,6 +831,8 @@ func _rebuild_astar_grid() -> void:
 		astar_grid.set_point_solid(cell, true)
 
 	for u in units.values():
+		if u.detection_radius > 0.0:
+			_detectors.append(u)
 		if u.is_structure and bool(RTSData.get_unit_def(u.unit_type).get("is_town_hall", false)):
 			_town_halls.append(u)
 		if u.unit_type == "aether_tap":
@@ -1023,6 +1066,13 @@ func _update_structures(dt: float) -> void:
 					issue_command([new_unit.tag], "move", first)
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
+	if u.unit_type == "skirmisher":
+		if u.get("cloaked", false):
+			u.energy = maxf(0.0, u.energy - CLOAK_DRAIN * dt)
+			if u.energy <= 0.0:
+				u["cloaked"] = false
+		else:
+			u.energy = minf(CLOAK_ENERGY_MAX, u.energy + dt)
 	if u["surge_timer"] > 0.0:
 		u["surge_timer"] = max(0.0, u["surge_timer"] - dt)
 	if u["charge_timer"] > 0.0:
@@ -1073,7 +1123,7 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	if u["orders"].is_empty():
 		if u.get("auto_repair", false) and tick % 8 == u.tag % 8 and _begin_auto_repair(u):
 			return
-		var enemy = _find_best_attack_target(u, false)
+		var enemy = _find_best_attack_target(u, u.is_structure)
 		if not enemy.is_empty():
 			var wpn_range = _get_weapon_range(u)
 			var dist_edge = _edge_distance(u, enemy)
@@ -1140,25 +1190,28 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				else:
 					_follow_order_path(u, target_pos, dt)
 
-		"attack_target":
+		"attack_target", "force_attack":
 			var t_tag = int(order.get("target_tag", 0))
-			if vision != null:
-				var live: Dictionary = units.get(t_tag, {})
-				if live.is_empty() or not can_see_unit(u.owner, live):
-					# Continue to the last observed location, never the hidden unit.
+			var enemy: Dictionary = units.get(t_tag, {})
+			if enemy.is_empty() or not can_see_unit(u.owner, enemy):
+				# Mobile units can continue to the last observed location of an enemy.
+				if otype == "attack_target" and not u.is_immobile and order.has("target_pos") and (vision != null or not enemy.is_empty()):
 					u.orders[0] = {"type": "attack_move", "target_pos": order.target_pos}
-					u.path.clear()
-					return
-				order.target_pos = live.pos
-			if not units.has(t_tag) or units[t_tag]["hp"] <= 0.0:
+				else:
+					u.orders.pop_front()
+				u.path.clear()
+				return
+			if enemy.hp <= 0.0:
 				u["orders"].pop_front()
 				return
-			var enemy = units[t_tag]
+			order.target_pos = enemy.pos
 			var wpn_range = _get_weapon_range(u)
 			if _edge_distance(u, enemy) <= wpn_range:
 				_begin_attack_on(u, enemy)
 			elif not u["is_immobile"]:
 				_approach_target(u, enemy["pos"], dt)
+			elif u.armed_structure:
+				u.orders.pop_front()
 
 		"harvest":
 			_process_worker_harvest_order(u, order, dt)
@@ -1658,6 +1711,8 @@ func _edge_distance(a: Dictionary, b: Dictionary) -> float:
 	return max(0.0, a["pos"].distance_to(b["pos"]) - (float(a["radius"]) + float(b["radius"])))
 
 func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
+	if u.get("hold_fire", false):
+		return {}
 	var def = RTSData.get_unit_def(u["unit_type"])
 	var wpn = def.get("weapon", {})
 	if wpn.is_empty():
@@ -1760,7 +1815,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 
 	target["out_of_combat_timer"] = 0.0
 	if target.erase("salvage_finish"):
-		emit_signal("notice", target.owner, "Enemy fire interrupted salvage.", "warn")
+		emit_signal("notice", target.owner, "Damage interrupted salvage.", "warn")
 	emit_signal("unit_damaged", target["owner"], target["pos"])
 
 	# Aegis Shields absorb damage before HP
@@ -1780,9 +1835,10 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	attacker["damage_dealt"] += hp_dmg
 
 	if target["hp"] <= 0.0:
-		attacker["kills"] += 1
-		if players.has(attacker["owner"]):
-			players[attacker["owner"]]["units_killed"] += 1
+		if attacker.owner != target.owner:
+			attacker["kills"] += 1
+			if players.has(attacker["owner"]):
+				players[attacker["owner"]]["units_killed"] += 1
 		if players.has(target["owner"]):
 			players[target["owner"]]["units_lost"] += 1
 		var dead = target.duplicate(true)
@@ -1812,6 +1868,31 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if u.armed_structure and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
+			continue
+		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
+			continue
+		if ctype == "phase_cloak":
+			if u.unit_type != "skirmisher":
+				continue
+			if u.get("cloaked", false):
+				u["cloaked"] = false
+			elif u.energy >= CLOAK_START_ENERGY:
+				u.energy -= CLOAK_START_ENERGY
+				u["cloaked"] = true
+			else:
+				continue
+			emit_signal("ability_triggered", u, ctype, u.pos)
+			accepted += 1
+			continue
+		if ctype == "hold_fire":
+			if u.is_worker or not RTSData.get_unit_def(u.unit_type).has("weapon") or u.build_progress < 1.0:
+				continue
+			u["hold_fire"] = not u.get("hold_fire", false)
+			if u.hold_fire and u.attack_state == "windup" and (u.orders.is_empty() or not u.orders[0].type in ["attack_target", "force_attack"]):
+				u.attack_state = "idle"
+			accepted += 1
+			continue
 		if ctype in ["recon_sweep", "reinforce_supply"]:
 			if accepted == 0 and _use_hub_power(u, ctype, target_pos, target_tag):
 				accepted += 1
@@ -1859,7 +1940,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "patrol" and (u.is_immobile or u.is_structure or not target_pos.is_finite()):
 			continue
-		if vision != null and (ctype == "attack_target" or (ctype in ["attack", "attack_move"] and target_tag > 0)):
+		if ctype == "force_attack":
+			var friendly: Dictionary = units.get(target_tag, {})
+			if friendly.is_empty() or friendly.owner != u.owner or friendly.tag == u.tag or not RTSData.get_unit_def(u.unit_type).has("weapon"):
+				continue
+		elif ctype == "attack_target" or (ctype in ["attack", "attack_move"] and target_tag > 0):
 			var target: Dictionary = units.get(target_tag, {})
 			if target.is_empty() or target.owner == u.owner or not can_see_unit(u.owner, target):
 				continue
@@ -2010,8 +2095,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 					"type": "attack_target",
 					"target_tag": target_tag
 				})
-				if vision != null:
-					u.orders.back()["target_pos"] = units[target_tag].pos
+				u.orders.back()["target_pos"] = units[target_tag].pos
 			else:
 				u["orders"].append({
 					"type": "attack_move",
@@ -2020,13 +2104,12 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				})
 			accepted += 1
 
-		elif ctype == "attack_target":
+		elif ctype in ["attack_target", "force_attack"]:
 			u["orders"].append({
-				"type": "attack_target",
-				"target_tag": target_tag
+				"type": ctype,
+				"target_tag": target_tag,
+				"target_pos": units[target_tag].pos
 			})
-			if vision != null:
-				u.orders.back()["target_pos"] = units[target_tag].pos
 			accepted += 1
 
 		elif ctype == "harvest":
@@ -2389,7 +2472,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 	all_tags.sort()
 	for tag in all_tags:
 		var u = units[tag]
-		if limited and not can_see_unit(perspective_player, u):
+		if perspective_player != 0 and not can_see_unit(perspective_player, u):
 			continue
 		unit_list.append({
 			"tag": u["tag"],
@@ -2419,9 +2502,14 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"kills": u["kills"]
 		})
 		var entry: Dictionary = unit_list.back()
+		if u.get("hold_fire", false):
+			entry["hold_fire"] = true
 		match u.unit_type:
 			"colony_hub":
 				entry["energy"] = snappedf(u.energy, 0.01)
+			"skirmisher":
+				entry["energy"] = snappedf(u.energy, 0.01)
+				entry["cloaked"] = u.get("cloaked", false)
 			"silo", "silo_retracted":
 				entry["supply_reinforced"] = u.get("supply_reinforced", false)
 				entry["salvage_ticks"] = maxi(0, int(u.get("salvage_finish", 0)) - tick)
@@ -2450,6 +2538,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 	var match_view := match_state.duplicate(true)
 	var player_view := players.duplicate(true)
 	var events := recent_events.slice(max(0, recent_events.size() - 15))
+	if perspective_player != 0:
+		events = []
 	var memory := []
 	if limited:
 		if match_view.has("assigned_starts"):
@@ -2458,7 +2548,6 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		for player in player_view.keys():
 			if player != perspective_player:
 				player_view[player] = {"id": player, "name": players[player].name, "faction": players[player].faction}
-		events = []
 		for building in remembered_buildings(perspective_player):
 			var snapshot: Dictionary = building.duplicate()
 			snapshot.pos = {"x": building.pos.x, "y": building.pos.y}
