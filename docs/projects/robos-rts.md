@@ -346,13 +346,14 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Arrow keys | Pan |
 | Letter in a button's corner | Use that command |
 | Ctrl + number, number (1–9, 0) | Set, recall a control group; Alt moves selected units from other groups |
-| Tab | Cycle the active unit type |
-| **.** | Select the next idle worker |
+| Tab / Shift + Tab | Cycle the active subgroup forward or backward. |
+| **.** / Ctrl + . | Cycle idle workers or select them all. Ctrl + click on the idle worker button also selects them all. |
 | Space | Jump to the last attack alert, or home |
 | Esc | Cancel placement or targeting |
 | F1 | Controls overlay |
 | F8 | Match menu: settings, new game, surrender and map editor |
-| F2 | Switch the viewed faction in showcase scenarios |
+| F2 / Ctrl + F2 | Select all friendly army units. Ctrl + F2 switches the viewed faction in showcase scenarios. |
+| Ctrl + click / double click | Select friendly units of the clicked type on screen. Shift adds them to the selection. |
 | Ctrl + F3 / F4 / F9 / F11 | Save the current camera position and zoom. Press the same function key alone to return. |
 | Backspace | Cycle through completed friendly bases without changing selection or zoom. |
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |

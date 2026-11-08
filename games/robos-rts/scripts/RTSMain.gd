@@ -31,6 +31,7 @@ var active_type: String = ""
 var is_box_selecting: bool = false
 var box_start_screen: Vector2 = Vector2.ZERO
 var box_end_screen: Vector2 = Vector2.ZERO
+var _box_pick_type := false
 var mm_dragging: bool = false
 var mid_dragging: bool = false
 
@@ -310,9 +311,24 @@ func _select_tags(tags: Array, add: bool = false) -> void:
 func idle_workers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for u in SimEngine.units.values():
-		if u["owner"] == local_player and u["is_worker"] and u["orders"].is_empty() and int(u["cargo_amount"]) == 0:
+		if u.owner == local_player and u.hp > 0.0 and u.is_worker and u.orders.is_empty() and int(u.cargo_amount) == 0:
 			out.append(u)
 	return out
+
+func _select_all_army() -> void:
+	var tags: Array[int] = []
+	for unit in SimEngine.units.values():
+		if unit.owner == local_player and unit.hp > 0.0 and not unit.is_worker and not unit.is_structure:
+			tags.append(unit.tag)
+	if not tags.is_empty():
+		pending_ability = ""
+		_select_tags(tags)
+
+func _select_all_idle_workers() -> void:
+	var idle := idle_workers()
+	if not idle.is_empty():
+		pending_ability = ""
+		_select_tags(idle.map(func(worker): return worker.tag))
 
 func _select_next_idle_worker() -> void:
 	var idle := idle_workers()
@@ -325,7 +341,9 @@ func _select_next_idle_worker() -> void:
 				cur = i
 	var nxt: Dictionary = idle[(cur + 1) % idle.size()]
 	_select_tags([nxt["tag"]])
-	world_3d.set_focus(nxt["pos"])
+	pending_ability = ""
+	if world_3d:
+		world_3d.set_focus(nxt["pos"])
 
 # ---------------------------------------------------------------------------
 # Input
@@ -366,7 +384,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		mm_dragging = false
 		if is_box_selecting:
 			is_box_selecting = false
-			_complete_box_selection(box_start_screen, box_end_screen, mb.shift_pressed, mb.double_click)
+			_complete_box_selection(box_start_screen, box_end_screen, mb.shift_pressed, _box_pick_type or mb.double_click or mb.ctrl_pressed or mb.meta_pressed)
 		return
 
 	if mpos.y >= HUD_TOP - 40.0 and _hud_hit(mb, mpos):
@@ -379,6 +397,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 			_execute_pending_ability_at(screen_to_world(mpos), Input.is_key_pressed(KEY_SHIFT))
 			return
 		is_box_selecting = true
+		_box_pick_type = mb.ctrl_pressed or mb.meta_pressed
 		box_start_screen = mpos
 		box_end_screen = mpos
 	elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
@@ -404,7 +423,10 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 		return true
 
 	if left and idle_workers().size() > 0 and IDLE_BTN.has_point(mpos):
-		_select_next_idle_worker()
+		if mb.ctrl_pressed or mb.meta_pressed:
+			_select_all_idle_workers()
+		else:
+			_select_next_idle_worker()
 		return true
 
 	if left:
@@ -430,7 +452,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 
 	return mpos.y >= HUD_TOP
 
-func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_double_click: bool) -> void:
+func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_type: bool) -> void:
 	_last_group_press.clear()
 	if not add_shift:
 		selected_tags.clear()
@@ -441,9 +463,9 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 		var clicked := _unit_at_screen(p2)
 		if clicked.is_empty():
 			return
-		if is_double_click and clicked["owner"] == local_player:
+		if pick_type and clicked["owner"] == local_player:
 			for u in SimEngine.units.values():
-				if u["owner"] == clicked["owner"] and u["unit_type"] == clicked["unit_type"]:
+				if u.hp > 0.0 and u["owner"] == clicked["owner"] and u["unit_type"] == clicked["unit_type"]:
 					var sp := world_to_screen(u["pos"])
 					if sp.y < HUD_TOP and sp.y > 0.0 and sp.x > 0.0 and sp.x < 1920.0:
 						if not selected_tags.has(u["tag"]):
@@ -896,13 +918,16 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 					types.append(u["unit_type"])
 			if types.size() > 1:
 				var i := types.find(primary_type())
-				active_type = types[(i + 1) % types.size()]
+				var direction := -1 if ke.shift_pressed else 1
+				active_type = types[posmod(i + direction, types.size())]
 			return
 		KEY_F2:
-			if not SimEngine.match_state.is_empty():
-				return
-			_set_local_player(local_player % 3 + 1)
-			focus_on_base()
+			if ke.ctrl_pressed or ke.meta_pressed:
+				if SimEngine.match_state.is_empty():
+					_set_local_player(local_player % 3 + 1)
+					focus_on_base()
+			else:
+				_select_all_army()
 			return
 		KEY_SPACE:
 			if alerts.size() > 0:
@@ -911,7 +936,10 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				focus_on_base()
 			return
 		KEY_PERIOD:
-			_select_next_idle_worker()
+			if ke.ctrl_pressed or ke.meta_pressed:
+				_select_all_idle_workers()
+			else:
+				_select_next_idle_worker()
 			return
 		KEY_F5:
 			if not SimEngine.match_state.is_empty():
