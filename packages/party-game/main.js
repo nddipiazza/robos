@@ -10,6 +10,7 @@ try {
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
+const { spawn } = require('node:child_process');
 
 const { createPartyEngine, normalizeSettings, DEFAULT_SETTINGS } = require('./lib/game-engine');
 const { createGameServer } = require('./lib/game-server');
@@ -556,8 +557,41 @@ if (app) {
         log({ msg: 'TV portal unavailable', err: err.message });
       }
       gamePort = await server.start();
-      engine.setJoinUrl(`http://${lanIp()}:${gamePort}/join`);
+      const localJoinUrl = `http://${lanIp()}:${gamePort}/join`;
+      engine.setJoinUrl(localJoinUrl);
       log({ msg: 'party server listening', port: gamePort, joinUrl: engine.state.joinUrl });
+      let tunnelProc = null;
+      if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_PARTY_DISABLE_TUNNEL !== '1') {
+        try {
+          tunnelProc = spawn('ssh', [
+            '-o', 'StrictHostKeyChecking=no',
+            '-o', 'UserKnownHostsFile=/dev/null',
+            '-o', 'ServerAliveInterval=25',
+            '-o', 'ExitOnForwardFailure=yes',
+            '-T', '-R', `80:127.0.0.1:${gamePort}`,
+            'nokey@localhost.run', '--', '--output', 'json',
+          ], { stdio: ['ignore', 'pipe', 'pipe'] });
+          tunnelProc.unref?.();
+          let buf = '';
+          tunnelProc.stdout.on('data', (chunk) => {
+            buf += chunk.toString();
+            const lines = buf.split('\n');
+            buf = lines.pop() || '';
+            for (const line of lines) {
+              const m = line.match(/https:\/\/[a-z0-9-]+\.lhr\.life/i);
+              if (m) {
+                const publicJoinUrl = `${m[0]}/join`;
+                if (engine.state.joinUrl !== publicJoinUrl) {
+                  engine.setJoinUrl(publicJoinUrl);
+                  log({ msg: 'public HTTPS tunnel ready', joinUrl: publicJoinUrl, lanJoinUrl: localJoinUrl });
+                  sendToRenderer('party:state', hostSnapshot());
+                }
+              }
+            }
+          });
+          tunnelProc.stderr?.on('data', () => {});
+        } catch {}
+      }
       if (process.env.ROBOS_PARTY_AUTO_ONBOARD === '1') {
         try {
           await onboardGameNight({ openControllers: process.env.ROBOS_PARTY_OPEN_CONTROLLERS === '1' });
