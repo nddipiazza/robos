@@ -27,6 +27,8 @@ const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
 const HARVEST_REACH := 1.2
 const CRYSTAL_LINE_RADIUS := 26.0
+const CONSTRUCTION_REFUND := 0.75
+const REPAIR_HP_PER_SECOND := 12.0
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -716,9 +718,9 @@ func _step_single_tick() -> void:
 		if u["is_structure"]:
 			continue
 		_update_unit_orders(u, TICK_DT)
-		if u.is_worker and not u.orders.is_empty() and u.orders[0].type == "harvest":
+		if u.is_worker and not u.orders.is_empty() and u.orders[0].type in ["harvest", "return_cargo"]:
 			var deposit: Dictionary = resources.get(int(u.orders[0].target_tag), {})
-			if (u.cargo_amount > 0 and u.cargo_type == "crystal") or (u.cargo_amount == 0 and deposit.get("resource_type") == "crystal_field"):
+			if u.cargo_type == "crystal" or (u.orders[0].type == "harvest" and u.cargo_amount == 0 and deposit.get("resource_type") == "crystal_field"):
 				mineral_walkers[tag] = true
 
 	profile_usec.orders += Time.get_ticks_usec() - orders_started
@@ -1106,8 +1108,16 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"harvest":
 			_process_worker_harvest_order(u, order, dt)
 
+		"return_cargo":
+			if _deliver_worker_cargo(u, dt, order.target_tag):
+				u.orders.pop_front()
+				u.path.clear()
+
 		"build":
 			_process_worker_build_order(u, order, dt)
+
+		"repair":
+			_process_repair_order(u, order.target_tag, dt)
 
 func _release_mining_slot(worker: Dictionary) -> void:
 	if worker.harvest_timer <= 0.0:
@@ -1131,25 +1141,34 @@ func _claim_mining_slot(worker: Dictionary, patch: Dictionary) -> bool:
 	worker.harvest_timer = 0.0
 	return true
 
+func _deliver_worker_cargo(worker: Dictionary, dt: float, hall_tag: int = 0) -> bool:
+	if worker.cargo_amount <= 0:
+		return true
+	var hall: Dictionary = units.get(hall_tag, {})
+	if not is_dropoff(hall, worker.owner):
+		hall = _find_nearest_town_hall(worker.owner, worker.pos)
+	if hall.is_empty():
+		return false
+	if _edge_distance(worker, hall) > 1.6:
+		if worker.cargo_type == "crystal":
+			_follow_order_path(worker, hall.pos, dt)
+		else:
+			_approach_target(worker, hall.pos, dt)
+		return false
+	var player: Dictionary = players[worker.owner]
+	var cargo: String = worker.cargo_type
+	player[cargo] += worker.cargo_amount
+	player[cargo + "_collected"] += worker.cargo_amount
+	worker.cargo_amount = 0
+	worker.cargo_type = ""
+	return true
+
 func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
-		var th = _find_nearest_town_hall(u["owner"], u["pos"])
-		if th.is_empty():
-			return
-		if _edge_distance(u, th) <= 1.6:
-			if u["cargo_type"] == "aether":
-				players[u["owner"]]["aether"] += u["cargo_amount"]
-				players[u["owner"]]["aether_collected"] += u["cargo_amount"]
-			else:
-				players[u["owner"]]["crystal"] += u["cargo_amount"]
-				players[u["owner"]]["crystal_collected"] += u["cargo_amount"]
-			u["cargo_amount"] = 0
-			u["cargo_type"] = ""
-		elif u.cargo_type == "crystal":
-			_follow_order_path(u, th.pos, dt)
-		else:
-			_approach_target(u, th["pos"], dt)
+		if _deliver_worker_cargo(u, dt) and u.orders.size() > 1:
+			u.orders.pop_front()
+			u.path.clear()
 		return
 
 	var target_entity: Dictionary = {}
@@ -1185,7 +1204,8 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
 		_release_mining_slot(u)
 		u.orders.pop_front()
-		issue_SmartHarvest(u.tag)
+		if u.orders.is_empty():
+			issue_SmartHarvest(u.tag)
 		return
 	if dist <= HARVEST_REACH:
 		u["vel"] = Vector2.ZERO
@@ -1235,6 +1255,8 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				p["aether"] -= v_cost
 				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.1)
 				order["structure_tag"] = s_unit["tag"]
+				s_unit["builder_tag"] = u.tag
+				s_unit["construction_cost"] = Vector2i(m_cost, v_cost)
 				# Alien Motes summon in structures automatically and are immediately free!
 				if u["unit_type"] == "mote":
 					s_unit["auto_summon"] = true
@@ -1245,19 +1267,14 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 		else:
 			_approach_target(u, build_pos, dt)
 	else:
-		if not units.has(struct_tag):
+		var s_unit: Dictionary = units.get(struct_tag, {})
+		if not can_resume_construction(u, s_unit):
 			u["orders"].pop_front()
-			return
-		var s_unit = units[struct_tag]
-		if s_unit["build_progress"] >= 1.0:
-			players[u["owner"]]["structures_built"] += 1
-			_recompute_supplies()
-			emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
-			emit_signal("structure_construction_finished", s_unit)
-			u["orders"].pop_front()
+			u.path.clear()
 			return
 		var dist = _edge_distance(u, s_unit)
 		if dist <= 1.8:
+			s_unit["builder_tag"] = u.tag
 			u["vel"] = Vector2.ZERO
 			u["facing"] = (s_unit["pos"] - u["pos"]).angle()
 			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * _build_time_scale())
@@ -1271,6 +1288,56 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				u["orders"].pop_front()
 		else:
 			_approach_target(u, s_unit["pos"], dt)
+
+func can_resume_construction(worker: Dictionary, site: Dictionary) -> bool:
+	if site.is_empty() or not site.is_structure or site.owner != worker.owner or site.faction != worker.faction:
+		return false
+	if not worker.is_worker or worker.is_immobile or site.build_progress >= 1.0 or site.get("auto_summon", false):
+		return false
+	var builder: Dictionary = units.get(site.get("builder_tag", 0), {})
+	if builder.is_empty() or builder.tag == worker.tag or builder.orders.is_empty():
+		return true
+	var order: Dictionary = builder.orders[0]
+	return order.type != "build" or int(order.get("structure_tag", 0)) != site.tag
+
+func _cancel_construction(site: Dictionary) -> bool:
+	if not units.has(site.tag) or not site.is_structure or site.build_progress >= 1.0:
+		return false
+	var costs: Vector2i = site.get("construction_cost", Vector2i.ZERO)
+	var player: Dictionary = players[site.owner]
+	player.crystal += floori(costs.x * CONSTRUCTION_REFUND)
+	player.aether += floori(costs.y * CONSTRUCTION_REFUND)
+	units.erase(site.tag)
+	nav_dirty = true
+	_recompute_supplies()
+	emit_signal("notice", site.owner, "%s construction cancelled." % site.name, "info")
+	return true
+
+func can_repair(worker: Dictionary, target: Dictionary) -> bool:
+	return worker.unit_type == "pioneer" and not target.is_empty() and target.owner == worker.owner and target.tag != worker.tag and target.build_progress >= 1.0 and target.hp < target.max_hp and target.attributes.has("Mechanical")
+
+func _process_repair_order(worker: Dictionary, target_tag: int, dt: float) -> void:
+	var target: Dictionary = units.get(target_tag, {})
+	if not can_repair(worker, target):
+		worker.orders.pop_front()
+		worker.path.clear()
+		return
+	if _edge_distance(worker, target) > 1.1:
+		_follow_order_path(worker, target.pos, dt)
+		return
+	worker.facing = (target.pos - worker.pos).angle()
+	var player: Dictionary = players[worker.owner]
+	var replacement_cost: float = RTSData.get_unit_def(target.unit_type).get("crystal_cost", 0)
+	var price_per_hp: float = replacement_cost * 0.25 / target.max_hp
+	var hp := minf(REPAIR_HP_PER_SECOND * dt, target.max_hp - target.hp)
+	if price_per_hp > 0.0:
+		var credit: float = target.get("repair_credit", 0.0)
+		hp = minf(hp, (player.crystal + credit) / price_per_hp)
+		var price := hp * price_per_hp
+		var charge := clampi(ceili(price - credit - 0.000001), 0, player.crystal)
+		player.crystal -= charge
+		target["repair_credit"] = maxf(0.0, credit + charge - price)
+	target.hp += hp
 
 func _approach_target(u: Dictionary, target_pos: Vector2, dt: float) -> void:
 	if water_cells.is_empty():
@@ -1614,7 +1681,32 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "cancel_construction":
+			if _cancel_construction(u):
+				accepted += 1
+			continue
+		if ctype == "resume_construction" and (accepted > 0 or not can_resume_construction(u, units.get(target_tag, {}))):
+			continue
+		if ctype == "repair" and not can_repair(u, units.get(target_tag, {})):
+			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
+			continue
+		if ctype == "return_cargo":
+			if not u.is_worker or u.is_immobile or u.cargo_amount <= 0 or (target_tag > 0 and not is_dropoff(units.get(target_tag, {}), u.owner)):
+				continue
+			var dropoff := {"type": "return_cargo", "target_tag": target_tag}
+			if queue:
+				u.orders.append(dropoff)
+			else:
+				if not u.orders.is_empty() and u.orders[0].type == "return_cargo":
+					u.orders.pop_front()
+				var current: Dictionary = u.orders.front() if not u.orders.is_empty() else {}
+				u.orders.clear()
+				u.orders.append(dropoff)
+				if current.get("type") == "harvest":
+					u.orders.append(current)
+				u.path.clear()
+			accepted += 1
 			continue
 		if ctype == "patrol" and (u.is_immobile or u.is_structure or not target_pos.is_finite()):
 			continue
@@ -1799,6 +1891,15 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			})
 			accepted += 1
 
+		elif ctype == "resume_construction":
+			var site: Dictionary = units[target_tag]
+			u.orders.append({"type": "build", "structure_tag": site.tag, "target_pos": site.pos})
+			accepted += 1
+
+		elif ctype == "repair":
+			u.orders.append({"type": "repair", "target_tag": target_tag})
+			accepted += 1
+
 		elif ctype.begins_with("build_"):
 			var stype = ctype.replace("build_", "")
 			u["orders"].append({
@@ -1940,6 +2041,9 @@ func _recompute_supplies() -> void:
 	for pid in players:
 		players[pid]["supply_cap"] = mini(200, players[pid]["supply_cap"])
 
+func is_dropoff(unit: Dictionary, owner_id: int) -> bool:
+	return not unit.is_empty() and unit.owner == owner_id and unit.build_progress >= 1.0 and unit.hp > 0.0 and RTSData.get_unit_def(unit.unit_type).get("is_town_hall", false)
+
 func _find_nearest_town_hall(owner_id: int, pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d: float = 999999.0
@@ -1950,6 +2054,41 @@ func _find_nearest_town_hall(owner_id: int, pos: Vector2) -> Dictionary:
 				best_d = d
 				best = u
 	return best
+
+func worker_saturation(owner_id: int) -> Dictionary:
+	var sites := {}
+	var deposits := {}
+	for unit in units.values():
+		if unit.owner != owner_id or not unit.is_structure or unit.build_progress < 1.0:
+			continue
+		if unit.unit_type == "aether_tap":
+			var vent: int = _gas_source_by_tap.get(unit.tag, 0)
+			var source: Dictionary = resources.get(vent, {})
+			if not source.is_empty() and (source.amount > 0 or unlimited_resources):
+				sites[unit.tag] = {"assigned": 0, "ideal": 3, "type": "aether"}
+				deposits[vent] = unit.tag
+				deposits[unit.tag] = unit.tag
+		elif is_dropoff(unit, owner_id):
+			sites[unit.tag] = {"assigned": 0, "ideal": 0, "type": "crystal"}
+	for patch in resources.values():
+		if patch.resource_type != "crystal_field" or (patch.amount <= 0 and not unlimited_resources):
+			continue
+		if vision != null and vision.state_at(owner_id, patch.pos) == Vision.UNEXPLORED:
+			continue
+		var hall := _find_nearest_town_hall(owner_id, patch.pos)
+		if not hall.is_empty() and hall.pos.distance_squared_to(patch.pos) <= CRYSTAL_LINE_RADIUS * CRYSTAL_LINE_RADIUS:
+			sites[hall.tag].ideal += 2
+			deposits[patch.tag] = hall.tag
+	for worker in units.values():
+		if worker.owner != owner_id or not worker.is_worker:
+			continue
+		for order in worker.orders:
+			if order.type == "return_cargo":
+				continue
+			if order.type == "harvest" and deposits.has(order.target_tag):
+				sites[deposits[order.target_tag]].assigned += 1
+			break
+	return sites
 
 func _find_nearest_crystal(pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}

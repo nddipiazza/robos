@@ -209,6 +209,10 @@ When you cannot afford something, or you are at your supply cap, the game says s
 
 Select a Pioneer, press the build hotkey and place the structure. The footprint turns green where you can build and red where you cannot, and a click on an invalid spot tells you why. Aether Taps snap to a free aether vent.
 
+Hold **Shift** while placing to queue another copy without reopening the placement tool. Press **Esc** when finished. If a builder leaves a foundation unfinished, right-click it with another worker from the same faction to continue at no additional charge. Select the foundation and press **X** to recover 75% of its paid cost.
+
+Pioneers can repair damaged friendly mechanical units and buildings. Right-click the target or press **E** and select it. The job spends crystal in proportion to the health restored.
+
 ![Placement footprint shown in green for a Provision Silo]({{ '/assets/images/robos-rts/09-build-placement.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ![Placement footprint in red next to a crystal field, with the message "Too close to a resource"]({{ '/assets/images/robos-rts/10-build-placement-blocked.jpg' | relative_url }}){: .robos-zoomable-img }
@@ -228,6 +232,8 @@ Select a Pioneer, press the build hotkey and place the structure. The footprint 
 Pioneers gather **crystal** from fields and **aether** through an Aether Tap built on a vent, and carry it back to the nearest main base. Supply comes from main bases and Provision Silos; units and queued units count against it.
 
 During a crystal harvest order, workers pass through mobile units on both the outbound and delivery legs. Terrain and buildings still shape their route, and workers remain targetable. Each patch serves one miner at a time, so automatic assignments and group gather orders fill open local patches first. A teal load shows which workers are returning with crystal. Stop or move a worker to restore normal body blocking.
+
+The numbers over each friendly base and Aether Tap show assigned workers against a target of two per nearby crystal patch or three per tap. The count turns gold when oversaturated. Press **D** to deliver a carried load to the nearest completed base, or right-click a friendly base to choose the drop-off. A worker already gathering resumes that assignment after delivery.
 
 ![Pioneers mining crystal beside the Colony Hub]({{ '/assets/images/robos-rts/02-gathering-crystal.jpg' | relative_url }}){: .robos-zoomable-img }
 

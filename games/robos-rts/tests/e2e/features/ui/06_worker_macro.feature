@@ -1,0 +1,76 @@
+@worker_macro
+Feature: Workers keep the economy moving
+  Scenario: A worker returns cargo and keeps its mineral assignment
+    Given an RTS test scenario
+      """
+      {"name":"Worker assignments","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"home","type":"colony_hub","owner":1,"x":20,"y":24},
+                {"id":"miner","type":"pioneer","owner":1,"x":37,"y":24},
+                {"id":"gas_worker","type":"pioneer","owner":1,"x":25,"y":38},
+                {"id":"tap","type":"aether_tap","owner":1,"x":24,"y":42}],
+       "resources":[{"id":"ore","type":"crystal_field","x":40,"y":24,"amount":500},
+                    {"type":"crystal_field","x":40,"y":30,"amount":500},
+                    {"type":"aether_vent","x":24,"y":42,"amount":500}]}
+      """
+    When "miner" is assigned to "ore"
+    And "gas_worker" is assigned to "tap"
+    And the simulation advances 128 ticks
+    Then "home" shows 1 of 4 workers assigned
+    And "tap" shows 1 of 3 workers assigned
+    When the commander clicks unit "miner"
+    And the commander presses "D"
+    Then "miner" has orders "return_cargo,harvest"
+    When the simulation advances 220 ticks
+    Then player 1 has collected at least 5 crystal
+    And "miner" has orders "harvest"
+
+  Scenario: A foundation keeps progress through a handoff and another can be refunded
+    Given an RTS test scenario
+      """
+      {"name":"Construction handoff","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"home","type":"colony_hub","owner":1,"x":19,"y":24},
+                {"id":"builder","type":"pioneer","owner":1,"x":30,"y":24},
+                {"id":"backup","type":"pioneer","owner":1,"x":31,"y":30}]}
+      """
+    When the commander clicks unit "builder"
+    And the commander presses "B"
+    And the commander places a building at (35, 24)
+    And the simulation advances 64 ticks
+    And the commander presses "S"
+    Then construction at (35, 24) stays unfinished without a builder
+    When the commander clicks unit "backup"
+    And the commander right-clicks terrain at (35, 24)
+    And the simulation advances 430 ticks
+    Then a finished "silo" stands at (35, 24)
+    And player 1 has 300 crystal, 150 aether and 2 supply used
+    When the commander presses "B"
+    And the commander places a building at (46, 24)
+    And the simulation advances 150 ticks
+    And the commander selects the building at (46, 24)
+    And the commander presses "X"
+    Then no building stands at (46, 24)
+    And player 1 has 275 crystal, 150 aether and 2 supply used
+
+  Scenario: Pioneers repair damaged machinery and place several buildings with one hotkey
+    Given an RTS test scenario
+      """
+      {"name":"Repair and placement","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"type":"colony_hub","owner":1,"x":19,"y":24},
+                {"id":"builder","type":"pioneer","owner":1,"x":31,"y":28},
+                {"id":"tank","type":"howitzer","owner":1,"x":34,"y":28,"hp":50}]}
+      """
+    When the commander clicks unit "builder"
+    And the commander presses "E"
+    And the commander places a building at (34, 28)
+    Then "builder" has orders "repair"
+    When the simulation advances 960 ticks
+    Then "tank" is fully repaired at a crystal cost
+    When the commander presses "B"
+    And the commander Shift-places a building at (40, 22)
+    And the commander Shift-places a building at (40, 22)
+    And the commander Shift-places a building at (47, 22)
+    Then "builder" has orders "build,build"
+    When the commander presses "Escape"
+    And the simulation advances 1240 ticks
+    Then a finished "silo" stands at (40, 22)
+    And a finished "silo" stands at (47, 22)
