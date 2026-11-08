@@ -16,6 +16,7 @@ const CARD_BTN := 64.0
 const CARD_GAP := 6.0
 const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
 const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
 
 var world_3d: Node3D
 var icons: Node
@@ -44,6 +45,8 @@ var hud_hidden: bool = false
 var banner_ttl: float = 0.0
 var _attack_msg_cd: float = 0.0
 var _last_group_press: Dictionary = {}
+var _camera_bookmarks: Dictionary = {}
+var _last_base_tag := 0
 
 func _ready() -> void:
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
@@ -85,6 +88,8 @@ func _on_scenario_loaded(_name: String) -> void:
 	pending_ability = ""
 	control_groups.clear()
 	_last_group_press.clear()
+	_camera_bookmarks.clear()
+	_last_base_tag = 0
 	messages.clear()
 	alerts.clear()
 	click_markers.clear()
@@ -144,6 +149,33 @@ func focus_on_base() -> void:
 		world_3d.set_focus(Vector2(SimEngine.map_width * 0.5, SimEngine.map_height * 0.5), 56.0)
 	else:
 		world_3d.set_focus(best["pos"] + Vector2(9.0, -1.0), 40.0)
+
+func _camera_bookmark(key: int, save: bool) -> void:
+	if not world_3d:
+		return
+	var label := OS.get_keycode_string(key)
+	if save:
+		_camera_bookmarks[key] = {"focus": world_3d.get_focus(), "height": world_3d.cam_height}
+		push_message("Camera location saved to %s." % label)
+	elif _camera_bookmarks.has(key):
+		var bookmark: Dictionary = _camera_bookmarks[key]
+		world_3d.set_focus(bookmark.focus, bookmark.height)
+	else:
+		push_message("Save a camera location with Ctrl+%s." % label)
+
+func _cycle_base() -> void:
+	if not world_3d:
+		return
+	var bases: Array[int] = []
+	for unit in SimEngine.units.values():
+		if unit.owner == local_player and unit.hp > 0.0 and unit.build_progress >= 1.0:
+			if RTSData.get_unit_def(unit.unit_type).get("is_town_hall", false):
+				bases.append(unit.tag)
+	if bases.is_empty():
+		return
+	bases.sort()
+	_last_base_tag = bases[(bases.find(_last_base_tag) + 1) % bases.size()]
+	world_3d.set_focus(SimEngine.units[_last_base_tag].pos)
 
 func _handle_camera_pan(delta: float) -> void:
 	if not world_3d or not world_3d.camera_3d:
@@ -813,6 +845,8 @@ func _set_local_player(player: int) -> void:
 	selected_tags.clear()
 	control_groups.clear()
 	_last_group_press.clear()
+	_camera_bookmarks.clear()
+	_last_base_tag = 0
 	active_type = ""
 	pending_ability = ""
 
@@ -828,8 +862,15 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		_handle_group_input(grp, ke.ctrl_pressed or ke.meta_pressed, ke.shift_pressed, ke.alt_pressed)
 		return
 	_last_group_press.clear()
+	if CAMERA_KEYS.has(ke.keycode):
+		if not ke.alt_pressed:
+			_camera_bookmark(ke.keycode, ke.ctrl_pressed or ke.meta_pressed)
+		return
 
 	match ke.keycode:
+		KEY_BACKSPACE:
+			_cycle_base()
+			return
 		KEY_F8:
 			if match_menu:
 				match_menu.toggle()

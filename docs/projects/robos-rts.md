@@ -353,6 +353,8 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | F1 | Controls overlay |
 | F8 | Match menu: settings, new game, surrender and map editor |
 | F2 | Switch the viewed faction in showcase scenarios |
+| Ctrl + F3 / F4 / F9 / F11 | Save the current camera position and zoom. Press the same function key alone to return. |
+| Backspace | Cycle through completed friendly bases without changing selection or zoom. |
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
 
 ## Scripting and bots
