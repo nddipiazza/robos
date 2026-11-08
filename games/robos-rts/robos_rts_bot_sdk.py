@@ -58,6 +58,9 @@ class RTSClient:
     def surrender(self, player: int = 1) -> Dict[str, Any]:
         return self._request("POST", "/match", {"action": "surrender", "player": player})
 
+    def rematch(self) -> Dict[str, Any]:
+        return self._request("POST", "/match", {"action": "rematch"})
+
     def editor(self, action: str = "state", **params: Any) -> Dict[str, Any]:
         """Drive the Map Editor (`scenes/MapEditor.tscn`); action="open" switches the game into it."""
         try:

@@ -53,6 +53,8 @@ This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two di
 
 ### Scouting and fog of war
 
+With fog enabled, a unit on low ground needs a friendly spotter or a recon sweep to see uphill. Units on high ground share their sight with the rest of the army. Select a completed Colony Hub, press **E** and click the battlefield or minimap to reveal an area for 10 seconds. The Hub starts with 50 energy, regenerates 0.75 energy per second and can store 200.
+
 Black terrain is unexplored. Dim terrain has been explored, and lit terrain is within friendly sight. Send a Pioneer ahead to find the opposing base or check an expansion. Enemy troops disappear when they leave sight, and combat outside your vision produces no new visible effects or world sounds. A building you previously saw leaves a **Last seen** footprint and a minimap marker until you scout the site again. A unit that loses sight of its focus-fire target moves to the last known position and attacks enemies it spots on the way.
 
 Both sides share vision across their own units and structures. The skirmish AI attacks visible or remembered buildings and searches possible bases when it has no known target. Sight uses unit ranges on a four-unit grid. Terrain elevation does not block sight in this version. Frontier Hunters enables fog by default. Other scenarios can set `"fog_of_war": true` to opt in.
@@ -195,6 +197,8 @@ Each button on the command card shows its hotkey in the corner. Hover one for th
 
 Structures have a five-slot production queue. The first slot shows progress. The structure also shows a progress bar in the world while it is producing.
 
+Hold **Shift** when clicking a training button or pressing its hotkey to order up to five units. Orders fill the shortest queues across eligible selected buildings and stop when the next order cannot be paid for or placed.
+
 Right-click a queued unit in the selected building's production panel to cancel that slot. Its crystal and aether costs are refunded, its reserved supply is released, and the rest of the queue keeps its order.
 
 With a worker-producing building selected, right-click a visible crystal field or your completed Aether Tap to rally new workers straight to gathering. The teal rally flag marks a resource target. Rally to open ground to move new workers there instead.
@@ -217,6 +221,8 @@ Hold **Shift** while placing to queue another copy without reopening the placeme
 
 Pioneers can repair damaged friendly mechanical units and buildings. Right-click the target or press **E** and select it. The job spends crystal in proportion to the health restored.
 
+Press **Q** on a Pioneer to toggle Auto-Repair. Idle Pioneers repair nearby friendly machinery using the same crystal costs. Explicit orders take priority.
+
 ![Placement footprint shown in green for a Provision Silo]({{ '/assets/images/robos-rts/09-build-placement.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ![Placement footprint in red next to a crystal field, with the message "Too close to a resource"]({{ '/assets/images/robos-rts/10-build-placement-blocked.jpg' | relative_url }}){: .robos-zoomable-img }
@@ -238,6 +244,8 @@ Pioneers gather **crystal** from fields and **aether** through an Aether Tap bui
 During a crystal harvest order, workers pass through mobile units on both the outbound and delivery legs. Terrain and buildings still shape their route, and workers remain targetable. Each patch serves one miner at a time, so automatic assignments and group gather orders fill open local patches first. A teal load shows which workers are returning with crystal. Stop or move a worker to restore normal body blocking.
 
 The numbers over each friendly base and Aether Tap show assigned workers against a target of two per nearby crystal patch or three per tap. The count turns gold when oversaturated. Press **D** to deliver a carried load to the nearest completed base, or right-click a friendly base to choose the drop-off. A worker already gathering resumes that assignment after delivery.
+
+With a Colony Hub selected, press **D** and click a completed friendly Provision Silo to spend 50 Hub energy on eight additional supply. Each Silo can receive one reinforcement. Select a completed Silo and press **V** to salvage it after five seconds for 75% of its cost. Damage or a second press cancels salvage.
 
 ![Pioneers mining crystal beside the Colony Hub]({{ '/assets/images/robos-rts/02-gathering-crystal.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -364,10 +372,12 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Ctrl + number, number (1–9, 0) | Set, recall a control group; Alt moves selected units from other groups |
 | Tab / Shift + Tab | Cycle the active subgroup forward or backward. |
 | **.** / Ctrl + . | Cycle idle workers or select them all. Ctrl + click on the idle worker button also selects them all. |
-| Space | Jump to the last attack alert, or home |
+| Space | Cycle through the last six attack alerts, or jump home if none exist. Click a red minimap diamond to reopen that alert. |
+| Ctrl + F | Track the first selected friendly mobile unit. Pan, jump the camera or press the shortcut again to stop. |
 | Esc | Cancel placement or targeting |
 | F1 | Controls overlay |
-| F8 | Match menu: settings, new game, surrender and map editor |
+| F8 | Match settings, new game, surrender, map editor and completed match results |
+| Ctrl + Enter on the scorecard | Rematch the same AI settings, map seed and start positions with fresh scores |
 | F2 / Ctrl + F2 | Select all friendly army units. Ctrl + F2 switches the viewed faction in showcase scenarios. |
 | Ctrl + click / double click | Select friendly units of the clicked type on screen. Shift adds them to the selection. |
 | Ctrl + F3 / F4 / F9 / F11 | Save the current camera position and zoom. Press the same function key alone to return. |
@@ -387,6 +397,7 @@ The game runs an HTTP/JSON server (port 18095, or `RTS_WEB_SERVICE_PORT`). The C
 | `POST /step`, `POST /pause` | Advance ticks; pause real-time play (`/step` still works) |
 | `POST /playback`, `GET /performance` | Control live speed/pause without stepping; inspect frame timings |
 | `POST /scenario` | Load a scenario by slug (`default` for the main map) or an inline definition |
+| `POST /match` | Start or surrender a skirmish, or send `{"action":"rematch"}` after it ends to replay the opening. The finished match contains both sides' scorecard totals. |
 | `POST /directive` | Turn a built-in AI mode on or off for a player |
 | `POST /select`, `POST /camera`, `POST /ui` | Selection, camera and HUD state |
 | `POST /input` | Inject mouse and key events through the real input handlers |
