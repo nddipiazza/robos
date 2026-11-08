@@ -194,18 +194,17 @@ function renderSpeakers(st, list = st.speakers || []) {
 
 function renderTvs(st) {
   const tvs = st.availableTvs || [];
-  const locked = st.phase !== 'setup';
   if (!tvs.length) {
     $('tvList').innerHTML = '<div class="warn">No RobOS TVs are paired yet. Pair one in RobOS Smart TV Studio, then come back.</div>';
     return;
   }
-  if (!tvSelection.length && st.tvs.length) tvSelection = st.tvs.map((t) => ({ tvId: t.tvId, screen: t.screen }));
+  tvSelection = (st.tvs || []).map((t) => ({ tvId: t.tvId, screen: t.screen }));
   $('tvList').innerHTML = tvs.map((tv) => {
     const sel = tvSelection.find((s) => s.tvId === tv.id);
     return `<div class="tv ${sel ? 'on' : ''}">
-      <label class="check"><input type="checkbox" data-tv="${esc(tv.id)}" ${sel ? 'checked' : ''} ${locked ? 'disabled' : ''}>
+      <label class="check"><input type="checkbox" data-tv="${esc(tv.id)}" ${sel ? 'checked' : ''}>
         <span><b>${esc(tv.name)}</b><br><span class="muted small">${esc(tv.platformName || tv.platformId)} · ${esc(tv.ip)} · ${tv.browser ? 'opens the page' : 'live frames'}</span></span></label>
-      <select data-screen="${esc(tv.id)}" ${!sel || locked ? 'disabled' : ''}>
+      <select data-screen="${esc(tv.id)}" ${!sel ? 'disabled' : ''}>
         ${SCREENS.map(([id, label]) => `<option value="${id}" ${sel && sel.screen === id ? 'selected' : ''}>${label}</option>`).join('')}
       </select>
     </div>`;
@@ -213,7 +212,7 @@ function renderTvs(st) {
 }
 
 function wireTvs() {
-  $('tvList').addEventListener('change', (e) => {
+  $('tvList').addEventListener('change', async (e) => {
     const tvId = e.target.dataset.tv || e.target.dataset.screen;
     if (!tvId) return;
     if (e.target.dataset.tv) {
@@ -228,7 +227,8 @@ function wireTvs() {
       const sel = tvSelection.find((s) => s.tvId === tvId);
       if (sel) sel.screen = e.target.value;
     }
-    call(api.selectTvs, tvSelection);
+    const res = await call(api.selectTvs, tvSelection);
+    if (res && res.ok && res.result?.castResults) showCastResults(res.result.castResults);
   });
   $('recastBtn').onclick = async () => {
     const res = await call(api.recast);
