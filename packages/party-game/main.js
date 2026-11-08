@@ -23,6 +23,7 @@ const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config', 'robos');
 const DATA_DIR = path.join(CONFIG_DIR, 'party-game');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+const TVS_FILE = path.join(DATA_DIR, 'tvs.json');
 const HISTORY_DIR = path.join(DATA_DIR, 'history');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
@@ -81,6 +82,22 @@ function saveSettings(settings) {
   } catch (err) {
     log({ msg: 'could not save settings', err: err.message });
   }
+}
+
+function loadSelectedTvs() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(TVS_FILE, 'utf8'));
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSelectedTvs(tvs) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(TVS_FILE, JSON.stringify(tvs || [], null, 2));
+  } catch {}
 }
 
 // ── AI host (required) ─────────────────────────────────────────────────────
@@ -238,12 +255,20 @@ async function onboardGameNight({ openControllers = false } = {}) {
   // Ensure at least one TV is selected so the lobby can open
   if (!engine.state.tvs.length) {
     const tvs = bridge.listTvs();
-    const pickTv = tvs.find((t) => t.id === 'tv-livingroom-webos') || tvs[0] || {
-      id: 'preview-stage',
-      name: 'Living Room Stage (Desktop Preview)',
-      platformId: 'webos',
-    };
-    engine.selectTvs([{ tvId: pickTv.id, screen: 'stage', name: pickTv.name, platformId: pickTv.platformId }]);
+    const saved = loadSelectedTvs().filter((s) => tvs.some((t) => t.id === s.tvId));
+    if (saved.length) {
+      engine.selectTvs(saved.map((s) => {
+        const tv = tvs.find((t) => t.id === s.tvId) || {};
+        return { tvId: s.tvId, screen: s.screen || 'stage', name: tv.name, platformId: tv.platformId };
+      }));
+    } else {
+      const pickTv = tvs.find((t) => t.id === 'tv-livingroom-tcl-roku') || tvs[0] || {
+        id: 'preview-stage',
+        name: 'Living Room Stage (Desktop Preview)',
+        platformId: 'webos',
+      };
+      engine.selectTvs([{ tvId: pickTv.id, screen: 'stage', name: pickTv.name, platformId: pickTv.platformId }]);
+    }
   }
 
   // Open lobby if currently in setup
@@ -365,12 +390,19 @@ function registerIpc() {
     saveSettings(s);
     return s;
   }));
-  ipcMain.handle('party:selectTvs', wrap((selection) => {
+  ipcMain.handle('party:selectTvs', wrap(async (selection) => {
+    bridge.stopAll();
     const tvs = bridge.listTvs();
-    return engine.selectTvs((selection || []).map((sel) => {
+    const nextTvs = engine.selectTvs((selection || []).map((sel) => {
       const tv = tvs.find((t) => t.id === sel.tvId) || {};
       return { tvId: sel.tvId, screen: sel.screen, name: tv.name, platformId: tv.platformId };
     }));
+    saveSelectedTvs(nextTvs);
+    let castResults = [];
+    if (engine.state.phase !== 'setup' && nextTvs.length) {
+      castResults = await bridge.castAll(nextTvs);
+    }
+    return { tvs: nextTvs, castResults };
   }));
   ipcMain.handle('party:openLobby', wrap(async () => {
     await engine.openLobby();
