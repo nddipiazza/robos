@@ -24,6 +24,34 @@ const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
 const CLIP_DIR = path.join(os.tmpdir(), 'robos-party-narration');
+const { PERSONALITIES } = require('./narrator');
+
+// Clean emojis, parenthetical score shorthand, and technical acronyms so
+// Kokoro-82M delivers every line like a natural human game-show host.
+function cleanSpeechForNaturalVoice(text) {
+  return String(text || '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ')
+    .replace(/\(\+(\d+)\s*pts?\)/gi, 'for $1 points')
+    .replace(/\+(\d+)\s*pts?\b/gi, 'plus $1 points')
+    .replace(/\b(\d+)\s*pts?\b/gi, '$1 points')
+    .replace(/#(\d+)\b/g, 'number $1')
+    .replace(/\bAI\b/g, 'A I')
+    .replace(/\bkVp\b/g, 'K V P')
+    .replace(/\bmAs\b/g, 'M A S')
+    .replace(/\bPA\b/g, 'P A')
+    .replace(/\bAP\b/g, 'A P')
+    .replace(/\bER\b/g, 'E R')
+    .replace(/\bERs\b/g, 'E R s')
+    .replace(/\bIT\b/g, 'I T')
+    .replace(/\bJVM\b/g, 'J V M')
+    .replace(/\bDNS\b/g, 'D N S')
+    .replace(/\bHVDC\b/g, 'H V D C')
+    .replace(/\bDiPiazza\b/gi, 'Dee-pee-ah-zah')
+    .replace(/\s*\|\s*/g, '. ')
+    .replace(/\s*·\s*/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 // Normalise to typical speaker loudness and encode as MP3 (Roku and Cast
 // speakers both play it; voice engines write quiet, sometimes float WAVs).
@@ -155,8 +183,15 @@ function createNarrationRouter({
     if (!outputs.length) return;
     const tts = getTts();
     if (!tts) return;
+    const pers = PERSONALITIES[engine.state.settings.personality] || PERSONALITIES.gameshow;
+    const spokenText = cleanSpeechForNaturalVoice(narration.text);
     const job = tts
-      .synthesize(narration.text, { kokoroTimeoutMs: 30000 })
+      .synthesize(spokenText, {
+        engine: 'kokoro',
+        voice: pers.ttsVoice || '0.6*am_puck+0.4*am_michael',
+        speed: pers.ttsSpeed || 1.05,
+        kokoroTimeoutMs: 30000,
+      })
       .then((res) => (res && res.ok && res.engine !== 'fallback' ? toMp3(res.filePath, narration.id) : null))
       .catch(() => null);
     clips.set(narration.id, job);
@@ -196,4 +231,4 @@ function createNarrationRouter({
   return { handle, clip, listSpeakers, scanSpeakers, stop, playOnSpeaker, speakersAvailable: () => Boolean(castModule && castModule.CastService) };
 }
 
-module.exports = { createNarrationRouter, toMp3, toRokuMp4 };
+module.exports = { createNarrationRouter, toMp3, toRokuMp4, cleanSpeechForNaturalVoice };
