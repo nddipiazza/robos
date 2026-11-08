@@ -335,7 +335,7 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 100,
 		"trains": ["pioneer"],
-		"abilities": ["train_pioneer", "rally"]
+		"abilities": ["train_pioneer", "rally", "recon_sweep", "reinforce_supply"]
 	},
 	"silo": {
 		"id": "silo",
@@ -355,7 +355,7 @@ var units: Dictionary = {
 		"footprint": Vector2i(2, 2),
 		"sight_range": 18.0,
 		"push_priority": 100,
-		"abilities": ["retract_silo"]
+		"abilities": ["retract_silo", "salvage"]
 	},
 	"silo_retracted": {
 		"id": "silo_retracted",
@@ -376,7 +376,7 @@ var units: Dictionary = {
 		"footprint": Vector2i(2, 2),
 		"sight_range": 18.0,
 		"push_priority": 0,
-		"abilities": ["extend_silo"]
+		"abilities": ["extend_silo", "salvage"]
 	},
 	"aether_tap": {
 		"id": "aether_tap",
@@ -821,6 +821,10 @@ var abilities: Dictionary = {
 	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},
 	"return_cargo": {"id": "return_cargo", "name": "Return Cargo", "hotkey": "D", "target": "none", "desc": "Deliver carried resources to a completed main base. Workers already gathering resume that assignment after delivery."},
 	"repair": {"id": "repair", "name": "Repair", "hotkey": "E", "target": "unit", "desc": "Repair a friendly mechanical unit or building. Crystal cost scales with the health restored."},
+	"auto_repair": {"id": "auto_repair", "name": "Auto-Repair", "hotkey": "Q", "target": "none", "desc": "Toggle repairs for idle Pioneers. They spend crystal to repair nearby friendly machinery. Manual orders take priority."},
+	"recon_sweep": {"id": "recon_sweep", "name": "Recon Sweep", "hotkey": "E", "target": "point", "desc": "Spend 50 Hub energy to reveal an area, including high ground, for 10 seconds."},
+	"reinforce_supply": {"id": "reinforce_supply", "name": "Reinforce Supply", "hotkey": "D", "target": "unit", "desc": "Spend 50 Hub energy to add 8 supply to a completed friendly Provision Silo once."},
+	"salvage": {"id": "salvage", "name": "Salvage Silo", "hotkey": "V", "target": "none", "desc": "Recover 75% of this completed Silo's cost after 5 seconds. Damage interrupts salvage. Press again to cancel."},
 	"cancel_construction": {"id": "cancel_construction", "name": "Cancel Construction", "hotkey": "X", "target": "none", "desc": "Remove the foundation and refund 75% of the paid construction costs."},
 	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},
 	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0, "sfx": "phase_step"},

@@ -67,6 +67,9 @@ func _draw() -> void:
 	_draw_tooltip()
 	_draw_caption()
 	_draw_match_status()
+	var tracked: Dictionary = SimEngine.units.get(main._tracked_tag, {})
+	if not tracked.is_empty():
+		_text(Vector2(32, 78), "Tracking %s · Ctrl+F" % tracked.name, 17, C_MUTED)
 	if main.show_help:
 		_draw_help()
 	draw_ms = (Time.get_ticks_usec() - started) / 1000.0
@@ -82,13 +85,11 @@ func _draw_match_status() -> void:
 	var state: Dictionary = SimEngine.match_state
 	if state.is_empty():
 		return
-	_text(Vector2(32, 55), "1 vs AI · %s · %s · %.0f×   |   F8 Match menu" % [str(state.get("difficulty", "normal")).capitalize(), str(state.get("strategy", "balanced")).capitalize(), SimEngine.sim_speed], 17, C_MUTED)
 	if state.status == "finished":
-		_frame(Rect2(650, 345, 620, 180))
-		var result = "VICTORY" if int(state.winner) == 1 else ("DRAW" if int(state.winner) == 0 else "DEFEAT")
-		_text(Vector2(650, 410), result, 42, C_GOLD, HORIZONTAL_ALIGNMENT_CENTER, 620)
-		_text(Vector2(650, 455), "Surrender" if state.reason == "surrender" else "All opposing structures destroyed", 20, C_TEXT, HORIZONTAL_ALIGNMENT_CENTER, 620)
-		_text(Vector2(650, 494), "F8 — Play again", 19, C_MUTED, HORIZONTAL_ALIGNMENT_CENTER, 620)
+		var outcome := "Victory" if state.winner == 1 else ("Draw" if state.winner == 0 else "Defeat")
+		_text(Vector2(32, 55), "%s  ·  F8 Match menu" % outcome, 17, C_GOLD)
+		return
+	_text(Vector2(32, 55), "1 vs AI · %s · %s · %.0f×   |   F8 Match menu" % [str(state.get("difficulty", "normal")).capitalize(), str(state.get("strategy", "balanced")).capitalize(), SimEngine.sim_speed], 17, C_MUTED)
 
 func _text_r(right: float, y: float, s: String, size: int, col: Color = C_TEXT) -> void:
 	_text(Vector2(right - _text_w(s, size), y), s, size, col)
@@ -345,6 +346,10 @@ func _draw_minimap_units() -> void:
 		var t: float = 1.0 - float(a["ttl"]) / float(a["max"])
 		var ap: Vector2 = main.world_to_minimap(a["pos"])
 		draw_arc(ap, 5.0 + t * 16.0, 0.0, TAU, 24, Color(1.0, 0.25, 0.2, 1.0 - t), 2.0, true)
+	for i in range(main.attack_history.size()):
+		var ap: Vector2 = main.world_to_minimap(main.attack_history[i])
+		var diamond := PackedVector2Array([ap + Vector2(0, -5), ap + Vector2(5, 0), ap + Vector2(0, 5), ap + Vector2(-5, 0), ap + Vector2(0, -5)])
+		draw_polyline(diamond, C_GOLD if i == main._attack_cursor else C_RED, 1.5, true)
 
 	# Camera frustum
 	var corners := [Vector2(0, 46), Vector2(1920, 46), Vector2(1920, main.HUD_TOP), Vector2(0, main.HUD_TOP)]
@@ -476,6 +481,9 @@ func _draw_single(u: Dictionary) -> void:
 	var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
 	var hcol := Color("#3fcf6a") if ratio > 0.5 else (Color("#f0b232") if ratio > 0.25 else Color("#ee4b3f"))
 	_bar(Rect2(x0, by, 360, 15), ratio, hcol, "Health  %d / %d" % [int(ceil(u["hp"])), int(u["max_hp"])])
+	if is_own and u.unit_type == "colony_hub":
+		by += 19.0
+		_bar(Rect2(x0, by, 360, 15), u.energy / SimEngine.HUB_ENERGY_MAX, Color("#6d8fe3"), "Energy  %d / %d" % [int(u.energy), int(SimEngine.HUB_ENERGY_MAX)])
 	by += 30.0
 
 	# Stats: two columns, labels muted, values bright
@@ -548,6 +556,8 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
 	if is_own and not u["is_structure"]:
 		status.append(_order_label(u))
+		if u.get("auto_repair", false):
+			status.append("Auto-repair on")
 		if int(u["cargo_amount"]) > 0:
 			status.append("Carrying %d %s" % [int(u["cargo_amount"]), str(u["cargo_type"])])
 		if float(u["surge_timer"]) > 0.0:
@@ -555,9 +565,11 @@ func _draw_single(u: Dictionary) -> void:
 		if float(u["phase_cooldown"]) > 0.0:
 			status.append("Phase Step  %.0fs" % float(u["phase_cooldown"]))
 	if u["is_structure"] and not building:
-		var prov := int(def.get("supply_provided", 0))
+		var prov := SimEngine.supply_from(u)
 		if prov > 0:
 			status.append("Provides  +%d supply" % prov)
+		if u.get("salvage_finish", 0) > SimEngine.tick:
+			status.append("Salvage  %.1fs" % ((u.salvage_finish - SimEngine.tick) * SimEngine.TICK_DT))
 	var sx := rx
 	for s in status:
 		_text(Vector2(sx, ry + 16), str(s), 16, C_TEXT)
@@ -608,6 +620,9 @@ func _draw_command_card() -> void:
 		if pending:
 			border = C_GOLD
 			bw = 3.0
+		if not pu.is_empty() and ((btn.ability_id == "auto_repair" and pu.get("auto_repair", false)) or (btn.ability_id == "salvage" and pu.get("salvage_finish", 0) > SimEngine.tick)):
+			border = C_AETHER
+			bw = 3.0
 		draw_rect(r, border, false, bw)
 		var hk := str(adef.get("hotkey", ""))
 		if hk != "":
@@ -654,9 +669,22 @@ func _glyph(id: String, r: Rect2) -> void:
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
 			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
-		"repair":
+		"repair", "auto_repair":
 			draw_line(c - Vector2(13, 0) * u, c + Vector2(13, 0) * u, C_AETHER, 5.0 * u)
 			draw_line(c - Vector2(0, 13) * u, c + Vector2(0, 13) * u, C_AETHER, 5.0 * u)
+			if id == "auto_repair":
+				draw_arc(c, 20.0 * u, 0.0, TAU, 24, C_AETHER, 2.5 * u, true)
+		"recon_sweep":
+			draw_arc(c, 19.0 * u, 0.0, TAU, 24, accent, 3.0 * u, true)
+			draw_arc(c, 9.0 * u, 0.0, TAU, 16, accent, 2.5 * u, true)
+			draw_line(c, c + Vector2(14, -14) * u, col, 3.0 * u)
+		"reinforce_supply":
+			draw_rect(Rect2(c - Vector2(17, 15) * u, Vector2(34, 30) * u), C_GOLD, false, 3.0 * u)
+			draw_line(c - Vector2(9, 0) * u, c + Vector2(9, 0) * u, C_GOLD, 3.0 * u)
+			draw_line(c - Vector2(0, 9) * u, c + Vector2(0, 9) * u, C_GOLD, 3.0 * u)
+		"salvage":
+			draw_polyline(P.call([[-17, -7], [0, 10], [17, -7]]), C_GOLD, 4.0 * u, true)
+			draw_line(c - Vector2(16, -17) * u, c + Vector2(16, 17) * u, C_GOLD, 3.0 * u)
 		"cancel_construction":
 			draw_line(c - Vector2(13, 13) * u, c + Vector2(13, 13) * u, C_RED, 5.0 * u)
 			draw_line(c - Vector2(-13, 13) * u, c + Vector2(-13, 13) * u, C_RED, 5.0 * u)
@@ -806,7 +834,7 @@ func _draw_help() -> void:
 		["Mouse wheel", "Zoom"],
 		["Middle drag", "Pan the camera"],
 		["Minimap", "Pan or place a targeted move, attack, patrol or rally"],
-		["Command card", "Click, or press the letter in the corner"],
+		["Command card", "Click or press the hotkey. Shift trains up to five."],
 		["Backspace", "Cycle through your completed bases"],
 	]
 	var right := [
@@ -814,7 +842,7 @@ func _draw_help() -> void:
 		["Ctrl + 1-0 / Ctrl + Shift + 1-0", "Assign / add units; Alt moves from other groups"],
 		["Tab / Shift + Tab", "Cycle unit types forward or backward"],
 		[". / Ctrl + .", "Cycle idle workers or select them all"],
-		["Space", "Jump to the last attack alert, or home"],
+		["Space / Ctrl + F", "Cycle attack alerts / track a friendly unit"],
 		["Esc / Ctrl+M", "Cancel targeting · Mute or unmute sound"],
 		["F2 / Ctrl + F2", "Select army or switch viewed faction in showcases"],
 		["F5  F6  F7", "Toggle the built-in AI for each faction"],

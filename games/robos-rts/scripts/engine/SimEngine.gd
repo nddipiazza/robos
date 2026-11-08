@@ -20,6 +20,7 @@ signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
 signal resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2)
 signal unit_production_finished(unit: Dictionary, structure: Dictionary)
 signal structure_construction_finished(structure: Dictionary)
+signal match_finished
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
@@ -29,8 +30,15 @@ const HARVEST_REACH := 1.2
 const CRYSTAL_LINE_RADIUS := 26.0
 const CONSTRUCTION_REFUND := 0.75
 const REPAIR_HP_PER_SECOND := 12.0
+const AUTO_REPAIR_RADIUS := 8.0
 const MAX_RALLY_WAYPOINTS := 8
 const MAX_UPGRADE_LEVEL := 3
+const HUB_ENERGY_MAX := 200.0
+const HUB_POWER_COST := 50.0
+const SWEEP_RADIUS := 16.0
+const SWEEP_TICKS := 10 * TICK_RATE
+const SALVAGE_TICKS := 5 * TICK_RATE
+const REINFORCED_SUPPLY := 8
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -74,6 +82,7 @@ var _accum_time: float = 0.0
 # Map Editor <-> playtest handoff: holds the editor document while RTSMain playtests it.
 var editor_session: Dictionary = {}
 var match_state: Dictionary = {}
+var _skirmish_source: Dictionary = {}
 var vision: Vision
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
@@ -146,6 +155,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
+	_skirmish_source = {}
 	vision = null
 	_accum_time = 0.0
 	sim_speed = 1.0
@@ -172,6 +182,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 			"crystal_collected": 0,
 			"aether_collected": 0,
 			"units_killed": 0,
+			"units_trained": 0,
 			"units_lost": 0,
 			"structures_built": 0,
 			"stutter_step_cancels": 0,
@@ -361,6 +372,8 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		return {"ok": false, "error": "Expected 2–8 starts and a supported difficulty/strategy"}
 	var match_seed = int(data.get("seed", Time.get_unix_time_from_system() * 1000.0 + Time.get_ticks_msec()))
 	reset_state(match_seed, float(map_cfg.get("width", 256)), float(map_cfg.get("height", 256)))
+	_skirmish_source = data.duplicate(true)
+	_skirmish_source["seed"] = match_seed
 	unlimited_resources = bool(data.get("unlimited_resources", true))
 	_configure_water(map_cfg)
 	players.erase(3)
@@ -420,6 +433,8 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 func _start_vision(enabled: bool) -> void:
 	if enabled:
 		vision = Vision.new(map_width, map_height, players.keys())
+		if not high_ground_zones.is_empty() or not ramps.is_empty():
+			vision.configure_elevation(get_elevation_at)
 		vision.update(units, tick)
 
 func can_see_position(player: int, pos: Vector2) -> bool:
@@ -450,12 +465,28 @@ func surrender(player_id: int) -> Dictionary:
 	_finish_match(3 - player_id, "surrender")
 	return {"ok": true, "match": match_state.duplicate(true)}
 
+func rematch() -> Dictionary:
+	if _skirmish_source.is_empty() or match_state.get("status") != "finished":
+		return {"ok": false, "error": "Finish a skirmish before starting a same-seed rematch."}
+	var speed := sim_speed
+	var result := _load_skirmish(_skirmish_source)
+	sim_speed = speed
+	return result
+
 func _finish_match(winner: int, reason: String) -> void:
 	match_state["status"] = "finished"
 	match_state["winner"] = winner
 	match_state["reason"] = reason
 	match_state["finished_tick"] = tick
+	var scores := {}
+	for owner in players:
+		var row := {}
+		for stat in ["crystal_collected", "aether_collected", "units_trained", "units_lost", "structures_built"]:
+			row[stat] = players[owner][stat]
+		scores[str(owner)] = row
+	match_state["scorecard"] = scores
 	emit_signal("notice", 1, "Victory" if winner == 1 else ("Draw" if winner == 0 else "Defeat"), "info")
+	emit_signal("match_finished")
 
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
@@ -661,6 +692,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"cargo_amount": 0,
 		"harvest_timer": 0.0,
 		"harvest_target_tag": 0,
+		"energy": HUB_POWER_COST if unit_type == "colony_hub" else 0.0,
 		"build_progress": build_progress,
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
@@ -950,6 +982,15 @@ func _update_structures(dt: float) -> void:
 					_recompute_supplies()
 					emit_signal("structure_construction_finished", u)
 			continue
+		if u.unit_type == "colony_hub":
+			u.energy = minf(HUB_ENERGY_MAX, u.energy + 0.75 * dt)
+		var salvage_finish: int = u.get("salvage_finish", 0)
+		if salvage_finish > 0 and tick >= salvage_finish:
+			var definition: Dictionary = RTSData.get_unit_def(u.unit_type)
+			var cost: Vector2i = u.get("construction_cost", Vector2i(definition.crystal_cost, definition.aether_cost))
+			_refund_structure(u, cost)
+			emit_signal("notice", u.owner, "%s salvaged." % u.name, "info")
+			continue
 		var queue: Array = u["production_queue"]
 		if queue.size() > 0:
 			var item = queue[0]
@@ -972,6 +1013,7 @@ func _update_structures(dt: float) -> void:
 				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
 				if new_unit.is_empty():
 					continue
+				players[u.owner].units_trained += 1
 				emit_signal("unit_production_finished", new_unit, u)
 				if not route.is_empty():
 					_apply_rally_route(new_unit, route)
@@ -1029,6 +1071,8 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			return
 
 	if u["orders"].is_empty():
+		if u.get("auto_repair", false) and tick % 8 == u.tag % 8 and _begin_auto_repair(u):
+			return
 		var enemy = _find_best_attack_target(u, false)
 		if not enemy.is_empty():
 			var wpn_range = _get_weapon_range(u)
@@ -1142,7 +1186,7 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			_process_worker_build_order(u, order, dt)
 
 		"repair":
-			_process_repair_order(u, order.target_tag, dt)
+			_process_repair_order(u, order, dt)
 
 func _release_mining_slot(worker: Dictionary) -> void:
 	if worker.harvest_timer <= 0.0:
@@ -1329,21 +1373,80 @@ func _cancel_construction(site: Dictionary) -> bool:
 	if not units.has(site.tag) or not site.is_structure or site.build_progress >= 1.0:
 		return false
 	var costs: Vector2i = site.get("construction_cost", Vector2i.ZERO)
+	_refund_structure(site, costs)
+	emit_signal("notice", site.owner, "%s construction cancelled." % site.name, "info")
+	return true
+
+func _refund_structure(site: Dictionary, costs: Vector2i) -> void:
 	var player: Dictionary = players[site.owner]
 	player.crystal += floori(costs.x * CONSTRUCTION_REFUND)
 	player.aether += floori(costs.y * CONSTRUCTION_REFUND)
 	units.erase(site.tag)
 	nav_dirty = true
 	_recompute_supplies()
-	emit_signal("notice", site.owner, "%s construction cancelled." % site.name, "info")
+
+func _is_finished_silo(unit: Dictionary, owner_id: int) -> bool:
+	return not unit.is_empty() and unit.owner == owner_id and unit.unit_type in ["silo", "silo_retracted"] and unit.build_progress >= 1.0
+
+func can_use_hub_power(unit: Dictionary) -> bool:
+	return unit.unit_type == "colony_hub" and unit.build_progress >= 1.0 and unit.energy >= HUB_POWER_COST
+
+func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_tag: int) -> bool:
+	if not can_use_hub_power(hub):
+		return false
+	if command == "recon_sweep":
+		if vision == null or not position.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(position):
+			return false
+		vision.add_sweep(hub.owner, position, SWEEP_RADIUS, tick + SWEEP_TICKS)
+		vision.update(units, tick)
+	else:
+		var silo: Dictionary = units.get(target_tag, {})
+		if not _is_finished_silo(silo, hub.owner) or silo.get("supply_reinforced", false):
+			return false
+		silo["supply_reinforced"] = true
+		_recompute_supplies()
+		emit_signal("notice", hub.owner, "Provision Silo reinforced.", "info")
+	hub.energy -= HUB_POWER_COST
 	return true
+
+func _toggle_salvage(silo: Dictionary) -> bool:
+	if not _is_finished_silo(silo, silo.owner):
+		return false
+	if silo.get("salvage_finish", 0) > 0:
+		silo.erase("salvage_finish")
+		emit_signal("notice", silo.owner, "Salvage cancelled.", "info")
+	else:
+		silo["salvage_finish"] = tick + SALVAGE_TICKS
+		emit_signal("notice", silo.owner, "Salvaging Provision Silo.", "info")
+	return true
+
+func supply_from(unit: Dictionary) -> int:
+	return int(RTSData.get_unit_def(unit.unit_type).get("supply_provided", 0)) + (REINFORCED_SUPPLY if unit.get("supply_reinforced", false) else 0)
 
 func can_repair(worker: Dictionary, target: Dictionary) -> bool:
 	return worker.unit_type == "pioneer" and not target.is_empty() and target.owner == worker.owner and target.tag != worker.tag and target.build_progress >= 1.0 and target.hp < target.max_hp and target.attributes.has("Mechanical")
 
-func _process_repair_order(worker: Dictionary, target_tag: int, dt: float) -> void:
-	var target: Dictionary = units.get(target_tag, {})
-	if not can_repair(worker, target):
+func _begin_auto_repair(worker: Dictionary) -> bool:
+	if players[worker.owner].crystal <= 0:
+		return false
+	var best: Dictionary = {}
+	var best_distance := AUTO_REPAIR_RADIUS
+	for target in query_units_in_radius(worker.pos, AUTO_REPAIR_RADIUS + worker.radius):
+		if not can_repair(worker, target):
+			continue
+		var distance := _edge_distance(worker, target)
+		if distance <= best_distance:
+			best = target
+			best_distance = distance
+	if best.is_empty():
+		return false
+	worker.orders.append({"type": "repair", "target_tag": best.tag, "automatic": true})
+	return true
+
+func _process_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> void:
+	var target: Dictionary = units.get(order.target_tag, {})
+	var player: Dictionary = players[worker.owner]
+	if not can_repair(worker, target) or (order.get("automatic", false) and (_edge_distance(worker, target) > AUTO_REPAIR_RADIUS or (player.crystal <= 0 and target.get("repair_credit", 0.0) <= 0.0))):
 		worker.orders.pop_front()
 		worker.path.clear()
 		return
@@ -1351,7 +1454,6 @@ func _process_repair_order(worker: Dictionary, target_tag: int, dt: float) -> vo
 		_follow_order_path(worker, target.pos, dt)
 		return
 	worker.facing = (target.pos - worker.pos).angle()
-	var player: Dictionary = players[worker.owner]
 	var replacement_cost: float = RTSData.get_unit_def(target.unit_type).get("crystal_cost", 0)
 	var price_per_hp: float = replacement_cost * 0.25 / target.max_hp
 	var hp := minf(REPAIR_HP_PER_SECOND * dt, target.max_hp - target.hp)
@@ -1657,6 +1759,8 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	dmg = max(0.5, dmg * mult)
 
 	target["out_of_combat_timer"] = 0.0
+	if target.erase("salvage_finish"):
+		emit_signal("notice", target.owner, "Enemy fire interrupted salvage.", "warn")
 	emit_signal("unit_damaged", target["owner"], target["pos"])
 
 	# Aegis Shields absorb damage before HP
@@ -1693,9 +1797,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		return {"ok": false, "accepted": 0, "error": "Match has finished"}
 	var accepted: int = 0
 	var valid_units: Array[Dictionary] = []
+	var seen := {}
 	for t in unit_tags:
 		var tag_int = int(t)
-		if units.has(tag_int):
+		if units.has(tag_int) and not seen.has(tag_int):
+			seen[tag_int] = true
 			valid_units.append(units[tag_int])
 
 	if valid_units.is_empty():
@@ -1706,6 +1812,22 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype in ["recon_sweep", "reinforce_supply"]:
+			if accepted == 0 and _use_hub_power(u, ctype, target_pos, target_tag):
+				accepted += 1
+			continue
+		if ctype == "salvage":
+			if _toggle_salvage(u):
+				accepted += 1
+			continue
+		if ctype == "auto_repair":
+			if u.unit_type == "pioneer":
+				u["auto_repair"] = not u.get("auto_repair", false)
+				if not u.auto_repair and not u.orders.is_empty() and u.orders[0].get("automatic", false):
+					u.orders.pop_front()
+					u.path.clear()
+				accepted += 1
+			continue
 		if ctype == "cancel_construction":
 			if _cancel_construction(u):
 				accepted += 1
@@ -2154,7 +2276,7 @@ func _recompute_supplies() -> void:
 		var def = RTSData.get_unit_def(u["unit_type"])
 		if u["is_structure"]:
 			if u["build_progress"] >= 1.0:
-				players[pid]["supply_cap"] += int(def.get("supply_provided", 0))
+				players[pid]["supply_cap"] += supply_from(u)
 			for q in u["production_queue"]:
 				if q.has("upgrade"):
 					continue
@@ -2296,12 +2418,21 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"production_queue_len": 0 if limited and u.owner != perspective_player else u["production_queue"].size(),
 			"kills": u["kills"]
 		})
+		var entry: Dictionary = unit_list.back()
+		match u.unit_type:
+			"colony_hub":
+				entry["energy"] = snappedf(u.energy, 0.01)
+			"silo", "silo_retracted":
+				entry["supply_reinforced"] = u.get("supply_reinforced", false)
+				entry["salvage_ticks"] = maxi(0, int(u.get("salvage_finish", 0)) - tick)
+			"pioneer":
+				entry["auto_repair"] = u.get("auto_repair", false)
 		if not u.rally_route.is_empty() and (not limited or u.owner == perspective_player):
 			var route := []
 			for waypoint in u.rally_route:
 				var position := rally_waypoint_position(waypoint)
 				route.append({"kind": waypoint.kind, "target_tag": waypoint.target_tag, "x": position.x, "y": position.y})
-			unit_list.back()["rally_route"] = route
+			entry["rally_route"] = route
 
 	var res_list: Array = []
 	for r in resources.values():

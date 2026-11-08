@@ -272,8 +272,11 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				_send_json(client, 200, res)
 
 		"/match":
-			if str(body_dict.get("action", "new")) == "surrender":
+			var action := str(body_dict.get("action", "new"))
+			if action == "surrender":
 				_send_json(client, 200, SimEngine.surrender(int(body_dict.get("player", 1))))
+			elif action == "rematch":
+				_send_json(client, 200, SimEngine.rematch())
 			else:
 				var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/frontier-hunters.jsonld"))
 				for key in ["seed", "difficulty", "strategy"]:

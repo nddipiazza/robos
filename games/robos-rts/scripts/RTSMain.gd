@@ -38,6 +38,9 @@ var mid_dragging: bool = false
 var pending_ability: String = ""
 var messages: Array[Dictionary] = []
 var alerts: Array[Dictionary] = []
+var attack_history: Array[Vector2] = []
+var _attack_cursor := -1
+var _tracked_tag := 0
 var click_markers: Array[Dictionary] = []
 var hover_override: Variant = null
 var show_help: bool = false
@@ -82,7 +85,7 @@ func _ready() -> void:
 
 func _on_scenario_loaded(_name: String) -> void:
 	if match_menu:
-		match_menu.panel.hide()
+		match_menu.reset_views()
 	if not SimEngine.match_state.is_empty():
 		local_player = 1
 	if RTSAudio:
@@ -96,6 +99,10 @@ func _on_scenario_loaded(_name: String) -> void:
 	_saturation_refresh = 0.0
 	messages.clear()
 	alerts.clear()
+	attack_history.clear()
+	_attack_cursor = -1
+	_attack_msg_cd = 0.0
+	_tracked_tag = 0
 	click_markers.clear()
 	active_type = ""
 	banner_ttl = 4.5
@@ -119,6 +126,13 @@ func _on_unit_damaged(owner_id: int, pos: Vector2) -> void:
 		if a["pos"].distance_to(pos) < 22.0 and a["ttl"] > 1.0:
 			return
 	alerts.append({"pos": pos, "ttl": 4.0, "max": 4.0})
+	for i in range(attack_history.size() - 1, -1, -1):
+		if attack_history[i].distance_to(pos) < 22.0:
+			attack_history.remove_at(i)
+	attack_history.push_front(pos)
+	if attack_history.size() > 6:
+		attack_history.pop_back()
+	_attack_cursor = -1
 	if _attack_msg_cd <= 0.0:
 		push_message("Your forces are under attack!", "warn")
 		if RTSAudio:
@@ -150,9 +164,48 @@ func focus_on_base() -> void:
 		if best.is_empty():
 			best = u
 	if best.is_empty():
-		world_3d.set_focus(Vector2(SimEngine.map_width * 0.5, SimEngine.map_height * 0.5), 56.0)
+		_focus_camera(Vector2(SimEngine.map_width * 0.5, SimEngine.map_height * 0.5), 56.0)
 	else:
-		world_3d.set_focus(best["pos"] + Vector2(9.0, -1.0), 40.0)
+		_focus_camera(best["pos"] + Vector2(9.0, -1.0), 40.0)
+
+func _focus_camera(position: Vector2, height: float = -1.0) -> void:
+	_tracked_tag = 0
+	if world_3d:
+		world_3d.set_focus(position, height)
+
+func _toggle_camera_tracking() -> void:
+	if _tracked_tag > 0:
+		_tracked_tag = 0
+		return
+	for unit in selected_owned():
+		if not unit.is_structure:
+			_tracked_tag = unit.tag
+			_update_camera_tracking()
+			return
+
+func _update_camera_tracking() -> void:
+	if _tracked_tag == 0 or not world_3d:
+		return
+	var unit: Dictionary = SimEngine.units.get(_tracked_tag, {})
+	if unit.is_empty() or unit.owner != local_player:
+		_tracked_tag = 0
+	elif world_3d.get_focus().distance_squared_to(unit.pos) > 0.001:
+		world_3d.set_focus(unit.pos)
+
+func _jump_to_attack() -> void:
+	if attack_history.is_empty():
+		focus_on_base()
+		return
+	_attack_cursor = (_attack_cursor + 1) % attack_history.size()
+	_focus_camera(attack_history[_attack_cursor])
+
+func _jump_to_attack_pin(screen_position: Vector2) -> bool:
+	for i in range(attack_history.size()):
+		if screen_position.distance_squared_to(world_to_minimap(attack_history[i])) <= 49.0:
+			_attack_cursor = i
+			_focus_camera(attack_history[i])
+			return true
+	return false
 
 func _camera_bookmark(key: int, save: bool) -> void:
 	if not world_3d:
@@ -163,7 +216,7 @@ func _camera_bookmark(key: int, save: bool) -> void:
 		push_message("Camera location saved to %s." % label)
 	elif _camera_bookmarks.has(key):
 		var bookmark: Dictionary = _camera_bookmarks[key]
-		world_3d.set_focus(bookmark.focus, bookmark.height)
+		_focus_camera(bookmark.focus, bookmark.height)
 	else:
 		push_message("Save a camera location with Ctrl+%s." % label)
 
@@ -179,7 +232,7 @@ func _cycle_base() -> void:
 		return
 	bases.sort()
 	_last_base_tag = bases[(bases.find(_last_base_tag) + 1) % bases.size()]
-	world_3d.set_focus(SimEngine.units[_last_base_tag].pos)
+	_focus_camera(SimEngine.units[_last_base_tag].pos)
 
 func _handle_camera_pan(delta: float) -> void:
 	if not world_3d or not world_3d.camera_3d:
@@ -190,6 +243,7 @@ func _handle_camera_pan(delta: float) -> void:
 	if Input.is_key_pressed(KEY_UP): v.y -= 1.0
 	if Input.is_key_pressed(KEY_DOWN): v.y += 1.0
 	if v != Vector2.ZERO:
+		_tracked_tag = 0
 		world_3d.pan(v.normalized() * 46.0 * (world_3d.cam_height / 50.0) * delta)
 
 func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
@@ -219,6 +273,7 @@ func hover_pos() -> Vector2:
 # ---------------------------------------------------------------------------
 func _process(delta: float) -> void:
 	_handle_camera_pan(delta)
+	_update_camera_tracking()
 	_saturation_refresh -= delta
 	if _saturation_refresh <= 0.0 and not hud_hidden:
 		_saturation = SimEngine.worker_saturation(local_player)
@@ -356,9 +411,12 @@ func _select_next_idle_worker() -> void:
 # Input
 # ---------------------------------------------------------------------------
 func _unhandled_input(event: InputEvent) -> void:
-	if match_menu and match_menu.panel.visible:
-		if event is InputEventKey and event.pressed and event.keycode == KEY_F8:
-			match_menu.toggle()
+	if match_menu and (match_menu.panel.visible or match_menu.result_panel.visible):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_F8:
+				match_menu.toggle()
+			elif match_menu.result_panel.visible and event.keycode == KEY_ENTER and (event.ctrl_pressed or event.meta_pressed):
+				match_menu.restart()
 		return
 	if event is InputEventMouseButton:
 		_on_mouse_button(event as InputEventMouseButton)
@@ -367,8 +425,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_box_selecting:
 			box_end_screen = mm.position
 		if mm_dragging and MINIMAP.grow(10.0).has_point(mm.position):
-			world_3d.set_focus(minimap_to_world(mm.position))
+			_focus_camera(minimap_to_world(mm.position))
 		if mid_dragging:
+			_tracked_tag = 0
 			var scale_px: float = world_3d.cam_height / 700.0
 			world_3d.pan(Vector2(-mm.relative.x, -mm.relative.y * 1.5) * scale_px)
 	elif event is InputEventKey and event.pressed and not event.echo:
@@ -385,6 +444,8 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		return
 	if mb.button_index == MOUSE_BUTTON_MIDDLE:
 		mid_dragging = mb.pressed
+		if mb.pressed:
+			_tracked_tag = 0
 		return
 
 	if mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
@@ -423,11 +484,11 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if MINIMAP.grow(6.0).has_point(mpos):
 		_last_group_press.clear()
 		if left:
-			if pending_ability in ["attack", "move", "patrol", "rally"]:
+			if pending_ability in ["attack", "move", "patrol", "rally", "recon_sweep"]:
 				_execute_pending_ability_at(minimap_to_world(mpos), mb.shift_pressed, true)
-			elif world_3d:
+			elif world_3d and not _jump_to_attack_pin(mpos):
 				mm_dragging = true
-				world_3d.set_focus(minimap_to_world(mpos))
+				_focus_camera(minimap_to_world(mpos))
 		elif right:
 			_issue_smart_right_click(minimap_to_world(mpos), mb.shift_pressed)
 		return true
@@ -465,7 +526,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 				return true
 		for btn in get_card_buttons():
 			if btn["rect"].has_point(mpos):
-				_trigger_card_button(btn)
+				_trigger_card_button(btn, mb.shift_pressed)
 				return true
 
 	return mpos.y >= HUD_TOP
@@ -684,6 +745,18 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			return
 		pending_ability = ""
 		_spawn_marker(target.pos, "move")
+	elif abil == "recon_sweep":
+		if SimEngine.issue_command(tags, abil, wpos).ok:
+			pending_ability = ""
+		else:
+			push_message("Choose a map location for the sweep.", "warn")
+	elif abil == "reinforce_supply":
+		var target := _order_target_at(wpos)
+		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag).ok:
+			push_message("Select a completed, unreinforced friendly Provision Silo.", "warn")
+			return
+		pending_ability = ""
+		_spawn_marker(target.pos, "move")
 	elif abil.begins_with("build_"):
 		var sdef_id := str(RTSData.get_ability_def(abil).get("structure", abil.replace("build_", "")))
 		var placement := placement_for(sdef_id, wpos)
@@ -811,6 +884,11 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more Provision Silos."
 	match str(adef.get("id", "")):
+		"recon_sweep", "reinforce_supply":
+			if adef.id == "recon_sweep" and SimEngine.vision == null:
+				return "Fog of war is disabled."
+			if not selected_owned().any(SimEngine.can_use_hub_power):
+				return "Requires 50 Hub energy."
 		"return_cargo":
 			if not selected_owned().any(func(unit): return unit.is_worker and unit.cargo_amount > 0):
 				return "No worker is carrying resources."
@@ -835,7 +913,7 @@ func get_card_buttons() -> Array[Dictionary]:
 	if pu.is_worker:
 		abils = abils + ["return_cargo"]
 		if pu.unit_type == "pioneer":
-			abils = abils + ["repair"]
+			abils = abils + ["repair", "auto_repair"]
 	for i in range(mini(15, abils.size())):
 		var row := i / 5
 		var col := i % 5
@@ -850,7 +928,7 @@ func get_card_buttons() -> Array[Dictionary]:
 		})
 	return buttons
 
-func _trigger_card_button(btn: Dictionary) -> void:
+func _trigger_card_button(btn: Dictionary, bulk: bool = false) -> void:
 	var abil_id: String = btn["ability_id"]
 	var adef: Dictionary = btn["def"]
 	if str(btn["blocked"]) != "":
@@ -865,30 +943,31 @@ func _trigger_card_button(btn: Dictionary) -> void:
 			RTSAudio.play_ui("ui_select")
 		return
 	if abil_id.begins_with("train_") or adef.has("upgrade"):
-		_train_on_best(abil_id)
+		_train_on_best(abil_id, 5 if bulk and abil_id.begins_with("train_") else 1)
 		if RTSAudio:
 			RTSAudio.play_ui("ui_select")
 		return
 	var tags: Array = []
 	for u in selected_owned():
-		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
+		if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	SimEngine.issue_command(tags, abil_id)
 
-func _train_on_best(abil_id: String) -> void:
-	var best: Dictionary = {}
-	var best_q := 99
+func _train_on_best(abil_id: String, count: int) -> void:
+	var producers: Array[Dictionary] = []
 	for u in selected_owned():
 		if not RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id):
 			continue
 		if float(u["build_progress"]) < 1.0:
 			continue
-		var q: int = u["production_queue"].size()
-		if q < best_q:
-			best_q = q
-			best = u
-	if not best.is_empty():
-		SimEngine.issue_command([best["tag"]], abil_id)
+		producers.append(u)
+	for i in range(count):
+		var best: Dictionary = {}
+		for producer in producers:
+			if best.is_empty() or producer.production_queue.size() < best.production_queue.size():
+				best = producer
+		if best.is_empty() or not SimEngine.issue_command([best.tag], abil_id).ok:
+			break
 
 func _hotkey_char(ke: InputEventKey) -> String:
 	var s := OS.get_keycode_string(ke.keycode)
@@ -976,7 +1055,7 @@ func _recall_group(g: int, add: bool = false) -> void:
 	pending_ability = ""
 	if not add and now - last < 400 and world_3d:
 		var first: Dictionary = SimEngine.units[control_groups[g][0]]
-		world_3d.set_focus(first["pos"])
+		_focus_camera(first["pos"])
 	_last_group_press.clear()
 	if not add:
 		_last_group_press[g] = now
@@ -992,10 +1071,18 @@ func _set_local_player(player: int) -> void:
 	_last_group_press.clear()
 	_camera_bookmarks.clear()
 	_last_base_tag = 0
+	_tracked_tag = 0
+	alerts.clear()
+	attack_history.clear()
+	_attack_cursor = -1
+	_attack_msg_cd = 0.0
 	active_type = ""
 	pending_ability = ""
 
 func _handle_hotkey(ke: InputEventKey) -> void:
+	if ke.keycode == KEY_F and (ke.ctrl_pressed or ke.meta_pressed):
+		_toggle_camera_tracking()
+		return
 	if ke.ctrl_pressed and ke.keycode == KEY_M:
 		if RTSAudio:
 			var is_muted: bool = RTSAudio.toggle_mute()
@@ -1053,10 +1140,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				_select_all_army()
 			return
 		KEY_SPACE:
-			if alerts.size() > 0:
-				world_3d.set_focus(alerts[alerts.size() - 1]["pos"])
-			else:
-				focus_on_base()
+			_jump_to_attack()
 			return
 		KEY_PERIOD:
 			if ke.ctrl_pressed or ke.meta_pressed:
@@ -1098,7 +1182,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		return
 	for btn in get_card_buttons():
 		if str(btn["def"].get("hotkey", "")) == hk:
-			_trigger_card_button(btn)
+			_trigger_card_button(btn, ke.shift_pressed)
 			return
 
 # External state hook used by the control server (screenshots, scripted demos)
@@ -1134,7 +1218,7 @@ func apply_ui_state(d: Dictionary) -> Dictionary:
 		push_message(str(d["message"]), str(d.get("message_kind", "info")))
 	if d.has("focus"):
 		var f: Dictionary = d["focus"]
-		world_3d.set_focus(Vector2(float(f.get("x", 64.0)), float(f.get("y", 48.0))), float(f.get("height", world_3d.cam_height)))
+		_focus_camera(Vector2(float(f.get("x", 64.0)), float(f.get("y", 48.0))), float(f.get("height", world_3d.cam_height)))
 	var st := ui_state()
 	if d.has("project"):
 		var pts: Array = []
@@ -1155,6 +1239,7 @@ func ui_state() -> Dictionary:
 	var f: Vector2 = world_3d.get_focus() if world_3d else Vector2.ZERO
 	return {
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
+		"scorecard_visible": match_menu != null and match_menu.result_panel.visible,
 		"local_player": local_player,
 		"selected": tags,
 		"primary_type": primary_type(),
@@ -1162,6 +1247,8 @@ func ui_state() -> Dictionary:
 		"messages": msgs,
 		"camera_focus": [f.x, f.y],
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
+		"camera_follow_tag": _tracked_tag,
+		"attack_history": attack_history.map(func(pos): return [pos.x, pos.y]),
 		"worker_saturation": SimEngine.worker_saturation(local_player),
 		"control_groups": control_groups.keys().size(),
 		"control_group_members": control_groups.duplicate(true)
@@ -1217,6 +1304,7 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	_draw_rally_and_orders()
 	_draw_building_memory(font)
+	_draw_recon_sweeps()
 	for u in SimEngine.units.values():
 		if SimEngine.can_see_unit(local_player, u):
 			_draw_unit_bars(u, font)
@@ -1235,6 +1323,16 @@ func _draw() -> void:
 		)
 		draw_rect(sel_rect, Color(0.45, 1.0, 0.55, 0.08))
 		draw_rect(sel_rect, Color(0.55, 1.0, 0.65, 0.9), false, 1.5)
+
+func _draw_recon_sweeps() -> void:
+	if SimEngine.vision == null:
+		return
+	for sweep in SimEngine.vision.sweeps_for(local_player):
+		var outline := PackedVector2Array()
+		for i in range(33):
+			var offset := Vector2.from_angle(TAU * i / 32.0) * float(sweep.radius)
+			outline.append(world_to_screen(sweep.pos + offset, 0.2))
+		draw_polyline(outline, Color("#6fb6ff"), 1.5, true)
 
 func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
 	var label := "%d/%d" % [site.assigned, site.ideal]
@@ -1349,7 +1447,8 @@ func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var hurt: bool = u["hp"] < u["max_hp"] - 0.5 or (u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] - 0.5)
 	var building: bool = u["is_structure"] and u["build_progress"] < 1.0
 	var producing: bool = u["is_structure"] and u["production_queue"].size() > 0 and is_sel
-	if not (is_sel or hurt or building or producing):
+	var salvage: int = maxi(0, int(u.get("salvage_finish", 0)) - SimEngine.tick)
+	if not (is_sel or hurt or building or producing or salvage > 0):
 		return
 	var sp_head := world_to_screen(u["pos"], unit_height(u) + 0.6)
 	if sp_head.y > HUD_TOP - 6.0 or sp_head.y < 10.0 or sp_head.x < -40.0 or sp_head.x > 1960.0:
@@ -1362,6 +1461,9 @@ func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 
 	if building:
 		_bar(Rect2(x0, y, bar_w, bar_h), float(u["build_progress"]), Color("#fbbf24"))
+		y -= bar_h + 2.0
+	elif salvage > 0:
+		_bar(Rect2(x0, y, bar_w, bar_h), 1.0 - float(salvage) / SimEngine.SALVAGE_TICKS, Color("#fbbf24"))
 		y -= bar_h + 2.0
 	if u["max_shields"] > 0.0:
 		_bar(Rect2(x0, y, bar_w, bar_h), clampf(u["shields"] / u["max_shields"], 0.0, 1.0), Color("#5ab8f5"))

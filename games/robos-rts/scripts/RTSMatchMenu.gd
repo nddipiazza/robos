@@ -1,31 +1,22 @@
 extends CanvasLayer
 
 var panel: PanelContainer
+var result_panel: PanelContainer
 var difficulty: OptionButton
 var strategy: OptionButton
 var speed: OptionButton
 var volume: OptionButton
 var was_paused: bool = false
+var _score_title: Label
+var _score_detail: Label
+var _score_values: Dictionary = {}
+var _rematch: Button
+var _show_results: Button
 
 func _ready() -> void:
 	layer = 10
-	panel = PanelContainer.new()
-	panel.position = Vector2(670, 260)
-	panel.custom_minimum_size = Vector2(580, 500)
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color("#111b27")
-	style.border_color = Color("#426578")
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	panel.add_theme_stylebox_override("panel", style)
-	add_child(panel)
-	var margin = MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 28)
-	panel.add_child(margin)
-	var box = VBoxContainer.new()
-	box.add_theme_constant_override("separation", 18)
-	margin.add_child(box)
+	panel = _make_panel(Vector2(670, 250), Vector2(580, 500))
+	var box := _panel_body(panel)
 	var title = Label.new()
 	title.text = "FRONTIER HUNTERS"
 	title.add_theme_font_size_override("font_size", 32)
@@ -46,6 +37,8 @@ func _ready() -> void:
 	resume.text = "Resume (F8)"
 	resume.pressed.connect(toggle)
 	box.add_child(resume)
+	_show_results = _button(box, "Match results", _open_result)
+	_show_results.hide()
 	var surrender_button = Button.new()
 	surrender_button.text = "Surrender"
 	surrender_button.pressed.connect(func():
@@ -57,13 +50,110 @@ func _ready() -> void:
 	editor_button.text = "Map editor"
 	editor_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MapEditor.tscn"))
 	box.add_child(editor_button)
-	panel.hide()
+	_create_scorecard()
+	SimEngine.match_finished.connect(_open_result)
 	var explicit_scenario = false
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--scenario="):
 			explicit_scenario = true
 	if not explicit_scenario and SimEngine.rts_mode != "backend" and not SimEngine.editor_session.has("doc"):
 		call_deferred("toggle")
+
+func _make_panel(position: Vector2, minimum_size: Vector2) -> PanelContainer:
+	var container := PanelContainer.new()
+	container.position = position
+	container.custom_minimum_size = minimum_size
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#111b27")
+	style.border_color = Color("#426578")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	container.add_theme_stylebox_override("panel", style)
+	add_child(container)
+	container.hide()
+	return container
+
+func _panel_body(container: PanelContainer) -> VBoxContainer:
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 28)
+	container.add_child(margin)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 18)
+	margin.add_child(box)
+	return box
+
+func _label(container: Container, value: String, font_size: int = 18) -> Label:
+	var label := Label.new()
+	label.text = value
+	label.add_theme_font_size_override("font_size", font_size)
+	container.add_child(label)
+	return label
+
+func _button(container: Container, value: String, handler: Callable) -> Button:
+	var button := Button.new()
+	button.text = value
+	button.pressed.connect(handler)
+	container.add_child(button)
+	return button
+
+func _create_scorecard() -> void:
+	result_panel = _make_panel(Vector2(600, 230), Vector2(720, 485))
+	var box := _panel_body(result_panel)
+	_score_title = _label(box, "", 36)
+	_score_title.modulate = Color("#fbbf24")
+	_score_detail = _label(box, "")
+	var table := GridContainer.new()
+	table.columns = 3
+	table.add_theme_constant_override("v_separation", 9)
+	table.add_theme_constant_override("h_separation", 24)
+	box.add_child(table)
+	_label(table, "Match totals").size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_label(table, "You").horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_label(table, "AI").horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var rows := {"crystal_collected": "Crystal collected", "aether_collected": "Aether collected",
+		"units_trained": "Units trained", "units_lost": "Units lost", "structures_built": "Structures completed"}
+	for key in rows:
+		_label(table, rows[key]).modulate = Color("#a9bdd0")
+		var values: Array[Label] = []
+		for player in [1, 2]:
+			var value := _label(table, "")
+			value.custom_minimum_size.x = 100
+			value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			values.append(value)
+		_score_values[key] = values
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 12)
+	box.add_child(actions)
+	_rematch = _button(actions, "Rematch (Ctrl+Enter)", restart)
+	_rematch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_button(actions, "Match setup (F8)", toggle).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_button(actions, "View battlefield", result_panel.hide).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+func _open_result() -> void:
+	var state: Dictionary = SimEngine.match_state
+	if not state.has("scorecard"):
+		return
+	panel.hide()
+	var outcome := "VICTORY" if state.winner == 1 else ("DRAW" if state.winner == 0 else "DEFEAT")
+	_score_title.text = outcome
+	var seconds := floori(state.finished_tick * SimEngine.TICK_DT)
+	var reason := "Surrender" if state.reason == "surrender" else "Annihilation"
+	_score_detail.text = "%s  ·  %d:%02d" % [reason, seconds / 60, seconds % 60]
+	for stat in _score_values:
+		for player in [1, 2]:
+			_score_values[stat][player - 1].text = str(state.scorecard[str(player)][stat])
+	_rematch.visible = state.mode == "1p_vs_ai"
+	_show_results.show()
+	result_panel.show()
+
+func reset_views() -> void:
+	panel.hide()
+	result_panel.hide()
+	_show_results.hide()
+
+func restart() -> void:
+	SimEngine.rematch()
 
 func _option(box: VBoxContainer, label_text: String, choices: Array, selected: int) -> OptionButton:
 	var row = HBoxContainer.new()
@@ -86,6 +176,7 @@ func _on_volume_selected(idx: int) -> void:
 		RTSAudio.set_volume_percent(levels[idx])
 
 func toggle() -> void:
+	result_panel.hide()
 	if panel.visible:
 		panel.hide()
 		SimEngine.sim_speed = float(1 << speed.selected)
