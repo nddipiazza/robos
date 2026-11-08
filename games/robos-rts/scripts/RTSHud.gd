@@ -746,7 +746,7 @@ func _draw_tooltip() -> void:
 # Help overlay
 # ---------------------------------------------------------------------------
 func _draw_help() -> void:
-	var r := Rect2(430.0, 120.0, 1060.0, 600.0)
+	var r := Rect2(430.0, 92.0, 1060.0, 656.0)
 	draw_rect(Rect2(0, 0, 1920, 1080), Color(0, 0, 0, 0.45))
 	_frame(r, 0.97)
 	_text(Vector2(r.position.x + 28, r.position.y + 48), "Controls", 32)
@@ -760,6 +760,7 @@ func _draw_help() -> void:
 		["Middle drag", "Pan the camera"],
 		["Minimap", "Left click jumps there, right click orders"],
 		["Command card", "Click, or press the letter in the corner"],
+		["Backspace", "Cycle through your completed bases"],
 	]
 	var right := [
 		["Arrow keys", "Pan the camera"],
@@ -770,11 +771,12 @@ func _draw_help() -> void:
 		["Esc / Ctrl+M", "Cancel targeting · Mute or unmute sound"],
 		["F2", "Switch the viewed faction"],
 		["F5  F6  F7", "Toggle the built-in AI for each faction"],
+		["F3 · F4 · F9 · F11", "Jump to a saved view. Hold Ctrl to save."],
 	]
 	if not SimEngine.match_state.is_empty():
 		right[6] = ["F8", "Match setup, speed, restart and surrender"]
 		right[7] = ["Victory", "Destroy every enemy structure"]
-	_text(r.position + Vector2(28, 578), "Groups 1-9, 0: recall; Shift adds selection; Alt moves units; double tap centers. Hover for controls.", 17, C_GOLD)
+	_text(r.position + Vector2(28, 634), "Groups 1-9, 0: recall; Shift adds selection; Alt moves units; double tap centers. Hover for controls.", 17, C_GOLD)
 	for i in range(left.size()):
 		var y := r.position.y + 106.0 + float(i) * 56.0
 		_text(Vector2(r.position.x + 28, y), str(left[i][0]), 19, C_GOLD)
