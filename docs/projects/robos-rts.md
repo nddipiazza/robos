@@ -51,6 +51,14 @@ This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two di
 
 **Win by destroying every opposing structure**, including expansions and unfinished construction, or by accepting the opponent's surrender. Losing a main base or all workers alone does not end the match. The terminal result freezes the simulation and rejects further commands. Supply is capped at 200. Construction and training use the unit registry's full durations; accelerated play advances the same simulation faster.
 
+### Scouting and fog of war
+
+Black terrain is unexplored. Dim terrain has been explored, and lit terrain is within friendly sight. Send a Pioneer ahead to find the opposing base or check an expansion. Enemy troops disappear when they leave sight, and combat outside your vision produces no new visible effects or world sounds. A building you previously saw leaves a **Last seen** footprint and a minimap marker until you scout the site again. A unit that loses sight of its focus-fire target moves to the last known position and attacks enemies it spots on the way.
+
+Both sides share vision across their own units and structures. The skirmish AI attacks visible or remembered buildings and searches possible bases when it has no known target. Sight uses unit ranges on a four-unit grid. Terrain elevation does not block sight in this version. Frontier Hunters enables fog by default. Other scenarios can set `"fog_of_war": true` to opt in.
+
+For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
+
 The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for a second base; Siege builds gas extraction and a Workshop for Howitzers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.
 
 The bot API starts a replayable match with `POST /match {"seed":42,"difficulty":"hard","strategy":"rush"}`. Omit the seed for a fresh random assignment. `POST /match {"action":"surrender","player":1}` concedes. Observations include match status, winner, reason, seed and starting-site assignments. Existing mechanics scenarios remain available by slug; `starfall-canyon` loads the older three-faction showcase.

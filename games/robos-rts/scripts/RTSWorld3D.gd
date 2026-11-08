@@ -13,6 +13,7 @@ const CAM_MIN_H := 28.0
 const CAM_MAX_H := 320.0
 const GROUND_TOP := 2.2
 const MAX_ACTIVE_FX := 192
+const FOG_ALPHA := [255, 152, 0]
 
 var camera_3d: Camera3D
 var dir_light: DirectionalLight3D
@@ -35,9 +36,17 @@ var mat_cache: Dictionary = {}
 var _last_pos: Dictionary = {}
 var _unit_mesh_cache: Dictionary = {}
 var _unit_batches: Dictionary = {}
+var fog_texture: ImageTexture
+var _fog_quad: MeshInstance3D
+var _fog_material: ShaderMaterial
+var _fog_revision := -1
+var _fog_cells := PackedByteArray()
+var _viewing_player := 1
 
 func _ready() -> void:
 	_setup_environment_and_camera()
+	if DisplayServer.get_name() != "headless":
+		_setup_fog()
 	for n in ["TerrainRoot", "DecorRoot", "ResourcesRoot", "UnitsRoot", "FXRoot"]:
 		var node := Node3D.new()
 		node.name = n
@@ -54,6 +63,51 @@ func _ready() -> void:
 	SimEngine.unit_destroyed.connect(_on_unit_destroyed)
 	SimEngine.paused_step.connect(_on_paused_step)
 	_rebuild_static_3d_map()
+
+func _setup_fog() -> void:
+	_fog_quad = MeshInstance3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2(2.0, 2.0)
+	_fog_quad.mesh = quad
+	_fog_quad.extra_cull_margin = 4096.0
+	_fog_quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_fog_material = ShaderMaterial.new()
+	_fog_material.shader = preload("res://scripts/rts_fog.gdshader")
+	_fog_material.render_priority = 127
+	_fog_quad.material_override = _fog_material
+	_fog_quad.hide()
+	add_child(_fog_quad)
+
+func _sync_fog(local_player: int) -> void:
+	if _fog_quad == null:
+		return
+	var sight = SimEngine.vision
+	if sight == null:
+		_fog_quad.hide()
+		fog_texture = null
+		_fog_cells.clear()
+		_fog_revision = -1
+		return
+	if _fog_revision == sight.revision and _viewing_player == local_player:
+		return
+	var cells: PackedByteArray = sight.cells_for(local_player)
+	_fog_revision = sight.revision
+	if fog_texture != null and fog_texture.get_size() == Vector2(sight.size) and _fog_cells == cells:
+		return
+	_fog_cells = cells.duplicate()
+	var pixels := PackedByteArray()
+	pixels.resize(sight.size.x * sight.size.y * 4)
+	for index in range(sight.size.x * sight.size.y):
+		var state: int = cells[index] if index < cells.size() else 0
+		pixels[index * 4 + 3] = FOG_ALPHA[state]
+	var mask := Image.create_from_data(sight.size.x, sight.size.y, false, Image.FORMAT_RGBA8, pixels)
+	if fog_texture == null or fog_texture.get_size() != Vector2(sight.size):
+		fog_texture = ImageTexture.create_from_image(mask)
+		_fog_material.set_shader_parameter("sight_mask", fog_texture)
+		_fog_material.set_shader_parameter("grid_extent", Vector2(sight.size) * SimEngine.Vision.CELL_SIZE)
+	else:
+		fog_texture.update(mask)
+	_fog_quad.show()
 
 func _setup_environment_and_camera() -> void:
 	world_env = WorldEnvironment.new()
@@ -160,6 +214,7 @@ func _noise_mat(key: String, c_dark: Color, c_light: Color, freq: float, tile: f
 # Static terrain
 # ---------------------------------------------------------------------------
 func _on_scenario_loaded(_name: String) -> void:
+	_fog_revision = -1
 	_rebuild_static_3d_map()
 
 func _clear_children(n: Node) -> void:
@@ -470,6 +525,8 @@ func _scatter_decor() -> void:
 func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int = 1) -> void:
 	var sync_started = Time.get_ticks_usec()
 	anim_time += delta
+	_sync_fog(local_player)
+	_viewing_player = local_player
 
 	# Resources
 	for r_tag in SimEngine.resources.keys():
@@ -499,6 +556,11 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 	var human_transforms: Dictionary = {}
 	for u_tag in SimEngine.units.keys():
 		var u: Dictionary = SimEngine.units[u_tag]
+		if not SimEngine.can_see_unit(local_player, u):
+			if unit_nodes.has(u_tag):
+				unit_nodes[u_tag].hide()
+			_last_pos.erase(u_tag)
+			continue
 		var u_node: Node3D
 		if not unit_nodes.has(u_tag) or unit_nodes[u_tag].get_meta("unit_type", "") != u["unit_type"]:
 			if unit_nodes.has(u_tag):
@@ -728,6 +790,8 @@ func _weapon_color(owner_id: int, is_splash: bool) -> Color:
 		_: return Color("#ffe27a")
 
 func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: String, is_splash: bool, owner_id: int) -> void:
+	if not SimEngine.can_see_position(_viewing_player, from_pos) or not SimEngine.can_see_position(_viewing_player, to_pos):
+		return
 	if _skip_transient_fx() or active_fx.size() >= MAX_ACTIVE_FX or (not _effect_near_view(from_pos) and not _effect_near_view(to_pos)):
 		return
 	var p1 := Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos) + 1.3, from_pos.y)
@@ -753,11 +817,13 @@ func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, _tag: int) -> void:
 	if _skip_transient_fx():
 		return
 	for p in [from_pos, to_pos]:
+		if not SimEngine.can_see_position(_viewing_player, p):
+			continue
 		_spawn_burst(Vector3(p.x, SimEngine.get_elevation_at(p) + 1.3, p.y), Color(0.4, 0.85, 1.0, 0.9), 0.9, 0.4, 2.6)
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
 	var p: Vector2 = dead["pos"]
-	if not _effect_near_view(p):
+	if not _effect_near_view(p) or not SimEngine.can_see_position(_viewing_player, p):
 		return
 	var base := Vector3(p.x, SimEngine.get_elevation_at(p), p.y)
 	var rad := float(dead["radius"])

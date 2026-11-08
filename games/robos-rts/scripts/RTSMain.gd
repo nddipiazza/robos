@@ -249,6 +249,8 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d := 1e9
 	for u in SimEngine.units.values():
+		if not SimEngine.can_see_unit(local_player, u):
+			continue
 		var center := world_to_screen(u["pos"], unit_height(u) * 0.45)
 		var edge := world_to_screen(u["pos"] + Vector2(float(u["radius"]), 0.0), unit_height(u) * 0.45)
 		var rad_px := maxf(16.0, center.distance_to(edge) * 1.05)
@@ -473,7 +475,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 		return
 
 	for r in SimEngine.resources.values():
-		if wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
+		if SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
 			var workers: Array = []
 			for u in own:
 				if u["is_worker"]:
@@ -486,7 +488,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	var target := _unit_at_screen(world_to_screen(wpos, 1.2))
 	if target.is_empty():
 		for u in SimEngine.units.values():
-			if wpos.distance_to(u["pos"]) <= float(u["radius"]) + 1.0:
+			if SimEngine.can_see_unit(local_player, u) and wpos.distance_to(u["pos"]) <= float(u["radius"]) + 1.0:
 				target = u
 				break
 	if not target.is_empty():
@@ -535,7 +537,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
-			if wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
+			if SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
 				SimEngine.issue_command(tags, "harvest", r["pos"], r["tag"], "", queue)
 				_spawn_marker(r["pos"], "gather")
 				return
@@ -568,11 +570,13 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 	var def: Dictionary = RTSData.get_unit_def(structure_id)
 	var r: float = float(def.get("radius", 2.0))
 	var pos := wpos
+	if not SimEngine.can_see_position(local_player, pos):
+		return {"ok": false, "pos": pos, "reason": "Scout this location before building."}
 	if structure_id == "aether_tap":
 		var best_d := 7.0
 		var found := false
 		for res in SimEngine.resources.values():
-			if res["resource_type"] == "aether_vent":
+			if res["resource_type"] == "aether_vent" and SimEngine.can_see_position(local_player, res.pos):
 				var d: float = wpos.distance_to(res["pos"])
 				if d < best_d:
 					var taken := false
@@ -592,7 +596,7 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 		if obs.grow(r * 0.8).has_point(pos):
 			return {"ok": false, "pos": pos, "reason": "Cannot build there."}
 	for u in SimEngine.units.values():
-		if u["is_structure"] and pos.distance_to(u["pos"]) < r + float(u["radius"]) - 0.4:
+		if u["is_structure"] and SimEngine.can_see_unit(local_player, u) and pos.distance_to(u["pos"]) < r + float(u["radius"]) - 0.4:
 			return {"ok": false, "pos": pos, "reason": "Too close to another structure."}
 	for res in SimEngine.resources.values():
 		if pos.distance_to(res["pos"]) < r + float(res["radius"]):
@@ -722,6 +726,8 @@ func _living_tags(tags: Array, owned_only: bool = false) -> Array[int]:
 		if u.is_empty() or float(u.get("hp", 0.0)) <= 0.0:
 			continue
 		if owned_only and int(u["owner"]) != local_player:
+			continue
+		if not SimEngine.can_see_unit(local_player, u):
 			continue
 		if not seen.has(t):
 			out.append(t)
@@ -1017,8 +1023,10 @@ func _draw() -> void:
 		return
 	var font := ThemeDB.fallback_font
 	_draw_rally_and_orders()
+	_draw_building_memory(font)
 	for u in SimEngine.units.values():
-		_draw_unit_bars(u, font)
+		if SimEngine.can_see_unit(local_player, u):
+			_draw_unit_bars(u, font)
 	_draw_build_ghost()
 	_draw_click_markers()
 	if show_names:
@@ -1031,9 +1039,22 @@ func _draw() -> void:
 		draw_rect(sel_rect, Color(0.45, 1.0, 0.55, 0.08))
 		draw_rect(sel_rect, Color(0.55, 1.0, 0.65, 0.9), false, 1.5)
 
-# Optional labels under every unit (scripted roster screenshots); off by default.
+func _draw_building_memory(font: Font) -> void:
+	for building in SimEngine.remembered_buildings(local_player):
+		var center := world_to_screen(building.pos)
+		if not Rect2(0.0, 46.0, 1920.0, HUD_TOP - 46.0).has_point(center):
+			continue
+		var corners := PackedVector2Array()
+		for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1), Vector2(-1, -1)]:
+			corners.append(world_to_screen(building.pos + corner * building.radius))
+		draw_polyline(corners, Color("#84939f"), 2.0, true)
+		draw_string(font, center + Vector2(12, -10), "Last seen · " + building.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#b5c4d0"))
+
+# Optional labels under visible units (scripted roster screenshots); off by default.
 func _draw_name_labels(font: Font) -> void:
 	for u in SimEngine.units.values():
+		if not SimEngine.can_see_unit(local_player, u):
+			continue
 		var sp := world_to_screen(u["pos"], -0.2)
 		if sp.y > HUD_TOP - 10.0 or sp.y < 50.0:
 			continue

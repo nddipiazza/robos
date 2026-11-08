@@ -29,7 +29,8 @@ class RTSClient:
     def health(self) -> Dict[str, Any]:
         return self._request("GET", "/health")
 
-    def get_observation(self, player: int = 1) -> Dict[str, Any]:
+    def get_observation(self, player: int = 0) -> Dict[str, Any]:
+        """Use a player ID for fog-limited sight, or 0 for full test/observer state."""
         return self._request("GET", "/observation", {"player": player})
 
     def pause(self, paused: bool = True) -> Dict[str, Any]:

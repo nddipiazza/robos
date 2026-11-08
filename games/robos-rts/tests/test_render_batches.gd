@@ -7,7 +7,7 @@ func _vertex_count(node: Node) -> int:
 	var count = 0
 	if node is MeshInstance3D and node.mesh:
 		for surface in range(node.mesh.get_surface_count()):
-			count += node.mesh.surface_get_array_len(surface)
+			count += node.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX].size()
 	for child in node.get_children():
 		count += _vertex_count(child)
 	return count
