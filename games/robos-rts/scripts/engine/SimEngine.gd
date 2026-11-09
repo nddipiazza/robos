@@ -34,12 +34,14 @@ const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
+const NARROW_PATH_CELL_SIZE := PATH_CELL_SIZE * 0.5
 const BRUSH_REVEAL_RADIUS := 6.0
 const WATCH_STATION_CAPTURE := 4.0
 const WATCH_STATION_SIGHT := 32.0
 const FOOTPRINT_BIN_SIZE := 8.0
-const INFANTRY_CLEARANCE := 1.0
-const HEAVY_CLEARANCE := 2.0
+const INFANTRY_CLEARANCE := 0.85
+const MAX_GROUND_CLEARANCE := 2.0
+const WALK_TRACE_STEP := PATH_CELL_SIZE * 0.6
 const NO_FOOTPRINTS: Array = []
 const HARVEST_REACH := 1.2
 const GAS_WORKER_SLOTS := 3
@@ -120,8 +122,7 @@ var frame_sim_ticks: int = 0
 var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
 var _static_structures: Array[Dictionary] = []
 var _footprint_bins: Dictionary = {}
-var _heavy_grid: AStarGrid2D
-var _cliff_grid: AStarGrid2D
+var _clearance_grids: Dictionary = {}
 var _max_unit_radius: float = 4.5
 var _town_halls: Array[Dictionary] = []
 var _detectors: Array[Dictionary] = []
@@ -996,8 +997,7 @@ func _rebuild_astar_grid() -> void:
 	_navigation_revision += 1
 	_static_structures.clear()
 	_footprint_bins.clear()
-	_heavy_grid = null
-	_cliff_grid = null
+	_clearance_grids.clear()
 	_detectors.clear()
 	_town_halls.clear()
 	_gas_source_by_tap.clear()
@@ -1023,7 +1023,9 @@ func _rebuild_astar_grid() -> void:
 	_fill_navigation_grid(astar_grid, INFANTRY_CLEARANCE, false)
 
 func _index_footprint(footprint: Dictionary) -> void:
-	var reach := Vector2.ONE * (float(footprint.radius) + HEAVY_CLEARANCE + 0.1)
+	# Each trace segment checks the bins at its endpoint. Include a trace
+	# step so a footprint crossed just before a bin boundary is still found.
+	var reach := Vector2.ONE * (float(footprint.radius) + MAX_GROUND_CLEARANCE + WALK_TRACE_STEP)
 	var first := _footprint_bin(footprint.pos - reach)
 	var last := _footprint_bin(footprint.pos + reach)
 	for x in range(first.x, last.x + 1):
@@ -1036,10 +1038,10 @@ func _index_footprint(footprint: Dictionary) -> void:
 func _footprint_bin(pos: Vector2) -> Vector2i:
 	return Vector2i(floori(pos.x / FOOTPRINT_BIN_SIZE), floori(pos.y / FOOTPRINT_BIN_SIZE))
 
-func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: bool) -> void:
+func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: bool, cell_size: float = PATH_CELL_SIZE) -> void:
 	grid.clear()
-	grid.region = Rect2i(0, 0, ceili(map_width / PATH_CELL_SIZE), ceili(map_height / PATH_CELL_SIZE))
-	grid.cell_size = Vector2.ONE * PATH_CELL_SIZE
+	grid.region = Rect2i(0, 0, ceili(map_width / cell_size), ceili(map_height / cell_size))
+	grid.cell_size = Vector2.ONE * cell_size
 	grid.offset = grid.cell_size * 0.5
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
@@ -1047,12 +1049,13 @@ func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: b
 	grid.update()
 	if not ignore_cliffs:
 		for obs in terrain_obstacles:
-			var expanded := obs.grow(clearance * 0.7)
-			var first := Vector2i(((expanded.position - grid.offset) / PATH_CELL_SIZE).ceil())
-			var last := Vector2i(((expanded.end - grid.offset) / PATH_CELL_SIZE).ceil())
+			var expanded := obs.grow(clearance)
+			var first := Vector2i(((expanded.position - grid.offset) / cell_size).ceil())
+			var last := Vector2i(((expanded.end - grid.offset) / cell_size).ceil())
 			grid.fill_solid_region(Rect2i(first, last - first).intersection(grid.region))
+		var water_scale := roundi(PATH_CELL_SIZE / cell_size)
 		for cell in water_cells:
-			grid.set_point_solid(cell)
+			grid.fill_solid_region(Rect2i(cell * water_scale, Vector2i.ONE * water_scale).intersection(grid.region))
 	for footprint in resources.values():
 		if deposit_present(footprint):
 			_mark_footprint(grid, footprint, clearance)
@@ -1060,6 +1063,7 @@ func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: b
 		_mark_footprint(grid, footprint, clearance)
 
 func _mark_footprint(grid: AStarGrid2D, footprint: Dictionary, clearance: float) -> void:
+	# Leave a margin at lattice vertices so edges can round circular footprints.
 	var reach := float(footprint.radius) + clearance + 0.15
 	var first := _path_cell(grid, footprint.pos - Vector2.ONE * reach)
 	var last := _path_cell(grid, footprint.pos + Vector2.ONE * reach)
@@ -1069,21 +1073,40 @@ func _mark_footprint(grid: AStarGrid2D, footprint: Dictionary, clearance: float)
 			if grid.get_point_position(cell).distance_squared_to(footprint.pos) < reach * reach:
 				grid.set_point_solid(cell)
 
-func _navigation_grid(radius: float, ignore_cliffs: bool) -> AStarGrid2D:
-	if ignore_cliffs:
-		if _cliff_grid == null:
-			_cliff_grid = AStarGrid2D.new()
-			_fill_navigation_grid(_cliff_grid, HEAVY_CLEARANCE, true)
-		return _cliff_grid
-	if radius > INFANTRY_CLEARANCE:
-		if _heavy_grid == null:
-			_heavy_grid = AStarGrid2D.new()
-			_fill_navigation_grid(_heavy_grid, HEAVY_CLEARANCE, false)
-		return _heavy_grid
-	return astar_grid
+func _navigation_grid(radius: float, ignore_cliffs: bool, cell_size: float = PATH_CELL_SIZE) -> AStarGrid2D:
+	if cell_size == PATH_CELL_SIZE and not ignore_cliffs and is_equal_approx(radius, INFANTRY_CLEARANCE):
+		return astar_grid
+	var key := Vector3(radius, float(ignore_cliffs), cell_size)
+	if not _clearance_grids.has(key):
+		var grid: AStarGrid2D
+		if cell_size == PATH_CELL_SIZE or _has_off_grid_cliff_gap(radius):
+			grid = AStarGrid2D.new()
+			_fill_navigation_grid(grid, radius, ignore_cliffs, cell_size)
+		_clearance_grids[key] = grid
+	return _clearance_grids[key]
+
+func _has_off_grid_cliff_gap(radius: float) -> bool:
+	# A continuous opening can fall entirely between coarse grid rows or columns.
+	# Check for such a gap before allocating a second grid on a partial route.
+	for i in range(terrain_obstacles.size()):
+		var a: Rect2 = terrain_obstacles[i]
+		for j in range(i + 1, terrain_obstacles.size()):
+			var b: Rect2 = terrain_obstacles[j]
+			for axis in range(2):
+				var along := 1 - axis
+				if maxf(a.position[along], b.position[along]) >= minf(a.end[along], b.end[along]):
+					continue
+				var first := minf(a.end[axis], b.end[axis]) + radius
+				var last := maxf(a.position[axis], b.position[axis]) - radius
+				if first < last and _first_path_center(first, PATH_CELL_SIZE) >= last and _first_path_center(first, NARROW_PATH_CELL_SIZE) < last:
+					return true
+	return false
+
+func _first_path_center(edge: float, cell_size: float) -> float:
+	return (ceilf(edge / cell_size - 0.5) + 0.5) * cell_size
 
 func _path_cell(grid: AStarGrid2D, pos: Vector2) -> Vector2i:
-	return Vector2i(pos / PATH_CELL_SIZE).clamp(Vector2i.ZERO, grid.region.size - Vector2i.ONE)
+	return Vector2i(pos / grid.cell_size).clamp(Vector2i.ZERO, grid.region.size - Vector2i.ONE)
 
 func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float = 0.85, ignore_cliffs: bool = false, interaction_reach: float = INF) -> Array[Vector2]:
 	var started = Time.get_ticks_usec()
@@ -1100,7 +1123,16 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 	if _has_clear_line_of_walk(start_pos, goal, unit_radius, ignore_cliffs):
 		return [goal]
 
-	var grid := _navigation_grid(unit_radius, ignore_cliffs)
+	var path := _trace_navigation_grid(_navigation_grid(unit_radius, ignore_cliffs), start_pos, goal, unit_radius, ignore_cliffs)
+	if not ignore_cliffs and not path.back().is_equal_approx(goal):
+		var narrow_grid := _navigation_grid(unit_radius, false, NARROW_PATH_CELL_SIZE)
+		if narrow_grid != null:
+			var narrow_path := _trace_navigation_grid(narrow_grid, start_pos, goal, unit_radius, false)
+			if narrow_path.back().is_equal_approx(goal):
+				return narrow_path
+	return path
+
+func _trace_navigation_grid(grid: AStarGrid2D, start_pos: Vector2, goal: Vector2, unit_radius: float, ignore_cliffs: bool) -> Array[Vector2]:
 	var start := _find_nearest_walkable_cell(grid, start_pos, start_pos)
 	var end := _find_nearest_walkable_cell(grid, goal, start_pos)
 	if grid.is_point_solid(start) or grid.is_point_solid(end):
@@ -1214,11 +1246,45 @@ func _find_nearest_walkable_cell(grid: AStarGrid2D, pos: Vector2, approach: Vect
 	return cell
 
 func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliffs: bool = false) -> bool:
-	var dist = a.distance_to(b)
-	var steps = maxi(1, ceili(dist / (PATH_CELL_SIZE * 0.6)))
+	if b.x < radius or b.y < radius or b.x > map_width - radius or b.y > map_height - radius:
+		return false
+	if not ignore_cliffs:
+		for obstacle in terrain_obstacles:
+			if _walk_segment_enters_rect(a, b, obstacle.grow(radius)):
+				return false
+	var check_water := not ignore_cliffs and not water_cells.is_empty()
+	if not check_water and _footprint_bins.is_empty():
+		return true
+	var steps := maxi(1, ceili(a.distance_to(b) / WALK_TRACE_STEP))
+	var previous := a
 	for i in range(1, steps + 1):
-		var p = a.lerp(b, float(i) / float(steps))
-		if _is_point_blocked_by_static(p, radius, ignore_cliffs):
+		var p := a.lerp(b, float(i) / float(steps))
+		if check_water and is_water_at(p, radius * 0.5):
+			return false
+		for footprint in _footprint_bins.get(_footprint_bin(p), NO_FOOTPRINTS):
+			var reach: float = footprint.radius + radius
+			var closest := Geometry2D.get_closest_point_to_segment(footprint.pos, previous, p)
+			if closest.distance_squared_to(footprint.pos) < reach * reach:
+				return false
+		previous = p
+	return true
+
+func _walk_segment_enters_rect(a: Vector2, b: Vector2, rect: Rect2) -> bool:
+	# Slab intersection catches brief diagonal corner crossings between grid
+	# samples. A tangent that merely touches a boundary remains walkable.
+	var motion := b - a
+	var enter := 0.0
+	var leave := 1.0
+	for axis in range(2):
+		if is_zero_approx(motion[axis]):
+			if a[axis] <= rect.position[axis] or a[axis] >= rect.end[axis]:
+				return false
+			continue
+		var first := (rect.position[axis] - a[axis]) / motion[axis]
+		var last := (rect.end[axis] - a[axis]) / motion[axis]
+		enter = maxf(enter, minf(first, last))
+		leave = minf(leave, maxf(first, last))
+		if enter >= leave:
 			return false
 	return true
 
@@ -1229,7 +1295,7 @@ func _is_point_blocked_by_static(p: Vector2, radius: float, ignore_cliffs: bool 
 		if is_water_at(p, radius * 0.5):
 			return true
 		for obs in terrain_obstacles:
-			if obs.grow(radius * 0.7).has_point(p):
+			if obs.grow(radius).has_point(p):
 				return true
 	for footprint in _footprint_bins.get(_footprint_bin(p), NO_FOOTPRINTS):
 		var reach := float(footprint.radius) + radius
@@ -2445,7 +2511,9 @@ func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, 
 			var cell := _find_nearest_walkable_cell(astar_grid, res, res)
 			res = astar_grid.get_point_position(cell)
 		for obs in terrain_obstacles:
-			var exp_rect := obs.grow(radius * 0.7)
+			var exp_rect := obs.grow(radius)
+			if previous.is_finite() and not exp_rect.has_point(previous) and _walk_segment_enters_rect(previous, res, exp_rect):
+				return _slide_along_static(previous, res, radius, ignore_cliffs)
 			if exp_rect.has_point(res):
 				var dl := absf(res.x - exp_rect.position.x)
 				var dr := absf(exp_rect.end.x - res.x)
@@ -2465,6 +2533,10 @@ func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, 
 		var separation := float(footprint.radius) + radius
 		var delta: Vector2 = res - footprint.pos
 		if delta.length_squared() >= separation * separation:
+			if previous.is_finite() and previous.distance_squared_to(footprint.pos) >= separation * separation:
+				var closest := Geometry2D.get_closest_point_to_segment(footprint.pos, previous, res)
+				if closest.distance_squared_to(footprint.pos) < separation * separation:
+					return _slide_along_static(previous, res, radius, ignore_cliffs)
 			continue
 		var origin: Vector2 = previous - footprint.pos
 		if previous.is_finite() and (delta.is_zero_approx() or delta.dot(origin) < 0.0):
@@ -2475,6 +2547,14 @@ func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, 
 	if res != before_collision and previous.is_finite() and _is_point_blocked_by_static(res, radius, ignore_cliffs):
 		return previous
 	return res
+
+func _slide_along_static(previous: Vector2, target: Vector2, radius: float, ignore_cliffs: bool) -> Vector2:
+	# Keep the move on its original side of the blocker rather than ejecting
+	# to the nearest face, which can be across a diagonal corner.
+	for slide in [Vector2(target.x, previous.y), Vector2(previous.x, target.y)]:
+		if slide != previous and _has_clear_line_of_walk(previous, slide, radius, ignore_cliffs):
+			return slide
+	return previous
 
 func _get_weapon_range(u: Dictionary) -> float:
 	var def = RTSData.get_unit_def(u["unit_type"])
