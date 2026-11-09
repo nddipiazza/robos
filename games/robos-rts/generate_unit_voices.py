@@ -31,6 +31,45 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "brood_keeper": {
+        "unit_name": "Brood Keeper",
+        "voice": "en-US-GuyNeural",
+        "rate": "-9%",
+        "pitch": "-22Hz",
+        "lines": {
+            "select": [
+                {"id": "brood_keeper_select_1", "text": "I tend the young."},
+                {"id": "brood_keeper_select_2", "text": "The nest stirs."},
+                {"id": "brood_keeper_select_3", "text": "Keep close to the brood."},
+                {"id": "brood_keeper_select_4", "text": "The eggs are warm."},
+                {"id": "brood_keeper_select_5", "text": "I hear every hatchling."},
+            ],
+            "move": [
+                {"id": "brood_keeper_move_1", "text": "I cross the ground."},
+                {"id": "brood_keeper_move_2", "text": "Make room for the keeper."},
+                {"id": "brood_keeper_move_3", "text": "I leave the clutch in your care."},
+                {"id": "brood_keeper_move_4", "text": "I know that scent."},
+            ],
+            "attack": [
+                {"id": "brood_keeper_attack_1", "text": "Away from my brood."},
+                {"id": "brood_keeper_attack_2", "text": "Too close to the eggs."},
+                {"id": "brood_keeper_attack_3", "text": "The nest has teeth."},
+                {"id": "brood_keeper_attack_4", "text": "You woke the little ones."},
+                {"id": "brood_keeper_attack_5", "text": "A warning you can taste."},
+            ],
+            "support": [
+                {"id": "brood_keeper_support_1", "text": "A clutch for the nest."},
+                {"id": "brood_keeper_support_2", "text": "Make space for the young."},
+                {"id": "brood_keeper_support_3", "text": "These eggs need a moment."},
+                {"id": "brood_keeper_support_4", "text": "The new clutch is seeded."},
+                {"id": "brood_keeper_support_5", "text": "Soon you will hear their feet."},
+            ],
+            "ready": [
+                {"id": "brood_keeper_ready_1", "text": "The keeper has hatched."},
+                {"id": "brood_keeper_ready_2", "text": "I will watch the nest."},
+            ],
+        },
+    },
     "farsight_wisp": {
         "unit_name": "Farsight Wisp",
         "voice": "en-US-EmmaNeural",

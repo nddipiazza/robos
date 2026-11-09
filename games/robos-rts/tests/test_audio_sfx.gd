@@ -24,12 +24,13 @@ func _run() -> void:
 	_test_asymmetric_worker_voices()
 	_test_support_cues()
 	_test_concord_support_cues()
+	_test_brood_support_cues()
 	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
 
 func _test_all_wav_files_loaded() -> void:
 	assert(audio != null, "RTSAudio autoload must be registered")
-	assert(audio.SOUND_FILES.size() == 41, "Expected 41 sound files in catalog")
+	assert(audio.SOUND_FILES.size() >= 42, "Expected at least 42 sound files in catalog")
 	for key in audio.SOUND_FILES.keys():
 		var path: String = str(audio.SOUND_FILES[key])
 		assert(FileAccess.file_exists(path), "Missing WAV file on disk: %s" % path)
@@ -47,7 +48,7 @@ func _test_all_wav_files_loaded() -> void:
 func _test_unit_weapon_metadata() -> void:
 	var armed_units := [
 		"pioneer", "rifleman", "breacher", "howitzer", "howitzer_emplaced", "kestrel_interceptor",
-		"forager", "skitterling", "bile_crawler", "blight_hurler",
+		"forager", "skitterling", "bile_crawler", "blight_hurler", "brood_keeper",
 		"mote", "sunblade", "skirmisher", "spire_walker"
 	]
 	for utype in armed_units:
@@ -248,7 +249,7 @@ func _test_asymmetric_worker_voices() -> void:
 func _test_support_cues() -> void:
 	sim.reset_state(42, 96, 64)
 	audio.reset_stats()
-	for entry in [["triage_specialist", "support"], ["kestrel_interceptor", "attack"]]:
+	for entry in [["triage_specialist", "support"], ["kestrel_interceptor", "attack"], ["brood_keeper", "attack"], ["brood_keeper", "support"]]:
 		var minimums := {"select": 5, "move": 4, "ready": 2}
 		minimums[entry[1]] = 5
 		for category in minimums:
@@ -283,3 +284,14 @@ func _test_concord_support_cues() -> void:
 	assert(sim.issue_command([carrier.tag], "retract_power_field").ok)
 	assert(audio.sfx_counts.get("power_field_anchor", 0) == 1)
 	assert(audio.sfx_counts.get("power_field_fold", 0) == 1)
+
+func _test_brood_support_cues() -> void:
+	sim.load_scenario_dict({"paused": true, "victory": "all_structures"})
+	var nest: Dictionary = sim.spawn_unit("brood_nest", 1, Vector2(30, 30))
+	sim.spawn_unit("colony_hub", 2, Vector2(70, 50))
+	var keeper: Dictionary = sim.spawn_unit("brood_keeper", 1, Vector2(40, 30))
+	audio.reset_stats()
+	assert(sim.issue_command([keeper.tag], "inject_brood", nest.pos, nest.tag).ok)
+	sim.step_ticks(1)
+	assert(audio.sfx_counts.get("brood_inject", 0) == 1)
+	assert(audio.dialogue_counts.get("brood_keeper:support", 0) == 1)

@@ -663,6 +663,7 @@ func _order_label(u: Dictionary) -> String:
 		"build": return "Constructing"
 		"repair": return "Repairing"
 		"restore_vitals": return "Treating wounds" if u.support_target_tag > 0 else "Approaching wounded ally"
+		"inject_brood": return "Approaching Brood Nest"
 		"hold_position": return "Holding position"
 		"unload_transport": return "Deploying troops"
 	return "Active"
@@ -712,7 +713,7 @@ func _draw_single(u: Dictionary) -> void:
 	var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
 	var hcol := Color("#3fcf6a") if ratio > 0.5 else (Color("#f0b232") if ratio > 0.25 else Color("#ee4b3f"))
 	_bar(Rect2(x0, by, 360, 15), ratio, hcol, "Health  %d / %d" % [int(ceil(u["hp"])), int(u["max_hp"])])
-	var energy_limit := float(u.get("support", {}).get("max_energy", u.get("max_energy", 0.0)))
+	var energy_limit := float(u.get("support", {}).get("max_energy", u.get("energy_profile", {}).get("max", 0.0)))
 	if u.unit_type in ["colony_hub", "heartstone"]:
 		energy_limit = SimEngine.HUB_ENERGY_MAX
 	elif u.unit_type == "skirmisher":
@@ -790,9 +791,12 @@ func _draw_single(u: Dictionary) -> void:
 		if u.flight_height > 0.0:
 			_text(Vector2(rx + 100.0, ry + 12), "Airborne  ·  Production paused", 15, C_GOLD)
 		elif brood:
-			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOTS], 15, C_GOLD)
+			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOT_CAP], 15, C_GOLD)
+			var clutch := SimEngine.brood_inject_remaining(u)
 			if exit_blocked:
 				_text(Vector2(rx + 235.0, ry + 12), "Exit blocked", 15, C_GOLD)
+			if clutch > 0.0:
+				_text(Vector2(rx + (348.0 if exit_blocked else 235.0), ry + 12), "Clutch  %.1fs" % clutch, 15, C_GOLD)
 		elif SimEngine.requires_power(u.unit_type) and not SimEngine.is_powered(u.owner, u.pos):
 			_text(Vector2(rx + 100.0, ry + 12), "Unpowered  ·  Production paused", 15, C_RED)
 		elif active_slots == 0 and not queue.is_empty() and queue[0].has("requires_attachment"):
@@ -1038,6 +1042,10 @@ func _glyph(id: String, r: Rect2) -> void:
 		"restore_vitals":
 			draw_rect(Rect2(c - Vector2(6, 18) * u, Vector2(12, 36) * u), Color("#a6f2ba"))
 			draw_rect(Rect2(c - Vector2(18, 6) * u, Vector2(36, 12) * u), Color("#a6f2ba"))
+		"inject_brood":
+			draw_circle(c + Vector2(-8, 5) * u, 7 * u, accent)
+			draw_circle(c + Vector2(8, 5) * u, 7 * u, accent)
+			draw_circle(c - Vector2(0, 8) * u, 8 * u, col)
 		"repair", "auto_repair":
 			draw_line(c - Vector2(13, 0) * u, c + Vector2(13, 0) * u, C_AETHER, 5.0 * u)
 			draw_line(c - Vector2(0, 13) * u, c + Vector2(0, 13) * u, C_AETHER, 5.0 * u)

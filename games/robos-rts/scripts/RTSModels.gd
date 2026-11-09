@@ -155,6 +155,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"needlewing": _needlewing(root, glow)
 		"blight_spire": _blight_spire(root, glow)
 		"tunnel_mouth": _tunnel_mouth(root, glow)
+		"brood_keeper": _brood_keeper(root, glow)
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"brood_growth_node": _brood_growth_node(root, r, glow)
@@ -562,6 +563,18 @@ static func _tunnel_mouth(root: Node3D, glow: Material) -> void:
 		var radial := Vector3(cos(angle), 0, sin(angle))
 		cone(root, 0.33, 1.42, m[2], radial * 1.41 + Vector3(0, 1.0, 0), Vector3(-21 * sin(angle), 0, 21 * cos(angle)), 6)
 		sph(root, 0.14, glow, radial * 1.31 + Vector3(0, 1.36, 0))
+
+static func _brood_keeper(root: Node3D, glow: Material) -> void:
+	var materials := _bug_mats()
+	sph(root, 0.87, materials[0], Vector3(-0.38, 0.8, 0), Vector3(1.32, 0.72, 0.96))
+	sph(root, 0.59, materials[1], Vector3(0.53, 1.22, 0), Vector3(0.8, 1.25, 0.76))
+	sph(root, 0.42, materials[2], Vector3(0.91, 1.65, 0), Vector3(0.95, 0.68, 0.84))
+	_legs(root, materials[2], 3, 0.55, 1.15, 0.1, 0.40, -0.16, 58.0)
+	for side in [-1.0, 1.0]:
+		sph(root, 0.10, glow, Vector3(1.14, 1.76, side * 0.22))
+		cone(root, 0.18, 0.88, materials[1], Vector3(0.27, 1.59, side * 0.57), Vector3(0, 0, 15), 6)
+		for i in range(2):
+			sph(root, 0.23, glow, Vector3(-0.46 - i * 0.44, 1.30, side * 0.42), Vector3(1, 1.24, 0.88), 8)
 
 static func _brood_nest(root: Node3D, r: float, glow: Material) -> void:
 	var m := _bug_mats()

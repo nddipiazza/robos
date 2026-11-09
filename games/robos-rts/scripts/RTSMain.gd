@@ -1056,6 +1056,15 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			_spawn_marker(target.pos, "gather")
 		else:
 			push_message("No available gas slots or workers.", "warn")
+	elif abil == "inject_brood":
+		var nest := _order_target_at(wpos, screen)
+		var keepers: Array[int] = []
+		for unit in own:
+			if unit.unit_type == "brood_keeper":
+				keepers.append(unit.tag)
+		if SimEngine.issue_command(keepers, abil, nest.get("pos", wpos), nest.get("tag", 0), "", queue).ok:
+			pending_ability = ""
+			_spawn_marker(nest.pos, "move")
 	elif abil in ["repair", "restore_vitals"]:
 		var target := _order_target_at(wpos, screen)
 		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag, "", queue).ok:
@@ -1286,6 +1295,11 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 				return "Phase Step is recharging."
 		"phase_cloak":
 			if not pu.get("cloaked", false) and pu.energy < SimEngine.CLOAK_START_ENERGY:
+				return "Requires 25 energy."
+		"inject_brood":
+			if SimEngine.match_state.is_empty():
+				return "Brood slots are enabled in skirmishes."
+			if not selected_owned().any(func(unit): return unit.unit_type == "brood_keeper" and unit.energy >= SimEngine.BROOD_INJECT_COST):
 				return "Requires 25 energy."
 		"surge":
 			if float(pu["hp"]) <= float(adef.hp_cost):
