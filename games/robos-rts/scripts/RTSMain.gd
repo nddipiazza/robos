@@ -1169,8 +1169,8 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		var reason := SimEngine.research_block_reason(local_player, adef.upgrade)
 		if not reason.is_empty():
 			return reason
-		if not selected_owned().any(func(unit): return unit.unit_type == "workshop" and unit.build_progress >= 1.0 and unit.production_queue.size() < 5):
-			return "Workshop queue is full."
+		if not selected_owned().any(func(unit): return SimEngine.research_producer_block_reason(unit, adef.upgrade).is_empty()):
+			return SimEngine.research_producer_block_reason(pu, adef.upgrade)
 	var p: Dictionary = SimEngine.players.get(local_player, {})
 	var cost := ability_cost(adef)
 	if not cost.is_empty():
@@ -1202,7 +1202,7 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 			if not pu.get("cloaked", false) and pu.energy < SimEngine.CLOAK_START_ENERGY:
 				return "Requires 25 energy."
 		"surge":
-			if float(pu["hp"]) <= 10.0:
+			if float(pu["hp"]) <= float(adef.hp_cost):
 				return "Not enough health."
 	return ""
 
@@ -1230,6 +1230,13 @@ func get_card_buttons() -> Array[Dictionary]:
 		var col := i % 5
 		var abil_id := str(abils[i])
 		var adef := RTSData.get_ability_def(abil_id)
+		if abil_id == "surge":
+			var hp_cost := SimEngine.surge_hp_cost(pu)
+			if hp_cost < float(adef.hp_cost):
+				adef = adef.duplicate()
+				adef["name"] = "Efficient Surge"
+				adef["hp_cost"] = hp_cost
+				adef["desc"] = "Spend %d HP for +50%% movement and attack speed for 11 seconds." % int(hp_cost)
 		buttons.append({
 			"ability_id": abil_id,
 			"def": adef,
@@ -1271,10 +1278,13 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 
 func _train_on_best(abil_id: String, count: int) -> void:
 	var producers: Array[Dictionary] = []
+	var upgrade := str(RTSData.get_ability_def(abil_id).get("upgrade", ""))
 	for u in selected_owned():
 		if not RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id):
 			continue
 		if float(u["build_progress"]) < 1.0:
+			continue
+		if not upgrade.is_empty() and not SimEngine.research_producer_block_reason(u, upgrade).is_empty():
 			continue
 		producers.append(u)
 	for i in range(count):

@@ -141,6 +141,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"aether_tap": _aether_tap(root, r, team)
 		"muster_hall": _muster_hall(root, r, team)
 		"fabrication_module": _fabrication_module(root, team)
+		"research_module": _research_module(root, team, glow)
 		"workshop": _workshop(root, r, team)
 		"sentry_turret": _sentry_turret(root, r, team)
 		"forager": _forager(root, glow)
@@ -381,6 +382,17 @@ static func _fabrication_module(root: Node3D, team: Material) -> void:
 		cyl(root, 0.3, 0.38, 0.85, dark, Vector3(0.24, 1.52, side), Vector3.ZERO, 10)
 		cyl(root, 0.29, 0.29, 0.12, team, Vector3(0.24, 1.99, side), Vector3.ZERO, 10)
 		box(root, Vector3(0.07, 0.18, 0.27), light, Vector3(1.1, 0.92, side))
+
+static func _research_module(root: Node3D, team: Material, glow: Material) -> void:
+	var armor := mat("h_armor", STEEL, Color.BLACK, 1.0, 0.35, 0.55)
+	var dark := mat("h_dark", STEEL_DARK, Color.BLACK, 1.0, 0.4, 0.6)
+	box(root, Vector3(2.55, 0.34, 2.3), dark, Vector3(0, 0.17, 0))
+	box(root, Vector3(2.0, 0.95, 1.72), armor, Vector3(0, 0.8, 0))
+	box(root, Vector3(0.32, 0.66, 1.25), team, Vector3(-1.03, 0.57, 0))
+	cyl(root, 0.2, 0.28, 0.65, dark, Vector3(0.32, 1.56, 0), Vector3.ZERO, 10)
+	cyl(root, 0.62, 0.38, 0.23, team, Vector3(0.39, 1.96, 0), Vector3(0, 0, -30), 14)
+	cyl(root, 0.045, 0.065, 0.42, dark, Vector3(0.52, 2.24, 0), Vector3(0, 0, -30), 7)
+	sph(root, 0.1, glow, Vector3(0.62, 2.47, 0))
 
 static func _workshop(root: Node3D, r: float, team: Material) -> void:
 	var armor := mat("h_armor", STEEL, Color.BLACK, 1.0, 0.35, 0.55)

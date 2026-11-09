@@ -239,6 +239,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 			"supply_used": 0,
 			"supply_cap": 0,
 			"upgrades": {"weapons": 0, "armor": 0},
+			"surge_efficiency": false,
 			"crystal_collected": 0,
 			"aether_collected": 0,
 			"units_killed": 0,
@@ -739,6 +740,9 @@ func _is_light_infantry_job(job: Dictionary) -> bool:
 func active_production_slots(producer: Dictionary) -> int:
 	var queue: Array = producer.production_queue
 	if queue.is_empty() or (requires_power(producer.unit_type) and not is_powered(producer.owner, producer.pos)):
+		return 0
+	var required_attachment := str(queue[0].get("requires_attachment", ""))
+	if not required_attachment.is_empty() and production_attachment(producer).get("unit_type") != required_attachment:
 		return 0
 	if uses_brood_slots(producer):
 		return queue.size()
@@ -1549,12 +1553,16 @@ func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[D
 	var item: Dictionary = structure.production_queue[index]
 	if item.has("upgrade"):
 		structure.production_queue.remove_at(index)
-		if item.upgrade == "hub_operations":
-			structure["hub_operations"] = true
-			notice.emit(structure.owner, "Colony Hub operations upgraded.", "info")
-			return true
-		players[structure.owner].upgrades[item.upgrade] = item.level
-		notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
+		match item.upgrade:
+			"hub_operations":
+				structure["hub_operations"] = true
+				notice.emit(structure.owner, "Colony Hub operations upgraded.", "info")
+			"surge_efficiency":
+				players[structure.owner].surge_efficiency = true
+				notice.emit(structure.owner, "Efficient Surge complete.", "info")
+			_:
+				players[structure.owner].upgrades[item.upgrade] = item.level
+				notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
 		return true
 	var utype: String = item.unit_type
 	var is_worker := bool(RTSData.get_unit_def(utype).get("is_worker", false))
@@ -3151,9 +3159,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			u["attack_state_timer"] = 0.0
 
 		if ctype == "surge":
-			if u["unit_type"] in ["rifleman", "breacher"] and u["hp"] > 10.0:
-				u["hp"] -= 10.0
-				u["surge_timer"] = 11.0
+			var hp_cost := surge_hp_cost(u)
+			if u["unit_type"] in ["rifleman", "breacher"] and u["hp"] > hp_cost:
+				u["hp"] -= hp_cost
+				u["surge_timer"] = float(RTSData.get_ability_def("surge").duration)
 				emit_signal("ability_triggered", u, "surge", u["pos"])
 				accepted += 1
 			continue
@@ -3547,28 +3556,51 @@ func unit_upgrade_level(unit: Dictionary, upgrade: String) -> int:
 		return 0
 	return players.get(unit.owner, {}).get("upgrades", {}).get(upgrade, 0)
 
+func surge_hp_cost(unit: Dictionary) -> float:
+	var base_cost := float(RTSData.get_ability_def("surge").hp_cost)
+	return base_cost * 0.5 if players.get(unit.owner, {}).get("surge_efficiency", false) else base_cost
+
 func research_offer(owner_id: int, upgrade: String) -> Dictionary:
-	var completed: int = players[owner_id].upgrades.get(upgrade, 0)
+	var player: Dictionary = players.get(owner_id, {})
+	if player.is_empty():
+		return {}
+	if upgrade == "surge_efficiency":
+		return {} if player.get("surge_efficiency", false) else {"level": 1, "crystal": 100, "aether": 100, "supply": 0, "time": 45.0, "requires": []}
+	var upgrades: Dictionary = player.get("upgrades", {})
+	if not upgrades.has(upgrade):
+		return {}
+	var completed: int = upgrades[upgrade]
 	if completed >= MAX_UPGRADE_LEVEL:
 		return {}
 	return {"level": completed + 1, "crystal": 100 + completed * 75, "aether": 100 + completed * 75,
 		"supply": 0, "time": 40.0 + completed * 15.0, "requires": []}
 
 func research_block_reason(owner_id: int, upgrade: String) -> String:
-	if players[owner_id].upgrades[upgrade] >= MAX_UPGRADE_LEVEL:
-		return "All levels researched."
+	if research_offer(owner_id, upgrade).is_empty():
+		return "Research already completed." if upgrade == "surge_efficiency" else "All levels researched."
 	for structure in units.values():
-		if structure.owner != owner_id or structure.unit_type != "workshop":
+		if structure.owner != owner_id or not structure.is_structure:
 			continue
 		for item in structure.production_queue:
 			if item.get("upgrade") == upgrade:
 				return "Research already queued."
 	return ""
 
+func research_producer_block_reason(structure: Dictionary, upgrade: String) -> String:
+	var ability: Dictionary = RTSData.get_ability_def("research_" + upgrade)
+	if structure.is_empty() or structure.unit_type != ability.get("producer") or structure.build_progress < 1.0:
+		return "Requires a completed research producer."
+	var required_attachment := str(ability.get("requires_attachment", ""))
+	if not required_attachment.is_empty() and production_attachment(structure).get("unit_type") != required_attachment:
+		return "Requires a completed Research Module."
+	if structure.production_queue.size() >= 5:
+		return "%s queue is full." % structure.name
+	return ""
+
 func _enqueue_research(structure: Dictionary, upgrade: String) -> bool:
-	if structure.unit_type != "workshop" or structure.build_progress < 1.0 or not players[structure.owner].upgrades.has(upgrade):
+	if not research_producer_block_reason(structure, upgrade).is_empty():
 		return false
-	if not research_block_reason(structure.owner, upgrade).is_empty() or structure.production_queue.size() >= 5:
+	if not research_block_reason(structure.owner, upgrade).is_empty():
 		return false
 	var offer := research_offer(structure.owner, upgrade)
 	var player: Dictionary = players[structure.owner]
@@ -3576,11 +3608,15 @@ func _enqueue_research(structure: Dictionary, upgrade: String) -> bool:
 		return false
 	player.crystal -= offer.crystal
 	player.aether -= offer.aether
-	structure.production_queue.append({
+	var job := {
 		"upgrade": upgrade, "level": offer.level,
 		"crystal_cost": offer.crystal, "aether_cost": offer.aether,
 		"progress": 0.0, "total_time": offer.time * build_time_scale(),
-	})
+	}
+	var required_attachment: String = RTSData.get_ability_def("research_" + upgrade).get("requires_attachment", "")
+	if not required_attachment.is_empty():
+		job["requires_attachment"] = required_attachment
+	structure.production_queue.append(job)
 	return true
 
 func _cancel_training(structure: Dictionary, index: int) -> bool:
