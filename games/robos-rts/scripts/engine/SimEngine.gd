@@ -684,9 +684,12 @@ func requires_power(structure_type: String) -> bool:
 
 func is_powered(owner_id: int, pos: Vector2) -> bool:
 	for unit in units.values():
-		if unit.unit_type == "resonator" and unit.owner == owner_id and unit.build_progress >= 1.0 and unit.pos.distance_squared_to(pos) <= POWER_RADIUS * POWER_RADIUS:
+		if unit.unit_type == "resonator" and unit.owner == owner_id and resonator_covers(unit, pos):
 			return true
 	return false
+
+func resonator_covers(resonator: Dictionary, pos: Vector2) -> bool:
+	return resonator.build_progress >= 1.0 and resonator.pos.distance_squared_to(pos) <= POWER_RADIUS * POWER_RADIUS
 
 func uses_brood_slots(unit: Dictionary) -> bool:
 	return unit.unit_type == "brood_nest" and not match_state.is_empty()
