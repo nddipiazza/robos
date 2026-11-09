@@ -825,10 +825,74 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
+	"drift_sac": {
+		"id": "drift_sac", "name": "Drift Sac", "faction": FACTION_MONSTERS,
+		"blurb": "Unarmed Brood flyer. Provides 8 supply and can scout across impassable ground.",
+		"attributes": ["Biological", "Air"], "crystal_cost": 100, "aether_cost": 0,
+		"supply_cost": 0, "supply_provided": 8, "build_time": 24.0,
+		"max_hp": 115.0, "radius": 1.35, "speed": 3.4, "sight_range": 26.0, "flight_height": 7.5,
+		"abilities": ["move", "stop", "hold_position"],
+		"dialogues": {
+			"select": [
+				{"id": "drift_sac_select_1", "text": "I carry the brood."},
+				{"id": "drift_sac_select_2", "text": "This one's drifting."},
+				{"id": "drift_sac_select_3", "text": "The air feeds me."},
+				{"id": "drift_sac_select_4", "text": "Keep the sharp ones away."},
+				{"id": "drift_sac_select_5", "text": "The nest can grow."},
+			],
+			"move": [
+				{"id": "drift_sac_move_1", "text": "Following the warm air."},
+				{"id": "drift_sac_move_2", "text": "Drifting over."},
+				{"id": "drift_sac_move_3", "text": "I feel the current."},
+				{"id": "drift_sac_move_4", "text": "The brood will see."},
+			],
+			"ready": [
+				{"id": "drift_sac_ready_1", "text": "The brood has room to grow."},
+				{"id": "drift_sac_ready_2", "text": "Drift Sac rising."},
+			],
+		}
+	},
+	"needlewing": {
+		"id": "needlewing", "name": "Needlewing", "faction": FACTION_MONSTERS,
+		"blurb": "Fast, light flyer that harasses ground units with venom. Vulnerable to anti-air.",
+		"attributes": ["Light", "Biological", "Air"], "crystal_cost": 100, "aether_cost": 100,
+		"supply_cost": 2, "build_time": 28.0, "max_hp": 90.0, "radius": 0.95,
+		"speed": 13.0, "sight_range": 25.0, "flight_height": 6.4,
+		"weapon": {"name": "Venom Needles", "sfx": "acid_spit", "attack_type": "ranged",
+			"damage": 9.0, "bonus": {"Light": 3.0}, "range": 9.0, "period": 0.95,
+			"damage_point": 0.14, "backswing": 0.24, "targets_air": false, "targets_ground": true},
+		"abilities": ["move", "stop", "hold_position", "attack"],
+		"dialogues": {
+			"select": [
+				{"id": "needlewing_select_1", "text": "Needlewing listens."},
+				{"id": "needlewing_select_2", "text": "My wings itch."},
+				{"id": "needlewing_select_3", "text": "Where do we sting?"},
+				{"id": "needlewing_select_4", "text": "I smell bare skin."},
+				{"id": "needlewing_select_5", "text": "The brood calls."},
+			],
+			"move": [
+				{"id": "needlewing_move_1", "text": "Gliding low."},
+				{"id": "needlewing_move_2", "text": "Across the ridge."},
+				{"id": "needlewing_move_3", "text": "The wind is mine."},
+				{"id": "needlewing_move_4", "text": "Diving in."},
+			],
+			"attack": [
+				{"id": "needlewing_attack_1", "text": "The groundlings never look up."},
+				{"id": "needlewing_attack_2", "text": "Sting and scatter."},
+				{"id": "needlewing_attack_3", "text": "Give the dirt a little venom."},
+				{"id": "needlewing_attack_4", "text": "Run. It makes this fun."},
+				{"id": "needlewing_attack_5", "text": "I'll leave a mark."},
+			],
+			"ready": [
+				{"id": "needlewing_ready_1", "text": "Needles sharp."},
+				{"id": "needlewing_ready_2", "text": "Needlewing in the air."},
+			],
+		}
+	},
 	"brood_nest": {
 		"id": "brood_nest",
 		"name": "Brood Nest",
-		"blurb": "Monster main base. Spawns Foragers, Skitterlings, Bile Crawlers and Blight Hurlers.",
+		"blurb": "Brood main base. Hatches Foragers, combat troops and flyers.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": true,
 		"is_town_hall": true,
@@ -845,8 +909,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(5, 5),
 		"sight_range": 26.0,
 		"push_priority": 100,
-		"trains": ["forager", "skitterling", "bile_crawler", "blight_hurler"],
-		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally", "rally_worker"]
+		"trains": ["forager", "skitterling", "bile_crawler", "blight_hurler", "drift_sac", "needlewing"],
+		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally", "rally_worker", "train_drift_sac", "train_needlewing"]
 	},
 	"brood_pod": {
 		"id": "brood_pod", "name": "Brood Pod", "faction": FACTION_MONSTERS,
@@ -1178,6 +1242,8 @@ var abilities: Dictionary = {
 	"train_skitterling": {"id": "train_skitterling", "name": "Spawn Skitterling", "hotkey": "Z", "target": "none", "unit": "skitterling"},
 	"train_bile_crawler": {"id": "train_bile_crawler", "name": "Spawn Bile Crawler", "hotkey": "R", "target": "none", "unit": "bile_crawler"},
 	"train_blight_hurler": {"id": "train_blight_hurler", "name": "Spawn Blight Hurler", "hotkey": "V", "target": "none", "unit": "blight_hurler"},
+	"train_drift_sac": {"id": "train_drift_sac", "name": "Hatch Drift Sac", "hotkey": "F", "target": "none", "unit": "drift_sac", "desc": "Unarmed flying scout that provides 8 supply while alive."},
+	"train_needlewing": {"id": "train_needlewing", "name": "Hatch Needlewing", "hotkey": "N", "target": "none", "unit": "needlewing", "desc": "Fast flyer that fires venom needles at ground targets."},
 	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
 	"research_fast_deployment": {"id": "research_fast_deployment", "name": "Research Fast Deployment", "hotkey": "F", "target": "none", "upgrade": "fast_deployment", "producer": "waystone", "desc": "Lets powered Waystones send a paid trainee directly to a visible powered site."},
 	"fast_deploy": {"id": "fast_deploy", "name": "Fast Deploy", "hotkey": "D", "target": "point", "desc": "Set a powered landing point for the next paid trainee. A successful deployment recharges for 20 seconds. If the site becomes unavailable, the unit uses the normal exit."},
