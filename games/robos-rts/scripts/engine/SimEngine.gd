@@ -65,6 +65,11 @@ const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time"
 const PROSPECTOR_LIFETIME_TICKS := 45 * TICK_RATE
 const TRANSPORT_PICKUP_RADIUS := 6.5
 const FIGHTER_TRANSITION_TICKS := 96
+const MIASMA_COST := 50.0
+const MIASMA_RANGE := 17.0
+const MIASMA_RADIUS := 6.0
+const MIASMA_WARNING_TICKS := 64
+const MIASMA_DURATION_TICKS := 8 * 64
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
@@ -114,6 +119,7 @@ var unlimited_resources: bool = false
 var terrain_tiles: Array = []
 var _brush_cells: Dictionary = {}
 var watch_stations: Array[Dictionary] = []
+var miasma_zones: Array[Dictionary] = []
 
 var players: Dictionary = {}
 var next_tag: int = 1001
@@ -224,6 +230,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	terrain_tiles.clear()
 	_brush_cells.clear()
 	watch_stations.clear()
+	miasma_zones.clear()
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
@@ -1161,7 +1168,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"cargo_amount": 0,
 		"harvest_timer": 0.0,
 		"harvest_target_tag": 0,
-		"energy": _starting_energy(unit_type),
+		"energy": float(def.get("starting_energy", _starting_energy(unit_type))),
 		"build_progress": build_progress,
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
@@ -1173,6 +1180,9 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["living_ground_radius"] = def.living_ground_radius
 	if def.has("living_ground_speed_bonus"):
 		u["living_ground_speed_bonus"] = def.living_ground_speed_bonus
+	if def.has("energy_regen"):
+		u["energy_regen"] = def.energy_regen
+		u["max_energy"] = def.max_energy
 	if unit_type == "brood_nest":
 		u["brood_slots"] = BROOD_SLOTS
 		u["brood_recharge"] = 0.0
@@ -1266,6 +1276,7 @@ func _step_single_tick() -> void:
 	profile_usec.orders += Time.get_ticks_usec() - orders_started
 	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT, mineral_walkers)
+	_step_miasma()
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
 	if tick % LivingGround.UPDATE_TICKS == 0:
 		living_ground.update(units, tick, _can_spread_living_ground)
@@ -1854,6 +1865,8 @@ func _ground_production_exit_open(rim: Vector2, position: Vector2, heading: Vect
 	return false
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
+	if u.has("energy_regen"):
+		u.energy = minf(u.max_energy, u.energy + u.energy_regen * dt)
 	if u.has("power_field_until") and carrier_power_ticks(u) == 0:
 		_set_carrier_field(u, false)
 	if u.unit_type == "skirmisher":
@@ -3322,6 +3335,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "corrosive_miasma":
+			if accepted == 0 and _cast_miasma(u, target_pos):
+				accepted += 1
+			continue
 		if ctype in ["fighter_assault", "fighter_intercept"]:
 			var reason := fighter_mode_block_reason(u, ctype)
 			if not reason.is_empty():
@@ -3760,6 +3777,47 @@ func _fill_gas(workers: Array[Dictionary], tap_tag: int) -> Dictionary:
 
 func _is_friendly_mobile(unit: Dictionary, owner_id: int) -> bool:
 	return not unit.is_empty() and unit.owner == owner_id and not unit.is_structure and unit.hp > 0.0
+
+func miasma_block_reason(caster: Dictionary) -> String:
+	if caster.unit_type != "blight_hurler":
+		return "Select a Blight Hurler."
+	if not has_tech_structure(caster.owner, "blight_spire"):
+		return "Requires a completed Blight Spire."
+	if caster.energy < MIASMA_COST:
+		return "Requires 50 energy."
+	return ""
+
+func _cast_miasma(caster: Dictionary, point: Vector2) -> bool:
+	if not miasma_block_reason(caster).is_empty() or not point.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(point):
+		return false
+	if caster.pos.distance_to(point) > MIASMA_RANGE or not can_see_position(caster.owner, point) or is_water_at(point):
+		return false
+	var starts := tick + MIASMA_WARNING_TICKS
+	miasma_zones.append({"pos": point, "source": caster, "starts": starts, "ends": starts + MIASMA_DURATION_TICKS})
+	caster.energy -= MIASMA_COST
+	ability_triggered.emit(caster, "corrosive_miasma", point)
+	return true
+
+func visible_miasma(perspective: int) -> Array[Dictionary]:
+	var visible: Array[Dictionary] = []
+	for zone in miasma_zones:
+		if perspective == 0 or zone.source.owner == perspective or can_see_position(perspective, zone.pos):
+			visible.append({"x": zone.pos.x, "y": zone.pos.y, "radius": MIASMA_RADIUS,
+				"warning": tick < int(zone.starts), "ticks": int(zone.starts if tick < int(zone.starts) else zone.ends) - tick})
+	return visible
+
+func _step_miasma() -> void:
+	for i in range(miasma_zones.size() - 1, -1, -1):
+		var zone: Dictionary = miasma_zones[i]
+		if tick >= int(zone.ends):
+			miasma_zones.remove_at(i)
+		elif tick >= int(zone.starts) and (tick - int(zone.starts)) % TICK_RATE == 0:
+			var targets := query_units_in_radius(zone.pos, MIASMA_RADIUS, zone.source.owner)
+			targets.sort_custom(func(a, b): return a.tag < b.tag)
+			for target in targets:
+				if target.owner > 0 and not target.is_structure and target.flight_height <= 0.0 and target.pos.distance_to(zone.pos) <= MIASMA_RADIUS:
+					target.slow_timer = maxf(target.slow_timer, 1.0)
+					_apply_damage_to_target(zone.source, target, 9.0, {}, 1.0)
 
 func _load_transport(transport: Dictionary) -> bool:
 	var capacity: int = RTSData.get_unit_def(transport.unit_type).get("transport_capacity", 0)
@@ -4309,6 +4367,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"skirmisher":
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["cloaked"] = u.get("cloaked", false)
+			"blight_hurler":
+				entry["energy"] = snappedf(u.energy, 0.01)
 			"lumen_carrier":
 				entry["power_field_active"] = carrier_power_ticks(u) > 0
 				if not limited or u.owner == perspective_player:
@@ -4411,6 +4471,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		observation.map["watch_stations"] = watch_stations.map(func(station):
 			return {"x": station.pos.x, "y": station.pos.y, "owner": visible_watch_station_owner(station, perspective_player), "capture_radius": WATCH_STATION_CAPTURE, "sight_radius": WATCH_STATION_SIGHT}
 		)
+	if not miasma_zones.is_empty():
+		observation["miasma"] = visible_miasma(perspective_player)
 	if limited:
 		observation["vision"] = {
 			"width": vision.size.x, "height": vision.size.y, "cell_size": Vision.CELL_SIZE,
