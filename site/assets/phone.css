@@ -2,6 +2,11 @@
 .phone-guide .cr-hero{max-width:850px}
 .phone-guide .cr-hero h1{font-size:clamp(2.7rem,6vw,4.6rem);line-height:1.04}
 .phone-actions{display:flex;flex-wrap:wrap;align-items:center;gap:22px}
+.phone-ways{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}
+.phone-way{padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.phone-way h3{font-size:1.05rem;margin:8px 0 8px}
+.phone-way p{margin:0;font-size:.93rem;line-height:1.6;color:var(--muted)}
+.proto-tag{display:inline-block;font-size:.73rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--accent);background:var(--bg2)}
 .phone-guide .guide-shot{margin:24px 0}
 .phone-guide .guide-shot img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
 .phone-guide .guide-shot figcaption{margin-top:10px;font-size:.88rem;line-height:1.6;color:var(--muted)}
@@ -18,5 +23,5 @@
 .phone-guide pre{max-width:78ch;overflow-x:auto;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--card);font-size:.86rem;line-height:1.6}
 .phone-guide code{overflow-wrap:anywhere;background:var(--bg2);padding:1px 6px;border-radius:4px;font-size:.88em}
 .phone-guide pre code{overflow-wrap:normal;background:none;padding:0;font-size:inherit}
-@media(max-width:800px){.phone-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.phone-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.phone-ways{grid-template-columns:1fr}}
 @media(max-width:700px){.phone-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.phone-grid .wide-on-phone{grid-column:1/-1}.phone-note{padding:16px}.phone-table th,.phone-table td{padding:10px}}

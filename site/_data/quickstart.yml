@@ -244,6 +244,7 @@ personas:
       - { label: "RobOS on your TV", url: "/tv/" }
     apps: []
     read:
+      - { label: "RobOS Mobile (prototypes for any phone)", url: "/mobile/" }
       - { label: "Back up your settings to Google Drive", url: "/config-management/" }
       - { label: "Every app in the directory", url: "/apps/" }
       - { label: "Ask a question on Discord", url: "https://discord.gg/6PjxzkHujE" }
