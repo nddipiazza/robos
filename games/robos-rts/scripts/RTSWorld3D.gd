@@ -935,7 +935,9 @@ func _on_unit_destroyed(dead: Dictionary) -> void:
 	var p: Vector2 = dead["pos"]
 	if not _effect_near_view(p) or not SimEngine.can_see_unit(_viewing_player, dead):
 		return
-	var base := Vector3(p.x, SimEngine.get_elevation_at(p), p.y)
+	var airborne_structure: bool = dead.is_structure and dead.flight_height > 0.0
+	var height := SimEngine.unit_elevation(dead) if airborne_structure else SimEngine.get_elevation_at(p)
+	var base := Vector3(p.x, height, p.y)
 	var rad := float(dead["radius"])
 	var col := Color(1.0, 0.7, 0.3, 0.9)
 	match str(dead.get("faction", "humans")):
@@ -947,7 +949,7 @@ func _on_unit_destroyed(dead: Dictionary) -> void:
 		if dead["is_structure"]:
 			_spawn_burst(base + Vector3(rad * 0.3, rad * 1.2, 0), Color(1.0, 0.85, 0.5, 0.8), rad * 0.8, 0.8, 2.2)
 			_spawn_burst(base + Vector3(0, rad * 1.55, 0), DESTRUCTION_SMOKE, rad * 0.6, 1.2, 2.7)
-	if dead["unit_type"] != "shale_barrier":
+	if dead["unit_type"] != "shale_barrier" and not airborne_structure:
 		_spawn_scorch(base, rad * (1.1 if dead["is_structure"] else 0.8))
 
 func _effect_near_view(pos: Vector2) -> bool:

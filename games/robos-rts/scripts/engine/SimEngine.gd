@@ -55,6 +55,8 @@ const REPAIR_HP_PER_SECOND := 12.0
 const AUTO_REPAIR_RADIUS := 8.0
 const MAX_RALLY_WAYPOINTS := 8
 const ATTACHMENT_PAD_OFFSET := Vector2(5.5, 0.0)
+const ATTACHMENT_LANDING_SNAP := 2.0
+const PRODUCTION_FLIGHT_HEIGHT := 8.0
 const PRODUCTION_EXIT_RETRY_TICKS := 8
 const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
@@ -696,7 +698,7 @@ func uses_brood_slots(unit: Dictionary) -> bool:
 
 func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
-	if def.is_empty():
+	if def.is_empty() or not pos.is_finite():
 		return false
 	var radius = float(def.get("radius", 2.0))
 	if is_water_at(pos, radius):
@@ -715,7 +717,7 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 		if obs.grow(radius).has_point(pos):
 			return false
 	for u in units.values():
-		if u.is_structure and pos.distance_to(u.pos) < radius + float(u.radius) + 1.0:
+		if u.is_structure and u.flight_height <= 0.0 and pos.distance_to(u.pos) < radius + float(u.radius) + 1.0:
 			return false
 	for res in resources.values():
 		if not deposit_present(res):
@@ -724,6 +726,12 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 			if not extractor or res.resource_type != "aether_vent":
 				return false
 	return true
+
+func _ground_mobile_overlaps(point: Vector2, radius: float) -> bool:
+	for unit in units.values():
+		if not unit.is_structure and unit.flight_height <= 0.0 and point.distance_to(unit.pos) < radius + unit.radius:
+			return true
+	return false
 
 func production_attachment_pad(producer: Dictionary) -> Vector2:
 	return producer.pos + ATTACHMENT_PAD_OFFSET
@@ -746,7 +754,7 @@ func _is_light_infantry_job(job: Dictionary) -> bool:
 
 func active_production_slots(producer: Dictionary) -> int:
 	var queue: Array = producer.production_queue
-	if queue.is_empty() or (requires_power(producer.unit_type) and not is_powered(producer.owner, producer.pos)):
+	if queue.is_empty() or producer.flight_height > 0.0 or (requires_power(producer.unit_type) and not is_powered(producer.owner, producer.pos)):
 		return 0
 	var required_attachment := str(queue[0].get("requires_attachment", ""))
 	if not required_attachment.is_empty() and production_attachment(producer).get("unit_type") != required_attachment:
@@ -771,11 +779,9 @@ func attachment_block_reason(producer: Dictionary, attachment_type: String) -> S
 	var pad := production_attachment_pad(producer)
 	if not can_see_position(producer.owner, pad):
 		return "The attachment pad must be visible."
-	if not can_place_structure(attachment_type, pad) or not is_equal_approx(get_elevation_at(pad), get_elevation_at(producer.pos)):
+	if not can_place_structure(attachment_type, pad) or _ground_mobile_overlaps(pad, float(definition.radius)) \
+		or not is_equal_approx(get_elevation_at(pad), get_elevation_at(producer.pos)):
 		return "The attachment pad is blocked."
-	for unit in units.values():
-		if not unit.is_structure and unit.flight_height <= 0.0 and pad.distance_to(unit.pos) < float(definition.radius) + unit.radius:
-			return "The attachment pad is blocked."
 	var player: Dictionary = players[producer.owner]
 	if player.crystal < int(definition.crystal_cost):
 		return "Not enough crystal."
@@ -795,9 +801,12 @@ func _start_production_attachment(producer: Dictionary, attachment_type: String)
 	var attachment := spawn_unit(attachment_type, producer.owner, production_attachment_pad(producer), "", 0.1)
 	attachment["construction_cost"] = cost
 	attachment["auto_summon"] = true
+	_link_production_attachment(producer, attachment)
+	return true
+
+func _link_production_attachment(producer: Dictionary, attachment: Dictionary) -> void:
 	attachment["attachment_parent_tag"] = producer.tag
 	producer["attachment_tag"] = attachment.tag
-	return true
 
 func _unlink_attachment(attachment: Dictionary) -> void:
 	var producer: Dictionary = units.get(int(attachment.get("attachment_parent_tag", 0)), {})
@@ -819,6 +828,72 @@ func detach_production_attachment(producer: Dictionary) -> void:
 		_orphan_attachment(attachment)
 	producer.erase("attachment_tag")
 
+func lift_block_reason(producer: Dictionary) -> String:
+	var definition: Dictionary = RTSData.get_unit_def(producer.unit_type)
+	if not definition.has("lift_speed") or producer.flight_height > 0.0 or producer.build_progress < 1.0:
+		return "Requires a completed, grounded Meridian production structure."
+	var attachment := production_attachment(producer, false)
+	if not attachment.is_empty() and attachment.build_progress < 1.0:
+		return "Finish or cancel the attachment before lifting."
+	return ""
+
+func _set_producer_airborne(producer: Dictionary, airborne: bool) -> void:
+	var definition: Dictionary = RTSData.get_unit_def(producer.unit_type)
+	producer.flight_height = PRODUCTION_FLIGHT_HEIGHT if airborne else 0.0
+	producer.speed = float(definition.lift_speed) if airborne else float(definition.get("speed", 0.0))
+	producer.orders.clear()
+	producer.path.clear()
+	producer.vel = Vector2.ZERO
+	producer.has_home_pos = false
+	nav_dirty = true
+
+func _detached_module_at_pad(producer: Dictionary, center: Vector2, tolerance: float) -> Dictionary:
+	if producer.unit_type != "muster_hall":
+		return {}
+	var pad := center + ATTACHMENT_PAD_OFFSET
+	var best := {}
+	var nearest := tolerance * tolerance
+	for module in units.values():
+		if not module.is_structure or module.owner != producer.owner or module.has("attachment_parent_tag") \
+			or module.build_progress < 1.0 or module.hp <= 0.0 or module.flight_height > 0.0:
+			continue
+		var distance: float = module.pos.distance_squared_to(pad)
+		if distance > nearest or (not best.is_empty() and distance == nearest):
+			continue
+		if RTSData.get_unit_def(module.unit_type).get("attachment_for") != producer.unit_type:
+			continue
+		if not is_equal_approx(get_elevation_at(module.pos), get_elevation_at(module.pos - ATTACHMENT_PAD_OFFSET)):
+			continue
+		best = module
+		nearest = distance
+	return best
+
+func production_landing_position(producer: Dictionary, requested: Vector2) -> Vector2:
+	if not requested.is_finite():
+		return requested
+	var module := _detached_module_at_pad(producer, requested, ATTACHMENT_LANDING_SNAP)
+	return module.pos - ATTACHMENT_PAD_OFFSET if not module.is_empty() else requested
+
+func landing_block_reason(producer: Dictionary, position: Vector2) -> String:
+	if not RTSData.get_unit_def(producer.unit_type).has("lift_speed") or producer.flight_height <= 0.0:
+		return "Requires an airborne Meridian production structure."
+	if not position.is_finite() or not can_see_position(producer.owner, position):
+		return "Choose a visible landing site."
+	if not can_place_structure(producer.unit_type, position) or _ground_mobile_overlaps(position, producer.radius):
+		return "The landing footprint is blocked."
+	return ""
+
+func _land_production(producer: Dictionary, position: Vector2) -> void:
+	producer.pos = position
+	producer.prev_pos = position
+	producer.facing = 0.0 if producer.owner == 1 else PI
+	_set_producer_airborne(producer, false)
+	# Movement later in this tick must already collide with the landed hull.
+	_index_footprint(producer)
+	var module := _detached_module_at_pad(producer, position, 0.01)
+	if not module.is_empty() and module.pos.is_equal_approx(production_attachment_pad(producer)):
+		_link_production_attachment(producer, module)
+
 func is_build_tile_blocked(point: Vector2, player: int, allowed_vent: Vector2 = Vector2.INF) -> bool:
 	if not can_see_position(player, point) or is_water_at(point):
 		return true
@@ -833,7 +908,7 @@ func is_build_tile_blocked(point: Vector2, player: int, allowed_vent: Vector2 = 
 		if footprint.has("resource_type"):
 			if deposit_present(footprint) and (footprint.resource_type != "aether_vent" or footprint.pos.distance_squared_to(allowed_vent) > 0.25):
 				return true
-		elif can_see_unit(player, footprint):
+		elif footprint.flight_height <= 0.0 and can_see_unit(player, footprint):
 			return true
 	return false
 
@@ -1109,7 +1184,7 @@ func _step_single_tick() -> void:
 		_update_unit_timers(u, TICK_DT)
 		if u.has("support") and _step_support(u, TICK_DT):
 			continue
-		if u.is_structure and (not u.armed_structure or u.build_progress < 1.0):
+		if u.is_structure and u.flight_height <= 0.0 and (not u.armed_structure or u.build_progress < 1.0):
 			continue
 		_update_unit_orders(u, TICK_DT)
 		if u.is_worker and not u.orders.is_empty() and u.orders[0].type in ["harvest", "return_cargo"]:
@@ -1148,7 +1223,7 @@ func _rebuild_astar_grid() -> void:
 				if resource.resource_type == "aether_vent" and resource.pos.distance_squared_to(u.pos) < 1.0:
 					_gas_source_by_tap[u.tag] = resource.tag
 					_gas_tap_by_vent[Vector2i(u.owner, resource.tag)] = u.tag
-		if u["is_structure"] and not u["is_walkable_structure"]:
+		if u["is_structure"] and not u["is_walkable_structure"] and u.flight_height <= 0.0:
 			_static_structures.append(u)
 			_index_footprint(u)
 		else:
@@ -1627,7 +1702,7 @@ func _rally_spawn_position(structure: Dictionary, first: Vector2, unit_type: Str
 			continue
 		var occupied := false
 		for other in nearby:
-			if other.is_structure or (other.flight_height > 0.0) != flying:
+			if (other.is_structure and other.flight_height <= 0.0) or (other.flight_height > 0.0) != flying:
 				continue
 			var clearance: float = radius + other.radius
 			if position.distance_squared_to(other.pos) < clearance * clearance:
@@ -1687,7 +1762,9 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			u["attack_state_timer"] -= dt
 			u["facing"] = (target["pos"] - u["pos"]).angle()
 			if u["attack_state_timer"] <= 0.0:
-				_execute_weapon_hit(u, target)
+				if not _execute_weapon_hit(u, target):
+					u.attack_state = "idle"
+					return
 				var def = RTSData.get_unit_def(u["unit_type"])
 				var wpn = def.get("weapon", {})
 				u["weapon_cooldown"] = float(wpn.get("period", 0.8))
@@ -1732,6 +1809,19 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	var otype = str(order.get("type", "move"))
 
 	match otype:
+		"land":
+			var position: Vector2 = order.target_pos
+			if u.pos.distance_squared_to(position) > 0.04:
+				_follow_order_path(u, position, dt)
+				return
+			var reason := landing_block_reason(u, position)
+			if not reason.is_empty():
+				u.orders.pop_front()
+				u.path.clear()
+				notice.emit(u.owner, reason, "warn")
+				return
+			_land_production(u, position)
+
 		"move":
 			var target_pos := _prepare_order_path(u, order)
 			var arrival_rad: float = float(order.get("arrival_radius", 0.9))
@@ -2698,7 +2788,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		if not units.has(tag):
 			continue
 		var u: Dictionary = units[tag]
-		if u["is_structure"] or u["is_immobile"]:
+		if (u.is_structure and u.flight_height <= 0.0) or u.is_immobile:
 			continue
 		if u.has("choke_yield"):
 			if mineral_walkers.has(tag):
@@ -2739,7 +2829,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 
 			var normal = delta_p / dist
 
-			if is_moving and not n["is_structure"]:
+			if is_moving and (not n.is_structure or flying):
 				if not flying and n.owner == owner_id and n.attack_state == "idle" and not n.is_immobile and not u.has("choke_yield") and not n.has("choke_yield") and tick % 4 == int(tag) % 4 and dist < min_sep * 2.0:
 					_start_choke_yield(u, n, desired_vel.normalized(), mineral_walkers)
 				if dist < min_sep * 1.55:
@@ -2777,9 +2867,9 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		if not units.has(tag):
 			continue
 		var u: Dictionary = units[tag]
-		if u["is_structure"]:
+		if u.is_structure and u.flight_height <= 0.0:
 			continue
-		# Structures never moved between the passes; nearby mobiles moved by less
+		# Ground structures never moved between the passes; nearby mobiles moved by less
 		# than a tick. The wider steering query already covers collision contacts.
 		var neighbors: Array = neighbors_by_tag[tag] if neighbors_by_tag.has(tag) else query_units_in_radius(u["pos"], u["radius"] + 1.8)
 		var mineral_walking := mineral_walkers.has(tag)
@@ -2797,7 +2887,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			if dist < min_dist:
 				var nrm = diff / dist if dist > 0.001 else Vector2.RIGHT
 				var pen = min_dist - dist
-				if n["is_structure"] or n["is_immobile"]:
+				if (n.is_structure and not flying) or n.is_immobile:
 					_move_on_terrain(u, u.pos + nrm * pen)
 				elif u["is_immobile"]:
 					_move_on_terrain(n, n.pos - nrm * pen)
@@ -2951,11 +3041,11 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 	u["attack_windup_duration"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
 	u["attack_state_timer"] = u["attack_windup_duration"]
 
-func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> void:
+func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> bool:
 	var def = RTSData.get_unit_def(attacker["unit_type"])
 	var wpn = def.get("weapon", {})
 	if not _weapon_can_hit(wpn, primary_target):
-		return
+		return false
 
 	var base_dmg = float(wpn.get("damage", 6.0)) + unit_upgrade_level(attacker, "weapons")
 	var bonus_dict: Dictionary = wpn.get("bonus", {})
@@ -2998,6 +3088,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 		recent_events.pop_front()
 	emit_signal("weapon_attack", attacker, primary_target, wpn, hit_shields)
 	emit_signal("projectile_fired", attacker["pos"], primary_target["pos"], str(wpn.get("name", "")), splash_rad > 0.0, attacker["owner"])
+	return true
 
 func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float) -> void:
 	var dmg = base_dmg
@@ -3088,6 +3179,31 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if u.armed_structure and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
 			continue
 		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
+			continue
+		if ctype == "lift":
+			var reason := lift_block_reason(u)
+			if not reason.is_empty():
+				notice.emit(u.owner, reason, "error")
+				continue
+			detach_production_attachment(u)
+			_set_producer_airborne(u, true)
+			accepted += 1
+			continue
+		if ctype == "land":
+			var site := production_landing_position(u, target_pos)
+			var reason := landing_block_reason(u, site)
+			if not reason.is_empty():
+				notice.emit(u.owner, reason, "error")
+				continue
+			if not queue:
+				u.orders.clear()
+				u.path.clear()
+			u.orders.append({"type": "land", "target_pos": site})
+			accepted += 1
+			continue
+		if u.is_structure and u.flight_height > 0.0 and not ctype in ["move", "stop", "cancel_training"]:
+			continue
+		if u.is_structure and u.flight_height <= 0.0 and ctype == "move":
 			continue
 		if ctype == "undo_queued_order":
 			if not u.is_structure and u.orders.size() > 1:
@@ -3649,7 +3765,7 @@ func _morph_unit_in_place(u: Dictionary, new_type: String) -> void:
 		nav_dirty = true
 
 func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
-	if not structure["is_structure"] or structure["build_progress"] < 1.0:
+	if not structure["is_structure"] or structure["build_progress"] < 1.0 or structure.flight_height > 0.0:
 		return false
 	var u_def = RTSData.get_unit_def(unit_type)
 	if u_def.is_empty():
@@ -3731,7 +3847,7 @@ func research_block_reason(owner_id: int, upgrade: String) -> String:
 
 func research_producer_block_reason(structure: Dictionary, upgrade: String) -> String:
 	var ability: Dictionary = RTSData.get_ability_def("research_" + upgrade)
-	if structure.is_empty() or structure.unit_type != ability.get("producer") or structure.build_progress < 1.0:
+	if structure.is_empty() or structure.unit_type != ability.get("producer") or structure.build_progress < 1.0 or structure.flight_height > 0.0:
 		return "Requires a completed research producer."
 	var required_attachment := str(ability.get("requires_attachment", ""))
 	if not required_attachment.is_empty() and production_attachment(structure).get("unit_type") != required_attachment:
