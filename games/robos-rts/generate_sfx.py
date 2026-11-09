@@ -815,6 +815,17 @@ def gen_match_defeat() -> list[float]:
     return [_soft_clip(x, 1.2) for x in out]
 
 
+def gen_support_pulse(frequency: float, duration: float) -> list[float]:
+    samples = []
+    for index in range(int(SAMPLE_RATE * duration)):
+        t = index / SAMPLE_RATE
+        envelope = _env_ad(t, 0.045, duration - 0.045)
+        chirp = 2 * math.pi * frequency * (t + t * t * 0.9)
+        shimmer = math.sin(chirp * 1.51) * 0.24
+        samples.append((math.sin(chirp) * 0.67 + shimmer) * envelope)
+    return samples
+
+
 GENERATORS = {
     # Gunfire & Ranged Weapons
     "rifle_fire": (gen_rifle_fire, 0.90),
@@ -842,6 +853,8 @@ GENERATORS = {
     "phase_step": (gen_phase_step, 0.86),
     "siege_transform": (gen_siege_transform, 0.88),
     "silo_gate": (gen_silo_gate, 0.82),
+    "vital_restore": (lambda: gen_support_pulse(360, 0.26), 0.50),
+    "aegis_restore": (lambda: gen_support_pulse(530, 0.39), 0.56),
     # Unit & Structure Destruction
     "unit_death_human": (gen_unit_death_human, 0.86),
     "unit_death_monster": (gen_unit_death_monster, 0.86),

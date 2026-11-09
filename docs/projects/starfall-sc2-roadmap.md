@@ -39,9 +39,9 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **025 Brush cover.** Infantry can hide in authored brush until a scout or nearby enemy reveals them.
 - [x] **026 Watch stations.** A unit holding a neutral station reveals a fixed radius until it leaves or loses control.
 - [x] **027 Destructible route blockers.** Breaking a neutral blocker opens a ground route in both navigation and the minimap.
-- [ ] **028 Healing support.** A paid support unit restores biological allies from a limited energy pool.
-- [ ] **029 Shield restoration.** A powered Concord support structure spends energy to restore nearby allied shields.
-- [ ] **030 Ground and air targeting.** Flying movement and weapon target domains let anti-air units counter flyers without affecting ground-only shots.
+- [x] **028 Healing support.** A paid support unit restores biological allies from a limited energy pool.
+- [x] **029 Shield restoration.** A powered Concord support structure spends energy to restore nearby allied shields.
+- [x] **030 Ground and air targeting.** Flying movement and weapon target domains let anti-air units counter flyers without affecting ground-only shots.
 
 ## 031–040 Meridian Guard tech
 
@@ -115,7 +115,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [ ] **083 Splash boundaries.** Match the warning ring to the actual hit radius at cliff edges and around large units. Check friendly fire, inner and outer damage, and air and ground overlap.
 - [ ] **084 High-ground engagements.** Verify low-ground units lose a target that climbs out of sight and regain it when a spotter arrives. Keep targeting, projectile cues, and fog consistent.
 - [ ] **085 Concealment under crossfire.** Test brush, cloak, sweeps, and detector loss together. Hidden targets stay out of attack selection, warning decals, and the minimap until revealed.
-- [ ] **086 Support in a retreat.** A medic or shield relay transfers to a valid ally when its patient dies or leaves range. Verify interrupted treatment spends energy only for restoration already delivered.
+- [x] **086 Support in a retreat.** Automatic treatment switches patients when the current ally dies or retreats outside range. Verify explicit orders take precedence and interrupted treatment spends energy only for restoration already delivered.
 - [ ] **087 Supply changes with queued units.** Destroy a supply provider during production, cancel one paid slot, then restore supply. Validate reservation and refund accounting for each faction.
 - [ ] **088 Mineral-line saturation at scale.** Test 12, 24, and 36 workers on finite and unlimited lines. Verify workers redistribute as slots open, deliver each load once, and recover when a path is blocked.
 - [ ] **089 Construction and repair under pressure.** Kill a builder during placement, replace it, and assign multiple repairers with a low bank. Verify one foundation charge and bounded repair spending.

@@ -31,6 +31,70 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "triage_specialist": {
+        "unit_name": "Triage Specialist",
+        "voice": "en-US-AvaNeural",
+        "rate": "+4%",
+        "pitch": "+0Hz",
+        "lines": {
+            "select": [
+                {"id": "triage_specialist_select_1", "text": "Triage ready."},
+                {"id": "triage_specialist_select_2", "text": "Who needs a patch?"},
+                {"id": "triage_specialist_select_3", "text": "I've got clean hands and a full kit."},
+                {"id": "triage_specialist_select_4", "text": "Keep the wounded close."},
+                {"id": "triage_specialist_select_5", "text": "You're on my rounds."},
+            ],
+            "move": [
+                {"id": "triage_specialist_move_1", "text": "On my way."},
+                {"id": "triage_specialist_move_2", "text": "Moving the aid kit."},
+                {"id": "triage_specialist_move_3", "text": "Keep a lane open."},
+                {"id": "triage_specialist_move_4", "text": "I'll take the short route."},
+            ],
+            "support": [
+                {"id": "triage_specialist_support_1", "text": "Hold still. This one's cold."},
+                {"id": "triage_specialist_support_2", "text": "Save the war story for later."},
+                {"id": "triage_specialist_support_3", "text": "Patch in place. Keep breathing."},
+                {"id": "triage_specialist_support_4", "text": "You'll live to file the report."},
+                {"id": "triage_specialist_support_5", "text": "Back on your feet, soldier."},
+            ],
+            "ready": [
+                {"id": "triage_specialist_ready_1", "text": "Triage kit stocked."},
+                {"id": "triage_specialist_ready_2", "text": "Your field specialist is ready."},
+            ],
+        },
+    },
+    "kestrel_interceptor": {
+        "unit_name": "Kestrel Interceptor",
+        "voice": "en-US-GuyNeural",
+        "rate": "+5%",
+        "pitch": "-8Hz",
+        "lines": {
+            "select": [
+                {"id": "kestrel_interceptor_select_1", "text": "Kestrel on station."},
+                {"id": "kestrel_interceptor_select_2", "text": "Sky looks clear from here."},
+                {"id": "kestrel_interceptor_select_3", "text": "Flight lead listening."},
+                {"id": "kestrel_interceptor_select_4", "text": "You have my wings."},
+                {"id": "kestrel_interceptor_select_5", "text": "Pick a heading."},
+            ],
+            "move": [
+                {"id": "kestrel_interceptor_move_1", "text": "Banking over."},
+                {"id": "kestrel_interceptor_move_2", "text": "Vector received."},
+                {"id": "kestrel_interceptor_move_3", "text": "Taking the high route."},
+                {"id": "kestrel_interceptor_move_4", "text": "Crossing now."},
+            ],
+            "attack": [
+                {"id": "kestrel_interceptor_attack_1", "text": "That bird's coming down."},
+                {"id": "kestrel_interceptor_attack_2", "text": "Lock is solid."},
+                {"id": "kestrel_interceptor_attack_3", "text": "Keep the sky clean."},
+                {"id": "kestrel_interceptor_attack_4", "text": "You've got company up here."},
+                {"id": "kestrel_interceptor_attack_5", "text": "Missile away. Mind the debris."},
+            ],
+            "ready": [
+                {"id": "kestrel_interceptor_ready_1", "text": "Kestrel airborne."},
+                {"id": "kestrel_interceptor_ready_2", "text": "Engines green. Ready to intercept."},
+            ],
+        },
+    },
     "forager": {
         "unit_name": "Forager",
         "voice": "en-US-ChristopherNeural",

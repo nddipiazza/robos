@@ -59,7 +59,7 @@ func _ready() -> void:
 	fx_root = get_node("FXRoot")
 
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
-	SimEngine.projectile_fired.connect(_on_projectile_fired)
+	SimEngine.weapon_attack.connect(_on_weapon_attack)
 	SimEngine.unit_phased.connect(_on_unit_phased)
 	SimEngine.unit_destroyed.connect(_on_unit_destroyed)
 	SimEngine.paused_step.connect(_on_paused_step)
@@ -631,7 +631,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		if not u_node.visible:
 			continue
 
-		var elev := SimEngine.get_elevation_at(u["pos"])
+		var elev := SimEngine.unit_elevation(u)
 		var moving := false
 		if _last_pos.has(u_tag):
 			moving = (u["pos"] - _last_pos[u_tag]).length() > 0.004
@@ -859,17 +859,20 @@ func _weapon_color(owner_id: int, is_splash: bool) -> Color:
 		2: return Color("#a3e635")
 		_: return Color("#ffe27a")
 
-func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: String, is_splash: bool, owner_id: int) -> void:
+func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, _hit_shields: bool) -> void:
+	var from_pos: Vector2 = attacker.pos
+	var to_pos: Vector2 = target.pos
+	var is_splash := float(weapon.get("splash_radius", 0.0)) > 0.0
 	if not SimEngine.can_see_position(_viewing_player, from_pos) or not SimEngine.can_see_position(_viewing_player, to_pos):
 		return
 	if _skip_transient_fx() or active_fx.size() >= MAX_ACTIVE_FX or (not _effect_near_view(from_pos) and not _effect_near_view(to_pos)):
 		return
-	var p1 := Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos) + 1.3, from_pos.y)
-	var p2 := Vector3(to_pos.x, SimEngine.get_elevation_at(to_pos) + 1.0, to_pos.y)
+	var p1 := Vector3(from_pos.x, SimEngine.unit_elevation(attacker) + 1.3, from_pos.y)
+	var p2 := Vector3(to_pos.x, SimEngine.unit_elevation(target) + 1.0, to_pos.y)
 	var dist := p1.distance_to(p2)
 	if dist < 0.2:
 		return
-	var col := _weapon_color(owner_id, is_splash)
+	var col := _weapon_color(attacker.owner, is_splash)
 	var beam := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	var w := 0.22 if is_splash else 0.12
@@ -878,7 +881,8 @@ func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: Stri
 	var m := _fx_mat(col)
 	beam.material_override = m
 	fx_root.add_child(beam)
-	beam.look_at_from_position((p1 + p2) * 0.5, p2, Vector3.UP)
+	var up := Vector3.RIGHT if absf((p2 - p1).y) / dist > 0.999 else Vector3.UP
+	beam.look_at_from_position((p1 + p2) * 0.5, p2, up)
 	active_fx.append({"node": beam, "mat": m, "ttl": 0.16, "max": 0.16, "kind": "beam", "col": col, "grow": 0.0})
 	_spawn_burst(p1, Color(col.r, col.g, col.b, 0.9), 0.35, 0.1, 1.6)
 	_spawn_burst(p2, Color(col.r, col.g, col.b, 0.8), 1.4 if is_splash else 0.45, 0.22, 2.4 if is_splash else 1.8)

@@ -95,6 +95,10 @@ The two open Iron Narrows crossings each have a watch station. Keep a ground uni
 
 Right-click a Shale Barrier with combat units selected to break it. Its minimap marker disappears and ground units can cross. Scenario authors can place barriers with the map's `route_blockers` list.
 
+Train a **Triage Specialist** from a Muster Hall with **E**. An idle Specialist heals nearby biological allies. Right-click a wounded ally to follow and treat them. A Mote can use **C** to summon an **Aegis Relay** in a Resonator field. The Relay restores nearby allied shields, including during combat, and stops when unpowered. Both spend one energy per point restored and show their remaining energy when selected.
+
+Train a **Kestrel Interceptor** from a Workshop with **A**. It flies over cliffs, water, and ground units and fires at aircraft. Riflemen, Sentry Turrets, Bile Crawlers, and Skirmishers can hit air and ground. The selected weapon panel lists its target domains, and aircraft appear as diamonds on the minimap.
+
 For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
 
 The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for another base. Siege works toward faction-specific heavy units such as Howitzers, Blight Hurlers or Spire Walkers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.
@@ -328,8 +332,8 @@ Human colonists. Cheap infantry, armored line troops and artillery. Rifleman and
 | Provision Silo | 100 | +8 | 400 | 0 | Provides 8 supply. Extended, it blocks the path; retract it to let units through. |
 | Provision Silo (Retracted) | 100 | +8 | 400 | 0 | Provides 8 supply. Retracted into the ground, so units can walk over it. |
 | Aether Tap | 75 | - | 500 | 0 | Extracts aether from a vent. Pioneers carry it back to the Colony Hub. |
-| Muster Hall | 150 | - | 1000 | 0 | Trains Riflemen and Breachers. Requires a Provision Silo. |
-| Workshop | 150 / 100 | - | 1250 | 0 | Builds Howitzers. Requires a Muster Hall. |
+| Muster Hall | 150 | - | 1000 | 0 | Trains Riflemen, Breachers, and Triage Specialists. Requires a Provision Silo. |
+| Workshop | 150 / 100 | - | 1250 | 0 | Builds Howitzers and Kestrel Interceptors. Requires a Muster Hall. |
 
 ![Colony Hub, Muster Hall and Workshop]({{ '/assets/images/robos-rts/18-structures-meridian-guard.jpg' | relative_url }}){: .robos-zoomable-img }
 

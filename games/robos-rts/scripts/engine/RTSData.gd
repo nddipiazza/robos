@@ -101,6 +101,7 @@ var units: Dictionary = {
 		"push_priority": 2,
 		"weapon": {
 			"name": "R-9 Carbine",
+			"targets_air": true,
 			"sfx": "rifle_fire",
 			"attack_type": "ranged",
 			"damage": 6.0,
@@ -402,10 +403,45 @@ var units: Dictionary = {
 		"push_priority": 100,
 		"abilities": []
 	},
+	"triage_specialist": {
+		"id": "triage_specialist", "name": "Triage Specialist", "faction": FACTION_HUMANS,
+		"blurb": "Heals nearby biological allies with energy. Right-click a wounded ally to follow and treat them.",
+		"attributes": ["Light", "Biological"],
+		"crystal_cost": 75, "aether_cost": 25, "supply_cost": 2, "build_time": 22.0,
+		"max_hp": 60.0, "armor": 1.0, "radius": 0.85, "speed": 7.2, "sight_range": 22.0,
+		"support": {"stat": "hp", "range": 5.0, "rate": 14.0, "max_energy": 75.0, "starting_energy": 45.0, "regen": 1.0, "ability": "restore_vitals"},
+		"abilities": ["move", "stop", "hold_position", "restore_vitals"],
+		"dialogues": {
+			"select": [
+				{"id": "triage_specialist_select_1", "text": "Triage ready."},
+				{"id": "triage_specialist_select_2", "text": "Who needs a patch?"},
+				{"id": "triage_specialist_select_3", "text": "I've got clean hands and a full kit."},
+				{"id": "triage_specialist_select_4", "text": "Keep the wounded close."},
+				{"id": "triage_specialist_select_5", "text": "You're on my rounds."}
+			],
+			"move": [
+				{"id": "triage_specialist_move_1", "text": "On my way."},
+				{"id": "triage_specialist_move_2", "text": "Moving the aid kit."},
+				{"id": "triage_specialist_move_3", "text": "Keep a lane open."},
+				{"id": "triage_specialist_move_4", "text": "I'll take the short route."}
+			],
+			"support": [
+				{"id": "triage_specialist_support_1", "text": "Hold still. This one's cold."},
+				{"id": "triage_specialist_support_2", "text": "Save the war story for later."},
+				{"id": "triage_specialist_support_3", "text": "Patch in place. Keep breathing."},
+				{"id": "triage_specialist_support_4", "text": "You'll live to file the report."},
+				{"id": "triage_specialist_support_5", "text": "Back on your feet, soldier."}
+			],
+			"ready": [
+				{"id": "triage_specialist_ready_1", "text": "Triage kit stocked."},
+				{"id": "triage_specialist_ready_2", "text": "Your field specialist is ready."}
+			],
+		}
+	},
 	"muster_hall": {
 		"id": "muster_hall",
 		"name": "Muster Hall",
-		"blurb": "Trains Riflemen and Breachers. Requires a Provision Silo.",
+		"blurb": "Trains Riflemen, Breachers and Triage Specialists. Requires a Provision Silo.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"requires": ["silo"],
@@ -421,13 +457,52 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["rifleman", "breacher"],
-		"abilities": ["train_rifleman", "train_breacher", "rally"]
+		"trains": ["rifleman", "breacher", "triage_specialist"],
+		"abilities": ["train_rifleman", "train_breacher", "rally", "train_triage_specialist"]
+	},
+	"kestrel_interceptor": {
+		"id": "kestrel_interceptor", "name": "Kestrel Interceptor", "faction": FACTION_HUMANS,
+		"blurb": "Fast air superiority craft. Flies across ground obstacles and fires at aircraft.",
+		"attributes": ["Armored", "Mechanical", "Air"],
+		"crystal_cost": 125, "aether_cost": 100, "supply_cost": 3, "build_time": 30.0,
+		"max_hp": 125.0, "armor": 1.0, "radius": 1.25, "speed": 12.0, "sight_range": 28.0, "flight_height": 7.0,
+		"weapon": {
+			"name": "Seeker Burst", "sfx": "autocannon_fire", "attack_type": "ranged",
+			"damage": 20.0, "range": 14.0, "period": 1.1, "damage_point": 0.12, "backswing": 0.28,
+			"targets_air": true, "targets_ground": false
+		},
+		"abilities": ["move", "stop", "hold_position", "attack"],
+		"dialogues": {
+			"select": [
+				{"id": "kestrel_interceptor_select_1", "text": "Kestrel on station."},
+				{"id": "kestrel_interceptor_select_2", "text": "Sky looks clear from here."},
+				{"id": "kestrel_interceptor_select_3", "text": "Flight lead listening."},
+				{"id": "kestrel_interceptor_select_4", "text": "You have my wings."},
+				{"id": "kestrel_interceptor_select_5", "text": "Pick a heading."}
+			],
+			"move": [
+				{"id": "kestrel_interceptor_move_1", "text": "Banking over."},
+				{"id": "kestrel_interceptor_move_2", "text": "Vector received."},
+				{"id": "kestrel_interceptor_move_3", "text": "Taking the high route."},
+				{"id": "kestrel_interceptor_move_4", "text": "Crossing now."}
+			],
+			"attack": [
+				{"id": "kestrel_interceptor_attack_1", "text": "That bird's coming down."},
+				{"id": "kestrel_interceptor_attack_2", "text": "Lock is solid."},
+				{"id": "kestrel_interceptor_attack_3", "text": "Keep the sky clean."},
+				{"id": "kestrel_interceptor_attack_4", "text": "You've got company up here."},
+				{"id": "kestrel_interceptor_attack_5", "text": "Missile away. Mind the debris."}
+			],
+			"ready": [
+				{"id": "kestrel_interceptor_ready_1", "text": "Kestrel airborne."},
+				{"id": "kestrel_interceptor_ready_2", "text": "Engines green. Ready to intercept."}
+			],
+		}
 	},
 	"workshop": {
 		"id": "workshop",
 		"name": "Workshop",
-		"blurb": "Builds Howitzers and researches Meridian Guard weapon and armor upgrades. Requires a Muster Hall.",
+		"blurb": "Builds Howitzers and Kestrel Interceptors and researches weapon and armor upgrades. Requires a Muster Hall.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"requires": ["muster_hall"],
@@ -443,8 +518,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["howitzer"],
-		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor"]
+		"trains": ["howitzer", "kestrel_interceptor"],
+		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor", "train_kestrel_interceptor"]
 	},
 	"sentry_turret": {
 		"id": "sentry_turret",
@@ -466,6 +541,7 @@ var units: Dictionary = {
 		"detection_radius": 14.0,
 		"weapon": {
 			"name": "Sentry Coilgun", "sfx": "sentry_fire", "attack_type": "ranged",
+			"targets_air": true,
 			"damage": 12.0, "range": 13.0, "period": 0.9,
 			"damage_point": 0.09, "backswing": 0.2, "attacks": 1
 		},
@@ -606,6 +682,7 @@ var units: Dictionary = {
 			"backswing": 0.30,
 			"splash_radius": 0.0,
 			"sfx": "acid_spit",
+			"targets_air": true,
 			"attack_type": "ranged"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
@@ -720,7 +797,7 @@ var units: Dictionary = {
 			"sfx": "mote_spark",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_heartstone", "build_resonator", "build_waystone", "build_aether_prism"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_heartstone", "build_resonator", "build_waystone", "build_aether_prism", "build_aegis_relay"],
 		"dialogues": {
 			"select": [
 				{"id": "mote_select_1", "text": "Signal received."},
@@ -810,6 +887,7 @@ var units: Dictionary = {
 		"push_priority": 3,
 		"weapon": {
 			"name": "Lattice Needlers",
+			"targets_air": true,
 			"damage": 13.0,
 			"bonus": {"Armored": 5.0},
 			"attacks": 1,
@@ -883,7 +961,7 @@ var units: Dictionary = {
 	"resonator": {
 		"id": "resonator",
 		"name": "Resonator",
-		"blurb": "Provides 8 supply and powers nearby Waystones in skirmish.",
+		"blurb": "Provides 8 supply and powers nearby Waystones and Aegis Relays.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
@@ -921,6 +999,16 @@ var units: Dictionary = {
 		"trains": ["sunblade", "skirmisher", "spire_walker"],
 		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally"]
 	},
+	"aegis_relay": {
+		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
+		"blurb": "A powered relay spends energy to restore nearby allied shields, even during combat.",
+		"is_structure": true, "attributes": ["Armored", "Structure"],
+		"crystal_cost": 100, "aether_cost": 0, "build_time": 26.0,
+		"max_hp": 150.0, "max_shields": 150.0, "armor": 1.0, "radius": 1.8,
+		"footprint": Vector2i(2, 2), "sight_range": 15.0, "push_priority": 100,
+		"support": {"stat": "shields", "range": 7.0, "rate": 22.0, "max_energy": 100.0, "starting_energy": 50.0, "regen": 1.0, "ability": "restore_aegis"},
+		"abilities": []
+	},
 	"aether_prism": {
 		"id": "aether_prism", "name": "Aether Prism", "faction": FACTION_ALIENS,
 		"blurb": "Summoned on an aether vent. Three Motes can harvest there efficiently.",
@@ -946,6 +1034,8 @@ var abilities: Dictionary = {
 	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},
 	"return_cargo": {"id": "return_cargo", "name": "Return Cargo", "hotkey": "D", "target": "none", "desc": "Deliver carried resources to a completed main base. Workers already gathering resume that assignment after delivery."},
 	"repair": {"id": "repair", "name": "Repair", "hotkey": "E", "target": "unit", "desc": "Repair a friendly mechanical unit or building. Crystal cost scales with the health restored."},
+	"restore_vitals": {"id": "restore_vitals", "name": "Treat Wounds", "hotkey": "E", "target": "unit", "desc": "Follow and heal a wounded biological ally. Each point restored spends one energy. Idle specialists heal nearby allies automatically.", "sfx": "vital_restore"},
+	"restore_aegis": {"id": "restore_aegis", "name": "Restore Shields", "target": "none", "sfx": "aegis_restore"},
 	"auto_repair": {"id": "auto_repair", "name": "Auto-Repair", "hotkey": "Q", "target": "none", "desc": "Toggle repairs for idle Pioneers. They spend crystal to repair nearby friendly machinery. Manual orders take priority."},
 	"recon_sweep": {"id": "recon_sweep", "name": "Recon Sweep", "hotkey": "E", "target": "point", "desc": "Spend 50 Hub energy to reveal an area, including high ground, for 10 seconds."},
 	"reinforce_supply": {"id": "reinforce_supply", "name": "Reinforce Supply", "hotkey": "D", "target": "unit", "desc": "Spend 50 Hub energy to add 8 supply to a completed friendly Provision Silo once."},
@@ -963,7 +1053,9 @@ var abilities: Dictionary = {
 	"train_pioneer": {"id": "train_pioneer", "name": "Train Pioneer", "hotkey": "S", "target": "none", "unit": "pioneer"},
 	"train_rifleman": {"id": "train_rifleman", "name": "Train Rifleman", "hotkey": "A", "target": "none", "unit": "rifleman"},
 	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},
+	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
+	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},
 	"research_weapons": {"id": "research_weapons", "name": "Research Weapons", "hotkey": "W", "target": "none", "upgrade": "weapons", "desc": "Each level adds one damage per hit to Meridian Guard combat units. Applies to units already in the field."},
 	"research_armor": {"id": "research_armor", "name": "Research Armor", "hotkey": "G", "target": "none", "upgrade": "armor", "desc": "Each level adds one armor to Meridian Guard combat units. Applies to units already in the field."},
 	"train_forager": {"id": "train_forager", "name": "Spawn Forager", "hotkey": "D", "target": "none", "unit": "forager"},
@@ -983,6 +1075,7 @@ var abilities: Dictionary = {
 	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},
 	"build_resonator": {"id": "build_resonator", "name": "Summon Resonator", "hotkey": "E", "target": "point", "structure": "resonator"},
 	"build_waystone": {"id": "build_waystone", "name": "Summon Waystone", "hotkey": "W", "target": "point", "structure": "waystone"},
+	"build_aegis_relay": {"id": "build_aegis_relay", "name": "Summon Aegis Relay", "hotkey": "C", "target": "point", "structure": "aegis_relay"},
 	"build_aether_prism": {"id": "build_aether_prism", "name": "Summon Aether Prism", "hotkey": "R", "target": "point", "structure": "aether_prism"},
 	"build_brood_nest": {"id": "build_brood_nest", "name": "Grow Brood Nest", "hotkey": "N", "target": "point", "structure": "brood_nest"},
 	"build_brood_pod": {"id": "build_brood_pod", "name": "Grow Brood Pod", "hotkey": "B", "target": "point", "structure": "brood_pod"},

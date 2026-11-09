@@ -22,12 +22,13 @@ func _run() -> void:
 	_test_economy_and_ui_sfx()
 	_test_human_unit_dialogues_and_voices()
 	_test_asymmetric_worker_voices()
-	print("PASS test_audio_sfx (all 37 SFX + 113 voice dialogue WAV streams verified)")
+	_test_support_cues()
+	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
 
 func _test_all_wav_files_loaded() -> void:
 	assert(audio != null, "RTSAudio autoload must be registered")
-	assert(audio.SOUND_FILES.size() == 37, "Expected 37 sound files in catalog")
+	assert(audio.SOUND_FILES.size() == 39, "Expected 39 sound files in catalog")
 	for key in audio.SOUND_FILES.keys():
 		var path: String = str(audio.SOUND_FILES[key])
 		assert(FileAccess.file_exists(path), "Missing WAV file on disk: %s" % path)
@@ -44,7 +45,7 @@ func _test_all_wav_files_loaded() -> void:
 
 func _test_unit_weapon_metadata() -> void:
 	var armed_units := [
-		"pioneer", "rifleman", "breacher", "howitzer", "howitzer_emplaced",
+		"pioneer", "rifleman", "breacher", "howitzer", "howitzer_emplaced", "kestrel_interceptor",
 		"forager", "skitterling", "bile_crawler", "blight_hurler",
 		"mote", "sunblade", "skirmisher", "spire_walker"
 	]
@@ -169,7 +170,7 @@ func _test_economy_and_ui_sfx() -> void:
 	assert(audio.sfx_counts.is_empty(), "Expected NO sound when finishing & returning minerals/gas (got: %s)" % str(audio.sfx_counts))
 
 func _test_human_unit_dialogues_and_voices() -> void:
-	assert(audio.voice_streams.size() == 113, "Expected 113 voice dialogue streams loaded, got %d" % audio.voice_streams.size())
+	assert(audio.voice_streams.size() == 145, "Expected 145 voice dialogue streams loaded, got %d" % audio.voice_streams.size())
 	for line_id in audio.voice_streams.keys():
 		var wav_path := "res://assets/audio/voice/%s.wav" % line_id
 		assert(FileAccess.file_exists(wav_path), "Missing voice WAV file: %s" % wav_path)
@@ -194,7 +195,7 @@ func _test_human_unit_dialogues_and_voices() -> void:
 	assert(seen_select.size() == pioneer_select.size(), "Expected all %d pioneer select varieties to cycle" % pioneer_select.size())
 
 	# Verify Rifleman, Breacher, and Howitzer each have >= 5 select and >= 5 witty attack dialogues
-	for utype in ["rifleman", "breacher", "howitzer"]:
+	for utype in ["rifleman", "breacher", "howitzer", "kestrel_interceptor"]:
 		var sel_lines: Array = data.get_unit_dialogues(utype, "select")
 		var atk_lines: Array = data.get_unit_dialogues(utype, "attack")
 		assert(sel_lines.size() >= 5, "Expected >= 5 select lines for %s" % utype)
@@ -232,3 +233,25 @@ func _test_asymmetric_worker_voices() -> void:
 				assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
 			var played: Dictionary = audio.play_unit_dialogue(worker, category, true)
 			assert(played.get("unit_type") == worker and played.get("category") == category)
+
+func _test_support_cues() -> void:
+	sim.reset_state(42, 96, 64)
+	audio.reset_stats()
+	for entry in [["triage_specialist", "support"], ["kestrel_interceptor", "attack"]]:
+		var minimums := {"select": 5, "move": 4, "ready": 2}
+		minimums[entry[1]] = 5
+		for category in minimums:
+			var lines: Array = data.get_unit_dialogues(entry[0], category)
+			assert(lines.size() >= minimums[category], "Missing %s %s variants" % [entry[0], category])
+			for line in lines:
+				assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
+	sim.spawn_unit("triage_specialist", 1, Vector2(20, 20))
+	var soldier: Dictionary = sim.spawn_unit("breacher", 1, Vector2(23, 20))
+	soldier.hp = 40
+	sim.spawn_unit("resonator", 1, Vector2(40, 20))
+	sim.spawn_unit("aegis_relay", 1, Vector2(46, 20))
+	var patient: Dictionary = sim.spawn_unit("sunblade", 1, Vector2(51, 20))
+	patient.shields = 2
+	sim.step_ticks(16)
+	assert(audio.sfx_counts.get("vital_restore", 0) == 1 and audio.sfx_counts.get("aegis_restore", 0) == 1)
+	assert(audio.dialogue_counts.get("triage_specialist:support", 0) == 1)

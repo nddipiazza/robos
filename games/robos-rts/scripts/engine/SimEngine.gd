@@ -528,7 +528,7 @@ func _refresh_vision() -> void:
 	for station in watch_stations:
 		var owner := 0
 		for unit in query_units_in_radius(station.pos, WATCH_STATION_CAPTURE):
-			if unit.is_structure or unit.hp <= 0.0 or not players.has(unit.owner):
+			if unit.is_structure or unit.flight_height > 0.0 or unit.hp <= 0.0 or not players.has(unit.owner):
 				continue
 			if unit.pos.distance_squared_to(station.pos) > WATCH_STATION_CAPTURE * WATCH_STATION_CAPTURE:
 				continue
@@ -564,7 +564,7 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 	if not can_see_position(player, unit.pos):
 		return false
 	var cloaked := bool(unit.get("cloaked", false))
-	var concealed: bool = not _brush_cells.is_empty() and not unit.is_structure and not unit.is_worker and unit.attributes.has("Biological") and _brush_cells.has(Vector2i((unit.pos / 4.0).floor()))
+	var concealed: bool = not _brush_cells.is_empty() and not unit.is_structure and not unit.is_worker and unit.flight_height <= 0.0 and unit.attributes.has("Biological") and _brush_cells.has(Vector2i((unit.pos / 4.0).floor()))
 	if not cloaked and not concealed:
 		return true
 	if vision != null and vision.sweep_detects(player, unit.pos):
@@ -641,7 +641,7 @@ func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> boo
 	return can_place_structure(structure_type, pos)
 
 func requires_power(structure_type: String) -> bool:
-	return structure_type == "waystone" and not match_state.is_empty()
+	return structure_type == "aegis_relay" or (structure_type == "waystone" and not match_state.is_empty())
 
 func is_powered(owner_id: int, pos: Vector2) -> bool:
 	for unit in units.values():
@@ -855,6 +855,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"radius": float(def.get("radius", 0.85)),
 		"speed": float(def.get("speed", 7.0)),
 		"sight_range": float(def.get("sight_range", 20.0)),
+		"flight_height": float(def.get("flight_height", 0.0)),
 		"push_priority": int(def.get("push_priority", 1)),
 		"is_structure": bool(def.get("is_structure", false)),
 		"is_extractor": bool(def.get("is_extractor", false)),
@@ -894,6 +895,11 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["brood_slots"] = BROOD_SLOTS
 		u["brood_recharge"] = 0.0
 		u["worker_rally_route"] = []
+	if def.has("support"):
+		u["support"] = def.support
+		u["energy"] = def.support.starting_energy
+		u["support_target_tag"] = 0
+		u["next_support_cue"] = 0
 	units[tag] = u
 	if u.detection_radius > 0.0:
 		_detectors.append(u)
@@ -918,6 +924,9 @@ func get_elevation_at(pos: Vector2) -> float:
 		if hg.has_point(pos):
 			return 2.2
 	return 0.0
+
+func unit_elevation(unit: Dictionary) -> float:
+	return float(unit.flight_height) if unit.flight_height > 0.0 else get_elevation_at(unit.pos)
 
 func step_ticks(count: int = 1) -> void:
 	last_step_count = count
@@ -955,6 +964,8 @@ func _step_single_tick() -> void:
 		var u = units[tag]
 		u["prev_pos"] = u["pos"]
 		_update_unit_timers(u, TICK_DT)
+		if u.has("support") and _step_support(u, TICK_DT):
+			continue
 		if u.is_structure and (not u.armed_structure or u.build_progress < 1.0):
 			continue
 		_update_unit_orders(u, TICK_DT)
@@ -1487,8 +1498,9 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 					u.orders.pop_front()
 				u.path.clear()
 				return
-			if enemy.hp <= 0.0:
+			if enemy.hp <= 0.0 or not can_attack(u, enemy):
 				u["orders"].pop_front()
+				u.path.clear()
 				return
 			order.target_pos = enemy.pos
 			var wpn_range = _get_weapon_range(u)
@@ -1886,6 +1898,63 @@ func _process_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> 
 		target["repair_credit"] = maxf(0.0, credit + charge - price)
 	target.hp += hp
 
+func can_restore(source: Dictionary, target: Dictionary) -> bool:
+	if not source.has("support") or target.is_empty() or target.tag == source.tag:
+		return false
+	if target.owner != source.owner or target.hp <= 0.0 or target.build_progress < 1.0:
+		return false
+	if source.support.stat == "hp":
+		return not target.is_structure and target.flight_height <= 0.0 and target.attributes.has("Biological") and target.hp < target.max_hp
+	return target.shields < target.max_shields
+
+func _step_support(source: Dictionary, dt: float) -> bool:
+	var config: Dictionary = source.support
+	var previous: int = source.support_target_tag
+	source.support_target_tag = 0
+	if source.build_progress < 1.0 or (source.is_structure and not is_powered(source.owner, source.pos)):
+		return false
+	source.energy = minf(config.max_energy, source.energy + float(config.regen) * dt)
+	var order: Dictionary = source.orders.front() if not source.orders.is_empty() else {}
+	var target: Dictionary = {}
+	if order.get("type") == "restore_vitals":
+		target = units.get(order.target_tag, {})
+		if not can_restore(source, target):
+			source.orders.pop_front()
+			source.path.clear()
+			return false
+		source.vel = Vector2.ZERO
+		if _edge_distance(source, target) > float(config.range):
+			_follow_order_path(source, target.pos, dt, source.radius + target.radius + float(config.range))
+			return true
+		source.path.clear()
+	elif order.is_empty() or (order.type == "hold_position" and source.orders.size() == 1):
+		target = units.get(previous, {})
+		if not can_restore(source, target) or _edge_distance(source, target) > float(config.range):
+			target = {}
+			if tick % 8 == int(source.tag) % 8:
+				var nearest := float(config.range)
+				for candidate in query_units_in_radius(source.pos, nearest + float(source.radius)):
+					if not can_restore(source, candidate):
+						continue
+					var distance := _edge_distance(source, candidate)
+					if distance <= nearest:
+						target = candidate
+						nearest = distance
+	if target.is_empty():
+		return false
+	var stat: String = config.stat
+	var amount := minf(minf(float(config.rate) * dt, source.energy), float(target["max_" + stat]) - float(target[stat]))
+	target[stat] += amount
+	source.energy -= amount
+	source.vel = Vector2.ZERO
+	source.support_target_tag = target.tag
+	if not source.is_structure:
+		source.facing = (target.pos - source.pos).angle()
+	if previous != target.tag and tick >= source.next_support_cue:
+		source.next_support_cue = tick + 64
+		ability_triggered.emit(source, config.ability, target.pos)
+	return true
+
 func _approach_target(u: Dictionary, target_pos: Vector2, dt: float) -> void:
 	_prepare_path(u, target_pos, 1.0)
 	_follow_path(u, dt)
@@ -1900,7 +1969,10 @@ func _prepare_order_path(u: Dictionary, order: Dictionary) -> Vector2:
 
 func _prepare_path(u: Dictionary, target_pos: Vector2, tolerance: float, reach: float = INF) -> void:
 	if u.path.is_empty() or u.get("nav_goal", Vector2.INF).distance_squared_to(target_pos) > tolerance * tolerance:
-		u.path = compute_smooth_path(u.pos, target_pos, u.radius, u.unit_type == "spire_walker", reach)
+		if u.flight_height > 0.0:
+			u.path = [_map_clamped_position(target_pos, u.radius) if target_pos.is_finite() else u.pos]
+		else:
+			u.path = compute_smooth_path(u.pos, target_pos, u.radius, u.unit_type == "spire_walker", reach)
 		u["nav_goal"] = target_pos
 
 func _follow_path(u: Dictionary, dt: float) -> void:
@@ -1939,6 +2011,8 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 	for n in neighbors:
 		if n["tag"] == u["tag"] or n["owner"] != u["owner"]:
 			continue
+		if (u.flight_height > 0.0) != (n.flight_height > 0.0):
+			continue
 		if n["orders"].is_empty() and n["home_pos"].distance_to(target_pos) <= base_arrival * 3.0:
 			if u["pos"].distance_to(n["pos"]) <= (u["radius"] + n["radius"]) * 1.35:
 				return true
@@ -1964,9 +2038,10 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 
 		var steer_force: Vector2 = Vector2.ZERO
 		var mineral_walking := mineral_walkers.has(tag)
+		var flying: bool = u.flight_height > 0.0
 		for neighbor in neighbors:
 			var n: Dictionary = neighbor
-			if n["tag"] == tag:
+			if n["tag"] == tag or flying != (n.flight_height > 0.0):
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
@@ -2019,8 +2094,9 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		# than a tick. The wider steering query already covers collision contacts.
 		var neighbors: Array = neighbors_by_tag[tag] if neighbors_by_tag.has(tag) else query_units_in_radius(u["pos"], u["radius"] + 1.8)
 		var mineral_walking := mineral_walkers.has(tag)
+		var flying: bool = u.flight_height > 0.0
 		for n in neighbors:
-			if n["tag"] <= u["tag"]:
+			if n["tag"] <= u["tag"] or flying != (n.flight_height > 0.0):
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
@@ -2041,7 +2117,10 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 					_move_on_terrain(n, n.pos - nrm * (pen * 0.5))
 
 func _move_on_terrain(unit: Dictionary, pos: Vector2) -> void:
-	unit.pos = _clamp_to_walkable(pos, unit.radius, unit.unit_type == "spire_walker", unit.pos)
+	if unit.flight_height > 0.0:
+		unit.pos = _map_clamped_position(pos, unit.radius)
+	else:
+		unit.pos = _clamp_to_walkable(pos, unit.radius, unit.unit_type == "spire_walker", unit.pos)
 
 func _map_clamped_position(p: Vector2, radius: float) -> Vector2:
 	return Vector2(
@@ -2097,6 +2176,12 @@ func _get_weapon_range(u: Dictionary) -> float:
 func _edge_distance(a: Dictionary, b: Dictionary) -> float:
 	return max(0.0, a["pos"].distance_to(b["pos"]) - (float(a["radius"]) + float(b["radius"])))
 
+func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
+	return _weapon_can_hit(RTSData.get_unit_def(attacker.unit_type).get("weapon", {}), target)
+
+func _weapon_can_hit(weapon: Dictionary, target: Dictionary) -> bool:
+	return not weapon.is_empty() and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
+
 func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 	if u.get("hold_fire", false):
 		return {}
@@ -2115,6 +2200,8 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 
 	for c in candidates:
 		if c["owner"] == 0 or c["owner"] == u["owner"] or c["hp"] <= 0.0 or not can_see_unit(u.owner, c):
+			continue
+		if not _weapon_can_hit(wpn, c):
 			continue
 		var d_edge = _edge_distance(u, c)
 		if d_edge < min_range:
@@ -2146,7 +2233,7 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 		return
 	var def = RTSData.get_unit_def(u["unit_type"])
 	var wpn = def.get("weapon", {})
-	if wpn.is_empty() or _edge_distance(u, target) < float(wpn.get("min_range", 0.0)):
+	if not _weapon_can_hit(wpn, target) or _edge_distance(u, target) < float(wpn.get("min_range", 0.0)):
 		return
 	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	u["attack_state"] = "windup"
@@ -2157,7 +2244,7 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> void:
 	var def = RTSData.get_unit_def(attacker["unit_type"])
 	var wpn = def.get("weapon", {})
-	if wpn.is_empty():
+	if not _weapon_can_hit(wpn, primary_target):
 		return
 
 	var base_dmg = float(wpn.get("damage", 6.0)) + unit_upgrade_level(attacker, "weapons")
@@ -2174,7 +2261,7 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 		var friendly_scale := float(wpn.get("friendly_splash", 0.0))
 		var splashed = query_units_in_radius(primary_target["pos"], splash_rad)
 		for s in splashed:
-			if s["tag"] == primary_target["tag"] or s["tag"] == attacker["tag"] or s["hp"] <= 0.0:
+			if s["tag"] == primary_target["tag"] or s["tag"] == attacker["tag"] or s["hp"] <= 0.0 or not _weapon_can_hit(wpn, s):
 				continue
 			var allegiance_scale := friendly_scale if s["owner"] == attacker["owner"] else 1.0
 			if allegiance_scale <= 0.0:
@@ -2327,6 +2414,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "repair" and not can_repair(u, units.get(target_tag, {})):
 			continue
+		if ctype == "restore_vitals" and (u.is_structure or not can_restore(u, units.get(target_tag, {}))):
+			continue
 		if ctype == "follow" and (u.is_structure or u.is_immobile or u.tag == target_tag or not _is_friendly_mobile(units.get(target_tag, {}), u.owner)):
 			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
@@ -2352,11 +2441,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "force_attack":
 			var friendly: Dictionary = units.get(target_tag, {})
-			if friendly.is_empty() or friendly.owner != u.owner or friendly.tag == u.tag or not RTSData.get_unit_def(u.unit_type).has("weapon"):
+			if friendly.is_empty() or friendly.owner != u.owner or friendly.tag == u.tag or not can_attack(u, friendly):
 				continue
 		elif ctype == "attack_target" or (ctype in ["attack", "attack_move"] and target_tag > 0):
 			var target: Dictionary = units.get(target_tag, {})
-			if target.is_empty() or target.owner == u.owner or not can_see_unit(u.owner, target):
+			if target.is_empty() or target.owner == u.owner or not can_attack(u, target) or not can_see_unit(u.owner, target):
 				continue
 		if ctype.begins_with("build_") or ctype == "build":
 			var stype_check = ctype.trim_prefix("build_") if ctype != "build" else extra
@@ -2545,8 +2634,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				site["builder_tag"] = u.tag
 			accepted += 1
 
-		elif ctype == "repair":
-			u.orders.append({"type": "repair", "target_tag": target_tag})
+		elif ctype in ["repair", "restore_vitals"]:
+			u.orders.append({"type": ctype, "target_tag": target_tag})
 			accepted += 1
 
 		elif ctype.begins_with("build_"):
@@ -2948,7 +3037,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"faction": u["faction"],
 			"name": u["name"],
 			"owner": u["owner"],
-			"pos": {"x": snappedf(u["pos"].x, 0.01), "y": snappedf(u["pos"].y, 0.01), "z": snappedf(get_elevation_at(u["pos"]), 0.01)},
+			"pos": {"x": snappedf(u["pos"].x, 0.01), "y": snappedf(u["pos"].y, 0.01), "z": snappedf(unit_elevation(u), 0.01)},
 			"hp": snappedf(u["hp"], 0.1),
 			"max_hp": u["max_hp"],
 			"shields": snappedf(u["shields"], 0.1),
@@ -2969,6 +3058,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"kills": u["kills"]
 		})
 		var entry: Dictionary = unit_list.back()
+		if u.flight_height > 0.0:
+			entry["airborne"] = true
 		if u.get("hold_fire", false):
 			entry["hold_fire"] = true
 		match u.unit_type:
@@ -2983,6 +3074,10 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"pioneer":
 				entry["auto_repair"] = u.get("auto_repair", false)
 		if not limited or u.owner == perspective_player:
+			if u.has("support"):
+				entry["energy"] = snappedf(u.energy, 0.01)
+				entry["max_energy"] = u.support.max_energy
+				entry["support_target_tag"] = u.support_target_tag
 			if not u.rally_route.is_empty():
 				entry["rally_route"] = _observed_rally(u.rally_route)
 			if u.unit_type == "brood_nest" and not u.worker_rally_route.is_empty():

@@ -42,6 +42,8 @@ const SOUND_FILES: Dictionary = {
 	"phase_step": "res://assets/audio/sfx/phase_step.wav",
 	"siege_transform": "res://assets/audio/sfx/siege_transform.wav",
 	"silo_gate": "res://assets/audio/sfx/silo_gate.wav",
+	"vital_restore": "res://assets/audio/sfx/vital_restore.wav",
+	"aegis_restore": "res://assets/audio/sfx/aegis_restore.wav",
 
 	# Destruction & Unit Deaths
 	"unit_death_human": "res://assets/audio/sfx/unit_death_human.wav",
@@ -678,6 +680,8 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 				sfx_key = "silo_gate"
 	if sfx_key != "":
 		play_at(sfx_key, pos, 0.0, 0.035)
+	if ab_id == "restore_vitals" and unit.owner == local_player_id:
+		play_unit_dialogue(unit.unit_type, "support")
 
 func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, _unit_tag: int) -> void:
 	play_at("phase_step", to_pos, 0.0, 0.035)

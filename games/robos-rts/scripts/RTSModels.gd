@@ -130,6 +130,8 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"pioneer": _pioneer(root, team)
 		"rifleman": _rifleman(root, team)
 		"breacher": _breacher(root, team)
+		"triage_specialist": _triage_specialist(root, team)
+		"kestrel_interceptor": _kestrel_interceptor(root, team, glow)
 		"howitzer": _howitzer(root, r, team, false)
 		"howitzer_emplaced": _howitzer(root, r, team, true)
 		"colony_hub": _colony_hub(root, r, team)
@@ -151,6 +153,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"spire_walker": _spire_walker(root, team)
 		"heartstone": _heartstone(root, r, team)
 		"resonator": _resonator(root, team)
+		"aegis_relay": _aegis_relay(root, r, glow)
 		"waystone": _waystone(root, r, team)
 		"aether_prism": _aether_prism(root, r, glow)
 		"shale_barrier": _shale_barrier(root)
@@ -164,6 +167,39 @@ static func _shale_barrier(root: Node3D) -> void:
 		var slab := sph(root, 2.3, dark, Vector3(offset * 0.38, 1.35, offset), Vector3(1.08, 0.9, 0.8), 7)
 		slab.rotation_degrees = Vector3(12, offset * 12, 25)
 		sph(root, 1.45, light, Vector3(offset * 0.38 - 0.7, 2.5, offset + 0.6), Vector3(0.95, 0.65, 1.2), 7)
+
+static func _triage_specialist(root: Node3D, team: Material) -> void:
+	var shell := mat("triage_shell", Color("#d7e0dc"))
+	var mint := mat("triage_kit", Color("#65e6a2"), Color("#2a7452"))
+	var boots := mat("triage_boots", Color("#263341"))
+	sph(root, 0.36, shell, Vector3(0.12, 1.92, 0.0))
+	box(root, Vector3(0.66, 0.78, 0.69), team, Vector3(0.0, 1.23, 0.0))
+	box(root, Vector3(0.42, 0.78, 0.69), shell, Vector3(-0.42, 1.2, 0.0))
+	box(root, Vector3(0.08, 0.46, 0.12), mint, Vector3(-0.66, 1.22, 0.0))
+	box(root, Vector3(0.08, 0.12, 0.45), mint, Vector3(-0.66, 1.22, 0.0))
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(0.42, 0.73, 0.23), boots, Vector3(0.1, 0.38, side * 0.21))
+	box(root, Vector3(0.7, 0.22, 0.27), mint, Vector3(0.54, 1.18, 0.24))
+
+static func _aegis_relay(root: Node3D, radius: float, glow: Material) -> void:
+	var ceramic := mat("relay_ceramic", Color("#877dc6"), Color("#231d4d"))
+	var crystal := mat("relay_crystal", Color("#84d8f8"), Color("#3d89a9"))
+	cyl(root, radius * 0.66, radius, 0.52, ceramic, Vector3(0, 0.26, 0), Vector3.ZERO, 6)
+	for i in range(3):
+		var angle := TAU * float(i) / 3.0
+		box(root, Vector3(0.24, 1.85, 0.42), glow, Vector3(cos(angle) * radius * 0.62, 1.12, sin(angle) * radius * 0.62), Vector3(0, -rad_to_deg(angle), 12))
+	cone(root, 0.69, 1.18, crystal, Vector3(0, 2.18, 0), Vector3.ZERO, 6)
+	cone(root, 0.69, 0.81, crystal, Vector3(0, 1.26, 0), Vector3(180, 0, 0), 6)
+
+static func _kestrel_interceptor(root: Node3D, team: Material, glow: Material) -> void:
+	var hull := mat("kestrel_hull", Color("#8a9aac"))
+	var glass := mat("kestrel_canopy", Color("#16364c"), Color("#285876"))
+	cyl(root, 0.13, 0.58, 2.65, hull, Vector3(0.12, 0.28, 0.0), Vector3(0, 0, -90), 6)
+	sph(root, 0.43, glass, Vector3(0.44, 0.57, 0), Vector3(1.4, 0.64, 0.87))
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(1.28, 0.16, 1.15), team, Vector3(-0.23, 0.27, side * 0.76), Vector3(0, side * 26.0, 0))
+		cyl(root, 0.24, 0.32, 1.55, hull, Vector3(-0.36, 0.36, side * 0.84), Vector3(0, 0, -90), 8)
+		sph(root, 0.20, glow, Vector3(-1.15, 0.36, side * 0.84), Vector3(0.48, 1, 1))
 
 # ---------------------------------------------------------------------------
 # Humans — Meridian Guard
