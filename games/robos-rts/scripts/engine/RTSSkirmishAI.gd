@@ -247,9 +247,9 @@ func _needs_new_mineral_line(halls: Array) -> bool:
 	return true
 
 func _known_enemy_buildings(pid: int) -> Array:
-	var known: Array = SimEngine.remembered_buildings(pid)
+	var known: Array = SimEngine.remembered_buildings(pid).filter(func(building): return building.owner != 0)
 	for enemy in SimEngine.units.values():
-		if enemy.owner != pid and enemy.is_structure and SimEngine.can_see_unit(pid, enemy):
+		if enemy.owner != 0 and enemy.owner != pid and enemy.is_structure and SimEngine.can_see_unit(pid, enemy):
 			known.append(enemy)
 	return known
 

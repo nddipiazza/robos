@@ -378,7 +378,11 @@ func _draw_minimap_units() -> void:
 			continue
 		var up: Vector2 = main.world_to_minimap(u["pos"])
 		var col := RTSData.get_player_color(int(u["owner"]))
-		if u["is_structure"]:
+		if u.unit_type == "shale_barrier":
+			draw_circle(up, 4.5, Color("#302b2b"))
+			draw_line(up + Vector2(-3, -3), up + Vector2(3, 3), Color("#f3c697"), 1.5, true)
+			draw_line(up + Vector2(-3, 3), up + Vector2(3, -3), Color("#f3c697"), 1.5, true)
+		elif u["is_structure"]:
 			draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), col)
 			draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), Color(0, 0, 0, 0.8), false, 1.0)
 		else:
@@ -547,7 +551,7 @@ func _draw_single(u: Dictionary) -> void:
 	var sub := RTSData.get_faction_name(str(u["faction"]))
 	if not attrs.is_empty():
 		sub += "  ·  " + "  ·  ".join(PackedStringArray(attrs))
-	if not is_own:
+	if not is_own and u.owner != 0:
 		sub = "Enemy  ·  " + sub
 	_text(Vector2(x0, y0 + 48), sub, 15, C_MUTED)
 

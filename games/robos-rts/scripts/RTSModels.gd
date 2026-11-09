@@ -153,8 +153,17 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"resonator": _resonator(root, team)
 		"waystone": _waystone(root, r, team)
 		"aether_prism": _aether_prism(root, r, glow)
+		"shale_barrier": _shale_barrier(root)
 		_: box(root, Vector3(r * 1.5, 1.4, r * 1.5), mat("fallback", STEEL), Vector3(0, 0.7, 0))
 	return root
+
+static func _shale_barrier(root: Node3D) -> void:
+	var dark := mat("shale_dark", Color("#494449"))
+	var light := mat("shale_light", Color("#80756c"))
+	for offset in [-3.2, 0.0, 3.2]:
+		var slab := sph(root, 2.3, dark, Vector3(offset * 0.38, 1.35, offset), Vector3(1.08, 0.9, 0.8), 7)
+		slab.rotation_degrees = Vector3(12, offset * 12, 25)
+		sph(root, 1.45, light, Vector3(offset * 0.38 - 0.7, 2.5, offset + 0.6), Vector3(0.95, 0.65, 1.2), 7)
 
 # ---------------------------------------------------------------------------
 # Humans — Meridian Guard

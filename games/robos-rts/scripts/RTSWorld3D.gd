@@ -901,11 +901,13 @@ func _on_unit_destroyed(dead: Dictionary) -> void:
 	match str(dead.get("faction", "humans")):
 		"monsters": col = Color(0.65, 0.92, 0.2, 0.9)
 		"aliens": col = Color(0.5, 0.9, 1.0, 0.9)
+		"neutral": col = Color(0.78, 0.7, 0.62, 0.8)
 	if not _skip_transient_fx():
 		_spawn_burst(base + Vector3(0, rad * 0.8, 0), col, rad * (1.2 if dead["is_structure"] else 0.9), 0.55, 2.8)
 		if dead["is_structure"]:
 			_spawn_burst(base + Vector3(rad * 0.3, rad * 1.2, 0), Color(1.0, 0.85, 0.5, 0.8), rad * 0.8, 0.8, 2.2)
-	_spawn_scorch(base, rad * (1.1 if dead["is_structure"] else 0.8))
+	if dead["unit_type"] != "shale_barrier":
+		_spawn_scorch(base, rad * (1.1 if dead["is_structure"] else 0.8))
 
 func _effect_near_view(pos: Vector2) -> bool:
 	# Conservative margin includes beams crossing the view and tall structures.

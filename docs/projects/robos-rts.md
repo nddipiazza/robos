@@ -51,7 +51,7 @@ Skirmish setup lets you choose Easy, Normal or Hard AI, its Rush, Balanced, Econ
 
 ## Frontier Hunters
 
-The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, and two river crossings with brush cover on their approaches. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
+The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, two open crossings with brush on their approaches, and a third crossing sealed by a destructible Shale Barrier. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
 
 Frontier Hunters is a **256×256** map with two distinct starts drawn from eight perimeter bases. Each commander begins with their faction's main base, **12 workers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are inexhaustible by default. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
 
@@ -91,7 +91,9 @@ Both sides share vision across their own units and structures. The skirmish AI a
 
 Brush cover is walkable. It conceals biological combat units from enemy sight until an enemy comes within six world units or exposes them with detection. Workers and vehicles remain visible under normal sight rules.
 
-The Iron Narrows crossings each have a watch station. Keep a ground unit inside the four-unit ring to reveal 32 world units around the station. The station goes neutral when the ring is empty or contested. Scenario authors can place stations in the map's `watch_stations` list with `x` and `y` coordinates.
+The two open Iron Narrows crossings each have a watch station. Keep a ground unit inside the four-unit ring to reveal 32 world units around the station. The station goes neutral when the ring is empty or contested. Scenario authors can place stations in the map's `watch_stations` list with `x` and `y` coordinates.
+
+Right-click a Shale Barrier with combat units selected to break it. Its minimap marker disappears and ground units can cross. Scenario authors can place barriers with the map's `route_blockers` list.
 
 For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
 

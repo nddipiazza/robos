@@ -928,6 +928,12 @@ var units: Dictionary = {
 		"crystal_cost": 75, "aether_cost": 0, "build_time": 21.0,
 		"max_hp": 250.0, "max_shields": 250.0, "armor": 1.0, "radius": 2.0, "sight_range": 16.0,
 		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
+	},
+	"shale_barrier": {
+		"id": "shale_barrier", "name": "Shale Barrier", "faction": "neutral",
+		"blurb": "Attack the barrier to open a route.",
+		"is_structure": true, "is_immobile": true, "attributes": ["Armored", "Structure"],
+		"max_hp": 300.0, "armor": 2.0, "radius": 5.0, "sight_range": 0.0
 	}
 }
 
