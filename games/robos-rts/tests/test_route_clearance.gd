@@ -13,6 +13,7 @@ func _run() -> void:
 	_test_off_grid_ramp()
 	_test_gate()
 	_test_corner_sweeps()
+	_test_visible_start_cell()
 	print("Route clearance checks: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -111,3 +112,19 @@ func _test_corner_sweeps() -> void:
 	rifle.pos = gate_start
 	sim._move_on_terrain(rifle, gate_end)
 	_check(rifle.pos.is_equal_approx(gate_start), "Movement cannot sweep through the raised gate between walkable endpoints")
+
+func _test_visible_start_cell() -> void:
+	sim.reset_state(42, 96, 96)
+	sim.terrain_obstacles.append(Rect2(31, 0, 34, 46))
+	sim.terrain_obstacles.append(Rect2(31, 50, 34, 46))
+	sim._rebuild_astar_grid()
+	for start in [Vector2(30.10, 49.80), Vector2(65.90, 49.80)]:
+		var goal := Vector2(77, 48) if start.x < 48.0 else Vector2(19, 48)
+		var snapped: Vector2 = sim.astar_grid.get_point_position(sim._path_cell(sim.astar_grid, start))
+		_check(not sim._is_point_blocked_by_static(snapped, 0.85) and not sim._has_clear_line_of_walk(start, snapped, 0.85), "The usual lattice center is walkable but hidden by the wall lip")
+		var path: Array[Vector2] = sim.compute_smooth_path(start, goal)
+		var previous: Vector2 = start
+		_check(path.back().is_equal_approx(goal), "Route from the wall lip reaches the opposite bank")
+		for point in path:
+			_check(sim._has_clear_line_of_walk(previous, point, 0.85), "Route from the wall lip uses a visible start node")
+			previous = point
