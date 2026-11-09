@@ -523,7 +523,7 @@ func add_rect(layer: String, rect: Rect2) -> Dictionary:
 	emit_signal("changed")
 	return {"layer": layer, "index": data[layer].size() - 1}
 
-func add_resource(res_type: String, pos: Vector2, amount: int = -1) -> Dictionary:
+func add_resource(res_type: String, pos: Vector2, amount: int = -1, rich: bool = false) -> Dictionary:
 	checkpoint()
 	data["resources"].append({
 		"id": "",
@@ -532,6 +532,8 @@ func add_resource(res_type: String, pos: Vector2, amount: int = -1) -> Dictionar
 		"y": pos.y,
 		"amount": amount if amount >= 0 else int(RESOURCE_DEFAULT_AMOUNT.get(res_type, 1500))
 	})
+	if rich:
+		data.resources[-1]["rich"] = true
 	emit_signal("changed")
 	return {"layer": "resources", "index": data["resources"].size() - 1}
 

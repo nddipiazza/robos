@@ -19,16 +19,16 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 
 ## 011–020 Economy and construction
 
-- [ ] **011 Depleted crystal clears space.** Empty finite patches disappear and release their footprint after paying their last load.
-- [ ] **012 Rich crystal deposits.** A distinct deposit pays more per trip and displays its remaining reserves.
-- [ ] **013 Rich aether vents.** A distinct vent pays more per trip through each faction’s extractor.
-- [ ] **014 Mineral line reassignment.** When a drop-off is destroyed, workers transfer to an accessible surviving base.
-- [ ] **015 Gas build-to-gather.** Assign workers to an unfinished friendly extractor so gathering starts when it completes.
-- [ ] **016 Gas transfer shortcut.** Fill available gas slots from the current worker selection while leaving the rest on their current jobs.
-- [ ] **017 Default worker rally preview.** A completed headquarters shows the deposit it would assign to its next worker.
-- [ ] **018 Live income counters.** Hover crystal or aether to see recent income based on delivered loads.
-- [ ] **019 Build footprints on the ground.** Show blocked tiles, snapping, and a distinct planned footprint while targeting construction.
-- [ ] **020 Construction handoff.** A replacement Pioneer can claim a vacant foundation without paying twice, with ownership visible in its panel.
+- [x] **011 Depleted crystal clears space.** Empty finite patches disappear and release their footprint after paying their last load.
+- [x] **012 Rich crystal deposits.** A distinct deposit pays more per trip and displays its remaining reserves.
+- [x] **013 Rich aether vents.** A distinct vent pays more per trip through each faction’s extractor.
+- [x] **014 Mineral line reassignment.** When a drop-off is destroyed, workers transfer to an accessible surviving base.
+- [x] **015 Gas build-to-gather.** Assign workers to an unfinished friendly extractor so gathering starts when it completes.
+- [x] **016 Gas transfer shortcut.** Fill available gas slots from the current worker selection while leaving the rest on their current jobs.
+- [x] **017 Default worker rally preview.** A completed headquarters shows the deposit it would assign to its next worker.
+- [x] **018 Live income counters.** Hover crystal or aether to see recent income based on delivered loads.
+- [x] **019 Build footprints on the ground.** Show blocked tiles, snapping, and a distinct planned footprint while targeting construction.
+- [x] **020 Construction handoff.** A replacement Pioneer can claim a vacant foundation without paying twice, with ownership visible in its panel.
 
 ## 021–030 Combat readability and tactical terrain
 

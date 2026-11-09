@@ -61,6 +61,10 @@ Frontier Hunters is a **256×256** map with two distinct starts drawn from eight
 
 Click a visible deposit to inspect its remaining reserves. When your workers empty a finite field or vent, the HUD reports the depletion. Hover over supply to see deployed and reserved supply, free capacity and capacity under construction. Selecting several producers shows each building's queue count and active job progress on its portrait.
 
+Depleted crystal fields disappear and free their footprint. Rich crystal pays seven per load and rich aether pays six. Mark either deposit as rich in the Map Editor’s inspector. Hover the crystal or aether counter to see deliveries over the last 60 game seconds.
+
+Select workers, press **Alt+H**, then click a friendly extractor to fill up to three gas slots. Workers assigned to an extractor under construction wait for it to finish. When a base is lost, workers look for a reachable surviving drop-off and its crystal line. Select a headquarters to see its automatic worker rally.
+
 ### Skirmish factions
 
 Pick **Your faction** and **AI faction** independently on the skirmish setup screen. Both default to Meridian Guard. **Random** chooses a faction from the match seed, and a same-seed rematch preserves the factions and starting sites. The results screen lists both resolved factions.
@@ -435,6 +439,8 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 Ground movement orders aimed into cliffs, buildings, or deposits end at a reachable edge. Troops route around crystal fields and aether vents. Workers reach the edge of their deposit and can pass through other mobile units during active crystal gathering.
 
 In **Settings**, choose the camera pan speed and when unit order lines appear. Hold **Shift** to place several targeted move, attack, or rally waypoints after one command activation.
+
+The build preview marks blocked tiles in red, valid placements in green, and conflicts with queued footprints in amber. Extractors snap to the vent. A Meridian foundation displays its assigned builder or indicates that it needs a replacement.
 
 ## Scripting and bots
 

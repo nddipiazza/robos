@@ -556,7 +556,7 @@ static func _aether_prism(root: Node3D, radius: float, glow: Material) -> void:
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
-static func build_resource(res_type: String, seed_val: int) -> Node3D:
+static func build_resource(res_type: String, seed_val: int, rich: bool = false) -> Node3D:
 	var root := Node3D.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_val
@@ -565,6 +565,11 @@ static func build_resource(res_type: String, seed_val: int) -> Node3D:
 			mat("res_crystal_a", Color("#2dd4bf"), Color("#14b8a6"), 1.6, 0.0, 0.2, 0.95),
 			mat("res_crystal_b", Color("#38bdf8"), Color("#0ea5e9"), 1.6, 0.0, 0.2, 0.95),
 		]
+		if rich:
+			cm = [
+				mat("res_rich_gold", Color("#ffcf61"), Color("#f7a820"), 1.6, 0.0, 0.2, 0.95),
+				mat("res_rich_amber", Color("#ffab42"), Color("#ee8426"), 1.6, 0.0, 0.2, 0.95),
+			]
 		var rock := mat("res_rock", Color("#4a4540"), Color.BLACK, 1.0, 0.1, 0.95)
 		for i in range(3):
 			var a := rng.randf() * TAU
@@ -577,11 +582,12 @@ static func build_resource(res_type: String, seed_val: int) -> Node3D:
 			c.name = "Crystal%d" % i
 	else:
 		var rock2 := mat("res_rock", Color("#4a4540"), Color.BLACK, 1.0, 0.1, 0.95)
-		var green := mat("res_aether", Color("#6ee7a8"), Color("#34d399"), 2.2, 0.0, 0.3)
+		var green := mat("res_aether_rich", Color("#c6f77d"), Color("#a3e635"), 2.2, 0.0, 0.3) if rich else mat("res_aether", Color("#6ee7a8"), Color("#34d399"), 2.2, 0.0, 0.3)
 		ring(root, 1.5, 2.7, rock2, Vector3(0, 0.35, 0))
 		cyl(root, 1.55, 1.55, 0.12, green, Vector3(0, 0.28, 0), Vector3.ZERO, 18)
 		for i in range(3):
-			var p := sph(root, 0.7 + float(i) * 0.12, mat("res_plume", Color("#9ff3c8"), Color("#34d399"), 0.9, 0.0, 0.6, 0.35), Vector3(0, 1.2 + float(i) * 0.9, 0), Vector3.ONE, 10)
+			var plume := mat("res_plume_rich", Color("#e5ffa8"), Color("#a3e635"), 0.9, 0.0, 0.6, 0.35) if rich else mat("res_plume", Color("#9ff3c8"), Color("#34d399"), 0.9, 0.0, 0.6, 0.35)
+			var p := sph(root, 0.7 + float(i) * 0.12, plume, Vector3(0, 1.2 + float(i) * 0.9, 0), Vector3.ONE, 10)
 			p.name = "Plume%d" % i
 	return root
 

@@ -398,7 +398,7 @@ func _rebuild_static_3d_map() -> void:
 			var resource: Dictionary = SimEngine.resources[tag]
 			if resource.resource_type != "crystal_field":
 				continue
-			var node = Models.build_resource(resource.resource_type, tag)
+			var node = Models.build_resource(resource.resource_type, tag, resource.rich)
 			resources_root.add_child(node)
 			node.position = Vector3(resource.pos.x, SimEngine.get_elevation_at(resource.pos), resource.pos.y)
 			resource_nodes[tag] = node
@@ -532,8 +532,10 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 	# Resources
 	for r_tag in SimEngine.resources.keys():
 		var r: Dictionary = SimEngine.resources[r_tag]
+		if not SimEngine.deposit_present(r):
+			continue
 		if not resource_nodes.has(r_tag):
-			var node := Models.build_resource(str(r["resource_type"]), int(r_tag))
+			var node := Models.build_resource(str(r["resource_type"]), int(r_tag), r.rich)
 			resources_root.add_child(node)
 			resource_nodes[r_tag] = node
 		var rn: Node3D = resource_nodes[r_tag]
@@ -547,7 +549,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 				if pl:
 					pl.position.y = 1.2 + float(i) * 0.9 + sin(anim_time * 1.6 + float(i)) * 0.25
 	for r_tag in resource_nodes.keys():
-		if not SimEngine.resources.has(r_tag):
+		if not SimEngine.resources.has(r_tag) or not SimEngine.deposit_present(SimEngine.resources[r_tag]):
 			resource_nodes[r_tag].queue_free()
 			resource_nodes.erase(r_tag)
 

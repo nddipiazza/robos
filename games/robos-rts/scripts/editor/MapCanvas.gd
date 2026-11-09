@@ -414,15 +414,18 @@ func _clip_segment_to_rect(a: Vector2, b: Vector2, r: Rect2) -> Array:
 func _draw_resource(item: Dictionary, ref: Dictionary) -> void:
 	var c = world_to_screen(Vector2(float(item["x"]), float(item["y"])))
 	var rad = float(MapDocumentScript.RESOURCE_RADIUS.get(item["type"], 2.0)) * view_scale
+	var rich := bool(item.get("rich", false))
 	if item["type"] == "crystal_field":
 		var pts = PackedVector2Array([c + Vector2(0, -rad), c + Vector2(rad * 0.8, 0), c + Vector2(0, rad), c + Vector2(-rad * 0.8, 0)])
-		draw_colored_polygon(pts, COLOR_MINERAL)
+		var color := Color("#fbbf24") if rich else COLOR_MINERAL
+		draw_colored_polygon(pts, color)
 		pts.append(pts[0])
-		draw_polyline(pts, COLOR_MINERAL.lightened(0.5), 1.0)
+		draw_polyline(pts, color.lightened(0.5), 1.0)
 	else:
-		draw_circle(c, rad, Color(COLOR_GEYSER, 0.35))
-		draw_arc(c, rad, 0, TAU, 24, COLOR_GEYSER, 2.0)
-		draw_circle(c, rad * 0.35, COLOR_GEYSER)
+		var color := Color("#a3e635") if rich else COLOR_GEYSER
+		draw_circle(c, rad, Color(color, 0.35))
+		draw_arc(c, rad, 0, TAU, 24, color, 2.0)
+		draw_circle(c, rad * 0.35, color)
 	if _is_selected(ref):
 		draw_arc(c, rad + 4.0, 0, TAU, 24, COLOR_SELECT, 2.0)
 
