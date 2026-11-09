@@ -1703,7 +1703,12 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	if u["orders"].is_empty():
 		if u.get("auto_repair", false) and tick % 8 == u.tag % 8 and _begin_auto_repair(u):
 			return
-		var enemy = _find_best_attack_target(u, u.is_structure)
+		# Skirmish guards fire in place until the director commits them.
+		var range_only: bool = u.is_structure
+		if not range_only and not u.is_worker:
+			var directive: Dictionary = RTSCommanderAI.player_directives.get(u.owner, {})
+			range_only = directive.get("enabled", false) and directive.get("mode") == "skirmish"
+		var enemy = _find_best_attack_target(u, range_only)
 		if not enemy.is_empty():
 			var wpn_range = _get_weapon_range(u)
 			var dist_edge = _edge_distance(u, enemy)
@@ -1800,7 +1805,13 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"attack_target", "force_attack":
 			var t_tag = int(order.get("target_tag", 0))
 			var enemy: Dictionary = units.get(t_tag, {})
-			if enemy.is_empty() or not can_see_unit(u.owner, enemy):
+			var intercept: Dictionary = order.get("_defense_intercept", {})
+			var target_lost := enemy.is_empty() or not can_see_unit(u.owner, enemy)
+			if not intercept.is_empty() and (target_lost or enemy.pos.distance_squared_to(intercept.center) > intercept.radius_squared or not can_attack(u, enemy)):
+				u.orders[0] = {"type": "move", "target_pos": intercept.origin}
+				u.path.clear()
+				return
+			if target_lost:
 				# Mobile units can continue to the last observed location of an enemy.
 				if otype == "attack_target" and not u.is_immobile and order.has("target_pos") and (vision != null or not enemy.is_empty()):
 					u.orders[0] = {"type": "attack_move", "target_pos": order.target_pos}
@@ -3909,6 +3920,7 @@ func _observed_orders(orders: Array) -> Array:
 		order.erase("_reachable_request")
 		order.erase("_pursuit_origins")
 		order.erase("_blocked_crystal_revision")
+		order.erase("_defense_intercept")
 	return observed
 
 func get_observation(perspective_player: int = 0) -> Dictionary:
