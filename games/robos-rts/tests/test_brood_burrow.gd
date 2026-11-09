@@ -11,6 +11,7 @@ func _run() -> void:
 	sim = root.get_node("SimEngine")
 	_test_detection_and_mobility()
 	_test_occupied_surface()
+	_test_living_ground_bonus()
 	_test_splash()
 	print("Brood burrow checks: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
@@ -79,6 +80,17 @@ func _test_occupied_surface() -> void:
 	sim.step_ticks(1)
 	_check(not sim.issue_command([ling.tag], "surface").ok and ling.burrowed, "A unit cannot surface inside a newly occupied static footprint")
 
+func _test_living_ground_bonus() -> void:
+	sim.reset_state(42, 96, 64)
+	sim.spawn_unit("brood_nest", 2, Vector2(30, 30))
+	var ling: Dictionary = sim.spawn_unit("skitterling", 2, Vector2(43, 31))
+	sim.step_ticks(1600)
+	_check(sim.active_living_ground_speed_bonus(ling) > 0.0, "The surfaced unit gains the living ground bonus")
+	sim.issue_command([ling.tag], "burrow")
+	_check(sim.effective_move_speed(ling) == 0.0 and sim.active_living_ground_speed_bonus(ling) == 0.0, "The movement bonus shows as inactive underground")
+	sim.issue_command([ling.tag], "surface")
+	_check(is_equal_approx(sim.effective_move_speed(ling), 12.74), "Surfacing restores the boosted movement rate")
+
 func _test_splash() -> void:
 	sim.load_scenario_dict({
 		"paused": true, "fog_of_war": true, "map": {"width": 96, "height": 72},
@@ -92,7 +104,9 @@ func _test_splash() -> void:
 	var gun: Dictionary = units[0]
 	var crawler: Dictionary = units[1]
 	var ling: Dictionary = units[2]
+	ling.hp = 1.0
 	sim.issue_command([ling.tag], "burrow")
 	_check(not _visible(1, ling.tag) and sim.issue_command([gun.tag], "attack_target", crawler.pos, crawler.tag).ok, "An area attack can target a visible neighbor without seeing the buried unit")
 	sim.step_ticks(32)
-	_check(ling.hp < ling.max_hp and not _visible(1, ling.tag), "Area damage can reach the hidden unit without granting detection")
+	_check(not sim.units.has(ling.tag) and sim.players[2].supply_used == 2, "Lethal area damage removes the hidden unit and frees its supply")
+	_check(not _visible(1, ling.tag) and sim.get_observation(1).recent_events.is_empty(), "Undetected collateral death exposes no unit or combat telemetry to the other player")
