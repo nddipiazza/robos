@@ -2913,12 +2913,15 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 			continue
 
-		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "patrol", "phase_step"]:
+		# An appended order must leave the active shot and recovery alone.
+		# Phase Step is an immediate ability even when Shift is held.
+		var immediate := not queue or ctype == "phase_step"
+		if immediate and u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "patrol", "phase_step"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 			if players.has(u["owner"]):
 				players[u["owner"]]["stutter_step_cancels"] += 1
-		elif u["attack_state"] == "windup" and ctype in ["move", "stop", "phase_step"]:
+		elif immediate and u["attack_state"] == "windup" and ctype in ["move", "stop", "phase_step"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 
