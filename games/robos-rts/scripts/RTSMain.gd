@@ -1050,6 +1050,17 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			return
 		pending_ability = ""
 		_spawn_marker(target.pos, "move")
+	elif abil == "production_boost":
+		var target := _order_target_at(wpos, screen)
+		var reason := SimEngine.production_boost_target_reason(local_player, target)
+		if not reason.is_empty():
+			push_message(reason, "warn")
+			return
+		if not SimEngine.issue_command(tags, abil, target.pos, target.tag).ok:
+			push_message("Requires 50 Heartstone energy.", "warn")
+			return
+		pending_ability = ""
+		_spawn_marker(target.pos, "boost")
 	elif abil.begins_with("build_"):
 		var sdef_id := str(RTSData.get_ability_def(abil).get("structure", abil.replace("build_", "")))
 		var placement := placement_for(sdef_id, wpos)
@@ -1192,6 +1203,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 				return "Fog of war is disabled."
 			if not selected_owned().any(SimEngine.can_use_hub_power):
 				return "Requires 50 Hub energy."
+		"production_boost":
+			if not selected_owned().any(SimEngine.can_use_production_boost):
+				return "Requires 50 Heartstone energy."
 		"return_cargo":
 			if not selected_owned().any(func(unit): return unit.is_worker and unit.cargo_amount > 0):
 				return "No worker is carrying resources."
@@ -1866,7 +1880,7 @@ func _draw_click_markers() -> void:
 		var sp := world_to_screen(m["pos"], m.height)
 		var col := Color("#4ade80")
 		match str(m["kind"]):
-			"ping": col = Color("#b093ff")
+			"ping", "boost": col = Color("#b093ff")
 			"attack": col = Color("#f87171")
 			"gather": col = Color("#5eead4")
 			"patrol": col = Color("#b9a3ef")

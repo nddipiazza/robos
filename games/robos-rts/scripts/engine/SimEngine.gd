@@ -61,6 +61,9 @@ const HUB_ENERGY_MAX := 200.0
 const HUB_POWER_COST := 50.0
 const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 30.0, "requires": ["muster_hall"]}
 const PROSPECTOR_LIFETIME_TICKS := 45 * TICK_RATE
+const PRODUCTION_BOOST_COST := 50.0
+const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
+const PRODUCTION_BOOST_RATE := 1.5
 const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
 const SALVAGE_TICKS := 5 * TICK_RATE
@@ -1041,6 +1044,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 func _starting_energy(unit_type: String) -> float:
 	match unit_type:
 		"colony_hub": return HUB_POWER_COST
+		"heartstone": return PRODUCTION_BOOST_COST
 		"skirmisher": return 75.0
 	return 0.0
 
@@ -1520,7 +1524,7 @@ func _update_structures(dt: float) -> void:
 					_recompute_supplies()
 					emit_signal("structure_construction_finished", u)
 			continue
-		if u.unit_type == "colony_hub":
+		if u.unit_type == "colony_hub" or u.unit_type == "heartstone":
 			u.energy = minf(HUB_ENERGY_MAX, u.energy + 0.75 * dt)
 		var salvage_finish: int = u.get("salvage_finish", 0)
 		if salvage_finish > 0 and tick >= salvage_finish:
@@ -1537,10 +1541,13 @@ func _update_structures(dt: float) -> void:
 				u.brood_recharge = 0.0
 				u.brood_slots += 1
 		var active := active_production_slots(u)
+		# The tick at the deadline consumes the final interval of the boost.
+		var boost_active := active > 0 and int(u.get("production_boost_until", -1)) >= tick and is_powered(u.owner, u.pos)
 		var index := 0
 		while index < active:
 			var item: Dictionary = queue[index]
-			item.progress = minf(item.progress + dt, item.total_time)
+			var progress_dt := dt * PRODUCTION_BOOST_RATE if boost_active and item.has("unit_type") else dt
+			item.progress = minf(item.progress + progress_dt, item.total_time)
 			if item.progress < item.total_time or tick < int(item.get("exit_retry_tick", 0)):
 				index += 1
 			elif _try_finish_production(u, index, arrivals):
@@ -2231,6 +2238,28 @@ func _enqueue_hub_upgrade(hub: Dictionary) -> bool:
 	player.aether -= HUB_OPERATIONS_OFFER.aether
 	hub.production_queue.append({"upgrade": "hub_operations", "level": 1, "crystal_cost": HUB_OPERATIONS_OFFER.crystal,
 		"aether_cost": HUB_OPERATIONS_OFFER.aether, "progress": 0.0, "total_time": HUB_OPERATIONS_OFFER.time * build_time_scale()})
+	return true
+
+func can_use_production_boost(unit: Dictionary) -> bool:
+	return unit.unit_type == "heartstone" and unit.build_progress >= 1.0 and unit.energy >= PRODUCTION_BOOST_COST
+
+func production_boost_ticks(unit: Dictionary) -> int:
+	return maxi(0, int(unit.get("production_boost_until", 0)) - tick)
+
+func production_boost_target_reason(owner: int, producer: Dictionary) -> String:
+	if producer.is_empty() or producer.owner != owner or not producer.is_structure or producer.build_progress < 1.0 or RTSData.get_unit_def(producer.unit_type).get("trains", []).is_empty():
+		return "Select a completed friendly producer."
+	if not is_powered(owner, producer.pos):
+		return "The producer needs a Resonator's power field."
+	if production_boost_ticks(producer) > 0:
+		return "Production boost is already active."
+	return ""
+
+func _cast_production_boost(source: Dictionary, producer: Dictionary) -> bool:
+	if not can_use_production_boost(source) or not production_boost_target_reason(source.owner, producer).is_empty():
+		return false
+	source.energy -= PRODUCTION_BOOST_COST
+	producer["production_boost_until"] = tick + PRODUCTION_BOOST_TICKS
 	return true
 
 func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_tag: int) -> bool:
@@ -3076,6 +3105,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if _enqueue_hub_upgrade(u):
 				accepted += 1
 			continue
+		if ctype == "production_boost":
+			if accepted == 0 and _cast_production_boost(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
 		if ctype == "salvage":
 			if _toggle_salvage(u):
 				accepted += 1
@@ -3824,7 +3857,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		if u.get("hold_fire", false):
 			entry["hold_fire"] = true
 		match u.unit_type:
-			"colony_hub":
+			"colony_hub", "heartstone":
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["hub_operations"] = u.get("hub_operations", false)
 			"skirmisher":
@@ -3836,6 +3869,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"pioneer":
 				entry["auto_repair"] = u.get("auto_repair", false)
 		if not limited or u.owner == perspective_player:
+			if u.has("production_boost_until"):
+				entry["production_boost_ticks"] = production_boost_ticks(u)
 			if u.has("attachment_tag"):
 				entry["attachment_tag"] = u.attachment_tag
 			if u.has("attachment_parent_tag"):
