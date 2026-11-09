@@ -57,7 +57,7 @@ class FrontierBuildBot:
                 self.build_structure(obs, available, "colony_hub", pos, 400, exact=True)
                 self.attack(obs, army)
                 return
-        if self.build == "siege" and not counts.get("workshop"):
+        if self.build in ("economy", "siege") and not counts.get("workshop"):
             self.build_structure(obs, available, "workshop", base, 150, 100)
         target = 2 if self.build == "siege" else 4
         if counts.get("muster_hall", 0) < target and p["crystal"] >= 150:
@@ -72,6 +72,14 @@ class FrontierBuildBot:
             if u["unit_type"] == "muster_hall":
                 self.client.command("train_rifleman", tags=[u["tag"]])
             elif u["unit_type"] == "workshop":
+                if self.build == "economy" and len(army) >= 20:
+                    upgrades = p["upgrades"]
+                    for kind in sorted(("weapons", "armor"), key=lambda kind: upgrades[kind]):
+                        if self.client.command(f"research_{kind}", tags=[u["tag"]]).get("accepted"):
+                            break
+                    else:
+                        self.client.command("train_howitzer", tags=[u["tag"]])
+                    continue
                 self.client.command("train_howitzer", tags=[u["tag"]])
         self.attack(obs, army)
 
