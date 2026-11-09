@@ -138,6 +138,10 @@ func _on_scenario_loaded(_name: String) -> void:
 	if RTSAudio:
 		RTSAudio.local_player_id = local_player
 	selected_tags.clear()
+	is_box_selecting = false
+	mm_dragging = false
+	mid_dragging = false
+	_clear_held_keys()
 	_inspected_deposit_tag = 0
 	pending_ability = ""
 	_repeating_target = false
