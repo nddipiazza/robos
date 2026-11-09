@@ -9,6 +9,7 @@ enum Layout { BATTLE, SKIRMISH, SETTINGS }
 const DISPLAY_PREFS := "user://rts-display.cfg"
 const VOLUME_LEVELS := [100, 70, 40, 0]
 const PAN_SPEEDS := [28.0, 46.0, 72.0]
+const SkirmishPreview = preload("res://scripts/RTSSkirmishPreview.gd")
 enum OrderLines { ALWAYS, SHIFT, HIDDEN }
 
 var layout := Layout.BATTLE
@@ -34,6 +35,7 @@ var _score_values: Dictionary = {}
 var _rematch: Button
 var _show_results: Button
 var _map_description: Label
+var map_preview: Control
 var _faction_ids: Array = []
 
 func _ready() -> void:
@@ -43,6 +45,13 @@ func _ready() -> void:
 	var box := _panel_body(panel)
 	_label(box, "SETTINGS" if layout == Layout.SETTINGS else "SKIRMISH", 32)
 	if layout != Layout.SETTINGS:
+		map_preview = SkirmishPreview.new()
+		map_preview.position = panel.position + Vector2(panel.custom_minimum_size.x + 18, 0)
+		map_preview.size = Vector2(460, 368)
+		map_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		map_preview.hide()
+		add_child(map_preview)
+		panel.visibility_changed.connect(func(): map_preview.visible = panel.visible)
 		_build_skirmish_options(box)
 	if layout != Layout.SKIRMISH:
 		_build_display_options(box)
@@ -268,6 +277,7 @@ func _on_map_selected(index: int) -> void:
 	_map_description.text = "1 Player vs 1 AI\n%d × %d · %d possible starts" % [layout.get("width", 0), layout.get("height", 0), layout.get("starts", []).size()]
 	if data.has("menu_hint"):
 		_map_description.text += " · " + str(data.menu_hint)
+	map_preview.set_map(data)
 	deposit_rules.select(0 if data.get("unlimited_resources", true) else 1)
 
 func _on_health_selected(mode: int) -> void:

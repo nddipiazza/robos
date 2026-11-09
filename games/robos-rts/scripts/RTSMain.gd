@@ -1568,6 +1568,7 @@ func ui_state() -> Dictionary:
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"scorecard_visible": match_menu != null and match_menu.result_panel.visible,
 		"setup_map": SimEngine.SKIRMISH_MAPS.keys()[match_menu.map_picker.selected] if match_menu != null else "",
+		"map_preview": match_menu.map_preview.preview_state() if match_menu != null and match_menu.map_preview else {},
 		"setup_unlimited_resources": match_menu != null and match_menu.deposit_rules.selected == 0,
 		"observer_player": observer_player,
 		"health_bar_mode": health_bar_mode,

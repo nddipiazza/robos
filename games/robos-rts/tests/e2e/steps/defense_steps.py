@@ -68,12 +68,35 @@ def choose_glassline_basin(context):
     assert context.client.ui()["state"]["setup_map"] == "glassline-basin"
 
 
+@then("the preview shows Frontier Hunters with eight candidate starts and its bridges")
+def frontier_preview(context):
+    preview = context.client.ui()["state"]["map_preview"]
+    assert preview["map_id"] == "frontier-hunters" and preview["starts"] == 8 and preview["bridges"] > 2
+
+
+@then("the preview shows Glassline Basin with its starts, expansions, stations and blockers")
+def glassline_preview(context):
+    preview = context.client.ui()["state"]["map_preview"]
+    assert preview == {"map_id": "glassline-basin", "starts": 2, "expansions": 4, "bridges": 0,
+                       "watch_stations": 2, "route_blockers": 2}
+    result = context.client.screenshot(str(context.reports_dir / "glassline-map-preview.png"))
+    assert result["ok"], result
+
+
+@when("the commander starts the selected map from the picker")
+def start_from_map_picker(context):
+    for _ in range(7):
+        key(context, "Tab")
+    key(context, "Enter")
+
+
 @then("Glassline Basin starts with two economies and two flanking lanes")
 def glassline_opening(context):
     obs = context.client.get_observation()
-    assert obs["match"]["map_id"] == "glassline-basin" and not obs["match"]["unlimited_resources"]
+    assert obs["match"]["map_id"] == "glassline-basin" and not obs["match"]["unlimited_resources"], obs["match"]
     assert (obs["map"]["width"], obs["map"]["height"]) == (160, 112)
     assert len(obs["match"]["expansions"]) == 4 and len(obs["map"]["obstacles"]) == 3
+    assert not context.client.ui()["state"].get("map_preview")
     for seat in (1, 2):
         assert sum(u["owner"] == seat and u["is_worker"] and u["orders"][0]["type"] == "harvest"
                    for u in obs["units"]) == 12
@@ -118,14 +141,15 @@ def finite_duel(context):
 def observe_enemy(context):
     obs = context.client.get_observation()
     base = next(u for u in obs["units"] if u["owner"] == 2 and u["unit_type"] == "colony_hub")
-    assert not any(u["tag"] == base["tag"] for u in context.client.get_observation(1)["units"])
-    assert context.client.ui()["state"]["observer_player"] == 0
+    assert not any(u["tag"] == base["tag"] for u in context.client.get_observation(1)["units"]), "Player fog reveals the enemy base"
+    assert context.client.ui()["state"]["observer_player"] == 0, "The results shortcut did not enter observer mode"
     x, y = base["pos"]["x"], base["pos"]["y"]
     context.client.focus_camera(x, y, 40)
     sx, sy = context.client.project((x, y, 1.15))[0]
     context.client.mouse(sx, sy)
     context.client.mouse(sx, sy, pressed=False)
-    assert context.client.ui()["state"]["selected"] == [base["tag"]]
+    selected = context.client.ui()["state"]["selected"]
+    assert selected == [base["tag"]], (selected, base["tag"], sx, sy)
 
 
 @then("the observer sees through player 1's fog again")
