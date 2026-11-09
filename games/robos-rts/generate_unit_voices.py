@@ -31,6 +31,38 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "aegis_warden": {
+        "unit_name": "Aegis Warden",
+        "voice": "en-US-AndrewNeural",
+        "rate": "-4%",
+        "pitch": "-12Hz",
+        "lines": {
+            "select": [
+                {"id": "aegis_warden_select_1", "text": "An aegis answers."},
+                {"id": "aegis_warden_select_2", "text": "Where is the breach?"},
+                {"id": "aegis_warden_select_3", "text": "Geometry is our shield."},
+                {"id": "aegis_warden_select_4", "text": "Warden attuned."},
+                {"id": "aegis_warden_select_5", "text": "I hold the threshold."},
+            ],
+            "move": [
+                {"id": "aegis_warden_move_1", "text": "Mark the line."},
+                {"id": "aegis_warden_move_2", "text": "I will take position."},
+                {"id": "aegis_warden_move_3", "text": "Keeping the passage clear."},
+                {"id": "aegis_warden_move_4", "text": "Through the aperture."},
+            ],
+            "support": [
+                {"id": "aegis_warden_support_1", "text": "Barrier aligned."},
+                {"id": "aegis_warden_support_2", "text": "The ground route is sealed."},
+                {"id": "aegis_warden_support_3", "text": "Hold behind the field."},
+                {"id": "aegis_warden_support_4", "text": "Concord geometry, locked."},
+                {"id": "aegis_warden_support_5", "text": "That passage is ours."},
+            ],
+            "ready": [
+                {"id": "aegis_warden_ready_1", "text": "The ward is attuned."},
+                {"id": "aegis_warden_ready_2", "text": "Aegis Warden standing by."},
+            ],
+        },
+    },
     "veilseeker": {
         "unit_name": "Veilseeker",
         "voice": "en-US-AndrewNeural",

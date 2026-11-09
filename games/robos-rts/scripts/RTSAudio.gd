@@ -40,6 +40,7 @@ const SOUND_FILES: Dictionary = {
 	"surge_activate": "res://assets/audio/sfx/surge_activate.wav",
 	"charge_activate": "res://assets/audio/sfx/charge_activate.wav",
 	"phase_step": "res://assets/audio/sfx/phase_step.wav",
+	"phase_barrier": "res://assets/audio/sfx/phase_barrier.wav",
 	"power_field_anchor": "res://assets/audio/sfx/power_field_anchor.wav",
 	"power_field_fold": "res://assets/audio/sfx/power_field_fold.wav",
 	"siege_transform": "res://assets/audio/sfx/siege_transform.wav",
@@ -120,6 +121,7 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"surge_activate": -1.0,
 	"charge_activate": -1.0,
 	"phase_step": -0.5,
+	"phase_barrier": -1.5,
 	"power_field_anchor": -1.5,
 	"power_field_fold": -2.0,
 	"siege_transform": -0.5,
@@ -689,7 +691,7 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 				sfx_key = "silo_gate"
 	if sfx_key != "":
 		play_at(sfx_key, pos, 0.0, 0.035)
-	if ab_id in ["restore_vitals", "inject_brood"] and unit.owner == local_player_id:
+	if ab_id in ["restore_vitals", "inject_brood", "phase_barrier"] and unit.owner == local_player_id:
 		play_unit_dialogue(unit.unit_type, "support")
 	elif ab_id == "carapace_ready" and unit.owner == local_player_id:
 		play_unit_dialogue(unit.unit_type, "ready")
@@ -700,7 +702,7 @@ func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, unit_tag: int) -> void
 		play_at("phase_step", to_pos, 0.0, 0.035)
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
-	if not SimEngine.can_see_unit(local_player_id, dead):
+	if dead.unit_type == "phase_barrier" or not SimEngine.can_see_unit(local_player_id, dead):
 		return
 	var pos: Vector2 = dead.get("pos", Vector2.ZERO)
 	if bool(dead.get("is_structure", false)):

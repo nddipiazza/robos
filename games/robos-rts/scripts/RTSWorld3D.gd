@@ -1011,7 +1011,7 @@ func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, tag: int) -> void:
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
 	var p: Vector2 = dead["pos"]
-	if not _effect_near_view(p) or not SimEngine.can_see_unit(_viewing_player, dead):
+	if dead.unit_type == "phase_barrier" or not _effect_near_view(p) or not SimEngine.can_see_unit(_viewing_player, dead):
 		return
 	var airborne_structure: bool = dead.is_structure and dead.flight_height > 0.0
 	var height := SimEngine.unit_elevation(dead) if airborne_structure else SimEngine.get_elevation_at(p)

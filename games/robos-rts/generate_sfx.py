@@ -867,6 +867,7 @@ GENERATORS = {
     "surge_activate": (gen_surge_activate, 0.85),
     "charge_activate": (gen_charge_activate, 0.85),
     "phase_step": (gen_phase_step, 0.86),
+    "phase_barrier": (lambda: gen_support_pulse(315, 0.52), 0.60),
     "power_field_anchor": (lambda: gen_power_field(True), 0.78),
     "power_field_fold": (lambda: gen_power_field(False), 0.70),
     "siege_transform": (gen_siege_transform, 0.88),

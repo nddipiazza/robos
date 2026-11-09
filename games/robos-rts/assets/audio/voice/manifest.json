@@ -1550,5 +1550,99 @@
         }
       ]
     }
+  },
+  "aegis_warden": {
+    "unit_name": "Aegis Warden",
+    "voice": "en-US-AndrewNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "aegis_warden_select_1",
+          "text": "An aegis answers.",
+          "path": "res://assets/audio/voice/aegis_warden_select_1.wav"
+        },
+        {
+          "id": "aegis_warden_select_2",
+          "text": "Where is the breach?",
+          "path": "res://assets/audio/voice/aegis_warden_select_2.wav"
+        },
+        {
+          "id": "aegis_warden_select_3",
+          "text": "Geometry is our shield.",
+          "path": "res://assets/audio/voice/aegis_warden_select_3.wav"
+        },
+        {
+          "id": "aegis_warden_select_4",
+          "text": "Warden attuned.",
+          "path": "res://assets/audio/voice/aegis_warden_select_4.wav"
+        },
+        {
+          "id": "aegis_warden_select_5",
+          "text": "I hold the threshold.",
+          "path": "res://assets/audio/voice/aegis_warden_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "aegis_warden_move_1",
+          "text": "Mark the line.",
+          "path": "res://assets/audio/voice/aegis_warden_move_1.wav"
+        },
+        {
+          "id": "aegis_warden_move_2",
+          "text": "I will take position.",
+          "path": "res://assets/audio/voice/aegis_warden_move_2.wav"
+        },
+        {
+          "id": "aegis_warden_move_3",
+          "text": "Keeping the passage clear.",
+          "path": "res://assets/audio/voice/aegis_warden_move_3.wav"
+        },
+        {
+          "id": "aegis_warden_move_4",
+          "text": "Through the aperture.",
+          "path": "res://assets/audio/voice/aegis_warden_move_4.wav"
+        }
+      ],
+      "support": [
+        {
+          "id": "aegis_warden_support_1",
+          "text": "Barrier aligned.",
+          "path": "res://assets/audio/voice/aegis_warden_support_1.wav"
+        },
+        {
+          "id": "aegis_warden_support_2",
+          "text": "The ground route is sealed.",
+          "path": "res://assets/audio/voice/aegis_warden_support_2.wav"
+        },
+        {
+          "id": "aegis_warden_support_3",
+          "text": "Hold behind the field.",
+          "path": "res://assets/audio/voice/aegis_warden_support_3.wav"
+        },
+        {
+          "id": "aegis_warden_support_4",
+          "text": "Concord geometry, locked.",
+          "path": "res://assets/audio/voice/aegis_warden_support_4.wav"
+        },
+        {
+          "id": "aegis_warden_support_5",
+          "text": "That passage is ours.",
+          "path": "res://assets/audio/voice/aegis_warden_support_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "aegis_warden_ready_1",
+          "text": "The ward is attuned.",
+          "path": "res://assets/audio/voice/aegis_warden_ready_1.wav"
+        },
+        {
+          "id": "aegis_warden_ready_2",
+          "text": "Aegis Warden standing by.",
+          "path": "res://assets/audio/voice/aegis_warden_ready_2.wav"
+        }
+      ]
+    }
   }
 }

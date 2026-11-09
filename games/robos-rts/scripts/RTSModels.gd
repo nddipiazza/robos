@@ -167,6 +167,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"veilseeker": _veilseeker(root, team)
 		"farsight_wisp": _farsight_wisp(root, team)
 		"lumen_carrier": _lumen_carrier(root, team)
+		"aegis_warden": _aegis_warden(root, team)
 		"sunblade": _sunblade(root, team)
 		"skirmisher": _skirmisher(root, team)
 		"spire_walker": _spire_walker(root, team)
@@ -176,8 +177,26 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"waystone": _waystone(root, r, team)
 		"aether_prism": _aether_prism(root, r, glow)
 		"shale_barrier": _shale_barrier(root)
+		"phase_barrier": _phase_barrier(root, r)
 		_: box(root, Vector3(r * 1.5, 1.4, r * 1.5), mat("fallback", STEEL), Vector3(0, 0.7, 0))
 	return root
+
+static func _aegis_warden(root: Node3D, team: Material) -> void:
+	var m := _alien_mats()
+	cyl(root, 0.38, 0.69, 1.25, m[3], Vector3(0, 0.7, 0), Vector3.ZERO, 8)
+	sph(root, 0.43, m[0], Vector3(0, 1.38, 0), Vector3(0.9, 1.15, 0.85))
+	for side in [-1.0, 1.0]:
+		cone(root, 0.33, 0.84, m[1], Vector3(side * 0.52, 1.22, 0), Vector3(0, 0, side * 28.0), 5)
+	sph(root, 0.31, m[2], Vector3(0, 1.96, 0), Vector3(1, 1.2, 1), 12)
+	ring(root, 0.45, 0.60, team, Vector3(0, 2.35, 0))
+
+static func _phase_barrier(root: Node3D, radius: float) -> void:
+	var color := Color("#78dfff")
+	var shell := mat("phase_barrier_shell", color, color, 0.65, 0.0, 0.24, 0.23)
+	var edge := mat("phase_barrier_edge", color, color, 1.7, 0.1, 0.3)
+	cyl(root, radius * 0.95, radius, 1.65, shell, Vector3(0, 0.84, 0), Vector3.ZERO, 32)
+	ring(root, radius * 0.95, radius, edge, Vector3(0, 0.09, 0))
+	ring(root, radius * 0.90, radius * 0.96, edge, Vector3(0, 1.66, 0))
 
 static func _shale_barrier(root: Node3D) -> void:
 	var dark := mat("shale_dark", Color("#494449"))

@@ -272,7 +272,7 @@ func _test_concord_support_cues() -> void:
 	sim.reset_state(42, 96, 64)
 	audio.reset_stats()
 	var minimums := {"select": 5, "move": 4, "ready": 2}
-	for unit_type in ["lumen_carrier", "farsight_wisp", "veilseeker"]:
+	for unit_type in ["lumen_carrier", "farsight_wisp", "veilseeker", "aegis_warden"]:
 		for category in minimums:
 			var lines: Array = data.get_unit_dialogues(unit_type, category)
 			assert(lines.size() >= minimums[category], "Missing %s %s variants" % [unit_type, category])
@@ -284,6 +284,14 @@ func _test_concord_support_cues() -> void:
 	assert(sim.issue_command([carrier.tag], "retract_power_field").ok)
 	assert(audio.sfx_counts.get("power_field_anchor", 0) == 1)
 	assert(audio.sfx_counts.get("power_field_fold", 0) == 1)
+	var warden: Dictionary = sim.spawn_unit("aegis_warden", 1, Vector2(40, 26))
+	var cast_lines: Array = data.get_unit_dialogues("aegis_warden", "support")
+	assert(cast_lines.size() >= 5, "Expected Warden cast callouts")
+	for line in cast_lines:
+		assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
+	assert(sim.issue_command([warden.tag], "phase_barrier", Vector2(49, 26)).ok)
+	assert(audio.sfx_counts.get("phase_barrier", 0) == 1)
+	assert(audio.dialogue_counts.get("aegis_warden:support", 0) == 1)
 
 func _test_brood_support_cues() -> void:
 	sim.load_scenario_dict({"paused": true, "victory": "all_structures"})

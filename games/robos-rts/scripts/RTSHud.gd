@@ -1021,6 +1021,10 @@ func _glyph(id: String, r: Rect2) -> void:
 		"phase_cloak":
 			draw_arc(c, 18.0 * u, -2.8, 2.8, 24, accent, 3.0 * u, true)
 			draw_arc(c, 11.0 * u, 0.8, 5.4, 18, col, 2.0 * u, true)
+		"phase_barrier":
+			draw_colored_polygon(P.call([[-17, -10], [0, -17], [17, -10], [17, 10], [0, 17], [-17, 10]]), Color("#315979"))
+			draw_polyline(P.call([[-17, -10], [0, -17], [17, -10], [17, 10], [0, 17], [-17, 10], [-17, -10]]), Color("#78dfff"), 2.7 * u, true)
+			draw_line(c - Vector2(12, 0) * u, c + Vector2(12, 0) * u, col, 2.6 * u, true)
 		"research_weapons", "upgrade_hub":
 			draw_polyline(P.call([[-19, 12], [-7, 0], [0, 7], [20, -13]]), C_GOLD, 4.0 * u, true)
 			draw_polyline(P.call([[10, -13], [20, -13], [20, -3]]), C_GOLD, 4.0 * u, true)
