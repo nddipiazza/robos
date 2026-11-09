@@ -52,6 +52,10 @@
 .blog-stats b{display:block;font-family:'Fira Code',monospace;font-size:1.25rem;color:var(--fg);font-weight:600}
 .blog-stats span{font-size:.78rem;color:var(--muted)}
 .blog-log{font-family:'Fira Code',monospace;font-size:.8rem;line-height:1.7;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:18px 0;overflow-x:auto;white-space:pre;color:var(--fg)}
+.blog-release-notes{margin-top:28px}
+.blog-release-notes h2{scroll-margin-top:80px}
+.blog-release-notes details{background:var(--bg2);border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:8px 14px}
+.blog-release-notes summary{cursor:pointer;color:var(--fg);font-weight:600}
 
 /* A single post at /blog/<slug>/ */
 .blog-single{padding-top:40px;gap:24px}
