@@ -154,6 +154,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"drift_sac": _drift_sac(root, glow)
 		"needlewing": _needlewing(root, glow)
 		"blight_spire": _blight_spire(root, glow)
+		"tunnel_mouth": _tunnel_mouth(root, glow)
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"brood_growth_node": _brood_growth_node(root, r, glow)
@@ -550,6 +551,17 @@ static func _blight_spire(root: Node3D, glow: Material) -> void:
 		var outward := Vector3(cos(angle), 0, sin(angle))
 		cone(root, 0.25, 2.65, m[2], outward * 1.48 + Vector3(0, 1.6, 0), Vector3(18 * sin(angle), 0, -18 * cos(angle)), 6)
 		sph(root, 0.15, glow, outward * 0.8 + Vector3(0, 3.3, 0))
+
+static func _tunnel_mouth(root: Node3D, glow: Material) -> void:
+	var m := _bug_mats()
+	var shadow := mat("tunnel_interior", Color("#171022"))
+	sph(root, 2.15, m[0], Vector3(0, 0.31, 0), Vector3(1.02, 0.48, 0.94))
+	cyl(root, 1.24, 1.36, 0.27, shadow, Vector3(0.22, 1.24, 0), Vector3.ZERO, 9)
+	for index in range(7):
+		var angle := TAU * index / 7.0
+		var radial := Vector3(cos(angle), 0, sin(angle))
+		cone(root, 0.33, 1.42, m[2], radial * 1.41 + Vector3(0, 1.0, 0), Vector3(-21 * sin(angle), 0, 21 * cos(angle)), 6)
+		sph(root, 0.14, glow, radial * 1.31 + Vector3(0, 1.36, 0))
 
 static func _brood_nest(root: Node3D, r: float, glow: Material) -> void:
 	var m := _bug_mats()
