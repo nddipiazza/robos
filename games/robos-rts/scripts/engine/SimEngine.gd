@@ -81,6 +81,7 @@ const CLOAK_START_ENERGY := 25.0
 const CLOAK_DRAIN := 4.0
 const SKIRMISH_MAPS := {"frontier-hunters": "Frontier Hunters", "iron-narrows": "Iron Narrows", "glassline-basin": "Glassline Basin"}
 const Vision = preload("res://scripts/engine/RTSVision.gd")
+const LivingGround = preload("res://scripts/engine/RTSLivingGround.gd")
 const VISION_UPDATE_TICKS := 8
 
 enum CrystalSelection { LINE_ASSIGNMENT, OPEN_SLOT, REACHABLE_PATCH }
@@ -133,6 +134,7 @@ var title_battle_view: Dictionary = {}
 var match_state: Dictionary = {}
 var _skirmish_source: Dictionary = {}
 var vision: Vision
+var living_ground := LivingGround.new(128.0, 96.0)
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
 var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0, "vision": 0}
@@ -199,6 +201,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	rng.seed = rng_seed
 	map_width = width
 	map_height = height
+	living_ground = LivingGround.new(width, height)
 	next_tag = 1001
 	units.clear()
 	resources.clear()
@@ -596,6 +599,24 @@ func _spawn_route_blockers(map_cfg: Dictionary) -> void:
 
 func can_see_position(player: int, pos: Vector2) -> bool:
 	return vision == null or player == 0 or vision.state_at(player, pos) == Vision.VISIBLE
+
+func has_living_ground(position: Vector2, owner: int = 0) -> bool:
+	return living_ground.covers(position, owner)
+
+func visible_living_ground_cells(player: int) -> Array[Vector2i]:
+	var visible: Array[Vector2i] = []
+	for cell in living_ground.cells:
+		if can_see_position(player, living_ground.cell_center(cell)):
+			visible.append(cell)
+	return visible
+
+func _can_spread_living_ground(from: Vector2, to: Vector2) -> bool:
+	if is_water_at(to, LivingGround.CELL_SIZE * 0.4) or is_water_at(from.lerp(to, 0.5), 0.45):
+		return false
+	for obstacle in terrain_obstacles:
+		if obstacle.grow(1.25).has_point(to) or _walk_segment_enters_rect(from, to, obstacle):
+			return false
+	return true
 
 func can_see_unit(player: int, unit: Dictionary) -> bool:
 	if player == 0 or unit.owner == player:
@@ -1105,6 +1126,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"kills": 0,
 		"damage_dealt": 0.0
 	}
+	if def.has("living_ground_radius"):
+		u["living_ground_radius"] = def.living_ground_radius
 	if unit_type == "brood_nest":
 		u["brood_slots"] = BROOD_SLOTS
 		u["brood_recharge"] = 0.0
@@ -1199,6 +1222,8 @@ func _step_single_tick() -> void:
 	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT, mineral_walkers)
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
+	if tick % LivingGround.UPDATE_TICKS == 0:
+		living_ground.update(units, tick, _can_spread_living_ground)
 	if tick % VISION_UPDATE_TICKS == 0 and (vision != null or not watch_stations.is_empty()):
 		_refresh_vision()
 	_check_match_result()
@@ -4299,7 +4324,11 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"high_ground": _rects_to_dicts(high_ground_zones),
 			"ramps": _rects_to_dicts(ramps),
 			"water": _water_to_arrays(), "bridges": _rects_to_dicts(land_bridges),
-			"terrain_tiles": terrain_tiles.duplicate(true)
+			"terrain_tiles": terrain_tiles.duplicate(true),
+			"living_ground": {
+				"cell_size": LivingGround.CELL_SIZE,
+				"cells": visible_living_ground_cells(perspective_player).map(func(cell): return {"x": cell.x, "y": cell.y}),
+			}
 		},
 		"players": player_view,
 		"units": unit_list,

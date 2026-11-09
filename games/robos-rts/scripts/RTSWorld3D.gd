@@ -45,12 +45,20 @@ var _fog_quad: MeshInstance3D
 var _fog_material: ShaderMaterial
 var _fog_revision := -1
 var _fog_cells := PackedByteArray()
+var living_ground_texture: ImageTexture
+var living_ground_visible_count := 0
+var _living_ground_mesh: MeshInstance3D
+var _living_ground_material: ShaderMaterial
+var _living_ground_revision := -1
+var _living_ground_sight_revision := -1
+var _living_ground_cells: Array[Vector2i] = []
 var _viewing_player := 1
 
 func _ready() -> void:
 	_setup_environment_and_camera()
 	if DisplayServer.get_name() != "headless":
 		_setup_fog()
+		_setup_living_ground()
 	for n in ["TerrainRoot", "DecorRoot", "ResourcesRoot", "UnitsRoot", "FXRoot"]:
 		var node := Node3D.new()
 		node.name = n
@@ -112,6 +120,54 @@ func _sync_fog(local_player: int) -> void:
 	else:
 		fog_texture.update(mask)
 	_fog_quad.show()
+
+func _setup_living_ground() -> void:
+	_living_ground_mesh = MeshInstance3D.new()
+	_living_ground_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_living_ground_material = ShaderMaterial.new()
+	_living_ground_material.shader = preload("res://scripts/rts_living_ground.gdshader")
+	var pattern := _noise_mat("living_ground", Color("#251626"), Color("#704465"), 0.024, 15.0, 4)
+	_living_ground_material.set_shader_parameter("ground_pattern", pattern.albedo_texture)
+	_living_ground_mesh.material_override = _living_ground_material
+	add_child(_living_ground_mesh)
+
+func _sync_living_ground(local_player: int) -> void:
+	if _living_ground_mesh == null:
+		return
+	var ground := SimEngine.living_ground
+	var sight_revision: int = SimEngine.vision.revision if SimEngine.vision != null else 0
+	if ground.revision == _living_ground_revision and sight_revision == _living_ground_sight_revision and _viewing_player == local_player:
+		return
+	_living_ground_revision = ground.revision
+	_living_ground_sight_revision = sight_revision
+	var visible_cells := SimEngine.visible_living_ground_cells(local_player)
+	if visible_cells == _living_ground_cells:
+		return
+	_living_ground_cells = visible_cells
+	living_ground_visible_count = visible_cells.size()
+	if visible_cells.is_empty():
+		_living_ground_mesh.mesh = null
+		living_ground_texture = null
+		return
+	var mask := Image.create(ground.size.x, ground.size.y, false, Image.FORMAT_RGBA8)
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for cell in visible_cells:
+		mask.set_pixelv(cell, Color("#9a5a91"))
+		var rect := ground.cell_rect(cell)
+		var top_right := Vector2(rect.end.x, rect.position.y)
+		var bottom_left := Vector2(rect.position.x, rect.end.y)
+		for point in [rect.position, top_right, bottom_left, top_right, rect.end, bottom_left]:
+			var elevation := SimEngine.get_elevation_at(point.lerp(rect.get_center(), 0.001))
+			surface.add_vertex(Vector3(point.x, elevation + 0.18, point.y))
+	surface.generate_normals()
+	_living_ground_mesh.mesh = surface.commit()
+	if living_ground_texture == null:
+		living_ground_texture = ImageTexture.create_from_image(mask)
+		_living_ground_material.set_shader_parameter("ground_mask", living_ground_texture)
+		_living_ground_material.set_shader_parameter("grid_extent", Vector2(ground.size) * SimEngine.LivingGround.CELL_SIZE)
+	else:
+		living_ground_texture.update(mask)
 
 func _setup_environment_and_camera() -> void:
 	world_env = WorldEnvironment.new()
@@ -219,6 +275,13 @@ func _noise_mat(key: String, c_dark: Color, c_light: Color, freq: float, tile: f
 # ---------------------------------------------------------------------------
 func _on_scenario_loaded(_name: String) -> void:
 	_fog_revision = -1
+	_living_ground_revision = -1
+	_living_ground_sight_revision = -1
+	_living_ground_cells.clear()
+	living_ground_visible_count = 0
+	living_ground_texture = null
+	if _living_ground_mesh != null:
+		_living_ground_mesh.mesh = null
 	_rebuild_static_3d_map()
 
 func _clear_children(n: Node) -> void:
@@ -581,6 +644,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 	var sync_started = Time.get_ticks_usec()
 	_sync_fog(local_player)
 	fog_sync_ms = (Time.get_ticks_usec() - sync_started) / 1000.0
+	_sync_living_ground(local_player)
 	anim_time += delta
 	_viewing_player = local_player
 
