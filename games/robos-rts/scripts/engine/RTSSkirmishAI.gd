@@ -1,5 +1,9 @@
 extends RefCounted
 
+const ROUTE_CHECK_TICKS := 3 * 64
+const ROUTE_CHECK_DISTANCE_SQUARED := 2.25
+const MAX_RECOVERIES_PER_UPDATE := 4
+
 # Macro decisions use the same paid commands as the player. Difficulty changes
 # cadence, worker targets and army size, never damage, income or starting assets.
 func step_player(pid: int, cfg: Dictionary) -> void:
@@ -253,9 +257,10 @@ func _known_enemy_buildings(pid: int) -> Array:
 			known.append(enemy)
 	return known
 
-func _scout_position(pid: int, from: Vector2, cfg: Dictionary) -> Vector2:
+func _scout_position(pid: int, from: Vector2, cfg: Dictionary, avoid: Vector2 = Vector2.INF) -> Vector2:
+	var rerouting := avoid.is_finite()
 	var previous: Vector2 = cfg.get("scout_position", Vector2.ZERO)
-	if previous != Vector2.ZERO and SimEngine.vision.last_seen_at(pid, previous) == cfg.get("scout_seen", -1):
+	if not rerouting and previous != Vector2.ZERO and SimEngine.vision.last_seen_at(pid, previous) == cfg.get("scout_seen", -1):
 		return previous
 	var best := Vector2.ZERO
 	var best_seen := 2147483647
@@ -264,6 +269,8 @@ func _scout_position(pid: int, from: Vector2, cfg: Dictionary) -> Vector2:
 	var sites: Array = SimEngine.match_state.get("starts", []) + SimEngine.match_state.get("expansions", [])
 	for site in sites:
 		var pos := Vector2(site.x, site.y)
+		if rerouting and pos.distance_squared_to(avoid) < 16.0:
+			continue
 		var seen: int = SimEngine.vision.last_seen_at(pid, pos)
 		var distance := from.distance_squared_to(pos)
 		if seen < best_seen or (seen == best_seen and distance < best_distance):
@@ -275,6 +282,8 @@ func _scout_position(pid: int, from: Vector2, cfg: Dictionary) -> Vector2:
 		for y in range(8, int(SimEngine.map_height), 20):
 			for x in range(8, int(SimEngine.map_width), 20):
 				var pos := Vector2(x, y)
+				if rerouting and pos.distance_squared_to(avoid) < 16.0:
+					continue
 				var cell := Vector2i(pos / SimEngine.PATH_CELL_SIZE)
 				if SimEngine.astar_grid.is_point_solid(cell):
 					continue
@@ -284,9 +293,46 @@ func _scout_position(pid: int, from: Vector2, cfg: Dictionary) -> Vector2:
 					best = pos
 					best_seen = seen
 					best_distance = distance
-	cfg["scout_position"] = best
-	cfg["scout_seen"] = best_seen
+	if not rerouting:
+		cfg["scout_position"] = best
+		cfg["scout_seen"] = best_seen
 	return best
+
+func _route_has_stalled(soldier: Dictionary, route: Dictionary) -> bool:
+	var blocked: bool = route.get("blocked_pursuit", false)
+	if not blocked and SimEngine.tick < int(route.check_tick):
+		return false
+	var position: Vector2 = soldier.pos
+	var stalled: bool = position.distance_squared_to(route.position) < ROUTE_CHECK_DISTANCE_SQUARED
+	route.position = position
+	route.check_tick = SimEngine.tick + ROUTE_CHECK_TICKS
+	return (blocked or stalled) and soldier.attack_state == "idle" and soldier.weapon_cooldown <= 0.0
+
+func _recovery_destination(soldier: Dictionary, goal: Vector2, reach: float, previous: Vector2) -> Vector2:
+	if soldier.flight_height > 0.0:
+		return goal
+	var from: Vector2 = soldier.pos
+	var cliff_walk: bool = soldier.unit_type == "spire_walker"
+	if previous.is_finite():
+		# A route that was already tried can still be jammed. Prefer a different
+		# authored crossing that advances toward the objective.
+		var crossings: Array[Vector2] = []
+		var direction := (goal - from).normalized()
+		for bridge in SimEngine.land_bridges:
+			var point: Vector2 = bridge.get_center()
+			if (point - from).dot(direction) >= 4.0 and point.distance_squared_to(previous) > 36.0:
+				crossings.append(point)
+		crossings.sort_custom(func(a, b): return from.distance_to(a) + a.distance_to(goal) < from.distance_to(b) + b.distance_to(goal))
+		for i in range(mini(3, crossings.size())):
+			var point := crossings[i]
+			var path: Array[Vector2] = SimEngine.compute_smooth_path(from, point, soldier.radius, cliff_walk)
+			if path.back().distance_squared_to(point) < 4.0:
+				return path.back()
+	var path: Array[Vector2] = SimEngine.compute_smooth_path(from, goal, soldier.radius, cliff_walk, reach if reach > 3.0 else INF)
+	var destination: Vector2 = path.back()
+	if destination.distance_to(goal) <= reach and from.distance_squared_to(destination) > 4.0:
+		return destination
+	return Vector2.INF
 
 func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 	var threshold = {"rush": 6, "balanced": 10, "siege": 12, "economy": 18}[str(cfg.get("strategy", "balanced"))]
@@ -296,8 +342,24 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 		return
 	cfg["attacking"] = true
 	var known := _known_enemy_buildings(pid)
+	var recoveries := 0
 	for soldier in army:
+		if soldier.is_immobile:
+			continue
+		var route: Dictionary = soldier.get("skirmish_route", {})
+		var recovering := false
 		if not soldier.orders.is_empty():
+			var order: Dictionary = soldier.orders.front()
+			if route.is_empty() or order.type != "attack_move" or order.target_pos != route.destination:
+				continue
+			recovering = _route_has_stalled(soldier, route)
+			if not recovering:
+				continue
+		elif not route.is_empty():
+			recovering = soldier.pos.distance_squared_to(route.destination) > 9.0
+		if recovering and recoveries >= MAX_RECOVERIES_PER_UPDATE:
+			continue
+		if SimEngine.tick < int(route.get("retry_tick", 0)):
 			continue
 		var closest: Dictionary = {}
 		var distance = INF
@@ -305,9 +367,30 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 			if soldier.pos.distance_to(enemy.pos) < distance:
 				closest = enemy
 				distance = soldier.pos.distance_to(enemy.pos)
+		var goal := Vector2.ZERO
+		var reach := 3.0
 		if not closest.is_empty():
-			SimEngine.issue_command([soldier.tag], "attack_move", closest.pos)
+			goal = closest.pos
+			var weapon: Dictionary = RTSData.get_unit_def(soldier.unit_type).get("weapon", {})
+			reach = maxf(reach, float(weapon.get("range", 0.0)) + soldier.radius + closest.radius)
 		elif SimEngine.vision != null:
-			var target := _scout_position(pid, soldier.pos, cfg)
-			if target != Vector2.ZERO:
-				SimEngine.issue_command([soldier.tag], "attack_move", target)
+			goal = _scout_position(pid, soldier.pos, cfg)
+		if goal == Vector2.ZERO:
+			continue
+		var destination := goal
+		if recovering:
+			recoveries += 1
+			var previous: Vector2 = route.destination if route.get("recovery", false) else Vector2.INF
+			destination = _recovery_destination(soldier, goal, reach, previous)
+			if not destination.is_finite() and SimEngine.vision != null:
+				var scout := _scout_position(pid, soldier.pos, cfg, goal)
+				if scout != Vector2.ZERO:
+					destination = _recovery_destination(soldier, scout, 3.0, Vector2.INF)
+			if not destination.is_finite():
+				route.retry_tick = SimEngine.tick + ROUTE_CHECK_TICKS
+				continue
+		if SimEngine.issue_command([soldier.tag], "attack_move", destination, 0, "", false, recovering).ok:
+			soldier["skirmish_route"] = {
+				"destination": destination, "position": soldier.pos, "recovery": recovering,
+				"check_tick": SimEngine.tick + ROUTE_CHECK_TICKS
+			}
