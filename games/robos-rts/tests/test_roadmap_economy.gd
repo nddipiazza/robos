@@ -14,6 +14,8 @@ func _run() -> void:
 	_test_rich_aether()
 	_test_reassignment()
 	_test_gas_transfer()
+	_test_builder_under_fire()
+	_test_shared_repair_budget()
 	_test_default_rally()
 	_test_map_roundtrip()
 	print("Roadmap economy checks: ", "passed" if failures.is_empty() else str(failures))
@@ -108,6 +110,62 @@ func _test_default_rally() -> void:
 	sim.step_ticks(1200)
 	var recruits: Array = sim.units.values().filter(func(u): return u.is_worker and u.owner == 1 and not start_tags.has(u.tag))
 	_check(recruits.size() == 1 and recruits[0].harvest_target_tag == expected.get("tag"), "The trained Pioneer gathers from the previewed deposit")
+
+func _test_builder_under_fire() -> void:
+	sim.load_scenario_dict({
+		"paused": true, "map": {"width": 104, "height": 64},
+		"players": {"1": {"crystal": 250, "aether": 40}},
+		"units": [
+			{"type": "pioneer", "owner": 1, "x": 32, "y": 24, "hp": 3},
+			{"type": "pioneer", "owner": 1, "x": 38, "y": 24},
+			{"type": "rifleman", "owner": 2, "x": 22, "y": 24}
+		]
+	})
+	var tags: Array = sim.units.keys()
+	var location := Vector2(35, 24)
+	var builder: Dictionary = sim.units[tags[0]]
+	var replacement: Dictionary = sim.units[tags[1]]
+	var raider: Dictionary = sim.units[tags[2]]
+	_check(sim.issue_command([builder.tag], "build_silo", location).ok, "The first Pioneer receives the placement order")
+	_check(sim.issue_command([replacement.tag], "build_silo", location).ok, "A second Pioneer can order the same still-empty site")
+	sim.issue_command([raider.tag], "attack_target", builder.pos, builder.tag)
+	sim.step_ticks(1)
+	var foundations: Array = sim.units.values().filter(func(unit): return unit.unit_type == "silo")
+	_check(foundations.size() == 1 and sim.players[1].crystal == 150, "Simultaneous placement charges exactly one foundation")
+	if foundations.size() != 1:
+		return
+	var site: Dictionary = foundations.front()
+	_check(sim.construction_builder(site).get("tag") == builder.tag, "The original Pioneer claims the foundation")
+	sim.step_ticks(6)
+	_check(not sim.units.has(builder.tag) and sim.construction_builder(site).is_empty(), "A weapon kill releases the unfinished foundation")
+	var progress: float = site.build_progress
+	sim.issue_command([raider.tag], "stop")
+	sim.issue_command([raider.tag], "hold_fire")
+	sim.step_ticks(8)
+	_check(site.build_progress == progress, "Construction waits while the dead builder is unassigned")
+	_check(sim.issue_command([replacement.tag], "resume_construction", location, site.tag).ok, "The surviving Pioneer claims the same foundation")
+	sim.step_ticks(1600)
+	_check(site.build_progress == 1.0 and sim.players[1].structures_built == 1, "The replacement finishes the original structure once")
+	_check(sim.players[1].crystal == 150 and sim.players[1].aether == 40, "Taking over the foundation costs nothing extra")
+
+func _test_shared_repair_budget() -> void:
+	sim.reset_state(42, 104, 64)
+	sim.players[1].crystal = 2
+	var tank: Dictionary = sim.spawn_unit("howitzer", 1, Vector2(50, 30))
+	tank.hp = 60.0
+	var repairers: Array[int] = []
+	for i in range(3):
+		var worker: Dictionary = sim.spawn_unit("pioneer", 1, tank.pos + Vector2.from_angle(TAU * i / 3.0) * 3.0)
+		repairers.append(worker.tag)
+	_check(sim.issue_command(repairers, "repair", tank.pos, tank.tag).accepted == 3, "All three Pioneers receive the repair order")
+	sim.step_ticks(8)
+	_check(tank.hp > 63.0, "Multiple Pioneers repair concurrently")
+	sim.step_ticks(160)
+	var affordable_hp: float = 2.0 * tank.max_hp / (150.0 * 0.25)
+	_check(sim.players[1].crystal == 0 and is_equal_approx(tank.hp, 60.0 + affordable_hp), "Concurrent repair spends only the shared balance and restores exactly what it paid for")
+	var hp: float = tank.hp
+	sim.step_ticks(120)
+	_check(tank.hp == hp and sim.players[1].crystal == 0, "Repair pauses at zero crystal without free healing or debt")
 
 func _test_map_roundtrip() -> void:
 	var model = load("res://scripts/editor/RTSMapDocument.gd")
