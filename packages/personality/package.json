@@ -1,0 +1,12 @@
+{
+  "name": "robos-personality",
+  "version": "0.1.0",
+  "description": "Talk to an AI personality with a face, a voice, ears and eyes: an animated face shown in a window or cast to a TV, RobOS Voice speech and captions, a microphone, and a Camera Watch camera.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

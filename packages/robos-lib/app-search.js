@@ -100,6 +100,7 @@ const ALIASES = {
   'party-game': 'party|party games|games|trivia|icebreaker|guests|friends|family|tv|ai host|survey|house party',
   'game-playthrough': 'game playthrough|dragon warrior|dragon quest|watch gameplay|game checkpoints|replay adventures',
   'robos-tv': 'smart tv|televisions|roku|webos|tizen|tv apps|pair tv|tv remote|moonlight|sunshine',
+  'personality': 'ai personality|ai character|ai companion|talk to ai|voice chat|talking face|avatar|robot face|virtual assistant|chatbot|conversation|talk',
   'camera-watch': 'cameras|security cameras|ip cameras|cctv|nvr|ispy|onvif|rtsp|motion detection|surveillance|doorbell camera|baby monitor|record video|ptz',
   'smart-home': 'smart home|smart lights|lighting|light bulbs|room lights|hue|color lights|lg thinq|washer|dryer|laundry|fridge|refrigerator|appliances',
   'vpn-sandbox': 'vpn sandbox|isolated network|private browsing|network namespace|kill switch|sandbox apps',
