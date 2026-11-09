@@ -1134,7 +1134,10 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 	return path
 
 func _trace_navigation_grid(grid: AStarGrid2D, start_pos: Vector2, goal: Vector2, unit_radius: float, ignore_cliffs: bool) -> Array[Vector2]:
-	var start := _find_nearest_walkable_cell(grid, start_pos, start_pos)
+	# A unit displaced at a choke lip can be in an open cell with its center
+	# across the cliff corner. Snap to a center the unit can actually reach.
+	var start_clearance := -1.0 if _is_point_blocked_by_static(start_pos, unit_radius, ignore_cliffs) else unit_radius
+	var start := _find_nearest_walkable_cell(grid, start_pos, start_pos, start_clearance, ignore_cliffs)
 	var end := _find_nearest_walkable_cell(grid, goal, start_pos)
 	if grid.is_point_solid(start) or grid.is_point_solid(end):
 		return [start_pos]
@@ -1220,15 +1223,18 @@ func _project_destination(from: Vector2, requested: Vector2, radius: float, igno
 		return point
 	return goal
 
-func _find_nearest_walkable_cell(grid: AStarGrid2D, pos: Vector2, approach: Vector2) -> Vector2i:
+func _find_nearest_walkable_cell(grid: AStarGrid2D, pos: Vector2, approach: Vector2, clearance: float = -1.0, ignore_cliffs: bool = false) -> Vector2i:
 	var cell := _path_cell(grid, pos)
-	if not grid.is_point_solid(cell):
+	if not grid.is_point_solid(cell) and (clearance < 0.0 or _has_clear_line_of_walk(pos, grid.get_point_position(cell), clearance, ignore_cliffs)):
 		return cell
 	var size := grid.region.size
 	var best := cell
 	var best_distance := INF
 	var best_approach := INF
-	for radius in range(1, maxi(size.x, size.y)):
+	# Visibility is needed only for the local bridge from a physical start
+	# to the lattice. Keep that search bounded on legitimately isolated terrain.
+	var search_limit := 3 if clearance >= 0.0 else maxi(size.x, size.y)
+	for radius in range(1, search_limit):
 		for side in [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]:
 			var along := Vector2i(-side.y, side.x)
 			for offset in range(-radius, radius):
@@ -1236,6 +1242,8 @@ func _find_nearest_walkable_cell(grid: AStarGrid2D, pos: Vector2, approach: Vect
 				if not grid.region.has_point(candidate) or grid.is_point_solid(candidate):
 					continue
 				var point := grid.get_point_position(candidate)
+				if clearance >= 0.0 and not _has_clear_line_of_walk(pos, point, clearance, ignore_cliffs):
+					continue
 				var distance := point.distance_squared_to(pos)
 				var from_distance := point.distance_squared_to(approach)
 				if distance < best_distance or (is_equal_approx(distance, best_distance) and from_distance < best_approach):
