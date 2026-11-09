@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <title>RobOS Household · Shopping Lists</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="confetti-layer" aria-hidden="true"></div>
+
+  <header class="m-header">
+    <div class="m-top-row">
+      <div class="m-brand">
+        <span class="m-logo">🛒</span>
+        <div>
+          <div class="m-eyebrow">RobOS Household</div>
+          <h1 id="m-title">Shopping Lists</h1>
+        </div>
+      </div>
+      <div class="m-live-pill" id="m-live-pill">
+        <span class="m-dot"></span>
+        <span id="m-live-text">Live</span>
+      </div>
+    </div>
+
+    <div class="m-store-tabs" id="m-store-tabs" role="tablist" aria-label="Shopping lists"></div>
+
+    <div class="m-progress-wrap">
+      <div class="m-progress-meta">
+        <span id="m-stats-text">0 to buy · 0 in cart</span>
+        <span id="m-est-text" class="m-est-pill">Est. $0.00</span>
+      </div>
+      <div class="m-progress-track">
+        <div class="m-progress-fill" id="m-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="m-main">
+    <!-- Google Docs / Drive Quick Links Banner (shown when synced or previewable) -->
+    <div class="m-docs-bar" id="m-docs-bar"></div>
+
+    <!-- Form-like Item Entry Card -->
+    <form class="m-form-card" id="m-add-form" autocomplete="off">
+      <div class="m-form-head">
+        <span class="m-form-title">✨ Add Item</span>
+        <button type="button" class="m-link-btn" id="m-toggle-batch">Multi-item / Recipe paste</button>
+      </div>
+
+      <div id="m-single-fields">
+        <div class="m-field-row">
+          <input id="m-item-name" type="text" placeholder="Item name (milk, laundry pods, olive oil…)" required>
+        </div>
+
+        <div class="m-field-grid">
+          <div class="m-qty-box" aria-label="Quantity">
+            <button type="button" id="m-qty-dec" class="m-step" aria-label="Decrease quantity">−</button>
+            <input id="m-item-qty" type="number" value="1" min="0.25" step="any" aria-label="Quantity value">
+            <button type="button" id="m-qty-inc" class="m-step" aria-label="Increase quantity">+</button>
+          </div>
+          <select id="m-item-unit" aria-label="Unit"></select>
+          <select id="m-item-aisle" aria-label="Aisle or department"></select>
+        </div>
+
+        <div class="m-extra-grid">
+          <input id="m-item-price" type="number" min="0" step="0.01" placeholder="Est. $ (opt)" aria-label="Estimated price">
+          <input id="m-item-note" type="text" placeholder="Note / coupon / size (optional)" aria-label="Item note">
+        </div>
+
+        <div class="m-badge-row" id="m-badge-row" role="group" aria-label="Item tag"></div>
+
+        <button type="submit" class="m-add-btn" id="m-add-submit">
+          <span>＋ Add to <strong id="m-add-store-label">Grocery</strong></span>
+        </button>
+      </div>
+
+      <div id="m-batch-fields" hidden>
+        <textarea id="m-batch-input" rows="3" placeholder="e.g. 2 gal milk, 4 avocados, laundry pods at target, rotisserie chicken at costco"></textarea>
+        <button type="button" class="m-add-btn" id="m-batch-submit">⚡ Smart Route &amp; Add Items</button>
+      </div>
+    </form>
+
+    <!-- 1-Tap Quick-Add Staples -->
+    <section class="m-staples-sec" aria-label="Quick add staples">
+      <div class="m-sec-label">⚡ 1-Tap Quick Add</div>
+      <div class="m-chips" id="m-staple-chips"></div>
+    </section>
+
+    <!-- Filter Toolbar -->
+    <div class="m-filter-bar">
+      <div class="m-filter-pills" id="m-filter-pills">
+        <button type="button" data-filter="all" class="active">All</button>
+        <button type="button" data-filter="todo">To Buy</button>
+        <button type="button" data-filter="done">In Cart</button>
+      </div>
+      <input id="m-search" type="search" placeholder="Filter items…" aria-label="Filter items">
+    </div>
+
+    <!-- Shopping List Items -->
+    <div id="m-items-container" class="m-items-container"></div>
+  </main>
+
+  <footer class="m-footer-bar">
+    <button type="button" id="m-undo-btn" class="m-foot-btn" disabled>↩ Undo</button>
+    <button type="button" id="m-clear-btn" class="m-foot-btn">🧹 Clear Checked</button>
+    <a id="m-doc-preview-link" href="/doc-preview/grocery" target="_blank" rel="noopener" class="m-foot-btn m-foot-doc">📄 Google Doc View</a>
+  </footer>
+
+  <div id="m-toast" class="m-toast" hidden role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

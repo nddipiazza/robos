@@ -486,6 +486,12 @@ const BUILTIN_APPS = [
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#14b8a6\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5\"/><path d=\"M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9\"/><path d=\"M9 14h6\"/><path d=\"M9 17h4\"/><circle cx=\"12\" cy=\"10\" r=\"1.5\"/></svg>"
   },
   {
+    appId: 'shopping-lists',
+    label: "RobOS Shopping Lists",
+    category: "household",
+    iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"#10b981\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 8h5l4.4 20.2a3 3 0 0 0 2.93 2.36h17.84a3 3 0 0 0 2.9-2.22L42 15H13\"/><circle cx=\"19\" cy=\"38\" r=\"3\"/><circle cx=\"35\" cy=\"38\" r=\"3\"/><path d=\"m22 22 3 3 6-6\" stroke=\"#00bcd4\"/></svg>"
+  },
+  {
     appId: 'icon-manager',
     label: "Icon Manager",
     category: "core-desktop",

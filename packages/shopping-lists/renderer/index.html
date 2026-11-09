@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RobOS Shopping Lists · Household</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="confetti-stage" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand-cluster">
+        <div class="brand-badge">🛒</div>
+        <div>
+          <div class="eyebrow">RobOS Household · Personal &amp; Family Suite</div>
+          <h1>RobOS Shopping Lists</h1>
+        </div>
+      </div>
+
+      <div class="topbar-metrics">
+        <div class="metric-pill">
+          <span class="metric-label">Across All Lists</span>
+          <strong id="overall-counts">0 to buy · 0 in cart</strong>
+        </div>
+        <div class="metric-pill">
+          <span class="metric-label">Est. Household Cart</span>
+          <strong id="overall-est">$0.00</strong>
+        </div>
+        <button type="button" class="btn-glow-outline" id="btn-open-phone-modal">
+          📱 View on Phone / Google Docs Preview
+        </button>
+      </div>
+    </header>
+
+    <!-- Store Switcher Deck: 1) Grocery  2) Target  3) Costco  + Custom -->
+    <section class="store-deck-wrap" aria-label="Shopping Lists">
+      <div class="store-deck" id="store-deck"></div>
+      <button type="button" class="new-list-card" id="btn-new-list" title="Create another shopping list">
+        <span class="plus-ring">＋</span>
+        <span>New List</span>
+      </button>
+    </section>
+
+    <!-- Main Two-Column Content -->
+    <div class="workspace-grid">
+      <!-- Primary Form & Shopping List Column -->
+      <main class="list-column">
+        <!-- Active Store Hero Banner -->
+        <div class="store-hero" id="store-hero">
+          <div class="hero-left">
+            <div class="hero-icon" id="hero-icon">🥬</div>
+            <div>
+              <div class="hero-title-row">
+                <h2 id="hero-name">Grocery</h2>
+                <span class="doc-status-pill" id="hero-doc-pill">Local + Mobile Ready</span>
+              </div>
+              <p id="hero-subtitle">Weekly fresh market, produce, dairy &amp; pantry</p>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <div class="ring-widget">
+              <svg viewBox="0 0 44 44" class="progress-ring">
+                <circle cx="22" cy="22" r="18" class="ring-bg"></circle>
+                <circle cx="22" cy="22" r="18" class="ring-fg" id="hero-ring-fg" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+              </svg>
+              <span class="ring-pct" id="hero-pct">0%</span>
+            </div>
+            <div class="hero-stats">
+              <div><strong id="hero-tobuy">0</strong> to buy · <strong id="hero-checked">0</strong> in cart</div>
+              <div class="hero-money">Est. Remaining: <strong id="hero-est-rem">$0.00</strong> <span class="muted">(<span id="hero-est-tot">$0.00</span> total)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form-like Item Entry Card -->
+        <form class="entry-form-card" id="add-item-form" autocomplete="off">
+          <div class="form-card-header">
+            <div class="form-card-title">
+              <span class="sparkle">✨</span>
+              <span>Add Item to <strong id="form-store-name">Grocery</strong></span>
+              <span class="auto-aisle-hint" id="auto-aisle-hint"></span>
+            </div>
+            <div class="form-header-actions">
+              <button type="button" class="btn-ghost-sm" id="btn-toggle-smart-paste">⚡ Multi-Item / AI Smart Paste</button>
+            </div>
+          </div>
+
+          <div class="form-row-main">
+            <div class="field-grow">
+              <label for="input-name">Item Name</label>
+              <input id="input-name" type="text" placeholder="e.g. Organic Whole Milk, Laundry Pods, Rotisserie Chicken…" required>
+            </div>
+
+            <div class="field-qty">
+              <label for="input-qty">Quantity</label>
+              <div class="stepper-control">
+                <button type="button" id="btn-form-dec" class="step-btn" aria-label="Decrease quantity">−</button>
+                <input id="input-qty" type="number" value="1" min="0.25" step="any">
+                <button type="button" id="btn-form-inc" class="step-btn" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+
+            <div class="field-unit">
+              <label for="input-unit">Unit</label>
+              <select id="input-unit"></select>
+            </div>
+
+            <div class="field-aisle">
+              <label for="input-aisle">Aisle / Dept</label>
+              <select id="input-aisle"></select>
+            </div>
+          </div>
+
+          <div class="form-row-sub">
+            <div class="field-price">
+              <label for="input-price">Est. Unit Price ($)</label>
+              <input id="input-price" type="number" min="0" step="0.01" placeholder="Optional">
+            </div>
+
+            <div class="field-note">
+              <label for="input-note">Brand / Coupon / Store Note</label>
+              <input id="input-note" type="text" placeholder="Optional (e.g. Kirkland 2-pack, Target Circle $3 off)">
+            </div>
+
+            <div class="field-badges">
+              <label>Highlight Badge</label>
+              <div class="badge-selector" id="badge-selector" role="group" aria-label="Highlight badge"></div>
+            </div>
+          </div>
+
+          <div class="form-submit-row">
+            <button type="submit" class="btn-add-primary" id="btn-submit-add">
+              ＋ Add to Shopping List
+            </button>
+          </div>
+        </form>
+
+        <!-- Collapsible Multi-Store Smart Paste + Optional AI Drawer -->
+        <section class="smart-paste-card" id="smart-paste-card" hidden>
+          <div class="smart-paste-head">
+            <div>
+              <strong>⚡ Multi-Store Smart Entry &amp; Optional AI</strong>
+              <p>Paste a recipe or comma-separated list (e.g. <code>2 gal milk, 4 avocados, laundry pods at target, olive oil at costco</code>). Works 100% offline, or click <b>✦ Ask AI Agent</b> if configured.</p>
+            </div>
+            <button type="button" class="btn-ghost-sm" id="btn-close-smart-paste">✕ Close</button>
+          </div>
+          <textarea id="smart-paste-input" rows="3" placeholder="2 gal organic milk, 4 ripe avocados, dish soap at target, kirkland paper towels at costco"></textarea>
+          <div class="smart-paste-actions">
+            <button type="button" class="btn-secondary" id="btn-smart-offline">⚡ Route &amp; Add Items (Instant Offline)</button>
+            <button type="button" class="btn-ai" id="btn-smart-ai" disabled>✦ Parse with Active RobOS AI Agent</button>
+          </div>
+        </section>
+
+        <!-- 1-Tap Quick-Add Staples Carousel -->
+        <section class="staples-strip" aria-label="1-Tap Quick-Add Staples">
+          <div class="strip-label">⚡ 1-Tap Quick Add Staples</div>
+          <div class="staple-pills" id="staple-pills"></div>
+        </section>
+
+        <!-- List Controls & Action Bar -->
+        <div class="list-toolbar">
+          <div class="filter-tabs" id="filter-tabs">
+            <button type="button" data-filter="all" class="active">All Items</button>
+            <button type="button" data-filter="todo">To Buy</button>
+            <button type="button" data-filter="done">In Cart ✓</button>
+          </div>
+
+          <input id="search-items" type="search" class="search-input" placeholder="Search items, aisles, or notes…">
+
+          <div class="bulk-buttons">
+            <button type="button" class="btn-tool" id="btn-undo" disabled title="Undo last remove or clear">↩ Undo</button>
+            <button type="button" class="btn-tool" id="btn-clear-checked" title="Remove all checked items">🧹 Clear Checked</button>
+            <button type="button" class="btn-tool" id="btn-export-csv" title="Export CSV for RobOS Household Finances">💳 Export Household CSV</button>
+          </div>
+        </div>
+
+        <!-- Categorized Items List -->
+        <div id="items-list" class="items-list"></div>
+      </main>
+
+      <!-- Right Sidebar: Google Docs / Google Drive Sync + Mobile QR Companion -->
+      <aside class="companion-column">
+        <!-- Google Docs & Drive Sync Card -->
+        <section class="side-card drive-card">
+          <div class="side-card-head">
+            <span class="side-icon">☁️</span>
+            <div>
+              <h3>Google Docs &amp; Drive Mobile</h3>
+              <p>Sync native Google Docs for Grocery, Target &amp; Costco to view and edit on your phone.</p>
+            </div>
+          </div>
+
+          <div class="side-field">
+            <label for="gdrive-account">RobOS Google Cloud Account</label>
+            <div class="inline-row">
+              <select id="gdrive-account"></select>
+              <button type="button" class="btn-secondary-sm" id="btn-google-signin">Sign In</button>
+            </div>
+          </div>
+
+          <div class="side-field">
+            <label for="gdrive-folder">Drive Folder Link / ID <span class="muted">(blank = auto-create)</span></label>
+            <input id="gdrive-folder" type="text" placeholder="Auto: RobOS Household Shopping Lists">
+          </div>
+
+          <div class="side-field">
+            <label for="gdrive-webapp-url">Mobile Form Web App URL <span class="muted">(embedded at top of Docs)</span></label>
+            <div class="inline-row">
+              <input id="gdrive-webapp-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+              <button type="button" class="btn-secondary-sm" id="btn-open-apps-script" title="Get serverless Google Drive Mobile Form code">Setup</button>
+            </div>
+          </div>
+
+          <div class="sync-toggles">
+            <label class="chk-line">
+              <input type="checkbox" id="chk-pull-docs" checked>
+              <span>Pull mobile edits from Google Docs (☐ / ☑)</span>
+            </label>
+            <label class="chk-line">
+              <input type="checkbox" id="chk-auto-sync">
+              <span>Auto-sync changes to Google Drive</span>
+            </label>
+          </div>
+
+          <button type="button" class="btn-sync-drive" id="btn-sync-drive">
+            ☁️ Sync All 3 Lists to Google Docs &amp; Drive
+          </button>
+
+          <div class="sync-status-box" id="sync-status-box">
+            Ready to sync Grocery, Target &amp; Costco as native Google Docs.
+          </div>
+
+          <!-- Direct Links to the 3 Google Docs & Drive Folder -->
+          <div class="doc-links-list" id="doc-links-list"></div>
+
+          <!-- Family Share -->
+          <div class="share-box">
+            <label for="share-email">Share Lists in Google Drive with Family</label>
+            <div class="inline-row">
+              <input id="share-email" type="email" placeholder="partner@gmail.com">
+              <button type="button" class="btn-secondary-sm" id="btn-share-drive">Share</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mobile QR & Live Companion Card -->
+        <section class="side-card qr-card">
+          <div class="side-card-head">
+            <span class="side-icon">📱</span>
+            <div>
+              <h3>Scan on Mobile Phone</h3>
+              <p>Open the button-driven Add/Remove Form or jump straight to your Google Docs.</p>
+            </div>
+          </div>
+
+          <div class="qr-mode-pills" id="qr-mode-pills">
+            <button type="button" data-qr="mobile-form" class="active">📲 Form App</button>
+            <button type="button" data-qr="doc-grocery">🥬 Grocery Doc</button>
+            <button type="button" data-qr="doc-target">🎯 Target Doc</button>
+            <button type="button" data-qr="doc-costco">📦 Costco Doc</button>
+          </div>
+
+          <div class="qr-frame" id="qr-frame"></div>
+          <div class="qr-url-row">
+            <code id="qr-url-text">http://127.0.0.1:19225</code>
+            <button type="button" class="btn-ghost-sm" id="btn-copy-qr-url">Copy</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Modal: Live Mobile Preview (Google Doc Mobile View + Interactive Mobile Form View) -->
+  <div class="modal-backdrop" id="phone-preview-modal" hidden>
+    <div class="modal-panel modal-wide">
+      <div class="modal-head">
+        <div>
+          <h3>📱 Mobile Device Experience Preview</h3>
+          <p>Switch between how your list renders in <b>Google Docs Mobile</b> vs. the <b>Interactive Add/Remove Form</b>.</p>
+        </div>
+        <div class="modal-head-controls">
+          <div class="preview-mode-tabs" id="preview-mode-tabs">
+            <button type="button" data-mode="doc" class="active">📄 Google Docs Mobile View</button>
+            <button type="button" data-mode="form">📲 Interactive Form App</button>
+          </div>
+          <button type="button" class="btn-ghost-sm" id="btn-close-phone-modal">✕ Close</button>
+        </div>
+      </div>
+      <div class="phone-stage">
+        <div class="phone-bezel">
+          <div class="phone-notch"></div>
+          <iframe id="phone-preview-iframe" title="Mobile Shopping List Preview"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Serverless Google Drive Apps Script Mobile Form Wizard -->
+  <div class="modal-backdrop" id="apps-script-modal" hidden>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div>
+          <h3>☁️ Serverless Google Drive Mobile Form (Apps Script)</h3>
+          <p>Host the interactive Add/Remove Form right inside your Google Drive so it works on 5G cellular at Grocery, Target &amp; Costco—even when your home PC is off! (RobOS also saves these files into <code>Mobile-Form-Apps-Script/</code> in your Drive folder.)</p>
+        </div>
+        <button type="button" class="btn-ghost-sm" id="btn-close-apps-script">✕ Close</button>
+      </div>
+      <ol class="wizard-steps">
+        <li>Open <b>script.google.com</b> → <b>New project</b> → name it <code>RobOS Shopping Lists Mobile</code>.</li>
+        <li>Copy <code>Code.gs</code> below into <code>Code.gs</code>, then click <b>＋ → HTML</b> named <code>Index</code> and paste <code>Index.html</code>.</li>
+        <li>Click <b>Deploy → New deployment → Web app</b> (Execute as: <i>Me</i>, Access: <i>Only myself</i> or family) and paste the Web App URL into the <b>Mobile Form Web App URL</b> field!</li>
+      </ol>
+      <div class="code-copy-grid">
+        <div>
+          <div class="code-head">
+            <strong>1. Code.gs</strong>
+            <button type="button" class="btn-secondary-sm" id="btn-copy-codegs">Copy Code.gs</button>
+          </div>
+          <textarea id="textarea-codegs" rows="7" readonly></textarea>
+        </div>
+        <div>
+          <div class="code-head">
+            <strong>2. Index.html</strong>
+            <button type="button" class="btn-secondary-sm" id="btn-copy-indexhtml">Copy Index.html</button>
+          </div>
+          <textarea id="textarea-indexhtml" rows="7" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create New Shopping List -->
+  <div class="modal-backdrop" id="new-list-modal" hidden>
+    <div class="modal-panel modal-sm">
+      <div class="modal-head">
+        <h3>🛍️ Create New Shopping List</h3>
+        <button type="button" class="btn-ghost-sm" id="btn-close-new-list">✕</button>
+      </div>
+      <form id="new-list-form" class="modal-form">
+        <label>List / Store Name
+          <input id="new-list-name" type="text" placeholder="e.g. Trader Joe's, Home Depot, Farmer's Market" required>
+        </label>
+        <div class="inline-row">
+          <label style="flex:1">Emoji Icon
+            <input id="new-list-icon" type="text" value="🛍️" maxlength="4">
+          </label>
+          <label style="flex:1">Theme Color
+            <input id="new-list-accent" type="color" value="#00bcd4">
+          </label>
+        </div>
+        <label>Subtitle
+          <input id="new-list-sub" type="text" placeholder="Specialty items &amp; weekend run">
+        </label>
+        <button type="submit" class="btn-add-primary">＋ Create Shopping List</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Quick Edit Item -->
+  <div class="modal-backdrop" id="edit-item-modal" hidden>
+    <div class="modal-panel modal-sm">
+      <div class="modal-head">
+        <h3>✏️ Edit Item</h3>
+        <button type="button" class="btn-ghost-sm" id="btn-close-edit-item">✕</button>
+      </div>
+      <form id="edit-item-form" class="modal-form">
+        <input type="hidden" id="edit-item-id">
+        <label>Item Name
+          <input id="edit-item-name" type="text" required>
+        </label>
+        <div class="inline-row">
+          <label style="flex:1">Quantity
+            <input id="edit-item-qty" type="number" min="0.25" step="any" required>
+          </label>
+          <label style="flex:1">Unit
+            <select id="edit-item-unit"></select>
+          </label>
+        </div>
+        <div class="inline-row">
+          <label style="flex:1">Aisle
+            <select id="edit-item-aisle"></select>
+          </label>
+          <label style="flex:1">Est. Unit Price ($)
+            <input id="edit-item-price" type="number" min="0" step="0.01">
+          </label>
+        </div>
+        <label>Note / Coupon
+          <input id="edit-item-note" type="text">
+        </label>
+        <button type="submit" class="btn-add-primary">Save Item Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden role="status"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

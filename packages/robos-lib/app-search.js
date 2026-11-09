@@ -103,6 +103,7 @@ const ALIASES = {
   'personality': 'ai personality|ai character|ai companion|talk to ai|voice chat|talking face|avatar|robot face|virtual assistant|chatbot|conversation|talk',
   'camera-watch': 'cameras|security cameras|ip cameras|cctv|nvr|ispy|onvif|rtsp|motion detection|surveillance|doorbell camera|baby monitor|record video|ptz',
   'smart-home': 'smart home|smart lights|lighting|light bulbs|room lights|hue|color lights|lg thinq|washer|dryer|laundry|fridge|refrigerator|appliances',
+  'shopping-lists': 'shopping lists|shopping|groceries|grocery|target|costco|cart|pantry|household|errands|google docs|google drive|mobile shopping',
   'vpn-sandbox': 'vpn sandbox|isolated network|private browsing|network namespace|kill switch|sandbox apps',
   'vpn-servers': 'vpn servers|vpn providers|openvpn|ipvanish|vpn accounts|vpn locations',
   'app-mesh': 'app mesh|connect apps across machines|remote app ports|ipc bridge|zero trust|mtls|tailscale|headscale|netbird|wireguard|openziti',
