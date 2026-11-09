@@ -2077,6 +2077,18 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
 			continue
+		if ctype == "undo_queued_order":
+			if not u.is_structure and u.orders.size() > 1:
+				u.orders.pop_back()
+				accepted += 1
+			continue
+		if ctype == "reset_rally":
+			if u.is_structure and u.build_progress >= 1.0 and RTSData.get_unit_def(u.unit_type).has("trains"):
+				u.rally_route.clear()
+				if u.has("worker_rally_route"):
+					u.worker_rally_route.clear()
+				accepted += 1
+			continue
 		if ctype == "phase_cloak":
 			if u.unit_type != "skirmisher":
 				continue

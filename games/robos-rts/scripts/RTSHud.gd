@@ -63,11 +63,14 @@ func _draw() -> void:
 	_draw_banner()
 	_draw_messages()
 	_draw_idle_worker_button()
+	_draw_idle_production_button()
 	_draw_group_tabs()
 	_draw_bottom_panel()
 	_draw_tooltip()
 	_draw_caption()
 	_draw_match_status()
+	if main.pending_ability == "ping":
+		_text(Vector2(740, 76), "Place a map ping   ·   Esc to cancel", 20, Color("#b093ff"))
 	if SimEngine.paused and SimEngine.match_state.get("status") != "finished" and not main.match_menu.panel.visible:
 		_text(Vector2(790, 48), "PAUSED   ·   Pause / F12 to resume", 20, C_GOLD)
 	var tracked: Dictionary = SimEngine.units.get(main._tracked_tag, {})
@@ -265,6 +268,15 @@ func group_tab_rects() -> Dictionary:
 		out[g] = Rect2(main.SEL_PANEL.position.x + float(i) * 78.0, main.HUD_TOP - 38.0, 72.0, 30.0)
 	return out
 
+func _draw_idle_production_button() -> void:
+	var idle: Array = main.idle_producers()
+	if idle.is_empty():
+		return
+	var r: Rect2 = main.IDLE_PRODUCTION_BTN
+	_frame(r, 0.92)
+	_text(r.position + Vector2(12, 20), "Idle production", 15)
+	_text(r.position + Vector2(12, 38), "%d  ·  ," % idle.size(), 14, C_GOLD)
+
 func _draw_group_tabs() -> void:
 	var rects := group_tab_rects()
 	var selected_tags := {}
@@ -360,6 +372,11 @@ func _draw_minimap_units() -> void:
 		var ap: Vector2 = main.world_to_minimap(main.attack_history[i])
 		var diamond := PackedVector2Array([ap + Vector2(0, -5), ap + Vector2(5, 0), ap + Vector2(0, 5), ap + Vector2(-5, 0), ap + Vector2(0, -5)])
 		draw_polyline(diamond, C_GOLD if i == main._attack_cursor else C_RED, 1.5, true)
+	for marker in main.click_markers:
+		if marker.kind == "ping":
+			var pos: Vector2 = main.world_to_minimap(marker.pos)
+			var fraction: float = marker.ttl / marker.max
+			draw_arc(pos, lerpf(14.0, 5.0, fraction), 0.0, TAU, 20, Color(0.69, 0.58, 1.0, fraction), 2.0, true)
 
 	# Camera frustum
 	var corners := [Vector2(0, 46), Vector2(1920, 46), Vector2(1920, main.HUD_TOP), Vector2(0, main.HUD_TOP)]
@@ -927,7 +944,8 @@ func _draw_help() -> void:
 	if not SimEngine.match_state.is_empty():
 		right[6] = ["F2 / Shift + F2", "Select the army / only ungrouped combat units"]
 		right[7] = ["F8", "Match setup, speed, restart and surrender"]
-	_text(r.position + Vector2(28, 634), "Groups 1-9, 0: recall; Shift adds selection; Alt moves units; double tap centers. Hover for controls.", 17, C_GOLD)
+	_text(r.position + Vector2(28, 622), "Alt+G Ping   ·   Alt+R Weapon ranges   ·   Alt+Y Reset rally   ·   Ctrl+Backspace Undo queued order", 16, C_GOLD)
+	_text(r.position + Vector2(28, 644), "Home Center on selection   ·   PgUp/PgDn Zoom   ·   , Idle production   ·   Ctrl+, Select all idle production", 16, C_MUTED)
 	for i in range(left.size()):
 		var y := r.position.y + 106.0 + float(i) * 56.0
 		_text(Vector2(r.position.x + 28, y), str(left[i][0]), 19, C_GOLD)
