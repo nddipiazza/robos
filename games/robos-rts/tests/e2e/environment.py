@@ -13,6 +13,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
@@ -63,6 +64,8 @@ def before_all(context) -> None:
     env = os.environ.copy()
     env["RTS_MODE"] = context.rts_mode
     env["RTS_WEB_SERVICE_PORT"] = str(context.port)
+    context.display_prefs = tempfile.TemporaryDirectory(prefix="starfall-test-")
+    env["RTS_DISPLAY_PREFS"] = str(Path(context.display_prefs.name) / "display.cfg")
 
     cmd = [godot_bin, "--path", str(PROJECT_DIR)]
     if context.rts_mode == "backend" or context.live_headless:
@@ -132,6 +135,9 @@ def after_all(context) -> None:
             proc.kill()
             proc.wait(timeout=3.0)
     log_handle = getattr(context, "engine_log", None)
+    display_prefs = getattr(context, "display_prefs", None)
+    if display_prefs:
+        display_prefs.cleanup()
     if log_handle:
         log_handle.close()
         log = (context.reports_dir / "engine.log").read_text(encoding="utf-8", errors="replace")

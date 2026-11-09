@@ -28,7 +28,7 @@ The game takes its conventions from the RTS genre in general: base building, a w
 
 ## Run it
 
-Starfall Command opens on a title screen. Choose **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains the sound and overhead health-bar controls. Use the mouse or navigate with the arrow keys and **Enter**. **Esc** returns from a setup page.
+Starfall Command opens on a title screen. Choose **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains sound, overhead health bars, mouse edge scrolling and a choice of Standard or Grid command hotkeys. The grid maps command-card slots to **QWERT**, **ASDFG**, and **ZXCVB**. Use the mouse or navigate with the arrow keys and **Enter**. **Esc** returns from a setup page.
 
 During a battle, **F8 → Main menu** pauses the match. **Resume Match** restores the battlefield, camera, and control groups. The editor also has a **Main Menu** button and keeps its current draft while the game is open.
 
@@ -47,7 +47,7 @@ cd games/robos-rts
 ./run_cucumber_tests.py --backend
 ```
 
-The window opens with match setup. Choose Easy, Normal or Hard AI, its Rush, Balanced, Economy or Siege strategy, and a speed from 1× to 8×. Press **F8** during play to resume, start a new match, or surrender; **F1** opens the controls overlay.
+Skirmish setup lets you choose Easy, Normal or Hard AI, its Rush, Balanced, Economy or Siege strategy, and a speed from 1× to 8×. Press **F8** during play to resume, start a new match, or surrender. **F1** opens the controls overlay.
 
 ## Frontier Hunters
 
@@ -58,6 +58,8 @@ This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two di
 ![Frontier Hunters: the full 256×256 battlefield with waterways, crossings and expansion resources]({{ '/assets/images/robos-rts/34-frontier-hunters-map.png' | relative_url }}){: .robos-zoomable-img }
 
 **Win by destroying every opposing structure**, including expansions and unfinished construction, or by accepting the opponent's surrender. Losing a main base or all workers alone does not end the match. The terminal result freezes the simulation and rejects further commands. Supply is capped at 200. Construction and training use the unit registry's full durations; accelerated play advances the same simulation faster.
+
+Click a visible deposit to inspect its remaining reserves. When your workers empty a finite field or vent, the HUD reports the depletion. Hover over supply to see deployed and reserved supply, free capacity and capacity under construction. Selecting several producers shows each building's queue count and active job progress on its portrait.
 
 ### Scouting and fog of war
 
@@ -379,11 +381,14 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Input | Action |
 |:---|:---|
 | Left click or drag | Select; drag for a box |
+| Ctrl / Shift + click a selected portrait | Keep only that unit type / remove that unit from the selection |
 | Double click | Select all of that type on screen |
 | Right click | Move, attack, gather, or set a rally point |
 | Shift | Queue orders; add to or remove from the selection |
 | Mouse wheel, middle drag | Zoom, pan |
-| Arrow keys | Pan |
+| Arrow keys or screen edge | Pan. Mouse edge scrolling is available in Settings. |
+| Hold Alt | Temporarily show overhead health bars. |
+| Pause / F12 | Pause or resume the battle. |
 | Letter in a button's corner | Use that command |
 | Ctrl + number, number (1–9, 0) | Set, recall a control group; Alt moves selected units from other groups |
 | Tab / Shift + Tab | Cycle the active subgroup forward or backward. |
@@ -401,6 +406,7 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Ctrl + F3 / F4 / F9 / F11 | Save the current camera position and zoom. Press the same function key alone to return. |
 | Backspace | Cycle through completed friendly bases without changing selection or zoom. |
 | P, then click terrain | Patrol between the starting point and the clicked point, engaging visible enemies along the way. Stop or give a new order to end the patrol. |
+| Shift + Stop / Hold Position | Queue the stationary order after the current orders. |
 | M / A / P / Y, then click the minimap | Place a move, attack-move, patrol or rally order without moving the camera. Hold Shift to queue unit orders. |
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
 

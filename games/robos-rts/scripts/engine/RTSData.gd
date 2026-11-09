@@ -839,8 +839,8 @@ var units: Dictionary = {
 
 var abilities: Dictionary = {
 	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point", "desc": "Move to a location. Units do not stop for enemies on the way."},
-	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none", "desc": "Cancel the current order."},
-	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies that come into range."},
+	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none", "desc": "Cancel the current order. Hold Shift to queue the stop."},
+	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies in range. Hold Shift to queue."},
 	"attack": {"id": "attack", "name": "Attack", "hotkey": "A", "target": "point_or_unit", "desc": "Attack-move to a point, engaging anything met on the way, or focus a single target."},
 	"patrol": {"id": "patrol", "name": "Patrol", "hotkey": "P", "target": "point", "desc": "Travel back and forth, engaging visible enemies along the route."},
 	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},

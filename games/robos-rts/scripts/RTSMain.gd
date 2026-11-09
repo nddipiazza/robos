@@ -18,6 +18,8 @@ const CARD_GAP := 6.0
 const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
 const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
+const GRID_KEYS := "QWERTASDFGZXCVB"
+const EDGE_SCROLL_MARGIN := 14.0
 
 var world_3d: Node3D
 var icons: Node
@@ -27,7 +29,9 @@ var match_menu: CanvasLayer
 var local_player: int = 1
 var observer_player := -1
 var health_bar_mode := 0
+var reveal_health_bars := false
 var selected_tags: Array[int] = []
+var _inspected_deposit_tag := 0
 var control_groups: Dictionary = {}
 var active_type: String = ""
 
@@ -65,6 +69,8 @@ func _ready() -> void:
 	if DisplayServer.get_name() == "headless":
 		set_process(false)
 		return
+	SimEngine.resource_depleted.connect(_on_resource_depleted)
+	get_window().focus_exited.connect(func(): reveal_health_bars = false)
 	world_3d = RTSWorld3DScript.new()
 	world_3d.name = "RTSWorld3D"
 	add_child(world_3d)
@@ -122,6 +128,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	if RTSAudio:
 		RTSAudio.local_player_id = local_player
 	selected_tags.clear()
+	_inspected_deposit_tag = 0
 	pending_ability = ""
 	control_groups.clear()
 	_last_group_press.clear()
@@ -143,6 +150,10 @@ func _on_scenario_loaded(_name: String) -> void:
 func _on_notice(owner_id: int, text: String, kind: String) -> void:
 	if owner_id == local_player:
 		push_message(text, kind)
+
+func _on_resource_depleted(owner_id: int, resource_type: String) -> void:
+	if owner_id == local_player:
+		push_message("Aether vent depleted." if resource_type == "aether_vent" else "Crystal field depleted.", "warn")
 
 func _on_dialogue_spoken(unit_type: String, _category: String, _line_id: String, text: String) -> void:
 	if text == "":
@@ -267,13 +278,20 @@ func _cycle_base() -> void:
 	_focus_camera(SimEngine.units[_last_base_tag].pos)
 
 func _handle_camera_pan(delta: float) -> void:
-	if not world_3d or not world_3d.camera_3d:
+	if not world_3d or not world_3d.camera_3d or match_menu.panel.visible or match_menu.result_panel.visible or show_help:
 		return
 	var v := Vector2.ZERO
 	if Input.is_key_pressed(KEY_LEFT): v.x -= 1.0
 	if Input.is_key_pressed(KEY_RIGHT): v.x += 1.0
 	if Input.is_key_pressed(KEY_UP): v.y -= 1.0
 	if Input.is_key_pressed(KEY_DOWN): v.y += 1.0
+	if v == Vector2.ZERO and match_menu.edge_scroll and not (mm_dragging or mid_dragging):
+		if get_window().has_focus() or hover_override is Vector2:
+			var bounds := get_viewport_rect()
+			var cursor := hover_pos()
+			if bounds.has_point(cursor):
+				v.x = float(cursor.x >= bounds.end.x - EDGE_SCROLL_MARGIN) - float(cursor.x < bounds.position.x + EDGE_SCROLL_MARGIN)
+				v.y = float(cursor.y >= bounds.end.y - EDGE_SCROLL_MARGIN) - float(cursor.y < bounds.position.y + EDGE_SCROLL_MARGIN)
 	if v != Vector2.ZERO:
 		_tracked_tag = 0
 		world_3d.pan(v.normalized() * 46.0 * (world_3d.cam_height / 50.0) * delta)
@@ -389,6 +407,7 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 
 func _select_tags(tags: Array, add: bool = false) -> void:
 	_last_group_press.clear()
+	_inspected_deposit_tag = 0
 	if not add:
 		selected_tags.clear()
 	for t in tags:
@@ -401,6 +420,20 @@ func _select_tags(tags: Array, add: bool = false) -> void:
 		var pu := primary_unit()
 		if not pu.is_empty() and int(pu.get("owner", 0)) == local_player:
 			RTSAudio.play_unit_dialogue(str(pu.get("unit_type", "")), "select")
+
+func inspected_deposit() -> Dictionary:
+	var deposit: Dictionary = SimEngine.resources.get(_inspected_deposit_tag, {})
+	if not deposit.is_empty() and SimEngine.can_see_position(viewing_player(), deposit.pos):
+		return deposit
+	return {}
+
+func _inspect_deposit(position: Vector2) -> void:
+	var best_distance := INF
+	for deposit in SimEngine.resources.values():
+		var distance: float = position.distance_to(deposit.pos)
+		if distance < best_distance and distance <= deposit.radius + 0.6 and SimEngine.can_see_position(viewing_player(), deposit.pos):
+			_inspected_deposit_tag = deposit.tag
+			best_distance = distance
 
 func idle_workers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -449,6 +482,10 @@ func _select_next_idle_worker() -> void:
 # ---------------------------------------------------------------------------
 # Input
 # ---------------------------------------------------------------------------
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.keycode == KEY_ALT:
+		reveal_health_bars = event.pressed
+
 func _unhandled_input(event: InputEvent) -> void:
 	if match_menu and (match_menu.panel.visible or match_menu.result_panel.visible):
 		if event is InputEventKey and event.pressed and not event.echo:
@@ -558,10 +595,12 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 		var cells: Array = hud.selection_cells()
 		for c in cells:
 			if c["rect"].has_point(mpos):
-				if Input.is_key_pressed(KEY_SHIFT):
+				if mb.shift_pressed:
 					selected_tags.erase(c["tag"])
-				elif Input.is_key_pressed(KEY_CTRL):
-					active_type = str(SimEngine.units.get(c["tag"], {}).get("unit_type", ""))
+				elif mb.ctrl_pressed or mb.meta_pressed:
+					var unit_type: String = SimEngine.units[c.tag].unit_type
+					var subgroup := selected_tags.filter(func(tag): return SimEngine.units.get(tag, {}).get("unit_type") == unit_type)
+					_select_tags(subgroup)
 				else:
 					_select_tags([c["tag"]])
 				return true
@@ -574,6 +613,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 
 func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_type: bool) -> void:
 	_last_group_press.clear()
+	_inspected_deposit_tag = 0
 	if not add_shift:
 		selected_tags.clear()
 	active_type = ""
@@ -582,6 +622,8 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_typ
 	if rect.size.length() < 10.0:
 		var clicked := _unit_at_screen(p2)
 		if clicked.is_empty():
+			if not add_shift:
+				_inspect_deposit(screen_to_world(p2))
 			return
 		if pick_type and clicked["owner"] == local_player:
 			for u in SimEngine.units.values():
@@ -977,13 +1019,14 @@ func get_card_buttons() -> Array[Dictionary]:
 		buttons.append({
 			"ability_id": abil_id,
 			"def": adef,
+			"hotkey": GRID_KEYS[i] if match_menu and match_menu.grid_hotkeys else str(adef.get("hotkey", "")),
 			"rect": Rect2(CARD_ORIGIN + Vector2(col * (CARD_BTN + CARD_GAP), row * (CARD_BTN + CARD_GAP)), Vector2(CARD_BTN, CARD_BTN)),
 			"blocked": _block_reason(adef, pu),
 			"cost": ability_cost(adef)
 		})
 	return buttons
 
-func _trigger_card_button(btn: Dictionary, bulk: bool = false) -> void:
+func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 	var abil_id: String = btn["ability_id"]
 	var adef: Dictionary = btn["def"]
 	if str(btn["blocked"]) != "":
@@ -998,7 +1041,7 @@ func _trigger_card_button(btn: Dictionary, bulk: bool = false) -> void:
 			RTSAudio.play_ui("ui_select")
 		return
 	if abil_id.begins_with("train_") or adef.has("upgrade"):
-		_train_on_best(abil_id, 5 if bulk and abil_id.begins_with("train_") else 1)
+		_train_on_best(abil_id, 5 if shift and abil_id.begins_with("train_") else 1)
 		if RTSAudio:
 			RTSAudio.play_ui("ui_select")
 		return
@@ -1007,7 +1050,7 @@ func _trigger_card_button(btn: Dictionary, bulk: bool = false) -> void:
 		var def: Dictionary = RTSData.get_unit_def(u.unit_type)
 		if def.get("abilities", []).has(abil_id) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
-	SimEngine.issue_command(tags, abil_id)
+	SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
 
 func _train_on_best(abil_id: String, count: int) -> void:
 	var producers: Array[Dictionary] = []
@@ -1123,6 +1166,7 @@ func _set_local_player(player: int) -> void:
 	if RTSAudio:
 		RTSAudio.local_player_id = local_player
 	selected_tags.clear()
+	_inspected_deposit_tag = 0
 	control_groups.clear()
 	_last_group_press.clear()
 	_camera_bookmarks.clear()
@@ -1156,6 +1200,10 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		return
 
 	match ke.keycode:
+		KEY_PAUSE, KEY_F12:
+			if SimEngine.match_state.get("status") != "finished":
+				SimEngine.paused = not SimEngine.paused
+			return
 		KEY_BACKSPACE:
 			_cycle_base()
 			return
@@ -1242,7 +1290,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 	if hk == "":
 		return
 	for btn in get_card_buttons():
-		if str(btn["def"].get("hotkey", "")) == hk:
+		if btn.hotkey == hk:
 			_trigger_card_button(btn, ke.shift_pressed)
 			return
 
@@ -1305,6 +1353,8 @@ func ui_state() -> Dictionary:
 		"setup_unlimited_resources": match_menu != null and match_menu.deposit_rules.selected == 0,
 		"observer_player": observer_player,
 		"health_bar_mode": health_bar_mode,
+		"health_bars_revealed": reveal_health_bars,
+		"inspected_deposit": inspected_deposit().get("tag", 0),
 		"local_player": local_player,
 		"selected": tags,
 		"primary_type": primary_type(),
@@ -1339,6 +1389,9 @@ func _draw() -> void:
 	_draw_rally_and_orders()
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
+	var deposit := inspected_deposit()
+	if not deposit.is_empty():
+		_draw_range_ring(deposit.pos, deposit.radius + 0.2, Color("#fbbf24"))
 	for u in SimEngine.units.values():
 		if SimEngine.can_see_unit(viewing_player(), u):
 			_draw_unit_bars(u, font)
@@ -1496,7 +1549,7 @@ func _draw_rally_route(unit: Dictionary, start: Vector2) -> void:
 func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var is_sel := selected_tags.has(u["tag"])
 	var hurt: bool = u["hp"] < u["max_hp"] - 0.5 or (u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] - 0.5)
-	var health := health_bar_mode == 1 or (health_bar_mode == 0 and (is_sel or hurt))
+	var health := reveal_health_bars or health_bar_mode == 1 or (health_bar_mode == 0 and (is_sel or hurt))
 	var building: bool = u["is_structure"] and u["build_progress"] < 1.0
 	var producing: bool = u["is_structure"] and u["production_queue"].size() > 0 and is_sel
 	var salvage: int = maxi(0, int(u.get("salvage_finish", 0)) - SimEngine.tick)

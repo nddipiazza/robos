@@ -18,6 +18,7 @@ signal unit_damaged(owner_id: int, pos: Vector2)
 signal weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, hit_shields: bool)
 signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
 signal resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2)
+signal resource_depleted(owner_id: int, resource_type: String)
 signal unit_production_finished(unit: Dictionary, structure: Dictionary)
 signal structure_construction_finished(structure: Dictionary)
 signal match_finished
@@ -1173,9 +1174,19 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 					_follow_order_path(u, target_pos, dt)
 
 		"hold_position":
+			if u.orders.size() > 1:
+				u.orders.pop_front()
+				u.path.clear()
+				return
 			var enemy = _find_best_attack_target(u, true)
 			if not enemy.is_empty():
 				_begin_attack_on(u, enemy)
+
+		"stop":
+			_release_mining_slot(u)
+			u.orders.pop_front()
+			u.path.clear()
+			u.home_pos = u.pos
 
 		"attack_move", "patrol":
 			var target_pos: Vector2 = order.get("target_pos", u["pos"])
@@ -1360,8 +1371,11 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 				u["cargo_type"] = "crystal"
 				u["cargo_amount"] = 5
 			if resources.has(source_tag) and not unlimited_resources:
-				u.cargo_amount = mini(u.cargo_amount, int(resources[source_tag].amount))
-				resources[source_tag].amount -= u.cargo_amount
+				var source: Dictionary = resources[source_tag]
+				u.cargo_amount = mini(u.cargo_amount, int(source.amount))
+				source.amount -= u.cargo_amount
+				if source.amount == 0:
+					resource_depleted.emit(u.owner, source.resource_type)
 	elif not is_gas:
 		_release_mining_slot(u)
 		_follow_order_path(u, target_entity.pos, dt)
@@ -1963,6 +1977,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			var stype_check = ctype.trim_prefix("build_") if ctype != "build" else extra
 			if not _can_build(u, stype_check, target_pos):
 				continue
+
+		if queue and ctype in ["stop", "hold_position"]:
+			u.orders.append({"type": ctype})
+			accepted += 1
+			continue
 
 		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "patrol", "phase_step"]:
 			u["attack_state"] = "idle"
