@@ -493,7 +493,7 @@ func _draw_multi() -> void:
 
 func _order_label(u: Dictionary) -> String:
 	if u["orders"].is_empty():
-		return "Idle"
+		return "Engaging" if u.attack_state != "idle" else "Idle"
 	match str(u["orders"][0]["type"]):
 		"move": return "Moving"
 		"attack_move": return "Attack-moving"
@@ -660,6 +660,17 @@ func _draw_single(u: Dictionary) -> void:
 	for s in status:
 		_text(Vector2(sx, ry + 16), str(s), 16, C_TEXT)
 		sx += _text_w(str(s), 16) + 36.0
+
+	var timing: Dictionary = main.selected_weapon_timing()
+	if not timing.is_empty():
+		var label := str(timing.state)
+		if timing.remaining > 0.0:
+			label += "  %.2fs" % timing.remaining
+		var color := C_GOLD if timing.state == "Wind-up" else Color("#6d8fe3")
+		_bar(Rect2(rx, ry + 32.0, 275.0, 18.0), timing.progress, color, label)
+		var friendly_splash := float(wpn.get("friendly_splash", 0.0))
+		if friendly_splash > 0.0:
+			_text(Vector2(rx, ry + 72.0), "Friendly splash  %d%%" % roundi(friendly_splash * 100.0), 15, C_GOLD)
 
 	var blurb := str(def.get("blurb", ""))
 	if blurb != "":

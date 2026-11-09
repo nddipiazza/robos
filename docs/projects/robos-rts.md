@@ -179,6 +179,8 @@ The layout follows RTS convention: resources top-right, minimap bottom-left, the
 
 *One unit selected. The portrait is rendered from the unit's own 3D model. The panel lists health, damage with damage per second, range, armor and speed, plus the weapon's name and any bonus damage. The command card shows what the unit can do.*
 
+Selected friendly weapons show readiness, wind-up and cooldown. A visible splash attack marks the target area with a shrinking orange arc before impact. Breachers favor armored targets and Blight Hurlers favor structures when they can hit them. A direct attack order chooses the target explicitly.
+
 ### Selecting units
 
 Drag a box to select a squad. In a mixed selection the gold-bordered type is the active subgroup, which owns the command card; press **Tab** to cycle it. Double click selects every unit of that type on screen.
@@ -312,7 +314,7 @@ Human colonists. Cheap infantry, armored line troops and artillery. Rifleman and
 | Rifleman | 50 | 1 | 45 | 0 | 6 | 12.5 | Cheap ranged infantry. Surge Injector trades 10 HP for faster movement and fire rate. Strong when kiting melee units. |
 | Breacher | 100 / 25 | 2 | 125 | 0 | 10 | 14.5 | Armored line infantry. Breach Charges deal bonus damage to armored targets and slow them. |
 | Howitzer (mobile) | 150 / 125 | 3 | 175 | 0 | 15 | 16.5 | Mobile artillery. Emplace it to reach range 31 with splash damage. |
-| Howitzer (Emplaced Mode) | 150 / 125 | 3 | 175 | 0 | 40 | 31.0 | Deployed artillery. Range 31 with splash damage, minimum range 5. Cannot move until mobilized. |
+| Howitzer (Emplaced Mode) | 150 / 125 | 3 | 175 | 0 | 40 | 31.0 | Deployed artillery. Minimum range 5. Allies take half the usual splash damage. Cannot move until mobilized. |
 
 | Structure | Crystal / aether | Supply | Health | Shield | Role |
 |:---|---:|---:|---:|---:|:---|
