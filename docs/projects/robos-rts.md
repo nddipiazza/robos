@@ -4,13 +4,13 @@ layout: default
 parent: Projects
 permalink: /projects/robos-rts/
 nav_order: 4
-description: "Starfall Command: 1 player vs AI on Frontier Hunters, a 256×256 map with eight starts, unlimited deposits, a Godot 4 map editor and live gameplay tests."
+description: "Play Starfall Command across three skirmish maps and three factions. Learn the economy, controls, tech paths, map editor and deterministic test tools."
 ---
 
 # RobOS RTS: Starfall Command
 {: .no_toc }
 
-A real-time strategy game in Godot 4.3, in `games/robos-rts`. The default mode is **Frontier Hunters: one human versus one AI**, building from scratch on a rich eight-start map. The engine also contains three asymmetric factions and isolated mechanics scenarios. The simulation is deterministic and runs at a fixed 64 ticks per second, separately from rendering, so the same game can be played by a person, driven by a script, or run headless in tests.
+Starfall Command is a Godot 4.3 real-time strategy game. Play **one player versus AI** on Frontier Hunters, Iron Narrows, or Glassline Basin. Pick Meridian Guard, Gnarl Brood, or Aurelian Concord independently for either side. The deterministic simulation runs at 64 ticks per second and supports interactive play, scripted bots, and headless tests.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -20,38 +20,41 @@ A real-time strategy game in Godot 4.3, in `games/robos-rts`. The default mode i
 {:toc}
 </details>
 
-![Frontier Hunters combat: the player's Riflemen attack the Hard Siege AI base](/assets/games/rts/frontier-hunters-live.jpg){: .robos-zoomable-img }
-
-*A frame from the live Rush versus Hard Siege test on Frontier Hunters. The older canyon and three-faction screenshots below illustrate isolated engine mechanics.*
-
-The game takes its conventions from the RTS genre in general: base building, a worker economy, control groups, a minimap and a command card. Open-source RTS projects such as OpenRA, 0 A.D., Warzone 2100 and Beyond All Reason are good references for the genre. Names and models are original to this repository; the map editor credits its reused open-source brush and fill cores below.
+![Starfall Command title screen with Skirmish, Scenarios, Map Editor and Settings](/assets/blog/starfall-command-100-point-roadmap/title-screen.webp){: .robos-zoomable-img }
 
 ## Run it
 
-Starfall Command opens on a title screen. Choose **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains sound, overhead health bars, mouse edge scrolling and a choice of Standard or Grid command hotkeys. The grid maps command-card slots to **QWERT**, **ASDFG**, and **ZXCVB**. Use the mouse or navigate with the arrow keys and **Enter**. **Esc** returns from a setup page.
+Starfall Command opens on a title screen. Choose **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains sound, overhead health bars, mouse edge scrolling and a choice of Standard or Grid command hotkeys. Grid uses **QWERT**, **ASDFG**, **ZXCVB**, and **UHJKL** when the card needs a fourth row. Hotkeys named below use the Standard layout. Navigate with the mouse or the arrow keys and **Enter**. **Esc** returns from a setup page.
 
 During a battle, **F8 → Main menu** pauses the match. **Resume Match** restores the battlefield, camera, and control groups. The editor also has a **Main Menu** button and keeps its current draft while the game is open.
 
 Use `-- --skip-title` to open the default battlefield directly or `-- --scenario=<slug>` to launch a scenario.
 
-You need Godot 4.3 (`GODOT_BIN`, `godot4` or `godot` on your `PATH`).
+From a source checkout, use Godot 4.3 or newer. On Linux or macOS, set `GODOT_BIN` if `godot4` or `godot` is absent from `PATH`.
 
 ```bash
 games/robos-rts/play.sh
 ```
 
-Without a display, the headless Cucumber suite needs Python with `behave`:
+On Windows, open `games/robos-rts/project.godot` in Godot and press **F5** to launch the project. You can also launch directly from the repository root in PowerShell.
 
-```bash
-cd games/robos-rts
-./run_cucumber_tests.py --backend
+```powershell
+& "C:\path\to\Godot_v4.3-stable_win64.exe" --path .\games\robos-rts
 ```
 
-Skirmish setup lets you choose Easy, Normal or Hard AI, its Rush, Balanced, Economy or Siege strategy, and a speed from 1× to 8×. Press **F8** during play to resume, start a new match, or surrender. **F1** opens the controls overlay.
+In **Skirmish**, pick a map, both factions, and a difficulty. AI profiles include Rush, Balanced, Economy and Siege. Playback runs from 1× to 8×. **F8** opens match options during play, and **F1** opens the controls overlay. If you want the current roadmap mechanics in a packaged build, compare its source revision with [the roadmap build](https://github.com/nddipiazza/robos/commit/801e889558100575837d4288052720e08d508bf7).
 
-## Frontier Hunters
+## Skirmish maps
 
-The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, two open crossings with brush on their approaches, and a third crossing sealed by a destructible Shale Barrier. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
+The lobby preview shows terrain, candidate starts, expansions, crossings and special features before launch. Filter the map pool by size, start count, default deposit rule and terrain features. Set finite or unlimited deposits independently of a map’s default. A same-seed rematch preserves map, factions, start assignments and the deposit rule.
+
+| Map | Size | Candidate starts | Default deposits | Terrain |
+|:---|---:|---:|:---|:---|
+| Frontier Hunters | 256 × 256 | 8 | Unlimited | Waterways, land crossings and interior expansions |
+| Iron Narrows | 128 × 96 | 2 | Finite | Two open crossings with brush and watch stations, plus a crossing sealed by a Shale Barrier |
+| Glassline Basin | 160 × 112 | 2 | Finite | Two lanes around a central bluff, four expansions, brush, two watch stations and two Shale Barriers |
+
+### Frontier Hunters
 
 Frontier Hunters is a **256×256** map with two distinct starts drawn from eight perimeter bases. Each commander begins with their faction's main base, **12 workers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are inexhaustible by default. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
 
@@ -75,19 +78,19 @@ Pick **Your faction** and **AI faction** independently on the skirmish setup scr
 | Gnarl Brood | Brood Nest | Brood Pod | Spore Tap |
 | Aurelian Concord | Heartstone | Resonator | Aether Prism |
 
-**Gnarl Brood.** Foragers grow into structures, freeing their supply slot as construction begins. Cancel an unfinished morph to recover the worker and 75% of the paid cost. Each completed Brood Nest begins with three brood slots. A paid unit consumes one slot and hatches alongside other active jobs. One slot regenerates every 12 seconds up to three. **Y** sets the army rally, **G** sets the Forager rally, and right-clicking a usable deposit also sets the Forager rally.
+**Gnarl Brood.** Foragers grow into structures, freeing their supply slot as construction begins. Cancel unfinished Forager construction to recover the worker and 75% of the paid cost. In skirmish, each completed Brood Nest begins with three brood slots. A paid unit consumes one slot and hatches alongside other active jobs. One natural slot regenerates every 12 seconds, up to three. A Brood Keeper can add bonus slots, up to five total. **Y** sets the army rally. **G** or right-clicking a usable deposit sets the Forager rally.
 
-**Aurelian Concord.** Motes can leave after starting a summon. Press **W** with a Mote selected to place a Waystone within 18 units of a completed friendly Resonator. Select a Resonator or start placing a Waystone to see the power field. If all nearby Resonators are destroyed, a Waystone pauses its active production until power returns.
+**Aurelian Concord.** Motes can leave after starting a summon. Press **W** with a Mote selected to place a Waystone in a friendly power field. A completed Resonator provides an 18-unit field, and an anchored Lumen Carrier provides a temporary 12-unit field. Select a power source or a Waystone to inspect coverage. A Waystone pauses its paid queue when it loses all coverage and resumes when power returns.
 
 ### Scouting and fog of war
 
 With fog enabled, a unit on low ground needs a friendly spotter or a recon sweep to see uphill. Units on high ground share their sight with the rest of the army. Select a completed Colony Hub, press **E** and click the battlefield or minimap to reveal an area for 10 seconds. The Hub starts with 50 energy, regenerates 0.75 energy per second and can store 200.
 
-Skirmishers can use **C** to toggle Phase Cloak. Activation costs 25 energy and sustaining it costs four energy per second. Finished Sentry Turrets and active recon sweeps reveal cloaked units in visible areas. Select your turret to see its detection radius. Skirmishers are playable in the three-faction showcase and editor scenarios.
+Skirmishers use **C** to toggle Phase Cloak. Activation costs 25 energy and sustaining it costs four energy per second. Skitterlings use **B** to burrow or surface. Ordinary sight shows the terrain but leaves cloaked and burrowed enemies hidden. A Sentry Turret, Spore Watch, powered Aegis Relay, Veilseeker or active recon sweep can reveal them where you have sight. Select a detector to inspect its radius.
 
 Black terrain is unexplored. Dim terrain has been explored, and lit terrain is within friendly sight. Send a Pioneer ahead to find the opposing base or check an expansion. Enemy troops disappear when they leave sight, and combat outside your vision produces no new visible effects or world sounds. A building you previously saw leaves a **Last seen** footprint and a minimap marker until you scout the site again. A unit that loses sight of its focus-fire target moves to the last known position and attacks enemies it spots on the way.
 
-Both sides share vision across their own units and structures. The skirmish AI attacks visible or remembered buildings and searches possible bases when it has no known target. Sight uses unit ranges on a four-unit grid. Terrain elevation does not block sight in this version. Frontier Hunters enables fog by default. Other scenarios can set `"fog_of_war": true` to opt in.
+Each side shares sight across its own units and structures. Sight uses a four-unit grid and accounts for elevation on maps with high ground. Skirmishes enable fog by default. Scenario authors can set `"fog_of_war": true` to opt in.
 
 Brush cover is walkable. It conceals biological combat units from enemy sight until an enemy comes within six world units or exposes them with detection. Workers and vehicles remain visible under normal sight rules.
 
@@ -97,11 +100,11 @@ Right-click a Shale Barrier with combat units selected to break it. Its minimap 
 
 Train a **Triage Specialist** from a Muster Hall with **E**. An idle Specialist heals nearby biological allies. Right-click a wounded ally to follow and treat them. A Mote can use **C** to summon an **Aegis Relay** in a Resonator field. The Relay restores nearby allied shields, including during combat, and stops when unpowered. Both spend one energy per point restored and show their remaining energy when selected.
 
-Train a **Kestrel Interceptor** from a Workshop with **A**. It flies over cliffs, water, and ground units and fires at aircraft. Riflemen, Sentry Turrets, Bile Crawlers, and Skirmishers can hit air and ground. The selected weapon panel lists its target domains, and aircraft appear as diamonds on the minimap.
+Train a **Kestrel Interceptor** at an Airframe Hangar with **A**. It flies over cliffs, water and ground units and fires at aircraft. **E** switches between air-only Interceptor Mode and ground-only Assault Mode after a 1.5-second transition. Landing requires clear ground. Riflemen, Sentry Turrets, Bile Crawlers and Skirmishers can hit both domains. The selected weapon panel lists valid targets, and aircraft appear as diamonds on the minimap.
 
 For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
 
-The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for another base. Siege works toward faction-specific heavy units such as Howitzers, Blight Hurlers or Spire Walkers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.
+The AI scouts candidate starts with a worker, intercepts visible raids with a limited defensive group, and keeps mining and producing. It reroutes armies around blocked crossings. On Hard it can split a paid wave between two visible objectives with viable routes and regroup after a target falls. It buys counters to observed aircraft and detected stealth through normal production. All difficulties use the same starting resources, prices and combat statistics. Difficulty changes decision frequency, worker targets and production capacity.
 
 The bot API starts a replayable match with `POST /match {"seed":42,"difficulty":"hard","strategy":"rush"}`. Omit the seed for a fresh random assignment. `POST /match {"action":"surrender","player":1}` concedes. Observations include match status, winner, reason, seed and starting-site assignments. Existing mechanics scenarios remain available by slug; `starfall-canyon` loads the older three-faction showcase.
 
@@ -237,7 +240,7 @@ Each button on the command card shows its hotkey in the corner. Hover one for th
 
 ### Production
 
-Structures have a five-slot production queue. The first slot shows progress. The structure also shows a progress bar in the world while it is producing.
+Producers have a five-slot queue. Active jobs show progress in the queue and above the building. Most producers work through one job at a time. A Fabrication Module opens a second line for eligible light infantry, and skirmish Brood Nests hatch multiple paid jobs using brood slots.
 
 Hold **Shift** when clicking a training button or pressing its hotkey to order up to five units. Orders fill the shortest queues across eligible selected buildings and stop when the next order cannot be paid for or placed.
 
@@ -285,9 +288,9 @@ The **F8** menu saves your overhead health-bar preference. Choose selected or da
 
 ## Economy
 
-Pioneers gather **crystal** from fields and **aether** through an Aether Tap built on a vent, and carry it back to the nearest main base. Supply comes from main bases and Provision Silos; units and queued units count against it.
+Workers gather **crystal** from fields and **aether** through their faction’s extractor on a vent. They deliver each load to a reachable main base. Main bases, faction supply structures and Brood Drift Sacs provide capacity. Units in training or transit still count against supply.
 
-During a crystal harvest order, workers pass through mobile units on both the outbound and delivery legs. Terrain and buildings still shape their route, and workers remain targetable. Each patch serves one miner at a time, so automatic assignments and group gather orders fill open local patches first. A teal load shows which workers are returning with crystal. Stop or move a worker to restore normal body blocking.
+During an active crystal harvest order, workers pass through mobile units on the outbound and delivery legs. Buildings, deposits and terrain still constrain their routes, and workers remain targetable. Each patch serves one miner at a time, so automatic assignments and group gather orders fill open local patches first. A teal load marks returning crystal carriers. Stop or move a worker to restore normal body blocking.
 
 The numbers over each friendly base and Aether Tap show assigned workers against a target of two per nearby crystal patch or three per tap. The count turns gold when oversaturated. Press **D** to deliver a carried load to the nearest completed base, or right-click a friendly base to choose the drop-off. A worker already gathering resumes that assignment after delivery.
 
@@ -299,7 +302,7 @@ With a Colony Hub selected, press **D** and click a completed friendly Provision
 
 ## Map
 
-Starfall Canyon has two levels. The Meridian Guard start on a sandstone plateau; the Gnarl Brood and the Aurelian Concord start on the low ground to the east. A single ramp connects them, flanked by cliff walls that ground units cannot cross.
+Ground units route around structures, crystal fields, geysers, cliffs and other impassable terrain. A move click inside a blocked footprint projects to reachable ground at its edge. If a route changes, units can recover through a usable crossing. Queued commands keep their order as the lead move resolves. On Starfall Canyon, a ramp connects the sandstone plateau to the low ground.
 
 ![A squad walking down the ramp from the plateau to the low ground]({{ '/assets/images/robos-rts/04-ramp-descent.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -310,11 +313,19 @@ A Provision Silo can be retracted into the ground so units can walk over it, or 
 
 ## Factions
 
-The three factions are asymmetric rather than reskins of each other. Costs are crystal, then aether. Damage shows attacks per volley where a weapon fires more than once.
+Click **TECH** on the faction badge to see live prerequisites, production options and research costs. The tables list crystal first and aether second. Damage shows attacks per volley where a weapon fires more than once.
 
 ### Meridian Guard
 
-Human colonists. Cheap infantry, armored line troops and artillery. Rifleman and Breacher can use **Surge Injector**, which costs 10 health for 11 seconds of faster movement and fire. A Howitzer can **emplace** to reach range 31 with splash damage, at the price of being unable to move.
+Meridian builds around infantry, artillery and separate air production. The opening chain is **Provision Silo → Muster Hall → Workshop → Airframe Hangar**.
+
+- At a Muster Hall, **X** builds a Fabrication Module for two simultaneous eligible light infantry jobs. **C** builds a Research Module instead on the same pad. Research **Efficient Surge** with **T** for 100 crystal and 100 aether. It reduces the Rifleman and Breacher’s health cost from 10 to 5 while keeping the 11-second effect. Losing the required attachment pauses an active dependent research job until a compatible module returns.
+- **L** lifts a completed Muster Hall or Workshop. While airborne, production pauses and the attachment stays behind. Use **L** again and target a clear landing site. A Hall can reconnect to a compatible detached module.
+- **U** queues the per-Hub Operations upgrade once a Muster Hall is complete. It costs 150 crystal and 50 aether. On the upgraded Hub, **M** spends 50 energy to send a Prospector to a visible crystal patch. It brings back double crystal for 45 seconds and uses zero supply.
+- A Rampart boards up to six nearby eligible ground troops with **L**. **U** sends it to unload at a clear site. Passengers retain their supply and control groups. A shot-down transport loses its passengers.
+- A Howitzer can emplace for range 31 and splash damage. Mobilize it to move again.
+
+![Rampart Transport with two passengers aboard](/assets/blog/starfall-command-100-point-roadmap/rampart-transport.webp){: .robos-zoomable-img }
 
 ![Pioneer, Rifleman, Breacher, Howitzer and an emplaced Howitzer]({{ '/assets/images/robos-rts/15-roster-meridian-guard.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -325,6 +336,9 @@ Human colonists. Cheap infantry, armored line troops and artillery. Rifleman and
 | Breacher | 100 / 25 | 2 | 125 | 0 | 10 | 14.5 | Armored line infantry. Breach Charges deal bonus damage to armored targets and slow them. |
 | Howitzer (mobile) | 150 / 125 | 3 | 175 | 0 | 15 | 16.5 | Mobile artillery. Emplace it to reach range 31 with splash damage. |
 | Howitzer (Emplaced Mode) | 150 / 125 | 3 | 175 | 0 | 40 | 31.0 | Deployed artillery. Minimum range 5. Allies take half the usual splash damage. Cannot move until mobilized. |
+| Triage Specialist | 75 / 25 | 2 | 60 | 0 | — | — | Heals friendly biological units using energy. |
+| Kestrel Interceptor | 125 / 100 | 3 | 125 | 0 | 20 | 14 | Air-only missiles. Press **E** to land and switch to ground-only autocannons. |
+| Rampart Transport | 100 / 100 | 2 | 150 | 0 | — | — | Carries up to six eligible ground troops. |
 
 | Structure | Crystal / aether | Supply | Health | Shield | Role |
 |:---|---:|---:|---:|---:|:---|
@@ -333,7 +347,11 @@ Human colonists. Cheap infantry, armored line troops and artillery. Rifleman and
 | Provision Silo (Retracted) | 100 | +8 | 400 | 0 | Provides 8 supply. Retracted into the ground, so units can walk over it. |
 | Aether Tap | 75 | - | 500 | 0 | Extracts aether from a vent. Pioneers carry it back to the Colony Hub. |
 | Muster Hall | 150 | - | 1000 | 0 | Trains Riflemen, Breachers, and Triage Specialists. Requires a Provision Silo. |
-| Workshop | 150 / 100 | - | 1250 | 0 | Builds Howitzers and Kestrel Interceptors. Requires a Muster Hall. |
+| Workshop | 150 / 100 | - | 1250 | 0 | Builds Howitzers and researches weapons and armor. Requires a Muster Hall. |
+| Fabrication Module | 50 / 25 | - | 350 | 0 | Adds a second light infantry production line. |
+| Research Module | 50 / 50 | - | 350 | 0 | Enables Efficient Surge research at the connected Hall. |
+| Airframe Hangar | 150 / 100 | - | 540 | 0 | Trains Kestrels and Ramparts. Requires a Workshop. |
+| Sentry Turret | 125 | - | 350 | 0 | Defensive cannon and detector. Requires a Muster Hall. |
 
 ![Colony Hub, Muster Hall and Workshop]({{ '/assets/images/robos-rts/18-structures-meridian-guard.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -341,7 +359,15 @@ Human colonists. Cheap infantry, armored line troops and artillery. Rifleman and
 
 ### Gnarl Brood
 
-A monster swarm. Fast, cheap units that overwhelm in numbers and are punished by splash damage. They have one main structure, the Brood Nest, which spawns every unit.
+The Brood Nest supplies workers, ground troops and aircraft. Completed Nests spread **living ground**. Skitterlings, Bile Crawlers, Blight Hurlers and Carapace Bulwarks move 30% faster on it. The minimap shows visible coverage. A Forager can grow a **Growth Node** on active friendly living ground to extend it. Exclusive coverage gradually recedes when its last source is lost.
+
+- **Seed Clutch** (**E** on a Brood Keeper) spends 25 energy at a friendly Nest to add two brood slots after 12 seconds, up to five total.
+- **B** burrows or surfaces a Skitterling. Underground it has reduced sight, cannot move or attack, and can be revealed by detection. Surfacing requires room.
+- A **Blight Spire** unlocks the paid Carapace Bulwark evolution, **Corrosive Miasma** and **Tunnel Mouths**. Evolve a Bile Crawler with **E** for 75 crystal, 50 aether and one additional supply. It takes six seconds and preserves the unit’s health percentage. The Bulwark trades ranged anti-air for armored ground melee.
+- **E** on a Blight Hurler spends 50 energy on Corrosive Miasma. A one-second warning precedes eight seconds of slowing and damage to enemy ground troops in the circle.
+- Select a completed Tunnel Mouth and press **L** to link it to another completed entrance you own. **S** sends up to six nearby ground troops. One squad can travel at a time. A blocked exit holds the squad until there is room. If the destination falls, the surviving source tries to release the squad locally.
+
+![Purple Brood living ground around a Nest and Growth Node, also visible on the minimap](/assets/blog/starfall-command-100-point-roadmap/brood-growth-node.webp){: .robos-zoomable-img }
 
 ![Forager, Skitterling, Bile Crawler and Blight Hurler]({{ '/assets/images/robos-rts/16-roster-gnarl-brood.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -351,16 +377,35 @@ A monster swarm. Fast, cheap units that overwhelm in numbers and are punished by
 | Skitterling | 25 | 1 | 35 | 0 | 5 | 1.9 | Very fast, cheap melee swarm unit. Dangerous in numbers, weak to splash damage. |
 | Bile Crawler | 75 / 25 | 2 | 145 | 0 | 16 | 10.5 | Armored acid spitter with mid range. Good against structures and armored units. |
 | Blight Hurler | 100 / 100 | 3 | 120 | 0 | 18 | 15.0 | Lobs corrosive blight that splashes. Bonus damage to structures. |
+| Brood Keeper | 125 / 25 | 2 | 145 | 0 | 9 | 8 | Ground and air defense plus Seed Clutch. |
+| Carapace Bulwark | 75 / 50 evolution | 3 | 235 | 0 | 24 | 2.2 | Evolved Crawler with bonus melee damage against Armored targets. |
+| Drift Sac | 100 | 0 | 115 | 0 | — | — | Unarmed flying scout that adds eight supply while alive. |
+| Needlewing | 100 / 100 | 2 | 90 | 0 | 9 | 9 | Fast ground-harassing aircraft. |
 
 | Structure | Crystal / aether | Supply | Health | Shield | Role |
 |:---|---:|---:|---:|---:|:---|
-| Brood Nest | 300 | +15 | 1500 | 0 | Monster main base. Spawns Foragers, Skitterlings, Bile Crawlers and Blight Hurlers. |
+| Brood Nest | 300 | +15 | 1500 | 0 | Main base, living-ground source and paid hatchery. |
+| Brood Pod | 75 | +8 | 400 | 0 | Ground supply structure. |
+| Spore Tap | 50 | - | 500 | 0 | Extracts aether. |
+| Spore Watch | 100 | - | 300 | 0 | Reveals concealed enemies within detection range and friendly sight. |
+| Growth Node | 60 | - | 220 | 0 | Extends living ground from active friendly coverage. |
+| Blight Spire | 200 / 150 | - | 700 | 0 | Unlocks the Bulwark evolution, Miasma and Tunnel Mouths. |
+| Tunnel Mouth | 125 / 75 | - | 510 | 0 | One half of a linked troop passage. |
 
 ![The Brood Nest with its Foragers and crystal fields]({{ '/assets/images/robos-rts/20-brood-base.jpg' | relative_url }}){: .robos-zoomable-img }
 
 ### Aurelian Concord
 
-Shielded warriors. Every unit and structure has an Aegis Shield that absorbs damage first and regenerates after a few seconds out of combat; a faint bubble flashes when it takes a hit. Skirmishers can **Phase Step** to teleport 18 range, and the Spire Walker steps over cliff walls.
+Concord relies on shields, powered production and timed support. Aegis shields regenerate out of combat. Skirmishers can **Phase Step** up to 18 units, and Spire Walkers cross cliffs.
+
+- **B** on a Heartstone spends 50 energy to boost unit training at a friendly powered producer by 50% for 12 seconds. **R** spends 50 energy on **Defensive Recall**. Mobile allies present at cast that stay in the eight-unit marker for three seconds return through clear exits at that Heartstone.
+- Select a Resonator or Waystone to see overlapping fields. Amber marks Waystones that would lose their only active source. A Lumen Carrier can anchor for up to 24 seconds and recharge for 18 seconds afterward.
+- Research **Fast Deployment** at a powered Waystone for 150 crystal and 150 aether with **F**. Then use **D** to send the next paid trainee to a visible powered site. A successful landing starts a 20-second cooldown. If the site becomes unavailable, the trainee uses the normal exit and rally.
+- A Farsight Wisp scouts for 36 seconds. A Veilseeker supplies mobile detection in a 12-unit radius. A powered Aegis Relay supplies detection and spends energy restoring shields.
+- An Aegis Warden spends 50 energy on **Phase Barrier** (**F**) to block ground paths in a three-unit radius for eight seconds. **Lattice Burst** (**T**) spends 75 energy. It gives a one-second warning, then hits friendly and enemy ground and air units with four pulses inside a five-unit radius.
+- The **Crownspire** requires a completed Aegis Relay and trains at a powered Waystone. Its lance is strongest against Massive targets. Two cheaper Kestrels defeated one under return fire in the paid counter test.
+
+![Concord power overlay showing Waystones with one, two or zero sources](/assets/blog/starfall-command-100-point-roadmap/concord-power.webp){: .robos-zoomable-img }
 
 ![Mote, Sunblade, Skirmisher and Spire Walker]({{ '/assets/images/robos-rts/17-roster-aurelian-concord.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -370,12 +415,19 @@ Shielded warriors. Every unit and structure has an Aegis Shield that absorbs dam
 | Sunblade | 100 | 2 | 100 | 50 | 16x2 | 2.1 | Shielded melee warrior with twin light blades. Rush closes the gap quickly. |
 | Skirmisher | 125 / 50 | 2 | 80 | 80 | 13 | 15.5 | Shielded ranged unit. Phase Step teleports it out of danger or onto high ground. |
 | Spire Walker | 300 / 200 | 6 | 200 | 150 | 20x2 | 21.0 | Towering walker with splash prism beams. Strong against light units and can step over cliff walls. |
+| Lumen Carrier | 150 / 75 | 3 | 120 | 80 | — | — | Anchors to provide a temporary power field. |
+| Farsight Wisp | 45 | 1 | 22 | 0 | — | — | Disposable flying scout with ordinary sight. |
+| Veilseeker | 100 / 75 | 2 | 65 | 55 | — | — | Ground detector. |
+| Aegis Warden | 100 / 75 | 2 | 55 | 75 | — | — | Casts Phase Barrier and Lattice Burst. |
+| Crownspire | 400 / 300 | 8 | 240 | 120 | 18 | 18 | Heavy flyer with 62 bonus damage against Massive units. |
 
 | Structure | Crystal / aether | Supply | Health | Shield | Role |
 |:---|---:|---:|---:|---:|:---|
 | Heartstone | 400 | +15 | 1000 | 1000 | Aurelian main base. Summons Motes and provides 15 supply. |
 | Resonator | 100 | +8 | 200 | 200 | Provides 8 supply. |
-| Waystone | 150 | - | 500 | 500 | Summons Sunblades, Skirmishers and Spire Walkers. |
+| Waystone | 150 | - | 500 | 500 | Powered combat and support production, plus Fast Deployment research. |
+| Aether Prism | 75 | - | 250 | 250 | Extracts aether. |
+| Aegis Relay | 100 | - | 150 | 150 | Powered detector and shield support. Unlocks the Crownspire. |
 
 ![The Heartstone, Resonator and Waystone]({{ '/assets/images/robos-rts/21-concord-base.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -408,7 +460,7 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 
 ## Controls
 
-[100-point Starfall Command roadmap](./starfall-sc2-roadmap.md)
+[100-point Starfall Command roadmap](/projects/starfall-sc2-roadmap/)
 
 | Input | Action |
 |:---|:---|
@@ -485,11 +537,21 @@ Scenarios are JSON-LD files in `games/robos-rts/scenarios`. Besides units, resou
 
 ## Tests
 
-`games/robos-rts/tests/e2e/features/engine` covers combat mechanics, paid skirmish builds and map authoring. `features/realtime` plays editor-authored matches on the live clock and checks frame responsiveness during control traffic and capture. Full build orders take longer than isolated mechanics fixtures.
+The [completed 100-point roadmap](/projects/starfall-sc2-roadmap/) records the gameplay and hardening work. At [`801e8895`](https://github.com/nddipiazza/robos/commit/801e889558100575837d4288052720e08d508bf7), 100 rendered gameplay scenarios, two rendered title-screen scenarios, 33 deterministic backend scenarios and ten focused Godot suites passed. All four paid Frontier Hunters build orders reached structure elimination. The focused audio check verified 46 sound effects and 296 voice streams. The October live recording above covers a separate frame-clock run.
+
+From `games/robos-rts`, install Python’s `behave` package and set `GODOT_BIN` to the Godot executable. These shell commands run the three Cucumber layers. In PowerShell, set the same variables with `$env:RTS_MODE = 'human'` and `$env:RTS_TEST_TITLE = '1'` before the relevant Python commands.
+
+```bash
+python run_cucumber_tests.py --backend
+RTS_MODE=human python -m behave tests/e2e/features/ui
+RTS_MODE=human RTS_TEST_TITLE=1 python -m behave tests/e2e/features/startup
+```
+
+Use the rendered layer to verify actual hotkeys, clicks and overlays. The backend drives the same engine through the public action and step API. The [roadmap engineering post](/blog/starfall-command-100-point-roadmap/) describes how the fixtures prove the new mechanics.
 
 ## Regenerating these screenshots
 
-Every image on this page is a frame from the game itself. `games/robos-rts/capture_screenshots.py` starts the game under Xvfb, drives it through `/input`, `/ui` and `/step`, and writes the JPEGs:
+The title and roadmap screenshots come from the rendered suites above. They save evidence under `tests/e2e/reports/`. For the earlier canyon JPEGs, `games/robos-rts/capture_screenshots.py` starts the game under Xvfb and drives it through `/input`, `/ui` and `/step`.
 
 ```bash
 games/robos-rts/capture_screenshots.py --only 05,06

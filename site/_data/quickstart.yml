@@ -325,7 +325,7 @@ games:
   party-game: "Install it from App Manager (Games & game tools). It needs a TV paired in Smart TV Studio and an AI agent signed in, because the AI hosts the show."
   crpg: "Runs from source with Godot 4.3: clone the repository, then run games/crpg-realm/play.sh."
   tabletop-rpg: "Install Tabletop Studio from App Manager, or run games/tabletop-rpg/play.sh from source. Needs Godot 4.3."
-  robos-rts: "Runs from source with Godot 4.3 or newer: run games/robos-rts/play.sh. Press F1 for controls."
+  robos-rts: "Runs from source with Godot 4.3 or newer. On Windows, open games/robos-rts/project.godot and press F5. On Linux or macOS, run games/robos-rts/play.sh. Press F1 for battlefield controls."
   quest-warrior-dragon: "Runs from source with Godot 4. Game Playthrough in App Manager can run and replay the AI playthrough."
 
 # The app suites every technical guide also shows.

@@ -3,7 +3,7 @@ layout: game
 game_id: robos-rts
 title: "Starfall Command (RobOS RTS)"
 permalink: /games/robos-rts/
-description: "Starfall Command: one player versus AI on a 256×256 battlefield, with eight possible starts, unlimited deposits, a Godot 4 map editor and live gameplay tests."
+description: "Starfall Command is a three-faction RTS with three 1 vs. AI skirmish maps, a Godot 4 map editor and deterministic gameplay tests."
 bg_video: /assets/games/rts-bg.mp4
 bg_poster: /assets/games/rts-bg-poster.jpg
 accent: "#58b4ff"
@@ -14,7 +14,7 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
 <section class="g-hero wrap">
   <p class="kicker">RobOS RTS</p>
   <h1 class="g-title">Starfall Command</h1>
-  <p class="lead">Build from twelve workers into an army on Frontier Hunters, a 256×256 battlefield with eight possible starts and inexhaustible deposits. One player, one AI, and a working map editor for the next battlefield you want to make.</p>
+  <p class="lead">Choose Meridian Guard, Gnarl Brood or Aurelian Concord and build an army from twelve workers. Play one versus AI on three battlefields, practice in scenarios, or create a map in the editor.</p>
   <div class="cta">{% include game-download-button.html %}<a class="btn btn-ghost" href="#download">All platforms</a><a class="btn btn-ghost" href="#frontier">Watch the live match</a><a class="btn btn-ghost" href="{{ '/games/robos-rts/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
 </section>
@@ -26,10 +26,11 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
     <div class="panel-g">
       <p class="eyebrow">The game</p>
       <h2 class="h2">Gather, build, scout and win</h2>
-      <p class="sec-p">Frontier Hunters draws two distinct starts from eight perimeter bases. Both sides begin with a Colony Hub, twelve Pioneers and the same resources. Waterways and land crossings shape the routes between bases and expansions. Win by destroying every opposing structure, including unfinished expansions, or by your opponent's surrender.</p>
+      <p class="sec-p">Each commander starts with a faction base, twelve workers and the same resources. Win by destroying every opposing structure, including unfinished expansions, or by your opponent's surrender.</p>
+      <figure style="margin:24px 0"><img loading="lazy" src="{{ '/assets/blog/starfall-command-100-point-roadmap/title-screen.webp' | relative_url }}" alt="Starfall Command title screen with the Skirmish, Scenarios and Map Editor buttons" width="1600" height="900" style="width:100%;height:auto;border-radius:12px"><figcaption>Choose a mode from the title screen. The Skirmish setup previews and filters the map pool.</figcaption></figure>
       <div class="grid3">
-        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/mountain.svg" alt="" width="48" height="48" loading="lazy"></div><h3>A 256×256 battlefield</h3><p>Eight starting sites, interior expansions and unlimited crystal and aether. Build and train with normal costs, prerequisites, construction time and a 200 supply cap.</p></div>
-        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/balance.svg" alt="" width="48" height="48" loading="lazy"></div><h3>One player versus AI</h3><p>Easy, Normal and Hard opponents use Rush, Balanced, Economy or Siege strategies. Both sides use the Meridian Guard roster and the same paid commands.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/mountain.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Three skirmish maps</h3><p>Frontier Hunters has eight candidate starts and unlimited deposits by default. Iron Narrows and Glassline Basin offer finite-resource duels, watch stations and destructible route blockers.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/balance.svg" alt="" width="48" height="48" loading="lazy"></div><h3>One player versus AI</h3><p>Choose each side’s faction independently. The AI scouts, defends, reroutes and buys counters with the same starting resources and prices you use.</p></div>
         <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/target.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Micro that matters</h3><p>Every weapon has a wind-up and a recovery. Move during the recovery and you cancel it, which makes stutter-step kiting real.</p></div>
         <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/compass.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Pathfinding that behaves</h3><p>Funnel-smoothed A*, crowd steering and push priority: idle units yield to marching ones and return to their posts.</p></div>
         <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/clock.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Live, accelerated play</h3><p>Fixed 64 Hz ticks with 1×, 2×, 4× and 8× playback. Fast-forward adapts to available CPU time so input and drawing keep moving.</p></div>
@@ -49,7 +50,7 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
         <source src="{{ '/assets/games/rts/frontier-hunters-live.mp4' | relative_url }}" type="video/mp4">
         <track kind="captions" src="{{ '/assets/games/rts/frontier-hunters-live.vtt' | relative_url }}" srclang="en" label="English walkthrough" default>
       </video>
-      <figcaption>Seed 29, zero manual simulation steps. Recorded at 1080p / 10 FPS. Requested 8× playback achieved 2.58× under rendering and recording load.</figcaption>
+      <figcaption>October 23 recording, seed 29. The match used zero manual simulation steps and achieved 2.58× playback while recording at 1080p and 10 FPS.</figcaption>
     </figure>
     <div class="shots">
       <figure><img loading="lazy" src="{{ '/assets/games/rts/frontier-hunters-map.png' | relative_url }}" alt="Frontier Hunters: the full 256×256 map with eight starts and interior expansions"><figcaption>The full battlefield and its crossing routes.</figcaption></figure>
@@ -93,9 +94,9 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
 
 <section class="g-sec" id="factions">
   <div class="wrap">
-    <p class="eyebrow">Engine showcase rosters</p>
+    <p class="eyebrow">Playable skirmish factions</p>
     <h2 class="h2">Infantry, swarms and shielded warriors</h2>
-    <p class="sec-p">Frontier Hunters currently uses Meridian Guard on both sides. These three rosters remain available in the engine's isolated mechanics scenarios and older canyon showcase.</p>
+    <p class="sec-p">Choose either side’s faction in the lobby. Click <b>TECH</b> in a match to see prerequisites, research and production options.</p>
     <div class="tabs" role="tablist" aria-label="Factions">
       <button role="tab" class="on" data-tab="mg" style="--fc:#4f8cf0">Meridian Guard</button>
       <button role="tab" data-tab="gb" style="--fc:#e0453a">Gnarl Brood</button>
@@ -110,11 +111,12 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
           <ul class="ticks">
             <li><b>Surge Injector</b> trades 10 health for 11 seconds of faster movement and fire.</li>
             <li><b>Emplace</b> a Howitzer to reach range 31 with splash damage, at the cost of moving.</li>
-            <li><b>Provision Silos</b> double as a gate you can open and close.</li>
+            <li><b>Muster Hall modules</b> open a second infantry production line or unlock Efficient Surge research.</li>
+            <li><b>Airframe Hangars</b> train Kestrels with air and ground modes and Ramparts that carry up to six troops.</li>
           </ul>
-          <p class="muted">Pioneer · Rifleman · Breacher · Howitzer<br>Colony Hub · Provision Silo · Aether Tap · Muster Hall · Workshop</p>
+          <p class="muted"><a href="{{ '/projects/robos-rts/#meridian-guard' | relative_url }}">Meridian Guard tech and units →</a></p>
         </div>
-        <div class="fimg"><figure><img loading="lazy" src="{{ '/assets/games/rts/15-roster-meridian-guard.jpg' | relative_url }}" alt="Meridian Guard units"><figcaption>The Meridian Guard roster.</figcaption></figure></div>
+        <div class="fimg"><figure><img loading="lazy" src="{{ '/assets/blog/starfall-command-100-point-roadmap/rampart-transport.webp' | relative_url }}" alt="Selected Rampart Transport carrying two Riflemen beside the Airframe Hangar"><figcaption>A Rampart boards two Riflemen before crossing the wall.</figcaption></figure></div>
       </div>
       <div class="shots">
         <figure><img loading="lazy" src="{{ '/assets/games/rts/18-structures-meridian-guard.jpg' | relative_url }}" alt="Meridian structures"><figcaption>Colony Hub, Muster Hall, Workshop.</figcaption></figure>
@@ -127,15 +129,15 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
       <div class="faction">
         <div class="ftext">
           <h3>Gnarl Brood</h3>
-          <p>A monster swarm. Fast, cheap bodies that overwhelm in numbers and one nest that spawns all of them.</p>
+          <p>The Brood uses living ground for speed, Nest slots for simultaneous hatching and tunnels to move troops between fronts.</p>
           <ul class="ticks">
-            <li><b>Skitterlings</b> are the fastest units in the game and fall to splash.</li>
-            <li><b>Bile Crawlers</b> spit acid with real range and bonus damage to structures.</li>
-            <li><b>Blight Hurlers</b> lob corrosive splash over the front line.</li>
+            <li><b>Brood Keepers</b> spend energy to add Nest slots after a delay.</li>
+            <li><b>Skitterlings</b> can burrow, and Bile Crawlers can evolve into armored Carapace Bulwarks.</li>
+            <li><b>Drift Sacs</b> supply and scout while Needlewings harass ground units.</li>
           </ul>
-          <p class="muted">Forager · Skitterling · Bile Crawler · Blight Hurler<br>Brood Nest</p>
+          <p class="muted"><a href="{{ '/projects/robos-rts/#gnarl-brood' | relative_url }}">Gnarl Brood tech and units →</a></p>
         </div>
-        <div class="fimg"><figure><img loading="lazy" src="{{ '/assets/games/rts/16-roster-gnarl-brood.jpg' | relative_url }}" alt="Gnarl Brood units"><figcaption>The Gnarl Brood roster.</figcaption></figure></div>
+        <div class="fimg"><figure><img loading="lazy" src="{{ '/assets/blog/starfall-command-100-point-roadmap/brood-growth-node.webp' | relative_url }}" alt="Purple living ground spreading around a Brood Nest and Growth Node"><figcaption>A Growth Node extends living ground beyond the Nest.</figcaption></figure></div>
       </div>
       <div class="shots">
         <figure><img loading="lazy" src="{{ '/assets/games/rts/20-brood-base.jpg' | relative_url }}" alt="Brood base"><figcaption>The Brood Nest and its crystal line.</figcaption></figure>
@@ -147,15 +149,15 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
       <div class="faction">
         <div class="ftext">
           <h3>Aurelian Concord</h3>
-          <p>Shielded warriors. Every unit and structure has an Aegis Shield that absorbs damage first and regenerates out of combat.</p>
+          <p>Concord uses regenerating shields, powered Waystones and timed support abilities.</p>
           <ul class="ticks">
-            <li><b>Phase Step</b> teleports a Skirmisher up to 18 range when its shield breaks.</li>
-            <li><b>Sunblade Rush</b> closes the gap in a burst.</li>
-            <li><b>Spire Walkers</b> walk straight over cliff walls.</li>
+            <li><b>Lumen Carriers</b> anchor to supply a temporary power field.</li>
+            <li><b>Aegis Wardens</b> block ground paths and warn before Lattice Burst hits units on either side.</li>
+            <li><b>Crownspires</b> threaten Massive targets, while the Heartstone can recall a force through a timed marker.</li>
           </ul>
-          <p class="muted">Mote · Sunblade · Skirmisher · Spire Walker<br>Heartstone · Resonator · Waystone</p>
+          <p class="muted"><a href="{{ '/projects/robos-rts/#aurelian-concord' | relative_url }}">Aurelian Concord tech and units →</a></p>
         </div>
-        <div class="fimg"><figure><img loading="lazy" src="{{ '/assets/games/rts/17-roster-aurelian-concord.jpg' | relative_url }}" alt="Aurelian Concord units"><figcaption>The Aurelian Concord roster.</figcaption></figure></div>
+        <div class="fimg"><figure><img loading="lazy" src="{{ '/assets/blog/starfall-command-100-point-roadmap/concord-power.webp' | relative_url }}" alt="Concord power fields overlapping and labeling Waystone dependencies"><figcaption>Amber marks the Waystone that depends on the selected power source.</figcaption></figure></div>
       </div>
       <div class="shots">
         <figure><img loading="lazy" src="{{ '/assets/games/rts/21-concord-base.jpg' | relative_url }}" alt="Concord base"><figcaption>The Heartstone, Resonator and Waystone.</figcaption></figure>
@@ -208,7 +210,7 @@ c.screenshot("/tmp/frame.png")</code></pre>
 python run_cucumber_tests.py --backend
 python run_cucumber_tests.py --realtime-headless --speed=8
 python run_cucumber_tests.py --realtime --speed=8 --record</code></pre>
-      <p class="sec-p">On October 23, 2026, the backend passed 20 scenarios / 128 steps and the live suite passed 6 scenarios / 40 steps. A normal-speed paid army probe with roughly 80 units observed 49–60 FPS on a local GTX 1050 Ti at 1080p; its final rolling frame sample had a 26.952 ms p95. See the <a href="{{ '/projects/robos-rts/#verified-run-october-23-2026' | relative_url }}">verification report</a> for hardware, budgets and recording limits.</p>
+      <p class="sec-p">The completed roadmap build passed 102 rendered scenarios, 33 backend scenarios and ten focused Godot suites. All four paid Frontier Hunters build orders reached structure elimination. <a href="{{ '/blog/starfall-command-100-point-roadmap/' | relative_url }}">Read the engineering post →</a></p>
     </div>
   </div>
 </section>
@@ -218,7 +220,7 @@ python run_cucumber_tests.py --realtime --speed=8 --record</code></pre>
     <div class="panel-g">
       <p class="eyebrow">Play</p>
       <h2 class="h2">Run it from source</h2>
-      <p class="sec-p">You need <a style="text-decoration:underline" href="https://godotengine.org/download" target="_blank" rel="noopener">Godot 4.3 or newer</a> and Git; the verification above used 4.7.2. Press <b>F8</b> for match setup and the map editor, or <b>F1</b> for controls.</p>
+      <p class="sec-p">Use <a style="text-decoration:underline" href="https://godotengine.org/download" target="_blank" rel="noopener">Godot 4.3 or newer</a> and Git. On Windows, open <code>games/robos-rts/project.godot</code> and press <b>F5</b>. On Linux or macOS, run the launcher below. The title screen opens skirmish setup, scenarios and the editor. Press <b>F1</b> for battlefield controls.</p>
       <pre class="code"><button data-copy>Copy</button><code>git clone https://github.com/nddipiazza/robos.git
 cd robos/games/robos-rts
 GODOT_BIN=/path/to/godot4 ./play.sh</code></pre>
