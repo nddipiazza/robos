@@ -1,0 +1,165 @@
+---
+layout: default
+title: "RobOS Mobile — Run RobOS prototypes on any phone"
+permalink: /mobile/
+redirect_from:
+  - /phone/
+body_class: guide
+extra_css: /assets/phone.css
+description: "RobOS Mobile runs on any phone right now as early prototypes: mobile web views in any phone's browser, native Android 11+ apps you can sideload without wiping your device, and a prototype LineageOS 24 OS image."
+og_image: /assets/phone/boot-animation.jpg
+og_image_alt: "A phone on a desk showing the RobOS Mobile boot animation"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS Mobile, RobOS Android apps, RobOS on any phone, mobile prototypes, Smart Home for Android, RobOS Preferences for Android, RobOS Home launcher, LineageOS 24 prototype"
+---
+<section class="cr-page"><div class="wrap"><article class="guide-body cr-body phone-guide">
+  <header class="cr-hero">
+    <p class="eyebrow">RobOS Mobile · Early prototypes</p>
+    <h1>RobOS on any phone,<br>right now as prototypes.</h1>
+    <p class="lead">RobOS Mobile brings RobOS to phones in three ways, all available today as working prototypes. Any phone—iPhone or Android—can join RobOS apps in its browser over home Wi-Fi. Any Android 11+ phone can install the native RobOS mobile apps alongside its existing apps, without wiping the device or unlocking a bootloader. And for a dedicated test phone with an unlockable bootloader, a prototype LineageOS 24 (Android 17) OS image runs RobOS from startup animation to home screen.</p>
+    <div class="phone-actions"><a class="btn" href="#try">Try the prototypes</a><a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">Read how we built the OS prototype →</a></div>
+  </header>
+
+  <div class="phone-grid">
+    <figure class="guide-shot"><a href="{{ '/assets/phone/boot-animation.jpg' | relative_url }}"><img src="{{ '/assets/phone/boot-animation.jpg' | relative_url }}" alt="Photograph of a phone on a desk showing the RobOS logo while the prototype OS starts up" width="898" height="1132" fetchpriority="high"></a><figcaption>Prototype OS startup. The RobOS logo fades in and pulses while Android boots.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/photo-smart-home.jpg' | relative_url }}"><img src="{{ '/assets/phone/photo-smart-home.jpg' | relative_url }}" alt="Photograph of a phone running RobOS Smart Home with a Feit Color Light switched on in the Living Room" width="900" height="1200" loading="lazy"></a><figcaption>Smart Home switching a Feit Electric color bulb directly over Wi-Fi.</figcaption></figure>
+    <figure class="guide-shot wide-on-phone"><a href="{{ '/assets/phone/photo-preferences.jpg' | relative_url }}"><img src="{{ '/assets/phone/photo-preferences.jpg' | relative_url }}" alt="Photograph of RobOS Preferences on a phone listing what is in the RobOS Config Vault backup" width="900" height="1195" loading="lazy"></a><figcaption>Preferences reading a RobOS Config Sync backup from Google Drive.</figcaption></figure>
+  </div>
+  <p>Photographs of the RobOS Mobile prototypes running on real hardware (taken November 6, 2026).</p>
+
+  <ul class="cr-nav">
+    <li><a href="#ways"><b>Three ways to run it</b><span>Any phone, Android 11+, or full OS</span></a></li>
+    <li><a href="#apps"><b>Mobile prototypes</b><span>Smart Home, Preferences and Home</span></a></li>
+    <li><a href="#try"><b>Run on any Android phone</b><span>Build &amp; sideload APKs without wiping</span></a></li>
+    <li><a href="#os"><b>Full OS prototype</b><span>LineageOS 24 build &amp; flash guide</span></a></li>
+    <li><a href="#limits"><b>Prototype status &amp; limits</b><span>What works now and what doesn't yet</span></a></li>
+  </ul>
+
+  <h2 id="ways">1. Three ways RobOS runs on a phone right now</h2>
+  <p>Phones cannot run the desktop Electron suite directly, so RobOS Mobile meets phones where they are: mobile browser views for every phone, native Kotlin and Jetpack Compose apps for Android, and an optional open-source Android OS build. All three are active prototypes you can run from source today.</p>
+
+  <div class="phone-ways">
+    <div class="phone-way">
+      <span class="proto-tag">Any phone · iOS &amp; Android</span>
+      <h3>Browser companions &amp; mobile web</h3>
+      <p>No app install needed. Scan a QR code on your Wi-Fi to use phones as controllers in <a href="{{ '/games/party-game/' | relative_url }}">Party Game</a>, drive TVs with the <a href="{{ '/tv/' | relative_url }}">Smart TV Studio</a> virtual remote, open touchscreen or QR checkout in <a href="{{ '/point-of-sale/' | relative_url }}">Point of Sale</a>, or scaffold mobile web apps in <a href="{{ '/app-wizard/' | relative_url }}">App Wizard</a>.</p>
+    </div>
+    <div class="phone-way">
+      <span class="proto-tag">Any Android 11+ phone</span>
+      <h3>Standalone Android apps</h3>
+      <p>Build the native Kotlin apps (<a href="{{ '/smart-home-android/' | relative_url }}">Smart Home</a>, <a href="{{ '/robos-preferences-android/' | relative_url }}">Preferences</a> and <a href="{{ '/robos-launcher-android/' | relative_url }}">RobOS Home</a>) and install them over USB with <code>adb install</code>. They run alongside your normal apps, need no unlocked bootloader, and leave your data untouched.</p>
+    </div>
+    <div class="phone-way">
+      <span class="proto-tag">Supported unlocked phones</span>
+      <h3>Full RobOS Mobile OS image</h3>
+      <p>For a dedicated test or spare phone, <code>infra/android/</code> builds <strong>LineageOS 24 (Android 17)</strong> with the RobOS startup animation, RobOS Home replacing the stock launcher, and the RobOS apps built in. Verified on a Motorola Moto G100 (<code>nio</code>).</p>
+    </div>
+  </div>
+
+  <p>Here is how the desktop and mobile prototypes fit together in one example. You add a Feit Electric bulb in <a href="{{ '/smart-home/' | relative_url }}">Smart Home</a> on your RobOS computer. <a href="{{ '/config-management/' | relative_url }}">Config Sync</a> backs up your settings to your Google Drive. On your phone, you sign in once in RobOS Preferences and tap restore. Smart Home on your phone now shows that bulb in the same room and switches it on and off over Wi-Fi—even when your computer is turned off.</p>
+
+  <h2 id="apps">2. The native mobile prototypes</h2>
+  <div class="phone-grid four">
+    <figure class="guide-shot"><a href="{{ '/assets/phone/robos-home.jpg' | relative_url }}"><img src="{{ '/assets/phone/robos-home.jpg' | relative_url }}" alt="RobOS Home showing 9:14 PM, Friday, November 6, and app icons for Smart Home, AudioFX, Files, Firefox, Music and Settings" width="540" height="1260" loading="lazy"></a><figcaption>RobOS Home: the time, the date and every app, RobOS apps first.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/preferences-sign-in.jpg' | relative_url }}"><img src="{{ '/assets/phone/preferences-sign-in.jpg' | relative_url }}" alt="RobOS Preferences sign-in screen with a Sign in with Google button" width="540" height="1260" loading="lazy"></a><figcaption>Preferences: sign in with the Google account your computers back up to.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/smart-home-feit-dialog.jpg' | relative_url }}"><img src="{{ '/assets/phone/smart-home-feit-dialog.jpg' | relative_url }}" alt="Smart Home's Add Feit or Smart Life lights dialog with five numbered steps and Access ID and Access Secret fields" width="540" height="1260" loading="lazy"></a><figcaption>Adding Feit or Smart Life lights on the phone itself.</figcaption></figure>
+    <figure class="guide-shot"><a href="{{ '/assets/phone/smart-home-restored-light.jpg' | relative_url }}"><img src="{{ '/assets/phone/smart-home-restored-light.jpg' | relative_url }}" alt="Smart Home listing Color Light in the Living Room, Feit / Smart Life, switched on, with Lights, Scenes, Schedules and Appliances tabs" width="540" height="1260" loading="lazy"></a><figcaption>The light restored from the backup, ready to switch.</figcaption></figure>
+  </div>
+
+  <h3>RobOS Smart Home (<a href="{{ '/smart-home-android/' | relative_url }}"><code>packages/smart-home-android</code></a>)</h3>
+  <p>Controls lights straight over your home Wi-Fi from any Android 11+ phone. It needs no RobOS computer switched on and sends lighting commands locally on your network rather than through a cloud relay. Supported brands:</p>
+  <div class="phone-table"><table class="wide">
+    <thead><tr><th>Brand</th><th>How it connects</th></tr></thead>
+    <tbody>
+      <tr><td>Feit Electric, Smart Life and other Tuya lights</td><td>A one-time setup fetches each light's key from a free Tuya developer account. After that, the phone talks to the light directly on your network.</td></tr>
+      <tr><td>Philips Hue</td><td>Press the button on the Hue Bridge to pair.</td></tr>
+      <tr><td>WiZ, WLED, TP-Link Kasa, LIFX, Govee, Elgato, Yeelight, Shelly</td><td>Found on your Wi-Fi with <strong>Scan</strong>.</td></tr>
+      <tr><td>Home Assistant</td><td>Uses your Home Assistant server's address and a long-lived access token.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Lights can be grouped into rooms and saved as scenes. Schedules can fade lights up or down at set times and run even when the app is closed. The <strong>Appliances</strong> tab shows read-only status for LG ThinQ washers, dryers and refrigerators.</p>
+
+  <h3>RobOS Preferences (<a href="{{ '/robos-preferences-android/' | relative_url }}"><code>packages/robos-preferences-android</code></a>)</h3>
+  <p>Brings your RobOS computer settings to your phone. Tap <strong>Sign in with Google</strong> and the phone's browser opens Google's sign-in page using the same loopback PKCE flow as the desktop. Preferences finds your Config Sync backups in Google Drive, opens them (including passphrase-protected scrypt + AES-256-GCM vaults), and lists what each category holds. Today it restores what mobile apps already use: Smart Home's lights, rooms, scenes and schedules. Other categories remain untouched in your backup until mobile prototypes support them.</p>
+  <div class="phone-note"><strong>What stays private.</strong> Config Sync never uploads encryption keys for Feit and Smart Life lights. Each device fetches its own copy from your Tuya project and encrypts it with the Android Keystore, so your phone asks for your Tuya Access ID and Access Secret once even when your computer already has them.</div>
+
+  <h3>RobOS Home (<a href="{{ '/robos-launcher-android/' | relative_url }}"><code>packages/robos-launcher-android</code></a>)</h3>
+  <p>A clean prototype home screen showing the time, the date and every launchable app on the phone, with RobOS apps listed first. You can install it as an optional launcher on any Android 11+ phone (choose it as your default home app in Android Settings whenever you want, and switch back anytime), or run it built into the prototype OS image alongside Files, Music, Settings, AudioFX and any APKs you add with <code>adb install</code>.</p>
+
+  <h2 id="try">3. Run the prototypes on any Android phone (no wipe)</h2>
+  <p>You do not need a specific phone model, an unlocked bootloader or a custom ROM to try the native Android prototypes. Any phone on <strong>Android 11 (API 30) or newer</strong> works:</p>
+  <ol>
+    <li>Turn on <strong>Developer options</strong> and <strong>USB debugging</strong> on your Android phone, then connect it to your computer over USB.</li>
+    <li>Make sure JDK 17 and the Android SDK (<code>ANDROID_HOME</code> or <code>local.properties</code>) are installed on your computer.</li>
+    <li>Build and install the prototypes from your RobOS checkout:
+<pre><code># Smart Home + Preferences (both signed with your local debug key so settings handoff works)
+(cd packages/smart-home-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
+(cd packages/robos-preferences-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
+
+# Optional: the RobOS Home launcher
+(cd packages/robos-launcher-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)</code></pre></li>
+  </ol>
+  <p>Preferences hands restored settings to Smart Home through an Android content provider guarded by the signature permission <code>com.robos.permission.MANAGE_SETTINGS</code>. Building both debug APKs on the same computer signs them with the same local debug keystore, so the permission check succeeds automatically.</p>
+
+  <h3>Bring over your settings from a RobOS computer</h3>
+  <ol>
+    <li>On your RobOS computer, open <strong>Preferences → Config Sync &amp; Sharing</strong> and apply the sync to your Google Drive. A progress bar shows each file as it uploads.</li>
+    <li>On your phone, open <strong>RobOS Preferences</strong>, tap <strong>Sign in with Google</strong>, sign in in the browser, and return to Preferences when Google confirms you are signed in.</li>
+    <li>Choose your backup, and enter its passphrase if you set one.</li>
+    <li>Under <strong>Use on this phone</strong>, tap <strong>Restore to this phone</strong> on the Smart Home card.</li>
+    <li>Open <strong>RobOS Smart Home</strong>. If you have Feit or Smart Life lights, tap <strong>Add Feit or Smart Life lights</strong> once and enter your Tuya Access ID and Access Secret.</li>
+  </ol>
+  <figure class="guide-shot"><a href="{{ '/assets/phone/desktop-config-sync-progress.jpg' | relative_url }}"><img src="{{ '/assets/phone/desktop-config-sync-progress.jpg' | relative_url }}" alt="RobOS Preferences on the desktop, Config Sync and Sharing, uploading 12 of 47 files to the vault, currently smart-lights.json" width="1200" height="499" loading="lazy"></a><figcaption>Config Sync on the RobOS computer, uploading the backup the phone restores from.</figcaption></figure>
+
+  <h2 id="os">4. Prototype: Build &amp; flash the full RobOS OS image</h2>
+  <p>If you want a dedicated phone that boots straight into RobOS instead of running manufacturer Android, <code>infra/android/</code> builds an open-source <strong>LineageOS 24 (Android 17)</strong> image with a RobOS vendor layer: the RobOS startup animation, RobOS Home in place of the stock launcher, and Smart Home and Preferences pre-installed.</p>
+
+  <h3>What you need for the full OS image</h3>
+  <ul>
+    <li><strong>A LineageOS-supported phone with an unlockable bootloader.</strong> Our verified hardware prototype is the <strong>Motorola Moto G100</strong> (codename <code>nio</code>, model XT2125-4, on Motorola's Android 12 firmware such as S1RTS32.41-20-16-1-9). A Moto G10 (<code>capri</code>) target is also included behind <code>ROBOS_DEVICE=capri</code> (untested on hardware), and other LineageOS 24 devices can be added via <code>infra/android/local_manifests/</code>.</li>
+    <li><strong>A USB-C cable plugged straight into your computer</strong>—not through a USB hub or dock.</li>
+    <li><strong>A Linux build machine with plenty of RAM and disk.</strong> There is no prebuilt ROM download yet. Android 17's build analysis is memory-hungry: plan for about 60 GB of RAM (plus compressed swap), 300–400 GB of free disk, over 100 GB of source downloads, and roughly a day for the first build.</li>
+    <li><strong>Backups of everything on that phone.</strong> Unlocking and flashing erases the phone completely.</li>
+  </ul>
+  <p>Always verify the phone's exact codename over ADB before flashing anything:</p>
+<pre><code>adb shell getprop ro.product.device</code></pre>
+  <p>For the default Moto G100 build, this must print <code>nio</code>. Flashing an image built for another device codename can leave a phone unable to boot.</p>
+
+  <h3>Build the image</h3>
+  <p>On a Linux machine with 64 GB of RAM or less, enable compressed swap in memory first (active until the next reboot):</p>
+<pre><code>sudo modprobe zram &amp;&amp; sudo zramctl --size 48G --algorithm lz4 /dev/zram0 &amp;&amp; sudo mkswap /dev/zram0 &amp;&amp; sudo swapon --priority 100 /dev/zram0</code></pre>
+  <p>Then check prerequisites and run the build:</p>
+<pre><code>infra/android/robos-image.sh check
+infra/android/robos-image.sh all</code></pre>
+  <p>On later runs, <code>infra/android/robos-image.sh start</code> runs the build inside a memory-capped systemd user service so it cannot starve your desktop session, and <code>infra/android/tools/progress.sh</code> displays build progress. For <code>nio</code>, the output zip is written to <code>~/android/robos/out/target/product/nio/lineage-24.0-…-UNOFFICIAL-nio.zip</code> (~1 GB).</p>
+
+  <h3>Flash the Moto G100 (<code>nio</code>) prototype</h3>
+  <p>This erases the target phone. Read the <a href="https://wiki.lineageos.org/devices/nio/install/variant2/">LineageOS install guide for the Moto G100</a> first for full safety details. In summary:</p>
+  <ol>
+    <li><strong>Unlock the bootloader</strong> using Motorola's official unlock-code portal (availability depends on carrier and device).</li>
+    <li><strong>Boot into bootloader mode</strong> (hold Volume Down while powering on) and flash the partition and recovery images from the build output folder:
+<pre><code>fastboot flash dtbo dtbo.img
+fastboot flash vendor_boot vendor_boot.img
+fastboot reboot bootloader
+fastboot flash boot boot.img</code></pre></li>
+    <li><strong>Enter Recovery mode</strong> from the bootloader menu.</li>
+    <li><strong>Copy partitions to the inactive slot:</strong> choose <strong>Apply update → Apply from ADB</strong> and sideload LineageOS's <code>copy-partitions</code> zip: <code>adb -d sideload copy-partitions-20261011-signed.zip</code>.</li>
+    <li><strong>Wipe data:</strong> choose <strong>Factory reset → Format data</strong>.</li>
+    <li><strong>Sideload RobOS:</strong> choose <strong>Apply from ADB</strong> again and run <code>adb -d sideload lineage-24.0-…-UNOFFICIAL-nio.zip</code>.</li>
+    <li><strong>Reboot.</strong> After Motorola's bootloader screen, the pulsing RobOS logo appears and boots into RobOS Home.</li>
+  </ol>
+  <div class="phone-note"><strong>If fastboot says <code>Protocol error</code>.</strong> Our first flash failed with <code>reap_urb</code> errors because the phone was connected through a USB dock. Plugging the USB-C cable directly into the laptop port fixed it immediately. To return a Moto G100 to factory stock software later, use Motorola's Rescue and Smart Assistant.</div>
+
+  <h2 id="limits">5. Prototype status and honest limits</h2>
+  <p>RobOS Mobile is an early prototype effort. What to expect right now:</p>
+  <ul>
+    <li><strong>Prototypes built from source, not store releases.</strong> There are no Apple App Store, Google Play Store or F-Droid listings yet, and no prebuilt APK or ROM downloads. You build and install the Android apps with Gradle and <code>adb</code>.</li>
+    <li><strong>iPhone support is browser-based today.</strong> iPhones work right now with RobOS's local Wi-Fi web interfaces (Party Game controllers, Smart TV remote, Point of Sale web views and KGraph web apps), while native mobile apps are currently Android-only (Android 11+).</li>
+    <li><strong>Only Smart Home settings restore on mobile so far.</strong> RobOS Preferences opens and inspects your entire Config Sync vault, while additional mobile apps that consume other backup categories are still to come.</li>
+    <li><strong>Feit and Smart Life bulbs need a one-time free Tuya cloud project</strong> (~20 minutes once) so each device can fetch local LAN keys without syncing secrets through the cloud.</li>
+    <li><strong>RobOS Home has no Recents app switcher on the custom OS image,</strong> because Android's recent-apps overview lives inside the stock launcher that the OS image replaces. Three-button navigation is used instead.</li>
+    <li><strong>Full OS image caveats:</strong> Flashing wipes the phone and requires an unlockable bootloader; the image is a <code>userdebug</code> test-key build with no Google Play services; unlocked bootloaders show a manufacturer warning at boot; building Android 17 takes ~60 GB RAM (with zram), 300+ GB disk and about a day; and the full OS build has only been flashed and verified on the Moto G100 (<code>nio</code>) so far.</li>
+  </ul>
+  <p>For the engineering story behind compiling Android 17 on a laptop and verifying the hardware prototype, read <a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">how we built the LineageOS 24 prototype</a>. See also <a href="{{ '/smart-home/' | relative_url }}">Smart Home</a>, <a href="{{ '/config-management/' | relative_url }}">Config Sync</a> and <a href="{{ '/tv/' | relative_url }}">RobOS on your TV</a>.</p>
+</article></div></section>

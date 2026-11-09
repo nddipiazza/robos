@@ -9,7 +9,7 @@ og_image: /assets/og.png
 og_image_width: 1200
 og_image_height: 630
 og_image_alt: "RobOS — One open-source app suite to replace them all. Then need less AI."
-keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps, open-source alternatives, knowledge graph, KGraph, context engineering, AI energy use, reuse AI output, Skill Commons, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, RobOS eLearning, open-source course app, Godot 4 AI games, developer tools, coding agents"
+keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps, open-source alternatives, knowledge graph, KGraph, context engineering, AI energy use, reuse AI output, Skill Commons, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, RobOS eLearning, open-source course app, Godot 4 AI games, RobOS Mobile, developer tools, coding agents"
 ---
 <section class="l-hero">
   <div class="wrap l-hero-grid">
@@ -40,7 +40,7 @@ keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, replace paid apps
       <li><a href="{{ '/code-review/' | relative_url }}"><img src="{{ '/assets/landing/tiles/code.jpg' | relative_url }}" alt="" width="800" height="600"><span>AI coding agents &amp; code review</span></a></li>
       <li class="l-mosaic-split"><a href="{{ '/security/' | relative_url }}" aria-label="Passwords, hardware keys and VPN"><img src="{{ '/assets/landing/tiles/security.jpg' | relative_url }}" alt="" width="800" height="600"></a><a href="{{ '/p2p/' | relative_url }}" aria-label="Private mesh across all your machines"><img src="{{ '/assets/landing/tiles/mesh.jpg' | relative_url }}" alt="" width="800" height="600"></a><p class="l-biz-label"><a href="{{ '/security/' | relative_url }}">Passwords, hardware keys, VPN</a> &amp; <a href="{{ '/p2p/' | relative_url }}">private mesh</a></p></li>
       <li><a href="{{ '/home-assistant-voice/' | relative_url }}"><img src="{{ '/assets/landing/tiles/home.jpg' | relative_url }}" alt="" width="800" height="600"><span>Smart home: lights, speakers &amp; voice</span></a></li>
-      <li><a href="{{ '/phone/' | relative_url }}"><img src="{{ '/assets/landing/tiles/phone.jpg' | relative_url }}" alt="" width="800" height="600"><span>RobOS on your old Android phone</span></a></li>
+      <li><a href="{{ '/mobile/' | relative_url }}"><img src="{{ '/assets/landing/tiles/phone.jpg' | relative_url }}" alt="" width="800" height="600"><span>RobOS Mobile</span></a></li>
       <li class="l-mosaic-new"><a class="l-mosaic-more" href="{{ '/apps/' | relative_url }}"><span>More apps</span><b aria-hidden="true">→</b></a><a href="{{ '/build-apps/' | relative_url }}"><b aria-hidden="true">+</b><span>Add your own app</span></a></li>
     </ul>
   </div>

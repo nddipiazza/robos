@@ -81,6 +81,14 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
           <p>Sideload a native RobOS TV app via Developer Mode (LG webOS, Samsung Tizen, Google TV/ADB, Roku), navigate the 10-Foot Portal (<code>:19210</code>) with your TV remote D-Pad, and stream 4K 120Hz games.</p>
         </div>
       </a>
+      <a class="card app-card" href="{{ '/mobile/' | relative_url }}" data-s="robos mobile phone prototypes android ios browser smart-home-android robos-preferences-android robos-launcher-android lineageos config sync">
+        <img src="{{ '/assets/images/icons/app-launcher.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <div>
+          <h3>RobOS Mobile</h3>
+          <code class="app-pkg">Prototype Guide · /mobile/</code>
+          <p>Run RobOS on any phone right now as early prototypes: browser companion views on iOS &amp; Android, native Kotlin apps sideloaded on any Android 11+ phone, and a prototype LineageOS 24 OS image.</p>
+        </div>
+      </a>
       <a class="card app-card" href="{{ '/movie-player/' | relative_url }}" data-s="robos movie player video player cinema stage tv shows seasons episodes roku smart tv cast subtitles srt vtt ai watchlist virtual cinema host sftp cloud">
         <img src="{{ '/assets/images/icons/movie-player.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>

@@ -14,6 +14,7 @@
 - [Task Implementer](https://rowbose.com/task-implementer/): Pick a GitHub or Jira issue, choose a developer persona and coding agent (Codex, AGY, Claude Code or GitHub Copilot), and let it branch, test, commit and push without opening a pull request
 - [Apps and components](https://rowbose.com/apps/): Guides for every app, shared library, CLI and service, each at https://rowbose.com/<package-name>/
 - [RobOS on Your Smart TV](https://rowbose.com/tv/): Developer Mode sideloading (LG webOS, Samsung Tizen, Google TV / Android TV ADB, Roku OS), 10-Foot Big-Screen Portal (:19210), and Moonlight/Sunshine 4K game streaming
+- [RobOS Mobile](https://rowbose.com/mobile/): Early prototypes that run on any phone right now—browser companion views (iOS & Android), native Kotlin Android 11+ apps (Smart Home, Preferences with Config Sync restore, RobOS Home), and a prototype LineageOS 24 OS image
 - [RobOS Zero-Trust P2P App Mesh](https://rowbose.com/p2p/): Provider-agnostic Zero-Trust App & IPC Port Mesh (`packages/app-mesh`, `robos-lib/app-mesh-engine.js`) using built-in Mutual TLS 1.3 peer pinning, OpenZiti, Tailscale/Headscale, NetBird, or WireGuard to bridge RobOS app IPC ports and stream 1080p/4K movies across RobOS PCs
 - [Security & Isolation Proofs](https://rowbose.com/security/): Live kernel E2E proofs for the RobOS VPN Sandbox (`ip netns` + 3-barrier `iptables` kill-switch) and RobOS VPN Servers
 - [Download](https://rowbose.com/download/): Install RobOS on Windows, Linux, and macOS, or boot the Ubuntu appliance VM/USB
