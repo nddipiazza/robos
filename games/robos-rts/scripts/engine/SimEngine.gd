@@ -1408,6 +1408,7 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		if u["orders"].size() > 0 and u["orders"][0]["type"] != "move":
 			return
 
+	_start_waiting_target_order(u)
 	if u["orders"].is_empty():
 		if u.get("auto_repair", false) and tick % 8 == u.tag % 8 and _begin_auto_repair(u):
 			return
@@ -1549,6 +1550,57 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 
 		"repair":
 			_process_repair_order(u, order, dt)
+
+func _start_waiting_target_order(unit: Dictionary) -> void:
+	while not unit.orders.is_empty() and unit.orders[0].get("waiting_for_turn", false):
+		var order: Dictionary = unit.orders[0]
+		if _waiting_target_lost(unit, order):
+			unit.orders.pop_front()
+			unit.path.clear()
+			continue
+		order.erase("waiting_for_turn")
+		if order.type == "harvest":
+			unit.harvest_target_tag = order.target_tag
+		break
+
+func _waiting_target_lost(unit: Dictionary, order: Dictionary) -> bool:
+	var target: Dictionary = units.get(order.target_tag, {})
+	match order.type:
+		"attack_target":
+			# Treat an unobserved loss just like an enemy that moved out of sight.
+			if target.is_empty():
+				return vision == null or order.get("target_lost", false)
+			return can_see_unit(unit.owner, target) and (target.hp <= 0.0 or not can_attack(unit, target))
+		"force_attack":
+			return target.is_empty() or target.hp <= 0.0 or target.owner != unit.owner or not can_attack(unit, target)
+		"follow":
+			return not _is_friendly_mobile(target, unit.owner)
+		"harvest":
+			var source: Dictionary = resources.get(order.target_tag, {})
+			if source.is_empty():
+				if target.is_empty() or not target.is_extractor or target.owner != unit.owner or target.hp <= 0.0:
+					return true
+				source = resources.get(_gas_source_by_tap.get(target.tag, 0), {})
+			elif source.resource_type == "aether_vent":
+				var tap_tag: int = _gas_tap_by_vent.get(Vector2i(unit.owner, source.tag), 0)
+				var tap: Dictionary = units.get(tap_tag, {})
+				if tap.is_empty() or tap.hp <= 0.0:
+					return true
+			return not source.is_empty() and not unlimited_resources and source.amount <= 0
+	return false
+
+func _confirm_waiting_attack_loss(target: Dictionary) -> void:
+	if vision == null:
+		return
+	var visibility := {}
+	for unit in units.values():
+		for order in unit.orders:
+			if order.type != "attack_target" or not order.get("waiting_for_turn", false) or order.target_tag != target.tag:
+				continue
+			if not visibility.has(unit.owner):
+				visibility[unit.owner] = can_see_unit(unit.owner, target)
+			if visibility[unit.owner]:
+				order["target_lost"] = true
 
 func _release_mining_slot(worker: Dictionary) -> void:
 	if worker.harvest_timer <= 0.0:
@@ -1763,6 +1815,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 					s_unit["auto_summon"] = true
 					s_unit["morph_worker"] = {"id": u.id, "hp": u.hp, "cargo_type": u.cargo_type, "cargo_amount": u.cargo_amount}
 					_release_mining_slot(u)
+					_confirm_waiting_attack_loss(u)
 					units.erase(u.tag)
 					_recompute_supplies()
 			else:
@@ -1824,6 +1877,7 @@ func _refund_structure(site: Dictionary, costs: Vector2i) -> void:
 	var player: Dictionary = players[site.owner]
 	player.crystal += floori(costs.x * CONSTRUCTION_REFUND)
 	player.aether += floori(costs.y * CONSTRUCTION_REFUND)
+	_confirm_waiting_attack_loss(site)
 	units.erase(site.tag)
 	nav_dirty = true
 	_recompute_supplies()
@@ -2349,6 +2403,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		if players.has(target["owner"]):
 			players[target["owner"]]["units_lost"] += 1
 		var dead = target.duplicate(true)
+		_confirm_waiting_attack_loss(target)
 		units.erase(target["tag"])
 		if dead["is_structure"]:
 			nav_dirty = true
@@ -2612,17 +2667,17 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 
 		elif ctype == "follow":
-			u.orders.append({"type": "follow", "target_tag": target_tag})
+			_append_target_order(u, {"type": "follow", "target_tag": target_tag})
 			u.has_home_pos = false
 			accepted += 1
 
 		elif ctype in ["attack", "attack_move"]:
 			if target_tag > 0 and units.has(target_tag):
-				u["orders"].append({
+				_append_target_order(u, {
 					"type": "attack_target",
-					"target_tag": target_tag
+					"target_tag": target_tag,
+					"target_pos": units[target_tag].pos
 				})
-				u.orders.back()["target_pos"] = units[target_tag].pos
 			else:
 				u["orders"].append({
 					"type": "attack_move",
@@ -2634,7 +2689,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 
 		elif ctype in ["attack_target", "force_attack"]:
-			u["orders"].append({
+			_append_target_order(u, {
 				"type": ctype,
 				"target_tag": target_tag,
 				"target_pos": units[target_tag].pos
@@ -2646,8 +2701,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			var deposit: Dictionary = resources.get(target_tag, {})
 			if group_size > 1 and not queue and deposit.get("resource_type") == "crystal_field":
 				harvest_tag = _pick_local_crystal(u, deposit).tag
-			u["harvest_target_tag"] = harvest_tag
-			u["orders"].append({
+			if u.orders.is_empty():
+				u["harvest_target_tag"] = harvest_tag
+			_append_target_order(u, {
 				"type": "harvest",
 				"target_tag": harvest_tag
 			})
@@ -2693,6 +2749,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		command_history.pop_front()
 
 	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
+
+func _append_target_order(unit: Dictionary, order: Dictionary) -> void:
+	if not unit.orders.is_empty():
+		order["waiting_for_turn"] = true
+	unit.orders.append(order)
 
 func _fill_gas(workers: Array[Dictionary], tap_tag: int) -> Dictionary:
 	var tap: Dictionary = units.get(tap_tag, {})
