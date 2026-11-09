@@ -268,6 +268,24 @@ def gen_needler_fire() -> list[float]:
     return out
 
 
+def gen_crown_lance() -> list[float]:
+    """A low resonant capital beam with a sharp discharge and a falling tail."""
+    duration = 0.56
+    count = int(duration * SAMPLE_RATE)
+    discharge = _one_pole_lp(_make_noise(count, 1081), 2800.0)
+    phase = 0.0
+    samples = []
+    for i in range(count):
+        time = i / SAMPLE_RATE
+        pitch = 73.0 + 145.0 * math.exp(-time * 9.0)
+        phase += 2.0 * math.pi * pitch / SAMPLE_RATE
+        body = 0.7 * math.sin(phase) + 0.3 * math.sin(phase * 1.5) + 0.18 * math.sin(phase * 4.0)
+        sustain = body * _env_ad(time, 0.022, 0.52, 1.75)
+        crack = discharge[i] * _env_ad(time, 0.004, 0.09, 2.2)
+        samples.append(_soft_clip(sustain + crack, 1.25))
+    return samples
+
+
 def gen_prism_beam() -> list[float]:
     """Prism Beams (Spire Walker): sweeping thermal prism beam chord + high-energy plasma sear."""
     dur = 0.38
@@ -853,6 +871,7 @@ GENERATORS = {
     "corrosive_lob": (gen_corrosive_lob, 0.88),
     "needler_fire": (gen_needler_fire, 0.84),
     "prism_beam": (gen_prism_beam, 0.86),
+    "crown_lance": (gen_crown_lance, 0.89),
     # Melee Strikes & Worker Weapons
     "claw_slash": (gen_claw_slash, 0.88),
     "mandible_bite": (gen_mandible_bite, 0.84),

@@ -267,8 +267,15 @@ func technology_state() -> Dictionary:
 			producer_requirements.append({"id": "power", "name": "Power field", "state": power_state})
 		for trainee in definition.get("trains", []):
 			var train: Dictionary = RTSData.get_unit_def(trainee)
-			rows.append({"id": trainee, "section": "Production", "name": train.name, "state": producer_state,
-				"requirements": producer_requirements, "cost": main.ability_cost({"unit": trainee})})
+			var train_requirements := producer_requirements.duplicate()
+			var train_state := producer_state
+			for prerequisite in train.get("requires", []):
+				var needed := _technology_requirement(owner, prerequisite, structures, states)
+				train_requirements.append(needed)
+				if needed.state != "Complete":
+					train_state = "Locked"
+			rows.append({"id": trainee, "section": "Production", "name": train.name, "state": train_state,
+				"requirements": train_requirements, "cost": main.ability_cost({"unit": trainee})})
 		for action in definition.get("abilities", []):
 			var research := RTSData.get_ability_def(action)
 			if not research.has("upgrade"):
@@ -696,6 +703,7 @@ func _draw_single(u: Dictionary) -> void:
 
 	var x0 := pr.end.x + 20.0
 	var y0 := sp.position.y + 20.0
+	var rx := sp.position.x + 600.0
 	_text(Vector2(x0, y0 + 24), str(u["name"]), 28, C_TEXT)
 	var attrs: Array = u["attributes"]
 	var sub := RTSData.get_faction_name(str(u["faction"]))
@@ -703,7 +711,9 @@ func _draw_single(u: Dictionary) -> void:
 		sub += "  ·  " + "  ·  ".join(PackedStringArray(attrs))
 	if not is_own and u.owner != 0:
 		sub = "Enemy  ·  " + sub
-	_text(Vector2(x0, y0 + 48), sub, 15, C_MUTED)
+	var sub_width := rx - x0 - 12.0
+	var sub_size := clampi(floori(15.0 * sub_width / maxf(sub_width, _text_w(sub, 15))), 11, 15)
+	_text(Vector2(x0, y0 + 48), sub, sub_size, C_MUTED)
 
 	# Health / shield bars
 	var by := y0 + 62.0
@@ -749,17 +759,7 @@ func _draw_single(u: Dictionary) -> void:
 		var py2 := by + 8.0 + float(i) * 24.0
 		_text(Vector2(x0 + 200.0, py2), str(col_b[i][0]), 15, C_MUTED)
 		_text(Vector2(x0 + 258.0, py2), str(col_b[i][1]), 17, C_TEXT)
-	if not wpn.is_empty():
-		var wl := str(wpn.get("name", ""))
-		var bonus: Dictionary = wpn.get("bonus", {})
-		for k in bonus.keys():
-			wl += "   +%d vs %s" % [int(bonus[k]), str(k)]
-		if float(wpn.get("splash_radius", 0.0)) > 0.0:
-			wl += "   splash"
-		_text(Vector2(x0, by + 8.0 + float(col_a.size()) * 24.0 + 4.0), wl, 14, Color(C_MUTED.r, C_MUTED.g, C_MUTED.b, 0.9))
-
 	# Right column: production, status, blurb
-	var rx := sp.position.x + 600.0
 	var ry := sp.position.y + 22.0
 	var building: bool = u["is_structure"] and float(u["build_progress"]) < 1.0
 	if building:
@@ -927,6 +927,15 @@ func _draw_single(u: Dictionary) -> void:
 		if friendly_splash > 0.0:
 			details += "   ·   Friendly splash  %d%%" % roundi(friendly_splash * 100.0)
 		_text(Vector2(rx, ry + 72.0), details, 15, C_GOLD if friendly_splash > 0.0 else C_MUTED)
+	if not wpn.is_empty():
+		var weapon_label := str(wpn.get("name", ""))
+		var bonus: Dictionary = wpn.get("bonus", {})
+		for attribute in bonus:
+			weapon_label += "   +%d vs %s" % [int(bonus[attribute]), str(attribute)]
+		if float(wpn.get("splash_radius", 0.0)) > 0.0:
+			weapon_label += "   splash"
+		var weapon_y := ry + (44.0 if timing.is_empty() else 94.0)
+		_text(Vector2(rx, weapon_y), weapon_label, 14, C_MUTED)
 
 	var blurb := str(def.get("blurb", ""))
 	if blurb != "":

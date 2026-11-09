@@ -984,7 +984,7 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	var col := _weapon_color(attacker.owner, is_splash)
 	var beam := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	var w := 0.22 if is_splash else 0.12
+	var w := float(weapon.get("beam_width", 0.22 if is_splash else 0.12))
 	box.size = Vector3(w, w, dist)
 	beam.mesh = box
 	var m := _fx_mat(col)
