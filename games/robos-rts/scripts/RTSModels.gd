@@ -156,6 +156,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"blight_spire": _blight_spire(root, glow)
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
+		"brood_growth_node": _brood_growth_node(root, r, glow)
 		"mote": _mote(root, glow)
 		"lumen_carrier": _lumen_carrier(root, team)
 		"sunblade": _sunblade(root, team)
@@ -563,9 +564,16 @@ static func _brood_nest(root: Node3D, r: float, glow: Material) -> void:
 		var a3 := TAU * float(i) / 6.0
 		cyl(root, 0.1, 0.2, 2.4, m[1], Vector3(cos(a3) * r * 0.98, 0.45, sin(a3) * r * 0.98), Vector3(sin(a3) * 80.0, 0, -cos(a3) * 80.0), 5)
 
-# ---------------------------------------------------------------------------
-# Aliens — Aurelian Concord
-# ---------------------------------------------------------------------------
+static func _brood_growth_node(root: Node3D, radius: float, glow: Material) -> void:
+	var materials := _bug_mats()
+	sph(root, radius * 0.84, materials[0], Vector3.UP * 0.27, Vector3(1, 0.58, 1))
+	sph(root, radius * 0.52, glow, Vector3.UP * 0.9, Vector3(1, 1.2, 1), 10)
+	for i in range(5):
+		var angle := TAU * float(i) / 5.0
+		var radial := Vector3(cos(angle), 0, sin(angle))
+		sph(root, radius * 0.42, materials[1], radial * radius * 0.72 + Vector3.UP * 0.24, Vector3(1, 0.5, 1), 8)
+		cone(root, radius * 0.15, radius * 0.9, materials[2], radial * radius * 0.67 + Vector3.UP * 0.73, Vector3.ZERO, 5)
+
 static func _brood_fixture(root: Node3D, radius: float, glow: Material, extractor: bool) -> void:
 	var m := _bug_mats()
 	sph(root, radius, m[0], Vector3(0, 0.25, 0), Vector3(1, 0.44, 1))
@@ -581,6 +589,9 @@ static func _brood_fixture(root: Node3D, radius: float, glow: Material, extracto
 		ring(root, 0.4, 0.71, gas, Vector3(0, 2.36, 0), Vector3.ZERO)
 		sph(root, 0.35, gas, Vector3(0, 2.45, 0), Vector3(1, 0.65, 1))
 
+# ---------------------------------------------------------------------------
+# Aliens — Aurelian Concord
+# ---------------------------------------------------------------------------
 static func _alien_mats() -> Array:
 	return [
 		mat("a_ivory", IVORY, Color.BLACK, 1.0, 0.2, 0.4),

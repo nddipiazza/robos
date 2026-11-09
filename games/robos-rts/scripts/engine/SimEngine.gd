@@ -613,6 +613,9 @@ func can_see_position(player: int, pos: Vector2) -> bool:
 func has_living_ground(position: Vector2, owner: int = 0) -> bool:
 	return living_ground.covers(position, owner)
 
+func has_active_living_ground(position: Vector2, owner: int) -> bool:
+	return living_ground.covers(position, owner, true)
+
 func visible_living_ground_cells(player: int) -> Array[Vector2i]:
 	var visible: Array[Vector2i] = []
 	for cell in living_ground.cells:
@@ -703,6 +706,8 @@ func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> boo
 		if not has_tech_structure(worker.owner, str(required)):
 			return false
 	if requires_power(structure_type) and not is_powered(worker.owner, pos):
+		return false
+	if def.get("requires_living_ground", false) and (not can_see_position(worker.owner, pos) or not has_active_living_ground(pos, worker.owner)):
 		return false
 	return can_place_structure(structure_type, pos)
 

@@ -685,7 +685,7 @@ var units: Dictionary = {
 			"sfx": "mandible_bite",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_blight_spire"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_brood_growth_node", "build_blight_spire"],
 		"dialogues": {
 			"select": [
 				{"id": "forager_select_1", "text": "The brood hears."},
@@ -933,6 +933,14 @@ var units: Dictionary = {
 		"requires": ["brood_nest"], "crystal_cost": 200, "aether_cost": 150, "build_time": 52.0,
 		"max_hp": 700.0, "armor": 1.0, "radius": 2.6, "sight_range": 17.0,
 		"footprint": Vector2i(3, 3), "push_priority": 100, "abilities": []
+	},
+	"brood_growth_node": {
+		"id": "brood_growth_node", "name": "Growth Node", "faction": FACTION_MONSTERS,
+		"blurb": "A Forager grows into a node on active friendly living ground. Its spread recedes when destroyed.",
+		"is_structure": true, "attributes": ["Biological", "Structure"],
+		"crystal_cost": 60, "aether_cost": 0, "build_time": 18.0, "max_hp": 220.0,
+		"armor": 0.0, "radius": 1.65, "footprint": Vector2i(2, 2), "sight_range": 18.0,
+		"living_ground_radius": 16.0, "requires_living_ground": true, "push_priority": 100,
 	},
 	"spore_tap": {
 		"id": "spore_tap", "name": "Spore Tap", "faction": FACTION_MONSTERS,
@@ -1310,6 +1318,7 @@ var abilities: Dictionary = {
 	"build_aether_prism": {"id": "build_aether_prism", "name": "Summon Aether Prism", "hotkey": "R", "target": "point", "structure": "aether_prism"},
 	"build_brood_nest": {"id": "build_brood_nest", "name": "Grow Brood Nest", "hotkey": "N", "target": "point", "structure": "brood_nest"},
 	"build_brood_pod": {"id": "build_brood_pod", "name": "Grow Brood Pod", "hotkey": "B", "target": "point", "structure": "brood_pod"},
+	"build_brood_growth_node": {"id": "build_brood_growth_node", "name": "Grow Node", "hotkey": "T", "target": "point", "structure": "brood_growth_node"},
 	"build_spore_tap": {"id": "build_spore_tap", "name": "Grow Spore Tap", "hotkey": "R", "target": "point", "structure": "spore_tap"},
 	"build_blight_spire": {"id": "build_blight_spire", "name": "Grow Blight Spire", "hotkey": "T", "target": "point", "structure": "blight_spire"},
 	"rally_worker": {"id": "rally_worker", "name": "Set Forager Rally", "hotkey": "G", "target": "point", "desc": "Route newly hatched Foragers without changing the army rally. Shift-click adds a waypoint."},
