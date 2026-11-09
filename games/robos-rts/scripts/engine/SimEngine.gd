@@ -72,6 +72,8 @@ const SKIRMISH_MAPS := {"frontier-hunters": "Frontier Hunters", "iron-narrows": 
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
+enum CrystalSelection { LINE_ASSIGNMENT, OPEN_SLOT, REACHABLE_PATCH }
+
 var tick: int = 0
 var sim_time: float = 0.0
 var rng_seed: int = 42
@@ -1877,9 +1879,15 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		return
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
-		if _deliver_worker_cargo(u, dt, hall_tag) and u.orders.size() > 1:
-			u.orders.pop_front()
-			u.path.clear()
+		var crystal_trip: bool = u.cargo_type == "crystal"
+		if _deliver_worker_cargo(u, dt, hall_tag):
+			if u.orders.size() > 1:
+				u.orders.pop_front()
+				u.path.clear()
+			elif crystal_trip:
+				var patch: Dictionary = resources.get(res_tag, {})
+				if patch.get("resource_type") == "crystal_field" and deposit_present(patch):
+					_reassign_crystal_worker(u, order, patch, CrystalSelection.OPEN_SLOT)
 		return
 
 	var target_entity: Dictionary = {}
@@ -1948,7 +1956,25 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	else:
 		if not is_gas:
 			_release_mining_slot(u)
-		_follow_order_path(u, target_entity.pos, dt, u.radius + target_entity.radius + HARVEST_REACH)
+		var reach: float = u.radius + target_entity.radius + HARVEST_REACH
+		_prepare_path(u, target_entity.pos, 3.0, reach)
+		if not is_gas and u.orders.size() == 1 and tick % TICK_RATE == u.tag % TICK_RATE:
+			# Retry a partial route once per topology revision, spread over a
+			# second so a closed gate cannot replan an entire line in one tick.
+			if order.get("_blocked_crystal_revision", -1) != _navigation_revision and u.path.back().distance_squared_to(target_entity.pos) > reach * reach:
+				order["_blocked_crystal_revision"] = _navigation_revision
+				if _reassign_crystal_worker(u, order, target_entity, CrystalSelection.REACHABLE_PATCH):
+					return
+		_follow_path(u, dt)
+
+func _reassign_crystal_worker(worker: Dictionary, order: Dictionary, current: Dictionary, mode: CrystalSelection) -> bool:
+	var patch := _pick_local_crystal(worker, current, mode)
+	if patch.tag == current.tag:
+		return false
+	order.target_tag = patch.tag
+	worker.harvest_target_tag = patch.tag
+	worker.path.clear()
+	return true
 
 func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var struct_type = str(order.get("structure_type", "silo"))
@@ -3491,7 +3517,7 @@ func _find_nearest_crystal(pos: Vector2) -> Dictionary:
 				best = r
 	return best
 
-func _pick_local_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionary:
+func _pick_local_crystal(worker: Dictionary, preferred: Dictionary, mode: CrystalSelection = CrystalSelection.LINE_ASSIGNMENT) -> Dictionary:
 	if preferred.is_empty():
 		return {}
 	var assignments := {}
@@ -3502,8 +3528,11 @@ func _pick_local_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionar
 		if order.type == "harvest":
 			assignments[order.target_tag] = int(assignments.get(order.target_tag, 0)) + 1
 	var best := preferred
-	var best_count := 2147483647
-	var best_distance := INF
+	var balance_slots := mode == CrystalSelection.OPEN_SLOT
+	# The current patch count excludes this worker. A strictly smaller
+	# alternative improves the balance after this worker changes patches.
+	var best_count := int(assignments.get(preferred.tag, 0)) if balance_slots else 2147483647
+	var best_distance := -INF if balance_slots else INF
 	for patch in resources.values():
 		if patch.resource_type != "crystal_field" or (patch.amount <= 0 and not unlimited_resources):
 			continue
@@ -3514,9 +3543,18 @@ func _pick_local_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionar
 			continue
 		if vision != null and vision.state_at(worker.owner, patch.pos) == Vision.UNEXPLORED:
 			continue
+		if balance_slots and patch.mining_worker != 0:
+			continue
 		var count: int = assignments.get(patch.tag, 0)
 		var distance: float = patch.pos.distance_squared_to(worker.pos)
 		if count < best_count or (count == best_count and distance < best_distance):
+			if mode != CrystalSelection.LINE_ASSIGNMENT:
+				if patch.tag == preferred.tag:
+					continue
+				var reach: float = worker.radius + patch.radius + HARVEST_REACH
+				var path := compute_smooth_path(worker.pos, patch.pos, worker.radius, false, reach)
+				if path.back().distance_squared_to(patch.pos) > reach * reach:
+					continue
 			best = patch
 			best_count = count
 			best_distance = distance
@@ -3529,6 +3567,7 @@ func _observed_orders(orders: Array) -> Array:
 		order.erase("_formation_anchor")
 		order.erase("_reachable_request")
 		order.erase("_pursuit_origins")
+		order.erase("_blocked_crystal_revision")
 	return observed
 
 func get_observation(perspective_player: int = 0) -> Dictionary:
