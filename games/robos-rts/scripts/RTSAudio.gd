@@ -629,21 +629,19 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	_last_weapon_attack_tick = SimEngine.tick if SimEngine != null else -1
 	_last_weapon_attack_pos = attacker_pos
 
-	var primary_sfx: String = get_weapon_sfx(weapon, unit_type)
-	play_at(primary_sfx, attacker_pos, 0.0, 0.055)
+	if SimEngine.can_see_unit(local_player_id, attacker):
+		play_at(get_weapon_sfx(weapon, unit_type), attacker_pos, 0.0, 0.055)
 
-	if is_melee_weapon(weapon):
-		play_at("melee_hit", target_pos, -2.5, 0.06)
-
-	var splash_rad: float = float(weapon.get("splash_radius", 0.0))
-	var impact_sfx: String = str(weapon.get("impact_sfx", ""))
-	if impact_sfx != "" and has_sfx(impact_sfx):
-		play_at(impact_sfx, target_pos, -1.0, 0.05)
-	elif splash_rad > 0.0:
-		play_at("explosion_splash", target_pos, -1.5, 0.05)
-
-	if hit_shields or float(target.get("shields", 0.0)) > 0.0:
-		play_at("shield_hit", target_pos, -2.0, 0.05)
+	if SimEngine.can_see_unit(local_player_id, target):
+		if is_melee_weapon(weapon):
+			play_at("melee_hit", target_pos, -2.5, 0.06)
+		var impact_sfx: String = str(weapon.get("impact_sfx", ""))
+		if impact_sfx != "" and has_sfx(impact_sfx):
+			play_at(impact_sfx, target_pos, -1.0, 0.05)
+		elif float(weapon.get("splash_radius", 0.0)) > 0.0:
+			play_at("explosion_splash", target_pos, -1.5, 0.05)
+		if hit_shields or float(target.get("shields", 0.0)) > 0.0:
+			play_at("shield_hit", target_pos, -2.0, 0.05)
 
 	if not attacker.is_structure and int(attacker.get("owner", 0)) == local_player_id and not RTSData.get_unit_dialogues(unit_type, "attack").is_empty():
 		var now_sec: float = float(Time.get_ticks_msec()) * 0.001
@@ -664,6 +662,11 @@ func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: Strin
 
 func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -> void:
 	var ab_id: String = ability_id.to_lower()
+	var cue_unit: Dictionary = unit
+	if ab_id in ["restore_vitals", "restore_aegis"]:
+		cue_unit = SimEngine.units.get(unit.get("support_target_tag", 0), unit)
+	if not SimEngine.can_see_unit(local_player_id, cue_unit):
+		return
 	var ab_def: Dictionary = RTSData.get_ability_def(ab_id)
 	var sfx_key: String = str(ab_def.get("sfx", ""))
 	if sfx_key == "":
@@ -683,10 +686,14 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 	if ab_id == "restore_vitals" and unit.owner == local_player_id:
 		play_unit_dialogue(unit.unit_type, "support")
 
-func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, _unit_tag: int) -> void:
-	play_at("phase_step", to_pos, 0.0, 0.035)
+func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, unit_tag: int) -> void:
+	var unit: Dictionary = SimEngine.units.get(unit_tag, {})
+	if not unit.is_empty() and SimEngine.can_see_unit(local_player_id, unit):
+		play_at("phase_step", to_pos, 0.0, 0.035)
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
+	if not SimEngine.can_see_unit(local_player_id, dead):
+		return
 	var pos: Vector2 = dead.get("pos", Vector2.ZERO)
 	if bool(dead.get("is_structure", false)):
 		play_at("structure_destroyed", pos, 0.0, 0.04)
