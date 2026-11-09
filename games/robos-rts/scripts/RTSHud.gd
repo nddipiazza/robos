@@ -868,6 +868,8 @@ func _draw_single(u: Dictionary) -> void:
 			status.append("Mobile  ·  Field recharges %.1fs" % rearm_time)
 		else:
 			status.append("Mobile  ·  Field ready")
+	if u.get("burrowed", false):
+		status.append("Burrowed")
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
@@ -1056,6 +1058,11 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_circle(c + Vector2(-8, 5) * u, 7 * u, accent)
 			draw_circle(c + Vector2(8, 5) * u, 7 * u, accent)
 			draw_circle(c - Vector2(0, 8) * u, 8 * u, col)
+		"burrow", "surface":
+			var direction := 1.0 if id == "burrow" else -1.0
+			draw_line(c - Vector2(17, -13) * u, c + Vector2(17, 13) * u, accent, 3.0 * u)
+			draw_polyline(P.call([[-9, 2 * direction], [0, 10 * direction], [9, 2 * direction]]), col, 3.0 * u, true)
+			draw_line(c - Vector2(0, 12 * direction) * u, c + Vector2(0, 8 * direction) * u, col, 3.0 * u)
 		"repair", "auto_repair":
 			draw_line(c - Vector2(13, 0) * u, c + Vector2(13, 0) * u, C_AETHER, 5.0 * u)
 			draw_line(c - Vector2(0, 13) * u, c + Vector2(0, 13) * u, C_AETHER, 5.0 * u)

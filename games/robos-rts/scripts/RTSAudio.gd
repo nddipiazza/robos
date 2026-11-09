@@ -47,6 +47,7 @@ const SOUND_FILES: Dictionary = {
 	"vital_restore": "res://assets/audio/sfx/vital_restore.wav",
 	"aegis_restore": "res://assets/audio/sfx/aegis_restore.wav",
 	"brood_inject": "res://assets/audio/sfx/brood_inject.wav",
+	"burrow_shift": "res://assets/audio/sfx/burrow_shift.wav",
 
 	# Destruction & Unit Deaths
 	"unit_death_human": "res://assets/audio/sfx/unit_death_human.wav",

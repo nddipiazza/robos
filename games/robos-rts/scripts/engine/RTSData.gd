@@ -753,7 +753,7 @@ var units: Dictionary = {
 			"sfx": "claw_slash",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack"]
+		"abilities": ["move", "stop", "hold_position", "attack", "burrow"]
 	},
 	"bile_crawler": {
 		"id": "bile_crawler",
@@ -1407,6 +1407,8 @@ var abilities: Dictionary = {
 	"repair": {"id": "repair", "name": "Repair", "hotkey": "E", "target": "unit", "desc": "Repair a friendly mechanical unit or building. Crystal cost scales with the health restored."},
 	"restore_vitals": {"id": "restore_vitals", "name": "Treat Wounds", "hotkey": "E", "target": "unit", "desc": "Follow and heal a wounded biological ally. Each point restored spends one energy. Idle specialists heal nearby allies automatically.", "sfx": "vital_restore"},
 	"inject_brood": {"id": "inject_brood", "name": "Seed Clutch", "hotkey": "E", "target": "unit", "desc": "Spend 25 energy at a friendly Brood Nest to add two brood slots after 12 seconds. The Nest can hold up to five slots and grow one clutch at a time.", "sfx": "brood_inject"},
+	"burrow": {"id": "burrow", "name": "Burrow", "hotkey": "B", "target": "none", "desc": "Hide below ground until surfaced. A burrowed unit cannot move or attack and has reduced sight. Enemy detection reveals it.", "sfx": "burrow_shift"},
+	"surface": {"id": "surface", "name": "Surface", "hotkey": "B", "target": "none", "desc": "Return to clear ground and regain movement, attacks and full sight.", "sfx": "burrow_shift"},
 	"restore_aegis": {"id": "restore_aegis", "name": "Restore Shields", "target": "none", "sfx": "aegis_restore"},
 	"auto_repair": {"id": "auto_repair", "name": "Auto-Repair", "hotkey": "Q", "target": "none", "desc": "Toggle repairs for idle Pioneers. They spend crystal to repair nearby friendly machinery. Manual orders take priority."},
 	"recon_sweep": {"id": "recon_sweep", "name": "Recon Sweep", "hotkey": "E", "target": "point", "desc": "Spend 50 Hub energy to reveal an area, including high ground, for 10 seconds."},

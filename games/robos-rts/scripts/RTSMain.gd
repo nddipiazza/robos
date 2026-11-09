@@ -397,6 +397,8 @@ func _process(delta: float) -> void:
 # ---------------------------------------------------------------------------
 func unit_height(u: Dictionary) -> float:
 	var r: float = u["radius"]
+	if u.get("burrowed", false):
+		return 0.42
 	if u["is_structure"]:
 		return maxf(2.4, r * 1.5)
 	if u["unit_type"] == "spire_walker":
@@ -1315,6 +1317,10 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 				return "Brood slots are enabled in skirmishes."
 			if not selected_owned().any(func(unit): return unit.unit_type == "brood_keeper" and unit.energy >= SimEngine.BROOD_INJECT_COST):
 				return "Requires 25 energy."
+		"burrow", "surface":
+			var underground: bool = adef.id == "burrow"
+			if not selected_owned().any(func(unit): return SimEngine.burrow_block_reason(unit, underground).is_empty()):
+				return SimEngine.burrow_block_reason(pu, underground)
 		"surge":
 			if float(pu["hp"]) <= float(adef.hp_cost):
 				return "Not enough health."
@@ -1335,6 +1341,8 @@ func get_card_buttons() -> Array[Dictionary]:
 	elif pu.unit_type == "colony_hub":
 		abils = abils.duplicate()
 		abils.erase("upgrade_hub" if pu.get("hub_operations", false) else "deploy_prospector")
+	elif pu.get("burrowed", false):
+		abils = ["surface"]
 	elif not pu.is_worker and RTSData.get_unit_def(pu.unit_type).has("weapon"):
 		abils = abils + ["hold_fire"]
 	if abils.has("move") and not pu.is_structure:
@@ -1389,7 +1397,14 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 	var tags: Array = []
 	for u in selected_owned():
 		var def: Dictionary = RTSData.get_unit_def(u.unit_type)
-		if def.get("abilities", []).has(abil_id) or (abil_id == "cancel_carapace_morph" and u.has("carapace_morph_until")) or (abil_id == "stop" and u.is_structure and u.flight_height > 0.0) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
+		if def.get("abilities", []).has(abil_id) \
+			or (abil_id == "cancel_carapace_morph" and u.has("carapace_morph_until")) \
+			or (abil_id == "surface" and u.get("burrowed", false)) \
+			or (abil_id == "stop" and u.is_structure and u.flight_height > 0.0) \
+			or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) \
+			or (abil_id == "return_cargo" and u.is_worker) \
+			or (abil_id == "auto_repair" and u.unit_type == "pioneer") \
+			or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	var result := SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
 	if adef.get("attachment", false) and result.ok and RTSAudio:

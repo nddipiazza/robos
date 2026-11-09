@@ -723,6 +723,8 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 			var halo := u_node.get_node_or_null("Halo")
 			if halo:
 				halo.rotation.y = anim_time * 0.8
+		elif u.has("burrowed"):
+			u_node.scale = Vector3(1.0, 0.28, 1.0) if u.burrowed else Vector3.ONE
 		var hover := u_node.get_node_or_null("Hover")
 		if hover:
 			hover.position.y = 1.1 + sin(anim_time * 2.4 + float(u_tag)) * 0.12
