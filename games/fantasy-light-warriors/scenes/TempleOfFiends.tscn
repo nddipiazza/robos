@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/FF1MapScene.gd" id="1_s"]
+[node name="TempleOfFiends" type="Node2D"]
+script = ExtResource("1_s")
+map_json_path = "res://data/maps/map_12_temple_of_fiends_present.json"
+map_image_path = "res://assets/maps/temple_of_fiends.png"
+music_path = "res://assets/music/5_-_temple_of_chaos.mp3"
+default_spawn_tile = Vector2i(20, 29)
+default_spawn_facing = "up"
+map_key_id = "temple_of_fiends"

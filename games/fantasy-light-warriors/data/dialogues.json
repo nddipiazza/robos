@@ -1,0 +1,1282 @@
+[
+  {
+    "id": 0,
+    "hexId": "0x00",
+    "text": "Nothing here."
+  },
+  {
+    "id": 1,
+    "hexId": "0x01",
+    "text": "LIGHT WARRIORS.. Just as\nin Lukahn's prophecy.\nGarland has kidnapped\nthe Princess. Please\nhelp her!!"
+  },
+  {
+    "id": 2,
+    "hexId": "0x02",
+    "text": "Thank you for saving the\nPrincess. To aid your\nquest I ordered a bridge\nbuilt to the continent.\nGo now, and make the\nORBS shine again!!"
+  },
+  {
+    "id": 3,
+    "hexId": "0x03",
+    "text": "The Princess always\nworries about you."
+  },
+  {
+    "id": 4,
+    "hexId": "0x04",
+    "text": "No one touches my\nPrincess!!\nLIGHT WARRIORS??\nYou impertinent fools.\nI, Garland, will knock\nyou all down!!"
+  },
+  {
+    "id": 5,
+    "hexId": "0x05",
+    "text": "So, you are the\nLIGHT WARRIORS!\nThank you."
+  },
+  {
+    "id": 6,
+    "hexId": "0x06",
+    "text": "This LUTE has been\npassed down from Queen\nto Princess for 2000\nyears. Garland stole it\nwhen he kidnapped me.\nPlease accept it as my\ngift, it just might come\nin handy."
+  },
+  {
+    "id": 7,
+    "hexId": "0x07",
+    "text": "Now, get ready for your\ntrip, and make the ORBS\nshine again."
+  },
+  {
+    "id": 8,
+    "hexId": "0x08",
+    "text": "Aye, I am Bikke the\nPirate, and surprised I\nam that you scurvy dogs\nhave the nerve to face\nme.\nMates!\nGet those landlubbers!"
+  },
+  {
+    "id": 9,
+    "hexId": "0x09",
+    "text": "Okay, you got me.\nTake my SHIP."
+  },
+  {
+    "id": 10,
+    "hexId": "0x0A",
+    "text": "I won't be any more\nbother. I promise."
+  },
+  {
+    "id": 11,
+    "hexId": "0x0B",
+    "text": "For five years the\nPrince has slept\nunder Astos' spell.\nOnly HERB can wake him!"
+  },
+  {
+    "id": 12,
+    "hexId": "0x0C",
+    "text": "Oh, this HERB will\nrelease the Prince from\nAstos' curse. Look!\nHe is waking.."
+  },
+  {
+    "id": 13,
+    "hexId": "0x0D",
+    "text": "Thank you.\nPeace will return to\nElfLand."
+  },
+  {
+    "id": 14,
+    "hexId": "0x0E",
+    "text": "Is this a dream?..\nAre you, the\nLIGHT WARRIORS?..\nIs this for real?..\nSo, as legend says,\nI give you the mystic\nKEY."
+  },
+  {
+    "id": 15,
+    "hexId": "0x0F",
+    "text": "I feel fine now.\nThank you."
+  },
+  {
+    "id": 16,
+    "hexId": "0x10",
+    "text": "z....z...."
+  },
+  {
+    "id": 17,
+    "hexId": "0x11",
+    "text": "Astos double-crossed us.\nGo south, to the Cave of\nMarsh, to retrieve the\nCROWN. Then, bring it\ndirectly back to me!"
+  },
+  {
+    "id": 18,
+    "hexId": "0x12",
+    "text": "HA, HA, HA! I am Astos,\nKing of the Dark Elves.\nI have Matoya's CRYSTAL,\nand you shall give me\nthat CROWN, now!!!"
+  },
+  {
+    "id": 19,
+    "hexId": "0x13",
+    "text": "A rock blocks\nconstruction of my\ncanal.\nIf I only had TNT."
+  },
+  {
+    "id": 20,
+    "hexId": "0x14",
+    "text": "Oh, wonderful!\nNice work! Yes, yes\nindeed, this TNT is just\nwhat I need to finish my\ncanal. Now excuse me\nwhile I get to work!"
+  },
+  {
+    "id": 21,
+    "hexId": "0x15",
+    "text": "For the LIGHT\nWARRIORS I will make a\ntruly legendary sword.\nHowever, my supply of\nADAMANT is exhausted."
+  },
+  {
+    "id": 22,
+    "hexId": "0x16",
+    "text": "ADAMANT!!\nNow let me make\nthe sword for you..\nHere, the best work I've\never done.\nIt is my gift."
+  },
+  {
+    "id": 23,
+    "hexId": "0x17",
+    "text": "Where is my CRYSTAL?\nI can't see anything\nwithout it.. Who stole\nmy CRYSTAL?"
+  },
+  {
+    "id": 24,
+    "hexId": "0x18",
+    "text": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+  },
+  {
+    "id": 25,
+    "hexId": "0x19",
+    "text": "The Prince needs HERB?\nI'll trade the most\npowerful HERB to get my\nCRYSTAL back..\nOh! I can see!!"
+  },
+  {
+    "id": 26,
+    "hexId": "0x1A",
+    "text": "You have no more\nbusiness here. Go!!"
+  },
+  {
+    "id": 27,
+    "hexId": "0x1B",
+    "text": "Everybody knows me.\nWhat?! You've never\nheard of Dr. Unne?"
+  },
+  {
+    "id": 28,
+    "hexId": "0x1C",
+    "text": "A SLAB!!\nThis SLAB will lead us\nto solve the riddle of\nthe Lefeinish!!\nNow, listen to me.."
+  },
+  {
+    "id": 29,
+    "hexId": "0x1D",
+    "text": "All living things were\nborn to die.\nNo one can defeat me,\nthe Vampire!!"
+  },
+  {
+    "id": 30,
+    "hexId": "0x1E",
+    "text": "Use this ROD behind the\nVampire's room. Hiding\ndeep inside you will\nfind the cause of the\nearth's rot."
+  },
+  {
+    "id": 31,
+    "hexId": "0x1F",
+    "text": "I am BAHAMUT, King of\nthe Dragons. Bring me\nproof of your courage,\nto receive the honor\ndue true Warriors."
+  },
+  {
+    "id": 32,
+    "hexId": "0x20",
+    "text": "The TAIL of a rat proves\nyour courage. I shall\ngive you the honor due\ntrue Warriors."
+  },
+  {
+    "id": 33,
+    "hexId": "0x21",
+    "text": "The four ORBS now cover\nthe black ORB..\nTo take a step forward\nis to go back 2000 years\nin time."
+  },
+  {
+    "id": 34,
+    "hexId": "0x22",
+    "text": "The black ORB\nglitters ominously..\nBut nothing happens."
+  },
+  {
+    "id": 35,
+    "hexId": "0x23",
+    "text": "That pirate trapped me\nin the BOTTLE.\nI will draw OXYALE from\nthe bottom of the spring\nfor you."
+  },
+  {
+    "id": 36,
+    "hexId": "0x24",
+    "text": "Thank you for saving me.\nRemember! OXYALE will\ngive you air."
+  },
+  {
+    "id": 37,
+    "hexId": "0x25",
+    "text": "I made a submarine to\nsave the mermaids. But,\nto go deep enough it\nwill require OXYALE."
+  },
+  {
+    "id": 38,
+    "hexId": "0x26",
+    "text": "WARRIORS, you have\nOXYALE. The mermaids\nwait, please help them!"
+  },
+  {
+    "id": 39,
+    "hexId": "0x27",
+    "text": "Take this CUBE. With it,\nyou can transfer to the\nFLOATING CASTLE."
+  },
+  {
+    "id": 40,
+    "hexId": "0x28",
+    "text": "Please.."
+  },
+  {
+    "id": 41,
+    "hexId": "0x29",
+    "text": "No one passes this road."
+  },
+  {
+    "id": 42,
+    "hexId": "0x2A",
+    "text": "If you want pass, give\nme the RUBY..\nCrunch, crunch, crunch,\nmmm, it tastes so sweet.\nRubies are my favorite."
+  },
+  {
+    "id": 43,
+    "hexId": "0x2B",
+    "text": "Great job vanquishing\nthe Earth FIEND. Now,\nthe Fire FIEND wakes.\nWith this CANOE go to\nthe VOLCANO, and defeat\nthat FIEND also!"
+  },
+  {
+    "id": 44,
+    "hexId": "0x2C",
+    "text": "400 years ago, we lost\ncontrol of the Wind.\n200 years later we lost\nthe Water, then Earth,\nand Fire followed. The\nPowers that bind this\nworld are gone."
+  },
+  {
+    "id": 45,
+    "hexId": "0x2D",
+    "text": "Possession of the CROWN\nis required to test your\ncourage. Take it to the\nroyal throne, and bring\nback proof of your\ncourage. GOOD LUCK!"
+  },
+  {
+    "id": 46,
+    "hexId": "0x2E",
+    "text": "Remember me, Garland?\nYour puny lot thought it\nhad defeated me. But,\nthe Four FIENDS sent me\nback 2000 years into\nthe past."
+  },
+  {
+    "id": 47,
+    "hexId": "0x2F",
+    "text": "From here I sent the\nFour FIENDS to the\nfuture. The FIENDS will\nsend me back to here,\nand the Time-Loop will\ngo on."
+  },
+  {
+    "id": 48,
+    "hexId": "0x30",
+    "text": "After 2000 years, I will\nbe forgotten, and the\nTime-Loop will close. I\nwill live forever, and\nyou shall meet doom!!"
+  },
+  {
+    "id": 49,
+    "hexId": "0x31",
+    "text": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?"
+  },
+  {
+    "id": 50,
+    "hexId": "0x32",
+    "text": "Yes Sir!!\nI belong to the Honor\nGuard of Castle Coneria."
+  },
+  {
+    "id": 51,
+    "hexId": "0x33",
+    "text": "Please!\nSave the Princess!"
+  },
+  {
+    "id": 52,
+    "hexId": "0x34",
+    "text": "Thank you for rescuing\nthe Princess."
+  },
+  {
+    "id": 53,
+    "hexId": "0x35",
+    "text": "Legend says that the\nLUTE can break the evil\ngate."
+  },
+  {
+    "id": 54,
+    "hexId": "0x36",
+    "text": "Garland used to be a\ngood knight until.."
+  },
+  {
+    "id": 55,
+    "hexId": "0x37",
+    "text": "In sadness, the Queen\nlocked herself inside."
+  },
+  {
+    "id": 56,
+    "hexId": "0x38",
+    "text": "The Princess was\nlooking for you!"
+  },
+  {
+    "id": 57,
+    "hexId": "0x39",
+    "text": "So, you are the\nLIGHT WARRIORS?"
+  },
+  {
+    "id": 58,
+    "hexId": "0x3A",
+    "text": "Don't be greedy. You\nalready have too many\nweapons to carry."
+  },
+  {
+    "id": 59,
+    "hexId": "0x3B",
+    "text": "I am Jane, Queen of\nConeria. Please save my\ndaughter, Princess Sara."
+  },
+  {
+    "id": 60,
+    "hexId": "0x3C",
+    "text": "Thank you for saving\nPrincess Sara."
+  },
+  {
+    "id": 61,
+    "hexId": "0x3D",
+    "text": "Oh.. My sister.."
+  },
+  {
+    "id": 62,
+    "hexId": "0x3E",
+    "text": "My sister is back safe!\nThank you."
+  },
+  {
+    "id": 63,
+    "hexId": "0x3F",
+    "text": "Reports say that Garland\nholds the Princess in a\nTemple to the northwest."
+  },
+  {
+    "id": 64,
+    "hexId": "0x40",
+    "text": "Use that KEY. Inside\nwhat you find will be\nquite helpful."
+  },
+  {
+    "id": 65,
+    "hexId": "0x41",
+    "text": "400 years ago the\nTreasury was locked by\nthe mystic KEY. Our\nancestors gave the KEY\nto the Prince of ElfLand\nfor safekeeping."
+  },
+  {
+    "id": 66,
+    "hexId": "0x42",
+    "text": "This treasure room is\nlocked with the mystical\nKEY."
+  },
+  {
+    "id": 67,
+    "hexId": "0x43",
+    "text": "The King is sure that\nsomeday the LIGHT\nWARRIORS will come to\nsave the Princess,\njust as in Lukahn's\nprophecy."
+  },
+  {
+    "id": 68,
+    "hexId": "0x44",
+    "text": "Lukahn left this town,\nto join his colleagues\nat Crescent Lake."
+  },
+  {
+    "id": 69,
+    "hexId": "0x45",
+    "text": "As legend foretold, once\nagain the ORBS shine!!\nQuickly, to fulfill the\nlegend, take them to the\nTemple north of here,\nand stand in the center."
+  },
+  {
+    "id": 70,
+    "hexId": "0x46",
+    "text": "Go to the King."
+  },
+  {
+    "id": 71,
+    "hexId": "0x47",
+    "text": "I am Arylon, the Dancer!"
+  },
+  {
+    "id": 72,
+    "hexId": "0x48",
+    "text": "This is Coneria, the\ndream city."
+  },
+  {
+    "id": 73,
+    "hexId": "0x49",
+    "text": "North of Coneria lives\na witch named Matoya."
+  },
+  {
+    "id": 74,
+    "hexId": "0x4A",
+    "text": "Matoya has poor\neyesight. She needs the\nCRYSTAL to see."
+  },
+  {
+    "id": 75,
+    "hexId": "0x4B",
+    "text": "My home is Pravoka, a\nbeautiful port city far\neast of here."
+  },
+  {
+    "id": 76,
+    "hexId": "0x4C",
+    "text": "Kee..Kee.."
+  },
+  {
+    "id": 77,
+    "hexId": "0x4D",
+    "text": "Help! The FIEND's curse\nturned us into bats.\nWith the ORBS shining\nanew, once again we\ncan speak!"
+  },
+  {
+    "id": 78,
+    "hexId": "0x4E",
+    "text": "The Four FIENDS power\nis rooted 2000 years\nago. The real enemy is\nin that time."
+  },
+  {
+    "id": 79,
+    "hexId": "0x4F",
+    "text": "When the 4 ORBS cover\nthe black ORB in the\ncenter of the palace,\nthe Time Gate can open."
+  },
+  {
+    "id": 80,
+    "hexId": "0x50",
+    "text": "You must travel back in\ntime 2000 years. Now,\nwith the ORBS shining,\nstand in the Time Gate."
+  },
+  {
+    "id": 81,
+    "hexId": "0x51",
+    "text": "We are the five lost\nSKY WARRIORS. 400 years\nago we battled against\nthe cause of the world's\ndestruction."
+  },
+  {
+    "id": 82,
+    "hexId": "0x52",
+    "text": "Thank you. We don't need\nto be afraid of pirates\nanymore."
+  },
+  {
+    "id": 83,
+    "hexId": "0x53",
+    "text": "I have escaped from\nMelmond, in the west.\nMy town is in trouble.\nPlease help them!!"
+  },
+  {
+    "id": 84,
+    "hexId": "0x54",
+    "text": "The Elves live across\nthe sea. Matoya's HERB\nis the only thing that\nwill wake their Prince."
+  },
+  {
+    "id": 85,
+    "hexId": "0x55",
+    "text": "This town has been\ninvaded by pirates."
+  },
+  {
+    "id": 86,
+    "hexId": "0x56",
+    "text": "Ships can stop only at\nports. There are no\nports in the north."
+  },
+  {
+    "id": 87,
+    "hexId": "0x57",
+    "text": "Help!"
+  },
+  {
+    "id": 88,
+    "hexId": "0x58",
+    "text": "There are many dangerous\nmonsters in the sea.\nBe careful!"
+  },
+  {
+    "id": 89,
+    "hexId": "0x59",
+    "text": "Astos put the Prince to\nsleep.\nPlease! Save him!"
+  },
+  {
+    "id": 90,
+    "hexId": "0x5A",
+    "text": "The Prince is awake!\nThank you so much."
+  },
+  {
+    "id": 91,
+    "hexId": "0x5B",
+    "text": "The Cave of Dwarf is at\nthe west end of the Aldi\nSea."
+  },
+  {
+    "id": 92,
+    "hexId": "0x5C",
+    "text": "Without warning, Astos\nattacked our castle. Our\nPrince was laid under a\ncurse, and our treasury\nransacked."
+  },
+  {
+    "id": 93,
+    "hexId": "0x5D",
+    "text": "It is said there is a\nwitch who has HERBS.\nI believe that her name\nis..\nMatoya!"
+  },
+  {
+    "id": 94,
+    "hexId": "0x5E",
+    "text": "Is that it? The HERB to\nsave the Prince?"
+  },
+  {
+    "id": 95,
+    "hexId": "0x5F",
+    "text": "The Prince keeps the\nmystic KEY until the\ncoming of the\nLIGHT WARRIORS."
+  },
+  {
+    "id": 96,
+    "hexId": "0x60",
+    "text": "Maybe it's only rumour,\nbut, I think the cause\nof all problems is to\nbe found in the cave of\nMarsh."
+  },
+  {
+    "id": 97,
+    "hexId": "0x61",
+    "text": "Save our Prince!"
+  },
+  {
+    "id": 98,
+    "hexId": "0x62",
+    "text": "Our Prince was to\nbecome the King of\nElfLand."
+  },
+  {
+    "id": 99,
+    "hexId": "0x63",
+    "text": "Long ago I wandered to\nthe Northwest. I found\nan ancient castle that\nwas so spooky, I left\nimmediately."
+  },
+  {
+    "id": 100,
+    "hexId": "0x64",
+    "text": "Astos has been defeated?\nPeace will now return to\nElfLand."
+  },
+  {
+    "id": 101,
+    "hexId": "0x65",
+    "text": "Astos wears a disguise,\nand lurks in seclusion."
+  },
+  {
+    "id": 102,
+    "hexId": "0x66",
+    "text": "The Prince must wake\nsoon, or the power of\nthe Dark Elf will\ndominate!"
+  },
+  {
+    "id": 103,
+    "hexId": "0x67",
+    "text": "Legend says an AIRSHIP\nis buried somewhere."
+  },
+  {
+    "id": 104,
+    "hexId": "0x68",
+    "text": "Swords and armors made\nof silver are\nvery powerful."
+  },
+  {
+    "id": 105,
+    "hexId": "0x69",
+    "text": "I can see a cave above\nthe crescent..\nTo the north of the\nvolcano, there you will\nfind the FLOATER."
+  },
+  {
+    "id": 106,
+    "hexId": "0x6A",
+    "text": "In the desert south of\nthe crescent, something\nis emerging from below\nthe sand..\nUse the FLOATER!"
+  },
+  {
+    "id": 107,
+    "hexId": "0x6B",
+    "text": "The Prince must wake\nsoon, or the Dark Elf\nwill dominate!"
+  },
+  {
+    "id": 108,
+    "hexId": "0x6C",
+    "text": "I'm looking for the\nFLOATER. I'll bet with\nit I could float\nanything."
+  },
+  {
+    "id": 109,
+    "hexId": "0x6D",
+    "text": "Old Nerrick is a very\nrespectable Dwarf."
+  },
+  {
+    "id": 110,
+    "hexId": "0x6E",
+    "text": "That sound?\nNerrick is digging a\ncanal."
+  },
+  {
+    "id": 111,
+    "hexId": "0x6F",
+    "text": "Dwarves can see in the\ndark!"
+  },
+  {
+    "id": 112,
+    "hexId": "0x70",
+    "text": "Did you meet Smith,\nour blacksmith?"
+  },
+  {
+    "id": 113,
+    "hexId": "0x71",
+    "text": "With the CRYSTAL, even\nthe blind can see.\nAstos stole it from\nMatoya."
+  },
+  {
+    "id": 114,
+    "hexId": "0x72",
+    "text": "The earth is rotting\nslowly from the west.."
+  },
+  {
+    "id": 115,
+    "hexId": "0x73",
+    "text": "The earth is reviving!\nThanks to you,\nLIGHT WARRIORS!"
+  },
+  {
+    "id": 116,
+    "hexId": "0x74",
+    "text": "The <DE>..bracelet can\nprotect you, like\narmor."
+  },
+  {
+    "id": 117,
+    "hexId": "0x75",
+    "text": "Oh, did you see that\ncanal? Old Nerrick truly\nis great indeed."
+  },
+  {
+    "id": 118,
+    "hexId": "0x76",
+    "text": "Long ago, Coneria's\nTreasury safeguarded\nthe use of TNT."
+  },
+  {
+    "id": 119,
+    "hexId": "0x77",
+    "text": "Hurray!!"
+  },
+  {
+    "id": 120,
+    "hexId": "0x78",
+    "text": "....TCELES B HSUP\nA magic spell?"
+  },
+  {
+    "id": 121,
+    "hexId": "0x79",
+    "text": "The Vampire of the Earth\nCave is stealing the\nPower of the earth.\nWe need your help."
+  },
+  {
+    "id": 122,
+    "hexId": "0x7A",
+    "text": "Melmond was once a\nbeautiful town."
+  },
+  {
+    "id": 123,
+    "hexId": "0x7B",
+    "text": "The Titan who lives in\nthe tunnel eats gems.\nHe loves RUBIES."
+  },
+  {
+    "id": 124,
+    "hexId": "0x7C",
+    "text": "The Vampire is gone, but\nthe earth continues to\nrot. What causes this?"
+  },
+  {
+    "id": 125,
+    "hexId": "0x7D",
+    "text": "I'm a farmer."
+  },
+  {
+    "id": 126,
+    "hexId": "0x7E",
+    "text": "The Earth Cave is on\nthe peninsula southwest\nof this town."
+  },
+  {
+    "id": 127,
+    "hexId": "0x7F",
+    "text": "Look! The Earth ORB is\nshining again."
+  },
+  {
+    "id": 128,
+    "hexId": "0x80",
+    "text": "This town was invaded by\nthe Vampire. The Clinic\nwas destroyed and the\ntown was cursed."
+  },
+  {
+    "id": 129,
+    "hexId": "0x81",
+    "text": "Are you the\nLIGHT WARRIORS?"
+  },
+  {
+    "id": 130,
+    "hexId": "0x82",
+    "text": "Pass through the Titan's\nTunnel, then south to\nfind Sarda, the Sage."
+  },
+  {
+    "id": 131,
+    "hexId": "0x83",
+    "text": "The Vampire is gone, but\nthe earth still rots?.."
+  },
+  {
+    "id": 132,
+    "hexId": "0x84",
+    "text": "In the northern world,\nthere once was a\nprosperous civilization,\nbut now it is ruins."
+  },
+  {
+    "id": 133,
+    "hexId": "0x85",
+    "text": "If the ORB of Earth\nbegins to shine again,\nthe earth shall revive."
+  },
+  {
+    "id": 134,
+    "hexId": "0x86",
+    "text": "LIGHT WARRIORS..\nThanks to you, the earth\nis beginning to revive.."
+  },
+  {
+    "id": 135,
+    "hexId": "0x87",
+    "text": "They say the ancient\npeople used a stone to\nmake their ship float."
+  },
+  {
+    "id": 136,
+    "hexId": "0x88",
+    "text": "OH! An AIRSHIP!\nThe fables are true, it\nreally exists!!"
+  },
+  {
+    "id": 137,
+    "hexId": "0x89",
+    "text": "Sarda does not fear the\nevils of the cave."
+  },
+  {
+    "id": 138,
+    "hexId": "0x8A",
+    "text": "Well, well..\nYou have become fine\nWarriors."
+  },
+  {
+    "id": 139,
+    "hexId": "0x8B",
+    "text": "I am Jim. My home is the\nDwarf Village, but I am\nhere investigating."
+  },
+  {
+    "id": 140,
+    "hexId": "0x8C",
+    "text": "We, the Twelve Sages,\nwere lead here by the\nstars and prophecy."
+  },
+  {
+    "id": 141,
+    "hexId": "0x8D",
+    "text": "Once the ORBS shined\nwith the power of Earth,\nWind, Fire, and Water.\nThe four FIENDS seized\nthose Powers."
+  },
+  {
+    "id": 142,
+    "hexId": "0x8E",
+    "text": "Earth, Wind, Fire, and\nWater..\nThe world is bound by\nthese four Powers."
+  },
+  {
+    "id": 143,
+    "hexId": "0x8F",
+    "text": "Each element's power\nfocuses at its Altar.\nLocate, and crush the\nFiend. Then to make\nit shine, place the ORB\non the Altar it guarded!"
+  },
+  {
+    "id": 144,
+    "hexId": "0x90",
+    "text": "Four FIENDS are bent on\nthe world's destruction.\n200 years ago, the FIEND\nof Wind teamed with that\nof the Water to destroy\ncivilization."
+  },
+  {
+    "id": 145,
+    "hexId": "0x91",
+    "text": "The Earth FIEND causes\nthe rot of our land."
+  },
+  {
+    "id": 146,
+    "hexId": "0x92",
+    "text": "The Fire FIEND will\nburn everything up!"
+  },
+  {
+    "id": 147,
+    "hexId": "0x93",
+    "text": "As you restore light to\nthe ORBS, we will reveal\nmore secrets, please see\nus repeatedly."
+  },
+  {
+    "id": 148,
+    "hexId": "0x94",
+    "text": "LIGHT WARRIORS,\nonly you can make the\nORBS shine again!!"
+  },
+  {
+    "id": 149,
+    "hexId": "0x95",
+    "text": "Quickly, before all is\nburnt, hurry to Gurgu\nVolcano and stop the\nFIEND of Fire."
+  },
+  {
+    "id": 150,
+    "hexId": "0x96",
+    "text": "The Temple of FIENDS is\nin the center of the\nFour Altars. The time\nhas come to destroy the\nsource of evil."
+  },
+  {
+    "id": 151,
+    "hexId": "0x97",
+    "text": "With the four ORBS\nshining again the Time\nGate can be broken. The\ntrue enemy is 2000 years\nin the past."
+  },
+  {
+    "id": 152,
+    "hexId": "0x98",
+    "text": "The world was suddenly\nthrown into disorder.\nYou must restore it."
+  },
+  {
+    "id": 153,
+    "hexId": "0x99",
+    "text": "Time is repeating.\nIn order to break the\nTime-Loop you must\neliminate the enemy who\ncontrols from 2000 years\nin the past."
+  },
+  {
+    "id": 154,
+    "hexId": "0x9A",
+    "text": "Someone travelled 2000\nyears to the past. The\nfour FIENDS were sent\nforward in time. Those\nFIENDS threaten to\ndestroy the world today."
+  },
+  {
+    "id": 155,
+    "hexId": "0x9B",
+    "text": "I see now.\nSomeone who travelled\nback 2000 years is the\ncause of the world's\ndestruction. After 2000\nyears he will travel\nback again..\nThen again..Then again.."
+  },
+  {
+    "id": 156,
+    "hexId": "0x9C",
+    "text": "Time will repeat itself\nevery 2000 years.\nBreak the Time-Loop!"
+  },
+  {
+    "id": 157,
+    "hexId": "0x9D",
+    "text": "In the Temple of FIENDS\nare the remaining SKY\nWARRIORS. They fought\nthe FIENDS and are now\nbats!"
+  },
+  {
+    "id": 158,
+    "hexId": "0x9E",
+    "text": "We must use force only\nfor just purposes."
+  },
+  {
+    "id": 159,
+    "hexId": "0x9F",
+    "text": "For ten years I probed\nfor the FLOATER. CANOE\nnorth, to the Ice Cave."
+  },
+  {
+    "id": 160,
+    "hexId": "0xA0",
+    "text": "I am Lukahn.\nNow all legends and\nprophecy will be\nfulfilled. Our path has\nbeen decided."
+  },
+  {
+    "id": 161,
+    "hexId": "0xA1",
+    "text": "LIGHT WARRIORS, you can\ndo it!"
+  },
+  {
+    "id": 162,
+    "hexId": "0xA2",
+    "text": "My brother Dr. Unne has\nstudied Lefeinish, the\nlanguage of the SKY\nWARRIORS. If he had the\nSLAB, he could teach it."
+  },
+  {
+    "id": 163,
+    "hexId": "0xA3",
+    "text": "Soar to my brother Unne\nwith the SLAB!"
+  },
+  {
+    "id": 164,
+    "hexId": "0xA4",
+    "text": "Have you found OXYALE?"
+  },
+  {
+    "id": 165,
+    "hexId": "0xA5",
+    "text": "You have legs!"
+  },
+  {
+    "id": 166,
+    "hexId": "0xA6",
+    "text": "My legs are beautiful!\nIt's so nice to have\nlegs."
+  },
+  {
+    "id": 167,
+    "hexId": "0xA7",
+    "text": "Underhill, the Caravan\nMaster, had something\nvery strange.."
+  },
+  {
+    "id": 168,
+    "hexId": "0xA8",
+    "text": "Until 200 years ago the\nMermaids lived in the\nShrine. Then, in fire\nand smoke, it sank. The\nMermaids?.."
+  },
+  {
+    "id": 169,
+    "hexId": "0xA9",
+    "text": "Until 200 years ago, the\nPower of Water brought\nus good fortune."
+  },
+  {
+    "id": 170,
+    "hexId": "0xAA",
+    "text": "The power of Water!!\nNow, our country will\nprosper like before."
+  },
+  {
+    "id": 171,
+    "hexId": "0xAB",
+    "text": "I saw BAHAMUT, but, to\nbe honored as a true\nwarrior I must return\nwith proof of my\ncourage."
+  },
+  {
+    "id": 172,
+    "hexId": "0xAC",
+    "text": "Well, well..\nI see you have been\nhonored."
+  },
+  {
+    "id": 173,
+    "hexId": "0xAD",
+    "text": "Avast ye landlubbers!\nStay out of me way."
+  },
+  {
+    "id": 174,
+    "hexId": "0xAE",
+    "text": "My father runs the\ncaravan. He is having a\nclose out sale near the\noasis in the western\ndesert."
+  },
+  {
+    "id": 175,
+    "hexId": "0xAF",
+    "text": "Kope 'says' he saw a\nshining object fall."
+  },
+  {
+    "id": 176,
+    "hexId": "0xB0",
+    "text": "Fables say that when\nthe shrine sank, many\ntreasures were lost.\nAlso, they tell of a\ncryptic stone plate."
+  },
+  {
+    "id": 177,
+    "hexId": "0xB1",
+    "text": "My name is Kope.\nI saw it north, near the\nwaterfall. Believe me! I\nthink it was a robot."
+  },
+  {
+    "id": 178,
+    "hexId": "0xB2",
+    "text": "This town used to be\nprosperous 200 years\nago."
+  },
+  {
+    "id": 179,
+    "hexId": "0xB3",
+    "text": "No!\nThat is just an\nunusable sample."
+  },
+  {
+    "id": 180,
+    "hexId": "0xB4",
+    "text": "If we cannot regain the\nPower of Water, we will\nbecome bubbles, then\ndisappear."
+  },
+  {
+    "id": 181,
+    "hexId": "0xB5",
+    "text": "Are we going to become\nbubbles?"
+  },
+  {
+    "id": 182,
+    "hexId": "0xB6",
+    "text": "As long as the FIEND of\nWater lives, we..\nOh, boo hoo."
+  },
+  {
+    "id": 183,
+    "hexId": "0xB7",
+    "text": "You have responded\nto me!!"
+  },
+  {
+    "id": 184,
+    "hexId": "0xB8",
+    "text": "This is the Shrine's top\nfloor. The FIEND of\nWater, KRAKEN lives on\nthe bottom floor."
+  },
+  {
+    "id": 185,
+    "hexId": "0xB9",
+    "text": "I suppose you are the\nlegendary.."
+  },
+  {
+    "id": 186,
+    "hexId": "0xBA",
+    "text": "Please save the sea,\nand make the ORB shine\nagain!"
+  },
+  {
+    "id": 187,
+    "hexId": "0xBB",
+    "text": "Now, order has returned.\nThe sea will be as it\nwas before, beautiful."
+  },
+  {
+    "id": 188,
+    "hexId": "0xBC",
+    "text": "My friend Darryl went to\nthe land, then never\nreturned. I've often\nwondered what happened..\nMaybe, she grew legs and\nwalked away?"
+  },
+  {
+    "id": 189,
+    "hexId": "0xBD",
+    "text": "Unbelievable!!\nYou can breathe\nunderwater?!\nI'm impressed!"
+  },
+  {
+    "id": 190,
+    "hexId": "0xBE",
+    "text": "To unlock the Mirage\nTower the Lefeinish\nused a musical tone."
+  },
+  {
+    "id": 191,
+    "hexId": "0xBF",
+    "text": "This door is locked by\nthe mystic KEY."
+  },
+  {
+    "id": 192,
+    "hexId": "0xC0",
+    "text": "This town is Gaia.."
+  },
+  {
+    "id": 193,
+    "hexId": "0xC1",
+    "text": "Have you been to the\ncity south of here? I\njust cannot understand\na word spoken there.\nI have wondered what\nlanguage.."
+  },
+  {
+    "id": 194,
+    "hexId": "0xC2",
+    "text": "Legend says the SKY\nWARRIORS flew about,\nhere and there, from a\ncastle high in the sky."
+  },
+  {
+    "id": 195,
+    "hexId": "0xC3",
+    "text": "I saw a shining object\nflying towards the east."
+  },
+  {
+    "id": 196,
+    "hexId": "0xC4",
+    "text": "Unbelievable!\nYou are outsiders,\nright?\nHow did you get this far\nnorth?"
+  },
+  {
+    "id": 197,
+    "hexId": "0xC5",
+    "text": "Let me see.. Yes, there\nwas a professor that\nstudied Lefeinish."
+  },
+  {
+    "id": 198,
+    "hexId": "0xC6",
+    "text": "Only a fairy can draw\nOXYALE from the spring."
+  },
+  {
+    "id": 199,
+    "hexId": "0xC7",
+    "text": "Everyone thinks the\ntower in Yahnikurm\nDesert is a mirage.\nI wonder.."
+  },
+  {
+    "id": 200,
+    "hexId": "0xC8",
+    "text": "Hardy har, you are too\nlate! I BOTTLED the\nfairy and sold her to a\ncaravan."
+  },
+  {
+    "id": 201,
+    "hexId": "0xC9",
+    "text": "Legends say that the\ncastle in the west is a\nplace to test courage."
+  },
+  {
+    "id": 202,
+    "hexId": "0xCA",
+    "text": "?rewoP taerg evah uoy oD"
+  },
+  {
+    "id": 203,
+    "hexId": "0xCB",
+    "text": "What's that broom up to?\nIt's talking backwards!"
+  },
+  {
+    "id": 204,
+    "hexId": "0xCC",
+    "text": "The fairy at the spring\nwas kidnapped."
+  },
+  {
+    "id": 205,
+    "hexId": "0xCD",
+    "text": "With this CHIME you can\nenter the Mirage Tower."
+  },
+  {
+    "id": 206,
+    "hexId": "0xCE",
+    "text": "The Mirage Tower was the\ngateway to our home in\nthe sky."
+  },
+  {
+    "id": 207,
+    "hexId": "0xCF",
+    "text": "400 years ago, we had an\nadvanced civilization.\nOur interest was the\nuniverse!!"
+  },
+  {
+    "id": 208,
+    "hexId": "0xD0",
+    "text": "Lu..pa..?\nLu..pa..?"
+  },
+  {
+    "id": 209,
+    "hexId": "0xD1",
+    "text": "We are the Lefeinish.\nOnly our bravest became\nSKY WARRIORS. Your\nAIRSHIP was theirs."
+  },
+  {
+    "id": 210,
+    "hexId": "0xD2",
+    "text": "The FLOATING CASTLE..\nOur ancestors lived\nthere. The Mirage Tower\nis the entrance."
+  },
+  {
+    "id": 211,
+    "hexId": "0xD3",
+    "text": "At the time of\ndestruction a legend was\nborn.. In 400 years,\nWARRIORS with ORBS will\nappear to save our\npeople .\nAre you?.."
+  },
+  {
+    "id": 212,
+    "hexId": "0xD4",
+    "text": "We fought with TIAMAT,\nbut were unsuccessful.\nThe FIEND now inhabits\nour FLOATING CASTLE."
+  },
+  {
+    "id": 213,
+    "hexId": "0xD5",
+    "text": "Our last five Warriors\nleft to find the cause\nof the world's decay.\nWe Know they live, but,\nas bats."
+  },
+  {
+    "id": 214,
+    "hexId": "0xD6",
+    "text": "We knew that a great\npower controlled the\nFIENDS. Our five bravest\nWarriors left, never to\nreturn."
+  },
+  {
+    "id": 215,
+    "hexId": "0xD7",
+    "text": "We have passed on the\nlegends from generation\nto generation. But 400\nyears have caused our\nmemories to fade."
+  },
+  {
+    "id": 216,
+    "hexId": "0xD8",
+    "text": "Oh, the LIGHT WARRIORS!!\nThe legend is true!"
+  },
+  {
+    "id": 217,
+    "hexId": "0xD9",
+    "text": "Until 400 years ago we\ncontrolled the Power of\nthe Wind. This enabled\nus to suspend the castle\nin the air."
+  },
+  {
+    "id": 218,
+    "hexId": "0xDA",
+    "text": "The power of Wind was\ntaken by TIAMAT."
+  },
+  {
+    "id": 219,
+    "hexId": "0xDB",
+    "text": "Here lies Erdrick\n 837 - 866\n R.I.P."
+  },
+  {
+    "id": 220,
+    "hexId": "0xDC",
+    "text": "I wonder if the robots\nmade by our ancestors\nare still moving?"
+  },
+  {
+    "id": 221,
+    "hexId": "0xDD",
+    "text": "The FLOATING CASTLE\nfloats high in the\nsky, seemingly among\nthe stars."
+  },
+  {
+    "id": 222,
+    "hexId": "0xDE",
+    "text": "One of us escaped with\na CUBE. He floated far\nto the west."
+  },
+  {
+    "id": 223,
+    "hexId": "0xDF",
+    "text": "Transporter operation\nrequires a CUBE."
+  },
+  {
+    "id": 224,
+    "hexId": "0xE0",
+    "text": "Are you the master?"
+  },
+  {
+    "id": 225,
+    "hexId": "0xE1",
+    "text": "You can look out over\nthe world from this\nwindow."
+  },
+  {
+    "id": 226,
+    "hexId": "0xE2",
+    "text": "If you are brave enough,\ntry meeting the King of\nthe Dragons, BAHAMUT."
+  },
+  {
+    "id": 227,
+    "hexId": "0xE3",
+    "text": "Unprofitable business\nis not a practice of the\nDragons of Cardia."
+  },
+  {
+    "id": 228,
+    "hexId": "0xE4",
+    "text": "Long ago, Dragons and\nhumans lived and traded\ntogether."
+  },
+  {
+    "id": 229,
+    "hexId": "0xE5",
+    "text": "You are not afraid of\nme??\nThen, I am impressed!"
+  },
+  {
+    "id": 230,
+    "hexId": "0xE6",
+    "text": "See your face upon the\nclean water. How dirty!\nCome! Wash your face!"
+  },
+  {
+    "id": 231,
+    "hexId": "0xE7",
+    "text": "We are going to the\nCastle of Ordeal to the\nnortheast. There we will\ntest, and bring back\nproof of our courage."
+  },
+  {
+    "id": 232,
+    "hexId": "0xE8",
+    "text": "The proof of your\ncourage might be\nanything."
+  },
+  {
+    "id": 233,
+    "hexId": "0xE9",
+    "text": "Have you met BAHAMUT,\nthe Dragon King? He\nhonors those with\ncourage as true\nwarriors."
+  },
+  {
+    "id": 234,
+    "hexId": "0xEA",
+    "text": "Only the courageous ones\nbring back the proof of\ntheir courage."
+  },
+  {
+    "id": 235,
+    "hexId": "0xEB",
+    "text": "Once in the north, there\nwere beautiful palaces\nand big mechanical\ncastles."
+  },
+  {
+    "id": 236,
+    "hexId": "0xEC",
+    "text": "This is BAHAMUT's room."
+  },
+  {
+    "id": 237,
+    "hexId": "0xED",
+    "text": "BAHAMUT verifies the\ntrue courage of all."
+  },
+  {
+    "id": 238,
+    "hexId": "0xEE",
+    "text": "This is a tomb."
+  },
+  {
+    "id": 239,
+    "hexId": "0xEF",
+    "text": "This is a well. You\nmight think that there\nis something to it..\nBut in fact it is just\nan ordinary well."
+  },
+  {
+    "id": 240,
+    "hexId": "0xF0",
+    "text": "In the treasure box,\nyou found..\n\n[ITEM]"
+  },
+  {
+    "id": 241,
+    "hexId": "0xF1",
+    "text": "Can't hold anymore."
+  },
+  {
+    "id": 242,
+    "hexId": "0xF2",
+    "text": "The treasure box is\nempty!"
+  },
+  {
+    "id": 243,
+    "hexId": "0xF3",
+    "text": "The Altar of the Earth."
+  },
+  {
+    "id": 244,
+    "hexId": "0xF4",
+    "text": "The Altar of the Fire."
+  },
+  {
+    "id": 245,
+    "hexId": "0xF5",
+    "text": "The Altar of the Water."
+  },
+  {
+    "id": 246,
+    "hexId": "0xF6",
+    "text": "The Altar of the Wind."
+  },
+  {
+    "id": 247,
+    "hexId": "0xF7",
+    "text": "At the bottom of the\nspring, something is\nflowing."
+  },
+  {
+    "id": 248,
+    "hexId": "0xF8",
+    "text": "TIAMAT is the FIEND of\nthe WIND.."
+  },
+  {
+    "id": 249,
+    "hexId": "0xF9",
+    "text": "From this window one can\nsee the entire world.\nThe Four Forces are\nflowing together, into\nthe center of the Four\nAltars. Into the Temple\nof FIENDS."
+  },
+  {
+    "id": 250,
+    "hexId": "0xFA",
+    "text": "The FIEND's ball cracks\nopen.. An ominous cloud\nrises, and an evil shape\ncongeals..\nIt is LICH, the FIEND of\nEarth."
+  },
+  {
+    "id": 251,
+    "hexId": "0xFB",
+    "text": "Is it you, the tinder\nthat defeated the FIEND\nof the Earth, and\ndisturbed my sleep?\nI, KARY will now show\nyou the force of Fire,\nand you shall burn in\nits flames!!"
+  },
+  {
+    "id": 252,
+    "hexId": "0xFC",
+    "text": "The FIEND's ball is\nshattered, evaporating\nall the water.\nHo, Ho, Ho..\nHow foolhardy to dare\nchallenge me, KRAKEN the\nFIEND of the Water."
+  },
+  {
+    "id": 253,
+    "hexId": "0xFD",
+    "text": "Lightning erupts from\nthe FIEND's ball..\nSo, you have come this\nfar..\nI, TIAMAT the FIEND of\nthe Wind will now put an\nend to your adventure!!"
+  },
+  {
+    "id": 254,
+    "hexId": "0xFE",
+    "text": "What??\nYou can speak Lefeinish?"
+  },
+  {
+    "id": 255,
+    "hexId": "0xFF",
+    "text": "There is a stone plate\non the floor..\nYou sense something..\nEvil?.."
+  }
+]

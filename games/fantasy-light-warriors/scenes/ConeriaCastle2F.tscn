@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/FF1MapScene.gd" id="1_s"]
+[node name="ConeriaCastle2F" type="Node2D"]
+script = ExtResource("1_s")
+map_json_path = "res://data/maps/map_24_coneria_castle_2f.json"
+map_image_path = "res://assets/maps/coneria_castle_2f.png"
+music_path = "res://assets/music/3_-_cornelia_castle.mp3"
+default_spawn_tile = Vector2i(12, 17)
+default_spawn_facing = "up"
+map_key_id = "coneria_castle_2f"

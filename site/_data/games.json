@@ -48,5 +48,13 @@
     "kgraph_scope": "its world, characters, towns, dungeons, quests, combat rules and tests",
     "ai_playthrough_url": "https://rowbose.com/games/quest-warrior-dragon/ai-playthrough/",
     "ai_playthrough_label": "See the Quest: Warrior Dragon AI playthrough and checkpoints"
+  },
+  "fantasy-light-warriors": {
+    "title": "Fantasy: Light Warriors (WIP)",
+    "project": "fantasy-light-warriors",
+    "executable": "FantasyLightWarriors",
+    "kgraph_scope": "its 4 Light Warriors, 12 classes, 64 spells, 128 enemies, 2-step shops, and Act I playthrough tests",
+    "ai_playthrough_url": "https://rowbose.com/blog/jrpg-kgraph-parser-and-playthrough-part-2/",
+    "ai_playthrough_label": "See the Fantasy: Light Warriors (WIP) Act I AI playthrough and checkpoints"
   }
 }

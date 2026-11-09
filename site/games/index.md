@@ -36,6 +36,9 @@ keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tab
       <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}" style="background-image:url('{{ '/assets/games/quest-warrior-dragon/05_world_map_alefgard_overworld.png' | relative_url }}');--accent:#00bcd4">
         <div class="in"><h2>Quest: Warrior Dragon</h2><p>An NES-authentic 2D console RPG across 29 maps in Alefgard with in-engine Stride AI and 100% verified BFS map completeness.</p><span class="go">Begin the quest →</span></div>
       </a>
+      <a href="{{ '/games/fantasy-light-warriors/' | relative_url }}" style="background-image:url('{{ '/assets/elearning/jrpg-kgraph/part2/m7-s3-garland-boss-battle.png' | relative_url }}');--accent:#38bdf8">
+        <div class="in"><h2>Fantasy: Light Warriors (WIP)</h2><p>A clean-room 8-bit 4-hero party JRPG in Godot 4 with 2-step shop interiors, 7 headless Cucumber suites, and a 12-milestone Act I AI playthrough.</p><span class="go">Lead the Light Warriors →</span></div>
+      </a>
       <a href="{{ '/games/party-game/' | relative_url }}" style="background-image:url('{{ '/assets/games/party-game/finale.jpg' | relative_url }}');--accent:#ec4899">
         <div class="in"><h2>RobOS Party Game</h2><p>An AI host in a hooded mask runs mini games about your guests on your TVs. Phones are the controllers; the house is the game board.</p><span class="go">Start the party →</span></div>
       </a>

@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "game": "Fantasy: Light Warriors (WIP)",
+  "total": 12,
+  "milestones": [
+    {
+      "index": 1,
+      "id": "create-light-warriors",
+      "name": "Form the Four Light Warriors",
+      "given": "TitleScreen -> PartyCreate",
+      "when": "Confirm Fighter, Thief, White Mage, Black Mage and start game",
+      "then": "Party enters Coneria at (16, 21) with 400 Gold",
+      "start": {
+        "map": "TitleScreen",
+        "col": 0,
+        "row": 0
+      },
+      "goal": {
+        "action": "party_create",
+        "map": "Coneria",
+        "col": 16,
+        "row": 21
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "party_created"
+      }
+    },
+    {
+      "index": 2,
+      "id": "talk-coneria-guard",
+      "name": "Talk to the Coneria Town Guard",
+      "given": "Coneria (16, 21)",
+      "when": "Walk to the Coneria gate villager at (18, 20) and talk",
+      "then": "Villager welcomes the Light Warriors to Coneria, the dream city",
+      "start": {
+        "map": "Coneria",
+        "col": 16,
+        "row": 21
+      },
+      "goal": {
+        "action": "talk",
+        "map": "Coneria",
+        "col": 17,
+        "row": 20,
+        "facing": "right"
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "talked_coneria_guard"
+      }
+    },
+    {
+      "index": 3,
+      "id": "buy-rapier-coneria",
+      "name": "Buy & Equip Weapons at Coneria Weapon Shop",
+      "given": "Coneria (17, 20)",
+      "when": "Walk to Coneria Weapon Shop at (11, 10) and buy Rapier & Hammer",
+      "then": "Fighter equips Rapier and White Mage equips Hammer",
+      "start": {
+        "map": "Coneria",
+        "col": 17,
+        "row": 20
+      },
+      "goal": {
+        "action": "shop",
+        "shop_id": 1,
+        "map": "Coneria",
+        "col": 11,
+        "row": 10
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "bought_weapon_coneria"
+      }
+    },
+    {
+      "index": 4,
+      "id": "buy-chain-mail-coneria",
+      "name": "Buy & Equip Chain Mail at Coneria Armor Shop",
+      "given": "Coneria (11, 10)",
+      "when": "Walk to Coneria Armor Shop at (6, 10) and buy Chain Mail",
+      "then": "Fighter equips Chain Mail (+15 DEF) and Thief equips Leather Armor",
+      "start": {
+        "map": "Coneria",
+        "col": 11,
+        "row": 10
+      },
+      "goal": {
+        "action": "shop",
+        "shop_id": 11,
+        "map": "Coneria",
+        "col": 6,
+        "row": 10
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "bought_armor_coneria"
+      }
+    },
+    {
+      "index": 5,
+      "id": "buy-cure-coneria",
+      "name": "Learn CURE & RUSE at Coneria White Magic Shop",
+      "given": "Coneria (6, 10)",
+      "when": "Walk to Coneria White Magic Shop at (7, 4) and learn Lv1 White Magic",
+      "then": "White Mage learns CURE and RUSE",
+      "start": {
+        "map": "Coneria",
+        "col": 6,
+        "row": 10
+      },
+      "goal": {
+        "action": "shop",
+        "shop_id": 21,
+        "map": "Coneria",
+        "col": 7,
+        "row": 4
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "bought_white_magic_coneria"
+      }
+    },
+    {
+      "index": 6,
+      "id": "buy-fire-coneria",
+      "name": "Learn FIRE & LIT at Coneria Black Magic Shop",
+      "given": "Coneria (7, 4)",
+      "when": "Walk to Coneria Black Magic Shop at (3, 4) and learn Lv1 Black Magic",
+      "then": "Black Mage learns FIRE and LIT",
+      "start": {
+        "map": "Coneria",
+        "col": 7,
+        "row": 4
+      },
+      "goal": {
+        "action": "shop",
+        "shop_id": 31,
+        "map": "Coneria",
+        "col": 3,
+        "row": 4
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "bought_black_magic_coneria"
+      }
+    },
+    {
+      "index": 7,
+      "id": "enter-coneria-castle",
+      "name": "Exit Coneria and Enter Coneria Castle 1F",
+      "given": "Coneria (3, 4)",
+      "when": "Walk south out of Coneria (16, 24) onto Overworld and enter Coneria Castle at (41, 48)",
+      "then": "Party arrives in ConeriaCastle1F at (12, 35)",
+      "start": {
+        "map": "Coneria",
+        "col": 3,
+        "row": 4
+      },
+      "goal": {
+        "action": "reach_map",
+        "map": "ConeriaCastle1F",
+        "col": 12,
+        "row": 35
+      },
+      "done_when": {
+        "kind": "on_map",
+        "map": "ConeriaCastle1F"
+      }
+    },
+    {
+      "index": 8,
+      "id": "talk-king-coneria",
+      "name": "Ascend to Throne Room and Hear the King's Quest",
+      "given": "ConeriaCastle1F (12, 35)",
+      "when": "Climb stairs at (12, 18) to ConeriaCastle2F, walk to (12, 5), and talk to King of Coneria",
+      "then": "King implores the Light Warriors to rescue Princess Sara from Garland",
+      "start": {
+        "map": "ConeriaCastle1F",
+        "col": 12,
+        "row": 35
+      },
+      "goal": {
+        "action": "talk",
+        "map": "ConeriaCastle2F",
+        "col": 12,
+        "row": 5,
+        "facing": "up"
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "king_intro_done"
+      }
+    },
+    {
+      "index": 9,
+      "id": "march-to-temple-of-fiends",
+      "name": "March Across Overworld & Win IMP Encounter",
+      "given": "ConeriaCastle2F (12, 5)",
+      "when": "Exit Coneria Castle, battle IMP on the northwest road, and enter Temple of Fiends at (18, 11)",
+      "then": "Party defeats Overworld IMP and enters TempleOfFiends at (20, 29)",
+      "start": {
+        "map": "ConeriaCastle2F",
+        "col": 12,
+        "row": 5
+      },
+      "goal": {
+        "action": "reach_map",
+        "map": "TempleOfFiends",
+        "col": 20,
+        "row": 29
+      },
+      "done_when": {
+        "kind": "on_map",
+        "map": "TempleOfFiends"
+      }
+    },
+    {
+      "index": 10,
+      "id": "chest-tof-heal-potion",
+      "name": "Loot HEAL Potion & CABIN Chests in Northwest Wing",
+      "given": "TempleOfFiends (20, 29)",
+      "when": "Walk to northwest treasure room (3, 3) and (2, 3) and open chests",
+      "then": "Party obtains HEAL Potion and CABIN from Temple of Fiends chests",
+      "start": {
+        "map": "TempleOfFiends",
+        "col": 20,
+        "row": 29
+      },
+      "goal": {
+        "action": "chest",
+        "map": "TempleOfFiends",
+        "col": 2,
+        "row": 3
+      },
+      "done_when": {
+        "kind": "chest",
+        "map": "temple_of_fiends",
+        "col": 2,
+        "row": 3
+      }
+    },
+    {
+      "index": 11,
+      "id": "chest-tof-leather-cap",
+      "name": "Loot Leather Cap Chest in Southwest Wing",
+      "given": "TempleOfFiends (2, 3)",
+      "when": "Walk to southwest treasure room (2, 32) and open chest",
+      "then": "Party obtains Cap from Temple of Fiends chest",
+      "start": {
+        "map": "TempleOfFiends",
+        "col": 2,
+        "row": 3
+      },
+      "goal": {
+        "action": "chest",
+        "map": "TempleOfFiends",
+        "col": 2,
+        "row": 32
+      },
+      "done_when": {
+        "kind": "chest",
+        "map": "temple_of_fiends",
+        "col": 2,
+        "row": 32
+      }
+    },
+    {
+      "index": 12,
+      "id": "defeat-garland-1",
+      "name": "Confront and Defeat Garland in the Inner Sanctum",
+      "given": "TempleOfFiends (2, 32)",
+      "when": "Walk through center sanctum door (20, 24) to (20, 22), talk to Garland, and defeat him in battle",
+      "then": "Garland is defeated (106 HP -> 0 HP) and Princess Sara is rescued",
+      "start": {
+        "map": "TempleOfFiends",
+        "col": 2,
+        "row": 32
+      },
+      "goal": {
+        "action": "boss",
+        "map": "TempleOfFiends",
+        "col": 20,
+        "row": 22,
+        "facing": "up"
+      },
+      "done_when": {
+        "kind": "flag",
+        "flag": "garland_defeated"
+      }
+    }
+  ]
+}

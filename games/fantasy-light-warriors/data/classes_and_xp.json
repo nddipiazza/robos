@@ -1,0 +1,7738 @@
+{
+  "xpTable": [
+    {
+      "level": 1,
+      "xp": 0
+    },
+    {
+      "level": 2,
+      "xp": 40
+    },
+    {
+      "level": 3,
+      "xp": 196
+    },
+    {
+      "level": 4,
+      "xp": 547
+    },
+    {
+      "level": 5,
+      "xp": 1171
+    },
+    {
+      "level": 6,
+      "xp": 2146
+    },
+    {
+      "level": 7,
+      "xp": 3550
+    },
+    {
+      "level": 8,
+      "xp": 5461
+    },
+    {
+      "level": 9,
+      "xp": 7957
+    },
+    {
+      "level": 10,
+      "xp": 11116
+    },
+    {
+      "level": 11,
+      "xp": 15016
+    },
+    {
+      "level": 12,
+      "xp": 19735
+    },
+    {
+      "level": 13,
+      "xp": 25351
+    },
+    {
+      "level": 14,
+      "xp": 31942
+    },
+    {
+      "level": 15,
+      "xp": 39586
+    },
+    {
+      "level": 16,
+      "xp": 48361
+    },
+    {
+      "level": 17,
+      "xp": 58345
+    },
+    {
+      "level": 18,
+      "xp": 69617
+    },
+    {
+      "level": 19,
+      "xp": 82253
+    },
+    {
+      "level": 20,
+      "xp": 96332
+    },
+    {
+      "level": 21,
+      "xp": 111932
+    },
+    {
+      "level": 22,
+      "xp": 129131
+    },
+    {
+      "level": 23,
+      "xp": 148008
+    },
+    {
+      "level": 24,
+      "xp": 168639
+    },
+    {
+      "level": 25,
+      "xp": 191103
+    },
+    {
+      "level": 26,
+      "xp": 215479
+    },
+    {
+      "level": 27,
+      "xp": 241843
+    },
+    {
+      "level": 28,
+      "xp": 270275
+    },
+    {
+      "level": 29,
+      "xp": 300851
+    },
+    {
+      "level": 30,
+      "xp": 333651
+    },
+    {
+      "level": 31,
+      "xp": 366450
+    },
+    {
+      "level": 32,
+      "xp": 399250
+    },
+    {
+      "level": 33,
+      "xp": 432049
+    },
+    {
+      "level": 34,
+      "xp": 464849
+    },
+    {
+      "level": 35,
+      "xp": 497648
+    },
+    {
+      "level": 36,
+      "xp": 530448
+    },
+    {
+      "level": 37,
+      "xp": 563247
+    },
+    {
+      "level": 38,
+      "xp": 596047
+    },
+    {
+      "level": 39,
+      "xp": 628846
+    },
+    {
+      "level": 40,
+      "xp": 661646
+    },
+    {
+      "level": 41,
+      "xp": 694445
+    },
+    {
+      "level": 42,
+      "xp": 727245
+    },
+    {
+      "level": 43,
+      "xp": 760044
+    },
+    {
+      "level": 44,
+      "xp": 792844
+    },
+    {
+      "level": 45,
+      "xp": 825643
+    },
+    {
+      "level": 46,
+      "xp": 858443
+    },
+    {
+      "level": 47,
+      "xp": 891242
+    },
+    {
+      "level": 48,
+      "xp": 924042
+    },
+    {
+      "level": 49,
+      "xp": 956841
+    },
+    {
+      "level": 50,
+      "xp": 989641
+    }
+  ],
+  "classes": [
+    {
+      "id": 0,
+      "name": "Fighter",
+      "upgradesTo": "Knight",
+      "startingStats": {
+        "hp": 35,
+        "str": 20,
+        "agi": 5,
+        "int": 1,
+        "vit": 10,
+        "luck": 5,
+        "damage": 10,
+        "baseHitPercent": 10,
+        "evade": 53,
+        "baseMagicDefense": 15,
+        "startingMpLv1": 0
+      },
+      "hitPercentGrowthPerLevel": 3,
+      "magicDefenseGrowthPerLevel": 3,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Thief",
+      "upgradesTo": "Ninja",
+      "startingStats": {
+        "hp": 30,
+        "str": 5,
+        "agi": 10,
+        "int": 5,
+        "vit": 5,
+        "luck": 15,
+        "damage": 2,
+        "baseHitPercent": 5,
+        "evade": 58,
+        "baseMagicDefense": 15,
+        "startingMpLv1": 0
+      },
+      "hitPercentGrowthPerLevel": 2,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": true,
+          "guaranteedStats": [
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": true,
+          "guaranteedStats": [
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Black Belt",
+      "upgradesTo": "Master",
+      "startingStats": {
+        "hp": 33,
+        "str": 5,
+        "agi": 5,
+        "int": 5,
+        "vit": 20,
+        "luck": 5,
+        "damage": 2,
+        "baseHitPercent": 5,
+        "evade": 53,
+        "baseMagicDefense": 10,
+        "startingMpLv1": 0
+      },
+      "hitPercentGrowthPerLevel": 3,
+      "magicDefenseGrowthPerLevel": 4,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Red Mage",
+      "upgradesTo": "Red Wizard",
+      "startingStats": {
+        "hp": 30,
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 5,
+        "luck": 5,
+        "damage": 5,
+        "baseHitPercent": 7,
+        "evade": 58,
+        "baseMagicDefense": 20,
+        "startingMpLv1": 2
+      },
+      "hitPercentGrowthPerLevel": 2,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            3
+          ]
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            4
+          ]
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            6
+          ]
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": [
+            6,
+            7
+          ]
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            7
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6,
+            7
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            4,
+            5
+          ]
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            7,
+            8
+          ]
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            5,
+            7
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "White Mage",
+      "upgradesTo": "White Wizard",
+      "startingStats": {
+        "hp": 28,
+        "str": 5,
+        "agi": 5,
+        "int": 15,
+        "vit": 10,
+        "luck": 5,
+        "damage": 2,
+        "baseHitPercent": 5,
+        "evade": 53,
+        "baseMagicDefense": 20,
+        "startingMpLv1": 2
+      },
+      "hitPercentGrowthPerLevel": 1,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            3
+          ]
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            5
+          ]
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            4
+          ]
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            6
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            5
+          ]
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            6
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            7
+          ]
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            5,
+            6
+          ]
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            7,
+            8
+          ]
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            2,
+            8
+          ]
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": true,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Black Mage",
+      "upgradesTo": "Black Wizard",
+      "startingStats": {
+        "hp": 25,
+        "str": 1,
+        "agi": 10,
+        "int": 20,
+        "vit": 1,
+        "luck": 10,
+        "damage": 1,
+        "baseHitPercent": 5,
+        "evade": 58,
+        "baseMagicDefense": 20,
+        "startingMpLv1": 2
+      },
+      "hitPercentGrowthPerLevel": 1,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            3
+          ]
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            2,
+            5
+          ]
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            4
+          ]
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            2,
+            6
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            5
+          ]
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            6
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            7
+          ]
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            5,
+            6
+          ]
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            7,
+            8
+          ]
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            8
+          ]
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Knight",
+      "upgradesTo": null,
+      "startingStats": {
+        "hp": 35,
+        "str": 20,
+        "agi": 5,
+        "int": 1,
+        "vit": 10,
+        "luck": 5,
+        "damage": 10,
+        "baseHitPercent": 10,
+        "evade": 53,
+        "baseMagicDefense": 15,
+        "startingMpLv1": 0
+      },
+      "hitPercentGrowthPerLevel": 3,
+      "magicDefenseGrowthPerLevel": 3,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": []
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Ninja",
+      "upgradesTo": null,
+      "startingStats": {
+        "hp": 30,
+        "str": 5,
+        "agi": 10,
+        "int": 5,
+        "vit": 5,
+        "luck": 15,
+        "damage": 2,
+        "baseHitPercent": 5,
+        "evade": 58,
+        "baseMagicDefense": 15,
+        "startingMpLv1": 0
+      },
+      "hitPercentGrowthPerLevel": 2,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": true,
+          "guaranteedStats": [
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": true,
+          "guaranteedStats": [
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": []
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Master",
+      "upgradesTo": null,
+      "startingStats": {
+        "hp": 33,
+        "str": 5,
+        "agi": 5,
+        "int": 5,
+        "vit": 20,
+        "luck": 5,
+        "damage": 2,
+        "baseHitPercent": 5,
+        "evade": 53,
+        "baseMagicDefense": 10,
+        "startingMpLv1": 0
+      },
+      "hitPercentGrowthPerLevel": 3,
+      "magicDefenseGrowthPerLevel": 1,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": []
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "VIT"
+          ],
+          "mpGains": []
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Red Wizard",
+      "upgradesTo": null,
+      "startingStats": {
+        "hp": 30,
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 5,
+        "luck": 5,
+        "damage": 5,
+        "baseHitPercent": 7,
+        "evade": 58,
+        "baseMagicDefense": 20,
+        "startingMpLv1": 2
+      },
+      "hitPercentGrowthPerLevel": 2,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            3
+          ]
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            4
+          ]
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            6
+          ]
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": [
+            6,
+            7
+          ]
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            7
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6,
+            7
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            4,
+            5
+          ]
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            7,
+            8
+          ]
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            5,
+            7
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "VIT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "White Wizard",
+      "upgradesTo": null,
+      "startingStats": {
+        "hp": 28,
+        "str": 5,
+        "agi": 5,
+        "int": 15,
+        "vit": 10,
+        "luck": 5,
+        "damage": 2,
+        "baseHitPercent": 5,
+        "evade": 53,
+        "baseMagicDefense": 20,
+        "startingMpLv1": 2
+      },
+      "hitPercentGrowthPerLevel": 1,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            3
+          ]
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            5
+          ]
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            4
+          ]
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            6
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            5
+          ]
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            6
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            7
+          ]
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            5,
+            6
+          ]
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            7,
+            8
+          ]
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            2,
+            8
+          ]
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": true,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Black Wizard",
+      "upgradesTo": null,
+      "startingStats": {
+        "hp": 25,
+        "str": 1,
+        "agi": 10,
+        "int": 20,
+        "vit": 1,
+        "luck": 10,
+        "damage": 1,
+        "baseHitPercent": 5,
+        "evade": 58,
+        "baseMagicDefense": 20,
+        "startingMpLv1": 2
+      },
+      "hitPercentGrowthPerLevel": 1,
+      "magicDefenseGrowthPerLevel": 2,
+      "levelUpGrowth": [
+        {
+          "level": 2,
+          "xpRequired": 40,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 3,
+          "xpRequired": 196,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 4,
+          "xpRequired": 547,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 5,
+          "xpRequired": 1171,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            3
+          ]
+        },
+        {
+          "level": 6,
+          "xpRequired": 2146,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 7,
+          "xpRequired": 3550,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 8,
+          "xpRequired": 5461,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 9,
+          "xpRequired": 7957,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            4
+          ]
+        },
+        {
+          "level": 10,
+          "xpRequired": 11116,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1
+          ]
+        },
+        {
+          "level": 11,
+          "xpRequired": 15016,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            3,
+            4
+          ]
+        },
+        {
+          "level": 12,
+          "xpRequired": 19735,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 13,
+          "xpRequired": 25351,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            2,
+            5
+          ]
+        },
+        {
+          "level": 14,
+          "xpRequired": 31942,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            1,
+            4
+          ]
+        },
+        {
+          "level": 15,
+          "xpRequired": 39586,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 16,
+          "xpRequired": 48361,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 17,
+          "xpRequired": 58345,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            2,
+            6
+          ]
+        },
+        {
+          "level": 18,
+          "xpRequired": 69617,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4,
+            5
+          ]
+        },
+        {
+          "level": 19,
+          "xpRequired": 82253,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            1,
+            6
+          ]
+        },
+        {
+          "level": 20,
+          "xpRequired": 96332,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            3,
+            7
+          ]
+        },
+        {
+          "level": 21,
+          "xpRequired": 111932,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 22,
+          "xpRequired": 129131,
+          "strongHp": true,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            5,
+            6
+          ]
+        },
+        {
+          "level": 23,
+          "xpRequired": 148008,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 24,
+          "xpRequired": 168639,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            1,
+            2
+          ]
+        },
+        {
+          "level": 25,
+          "xpRequired": 191103,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 26,
+          "xpRequired": 215479,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            7,
+            8
+          ]
+        },
+        {
+          "level": 27,
+          "xpRequired": 241843,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            3,
+            5
+          ]
+        },
+        {
+          "level": 28,
+          "xpRequired": 270275,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            2,
+            8
+          ]
+        },
+        {
+          "level": 29,
+          "xpRequired": 300851,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4,
+            7
+          ]
+        },
+        {
+          "level": 30,
+          "xpRequired": 333651,
+          "strongHp": true,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            6,
+            8
+          ]
+        },
+        {
+          "level": 31,
+          "xpRequired": 366450,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 32,
+          "xpRequired": 399250,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 33,
+          "xpRequired": 432049,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 34,
+          "xpRequired": 464849,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 35,
+          "xpRequired": 497648,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 36,
+          "xpRequired": 530448,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 37,
+          "xpRequired": 563247,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 38,
+          "xpRequired": 596047,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            2
+          ]
+        },
+        {
+          "level": 39,
+          "xpRequired": 628846,
+          "strongHp": false,
+          "guaranteedStats": [
+            "AGI",
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 40,
+          "xpRequired": 661646,
+          "strongHp": false,
+          "guaranteedStats": [
+            "STR",
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 41,
+          "xpRequired": 694445,
+          "strongHp": true,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 42,
+          "xpRequired": 727245,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 43,
+          "xpRequired": 760044,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            3
+          ]
+        },
+        {
+          "level": 44,
+          "xpRequired": 792844,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 45,
+          "xpRequired": 825643,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            8
+          ]
+        },
+        {
+          "level": 46,
+          "xpRequired": 858443,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            4
+          ]
+        },
+        {
+          "level": 47,
+          "xpRequired": 891242,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            5
+          ]
+        },
+        {
+          "level": 48,
+          "xpRequired": 924042,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "VIT"
+          ],
+          "mpGains": [
+            6
+          ]
+        },
+        {
+          "level": 49,
+          "xpRequired": 956841,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT"
+          ],
+          "mpGains": [
+            7
+          ]
+        },
+        {
+          "level": 50,
+          "xpRequired": 989641,
+          "strongHp": false,
+          "guaranteedStats": [
+            "INT",
+            "LCK"
+          ],
+          "mpGains": [
+            8
+          ]
+        }
+      ]
+    }
+  ]
+}
