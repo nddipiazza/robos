@@ -233,7 +233,7 @@ flowchart LR
       <p>Once <strong>PC A</strong> (your RobOS media workstation holding your film &amp; TV library) and <strong>PC B</strong> (your laptop, bedroom PC, or office workstation) are paired in <strong>RobOS App Mesh</strong>, you have two ways to stream movies with instant seeking, TMDB/TVmaze posters, and watch-progress sync:</p>
 
       <h4>Method A: Bridge the Movie Player HTTP 206 Stream Server (<code>:19215</code>) via App Mesh (Zero Disk Sync)</h4>
-      <p><a href="{{ '/video-player/' | relative_url }}">RobOS Movie Player</a> (<code>packages/movie-player</code>) runs a built-in HTTP Range stream and cinema catalog server on port <strong><code>19215</code></strong> (registered in App Mesh as <code>movie-player-stream</code>).</p>
+      <p><a href="{{ '/movie-player/' | relative_url }}">RobOS Movie Player</a> (<code>packages/movie-player</code>) runs a built-in HTTP Range stream and cinema catalog server on port <strong><code>19215</code></strong> (registered in App Mesh as <code>movie-player-stream</code>).</p>
 
       <ol>
         <li><strong>On PC A (Media Host):</strong> Open <strong>RobOS Movie Player</strong> (<code>electron packages/movie-player</code>). Its stream server starts automatically on port <code>19215</code>.</li>
@@ -306,7 +306,7 @@ node --test packages/robos-lib/app-mesh-engine.test.cjs
       <a href="https://github.com/nddipiazza/robos/tree/main/packages/app-mesh"><code>packages/app-mesh</code> source →</a>
       <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/app-mesh-engine.js"><code>robos-lib/app-mesh-engine.js</code> →</a>
       <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/app-mesh-engine.test.cjs">E2E Zero-Trust tunnel test →</a>
-      <a href="{{ '/video-player/' | relative_url }}">RobOS Movie &amp; Video Player guide →</a>
+      <a href="{{ '/movie-player/' | relative_url }}">RobOS Movie &amp; Video Player guide →</a>
       <a href="{{ '/security/' | relative_url }}">Security &amp; Isolation Proofs →</a>
     </div>
   </article>

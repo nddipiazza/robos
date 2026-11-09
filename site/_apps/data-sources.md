@@ -9,6 +9,8 @@ related:
   - /cloud-accounts/
   - /audio-player/
 permalink: /data-sources/
+redirect_from:
+  - /apps/data-sources/
 ---
 
 Data Sources Explorer (`packages/data-sources`) is where you register the storage and databases other RobOS apps use. Google Drive, OneDrive, SFTP and FTP entries are real connections: the app signs in, lists folders, and uploads and downloads files. The other entry types are a catalog only.

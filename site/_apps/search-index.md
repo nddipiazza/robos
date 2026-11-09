@@ -6,6 +6,8 @@ icon: search-index.svg
 summary: "Builds plain-text lists of file paths under folders you choose, which RobOS text areas search for @-mentions."
 description: "Walks the folders of each index and saves their paths to ~/.config/robos/search-index. It indexes file and folder names only, not file contents or code symbols."
 permalink: /search-index/
+redirect_from:
+  - /apps/search-index/
 ---
 
 Search Indexer keeps lists of paths so that other RobOS apps can offer fast `@file` suggestions without scanning the disk on each keystroke. For example, the AI Prompt app matches what you type against these lists.

@@ -49,6 +49,14 @@ defaults:
       extra_css: /assets/blog.css
       og_type: article
       schema_type: BlogPosting
+  - scope:
+      path: "assets"
+    values:
+      sitemap: false
+  - scope:
+      path: "future/skill-commons-whitepaper.pdf"
+    values:
+      sitemap: false
 
 exclude:
   - README.md

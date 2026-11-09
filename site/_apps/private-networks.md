@@ -7,6 +7,8 @@ icon: private-networks.svg
 summary: "Cross-Network Zero-Trust P2P & Relay Mesh for linking RobOS machines across separate networks/NAT/CGNAT via Mutual TLS 1.3 (robos-net://), AES-256-GCM encrypted rendezvous, bidirectional Reverse-Mux tunneling, and cross-machine RobOS Movie Player (:19215) streaming"
 description: "Cross-Network Zero-Trust P2P & Relay Mesh for linking RobOS machines across separate networks/NAT/CGNAT via Mutual TLS 1.3 (robos-net://), AES-256-GCM encrypted rendezvous, bidirectional Reverse-Mux tunneling, and cross-machine RobOS Movie Player (:19215) streaming"
 permalink: /private-networks/
+redirect_from:
+  - /apps/private-networks/
 ---
 
 **RobOS Private Networks** (`packages/private-networks`, debug port `:19217`) links two or more RobOS machines across completely separate networks, symmetric NATs, or CGNAT with a single `robos-net://` invite token—requiring **zero cloud accounts, zero router port-forwarding, and zero root privileges**.

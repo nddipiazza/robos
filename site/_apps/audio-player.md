@@ -6,6 +6,8 @@ icon: audio-player.svg
 summary: "Open-source audio player, custom playlist engine, procedural focus soundscapes, and zero-cloud Google Cast smart speaker streaming."
 description: "Desktop audio deck with React H5 audio playback, custom playlist manager, M3U import/export, interactive queue controls, procedural synthesizers, and local TLS Google Cast streaming."
 permalink: /audio-player/
+redirect_from:
+  - /apps/audio-player/
 ---
 
 RobOS Audio Player provides high-fidelity audio playback for the developer workstation, complete playlist curation, and seamless zero-cloud audio streaming to physical Google Home and Nest smart speakers on the local network. For movies, TV series, and video collections with the exact same warm theater theme, AI Watchlists, Virtual Cinema Host, and synced `.srt`/`.vtt` subtitles, see [RobOS Movie Player]({{ '/movie-player/' | relative_url }}) (`packages/movie-player`).

@@ -4,6 +4,8 @@ package: robos-task-client
 category: "libraries"
 component_type: component
 permalink: /robos-task-client/
+redirect_from:
+  - /apps/robos-task-client/
 summary: "RobOS Task Client — unified adapter for Jira, GitHub Issues, and other task servers"
 description: "RobOS Task Client — unified adapter for Jira, GitHub Issues, and other task servers"
 ---

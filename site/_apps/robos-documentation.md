@@ -9,6 +9,8 @@ related:
   - /schemas/documentation/documentation/
   - /system-documentation/
 permalink: /robos-documentation/
+redirect_from:
+  - /apps/robos-documentation/
 ---
 
 RobOS Documentation tracks documentation coverage for the architecture recorded in the knowledge graph. It does not scan your source code. It works on the nodes in `.robos/knowledge-graph.jsonld`, found in the directory you launch it from or in the repository next to the package.

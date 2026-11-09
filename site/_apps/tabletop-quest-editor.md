@@ -6,6 +6,8 @@ icon: tabletop-quest-editor.svg
 summary: "Layer 2 quest scenario designer on top of calibrated blockmaps: place doors, monsters, furniture, traps, secret doors and stairs, then launch or export cartridges."
 description: "Author HeroQuest-style and Election 2026 tabletop quest maps on top of .blockmap.json geometry and export playable Godot 4 cartridges."
 permalink: /tabletop-quest-editor/
+redirect_from:
+  - /apps/tabletop-quest-editor/
 ---
 
 RobOS Tabletop Quest Map Editor is the Layer 2 scenario authoring tool for the HeroQuest-style game in `games/tabletop-rpg`. While [Tabletop Blockmap Creator]({{ '/tabletop-blockmap-creator/' | relative_url }}) calibrates the underlying board artwork into rooms and corridors (`.blockmap.json`), the Quest Map Editor lets you place quest-specific encounters, furniture, doors, hazards, and victory triggers on top of that blockmap and save directly to a playable `.cartridge.json`.

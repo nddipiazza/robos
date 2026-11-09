@@ -8,6 +8,8 @@ related:
   - /knowledge-graph/
 icon: robos-graph.svg
 permalink: /robos-graph/
+redirect_from:
+  - /apps/robos-graph/
 ---
 
 This package is both a window and a library. The graph store in `lib/graph-store.js` is loaded by many other RobOS apps (eLearning Hub, Documentation, Preferences, Task Servers and more). For what the graph holds and why, see [Knowledge graph](/knowledge-graph/).

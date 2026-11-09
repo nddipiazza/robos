@@ -34,8 +34,8 @@ keywords: "Realm of Heroes CRPG docs, cRPG level editor, Godot 4 cRPG tutorials,
     </div>
     <div>
       <h3>Learn interactively</h3>
-      <a href="{{ '/projects/crpg-realm/elearning/' | relative_url }}"><b>Tactical cRPG Codex</b><span>→</span></a>
-      <a href="{{ '/projects/crpg-realm/create-your-own-game/elearning/' | relative_url }}"><b>Game Builder Academy</b><span>→</span></a>
+      <a href="{{ '/elearning/robos-crpg/' | relative_url }}"><b>Tactical cRPG Codex</b><span>→</span></a>
+      <a href="{{ '/elearning/crpg-game-builder/' | relative_url }}"><b>Game Builder Academy</b><span>→</span></a>
     </div>
     <div>
       <h3>Project</h3>

@@ -1,16 +1,22 @@
 {%- assign seo_site_name = include.site_name | default: site.title | default: 'RobOS' -%}
+{%- assign seo_url_tail = page.url | slice: -11, 11 -%}
+{%- assign seo_title_lc = page.title | default: '' | downcase -%}
+{%- assign seo_has_ref_word = false -%}
+{%- if seo_title_lc contains 'reference' -%}{%- assign seo_has_ref_word = true -%}{%- endif -%}
 {%- if page.seo_title -%}
   {%- assign seo_title = page.seo_title -%}
 {%- elsif page.url == '/' -%}
   {%- assign seo_title = 'RobOS — One open-source app suite to replace them all.' -%}
 {%- elsif page.layout == 'game' -%}
   {%- assign seo_title = page.title | append: ' · RobOS Games' -%}
+{%- elsif seo_url_tail == '/reference/' and seo_has_ref_word == false and page.title -%}
+  {%- assign seo_title = page.title | append: ' Reference · ' | append: seo_site_name -%}
 {%- elsif page.title -%}
   {%- assign seo_title = page.title | append: ' · ' | append: seo_site_name -%}
 {%- else -%}
   {%- assign seo_title = seo_site_name -%}
 {%- endif -%}
-{%- assign seo_description = page.description | default: site.description | strip_html | normalize_whitespace -%}
+{%- assign seo_description = page.description | default: page.summary | default: site.description | strip_html | normalize_whitespace -%}
 {%- assign seo_url = page.canonical_url | default: page.url | absolute_url -%}
 {%- assign seo_image_path = page.og_image | default: page.bg_poster | default: site.og_image | default: '/assets/og.png' -%}
 {%- assign seo_image = seo_image_path | absolute_url -%}
@@ -167,6 +173,26 @@
           { "@type": "ListItem", "position": 1, "name": "RobOS", "item": {{ '/' | absolute_url | jsonify }} },
           { "@type": "ListItem", "position": 2, "name": "Engineering Blog", "item": {{ '/blog/' | absolute_url | jsonify }} },
           { "@type": "ListItem", "position": 3, "name": {{ page.title | jsonify }}, "item": {{ seo_url | jsonify }} }
+        ]
+      }
+      {%- elsif page.collection == 'apps' or page.collection == 'guides' %},
+      {
+        "@type": "BreadcrumbList",
+        "@id": "{{ seo_url }}#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "RobOS", "item": {{ '/' | absolute_url | jsonify }} },
+          { "@type": "ListItem", "position": 2, "name": "Apps", "item": {{ '/apps/' | absolute_url | jsonify }} },
+          { "@type": "ListItem", "position": 3, "name": {{ page.title | default: seo_title | jsonify }}, "item": {{ seo_url | jsonify }} }
+        ]
+      }
+      {%- elsif page.layout == 'game' and page.url != '/games/' %},
+      {
+        "@type": "BreadcrumbList",
+        "@id": "{{ seo_url }}#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "RobOS", "item": {{ '/' | absolute_url | jsonify }} },
+          { "@type": "ListItem", "position": 2, "name": "Games", "item": {{ '/games/' | absolute_url | jsonify }} },
+          { "@type": "ListItem", "position": 3, "name": {{ page.title | default: seo_title | jsonify }}, "item": {{ seo_url | jsonify }} }
         ]
       }
       {%- endif %}

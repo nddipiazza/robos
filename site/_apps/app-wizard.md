@@ -6,6 +6,8 @@ icon: app-wizard.svg
 summary: "Scaffold a new project from an archetype, or import an existing folder, and register it in the RobOS project files."
 description: "App Wizard writes starter code for a web app, desktop app, CLI or service, or inspects an existing codebase and adds a Backstage catalog file and dev-setup.sh. Both paths register the project in RobOS."
 permalink: /app-wizard/
+redirect_from:
+  - /apps/app-wizard/
 ---
 
 App Wizard has two modes, switched at the top of the window: **Create New Project** and **Import Existing Code**. A **Simple Mode** / **Advanced Mode** toggle hides or shows the engineering fields (technology stack, custom domain, team ownership). Step-by-step walkthroughs are on [New app wizard]({{ '/new-app-wizard/' | relative_url }}) and [Import an existing app]({{ '/app-import-wizard/' | relative_url }}).

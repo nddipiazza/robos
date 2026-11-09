@@ -4,6 +4,8 @@ package: robos-action-registry
 category: "libraries"
 component_type: component
 permalink: /robos-action-registry/
+redirect_from:
+  - /apps/robos-action-registry/
 summary: "RobOS Action Registry — pluggable action type system for event-driven automation"
 description: "RobOS Action Registry — pluggable action type system for event-driven automation"
 ---

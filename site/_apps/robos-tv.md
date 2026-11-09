@@ -13,6 +13,8 @@ related:
   - /movie-player/
   - /game-playthrough/
 permalink: /robos-tv/
+redirect_from:
+  - /apps/robos-tv/
 ---
 
 **RobOS Smart TV Studio** (`packages/robos-tv`) makes living-room and office wall Smart TVs first-class citizens of RobOS. Because commercial TV app stores restrict full Linux/Electron suites, **RobOS Smart TV Studio** bridges your workstation or appliance VM to any Smart TV on your local network through **Developer Mode sideloading**, a **10-Foot Big-Screen Spatial Navigation Portal (`:19210`)**, **Zero-Cloud Google Cast**, and **Moonlight / Sunshine 4K 120Hz streaming**.

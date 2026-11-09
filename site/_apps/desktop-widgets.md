@@ -6,6 +6,8 @@ icon: desktop-widgets.svg
 summary: "A transparent panel on the right edge of the desktop with five status widgets: active task, system stats, AI agent, work journal and security."
 description: "Desktop Widgets shows a 360-pixel overlay refreshed every five seconds. Active task, system stats and the pass and GPG check read real data; the AI agent and journal widgets show placeholder values."
 permalink: /desktop-widgets/
+redirect_from:
+  - /apps/desktop-widgets/
 ---
 
 Desktop Widgets draws a frameless, transparent window at desktop level (behind other windows, out of the task bar) on the right side of the primary display: 360 pixels wide, starting 40 pixels from the top and 20 from the right edge. Data is pushed to the window every five seconds.

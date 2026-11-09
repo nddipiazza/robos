@@ -6,6 +6,8 @@ summary: "Creates short-lived agent profiles with their own home directory (tmpf
 description: "Provisions a my-agent-<name> profile, forwards display, SSH and git settings into it, and removes it on termination. It does not create separate Linux users."
 icon: robos-profiled.svg
 permalink: /robos-profiled/
+redirect_from:
+  - /apps/robos-profiled/
 ---
 
 Agent Profile Daemon provisions "ephemeral agent profiles": a home directory plus environment variables that a command runs with. The window title is **RobOS Ephemeral Profile Manager**.

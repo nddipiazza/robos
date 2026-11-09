@@ -6,6 +6,8 @@ icon: software-center.svg
 summary: "Install and manage coding-agent CLIs, IDEs, browsers, game tools and utilities on Windows or Linux."
 description: "Native Windows installers through WinGet and a private npm prefix, with progress logs, updates and installation checks. Debian and Ubuntu use their Linux installers."
 permalink: /software-center/
+redirect_from:
+  - /apps/software-center/
 ---
 
 Software Center installs tools from its built-in catalog. Open it from the RobOS launcher, choose a category, and click **Install**. Progress and errors appear in the log panel. **Refresh** checks the current installation state.

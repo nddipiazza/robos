@@ -6,6 +6,8 @@ icon: nosql-manager.svg
 summary: "A MongoDB and Redis studio prototype with a document grid and a Redis key table; it shows built-in sample data and does not connect to a server."
 description: "NoSQL DB Manager lists two connection entries and shows sample MongoDB documents and Redis keys. Find Documents and the Redis command box return fixed results."
 permalink: /nosql-manager/
+redirect_from:
+  - /apps/nosql-manager/
 ---
 
 NoSQL DB Manager has the layout of a MongoDB Compass and RedisInsight style tool: a **NoSQL Clusters** list, a MongoDB view with a **Filter** box and **Find Documents** button, and a Redis view with a key table and a **CLI Command** box with **Execute**. The **Switch to Redis Cache** button toggles between the two views.

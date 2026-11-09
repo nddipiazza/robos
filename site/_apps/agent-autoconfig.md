@@ -6,6 +6,8 @@ summary: "Writes MCP configuration and instruction files so Claude Code, Gemini,
 description: "Agent Autoconfig generates per-agent MCP config files in your home directory and an AGENTS.md plus pointer files in ~/workspace. The task and knowledge-graph context it injects is currently a fixed default."
 icon: agent-autoconfig.svg
 permalink: /agent-autoconfig/
+redirect_from:
+  - /apps/agent-autoconfig/
 ---
 
 Agent Autoconfig keeps the config files of several coding agents pointing at one MCP server entry, `robos`, which runs `robos-mcp-router/cli.js --stdio`. It also writes an `AGENTS.md` for the project.

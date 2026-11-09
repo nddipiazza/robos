@@ -10,6 +10,8 @@ related:
   - /data-sources/
   - /dev-central/
 permalink: /google-calendar/
+redirect_from:
+  - /apps/google-calendar/
 ---
 
 RobOS Google Calendar, in `packages/google-calendar`, sets up Mozilla Thunderbird as the calendar and contacts client for a Google account. It does not show your calendar itself. The work is done by the shared module `packages/robos-lib/thunderbird-google.js`; the app is a form around it.

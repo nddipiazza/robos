@@ -6,6 +6,8 @@ icon: schema-studio.svg
 summary: "Browse the bundled Schema.org vocabulary, generate JSON-LD, TypeSpec, SHACL and code stubs for a new entity, and validate JSON-LD against RobOS shapes."
 description: "Explorer for Schema.org 28.1 (1,003 classes, 1,676 properties) with a synthesizer and validator built on it. The TypeSpec models tab, compile and breaking-change checks use fixed sample data."
 permalink: /schema-studio/
+redirect_from:
+  - /apps/schema-studio/
 ---
 
 Schema Studio helps you define a RobOS entity in terms of Schema.org. It has four tabs: **TypeSpec & Models**, **Schema.org Explorer**, **KGraph Synthesizer** and **Schema Validator**. For how RobOS uses schemas in general, see [Schemas](/schemas/).

@@ -6,6 +6,8 @@ icon: robos-crpg-elearning.svg
 summary: "Launcher that opens the eLearning Hub on the tactical cRPG course (D&D 5e rules and Godot 4)."
 description: "A thin wrapper: it starts robos-elearning with --course=robos-crpg. The course content lives in the learning knowledge graph."
 permalink: /robos-crpg-elearning/
+redirect_from:
+  - /apps/robos-crpg-elearning/
 ---
 
 cRPG Masterclass has no interface of its own. Its `main.js` adds `--course=robos-crpg` to the command line, if no `--course=` is given, and then loads [RobOS eLearning Hub]({{ '/robos-elearning/' | relative_url }}). Everything you see, including lab checklists, quizzes, the certificate and Editor Mode, is the eLearning Hub.

@@ -8,6 +8,8 @@ description: "Lists merged PRs from the active GitHub task server, saves a demo 
 related:
   - /walkthroughs/
 permalink: /stage-demo/
+redirect_from:
+  - /apps/stage-demo/
 ---
 
 Stage Demo Viewer is a review queue for merged work. For each merged pull request you generate a "demo": a record with the PR details and a text walkthrough, which someone then marks approved or rejected. Despite the name, it does not record video, narrate or deploy anything.

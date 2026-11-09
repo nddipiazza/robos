@@ -2,6 +2,8 @@
 layout: default
 title: Task Planner
 permalink: /task-planner/
+redirect_from:
+  - /apps/task-planner/
 body_class: guide
 extra_css: /assets/build-guide.css
 description: "RobOS Task Planner turns a sentence or a template into epics and tasks with acceptance criteria and a developer persona, lets you edit them, and creates them as GitHub or Jira issues. Requirements, every screen, templates, personas, KGraph project plans and where your data is stored."
@@ -20,7 +22,7 @@ keywords: "RobOS Task Planner, Task Explorer, AI task planning, epics and tasks,
         <h1 id="task-planner-title">Turn a sentence into issues an agent can finish</h1>
         <p class="auto-intro-lead">Describe a feature, or fill in one of 67 templates. You get a draft of epics and tasks, edit it, then create the issues on GitHub or Jira.</p>
         <p>Each task is written with scope, acceptance criteria and test cases, and each card has a <strong>developer persona</strong>: the role the implementing agent should take. <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a> picks the issues up from there.</p>
-        <a class="btn" href="#plan">Plan your first feature <span aria-hidden="true">↓</span></a>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="#plan">Plan your first feature <span aria-hidden="true">↓</span></a><a class="btn btn-ghost" href="{{ '/task-planner/reference/' | relative_url }}">Package reference</a></div>
       </div>
       <div class="auto-intro-demo">
         <figure class="guide-shot" style="margin:0"><a href="{{ shots }}planner-3-generated.jpg"><img src="{{ shots }}planner-3-generated.jpg" alt="Task Explorer with a generated epic assigned to the Software Architect persona and a task assigned to Backend Systems Developer" loading="eager" width="1600" height="1135"></a><figcaption>An epic and a task drafted from one sentence, each with a persona.</figcaption></figure>

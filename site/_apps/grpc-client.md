@@ -8,6 +8,8 @@ description: "gRPC Client lays out a service list, request payload editor and re
 related:
   - /rest-client/
 permalink: /grpc-client/
+redirect_from:
+  - /apps/grpc-client/
 ---
 
 gRPC Client has the layout of a protobuf RPC tool: a **Protobuf Services (petshop.proto)** list, a request payload editor with an endpoint field, an **Invoke RPC** button and a **Response Payload** pane with status, latency and headers.

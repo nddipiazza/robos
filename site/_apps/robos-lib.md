@@ -4,6 +4,8 @@ package: robos-lib
 category: "libraries"
 component_type: component
 permalink: /robos-lib/
+redirect_from:
+  - /apps/robos-lib/
 summary: "RobOS shared utilities — categories, .desktop file parsing, app registry"
 description: "RobOS shared utilities — categories, .desktop file parsing, app registry"
 ---

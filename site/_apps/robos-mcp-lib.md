@@ -6,6 +6,8 @@ summary: "Node.js library for building small Model Context Protocol servers, wit
 description: "The base that the RobOS system, task and workspace MCP servers are built on. The package's own window is an inspector for a demo server with two sample tools."
 icon: robos-mcp-lib.svg
 permalink: /robos-mcp-lib/
+redirect_from:
+  - /apps/robos-mcp-lib/
 ---
 
 `robos-mcp-lib` is a library first. Other packages (`system-mcp`, `task-manager-mcp`, `workspace-manager-mcp` and several more under `packages/`) call it to define their tools and resources.

@@ -7,6 +7,8 @@ icon: party-game.svg
 summary: "AI-hosted party game on your RobOS TVs: guests take a survey on their phones, get secret roles, and play mini games built from each other's answers"
 description: "AI-hosted party game on your RobOS TVs: guests take a survey on their phones, get secret roles, and play mini games built from each other's answers"
 permalink: /party-game/
+redirect_from:
+  - /apps/party-game/
 ---
 
 # RobOS Party Game

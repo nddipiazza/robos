@@ -6,6 +6,8 @@ icon: robos-preferences.svg
 summary: "Signs in to Google Drive on an Android phone, opens your RobOS Config Sync backups and restores the settings phone apps use."
 description: "RobOS Preferences for Android finds your RobOS Config Sync backups in Google Drive, opens passphrase backups and restores Smart Home settings to the phone."
 permalink: /robos-preferences-android/
+redirect_from:
+  - /apps/robos-preferences-android/
 landing: /phone/
 ---
 

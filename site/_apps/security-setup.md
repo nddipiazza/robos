@@ -8,6 +8,8 @@ description: "Runs gpg, pass and ssh-keygen to set up the credentials RobOS need
 related:
   - /big-wins/
 permalink: /security-setup/
+redirect_from:
+  - /apps/security-setup/
 ---
 
 Security Setup is a small wizard for a machine that has no GPG key, password store or SSH key yet. It runs the usual `gpg`, `pass` and `ssh-keygen` commands, so the results are ordinary files you can manage by hand. It checks what already exists and lets you skip steps that are done. The larger [RobOS Setup Wizard]({{ '/robos-onboarding/' | relative_url }}) covers the same ground plus git identity, Chrome, GitHub login and AI keys.

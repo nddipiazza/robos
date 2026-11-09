@@ -6,6 +6,8 @@ icon: ai-prompt.svg
 summary: "Type a task in plain English and run it through the Claude CLI or GitHub Copilot CLI, with optional skills attached as hints."
 description: "AI Prompt sends your prompt to an installed agent CLI and shows the steps and result it returns. It scans prompts for secrets first and keeps the last 50 runs."
 permalink: /ai-prompt/
+redirect_from:
+  - /apps/ai-prompt/
 ---
 
 AI Prompt is a one-box front end for agent CLIs. You describe a task ("List all Docker containers and their port mappings"), the app wraps it in a prompt that asks for a JSON summary, runs the agent in a subprocess, and displays the steps and result.

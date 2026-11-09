@@ -4,6 +4,8 @@ package: robos-llm
 category: "libraries"
 component_type: component
 permalink: /robos-llm/
+redirect_from:
+  - /apps/robos-llm/
 summary: "RobOS optional API mode — direct model calls (Anthropic, OpenAI, Gemini, Ollama) through LangChain.js. Off by default; the coding-agent CLIs stay the default path."
 description: "RobOS optional API mode — direct model calls (Anthropic, OpenAI, Gemini, Ollama) through LangChain.js. Off by default; the coding-agent CLIs stay the default path."
 ---
