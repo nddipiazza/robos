@@ -36,6 +36,7 @@ const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
 const NARROW_PATH_CELL_SIZE := PATH_CELL_SIZE * 0.5
+const FOOTPRINT_LATTICE_MARGIN := 0.15
 const BRUSH_REVEAL_RADIUS := 6.0
 const WATCH_STATION_CAPTURE := 4.0
 const WATCH_STATION_SIGHT := 32.0
@@ -1065,7 +1066,7 @@ func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: b
 
 func _mark_footprint(grid: AStarGrid2D, footprint: Dictionary, clearance: float) -> void:
 	# Leave a margin at lattice vertices so edges can round circular footprints.
-	var reach := float(footprint.radius) + clearance + 0.15
+	var reach := float(footprint.radius) + clearance + FOOTPRINT_LATTICE_MARGIN
 	var first := _path_cell(grid, footprint.pos - Vector2.ONE * reach)
 	var last := _path_cell(grid, footprint.pos + Vector2.ONE * reach)
 	for x in range(first.x, last.x + 1):
@@ -1080,27 +1081,41 @@ func _navigation_grid(radius: float, ignore_cliffs: bool, cell_size: float = PAT
 	var key := Vector3(radius, float(ignore_cliffs), cell_size)
 	if not _clearance_grids.has(key):
 		var grid: AStarGrid2D
-		if cell_size == PATH_CELL_SIZE or _has_off_grid_cliff_gap(radius):
+		if cell_size == PATH_CELL_SIZE or _has_off_grid_crossing(radius):
 			grid = AStarGrid2D.new()
 			_fill_navigation_grid(grid, radius, ignore_cliffs, cell_size)
 		_clearance_grids[key] = grid
 	return _clearance_grids[key]
 
-func _has_off_grid_cliff_gap(radius: float) -> bool:
+func _has_off_grid_crossing(radius: float) -> bool:
 	# A continuous opening can fall entirely between coarse grid rows or columns.
 	# Check for such a gap before allocating a second grid on a partial route.
+	if terrain_obstacles.is_empty():
+		return false
+	var gates: Array[Rect2] = []
+	for footprint in _static_structures:
+		if footprint.unit_type == "silo":
+			var extent := Vector2.ONE * (float(footprint.radius) + FOOTPRINT_LATTICE_MARGIN)
+			gates.append(Rect2(footprint.pos - extent, extent * 2.0))
 	for i in range(terrain_obstacles.size()):
 		var a: Rect2 = terrain_obstacles[i]
 		for j in range(i + 1, terrain_obstacles.size()):
-			var b: Rect2 = terrain_obstacles[j]
-			for axis in range(2):
-				var along := 1 - axis
-				if maxf(a.position[along], b.position[along]) >= minf(a.end[along], b.end[along]):
-					continue
-				var first := minf(a.end[axis], b.end[axis]) + radius
-				var last := maxf(a.position[axis], b.position[axis]) - radius
-				if first < last and _first_path_center(first, PATH_CELL_SIZE) >= last and _first_path_center(first, NARROW_PATH_CELL_SIZE) < last:
-					return true
+			if _has_off_grid_gap_between(a, terrain_obstacles[j], radius):
+				return true
+		for gate in gates:
+			if _has_off_grid_gap_between(a, gate, radius):
+				return true
+	return false
+
+func _has_off_grid_gap_between(a: Rect2, b: Rect2, radius: float) -> bool:
+	for axis in range(2):
+		var along := 1 - axis
+		if maxf(a.position[along], b.position[along]) >= minf(a.end[along], b.end[along]):
+			continue
+		var first := minf(a.end[axis], b.end[axis]) + radius
+		var last := maxf(a.position[axis], b.position[axis]) - radius
+		if first < last and _first_path_center(first, PATH_CELL_SIZE) >= last and _first_path_center(first, NARROW_PATH_CELL_SIZE) < last:
+			return true
 	return false
 
 func _first_path_center(edge: float, cell_size: float) -> float:
