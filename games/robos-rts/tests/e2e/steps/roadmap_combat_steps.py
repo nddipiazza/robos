@@ -1,4 +1,4 @@
-from math import dist
+from math import dist, isclose
 
 from behave import then, when
 
@@ -26,10 +26,24 @@ def splash_warning(context, name, radius):
 
 
 @when("the commander captures the artillery warning")
-def capture_warning(context):
+@when("the commander captures the {kind} splash warning")
+def capture_warning(context, kind="artillery"):
     context.client.ui(banner=0, clear_messages=True, hover=[1450, 820])
-    result = context.client.screenshot(str(context.reports_dir / "roadmap-artillery-warning.png"))
+    result = context.client.screenshot(str(context.reports_dir / f"roadmap-{kind}-warning.png"))
     assert result["ok"], result
+
+
+@then("the inner splash warning radius is {radius:f}")
+def inner_splash_radius(context, radius):
+    warning, = context.client.ui()["state"]["area_warnings"]
+    assert warning.get("inner_radius") == radius, warning
+
+
+@then('"{name}" has taken {damage:f} damage')
+def splash_damage(context, name, damage):
+    unit = find_unit(context, name)
+    # Observation rounds health to the nearest tenth.
+    assert isclose(unit["max_hp"] - unit["hp"], damage, abs_tol=0.051), unit
 
 
 @then("no splash warning is visible")

@@ -33,6 +33,7 @@ signal match_finished
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
+const SPLASH_INNER_RADIUS_RATIO := 0.5
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
 const NARROW_PATH_CELL_SIZE := PATH_CELL_SIZE * 0.5
@@ -2719,8 +2720,10 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 			var allegiance_scale := friendly_scale if s["owner"] == attacker["owner"] else 1.0
 			if allegiance_scale <= 0.0:
 				continue
-			var d = primary_target["pos"].distance_to(s["pos"])
-			var mult = 0.5 if d <= splash_rad * 0.5 else 0.25
+			# The outer query includes units by footprint overlap. Use the
+			# same boundary for the inner band so large units match the ring.
+			var distance_to_footprint: float = primary_target.pos.distance_to(s.pos) - float(s.radius)
+			var mult := 0.5 if distance_to_footprint <= splash_rad * SPLASH_INNER_RADIUS_RATIO else 0.25
 			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult * allegiance_scale)
 
 	var evt = {

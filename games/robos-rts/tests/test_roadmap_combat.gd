@@ -12,6 +12,7 @@ func _run() -> void:
 	root.get_node("RTSCommanderAI").configure_from_scenario([])
 	_test_target_preferences()
 	_test_emplaced_splash()
+	_test_splash_boundaries()
 	_test_other_splash()
 	print("Roadmap combat checks: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
@@ -68,6 +69,21 @@ func _test_emplaced_splash() -> void:
 	sim.issue_command([gun.tag], "attack_target", target.pos, target.tag)
 	sim.step_ticks(25)
 	_check(target.hp == target.max_hp and gun.attack_state == "idle", "Explicit fire still respects the minimum range")
+
+func _test_splash_boundaries() -> void:
+	sim.reset_state(42, 96, 64)
+	var gun: Dictionary = sim.spawn_unit("howitzer_emplaced", 1, Vector2(20, 24))
+	var target: Dictionary = sim.spawn_unit("rifleman", 2, Vector2(42, 24))
+	var inner_edge: Dictionary = sim.spawn_unit("howitzer", 2, Vector2(45.5, 24))
+	var after_inner: Dictionary = sim.spawn_unit("howitzer", 2, Vector2(42, 27.55))
+	var outer_edge: Dictionary = sim.spawn_unit("howitzer", 2, Vector2(36.75, 24))
+	var after_outer: Dictionary = sim.spawn_unit("howitzer", 2, Vector2(42, 18.7))
+	sim._rebuild_spatial_grid()
+	sim._execute_weapon_hit(gun, target)
+	_check(inner_edge.max_hp - inner_edge.hp == 34.0, "Touching the inner band takes inner damage")
+	_check(after_inner.max_hp - after_inner.hp == 16.5, "A footprint beyond the inner band takes outer damage")
+	_check(outer_edge.max_hp - outer_edge.hp == 16.5, "Touching the outer band takes outer damage")
+	_check(after_outer.max_hp == after_outer.hp, "A footprint beyond the outer band is safe")
 
 func _test_other_splash() -> void:
 	sim.reset_state(42, 96, 64)
