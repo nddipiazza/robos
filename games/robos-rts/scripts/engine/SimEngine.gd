@@ -2290,7 +2290,7 @@ func _find_choke_berth(unit: Dictionary, direction: Vector2, across: Vector2, ga
 				return [turn, point]
 	return []
 
-func _follow_choke_yield(unit: Dictionary, dt: float) -> void:
+func _follow_choke_yield(unit: Dictionary, dt: float, mineral_walkers: Dictionary) -> void:
 	var yield_order: Dictionary = unit.choke_yield
 	var leader: Dictionary = units.get(yield_order.leader, {})
 	var direction: Vector2 = yield_order.direction
@@ -2312,6 +2312,8 @@ func _follow_choke_yield(unit: Dictionary, dt: float) -> void:
 	if tick % 8 != int(unit.tag) % 8 or (leader.pos - turn).dot(direction) < 1.0:
 		return
 	for follower in query_units_in_radius(turn, 7.0):
+		if follower.flight_height > 0.0 or mineral_walkers.has(follower.tag):
+			continue
 		if follower.owner == unit.owner and follower.vel.dot(direction) > 0.25 and (follower.pos - turn).dot(direction) < 1.0 and absf((follower.pos - turn).dot(direction.orthogonal())) < 2.5:
 			return
 	unit.erase("choke_yield")
@@ -2329,7 +2331,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			if mineral_walkers.has(tag):
 				u.erase("choke_yield")
 			else:
-				_follow_choke_yield(u, dt)
+				_follow_choke_yield(u, dt, mineral_walkers)
 
 		var position: Vector2 = u["pos"]
 		var radius: float = u["radius"]
