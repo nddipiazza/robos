@@ -1,0 +1,603 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:characters",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "characters",
+  "robos:namespace": "jrpg.final-fantasy.characters",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Playable Classes",
+  "dcterms:description": "Party classes and their sprites.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:black-belt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Black Belt",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "BB",
+        "MONK",
+        "Monk"
+      ],
+      "jrpg:upgradesTo": "Master",
+      "jrpg:startingStats": {
+        "hp": 33,
+        "str": 5,
+        "agi": 5,
+        "int": 5,
+        "vit": 20,
+        "luck": 5,
+        "damage": 2,
+        "baseHit": 5,
+        "hitGrowth": 3,
+        "baseEvade": 53,
+        "baseMagicDefense": 10,
+        "magicDefenseGrowth": 4,
+        "startingMp": 0
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:black-mage",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Black Mage",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "BM"
+      ],
+      "jrpg:upgradesTo": "Black Wizard",
+      "jrpg:startingStats": {
+        "hp": 25,
+        "str": 1,
+        "agi": 10,
+        "int": 20,
+        "vit": 1,
+        "luck": 10,
+        "damage": 1,
+        "baseHit": 5,
+        "hitGrowth": 1,
+        "baseEvade": 58,
+        "baseMagicDefense": 20,
+        "magicDefenseGrowth": 2,
+        "startingMp": 2
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:black-wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Black Wizard",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "BW"
+      ],
+      "jrpg:startingStats": {
+        "hp": 25,
+        "str": 1,
+        "agi": 10,
+        "int": 20,
+        "vit": 1,
+        "luck": 10,
+        "damage": 1,
+        "baseHit": 5,
+        "hitGrowth": 1,
+        "baseEvade": 58,
+        "baseMagicDefense": 20,
+        "magicDefenseGrowth": 2,
+        "startingMp": 2
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:fighter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Fighter",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "FI",
+        "warrior",
+        "Warrior",
+        "WARRIOR",
+        "Figher",
+        "fighter"
+      ],
+      "jrpg:upgradesTo": "Knight",
+      "jrpg:startingStats": {
+        "hp": 35,
+        "str": 20,
+        "agi": 5,
+        "int": 1,
+        "vit": 10,
+        "luck": 5,
+        "damage": 10,
+        "baseHit": 10,
+        "hitGrowth": 3,
+        "baseEvade": 53,
+        "baseMagicDefense": 15,
+        "magicDefenseGrowth": 3,
+        "startingMp": 0
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Knight",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "KN"
+      ],
+      "jrpg:startingStats": {
+        "hp": 35,
+        "str": 20,
+        "agi": 5,
+        "int": 1,
+        "vit": 10,
+        "luck": 5,
+        "damage": 10,
+        "baseHit": 10,
+        "hitGrowth": 3,
+        "baseEvade": 53,
+        "baseMagicDefense": 15,
+        "magicDefenseGrowth": 3,
+        "startingMp": 0
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:master",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Master",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "MA",
+        "Monk",
+        "Grandmaster"
+      ],
+      "jrpg:startingStats": {
+        "hp": 33,
+        "str": 5,
+        "agi": 5,
+        "int": 5,
+        "vit": 20,
+        "luck": 5,
+        "damage": 2,
+        "baseHit": 5,
+        "hitGrowth": 3,
+        "baseEvade": 53,
+        "baseMagicDefense": 10,
+        "magicDefenseGrowth": 1,
+        "startingMp": 0
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:ninja",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Ninja",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "NI"
+      ],
+      "jrpg:startingStats": {
+        "hp": 30,
+        "str": 5,
+        "agi": 10,
+        "int": 5,
+        "vit": 5,
+        "luck": 15,
+        "damage": 2,
+        "baseHit": 5,
+        "hitGrowth": 2,
+        "baseEvade": 58,
+        "baseMagicDefense": 15,
+        "magicDefenseGrowth": 2,
+        "startingMp": 0
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:red-mage",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Red Mage",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "RM",
+        "Red Magician"
+      ],
+      "jrpg:upgradesTo": "Red Wizard",
+      "jrpg:startingStats": {
+        "hp": 30,
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 5,
+        "luck": 5,
+        "damage": 5,
+        "baseHit": 7,
+        "hitGrowth": 2,
+        "baseEvade": 58,
+        "baseMagicDefense": 20,
+        "magicDefenseGrowth": 2,
+        "startingMp": 2
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:red-wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Red Wizard",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "RW",
+        "Wizard",
+        "Red Magician"
+      ],
+      "jrpg:startingStats": {
+        "hp": 30,
+        "str": 10,
+        "agi": 10,
+        "int": 10,
+        "vit": 5,
+        "luck": 5,
+        "damage": 5,
+        "baseHit": 7,
+        "hitGrowth": 2,
+        "baseEvade": 58,
+        "baseMagicDefense": 20,
+        "magicDefenseGrowth": 2,
+        "startingMp": 2
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:thief",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "Thief",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "TH"
+      ],
+      "jrpg:upgradesTo": "Ninja",
+      "jrpg:startingStats": {
+        "hp": 30,
+        "str": 5,
+        "agi": 10,
+        "int": 5,
+        "vit": 5,
+        "luck": 15,
+        "damage": 2,
+        "baseHit": 5,
+        "hitGrowth": 2,
+        "baseEvade": 58,
+        "baseMagicDefense": 15,
+        "magicDefenseGrowth": 2,
+        "startingMp": 0
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:white-mage",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "White Mage",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "WM"
+      ],
+      "jrpg:upgradesTo": "White Wizard",
+      "jrpg:startingStats": {
+        "hp": 28,
+        "str": 5,
+        "agi": 5,
+        "int": 15,
+        "vit": 10,
+        "luck": 5,
+        "damage": 2,
+        "baseHit": 5,
+        "hitGrowth": 1,
+        "baseEvade": 53,
+        "baseMagicDefense": 20,
+        "magicDefenseGrowth": 2,
+        "startingMp": 2
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:class:white-wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role",
+        "jrpg:PlayableClass"
+      ],
+      "dcterms:title": "White Wizard",
+      "robos:package": "characters",
+      "jrpg:altName": [
+        "WW"
+      ],
+      "jrpg:startingStats": {
+        "hp": 28,
+        "str": 5,
+        "agi": 5,
+        "int": 15,
+        "vit": 10,
+        "luck": 5,
+        "damage": 2,
+        "baseHit": 5,
+        "hitGrowth": 1,
+        "baseEvade": 53,
+        "baseMagicDefense": 20,
+        "magicDefenseGrowth": 2,
+        "startingMp": 2
+      },
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-black-belt",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Black Belt sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-black-belt.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:black-belt"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-black-mage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Black Mage sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-black-mage.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:black-mage"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-black-wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Black Wizard sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-black-wizard.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:black-wizard"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-fighter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Fighter sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-fighter.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:fighter"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Knight sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-knight.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:knight"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-master",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Master sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-master.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:master"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-ninja",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Ninja sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-ninja.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:ninja"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-red-mage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Red Mage sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-red-mage.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:red-mage"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-red-wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Red Wizard sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-red-wizard.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:red-wizard"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-thief",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Thief sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-thief.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:thief"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-white-mage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "White Mage sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-white-mage.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:white-mage"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:class-sprite-white-wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Sprite",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "White Wizard sprite",
+      "robos:package": "characters",
+      "schema:contentUrl": "assets/generated/class-sprite/class-sprite-white-wizard.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:class:white-wizard"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.characters"
+    }
+  ]
+}

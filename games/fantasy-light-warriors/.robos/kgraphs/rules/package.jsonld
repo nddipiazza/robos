@@ -1,0 +1,3448 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:rules",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "rules",
+  "robos:namespace": "jrpg.final-fantasy.rules",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Rule Engine",
+  "dcterms:description": "Formulas, stats, statuses and elements.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:15-puzzle-game",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "15 Puzzle game",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:absorb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Absorb",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:absorb-defense",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Absorb (Defense)",
+      "robos:package": "rules",
+      "jrpg:expression": "Absorb = \\sum Equipped Armor Absorb",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:accuracy-hit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Accuracy (Hit%)",
+      "robos:package": "rules",
+      "jrpg:expression": "Hit\\% = Base Hit\\% + (Level Growth) + Weapon Hit\\%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:afir-nulfire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "AFIR (NULFIRE)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:agility",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Agility",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:agl",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "AGL",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:aice-nulice",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "AICE (NULICE)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:airship-flight-and-landing",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Airship Flight and Landing",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:airship-landing-on-desert-caravan-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Airship landing on Desert Caravan bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:airship-landing-restriction",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Airship landing restriction",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:airship-movement-and-encounter-immunity",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Airship movement and encounter immunity",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:airship-transportation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Airship transportation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:airship-traversal-and-landing",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Airship Traversal and Landing",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:alit-nulbolt",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "ALIT (NULBOLT)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:amut-vox",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "AMUT (VOX)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:aquatic-enemy-elemental-weakness",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Aquatic enemy elemental weakness",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:armed-black-belt-master-attack",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Armed Black Belt/Master Attack",
+      "robos:package": "rules",
+      "jrpg:expression": "ATK = WeaponATK + floor(STR / 2) + 1",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:armor-elemental-resistance",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Armor elemental resistance",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:armor-elemental-resistances",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Armor elemental resistances",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:armor-selling-price",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Armor selling price",
+      "robos:package": "rules",
+      "jrpg:expression": "purchasing price / 2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:armor-slots-and-ratings",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Armor slots and ratings",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:art-gallery",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Art Gallery",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:arub-nulmgc",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "ARUB (NULMGC)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:atk",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Atk",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:attack-calculation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Attack calculation",
+      "robos:package": "rules",
+      "jrpg:expression": "ATK = ½STR + Weapon Attack modifier",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:attack-damage-value",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Attack (Damage Value)",
+      "robos:package": "rules",
+      "jrpg:expression": "Damage = Weapon Damage + floor( (Strength / 2) )",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:attacking-slain-enemies",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Attacking Slain Enemies",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:avoiding-chest-guarding-enemy-triggers-from-the-side",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Avoiding chest-guarding enemy triggers from the side",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:bahamut-class-upgrade",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Bahamut Class Upgrade",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:bane-poison",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "BANE (POISON)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:bane-poison-instant-death-spell",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Bane / Poison instant death spell",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:bare-handed-black-belt-master-attack-rating",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Bare-handed Black Belt / Master attack rating",
+      "robos:package": "rules",
+      "jrpg:expression": "double the character level",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:base-absorb-rating",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Base absorb rating",
+      "robos:package": "rules",
+      "jrpg:expression": "0 (or equal to level for unarmored monks/masters)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:base-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Base damage",
+      "robos:package": "rules",
+      "jrpg:expression": "half of his strength, rounded down",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:base-evade-rating",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Base evade rating",
+      "robos:package": "rules",
+      "jrpg:expression": "48 + agility",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:base-to-hit-rating",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Base To-Hit Rating",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:battle-data",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Battle data",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:black-belt-master-armed-attack",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Black Belt / Master (Armed) Attack",
+      "robos:package": "rules",
+      "jrpg:expression": "$Damage = Weapon Damage + floor( (Strength / 2) ) + 1$",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:black-belt-master-unarmed-attack",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Black Belt / Master (Unarmed) Attack",
+      "robos:package": "rules",
+      "jrpg:expression": "$Damage = 2 \\times Level$",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:black-belt-master-unarmed-unarmored-absorb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Black Belt / Master (Unarmed/Unarmored) Absorb",
+      "robos:package": "rules",
+      "jrpg:expression": "$Absorb = Level$",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:black-belt-monk-unarmed-scaling",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Black Belt/Monk unarmed scaling",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:black-robe-and-protect-cloak-absorb-calculation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Black Robe and Protect Cloak absorb calculation",
+      "robos:package": "rules",
+      "jrpg:expression": "24 + 8 = 32 absorb points",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:blind",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Blind",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:blind-dark-status",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Blind (Dark) Status",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:blizzard",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Blizzard",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:blnd",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "BLND",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:bolt-lit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "BOLT (LIT)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:bottled-faerie-early-use-penalty",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Bottled Faerie Early Use Penalty",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:break",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "BREAK",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:canoe-river-navigation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Canoe River Navigation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:canoe-river-navigation-and-boat-docking",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Canoe river navigation and boat docking",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:canoe-transportation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Canoe transportation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:cap-stat-modifiers",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Cap Stat Modifiers",
+      "robos:package": "rules",
+      "jrpg:expression": "+1 absorb, -1 Evade%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:chaos-hp-and-cure4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Chaos HP and Cure4",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:chaos-spell-immunity-and-single-curaja",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Chaos Spell Immunity and Single Curaja",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:character-base-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Character Base Damage",
+      "robos:package": "rules",
+      "jrpg:expression": "floor(Strength / 2)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-change",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class Change",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-change-growth-rates",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class Change Growth Rates",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-change-spell-eligibility",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class Change Spell Eligibility",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-upgrade",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class upgrade",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-upgrade-requirement-for-warp",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class upgrade requirement for Warp",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-upgrade-spell-restriction",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class upgrade spell restriction",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:class-upgrade-via-bahamut",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Class upgrade via Bahamut",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:classical-elements",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Classical Elements",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:collections",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Collections",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:combat-incapacity",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Combat incapacity",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:conf",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "CONF",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:cornelia-castle-invisible-person-glitch",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Cornelia Castle Invisible Person Glitch",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:critical-hit-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Critical Hit Damage",
+      "robos:package": "rules",
+      "jrpg:expression": "Final Hit Damage = \\max(1, Roll - Target Absorb) + Roll",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:critical-hit-rate",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Critical Hit Rate",
+      "robos:package": "rules",
+      "jrpg:expression": "Crit Rate = Weapon Index Number (BUG: NES uses weapon ID index instead of its Crit stat)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:crown-chest-forced-encounter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Crown Chest Forced Encounter",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:cur4-curaja-full-hp-recovery",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Cur4 (Curaja) Full HP Recovery",
+      "robos:package": "rules",
+      "jrpg:expression": "100% HP restored",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:cure",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "CURE",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Damage",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:damage-spells-base-chance-to-double-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Damage Spells Base Chance to Double Damage",
+      "robos:package": "rules",
+      "jrpg:expression": "Success Threshold = 148 + Spell Accuracy - Target Magic Defense",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:damage-spells-damage-calculation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Damage Spells Damage Calculation",
+      "robos:package": "rules",
+      "jrpg:expression": "Raw Damage = Random Integer \\in [Spell Power, 2 \\times Spell Power]",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:dark",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Dark",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:dark-fog",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "DARK (FOG)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:darkness",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Darkness",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:death-spell-instant-kill",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Death Spell Instant Kill",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:def",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Def",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:defense-and-evasion-buff-stacking",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Defense and Evasion Buff Stacking",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:desert-caravan-disappearance",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Desert Caravan disappearance",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:dia-spell-effect",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Dia Spell Effect",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:dropping-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Dropping Magic",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:elemental-spell-item-autocasting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Elemental spell item autocasting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:encounter-slot-weights",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Encounter Slot Weights",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:equipment-and-spell-totals",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Equipment and spell totals",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:equipment-casting-heal2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Equipment casting Heal2",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:equipment-combat-stats",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Equipment Combat Stats",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:equipment-spell-casting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Equipment spell casting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:equipment-spell-casting-in-battle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Equipment spell casting in battle",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:equipment-spells-and-in-battle-equipping",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Equipment spells and in-battle equipping",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:evade",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Evade",
+      "robos:package": "rules",
+      "jrpg:expression": "Evade\\% = 48 + Agility - Armor Weight",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:evade-hit-chance-reduction",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Evade hit chance reduction",
+      "robos:package": "rules",
+      "jrpg:expression": "0.5% per point of evade",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:evasion",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Evasion",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:evil-eye-fixed-encounter-tile",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Evil Eye Fixed Encounter Tile",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:evil-eye-repeatable-encounter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Evil Eye Repeatable Encounter",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:excalibur-elemental-racial-bonus-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Excalibur elemental/racial bonus bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:exit-dungeon-warp",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Exit Dungeon Warp",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:exit-spell-in-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Exit Spell in Flying Fortress",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:exit-warp2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "EXIT (WARP2)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:exp",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Exp",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fade-holy",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "FADE (HOLY)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fast",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "FAST",
+      "robos:package": "rules",
+      "jrpg:expression": "power * 2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fast-haste-hit-multiplier",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Fast (Haste) Hit Multiplier",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fast-negates-slo2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "FAST negates SLO2",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fear",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "FEAR",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Fire",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fire-enemy-ice-weakness",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Fire Enemy Ice Weakness",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fixed-party-of-four",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Fixed party of four",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fixed-trap-encounters",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Fixed Trap Encounters",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fixed-treasure-room-encounters",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Fixed Treasure Room Encounters",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:flee",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Flee",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:flying-fortress-floor-4-endless-maze-navigation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Flying Fortress Floor 4 Endless Maze Navigation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fog-protect-defense-boost",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Fog (Protect) Defense Boost",
+      "robos:package": "rules",
+      "jrpg:expression": "Defense + 8",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:fog-shld1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "FOG (SHLD1)",
+      "robos:package": "rules",
+      "jrpg:expression": "armor + 8",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:formation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Formation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:four-armor-slots-limit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Four armor slots limit",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:front-row-targeting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Front row targeting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:frontmost-party-member-preemptive-ambush-check",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Frontmost Party Member Preemptive/Ambush Check",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:garland-boss-encounter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Garland Boss Encounter",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:gil",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Gil",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hall-of-giants-encounters",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Hall of Giants encounters",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hall-of-giants-every-step-encounter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Hall of Giants every-step encounter",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:harm-dia",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "HARM (DIA)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:harm-dia-undead-targeting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Harm (Dia) Undead Targeting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:haste-and-temper",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Haste and Temper",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:heal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "HEAL",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:healing-staff-battle-item-effect",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Healing Staff battle item effect",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:heavy-armor-evasion-penalty",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Heavy Armor Evasion Penalty",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hel2-healara-battle-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Hel2 (Healara) Battle Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Hit%",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hit-chance",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Hit chance",
+      "robos:package": "rules",
+      "jrpg:expression": "attacker's accuracy - target's evasion",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hold-bind",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "HOLD (BIND)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:holy",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Holy",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:house-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "House Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:house-cottage-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "House (Cottage) Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hp",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "HP",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:hp-based-status-spells",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "HP-Based Status Spells",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ice",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Ice",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ice-floor-damage-and-encounter-prevention",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Ice Floor Damage and Encounter Prevention",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ice-monster-fire-weakness",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Ice Monster Fire Weakness",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:in-battle-sword-equipping",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "In-battle sword equipping",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:in-battle-weapon-equipping",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "In-Battle Weapon Equipping",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ineffective-strikes-no-auto-target",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Ineffective Strikes (No Auto Target)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:inn-recovery-and-saving",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Inn Recovery and Saving",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:instant-death-protection",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Instant Death Protection",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:int",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "INT",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:intelligence-stat-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Intelligence Stat Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:inv2-invisara-evade-boost",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "INV2 (Invisara) Evade Boost",
+      "robos:package": "rules",
+      "jrpg:expression": "Evade + 40",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:invis",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Invis",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:invs",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "INVS",
+      "robos:package": "rules",
+      "jrpg:expression": "+20% ability to avoid attacks",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:iron-golem-encounter-rate",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Iron Golem Encounter Rate",
+      "robos:package": "rules",
+      "jrpg:expression": "1.6%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:items-that-cast-diara",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Items that cast Diara",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:knight-spell-level-cap",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Knight spell level cap",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ko",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "KO",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:kraken-tile-re-trigger",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Kraken Tile Re-Trigger",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lamp",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "LAMP",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lava-and-ice-floor-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Lava and ice floor damage",
+      "robos:package": "rules",
+      "jrpg:expression": "1 step = -1 HP to each party member",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lava-floor-damage-and-encounter-immunity",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Lava Floor Damage and Encounter Immunity",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lck",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "LCK",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:level-up-hp-formula",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Level-Up HP Formula",
+      "robos:package": "rules",
+      "jrpg:expression": "floor(VIT / 4) + 1",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lich-fire-weakness",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Lich fire weakness",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:life",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "LIFE",
+      "robos:package": "rules",
+      "jrpg:expression": "HP = 1",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:life-and-lif2-revival",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Life and Lif2 Revival",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lightning",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Lightning",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lock-focus-nes-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Lock (Focus) NES Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lock-focus1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "LOCK (FOCUS1)",
+      "robos:package": "rules",
+      "jrpg:expression": "+10% success rate of inflicting damage",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:lock2-inverted-effect-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Lock2 Inverted Effect Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:luck",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Luck",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:magic-acquisition",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Magic acquisition",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:magic-categories-and-spell-slots",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Magic Categories and Spell Slots",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:magic-effectiveness-and-damage-range",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Magic Effectiveness and Damage Range",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:magic-resistance",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Magic Resistance",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:magical-defense",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Magical Defense",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:master-armor-equip-order-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Master armor equip order bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:master-bare-handed-strength-scaling",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Master bare-handed strength scaling",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:master-equipment-evade-penalty",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Master equipment evade penalty",
+      "robos:package": "rules",
+      "jrpg:expression": "-1%/item",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:mdf",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "MDf",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:monk-master-level-up-absorb-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Monk/Master level-up absorb bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:monk-unarmed-and-unarmored-scaling",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Monk unarmed and unarmored scaling",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:monster-evade-as-agility",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Monster Evade as Agility",
+      "robos:package": "rules",
+      "jrpg:expression": "EVA + rand(0..49)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:mountain-traversal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Mountain Traversal",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:mute",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Mute",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:mute-silence",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "MUTE (SILENCE)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:mute-silence-status",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Mute (Silence) Status",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:mystic-key-locked-doors",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Mystic Key locked doors",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-armor-set-naming",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES armor set naming",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-character-armor-inventory-limit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Character Armor Inventory Limit",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-party-formation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Party Formation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-separate-weapon-and-armor-menus",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Separate Weapon and Armor Menus",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-sorcerer-instant-death-immunity-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Sorcerer Instant-Death Immunity Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-spell-casting-allocation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Spell Casting Allocation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-thief-bugs",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Thief Bugs",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nes-weapon-and-armor-menu-separation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NES Weapon and Armor Menu Separation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:non-functional-black-magic-spells-temper-saber-lock",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Non-functional Black Magic Spells (Temper, Saber, Lock)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nonlinear-boss-and-airship-progression",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Nonlinear boss and airship progression",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:normal-hit-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Normal Hit Damage",
+      "robos:package": "rules",
+      "jrpg:expression": "Final Hit Damage = \\max(1, Roll - Target Absorb)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nuke-flare",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "NUKE (FLARE)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:nul-elemental-damage-reduction",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Nul Elemental Damage Reduction",
+      "robos:package": "rules",
+      "jrpg:expression": "Elemental damage * 50%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:number-of-hits-multiplier",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Number of Hits (Multiplier)",
+      "robos:package": "rules",
+      "jrpg:expression": "Max Hits = 1 + floor( (Hit\\% / 32) )",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ocean-and-ship-traversal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Ocean and Ship Traversal",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:overworld-saving-with-tent-or-cottage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Overworld Saving with Tent or Cottage",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:overworld-tile-data",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Overworld tile data",
+      "robos:package": "rules",
+      "jrpg:expression": "First byte [SSdf ascw]",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:paralysis",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Paralysis",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-class-selection",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party Class Selection",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-creation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party Creation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-creation-and-class-upgrade",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party Creation and Class Upgrade",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-creation-class-limit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party creation class limit",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-formation-change",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party Formation Change",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-formation-protection",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party formation protection",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-leader-targeting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party Leader Targeting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-order-targeting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party Order Targeting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:party-row-targeting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Party row targeting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:per-level-spell-charges-mp-system",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Per-Level Spell Charges (MP System)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:permanent-learned-magic-in-nes",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Permanent Learned Magic in NES",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:permanent-spell-slots",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Permanent spell slots",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:petrification",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Petrification",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:petrify",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Petrify",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:petrify-status",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Petrify status",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:photo-gallery",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Photo Gallery",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:physical-base-chance-to-hit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Physical Base Chance to Hit",
+      "robos:package": "rules",
+      "jrpg:expression": "Base Chance = 168 + Attacker Hit\\%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:physical-damage-roll",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Physical Damage Roll",
+      "robos:package": "rules",
+      "jrpg:expression": "Roll = Random Integer \\in [D, 2D]",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:physical-hit-success-threshold",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Physical Hit Success Threshold",
+      "robos:package": "rules",
+      "jrpg:expression": "Success Threshold = Base Chance - Target Evade\\%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:physical-roll-to-connect",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Physical Roll to Connect",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:poison",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Poison",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:poison-status",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Poison status",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:poison-walking-damage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Poison Walking Damage",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:power-peninsula-encounter-table",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Power peninsula encounter table",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:power-peninsula-encounter-tile-map",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Power Peninsula Encounter Tile Map",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:power-peninsula-enemy-spawn-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Power peninsula enemy spawn bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:preprogrammed-battles",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Preprogrammed Battles",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:protera-and-invisira",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Protera and Invisira",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:pure-esuna",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "PURE (ESUNA)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:quake",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "QUAKE",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:random-and-preprogrammed-encounters",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Random and Preprogrammed Encounters",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:random-encounters",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Random Encounters",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:reaper-instant-death",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Reaper instant death",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:red-mage-spell-slot-limit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Red Mage Spell Slot Limit",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:respawning-evil-eye-encounter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Respawning Evil Eye Encounter",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:reusable-battle-item-casting",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Reusable Battle Item Casting",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:reviving-fallen-allies",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Reviving fallen allies",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:river-traversal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "River Traversal",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:rub-reaper",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "RUB (REAPER)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:running-fleeing",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Running (Fleeing)",
+      "robos:package": "rules",
+      "jrpg:expression": "Luck > Random Integer \\in [0, Slot Condition]",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:running-from-battle-rewards",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Running from battle rewards",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ruse-blink",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "RUSE (BLINK)",
+      "robos:package": "rules",
+      "jrpg:expression": "Evade + 40%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ruse-blink-evasion-boost",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Ruse (Blink) Evasion Boost",
+      "robos:package": "rules",
+      "jrpg:expression": "Evasion + 80",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:saber",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Saber",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:sabr",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "SABR",
+      "robos:package": "rules",
+      "jrpg:expression": "+40% success rate, +15% damage",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:sabr-saber-nes-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Sabr (Saber) NES Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:saving",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Saving",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:saving-at-inns",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Saving at inns",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:saving-the-game",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Saving the Game",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:shared-chests-cancel-identical-items",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Shared Chests Cancel Identical Items",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:shared-dia-and-cure-spell-charges",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Shared Dia and Cure spell charges",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:shared-treasure-chest-state",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Shared Treasure Chest State",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:shield-blocking",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Shield blocking",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ship-landing-restriction",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Ship landing restriction",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ship-river-mouth-disembarking",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Ship River Mouth Disembarking",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:ship-transportation",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Ship transportation",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:side-chest-opening-avoids-guardians",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Side Chest Opening Avoids Guardians",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:silence",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Silence",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:sleep",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "SLEEP",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:sleep-spell-effect",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Sleep Spell Effect",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:sliding-puzzle-game",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Sliding Puzzle Game",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:slow",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "SLOW",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:sm-tile-data",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "SM tile data",
+      "robos:package": "rules",
+      "jrpg:expression": "First Byte [TTBs sssm]",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:soft-stona",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "SOFT (STONA)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:solo-party-experience-rate",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Solo party experience rate",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:special",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Special",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:special-weapon-monster-effectiveness-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Special weapon monster effectiveness bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-casting-allocations",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell Casting Allocations",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-casting-equipment",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell-casting equipment",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-casting-items",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell-Casting Items",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-charge-system",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell Charge System",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-inventory-limit",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell Inventory Limit",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-limit-per-magic-level",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell Limit Per Magic Level",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-slots-per-level",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell slots per level",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spell-slots-per-magic-level",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spell Slots Per Magic Level",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spellcasting-equipment",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spellcasting Equipment",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spellcasting-equipment-in-battle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spellcasting Equipment in Battle",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spellcasting-weapons",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spellcasting Weapons",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:spellcasting-weapons-and-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Spellcasting weapons and armor",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:standard-status-spells-success-threshold",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Standard Status Spells Success Threshold",
+      "robos:package": "rules",
+      "jrpg:expression": "Success Threshold = 148 + Spell Accuracy - Target Magic Defense",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:starting-gold",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Starting Gold",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:stone",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Stone",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:stone-status",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Stone Status",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:stop",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "STOP",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:str",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "STR",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:strong",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Strong",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:stun",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "STUN",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:swirl-tornado-and-nuke-resistance",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Swirl, Tornado, and NUKE resistance",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:t-rex-encounter-rate",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "T Rex Encounter Rate",
+      "robos:package": "rules",
+      "jrpg:expression": "1.6%",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:temper",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Temper",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:temple-of-chaos-exit-restriction",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Temple of Chaos Exit Restriction",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:temporary-battle-statuses",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatusEffect"
+      ],
+      "dcterms:title": "Temporary Battle Statuses",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:terrain-and-vehicle-movement",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Terrain and Vehicle Movement",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:thunder",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Thunder",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:tiamat-stats-and-bane-vulnerability",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Tiamat Stats and Bane Vulnerability",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:tmpr-steel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "TMPR (STEEL)",
+      "robos:package": "rules",
+      "jrpg:expression": "strength + 14",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:tmpr-temper-nes-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Tmpr (Temper) NES Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:to-hit-rating-and-multiple-hits",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "To-hit rating and multiple hits",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:town-shops-and-services",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Town Shops and Services",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:turn-order-roll",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Turn Order Roll",
+      "robos:package": "rules",
+      "jrpg:expression": "Order Score = Agility + Random Integer \\in [0, 49]",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:unarmed-black-belt-master-attack",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Unarmed Black Belt/Master Attack",
+      "robos:package": "rules",
+      "jrpg:expression": "Attack = Level × 2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:unarmed-black-belt-master-critical-rate",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Unarmed Black Belt/Master Critical Rate",
+      "robos:package": "rules",
+      "jrpg:expression": "Critical Rate = Level × 2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:unarmed-black-belt-master-hit-multiplier",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Unarmed Black Belt/Master Hit Multiplier",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:unarmored-black-belt-master-absorb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Unarmored Black Belt/Master Absorb",
+      "robos:package": "rules",
+      "jrpg:expression": "Absorb = Level",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:undead-and-earth-elemental-weaknesses",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Undead and Earth Elemental weaknesses",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:undead-magic-susceptibility",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Undead magic susceptibility",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:undead-weakness-to-dia-and-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Undead Weakness to Dia and Fire",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:unescapable-chest-ambushes",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Unescapable chest ambushes",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:unlimited-use-spell-casting-equipment",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Unlimited-use spell-casting equipment",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:vitality",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StatDefinition"
+      ],
+      "dcterms:title": "Vitality",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:vox-and-mute-spells",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Vox and Mute Spells",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:wall-nulall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "WALL (NULALL)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:wall-nulall-single-target-protection",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Wall (NulAll) Single-Target Protection",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:warmech-death-machine-encounter-rate-and-regeneration",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "WarMech (Death Machine) Encounter Rate and Regeneration",
+      "robos:package": "rules",
+      "jrpg:expression": "1/64 encounter rate; +100 HP per turn",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:warmech-rare-bridge-encounter",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Warmech Rare Bridge Encounter",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:warp",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "WARP",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:water-enemy-lightning-weakness",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Water Enemy Lightning Weakness",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:weak",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Weak",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:weapon-elemental-and-monster-type-weakness-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Weapon Elemental and Monster-Type Weakness Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:weapon-elemental-racial-weakness-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Weapon Elemental/Racial Weakness Bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:weapon-elements",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Element"
+      ],
+      "dcterms:title": "Weapon elements",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:weapon-monster-type-and-elemental-weakness-bug",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "Weapon monster-type and elemental weakness bug",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:weapon-selling-price",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Formula"
+      ],
+      "dcterms:title": "Weapon selling price",
+      "robos:package": "rules",
+      "jrpg:expression": "half its purchasing price",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:world-map",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "World Map",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:world-map-access",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "World Map Access",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:world-map-button-combination",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "World map button combination",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:world-map-shortcut",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "World Map Shortcut",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:xfer-dispel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "XFER (DISPEL)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:xxxx-doom",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "XXXX (DOOM)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:rule:zap-banish",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Rule"
+      ],
+      "dcterms:title": "ZAP! (BANISH)",
+      "robos:package": "rules",
+      "robos:namespace": "jrpg.fantasy-light-warriors.rules"
+    }
+  ]
+}

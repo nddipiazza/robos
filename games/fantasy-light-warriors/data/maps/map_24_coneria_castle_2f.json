@@ -213,87 +213,50 @@
   "npcs": [
     {
       "mapId": 24,
-      "mapName": "Coneria Castle 2F",
       "slot": 0,
       "objectId": 1,
-      "hexObjectId": "0x01",
       "x": 12,
       "y": 4,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        0,
-        1,
-        2,
-        3
-      ],
       "dialogues": {
-        "dialogue_1": "LIGHT WARRIORS.. Just as\nin Lukahn's prophecy.\nGarland has kidnapped\nthe Princess. Please\nhelp her!!",
-        "dialogue_2": "Thank you for saving the\nPrincess. To aid your\nquest I ordered a bridge\nbuilt to the continent.\nGo now, and make the\nORBS shine again!!",
-        "dialogue_3": "The Princess always\nworries about you."
+        "dialogue_1": "LIGHT WARRIORS! Just as in Lukahn's prophecy, you have arrived. Garland has kidnapped Princess Sara\u2014please rescue her from the Temple of Fiends!"
       }
     },
     {
       "mapId": 24,
-      "mapName": "Coneria Castle 2F",
       "slot": 1,
       "objectId": 18,
-      "hexObjectId": "0x12",
       "x": 11,
       "y": 5,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        0,
-        6,
-        7,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "This LUTE has been\npassed down from Queen\nto Princess for 2000\nyears. Garland stole it\nwhen he kidnapped me.\nPlease accept it as my\ngift, it just might come\nin handy.",
-        "dialogue_2": "Now, get ready for your\ntrip, and make the ORBS\nshine again."
+        "dialogue_1": "Please accept this LUTE, treasured by our royal family for two thousand years!"
       }
     },
     {
       "mapId": 24,
-      "mapName": "Coneria Castle 2F",
       "slot": 2,
       "objectId": 43,
-      "hexObjectId": "0x2B",
       "x": 2,
       "y": 29,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        18,
-        63,
-        52,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Reports say that Garland\nholds the Princess in a\nTemple to the northwest.",
-        "dialogue_2": "Thank you for rescuing\nthe Princess."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 24,
-      "mapName": "Coneria Castle 2F",
       "slot": 3,
       "objectId": 48,
-      "hexObjectId": "0x30",
       "x": 13,
       "y": 9,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        18,
-        49,
-        52,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?",
-        "dialogue_2": "Thank you for rescuing\nthe Princess."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     }
   ],

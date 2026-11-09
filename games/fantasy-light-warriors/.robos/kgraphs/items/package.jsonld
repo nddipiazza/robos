@@ -1,0 +1,2882 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:items",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "items",
+  "robos:namespace": "jrpg.final-fantasy.items",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Weapons, Armor & Items",
+  "dcterms:description": "Equipment and items.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:adamant",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Adamant",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Adamantite",
+        "Adamantine"
+      ],
+      "jrpg:foundAt": "Flying Fortress",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:aegis-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Aegis Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Find: Mirage Tower",
+      "robos:defenseBonus": 16,
+      "robos:cost": 40000,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 20000,
+      "jrpg:effect": "Resists Poison/Stone",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:airship",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Airship",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Airship"
+      ],
+      "jrpg:foundAt": "Lykion Desert",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:bane-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Bane Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Venom Blade",
+        "Bane"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Find: Flying Fortress",
+      "robos:attackBonus": 22,
+      "robos:cost": 60000,
+      "jrpg:gameId": 37,
+      "jrpg:hitBonus": 20,
+      "jrpg:critRate": 37,
+      "jrpg:sellPrice": 30000,
+      "jrpg:effect": "Casts BANE",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:black-shirt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Black Shirt",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Black Robe"
+      ],
+      "jrpg:usableBy": [
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Flying Fortress 2F",
+      "robos:defenseBonus": 24,
+      "robos:cost": 2000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 2,
+      "jrpg:sellPrice": 1000,
+      "jrpg:effect": "Resists Ice, Time / Casts ICE2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:bottle",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Bottle",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Bottled Faerie"
+      ],
+      "jrpg:foundAt": "Desert Caravan",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:buckler",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Buckler",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Crescent Lake",
+      "robos:defenseBonus": 2,
+      "robos:cost": 2500,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 1250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:cabin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Cabin",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Tent",
+        "Bag"
+      ],
+      "jrpg:foundAt": "terra cavern, MT. GULG",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:canoe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Canoe",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Canoe"
+      ],
+      "jrpg:foundAt": "crescent lake",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:cap",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Cap",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Leather caps",
+        "Leather Cap"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Elfheim Find: Chaos Temple",
+      "robos:defenseBonus": 1,
+      "robos:cost": 80,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 40,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:catclaw",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "CatClaw",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Cat Claw",
+        "Cat's Claw",
+        "Cat Claws"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja",
+        "Red Wizard",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Gaia Weapon Shop",
+      "robos:attackBonus": 22,
+      "robos:cost": 65000,
+      "jrpg:gameId": 35,
+      "jrpg:hitBonus": 35,
+      "jrpg:critRate": 35,
+      "jrpg:sellPrice": 32500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:chain-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Chain Mail",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Chain armor"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Corneria",
+      "robos:defenseBonus": 15,
+      "robos:cost": 80,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 15,
+      "jrpg:sellPrice": 40,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:chime",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Chime",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Bell",
+        "Chime",
+        "Flute"
+      ],
+      "jrpg:foundAt": "Lufenia",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:cloth",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Cloth",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Shirt",
+        "Clothes"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Corneria",
+      "robos:defenseBonus": 1,
+      "robos:cost": 10,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 2,
+      "jrpg:sellPrice": 5,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:copper-bracelet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Copper Bracelet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Copper Armlet",
+        "Bracelet"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Elfheim Find: Marsh Cave",
+      "robos:defenseBonus": 4,
+      "robos:cost": 1000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:copper-gauntlet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Copper Gauntlet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Bronze Gloves"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Elven Castle",
+      "robos:defenseBonus": 2,
+      "robos:cost": 200,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:coral-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Coral Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Find: Terra Cave",
+      "robos:attackBonus": 19,
+      "robos:cost": 8000,
+      "jrpg:gameId": 25,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 25,
+      "jrpg:sellPrice": 4000,
+      "jrpg:effect": "Aquatic",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:crown",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Crown",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Crown"
+      ],
+      "jrpg:foundAt": "marsh cave",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:crystal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Crystal",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Crystal Eye",
+        "Crystal Lens",
+        "crystal",
+        "Orb"
+      ],
+      "jrpg:foundAt": "Western Keep",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:cube",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Cube",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Warp Cube",
+        "Cube"
+      ],
+      "jrpg:foundAt": "Waterfall Cave",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:defense",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Defense",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Defender",
+        "Defense sword"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Waterfall Cave",
+      "robos:attackBonus": 30,
+      "robos:cost": 40000,
+      "jrpg:gameId": 32,
+      "jrpg:hitBonus": 35,
+      "jrpg:critRate": 32,
+      "jrpg:sellPrice": 20000,
+      "jrpg:effect": "Casts RUSE",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:dragon-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Dragon Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Dragon Mail"
+      ],
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Tower of Mirage Floor 2",
+      "robos:defenseBonus": 42,
+      "robos:cost": 50000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 10,
+      "jrpg:sellPrice": 25000,
+      "jrpg:effect": "Resists Fire, Ice, Lightning",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:dragon-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Dragon Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Wyrmkiller",
+        "Wyrmblade"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Find: Mt. Duergar",
+      "robos:attackBonus": 19,
+      "robos:cost": 8000,
+      "jrpg:gameId": 22,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 22,
+      "jrpg:sellPrice": 4000,
+      "jrpg:effect": "Dragons",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:falchon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Falchon",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Falchion"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "astos castle",
+      "robos:attackBonus": 15,
+      "robos:cost": 450,
+      "jrpg:gameId": 15,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 15,
+      "jrpg:sellPrice": 225,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:flame-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Flame Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Flame Mail",
+        "Fire Armor"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Mt.Gulg",
+      "robos:defenseBonus": 34,
+      "robos:cost": 30000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 10,
+      "jrpg:sellPrice": 15000,
+      "jrpg:effect": "Resists Ice",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:flame-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Flame Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Mt. Gulg",
+      "robos:defenseBonus": 12,
+      "robos:cost": 10000,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 5000,
+      "jrpg:effect": "Resists Ice",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:flame-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Flame Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Fire sword"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Find: Ice Cavern",
+      "robos:attackBonus": 26,
+      "robos:cost": 10000,
+      "jrpg:gameId": 20,
+      "jrpg:hitBonus": 20,
+      "jrpg:critRate": 20,
+      "jrpg:sellPrice": 5000,
+      "jrpg:effect": "Fire / Undead, Regenerative",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:floater",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Floater",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Levistone"
+      ],
+      "jrpg:foundAt": "Ice Cavern",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:giant-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Giant Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Claymore"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Mt. Gulg Floor 2",
+      "robos:attackBonus": 21,
+      "robos:cost": 8000,
+      "jrpg:gameId": 23,
+      "jrpg:hitBonus": 20,
+      "jrpg:critRate": 23,
+      "jrpg:sellPrice": 4000,
+      "jrpg:effect": "Giants",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:gloves",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Gloves",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Leather Gloves"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Pravoka",
+      "robos:defenseBonus": 1,
+      "robos:cost": 60,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 30,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:gold-bracelet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Gold Bracelet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Ruby Armlet"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Gaia Find: Trials Citadel",
+      "robos:defenseBonus": 24,
+      "robos:cost": 50000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 25000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:great-axe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Great Axe",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Titan's Cave",
+      "robos:attackBonus": 22,
+      "robos:cost": 2000,
+      "jrpg:gameId": 14,
+      "jrpg:hitBonus": 5,
+      "jrpg:critRate": 14,
+      "jrpg:sellPrice": 1000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:hand-axe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Hand Axe",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Battle Axe"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "provoka",
+      "robos:attackBonus": 16,
+      "robos:cost": 550,
+      "jrpg:gameId": 7,
+      "jrpg:hitBonus": 5,
+      "jrpg:critRate": 7,
+      "jrpg:sellPrice": 275,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:heal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Heal",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Potion",
+        "Ether",
+        "Hi-Potion",
+        "Phoenix Down",
+        "Heal Potion",
+        "Potions",
+        "healing potions",
+        "Healing Potion"
+      ],
+      "jrpg:foundAt": "Cornelia, Pravoka, Elfheim, Crescent Lake, Gaia, Onlak",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:heal-helmet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Heal Helmet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Healing Helm",
+        "Healing Helmet"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Mirage Tower F1 / Flying Fortress F1",
+      "robos:defenseBonus": 6,
+      "robos:cost": 20000,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 10000,
+      "jrpg:effect": "Casts HEAL",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:heal-staff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Heal Staff",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Healing Staff"
+      ],
+      "jrpg:usableBy": [
+        "Ninja",
+        "White Mage",
+        "White Wizard"
+      ],
+      "jrpg:foundAt": "CITADEL",
+      "robos:attackBonus": 6,
+      "robos:cost": 10000,
+      "jrpg:gameId": 30,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 30,
+      "jrpg:sellPrice": 5000,
+      "jrpg:effect": "Casts HEAL",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:herb",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Herb",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Jolt Tonic",
+        "Special Herb"
+      ],
+      "jrpg:foundAt": "matoya's",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:hi-potion",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Hi-Potion",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Hi-Potions"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:house",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "House",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Cottage"
+      ],
+      "jrpg:foundAt": "Marsh Cave Floor 3",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:ice-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Ice Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Ice Cave",
+      "robos:defenseBonus": 34,
+      "robos:cost": 30000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 10,
+      "jrpg:sellPrice": 15000,
+      "jrpg:effect": "Resists Fire",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:ice-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Ice Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Ice Cavern",
+      "robos:defenseBonus": 12,
+      "robos:cost": 10000,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 5000,
+      "jrpg:effect": "Resists Fire",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:ice-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Ice Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Ice Brand",
+        "Ice sw."
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Mt. Gulg Floor 4",
+      "robos:attackBonus": 29,
+      "robos:cost": 15000,
+      "jrpg:gameId": 21,
+      "jrpg:hitBonus": 25,
+      "jrpg:critRate": 21,
+      "jrpg:sellPrice": 7500,
+      "jrpg:effect": "Ice",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Iron Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Buy: Pravoka, Elfheim Find: Marsh Cave, Cornelia Castle",
+      "robos:defenseBonus": 24,
+      "robos:cost": 800,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 23,
+      "jrpg:sellPrice": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-gauntlet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Iron Gauntlet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Steel Gloves"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Western Keep",
+      "robos:defenseBonus": 4,
+      "robos:cost": 750,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 5,
+      "jrpg:sellPrice": 375,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-hammer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Iron Hammer",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Hammer"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "White Mage",
+        "White Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Cornelia, Pravoka",
+      "robos:attackBonus": 9,
+      "robos:cost": 10,
+      "jrpg:gameId": 5,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 5,
+      "jrpg:sellPrice": 5,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-helmet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Iron Helmet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Grand Helm"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Mt. Duergar",
+      "robos:defenseBonus": 5,
+      "robos:cost": 450,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 5,
+      "jrpg:sellPrice": 225,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-nunchuck",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Iron Nunchuck",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Iron nunchucks",
+        "Iron Nunchaku",
+        "Iron nunchuks"
+      ],
+      "jrpg:usableBy": [
+        "Black Belt",
+        "Master",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Elfland",
+      "robos:attackBonus": 16,
+      "robos:cost": 200,
+      "jrpg:gameId": 9,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 9,
+      "jrpg:sellPrice": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Iron Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Buy: Pravoka, Elfheim",
+      "robos:defenseBonus": 4,
+      "robos:cost": 100,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 50,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:iron-staff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Iron Staff",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Crosier"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Black Belt",
+        "Master"
+      ],
+      "jrpg:foundAt": "Find: Cornelia Castle Buy: Elfheim, Melmond",
+      "robos:attackBonus": 14,
+      "robos:cost": 200,
+      "jrpg:gameId": 11,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 11,
+      "jrpg:sellPrice": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:katana",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Katana",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Sasuke",
+        "Katana Sword"
+      ],
+      "jrpg:usableBy": [
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Flying Fortress, Chaos Temple",
+      "robos:attackBonus": 33,
+      "robos:cost": 60000,
+      "jrpg:gameId": 38,
+      "jrpg:hitBonus": 35,
+      "jrpg:critRate": 38,
+      "jrpg:sellPrice": 30000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:key",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Key",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Mystic Key",
+        "mystic Key",
+        "mystic key",
+        "Key",
+        "magic key",
+        "Magic key",
+        "Magic Key"
+      ],
+      "jrpg:foundAt": "Elven Castle",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:large-dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Large Dagger",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Dagger",
+        "Large Knife"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "marsh cave",
+      "robos:attackBonus": 7,
+      "robos:cost": 175,
+      "jrpg:gameId": 10,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 10,
+      "jrpg:sellPrice": 87,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:light-axe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Light Axe",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Find: Sunken Shrine",
+      "robos:attackBonus": 28,
+      "robos:cost": 10000,
+      "jrpg:gameId": 29,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 29,
+      "jrpg:sellPrice": 5000,
+      "jrpg:effect": "Undead / Casts HRM2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:long-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Long Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Melmond",
+      "robos:attackBonus": 20,
+      "robos:cost": 1500,
+      "jrpg:gameId": 13,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 13,
+      "jrpg:sellPrice": 750,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:lute",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Lute",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Lute"
+      ],
+      "jrpg:foundAt": "Corneria",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:mage-staff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Mage Staff",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Spellbinder",
+        "Mage's Staff"
+      ],
+      "jrpg:usableBy": [
+        "Ninja",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Find: Sunken Shrine",
+      "robos:attackBonus": 12,
+      "robos:cost": 15000,
+      "jrpg:gameId": 31,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 31,
+      "jrpg:sellPrice": 7500,
+      "jrpg:effect": "Casts FIR2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:masmune",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Masmune",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Masamune"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Find: Chaos Temple",
+      "robos:attackBonus": 56,
+      "robos:cost": 60000,
+      "jrpg:gameId": 40,
+      "jrpg:hitBonus": 50,
+      "jrpg:critRate": 40,
+      "jrpg:sellPrice": 30000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:opal-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Opal Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Diamond Armor"
+      ],
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Sunken Shrine Floor 2 (4F)",
+      "robos:defenseBonus": 42,
+      "robos:cost": 50000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 10,
+      "jrpg:sellPrice": 25000,
+      "jrpg:effect": "Resists Lightning",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:opal-bracelet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Opal Bracelet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Diamond Armlet"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Find: Sunken Shrine",
+      "robos:defenseBonus": 34,
+      "robos:cost": 65000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 32500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:opal-gauntlet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Opal Gauntlet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Diamond Gloves",
+        "Opal Gauntlets"
+      ],
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Sunken Shrine Floor 3 (5F)",
+      "robos:defenseBonus": 8,
+      "robos:cost": 20000,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 10000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:opal-helmet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Opal Helmet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Diamond Helm"
+      ],
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Sunken Shrine Floor 3 (5F)",
+      "robos:defenseBonus": 8,
+      "robos:cost": 10000,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 5000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:opal-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Opal Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Diamond Shield"
+      ],
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Sunken Shrine Floor 3 (5F)",
+      "robos:defenseBonus": 16,
+      "robos:cost": 15000,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 7500,
+      "jrpg:effect": "Resists Lightning",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:oxyale",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Oxyale",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Oxyale"
+      ],
+      "jrpg:foundAt": "Gaia",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:phoenix-down",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Phoenix Down",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:power-gauntlet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Power Gauntlet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Giants Gloves",
+        "Power gloves"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Sunken Shrine Basement 1 (2F)",
+      "robos:defenseBonus": 6,
+      "robos:cost": 10000,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 5000,
+      "jrpg:effect": "Casts SABR (Bugged: Casts on self, fails)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:power-staff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Power Staff",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Find: Western Keep",
+      "robos:attackBonus": 12,
+      "robos:cost": 12345,
+      "jrpg:gameId": 28,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 28,
+      "jrpg:sellPrice": 6172,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:procape",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "ProCape",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Protect Cloak",
+        "Pro Cape"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Flying Fortress Floor 3",
+      "robos:defenseBonus": 8,
+      "robos:cost": 20000,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 2,
+      "jrpg:sellPrice": 10000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:proring",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "ProRing",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Protect Ring"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Gaia Armor Shop / Flying Fortress F1 / Flying Fortress F3",
+      "robos:defenseBonus": 8,
+      "robos:cost": 20000,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 10000,
+      "jrpg:effect": "Resists Instant Death",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:pure",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Pure",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Antidote",
+        "Antidotes",
+        "Pure",
+        "Pure Potion"
+      ],
+      "jrpg:foundAt": "Cavern of Earth",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:rapier",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Rapier",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Corneria",
+      "robos:attackBonus": 9,
+      "robos:cost": 10,
+      "jrpg:gameId": 4,
+      "jrpg:hitBonus": 5,
+      "jrpg:critRate": 4,
+      "jrpg:sellPrice": 5,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:ribbon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Ribbon",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Find: Sunken Shrine, Waterfall Cave, Flying Fortress",
+      "robos:defenseBonus": 1,
+      "robos:cost": 1,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 1,
+      "jrpg:effect": "Resists ALL Elements & Statuses",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:rod",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Rod",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Earth Rod"
+      ],
+      "jrpg:foundAt": "Sage's Cave",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:ruby",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Ruby",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Star Ruby"
+      ],
+      "jrpg:foundAt": "Terra Cave",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:rune-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Rune Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Rune Blade",
+        "Rune sw."
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Chaos Shrine",
+      "robos:attackBonus": 18,
+      "robos:cost": 5000,
+      "jrpg:gameId": 27,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 27,
+      "jrpg:sellPrice": 2500,
+      "jrpg:effect": "Magical creatures",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:sabre",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Sabre",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Saber"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Elfland",
+      "robos:attackBonus": 13,
+      "robos:cost": 450,
+      "jrpg:gameId": 12,
+      "jrpg:hitBonus": 5,
+      "jrpg:critRate": 12,
+      "jrpg:sellPrice": 225,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:scimitar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Scimitar",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "provoka",
+      "robos:attackBonus": 10,
+      "robos:cost": 200,
+      "jrpg:gameId": 8,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 8,
+      "jrpg:sellPrice": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:ship",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Ship",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Ship"
+      ],
+      "jrpg:foundAt": "Pravoka",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:short-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Short Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Broadsword"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Marsh Cave Floor 2",
+      "robos:attackBonus": 15,
+      "robos:cost": 550,
+      "jrpg:gameId": 6,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 6,
+      "jrpg:sellPrice": 275,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Silver Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Mythril Mail"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Crescent Lake Find: Mt.Gulg",
+      "robos:defenseBonus": 18,
+      "robos:cost": 7500,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 8,
+      "jrpg:sellPrice": 3750,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-axe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Silver Axe",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "MT. GULG",
+      "robos:attackBonus": 25,
+      "robos:cost": 4500,
+      "jrpg:gameId": 19,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 19,
+      "jrpg:sellPrice": 2250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-bracelet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Silver Bracelet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Silver Armlet"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Marsh Cave",
+      "robos:defenseBonus": 15,
+      "robos:cost": 5000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 1,
+      "jrpg:sellPrice": 2500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Silver Dagger",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Mythril Knife",
+        "Silver Knife"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "corneria castle, marsh cave",
+      "robos:attackBonus": 10,
+      "robos:cost": 800,
+      "jrpg:gameId": 16,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 16,
+      "jrpg:sellPrice": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-gauntlet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Silver Gauntlet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Mythril Gloves"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "MT. GULG",
+      "robos:defenseBonus": 6,
+      "robos:cost": 2500,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 1250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-hammer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Silver Hammer",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Mythril Hammer"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "White Mage",
+        "White Wizard"
+      ],
+      "jrpg:foundAt": "Elven Castle",
+      "robos:attackBonus": 12,
+      "robos:cost": 2500,
+      "jrpg:gameId": 18,
+      "jrpg:hitBonus": 5,
+      "jrpg:critRate": 18,
+      "jrpg:sellPrice": 1250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-helmet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Silver Helmet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Mythril Helmet",
+        "Mythril Helm"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "MT. GULG",
+      "robos:defenseBonus": 6,
+      "robos:cost": 2500,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 1250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Silver Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Mythril Shield"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "terra cavern, MT. GULG",
+      "robos:defenseBonus": 8,
+      "robos:cost": 2500,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 1250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:silver-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Silver Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Mythril Sword"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "3: Elfheim",
+      "robos:attackBonus": 23,
+      "robos:cost": 4000,
+      "jrpg:gameId": 17,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 17,
+      "jrpg:sellPrice": 2000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:slab",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Slab",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Rosetta Stone",
+        "stone tablet",
+        "stone plate",
+        "Stone"
+      ],
+      "jrpg:foundAt": "Sunken Shrine",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:small-dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Small Dagger",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Knife",
+        "Small Knife"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Cornelia",
+      "robos:attackBonus": 5,
+      "robos:cost": 5,
+      "jrpg:gameId": 2,
+      "jrpg:hitBonus": 10,
+      "jrpg:critRate": 2,
+      "jrpg:sellPrice": 2,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:soft",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Soft",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Gold Needle",
+        "Golden Needle",
+        "Gold Needles",
+        "Soft potions",
+        "Golden Needles",
+        "Soft Potion"
+      ],
+      "jrpg:foundAt": "Flying Fortress F3",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:steel-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Steel Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Steel Plate",
+        "Knight's Armor"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight"
+      ],
+      "jrpg:foundAt": "provoka",
+      "robos:defenseBonus": 34,
+      "robos:cost": 45000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 33,
+      "jrpg:sellPrice": 22500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:sun-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Sun Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Sunblade"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Tower of Mirage Floor 2",
+      "robos:attackBonus": 32,
+      "robos:cost": 20000,
+      "jrpg:gameId": 24,
+      "jrpg:hitBonus": 30,
+      "jrpg:critRate": 24,
+      "jrpg:sellPrice": 10000,
+      "jrpg:effect": "Undead",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:tail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Tail",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Rat's Tail"
+      ],
+      "jrpg:foundAt": "Citadel of Trials",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:tent",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Consumable"
+      ],
+      "dcterms:title": "Tent",
+      "robos:package": "items",
+      "robos:itemCategory": "consumable",
+      "jrpg:altName": [
+        "Sleeping Bag",
+        "Sleeping bag"
+      ],
+      "jrpg:foundAt": "temple of fiends, terra cavern, DRAGON CAVES",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:thor-hammer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Thor Hammer",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Thor's Hammer"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja",
+        "White Wizard"
+      ],
+      "jrpg:foundAt": "Mirage Tower 2F",
+      "robos:attackBonus": 18,
+      "robos:cost": 40000,
+      "jrpg:gameId": 36,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 36,
+      "jrpg:sellPrice": 20000,
+      "jrpg:effect": "Casts LIT2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:tnt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:KeyItem"
+      ],
+      "dcterms:title": "Tnt",
+      "robos:package": "items",
+      "robos:itemCategory": "key-item",
+      "jrpg:altName": [
+        "Nitro Powder"
+      ],
+      "jrpg:foundAt": "Cornelia Castle",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:vorpal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Vorpal",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Vorpal Sword"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Mirage Tower F1",
+      "robos:attackBonus": 24,
+      "robos:cost": 30000,
+      "jrpg:gameId": 34,
+      "jrpg:hitBonus": 25,
+      "jrpg:critRate": 34,
+      "jrpg:sellPrice": 15000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:were-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Were Sword",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Werebane",
+        "Werebuster"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Find: Chaos Temple",
+      "robos:attackBonus": 18,
+      "robos:cost": 5000,
+      "jrpg:gameId": 26,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 26,
+      "jrpg:sellPrice": 2500,
+      "jrpg:effect": "Were-creatures",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:white-shirt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "White Shirt",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "White Robe"
+      ],
+      "jrpg:usableBy": [
+        "White Wizard"
+      ],
+      "jrpg:foundAt": "Flying Fortress 2F",
+      "robos:defenseBonus": 24,
+      "robos:cost": 2000,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 2,
+      "jrpg:sellPrice": 1000,
+      "jrpg:effect": "Resists Fire, Death / Casts INV2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:wizard-staff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Wizard Staff",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Wizard's Staff"
+      ],
+      "jrpg:usableBy": [
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Find: Waterfall Cave",
+      "robos:attackBonus": 15,
+      "robos:cost": 25000,
+      "jrpg:gameId": 33,
+      "jrpg:hitBonus": 15,
+      "jrpg:critRate": 33,
+      "jrpg:sellPrice": 12500,
+      "jrpg:effect": "Casts CONF",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:wooden-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Wooden Armor",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Leather armor"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Thief",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "Corneria",
+      "robos:defenseBonus": 4,
+      "robos:cost": 50,
+      "jrpg:slot": "armor",
+      "jrpg:evadePenalty": 8,
+      "jrpg:sellPrice": 25,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:wooden-helmet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Wooden Helmet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Helmet",
+        "Wood Helmet"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Elfland",
+      "robos:defenseBonus": 3,
+      "robos:cost": 100,
+      "jrpg:slot": "helmet",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 50,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:wooden-nunchuck",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Wooden Nunchuck",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Wooden Nunchucks",
+        "Nunchaku"
+      ],
+      "jrpg:usableBy": [
+        "Black Belt",
+        "Master",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "Corneria",
+      "robos:attackBonus": 12,
+      "robos:cost": 10,
+      "jrpg:gameId": 1,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 1,
+      "jrpg:sellPrice": 5,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:wooden-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Wooden Shield",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Leather Shield"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja"
+      ],
+      "jrpg:foundAt": "terra cavern",
+      "robos:defenseBonus": 2,
+      "robos:cost": 15,
+      "jrpg:slot": "shield",
+      "jrpg:evadePenalty": 0,
+      "jrpg:sellPrice": 7,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:wooden-staff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Wooden Staff",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Staff"
+      ],
+      "jrpg:usableBy": [
+        "Fighter",
+        "Knight",
+        "Ninja",
+        "Black Belt",
+        "Master",
+        "Red Mage",
+        "Red Wizard",
+        "White Mage",
+        "White Wizard",
+        "Black Mage",
+        "Black Wizard"
+      ],
+      "jrpg:foundAt": "Buy: Cornelia Find: several",
+      "robos:attackBonus": 6,
+      "robos:cost": 5,
+      "jrpg:gameId": 3,
+      "jrpg:hitBonus": 0,
+      "jrpg:critRate": 3,
+      "jrpg:sellPrice": 2,
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:xcalber",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Weapon"
+      ],
+      "dcterms:title": "Xcalber",
+      "robos:package": "items",
+      "robos:itemCategory": "weapon",
+      "jrpg:altName": [
+        "Excalibur",
+        "Xcalbur"
+      ],
+      "jrpg:usableBy": [
+        "Knight"
+      ],
+      "jrpg:foundAt": "Dwarf Cave",
+      "robos:attackBonus": 45,
+      "robos:cost": 60000,
+      "jrpg:gameId": 39,
+      "jrpg:hitBonus": 35,
+      "jrpg:critRate": 39,
+      "jrpg:sellPrice": 30000,
+      "jrpg:effect": "All Elements & Types",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:item:zeus-gauntlet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product",
+        "jrpg:Armor"
+      ],
+      "dcterms:title": "Zeus Gauntlet",
+      "robos:package": "items",
+      "robos:itemCategory": "armor",
+      "jrpg:altName": [
+        "Gauntlets",
+        "Zeus Gauntlets"
+      ],
+      "jrpg:usableBy": [
+        "Knight",
+        "Ninja",
+        "Red Wizard"
+      ],
+      "jrpg:foundAt": "CITADEL",
+      "robos:defenseBonus": 6,
+      "robos:cost": 15000,
+      "jrpg:slot": "glove",
+      "jrpg:evadePenalty": 3,
+      "jrpg:sellPrice": 7500,
+      "jrpg:effect": "Casts LIT2",
+      "robos:namespace": "jrpg.fantasy-light-warriors.items"
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:audio",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "audio",
+  "robos:namespace": "jrpg.final-fantasy.audio",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Music",
+  "dcterms:description": "Music tracks and where they play.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:airship",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Airship",
+      "robos:package": "audio",
+      "jrpg:track": 12,
+      "jrpg:usedFor": "Flying the Airship",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:battle-scene",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Battle Scene",
+      "robos:package": "audio",
+      "jrpg:track": 16,
+      "jrpg:usedFor": "All Monster & Boss Encounters",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:chaos-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Chaos Shrine",
+      "robos:package": "audio",
+      "jrpg:track": 20,
+      "jrpg:usedFor": "Present-Day Temple of Fiends & Northwest Castle",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:cornelia-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Cornelia Castle",
+      "robos:package": "audio",
+      "jrpg:track": 3,
+      "jrpg:usedFor": "Castle Coneria & other Royal Castles",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:dead-music-game-over",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Dead Music (Game Over)",
+      "robos:package": "audio",
+      "jrpg:track": 18,
+      "jrpg:usedFor": "Party Wiped Out",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:dungeon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Dungeon",
+      "robos:package": "audio",
+      "jrpg:track": 10,
+      "jrpg:usedFor": "Marsh Cave, Earth Cave, Ice Cave",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:ending-theme",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Ending Theme",
+      "robos:package": "audio",
+      "jrpg:track": 21,
+      "jrpg:usedFor": "Epilogue & Credits Roll",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:floating-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Floating Castle",
+      "robos:package": "audio",
+      "jrpg:track": 14,
+      "jrpg:usedFor": "Mirage Tower & Sky Castle",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:gurgu-volcano",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Gurgu Volcano",
+      "robos:package": "audio",
+      "jrpg:track": 13,
+      "jrpg:usedFor": "Gurgu Volcano & Castle of Ordeals",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:main-theme-overworld",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Main Theme (Overworld)",
+      "robos:package": "audio",
+      "jrpg:track": 4,
+      "jrpg:usedFor": "World Map Exploration",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Matoya's Cave",
+      "robos:package": "audio",
+      "jrpg:track": 5,
+      "jrpg:usedFor": "Matoya's Cave, Dwarf Cave, Sarda's Cave",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:menu-screen",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Menu Screen",
+      "robos:package": "audio",
+      "jrpg:track": 11,
+      "jrpg:usedFor": "Status and Inventory Screen",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:opening-theme-fantasy-light-warriors-theme",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Opening Theme (Light Warriors Theme)",
+      "robos:package": "audio",
+      "jrpg:track": 2,
+      "jrpg:usedFor": "Crossing the Bridge of Coneria",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:prelude-the-crystal-theme",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Prelude (The Crystal Theme)",
+      "robos:package": "audio",
+      "jrpg:track": 1,
+      "jrpg:usedFor": "Title Screen",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:save-music-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Save Music (Inn)",
+      "robos:package": "audio",
+      "jrpg:track": 19,
+      "jrpg:usedFor": "Sleeping at an Inn / Using Tent, Cabin, House",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:ship",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Ship",
+      "robos:package": "audio",
+      "jrpg:track": 8,
+      "jrpg:usedFor": "Sailing the Ocean",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:shop",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Shop",
+      "robos:package": "audio",
+      "jrpg:track": 7,
+      "jrpg:usedFor": "Weapon, Armor, Item, and Magic Shops",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:temple-of-chaos-temple-of-fiends",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Temple of Chaos (Temple of Fiends)",
+      "robos:package": "audio",
+      "jrpg:track": 15,
+      "jrpg:usedFor": "Temple of Fiends Revisited (2000 Years Ago)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:town",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Town",
+      "robos:package": "audio",
+      "jrpg:track": 6,
+      "jrpg:usedFor": "All Towns and Villages",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:undersea-shrine-sunken-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Undersea Shrine (Sunken Shrine)",
+      "robos:package": "audio",
+      "jrpg:track": 9,
+      "jrpg:usedFor": "Sea Shrine",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:music:victory",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MusicTrack",
+        "schema:MusicRecording"
+      ],
+      "dcterms:title": "Victory",
+      "robos:package": "audio",
+      "jrpg:track": 17,
+      "jrpg:usedFor": "Post-Battle Victory Fanfare",
+      "robos:namespace": "jrpg.fantasy-light-warriors.audio"
+    }
+  ]
+}

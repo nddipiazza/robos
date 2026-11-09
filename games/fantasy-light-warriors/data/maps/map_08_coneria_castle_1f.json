@@ -131,69 +131,39 @@
   "chests": [
     {
       "chestId": 1,
-      "hexId": "0x01",
-      "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "x": 11,
       "y": 11,
-      "itemId": 71,
-      "contents": "Iron Armor",
-      "mapHasMysticKeyDoors": true
+      "contents": "Iron Armor"
     },
     {
       "chestId": 2,
-      "hexId": "0x02",
-      "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "x": 12,
       "y": 11,
-      "itemId": 85,
-      "contents": "Iron Shield",
-      "mapHasMysticKeyDoors": true
+      "contents": "Iron Shield"
     },
     {
       "chestId": 3,
-      "hexId": "0x03",
-      "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "x": 13,
       "y": 11,
-      "itemId": 6,
-      "contents": "TNT",
-      "mapHasMysticKeyDoors": true
+      "contents": "TNT"
     },
     {
       "chestId": 4,
-      "hexId": "0x04",
-      "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "x": 16,
       "y": 11,
-      "itemId": 38,
-      "contents": "Iron Staff",
-      "mapHasMysticKeyDoors": true
+      "contents": "Iron Staff"
     },
     {
       "chestId": 5,
-      "hexId": "0x05",
-      "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "x": 17,
       "y": 11,
-      "itemId": 39,
-      "contents": "Sabre",
-      "mapHasMysticKeyDoors": true
+      "contents": "Sabre"
     },
     {
       "chestId": 6,
-      "hexId": "0x06",
-      "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "x": 18,
       "y": 11,
-      "itemId": 43,
-      "contents": "Silver Dagger",
-      "mapHasMysticKeyDoors": true
+      "contents": "Silver Dagger"
     }
   ],
   "teleports": [
@@ -19780,212 +19750,122 @@
   "npcs": [
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 0,
       "objectId": 32,
-      "hexObjectId": "0x20",
       "x": 14,
       "y": 28,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        18,
-        49,
-        50,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?",
-        "dialogue_2": "Yes Sir!!\nI belong to the Honor\nGuard of Castle Coneria."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 1,
       "objectId": 32,
-      "hexObjectId": "0x20",
       "x": 10,
       "y": 18,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        18,
-        49,
-        50,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?",
-        "dialogue_2": "Yes Sir!!\nI belong to the Honor\nGuard of Castle Coneria."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 2,
       "objectId": 34,
-      "hexObjectId": "0x22",
       "x": 2,
       "y": 10,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        18,
-        51,
-        52,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Please!\nSave the Princess!",
-        "dialogue_2": "Thank you for rescuing\nthe Princess."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 3,
       "objectId": 35,
-      "hexObjectId": "0x23",
       "x": 8,
       "y": 11,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        1,
-        53,
-        54,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Legend says that the\nLUTE can break the evil\ngate.",
-        "dialogue_2": "Garland used to be a\ngood knight until.."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 4,
       "objectId": 37,
-      "hexObjectId": "0x25",
       "x": 7,
       "y": 28,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        18,
-        55,
-        52,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "In sadness, the Queen\nlocked herself inside.",
-        "dialogue_2": "Thank you for rescuing\nthe Princess."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 5,
       "objectId": 38,
-      "hexObjectId": "0x26",
       "x": 7,
       "y": 15,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        0,
-        56,
-        57,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The Princess was\nlooking for you!",
-        "dialogue_2": "So, you are the\nLIGHT WARRIORS?"
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 6,
       "objectId": 41,
-      "hexObjectId": "0x29",
       "x": 6,
       "y": 24,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        18,
-        59,
-        60,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "I am Jane, Queen of\nConeria. Please save my\ndaughter, Princess Sara.",
-        "dialogue_2": "Thank you for saving\nPrincess Sara."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 7,
       "objectId": 42,
-      "hexObjectId": "0x2A",
       "x": 17,
       "y": 23,
       "inRoom": true,
       "standStill": false,
-      "talkParams": [
-        18,
-        61,
-        62,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Oh.. My sister..",
-        "dialogue_2": "My sister is back safe!\nThank you."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 8,
       "objectId": 44,
-      "hexObjectId": "0x2C",
       "x": 22,
       "y": 9,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        5,
-        64,
-        65,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Use that KEY. Inside\nwhat you find will be\nquite helpful.",
-        "dialogue_2": "400 years ago the\nTreasury was locked by\nthe mystic KEY. Our\nancestors gave the KEY\nto the Prince of ElfLand\nfor safekeeping."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 8,
-      "mapName": "Coneria Castle 1F",
       "slot": 9,
       "objectId": 46,
-      "hexObjectId": "0x2E",
       "x": 14,
       "y": 15,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        5,
-        66,
-        65,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "This treasure room is\nlocked with the mystical\nKEY.",
-        "dialogue_2": "400 years ago the\nTreasury was locked by\nthe mystic KEY. Our\nancestors gave the KEY\nto the Prince of ElfLand\nfor safekeeping."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     }
   ],

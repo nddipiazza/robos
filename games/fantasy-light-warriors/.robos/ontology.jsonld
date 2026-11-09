@@ -1,0 +1,350 @@
+{
+  "@context": {
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:ontology:jrpg",
+  "dcterms:title": "RobOS JRPG remake ontology",
+  "robos:classes": [
+    {
+      "@id": "jrpg:Thing",
+      "@type": "rdfs:Class",
+      "rdfs:label": "JRPG Thing",
+      "rdfs:comment": "Anything recorded about a JRPG remake."
+    },
+    {
+      "@id": "jrpg:Game",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Game",
+      "rdfs:comment": "The game being remade.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Source",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Source File",
+      "rdfs:comment": "A file a person collected and gave to the parser.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Asset",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Asset",
+      "rdfs:comment": "A visual asset of the remake.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:GeneratedImage",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Generated Image",
+      "rdfs:comment": "An image a model generated from the source files or from text.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Asset"
+      }
+    },
+    {
+      "@id": "jrpg:Map",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Map",
+      "rdfs:comment": "A map image of a play area.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:GeneratedImage"
+      }
+    },
+    {
+      "@id": "jrpg:WorldMap",
+      "@type": "rdfs:Class",
+      "rdfs:label": "World Map",
+      "rdfs:comment": "The overworld map.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Map"
+      }
+    },
+    {
+      "@id": "jrpg:AreaMap",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Area Map",
+      "rdfs:comment": "A town, castle or dungeon map.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Map"
+      }
+    },
+    {
+      "@id": "jrpg:BattleBackdrop",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Battle Backdrop",
+      "rdfs:comment": "The scenery strip behind a battle.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:GeneratedImage"
+      }
+    },
+    {
+      "@id": "jrpg:Sprite",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Sprite",
+      "rdfs:comment": "A character or enemy sprite.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:GeneratedImage"
+      }
+    },
+    {
+      "@id": "jrpg:MenuArt",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Menu Art",
+      "rdfs:comment": "A rendered menu screen.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:GeneratedImage"
+      }
+    },
+    {
+      "@id": "jrpg:MenuScreen",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Menu Screen",
+      "rdfs:comment": "A menu layout: its windows and what each holds.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Place",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Place",
+      "rdfs:comment": "A place in the game world.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Town",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Town",
+      "rdfs:comment": "A town or village.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Place"
+      }
+    },
+    {
+      "@id": "jrpg:Castle",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Castle",
+      "rdfs:comment": "A castle.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Place"
+      }
+    },
+    {
+      "@id": "jrpg:Dungeon",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Dungeon",
+      "rdfs:comment": "A cave, tower, shrine or other dungeon.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Place"
+      }
+    },
+    {
+      "@id": "jrpg:Region",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Region",
+      "rdfs:comment": "An overworld region or landmark.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Place"
+      }
+    },
+    {
+      "@id": "jrpg:Character",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Character",
+      "rdfs:comment": "Something with a sprite and stats.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:PlayableClass",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Playable Class",
+      "rdfs:comment": "A class the player controls.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Character"
+      }
+    },
+    {
+      "@id": "jrpg:Enemy",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Enemy",
+      "rdfs:comment": "A monster with stats and rewards.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Character"
+      }
+    },
+    {
+      "@id": "jrpg:Boss",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Boss",
+      "rdfs:comment": "A scripted boss fight.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Enemy"
+      }
+    },
+    {
+      "@id": "jrpg:Item",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Item",
+      "rdfs:comment": "Anything the party can carry.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Consumable",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Consumable",
+      "rdfs:comment": "An item used up when used.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Item"
+      }
+    },
+    {
+      "@id": "jrpg:KeyItem",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Key Item",
+      "rdfs:comment": "A story item that unlocks progress.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Item"
+      }
+    },
+    {
+      "@id": "jrpg:Equipment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Equipment",
+      "rdfs:comment": "Something a character can equip.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Item"
+      }
+    },
+    {
+      "@id": "jrpg:Weapon",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Weapon",
+      "rdfs:comment": "A weapon.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Equipment"
+      }
+    },
+    {
+      "@id": "jrpg:Armor",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Armor",
+      "rdfs:comment": "Armor, shields, helmets, gloves.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Equipment"
+      }
+    },
+    {
+      "@id": "jrpg:Spell",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Spell",
+      "rdfs:comment": "A spell: school, level, cost and effect.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:MusicTrack",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Music Track",
+      "rdfs:comment": "A music track and where it plays.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Shop",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Shop",
+      "rdfs:comment": "A shop or inn and what it sells.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Rule",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Rule",
+      "rdfs:comment": "A rule the game engine follows.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:Formula",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Formula",
+      "rdfs:comment": "A battle, magic or economy formula.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Rule"
+      }
+    },
+    {
+      "@id": "jrpg:StatDefinition",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Stat",
+      "rdfs:comment": "A statistic and what it does.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Rule"
+      }
+    },
+    {
+      "@id": "jrpg:StatusEffect",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Status Effect",
+      "rdfs:comment": "A status ailment or buff.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Rule"
+      }
+    },
+    {
+      "@id": "jrpg:Element",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Element",
+      "rdfs:comment": "An element for weaknesses and resistances.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Rule"
+      }
+    },
+    {
+      "@id": "jrpg:StoryMilestone",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Story Milestone",
+      "rdfs:comment": "A step of the main quest, in order.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:EncounterZone",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Encounter Zone",
+      "rdfs:comment": "An overworld or dungeon encounter slot table.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    },
+    {
+      "@id": "jrpg:TreasureChest",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Treasure Chest",
+      "rdfs:comment": "A treasure chest with coordinates and contents.",
+      "rdfs:subClassOf": {
+        "@id": "jrpg:Thing"
+      }
+    }
+  ]
+}
