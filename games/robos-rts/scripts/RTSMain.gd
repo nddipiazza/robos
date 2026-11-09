@@ -1027,11 +1027,13 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			_spawn_marker(wpos, "move")
 		else:
 			push_message("Choose a clear ground drop site.", "warn")
-	elif abil == "phase_barrier":
+	elif abil in ["phase_barrier", "lattice_burst"]:
 		if SimEngine.issue_command(tags, abil, wpos).ok:
 			pending_ability = ""
-		else:
+		elif abil == "phase_barrier":
 			push_message("Choose clear visible ground within the Warden's cast range.", "warn")
+		else:
+			push_message("Choose a visible point within the Warden's cast range.", "warn")
 	elif abil == "corrosive_miasma":
 		if SimEngine.issue_command(tags, abil, wpos).ok:
 			pending_ability = ""
@@ -1328,9 +1330,10 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 			var underground: bool = adef.id == "burrow"
 			if not selected_owned().any(func(unit): return SimEngine.burrow_block_reason(unit, underground).is_empty()):
 				return SimEngine.burrow_block_reason(pu, underground)
-		"phase_barrier":
-			if not selected_owned().any(func(unit): return SimEngine.phase_barrier_block_reason(unit).is_empty()):
-				return SimEngine.phase_barrier_block_reason(pu)
+		"phase_barrier", "lattice_burst":
+			var energy_cost := SimEngine.PHASE_BARRIER_COST if adef.id == "phase_barrier" else SimEngine.LATTICE_BURST_COST
+			if not selected_owned().any(func(unit): return SimEngine.warden_cast_block_reason(unit, energy_cost).is_empty()):
+				return SimEngine.warden_cast_block_reason(pu, energy_cost)
 		"surge":
 			if float(pu["hp"]) <= float(adef.hp_cost):
 				return "Not enough health."
@@ -1793,6 +1796,7 @@ func ui_state() -> Dictionary:
 		"recall_markers": SimEngine.defensive_recall_markers_for(viewing_player()),
 		"area_warnings": _area_attack_warnings(),
 		"phase_barriers": SimEngine.visible_phase_barriers(viewing_player()),
+		"lattice_bursts": SimEngine.visible_lattice_bursts(viewing_player()),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"path_feedback": _selected_path_feedback().map(func(feedback): return {
 			"tag": feedback.tag, "status": feedback.status, "endpoint": [feedback.endpoint.x, feedback.endpoint.y]
@@ -1826,6 +1830,7 @@ func _draw() -> void:
 	for warning in _area_attack_warnings():
 		_draw_area_attack_warning(warning)
 	_draw_miasma_zones(font)
+	_draw_lattice_bursts(font)
 	_draw_power_overlay(font)
 	_draw_rally_and_orders()
 	_draw_building_memory(font)
@@ -1920,6 +1925,23 @@ func _draw_recall_markers(font: Font) -> void:
 		var label := "Recall %.1fs" % (marker.ticks * SimEngine.TICK_DT)
 		draw_rect(Rect2(center - Vector2(0, 15), Vector2(120, 21)), Color(0.04, 0.08, 0.07, 0.9))
 		draw_string(font, center, label, HORIZONTAL_ALIGNMENT_CENTER, 120, 16, color)
+
+func _draw_lattice_bursts(font: Font) -> void:
+	for zone in SimEngine.visible_lattice_bursts(viewing_player()):
+		var position := Vector2(zone.x, zone.y)
+		var color := Color("#ffd095") if zone.warning else Color("#c59aff")
+		_draw_range_ring(position, zone.radius, color, 3.0)
+		_draw_range_ring(position, zone.radius * 0.87, Color(color, 0.48), 1.4)
+		var anchor := world_to_screen(position, 1.4) - Vector2(98, 4)
+		var label := "%s %.1fs" % ["Lattice Burst incoming" if zone.warning else "Lattice Burst", zone.ticks * SimEngine.TICK_DT]
+		draw_string_outline(font, anchor, label, HORIZONTAL_ALIGNMENT_CENTER, 196.0, 15, 4, Color.BLACK)
+		draw_string(font, anchor, label, HORIZONTAL_ALIGNMENT_CENTER, 196.0, 15, color)
+	if pending_ability == "lattice_burst" and hover_pos().y < HUD_TOP:
+		var color := Color("#ffd095")
+		for caster in selected_owned():
+			if SimEngine.warden_cast_block_reason(caster, SimEngine.LATTICE_BURST_COST).is_empty():
+				_draw_range_ring(caster.pos, SimEngine.LATTICE_BURST_RANGE, Color(color, 0.38))
+		_draw_range_ring(screen_to_world(hover_pos()), SimEngine.LATTICE_BURST_RADIUS, Color(color, 0.78), 2.0)
 
 func _draw_range_ring(position: Vector2, radius: float, color: Color, width: float = 1.5) -> void:
 	var outline := PackedVector2Array()

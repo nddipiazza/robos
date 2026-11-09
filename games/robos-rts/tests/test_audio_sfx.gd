@@ -30,7 +30,7 @@ func _run() -> void:
 
 func _test_all_wav_files_loaded() -> void:
 	assert(audio != null, "RTSAudio autoload must be registered")
-	assert(audio.SOUND_FILES.size() >= 45, "Expected at least 45 sound files in catalog")
+	assert(audio.SOUND_FILES.size() >= 46, "Expected at least 46 sound files in catalog")
 	for key in audio.SOUND_FILES.keys():
 		var path: String = str(audio.SOUND_FILES[key])
 		assert(FileAccess.file_exists(path), "Missing WAV file on disk: %s" % path)
@@ -294,6 +294,11 @@ func _test_concord_support_cues() -> void:
 	assert(sim.issue_command([warden.tag], "phase_barrier", Vector2(49, 26)).ok)
 	assert(audio.sfx_counts.get("phase_barrier", 0) == 1)
 	assert(audio.dialogue_counts.get("aegis_warden:support", 0) == 1)
+	var second_warden: Dictionary = sim.spawn_unit("aegis_warden", 1, Vector2(54, 26))
+	sim.step_ticks(25 * 64)
+	assert(sim.issue_command([second_warden.tag], "lattice_burst", Vector2(62, 26)).ok)
+	assert(audio.sfx_counts.get("lattice_burst", 0) == 1)
+	assert(audio.dialogue_counts.get("aegis_warden:support", 0) == 1, "Burst uses its own cast sound")
 
 func _test_brood_support_cues() -> void:
 	sim.load_scenario_dict({"paused": true, "victory": "all_structures"})

@@ -1034,6 +1034,10 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_colored_polygon(P.call([[-17, -10], [0, -17], [17, -10], [17, 10], [0, 17], [-17, 10]]), Color("#315979"))
 			draw_polyline(P.call([[-17, -10], [0, -17], [17, -10], [17, 10], [0, 17], [-17, 10], [-17, -10]]), Color("#78dfff"), 2.7 * u, true)
 			draw_line(c - Vector2(12, 0) * u, c + Vector2(12, 0) * u, col, 2.6 * u, true)
+		"lattice_burst":
+			draw_circle(c, 17.0 * u, Color("#392953"))
+			draw_arc(c, 17.0 * u, 0.0, TAU, 32, Color("#c59aff"), 2.2 * u, true)
+			draw_polyline(P.call([[5, -12], [-6, 0], [3, 0], [-5, 12]]), Color("#ffd095"), 2.8 * u, true)
 		"research_weapons", "upgrade_hub":
 			draw_polyline(P.call([[-19, 12], [-7, 0], [0, 7], [20, -13]]), C_GOLD, 4.0 * u, true)
 			draw_polyline(P.call([[10, -13], [20, -13], [20, -3]]), C_GOLD, 4.0 * u, true)
