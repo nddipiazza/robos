@@ -67,6 +67,8 @@ def before_all(context) -> None:
     cmd = [godot_bin, "--path", str(PROJECT_DIR)]
     if context.rts_mode == "backend" or context.live_headless:
         cmd.insert(1, "--headless")
+    if os.environ.get("RTS_TEST_TITLE") != "1":
+        cmd.extend(["--", "--skip-title"])
 
     startupinfo = None
     if os.name == "nt" and os.environ.get("RTS_SHOW_WINDOW") != "1":

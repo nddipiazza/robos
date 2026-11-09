@@ -28,6 +28,12 @@ The game takes its conventions from the RTS genre in general: base building, a w
 
 ## Run it
 
+Starfall Command opens on a title screen. Choose **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains the sound and overhead health-bar controls. Use the mouse or navigate with the arrow keys and **Enter**. **Esc** returns from a setup page.
+
+During a battle, **F8 → Main menu** pauses the match. **Resume Match** restores the battlefield, camera, and control groups. The editor also has a **Main Menu** button and keeps its current draft while the game is open.
+
+Use `-- --skip-title` to open the default battlefield directly or `-- --scenario=<slug>` to launch a scenario.
+
 You need Godot 4.3 (`GODOT_BIN`, `godot4` or `godot` on your `PATH`).
 
 ```bash

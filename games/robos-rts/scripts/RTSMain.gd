@@ -6,6 +6,7 @@ extends Node2D
 const RTSWorld3DScript = preload("res://scripts/RTSWorld3D.gd")
 const RTSIconsScript = preload("res://scripts/RTSIcons.gd")
 const RTSHudScript = preload("res://scripts/RTSHud.gd")
+const GameInput = preload("res://scripts/RTSGameInput.gd")
 
 # Screen layout (1920x1080 virtual canvas)
 const HUD_TOP := 844.0
@@ -87,6 +88,31 @@ func _ready() -> void:
 	match_menu.health_mode_changed.connect(func(mode): health_bar_mode = mode)
 	health_bar_mode = match_menu.health_bars.selected
 	_on_scenario_loaded(SimEngine.scenario_name)
+	_restore_title_view()
+
+func save_title_view() -> void:
+	SimEngine.title_battle_view = {
+		"local_player": local_player,
+		"selected": selected_tags.duplicate(),
+		"active_type": active_type,
+		"groups": control_groups.duplicate(true),
+		"bookmarks": _camera_bookmarks.duplicate(true),
+		"focus": world_3d.get_focus(),
+		"height": world_3d.cam_height,
+	}
+
+func _restore_title_view() -> void:
+	var saved := SimEngine.title_battle_view
+	if saved.is_empty():
+		return
+	_set_local_player(saved.local_player)
+	selected_tags.assign(saved.selected)
+	active_type = saved.active_type
+	control_groups = saved.groups
+	_camera_bookmarks = saved.bookmarks
+	_focus_camera(saved.focus, saved.height)
+	_prune_control_groups()
+	SimEngine.title_battle_view = {}
 
 func _on_scenario_loaded(_name: String) -> void:
 	if match_menu:
@@ -1295,44 +1321,13 @@ func ui_state() -> Dictionary:
 
 # Synthetic input for scripted demos and UI tests: goes through the same handlers as real input.
 func inject_input(d: Dictionary) -> void:
-	var kind := str(d.get("type", ""))
-	var pos := Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
-	if kind == "mouse_button":
-		var mb := InputEventMouseButton.new()
-		mb.position = pos
-		mb.global_position = pos
-		mb.button_index = int(d.get("button", MOUSE_BUTTON_LEFT))
-		mb.pressed = bool(d.get("pressed", true))
-		mb.double_click = bool(d.get("double", false))
-		mb.shift_pressed = bool(d.get("shift", false))
-		mb.ctrl_pressed = bool(d.get("ctrl", false))
-		mb.meta_pressed = bool(d.get("meta", false))
-		mb.alt_pressed = bool(d.get("alt", false))
-		if DisplayServer.get_name() == "headless":
-			_unhandled_input(mb)
-		else:
-			get_viewport().push_input(mb)
-	elif kind == "mouse_motion":
-		var mm := InputEventMouseMotion.new()
-		mm.position = pos
-		mm.global_position = pos
-		mm.relative = Vector2(float(d.get("dx", 0.0)), float(d.get("dy", 0.0)))
-		if DisplayServer.get_name() == "headless":
-			_unhandled_input(mm)
-		else:
-			get_viewport().push_input(mm)
-	elif kind == "key":
-		var ke := InputEventKey.new()
-		ke.keycode = OS.find_keycode_from_string(str(d.get("key", "")))
-		ke.pressed = bool(d.get("pressed", true))
-		ke.shift_pressed = bool(d.get("shift", false))
-		ke.ctrl_pressed = bool(d.get("ctrl", false))
-		ke.meta_pressed = bool(d.get("meta", false))
-		ke.alt_pressed = bool(d.get("alt", false))
-		if DisplayServer.get_name() == "headless":
-			_unhandled_input(ke)
-		else:
-			get_viewport().push_input(ke)
+	var event := GameInput.from_request(d)
+	if not event:
+		return
+	if DisplayServer.get_name() == "headless":
+		_unhandled_input(event)
+	else:
+		get_viewport().push_input(event)
 
 # ---------------------------------------------------------------------------
 # In-world 2D overlays (unit bars, orders, markers, build ghost, selection box)
