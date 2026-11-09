@@ -1621,8 +1621,15 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				order["patrol_origin"] = u.pos
 			if u.has("skirmish_route"):
 				u.skirmish_route.erase("blocked_pursuit")
-			var enemy = _find_best_attack_target(u, bool(order.get("stay_on_route", false)))
+			var range_only := bool(order.get("stay_on_route", false))
+			var pursuit_origins: Dictionary = order.get("_pursuit_origins", {})
+			var enemy := _find_best_attack_target(u, range_only, pursuit_origins)
 			if not enemy.is_empty():
+				if otype == "attack_move" and not range_only and not enemy.is_structure and not pursuit_origins.has(enemy.tag):
+					# Preserve the acquisition point so a retreating target cannot
+					# extend the chase just by staying within the moving scan radius.
+					pursuit_origins[enemy.tag] = u.pos
+					order["_pursuit_origins"] = pursuit_origins
 				var wpn_range = _get_weapon_range(u)
 				if _edge_distance(u, enemy) <= wpn_range:
 					_begin_attack_on(u, enemy)
@@ -2623,7 +2630,7 @@ func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
 func _weapon_can_hit(weapon: Dictionary, target: Dictionary) -> bool:
 	return not weapon.is_empty() and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
 
-func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
+func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: Dictionary = {}) -> Dictionary:
 	if u.get("hold_fire", false):
 		return {}
 	var def = RTSData.get_unit_def(u["unit_type"])
@@ -2632,10 +2639,10 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 		return {}
 	var wpn_range = float(wpn.get("range", 5.0))
 	var min_range = float(wpn.get("min_range", 0.0))
-	var scan_rad = wpn_range if range_only else max(wpn_range, float(u["sight_range"]))
+	var scan_radius: float = (wpn_range if range_only else maxf(wpn_range, float(u["sight_range"]))) + 2.5
 	var preferences: Dictionary = wpn.get("target_priority", {})
 
-	var candidates = query_units_in_radius(u["pos"], scan_rad + 2.5, u["owner"])
+	var candidates = query_units_in_radius(u["pos"], scan_radius, u["owner"])
 	var best: Dictionary = {}
 	var best_score: float = -999999.0
 
@@ -2649,6 +2656,11 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 			continue
 		if range_only and d_edge > wpn_range:
 			continue
+		if d_edge > wpn_range and pursuit_origins.has(c.tag):
+			var origin: Vector2 = pursuit_origins[c.tag]
+			var limit := scan_radius + float(c.radius)
+			if maxf(origin.distance_squared_to(c.pos), origin.distance_squared_to(u.pos)) > limit * limit:
+				continue
 
 		var prio = 200.0
 		if c["is_structure"]:
@@ -3503,6 +3515,7 @@ func _observed_orders(orders: Array) -> Array:
 		order.erase("_formation")
 		order.erase("_formation_anchor")
 		order.erase("_reachable_request")
+		order.erase("_pursuit_origins")
 	return observed
 
 func get_observation(perspective_player: int = 0) -> Dictionary:
