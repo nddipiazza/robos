@@ -286,6 +286,62 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     }
     assert.ok(ansPositions.size >= 3, 'Correct answers must be distributed across multiple option indices rather than always index 0');
   });
+
+  it('7. Publishes how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2 to site/elearning/{course-id}', () => {
+    const courseSlug = 'how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2';
+    const result = store.generateELearningWebsite({
+      courseId: `urn:robos:elearning:course:${courseSlug}`,
+    });
+
+    assert.strictEqual(result.ok, true, 'Result ok must be true');
+    assert.strictEqual(result.siteUrl, `https://rowbose.com/elearning/${courseSlug}`);
+    assert.ok(result.siteFilePath && fs.existsSync(result.siteFilePath), 'Front-site index.html must exist on disk');
+
+    const siteHtml = fs.readFileSync(result.siteFilePath, 'utf8');
+    assert.ok(siteHtml.includes(`permalink: /elearning/${courseSlug}/`), 'Front-site permalink must match /elearning/<course-id>/');
+    assert.ok(siteHtml.includes('harvest_jrpg_assets.py'), 'Must show the harvester running');
+    assert.ok(siteHtml.includes('build_ff1_resources.py'), 'Must show the 6502 resource extractor');
+    assert.ok(siteHtml.includes('04_shops_and_inn.feature'), 'Must show isolated shop and inn Cucumber tests');
+    assert.ok(siteHtml.includes('play_full_game.py'), 'Must show the stepped playthrough runner');
+    assert.ok(!siteHtml.includes('/home/ndipiazza'), 'Must not mention a personal home folder');
+    assert.ok(!/SCORM 2004 Verified|W3C SHACL Conforming/.test(siteHtml), 'Must not show decorative tags');
+    assert.ok(!/[\u{1F000}-\u{1FAFF}\u2B50\u23F1]/u.test(siteHtml), 'Must not use emoji');
+    assert.ok(siteHtml.includes('--accent: #f54e00'), 'Must use the RobOS site theme');
+    assert.ok(siteHtml.includes('lab-agent'), 'Must render the agent prompt cards');
+    assert.ok(!siteHtml.includes('/assets/elearning/jrpg-kgraph/labs/'), 'Must not use old ROM-decoded lab images');
+
+    const courseNode = store.getNode(`urn:robos:elearning:course:${courseSlug}`);
+    assert.ok(courseNode && Array.isArray(courseNode['robos:modules']), 'Course node must have robos:modules');
+    assert.strictEqual(courseNode['robos:modules'].length, 8, 'Must have 8 modules');
+
+    const ansPositions = new Set();
+    for (const mod of courseNode['robos:modules']) {
+      assert.ok(Array.isArray(mod.labDetails) && mod.labDetails.length === 3 && mod.labDetails.length === mod.labSteps.length, `${mod.id} must describe each of its 3 lab steps`);
+      for (const step of mod.labDetails) {
+        assert.ok(step.who, `Lab step must say who acts: ${step.title}`);
+        assert.ok(step.code, `Lab step must have a reproducible command: ${step.title}`);
+        assert.ok(step.explain && step.explain.length >= 40, `Lab step must explain the program it runs: ${step.title}`);
+        assert.ok(step.agentPrompt, `Lab step must offer an agent prompt: ${step.title}`);
+        assert.ok(step.title && step.title.length >= 10, `Lab step must have a descriptive title: ${step.title}`);
+        assert.ok(step.description && step.description.length >= 30, `Lab step must have a clear English description: ${step.title}`);
+        assert.ok(step.expected && step.expected.length >= 30, `Lab step must explain what to expect: ${step.title}`);
+        assert.ok(step.image && step.image.startsWith('/assets/elearning/jrpg-kgraph/part2/'), `Lab step must use a Part 2 clean-room screenshot: ${step.title}`);
+        assert.ok(fs.existsSync(path.join(__dirname, '../../../../site', step.image)), `Lab step screenshot must exist on disk: ${step.image}`);
+      }
+      assert.ok(Array.isArray(mod.quiz) && mod.quiz.length >= 3, `${mod.id} must have at least 3 knowledge check questions`);
+      for (const q of mod.quiz) {
+        assert.strictEqual(q.options.length, 4, `Question must have 4 options: ${q.question}`);
+        const ansIdx = q.options.indexOf(q.answer);
+        assert.ok(ansIdx >= 0, `Correct answer must be in options: ${q.question}`);
+        ansPositions.add(ansIdx);
+        for (const opt of q.options) {
+          assert.ok(opt.length >= 60, `Every distractor/option must be substantive (>=60 chars), got ${opt.length}: ${opt}`);
+        }
+        assert.ok(q.explanation && q.explanation.length >= 80, `Question must have a detailed explanation: ${q.question}`);
+      }
+    }
+    assert.ok(ansPositions.size >= 3, 'Correct answers must be distributed across multiple option indices');
+  });
 });
 
 

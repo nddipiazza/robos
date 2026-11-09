@@ -1,0 +1,167 @@
+---
+title: "JRPG KGraph Parser & Automated Playthrough, Part 2: Rebuilding Final Fantasy (1990 NES) from Coneria to Defeating Garland"
+nav_label: "JRPG KGraph Parser Part 2 (FF1)"
+date: 2026-11-09
+date_label: "Nov 9, 2026"
+tags:
+  - "Games"
+  - "Knowledge Graph"
+  - "Autonomous Agents"
+  - "eLearning"
+summary: "In Part 1 we introduced robos-jrpg-parser and the beginner bootcamp on Ember Quest and Quest: Warrior Dragon. In Part 2 we walk through our separate, full-scale build of the 1990 North American NES release of Final Fantasy: harvesting 82 reference files into a private folder, closing the 5 gameplay blockers from the 6502 disassembly (including the critical-hit index bug and indoor ceiling palette swap), building the 4-hero Godot 4.3 engine with 2-step NES shop interiors, passing 7 isolated headless Cucumber suites, and clearing all 12 Chapter 1 milestones to defeat Garland in the RobOS Game Playthrough viewer."
+description: "Part 2 of the JRPG KGraph series: how we parsed 1,206 nodes for the 1990 NES release of Final Fantasy, built the 4-hero Godot 4.3 runtime and 2-step shop interiors, passed 7 isolated Cucumber suites, and ran the 12-milestone stepped AI playthrough to defeat Garland."
+seo_title: "Rebuilding Final Fantasy (1990 NES) with KGraph & Automated Playthrough · Part 2 · RobOS"
+og_image: /assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png
+og_image_alt: "RobOS Game Playthrough desktop viewer showing all 12 completed Final Fantasy Chapter 1 milestones, the Garland boss victory screen, and Checkpoint #12 state"
+---
+<div class="blog-body">
+  <p>In <a href="{{ '/blog/jrpg-kgraph-parser-and-playthrough/' | relative_url }}">Part 1 of this series</a> (and the companion <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}">Part 1 eLearning course</a>), we introduced <code>packages/robos-jrpg-parser</code> on a compact practice game (<em>Ember Quest</em>) and a single-hero Godot 4 bootcamp (<em>Quest: Warrior Dragon</em>). In parallel, we ran the exact same pipeline against a much larger target in a separate private workspace: the <strong>1990 North American NES release of <em>Final Fantasy</em></strong>.</p>
+
+  <p>Today we are publishing <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}"><strong>Part 2 of the Interactive eLearning Course</strong> (<code>/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/</code>)</a> alongside this technical deep dive, walking through every engineering hurdle we hit taking the 4 Light Warriors from the title screen through Coneria's shops, Coneria Castle, and the Temple of Fiends to defeat Garland—and documenting exactly where the build left off at the North Bridge gateway to Chapter 2.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png' | relative_url }}" alt="RobOS Game Playthrough desktop viewer showing all 12 completed Final Fantasy Chapter 1 milestones, the Garland boss victory screen, and Checkpoint #12 state" loading="lazy" style="object-fit:contain;max-height:none">
+    <figcaption>The <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough --game-dir ~/Downloads/ff1/ff1-game</code>) after completing all 12 Chapter 1 milestones in 100.9 seconds with 0 deaths: Garland (106 HP) is defeated, Princess Sara is rescued, and the North Bridge is built.</figcaption>
+  </figure>
+
+  <h3>1. Harvesting 82 Mixed Reference Files &amp; Quarantining GBA/PS1 Remakes</h3>
+  <p>Scaling from a 12-file demo to a real 1990 cartridge begins with reusable acquisition. Rather than hardcoding URLs for one game, <code>packages/robos-jrpg-parser/tools/harvest_jrpg_assets.py</code> reads a saved VGMaps NES index page, matches all 27 <code>FinalFantasy-*.png</code> atlas sheets, queues 14 StrategyWiki guide pages, and writes both <code>~/Downloads/ff1/sources-manifest.json</code> and <code>~/Downloads/ff1/download-receipt.json</code> (recording SHA-256 hashes and PNG <code>IHDR</code> dimensions).</p>
+
+  <p>Inspecting <code>download-receipt.json</code> exposed two immediate physical facts:</p>
+  <ul>
+    <li><strong>Exact Overworld vs. Cropped Town Sheets:</strong> While <code>FinalFantasy-World(Unmarked).png</code> is <code>4096&times;4096</code> pixels (an exact <code>256&times;256</code> grid of <code>16&times;16</code> tiles), VGMaps town and dungeon PNGs such as <code>FinalFantasy-Coneria.png</code> (<code>987&times;544</code>) and <code>FinalFantasy-TempleOfFiends(Present).png</code> (<code>805&times;594</code>) are cropped reference sheets where human mappers trimmed repeating outer border trees and composited multiple floors onto one canvas.</li>
+    <li><strong>Remake &amp; Balance-Mod Contamination:</strong> Real community folders mix editions. Running <code>jrpg-parser.js scan ~/Downloads/ff1 --edition "NES (USA)"</code> classified 61 authentic NES files as usable, skipped 12 saved-page <code>_files/</code> directories, and quarantined 9 non-NES files—including GBA <em>Dawn of Souls</em> screenshots, PS1 <em>Origins</em> battle sheets, and a saved forum thread (<code>shop.html</code>, <em>"Let's Play Dawn of Souls FF1: Mod of Balance!"</em>) whose rebalanced 50 G spell prices would otherwise overwrite the 100 G 1990 NES magic tables.</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m1-s2-harvest-receipt.png' | relative_url }}" alt="Terminal output inspecting download-receipt.json showing 4096x4096 Overworld vs cropped 987x544 Coneria PNG dimensions" loading="lazy">
+      <figcaption>Inspecting PNG <code>IHDR</code> dimensions in <code>download-receipt.json</code> before slicing a single tile.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m1-s3-scan-edition-quarantine.png' | relative_url }}" alt="Terminal output of jrpg-parser.js scan quarantining GBA Dawn of Souls, PS1 Origins, and modded forum files" loading="lazy">
+      <figcaption><code>jrpg-parser.js scan</code> quarantines GBA, PS1, PSP, and modded files (<code>usable: false</code>) so remake numbers never enter the NES graph.</figcaption>
+    </figure>
+  </div>
+
+  <h3>2. The Verbatim Quote Gate &amp; Why Fan Guides Left 5 Engine Blockers</h3>
+  <p>During <code>jrpg-parser.js parse</code>, structured HTML and Markdown tables are parsed deterministically by <code>lib/charts.js</code>, while unstructured walkthrough prose is extracted through <code>lib/extract.js</code> behind a hard <strong>verbatim quote gate</strong>: if the <code>quote</code> field returned by the AI agent is not literally present in the local file on disk, the record is dropped. In our FF1 run, that gate caught and dropped 4 unverified records where the model attempted to supply remake facts from pretraining memory, and <code>parsed.json</code> surfaced 5 cross-source conflicts (such as normalizing a prose walkthrough's GBA <code>Mythril Sword</code> alias to the 1990 NES <code>Silver Sword</code>).</p>
+
+  <p>Even more importantly, running <code>jrpg-parser.js coverage --out ~/kgraphs/final-fantasy-nes</code> after scraping the web guides and the 84-page Nintendo manual (<code>CLV-P-NAAAE.pdf</code>) showed why prose guides alone cannot run a game engine. Guides record what players see in menus (monster HP/XP/Gold, spell names and prices), leaving <strong>five engine blockers</strong>: missing enemy combat stats (<code>ATK, ACC, Hits, CRT, DEF, EVA, MDEF</code>), missing 8-slot encounter formation tables, missing 50-level class stat/XP curves, missing numeric spell <code>Effectivity</code> (Power <code>E</code>) and <code>Accuracy</code> bytes, and missing <code>64&times;64</code> walkable tile grids with exact door and chest coordinates.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m2-s1-quote-gate-audit.png' | relative_url }}" alt="Parser output showing deterministic table counts and 4 unverified prose records dropped by the verbatim quote gate" loading="lazy">
+      <figcaption>Deterministic table extraction paired with the verbatim quote gate in <code>lib/extract.js</code>.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m2-s3-five-blockers-matrix.png' | relative_url }}" alt="Completeness audit matrix showing the 5 gameplay blockers left after scraping web guides" loading="lazy">
+      <figcaption>The initial coverage audit turns "we're not done" into a specific 5-item engineering checklist.</figcaption>
+    </figure>
+  </div>
+
+  <h3>3. Closing the Gaps from the 6502 Disassembly (Including 3 Famous 1990 NES Quirks)</h3>
+  <p>To close all five blockers with 100% hardware accuracy, we cross-referenced Disch's commented 6502 disassembly (<code>~/Downloads/ff1/nes_disassembly/</code>) with AstralEsper's NES Game Mechanics Guide and wrote <code>build_ff1_resources.py</code> + <code>update_reference_guide.py</code>. That decoded all 128 enemies, 64 spells, 12 classes across 50 levels, 84 encounter zones, 256 treasure chests, and 61 RLE-compressed <code>64&times;64</code> map grids into <code>~/Downloads/ff1/nes_data/</code> and <code>map_grids/</code>, and appended structured Markdown tables to <code>ff1_nes_agent_reference_guide.md</code>.</p>
+
+  <p>Reading the 6502 assembly also preserved three famous 1990 NES quirks in our engine:</p>
+  <ol>
+    <li><strong>The Weapon Critical Hit Index Bug:</strong> In <code>LoadOneCharacterIBStats</code>, a pointer bug loads the weapon's <strong>1-based inventory index (<code>1..40</code>)</strong> instead of its critical byte, giving the Wooden Nunchuck (<code>ID 1</code>) a <code>1/201</code> crit rate and the Masamune (<code>ID 40</code>) a <code>40/201</code> (<code>~19.9%</code>) crit rate.</li>
+    <li><strong>The Level-Up HP &amp; Strong-Level Bitmask:</strong> Every level-up grants <code>floor(VIT / 4) + 1</code> HP, plus <code>20..25</code> bonus HP on levels flagged in the class's 49-level strong-HP bitmask table.</li>
+    <li><strong>The INT Magic Bug:</strong> Caster <code>INT</code> never scales magic in the 1990 NES release; Level 1 <code>CURE</code> (<code>E=16</code>) heals <code>16..32 HP</code> and Level 1 <code>FIRE</code> (<code>E=10, ACC=24</code>) rolls <code>10..20</code> (doubling to <code>20..40</code> when <code>0..255 &lt; 148 + Spell_Acc - Target_MDEF</code>).</li>
+  </ol>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m3-s2-enemies-and-quirks.png' | relative_url }}" alt="Terminal output inspecting IMP, GARLAND, CURE, and FIRE combat stats and the 3 preserved 1990 NES quirks" loading="lazy">
+      <figcaption>Exact combat profiles for <code>IMP</code> (<code>8 HP</code>) and <code>GARLAND</code> (<code>106 HP, 15 ATK, 10 DEF</code>) alongside numeric spell power bytes.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m3-s3-kgraph-1206-nodes.png' | relative_url }}" alt="Re-running jrpg-parser.js parse producing 1,206 validated OSLC JSON-LD nodes with 0 blockers" loading="lazy">
+      <figcaption>Re-running <code>jrpg-parser.js parse</code> produces <strong>1,206 validated OSLC JSON-LD nodes</strong> across 13 RDF types with zero blockers.</figcaption>
+    </figure>
+  </div>
+
+  <h3>4. 64&times;64 Walkable Grids, the Tree Spawn Bug, and the Indoor Ceiling Palette Swap</h3>
+  <p>When we first booted our Godot 4.3 project (<code>~/Downloads/ff1/ff1-game</code>) and ran our opening Gherkin scenario, every step passed—yet inspecting the recorded video frames exposed two classic visual bugs that unit tests never see:</p>
+  <ul>
+    <li><strong>The South Gate Border Tree at <code>(15, 22)</code>:</strong> Checking row <code>y=21</code> of <code>map_00_coneria.json</code> (<code>[14, 14, 16, 14, 14]</code>) showed that Coneria's south entrance is a single brick column wide at <code>x=16</code> (<code>tileId=16</code>, matching <code>lut_EntrTele_X = 16</code>) flanked by unwalkable border trees at <code>x=15</code> and <code>x=17</code> (<code>tileId=14</code>). Moving <code>spawn_tile</code> from <code>(15, 22)</code> to <code>Vector2i(16, 21)</code> placed the party squarely on the brick street.</li>
+    <li><strong>Outside-Room Ceiling Palette vs. Inside-Room Chest Palette:</strong> In <code>lut_SMPalettes</code> (<code>$A000</code>), Outside-Room Palette 0 (<code>+0x00</code>) is <code>[0x0F, 0x30, 0x30, 0x30]</code> (solid white) so the NES PPU can hide unentered rooms behind a white ceiling, while Inside-Room Palette 0 (<code>+0x20</code>) is <code>[0x0F, 0x10, 0x17, 0x0F]</code> (black, silver, and wood brown). Swapping in Inside-Room Palette 0 and removing a debug <code>ColorRect</code> overlay turned flat teal squares back into crisp silver-and-brown treasure chests.</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m4-s1-coneria-south-gate-grid.png' | relative_url }}" alt="Inspecting map_00_coneria.json around row 21 showing the walkable brick corridor at x=16 and shop door triggers" loading="lazy">
+      <figcaption>Decompressed <code>map_00_coneria.json</code> showing the 1-tile brick corridor at <code>x=16</code> and Coneria's shop door coordinates.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m4-s2-indoor-palette-swap.png' | relative_url }}" alt="Comparison of Outside-Room Palette 0 (+0x00 white ceiling) vs Inside-Room Palette 0 (+0x20 silver and wood brown treasure chests)" loading="lazy">
+      <figcaption>Swapping Outside-Room Palette 0 (<code>+0x00</code>) for Inside-Room Palette 0 (<code>+0x20</code>) restores the indoor floor and silver-and-brown chests.</figcaption>
+    </figure>
+  </div>
+
+  <h3>5. Clean-Room Art &amp; the Authentic 2-Step NES Shop Interior</h3>
+  <p>Using <code>jrpg-generate-art</code> (<code>packages/robos-lib/ai-image.js</code> + <code>nesify.py</code>), we generated 50 clean-room NES-quantized sprites, backdrops, and maps and ran <code>jrpg-parser.js publish</code> to export <code>~/kgraphs/final-fantasy-nes-public</code> (1,184 fact nodes + 50 clean-room images, zero source filenames or quotes).</p>
+
+  <p>Next came the most important interactive fix of Chapter 1. When we first let the AI player loose in Coneria to buy gear before fighting Garland, it walked onto the Coneria Weapon Shop door at <code>(11, 10)</code> and got stuck in an infinite loop. To fix both the visual presentation and the state machine, we built the authentic NES 2-step Shop interior inside <code>FF1MapScene.gd</code> for all six shop types (<code>WEAPON</code>, <code>ARMOR</code>, <code>WHITE</code>, <code>BLACK</code>, <code>INN</code>, <code>ITEM</code>):</p>
+  <ul>
+    <li>Stepping onto a shop door opens the royal-blue NES shop layout with the top-left shop banner, the center shopkeeper counter, the item/spell price list on the right, the greeting dialogue box, the live Gold box (<code>400 G</code>), and the white pointing-hand glove cursor positioned on <code>Buy</code> (<code>shop_cursor = 0</code>).</li>
+    <li>Pressing <code>ui_accept</code> on <code>Buy</code> equips the class-appropriate upgrades (<code>Rapier</code> on <code>ZEST</code>, <code>Hammer</code> on <code>ROBO</code>, <code>Chain Mail</code> at the Armor Shop, <code>CURE</code>/<code>RUSE</code> at White Magic, <code>FIRE</code>/<code>LIT</code> at Black Magic), deducts Gold live, sets the milestone flag, and automatically advances the pointing-hand cursor to <code>Exit</code> (<code>shop_cursor = 1</code>).</li>
+    <li>Pressing <code>ui_accept</code> on <code>Exit</code> closes the shop overlay and steps the party one tile south off the doorway trigger so it never re-enters the shop in a loop.</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m6-s1-weapon-shop-welcome.png' | relative_url }}" alt="Clean-room Coneria Weapon Shop interior on entry with 400 G and the pointing-hand cursor on Buy" loading="lazy">
+      <figcaption>Step 0: Entering the Coneria Weapon Shop at <code>(11, 10)</code> places the white pointing-hand cursor on <code>Buy</code> (<code>index 0</code>) with <code>400 G</code>.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m6-s2-weapon-shop-bought-exit.png' | relative_url }}" alt="Clean-room Coneria Weapon Shop after buying Rapier and Hammer, showing 380 G and the pointing-hand cursor on Exit" loading="lazy">
+      <figcaption>Step 1: Pressing <code>ui_accept</code> buys and equips <code>Rapier</code> &amp; <code>Hammer</code>, updates Gold to <code>380 G</code>, and moves the cursor to <code>Exit</code> (<code>index 1</code>).</figcaption>
+    </figure>
+  </div>
+
+  <h3>6. Seven Isolated Headless Cucumber Suites &rarr; 12-Milestone Stepped Playthrough</h3>
+  <p>Rather than discovering mechanic bugs midway through a full-game run, we built and passed <strong>7 headless Cucumber suites</strong> in <code>~/Downloads/ff1/ff1-game/tests/e2e/features/</code>:</p>
+  <ul>
+    <li><code>01_start_new_game_and_create_party.feature</code> — <code>TitleScreen</code> &rarr; <code>PartyCreate</code> (<code>ZEST</code>, <code>SAIL</code>, <code>ROBO</code>, <code>MAGE</code>) &rarr; <code>Coneria (16, 21)</code>.</li>
+    <li><code>02_smoke_maps_and_transitions.feature</code> — Town, Overworld, Castle 1F/2F, and Temple of Fiends transitions.</li>
+    <li><code>03_npc_dialogues.feature</code> — Facing the Coneria town guard and the King of Coneria and dismissing dialogues cleanly.</li>
+    <li><code>04_shops_and_inn.feature</code> — All 6 Coneria shop and Inn scenarios (46 steps passed in <code>11.3s</code>).</li>
+    <li><code>05_treasure_chests.feature</code> — Looting <code>Heal Potion</code> <code>(3,3)</code>, <code>Cabin</code> <code>(2,3)</code>, and <code>Leather Cap</code> <code>(4,14)</code> in the Temple of Fiends with open-chest persistence.</li>
+    <li><code>06_random_encounters_and_boss.feature</code> — Overworld <code>IMP</code> encounter and the <code>GARLAND</code> boss fight (<code>106 HP</code>) at <code>(19, 5)</code>.</li>
+    <li><code>07_checkpoint_kill_garland_1.feature</code> — Checkpoint-chained Act I verification across Milestones <code>1..6</code>, <code>7..8</code>, and <code>9..12</code> (21 steps passed in <code>72.1s</code>).</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m7-s1-behave-shops-and-inn.png' | relative_url }}" alt="Terminal output of behave running 04_shops_and_inn.feature passing all 6 scenarios and 46 steps in 11.3 seconds" loading="lazy">
+      <figcaption><code>04_shops_and_inn.feature</code> verifies Weapon, Armor, White Magic, Black Magic, Item, and Inn interiors headlessly in 11.3 seconds.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m7-s3-garland-boss-battle.png' | relative_url }}" alt="Garland boss battle victory screen paired with 07_checkpoint_kill_garland_1.feature passing" loading="lazy">
+      <figcaption>Defeating Garland (<code>106 HP</code>) in the Temple of Fiends at the end of <code>07_checkpoint_kill_garland_1.feature</code>.</figcaption>
+    </figure>
+  </div>
+
+  <h3>7. Where We Left Off &amp; The Gateway to Chapter 2</h3>
+  <p>With all 7 isolated suites green, running <code>python3 tests/e2e/play_full_game.py --fresh --stepped --time-scale 3.0</code> clears all <strong>12 Chapter 1 milestones</strong> in <code>100.9s</code> with <code>0</code> deaths, writing 12 per-milestone MP4 videos, 12 JSON save checkpoints, and 12 PNG screenshots into <code>tests/e2e/reports/playthrough/</code> for inspection in the <strong>RobOS Game Playthrough</strong> viewer.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m8-s1-stepped-playthrough-12-of-12.png' | relative_url }}" alt="Terminal output of play_full_game.py --fresh --stepped completing all 12 milestones in 100.9s" loading="lazy">
+      <figcaption>Stepped playthrough summary: all 12/12 Act I milestones completed in 100.9 seconds with 0 deaths.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m8-s2-checkpoint-single-replay.png' | relative_url }}" alt="Replaying Milestone #3 from Checkpoint #2 in 8.4 seconds and inspecting Checkpoint #12 JSON" loading="lazy">
+      <figcaption>Replaying Milestone #3 alone (<code>--stepped --only 3</code>) in 8.4 seconds and inspecting <code>checkpoints/12-defeat-garland-1.json</code>.</figcaption>
+    </figure>
+  </div>
+
+  <p><strong>Where the FF1 project sits right now:</strong> At the end of Milestone #12 (<code>checkpoints/12-defeat-garland-1.json</code>), the Light Warriors have defeated Garland in the Temple of Fiends, rescued Princess Sara, and unlocked the <strong>North Bridge</strong> (<code>bridge_built: true</code>). Because our 1,206-node Knowledge Graph in <code>~/kgraphs/final-fantasy-nes</code> and the 61 decompressed <code>64&times;64</code> map grids in <code>~/Downloads/ff1/map_grids/</code> already contain every town, dungeon, monster, spell, shop, and treasure chest in the 1990 NES cartridge, Chapter 2 picks up directly at Checkpoint #12: crossing the North Bridge to Pravoka, defeating Bikke's Pirates to win the Ship, sailing to Elfland, looting the Crown from the Marsh Cave, and defeating Astos.</p>
+</div>
+<div class="blog-links">
+  <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}">Take the Part 2 Course: Final Fantasy (NES 1990) from Coneria to Garland →</a>
+  <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}">Part 1 Course: Beginner JRPG KGraph &amp; Godot Bootcamp →</a>
+  <a href="{{ '/blog/jrpg-kgraph-parser-and-playthrough/' | relative_url }}">Read Part 1 Blog Post →</a>
+  <span class="blog-commits">Commits: 9bf77492 · 0f0e4e35 · 4c5adc85 · 6637fba5 · 606db9af · 41f73e45 · 68ef5965</span>
+</div>
