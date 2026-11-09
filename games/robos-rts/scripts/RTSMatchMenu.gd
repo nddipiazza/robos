@@ -8,6 +8,8 @@ enum Layout { BATTLE, SKIRMISH, SETTINGS }
 
 const DISPLAY_PREFS := "user://rts-display.cfg"
 const VOLUME_LEVELS := [100, 70, 40, 0]
+const PAN_SPEEDS := [28.0, 46.0, 72.0]
+enum OrderLines { ALWAYS, SHIFT, HIDDEN }
 
 var layout := Layout.BATTLE
 var panel: PanelContainer
@@ -23,6 +25,8 @@ var speed: OptionButton
 var volume: OptionButton
 var grid_hotkeys := false
 var edge_scroll := false
+var pan_speed := 46.0
+var order_lines := OrderLines.ALWAYS
 var was_paused: bool = false
 var _score_title: Label
 var _score_detail: Label
@@ -94,17 +98,24 @@ func _build_display_options(box: VBoxContainer) -> void:
 	health_bars.item_selected.connect(_on_health_selected)
 	grid_hotkeys = bool(display.get_value("controls", "grid_hotkeys", false))
 	edge_scroll = bool(display.get_value("controls", "edge_scroll", false))
+	var pan_index := clampi(int(display.get_value("controls", "pan_speed", 1)), 0, PAN_SPEEDS.size() - 1)
+	pan_speed = PAN_SPEEDS[pan_index]
+	order_lines = clampi(int(display.get_value("controls", "order_lines", OrderLines.ALWAYS)), 0, OrderLines.HIDDEN)
 	if layout == Layout.SETTINGS:
 		var hotkeys := _option(box, "Command card hotkeys", ["Standard", "Grid"], int(grid_hotkeys))
 		hotkeys.item_selected.connect(func(index): _save_control("grid_hotkeys", index == 1))
 		var scrolling := _option(box, "Mouse edge scrolling", ["Off", "On"], int(edge_scroll))
 		scrolling.item_selected.connect(func(index): _save_control("edge_scroll", index == 1))
+		var pan := _option(box, "Camera pan speed", ["Slow", "Standard", "Fast"], pan_index)
+		pan.item_selected.connect(func(index): _save_control("pan_speed", index))
+		var lines := _option(box, "Unit order lines", ["Always", "Hold Shift", "Hidden"], order_lines)
+		lines.item_selected.connect(func(index): _save_control("order_lines", index))
 
-func _save_control(key: String, enabled: bool) -> void:
+func _save_control(key: String, value: Variant) -> void:
 	var display := ConfigFile.new()
 	var path := _display_prefs_path()
 	display.load(path)
-	display.set_value("controls", key, enabled)
+	display.set_value("controls", key, value)
 	display.save(path)
 
 func _display_prefs_path() -> String:

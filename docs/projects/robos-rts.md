@@ -392,6 +392,8 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 
 ## Controls
 
+[100-point Starfall Command roadmap](./starfall-sc2-roadmap.md)
+
 | Input | Action |
 |:---|:---|
 | Left click or drag | Select; drag for a box |
@@ -403,6 +405,12 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Arrow keys or screen edge | Pan. Mouse edge scrolling is available in Settings. |
 | Hold Alt | Temporarily show overhead health bars. |
 | Pause / F12 | Pause or resume the battle. |
+| Home / Page Up / Page Down | Center on the selection or change zoom. |
+| Alt + G, then click | Ping the battlefield or minimap. |
+| Alt + R | Toggle selected weapon ranges, including minimum range. |
+| Ctrl + Backspace | Remove the last future order while keeping the current job. |
+| **,** / Ctrl + **,** | Cycle or select all idle combat production. The HUD button supports the same modifiers. |
+| Alt + Y | Reset the rally routes of selected producers. |
 | Letter in a button's corner | Use that command |
 | Ctrl + number, number (1–9, 0) | Set, recall a control group; Alt moves selected units from other groups |
 | Tab / Shift + Tab | Cycle the active subgroup forward or backward. |
@@ -425,6 +433,8 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
 
 Ground movement orders aimed into cliffs, buildings, or deposits end at a reachable edge. Troops route around crystal fields and aether vents. Workers reach the edge of their deposit and can pass through other mobile units during active crystal gathering.
+
+In **Settings**, choose the camera pan speed and when unit order lines appear. Hold **Shift** to place several targeted move, attack, or rally waypoints after one command activation.
 
 ## Scripting and bots
 

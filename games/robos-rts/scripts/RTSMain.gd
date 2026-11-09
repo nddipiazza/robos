@@ -7,6 +7,7 @@ const RTSWorld3DScript = preload("res://scripts/RTSWorld3D.gd")
 const RTSIconsScript = preload("res://scripts/RTSIcons.gd")
 const RTSHudScript = preload("res://scripts/RTSHud.gd")
 const GameInput = preload("res://scripts/RTSGameInput.gd")
+const MatchMenu = preload("res://scripts/RTSMatchMenu.gd")
 
 # Screen layout (1920x1080 virtual canvas)
 const HUD_TOP := 844.0
@@ -16,6 +17,7 @@ const CARD_ORIGIN := Vector2(1560.0, 862.0)
 const CARD_BTN := 64.0
 const CARD_GAP := 6.0
 const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
+const IDLE_PRODUCTION_BTN := Rect2(130.0, 786.0, 148.0, 48.0)
 const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
 const GRID_KEYS := "QWERTASDFGZXCVB"
@@ -30,6 +32,9 @@ var local_player: int = 1
 var observer_player := -1
 var health_bar_mode := 0
 var reveal_health_bars := false
+var _shift_held := false
+var _repeating_target := false
+var _show_weapon_ranges := false
 var selected_tags: Array[int] = []
 var _inspected_deposit_tag := 0
 var control_groups: Dictionary = {}
@@ -70,7 +75,7 @@ func _ready() -> void:
 		set_process(false)
 		return
 	SimEngine.resource_depleted.connect(_on_resource_depleted)
-	get_window().focus_exited.connect(func(): reveal_health_bars = false)
+	get_window().focus_exited.connect(_clear_held_keys)
 	world_3d = RTSWorld3DScript.new()
 	world_3d.name = "RTSWorld3D"
 	add_child(world_3d)
@@ -88,7 +93,7 @@ func _ready() -> void:
 	hud.name = "RTSHud"
 	hud.main = self
 	add_child(hud)
-	match_menu = preload("res://scripts/RTSMatchMenu.gd").new()
+	match_menu = MatchMenu.new()
 	add_child(match_menu)
 	match_menu.observe_requested.connect(_enter_observer)
 	match_menu.health_mode_changed.connect(func(mode): health_bar_mode = mode)
@@ -130,6 +135,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	selected_tags.clear()
 	_inspected_deposit_tag = 0
 	pending_ability = ""
+	_repeating_target = false
 	control_groups.clear()
 	_last_group_press.clear()
 	_camera_bookmarks.clear()
@@ -216,6 +222,15 @@ func _focus_camera(position: Vector2, height: float = -1.0) -> void:
 	if world_3d:
 		world_3d.set_focus(position, height)
 
+func _center_selection() -> void:
+	var live := _living_tags(selected_tags)
+	if live.is_empty():
+		return
+	var center := Vector2.ZERO
+	for tag in live:
+		center += SimEngine.units[tag].pos
+	_focus_camera(center / float(live.size()))
+
 func _toggle_camera_tracking() -> void:
 	if _tracked_tag > 0:
 		_tracked_tag = 0
@@ -294,7 +309,7 @@ func _handle_camera_pan(delta: float) -> void:
 				v.y = float(cursor.y >= bounds.end.y - EDGE_SCROLL_MARGIN) - float(cursor.y < bounds.position.y + EDGE_SCROLL_MARGIN)
 	if v != Vector2.ZERO:
 		_tracked_tag = 0
-		world_3d.pan(v.normalized() * 46.0 * (world_3d.cam_height / 50.0) * delta)
+		world_3d.pan(v.normalized() * match_menu.pan_speed * (world_3d.cam_height / 50.0) * delta)
 
 func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
 	if world_3d and world_3d.camera_3d:
@@ -442,6 +457,37 @@ func idle_workers() -> Array[Dictionary]:
 			out.append(u)
 	return out
 
+func idle_producers() -> Array[Dictionary]:
+	var idle: Array[Dictionary] = []
+	if observer_player >= 0:
+		return idle
+	for unit in SimEngine.units.values():
+		if unit.owner != local_player or not unit.is_structure or unit.build_progress < 1.0 or not unit.production_queue.is_empty():
+			continue
+		var def: Dictionary = RTSData.get_unit_def(unit.unit_type)
+		if not def.has("trains") or (def.get("is_town_hall", false) and unit.unit_type != "brood_nest"):
+			continue
+		if SimEngine.uses_brood_slots(unit) and unit.brood_slots == 0:
+			continue
+		if SimEngine.requires_power(unit.unit_type) and not SimEngine.is_powered(local_player, unit.pos):
+			continue
+		idle.append(unit)
+	return idle
+
+func _select_idle_production(all: bool) -> void:
+	var idle := idle_producers()
+	if idle.is_empty():
+		return
+	var tags := idle.map(func(unit): return unit.tag)
+	pending_ability = ""
+	if all:
+		_select_tags(tags)
+		return
+	var current := tags.find(selected_tags[0]) if selected_tags.size() == 1 else -1
+	var next := (current + 1) % tags.size()
+	_select_tags([tags[next]])
+	_focus_camera(idle[next].pos)
+
 func _select_all_army(ungrouped_only: bool = false) -> void:
 	var assigned := {}
 	if ungrouped_only:
@@ -483,8 +529,23 @@ func _select_next_idle_worker() -> void:
 # Input
 # ---------------------------------------------------------------------------
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.keycode == KEY_ALT:
-		reveal_health_bars = event.pressed
+	if event is InputEventKey:
+		if event.keycode == KEY_ALT:
+			reveal_health_bars = event.pressed
+		elif event.keycode == KEY_SHIFT:
+			_shift_held = event.pressed
+			if not _shift_held:
+				_clear_repeated_target()
+
+func _clear_held_keys() -> void:
+	reveal_health_bars = false
+	_shift_held = false
+	_clear_repeated_target()
+
+func _clear_repeated_target() -> void:
+	if _repeating_target:
+		pending_ability = ""
+		_repeating_target = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	if match_menu and (match_menu.panel.visible or match_menu.result_panel.visible):
@@ -533,7 +594,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 			_complete_box_selection(box_start_screen, box_end_screen, mb.shift_pressed, _box_pick_type or mb.double_click or mb.ctrl_pressed or mb.meta_pressed)
 		return
 
-	if mpos.y >= HUD_TOP - 40.0 and _hud_hit(mb, mpos):
+	if mpos.y >= IDLE_BTN.position.y and _hud_hit(mb, mpos):
 		return
 	if mpos.y >= HUD_TOP:
 		return
@@ -562,7 +623,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if MINIMAP.grow(6.0).has_point(mpos):
 		_last_group_press.clear()
 		if left:
-			if pending_ability in ["attack", "move", "patrol", "rally", "rally_worker", "recon_sweep"]:
+			if pending_ability in ["attack", "move", "patrol", "rally", "rally_worker", "recon_sweep", "ping"]:
 				_execute_pending_ability_at(minimap_to_world(mpos), mb.shift_pressed, true)
 			elif world_3d and not _jump_to_attack_pin(mpos):
 				mm_dragging = true
@@ -576,6 +637,9 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 			_select_all_idle_workers()
 		else:
 			_select_next_idle_worker()
+		return true
+	if left and IDLE_PRODUCTION_BTN.has_point(mpos) and not idle_producers().is_empty():
+		_select_idle_production(mb.ctrl_pressed or mb.meta_pressed)
 		return true
 
 	if right and hud and selected_tags.size() == 1:
@@ -663,7 +727,8 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_typ
 			RTSAudio.play_unit_dialogue(str(pu2.get("unit_type", "")), "select")
 
 func _spawn_marker(pos: Vector2, kind: String) -> void:
-	click_markers.append({"pos": pos, "kind": kind, "ttl": 0.7, "max": 0.7})
+	var duration := 5.0 if kind == "ping" else 0.7
+	click_markers.append({"pos": pos, "kind": kind, "ttl": duration, "max": duration})
 	if RTSAudio:
 		var pu := primary_unit()
 		var utype := str(pu.get("unit_type", "")) if not pu.is_empty() and int(pu.get("owner", 0)) == local_player else ""
@@ -790,16 +855,22 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	_spawn_marker(wpos, "move")
 
 func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false, force: bool = false) -> void:
+	if pending_ability == "ping":
+		pending_ability = ""
+		var position := wpos.clamp(Vector2.ZERO, Vector2(SimEngine.map_width, SimEngine.map_height))
+		_spawn_marker(position, "ping")
+		return
 	var own := selected_owned()
 	if own.is_empty():
 		pending_ability = ""
 		return
 	var abil := pending_ability
+	_repeating_target = queue and abil in ["attack", "move", "rally", "rally_worker"]
 	var tags: Array = []
 	for u in own:
 		tags.append(u["tag"])
 	if abil == "attack":
-		pending_ability = ""
+		pending_ability = abil if _repeating_target else ""
 		var tgt := {} if minimap else _order_target_at(wpos)
 		if not tgt.is_empty() and tgt["owner"] != local_player:
 			SimEngine.issue_command(tags, "attack_target", tgt["pos"], tgt["tag"], "", queue)
@@ -811,7 +882,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			SimEngine.issue_command(tags, "attack_move", wpos, 0, "", queue)
 			_spawn_marker(wpos, "attack")
 	elif abil in ["move", "phase_step", "patrol"]:
-		pending_ability = ""
+		pending_ability = abil if _repeating_target else ""
 		var ability_tags: Array = []
 		for u in own:
 			var unit_abilities: Array = RTSData.get_unit_def(u.unit_type).get("abilities", [])
@@ -820,7 +891,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		SimEngine.issue_command(ability_tags, abil, wpos, 0, "", queue)
 		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
 	elif abil in ["rally", "rally_worker"]:
-		pending_ability = ""
+		pending_ability = abil if _repeating_target else ""
 		_issue_rally_at(tags, wpos, queue, not minimap, abil)
 	elif abil == "harvest":
 		pending_ability = ""
@@ -1035,6 +1106,7 @@ func get_card_buttons() -> Array[Dictionary]:
 	return buttons
 
 func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
+	_repeating_target = false
 	var abil_id: String = btn["ability_id"]
 	var adef: Dictionary = btn["def"]
 	if str(btn["blocked"]) != "":
@@ -1192,6 +1264,19 @@ func _set_local_player(player: int) -> void:
 	pending_ability = ""
 
 func _handle_hotkey(ke: InputEventKey) -> void:
+	if ke.alt_pressed and ke.keycode == KEY_G:
+		_repeating_target = false
+		pending_ability = "ping"
+		return
+	if ke.alt_pressed and ke.keycode == KEY_R:
+		_show_weapon_ranges = not _show_weapon_ranges
+		return
+	if ke.alt_pressed and ke.keycode == KEY_Y:
+		if SimEngine.issue_command(selected_owned().map(func(unit): return unit.tag), "reset_rally").ok:
+			pending_ability = ""
+			_repeating_target = false
+			push_message("Rally reset.")
+		return
 	if ke.keycode == KEY_F and (ke.ctrl_pressed or ke.meta_pressed):
 		_toggle_camera_tracking()
 		return
@@ -1217,13 +1302,28 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				SimEngine.paused = not SimEngine.paused
 			return
 		KEY_BACKSPACE:
-			_cycle_base()
+			if ke.ctrl_pressed or ke.meta_pressed:
+				if SimEngine.issue_command(selected_owned().map(func(unit): return unit.tag), "undo_queued_order").ok:
+					push_message("Last queued order removed.")
+			else:
+				_cycle_base()
+			return
+		KEY_HOME:
+			_center_selection()
+			return
+		KEY_PAGEUP, KEY_PAGEDOWN:
+			if world_3d:
+				world_3d.zoom_by(-4.0 if ke.keycode == KEY_PAGEUP else 4.0)
+			return
+		KEY_COMMA:
+			_select_idle_production(ke.ctrl_pressed or ke.meta_pressed)
 			return
 		KEY_F8:
 			if match_menu:
 				match_menu.toggle()
 			return
 		KEY_ESCAPE:
+			_repeating_target = false
 			if show_help:
 				show_help = false
 			else:
@@ -1374,6 +1474,10 @@ func ui_state() -> Dictionary:
 		"messages": msgs,
 		"camera_focus": [f.x, f.y],
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
+		"camera_pan_speed": match_menu.pan_speed if match_menu else 46.0,
+		"order_lines_visible": _order_lines_visible(),
+		"weapon_ranges": _selected_weapon_ranges(),
+		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"camera_follow_tag": _tracked_tag,
 		"attack_history": attack_history.map(func(pos): return [pos.x, pos.y]),
 		"worker_saturation": SimEngine.worker_saturation(local_player),
@@ -1499,6 +1603,7 @@ func _draw_click_markers() -> void:
 		var sp := world_to_screen(m["pos"], 0.1)
 		var col := Color("#4ade80")
 		match str(m["kind"]):
+			"ping": col = Color("#b093ff")
 			"attack": col = Color("#f87171")
 			"gather": col = Color("#5eead4")
 			"patrol": col = Color("#b9a3ef")
@@ -1506,7 +1611,25 @@ func _draw_click_markers() -> void:
 		col.a = 1.0 - t
 		_ellipse(sp, lerpf(26.0, 8.0, t), col, 2.5)
 
+func _order_lines_visible() -> bool:
+	return not match_menu or match_menu.order_lines == MatchMenu.OrderLines.ALWAYS or (match_menu.order_lines == MatchMenu.OrderLines.SHIFT and _shift_held)
+
+func _selected_weapon_ranges() -> Array:
+	var ranges := []
+	if _show_weapon_ranges:
+		for unit in selected_owned():
+			var weapon: Dictionary = RTSData.get_unit_def(unit.unit_type).get("weapon", {})
+			if not weapon.is_empty() and unit.build_progress >= 1.0:
+				ranges.append({"tag": unit.tag, "maximum": weapon.range, "minimum": weapon.get("min_range", 0.0)})
+	return ranges
+
 func _draw_rally_and_orders() -> void:
+	for weapon in _selected_weapon_ranges():
+		var unit: Dictionary = SimEngine.units[weapon.tag]
+		_draw_range_ring(unit.pos, unit.radius + weapon.maximum, Color("#b093ff"))
+		if weapon.minimum > 0.0:
+			_draw_range_ring(unit.pos, unit.radius + weapon.minimum, Color("#f0645a"))
+	var show_orders := _order_lines_visible()
 	for t in selected_tags:
 		var u: Dictionary = SimEngine.units.get(t, {})
 		if u.is_empty() or u["owner"] != local_player:
@@ -1524,6 +1647,8 @@ func _draw_rally_and_orders() -> void:
 				_draw_rally_route(route, sp, Color("#fbbf24"))
 				if u.unit_type == "brood_nest":
 					_draw_rally_route(u.worker_rally_route, sp, Color("#5eead4"))
+			continue
+		if not show_orders:
 			continue
 		var prev := sp
 		for ord in u["orders"]:
