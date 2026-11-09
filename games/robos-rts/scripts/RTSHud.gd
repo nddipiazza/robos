@@ -12,6 +12,7 @@ var main: Node2D
 var font: Font
 var draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
+var _supply_region := Rect2()
 
 class MinimapTerrain extends Node2D:
 	var hud: Node2D
@@ -67,6 +68,8 @@ func _draw() -> void:
 	_draw_tooltip()
 	_draw_caption()
 	_draw_match_status()
+	if SimEngine.paused and SimEngine.match_state.get("status") != "finished" and not main.match_menu.panel.visible:
+		_text(Vector2(790, 48), "PAUSED   ·   Pause / F12 to resume", 20, C_GOLD)
 	var tracked: Dictionary = SimEngine.units.get(main._tracked_tag, {})
 	if not tracked.is_empty():
 		_text(Vector2(32, 78), "Tracking %s · Ctrl+F" % tracked.name, 17, C_MUTED)
@@ -156,6 +159,7 @@ func _person(c: Vector2, s: float, col: Color) -> void:
 # Top-right resources, faction label, banner, messages
 # ---------------------------------------------------------------------------
 func _draw_resource_bar() -> void:
+	_supply_region = Rect2()
 	var p: Dictionary = SimEngine.players.get(main.local_player, {})
 	if p.is_empty():
 		return
@@ -175,6 +179,7 @@ func _draw_resource_bar() -> void:
 	var sup_txt := "%d/%d" % [supply_used, supply_cap]
 	var blocked := supply_cap > 0 and supply_used >= supply_cap
 	var sup_col := C_RED if blocked else C_TEXT
+	_supply_region = Rect2(x - _text_w(sup_txt, 24) - 43, 3, _text_w(sup_txt, 24) + 55, 39)
 	_text(Vector2(x - _text_w(sup_txt, 24), y), sup_txt, 24, sup_col)
 	x -= _text_w(sup_txt, 24) + 24.0
 	_person(Vector2(x, y - 8.0), 11.0, sup_col)
@@ -394,6 +399,10 @@ func _draw_selection_panel() -> void:
 	var sp: Rect2 = main.SEL_PANEL
 	var tags: Array = main.selected_tags
 	if tags.is_empty():
+		var deposit: Dictionary = main.inspected_deposit()
+		if not deposit.is_empty():
+			_draw_deposit(deposit, sp)
+			return
 		_text_r(sp.end.x - 16, sp.end.y - 12, "F1  Controls", 14, Color(C_MUTED.r, C_MUTED.g, C_MUTED.b, 0.7))
 		return
 	if tags.size() == 1:
@@ -402,6 +411,22 @@ func _draw_selection_panel() -> void:
 			_draw_single(u)
 		return
 	_draw_multi()
+
+func _draw_deposit(deposit: Dictionary, panel: Rect2) -> void:
+	var is_aether: bool = deposit.resource_type == "aether_vent"
+	var icon_pos := panel.position + Vector2(56, 65)
+	var color := C_AETHER if is_aether else C_CRYSTAL
+	if is_aether:
+		_drop(icon_pos, 24)
+	else:
+		_gem(icon_pos, 24)
+	_text(panel.position + Vector2(108, 58), "Aether Vent" if is_aether else "Crystal Field", 28, color)
+	var depleted: bool = not SimEngine.unlimited_resources and deposit.amount <= 0
+	var reserves := "Unlimited reserves" if SimEngine.unlimited_resources else ("%d remaining" % deposit.amount if not depleted else "Depleted")
+	_text(panel.position + Vector2(108, 96), reserves, 20)
+	if not depleted:
+		var hint := "Build an Aether Tap to harvest." if is_aether else "Right-click with workers to gather."
+		_text(panel.position + Vector2(108, 132), hint, 16, C_MUTED)
 
 func _draw_multi() -> void:
 	var cells := selection_cells()
@@ -417,6 +442,13 @@ func _draw_multi() -> void:
 		var tex := _icon_for(str(u["unit_type"]))
 		if tex:
 			draw_texture_rect(tex, Rect2(r.position + Vector2(4, 2), Vector2(72, 70)), false)
+		var queue: Array = u.production_queue
+		if u.owner == main.local_player and not queue.is_empty():
+			var badge := Rect2(r.end.x - 24, r.position.y + 4, 20, 20)
+			draw_rect(badge, Color("#111923"))
+			_text(badge.position + Vector2(0, 15), str(queue.size()), 14, C_GOLD, HORIZONTAL_ALIGNMENT_CENTER, badge.size.x)
+			var current: Dictionary = queue.front()
+			_bar(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 34, 4), current.progress / maxf(0.1, current.total_time), C_GOLD)
 		var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
 		var col := Color("#4ade80") if ratio > 0.5 else (Color("#f5b941") if ratio > 0.25 else Color("#ef4444"))
 		if u["max_shields"] > 0.0:
@@ -635,7 +667,7 @@ func _draw_command_card() -> void:
 			border = C_AETHER
 			bw = 3.0
 		draw_rect(r, border, false, bw)
-		var hk := str(adef.get("hotkey", ""))
+		var hk: String = btn.hotkey
 		if hk != "":
 			var badge := Rect2(r.position + Vector2(3, 3), Vector2(19, 19))
 			draw_rect(badge, Color(0, 0, 0, 0.72))
@@ -738,8 +770,30 @@ func _glyph(id: String, r: Rect2) -> void:
 # ---------------------------------------------------------------------------
 # Tooltip
 # ---------------------------------------------------------------------------
+func _draw_supply_tooltip() -> void:
+	var p: Dictionary = SimEngine.players[main.local_player]
+	var reserved := 0
+	var building := 0
+	for unit in SimEngine.units.values():
+		if unit.owner != main.local_player or not unit.is_structure:
+			continue
+		if unit.build_progress < 1.0:
+			building += SimEngine.supply_from(unit)
+		for item in unit.production_queue:
+			if item.has("unit_type"):
+				reserved += int(RTSData.get_unit_def(item.unit_type).get("supply_cost", 1))
+	var r := Rect2(1582, 54, 312, 122)
+	_frame(r, 0.97)
+	_text(r.position + Vector2(14, 27), "Supply  %d / %d" % [p.supply_used, p.supply_cap], 19, C_GOLD)
+	_text(r.position + Vector2(14, 54), "%d deployed  ·  %d reserved" % [p.supply_used - reserved, reserved], 16)
+	_text(r.position + Vector2(14, 79), "%d free now" % maxi(0, p.supply_cap - p.supply_used), 16)
+	_text(r.position + Vector2(14, 104), "+%d capacity under construction" % mini(building, 200 - p.supply_cap), 16, C_MUTED)
+
 func _draw_tooltip() -> void:
 	var hover: Vector2 = main.hover_pos()
+	if _supply_region.has_point(hover):
+		_draw_supply_tooltip()
+		return
 	for g in group_tab_rects():
 		var tab: Rect2 = group_tab_rects()[g]
 		if tab.has_point(hover):
@@ -795,7 +849,7 @@ func _draw_tooltip() -> void:
 	if cost.has("level"):
 		title += " %d" % int(cost.level)
 	_text(Vector2(r.position.x + 14, y), title, 20, C_TEXT)
-	var hk := str(adef.get("hotkey", ""))
+	var hk: String = hit.hotkey
 	if hk != "":
 		_text_r(r.end.x - 14, y, "[%s]" % hk, 18, C_GOLD)
 	y += 10.0
@@ -848,14 +902,14 @@ func _draw_help() -> void:
 		["Ctrl + click / double click", "Select friendly units of that type on screen"],
 		["Right click", "Move, attack, gather or set a rally point"],
 		["Shift + click", "Queue orders, add to or remove from selection"],
-		["Mouse wheel", "Zoom"],
-		["Middle drag", "Pan the camera"],
+		["Mouse wheel / Alt", "Zoom / show overhead health bars while held"],
+		["Middle drag / screen edge", "Pan the camera. Enable edge scroll in Settings."],
 		["Minimap", "Pan or place a targeted move, attack, patrol or rally"],
 		["Command card", "Click or press the hotkey. Shift trains up to five."],
 		["Backspace", "Cycle through your completed bases"],
 	]
 	var right := [
-		["Arrow keys", "Pan the camera"],
+		["Arrow keys / Pause or F12", "Pan the camera / pause or resume the battle"],
 		["Ctrl + 1-0 / Ctrl + Shift + 1-0", "Assign / add units; Alt moves from other groups"],
 		["Tab / Shift + Tab", "Cycle unit types forward or backward"],
 		[". / Ctrl + .", "Cycle idle workers or select them all"],

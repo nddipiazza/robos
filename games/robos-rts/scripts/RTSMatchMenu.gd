@@ -19,6 +19,8 @@ var difficulty: OptionButton
 var strategy: OptionButton
 var speed: OptionButton
 var volume: OptionButton
+var grid_hotkeys := false
+var edge_scroll := false
 var was_paused: bool = false
 var _score_title: Label
 var _score_detail: Label
@@ -80,9 +82,27 @@ func _build_display_options(box: VBoxContainer) -> void:
 	volume = _option(box, "Sound volume", ["100%", "70%", "40%", "Muted"], current)
 	volume.item_selected.connect(_on_volume_selected)
 	var display := ConfigFile.new()
-	display.load(DISPLAY_PREFS)
+	display.load(_display_prefs_path())
 	health_bars = _option(box, "Overhead health bars", ["Selected or damaged", "Always", "Off"], clampi(int(display.get_value("display", "health_bars", 0)), 0, 2))
 	health_bars.item_selected.connect(_on_health_selected)
+	grid_hotkeys = bool(display.get_value("controls", "grid_hotkeys", false))
+	edge_scroll = bool(display.get_value("controls", "edge_scroll", false))
+	if layout == Layout.SETTINGS:
+		var hotkeys := _option(box, "Command card hotkeys", ["Standard", "Grid"], int(grid_hotkeys))
+		hotkeys.item_selected.connect(func(index): _save_control("grid_hotkeys", index == 1))
+		var scrolling := _option(box, "Mouse edge scrolling", ["Off", "On"], int(edge_scroll))
+		scrolling.item_selected.connect(func(index): _save_control("edge_scroll", index == 1))
+
+func _save_control(key: String, enabled: bool) -> void:
+	var display := ConfigFile.new()
+	var path := _display_prefs_path()
+	display.load(path)
+	display.set_value("controls", key, enabled)
+	display.save(path)
+
+func _display_prefs_path() -> String:
+	var override := OS.get_environment("RTS_DISPLAY_PREFS")
+	return DISPLAY_PREFS if override.is_empty() else override
 
 func open_title_panel() -> void:
 	panel.show()
@@ -225,9 +245,10 @@ func _on_map_selected(index: int) -> void:
 
 func _on_health_selected(mode: int) -> void:
 	var display := ConfigFile.new()
-	display.load(DISPLAY_PREFS)
+	var path := _display_prefs_path()
+	display.load(path)
 	display.set_value("display", "health_bars", mode)
-	display.save(DISPLAY_PREFS)
+	display.save(path)
 	health_mode_changed.emit(mode)
 
 func toggle() -> void:
