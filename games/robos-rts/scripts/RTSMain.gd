@@ -812,6 +812,15 @@ func _order_target_at(position: Vector2, screen: Vector2 = Vector2.INF) -> Dicti
 			best_distance = distance
 	return target
 
+func _issue_context_escorts(own: Array[Dictionary], position: Vector2, queue: bool, follow_tag: int = 0, assigned: Array = []) -> void:
+	var escorts: Array[int] = []
+	for unit in own:
+		if not unit.is_worker and not unit.is_structure and not unit.is_immobile and unit.tag != follow_tag and not assigned.has(unit.tag):
+			escorts.append(unit.tag)
+	if not escorts.is_empty():
+		var command := "follow" if follow_tag > 0 else "move"
+		SimEngine.issue_command(escorts, command, position, follow_tag, "", queue)
+
 func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vector2.INF) -> void:
 	var own := selected_owned()
 	if own.is_empty():
@@ -820,9 +829,9 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 	for u in own:
 		tags.append(u["tag"])
 
+	var target := _order_target_at(wpos, screen)
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		var target := _order_target_at(wpos, screen)
 		if not target.is_empty() and target.owner != local_player and own.any(func(unit): return unit.armed_structure):
 			var turrets := tags.filter(func(tag): return SimEngine.units[tag].armed_structure)
 			if SimEngine.issue_command(turrets, "attack_target", target.pos, target.tag, "", queue).ok:
@@ -831,7 +840,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 			_issue_rally_at(tags, wpos, queue, true, "rally", screen)
 		return
 
-	var target := _order_target_at(wpos, screen)
+	var workers := own.filter(func(unit): return unit.is_worker and not unit.is_immobile).map(func(unit): return unit.tag)
 	if not target.is_empty() and target.owner == local_player:
 		var builder := {}
 		var repairers: Array = []
@@ -842,29 +851,33 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 				repairers.append(unit.tag)
 		if not builder.is_empty():
 			SimEngine.issue_command([builder.tag], "resume_construction", target.pos, target.tag, "", queue)
+			_issue_context_escorts(own, target.pos, queue)
 			_spawn_marker(target.pos, "move")
 			return
-		var medics := own.filter(func(unit): return not unit.is_structure and SimEngine.can_restore(unit, target))
+		var medics := own.filter(func(unit): return not unit.is_structure and not unit.is_immobile and SimEngine.can_restore(unit, target)).map(func(unit): return unit.tag)
+		var follow_tag := int(target.tag) if not target.is_structure else 0
 		if not medics.is_empty():
-			SimEngine.issue_command(medics.map(func(unit): return unit.tag), "restore_vitals", target.pos, target.tag, "", queue)
+			SimEngine.issue_command(medics, "restore_vitals", target.pos, target.tag, "", queue)
+			_issue_context_escorts(own, target.pos, queue, follow_tag, medics)
 			_spawn_marker(target.pos, "move")
 			return
 		if not repairers.is_empty():
 			SimEngine.issue_command(repairers, "repair", target.pos, target.tag, "", queue)
+			_issue_context_escorts(own, target.pos, queue, follow_tag)
 			_spawn_marker(target.pos, "move")
 			return
+		if target.is_extractor and not workers.is_empty():
+			SimEngine.issue_command(workers, "harvest", target.pos, target.tag, "", queue)
+			_issue_context_escorts(own, target.pos, queue)
+			_spawn_marker(target.pos, "gather")
+			return
 
-	for r in SimEngine.resources.values():
-		if not SimEngine.deposit_present(r):
-			continue
-		if SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
-			var workers: Array = []
-			for u in own:
-				if u["is_worker"]:
-					workers.append(u["tag"])
-			if not workers.is_empty():
-				SimEngine.issue_command(workers, "harvest", r["pos"], r["tag"], "", queue)
-				_spawn_marker(r["pos"], "gather")
+	if not workers.is_empty():
+		for r in SimEngine.resources.values():
+			if SimEngine.deposit_present(r) and SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r.pos) <= float(r.radius) + 1.6:
+				SimEngine.issue_command(workers, "harvest", r.pos, r.tag, "", queue)
+				_issue_context_escorts(own, r.pos, queue)
+				_spawn_marker(r.pos, "gather")
 				return
 
 	if not target.is_empty():
@@ -874,28 +887,20 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 			else:
 				push_message("Selected weapons cannot hit that target.", "warn")
 			return
-		elif target.is_extractor and own.any(func(unit): return unit.is_worker):
-			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
-			_spawn_marker(target["pos"], "gather")
-			return
 		elif SimEngine.is_dropoff(target, local_player):
-			var carrying: Array = []
-			for unit in own:
-				if unit.is_worker and unit.cargo_amount > 0:
-					carrying.append(unit.tag)
+			var carrying := workers.filter(func(tag): return SimEngine.units[tag].cargo_amount > 0)
 			if not carrying.is_empty():
 				SimEngine.issue_command(carrying, "return_cargo", target.pos, target.tag, "", queue)
-				for tag in carrying:
-					tags.erase(tag)
-				if tags.is_empty():
-					_spawn_marker(target.pos, "gather")
-					return
+				_issue_context_escorts(own, target.pos, queue)
+				_spawn_marker(target.pos, "gather")
+				return
 		elif not target.is_structure and SimEngine.issue_command(tags, "follow", target.pos, target.tag, "", queue).ok:
 			_spawn_marker(target.pos, "move")
 			return
 
-	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
-	_spawn_marker(wpos, "move")
+	var mobile := own.filter(func(unit): return not unit.is_structure and not unit.is_immobile).map(func(unit): return unit.tag)
+	if not mobile.is_empty() and SimEngine.issue_command(mobile, "move", wpos, 0, "", queue).ok:
+		_spawn_marker(wpos, "move")
 
 func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false, force: bool = false, screen: Vector2 = Vector2.INF) -> void:
 	if pending_ability == "ping":
