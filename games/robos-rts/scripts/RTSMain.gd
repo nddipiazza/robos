@@ -65,6 +65,7 @@ var _camera_bookmarks: Dictionary = {}
 var _last_base_tag := 0
 var _saturation := {}
 var _saturation_refresh := 0.0
+var _worker_rally_previews := {}
 
 func _ready() -> void:
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
@@ -141,6 +142,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	_camera_bookmarks.clear()
 	_last_base_tag = 0
 	_saturation_refresh = 0.0
+	_worker_rally_previews.clear()
 	messages.clear()
 	alerts.clear()
 	attack_history.clear()
@@ -342,6 +344,11 @@ func _process(delta: float) -> void:
 	_saturation_refresh -= delta
 	if _saturation_refresh <= 0.0 and not hud_hidden:
 		_saturation = SimEngine.worker_saturation(local_player)
+		_worker_rally_previews.clear()
+		for unit in selected_owned():
+			var deposit := SimEngine.default_worker_deposit(unit)
+			if not deposit.is_empty():
+				_worker_rally_previews[unit.tag] = deposit
 		_saturation_refresh = 0.25
 	_attack_msg_cd = maxf(0.0, _attack_msg_cd - delta)
 	banner_ttl = maxf(0.0, banner_ttl - delta)
@@ -445,6 +452,8 @@ func inspected_deposit() -> Dictionary:
 func _inspect_deposit(position: Vector2) -> void:
 	var best_distance := INF
 	for deposit in SimEngine.resources.values():
+		if not SimEngine.deposit_present(deposit):
+			continue
 		var distance: float = position.distance_to(deposit.pos)
 		if distance < best_distance and distance <= deposit.radius + 0.6 and SimEngine.can_see_position(viewing_player(), deposit.pos):
 			_inspected_deposit_tag = deposit.tag
@@ -816,6 +825,8 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 			return
 
 	for r in SimEngine.resources.values():
+		if not SimEngine.deposit_present(r):
+			continue
 		if SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
 			var workers: Array = []
 			for u in own:
@@ -896,11 +907,24 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
+			if not SimEngine.deposit_present(r):
+				continue
 			if SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r["pos"]) <= float(r["radius"]) + 1.6:
 				SimEngine.issue_command(tags, "harvest", r["pos"], r["tag"], "", queue)
 				_spawn_marker(r["pos"], "gather")
 				return
 		push_message("Select a crystal field or aether vent.", "warn")
+	elif abil == "fill_gas":
+		var target := _order_target_at(wpos)
+		if target.is_empty() or not target.is_extractor or target.owner != local_player:
+			push_message("Select a friendly extractor.", "warn")
+			return
+		pending_ability = ""
+		var result := SimEngine.issue_command(tags, "fill_gas", target.pos, target.tag)
+		if result.ok:
+			_spawn_marker(target.pos, "gather")
+		else:
+			push_message("No available gas slots or workers.", "warn")
 	elif abil == "repair":
 		var target := _order_target_at(wpos)
 		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag, "", queue).ok:
@@ -979,6 +1003,8 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 		if u["is_structure"] and SimEngine.can_see_unit(local_player, u) and pos.distance_to(u["pos"]) < r + float(u["radius"]) - 0.4:
 			return {"ok": false, "pos": pos, "reason": "Too close to another structure."}
 	for res in SimEngine.resources.values():
+		if not SimEngine.deposit_present(res):
+			continue
 		if pos.distance_to(res["pos"]) < r + float(res["radius"]):
 			return {"ok": false, "pos": pos, "reason": "Too close to a resource."}
 	return _check_planned_placement(structure_id, pos, r)
@@ -1268,6 +1294,11 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		_repeating_target = false
 		pending_ability = "ping"
 		return
+	if ke.alt_pressed and ke.keycode == KEY_H:
+		if selected_owned().any(func(unit): return unit.is_worker):
+			_repeating_target = false
+			pending_ability = "fill_gas"
+		return
 	if ke.alt_pressed and ke.keycode == KEY_R:
 		_show_weapon_ranges = not _show_weapon_ranges
 		return
@@ -1478,6 +1509,8 @@ func ui_state() -> Dictionary:
 		"order_lines_visible": _order_lines_visible(),
 		"weapon_ranges": _selected_weapon_ranges(),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
+		"worker_rally_previews": _worker_rally_previews.values().map(func(deposit): return deposit.tag),
+		"recent_income": SimEngine.recent_income(local_player),
 		"camera_follow_tag": _tracked_tag,
 		"attack_history": attack_history.map(func(pos): return [pos.x, pos.y]),
 		"worker_saturation": SimEngine.worker_saturation(local_player),
@@ -1647,6 +1680,9 @@ func _draw_rally_and_orders() -> void:
 				_draw_rally_route(route, sp, Color("#fbbf24"))
 				if u.unit_type == "brood_nest":
 					_draw_rally_route(u.worker_rally_route, sp, Color("#5eead4"))
+				var preview: Dictionary = _worker_rally_previews.get(u.tag, {})
+				if not preview.is_empty():
+					_draw_rally_route([{"kind": "harvest", "pos": preview.pos, "target_tag": preview.tag}], sp, Color("#5eead4"))
 			continue
 		if not show_orders:
 			continue
@@ -1754,12 +1790,30 @@ func _draw_build_ghost() -> void:
 	var placement := placement_for(sid, wpos)
 	var r: float = float(RTSData.get_unit_def(sid).get("radius", 2.0))
 	var c: Vector2 = placement["pos"]
-	var col := Color(0.35, 0.95, 0.5, 0.9) if placement["ok"] else Color(0.95, 0.35, 0.3, 0.9)
-	var pts := PackedVector2Array([
-		world_to_screen(c + Vector2(-r, -r), 0.1), world_to_screen(c + Vector2(r, -r), 0.1),
-		world_to_screen(c + Vector2(r, r), 0.1), world_to_screen(c + Vector2(-r, r), 0.1)
+	var definition: Dictionary = RTSData.get_unit_def(sid)
+	var cells: Vector2i = definition.get("footprint", Vector2i(2, 2))
+	var step := Vector2.ONE * (r * 2.0) / Vector2(cells)
+	var origin := c - Vector2.ONE * r
+	var valid_color := Color("#51e480")
+	var blocked_color := Color("#ef6158")
+	var queued_color := Color("#fbbf24")
+	var outline := valid_color if placement.ok else (queued_color if placement.reason.contains("queued") else blocked_color)
+	var vent := c if definition.get("is_extractor", false) and placement.ok else Vector2.INF
+	for y in range(cells.y):
+		for x in range(cells.x):
+			var tile := origin + Vector2(x, y) * step
+			var color := blocked_color if SimEngine.is_build_tile_blocked(tile + step * 0.5, local_player, vent) else outline
+			_draw_build_tile(Rect2(tile, step), color, 0.16, 1.0)
+	_draw_build_tile(Rect2(origin, Vector2.ONE * r * 2.0), outline, 0.0, 2.0)
+	if vent.is_finite():
+		_draw_range_ring(c, 0.8, Color("#5eead4"))
+
+func _draw_build_tile(tile: Rect2, color: Color, fill: float, width: float) -> void:
+	var points := PackedVector2Array([
+		world_to_screen(tile.position, 0.1), world_to_screen(Vector2(tile.end.x, tile.position.y), 0.1),
+		world_to_screen(tile.end, 0.1), world_to_screen(Vector2(tile.position.x, tile.end.y), 0.1),
 	])
-	draw_colored_polygon(pts, Color(col.r, col.g, col.b, 0.22))
-	var closed := pts.duplicate()
-	closed.append(pts[0])
-	draw_polyline(closed, col, 2.0)
+	if fill > 0.0:
+		draw_colored_polygon(points, Color(color, fill))
+	points.append(points[0])
+	draw_polyline(points, color, width)

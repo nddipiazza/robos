@@ -565,6 +565,9 @@ func _on_selection_changed(ref: Dictionary) -> void:
 		_inspector_fields["id"] = _row(_inspector_box, "Id", _line(func(t): _set_field("id", t.strip_edges())))
 		_add_xy_fields()
 		_inspector_fields["amount"] = _row(_inspector_box, "Amount", _spin(0, 100000, 50, 1500, func(val): _set_field("amount", int(val))))
+		var rich := CheckBox.new()
+		rich.toggled.connect(func(enabled): _set_field("rich", enabled))
+		_inspector_fields["rich"] = _row(_inspector_box, "Rich deposit", rich)
 	elif layer in ["starts", "expansions"]:
 		_add_xy_fields()
 	else:
@@ -898,7 +901,7 @@ func handle_control_request(req: Dictionary) -> Dictionary:
 			_brush_size_spin.set_value_no_signal(canvas.brush_size)
 			out["ui"] = ui_state()
 		"add_resource":
-			out["ref"] = doc.add_resource(str(req.get("type", "crystal_field")), Vector2(float(req["x"]), float(req["y"])), int(req.get("amount", -1)))
+			out["ref"] = doc.add_resource(str(req.get("type", "crystal_field")), Vector2(float(req["x"]), float(req["y"])), int(req.get("amount", -1)), bool(req.get("rich", false)))
 		"add_unit":
 			out["ref"] = doc.add_unit(str(req["type"]), int(req.get("owner", 1)), Vector2(float(req["x"]), float(req["y"])),
 				int(req.get("count", 1)), float(req.get("spread", 2.1)), bool(req.get("auto_harvest", false)))

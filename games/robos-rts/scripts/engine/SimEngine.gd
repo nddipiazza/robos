@@ -32,6 +32,8 @@ const INFANTRY_CLEARANCE := 1.0
 const HEAVY_CLEARANCE := 2.0
 const NO_FOOTPRINTS: Array = []
 const HARVEST_REACH := 1.2
+const GAS_WORKER_SLOTS := 3
+const INCOME_WINDOW := 60
 const CRYSTAL_LINE_RADIUS := 26.0
 const CONSTRUCTION_REFUND := 0.75
 const REPAIR_HP_PER_SECOND := 12.0
@@ -111,6 +113,7 @@ var _town_halls: Array[Dictionary] = []
 var _detectors: Array[Dictionary] = []
 var _gas_source_by_tap: Dictionary = {}
 var _gas_tap_by_vent: Dictionary = {}
+var _income_buckets: Dictionary = {}
 
 func _ready() -> void:
 	var env_mode = OS.get_environment("RTS_MODE")
@@ -169,6 +172,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	units.clear()
 	resources.clear()
 	_footprint_bins.clear()
+	_income_buckets.clear()
 	nav_dirty = true
 	spatial_grid.clear()
 	terrain_obstacles.clear()
@@ -341,7 +345,8 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 			str(res.get("type", "crystal_field")),
 			Vector2(float(res.get("x", 20.0)), float(res.get("y", 20.0))),
 			int(res.get("amount", 1500)),
-			str(res.get("id", ""))
+			str(res.get("id", "")),
+			bool(res.get("rich", false))
 		)
 
 	for u in data.get("units", []):
@@ -463,7 +468,7 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		crystal_lines.clear()
 		next_tag = 1001
 		for resource in data.resources:
-			spawn_resource(str(resource.type), Vector2(float(resource.x), float(resource.y)), int(resource.get("amount", 1500)), str(resource.get("id", "")))
+			spawn_resource(str(resource.type), Vector2(float(resource.x), float(resource.y)), int(resource.get("amount", 1500)), str(resource.get("id", "")), bool(resource.get("rich", false)))
 	for pid in [1, 2]:
 		var faction: String = factions[str(pid)]
 		var roster: Dictionary = RTSData.faction_info[faction]
@@ -608,10 +613,30 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 		if u.is_structure and pos.distance_to(u.pos) < radius + float(u.radius) + 1.0:
 			return false
 	for res in resources.values():
+		if not deposit_present(res):
+			continue
 		if pos.distance_to(res.pos) < radius + float(res.radius) + 0.5:
 			if not extractor or res.resource_type != "aether_vent":
 				return false
 	return true
+
+func is_build_tile_blocked(point: Vector2, player: int, allowed_vent: Vector2 = Vector2.INF) -> bool:
+	if not can_see_position(player, point) or is_water_at(point):
+		return true
+	if not Rect2(0, 0, map_width, map_height).has_point(point):
+		return true
+	for obstacle in terrain_obstacles:
+		if obstacle.has_point(point):
+			return true
+	for footprint in _footprint_bins.get(_footprint_bin(point), NO_FOOTPRINTS):
+		if point.distance_squared_to(footprint.pos) >= footprint.radius * footprint.radius:
+			continue
+		if footprint.has("resource_type"):
+			if deposit_present(footprint) and (footprint.resource_type != "aether_vent" or footprint.pos.distance_squared_to(allowed_vent) > 0.25):
+				return true
+		elif can_see_unit(player, footprint):
+			return true
+	return false
 
 func _configure_water(map_cfg: Dictionary) -> void:
 	terrain_tiles = map_cfg.get("terrain_tiles", []).duplicate(true)
@@ -704,7 +729,7 @@ func _resource_land_position(pos: Vector2) -> Vector2:
 				return candidate
 	return pos
 
-func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_id: String = "") -> Dictionary:
+func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_id: String = "", rich: bool = false) -> Dictionary:
 	var tag = next_tag
 	next_tag += 1
 	var r = {
@@ -713,12 +738,21 @@ func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_i
 		"resource_type": res_type,
 		"pos": pos,
 		"amount": amount,
+		"rich": rich,
 		"radius": 1.8 if res_type == "crystal_field" else 2.6,
 		"mining_worker": 0
 	}
 	resources[tag] = r
 	nav_dirty = true
 	return r
+
+func deposit_present(deposit: Dictionary) -> bool:
+	return unlimited_resources or deposit.resource_type != "crystal_field" or deposit.amount > 0
+
+func deposit_yield(deposit: Dictionary) -> int:
+	if deposit.resource_type == "crystal_field":
+		return 7 if deposit.rich else 5
+	return 6 if deposit.rich else 4
 
 func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: String = "", build_progress: float = 1.0) -> Dictionary:
 	var def = RTSData.get_unit_def(unit_type)
@@ -879,7 +913,8 @@ func _rebuild_astar_grid() -> void:
 	_gas_source_by_tap.clear()
 	_gas_tap_by_vent.clear()
 	for deposit in resources.values():
-		_index_footprint(deposit)
+		if deposit_present(deposit):
+			_index_footprint(deposit)
 	for u in units.values():
 		if u.detection_radius > 0.0:
 			_detectors.append(u)
@@ -929,7 +964,8 @@ func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: b
 		for cell in water_cells:
 			grid.set_point_solid(cell)
 	for footprint in resources.values():
-		_mark_footprint(grid, footprint, clearance)
+		if deposit_present(footprint):
+			_mark_footprint(grid, footprint, clearance)
 	for footprint in _static_structures:
 		_mark_footprint(grid, footprint, clearance)
 
@@ -1214,10 +1250,7 @@ func _finish_production(structure: Dictionary, item: Dictionary) -> void:
 	var first := default_rally_position(structure)
 	if not route.is_empty():
 		first = rally_waypoint_position(route.front())
-	var spawn_dir: Vector2 = (first - structure.pos).normalized()
-	if spawn_dir.length_squared() < 0.01:
-		spawn_dir = Vector2.RIGHT if structure.owner == 1 else Vector2.LEFT
-	var spawn_pos: Vector2 = structure.pos + spawn_dir * (structure.radius + 1.8)
+	var spawn_pos := _rally_spawn_position(structure, first)
 	var new_unit := spawn_unit(utype, structure.owner, spawn_pos)
 	if new_unit.is_empty():
 		return
@@ -1229,6 +1262,12 @@ func _finish_production(structure: Dictionary, item: Dictionary) -> void:
 		issue_SmartHarvest(new_unit.tag)
 	elif first.distance_to(structure.pos) > structure.radius + 1.5:
 		issue_command([new_unit.tag], "move", first)
+
+func _rally_spawn_position(structure: Dictionary, first: Vector2) -> Vector2:
+	var direction: Vector2 = (first - structure.pos).normalized()
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT if structure.owner == 1 else Vector2.LEFT
+	return structure.pos + direction * (structure.radius + 1.8)
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u.unit_type == "skirmisher":
@@ -1454,14 +1493,80 @@ func _deliver_worker_cargo(worker: Dictionary, dt: float, hall_tag: int = 0) -> 
 	var cargo: String = worker.cargo_type
 	player[cargo] += worker.cargo_amount
 	player[cargo + "_collected"] += worker.cargo_amount
+	_record_income(worker.owner, cargo, worker.cargo_amount)
 	worker.cargo_amount = 0
 	worker.cargo_type = ""
 	return true
 
+func _record_income(owner_id: int, cargo: String, amount: int) -> void:
+	if not _income_buckets.has(owner_id):
+		_income_buckets[owner_id] = {}
+	var buckets: Dictionary = _income_buckets[owner_id]
+	var second := floori(sim_time)
+	var slot := second % INCOME_WINDOW
+	var sample: Dictionary = buckets.get(slot, {})
+	if sample.get("second", -1) != second:
+		sample = {"second": second, "crystal": 0, "aether": 0}
+		buckets[slot] = sample
+	sample[cargo] += amount
+
+func recent_income(owner_id: int) -> Dictionary:
+	var totals := {"crystal": 0, "aether": 0}
+	var second := floori(sim_time)
+	for sample in _income_buckets.get(owner_id, {}).values():
+		if second - sample.second < INCOME_WINDOW:
+			totals.crystal += sample.crystal
+			totals.aether += sample.aether
+	return totals
+
+func _harvest_dropoff(worker: Dictionary, order: Dictionary) -> int:
+	var previous: int = order.get("dropoff_tag", 0)
+	if is_dropoff(units.get(previous, {}), worker.owner):
+		return previous
+	if previous == 0:
+		var target: Dictionary = resources.get(order.target_tag, units.get(order.target_tag, {}))
+		var hall := _find_nearest_town_hall(worker.owner, target.get("pos", worker.pos))
+		order["dropoff_tag"] = hall.get("tag", 0)
+		return order.dropoff_tag
+	if tick < int(order.get("dropoff_retry", 0)):
+		return -1
+	var replacement := _reachable_dropoff(worker)
+	if replacement.is_empty():
+		order["dropoff_retry"] = tick + TICK_RATE
+		return -1
+	order.erase("dropoff_retry")
+	order.dropoff_tag = replacement.tag
+	var patch := _pick_local_crystal({"tag": worker.tag, "owner": worker.owner, "pos": replacement.pos}, _find_nearest_crystal(replacement.pos))
+	if not patch.is_empty():
+		_release_mining_slot(worker)
+		order.target_tag = patch.tag
+		worker.harvest_target_tag = patch.tag
+		worker.path.clear()
+	return replacement.tag
+
+func _reachable_dropoff(worker: Dictionary) -> Dictionary:
+	var nearest := {}
+	var best_distance := INF
+	for hall in _town_halls:
+		if not is_dropoff(hall, worker.owner):
+			continue
+		var distance: float = worker.pos.distance_squared_to(hall.pos)
+		if distance >= best_distance:
+			continue
+		var reach: float = worker.radius + hall.radius + 1.6
+		var path := compute_smooth_path(worker.pos, hall.pos, worker.radius, false, reach)
+		if path.back().distance_to(hall.pos) <= reach:
+			nearest = hall
+			best_distance = distance
+	return nearest
+
 func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) -> void:
+	var hall_tag := _harvest_dropoff(u, order)
+	if hall_tag < 0:
+		return
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
-		if _deliver_worker_cargo(u, dt) and u.orders.size() > 1:
+		if _deliver_worker_cargo(u, dt, hall_tag) and u.orders.size() > 1:
 			u.orders.pop_front()
 			u.path.clear()
 		return
@@ -1492,8 +1597,12 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		# every map deposit for each gas worker at 64 Hz dominated late-game CPU.
 		var tap_tag = res_tag if units.has(res_tag) else int(_gas_tap_by_vent.get(Vector2i(u.owner, res_tag), 0))
 		var extractor: Dictionary = units.get(tap_tag, {})
-		if extractor.is_empty() or extractor.owner != u.owner or extractor.build_progress < 1.0:
+		if extractor.is_empty() or extractor.owner != u.owner:
 			u.orders.pop_front()
+			return
+		if extractor.build_progress < 1.0:
+			if dist > HARVEST_REACH:
+				_follow_order_path(u, target_entity.pos, dt, u.radius + target_entity.radius + HARVEST_REACH)
 			return
 		source_tag = int(_gas_source_by_tap.get(tap_tag, res_tag))
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
@@ -1515,17 +1624,15 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 				emit_signal("resource_gathered", u, "crystal", target_entity["pos"])
 		if u["harvest_timer"] >= 1.75:
 			_release_mining_slot(u)
-			if is_gas:
-				u["cargo_type"] = "aether"
-				u["cargo_amount"] = 4
-			else:
-				u["cargo_type"] = "crystal"
-				u["cargo_amount"] = 5
+			u.cargo_type = "aether" if is_gas else "crystal"
+			var source: Dictionary = resources.get(source_tag, {})
+			u.cargo_amount = deposit_yield(source) if not source.is_empty() else (4 if is_gas else 5)
 			if resources.has(source_tag) and not unlimited_resources:
-				var source: Dictionary = resources[source_tag]
 				u.cargo_amount = mini(u.cargo_amount, int(source.amount))
 				source.amount -= u.cargo_amount
 				if source.amount == 0:
+					if not deposit_present(source):
+						nav_dirty = true
 					resource_depleted.emit(u.owner, source.resource_type)
 	else:
 		if not is_gas:
@@ -1575,9 +1682,9 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			u["orders"].pop_front()
 			u.path.clear()
 			return
+		s_unit["builder_tag"] = u.tag
 		var dist = _edge_distance(u, s_unit)
 		if dist <= 1.8:
-			s_unit["builder_tag"] = u.tag
 			u["vel"] = Vector2.ZERO
 			u["facing"] = (s_unit["pos"] - u["pos"]).angle()
 			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * build_time_scale())
@@ -1597,11 +1704,15 @@ func can_resume_construction(worker: Dictionary, site: Dictionary) -> bool:
 		return false
 	if not worker.is_worker or worker.is_immobile or site.build_progress >= 1.0 or site.get("auto_summon", false):
 		return false
+	var builder := construction_builder(site)
+	return builder.is_empty() or builder.tag == worker.tag
+
+func construction_builder(site: Dictionary) -> Dictionary:
 	var builder: Dictionary = units.get(site.get("builder_tag", 0), {})
-	if builder.is_empty() or builder.tag == worker.tag or builder.orders.is_empty():
-		return true
+	if builder.is_empty() or builder.orders.is_empty() or site.build_progress >= 1.0 or site.get("auto_summon", false):
+		return {}
 	var order: Dictionary = builder.orders[0]
-	return order.type != "build" or int(order.get("structure_tag", 0)) != site.tag
+	return builder if order.type == "build" and int(order.get("structure_tag", 0)) == site.tag else {}
 
 func _cancel_construction(site: Dictionary) -> bool:
 	if not units.has(site.tag) or not site.is_structure or site.build_progress >= 1.0:
@@ -2067,6 +2178,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	if valid_units.is_empty():
 		return {"ok": false, "accepted": 0, "error": "No valid unit tags"}
+	if cmd_type == "fill_gas":
+		return _fill_gas(valid_units, target_tag)
 
 	var group_size = valid_units.size()
 	var dynamic_arrival = clampf(0.85 + sqrt(float(group_size)) * 0.65, 0.85, 5.5)
@@ -2348,6 +2461,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype == "resume_construction":
 			var site: Dictionary = units[target_tag]
 			u.orders.append({"type": "build", "structure_tag": site.tag, "target_pos": site.pos})
+			if u.orders.size() == 1:
+				site["builder_tag"] = u.tag
 			accepted += 1
 
 		elif ctype == "repair":
@@ -2382,6 +2497,31 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 	if command_history.size() > 100:
 		command_history.pop_front()
 
+	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
+
+func _fill_gas(workers: Array[Dictionary], tap_tag: int) -> Dictionary:
+	var tap: Dictionary = units.get(tap_tag, {})
+	if tap.is_empty() or not tap.is_extractor or tap.hp <= 0.0:
+		return {"ok": false, "accepted": 0}
+	var vent_tag: int = _gas_source_by_tap.get(tap_tag, 0)
+	var vent: Dictionary = resources.get(vent_tag, {})
+	if vent.is_empty() or (not unlimited_resources and vent.amount <= 0):
+		return {"ok": false, "accepted": 0}
+	var assigned := {}
+	for unit in units.values():
+		if unit.owner == tap.owner and unit.is_worker:
+			for order in unit.orders:
+				if order.type == "harvest" and order.target_tag in [tap_tag, vent_tag]:
+					assigned[unit.tag] = true
+					break
+	var slots := GAS_WORKER_SLOTS - assigned.size()
+	var accepted := 0
+	for worker in workers:
+		if accepted >= slots:
+			break
+		if worker.is_worker and worker.owner == tap.owner and not assigned.has(worker.tag) and (worker.orders.is_empty() or worker.orders[0].type != "build"):
+			if issue_command([worker.tag], "harvest", tap.pos, tap.tag).ok:
+				accepted += 1
 	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
 
 func _is_friendly_mobile(unit: Dictionary, owner_id: int) -> bool:
@@ -2454,11 +2594,21 @@ func issue_SmartHarvest(worker_tag: int, preferred: Dictionary = {}) -> void:
 	if not units.has(worker_tag):
 		return
 	var u = units[worker_tag]
-	if preferred.is_empty():
-		preferred = _find_nearest_crystal(u.pos)
-	var nearest := _pick_local_crystal(u, preferred)
+	var nearest := _worker_crystal(u, preferred)
 	if not nearest.is_empty():
 		issue_command([worker_tag], "harvest", nearest["pos"], nearest["tag"])
+
+func _worker_crystal(worker: Dictionary, preferred: Dictionary = {}) -> Dictionary:
+	return _pick_local_crystal(worker, _find_nearest_crystal(worker.pos) if preferred.is_empty() else preferred)
+
+func default_worker_deposit(structure: Dictionary) -> Dictionary:
+	if match_state.is_empty() or not is_dropoff(structure, structure.owner):
+		return {}
+	var route: Array = structure.get("worker_rally_route", structure.rally_route)
+	if not route.is_empty():
+		return {}
+	var spawn := _rally_spawn_position(structure, default_rally_position(structure))
+	return _worker_crystal({"tag": 0, "owner": structure.owner, "pos": spawn})
 
 func _morph_unit_in_place(u: Dictionary, new_type: String) -> void:
 	var def = RTSData.get_unit_def(new_type)
@@ -2631,7 +2781,7 @@ func worker_saturation(owner_id: int) -> Dictionary:
 			var vent: int = _gas_source_by_tap.get(unit.tag, 0)
 			var source: Dictionary = resources.get(vent, {})
 			if not source.is_empty() and (source.amount > 0 or unlimited_resources):
-				sites[unit.tag] = {"assigned": 0, "ideal": 3, "type": "aether"}
+				sites[unit.tag] = {"assigned": 0, "ideal": GAS_WORKER_SLOTS, "type": "aether"}
 				deposits[vent] = unit.tag
 				deposits[unit.tag] = unit.tag
 		elif is_dropoff(unit, owner_id):
@@ -2761,6 +2911,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["brood_slots"] = u.brood_slots
 			if requires_power(u.unit_type):
 				entry["powered"] = is_powered(u.owner, u.pos)
+			if u.is_structure and u.build_progress < 1.0:
+				entry["builder_tag"] = construction_builder(u).get("tag", 0)
 			if (uses_brood_slots(u) or requires_power(u.unit_type)) and not u.production_queue.is_empty():
 				entry["production_progress"] = u.production_queue.map(func(item): return snappedf(item.progress, 0.01))
 
@@ -2774,6 +2926,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"resource_type": r["resource_type"],
 			"pos": {"x": r["pos"].x, "y": r["pos"].y, "z": snappedf(get_elevation_at(r["pos"]), 0.01)},
 			"amount": r["amount"],
+			"rich": r.rich,
+			"yield": deposit_yield(r),
+			"present": deposit_present(r),
 			"unlimited": unlimited_resources
 		})
 

@@ -13,6 +13,7 @@ var font: Font
 var draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
 var _supply_region := Rect2()
+var _resource_regions: Dictionary = {}
 
 class MinimapTerrain extends Node2D:
 	var hud: Node2D
@@ -21,6 +22,9 @@ class MinimapTerrain extends Node2D:
 
 func _ready() -> void:
 	SimEngine.scenario_loaded.connect(_invalidate_minimap)
+	SimEngine.resource_depleted.connect(func(_owner, type):
+		if type == "crystal_field":
+			_invalidate_minimap())
 
 func _invalidate_minimap(_scenario_name: String = "") -> void:
 	if _minimap_viewport:
@@ -71,6 +75,8 @@ func _draw() -> void:
 	_draw_match_status()
 	if main.pending_ability == "ping":
 		_text(Vector2(740, 76), "Place a map ping   ·   Esc to cancel", 20, Color("#b093ff"))
+	elif main.pending_ability == "fill_gas":
+		_text(Vector2(740, 76), "Select a friendly extractor   ·   Esc to cancel", 20, C_AETHER)
 	if SimEngine.paused and SimEngine.match_state.get("status") != "finished" and not main.match_menu.panel.visible:
 		_text(Vector2(790, 48), "PAUSED   ·   Pause / F12 to resume", 20, C_GOLD)
 	var tracked: Dictionary = SimEngine.units.get(main._tracked_tag, {})
@@ -163,6 +169,7 @@ func _person(c: Vector2, s: float, col: Color) -> void:
 # ---------------------------------------------------------------------------
 func _draw_resource_bar() -> void:
 	_supply_region = Rect2()
+	_resource_regions.clear()
 	var p: Dictionary = SimEngine.players.get(main.local_player, {})
 	if p.is_empty():
 		return
@@ -189,12 +196,14 @@ func _draw_resource_bar() -> void:
 	x -= 50.0
 
 	var aether_txt := str(int(p.get("aether", 0)))
+	_resource_regions["aether"] = Rect2(x - _text_w(aether_txt, 24) - 42, 3, _text_w(aether_txt, 24) + 48, 39)
 	_text(Vector2(x - _text_w(aether_txt, 24), y), aether_txt, 24)
 	x -= _text_w(aether_txt, 24) + 24.0
 	_drop(Vector2(x, y - 9.0), 13.0)
 	x -= 52.0
 
 	var crystal_txt := str(int(p.get("crystal", 0)))
+	_resource_regions["crystal"] = Rect2(x - _text_w(crystal_txt, 24) - 42, 3, _text_w(crystal_txt, 24) + 48, 39)
 	_text(Vector2(x - _text_w(crystal_txt, 24), y), crystal_txt, 24)
 	x -= _text_w(crystal_txt, 24) + 24.0
 	_gem(Vector2(x, y - 9.0), 13.0)
@@ -344,8 +353,13 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 	for obs in SimEngine.terrain_obstacles:
 		canvas.draw_rect(Rect2(mm.position + obs.position * Vector2(sx, sy), obs.size * Vector2(sx, sy)), Color("#3a3029"))
 	for r in SimEngine.resources.values():
+		if not SimEngine.deposit_present(r):
+			continue
 		var p: Vector2 = main.world_to_minimap(r["pos"])
-		canvas.draw_circle(p, 2.4, C_CRYSTAL if r["resource_type"] == "crystal_field" else C_AETHER)
+		var color := C_CRYSTAL if r.resource_type == "crystal_field" else C_AETHER
+		if r.rich:
+			color = C_GOLD if r.resource_type == "crystal_field" else Color("#a3e635")
+		canvas.draw_circle(p, 2.4, color)
 
 func _draw_minimap_units() -> void:
 	var mm: Rect2 = main.MINIMAP
@@ -433,17 +447,20 @@ func _draw_deposit(deposit: Dictionary, panel: Rect2) -> void:
 	var is_aether: bool = deposit.resource_type == "aether_vent"
 	var icon_pos := panel.position + Vector2(56, 65)
 	var color := C_AETHER if is_aether else C_CRYSTAL
+	if deposit.rich:
+		color = Color("#a3e635") if is_aether else C_GOLD
 	if is_aether:
 		_drop(icon_pos, 24)
 	else:
 		_gem(icon_pos, 24)
-	_text(panel.position + Vector2(108, 58), "Aether Vent" if is_aether else "Crystal Field", 28, color)
+	var title := "Aether Vent" if is_aether else "Crystal Field"
+	_text(panel.position + Vector2(108, 58), ("Rich " if deposit.rich else "") + title, 28, color)
 	var depleted: bool = not SimEngine.unlimited_resources and deposit.amount <= 0
 	var reserves := "Unlimited reserves" if SimEngine.unlimited_resources else ("%d remaining" % deposit.amount if not depleted else "Depleted")
 	_text(panel.position + Vector2(108, 96), reserves, 20)
 	if not depleted:
 		var hint := "Build your faction's extractor to harvest." if is_aether else "Right-click with workers to gather."
-		_text(panel.position + Vector2(108, 132), hint, 16, C_MUTED)
+		_text(panel.position + Vector2(108, 132), "%d per trip  ·  %s" % [SimEngine.deposit_yield(deposit), hint], 16, C_MUTED)
 
 func _draw_multi() -> void:
 	var cells := selection_cells()
@@ -579,6 +596,10 @@ func _draw_single(u: Dictionary) -> void:
 	var building: bool = u["is_structure"] and float(u["build_progress"]) < 1.0
 	if building:
 		_text(Vector2(rx, ry + 14), "Under construction", 18, C_TEXT)
+		if is_own and not u.get("auto_summon", false):
+			var builder := SimEngine.construction_builder(u)
+			var status := "Needs a builder" if builder.is_empty() else "Assigned builder: %s" % builder.name
+			_text(Vector2(rx + 177, ry + 14), status, 15, C_GOLD if builder.is_empty() else C_MUTED)
 		_bar(Rect2(rx, ry + 24, 420, 18), float(u["build_progress"]), C_GOLD, "%d%%" % int(float(u["build_progress"]) * 100.0))
 		ry += 62.0
 	elif def.has("trains") and is_own:
@@ -816,6 +837,15 @@ func _draw_tooltip() -> void:
 	if _supply_region.has_point(hover):
 		_draw_supply_tooltip()
 		return
+	for resource in _resource_regions:
+		var bounds: Rect2 = _resource_regions[resource]
+		if bounds.has_point(hover):
+			var income := SimEngine.recent_income(main.local_player)
+			var r := Rect2(bounds.end.x - 245, 54, 245, 75)
+			_frame(r, 0.97)
+			_text(r.position + Vector2(12, 27), "%s income" % resource.capitalize(), 18, C_GOLD)
+			_text(r.position + Vector2(12, 55), "%d delivered in the last 60s" % income[resource], 16)
+			return
 	for g in group_tab_rects():
 		var tab: Rect2 = group_tab_rects()[g]
 		if tab.has_point(hover):
