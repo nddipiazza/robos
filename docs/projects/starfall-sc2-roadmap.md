@@ -59,24 +59,24 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 ## 041–050 Gnarl Brood tech
 
 - [x] **041 Living ground.** Completed Brood bases spread a deterministic terrain layer visible in game and on the minimap.
-- [ ] **042 Brood terrain bonuses.** Eligible Brood troops gain speed on living ground and tooltips show the effective speed.
-- [ ] **043 Expansion of living ground.** Paid or energy-limited nodes extend the layer and decay after losing their source.
-- [ ] **044 Nest support unit.** A paid defender can spend energy to add brood slots after a delay.
+- [x] **042 Brood terrain bonuses.** Eligible Brood troops gain speed on living ground and tooltips show the effective speed.
+- [x] **043 Expansion of living ground.** Paid or energy-limited nodes extend the layer and decay after losing their source.
+- [x] **044 Nest support unit.** A paid defender can spend energy to add brood slots after a delay.
 - [ ] **045 Ground ambush.** Eligible units can burrow, with detection and mobility rules applied consistently.
 - [ ] **046 Unit morph branch.** A paid morph transforms an existing combat unit into a different battlefield role.
-- [ ] **047 Mobile supply.** A paid, vulnerable Brood flyer grants supply and frees room for scouting.
-- [ ] **048 Brood air harassment.** A light flyer attacks valid targets and is vulnerable to dedicated anti-air.
-- [ ] **049 Siege denial.** A late-tier Brood ability temporarily denies an area without hiding its duration.
-- [ ] **050 Subterranean reinforcement.** Linked paid entrances allow allied troops to travel between them under capacity and placement limits.
+- [x] **047 Mobile supply.** A paid, vulnerable Brood flyer grants supply and frees room for scouting.
+- [x] **048 Brood air harassment.** A light flyer attacks valid targets and is vulnerable to dedicated anti-air.
+- [x] **049 Siege denial.** A late-tier Brood ability temporarily denies an area without hiding its duration.
+- [x] **050 Subterranean reinforcement.** Linked paid entrances allow allied troops to travel between them under capacity and placement limits.
 
 ## 051–060 Aurelian Concord tech
 
 - [x] **051 Energy-backed production boost.** A Heartstone can temporarily speed one friendly producer with a visible timer.
 - [x] **052 Powered infrastructure overlay.** Show overlapping power fields and which Waystones would lose coverage if a Resonator falls.
 - [x] **053 Fast deployment upgrade.** Research lets eligible Waystones deploy paid troops at powered locations with a cooldown.
-- [ ] **054 Mobile power source.** A Concord carrier can deploy a temporary field while giving up movement.
-- [ ] **055 Disposable scout.** A cheap, fragile scouting unit provides sight without attack power.
-- [ ] **056 Mobile detector.** A paid Concord unit reveals hidden enemies within a displayed radius.
+- [x] **054 Mobile power source.** A Concord carrier can deploy a temporary field while giving up movement.
+- [x] **055 Disposable scout.** A cheap, fragile scouting unit provides sight without attack power.
+- [x] **056 Mobile detector.** A paid Concord unit reveals hidden enemies within a displayed radius.
 - [ ] **057 Barrier placement.** A support ability briefly blocks ground paths with visible duration and size.
 - [ ] **058 Area spellcaster.** An energy-funded cast damages units in a telegraphed area, including allies.
 - [ ] **059 Defensive recall.** An energy-funded recall returns eligible units after a delay if they remain inside the marker.
@@ -92,7 +92,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **066 AI scouting worker.** The opponent scouts plausible starts and reacts to visible evidence.
 - [x] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
 - [x] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
-- [ ] **069 AI air and stealth response.** Opponents build counters to confirmed threats using the standard economy.
+- [x] **069 AI air and stealth response.** Opponents build counters to confirmed threats using the standard economy.
 - [x] **070 AI route recovery.** An army that loses a crossing or stalls at a neutral barrier tries another reachable route while its economy keeps running. Verify a paid opening reaches the enemy on both sides of a blocked crossing.
 
 ## 071–080 Movement and command reliability
