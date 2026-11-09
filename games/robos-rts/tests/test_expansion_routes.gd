@@ -29,6 +29,10 @@ func _check_map(map_id: String) -> Dictionary:
 	sim._rebuild_astar_grid()
 	var starts: Array = sim.match_state.starts.map(_position)
 	var expansions: Array = sim.match_state.expansions.map(_position)
+	if map_id == "glassline-basin":
+		for station in sim.watch_stations:
+			if _route(starts[0], station.pos).is_empty() or _route(station.pos, starts[1]).is_empty():
+				failures.append("The flanking lane through %s is not open" % station.pos)
 	var raid_pairs := 0
 	var longest_defense := 0.0
 	for defender in starts:
