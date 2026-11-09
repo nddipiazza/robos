@@ -1072,6 +1072,11 @@ func _glyph(id: String, r: Rect2) -> void:
 		"production_boost":
 			draw_polyline(P.call([[-19, -13], [-5, 0], [-19, 13]]), Color("#b093ff"), 4.0 * u, true)
 			draw_polyline(P.call([[-2, -13], [12, 0], [-2, 13]]), Color("#b093ff"), 4.0 * u, true)
+		"defensive_recall":
+			var mint := Color("#71f4b5")
+			draw_arc(c, 16.0 * u, -PI * 0.75, PI * 0.76, 22, mint, 3.0 * u, true)
+			draw_polyline(P.call([[-17, -14], [-10, -16], [-10, -8]]), mint, 3.0 * u, true)
+			draw_circle(c, 3.0 * u, mint)
 		"research_fast_deployment", "fast_deploy":
 			draw_arc(c + Vector2(8, 0) * u, 13.0 * u, -1.25, 1.25, 20, Color("#b093ff"), 3.0 * u, true)
 			draw_polyline(P.call([[1, -9], [11, 0], [1, 9]]), Color("#b093ff"), 3.0 * u, true)

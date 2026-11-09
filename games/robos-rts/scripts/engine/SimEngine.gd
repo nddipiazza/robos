@@ -78,6 +78,9 @@ const CARAPACE_MORPH_OFFER := {"crystal": 75, "aether": 50, "supply": 1, "time":
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
+const DEFENSIVE_RECALL_COST := 50.0
+const DEFENSIVE_RECALL_RADIUS := 8.0
+const DEFENSIVE_RECALL_TICKS := 3 * TICK_RATE
 const FAST_DEPLOYMENT_COOLDOWN_TICKS := 20 * TICK_RATE
 const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
@@ -142,6 +145,7 @@ var nav_dirty: bool = true
 var _navigation_revision := 0
 
 var recent_events: Array[Dictionary] = []
+var _defensive_recalls: Dictionary = {}
 var command_history: Array[Dictionary] = []
 var _accum_time: float = 0.0
 
@@ -242,6 +246,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	watch_stations.clear()
 	miasma_zones.clear()
 	recent_events.clear()
+	_defensive_recalls.clear()
 	command_history.clear()
 	match_state.clear()
 	resume_from_title = false
@@ -1317,6 +1322,8 @@ func _step_single_tick() -> void:
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
 	if tick % LivingGround.UPDATE_TICKS == 0:
 		living_ground.update(units, tick, _can_spread_living_ground)
+	if not _defensive_recalls.is_empty():
+		_update_defensive_recalls()
 	if tick % VISION_UPDATE_TICKS == 0 and (vision != null or not watch_stations.is_empty()):
 		_refresh_vision()
 	_check_match_result()
@@ -2592,6 +2599,98 @@ func _cast_production_boost(source: Dictionary, producer: Dictionary) -> bool:
 	producer["production_boost_until"] = tick + PRODUCTION_BOOST_TICKS
 	return true
 
+func defensive_recall_block_reason(source: Dictionary) -> String:
+	if source.unit_type != "heartstone" or source.build_progress < 1.0 or source.hp <= 0.0:
+		return "Select a completed Heartstone."
+	if _defensive_recalls.has(source.owner):
+		return "A defensive recall is already in progress."
+	return "Requires 50 Heartstone energy." if source.energy < DEFENSIVE_RECALL_COST else ""
+
+func defensive_recall_markers_for(owner: int) -> Array[Dictionary]:
+	var markers: Array[Dictionary] = []
+	for player in _defensive_recalls:
+		if owner != 0 and player != owner:
+			continue
+		var recall: Dictionary = _defensive_recalls[player]
+		var position: Vector2 = recall.pos
+		var remaining := maxi(0, int(recall.finish_tick) - tick)
+		markers.append({"x": position.x, "y": position.y, "radius": DEFENSIVE_RECALL_RADIUS, "ticks": remaining})
+	return markers
+
+func _can_remain_in_recall(unit: Dictionary, owner: int, position: Vector2) -> bool:
+	return not unit.is_empty() and unit.owner == owner and not unit.is_structure and not unit.is_immobile \
+		and unit.hp > 0.0 and unit.build_progress >= 1.0 \
+		and position.distance_squared_to(unit.pos) <= DEFENSIVE_RECALL_RADIUS * DEFENSIVE_RECALL_RADIUS
+
+func _cast_defensive_recall(source: Dictionary, position: Vector2) -> bool:
+	if not defensive_recall_block_reason(source).is_empty():
+		return false
+	if not position.is_finite() or not Rect2(0.0, 0.0, map_width, map_height).has_point(position) or not can_see_position(source.owner, position):
+		return false
+	var tags: Array[int] = []
+	for unit in units.values():
+		if _can_remain_in_recall(unit, source.owner, position):
+			tags.append(unit.tag)
+	if tags.is_empty():
+		return false
+	source.energy -= DEFENSIVE_RECALL_COST
+	_defensive_recalls[source.owner] = {"source_tag": source.tag, "pos": position, "finish_tick": tick + DEFENSIVE_RECALL_TICKS, "tags": tags}
+	return true
+
+func _update_defensive_recalls() -> void:
+	for owner in _defensive_recalls.keys():
+		var recall: Dictionary = _defensive_recalls[owner]
+		var source: Dictionary = units.get(recall.source_tag, {})
+		if source.is_empty():
+			_defensive_recalls.erase(owner)
+			notice.emit(owner, "Recall cancelled. The Heartstone was destroyed.", "warn")
+			continue
+		recall.tags = recall.tags.filter(func(tag): return _can_remain_in_recall(units.get(tag, {}), owner, recall.pos))
+		if tick < int(recall.finish_tick):
+			continue
+		_defensive_recalls.erase(owner)
+		var recalled := _finish_defensive_recall(source, recall.pos, recall.tags)
+		var message := "Recalled one unit." if recalled == 1 else "Recalled %d units." % recalled
+		if recall.tags.is_empty():
+			message = "No units stayed inside the recall circle."
+		elif recalled == 0:
+			message = "Recall ended without a unit finding a clear exit."
+		elif recalled < recall.tags.size():
+			message += " Some exits were blocked."
+		notice.emit(owner, message, "info")
+
+func _finish_defensive_recall(source: Dictionary, position: Vector2, tags: Array) -> int:
+	if tags.is_empty():
+		return 0
+	if nav_dirty:
+		_rebuild_astar_grid()
+		nav_dirty = false
+	# Use positions after steering, and reserve each landing for this recall.
+	_rebuild_spatial_grid()
+	var arrivals: Array[Dictionary] = []
+	for tag in tags:
+		var unit: Dictionary = units[tag]
+		var landing := _rally_spawn_position(source, position, unit.unit_type, arrivals)
+		if not landing.is_finite():
+			continue
+		var origin: Vector2 = unit.pos
+		_release_mining_slot(unit)
+		unit.orders.clear()
+		unit.path.clear()
+		unit.erase("choke_yield")
+		unit["vel"] = Vector2.ZERO
+		unit["attack_state"] = "idle"
+		unit["attack_target_tag"] = 0
+		unit["pos"] = landing
+		unit["prev_pos"] = landing
+		unit["home_pos"] = landing
+		unit["has_home_pos"] = true
+		arrivals.append(unit)
+		unit_phased.emit(origin, landing, tag)
+	if not arrivals.is_empty():
+		_rebuild_spatial_grid()
+	return arrivals.size()
+
 func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_tag: int) -> bool:
 	if not can_use_hub_power(hub):
 		return false
@@ -3531,6 +3630,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				notice.emit(u.owner, "No troops in boarding range.", "warn")
 			continue
 		if ctype == "unload_transport" and not _valid_unload_order(u, target_pos):
+			continue
+		if ctype == "defensive_recall":
+			if accepted == 0 and _cast_defensive_recall(u, target_pos):
+				accepted += 1
 			continue
 		if ctype == "salvage":
 			if _toggle_salvage(u):
@@ -4694,6 +4797,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		"players": player_view,
 		"units": unit_list,
 		"resources": res_list,
+		"recall_markers": defensive_recall_markers_for(perspective_player),
 		"recent_events": events
 	}
 	if not watch_stations.is_empty():

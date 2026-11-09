@@ -1327,7 +1327,7 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 100,
 		"trains": ["mote"],
-		"abilities": ["train_mote", "rally", "production_boost"]
+		"abilities": ["train_mote", "rally", "production_boost", "defensive_recall"]
 	},
 	"resonator": {
 		"id": "resonator",
@@ -1456,6 +1456,7 @@ var abilities: Dictionary = {
 	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
 	"research_fast_deployment": {"id": "research_fast_deployment", "name": "Research Fast Deployment", "hotkey": "F", "target": "none", "upgrade": "fast_deployment", "producer": "waystone", "desc": "Lets powered Waystones send a paid trainee directly to a visible powered site."},
 	"fast_deploy": {"id": "fast_deploy", "name": "Fast Deploy", "hotkey": "D", "target": "point", "desc": "Set a powered landing point for the next paid trainee. A successful deployment recharges for 20 seconds. If the site becomes unavailable, the unit uses the normal exit."},
+	"defensive_recall": {"id": "defensive_recall", "name": "Defensive Recall", "hotkey": "R", "target": "point", "desc": "Spend 50 energy to open a visible 8-unit recall circle for 3 seconds. Friendly mobile units that stay inside return to this Heartstone if an exit is clear."},
 	"train_sunblade": {"id": "train_sunblade", "name": "Summon Sunblade", "hotkey": "Z", "target": "none", "unit": "sunblade"},
 	"train_skirmisher": {"id": "train_skirmisher", "name": "Summon Skirmisher", "hotkey": "S", "target": "none", "unit": "skirmisher"},
 	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},

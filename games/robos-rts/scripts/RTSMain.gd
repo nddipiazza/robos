@@ -678,7 +678,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if MINIMAP.grow(6.0).has_point(mpos):
 		_last_group_press.clear()
 		if left:
-			if pending_ability in ["attack", "move", "patrol", "rally", "rally_worker", "recon_sweep", "ping"]:
+			if pending_ability in ["attack", "move", "patrol", "rally", "rally_worker", "recon_sweep", "defensive_recall", "ping"]:
 				_execute_pending_ability_at(minimap_to_world(mpos), mb.shift_pressed, true)
 			elif world_3d and not _jump_to_attack_pin(mpos):
 				mm_dragging = true
@@ -1078,6 +1078,11 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			pending_ability = ""
 		else:
 			push_message("Choose a map location for the sweep.", "warn")
+	elif abil == "defensive_recall":
+		if SimEngine.issue_command(tags, abil, wpos).ok:
+			pending_ability = ""
+		else:
+			push_message("Choose a visible location with friendly mobile units.", "warn")
 	elif abil == "deploy_prospector":
 		for deposit in SimEngine.resources.values():
 			if deposit.resource_type != "crystal_field" or wpos.distance_to(deposit.pos) > deposit.radius + 1.6:
@@ -1283,6 +1288,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		"production_boost":
 			if not selected_owned().any(SimEngine.can_use_production_boost):
 				return "Requires 50 Heartstone energy."
+		"defensive_recall":
+			if not selected_owned().any(func(unit): return SimEngine.defensive_recall_block_reason(unit).is_empty()):
+				return SimEngine.defensive_recall_block_reason(pu)
 		"fast_deploy":
 			if not selected_owned().any(func(unit): return SimEngine.fast_deployment_block_reason(unit).is_empty()):
 				return SimEngine.fast_deployment_block_reason(pu)
@@ -1757,6 +1765,7 @@ func ui_state() -> Dictionary:
 		"mobile_detection_ranges": _selected_mobile_detection_ranges(),
 		"weapon_timing": selected_weapon_timing(),
 		"power_overlay": _power_overlay(),
+		"recall_markers": SimEngine.defensive_recall_markers_for(viewing_player()),
 		"area_warnings": _area_attack_warnings(),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"path_feedback": _selected_path_feedback().map(func(feedback): return {
@@ -1795,6 +1804,7 @@ func _draw() -> void:
 	_draw_rally_and_orders()
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
+	_draw_recall_markers(font)
 	for station in SimEngine.watch_stations:
 		if SimEngine.can_see_position(viewing_player(), station.pos):
 			var owner := int(station.owner)
@@ -1854,6 +1864,16 @@ func _draw_miasma_zones(font: Font) -> void:
 	if pending_ability == "corrosive_miasma" and hover_pos().y < HUD_TOP:
 		var point := screen_to_world(hover_pos())
 		_draw_range_ring(point, SimEngine.MIASMA_RADIUS, Color(0.78, 0.91, 0.43, 0.65))
+
+func _draw_recall_markers(font: Font) -> void:
+	var color := Color("#71f4b5")
+	for marker in SimEngine.defensive_recall_markers_for(viewing_player()):
+		var position := Vector2(marker.x, marker.y)
+		_draw_range_ring(position, marker.radius, color, 2.5)
+		var center := world_to_screen(position, 2.8) - Vector2(60, 0)
+		var label := "Recall %.1fs" % (marker.ticks * SimEngine.TICK_DT)
+		draw_rect(Rect2(center - Vector2(0, 15), Vector2(120, 21)), Color(0.04, 0.08, 0.07, 0.9))
+		draw_string(font, center, label, HORIZONTAL_ALIGNMENT_CENTER, 120, 16, color)
 
 func _draw_range_ring(position: Vector2, radius: float, color: Color, width: float = 1.5) -> void:
 	var outline := PackedVector2Array()
