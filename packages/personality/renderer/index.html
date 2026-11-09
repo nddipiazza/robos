@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' file:; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://127.0.0.1:*; media-src http://127.0.0.1:* file: blob:; frame-src http://127.0.0.1:*; connect-src 'self' http://127.0.0.1:*">
+  <title>RobOS Personality</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <img class="brand-icon" src="../icon.svg" alt="">
+        <div>
+          <h1>RobOS Personality</h1>
+          <p class="muted small">Give an AI a face, a voice, ears and eyes, then talk to it.</p>
+        </div>
+      </div>
+      <div class="picker">
+        <label for="personality-select" class="muted small">Personality</label>
+        <select id="personality-select" aria-label="Personality"></select>
+        <button id="new-personality" class="btn">New</button>
+        <button id="delete-personality" class="btn ghost" title="Delete this personality">Delete</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="parts" aria-label="Parts of the personality">
+        <section class="card" id="part-face">
+          <h2>Face</h2>
+          <p class="hint">How it looks. The face shows here, in its own window, or on a TV.</p>
+          <label class="field">Name<input id="name" maxlength="60"></label>
+          <label class="field">Who it is
+            <textarea id="persona" rows="4" maxlength="2000" placeholder="A warm, curious robot who…"></textarea>
+          </label>
+          <div class="row">
+            <label class="field grow">Look
+              <select id="face-style">
+                <option value="robot">Robot screen</option>
+                <option value="buddy">Cartoon buddy</option>
+              </select>
+            </label>
+            <div class="field">Color<div id="colors" class="swatches"></div></div>
+          </div>
+        </section>
+
+        <section class="card" id="part-voice">
+          <h2>Voice</h2>
+          <p class="hint">How it sounds, and which speaker plays it.</p>
+          <div class="row">
+            <label class="field grow">Speech engine<select id="voice-engine"></select></label>
+            <label class="field grow">Voice<select id="voice-voice"></select></label>
+          </div>
+          <label class="field">Sound device<select id="voice-output"></select></label>
+          <div class="row center">
+            <label class="field grow">Speed <span id="voice-speed-label" class="muted"></span>
+              <input id="voice-speed" type="range" min="0.6" max="1.6" step="0.05">
+            </label>
+            <label class="check"><input id="voice-captions" type="checkbox"> Captions</label>
+          </div>
+          <div class="row">
+            <button id="voice-test" class="btn">Test voice</button>
+            <span id="voice-status" class="status muted small"></span>
+          </div>
+        </section>
+
+        <section class="card" id="part-ears">
+          <h2>Ears</h2>
+          <p class="hint">The microphone it listens with. Words show on the face as it hears them.</p>
+          <label class="field">Microphone<select id="ears-device"></select></label>
+          <label class="field">Sensitivity <span id="ears-sens-label" class="muted"></span>
+            <input id="ears-sensitivity" type="range" min="0" max="1" step="0.05">
+          </label>
+          <div class="meter" aria-hidden="true"><div id="ears-meter"></div></div>
+          <span id="ears-status" class="status muted small">Not listening.</span>
+        </section>
+
+        <section class="card" id="part-eyes">
+          <h2>Eyes</h2>
+          <p class="hint">A camera from RobOS Camera Watch. The face shows what it sees in a small picture.</p>
+          <div class="row">
+            <label class="field grow">Camera<select id="eyes-camera"></select></label>
+            <button id="eyes-refresh" class="btn ghost" title="Look for cameras added in Camera Watch">Refresh</button>
+          </div>
+          <label class="check"><input id="eyes-pip" type="checkbox"> Show what it sees on the face</label>
+          <img id="eyes-preview" class="eyes-preview hidden" alt="What the personality sees">
+          <span id="eyes-status" class="status muted small"></span>
+        </section>
+
+        <section class="card" id="part-model">
+          <h2>Model</h2>
+          <p class="hint">The AI agent that thinks for it. When the eyes are on, it gets the latest picture to look at.</p>
+          <div id="agent-slot"></div>
+          <span id="model-status" class="status muted small"></span>
+        </section>
+      </aside>
+
+      <main class="main">
+        <section class="stage-card">
+          <div class="stage-bar">
+            <h2>Face</h2>
+            <span id="activity" class="activity-pill">idle</span>
+            <span class="spacer"></span>
+            <select id="display-select" aria-label="Monitor for the face window"></select>
+            <label class="check small"><input id="fullscreen" type="checkbox"> Full screen</label>
+            <button id="face-window" class="btn">Show in a window</button>
+            <select id="tv-select" aria-label="TV to cast to"></select>
+            <button id="tv-cast" class="btn">Cast to TV</button>
+          </div>
+          <div class="stage-frame">
+            <iframe id="face-frame" title="Personality face"></iframe>
+          </div>
+          <p id="cast-status" class="status muted small"></p>
+        </section>
+
+        <section class="talk-card">
+          <div class="talk-head">
+            <h2>Conversation</h2>
+            <span class="spacer"></span>
+            <button id="clear-history" class="btn ghost small">Clear</button>
+          </div>
+          <ol id="transcript" class="transcript" aria-live="polite"></ol>
+          <form id="composer" class="composer">
+            <button type="button" id="listen" class="btn listen" aria-pressed="false" title="Talk with the microphone">Listen</button>
+            <input id="message" autocomplete="off" placeholder="Type something to say to it…" maxlength="2000">
+            <button type="submit" id="send" class="btn primary">Send</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <audio id="voice-audio" preload="auto" crossorigin="anonymous"></audio>
+  <script src="../web/talk-core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

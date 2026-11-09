@@ -108,6 +108,7 @@ const PORT_MAP = {
   'voice-prompt': 19188,
   'kgraph-parse-portal': 19192,
   'crpg-editor': 19194,
+  'personality': 19222,
 };
 
 

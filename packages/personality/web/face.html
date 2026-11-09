@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RobOS Personality</title>
+  <link rel="stylesheet" href="/web/face.css">
+</head>
+<body>
+  <main id="stage" class="stage" data-activity="idle">
+    <div id="face" class="face" aria-hidden="true"></div>
+    <div class="nameplate"><span id="name">Personality</span><span id="activity" class="activity"></span></div>
+    <figure id="pip" class="pip hidden" aria-label="What the personality sees">
+      <img id="pip-img" alt="Camera view">
+      <figcaption id="pip-label">Eyes</figcaption>
+    </figure>
+    <div id="heard" class="heard hidden" aria-live="polite"></div>
+    <div id="caption" class="caption hidden" aria-live="polite"></div>
+    <div id="offline" class="offline hidden">Reconnecting…</div>
+  </main>
+  <script src="/web/face.js"></script>
+</body>
+</html>

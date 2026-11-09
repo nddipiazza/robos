@@ -336,6 +336,22 @@
       "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
     },
     {
+      "@id": "urn:robos:desktop-app:personality",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Personality",
+      "dcterms:description": "Talk to an AI personality built from parts: an animated face whose mouth moves with its voice (in the app, a desktop window, or cast to a TV), RobOS Voice speech with captions on a chosen sound device, a microphone transcribed by Whisper with heard words shown on the face, a Camera Watch camera as its eyes with a picture-in-picture, and the AI agent picked in the shared agent selector.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/personality",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / RobOS Voice (Kokoro, Piper, Edge TTS, Whisper) / Camera Watch camera runner (ffmpeg) / tv-engine app cast / robos-agent-client"
+    },
+    {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
@@ -875,6 +891,22 @@
       "robos:repository": "packages/camera-watch",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
+    },
+    {
+      "@id": "urn:robos:desktop-app:personality",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Personality",
+      "dcterms:description": "Talk to an AI personality built from parts: an animated face whose mouth moves with its voice (in the app, a desktop window, or cast to a TV), RobOS Voice speech with captions on a chosen sound device, a microphone transcribed by Whisper with heard words shown on the face, a Camera Watch camera as its eyes with a picture-in-picture, and the AI agent picked in the shared agent selector.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/personality",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / RobOS Voice (Kokoro, Piper, Edge TTS, Whisper) / Camera Watch camera runner (ffmpeg) / tv-engine app cast / robos-agent-client"
     },
     {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
