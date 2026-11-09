@@ -61,6 +61,7 @@ const HUB_ENERGY_MAX := 200.0
 const HUB_POWER_COST := 50.0
 const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 30.0, "requires": ["muster_hall"]}
 const PROSPECTOR_LIFETIME_TICKS := 45 * TICK_RATE
+const TRANSPORT_PICKUP_RADIUS := 6.5
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
@@ -1827,6 +1828,15 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			if _deliver_worker_cargo(u, dt, order.target_tag):
 				u.orders.pop_front()
 				u.path.clear()
+		"unload_transport":
+			if u.pos.distance_squared_to(order.target_pos) > 1.0:
+				_move_toward_point(u, order.target_pos, dt)
+			else:
+				if not _unload_transport(u, order.target_pos):
+					notice.emit(u.owner, "Deployment site blocked. Troops remain aboard.", "warn")
+				u.orders.pop_front()
+				u.path.clear()
+				u.home_pos = u.pos
 
 		"follow":
 			var leader: Dictionary = units.get(order.target_tag, {})
@@ -3006,12 +3016,13 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	attacker["damage_dealt"] += hp_dmg
 
 	if target["hp"] <= 0.0:
+		var lost_count: int = 1 + target.get("passengers", []).size()
 		if target.owner != 0 and attacker.owner != target.owner:
-			attacker["kills"] += 1
+			attacker["kills"] += lost_count
 			if players.has(attacker["owner"]):
-				players[attacker["owner"]]["units_killed"] += 1
+				players[attacker["owner"]]["units_killed"] += lost_count
 		if players.has(target["owner"]):
-			players[target["owner"]]["units_lost"] += 1
+			players[target["owner"]]["units_lost"] += lost_count
 		var dead = target.duplicate(true)
 		if target.has("attachment_tag"):
 			detach_production_attachment(target)
@@ -3108,6 +3119,12 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if ctype == "production_boost":
 			if accepted == 0 and _cast_production_boost(u, units.get(target_tag, {})):
 				accepted += 1
+			continue
+		if ctype == "load_transport":
+			if _load_transport(u):
+				accepted += 1
+			continue
+		if ctype == "unload_transport" and not _valid_unload_order(u, target_pos):
 			continue
 		if ctype == "salvage":
 			if _toggle_salvage(u):
@@ -3372,6 +3389,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype in ["repair", "restore_vitals"]:
 			u.orders.append({"type": ctype, "target_tag": target_tag})
 			accepted += 1
+		elif ctype == "unload_transport":
+			u.orders.append({"type": ctype, "target_pos": target_pos})
+			accepted += 1
 
 		elif ctype.begins_with("build_"):
 			var stype = ctype.replace("build_", "")
@@ -3435,6 +3455,82 @@ func _fill_gas(workers: Array[Dictionary], tap_tag: int) -> Dictionary:
 
 func _is_friendly_mobile(unit: Dictionary, owner_id: int) -> bool:
 	return not unit.is_empty() and unit.owner == owner_id and not unit.is_structure and unit.hp > 0.0
+
+func _load_transport(transport: Dictionary) -> bool:
+	var capacity: int = RTSData.get_unit_def(transport.unit_type).get("transport_capacity", 0)
+	var passengers: Array = transport.get("passengers", [])
+	if passengers.size() >= capacity:
+		return false
+	var candidates := units.values().filter(func(unit):
+		return _is_friendly_mobile(unit, transport.owner) and unit.flight_height <= 0.0 and not unit.is_worker and not unit.is_immobile \
+			and transport.pos.distance_squared_to(unit.pos) <= TRANSPORT_PICKUP_RADIUS * TRANSPORT_PICKUP_RADIUS)
+	candidates.sort_custom(func(a, b):
+		var a_distance: float = transport.pos.distance_squared_to(a.pos)
+		var b_distance: float = transport.pos.distance_squared_to(b.pos)
+		return a.tag < b.tag if a_distance == b_distance else a_distance < b_distance)
+	var loaded := false
+	for passenger in candidates:
+		if passengers.size() >= capacity:
+			break
+		passenger.orders.clear()
+		passenger.path.clear()
+		passenger.attack_state = "idle"
+		passenger.vel = Vector2.ZERO
+		_confirm_waiting_attack_loss(passenger)
+		passengers.append(passenger)
+		units.erase(passenger.tag)
+		loaded = true
+	if loaded:
+		transport["passengers"] = passengers
+	return loaded
+
+func _valid_unload_order(transport: Dictionary, point: Vector2) -> bool:
+	if transport.get("passengers", []).is_empty() or not point.is_finite() or _map_clamped_position(point, transport.radius) != point:
+		return false
+	return not can_see_position(transport.owner, point) or not _is_point_blocked_by_static(point, INFANTRY_CLEARANCE)
+
+func is_embarked(tag: int, owner: int) -> bool:
+	for unit in units.values():
+		if unit.owner == owner and unit.has("passengers") and unit.passengers.any(func(passenger): return passenger.tag == tag):
+			return true
+	return false
+
+func _unload_transport(transport: Dictionary, center: Vector2) -> bool:
+	if _is_point_blocked_by_static(center, INFANTRY_CLEARANCE):
+		return false
+	var passengers: Array = transport.passengers
+	var ground := units.values().filter(func(unit): return unit.flight_height <= 0.0 and unit.pos.distance_squared_to(center) < 100.0)
+	var positions: Array[Vector2] = []
+	var candidates: Array[Vector2] = [center]
+	for distance in [2.7, 5.4]:
+		for step in range(12):
+			candidates.append(center + Vector2.from_angle(TAU * step / 12.0) * float(distance))
+	for passenger in passengers:
+		var spot := Vector2.INF
+		for candidate in candidates:
+			if _map_clamped_position(candidate, passenger.radius) != candidate or _is_point_blocked_by_static(candidate, passenger.radius):
+				continue
+			if ground.any(func(unit): return candidate.distance_squared_to(unit.pos) < pow(passenger.radius + unit.radius, 2.0)):
+				continue
+			var clear := true
+			for i in range(positions.size()):
+				if candidate.distance_squared_to(positions[i]) < pow(passenger.radius + passengers[i].radius, 2.0):
+					clear = false
+					break
+			if clear:
+				spot = candidate
+				break
+		if not spot.is_finite():
+			return false
+		positions.append(spot)
+	for i in range(passengers.size()):
+		var passenger: Dictionary = passengers[i]
+		passenger.pos = positions[i]
+		passenger.prev_pos = positions[i]
+		passenger.home_pos = positions[i]
+		units[passenger.tag] = passenger
+	passengers.clear()
+	return true
 
 func default_rally_position(structure: Dictionary) -> Vector2:
 	return structure.pos + (Vector2(8.0, 0.0) if structure.owner == 1 else Vector2(-8.0, 0.0))
@@ -3693,6 +3789,8 @@ func _recompute_supplies() -> void:
 				players[pid]["supply_used"] += int(q_def.get("supply_cost", 1))
 		else:
 			players[pid]["supply_used"] += int(def.get("supply_cost", 1))
+			for passenger in u.get("passengers", []):
+				players[pid]["supply_used"] += int(RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1))
 	for pid in players:
 		players[pid]["supply_cap"] = mini(200, players[pid]["supply_cap"])
 
@@ -3850,6 +3948,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"kills": u["kills"]
 		})
 		var entry: Dictionary = unit_list.back()
+		if u.owner == perspective_player or perspective_player == 0:
+			if u.has("passengers"):
+				entry["passengers"] = u.passengers.map(func(passenger): return passenger.tag)
 		if u.has("expires_tick"):
 			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
 		if u.flight_height > 0.0:

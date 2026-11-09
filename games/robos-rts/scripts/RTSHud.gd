@@ -659,6 +659,7 @@ func _order_label(u: Dictionary) -> String:
 		"repair": return "Repairing"
 		"restore_vitals": return "Treating wounds" if u.support_target_tag > 0 else "Approaching wounded ally"
 		"hold_position": return "Holding position"
+		"unload_transport": return "Deploying troops"
 	return "Active"
 
 func _production_rect(index: int) -> Rect2:
@@ -812,6 +813,8 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Cloaked")
 	if u.has("expires_tick"):
 		status.append("Deployment ends in %.0fs" % ceilf(maxi(0, int(u.expires_tick) - SimEngine.tick) * SimEngine.TICK_DT))
+	if is_own and def.has("transport_capacity"):
+		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
@@ -879,16 +882,20 @@ func _draw_single(u: Dictionary) -> void:
 # ---------------------------------------------------------------------------
 func _draw_command_card() -> void:
 	var origin: Vector2 = main.CARD_ORIGIN
-	var card_w: float = 5.0 * main.CARD_BTN + 4.0 * main.CARD_GAP
-	var card_h: float = 3.0 * main.CARD_BTN + 2.0 * main.CARD_GAP
+	var buttons: Array = main.get_card_buttons()
+	var button_size: float = main.CARD_BTN if buttons.is_empty() else buttons[0].rect.size.x
+	var rows: int = 4 if buttons.size() > 15 else 3
+	var step: float = button_size + main.CARD_GAP
+	var card_w: float = 5.0 * step - main.CARD_GAP
+	var card_h: float = rows * step - main.CARD_GAP
 	_frame(Rect2(origin - Vector2(8, 8), Vector2(card_w + 16, card_h + 16)))
 	var hover: Vector2 = main.hover_pos()
 	var pu: Dictionary = main.primary_unit()
-	for i in range(15):
-		var er := Rect2(origin + Vector2(float(i % 5) * (main.CARD_BTN + main.CARD_GAP), float(i / 5) * (main.CARD_BTN + main.CARD_GAP)), Vector2(main.CARD_BTN, main.CARD_BTN))
+	for i in range(rows * 5):
+		var er := Rect2(origin + Vector2(float(i % 5), float(i / 5)) * step, Vector2(button_size, button_size))
 		draw_rect(er, Color(0.05, 0.06, 0.08, 0.7))
 		draw_rect(er, Color(C_EDGE.r, C_EDGE.g, C_EDGE.b, 0.55), false, 1.0)
-	for btn in main.get_card_buttons():
+	for btn in buttons:
 		var r: Rect2 = btn["rect"]
 		var blocked: bool = str(btn["blocked"]) != ""
 		var pending: bool = main.pending_ability == btn["ability_id"]
@@ -970,6 +977,11 @@ func _glyph(id: String, r: Rect2) -> void:
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
 			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
+		"load_transport", "unload_transport":
+			var direction := -1.0 if id == "load_transport" else 1.0
+			draw_rect(Rect2(c - Vector2(16, 16) * u, Vector2(32, 14) * u), accent, false, 3.0 * u)
+			draw_line(c + Vector2(0, 7 - 10 * direction) * u, c + Vector2(0, 7 + 10 * direction) * u, col, 3.0 * u)
+			draw_polyline(P.call([[-7, 7 + 3 * direction], [0, 7 + 10 * direction], [7, 7 + 3 * direction]]), col, 3.0 * u, true)
 		"restore_vitals":
 			draw_rect(Rect2(c - Vector2(6, 18) * u, Vector2(12, 36) * u), Color("#a6f2ba"))
 			draw_rect(Rect2(c - Vector2(18, 6) * u, Vector2(36, 12) * u), Color("#a6f2ba"))

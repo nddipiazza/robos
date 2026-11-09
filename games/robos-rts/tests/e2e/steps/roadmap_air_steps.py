@@ -11,6 +11,26 @@ def crossing(context):
     assert find_unit(context, "infantry")["pos"]["x"] < 44
 
 
+@then("the Rampart carries two Riflemen")
+def transport_cargo(context):
+    units = context.client.get_observation()["units"]
+    transport = next(unit for unit in units if unit["unit_type"] == "rampart_transport")
+    assert len(transport["passengers"]) == 2, transport
+    assert not any(unit["id"] in {"first", "second"} for unit in units), units
+    result = context.client.screenshot(str(context.reports_dir / "rampart-troop-lift.png"))
+    assert result.get("ok"), result
+
+
+@then('"{first}" and "{second}" are deployed across the wall')
+def transport_drop(context, first, second):
+    for name in (first, second):
+        unit = find_unit(context, name)
+        assert unit["pos"]["x"] > 60 and not unit.get("airborne", False), unit
+    units = context.client.get_observation()["units"]
+    transport = next(unit for unit in units if unit["unit_type"] == "rampart_transport")
+    assert transport["passengers"] == [], transport
+
+
 @when('the commander clicks the airborne unit "{name}"')
 def click_airborne(context, name):
     _click_airborne(context, name, 1)

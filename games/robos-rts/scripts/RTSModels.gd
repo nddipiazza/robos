@@ -133,6 +133,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"breacher": _breacher(root, team)
 		"triage_specialist": _triage_specialist(root, team)
 		"kestrel_interceptor": _kestrel_interceptor(root, team, glow)
+		"rampart_transport": _rampart_transport(root, team, glow)
 		"howitzer": _howitzer(root, r, team, false)
 		"howitzer_emplaced": _howitzer(root, r, team, true)
 		"colony_hub": _colony_hub(root, r, team)
@@ -143,6 +144,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"fabrication_module": _fabrication_module(root, team)
 		"research_module": _research_module(root, team, glow)
 		"workshop": _workshop(root, r, team)
+		"airframe_hangar": _airframe_hangar(root, team, glow)
 		"sentry_turret": _sentry_turret(root, r, team)
 		"forager": _forager(root, glow)
 		"skitterling": _skitterling(root, glow)
@@ -203,6 +205,30 @@ static func _kestrel_interceptor(root: Node3D, team: Material, glow: Material) -
 		box(root, Vector3(1.28, 0.16, 1.15), team, Vector3(-0.23, 0.27, side * 0.76), Vector3(0, side * 26.0, 0))
 		cyl(root, 0.24, 0.32, 1.55, hull, Vector3(-0.36, 0.36, side * 0.84), Vector3(0, 0, -90), 8)
 		sph(root, 0.20, glow, Vector3(-1.15, 0.36, side * 0.84), Vector3(0.48, 1, 1))
+
+static func _rampart_transport(root: Node3D, team: Material, glow: Material) -> void:
+	var hull := mat("rampart_hull", STEEL_DARK)
+	var glass := mat("rampart_glass", Color("#183648"), Color("#3a6e84"))
+	box(root, Vector3(2.8, 0.72, 1.48), hull, Vector3(-0.15, 0.37, 0))
+	box(root, Vector3(1.82, 0.21, 1.5), team, Vector3(-0.27, 0.82, 0))
+	box(root, Vector3(0.55, 0.43, 1.16), glass, Vector3(1.27, 0.49, 0), Vector3(0, 0, -13))
+	box(root, Vector3(0.7, 0.1, 1.25), hull, Vector3(-1.43, 0.23, 0), Vector3(0, 0, 18))
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(1.5, 0.16, 0.62), team, Vector3(-0.25, 0.51, side * 0.94))
+		cyl(root, 0.33, 0.38, 1.75, hull, Vector3(-0.31, 0.48, side * 1.15), Vector3(0, 0, -90), 8)
+		sph(root, 0.26, glow, Vector3(-1.24, 0.48, side * 1.15), Vector3(0.46, 1, 1))
+
+static func _airframe_hangar(root: Node3D, team: Material, glow: Material) -> void:
+	var steel := mat("airframe_steel", STEEL_DARK)
+	var door := mat("airframe_door", Color("#101d29"))
+	box(root, Vector3(5.8, 0.26, 5.8), steel, Vector3(0, 0.13, 0))
+	box(root, Vector3(4.5, 2.0, 4.8), steel, Vector3(-0.28, 1.14, 0))
+	box(root, Vector3(4.56, 0.38, 5.03), team, Vector3(-0.28, 2.24, 0))
+	box(root, Vector3(0.14, 1.54, 3.38), door, Vector3(2.0, 0.94, 0))
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(4.8, 0.32, 0.28), team, Vector3(-0.17, 1.88, side * 2.3))
+		box(root, Vector3(0.15, 1.56, 0.09), glow, Vector3(2.12, 0.94, side * 1.77))
+		box(root, Vector3(0.56, 0.045, 0.11), glow, Vector3(2.56, 0.28, side * 0.82))
 
 # ---------------------------------------------------------------------------
 # Humans — Meridian Guard
