@@ -23,6 +23,7 @@ const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
 const GRID_KEYS := "QWERTASDFGZXCVB"
 const EDGE_SCROLL_MARGIN := 14.0
 const PATH_FEEDBACK_FADE := 1.5
+const SPLASH_RING_SEGMENTS := 32
 
 var world_3d: Node3D
 var icons: Node
@@ -1710,21 +1711,48 @@ func _area_attack_warning(attacker: Dictionary) -> Dictionary:
 	var target: Dictionary = SimEngine.units.get(attacker.attack_target_tag, {})
 	if target.is_empty() or not SimEngine.can_see_unit(viewing_player(), target) or not SimEngine.can_see_unit(attacker.owner, target):
 		return {}
-	return {"position": [target.pos.x, target.pos.y], "radius": radius, "remaining": float(attacker.attack_state_timer), "fraction": float(attacker.attack_state_timer) / attacker.attack_windup_duration}
+	return {
+		"position": [target.pos.x, target.pos.y],
+		"radius": radius,
+		"inner_radius": radius * SimEngine.SPLASH_INNER_RADIUS_RATIO,
+		"remaining": float(attacker.attack_state_timer),
+		"fraction": float(attacker.attack_state_timer) / attacker.attack_windup_duration
+	}
 
 func _draw_area_attack_warning(warning: Dictionary) -> void:
 	var position := Vector2(warning.position[0], warning.position[1])
-	var radius := float(warning.radius)
 	var fraction := clampf(warning.fraction, 0.0, 1.0)
+	var countdown := maxi(1, ceili(SPLASH_RING_SEGMENTS * fraction))
+	_draw_splash_ring(position, warning.radius, Color("#ea624b"), 2.0, countdown)
+	_draw_splash_ring(position, warning.inner_radius, Color("#ffb276"), 1.5)
+
+func _draw_splash_ring(position: Vector2, radius: float, color: Color, width: float, countdown: int = 0) -> void:
+	var camera: Camera3D = world_3d.camera_3d
 	var outline := PackedVector2Array()
-	for i in range(32):
-		var offset := Vector2.from_angle(TAU * i / 32.0 - PI / 2.0) * radius
-		outline.append(world_to_screen(position + offset, 0.25))
-	draw_colored_polygon(outline, Color(1.0, 0.29, 0.15, 0.15))
-	outline.append(outline[0])
-	draw_polyline(outline, Color("#ea624b"), 1.5, true)
-	var arc := outline.slice(0, maxi(2, ceili(32.0 * fraction) + 1))
-	draw_polyline(arc, Color("#ffb276"), 3.0, true)
+	var breaks := PackedInt32Array()
+	var center_elevation := SimEngine.get_elevation_at(position)
+	var previous_elevation := center_elevation
+	var flat := true
+	for i in range(SPLASH_RING_SEGMENTS + 1):
+		var point := position + Vector2.from_angle(TAU * i / SPLASH_RING_SEGMENTS - PI / 2.0) * radius
+		var elevation := SimEngine.get_elevation_at(point)
+		flat = flat and is_equal_approx(elevation, center_elevation)
+		if i > 0 and absf(elevation - previous_elevation) > 1.75:
+			breaks.append(i)
+		previous_elevation = elevation
+		outline.append(camera.unproject_position(Vector3(point.x, elevation + 0.25, point.y)))
+	if flat and countdown > 0:
+		draw_colored_polygon(outline.slice(0, SPLASH_RING_SEGMENTS), Color(1.0, 0.29, 0.15, 0.15))
+	# A cliff jump splits the projected ring into separate arcs.
+	breaks.append(outline.size())
+	var start := 0
+	for end in breaks:
+		if end - start > 1:
+			draw_polyline(outline.slice(start, end), color, width, true)
+		var arc_end := mini(end, countdown + 1)
+		if arc_end - start > 1:
+			draw_polyline(outline.slice(start, arc_end), Color("#ffb276"), 3.0, true)
+		start = end
 
 func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
 	var label := "%d/%d" % [site.assigned, site.ideal]
