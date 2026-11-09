@@ -65,13 +65,13 @@ Feature: A late-tech Crownspire attacks Massive units and loses to cheaper inter
        "map":{"width":118,"height":68},
        "units":[{"id":"home","type":"colony_hub","owner":1,"x":18,"y":31},
                 {"id":"hall","type":"muster_hall","owner":1,"x":27,"y":38},
-                {"id":"workshop","type":"workshop","owner":1,"x":34,"y":24},
+                {"id":"hangar","type":"airframe_hangar","owner":1,"x":34,"y":24},
                 {"id":"capital","type":"crownspire","owner":2,"x":86,"y":24},
                 {"id":"enemy","type":"heartstone","owner":2,"x":108,"y":54}]}
       """
     When player 2 issues "hold_fire" to unit "capital" toward (86.0, 24.0)
     And the commander frames (61, 28) at zoom height 88
-    And the commander clicks the projected body of "workshop" at (0.0, 1.15)
+    And the commander clicks the projected body of "hangar" at (0.0, 1.15)
     And the commander presses "A"
     And the commander presses "A"
     Then player 1 has 150 crystal, 50 aether and 6 supply used
