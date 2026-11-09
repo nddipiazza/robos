@@ -888,11 +888,11 @@ func _weapon_color(owner_id: int, is_splash: bool) -> Color:
 		_: return Color("#ffe27a")
 
 func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, _hit_shields: bool) -> void:
+	if not SimEngine.can_see_unit(_viewing_player, attacker) or not SimEngine.can_see_unit(_viewing_player, target):
+		return
 	var from_pos: Vector2 = attacker.pos
 	var to_pos: Vector2 = target.pos
 	var is_splash := float(weapon.get("splash_radius", 0.0)) > 0.0
-	if not SimEngine.can_see_position(_viewing_player, from_pos) or not SimEngine.can_see_position(_viewing_player, to_pos):
-		return
 	if _skip_transient_fx() or active_fx.size() >= MAX_ACTIVE_FX or (not _effect_near_view(from_pos) and not _effect_near_view(to_pos)):
 		return
 	var p1 := Vector3(from_pos.x, SimEngine.unit_elevation(attacker) + 1.3, from_pos.y)
@@ -915,17 +915,22 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	_spawn_burst(p1, Color(col.r, col.g, col.b, 0.9), 0.35, 0.1, 1.6)
 	_spawn_burst(p2, Color(col.r, col.g, col.b, 0.8), 1.4 if is_splash else 0.45, 0.22, 2.4 if is_splash else 1.8)
 
-func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, _tag: int) -> void:
+func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, tag: int) -> void:
 	if _skip_transient_fx():
 		return
+	var unit: Dictionary = SimEngine.units.get(tag, {})
+	if unit.is_empty():
+		return
+	var endpoint := unit.duplicate()
 	for p in [from_pos, to_pos]:
-		if not SimEngine.can_see_position(_viewing_player, p):
+		endpoint.pos = p
+		if not SimEngine.can_see_unit(_viewing_player, endpoint):
 			continue
 		_spawn_burst(Vector3(p.x, SimEngine.get_elevation_at(p) + 1.3, p.y), Color(0.4, 0.85, 1.0, 0.9), 0.9, 0.4, 2.6)
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
 	var p: Vector2 = dead["pos"]
-	if not _effect_near_view(p) or not SimEngine.can_see_position(_viewing_player, p):
+	if not _effect_near_view(p) or not SimEngine.can_see_unit(_viewing_player, dead):
 		return
 	var base := Vector3(p.x, SimEngine.get_elevation_at(p), p.y)
 	var rad := float(dead["radius"])
