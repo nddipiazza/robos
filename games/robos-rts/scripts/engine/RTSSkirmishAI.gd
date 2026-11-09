@@ -3,6 +3,8 @@ extends RefCounted
 const ROUTE_CHECK_TICKS := 3 * 64
 const ROUTE_CHECK_DISTANCE_SQUARED := 2.25
 const MAX_RECOVERIES_PER_UPDATE := 4
+const RECOVERY_WORKER_TARGET := 4
+const MINERAL_WORKERS_BEFORE_GAS := 3
 
 # Macro decisions use the same paid commands as the player. Difficulty changes
 # cadence, worker targets and army size, never damage, income or starting assets.
@@ -36,13 +38,19 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	if halls.is_empty():
 		_attack(pid, army, cfg, true)
 		return
+	if workers.size() < RECOVERY_WORKER_TARGET:
+		_train_recovery_workers(halls, roster.worker, workers.size())
 	var base: Vector2 = halls[0].pos
 	# Include pending construction orders to avoid repeatedly replacing builders.
+	var available_workers := workers.size()
 	for worker in workers:
+		if not worker.orders.is_empty() and worker.orders[0].type == "build":
+			available_workers -= 1
 		for order in worker.orders:
 			if order.type == "build" and int(order.get("structure_tag", 0)) == 0:
 				counts[order.structure_type] = int(counts.get(order.structure_type, 0)) + 1
-	var gas_workers = 0
+	var gas_workers := 0
+	var gas_limit := mini(3, maxi(0, available_workers - MINERAL_WORKERS_BEFORE_GAS))
 	var gas_tap: Dictionary = {}
 	for u in mine:
 		if u.unit_type == roster.extractor and u.build_progress >= 1.0 and (SimEngine.unlimited_resources or not SimEngine.worker_rally_resource(pid, u.tag).is_empty()):
@@ -50,12 +58,14 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	for worker in workers:
 		if not worker.orders.is_empty() and worker.orders[0].type == "build":
 			continue
-		if not gas_tap.is_empty() and gas_workers < 3:
+		if not gas_tap.is_empty() and gas_workers < gas_limit:
 			gas_workers += 1
-			if worker.harvest_target_tag != gas_tap.tag:
+			if worker.orders.is_empty() or worker.harvest_target_tag != gas_tap.tag:
 				SimEngine.issue_command([worker.tag], "harvest", Vector2.ZERO, gas_tap.tag)
-		elif worker.orders.is_empty():
-			SimEngine.issue_SmartHarvest(worker.tag)
+		else:
+			var target: Dictionary = SimEngine.units.get(worker.harvest_target_tag, {})
+			if worker.orders.is_empty() or (worker.orders[0].type == "harvest" and target.get("unit_type") == roster.extractor):
+				SimEngine.issue_SmartHarvest(worker.tag)
 	if p.faction != RTSData.FACTION_HUMANS:
 		_step_asymmetric_macro(pid, cfg, mine, workers, army, halls, counts)
 		return
@@ -64,10 +74,12 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	for u in mine:
 		if u.unit_type in ["silo", "silo_retracted"] and u.build_progress >= 1:
 			finished_supply += 1
-	if p.supply_cap < 200 and p.supply_cap - p.supply_used <= 4 and pending_supply == finished_supply:
+	var needs_muster_hall := int(counts.get("muster_hall", 0)) == 0
+	var needs_supply: bool = p.supply_cap < 200 and p.supply_cap - p.supply_used <= 4 and pending_supply == finished_supply
+	if needs_supply or (needs_muster_hall and pending_supply == 0):
 		_build(workers, "silo", base)
 		return
-	if int(counts.get("muster_hall", 0)) == 0:
+	if needs_muster_hall:
 		_build(workers, "muster_hall", base)
 		return
 	if strategy != "rush" and int(counts.get("aether_tap", 0)) == 0:
@@ -106,6 +118,20 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 			SimEngine.issue_command([u.tag], "train_" + unit_type)
 	_attack(pid, army, cfg, false)
 
+func _train_recovery_workers(halls: Array, worker_type: String, worker_count: int) -> void:
+	var committed := worker_count
+	for hall in halls:
+		for job in hall.production_queue:
+			if job.get("unit_type") == worker_type:
+				committed += 1
+	for hall in halls:
+		if committed >= RECOVERY_WORKER_TARGET:
+			return
+		if not hall.production_queue.is_empty() and not SimEngine.uses_brood_slots(hall):
+			continue
+		if SimEngine.issue_command([hall.tag], "train_" + worker_type).ok:
+			committed += 1
+
 func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Array, army: Array, halls: Array, counts: Dictionary) -> void:
 	var p: Dictionary = SimEngine.players[pid]
 	var roster: Dictionary = RTSData.faction_info[p.faction]
@@ -115,7 +141,8 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 	var strategy: String = cfg.get("strategy", "balanced")
 	var difficulty: String = cfg.get("difficulty", "normal")
 	var completed_supply := mine.filter(func(u): return u.unit_type == supply_type and u.build_progress >= 1.0).size()
-	if p.supply_cap < 200 and p.supply_cap - p.supply_used <= 4:
+	var needs_power := not brood and int(counts.get(supply_type, 0)) == 0
+	if needs_power or (p.supply_cap < 200 and p.supply_cap - p.supply_used <= 4):
 		if int(counts.get(supply_type, 0)) == completed_supply:
 			_build(workers, supply_type, base)
 		_attack(pid, army, cfg, false)
