@@ -2,7 +2,7 @@
 
 Starfall Command already has three skirmish factions, fog and detection, mineral walking, control groups, grid hotkeys, a map editor, and paid AI openings. The roadmap builds on that game. It uses Starfall’s own factions, maps, names, and art.
 
-Work proceeds in numbered groups of ten. An item is complete once it works through its normal entry point and its check passes. Shared simulation changes also need a rendered UI pass and deterministic match regressions. Keep new content and modes playable from the title screen. The existing 64 Hz simulation and bot API remain the common test surface.
+Work proceeds in numbered groups of ten. An item is complete once it works through its normal entry point and its check passes. Shared simulation changes also need a rendered UI pass and deterministic match regressions. New gameplay must be reachable from the normal skirmish flow. The existing 64 Hz simulation and bot API remain the common test surface.
 
 ## 001–010 Battlefield controls
 
@@ -93,46 +93,46 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [ ] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
 - [ ] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
 - [ ] **069 AI air and stealth response.** Opponents build counters to confirmed threats using the standard economy.
-- [ ] **070 Skirmish handicap options.** An explicit handicap changes starting resources or unit durability and is recorded in the result.
+- [ ] **070 AI route recovery.** An army that loses a crossing or stalls at a neutral barrier tries another reachable route while its economy keeps running. Verify a paid opening reaches the enemy on both sides of a blocked crossing.
 
-## 071–080 Replay, observer, and results
+## 071–080 Movement and command reliability
 
-- [ ] **071 Versioned replay recording.** Record map, seed, options, and timestamped commands needed to reconstruct a match.
-- [ ] **072 Deterministic replay validation.** A playback reaches the recorded terminal result and state digest.
-- [ ] **073 Replay library.** Open, rename, and delete locally saved recordings from the title screen.
-- [ ] **074 Replay playback controls.** Pause, resume, and change speed with a visible time indicator.
-- [ ] **075 Replay seeking.** Jump to a requested time from a validated checkpoint or initial state.
-- [ ] **076 Observer perspective.** Switch to a player’s fog, camera, or full-information observer view.
-- [ ] **077 Observer comparison panels.** Compare both players’ supply, income, army, and production during playback.
-- [ ] **078 Build-order timeline.** Review both sides’ construction, training, and research events in time order.
-- [ ] **079 Result graphs.** Chart income, supply, and army value from recorded samples.
-- [ ] **080 Match history.** Browse local results by opponent, faction, map, duration, and replay availability.
+- [ ] **071 Group arrival spacing.** Give a mixed army reachable destinations around one move click. Verify units settle without piling on the center or circling after arrival.
+- [ ] **072 Route changes during a move.** Replan when a raised gate, new foundation, or destroyed barrier changes the active route. Preserve the remaining Shift-queued waypoints.
+- [ ] **073 Unreachable order feedback.** Mark the reachable endpoint when a click lands across an impassable gap. Show which group members could not reach the requested side.
+- [ ] **074 Clearance through ramps and gates.** A heavy unit takes a wide enough route and a smaller unit can still use a narrow one. Test both directions and protect against clipping at diagonal corners.
+- [ ] **075 Choke traffic.** Opposing friendly groups get through a one-lane opening in bounded time. Cover idle blockers, army retreats, and workers returning cargo through the same choke.
+- [ ] **076 Production exit clearance.** Rally a newly trained squad past adjacent structures and deposits. A temporarily blocked exit holds units at a safe point and resumes when space opens.
+- [ ] **077 Queued target loss.** Destroy a queued target, deplete a queued deposit, and break a follow link. Each unit resolves the invalid leg and starts the next valid order once.
+- [ ] **078 Picking crowded targets.** Verify clicks on overlapping workers, units in cover, and flyers over ground troops select or target the intended visible object at each zoom level.
+- [ ] **079 Mixed selection orders.** A single context click can assign a worker, move an escort, and keep an incompatible unit’s active order. Validate the resulting orders for each subgroup.
+- [ ] **080 Input under battle load.** Issue move, attack, and stop in a dense fight. Confirm each order registers once and takes effect within the next simulation step at normal speed.
 
-## 081–090 Practice, campaign, and presentation
+## 081–090 Combat and economy reliability
 
-- [ ] **081 Guided first skirmish.** The title screen offers a practice run that teaches gather, build, train, and attack.
-- [ ] **082 Macro drills.** A timed practice scenario scores worker production, spending, and avoidable supply blocks.
-- [ ] **083 Micro drills.** Practice kiting, focus fire, positioning, and split movement with repeatable setups.
-- [ ] **084 Counter guide.** The roster describes weapon domains and counters using actual simulation data.
-- [ ] **085 Campaign mission selection.** An original mission sequence appears as a playable title-screen mode.
-- [ ] **086 Campaign objectives.** Scenario rules support clear primary and optional objectives with live progress.
-- [ ] **087 Mission checkpoints.** Save and resume at deliberate mission checkpoints without losing objective state.
-- [ ] **088 Contextual announcer cues.** Localized cues call out threats, depleted resources, and blocked production with rate limits.
-- [ ] **089 Readable team colors.** A palette setting distinguishes allies, enemies, and neutrals across HUD and battlefield.
-- [ ] **090 Accessible controls.** Rebind commands with conflict checks and reset controls to a known profile.
+- [ ] **081 Attack-move pursuit limits.** An army resumes its original route after chasing a retreating unit beyond its pursuit range. Verify hold position remains anchored through the same encounter.
+- [ ] **082 Fire and movement timing.** Test move and stop on the ticks immediately before and after impact. Preserve valid shots and cooldowns across rapid alternating orders.
+- [ ] **083 Splash boundaries.** Match the warning ring to the actual hit radius at cliff edges and around large units. Check friendly fire, inner and outer damage, and air and ground overlap.
+- [ ] **084 High-ground engagements.** Verify low-ground units lose a target that climbs out of sight and regain it when a spotter arrives. Keep targeting, projectile cues, and fog consistent.
+- [ ] **085 Concealment under crossfire.** Test brush, cloak, sweeps, and detector loss together. Hidden targets stay out of attack selection, warning decals, and the minimap until revealed.
+- [ ] **086 Support in a retreat.** A medic or shield relay transfers to a valid ally when its patient dies or leaves range. Verify interrupted treatment spends energy only for restoration already delivered.
+- [ ] **087 Supply changes with queued units.** Destroy a supply provider during production, cancel one paid slot, then restore supply. Validate reservation and refund accounting for each faction.
+- [ ] **088 Mineral-line saturation at scale.** Test 12, 24, and 36 workers on finite and unlimited lines. Verify workers redistribute as slots open, deliver each load once, and recover when a path is blocked.
+- [ ] **089 Construction and repair under pressure.** Kill a builder during placement, replace it, and assign multiple repairers with a low bank. Verify one foundation charge and bounded repair spending.
+- [ ] **090 Production queue consistency.** Exercise queued training, research, and cancellation as buildings lose power or attachments. Check exact costs, refunds, prerequisites, and resumed progress.
 
-## 091–100 Multiplayer and release validation
+## 091–100 Skirmish depth and performance
 
-- [ ] **091 Local two-player lobby.** Two seats choose a map, faction, and ready state before a match can start.
-- [ ] **092 Deterministic network commands.** Peers agree on ordered tick inputs and reject unauthorized seat commands.
-- [ ] **093 Desync detection.** Periodic state digests identify and report a reproducible divergent tick.
-- [ ] **094 Disconnect recovery.** A player can rejoin the same seat using a verified checkpoint and command history.
-- [ ] **095 Spectator seats.** A lobby can admit read-only observers with the appropriate vision policy.
-- [ ] **096 Team pings and chat.** Team messages stay with the correct recipients and cannot modify simulation state.
-- [ ] **097 Two versus two.** Team victory, ally colors, and shared vision work across two human or AI seats per team.
-- [ ] **098 Custom lobby maps.** Players verify and agree on the map version before a custom match starts.
-- [ ] **099 Cross-platform smoke tests.** Validate Windows, macOS, and Linux launch, input, replay loading, and skirmish.
-- [ ] **100 Release acceptance.** Run the full roster and map matrix, stress a late-game battle, and record playable release proof.
+- [ ] **091 AI economy recovery after a raid.** After losing workers, gas, or a production building, the AI rebuilds a working economy and resumes paid production from its surviving base.
+- [ ] **092 Opening timing and counterplay.** Measure first attack, expansion, and tech timings for the three factions on the same maps. Verify a timely defense has a viable paid answer to each opening.
+- [ ] **093 Unit counter and upgrade checks.** Run equal-cost encounters for core unit roles and weapon tiers. Verify each intended counter has a measurable advantage and that positioning can change the outcome.
+- [ ] **094 Expansion safety and counterattacks.** Verify each skirmish spawn can defend a nearby expansion and that its opponent has a distinct raiding or flanking route to contest it.
+- [ ] **095 Match end and rematch integrity.** Cover annihilation with unfinished structures, mutual destruction, and surrender. A rematch starts with clean resources, queues, selection, and AI orders.
+- [ ] **096 Large-army simulation stress.** Run two paid armies near the supply cap with active worker lines. Compare tick cost and verify repeated runs with the same seed and inputs reach the same result.
+- [ ] **097 Fog and minimap cost.** Profile a large explored map during simultaneous attacks and detection changes. Keep the minimap responsive and confirm fog updates within the simulation’s vision cadence.
+- [ ] **098 Combat rendering budget.** Stress a dense fight with projectiles, splash, smoke, and shield effects. Track frame times and keep selection, health bars, and commands readable during the burst.
+- [ ] **099 Long skirmish soak.** Play a sustained match through depletion, expansion, and repeated battles. Restart it several times and check for stalled commands, memory growth, and stale world objects.
+- [ ] **100 Core skirmish acceptance.** Play paid matches across faction pairings and maps from opening through victory or surrender. Require the movement, economy, combat, AI, and responsiveness checks to pass together.
 
 ## Design references
 
@@ -140,4 +140,3 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [Blizzard’s special controls guide](https://news.blizzard.com/en-us/article/4552955/game-guide-special-control)
 - [Blizzard’s resources guide](https://news.blizzard.com/en-us/article/4488900/game-guide-resources)
 - [Blizzard’s faction guide index](https://news.blizzard.com/en-us/article/7178492/game-guide-updated-race-pages)
-- [Blizzard’s replay and resume overview](https://news.blizzard.com/en-gb/article/10054757/new-replay-and-resume-features-coming-in-heart-of-the-swarm)
