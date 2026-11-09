@@ -14,6 +14,7 @@ var draw_ms: float = 0.0
 var minimap_draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
 var _supply_region := Rect2()
+var _speed_region := Rect2()
 var _resource_regions: Dictionary = {}
 var technology_bounds := Rect2(12.0, 64.0, 760.0, 725.0)
 
@@ -71,6 +72,7 @@ func _draw() -> void:
 	_draw_idle_worker_button()
 	_draw_idle_production_button()
 	_draw_group_tabs()
+	_speed_region = Rect2()
 	_draw_bottom_panel()
 	if main.technology_open:
 		_draw_technology_panel()
@@ -733,7 +735,9 @@ func _draw_single(u: Dictionary) -> void:
 		col_a.append(["Range", "%.1f" % float(wpn.get("range", 0))])
 	col_a.append(["Armor", "%d" % (int(u["armor"]) + SimEngine.unit_upgrade_level(u, "armor"))])
 	if float(def.get("speed", 0.0)) > 0.0 or u.flight_height > 0.0:
-		col_b.append(["Speed", "%.1f" % float(u["speed"])])
+		if u.has("living_ground_speed_bonus"):
+			_speed_region = Rect2(x0 + 193.0, by - 11.0 + float(col_b.size()) * 24.0, 122.0, 25.0)
+		col_b.append(["Speed", "%.1f" % SimEngine.effective_move_speed(u)])
 	for i in range(col_a.size()):
 		var py := by + 8.0 + float(i) * 24.0
 		_text(Vector2(x0, py), str(col_a[i][0]), 15, C_MUTED)
@@ -1090,8 +1094,23 @@ func _draw_supply_tooltip() -> void:
 	_text(r.position + Vector2(14, 79), "%d free now" % maxi(0, p.supply_cap - p.supply_used), 16)
 	_text(r.position + Vector2(14, 104), "+%d capacity under construction" % mini(building, 200 - p.supply_cap), 16, C_MUTED)
 
+func speed_tooltip() -> String:
+	var unit: Dictionary = main.primary_unit()
+	if not _speed_region.has_point(main.hover_pos()) or not unit.has("living_ground_speed_bonus"):
+		return ""
+	var bonus := int(roundf(float(unit.living_ground_speed_bonus) * 100.0))
+	var active := SimEngine.active_living_ground_speed_bonus(unit) > 0.0
+	return "Base %.1f   ·   Living ground +%d%% (%s)" % [unit.speed, bonus, "active" if active else "inactive"]
+
 func _draw_tooltip() -> void:
 	var hover: Vector2 = main.hover_pos()
+	var speed_detail := speed_tooltip()
+	if not speed_detail.is_empty():
+		var r := Rect2(Vector2(_speed_region.position.x, main.SEL_PANEL.position.y - 85.0), Vector2(310, 75))
+		_frame(r, 0.97)
+		_text(r.position + Vector2(12, 27), "Move speed   %.1f" % SimEngine.effective_move_speed(main.primary_unit()), 18, C_GOLD)
+		_text(r.position + Vector2(12, 55), speed_detail, 15)
+		return
 	if _supply_region.has_point(hover):
 		_draw_supply_tooltip()
 		return
