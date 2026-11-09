@@ -123,16 +123,20 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 		return
 	if strategy != "rush" and int(counts.get(roster.extractor, 0)) == 0 and (brood or int(counts.get("waystone", 0)) > 0):
 		_build(workers, roster.extractor, base)
-	var building_hall: bool = int(counts.get(roster.town_hall, 0)) > halls.size() or halls.any(func(u): return u.build_progress < 1.0)
+	var pending_hall: bool = int(counts.get(roster.town_hall, 0)) > halls.size()
+	var building_hall: bool = pending_hall or halls.any(func(u): return u.build_progress < 1.0)
 	var wants_expansion: bool = strategy == "economy" and workers.size() >= 18 and SimEngine.sim_time >= 85 and halls.size() < 2
 	var needs_expansion: bool = not SimEngine.unlimited_resources and workers.size() >= 12 and _needs_new_mineral_line(halls)
+	if pending_hall and (wants_expansion or needs_expansion):
+		_attack(pid, army, cfg, false)
+		return
 	if not building_hall and (wants_expansion or needs_expansion):
-		var expansion := _expansion_position(pid, base)
+		var expansion := _expansion_position(pid, base, 12.0)
 		if expansion != Vector2.ZERO:
 			_build(workers, roster.town_hall, expansion, true)
 			_attack(pid, army, cfg, false)
 			return
-	if not building_hall and brood and halls.size() < 3 and p.crystal >= 375 and workers.size() >= 13:
+	if not building_hall and brood and halls.size() < 3 and (strategy != "economy" or halls.size() > 1) and p.crystal >= 375 and workers.size() >= 13:
 		_build(workers, roster.town_hall, base)
 	if not brood and int(counts.get("waystone", 0)) < (3 if difficulty == "hard" else 2) and p.crystal >= 180:
 		_build(workers, "waystone", base)
@@ -205,7 +209,7 @@ func _build(workers: Array, structure_type: String, base: Vector2, exact: bool =
 			SimEngine.issue_command([worker.tag], "build_" + structure_type, candidate)
 			return
 
-func _expansion_position(pid: int, base: Vector2) -> Vector2:
+func _expansion_position(pid: int, base: Vector2, clearance: float = 26.0) -> Vector2:
 	var best = Vector2.ZERO
 	var distance = INF
 	var known := _known_enemy_buildings(pid)
@@ -218,7 +222,7 @@ func _expansion_position(pid: int, base: Vector2) -> Vector2:
 			continue
 		var occupied = false
 		for u in known:
-			if u.pos.distance_to(pos) < 26:
+			if u.pos.distance_to(pos) < clearance:
 				occupied = true
 		if not occupied and pos.distance_to(base) < distance:
 			best = pos
