@@ -424,6 +424,8 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | M / A / P / Y, then click the minimap | Place a move, attack-move, patrol or rally order without moving the camera. Hold Shift to queue unit orders. |
 | F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
 
+Ground movement orders aimed into cliffs, buildings, or deposits end at a reachable edge. Troops route around crystal fields and aether vents. Workers reach the edge of their deposit and can pass through other mobile units during active crystal gathering.
+
 ## Scripting and bots
 
 The game runs an HTTP/JSON server (port 18095, or `RTS_WEB_SERVICE_PORT`). The Cucumber tests and external bots use the same endpoints, and the Python SDK `robos_rts_bot_sdk.py` wraps them:

@@ -27,6 +27,10 @@ const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
+const FOOTPRINT_BIN_SIZE := 8.0
+const INFANTRY_CLEARANCE := 1.0
+const HEAVY_CLEARANCE := 2.0
+const NO_FOOTPRINTS: Array = []
 const HARVEST_REACH := 1.2
 const CRYSTAL_LINE_RADIUS := 26.0
 const CONSTRUCTION_REFUND := 0.75
@@ -99,6 +103,9 @@ var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
 var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
 var _static_structures: Array[Dictionary] = []
+var _footprint_bins: Dictionary = {}
+var _heavy_grid: AStarGrid2D
+var _cliff_grid: AStarGrid2D
 var _max_unit_radius: float = 4.5
 var _town_halls: Array[Dictionary] = []
 var _detectors: Array[Dictionary] = []
@@ -161,6 +168,8 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	next_tag = 1001
 	units.clear()
 	resources.clear()
+	_footprint_bins.clear()
+	nav_dirty = true
 	spatial_grid.clear()
 	terrain_obstacles.clear()
 	high_ground_zones.clear()
@@ -862,24 +871,15 @@ func _step_single_tick() -> void:
 
 func _rebuild_astar_grid() -> void:
 	_static_structures.clear()
+	_footprint_bins.clear()
+	_heavy_grid = null
+	_cliff_grid = null
 	_detectors.clear()
 	_town_halls.clear()
 	_gas_source_by_tap.clear()
 	_gas_tap_by_vent.clear()
-	var cols = int(ceil(map_width / PATH_CELL_SIZE))
-	var rows = int(ceil(map_height / PATH_CELL_SIZE))
-	astar_grid.region = Rect2i(0, 0, cols, rows)
-	astar_grid.cell_size = Vector2(PATH_CELL_SIZE, PATH_CELL_SIZE)
-	astar_grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
-	astar_grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
-	astar_grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
-	astar_grid.update()
-
-	for obs in terrain_obstacles:
-		_set_rect_solid(obs, true)
-	for cell in water_cells:
-		astar_grid.set_point_solid(cell, true)
-
+	for deposit in resources.values():
+		_index_footprint(deposit)
 	for u in units.values():
 		if u.detection_radius > 0.0:
 			_detectors.append(u)
@@ -892,62 +892,103 @@ func _rebuild_astar_grid() -> void:
 					_gas_tap_by_vent[Vector2i(u.owner, resource.tag)] = u.tag
 		if u["is_structure"] and not u["is_walkable_structure"]:
 			_static_structures.append(u)
-			var r = u["radius"]
-			var rect = Rect2(u["pos"].x - r, u["pos"].y - r, r * 2.0, r * 2.0)
-			_set_rect_solid(rect, true)
+			_index_footprint(u)
 		else:
 			u.path.clear()
+	_fill_navigation_grid(astar_grid, INFANTRY_CLEARANCE, false)
 
-func _set_rect_solid(rect: Rect2, solid: bool) -> void:
-	var x0 = clampi(int(floor(rect.position.x / PATH_CELL_SIZE)), 0, astar_grid.region.size.x - 1)
-	var y0 = clampi(int(floor(rect.position.y / PATH_CELL_SIZE)), 0, astar_grid.region.size.y - 1)
-	var x1 = clampi(int(ceil(rect.end.x / PATH_CELL_SIZE)) - 1, 0, astar_grid.region.size.x - 1)
-	var y1 = clampi(int(ceil(rect.end.y / PATH_CELL_SIZE)) - 1, 0, astar_grid.region.size.y - 1)
-	for x in range(x0, x1 + 1):
-		for y in range(y0, y1 + 1):
-			astar_grid.set_point_solid(Vector2i(x, y), solid)
+func _index_footprint(footprint: Dictionary) -> void:
+	var reach := Vector2.ONE * (float(footprint.radius) + HEAVY_CLEARANCE + 0.1)
+	var first := _footprint_bin(footprint.pos - reach)
+	var last := _footprint_bin(footprint.pos + reach)
+	for x in range(first.x, last.x + 1):
+		for y in range(first.y, last.y + 1):
+			var cell := Vector2i(x, y)
+			if not _footprint_bins.has(cell):
+				_footprint_bins[cell] = []
+			_footprint_bins[cell].append(footprint)
 
-func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float = 0.85) -> Array[Vector2]:
+func _footprint_bin(pos: Vector2) -> Vector2i:
+	return Vector2i(floori(pos.x / FOOTPRINT_BIN_SIZE), floori(pos.y / FOOTPRINT_BIN_SIZE))
+
+func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: bool) -> void:
+	grid.clear()
+	grid.region = Rect2i(0, 0, ceili(map_width / PATH_CELL_SIZE), ceili(map_height / PATH_CELL_SIZE))
+	grid.cell_size = Vector2.ONE * PATH_CELL_SIZE
+	grid.offset = grid.cell_size * 0.5
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	grid.update()
+	if not ignore_cliffs:
+		for obs in terrain_obstacles:
+			var expanded := obs.grow(clearance * 0.7)
+			var first := Vector2i(((expanded.position - grid.offset) / PATH_CELL_SIZE).ceil())
+			var last := Vector2i(((expanded.end - grid.offset) / PATH_CELL_SIZE).ceil())
+			grid.fill_solid_region(Rect2i(first, last - first).intersection(grid.region))
+		for cell in water_cells:
+			grid.set_point_solid(cell)
+	for footprint in resources.values():
+		_mark_footprint(grid, footprint, clearance)
+	for footprint in _static_structures:
+		_mark_footprint(grid, footprint, clearance)
+
+func _mark_footprint(grid: AStarGrid2D, footprint: Dictionary, clearance: float) -> void:
+	var reach := float(footprint.radius) + clearance + 0.15
+	var first := _path_cell(grid, footprint.pos - Vector2.ONE * reach)
+	var last := _path_cell(grid, footprint.pos + Vector2.ONE * reach)
+	for x in range(first.x, last.x + 1):
+		for y in range(first.y, last.y + 1):
+			var cell := Vector2i(x, y)
+			if grid.get_point_position(cell).distance_squared_to(footprint.pos) < reach * reach:
+				grid.set_point_solid(cell)
+
+func _navigation_grid(radius: float, ignore_cliffs: bool) -> AStarGrid2D:
+	if ignore_cliffs:
+		if _cliff_grid == null:
+			_cliff_grid = AStarGrid2D.new()
+			_fill_navigation_grid(_cliff_grid, HEAVY_CLEARANCE, true)
+		return _cliff_grid
+	if radius > INFANTRY_CLEARANCE:
+		if _heavy_grid == null:
+			_heavy_grid = AStarGrid2D.new()
+			_fill_navigation_grid(_heavy_grid, HEAVY_CLEARANCE, false)
+		return _heavy_grid
+	return astar_grid
+
+func _path_cell(grid: AStarGrid2D, pos: Vector2) -> Vector2i:
+	return Vector2i(pos / PATH_CELL_SIZE).clamp(Vector2i.ZERO, grid.region.size - Vector2i.ONE)
+
+func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float = 0.85, ignore_cliffs: bool = false, interaction_reach: float = INF) -> Array[Vector2]:
 	var started = Time.get_ticks_usec()
-	var result = _compute_smooth_path(start_pos, end_pos, unit_radius)
+	var result = _compute_smooth_path(start_pos, end_pos, unit_radius, ignore_cliffs, interaction_reach)
 	profile_usec.navigation += Time.get_ticks_usec() - started
 	return result
 
-func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float) -> Array[Vector2]:
-	if _has_clear_line_of_walk(start_pos, end_pos, unit_radius):
-		return [end_pos]
+func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float, ignore_cliffs: bool, interaction_reach: float) -> Array[Vector2]:
+	if not end_pos.is_finite():
+		return [start_pos]
+	var goal := _project_destination(start_pos, end_pos, unit_radius, ignore_cliffs)
+	if interaction_reach < INF and goal.distance_to(end_pos) >= interaction_reach - 0.12:
+		goal = _interaction_destination(start_pos, end_pos, goal, unit_radius, interaction_reach, ignore_cliffs)
+	if _has_clear_line_of_walk(start_pos, goal, unit_radius, ignore_cliffs):
+		return [goal]
 
-	var cols = astar_grid.region.size.x
-	var rows = astar_grid.region.size.y
-	var s_cell = Vector2i(
-		clampi(int(start_pos.x / PATH_CELL_SIZE), 0, cols - 1),
-		clampi(int(start_pos.y / PATH_CELL_SIZE), 0, rows - 1)
-	)
-	var e_cell = Vector2i(
-		clampi(int(end_pos.x / PATH_CELL_SIZE), 0, cols - 1),
-		clampi(int(end_pos.y / PATH_CELL_SIZE), 0, rows - 1)
-	)
-	s_cell = _find_nearest_walkable_cell(s_cell)
-	e_cell = _find_nearest_walkable_cell(e_cell)
-
-	var raw_pts = astar_grid.get_point_path(s_cell, e_cell)
-	if raw_pts.size() == 0:
-		return [end_pos]
-
-	var waypoints: Array[Vector2] = []
-	for pt in raw_pts:
-		waypoints.append(Vector2(pt.x + PATH_CELL_SIZE * 0.5, pt.y + PATH_CELL_SIZE * 0.5))
-	waypoints[waypoints.size() - 1] = end_pos
-
-	if waypoints.size() <= 2:
-		return [end_pos]
+	var grid := _navigation_grid(unit_radius, ignore_cliffs)
+	var start := _find_nearest_walkable_cell(grid, start_pos, start_pos)
+	var end := _find_nearest_walkable_cell(grid, goal, start_pos)
+	if grid.is_point_solid(start) or grid.is_point_solid(end):
+		return [start_pos]
+	var waypoints := grid.get_point_path(start, end, true)
+	if waypoints.is_empty():
+		return [start_pos]
+	if waypoints[-1] == grid.get_point_position(end) and _has_clear_line_of_walk(waypoints[-1], goal, unit_radius, ignore_cliffs):
+		waypoints.append(goal)
 
 	var smoothed: Array[Vector2] = []
 	var anchor: Vector2 = start_pos
-	var idx: int = 0
+	var idx := -1
 	while idx < waypoints.size() - 1:
-		# Always advance at least one waypoint; without this a unit hugging a cliff corner (no clear
-		# line to any later waypoint) would loop here forever.
 		var furthest = idx + 1
 		# Grow visibility probes exponentially, then bisect the blocked interval.
 		# Reverse-scanning a long cross-map path repeated hundreds of ray tests.
@@ -955,7 +996,7 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 		var blocked = waypoints.size()
 		while idx + stride < waypoints.size():
 			var probe = idx + stride
-			if not _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius):
+			if not _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius, ignore_cliffs):
 				blocked = probe
 				break
 			furthest = probe
@@ -964,55 +1005,107 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 		var high = mini(blocked - 1, waypoints.size() - 1)
 		while low <= high:
 			var probe = (low + high) / 2
-			if _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius):
+			if _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius, ignore_cliffs):
 				furthest = probe
 				low = probe + 1
 			else:
 				high = probe - 1
+		if furthest == idx + 1 and not _has_clear_line_of_walk(anchor, waypoints[furthest], unit_radius, ignore_cliffs):
+			# An authored spawn can overlap a footprint. Let it step out to its first cell.
+			if idx >= 0 or not _is_point_blocked_by_static(anchor, unit_radius, ignore_cliffs):
+				break
 		smoothed.append(waypoints[furthest])
 		anchor = waypoints[furthest]
 		idx = furthest
 		if idx == waypoints.size() - 1:
 			break
-	if smoothed.is_empty() or smoothed[smoothed.size() - 1].distance_to(end_pos) > 0.1:
-		smoothed.append(end_pos)
-	return smoothed
+	return [start_pos] if smoothed.is_empty() else smoothed
 
-func _find_nearest_walkable_cell(cell: Vector2i) -> Vector2i:
-	if not astar_grid.is_point_solid(cell):
+func _interaction_destination(from: Vector2, target: Vector2, fallback: Vector2, radius: float, reach: float, ignore_cliffs: bool) -> Vector2:
+	# A neighboring deposit can block the direct approach even though the assigned
+	# patch has open gathering space along its sides.
+	var angle := (from - target).angle()
+	var first_open := Vector2.INF
+	for i in range(16):
+		var turn := ((i + 1) / 2) * (1 if i % 2 == 1 else -1)
+		var candidate := target + Vector2.from_angle(angle + float(turn) * TAU / 16.0) * (reach - 0.25)
+		if _is_point_blocked_by_static(candidate, radius, ignore_cliffs):
+			continue
+		if _has_clear_line_of_walk(from, candidate, radius, ignore_cliffs):
+			return candidate
+		if not first_open.is_finite():
+			first_open = candidate
+	return first_open if first_open.is_finite() else fallback
+
+func _project_destination(from: Vector2, requested: Vector2, radius: float, ignore_cliffs: bool) -> Vector2:
+	var goal := _map_clamped_position(requested, radius)
+	if not _is_point_blocked_by_static(goal, radius, ignore_cliffs):
+		return goal
+	# Search back from the click so a large obstacle uses the edge facing the unit.
+	var distance := goal.distance_to(from)
+	var steps := maxi(1, ceili(distance / PATH_CELL_SIZE))
+	var blocked := goal
+	for i in range(1, steps + 1):
+		var point := goal.lerp(from, float(i) / float(steps))
+		if _is_point_blocked_by_static(point, radius, ignore_cliffs):
+			blocked = point
+			continue
+		for _probe in range(5):
+			var middle := point.lerp(blocked, 0.5)
+			if _is_point_blocked_by_static(middle, radius, ignore_cliffs):
+				blocked = middle
+			else:
+				point = middle
+		return point
+	return goal
+
+func _find_nearest_walkable_cell(grid: AStarGrid2D, pos: Vector2, approach: Vector2) -> Vector2i:
+	var cell := _path_cell(grid, pos)
+	if not grid.is_point_solid(cell):
 		return cell
-	var cols = astar_grid.region.size.x
-	var rows = astar_grid.region.size.y
-	for rad in range(1, 10):
-		for dx in range(-rad, rad + 1):
-			for dy in range(-rad, rad + 1):
-				var c = Vector2i(clampi(cell.x + dx, 0, cols - 1), clampi(cell.y + dy, 0, rows - 1))
-				if not astar_grid.is_point_solid(c):
-					return c
+	var size := grid.region.size
+	var best := cell
+	var best_distance := INF
+	var best_approach := INF
+	for radius in range(1, maxi(size.x, size.y)):
+		for side in [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]:
+			var along := Vector2i(-side.y, side.x)
+			for offset in range(-radius, radius):
+				var candidate: Vector2i = cell + side * radius + along * offset
+				if not grid.region.has_point(candidate) or grid.is_point_solid(candidate):
+					continue
+				var point := grid.get_point_position(candidate)
+				var distance := point.distance_squared_to(pos)
+				var from_distance := point.distance_squared_to(approach)
+				if distance < best_distance or (is_equal_approx(distance, best_distance) and from_distance < best_approach):
+					best = candidate
+					best_distance = distance
+					best_approach = from_distance
+		if best != cell:
+			return best
 	return cell
 
-func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float) -> bool:
+func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliffs: bool = false) -> bool:
 	var dist = a.distance_to(b)
-	if dist < 0.5:
-		return true
-	var steps = int(ceil(dist / (PATH_CELL_SIZE * 0.6)))
+	var steps = maxi(1, ceili(dist / (PATH_CELL_SIZE * 0.6)))
 	for i in range(1, steps + 1):
 		var p = a.lerp(b, float(i) / float(steps))
-		if _is_point_blocked_by_static(p, radius * 0.7):
+		if _is_point_blocked_by_static(p, radius, ignore_cliffs):
 			return false
 	return true
 
-func _is_point_blocked_by_static(p: Vector2, radius: float) -> bool:
-	if is_water_at(p, radius):
-		return true
+func _is_point_blocked_by_static(p: Vector2, radius: float, ignore_cliffs: bool = false) -> bool:
 	if p.x < radius or p.y < radius or p.x > map_width - radius or p.y > map_height - radius:
 		return true
-	for obs in terrain_obstacles:
-		var expanded = obs.grow(radius * 0.75)
-		if expanded.has_point(p):
+	if not ignore_cliffs:
+		if is_water_at(p, radius * 0.5):
 			return true
-	for u in _static_structures:
-		if p.distance_squared_to(u["pos"]) < pow(float(u["radius"]) + radius * 0.65, 2):
+		for obs in terrain_obstacles:
+			if obs.grow(radius * 0.7).has_point(p):
+				return true
+	for footprint in _footprint_bins.get(_footprint_bin(p), NO_FOOTPRINTS):
+		var reach := float(footprint.radius) + radius
+		if p.distance_squared_to(footprint.pos) < reach * reach:
 			return true
 	return false
 
@@ -1217,9 +1310,9 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 
 	match otype:
 		"move":
-			var target_pos: Vector2 = order.get("target_pos", u["pos"])
+			var target_pos := _prepare_order_path(u, order)
 			var arrival_rad: float = float(order.get("arrival_radius", 0.9))
-			if u["pos"].distance_to(target_pos) <= arrival_rad:
+			if u.path.size() == 1 and u.pos.distance_to(target_pos) <= arrival_rad:
 				u["orders"].pop_front()
 				u["path"].clear()
 				u["home_pos"] = u["pos"]
@@ -1231,7 +1324,7 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 					u["home_pos"] = u["pos"]
 					u["has_home_pos"] = true
 				else:
-					_follow_order_path(u, target_pos, dt)
+					_follow_path(u, dt)
 
 		"hold_position":
 			if u.orders.size() > 1:
@@ -1249,7 +1342,6 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			u.home_pos = u.pos
 
 		"attack_move", "patrol":
-			var target_pos: Vector2 = order.get("target_pos", u["pos"])
 			if otype == "patrol" and not order.has("patrol_origin"):
 				order["patrol_origin"] = u.pos
 			var enemy = _find_best_attack_target(u, false)
@@ -1260,17 +1352,19 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				else:
 					_approach_target(u, enemy["pos"], dt)
 			else:
+				var target_pos := _prepare_order_path(u, order)
 				var arrival_rad: float = float(order.get("arrival_radius", 1.5))
-				if u["pos"].distance_to(target_pos) <= arrival_rad:
+				if u.path.size() == 1 and u.pos.distance_to(target_pos) <= arrival_rad:
 					if otype == "patrol" and target_pos.distance_to(order.patrol_origin) > arrival_rad:
 						order.target_pos = order.patrol_origin
 						order.patrol_origin = target_pos
 						u.path.clear()
 					else:
 						u["orders"].pop_front()
+						u.path.clear()
 						u["home_pos"] = u["pos"]
 				else:
-					_follow_order_path(u, target_pos, dt)
+					_follow_path(u, dt)
 
 		"attack_target", "force_attack":
 			var t_tag = int(order.get("target_tag", 0))
@@ -1354,10 +1448,7 @@ func _deliver_worker_cargo(worker: Dictionary, dt: float, hall_tag: int = 0) -> 
 	if hall.is_empty():
 		return false
 	if _edge_distance(worker, hall) > 1.6:
-		if worker.cargo_type == "crystal":
-			_follow_order_path(worker, hall.pos, dt)
-		else:
-			_approach_target(worker, hall.pos, dt)
+		_follow_order_path(worker, hall.pos, dt, worker.radius + hall.radius + 1.6)
 		return false
 	var player: Dictionary = players[worker.owner]
 	var cargo: String = worker.cargo_type
@@ -1436,11 +1527,10 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 				source.amount -= u.cargo_amount
 				if source.amount == 0:
 					resource_depleted.emit(u.owner, source.resource_type)
-	elif not is_gas:
-		_release_mining_slot(u)
-		_follow_order_path(u, target_entity.pos, dt)
 	else:
-		_approach_target(u, target_entity["pos"], dt)
+		if not is_gas:
+			_release_mining_slot(u)
+		_follow_order_path(u, target_entity.pos, dt, u.radius + target_entity.radius + HARVEST_REACH)
 
 func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var struct_type = str(order.get("structure_type", "silo"))
@@ -1615,31 +1705,30 @@ func _process_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> 
 	target.hp += hp
 
 func _approach_target(u: Dictionary, target_pos: Vector2, dt: float) -> void:
-	if water_cells.is_empty():
-		_move_toward_point(u, target_pos, dt)
-	else:
-		_follow_order_path(u, target_pos, dt)
+	_prepare_path(u, target_pos, 1.0)
+	_follow_path(u, dt)
 
-func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float) -> void:
-	# Spire Walker has Cliff-Walk ("Massive" attribute walks directly over cliffs!)
-	if u["unit_type"] == "spire_walker":
-		_move_toward_point(u, target_pos, dt)
-		return
+func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float, reach: float = INF) -> void:
+	_prepare_path(u, target_pos, 3.0, reach)
+	_follow_path(u, dt)
 
-	var path: Array = u["path"]
-	if path.is_empty() or u.get("nav_goal", Vector2.INF).distance_to(target_pos) > 3.0:
-		u["path"] = compute_smooth_path(u["pos"], target_pos, u["radius"])
+func _prepare_order_path(u: Dictionary, order: Dictionary) -> Vector2:
+	_prepare_path(u, order.get("target_pos", u.pos), 0.05)
+	return u.path.back()
+
+func _prepare_path(u: Dictionary, target_pos: Vector2, tolerance: float, reach: float = INF) -> void:
+	if u.path.is_empty() or u.get("nav_goal", Vector2.INF).distance_squared_to(target_pos) > tolerance * tolerance:
+		u.path = compute_smooth_path(u.pos, target_pos, u.radius, u.unit_type == "spire_walker", reach)
 		u["nav_goal"] = target_pos
-		path = u["path"]
 
-	if path.size() > 0:
-		var wp: Vector2 = path[0]
-		if u["pos"].distance_to(wp) <= max(1.1, u["radius"] * 1.2) and path.size() > 1:
+func _follow_path(u: Dictionary, dt: float) -> void:
+	var path: Array = u.path
+	var waypoint: Vector2 = path.front()
+	if path.size() > 1 and u.pos.distance_to(waypoint) <= maxf(1.1, u.radius * 1.2):
+		if _has_clear_line_of_walk(u.pos, path[1], u.radius, u.unit_type == "spire_walker"):
 			path.pop_front()
-			wp = path[0]
-		_move_toward_point(u, wp, dt)
-	else:
-		_move_toward_point(u, target_pos, dt)
+			waypoint = path.front()
+	_move_toward_point(u, waypoint, dt)
 
 func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 	if u["is_immobile"]:
@@ -1726,7 +1815,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 						if perp.dot(neighbor_position - position) < 0.0:
 							perp = -perp
 						var push_vec = (perp * 0.75 + (-normal) * 0.25).normalized()
-						n["pos"] = _clamp_to_walkable(neighbor_position + push_vec * speed * dt * 0.9, n["radius"], n["unit_type"] == "spire_walker")
+						_move_on_terrain(n, neighbor_position + push_vec * speed * dt * 0.9)
 						n["pushed_timer"] = 0.35
 
 		var final_vel = desired_vel + steer_force
@@ -1735,7 +1824,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			final_vel = final_vel.normalized() * max_spd
 
 		if final_vel.length_squared() > 0.001:
-			u["pos"] = _clamp_to_walkable(position + final_vel * dt, radius, u["unit_type"] == "spire_walker")
+			_move_on_terrain(u, position + final_vel * dt)
 			u["vel"] = final_vel
 
 	for tag in all_tags:
@@ -1762,39 +1851,60 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 				var nrm = diff / dist if dist > 0.001 else Vector2.RIGHT
 				var pen = min_dist - dist
 				if n["is_structure"] or n["is_immobile"]:
-					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * pen, u["radius"], u["unit_type"] == "spire_walker")
+					_move_on_terrain(u, u.pos + nrm * pen)
 				elif u["is_immobile"]:
-					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * pen, n["radius"], n["unit_type"] == "spire_walker")
+					_move_on_terrain(n, n.pos - nrm * pen)
 				else:
-					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * (pen * 0.5), u["radius"], u["unit_type"] == "spire_walker")
-					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * (pen * 0.5), n["radius"], n["unit_type"] == "spire_walker")
+					_move_on_terrain(u, u.pos + nrm * (pen * 0.5))
+					_move_on_terrain(n, n.pos - nrm * (pen * 0.5))
 
-func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false) -> Vector2:
-	var res = Vector2(
+func _move_on_terrain(unit: Dictionary, pos: Vector2) -> void:
+	unit.pos = _clamp_to_walkable(pos, unit.radius, unit.unit_type == "spire_walker", unit.pos)
+
+func _map_clamped_position(p: Vector2, radius: float) -> Vector2:
+	return Vector2(
 		clampf(p.x, radius + 1.0, map_width - radius - 1.0),
 		clampf(p.y, radius + 1.0, map_height - radius - 1.0)
 	)
-	if ignore_cliffs:
-		return res
-	if is_water_at(res, radius * 0.5):
-		var cell = _find_nearest_walkable_cell(Vector2i(int(res.x / PATH_CELL_SIZE), int(res.y / PATH_CELL_SIZE)))
-		res = (Vector2(cell) + Vector2(0.5, 0.5)) * PATH_CELL_SIZE
-	for obs in terrain_obstacles:
-		var exp_rect = obs.grow(radius * 0.7)
-		if exp_rect.has_point(res):
-			var dl = abs(res.x - exp_rect.position.x)
-			var dr = abs(exp_rect.end.x - res.x)
-			var dt_top = abs(res.y - exp_rect.position.y)
-			var db = abs(exp_rect.end.y - res.y)
-			var m = min(min(dl, dr), min(dt_top, db))
-			if m == dl:
-				res.x = exp_rect.position.x - 0.05
-			elif m == dr:
-				res.x = exp_rect.end.x + 0.05
-			elif m == dt_top:
-				res.y = exp_rect.position.y - 0.05
-			else:
-				res.y = exp_rect.end.y + 0.05
+
+func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, previous: Vector2 = Vector2.INF) -> Vector2:
+	var res := _map_clamped_position(p, radius)
+	if not ignore_cliffs:
+		if is_water_at(res, radius * 0.5):
+			if previous.is_finite() and not is_water_at(previous, radius * 0.5):
+				return previous
+			var cell := _find_nearest_walkable_cell(astar_grid, res, res)
+			res = astar_grid.get_point_position(cell)
+		for obs in terrain_obstacles:
+			var exp_rect := obs.grow(radius * 0.7)
+			if exp_rect.has_point(res):
+				var dl := absf(res.x - exp_rect.position.x)
+				var dr := absf(exp_rect.end.x - res.x)
+				var dt_top := absf(res.y - exp_rect.position.y)
+				var db := absf(exp_rect.end.y - res.y)
+				var m := minf(minf(dl, dr), minf(dt_top, db))
+				if m == dl:
+					res.x = exp_rect.position.x - 0.05
+				elif m == dr:
+					res.x = exp_rect.end.x + 0.05
+				elif m == dt_top:
+					res.y = exp_rect.position.y - 0.05
+				else:
+					res.y = exp_rect.end.y + 0.05
+	var before_collision := res
+	for footprint in _footprint_bins.get(_footprint_bin(res), NO_FOOTPRINTS):
+		var separation := float(footprint.radius) + radius
+		var delta: Vector2 = res - footprint.pos
+		if delta.length_squared() >= separation * separation:
+			continue
+		var origin: Vector2 = previous - footprint.pos
+		if previous.is_finite() and (delta.is_zero_approx() or delta.dot(origin) < 0.0):
+			delta = origin
+		if delta.is_zero_approx():
+			delta = Vector2.RIGHT
+		res = footprint.pos + delta.normalized() * (separation + 0.02)
+	if res != before_collision and previous.is_finite() and _is_point_blocked_by_static(res, radius, ignore_cliffs):
+		return previous
 	return res
 
 func _get_weapon_range(u: Dictionary) -> float:
@@ -2083,7 +2193,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				var delta_b: Vector2 = target_pos - old_pos
 				if delta_b.length() > 18.0:
 					delta_b = delta_b.normalized() * 18.0
-				var dest = _clamp_to_walkable(old_pos + delta_b, u["radius"], true)
+				var dest := _project_destination(old_pos, old_pos + delta_b, u.radius, true)
 				u["pos"] = dest
 				u["prev_pos"] = dest
 				u["home_pos"] = dest
@@ -2179,8 +2289,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 
 		elif ctype == "patrol":
-			var waypoint := _clamp_to_walkable(target_pos, u.radius, u.unit_type == "spire_walker")
-			u.orders.append({"type": "patrol", "target_pos": waypoint})
+			u.orders.append({"type": "patrol", "target_pos": target_pos})
 			u.has_home_pos = false
 			accepted += 1
 

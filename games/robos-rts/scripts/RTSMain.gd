@@ -766,7 +766,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 			SimEngine.issue_command(tags, "attack_target", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "attack")
 			return
-		elif target.is_extractor:
+		elif target.is_extractor and own.any(func(unit): return unit.is_worker):
 			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "gather")
 			return
@@ -1529,7 +1529,10 @@ func _draw_rally_and_orders() -> void:
 		for ord in u["orders"]:
 			var tp := Vector2.ZERO
 			if ord.has("target_pos"):
-				tp = world_to_screen(ord["target_pos"], 0.2)
+				var destination: Vector2 = ord.target_pos
+				if ord == u.orders.front() and ord.type in ["move", "attack_move", "patrol"] and not u.path.is_empty() and u.get("nav_goal") == destination:
+					destination = u.path.back()
+				tp = world_to_screen(destination, 0.2)
 			elif ord.has("target_tag") and SimEngine.units.has(ord["target_tag"]):
 				tp = world_to_screen(SimEngine.units[ord["target_tag"]]["pos"], 0.2)
 			elif ord.has("target_tag") and SimEngine.resources.has(ord["target_tag"]):

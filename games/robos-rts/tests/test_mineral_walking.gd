@@ -65,11 +65,27 @@ func _run() -> void:
 	sim.step_ticks(1)
 	check(patch.mining_worker == second.tag and first.harvest_timer == 0.0, "Stopping mid-drill must free the slot for a waiting worker")
 
+	sim.reset_state(42, 96, 64)
+	sim.spawn_unit("colony_hub", 1, Vector2(16, 24))
+	var neighbor: Dictionary = sim.spawn_resource("crystal_field", Vector2(32, 24), 50)
+	patch = sim.spawn_resource("crystal_field", Vector2(35.6, 24), 50)
+	var miner: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(25, 24))
+	sim.issue_command([miner.tag], "harvest", patch.pos, patch.tag)
+	var minimum_clearance := INF
+	for i in range(600):
+		sim.step_ticks(1)
+		for deposit in [patch, neighbor]:
+			minimum_clearance = minf(minimum_clearance, miner.pos.distance_to(deposit.pos) - miner.radius - deposit.radius)
+	check(patch.amount < 50 and neighbor.amount == 50 and sim.players[1].crystal_collected > 0, "Workers must get around a neighboring field to reach their assigned patch")
+	check(minimum_clearance >= -0.01, "Gathering workers must stay outside the deposits")
+
 	var scenario: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/frontier-hunters.jsonld"))
 	var covered := {}
+	var ai := root.get_node("RTSCommanderAI")
 	for seed in [0, 2, 3, 4, 6]:
 		scenario.seed = seed
 		sim.load_scenario_dict(scenario)
+		ai.set_directive(2, "idle", false)
 		for player in [1, 2]:
 			var slot: int = sim.match_state.assigned_starts[str(player)]
 			covered[slot] = true
@@ -83,6 +99,15 @@ func _run() -> void:
 			check(assignments.size() == 8 and assignments.values().max() <= 2, "The 12 opening workers must spread across all eight local patches")
 			var saturation: Dictionary = sim.worker_saturation(player).values().front()
 			check(saturation.assigned == 12 and saturation.ideal == 16, "The starting base must show 12/16 workers")
+		var miners_with_cargo := {}
+		for _sample in range(96):
+			sim.step_ticks(32)
+			for worker in sim.units.values():
+				if worker.is_worker and worker.cargo_amount > 0:
+					miners_with_cargo[worker.tag] = true
+			if miners_with_cargo.size() == 24:
+				break
+		check(miners_with_cargo.size() == 24, "All 24 opening workers must reach a patch for seed %d (got %d)" % [seed, miners_with_cargo.size()])
 	check(covered.size() == 8, "The fixture must exercise all eight starts")
 
 	print("Mineral walking checks: ", "passed" if failures.is_empty() else failures)
