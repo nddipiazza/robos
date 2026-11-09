@@ -13,6 +13,7 @@ func _run() -> void:
 	_test_opposing_convoys()
 	_test_idle_and_cargo()
 	_test_overhead_traffic()
+	_test_crowded_entrance()
 	print("Choke traffic: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -86,3 +87,20 @@ func _yield_release_tick(flyer_arrival_tick: int) -> int:
 		elif yielded:
 			return sim.tick
 	return -1
+
+func _test_crowded_entrance() -> void:
+	sim.reset_state(42, 96, 96)
+	sim.terrain_obstacles.append(Rect2(0, 40, 47.5, 16))
+	sim.terrain_obstacles.append(Rect2(50.5, 40, 45.5, 16))
+	var advancing: Array[int] = []
+	var retreating: Array[int] = []
+	for offset in [Vector2.ZERO, Vector2(2, 0), Vector2(0, 2.3)]:
+		advancing.append(sim.spawn_unit("rifleman", 1, Vector2(49, 36) + Vector2(offset.x, -offset.y)).tag)
+		retreating.append(sim.spawn_unit("rifleman", 1, Vector2(49, 60) + offset).tag)
+	sim.issue_command(advancing, "move", Vector2(49, 68))
+	sim.issue_command(retreating, "move", Vector2(49, 28), 0, "", true)
+	sim.step_ticks(1152)
+	_check(advancing.all(func(tag): return sim.units[tag].pos.y > 56.0 and sim.units[tag].orders.is_empty()),
+		"The advancing group returns to the lane after crowd steering displaces its approach")
+	_check(retreating.all(func(tag): return sim.units[tag].pos.y < 40.0 and sim.units[tag].orders.is_empty()),
+		"The retreating group also clears the crowded entrance")
