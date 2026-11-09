@@ -150,6 +150,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"forager": _forager(root, glow)
 		"skitterling": _skitterling(root, glow)
 		"bile_crawler": _bile_crawler(root, glow)
+		"carapace_bulwark": _carapace_bulwark(root, glow)
 		"blight_hurler": _blight_hurler(root, glow)
 		"drift_sac": _drift_sac(root, glow)
 		"needlewing": _needlewing(root, glow)
@@ -504,6 +505,20 @@ static func _bile_crawler(root: Node3D, glow: Material) -> void:
 	_legs(root, m[2], 3, 0.7, 1.35, 0.09, 0.5, -0.05, 50.0)
 	for side in [-1.0, 1.0]:
 		cone(root, 0.08, 0.6, m[2], Vector3(1.4, 0.45, side * 0.22), Vector3(0, 0, -100), 6)
+
+static func _carapace_bulwark(root: Node3D, glow: Material) -> void:
+	var m := _bug_mats()
+	sph(root, 0.89, m[0], Vector3(-0.17, 0.75, 0), Vector3(1.29, 0.78, 1.09))
+	sph(root, 0.45, m[2], Vector3(0.72, 0.82, 0), Vector3(1.14, 0.88, 1.03))
+	_legs(root, m[2], 3, 0.63, 1.21, 0.09, 0.48, -0.06, 53.0)
+	for index in range(3):
+		var x := 0.45 - index * 0.51
+		sph(root, 0.5, m[1], Vector3(x, 1.31, 0), Vector3(0.84, 0.40, 1.76))
+		cone(root, 0.10, 0.48, m[2], Vector3(x, 1.55, 0), Vector3(0, 0, 15), 6)
+	for side in [-1.0, 1.0]:
+		sph(root, 0.09, glow, Vector3(0.99, 0.94, side * 0.25))
+		caps(root, 0.23, 0.96, m[2], Vector3(0.78, 0.59, side * 0.76), Vector3(0, 0, -68))
+		cone(root, 0.16, 0.69, m[1], Vector3(1.27, 0.66, side * 0.66), Vector3(side * 11, 0, -98), 6)
 
 static func _blight_hurler(root: Node3D, glow: Material) -> void:
 	var m := _bug_mats()

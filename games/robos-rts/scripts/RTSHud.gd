@@ -844,6 +844,8 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("%s %.1fs" % ["Landing" if u.flight_height > 0.0 else "Taking off", maxf(0.0, (u.fighter_mode_until - SimEngine.tick) * SimEngine.TICK_DT)])
 	elif u.unit_type in ["kestrel_interceptor", "kestrel_assault"]:
 		status.append("Interceptor Mode · Air only" if u.flight_height > 0.0 else "Assault Mode · Ground only")
+	if u.has("carapace_morph_until"):
+		status.append("Evolving %.1fs" % ((u.carapace_morph_until - SimEngine.tick) * SimEngine.TICK_DT))
 	if is_own and def.has("transport_capacity"):
 		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
 	if is_own and u.unit_type == "tunnel_mouth" and not building:
@@ -1023,6 +1025,12 @@ func _glyph(id: String, r: Rect2) -> void:
 		"research_armor":
 			draw_colored_polygon(P.call([[-16, -16], [16, -16], [16, 5], [0, 20], [-16, 5]]), Color("#6688b7"))
 			draw_polyline(P.call([[-8, 1], [-2, 7], [9, -6]]), col, 3.0 * u, true)
+		"morph_carapace":
+			draw_colored_polygon(P.call([[-17, -14], [17, -14], [14, 8], [0, 19], [-14, 8]]), Color("#985987"))
+			draw_polyline(P.call([[-10, 5], [0, -8], [10, 5]]), C_GOLD, 3.0 * u, true)
+		"cancel_carapace_morph":
+			draw_line(c - Vector2(12, 12) * u, c + Vector2(12, 12) * u, C_RED, 4.0 * u, true)
+			draw_line(c + Vector2(-12, 12) * u, c + Vector2(12, -12) * u, C_RED, 4.0 * u, true)
 		"harvest", "deploy_prospector":
 			_gem(c, 17.0 * u)
 		"return_cargo":
