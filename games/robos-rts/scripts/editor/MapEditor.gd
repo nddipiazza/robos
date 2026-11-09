@@ -8,6 +8,7 @@ extends Control
 #
 # Launch: ./map-editor.sh [slug-or-path]   (automation: GET|POST /editor on the GameControlServer port)
 
+const MapDocumentScript = preload("res://scripts/editor/RTSMapDocument.gd")
 const MapCanvasScript = preload("res://scripts/editor/MapCanvas.gd")
 
 const TOOLS = [
@@ -30,7 +31,7 @@ const TOOLS = [
 const SNAP_OPTIONS = [0.0, 0.5, 1.0, 2.0, 4.0]
 const FACTION_LABELS = {"humans": "Humans", "monsters": "Monsters", "aliens": "Aliens"}
 
-var doc: RTSMapDocument
+var doc: MapDocumentScript
 var canvas: Control
 
 var _tool_buttons: Dictionary = {}
@@ -82,7 +83,7 @@ func _ready() -> void:
 		doc = SimEngine.editor_session["menu_doc"]
 		SimEngine.editor_session.erase("menu_doc")
 	else:
-		doc = RTSMapDocument.new()
+		doc = MapDocumentScript.new()
 		var start = _cmdline_map_arg()
 		if start == "":
 			start = "frontier-hunters"
@@ -143,7 +144,7 @@ func _build_ui() -> void:
 	canvas.cursor_moved.connect(_on_cursor_moved)
 	canvas.target_picked.connect(_on_target_picked)
 	canvas.terrain_sampled.connect(func(terrain):
-		_terrain_opt.select(RTSMapDocument.TERRAIN_TYPES.find(terrain))
+		_terrain_opt.select(MapDocumentScript.TERRAIN_TYPES.find(terrain))
 		_select_tool("terrain_brush"))
 	body.add_child(_wrap_panel(_build_tool_panel(), 230))
 	body.add_child(canvas)
@@ -313,11 +314,11 @@ func _build_tool_panel() -> Control:
 	_snap_opt.item_selected.connect(func(i): canvas.snap = SNAP_OPTIONS[i])
 	_row(v, "Snap", _snap_opt)
 	var terrain = OptionButton.new()
-	for kind in RTSMapDocument.TERRAIN_TYPES:
+	for kind in MapDocumentScript.TERRAIN_TYPES:
 		terrain.add_item(kind.capitalize())
 	terrain.selected = 1
 	_terrain_opt = terrain
-	terrain.item_selected.connect(func(i): canvas.terrain_brush = RTSMapDocument.TERRAIN_TYPES[i])
+	terrain.item_selected.connect(func(i): canvas.terrain_brush = MapDocumentScript.TERRAIN_TYPES[i])
 	_row(v, "Terrain", terrain)
 	_brush_size_spin = _spin(1, 12, 1, 3, func(value): canvas.brush_size = int(value))
 	_row(v, "Brush cells", _brush_size_spin)
@@ -333,7 +334,7 @@ func _build_tool_panel() -> Control:
 	v.add_child(HSeparator.new())
 	_section(v, "UNIT BRUSH")
 	_unit_type_opt = OptionButton.new()
-	for faction in RTSMapDocument.FACTIONS:
+	for faction in MapDocumentScript.FACTIONS:
 		_unit_type_opt.add_separator(FACTION_LABELS[faction])
 		_unit_type_ids.append("")
 		for uid in RTSData.units.keys():
@@ -405,7 +406,7 @@ func _build_properties_panel() -> Control:
 
 	_section(v, "MAP")
 	_map_fields["label"] = _row(v, "Name", _line(func(t): doc.set_map_property("label", t)))
-	_map_fields["id"] = _row(v, "Map id", _line(func(t): doc.set_map_property("id", RTSMapDocument.slugify(t))))
+	_map_fields["id"] = _row(v, "Map id", _line(func(t): doc.set_map_property("id", MapDocumentScript.slugify(t))))
 	_map_fields["seed"] = _row(v, "Seed", _spin(0, 999999, 1, 42, func(val): doc.set_map_property("seed", int(val))))
 	_map_fields["width"] = _row(v, "Width", _spin(32, 512, 8, 128, func(val): doc.set_map_property("width", float(val)); canvas.fit_to_view()))
 	_map_fields["height"] = _row(v, "Height", _spin(32, 512, 8, 96, func(val): doc.set_map_property("height", float(val)); canvas.fit_to_view()))
@@ -445,9 +446,9 @@ func _build_properties_panel() -> Control:
 		head.add_theme_color_override("font_color", MapCanvasScript.OWNER_COLORS[pid])
 		_scenario_controls.add_child(head)
 		var fac = OptionButton.new()
-		for f in RTSMapDocument.FACTIONS:
+		for f in MapDocumentScript.FACTIONS:
 			fac.add_item(FACTION_LABELS[f])
-		fac.item_selected.connect(func(i): doc.set_player_property(p_id, "faction", RTSMapDocument.FACTIONS[i]))
+		fac.item_selected.connect(func(i): doc.set_player_property(p_id, "faction", MapDocumentScript.FACTIONS[i]))
 		_player_fields["%d:faction" % pid] = _row(_scenario_controls, "Faction", fac)
 		var res = HBoxContainer.new()
 		_player_fields["%d:crystal" % pid] = _spin(0, 99999, 25, 400, func(val): doc.set_player_property(p_id, "crystal", int(val)))
@@ -464,9 +465,9 @@ func _build_properties_panel() -> Control:
 		dh.add_child(en)
 		var mode = OptionButton.new()
 		mode.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		for m in RTSMapDocument.DIRECTIVE_MODES:
+		for m in MapDocumentScript.DIRECTIVE_MODES:
 			mode.add_item(m)
-		mode.item_selected.connect(func(i): doc.set_directive(p_id, {"mode": RTSMapDocument.DIRECTIVE_MODES[i]}))
+		mode.item_selected.connect(func(i): doc.set_directive(p_id, {"mode": MapDocumentScript.DIRECTIVE_MODES[i]}))
 		_directive_fields["%d:mode" % pid] = mode
 		dh.add_child(mode)
 		_row(_scenario_controls, "Directive", dh)
@@ -557,9 +558,9 @@ func _on_selection_changed(ref: Dictionary) -> void:
 			_row(_inspector_box, "Start %s" % key, oh)
 	elif layer == "resources":
 		var type_opt = OptionButton.new()
-		for t in RTSMapDocument.RESOURCE_TYPES:
+		for t in MapDocumentScript.RESOURCE_TYPES:
 			type_opt.add_item(t)
-		type_opt.item_selected.connect(func(i): _set_field("type", RTSMapDocument.RESOURCE_TYPES[i]))
+		type_opt.item_selected.connect(func(i): _set_field("type", MapDocumentScript.RESOURCE_TYPES[i]))
 		_inspector_fields["type"] = _row(_inspector_box, "Type", type_opt)
 		_inspector_fields["id"] = _row(_inspector_box, "Id", _line(func(t): _set_field("id", t.strip_edges())))
 		_add_xy_fields()
@@ -615,7 +616,7 @@ func _refresh_inspector_values() -> void:
 					if _inspector_ref["layer"] == "units":
 						opt.select(_unit_type_ids.find(str(val)))
 					else:
-						opt.select(RTSMapDocument.RESOURCE_TYPES.find(str(val)))
+						opt.select(MapDocumentScript.RESOURCE_TYPES.find(str(val)))
 
 # -------------------------------------------------------------------------
 # Document sync
@@ -637,12 +638,12 @@ func _on_doc_changed() -> void:
 		(_map_fields[key] as SpinBox).set_value_no_signal(float(d[key]))
 	for pid in [1, 2, 3]:
 		var p: Dictionary = d["players"][str(pid)]
-		(_player_fields["%d:faction" % pid] as OptionButton).select(max(0, RTSMapDocument.FACTIONS.find(str(p["faction"]))))
+		(_player_fields["%d:faction" % pid] as OptionButton).select(max(0, MapDocumentScript.FACTIONS.find(str(p["faction"]))))
 		(_player_fields["%d:crystal" % pid] as SpinBox).set_value_no_signal(float(p["crystal"]))
 		(_player_fields["%d:aether" % pid] as SpinBox).set_value_no_signal(float(p["aether"]))
 		var dv = doc.get_directive(pid)
 		(_directive_fields["%d:enabled" % pid] as CheckBox).set_pressed_no_signal(bool(dv["enabled"]))
-		(_directive_fields["%d:mode" % pid] as OptionButton).select(max(0, RTSMapDocument.DIRECTIVE_MODES.find(str(dv["mode"]))))
+		(_directive_fields["%d:mode" % pid] as OptionButton).select(max(0, MapDocumentScript.DIRECTIVE_MODES.find(str(dv["mode"]))))
 		(_directive_fields["%d:target_x" % pid] as SpinBox).set_value_no_signal(float(dv["target_x"]))
 		(_directive_fields["%d:target_y" % pid] as SpinBox).set_value_no_signal(float(dv["target_y"]))
 	_refresh_inspector_values()
@@ -726,7 +727,7 @@ func _new_hunters_template() -> void:
 
 func _refresh_open_list() -> void:
 	_open_opt.clear()
-	_open_paths = RTSMapDocument.list_scenarios()
+	_open_paths = MapDocumentScript.list_scenarios()
 	for p in _open_paths:
 		_open_opt.add_item(p.get_file())
 	var idx = _open_paths.find(doc.file_path)
@@ -893,7 +894,7 @@ func handle_control_request(req: Dictionary) -> Dictionary:
 			_select_tool(str(req.get("tool", "select")))
 			canvas.terrain_brush = str(req.get("terrain", canvas.terrain_brush))
 			canvas.brush_size = clampi(int(req.get("size", canvas.brush_size)), 1, 12)
-			_terrain_opt.select(maxi(0, RTSMapDocument.TERRAIN_TYPES.find(canvas.terrain_brush)))
+			_terrain_opt.select(maxi(0, MapDocumentScript.TERRAIN_TYPES.find(canvas.terrain_brush)))
 			_brush_size_spin.set_value_no_signal(canvas.brush_size)
 			out["ui"] = ui_state()
 		"add_resource":
