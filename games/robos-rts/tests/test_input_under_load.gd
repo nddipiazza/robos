@@ -54,7 +54,8 @@ func _run() -> void:
 	await sim.simulation_ticked
 	_check_next_tick(registered)
 	for i in range(squad.size()):
-		_check(squad[i].pos.x > before[i].x and squad[i].orders[0].type == "move", "The next step moves squad member %s" % squad[i].tag)
+		var unit: Dictionary = squad[i]
+		_check(unit.pos.x > before[i].x and not unit.orders.is_empty() and unit.orders[0].type == "move", "The next step moves squad member %s" % unit.tag)
 
 	registered = _dispatch("A", "attack_target", target.pos, 1.25, tags)
 	await sim.simulation_ticked
@@ -72,7 +73,8 @@ func _run() -> void:
 	sim.paused = true
 	battle.queue_free()
 	await process_frame
-	quit(0 if failures.is_empty() else 1)
+	await RenderingServer.frame_post_draw
+	quit.call_deferred(0 if failures.is_empty() else 1)
 
 func _dispatch(key: String, command: String, point: Vector2, height: float, tags: Array[int]) -> int:
 	var count: int = sim.command_history.size()
