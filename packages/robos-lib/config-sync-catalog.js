@@ -218,6 +218,7 @@ const LOCAL_KEYS = {
   'config/home-speakers.json': ['updatedAt'],
   'config/hardware-keys.json': ['touchHistory', 'lastSeenAt'],
   'config/camera-watch/settings.json': ['recordingsDir', 'ffmpegPath'],
+  'config/household/shopping-lists.json': ['lastSyncedAt', 'lastSyncStatus', 'lastSyncMessage'],
 };
 
 /**

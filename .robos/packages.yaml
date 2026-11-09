@@ -385,5 +385,10 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/personality"
     technology: "Electron 28 / RobOS Voice (Kokoro, Piper, Edge TTS, Whisper) / Camera Watch camera runner (ffmpeg) / tv-engine app cast / robos-agent-client"
+  - id: "urn:robos:desktop-app:shopping-lists"
+    title: "RobOS Shopping Lists"
+    type: "robos:DesktopApp"
+    repository: "packages/shopping-lists"
+    technology: "Electron 28 / Google Drive v3 & Google Docs Mobile Sync / Mobile SSE Form Server / RobOS Household Suite"
 
 

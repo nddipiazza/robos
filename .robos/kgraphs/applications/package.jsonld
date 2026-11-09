@@ -352,6 +352,22 @@
       "robos:technology": "Electron 28 / RobOS Voice (Kokoro, Piper, Edge TTS, Whisper) / Camera Watch camera runner (ffmpeg) / tv-engine app cast / robos-agent-client"
     },
     {
+      "@id": "urn:robos:desktop-app:shopping-lists",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Shopping Lists",
+      "dcterms:description": "Household shopping lists for Grocery, Target, and Costco with form-driven item entry, +/- quantity and remove buttons, live mobile web companion, and two-way native Google Docs and Google Drive synchronization.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/shopping-lists",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Google Drive v3 & Google Docs Mobile Sync / Mobile SSE Form Server / RobOS Household Suite"
+    },
+    {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
@@ -907,6 +923,22 @@
       "robos:repository": "packages/personality",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 28 / RobOS Voice (Kokoro, Piper, Edge TTS, Whisper) / Camera Watch camera runner (ffmpeg) / tv-engine app cast / robos-agent-client"
+    },
+    {
+      "@id": "urn:robos:desktop-app:shopping-lists",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Shopping Lists",
+      "dcterms:description": "Household shopping lists for Grocery, Target, and Costco with form-driven item entry, +/- quantity and remove buttons, live mobile web companion, and two-way native Google Docs and Google Drive synchronization.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/shopping-lists",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Google Drive v3 & Google Docs Mobile Sync / Mobile SSE Form Server / RobOS Household Suite"
     },
     {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",

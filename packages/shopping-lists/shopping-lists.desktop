@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Shopping Lists
+Comment=Household shopping lists for Grocery, Target, and Costco with mobile form controls and Google Docs / Google Drive sync
+Exec=/usr/bin/electron /usr/local/share/robos/shopping-lists/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/shopping-lists/icon.svg
+Terminal=false
+Categories=Utility;Office;
+X-RobOS-Category=Tools
+StartupWMClass=robos-shopping-lists

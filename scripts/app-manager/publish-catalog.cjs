@@ -57,7 +57,7 @@ function sourceCatalog(root = repo, platform = process.platform) {
     const main = path.join(dir, 'main.js');
     if (id !== 'household' && !(fs.existsSync(main) && /require\(['"]electron['"]\)/.test(fs.readFileSync(main, 'utf8')))) return [];
     const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))), icon = icons.find(item => item.appId === id);
-    const group = ['point-of-sale', 'auto-center', 'household', 'audio-player', 'home-speaker', 'robos-elearning'].includes(id) ? 'Everyday & business' :
+    const group = ['point-of-sale', 'auto-center', 'household', 'shopping-lists', 'audio-player', 'home-speaker', 'robos-elearning'].includes(id) ? 'Everyday & business' :
       /game|crpg|tabletop/.test(id) ? 'Games & game tools' : /agent|claude|ai-|context|prompt/.test(id) ? 'AI & agents' :
         /System|Security|Internet/.test(icon?.category || '') ? 'System & security' : 'Developer tools';
     return [{ id: id === 'robos-graph' ? 'knowledge-graph-explorer' : id, sourceId: id, kind: 'app',

@@ -138,6 +138,7 @@ const PORT_REGISTRY = {
   'hardware-keys':     19218,
   'camera-watch':      19220,
   'personality':       19222,
+  'shopping-lists':    19224,
 };
 
 
