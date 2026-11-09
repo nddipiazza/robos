@@ -1205,13 +1205,13 @@ var units: Dictionary = {
 	},
 	"aegis_warden": {
 		"id": "aegis_warden", "name": "Aegis Warden", "faction": FACTION_ALIENS,
-		"blurb": "Unarmed support caster. Shapes a temporary barrier that blocks ground paths while aircraft pass above it.",
+		"blurb": "Unarmed support caster. Seals ground paths with Phase Barrier and warns before a damaging Lattice Burst.",
 		"is_structure": false, "is_worker": false, "attributes": ["Light", "Biological"],
 		"crystal_cost": 100, "aether_cost": 75, "supply_cost": 2, "build_time": 30.0,
 		"max_hp": 55.0, "max_shields": 75.0, "armor": 0.0, "radius": 0.95,
 		"speed": 7.0, "sight_range": 22.0, "push_priority": 2,
 		"energy_profile": {"start": 50.0, "max": 150.0, "regen": 1.0},
-		"abilities": ["move", "stop", "hold_position", "phase_barrier"],
+		"abilities": ["move", "stop", "hold_position", "phase_barrier", "lattice_burst"],
 		"dialogues": {
 			"select": [
 				{"id": "aegis_warden_select_1", "text": "An aegis answers."},
@@ -1503,6 +1503,7 @@ var abilities: Dictionary = {
 	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0, "sfx": "phase_step"},
 	"phase_cloak": {"id": "phase_cloak", "name": "Phase Cloak", "hotkey": "C", "target": "none", "desc": "Spend 25 energy to cloak. Cloak drains 4 energy per second. Detectors and recon sweeps can reveal this unit.", "sfx": "phase_step"},
 	"phase_barrier": {"id": "phase_barrier", "name": "Phase Barrier", "hotkey": "F", "target": "point", "desc": "Spend 50 energy to block ground paths in a 3-unit radius for 8 seconds.", "sfx": "phase_barrier"},
+	"lattice_burst": {"id": "lattice_burst", "name": "Lattice Burst", "hotkey": "T", "target": "point", "desc": "Spend 75 energy. After a one-second warning, four pulses damage friendly and enemy ground and air units in a 5-unit radius. Structures are safe.", "sfx": "lattice_burst"},
 	"hold_fire": {"id": "hold_fire", "name": "Hold Fire", "hotkey": "K", "target": "none", "desc": "Toggle automatic attacks. Explicit attack orders can still fire."},
 	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5, "sfx": "charge_activate"},
 	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31, minimum range 5. Splash deals half damage to allies. Cannot move while emplaced.", "morph_to": "howitzer_emplaced", "sfx": "siege_transform"},
