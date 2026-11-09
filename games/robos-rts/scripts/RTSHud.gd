@@ -771,6 +771,8 @@ func _draw_single(u: Dictionary) -> void:
 				_text(Vector2(rx + 235.0, ry + 12), "Exit blocked", 15, C_GOLD)
 		elif SimEngine.requires_power(u.unit_type) and not SimEngine.is_powered(u.owner, u.pos):
 			_text(Vector2(rx + 100.0, ry + 12), "Unpowered  ·  Production paused", 15, C_RED)
+		elif active_slots == 0 and not queue.is_empty() and queue[0].has("requires_attachment"):
+			_text(Vector2(rx + 100.0, ry + 12), "Research paused  ·  Module required", 15, C_RED)
 		elif exit_blocked:
 			_text(Vector2(rx + 100.0, ry + 12), "Exit blocked", 15, C_GOLD)
 		elif active_slots > 1:
@@ -987,7 +989,7 @@ func _glyph(id: String, r: Rect2) -> void:
 		"cancel_construction":
 			draw_line(c - Vector2(13, 13) * u, c + Vector2(13, 13) * u, C_RED, 5.0 * u)
 			draw_line(c - Vector2(-13, 13) * u, c + Vector2(-13, 13) * u, C_RED, 5.0 * u)
-		"surge":
+		"surge", "research_surge_efficiency":
 			draw_colored_polygon(P.call([[5, -22], [-13, 3], [-2, 3], [-6, 22], [14, -5], [2, -5]]), Color("#ffd24a"))
 		"phase_step":
 			draw_arc(c + Vector2(-10, 0) * u, 12.0 * u, 0.0, TAU, 24, Color(0.45, 0.8, 1.0, 0.55), 3.0 * u, true)

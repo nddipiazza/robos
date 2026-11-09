@@ -17,6 +17,8 @@ func _run() -> void:
 	sim.unit_production_finished.connect(_record_deployment)
 	_test_power_cycle()
 	_test_tech_and_workshop()
+	_test_attachment_cycle(true)
+	_test_attachment_cycle(false)
 	print("Production queue consistency: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -196,3 +198,98 @@ func _test_workshop_queue(workshop: Dictionary, paid_buildings: Vector2i) -> voi
 		and player.upgrades.weapons == 1 and player.upgrades.armor == 0
 		and _stock() == paid_buildings - troops - weapons and player.supply_used == starting_supply + troop_supply,
 		"The final queue deploys two paid units and applies only the completed research")
+
+func _attack_module(gun: Dictionary, module: Dictionary) -> void:
+	module.hp = 1.0
+	_check(sim.issue_command([gun.tag], "attack_target", module.pos, module.tag).ok, "Enemy artillery targets the Research Module")
+	sim.step_ticks(32)
+	_check(not sim.units.has(module.tag), "Combat removes the Research Module")
+
+func _test_attachment_cycle(cancel_research: bool) -> void:
+	_load([
+		{"type": "colony_hub", "x": 16, "y": 18},
+		{"id": "hall", "type": "muster_hall", "x": 30, "y": 29},
+		{"id": "other_hall", "type": "muster_hall", "x": 51, "y": 52},
+		{"id": "lab", "type": "workshop", "x": 20, "y": 56},
+		{"id": "rifle", "type": "rifleman", "x": 22, "y": 41},
+		{"id": "gun", "type": "howitzer_emplaced", "owner": 2, "x": 62, "y": 29},
+	])
+	var hall := _unit("hall")
+	var other_hall := _unit("other_hall")
+	var gun := _unit("gun")
+	var rifle := _unit("rifle")
+	var player: Dictionary = sim.players[1]
+	var attach := "attach_research_module"
+	var research := "research_surge_efficiency"
+	var module_cost := _cost("research_module")
+	var rifle_cost := _cost("rifleman")
+	var offer: Dictionary = sim.research_offer(1, "surge_efficiency")
+	var research_cost := Vector2i(offer.crystal, offer.aether)
+	_check(not sim.issue_command([hall.tag, _unit("lab").tag], research).ok and _stock() == STARTING_STOCK,
+		"Neither a bare Hall nor a Workshop can start attachment research")
+	_check(sim.issue_command([rifle.tag], "surge").ok and rifle.hp == rifle.max_hp - 10.0 and rifle.surge_timer == 11.0,
+		"Ordinary Surge still costs 10 HP for 11 seconds before research")
+	rifle.hp = 8.0
+	_check(not sim.issue_command([rifle.tag], "surge").ok, "Unresearched Surge still rejects a low-health Rifleman")
+	sim.issue_command([gun.tag], "hold_fire")
+	_check(sim.issue_command([hall.tag, other_hall.tag], attach).accepted == 2, "Both Halls can pay for their own Research Modules")
+	var module: Dictionary = sim.production_attachment(hall, false)
+	if not _check(not module.is_empty(), "The paid Research Module occupies its Hall's pad"):
+		return
+	_check(not sim.issue_command([hall.tag], "attach_fabrication_module").ok and not sim.issue_command([hall.tag], research).ok
+		and _stock() == STARTING_STOCK - module_cost * 2, "The foundation occupies the common pad and has not unlocked research")
+	sim.step_ticks(_build_ticks(module))
+	_check(not sim.issue_command([hall.tag], "attach_fabrication_module").ok and not sim.issue_command([module.tag], research).ok,
+		"A finished Research Module shares the pad and its Hall runs the research")
+	_check(sim.issue_command([hall.tag], research).ok and not sim.issue_command([other_hall.tag], research).ok,
+		"An attached Hall can pay once while another attached Hall is blocked from duplicating the job")
+	for _job in range(2):
+		_check(sim.issue_command([hall.tag], "train_rifleman").ok, "Queue paid infantry behind research")
+	var cost_before_loss := module_cost * 2 + research_cost + rifle_cost * 2
+	if not _check(_job_names(hall) == ["surge_efficiency", "rifleman", "rifleman"]
+		and _stock() == STARTING_STOCK - cost_before_loss and player.supply_used == 3,
+		"Research and infantry keep exact order, cost and supply"):
+		return
+	sim.step_ticks(32)
+	_attack_module(gun, module)
+	var queue: Array = hall.production_queue
+	var job: Dictionary = queue[0]
+	var paused_progress: float = job.progress
+	sim.step_ticks(ceili(float(job.total_time) / sim.TICK_DT))
+	if not _check(queue.size() == 3 and sim.active_production_slots(hall) == 0 and paused_progress > 0.0 and job.progress == paused_progress
+		and queue[1].progress == 0.0 and queue[2].progress == 0.0 and not player.surge_efficiency,
+		"Loss freezes the paid research and both waiting jobs for longer than the original duration"):
+		return
+	_check(not sim.issue_command([other_hall.tag], research).ok, "Paused research still reserves the unique upgrade")
+	if cancel_research:
+		_check(_cancel(hall, 0) and _stock() == STARTING_STOCK - cost_before_loss + research_cost
+			and player.supply_used == 3 and not player.surge_efficiency,
+			"Canceling paused research refunds its full cost without granting the upgrade")
+		sim.step_ticks(1)
+		_check(queue[0].progress == sim.TICK_DT and queue[1].progress == 0.0,
+			"Canceling paused research lets the next paid unit advance normally")
+		_check(sim.issue_command([other_hall.tag], research).ok, "A separate attached Hall can restart the canceled research")
+		return
+	_check(_cancel(hall, 1) and _stock() == STARTING_STOCK - cost_before_loss + rifle_cost and player.supply_used == 2,
+		"Canceling a waiting unit during attachment loss refunds only that unit")
+	_check(sim.issue_command([hall.tag], attach).ok, "Pay to rebuild the missing Research Module")
+	var replacement: Dictionary = sim.production_attachment(hall, false)
+	if replacement.is_empty():
+		return
+	for _tick in range(_build_ticks(replacement)):
+		sim.step_ticks(1)
+		if replacement.build_progress >= 1.0:
+			break
+	sim.step_ticks(1)
+	_check(job.progress > paused_progress and job.progress <= paused_progress + sim.TICK_DT * 2.0
+		and queue[1].progress == 0.0, "Rebuilding resumes the original research at its saved progress")
+	_finish_front(hall)
+	_check(player.surge_efficiency and not sim.issue_command([other_hall.tag], research).ok,
+		"The recovered job grants one permanent research level")
+	_finish_front(hall)
+	_check(deployed == ["rifleman"] and queue.is_empty() and player.supply_used == 2
+		and _stock() == STARTING_STOCK - module_cost * 3 - research_cost - rifle_cost,
+		"Only the uncanceled unit deploys and no paid job is charged again")
+	_attack_module(gun, replacement)
+	_check(sim.issue_command([rifle.tag], "surge").ok and rifle.hp == 3.0 and rifle.surge_timer == 11.0,
+		"Existing infantry use the unlocked 5-HP Surge even after the completed tech's module is lost")
