@@ -2,7 +2,7 @@
 layout: game
 title: Games
 permalink: /games/
-description: "Games built by AI agents inside RobOS, including Starfall Command: one player versus AI on Frontier Hunters, with a reusable Godot map editor and live gameplay tests, and RobOS Party Game, an AI-hosted party game on your TVs."
+description: "Games built by AI agents inside RobOS, including Starfall Command with three-faction AI skirmishes and a Godot map editor, and RobOS Party Game on your TVs."
 bg_video: /assets/games/tabletop-bg.mp4
 bg_poster: /assets/games/tabletop-bg-poster.jpg
 accent: "#e0b252"
@@ -31,7 +31,7 @@ keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tab
         <div class="in"><h2>Midterms 2026</h2><p>Battle for the Hill: a standalone satirical Capitol dungeon adventure. Play in your browser or download the game.</p><span class="go">Enter the Capitol →</span></div>
       </a>
       <a href="{{ '/games/robos-rts/' | relative_url }}" style="background-image:url('{{ '/assets/games/rts/frontier-hunters-live.jpg' | relative_url }}');--accent:#58b4ff">
-        <div class="in"><h2>Starfall Command</h2><p>One player versus AI on a 256×256 battlefield with eight possible starts, unlimited deposits, a map editor and live gameplay tests.</p><span class="go">Take command →</span></div>
+        <div class="in"><h2>Starfall Command</h2><p>Pick from three factions and three skirmish maps, play one versus AI, or author a battlefield in the Godot map editor.</p><span class="go">Take command →</span></div>
       </a>
       <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}" style="background-image:url('{{ '/assets/games/quest-warrior-dragon/05_world_map_alefgard_overworld.png' | relative_url }}');--accent:#00bcd4">
         <div class="in"><h2>Quest: Warrior Dragon</h2><p>An NES-authentic 2D console RPG across 29 maps in Alefgard with in-engine Stride AI and 100% verified BFS map completeness.</p><span class="go">Begin the quest →</span></div>

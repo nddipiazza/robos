@@ -1,8 +1,15 @@
+---
+title: "Starfall Command 100-point roadmap"
+layout: default
+permalink: /projects/starfall-sc2-roadmap/
+description: "The completed 100-point Starfall Command roadmap for battlefield controls, faction technology, skirmish AI and simulation hardening."
+---
+
 # Starfall Command 100-point roadmap
 
-Starfall Command already has three skirmish factions, fog and detection, mineral walking, control groups, grid hotkeys, a map editor, and paid AI openings. The roadmap builds on that game. It uses Starfall’s own factions, maps, names, and art.
+All 100 items shipped in [`801e8895`](https://github.com/nddipiazza/robos/commit/801e889558100575837d4288052720e08d508bf7). For controls and faction tech, see the [player guide](/projects/robos-rts/). The [engineering post](/blog/starfall-command-100-point-roadmap/) covers the gameplay tests and the final paid skirmish replays.
 
-Work proceeds in numbered groups of ten. An item is complete once it works through its normal entry point and its check passes. Shared simulation changes also need a rendered UI pass and deterministic match regressions. New gameplay must be reachable from the normal skirmish flow. The existing 64 Hz simulation and bot API remain the common test surface.
+Each item had to work through its normal entry point and pass its focused check. Shared simulation changes also went through rendered UI and deterministic match regressions. The 64 Hz simulation and bot API served both test layers.
 
 ## 001–010 Battlefield controls
 

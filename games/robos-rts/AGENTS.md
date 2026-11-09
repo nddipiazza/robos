@@ -6,11 +6,12 @@ An open-source deterministic 64Hz Real-Time Strategy (RTS) game and engine built
 
 1. **2.5D Angled 3D Perspective Renderer ([`scripts/RTSWorld3D.gd`](./scripts/RTSWorld3D.gd) & [`scripts/RTSMain.gd`](./scripts/RTSMain.gd))**:
    - Uses a `Camera3D` pitched at `-56°` (`fov = 42°`) projecting 3D elevated high-ground plateaus (`+2.2` elevation), sloped ramps, canyon cliff walls, 3D crystal crystals, aether vents, 3D unit/structure meshes, translucent Alien Aegis Shield bubbles, and ground selection tori.
-   - Overlays crisp 2D screen-space HP & Shield bars, box selection, a `3x5` command card, and a tactical minimap.
+   - Overlays health and shield bars, box selection, a command card that expands from 15 to 20 slots as needed, and a tactical minimap.
 2. **3 Asymmetric Factions ([`scripts/engine/RTSData.gd`](./scripts/engine/RTSData.gd))**:
-   - **Humans (`humans` / Meridian Guard)**: `Pioneer` (construction & harvesting), `Rifleman` (Surge Injector + stutter-step kiting), `Breacher` (Concussive Slow + Armored bonus), `Howitzer` (Mobile Mode <-> Emplaced Mode 31-range splash), `Colony Hub`, `Provision Silo` (Raise/Lower choke gate), `Aether Tap`, `Muster Hall`, `Workshop`.
-   - **Monsters (`monsters` / Gnarl Brood)**: `Forager`, `Skitterling` (ultra-fast melee swarm), `Bile Crawler` (armored acid ranged), `Blight Hurler` (corrosive plasma splash), `Brood Nest`.
-   - **Aliens (`aliens` / Aurelian Concord)**: Regenerating **Aegis Shields** across all units & structures, `Mote` (autonomous summon construction), `Sunblade` (Light Blades + `Charge` speed burst), `Skirmisher` (`Phase Step` teleport micro!), `Spire Walker` (Prism Beam splash + **Cliff-Walk** over canyon walls), `Heartstone`, `Resonator`, `Waystone`.
+   - **Humans (`humans` / Meridian Guard)** use per-Hub Operations, Muster Hall attachments, liftable Halls and Workshops, and separate Airframe Hangar production for the Kestrel and Rampart.
+   - **Monsters (`monsters` / Gnarl Brood)** use Nest slots, a bounded living-ground layer, Seed Clutch, Skitterling burrow, paid Carapace evolution and linked Tunnel Mouths.
+   - **Aliens (`aliens` / Aurelian Concord)** use overlapping power fields, powered production and deployment, mobile detection, timed barriers, damage and recall, and the late-tech Crownspire.
+   - See the [player guide](../../docs/projects/robos-rts.md) for costs, controls and complete tech paths. Keep live values in `RTSData.gd` and `SimEngine.gd`.
 3. **Decoupled 64Hz Simulation Core ([`scripts/engine/SimEngine.gd`](./scripts/engine/SimEngine.gd))**:
    - Runs at a deterministic 64Hz fixed step (`TICK_DT = 1.0 / 64.0`), completely decoupled from rendering FPS.
    - Implements funnel-smoothed A\* paths, RVO-style velocity steering, Allied `push priority` displacement & return-to-post, and `wind-up`/`recovery` stutter-step combat micro.
@@ -25,7 +26,7 @@ An open-source deterministic 64Hz Real-Time Strategy (RTS) game and engine built
 
 ## Running the Game & E2E Tests
 
-The default playable mode is **Frontier Hunters**, one human versus one AI with Meridian Guard selected for both seats. Each seat can select any faction or a seeded Random faction. Each starts at a distinct seeded site with its own base, 12 workers, 50 crystal and no aether. `SimEngine.match_state` tracks annihilation/surrender and freezes completed matches. `RTSSkirmishAI.gd` builds through paid commands. Difficulty affects its decisions. The title and F8 menus select factions, difficulty, strategy and speed. `starfall-canyon` retains the three-faction mechanics showcase.
+The game opens at the title screen. **Skirmish** offers Frontier Hunters, Iron Narrows and Glassline Basin, with independent faction selection or seeded Random for each seat. Each seat starts at a distinct seeded site with its own base, 12 workers, 50 crystal and no aether. `SimEngine.match_state` tracks annihilation and surrender and freezes completed matches. `RTSSkirmishAI.gd` uses paid commands for all factions. Its scouting, raid responses and counter purchases respect player-scoped visibility. Hard AI can split a paid wave between two visible objectives with viable routes. `starfall-canyon` retains the three-faction mechanics showcase.
 
 Frontier Hunters is 256×256 with unlimited crystal/aether, waterways, land crossings and interior expansions. `terrain_tiles` are 4-unit brush overrides shared by rendering, collision, pathfinding and map persistence. Do not let resource amounts stand in for infinity: the `unlimited_resources` rule prevents depletion for both resources.
 
