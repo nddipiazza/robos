@@ -1110,15 +1110,6 @@ func _check_planned_placement(structure_id: String, position: Vector2, radius: f
 # ---------------------------------------------------------------------------
 # Command card
 # ---------------------------------------------------------------------------
-func _has_structure(owner_id: int, type_id: String) -> bool:
-	for u in SimEngine.units.values():
-		if u["owner"] != owner_id or not u["is_structure"] or u["build_progress"] < 1.0:
-			continue
-		var t: String = u["unit_type"]
-		if t == type_id or t == type_id + "_retracted":
-			return true
-	return false
-
 func ability_cost(adef: Dictionary) -> Dictionary:
 	if adef.has("upgrade"):
 		return SimEngine.research_offer(local_player, adef.upgrade)
@@ -1156,7 +1147,7 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 	var cost := ability_cost(adef)
 	if not cost.is_empty():
 		for req in cost["requires"]:
-			if not _has_structure(local_player, str(req)):
+			if not SimEngine.has_tech_structure(local_player, str(req)):
 				return "Requires %s." % str(RTSData.get_unit_def(str(req)).get("name", req))
 		if int(p.get("crystal", 0)) < int(cost["crystal"]):
 			return "Not enough crystal."

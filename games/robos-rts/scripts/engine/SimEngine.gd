@@ -643,15 +643,20 @@ func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> boo
 	if not worker.is_worker or not bool(def.get("is_structure", false)) or def.get("faction", "") != worker.faction:
 		return false
 	for required in def.get("requires", []):
-		var found = false
-		for u in units.values():
-			if u.owner == worker.owner and u.unit_type == required and u.build_progress >= 1.0:
-				found = true
-		if not found:
+		if not has_tech_structure(worker.owner, str(required)):
 			return false
 	if requires_power(structure_type) and not is_powered(worker.owner, pos):
 		return false
 	return can_place_structure(structure_type, pos)
+
+func has_tech_structure(owner_id: int, type_id: String) -> bool:
+	var retracted_type := type_id + "_retracted"
+	for unit in units.values():
+		if unit.owner != owner_id or not unit.is_structure or unit.build_progress < 1.0:
+			continue
+		if unit.unit_type == type_id or unit.unit_type == retracted_type:
+			return true
+	return false
 
 func requires_power(structure_type: String) -> bool:
 	return structure_type == "aegis_relay" or (structure_type == "waystone" and not match_state.is_empty())
