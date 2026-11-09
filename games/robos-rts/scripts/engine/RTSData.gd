@@ -458,7 +458,26 @@ var units: Dictionary = {
 		"sight_range": 20.0,
 		"push_priority": 100,
 		"trains": ["rifleman", "breacher", "triage_specialist"],
-		"abilities": ["train_rifleman", "train_breacher", "rally", "train_triage_specialist"]
+		"abilities": ["train_rifleman", "train_breacher", "rally", "train_triage_specialist", "attach_fabrication_module"]
+	},
+	"fabrication_module": {
+		"id": "fabrication_module",
+		"name": "Fabrication Module",
+		"blurb": "A separately targetable installation built on the east pad of a Muster Hall.",
+		"faction": FACTION_HUMANS,
+		"is_structure": true,
+		"attachment_for": "muster_hall",
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"crystal_cost": 50,
+		"aether_cost": 25,
+		"build_time": 18.0,
+		"max_hp": 350.0,
+		"armor": 1.0,
+		"radius": 1.5,
+		"footprint": Vector2i(2, 2),
+		"sight_range": 8.0,
+		"push_priority": 100,
+		"abilities": []
 	},
 	"kestrel_interceptor": {
 		"id": "kestrel_interceptor", "name": "Kestrel Interceptor", "faction": FACTION_HUMANS,
@@ -1053,6 +1072,7 @@ var abilities: Dictionary = {
 	"train_pioneer": {"id": "train_pioneer", "name": "Train Pioneer", "hotkey": "S", "target": "none", "unit": "pioneer"},
 	"train_rifleman": {"id": "train_rifleman", "name": "Train Rifleman", "hotkey": "A", "target": "none", "unit": "rifleman"},
 	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},
+	"attach_fabrication_module": {"id": "attach_fabrication_module", "name": "Build Fabrication Module", "hotkey": "X", "target": "none", "structure": "fabrication_module", "attachment": true, "desc": "Build on the east pad of this Muster Hall."},
 	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
 	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},

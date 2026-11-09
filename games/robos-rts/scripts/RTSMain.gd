@@ -1131,6 +1131,8 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return ""
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
+	if adef.get("attachment", false):
+		return SimEngine.attachment_block_reason(pu, str(adef.structure))
 	if adef.has("unit"):
 		var producers := selected_owned()
 		if SimEngine.uses_brood_slots(pu) and not producers.any(func(u): return SimEngine.uses_brood_slots(u) and u.build_progress >= 1.0 and u.brood_slots > 0):
@@ -1231,7 +1233,9 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 		var def: Dictionary = RTSData.get_unit_def(u.unit_type)
 		if def.get("abilities", []).has(abil_id) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
-	SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
+	var result := SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
+	if adef.get("attachment", false) and result.ok and RTSAudio:
+		RTSAudio.play_ui("ui_build_place")
 
 func _train_on_best(abil_id: String, count: int) -> void:
 	var producers: Array[Dictionary] = []

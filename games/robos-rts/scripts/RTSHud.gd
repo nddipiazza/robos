@@ -669,6 +669,15 @@ func _draw_single(u: Dictionary) -> void:
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
+	if is_own and u.has("attachment_tag"):
+		var attachment := SimEngine.production_attachment(u, false)
+		if not attachment.is_empty():
+			var label: String = attachment.name
+			if attachment.build_progress < 1.0:
+				label += "  %d%%" % int(attachment.build_progress * 100.0)
+			status.append(label)
+	if is_own and def.has("attachment_for") and not building:
+		status.append("Attached" if u.has("attachment_parent_tag") else "Detached")
 	if is_own and u.has("support") and not building:
 		if u.is_structure:
 			if not SimEngine.is_powered(u.owner, u.pos):
