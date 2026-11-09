@@ -54,6 +54,7 @@ const CONSTRUCTION_REFUND := 0.75
 const REPAIR_HP_PER_SECOND := 12.0
 const AUTO_REPAIR_RADIUS := 8.0
 const MAX_RALLY_WAYPOINTS := 8
+const ATTACHMENT_PAD_OFFSET := Vector2(5.5, 0.0)
 const PRODUCTION_EXIT_RETRY_TICKS := 8
 const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
@@ -653,7 +654,7 @@ func _finish_match(winner: int, reason: String) -> void:
 
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
-	if not worker.is_worker or not bool(def.get("is_structure", false)) or def.get("faction", "") != worker.faction:
+	if not worker.is_worker or not bool(def.get("is_structure", false)) or def.has("attachment_for") or def.get("faction", "") != worker.faction:
 		return false
 	for required in def.get("requires", []):
 		if not has_tech_structure(worker.owner, str(required)):
@@ -713,6 +714,81 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 			if not extractor or res.resource_type != "aether_vent":
 				return false
 	return true
+
+func production_attachment_pad(producer: Dictionary) -> Vector2:
+	return producer.pos + ATTACHMENT_PAD_OFFSET
+
+func _attachment_link_valid(producer: Dictionary, attachment: Dictionary) -> bool:
+	return not producer.is_empty() and not attachment.is_empty() and producer.hp > 0.0 and producer.flight_height <= 0.0 \
+		and producer.build_progress >= 1.0 and producer.owner == attachment.owner \
+		and int(producer.get("attachment_tag", 0)) == attachment.tag and int(attachment.get("attachment_parent_tag", 0)) == producer.tag \
+		and attachment.pos.is_equal_approx(production_attachment_pad(producer))
+
+func production_attachment(producer: Dictionary, completed_only: bool = true) -> Dictionary:
+	var attachment: Dictionary = units.get(int(producer.get("attachment_tag", 0)), {})
+	if not _attachment_link_valid(producer, attachment) or (completed_only and attachment.build_progress < 1.0):
+		return {}
+	return attachment
+
+func attachment_block_reason(producer: Dictionary, attachment_type: String) -> String:
+	var definition: Dictionary = RTSData.get_unit_def(attachment_type)
+	if producer.is_empty() or not units.has(producer.tag) or producer.unit_type != definition.get("attachment_for") \
+		or producer.faction != definition.get("faction") or not players.has(producer.owner):
+		return "This structure cannot build that attachment."
+	if producer.build_progress < 1.0 or producer.hp <= 0.0 or producer.flight_height > 0.0:
+		return "Requires a completed, grounded Muster Hall."
+	if not production_attachment(producer, false).is_empty():
+		return "The attachment pad is already in use."
+	var pad := production_attachment_pad(producer)
+	if not can_see_position(producer.owner, pad):
+		return "The attachment pad must be visible."
+	if not can_place_structure(attachment_type, pad) or not is_equal_approx(get_elevation_at(pad), get_elevation_at(producer.pos)):
+		return "The attachment pad is blocked."
+	for unit in units.values():
+		if not unit.is_structure and unit.flight_height <= 0.0 and pad.distance_to(unit.pos) < float(definition.radius) + unit.radius:
+			return "The attachment pad is blocked."
+	var player: Dictionary = players[producer.owner]
+	if player.crystal < int(definition.crystal_cost):
+		return "Not enough crystal."
+	if player.aether < int(definition.aether_cost):
+		return "Not enough aether."
+	return ""
+
+func _start_production_attachment(producer: Dictionary, attachment_type: String) -> bool:
+	var reason := attachment_block_reason(producer, attachment_type)
+	if not reason.is_empty():
+		notice.emit(producer.owner, reason, "error")
+		return false
+	var definition: Dictionary = RTSData.get_unit_def(attachment_type)
+	var cost := Vector2i(definition.crystal_cost, definition.aether_cost)
+	players[producer.owner].crystal -= cost.x
+	players[producer.owner].aether -= cost.y
+	var attachment := spawn_unit(attachment_type, producer.owner, production_attachment_pad(producer), "", 0.1)
+	attachment["construction_cost"] = cost
+	attachment["auto_summon"] = true
+	attachment["attachment_parent_tag"] = producer.tag
+	producer["attachment_tag"] = attachment.tag
+	return true
+
+func _unlink_attachment(attachment: Dictionary) -> void:
+	var producer: Dictionary = units.get(int(attachment.get("attachment_parent_tag", 0)), {})
+	if int(producer.get("attachment_tag", 0)) == attachment.tag:
+		producer.erase("attachment_tag")
+	attachment.erase("attachment_parent_tag")
+
+func _orphan_attachment(attachment: Dictionary) -> void:
+	_unlink_attachment(attachment)
+	if attachment.build_progress < 1.0:
+		_confirm_waiting_attack_loss(attachment)
+		units.erase(attachment.tag)
+		nav_dirty = true
+		unit_destroyed.emit(attachment.duplicate(true))
+
+func detach_production_attachment(producer: Dictionary) -> void:
+	var attachment: Dictionary = units.get(int(producer.get("attachment_tag", 0)), {})
+	if int(attachment.get("attachment_parent_tag", 0)) == producer.tag:
+		_orphan_attachment(attachment)
+	producer.erase("attachment_tag")
 
 func is_build_tile_blocked(point: Vector2, player: int, allowed_vent: Vector2 = Vector2.INF) -> bool:
 	if not can_see_position(player, point) or is_water_at(point):
@@ -1403,6 +1479,9 @@ func _update_structures(dt: float) -> void:
 	for u in units.values():
 		if not u["is_structure"]:
 			continue
+		if u.has("attachment_parent_tag") and not _attachment_link_valid(units.get(u.attachment_parent_tag, {}), u):
+			_orphan_attachment(u)
+			continue
 		if u["build_progress"] < 1.0:
 			if bool(u.get("auto_summon", false)):
 				var rate = dt / maxf(1.0, float(u.build_total_time) * build_time_scale())
@@ -2078,6 +2157,7 @@ func _refund_structure(site: Dictionary, costs: Vector2i) -> void:
 	var player: Dictionary = players[site.owner]
 	player.crystal += floori(costs.x * CONSTRUCTION_REFUND)
 	player.aether += floori(costs.y * CONSTRUCTION_REFUND)
+	_unlink_attachment(site)
 	_confirm_waiting_attack_loss(site)
 	units.erase(site.tag)
 	nav_dirty = true
@@ -2827,6 +2907,10 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		if players.has(target["owner"]):
 			players[target["owner"]]["units_lost"] += 1
 		var dead = target.duplicate(true)
+		if target.has("attachment_tag"):
+			detach_production_attachment(target)
+		if target.has("attachment_parent_tag"):
+			_unlink_attachment(target)
 		_confirm_waiting_attack_loss(target)
 		units.erase(target["tag"])
 		if dead["is_structure"]:
@@ -2925,6 +3009,11 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "cancel_construction":
 			if _cancel_construction(u):
+				accepted += 1
+			continue
+		if ctype.begins_with("attach_"):
+			var ability: Dictionary = RTSData.get_ability_def(ctype)
+			if ability.get("attachment", false) and _start_production_attachment(u, str(ability.structure)):
 				accepted += 1
 			continue
 		if ctype == "resume_construction" and (accepted > 0 or not can_resume_construction(u, units.get(target_tag, {}))):
@@ -3633,6 +3722,10 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"pioneer":
 				entry["auto_repair"] = u.get("auto_repair", false)
 		if not limited or u.owner == perspective_player:
+			if u.has("attachment_tag"):
+				entry["attachment_tag"] = u.attachment_tag
+			if u.has("attachment_parent_tag"):
+				entry["attachment_parent_tag"] = u.attachment_parent_tag
 			if u.has("support"):
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["max_energy"] = u.support.max_energy
