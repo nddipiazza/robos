@@ -5,6 +5,9 @@ const ROUTE_CHECK_DISTANCE_SQUARED := 2.25
 const MAX_RECOVERIES_PER_UPDATE := 4
 const RECOVERY_WORKER_TARGET := 4
 const MINERAL_WORKERS_BEFORE_GAS := 3
+const WORKER_SCOUT_START_TICKS := 40 * 64
+const WORKER_SCOUT_DURATION_TICKS := 90 * 64
+const WORKERS_BEFORE_SCOUT := 12
 
 # Macro decisions use the same paid commands as the player. Difficulty changes
 # cadence, worker targets and army size, never damage, income or starting assets.
@@ -41,8 +44,9 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	if workers.size() < RECOVERY_WORKER_TARGET:
 		_train_recovery_workers(halls, roster.worker, workers.size())
 	var base: Vector2 = halls[0].pos
+	var scout_tag := _step_worker_scout(pid, cfg, workers, base)
 	# Include pending construction orders to avoid repeatedly replacing builders.
-	var available_workers := workers.size()
+	var available_workers := workers.size() - (1 if scout_tag != 0 else 0)
 	for worker in workers:
 		if not worker.orders.is_empty() and worker.orders[0].type == "build":
 			available_workers -= 1
@@ -56,7 +60,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 		if u.unit_type == roster.extractor and u.build_progress >= 1.0 and (SimEngine.unlimited_resources or not SimEngine.worker_rally_resource(pid, u.tag).is_empty()):
 			gas_tap = u
 	for worker in workers:
-		if not worker.orders.is_empty() and worker.orders[0].type == "build":
+		if worker.tag == scout_tag or (not worker.orders.is_empty() and worker.orders[0].type == "build"):
 			continue
 		if not gas_tap.is_empty() and gas_workers < gas_limit:
 			gas_workers += 1
@@ -289,6 +293,99 @@ func _known_enemy_buildings(pid: int) -> Array:
 			known.append(enemy)
 	return known
 
+func _step_worker_scout(pid: int, cfg: Dictionary, workers: Array, base: Vector2) -> int:
+	if SimEngine.vision == null or SimEngine.tick < WORKER_SCOUT_START_TICKS:
+		return 0
+	var mission: Dictionary = cfg.get("worker_scout", {})
+	if mission.get("finished", false):
+		return 0
+	if mission.is_empty():
+		if not _known_enemy_buildings(pid).is_empty() or SimEngine.tick >= WORKER_SCOUT_START_TICKS + WORKER_SCOUT_DURATION_TICKS:
+			cfg["worker_scout"] = {"finished": true}
+			return 0
+		if workers.size() < WORKERS_BEFORE_SCOUT:
+			return 0
+		# The newest eligible miner is away from the front of the lists
+		# used to assign gas workers and builders.
+		for i in range(workers.size() - 1, -1, -1):
+			var candidate: Dictionary = workers[i]
+			if candidate.cargo_amount > 0 or candidate.orders.size() != 1 or candidate.orders[0].type != "harvest":
+				continue
+			var patch: Dictionary = SimEngine.resources.get(candidate.orders[0].target_tag, {})
+			if patch.get("resource_type") != "crystal_field" or not SimEngine.deposit_present(patch):
+				continue
+			mission = {"tag": candidate.tag, "home_patch": patch.tag, "attempted": {},
+				"deadline": SimEngine.tick + WORKER_SCOUT_DURATION_TICKS, "health": candidate.hp + candidate.shields}
+			cfg["worker_scout"] = mission
+			break
+		if mission.is_empty():
+			return 0
+	var worker: Dictionary = SimEngine.units.get(mission.tag, {})
+	if worker.is_empty():
+		mission["finished"] = true
+		return 0
+	var health: float = worker.hp + worker.shields
+	if SimEngine.tick >= int(mission.deadline) or health < float(mission.health) or not _known_enemy_buildings(pid).is_empty() or _worker_scout_sees_threat(pid, worker):
+		_return_worker_scout(worker, mission, base)
+		return 0
+	mission.health = health
+	var site: Vector2 = mission.get("site", Vector2.INF)
+	if site.is_finite() and SimEngine.vision.last_seen_at(pid, site) == 0 and not worker.orders.is_empty() and worker.orders[0].type == "move":
+		if SimEngine.tick < int(mission.check_tick):
+			return worker.tag
+		if worker.pos.distance_squared_to(mission.position) >= ROUTE_CHECK_DISTANCE_SQUARED:
+			mission.position = worker.pos
+			mission.check_tick = SimEngine.tick + ROUTE_CHECK_TICKS
+			return worker.tag
+	if site.is_finite():
+		mission.attempted[site] = true
+	if _send_worker_scout(pid, worker, mission):
+		return worker.tag
+	_return_worker_scout(worker, mission, base)
+	return 0
+
+func _worker_scout_sees_threat(pid: int, worker: Dictionary) -> bool:
+	for enemy in SimEngine.query_units_in_radius(worker.pos, 9.0, pid):
+		if enemy.owner != 0 and not enemy.is_worker and SimEngine.can_see_unit(pid, enemy) and SimEngine.can_attack(enemy, worker):
+			return true
+	return false
+
+func _send_worker_scout(pid: int, worker: Dictionary, mission: Dictionary) -> bool:
+	var sites: Array[Vector2] = []
+	for entry in SimEngine.match_state.get("starts", []):
+		var site := Vector2(entry.x, entry.y)
+		if not mission.attempted.has(site) and SimEngine.vision.last_seen_at(pid, site) == 0:
+			sites.append(site)
+	var from: Vector2 = worker.pos
+	sites.sort_custom(func(a, b): return from.distance_squared_to(a) < from.distance_squared_to(b))
+	var reveal_distance := maxf(3.0, float(worker.sight_range) - 4.0)
+	for site in sites:
+		# Scout the site from an approach point. The site's center can be a
+		# foundation, and a partial route can still reach viewing distance.
+		var approach := (from - site).normalized() * minf(9.0, reveal_distance)
+		for angle in [0.0, PI / 3.0, -PI / 3.0, PI * 0.5, -PI * 0.5]:
+			var point := site + approach.rotated(angle)
+			var path: Array[Vector2] = SimEngine.compute_smooth_path(from, point, worker.radius)
+			var destination: Vector2 = path.back()
+			if destination.distance_squared_to(site) <= reveal_distance * reveal_distance and from.distance_squared_to(destination) > 4.0:
+				if SimEngine.issue_command([worker.tag], "move", destination).ok:
+					mission["site"] = site
+					mission["position"] = from
+					mission["check_tick"] = SimEngine.tick + ROUTE_CHECK_TICKS
+					return true
+		mission.attempted[site] = true
+	return false
+
+func _return_worker_scout(worker: Dictionary, mission: Dictionary, base: Vector2) -> void:
+	mission["finished"] = true
+	var patch: Dictionary = SimEngine.resources.get(mission.home_patch, {})
+	if patch.is_empty() or not SimEngine.deposit_present(patch):
+		patch = SimEngine._find_nearest_crystal(base)
+	if patch.is_empty():
+		SimEngine.issue_command([worker.tag], "move", base)
+	else:
+		SimEngine.issue_SmartHarvest(worker.tag, patch)
+
 func _scout_position(pid: int, from: Vector2, cfg: Dictionary, avoid: Vector2 = Vector2.INF) -> Vector2:
 	var rerouting := avoid.is_finite()
 	var previous: Vector2 = cfg.get("scout_position", Vector2.ZERO)
@@ -380,18 +477,19 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 			continue
 		var route: Dictionary = soldier.get("skirmish_route", {})
 		var recovering := false
+		var found_target: bool = route.get("searching", false) and not known.is_empty()
 		if not soldier.orders.is_empty():
 			var order: Dictionary = soldier.orders.front()
 			if route.is_empty() or order.type != "attack_move" or order.target_pos != route.destination:
 				continue
-			recovering = _route_has_stalled(soldier, route)
-			if not recovering:
+			recovering = not found_target and _route_has_stalled(soldier, route)
+			if not recovering and not found_target:
 				continue
 		elif not route.is_empty():
-			recovering = soldier.pos.distance_squared_to(route.destination) > 9.0
+			recovering = not found_target and soldier.pos.distance_squared_to(route.destination) > 9.0
 		if recovering and recoveries >= MAX_RECOVERIES_PER_UPDATE:
 			continue
-		if SimEngine.tick < int(route.get("retry_tick", 0)):
+		if not found_target and SimEngine.tick < int(route.get("retry_tick", 0)):
 			continue
 		var closest: Dictionary = {}
 		var distance = INF
@@ -424,5 +522,5 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 		if SimEngine.issue_command([soldier.tag], "attack_move", destination, 0, "", false, recovering).ok:
 			soldier["skirmish_route"] = {
 				"destination": destination, "position": soldier.pos, "recovery": recovering,
-				"check_tick": SimEngine.tick + ROUTE_CHECK_TICKS
+				"check_tick": SimEngine.tick + ROUTE_CHECK_TICKS, "searching": closest.is_empty()
 			}
