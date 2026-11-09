@@ -11,6 +11,9 @@ const WORKERS_BEFORE_SCOUT := 12
 const DEFENSE_RADIUS := 28.0
 const DEFENDER_CALL_DISTANCE := 36.0
 const MAX_DEFENDERS := 4
+const MIN_SPLIT_ARMY := 8
+const FRONT_SPACING := 24.0
+const MAX_FRONT_PROBES := 6
 
 # Macro decisions use the same paid commands as the player. Difficulty changes
 # cadence, worker targets and army size, never damage, income or starting assets.
@@ -524,6 +527,113 @@ func _recovery_destination(soldier: Dictionary, goal: Vector2, reach: float, pre
 		return destination
 	return Vector2.INF
 
+func _available_for_front(soldier: Dictionary) -> bool:
+	if soldier.is_immobile or soldier.flight_height > 0.0 or soldier.attack_state != "idle" or soldier.weapon_cooldown > 0.0:
+		return false
+	if soldier.orders.is_empty():
+		return true
+	var order: Dictionary = soldier.orders[0]
+	return order.type == "attack_move" and order.target_pos == soldier.get("skirmish_route", {}).get("destination", Vector2.INF)
+
+func _attack_fronts(pid: int, army: Array, cfg: Dictionary, known: Array, desperate: bool) -> Dictionary:
+	var fronts := {}
+	if cfg.get("difficulty") != "hard" or desperate:
+		return fronts
+	var previous: Array = cfg.get("attack_fronts", [])
+	for target in known:
+		if target.tag in previous:
+			fronts[target.tag] = target
+	if fronts.size() == 2 or army.size() < MIN_SPLIT_ARMY or SimEngine.tick < int(cfg.get("front_retry_tick", 0)):
+		return fronts
+	var visible: Array = known.filter(func(target):
+		var live: Dictionary = SimEngine.units.get(target.tag, {})
+		return not live.is_empty() and SimEngine.can_see_unit(pid, live))
+	if visible.size() < 2:
+		return fronts
+	var available := army.filter(_available_for_front)
+	if available.size() < MIN_SPLIT_ARMY:
+		return fronts
+	cfg["front_retry_tick"] = SimEngine.tick + ROUTE_CHECK_TICKS
+	var center := Vector2.ZERO
+	for soldier in available:
+		center += soldier.pos
+	center /= float(available.size())
+	available.sort_custom(func(a, b): return center.distance_squared_to(a.pos) < center.distance_squared_to(b.pos))
+	var lead: Dictionary = available[0]
+	visible.sort_custom(func(a, b): return center.distance_squared_to(a.pos) < center.distance_squared_to(b.pos))
+	var probes := 0
+	var options: Array[Dictionary] = []
+	for target in visible:
+		if options.any(func(option): return target.pos.distance_squared_to(option.target.pos) < FRONT_SPACING * FRONT_SPACING):
+			continue
+		probes += 1
+		var route := _front_approach(lead, target)
+		if not route.is_empty():
+			for option in options:
+				if _independent_front_routes(option, route):
+					cfg["attack_fronts"] = [option.target.tag, target.tag]
+					return {option.target.tag: option.target, target.tag: target}
+			options.append(route)
+		if probes >= MAX_FRONT_PROBES:
+			break
+	return fronts
+
+func _front_approach(soldier: Dictionary, target: Dictionary) -> Dictionary:
+	var from: Vector2 = soldier.pos
+	var reach := _attack_reach(soldier, target)
+	var path: Array[Vector2] = SimEngine.compute_smooth_path(from, target.pos, soldier.radius, soldier.unit_type == "spire_walker", reach)
+	if path.back().distance_squared_to(target.pos) > reach * reach:
+		return {}
+	var bridge := -1
+	var advance: Vector2 = path.back()
+	var remaining := FRONT_SPACING
+	for point in path:
+		if bridge < 0:
+			for i in range(SimEngine.land_bridges.size()):
+				if SimEngine._walk_segment_enters_rect(from, point, SimEngine.land_bridges[i]):
+					bridge = i
+					break
+		if remaining > 0.0:
+			var length := from.distance_to(point)
+			if length >= remaining:
+				advance = from.lerp(point, remaining / length)
+			remaining -= length
+		from = point
+	return {"target": target, "bridge": bridge, "advance": advance}
+
+func _independent_front_routes(a: Dictionary, b: Dictionary) -> bool:
+	# Separate authored crossings are distinct even when the army starts
+	# far away. Open approaches must diverge near the army.
+	if a.bridge >= 0 and b.bridge >= 0:
+		return a.bridge != b.bridge
+	return a.advance.distance_squared_to(b.advance) >= 12.0 * 12.0
+
+func _attack_reach(soldier: Dictionary, target: Dictionary) -> float:
+	var weapon: Dictionary = RTSData.get_unit_def(soldier.unit_type).get("weapon", {})
+	return maxf(3.0, float(weapon.get("range", 0.0)) + soldier.radius + target.radius)
+
+func _choose_front(pid: int, soldier: Dictionary, fronts: Dictionary, loads: Dictionary, previous: int, skipped: Array) -> Dictionary:
+	if previous not in skipped and fronts.has(previous):
+		return fronts[previous]
+	if fronts.is_empty() or not _available_for_front(soldier):
+		return {}
+	var best := {}
+	var best_load := 2147483647
+	var best_distance := INF
+	for tag in fronts:
+		if tag in skipped:
+			continue
+		var target: Dictionary = fronts[tag]
+		if not SimEngine.can_see_position(pid, target.pos):
+			continue
+		var load_count: int = loads[tag]
+		var distance: float = soldier.pos.distance_squared_to(target.pos)
+		if load_count < best_load or (load_count == best_load and distance < best_distance):
+			best = target
+			best_load = load_count
+			best_distance = distance
+	return best
+
 func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 	var threshold = {"rush": 6, "balanced": 10, "siege": 12, "economy": 18}[str(cfg.get("strategy", "balanced"))]
 	if cfg.get("difficulty", "normal") == "easy":
@@ -532,47 +642,73 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 		return
 	cfg["attacking"] = true
 	var known := _known_enemy_buildings(pid)
+	var fronts := _attack_fronts(pid, army, cfg, known, desperate)
+	var loads := {}
+	for tag in fronts:
+		loads[tag] = 0
+	if not fronts.is_empty():
+		for soldier in army:
+			var tag: int = soldier.get("skirmish_route", {}).get("front_tag", 0)
+			if loads.has(tag):
+				loads[tag] += 1
 	var recoveries := 0
 	for soldier in army:
 		if soldier.is_immobile:
 			continue
 		var route: Dictionary = soldier.get("skirmish_route", {})
+		var previous_front: int = route.get("front_tag", 0)
+		var skipped_fronts: Array = route.get("abandoned_fronts", []) if route.get("abandoned_revision", -1) == SimEngine._navigation_revision else []
+		var closest := _choose_front(pid, soldier, fronts, loads, previous_front, skipped_fronts)
+		var front_tag: int = closest.get("tag", 0)
 		var recovering := false
 		var found_target: bool = route.get("searching", false) and not known.is_empty()
+		var change_goal := found_target or previous_front != front_tag
 		if not soldier.orders.is_empty():
 			var order: Dictionary = soldier.orders.front()
 			if route.is_empty() or order.type != "attack_move" or order.target_pos != route.destination:
 				continue
-			recovering = not found_target and _route_has_stalled(soldier, route)
-			if not recovering and not found_target:
+			recovering = not change_goal and _route_has_stalled(soldier, route)
+			if not recovering and not change_goal:
 				continue
 		elif not route.is_empty():
-			recovering = not found_target and soldier.pos.distance_squared_to(route.destination) > 9.0
+			recovering = not change_goal and soldier.pos.distance_squared_to(route.destination) > 9.0
 		if recovering and recoveries >= MAX_RECOVERIES_PER_UPDATE:
 			continue
-		if not found_target and SimEngine.tick < int(route.get("retry_tick", 0)):
+		if not change_goal and SimEngine.tick < int(route.get("retry_tick", 0)):
 			continue
-		var closest: Dictionary = {}
-		var distance = INF
-		for enemy in known:
-			if soldier.pos.distance_to(enemy.pos) < distance:
-				closest = enemy
-				distance = soldier.pos.distance_to(enemy.pos)
+		if closest.is_empty():
+			var distance := INF
+			for enemy in known:
+				if enemy.tag in skipped_fronts:
+					continue
+				var candidate_distance: float = soldier.pos.distance_squared_to(enemy.pos)
+				if candidate_distance < distance:
+					closest = enemy
+					distance = candidate_distance
 		var goal := Vector2.ZERO
 		var reach := 3.0
 		if not closest.is_empty():
 			goal = closest.pos
-			var weapon: Dictionary = RTSData.get_unit_def(soldier.unit_type).get("weapon", {})
-			reach = maxf(reach, float(weapon.get("range", 0.0)) + soldier.radius + closest.radius)
+			reach = _attack_reach(soldier, closest)
 		elif SimEngine.vision != null:
 			goal = _scout_position(pid, soldier.pos, cfg)
 		if goal == Vector2.ZERO:
+			if previous_front != 0 and not skipped_fronts.is_empty():
+				SimEngine.issue_command([soldier.tag], "stop")
+				route.erase("front_tag")
 			continue
 		var destination := goal
 		if recovering:
 			recoveries += 1
 			var previous: Vector2 = route.destination if route.get("recovery", false) else Vector2.INF
 			destination = _recovery_destination(soldier, goal, reach, previous)
+			if not destination.is_finite() and front_tag != 0:
+				# A split unit can regroup on the other front instead of
+				# repeatedly retrying a route cut by new terrain or structures.
+				skipped_fronts.append(front_tag)
+				route["abandoned_fronts"] = skipped_fronts
+				route["abandoned_revision"] = SimEngine._navigation_revision
+				continue
 			if not destination.is_finite() and SimEngine.vision != null:
 				var scout := _scout_position(pid, soldier.pos, cfg, goal)
 				if scout != Vector2.ZERO:
@@ -580,8 +716,14 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 			if not destination.is_finite():
 				route.retry_tick = SimEngine.tick + ROUTE_CHECK_TICKS
 				continue
-		if SimEngine.issue_command([soldier.tag], "attack_move", destination, 0, "", false, recovering).ok:
+		if SimEngine.issue_command([soldier.tag], "attack_move", destination, 0, "", false, recovering or front_tag != 0).ok:
+			if loads.has(previous_front):
+				loads[previous_front] -= 1
+			if front_tag != 0:
+				loads[front_tag] += 1
+				soldier.orders[0]["arrival_radius"] = 0.45
 			soldier["skirmish_route"] = {
 				"destination": destination, "position": soldier.pos, "recovery": recovering,
-				"check_tick": SimEngine.tick + ROUTE_CHECK_TICKS, "searching": closest.is_empty()
+				"check_tick": SimEngine.tick + ROUTE_CHECK_TICKS, "searching": closest.is_empty(),
+				"front_tag": front_tag, "abandoned_fronts": skipped_fronts, "abandoned_revision": SimEngine._navigation_revision,
 			}
