@@ -685,7 +685,7 @@ var units: Dictionary = {
 			"sfx": "mandible_bite",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_brood_growth_node", "build_blight_spire", "build_spore_watch"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_brood_growth_node", "build_blight_spire", "build_spore_watch", "build_tunnel_mouth"],
 		"dialogues": {
 			"select": [
 				{"id": "forager_select_1", "text": "The brood hears."},
@@ -933,6 +933,15 @@ var units: Dictionary = {
 		"requires": ["brood_nest"], "crystal_cost": 200, "aether_cost": 150, "build_time": 52.0,
 		"max_hp": 700.0, "armor": 1.0, "radius": 2.6, "sight_range": 17.0,
 		"footprint": Vector2i(3, 3), "push_priority": 100, "abilities": []
+	},
+	"tunnel_mouth": {
+		"id": "tunnel_mouth", "name": "Tunnel Mouth", "faction": FACTION_MONSTERS,
+		"blurb": "Link two entrances to move up to six nearby ground troops beneath the map.",
+		"is_structure": true, "attributes": ["Armored", "Biological", "Structure"],
+		"requires": ["blight_spire"], "crystal_cost": 125, "aether_cost": 75, "build_time": 32.0,
+		"max_hp": 510.0, "armor": 1.0, "radius": 2.3, "sight_range": 16.0,
+		"footprint": Vector2i(3, 3), "push_priority": 100,
+		"abilities": ["link_tunnel", "send_tunnel_squad"]
 	},
 	"brood_growth_node": {
 		"id": "brood_growth_node", "name": "Growth Node", "faction": FACTION_MONSTERS,
@@ -1358,6 +1367,9 @@ var abilities: Dictionary = {
 	"build_spore_tap": {"id": "build_spore_tap", "name": "Grow Spore Tap", "hotkey": "R", "target": "point", "structure": "spore_tap"},
 	"build_blight_spire": {"id": "build_blight_spire", "name": "Grow Blight Spire", "hotkey": "Y", "target": "point", "structure": "blight_spire"},
 	"build_spore_watch": {"id": "build_spore_watch", "name": "Grow Spore Watch", "hotkey": "U", "target": "point", "structure": "spore_watch"},
+	"build_tunnel_mouth": {"id": "build_tunnel_mouth", "name": "Grow Tunnel Mouth", "hotkey": "C", "target": "point", "structure": "tunnel_mouth"},
+	"link_tunnel": {"id": "link_tunnel", "name": "Link Entrances", "hotkey": "L", "target": "unit", "desc": "Link this entrance to another finished, unlinked Tunnel Mouth you own."},
+	"send_tunnel_squad": {"id": "send_tunnel_squad", "name": "Send Nearby Troops", "hotkey": "S", "target": "none", "sfx": "mandible_bite", "desc": "Send up to six nearby ground troops through the link. Only one squad can travel at a time."},
 	"rally_worker": {"id": "rally_worker", "name": "Set Forager Rally", "hotkey": "G", "target": "point", "desc": "Route newly hatched Foragers without changing the army rally. Shift-click adds a waypoint."},
 	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "Set where new units move, follow or gather. Shift-click to add a waypoint."}
 }

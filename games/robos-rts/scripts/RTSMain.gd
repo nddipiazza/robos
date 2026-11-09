@@ -1028,6 +1028,13 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			pending_ability = ""
 		else:
 			push_message("Choose visible ground within the Hurler's cast range.", "warn")
+	elif abil == "link_tunnel":
+		var target := _order_target_at(wpos, screen)
+		if not target.is_empty() and SimEngine.issue_command(tags, abil, target.pos, target.tag).ok:
+			pending_ability = ""
+			_spawn_marker(target.pos, "move")
+		else:
+			push_message("Choose a completed, unlinked Tunnel Mouth you own.", "warn")
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -1233,6 +1240,11 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(cost["supply"]) > 0 and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
+		"link_tunnel":
+			if not SimEngine.linked_tunnel(pu).is_empty():
+				return "Already linked to a Tunnel Mouth."
+		"send_tunnel_squad":
+			return SimEngine.tunnel_send_block_reason(pu)
 		"corrosive_miasma":
 			if not selected_owned().any(func(unit): return SimEngine.miasma_block_reason(unit).is_empty()):
 				return SimEngine.miasma_block_reason(pu)
@@ -2101,6 +2113,11 @@ func _draw_rally_and_orders() -> void:
 		if u.is_empty() or u["owner"] != local_player:
 			continue
 		var sp := _unit_screen(u, 0.2)
+		if u.unit_type == "tunnel_mouth" and u.build_progress >= 1.0:
+			_draw_range_ring(u.pos, SimEngine.TRANSPORT_PICKUP_RADIUS, Color("#a3d270"))
+			var exit := SimEngine.linked_tunnel(u)
+			if not exit.is_empty():
+				draw_dashed_line(sp, _unit_screen(exit, 0.2), Color(0.55, 0.73, 0.4, 0.65), 2.0, 10.0, true)
 		if u.build_progress >= 1.0 and u.has("support"):
 			_draw_range_ring(u.pos, float(u.support.range) + float(u.radius), Color("#9ae8d1"))
 		if u.is_structure and u.flight_height <= 0.0:

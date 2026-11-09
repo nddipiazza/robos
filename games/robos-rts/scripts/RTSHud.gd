@@ -840,6 +840,15 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Interceptor Mode · Air only" if u.flight_height > 0.0 else "Assault Mode · Ground only")
 	if is_own and def.has("transport_capacity"):
 		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
+	if is_own and u.unit_type == "tunnel_mouth" and not building:
+		var partner := SimEngine.linked_tunnel(u)
+		var entrance := u if u.has("tunnel_arrival") else partner
+		if entrance.has("tunnel_arrival"):
+			var ticks := int(entrance.tunnel_arrival) - SimEngine.tick
+			var remaining := "%.1fs" % (ticks * SimEngine.TICK_DT) if ticks > 0 else "Exit blocked"
+			status.append("%d in transit  ·  %s" % [entrance.passengers.size(), remaining])
+		else:
+			status.append("Unlinked" if partner.is_empty() else "Linked  ·  Six troop capacity")
 	if is_own and not u.is_structure and int(def.get("supply_provided", 0)) > 0:
 		status.append("Provides %d supply" % int(def.supply_provided))
 	if is_own and u.unit_type == "lumen_carrier":
@@ -1017,6 +1026,10 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_arc(c, 17.0 * u, 0.0, TAU, 28, Color("#bcf264"), 2.7 * u, true)
 			for offset in [Vector2(-7, 5), Vector2(1, -6), Vector2(8, 7)]:
 				draw_circle(c + offset * u, 3.0 * u, Color("#e8c27a"))
+		"link_tunnel", "send_tunnel_squad":
+			draw_arc(c - Vector2(12, 0) * u, 8 * u, 0, TAU, 14, Color("#a3d270"), 2.4 * u, true)
+			draw_arc(c + Vector2(12, 0) * u, 8 * u, 0, TAU, 14, Color("#a3d270"), 2.4 * u, true)
+			draw_line(c - Vector2(5, 0) * u, c + Vector2(5, 0) * u, col, 3.2 * u)
 		"load_transport", "unload_transport", "fighter_assault", "fighter_intercept":
 			var direction := -1.0 if id in ["load_transport", "fighter_intercept"] else 1.0
 			draw_rect(Rect2(c - Vector2(16, 16) * u, Vector2(32, 14) * u), accent, false, 3.0 * u)

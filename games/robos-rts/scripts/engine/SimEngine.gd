@@ -70,6 +70,9 @@ const MIASMA_RANGE := 17.0
 const MIASMA_RADIUS := 6.0
 const MIASMA_WARNING_TICKS := 64
 const MIASMA_DURATION_TICKS := 8 * 64
+const TUNNEL_CAPACITY := 6
+const TUNNEL_TRAVEL_TICKS := 2 * 64
+const TUNNEL_EXIT_RETRY_TICKS := 16
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
@@ -1701,6 +1704,8 @@ func _update_structures(dt: float) -> void:
 			continue
 		if u.unit_type == "colony_hub" or u.unit_type == "heartstone":
 			u.energy = minf(HUB_ENERGY_MAX, u.energy + 0.75 * dt)
+		if u.unit_type == "tunnel_mouth" and u.has("tunnel_arrival"):
+			_step_tunnel_squad(u)
 		var salvage_finish: int = u.get("salvage_finish", 0)
 		if salvage_finish > 0 and tick >= salvage_finish:
 			var definition: Dictionary = RTSData.get_unit_def(u.unit_type)
@@ -3347,6 +3352,14 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "link_tunnel":
+			if accepted == 0 and _link_tunnel(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "send_tunnel_squad":
+			if _send_tunnel_squad(u):
+				accepted += 1
+			continue
 		if ctype == "corrosive_miasma":
 			if accepted == 0 and _cast_miasma(u, target_pos):
 				accepted += 1
@@ -3833,15 +3846,19 @@ func _step_miasma() -> void:
 
 func _load_transport(transport: Dictionary) -> bool:
 	var capacity: int = RTSData.get_unit_def(transport.unit_type).get("transport_capacity", 0)
-	var passengers: Array = transport.get("passengers", [])
+	return _board_ground_squad(transport, capacity)
+
+func _board_ground_squad(carrier: Dictionary, capacity: int, tunnel: bool = false) -> bool:
+	var passengers: Array = carrier.get("passengers", [])
 	if passengers.size() >= capacity:
 		return false
 	var candidates := units.values().filter(func(unit):
-		return _is_friendly_mobile(unit, transport.owner) and unit.flight_height <= 0.0 and not unit.is_worker and not unit.is_immobile \
-			and transport.pos.distance_squared_to(unit.pos) <= TRANSPORT_PICKUP_RADIUS * TRANSPORT_PICKUP_RADIUS)
+		return _is_friendly_mobile(unit, carrier.owner) and unit.flight_height <= 0.0 and not unit.is_worker and not unit.is_immobile \
+			and carrier.pos.distance_squared_to(unit.pos) <= TRANSPORT_PICKUP_RADIUS * TRANSPORT_PICKUP_RADIUS \
+			and (not tunnel or _has_tunnel_access(unit.pos, unit.radius, carrier)))
 	candidates.sort_custom(func(a, b):
-		var a_distance: float = transport.pos.distance_squared_to(a.pos)
-		var b_distance: float = transport.pos.distance_squared_to(b.pos)
+		var a_distance: float = carrier.pos.distance_squared_to(a.pos)
+		var b_distance: float = carrier.pos.distance_squared_to(b.pos)
 		return a.tag < b.tag if a_distance == b_distance else a_distance < b_distance)
 	var loaded := false
 	for passenger in candidates:
@@ -3856,7 +3873,7 @@ func _load_transport(transport: Dictionary) -> bool:
 		units.erase(passenger.tag)
 		loaded = true
 	if loaded:
-		transport["passengers"] = passengers
+		carrier["passengers"] = passengers
 	return loaded
 
 func _valid_unload_order(transport: Dictionary, point: Vector2) -> bool:
@@ -3873,23 +3890,29 @@ func is_embarked(tag: int, owner: int) -> bool:
 func _unload_transport(transport: Dictionary, center: Vector2) -> bool:
 	if _is_point_blocked_by_static(center, INFANTRY_CLEARANCE):
 		return false
-	var passengers: Array = transport.passengers
+	return _drop_ground_squad(transport.passengers, center)
+
+func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = {}) -> bool:
 	var ground := units.values().filter(func(unit): return unit.flight_height <= 0.0 and unit.pos.distance_squared_to(center) < 100.0)
+	var landing_order := passengers.duplicate()
+	landing_order.sort_custom(func(a, b): return a.tag < b.tag if a.radius == b.radius else a.radius > b.radius)
 	var positions: Array[Vector2] = []
 	var candidates: Array[Vector2] = [center]
 	for distance in [2.7, 5.4]:
 		for step in range(12):
 			candidates.append(center + Vector2.from_angle(TAU * step / 12.0) * float(distance))
-	for passenger in passengers:
+	for passenger in landing_order:
 		var spot := Vector2.INF
 		for candidate in candidates:
 			if _map_clamped_position(candidate, passenger.radius) != candidate or _is_point_blocked_by_static(candidate, passenger.radius):
+				continue
+			if not mouth.is_empty() and not _has_tunnel_access(candidate, passenger.radius, mouth):
 				continue
 			if ground.any(func(unit): return candidate.distance_squared_to(unit.pos) < pow(passenger.radius + unit.radius, 2.0)):
 				continue
 			var clear := true
 			for i in range(positions.size()):
-				if candidate.distance_squared_to(positions[i]) < pow(passenger.radius + passengers[i].radius, 2.0):
+				if candidate.distance_squared_to(positions[i]) < pow(passenger.radius + landing_order[i].radius, 2.0):
 					clear = false
 					break
 			if clear:
@@ -3898,14 +3921,67 @@ func _unload_transport(transport: Dictionary, center: Vector2) -> bool:
 		if not spot.is_finite():
 			return false
 		positions.append(spot)
-	for i in range(passengers.size()):
-		var passenger: Dictionary = passengers[i]
+	for i in range(landing_order.size()):
+		var passenger: Dictionary = landing_order[i]
 		passenger.pos = positions[i]
 		passenger.prev_pos = positions[i]
 		passenger.home_pos = positions[i]
 		units[passenger.tag] = passenger
 	passengers.clear()
 	return true
+
+func linked_tunnel(mouth: Dictionary) -> Dictionary:
+	var partner: Dictionary = units.get(int(mouth.get("tunnel_partner", 0)), {})
+	if not partner.is_empty() and partner.get("tunnel_partner") == mouth.tag:
+		return partner
+	return {}
+
+func _ready_tunnel(mouth: Dictionary) -> bool:
+	return mouth.get("unit_type") == "tunnel_mouth" and mouth.build_progress >= 1.0 and mouth.hp > 0.0
+
+func _has_tunnel_access(point: Vector2, radius: float, mouth: Dictionary) -> bool:
+	var offset: Vector2 = point - mouth.pos
+	var lip: Vector2 = mouth.pos + offset.normalized() * (mouth.radius + radius + 0.3)
+	return _has_clear_line_of_walk(point, lip, radius)
+
+func _link_tunnel(mouth: Dictionary, partner: Dictionary) -> bool:
+	if not _ready_tunnel(mouth) or not _ready_tunnel(partner) or mouth.owner != partner.owner or mouth.tag == partner.tag:
+		return false
+	if not linked_tunnel(mouth).is_empty() or not linked_tunnel(partner).is_empty() or mouth.has("tunnel_arrival") or partner.has("tunnel_arrival"):
+		return false
+	mouth["tunnel_partner"] = partner.tag
+	partner["tunnel_partner"] = mouth.tag
+	return true
+
+func tunnel_send_block_reason(mouth: Dictionary) -> String:
+	var partner := linked_tunnel(mouth)
+	if partner.is_empty():
+		return "Link this entrance to a second Tunnel Mouth."
+	if mouth.has("tunnel_arrival") or partner.has("tunnel_arrival"):
+		return "A squad is already traveling through the link."
+	return ""
+
+func _send_tunnel_squad(mouth: Dictionary) -> bool:
+	if not _ready_tunnel(mouth) or not tunnel_send_block_reason(mouth).is_empty():
+		return false
+	if not _board_ground_squad(mouth, TUNNEL_CAPACITY, true):
+		notice.emit(mouth.owner, "No ground troops near this entrance.", "warn")
+		return false
+	mouth["tunnel_arrival"] = tick + TUNNEL_TRAVEL_TICKS
+	ability_triggered.emit(mouth, "send_tunnel_squad", mouth.pos)
+	return true
+
+func _step_tunnel_squad(mouth: Dictionary) -> void:
+	if tick < int(mouth.tunnel_arrival) or tick < int(mouth.get("tunnel_retry", 0)):
+		return
+	var exit := linked_tunnel(mouth)
+	if exit.is_empty():
+		exit = mouth
+	if _drop_ground_squad(mouth.passengers, exit.pos, exit):
+		mouth.erase("tunnel_arrival")
+		mouth.erase("tunnel_retry")
+	else:
+		mouth["tunnel_retry"] = tick + TUNNEL_EXIT_RETRY_TICKS
 
 func default_rally_position(structure: Dictionary) -> Vector2:
 	return structure.pos + (Vector2(8.0, 0.0) if structure.owner == 1 else Vector2(-8.0, 0.0))
@@ -4198,8 +4274,8 @@ func _recompute_supplies() -> void:
 				players[pid]["supply_used"] += int(q_def.get("supply_cost", 1))
 		else:
 			players[pid]["supply_used"] += int(def.get("supply_cost", 1))
-			for passenger in u.get("passengers", []):
-				players[pid]["supply_used"] += int(RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1))
+		for passenger in u.get("passengers", []):
+			players[pid]["supply_used"] += int(RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1))
 	for pid in players:
 		players[pid]["supply_cap"] = mini(200, players[pid]["supply_cap"])
 
@@ -4361,6 +4437,10 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		if u.owner == perspective_player or perspective_player == 0:
 			if u.has("passengers"):
 				entry["passengers"] = u.passengers.map(func(passenger): return passenger.tag)
+			if u.unit_type == "tunnel_mouth":
+				entry["tunnel_partner"] = linked_tunnel(u).get("tag", 0)
+				if u.has("tunnel_arrival"):
+					entry["tunnel_ticks"] = maxi(0, int(u.tunnel_arrival) - tick)
 		if u.has("expires_tick"):
 			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
 		if u.has("living_ground_speed_bonus"):
