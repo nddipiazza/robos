@@ -22,6 +22,7 @@ const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
 const GRID_KEYS := "QWERTASDFGZXCVB"
 const EDGE_SCROLL_MARGIN := 14.0
+const FACTION_CARD := Rect2(8.0, 6.0, 238.0, 31.0)
 const PATH_FEEDBACK_FADE := 1.5
 const SPLASH_RING_SEGMENTS := 32
 
@@ -59,6 +60,7 @@ var click_markers: Array[Dictionary] = []
 var _path_feedback: Dictionary = {}
 var hover_override: Variant = null
 var show_help: bool = false
+var technology_open := false
 var show_names: bool = false
 var hud_hidden: bool = false
 var banner_ttl: float = 0.0
@@ -143,6 +145,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	mid_dragging = false
 	_clear_held_keys()
 	_inspected_deposit_tag = 0
+	technology_open = false
 	pending_ability = ""
 	_repeating_target = false
 	control_groups.clear()
@@ -612,6 +615,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_mouse_button(mb: InputEventMouseButton) -> void:
 	var mpos: Vector2 = mb.position
+
+	if mb.pressed and hud and not hud_hidden:
+		if FACTION_CARD.has_point(mpos):
+			if mb.button_index == MOUSE_BUTTON_LEFT:
+				technology_open = not technology_open
+			return
+		if technology_open and hud.technology_bounds.has_point(mpos):
+			return
 
 	if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
 		world_3d.zoom_by(-4.0)
@@ -1440,6 +1451,8 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			_repeating_target = false
 			if show_help:
 				show_help = false
+			elif pending_ability.is_empty() and technology_open:
+				technology_open = false
 			else:
 				pending_ability = ""
 			return
@@ -1583,6 +1596,7 @@ func ui_state() -> Dictionary:
 		"health_bar_mode": health_bar_mode,
 		"health_bars_revealed": reveal_health_bars,
 		"inspected_deposit": inspected_deposit().get("tag", 0),
+		"technology": hud.technology_state() if hud and technology_open and not hud_hidden else {"visible": false},
 		"local_player": local_player,
 		"selected": tags,
 		"primary_type": primary_type(),

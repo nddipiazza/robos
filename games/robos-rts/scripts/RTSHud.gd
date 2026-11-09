@@ -15,6 +15,7 @@ var minimap_draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
 var _supply_region := Rect2()
 var _resource_regions: Dictionary = {}
+var technology_bounds := Rect2(12.0, 64.0, 760.0, 725.0)
 
 class MinimapTerrain extends Node2D:
 	var hud: Node2D
@@ -71,6 +72,8 @@ func _draw() -> void:
 	_draw_idle_production_button()
 	_draw_group_tabs()
 	_draw_bottom_panel()
+	if main.technology_open:
+		_draw_technology_panel()
 	_draw_tooltip()
 	_draw_caption()
 	_draw_match_status()
@@ -214,9 +217,139 @@ func _draw_faction_label() -> void:
 	if p.is_empty():
 		return
 	var col := _player_color()
-	draw_rect(Rect2(14, 14, 10, 10), col)
-	draw_rect(Rect2(14, 14, 10, 10), Color(0, 0, 0, 0.8), false, 1.0)
-	_text(Vector2(32, 25), RTSData.get_faction_name(str(p.get("faction", "humans"))), 17, C_TEXT)
+	var card: Rect2 = main.FACTION_CARD
+	_vgrad(card, C_TOP, C_BOT)
+	var edge := C_GOLD if main.technology_open else (C_EDGE_HI if card.has_point(main.hover_pos()) else C_EDGE)
+	draw_rect(card, edge, false, 1.0)
+	draw_rect(Rect2(17, 17, 9, 9), col)
+	_text(Vector2(34, 27), RTSData.get_faction_name(str(p.get("faction", "humans"))), 17, C_TEXT)
+	_text_r(card.end.x - 10, 27, "TECH", 13, C_GOLD)
+
+func technology_state() -> Dictionary:
+	var owner: int = main.local_player
+	var player: Dictionary = SimEngine.players.get(owner, {})
+	var faction: String = player.get("faction", "humans")
+	var roster: Dictionary = RTSData.faction_info.get(faction, {})
+	if roster.is_empty():
+		return {"visible": true, "faction": faction, "rows": []}
+	var worker: Dictionary = RTSData.get_unit_def(roster.worker)
+	var structures := SimEngine.units.values().filter(func(unit): return unit.owner == owner and unit.is_structure)
+	var states := {}
+	var rows: Array[Dictionary] = []
+	for ability_id in worker.abilities:
+		var ability := RTSData.get_ability_def(ability_id)
+		if not ability.has("structure"):
+			continue
+		var type: String = ability.structure
+		var definition := RTSData.get_unit_def(type)
+		var requirement := _technology_requirement(owner, type, structures, states)
+		var requirements: Array[Dictionary] = []
+		for prerequisite in definition.get("requires", []):
+			requirements.append(_technology_requirement(owner, prerequisite, structures, states))
+		if SimEngine.requires_power(type):
+			var power := _technology_requirement(owner, "resonator", structures, states).duplicate()
+			power.name = "Resonator field"
+			requirements.append(power)
+		if definition.get("is_extractor", false):
+			requirements.append({"id": "vent", "name": "Aether vent", "state": "Site"})
+		var state: String = requirement.state
+		if state == "Missing":
+			state = "Locked" if requirements.any(func(req): return req.state in ["Missing", "Building"]) else "Available"
+		rows.append({"id": type, "section": "Construction", "name": definition.name, "state": state,
+			"requirements": requirements, "cost": main.ability_cost(ability)})
+
+		var producer_state := _technology_production_state(owner, type, structures)
+		var producer_requirements: Array[Dictionary] = [requirement]
+		if SimEngine.requires_power(type):
+			var power_state := "Missing" if producer_state == "Unpowered" else ("Complete" if requirement.state == "Complete" else "Site")
+			producer_requirements.append({"id": "power", "name": "Power field", "state": power_state})
+		for trainee in definition.get("trains", []):
+			var train: Dictionary = RTSData.get_unit_def(trainee)
+			rows.append({"id": trainee, "section": "Production", "name": train.name, "state": producer_state,
+				"requirements": producer_requirements, "cost": main.ability_cost({"unit": trainee})})
+		for action in definition.get("abilities", []):
+			var research := RTSData.get_ability_def(action)
+			if not research.has("upgrade"):
+				continue
+			var offer: Dictionary = main.ability_cost(research)
+			var research_state := producer_state
+			var name: String = research.name.trim_prefix("Research ")
+			if offer.is_empty():
+				research_state = "Max level"
+			else:
+				name += " · L%d" % offer.level
+				if not SimEngine.research_block_reason(owner, research.upgrade).is_empty():
+					research_state = "Queued"
+			rows.append({"id": action, "section": "Research", "name": name, "state": research_state,
+				"requirements": [requirement], "cost": offer})
+	return {"visible": true, "faction": faction, "rows": rows}
+
+func _technology_requirement(owner: int, type: String, structures: Array, states: Dictionary) -> Dictionary:
+	if not states.has(type):
+		var state := "Complete" if SimEngine.has_tech_structure(owner, type) else "Missing"
+		if state == "Missing" and structures.any(func(unit): return unit.unit_type == type or unit.unit_type == type + "_retracted"):
+			state = "Building"
+		states[type] = {"id": type, "name": RTSData.get_unit_def(type).get("name", type), "state": state}
+	return states[type]
+
+func _technology_production_state(owner: int, type: String, structures: Array) -> String:
+	var finished := structures.filter(func(unit): return unit.unit_type == type and unit.build_progress >= 1.0)
+	if finished.is_empty():
+		return "Locked"
+	if SimEngine.requires_power(type):
+		finished = finished.filter(func(unit): return SimEngine.is_powered(owner, unit.pos))
+		if finished.is_empty():
+			return "Unpowered"
+	var open := finished.filter(func(unit): return unit.production_queue.size() < 5)
+	if open.is_empty():
+		return "Queue full"
+	if not open.any(func(unit): return not SimEngine.uses_brood_slots(unit) or unit.brood_slots > 0):
+		return "No brood slots"
+	return "Unlocked"
+
+func _draw_technology_panel() -> void:
+	var state := technology_state()
+	var rows: Array = state.rows
+	var sections := ["Construction", "Production", "Research"]
+	var height := 66.0 + rows.size() * 31.0
+	for section in sections:
+		if rows.any(func(row): return row.section == section):
+			height += 30.0
+	technology_bounds.size.y = height
+	var origin := technology_bounds.position
+	_frame(technology_bounds)
+	_text(origin + Vector2(15, 29), RTSData.get_faction_name(state.faction) + " technology", 22)
+	_text(origin + Vector2(15, 52), "C  Crystal     A  Aether     S  Supply", 14, C_MUTED)
+	_text_r(origin.x + 745, origin.y + 52, "Esc to close", 14, C_MUTED)
+	var y := origin.y + 61.0
+	for section in sections:
+		var branch := rows.filter(func(row): return row.section == section)
+		if branch.is_empty():
+			continue
+		draw_rect(Rect2(origin.x + 9, y, 742, 24), C_TOP)
+		_text(Vector2(origin.x + 15, y + 17), section, 15, C_GOLD)
+		_text(Vector2(origin.x + 237, y + 17), "Prerequisites", 13, C_MUTED)
+		_text(Vector2(origin.x + 534, y + 17), "Cost", 13, C_MUTED)
+		_text(Vector2(origin.x + 644, y + 17), "Status", 13, C_MUTED)
+		y += 28.0
+		for row in branch:
+			var requirements: Array = row.requirements.map(func(req):
+				if req.state == "Site":
+					return req.name
+				return "%s %s" % [req.name, "ready" if req.state == "Complete" else req.state.to_lower()])
+			var cost: Dictionary = row.cost
+			var price := "—" if cost.is_empty() else "%dC %dA" % [cost.crystal, cost.aether]
+			if int(cost.get("supply", 0)) > 0:
+				price += " %dS" % cost.supply
+			var color := Color("#73dca1") if row.state in ["Available", "Complete", "Unlocked"] else C_MUTED
+			if row.state in ["Building", "Queued"]:
+				color = C_GOLD
+			_text(Vector2(origin.x + 15, y + 20), row.name, 16, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT, 215)
+			_text(Vector2(origin.x + 237, y + 20), " · ".join(requirements) if not requirements.is_empty() else "—", 14, C_MUTED, HORIZONTAL_ALIGNMENT_LEFT, 288)
+			_text(Vector2(origin.x + 534, y + 20), price, 14)
+			_text(Vector2(origin.x + 644, y + 20), row.state, 14, color)
+			draw_line(Vector2(origin.x + 14, y + 26), Vector2(origin.x + 746, y + 26), C_EDGE, 1.0)
+			y += 31.0
 
 func _draw_banner() -> void:
 	if main.banner_ttl <= 0.0:
