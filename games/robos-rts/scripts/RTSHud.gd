@@ -275,13 +275,14 @@ func technology_state() -> Dictionary:
 			var research_state := producer_state
 			var name: String = research.name.trim_prefix("Research ")
 			if offer.is_empty():
-				research_state = "Max level"
+				research_state = "Complete" if research.upgrade == "fast_deployment" else "Max level"
 			else:
-				name += " · L%d" % offer.level
+				if research.upgrade != "fast_deployment":
+					name += " · L%d" % offer.level
 				if not SimEngine.research_block_reason(owner, research.upgrade).is_empty():
 					research_state = "Queued"
 			rows.append({"id": action, "section": "Research", "name": name, "state": research_state,
-				"requirements": [requirement], "cost": offer})
+				"requirements": producer_requirements, "cost": offer})
 	return {"visible": true, "faction": faction, "rows": rows}
 
 func _technology_requirement(owner: int, type: String, structures: Array, states: Dictionary) -> Dictionary:
@@ -762,10 +763,21 @@ func _draw_single(u: Dictionary) -> void:
 		ry += 62.0
 	elif def.has("trains") and is_own:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
+		var queue: Array = u["production_queue"]
+		var timers: Array[String] = []
 		var boost := SimEngine.production_boost_ticks(u)
 		if boost > 0:
-			_text_r(sp.end.x - 16.0, ry + 12, "Boost %.1fs" % (boost * SimEngine.TICK_DT), 15, Color("#b093ff"))
-		var queue: Array = u["production_queue"]
+			timers.append("Boost %.1fs" % (boost * SimEngine.TICK_DT))
+		if u.unit_type == "waystone" and SimEngine.players[u.owner].get("fast_deployment", false):
+			var cooldown := SimEngine.fast_deployment_ticks(u)
+			if cooldown > 0:
+				timers.append("Deploy %.1fs" % (cooldown * SimEngine.TICK_DT))
+			elif not queue.is_empty() and queue[0].has("deployment_pos"):
+				timers.append("Deployment set")
+			elif SimEngine.fast_deployment_block_reason(u).is_empty():
+				timers.append("Deploy ready")
+		if not timers.is_empty():
+			_text_r(sp.end.x - 16.0, ry + 12, " · ".join(timers), 15, Color("#b093ff"))
 		var brood := SimEngine.uses_brood_slots(u)
 		var active_slots := SimEngine.active_production_slots(u)
 		var exit_blocked := queue.any(func(item): return item.has("exit_retry_tick"))
@@ -1007,6 +1019,10 @@ func _glyph(id: String, r: Rect2) -> void:
 		"production_boost":
 			draw_polyline(P.call([[-19, -13], [-5, 0], [-19, 13]]), Color("#b093ff"), 4.0 * u, true)
 			draw_polyline(P.call([[-2, -13], [12, 0], [-2, 13]]), Color("#b093ff"), 4.0 * u, true)
+		"research_fast_deployment", "fast_deploy":
+			draw_arc(c + Vector2(8, 0) * u, 13.0 * u, -1.25, 1.25, 20, Color("#b093ff"), 3.0 * u, true)
+			draw_polyline(P.call([[1, -9], [11, 0], [1, 9]]), Color("#b093ff"), 3.0 * u, true)
+			draw_line(c - Vector2(20, 0) * u, c + Vector2(10, 0) * u, Color("#b093ff"), 3.0 * u)
 		"salvage":
 			draw_polyline(P.call([[-17, -7], [0, 10], [17, -7]]), C_GOLD, 4.0 * u, true)
 			draw_line(c - Vector2(16, -17) * u, c + Vector2(16, 17) * u, C_GOLD, 3.0 * u)

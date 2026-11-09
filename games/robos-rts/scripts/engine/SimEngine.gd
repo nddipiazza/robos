@@ -68,6 +68,7 @@ const FIGHTER_TRANSITION_TICKS := 96
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
+const FAST_DEPLOYMENT_COOLDOWN_TICKS := 20 * TICK_RATE
 const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
 const SALVAGE_TICKS := 5 * TICK_RATE
@@ -247,6 +248,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 			"supply_cap": 0,
 			"upgrades": {"weapons": 0, "armor": 0},
 			"surge_efficiency": false,
+			"fast_deployment": false,
 			"crystal_collected": 0,
 			"aether_collected": 0,
 			"units_killed": 0,
@@ -1647,6 +1649,9 @@ func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[D
 			"surge_efficiency":
 				players[structure.owner].surge_efficiency = true
 				notice.emit(structure.owner, "Efficient Surge complete.", "info")
+			"fast_deployment":
+				players[structure.owner].fast_deployment = true
+				notice.emit(structure.owner, "Fast Deployment complete.", "info")
 			_:
 				players[structure.owner].upgrades[item.upgrade] = item.level
 				notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
@@ -1659,7 +1664,10 @@ func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[D
 	var first := default_rally_position(structure)
 	if not route.is_empty():
 		first = rally_waypoint_position(route.front())
-	var spawn_pos := _rally_spawn_position(structure, first, utype, arrivals)
+	var deployment: Vector2 = item.get("deployment_pos", Vector2.INF)
+	var deploy_remotely := deployment.is_finite() and fast_deployment_ticks(structure) == 0 and is_powered(structure.owner, structure.pos) \
+		and _fast_deployment_site_valid(structure.owner, deployment, utype, arrivals, true)
+	var spawn_pos := deployment if deploy_remotely else _rally_spawn_position(structure, first, utype, arrivals)
 	if not spawn_pos.is_finite():
 		return false
 	# The job already reserves this supply. Remove it before spawn_unit counts
@@ -1670,13 +1678,65 @@ func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[D
 		return true
 	arrivals.append(new_unit)
 	players[structure.owner].units_trained += 1
+	if deploy_remotely:
+		structure["fast_deployment_until"] = tick + FAST_DEPLOYMENT_COOLDOWN_TICKS
 	unit_production_finished.emit(new_unit, structure)
+	if deploy_remotely:
+		return true
+	if deployment.is_finite():
+		notice.emit(structure.owner, "Deployment site unavailable. Unit used the normal exit.", "info")
 	if not route.is_empty():
 		_apply_rally_route(new_unit, route)
 	elif is_worker and not match_state.is_empty():
 		issue_SmartHarvest(new_unit.tag)
 	elif first.distance_to(structure.pos) > structure.radius + 1.5:
 		issue_command([new_unit.tag], "move", first)
+	return true
+
+func fast_deployment_ticks(structure: Dictionary) -> int:
+	return maxi(0, int(structure.get("fast_deployment_until", 0)) - tick)
+
+func fast_deployment_block_reason(structure: Dictionary) -> String:
+	if structure.unit_type != "waystone" or structure.build_progress < 1.0:
+		return "Select a completed Waystone."
+	if not players[structure.owner].get("fast_deployment", false):
+		return "Research Fast Deployment first."
+	if not is_powered(structure.owner, structure.pos):
+		return "The Waystone needs a Resonator's power field."
+	var remaining := fast_deployment_ticks(structure)
+	if remaining > 0:
+		return "Deployment recharges in %.1fs." % (remaining * TICK_DT)
+	if structure.production_queue.is_empty() or not structure.production_queue[0].has("unit_type"):
+		return "Queue a paid unit first."
+	return ""
+
+func _assign_fast_deployment(structure: Dictionary, pos: Vector2) -> bool:
+	if not fast_deployment_block_reason(structure).is_empty():
+		return false
+	var item: Dictionary = structure.production_queue.front()
+	if not _fast_deployment_site_valid(structure.owner, pos, item.unit_type):
+		return false
+	item["deployment_pos"] = pos
+	return true
+
+func _fast_deployment_site_valid(owner: int, pos: Vector2, unit_type: String, arrivals: Array[Dictionary] = [], check_mobiles: bool = false) -> bool:
+	if not pos.is_finite() or not can_see_position(owner, pos) or not is_powered(owner, pos):
+		return false
+	var definition := RTSData.get_unit_def(unit_type)
+	var radius: float = definition.get("radius", 0.85)
+	var flying := float(definition.get("flight_height", 0.0)) > 0.0
+	if _map_clamped_position(pos, radius) != pos or (not flying and _is_point_blocked_by_static(pos, radius)):
+		return false
+	if not check_mobiles:
+		return true
+	var nearby := query_units_in_radius(pos, radius)
+	nearby.append_array(arrivals)
+	for other in nearby:
+		if other.is_structure or (other.flight_height > 0.0) != flying:
+			continue
+		var clearance: float = radius + other.radius
+		if pos.distance_squared_to(other.pos) < clearance * clearance:
+			return false
 	return true
 
 func _rally_spawn_position(structure: Dictionary, first: Vector2, unit_type: String, arrivals: Array[Dictionary] = []) -> Vector2:
@@ -3434,6 +3494,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if _enqueue_research(u, ctype.trim_prefix("research_")):
 				accepted += 1
 			continue
+		elif ctype == "fast_deploy":
+			if accepted == 0 and _assign_fast_deployment(u, target_pos):
+				accepted += 1
+			continue
 
 		elif ctype == "cancel_training":
 			if (extra.is_empty() or extra.is_valid_int()) and _cancel_training(u, int(extra) if not extra.is_empty() else u.production_queue.size() - 1):
@@ -3877,6 +3941,8 @@ func research_offer(owner_id: int, upgrade: String) -> Dictionary:
 		return {}
 	if upgrade == "surge_efficiency":
 		return {} if player.get("surge_efficiency", false) else {"level": 1, "crystal": 100, "aether": 100, "supply": 0, "time": 45.0, "requires": []}
+	if upgrade == "fast_deployment":
+		return {} if player.get("fast_deployment", false) else {"level": 1, "crystal": 150, "aether": 150, "supply": 0, "time": 45.0, "requires": []}
 	var upgrades: Dictionary = player.get("upgrades", {})
 	if not upgrades.has(upgrade):
 		return {}
@@ -3888,7 +3954,7 @@ func research_offer(owner_id: int, upgrade: String) -> Dictionary:
 
 func research_block_reason(owner_id: int, upgrade: String) -> String:
 	if research_offer(owner_id, upgrade).is_empty():
-		return "Research already completed." if upgrade == "surge_efficiency" else "All levels researched."
+		return "Research already completed." if upgrade in ["surge_efficiency", "fast_deployment"] else "All levels researched."
 	for structure in units.values():
 		if structure.owner != owner_id or not structure.is_structure:
 			continue
@@ -3901,6 +3967,8 @@ func research_producer_block_reason(structure: Dictionary, upgrade: String) -> S
 	var ability: Dictionary = RTSData.get_ability_def("research_" + upgrade)
 	if structure.is_empty() or structure.unit_type != ability.get("producer") or structure.build_progress < 1.0 or structure.flight_height > 0.0:
 		return "Requires a completed research producer."
+	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
+		return "The Waystone needs a Resonator's power field."
 	var required_attachment := str(ability.get("requires_attachment", ""))
 	if not required_attachment.is_empty() and production_attachment(structure).get("unit_type") != required_attachment:
 		return "Requires a completed Research Module."
@@ -4155,6 +4223,11 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"pioneer":
 				entry["auto_repair"] = u.get("auto_repair", false)
 		if not limited or u.owner == perspective_player:
+			if u.unit_type == "waystone":
+				entry["fast_deployment_ticks"] = fast_deployment_ticks(u)
+				if not u.production_queue.is_empty() and u.production_queue[0].has("deployment_pos"):
+					var deployment: Vector2 = u.production_queue[0].deployment_pos
+					entry["deployment_target"] = {"x": deployment.x, "y": deployment.y}
 			if u.has("production_boost_until"):
 				entry["production_boost_ticks"] = production_boost_ticks(u)
 			if u.has("attachment_tag"):

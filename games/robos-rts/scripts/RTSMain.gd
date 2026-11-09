@@ -1080,6 +1080,12 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			return
 		pending_ability = ""
 		_spawn_marker(target.pos, "boost")
+	elif abil == "fast_deploy":
+		if not SimEngine.issue_command(tags, abil, wpos).ok:
+			push_message("Choose a clear, visible powered deployment site.", "warn")
+			return
+		pending_ability = ""
+		_spawn_marker(wpos, "boost")
 	elif abil.begins_with("build_"):
 		var sdef_id := str(RTSData.get_ability_def(abil).get("structure", abil.replace("build_", "")))
 		var placement := placement_for(sdef_id, wpos)
@@ -1236,6 +1242,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		"production_boost":
 			if not selected_owned().any(SimEngine.can_use_production_boost):
 				return "Requires 50 Heartstone energy."
+		"fast_deploy":
+			if not selected_owned().any(func(unit): return SimEngine.fast_deployment_block_reason(unit).is_empty()):
+				return SimEngine.fast_deployment_block_reason(pu)
 		"return_cargo":
 			if not selected_owned().any(func(unit): return unit.is_worker and unit.cargo_amount > 0):
 				return "No worker is carrying resources."
@@ -2062,6 +2071,10 @@ func _draw_rally_and_orders() -> void:
 				if route.is_empty():
 					route = [{"kind": "move", "pos": SimEngine.default_rally_position(u)}]
 				_draw_rally_route(route, sp, Color("#fbbf24"))
+				if u.unit_type == "waystone" and not u.production_queue.is_empty():
+					var deployment: Vector2 = u.production_queue[0].get("deployment_pos", Vector2.INF)
+					if deployment.is_finite():
+						_draw_range_ring(deployment, 1.25, Color("#b093ff"), 2.0)
 				if u.unit_type == "brood_nest":
 					_draw_rally_route(u.worker_rally_route, sp, Color("#5eead4"))
 				var preview: Dictionary = _worker_rally_previews.get(u.tag, {})

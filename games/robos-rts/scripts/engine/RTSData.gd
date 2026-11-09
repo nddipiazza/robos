@@ -1099,7 +1099,7 @@ var units: Dictionary = {
 		"sight_range": 20.0,
 		"push_priority": 100,
 		"trains": ["sunblade", "skirmisher", "spire_walker"],
-		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally"]
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy"]
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
@@ -1178,6 +1178,8 @@ var abilities: Dictionary = {
 	"train_bile_crawler": {"id": "train_bile_crawler", "name": "Spawn Bile Crawler", "hotkey": "R", "target": "none", "unit": "bile_crawler"},
 	"train_blight_hurler": {"id": "train_blight_hurler", "name": "Spawn Blight Hurler", "hotkey": "V", "target": "none", "unit": "blight_hurler"},
 	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
+	"research_fast_deployment": {"id": "research_fast_deployment", "name": "Research Fast Deployment", "hotkey": "F", "target": "none", "upgrade": "fast_deployment", "producer": "waystone", "desc": "Lets powered Waystones send a paid trainee directly to a visible powered site."},
+	"fast_deploy": {"id": "fast_deploy", "name": "Fast Deploy", "hotkey": "D", "target": "point", "desc": "Set a powered landing point for the next paid trainee. A successful deployment recharges for 20 seconds. If the site becomes unavailable, the unit uses the normal exit."},
 	"train_sunblade": {"id": "train_sunblade", "name": "Summon Sunblade", "hotkey": "Z", "target": "none", "unit": "sunblade"},
 	"train_skirmisher": {"id": "train_skirmisher", "name": "Summon Skirmisher", "hotkey": "S", "target": "none", "unit": "skirmisher"},
 	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},
