@@ -38,7 +38,8 @@ func _run() -> void:
 	check(sim.can_see_unit(1, outpost) and sim.can_see_unit(1, guard), "Scout must reveal both types of enemy")
 	soldier.orders.clear()
 	ai._attack(1, [soldier], ai_state, true)
-	check(soldier.orders[0].target_pos == outpost.pos, "AI can attack a base once an allied scout reveals it")
+	var firing_reach: float = soldier.radius + outpost.radius + sim._get_weapon_range(soldier)
+	check(soldier.orders[0].type == "attack_move" and soldier.orders[0].target_pos.distance_to(outpost.pos) <= firing_reach, "AI targets the base or its firing approach once an allied scout reveals it")
 	var accepted: Dictionary = sim.issue_command([scout.tag], "attack_target", Vector2.ZERO, guard.tag)
 	check(accepted.accepted == 1, "Focus fire must work on visible enemies")
 	var last_position: Vector2 = guard.pos
