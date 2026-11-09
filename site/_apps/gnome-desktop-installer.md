@@ -6,6 +6,8 @@ icon: gnome-desktop-installer.svg
 summary: "Install, manage, and repair GNOME Desktop shortcuts, App Grid launchers, multi-scale icons, and Dock favorites for all RobOS apps."
 description: "Centralized GNOME Linux desktop integration manager for the entire RobOS app suite: FreeDesktop 1.5 .desktop entries, GIO trusted ~/Desktop shortcuts, multi-scale hicolor PNG/SVG icons, ~/.local/bin launcher wrappers, and GNOME Shell Dock pinning."
 permalink: /gnome-desktop-installer/
+redirect_from:
+  - /apps/gnome-desktop-installer/
 ---
 
 RobOS GNOME Desktop App Installer provides a unified control center for managing GNOME Linux desktop integration across every application in the RobOS suite. Whether you want all RobOS apps searchable in the GNOME Activities Overview / App Grid, selected apps placed directly on `~/Desktop` with automatic GIO trust, or favorite tools pinned to the GNOME Shell Dash / Ubuntu Dock, this app handles the entire lifecycle in one click.

@@ -6,6 +6,8 @@ icon: issue-manager.svg
 summary: "Opens one GitHub issue, shows it with its workflow state, moves it between states by changing labels, and sets up a branch workspace for it."
 description: "Issue Manager is a single-issue view started with an issue number, plus a configuration screen for issue types and workflows. It uses the gh CLI and has no board or issue list view."
 permalink: /issue-manager/
+redirect_from:
+  - /apps/issue-manager/
 ---
 
 Issue Manager is launched for one issue at a time, usually from another RobOS app. It has no Kanban board and no issue list.

@@ -2,6 +2,8 @@
 layout: default
 title: Pass Manager — KeePassXC (.kdbx) Single-Archive Vault & YubiKey FIDO2 Unlock in RobOS
 permalink: /pass-manager/
+redirect_from:
+  - /apps/pass-manager/
 body_class: guide
 extra_css: /assets/code-review.css
 description: "Reference guide for RobOS Pass Manager (packages/pass-manager) and kdbx-vault.js: store all workspace credentials in a single encrypted KeePassXC .kdbx 4.1 archive and unlock it with a single physical touch on your YubiKey via the FIDO2 CTAP2.1 hmac-secret extension."
@@ -19,6 +21,11 @@ keywords: "RobOS Pass Manager, KeePassXC .kdbx Linux, YubiKey FIDO2 hmac-secret 
 <p class="eyebrow">Guide · Security › RobOS Pass Manager (<code>packages/pass-manager</code>)</p>
 <h1>KeePassXC (<code>.kdbx</code>) vault &amp; YubiKey unlock</h1>
 <p class="lead"><strong>RobOS Pass Manager</strong> stores your credentials, API tokens, database URLs, and notes inside a single portable <strong>KeePassXC <code>.kdbx</code> 4.1</strong> archive (<code>AES-256</code> / <code>Argon2id</code>) and binds it to your physical <strong>YubiKey / FIDO2 Security Key</strong> using the CTAP2.1 <code>hmac-secret</code> extension—so you can unlock your entire keystore with a single finger press on the key's gold contact.</p>
+<div class="cta" style="margin-top:6px">
+  <a class="btn" href="#architecture">Read the vault guide</a>
+  <a class="btn btn-ghost" href="{{ '/pass-manager/reference/' | relative_url }}">Package reference</a>
+  <a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/pass-manager">Source code</a>
+</div>
 </header>
 
 <figure class="guide-shot"><a href="{{ pm }}01-unlock-yubikey.png"><img src="{{ pm }}01-unlock-yubikey.png" alt="RobOS Pass Manager unlock screen showing Physical Key Bound: Yubico YubiKey FIDO with a 1-Touch Unlock button for robos-passwords.kdbx" width="900" height="620"></a><figcaption><strong>1-Touch Physical Key Unlock</strong> in RobOS Pass Manager (<code>:19113</code>): press the gold touch button on your YubiKey to unwrap and unlock <code>robos-passwords.kdbx</code>.</figcaption></figure>

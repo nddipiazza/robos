@@ -4,6 +4,8 @@ package: robos-adapters
 category: "libraries"
 component_type: component
 permalink: /robos-adapters/
+redirect_from:
+  - /apps/robos-adapters/
 summary: "RobOS Open-Source Ecosystem Adapter Suite (Backstage, TypeSpec, Buf, Pact, Devcontainers)"
 description: "RobOS Open-Source Ecosystem Adapter Suite (Backstage, TypeSpec, Buf, Pact, Devcontainers)"
 ---

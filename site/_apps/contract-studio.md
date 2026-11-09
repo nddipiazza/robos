@@ -6,6 +6,8 @@ summary: "A prototype console for browsing OpenAPI and AsyncAPI contracts and ru
 description: "Contract Studio shows three built-in Acme Petshop contracts. Spectral, Pact and Prism results are fixed values, and no linter, test runner or mock server is started."
 icon: contract-studio.svg
 permalink: /contract-studio/
+redirect_from:
+  - /apps/contract-studio/
 ---
 
 Contract Studio is a mock-up of an API governance console. It is wired to one sample project, `acme-petshop-platform`, and does not yet inspect your own contracts.

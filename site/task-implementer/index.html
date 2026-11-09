@@ -2,6 +2,8 @@
 layout: default
 title: Task Implementer
 permalink: /task-implementer/
+redirect_from:
+  - /apps/task-implementer/
 body_class: guide
 extra_css: /assets/build-guide.css
 description: "RobOS Task Implementer picks a GitHub or Jira issue, gives it a developer persona, and runs the coding agent you choose (Codex, AGY, Claude Code or GitHub Copilot). The agent creates a branch, implements and tests the task, commits and pushes, without opening a pull request. Requirements, safety, every tab, personas and the hand-off to Agent Code Review."
@@ -20,7 +22,7 @@ keywords: "RobOS Task Implementer, AI coding agent, implement GitHub issues with
         <h1 id="task-implementer-title">Pick an issue. An agent builds it on its own branch.</h1>
         <p class="auto-intro-lead">Choose a task from GitHub or Jira, check the persona and add your hints, then click <strong>Start Agent</strong>.</p>
         <p>The agent creates a branch, implements and tests the task, commits and pushes. It does not open a pull request: you review the branch first in <a href="{{ '/pr-review/' | relative_url }}">Agent Code Review</a>, and decide.</p>
-        <a class="btn" href="#run">Run your first task <span aria-hidden="true">↓</span></a>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="#run">Run your first task <span aria-hidden="true">↓</span></a><a class="btn btn-ghost" href="{{ '/task-implementer/reference/' | relative_url }}">Package reference</a></div>
       </div>
       <div class="auto-intro-demo">
         <figure class="guide-shot" style="margin:0"><a href="{{ shots }}implementer-2-done.jpg"><img src="{{ shots }}implementer-2-done.jpg" alt="Agent Output after the run: the agent read the task, created branch codex/42, ran the tests with 8 passing, committed and pushed without creating a pull request" loading="eager" width="1600" height="1067"></a><figcaption>Branch <code>codex/42</code> pushed, 8 tests passing, no pull request yet.</figcaption></figure>

@@ -4,6 +4,8 @@ package: robos-gaming
 category: "libraries"
 component_type: component
 permalink: /robos-gaming/
+redirect_from:
+  - /apps/robos-gaming/
 summary: "RobOS Shared Gaming Library — Core Gaming Ontology, Dice Subsystems, Grid Mathematics, and Cartridge Engine"
 description: "RobOS Shared Gaming Library — Core Gaming Ontology, Dice Subsystems, Grid Mathematics, and Cartridge Engine"
 ---

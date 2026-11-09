@@ -4,6 +4,8 @@ package: robos-event-bus
 category: "libraries"
 component_type: component
 permalink: /robos-event-bus/
+redirect_from:
+  - /apps/robos-event-bus/
 summary: "RobOS Event Bus — Unix domain socket pub/sub with NDJSON protocol"
 description: "RobOS Event Bus — Unix domain socket pub/sub with NDJSON protocol"
 ---

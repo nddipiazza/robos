@@ -11,6 +11,8 @@ related:
   - /robos-preferences/
   - /dev-central/
 permalink: /cloud-accounts/
+redirect_from:
+  - /apps/cloud-accounts/
 ---
 
 The window in `packages/cloud-accounts` sits on top of two shared modules, `packages/robos-lib/cloud-accounts.js` and `packages/robos-lib/thunderbird-google.js`. The account registry lives in the first one, so [RobOS Preferences]({{ '/robos-preferences/' | relative_url }}), [RobOS Google Calendar]({{ '/google-calendar/' | relative_url }}) and [Data Sources]({{ '/data-sources/' | relative_url }}) read and write the same accounts.

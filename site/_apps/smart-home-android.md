@@ -6,6 +6,8 @@ icon: smart-home.svg
 summary: "Controls Wi-Fi lights straight from an Android phone, no RobOS computer needed: Feit Electric and Smart Life, WiZ, Hue, WLED, Kasa, LIFX, Govee, Elgato, Yeelight, Shelly and Home Assistant."
 description: "RobOS Smart Home for Android controls smart lights directly over Wi-Fi, with rooms, scenes and schedules, and restores lights from RobOS Config Sync."
 permalink: /smart-home-android/
+redirect_from:
+  - /apps/smart-home-android/
 landing: /phone/
 ---
 

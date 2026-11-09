@@ -7,6 +7,8 @@ icon: home-speaker.svg
 summary: "Two-way smart speaker intercom, Home Assistant Voice PE (NC-VK-9727) hands-free voice approval, neural TTS broadcast, and soundboard."
 description: "Desktop two-way voice intercom and broadcast controller for Home Assistant Voice Preview Edition (NC-VK-9727), ESPHome satellites, and Google Cast speakers: hands-free question & auto-record replies, local Whisper STT, Kokoro neural speech synthesis, Bluetooth Wi-Fi setup wizard, and soundboard."
 permalink: /home-speaker/
+redirect_from:
+  - /apps/home-speaker/
 ---
 
 RobOS Home Speaker turns your workstation into a zero-cloud, two-way smart speaker intercom and voice-approval hub. It supports **Home Assistant Voice Preview Edition (`NC-VK-9727`)** as its #1 first-class hardware device alongside ESPHome voice satellites and Google Home / Nest speakers.

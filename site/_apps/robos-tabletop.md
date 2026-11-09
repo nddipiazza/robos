@@ -7,6 +7,8 @@ icon: robos-tabletop.svg
 summary: "Editor for HeroQuest-style quests, heroes, monsters, spells and boards that bundles cartridges and launches the Godot 4 game in player or game-master mode."
 description: "Form-based editor over the tabletop-game knowledge graph package. It writes cartridge JSON files for the Godot game in games/tabletop-rpg and starts that game for you."
 permalink: /robos-tabletop/
+redirect_from:
+  - /apps/robos-tabletop/
 ---
 
 Tabletop Studio is the authoring front end for the HeroQuest-style game in `games/tabletop-rpg`. You edit quest data in forms, bundle it into a cartridge file, and the Godot 4 game plays that cartridge. For the game engine itself, see [Tabletop RPG]({{ '/projects/tabletop-rpg/' | relative_url }}).

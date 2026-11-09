@@ -11,7 +11,7 @@ redirect_from:
   - /architecture/robos-documentation.html
   - /architecture/robos-elearning.html
   - /applications/forms-api.html
-description: "How the RobOS repository is put together: Electron apps, the shared libraries they load, the ."
+description: "How the RobOS repository is put together: Electron apps, the shared libraries they load, the .robos knowledge graph, the agent router and the MCP servers."
 ---
 
 # Architecture

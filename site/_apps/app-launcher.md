@@ -6,6 +6,8 @@ icon: app-launcher.svg
 summary: "A searchable grid of the desktop applications installed on the machine, including the RobOS apps."
 description: "App Launcher reads the standard .desktop files on the system, groups them by category and starts the one you pick. It is not limited to RobOS apps."
 permalink: /app-launcher/
+redirect_from:
+  - /apps/app-launcher/
 ---
 
 App Launcher is a centered 800 by 600 window with a search box, a row of category buttons and a grid of application icons. It closes when it loses focus, so it behaves like a menu.

@@ -4,6 +4,8 @@ package: robos-icons
 category: "libraries"
 component_type: component
 permalink: /robos-icons/
+redirect_from:
+  - /apps/robos-icons/
 summary: "RobOS SVG icon registry for built-in apps"
 description: "RobOS SVG icon registry for built-in apps"
 ---

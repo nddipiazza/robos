@@ -6,6 +6,8 @@ icon: group-manager.svg
 summary: "Create and edit developer groups (members, repositories, software, onboarding steps, secrets, CI) and set up a sample company identity."
 description: "Group Manager stores groups as JSON files under ~/.config/robos/groups. Its Sync Directory and Bootstrap buttons write built-in sample people and teams; they do not connect to Okta or LDAP."
 permalink: /group-manager/
+redirect_from:
+  - /apps/group-manager/
 ---
 
 Group Manager defines groups of developers and what each group needs: repositories, software, onboarding steps, secrets and CI environments. Other apps read the groups, for example [Git Projects]({{ '/git-projects/' | relative_url }}) uses them for **Add Dev Group Repos**.

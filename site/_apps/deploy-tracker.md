@@ -6,6 +6,8 @@ icon: deploy-tracker.svg
 summary: "Shows a GitHub repository's recent deployments, releases and merged pull requests with a few counts for a chosen time range."
 description: "Deploy Tracker reads GitHub deployments, releases and merged PRs through the gh CLI. It has no rollout or rollback controls, and it does not yet read deployment statuses."
 permalink: /deploy-tracker/
+redirect_from:
+  - /apps/deploy-tracker/
 ---
 
 Deploy Tracker is a read-only dashboard for the first repository of your active task server.

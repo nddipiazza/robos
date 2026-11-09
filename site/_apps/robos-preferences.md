@@ -6,6 +6,8 @@ icon: robos-preferences.svg
 summary: "Settings window for RobOS apps: Config Sync & Sharing (cloud backup and shared configs), optional AI API mode, agent tiers, prompt security, GitHub accounts, IDE, notifications, journal and theme."
 description: "Edits ~/.config/robos/settings.json, which other RobOS apps read. It also has selectors for the GitHub CLI accounts used by the git client and by Copilot."
 permalink: /robos-preferences/
+redirect_from:
+  - /apps/robos-preferences/
 ---
 
 > **Moving to a new machine or sharing your setup?** See [rowbose.com/config-management](https://rowbose.com/config-management/) for Config Sync & Sharing: back up to Google Drive, load a second machine, and share with family, new teammates or coworkers.

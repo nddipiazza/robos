@@ -9,7 +9,7 @@ description: "Desktop & Smart TV cinema stage with Movies, TV Shows & Tablo OTA 
 permalink: /movie-player/reference/
 ---
 
-> **Full Interactive Walkthrough & Live Roku TV Tour:** See the flagship landing page at [`/movie-player/`](https://rowbose.com/movie-player/) (or [`/video-player/`](https://rowbose.com/video-player/)).
+> **Full Interactive Walkthrough & Live Roku TV Tour:** See the flagship landing page at [`/movie-player/`](https://rowbose.com/movie-player/).
 
 **RobOS Movie Player** (`packages/movie-player`) is the cinema and video companion to [RobOS Audio Player]({{ '/audio-player/' | relative_url }}). It shares the exact same warm dark theater palette (`#15120f`, `#1c1814`, `#26211b`, `#e8a33d`, `#f1e9dc`) and multi-pane architecture, translating every audio player capability—100,000-item virtualized libraries, cloud byte-range streaming, AI playlists, a spoken Virtual Host, open-source metadata/artwork enrichment, procedural soundscapes, and zero-cloud Smart TV & Roku OS streaming—to movies, TV series, and video collections.
 

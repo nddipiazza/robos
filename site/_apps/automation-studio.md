@@ -6,6 +6,8 @@ icon: automation-studio.svg
 summary: "Editor for event rules and cron-style scheduled jobs, plus a viewer for the daily event log."
 description: "Automation Studio saves rules and jobs as JSON files under ~/.config/robos and shows the event log. Nothing in the repository executes the saved rules or jobs yet."
 permalink: /automation-studio/
+redirect_from:
+  - /apps/automation-studio/
 ---
 
 Automation Studio has three tabs: **Rules**, **Scheduled Jobs** and **Event Log**.

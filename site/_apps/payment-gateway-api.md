@@ -4,6 +4,8 @@ package: payment-gateway-api
 category: "libraries"
 component_type: component
 permalink: /payment-gateway-api/
+redirect_from:
+  - /apps/payment-gateway-api/
 summary: "Experimental payment-service scaffold with an OpenAPI contract."
 description: "Experimental payment-service scaffold with an OpenAPI contract."
 ---

@@ -8,6 +8,8 @@ description: "Presets your GPG passphrase into gpg-agent so pass and agents can 
 related:
   - /big-wins/
 permalink: /pass-unlock/
+redirect_from:
+  - /apps/pass-unlock/
 ---
 
 Pass Unlock is a small always-on-top window, not a background daemon. It asks for your GPG passphrase and hands it to `gpg-agent`, so tools that call `pass` do not each prompt for it.

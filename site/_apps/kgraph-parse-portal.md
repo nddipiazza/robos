@@ -8,6 +8,8 @@ description: "KGraph Parse Portal is an Electron window plus an HTTP API and CLI
 related:
   - /kgraph-parse-portal/
 permalink: /kgraph-parse-portal/
+redirect_from:
+  - /apps/kgraph-parse-portal/
 ---
 
 KGraph Parse Portal turns files into knowledge-graph nodes. The [KGraph parse portal]({{ '/kgraph-parse-portal/' | relative_url }}) page in the docs describes how it fits into ingestion; this page covers the app.

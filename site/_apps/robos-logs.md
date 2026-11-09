@@ -6,6 +6,8 @@ icon: robos-logs.svg
 summary: "Viewer for the structured logs that RobOS apps write to ~/.config/robos/logs, with search and level filters."
 description: "Reads the per-app NDJSON log files, lets you filter by app, level and text, refresh them every 3 seconds, and clear one app's log."
 permalink: /robos-logs/
+redirect_from:
+  - /apps/robos-logs/
 ---
 
 RobOS Logs reads the files that RobOS apps write through the shared logger in `packages/robos-lib/logger.js`. It is a viewer only; it does not collect logs from other places.

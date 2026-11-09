@@ -6,6 +6,8 @@ summary: "An MCP server that lets agents search and edit a small node store, que
 description: "ekgraph-mcp runs in two modes. By default it serves a JSON node store seeded with five sample nodes. When ROBOS_GRAPH_ROOT is set it serves the SDLC graph workspace through review-based sdlc tools."
 icon: ekgraph-mcp.svg
 permalink: /ekgraph-mcp/
+redirect_from:
+  - /apps/ekgraph-mcp/
 ---
 
 This package is an MCP server with a console window. Which tools do real work depends on whether a graph workspace is configured.

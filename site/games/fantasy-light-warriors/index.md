@@ -15,7 +15,8 @@ keywords: "Fantasy Light Warriors, RobOS 2D JRPG, 8-bit party RPG, Godot 4 RPG, 
   <h1 class="g-title">Four Warriors of Light,<br>restore the Crystals.</h1>
   <p class="lead">A clean-room 8-bit 4-hero party JRPG in Godot 4 built from a 1,206-node RobOS Knowledge Graph. All maps, sprites, shop counters, and chiptune tracks in <code>games/fantasy-light-warriors</code> are procedurally generated from semantic data, verified by 7 isolated headless Cucumber suites and a 12-milestone autonomous AI playthrough from Coneria to defeating Garland.</p>
   <div class="cta">
-    <a class="btn" href="#play">Play &amp; Run AI Playthrough</a>
+    {% include game-download-button.html %}
+    <a class="btn btn-ghost" href="#download">All platforms</a>
     <a class="btn btn-ghost" href="#act-1-milestones">Act I Milestones</a>
     <a class="btn btn-ghost" href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}">Take the Part 2 Course</a>
     <a class="btn btn-ghost" href="{{ '/blog/jrpg-kgraph-parser-and-playthrough-part-2/' | relative_url }}">Read the Part 2 Blog</a>
@@ -23,6 +24,7 @@ keywords: "Fantasy Light Warriors, RobOS 2D JRPG, 8-bit party RPG, Godot 4 RPG, 
   </div>
   <span class="scroll">Scroll ↓</span>
 </section>
+{% include game-downloads.html %}
 {% include game-kgraph.html %}
 
 <section class="g-sec">

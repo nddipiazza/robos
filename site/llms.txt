@@ -56,10 +56,13 @@
 - [Quest: Warrior Dragon Proof of Viability](https://rowbose.com/games/quest-warrior-dragon/proof-of-viability.html): Global map completeness and pathfinding proof of viability
 - [RobOS Party Game](https://rowbose.com/games/party-game/): AI-hosted party game on RobOS TVs with phones as controllers; mini games written from the guests' survey and the house
 - [RobOS Party Game Docs](https://rowbose.com/games/party-game/docs/): Setup, how a party runs, the mini games and the mini game template
+- [Fantasy: Light Warriors (WIP)](https://rowbose.com/games/fantasy-light-warriors/): Clean-room NES-style four-hero 2D JRPG in Godot 4 rebuilt from KGraph assets
 
 ## Guides and reference
+- [Interactive eLearning Courses](https://rowbose.com/elearning/): Hands-on browser courses covering SDLC fundamentals, cRPG & JRPG KGraph engines, event-driven microservices, and KGraph Parse Portal
 - [Get Started & Installation](https://rowbose.com/getting-started/): Windows, Linux, GNOME, and QEMU VM setup
 - [Architecture](https://rowbose.com/architecture/): Electron apps, shared libraries, KGraph, and MCP servers
+- [MCP Servers Reference](https://rowbose.com/mcp-servers/): Complete catalog of RobOS Model Context Protocol servers and tools
 - [Knowledge Graph](https://rowbose.com/knowledge-graph/): Dual-state OSLC JSON-LD graph and W3C SHACL validation
 - [Schemas Reference](https://rowbose.com/schemas/): All KGraph packages and SHACL shape definitions
 - [PR Review Theater](https://rowbose.com/pr-review-theater/): Autonomous pull request review and video proof-of-work

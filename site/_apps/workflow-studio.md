@@ -6,6 +6,8 @@ icon: workflow-studio.svg
 summary: "Define issue types, states and transitions for a GitHub task server, move an issue between states, and run a script or AI prompt when it enters a state."
 description: "State is stored as state:<id> labels on GitHub issues. Each state can have a bash script and a gh copilot prompt that run on entry. The definitions live in ~/.config/robos/settings.json."
 permalink: /workflow-studio/
+redirect_from:
+  - /apps/workflow-studio/
 ---
 
 Workflow Studio is a small state machine for GitHub issues. You define the states an issue type moves through. Moving an issue changes its `state:` label and can start a script or an AI prompt.

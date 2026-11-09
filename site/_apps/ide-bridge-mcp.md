@@ -6,6 +6,8 @@ summary: "An MCP server that forwards IDE commands (open file, breakpoints, run 
 description: "ide-bridge-mcp exposes 17 robos_ide_* tools. Each one updates a local state file and sends an HTTP request to the IntelliJ plugin; the plugin implements only some of the routes."
 icon: ide-bridge-mcp.svg
 permalink: /ide-bridge-mcp/
+redirect_from:
+  - /apps/ide-bridge-mcp/
 ---
 
 IDE Bridge MCP lets an agent drive an IDE through the same MCP interface it uses for the rest of RobOS. The IDE side is the plugin in `plugins/intellij-idea` (Kotlin), which listens on `http://127.0.0.1:63343/robos/...`.

@@ -5,6 +5,8 @@ category: household
 icon: smart-home.svg
 redirect_from:
   - /apps/smart-light/
+  - /smart-light/
+  - /apps/smart-home/
 summary: "Controls Wi-Fi smart lights on your local network by room, with preset and saved scenes, a circadian color-temperature curve and a status-light mode for CI builds. Also shows the status of your LG washer, dryer and refrigerator."
 description: "RobOS Smart Home sends commands straight to WiZ, WLED, Hue, Kasa, LIFX, Govee, Elgato and other lights on your LAN, with no vendor cloud. Scenes, a daylight curve, an optional AI scene designer and a local REST API sit on top. An optional Appliances tab reads LG washers, dryers and refrigerators through LG ThinQ."
 related:

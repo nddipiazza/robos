@@ -6,6 +6,8 @@ icon: git-projects.svg
 summary: "A list of your git repositories that clones, pulls and opens them in an IDE, and stores setup scripts, PR templates and review-notification settings for each."
 description: "Git Projects tracks repositories in ~/.config/robos/git-projects.json, wraps git clone and pull, launches installed IDEs, and can draft setup scripts with an AI helper that this repository does not include."
 permalink: /git-projects/
+redirect_from:
+  - /apps/git-projects/
 ---
 
 Git Projects is the repository list the rest of RobOS reads (Context Manager, App Wizard and others add to or read the same file).
