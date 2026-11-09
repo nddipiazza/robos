@@ -61,6 +61,24 @@ def choose_iron_narrows(context):
     assert context.client.ui()["state"]["setup_map"] == "iron-narrows"
 
 
+@when("the commander chooses Glassline Basin in the map picker")
+def choose_glassline_basin(context):
+    for button in ("Space", "Down", "Down", "Enter"):
+        key(context, button)
+    assert context.client.ui()["state"]["setup_map"] == "glassline-basin"
+
+
+@then("Glassline Basin starts with two economies and two flanking lanes")
+def glassline_opening(context):
+    obs = context.client.get_observation()
+    assert obs["match"]["map_id"] == "glassline-basin" and not obs["match"]["unlimited_resources"]
+    assert (obs["map"]["width"], obs["map"]["height"]) == (160, 112)
+    assert len(obs["match"]["expansions"]) == 4 and len(obs["map"]["obstacles"]) == 3
+    for seat in (1, 2):
+        assert sum(u["owner"] == seat and u["is_worker"] and u["orders"][0]["type"] == "harvest"
+                   for u in obs["units"]) == 12
+
+
 @then("the setup uses finite deposits")
 def finite_setup(context):
     assert not context.client.ui()["state"]["setup_unlimited_resources"]

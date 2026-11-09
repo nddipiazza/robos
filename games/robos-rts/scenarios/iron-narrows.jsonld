@@ -3,6 +3,7 @@
   "@id": "robos:scenario-iron-narrows",
   "@type": "robos:RTSScenario",
   "name": "Iron Narrows — 1 Player vs AI",
+  "menu_hint": "Two open river crossings",
   "mode": "skirmish",
   "map_id": "iron-narrows",
   "difficulty": "normal",

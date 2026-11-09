@@ -68,7 +68,7 @@ const POWER_RADIUS := 18.0
 const CLOAK_ENERGY_MAX := 100.0
 const CLOAK_START_ENERGY := 25.0
 const CLOAK_DRAIN := 4.0
-const SKIRMISH_MAPS := {"frontier-hunters": "Frontier Hunters", "iron-narrows": "Iron Narrows"}
+const SKIRMISH_MAPS := {"frontier-hunters": "Frontier Hunters", "iron-narrows": "Iron Narrows", "glassline-basin": "Glassline Basin"}
 const Vision = preload("res://scripts/engine/RTSVision.gd")
 const VISION_UPDATE_TICKS := 8
 
@@ -424,11 +424,19 @@ func load_scenario_file(slug_or_path: String) -> Dictionary:
 func start_skirmish(map_id: String = "frontier-hunters", options: Dictionary = {}) -> Dictionary:
 	if not SKIRMISH_MAPS.has(map_id):
 		return {"ok": false, "error": "Unknown skirmish map."}
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/%s.jsonld" % map_id))
+	var data := skirmish_map_config(map_id)
+	if data.is_empty():
+		return {"ok": false, "error": "Could not load the selected skirmish map."}
 	for key in ["seed", "difficulty", "strategy", "unlimited_resources", "player_faction", "ai_faction"]:
 		if options.has(key):
 			data[key] = options[key]
 	return _load_skirmish(data)
+
+func skirmish_map_config(map_id: String) -> Dictionary:
+	if not SKIRMISH_MAPS.has(map_id):
+		return {}
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/%s.jsonld" % map_id))
+	return data if data is Dictionary else {}
 
 # Only the two assigned seats participate; unoccupied sites are expansions.
 # A provided seed replays the same assignment; ordinary new games use fresh seeds.

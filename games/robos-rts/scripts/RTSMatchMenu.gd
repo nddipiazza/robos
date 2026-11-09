@@ -262,9 +262,13 @@ func _on_volume_selected(idx: int) -> void:
 		RTSAudio.set_volume_percent(VOLUME_LEVELS[idx])
 
 func _on_map_selected(index: int) -> void:
-	_map_description.text = "1 Player vs 1 AI\n"
-	_map_description.text += "256 × 256 · Eight possible starts" if index == 0 else "128 × 96 · Two starts · Two river crossings"
-	deposit_rules.select(0 if index == 0 else 1)
+	var map_id: String = SimEngine.SKIRMISH_MAPS.keys()[index]
+	var data := SimEngine.skirmish_map_config(map_id)
+	var layout: Dictionary = data.get("map", {})
+	_map_description.text = "1 Player vs 1 AI\n%d × %d · %d possible starts" % [layout.get("width", 0), layout.get("height", 0), layout.get("starts", []).size()]
+	if data.has("menu_hint"):
+		_map_description.text += " · " + str(data.menu_hint)
+	deposit_rules.select(0 if data.get("unlimited_resources", true) else 1)
 
 func _on_health_selected(mode: int) -> void:
 	var display := ConfigFile.new()
