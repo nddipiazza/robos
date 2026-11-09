@@ -35,6 +35,7 @@ var sync_ms: float = 0.0
 var mat_cache: Dictionary = {}
 var _last_pos: Dictionary = {}
 var _unit_mesh_cache: Dictionary = {}
+var _unit_pick_bounds: Dictionary = {}
 var _unit_batches: Dictionary = {}
 var _crystal_cargo_mesh: BoxMesh
 var fog_texture: ImageTexture
@@ -719,6 +720,7 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 		root = Node3D.new()
 		if not _unit_mesh_cache.has(cache_key):
 			var model = Models.build(str(u["unit_type"]), int(u["owner"]))
+			_cache_pick_bounds(u.unit_type, model)
 			_batch_static_geometry(model, false)
 			var parts: Array = []
 			for child in model.get_children():
@@ -728,6 +730,7 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 			model.free()
 	else:
 		root = Models.build(str(u["unit_type"]), int(u["owner"]))
+		_cache_pick_bounds(u.unit_type, root)
 	root.set_meta("unit_type", u["unit_type"])
 
 	if u.is_worker:
@@ -771,6 +774,31 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 		sh_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(sh_mi)
 	return root
+
+func _cache_pick_bounds(unit_type: String, model: Node3D) -> void:
+	if _unit_pick_bounds.has(unit_type):
+		return
+	var bounds := AABB()
+	for child in model.find_children("*", "MeshInstance3D", true, false):
+		var mesh := child as MeshInstance3D
+		var local := mesh.transform
+		var parent := mesh.get_parent() as Node3D
+		while parent != model:
+			local = parent.transform * local
+			parent = parent.get_parent() as Node3D
+		var part := local * mesh.get_aabb()
+		bounds = bounds.merge(part) if bounds.has_volume() else part
+	_unit_pick_bounds[unit_type] = bounds
+
+func unit_pick_distance(unit: Dictionary, ray_origin: Vector3, ray_direction: Vector3) -> float:
+	var node: Node3D = unit_nodes.get(unit.tag)
+	var bounds: AABB = _unit_pick_bounds.get(unit.unit_type, AABB())
+	if node == null or not node.visible or node.get_meta("unit_type") != unit.unit_type or not bounds.has_volume():
+		return INF
+	# Use the body transform without the selection ring, shields, or other effects.
+	var local := node.global_transform.affine_inverse()
+	var hit: Variant = bounds.intersects_ray(local * ray_origin, local.basis * ray_direction)
+	return ray_origin.distance_squared_to(node.global_transform * hit) if hit is Vector3 else INF
 
 # ---------------------------------------------------------------------------
 # Effects
