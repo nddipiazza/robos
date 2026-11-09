@@ -16,7 +16,7 @@ Feature: The Blight Spire unlocks a timed area denial spell
     And the commander presses "E"
     Then the miasma field is absent
     When the commander clicks unit "builder"
-    And the commander presses "T"
+    And the commander presses "Y"
     And the commander clicks a targeted point at (34, 17)
     And the simulation advances 1100 ticks
     Then player 1 has 200 crystal, 0 aether and 3 supply used
