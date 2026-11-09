@@ -1,5 +1,12 @@
 extends Node
 
+class MoveFormation extends RefCounted:
+	var slots := {}
+	var bins := {}
+	var spacing := 0.0
+	var rings: Array[PackedVector2Array] = []
+	var first_open_ring := {}
+
 # SimEngine.gd — Deterministic 64Hz RTS Simulation Engine (fixed-step, seeded, renderer-independent)
 # Supports 3 Factions:
 # - HUMANS ("humans" / Meridian Guard): Surge Injector, Retract/Extend Provision Silos, Howitzers, Pioneer Construction
@@ -2029,29 +2036,125 @@ func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float, reach: fl
 	_follow_path(u, dt)
 
 func _prepare_order_path(u: Dictionary, order: Dictionary) -> Vector2:
-	var requested: Vector2 = order.get("target_pos", u.pos)
-	_prepare_path(u, requested, 0.05)
-	var endpoint: Vector2 = u.path.back()
-	if u.flight_height <= 0.0 and order.get("navigation_revision", -1) != _navigation_revision:
-		var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
-		var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
-		# A route that existed when this leg started can reopen after a gate
-		# lowers or a foundation dies. Keep the remaining queue in place.
-		order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_goal
-		order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_goal
-		order["navigation_revision"] = _navigation_revision
-	return endpoint
+	var goal: Vector2 = order.get("target_pos", u.pos)
+	if u.path.is_empty() and order.has("_formation") and not order.has("arrival_pos"):
+		# A clear path through a slot to the requested anchor needs no second
+		# full-distance scan. Obstructed approaches use the regular pathfinder.
+		var anchor := _map_clamped_position(goal, u.radius)
+		var flying: bool = u.flight_height > 0.0
+		var cliff_walk: bool = u.unit_type == "spire_walker"
+		if flying or not _is_point_blocked_by_static(anchor, u.radius, cliff_walk):
+			var slot := _find_group_arrival(u, order["_formation"], anchor)
+			if slot.is_finite() and (flying or _has_clear_line_of_walk(u.pos, slot, u.radius, cliff_walk)):
+				_reserve_group_arrival(u, order, anchor, slot)
+				u.path = [slot]
+				u["nav_goal"] = goal
+				_update_path_reach(u, order, goal, anchor)
+				return slot
+	if _prepare_path(u, goal, 0.05):
+		_update_path_reach(u, order, goal, u.path.back())
+		if order.has("_formation"):
+			_apply_group_arrival(u, order)
+	return u.path.back()
+
+func _update_path_reach(u: Dictionary, order: Dictionary, requested: Vector2, endpoint: Vector2) -> void:
+	if u.flight_height > 0.0 or order.get("navigation_revision", -1) == _navigation_revision:
+		return
+	var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
+	var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
+	# A route that existed when this leg started can reopen after a gate
+	# lowers or a foundation dies. Keep the remaining queue in place.
+	order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_goal
+	order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_goal
+	order["navigation_revision"] = _navigation_revision
 
 func _can_finish_path_order(u: Dictionary, order: Dictionary) -> bool:
 	return u.flight_height > 0.0 or (not nav_dirty and not order.get("waiting_for_route", false))
 
-func _prepare_path(u: Dictionary, target_pos: Vector2, tolerance: float, reach: float = INF) -> void:
+func _prepare_path(u: Dictionary, target_pos: Vector2, tolerance: float, reach: float = INF) -> bool:
 	if u.path.is_empty() or u.get("nav_goal", Vector2.INF).distance_squared_to(target_pos) > tolerance * tolerance:
 		if u.flight_height > 0.0:
 			u.path = [_map_clamped_position(target_pos, u.radius) if target_pos.is_finite() else u.pos]
 		else:
 			u.path = compute_smooth_path(u.pos, target_pos, u.radius, u.unit_type == "spire_walker", reach)
 		u["nav_goal"] = target_pos
+		return true
+	return false
+
+func _apply_group_arrival(u: Dictionary, order: Dictionary) -> void:
+	# Allocate at the start of each leg, from the reachable endpoint of its
+	# current path. Each queued click owns its own set of reservations.
+	var formation: MoveFormation = order["_formation"]
+	var anchor: Vector2 = u.path.back()
+	var slot: Vector2 = order.get("arrival_pos", Vector2.INF)
+	var flying: bool = u.flight_height > 0.0
+	var cliff_walk: bool = u.unit_type == "spire_walker"
+	if not slot.is_finite() or not anchor.is_equal_approx(order.get("_formation_anchor", Vector2.INF)) or (not flying and not _has_clear_line_of_walk(anchor, slot, u.radius, cliff_walk)):
+		if slot.is_finite() and int(formation.slots.get(slot, {}).get("tag", 0)) == int(u.tag):
+			formation.slots.erase(slot)
+			formation.bins[Vector2i((slot / formation.spacing).floor())].erase(slot)
+			formation.first_open_ring.clear()
+		slot = _find_group_arrival(u, formation, anchor)
+		if slot.is_finite():
+			_reserve_group_arrival(u, order, anchor, slot)
+		else:
+			slot = anchor
+			order["_formation_anchor"] = anchor
+			order["arrival_pos"] = slot
+	if slot.is_equal_approx(anchor):
+		return
+	var approach: Vector2 = u.pos if u.path.size() == 1 else u.path[-2]
+	if flying or _has_clear_line_of_walk(approach, slot, u.radius, cliff_walk):
+		u.path[-1] = slot
+	else:
+		u.path.append(slot)
+
+func _reserve_group_arrival(u: Dictionary, order: Dictionary, anchor: Vector2, slot: Vector2) -> void:
+	var formation: MoveFormation = order["_formation"]
+	formation.slots[slot] = {"tag": u.tag, "radius": u.radius}
+	var cell := Vector2i((slot / formation.spacing).floor())
+	var bin: Array = formation.bins.get(cell, [])
+	bin.append(slot)
+	formation.bins[cell] = bin
+	order["_formation_anchor"] = anchor
+	order["arrival_pos"] = slot
+
+func _find_group_arrival(u: Dictionary, formation: MoveFormation, anchor: Vector2) -> Vector2:
+	var flying: bool = u.flight_height > 0.0
+	var cliff_walk: bool = u.unit_type == "spire_walker"
+	var anchor_key := Vector3(anchor.x, anchor.y, u.radius)
+	var start_ring: int = formation.first_open_ring.get(anchor_key, 0)
+	for ring in range(start_ring, formation.rings.size()):
+		var best := Vector2.INF
+		var best_score := INF
+		var all_reserved := true
+		for offset in formation.rings[ring]:
+			var point := _map_clamped_position(anchor + offset, u.radius)
+			if formation.slots.has(point):
+				continue
+			all_reserved = false
+			var score: float = point.distance_to(anchor) + 0.25 * point.distance_to(u.pos)
+			if score >= best_score or _group_arrival_overlaps(point, u.radius, formation):
+				continue
+			if not flying and not _has_clear_line_of_walk(anchor, point, u.radius, cliff_walk):
+				continue
+			best = point
+			best_score = score
+		if best.is_finite():
+			return best
+		if all_reserved and ring == int(formation.first_open_ring.get(anchor_key, 0)):
+			formation.first_open_ring[anchor_key] = ring + 1
+	return Vector2.INF
+
+func _group_arrival_overlaps(point: Vector2, radius: float, formation: MoveFormation) -> bool:
+	var cell := Vector2i((point / formation.spacing).floor())
+	for y in range(-1, 2):
+		for x in range(-1, 2):
+			for slot: Vector2 in formation.bins.get(cell + Vector2i(x, y), []):
+				var clearance: float = radius + float(formation.slots[slot].radius) + 1.5
+				if point.distance_squared_to(slot) < clearance * clearance:
+					return true
+	return false
 
 func _follow_path(u: Dictionary, dt: float) -> void:
 	var path: Array = u.path
@@ -2507,6 +2610,20 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	var group_size = valid_units.size()
 	var dynamic_arrival = clampf(0.85 + sqrt(float(group_size)) * 0.65, 0.85, 5.5)
+	var formation: MoveFormation
+	if cmd_type.to_lower() == "move" and group_size > 1 and target_pos.is_finite():
+		var mobile := valid_units.filter(func(unit): return not unit.is_structure and not unit.is_immobile)
+		if mobile.size() > 1:
+			formation = MoveFormation.new()
+			for unit in mobile:
+				formation.spacing = maxf(formation.spacing, float(unit.radius) * 2.0 + 1.6)
+			for ring in range(ceili(sqrt(float(mobile.size()))) + 1):
+				var offsets := PackedVector2Array()
+				for y in range(-ring, ring + 1):
+					for x in range(-ring, ring + 1):
+						if maxi(absi(x), absi(y)) == ring:
+							offsets.append(Vector2(x, y) * formation.spacing)
+				formation.rings.append(offsets)
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
@@ -2739,6 +2856,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				"target_pos": target_pos,
 				"arrival_radius": dynamic_arrival
 			})
+			if formation != null and not u.is_structure and not u.is_immobile:
+				u.orders.back()["_formation"] = formation
+				u.orders.back()["arrival_radius"] = 0.9
 			u["has_home_pos"] = false
 			accepted += 1
 
@@ -3189,6 +3309,13 @@ func _pick_local_crystal(worker: Dictionary, preferred: Dictionary) -> Dictionar
 			best_distance = distance
 	return best
 
+func _observed_orders(orders: Array) -> Array:
+	var observed := orders.duplicate(true)
+	for order in observed:
+		order.erase("_formation")
+		order.erase("_formation_anchor")
+	return observed
+
 func get_observation(perspective_player: int = 0) -> Dictionary:
 	var limited := vision != null and perspective_player != 0
 	var unit_list: Array = []
@@ -3221,7 +3348,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"surge_timer": snappedf(u["surge_timer"], 0.01),
 			"cargo_type": u["cargo_type"],
 			"cargo_amount": u["cargo_amount"],
-			"orders": [] if limited and u.owner != perspective_player else u["orders"].duplicate(true),
+			"orders": [] if limited and u.owner != perspective_player else _observed_orders(u.orders),
 			"production_queue_len": 0 if limited and u.owner != perspective_player else u["production_queue"].size(),
 			"kills": u["kills"]
 		})
