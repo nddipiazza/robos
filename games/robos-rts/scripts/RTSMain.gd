@@ -1669,6 +1669,7 @@ func ui_state() -> Dictionary:
 		"order_lines_visible": _order_lines_visible(),
 		"weapon_ranges": _selected_weapon_ranges(),
 		"weapon_timing": selected_weapon_timing(),
+		"power_overlay": _power_overlay(),
 		"area_warnings": _area_attack_warnings(),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"path_feedback": _selected_path_feedback().map(func(feedback): return {
@@ -1702,11 +1703,8 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	for warning in _area_attack_warnings():
 		_draw_area_attack_warning(warning)
+	_draw_power_overlay(font)
 	_draw_rally_and_orders()
-	if pending_ability.begins_with("build_") and SimEngine.requires_power(pending_ability.trim_prefix("build_")):
-		for unit in SimEngine.units.values():
-			if unit.owner == local_player and unit.unit_type == "resonator" and unit.build_progress >= 1.0 and not selected_tags.has(unit.tag):
-				_draw_range_ring(unit.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
 	for station in SimEngine.watch_stations:
@@ -1753,12 +1751,88 @@ func _draw_recon_sweeps() -> void:
 	for sweep in SimEngine.vision.sweeps_for(viewing_player()):
 		_draw_range_ring(sweep.pos, sweep.radius, Color("#6fb6ff"))
 
-func _draw_range_ring(position: Vector2, radius: float, color: Color) -> void:
+func _draw_range_ring(position: Vector2, radius: float, color: Color, width: float = 1.5) -> void:
 	var outline := PackedVector2Array()
 	for i in range(33):
 		var offset := Vector2.from_angle(TAU * i / 32.0) * radius
 		outline.append(world_to_screen(position + offset, 0.2))
-	draw_polyline(outline, color, 1.5, true)
+	draw_polyline(outline, color, width, true)
+
+func _power_overlay() -> Dictionary:
+	if observer_player >= 0 or hud_hidden:
+		return {"visible": false}
+	var show_overlay := pending_ability.begins_with("build_") and SimEngine.requires_power(pending_ability.trim_prefix("build_"))
+	var selected_sources: Array[int] = []
+	for unit in selected_owned():
+		if unit.unit_type == "resonator":
+			show_overlay = true
+			if unit.build_progress >= 1.0:
+				selected_sources.append(unit.tag)
+		elif unit.unit_type == "waystone":
+			show_overlay = true
+	if not show_overlay:
+		return {"visible": false}
+
+	var sources: Array[Dictionary] = []
+	var fields: Array[Dictionary] = []
+	var waystones: Array[Dictionary] = []
+	for unit in SimEngine.units.values():
+		if unit.owner != local_player or unit.build_progress < 1.0:
+			continue
+		if unit.unit_type == "resonator":
+			sources.append(unit)
+			fields.append({"tag": unit.tag, "selected": selected_sources.has(unit.tag)})
+		elif unit.unit_type == "waystone":
+			waystones.append(unit)
+	var coverage: Array[Dictionary] = []
+	for waystone in waystones:
+		var covering: Array[int] = []
+		for source in sources:
+			if SimEngine.resonator_covers(source, waystone.pos):
+				covering.append(source.tag)
+		var state := "unpowered"
+		if covering.size() > 1:
+			state = "redundant"
+		elif covering.size() == 1:
+			state = "at_risk" if selected_sources.has(covering[0]) else "single"
+		coverage.append({"tag": waystone.tag, "sources": covering, "state": state})
+	return {"visible": true, "fields": fields, "waystones": coverage}
+
+func _draw_power_overlay(font: Font) -> void:
+	var overlay := _power_overlay()
+	if not overlay.visible:
+		return
+	for field in overlay.fields:
+		var source: Dictionary = SimEngine.units[field.tag]
+		var color := Color("#9eeaff") if field.selected else Color(0.46, 0.60, 1.0, 0.75)
+		_draw_range_ring(source.pos, SimEngine.POWER_RADIUS, color, 2.5 if field.selected else 1.5)
+	for entry in overlay.waystones:
+		var unit: Dictionary = SimEngine.units[entry.tag]
+		var head := _unit_screen(unit, unit_height(unit) + 0.6) - Vector2(0, 23)
+		if not Rect2(0, 28, 1920, HUD_TOP - 42).has_point(head):
+			continue
+		var color := Color("#a5c4ff")
+		var label := "1 source"
+		match entry.state:
+			"at_risk":
+				color = Color("#fbbf24")
+				label = "Loses power"
+				var source: Dictionary = SimEngine.units[entry.sources[0]]
+				draw_dashed_line(world_to_screen(source.pos, 0.25), world_to_screen(unit.pos, 0.25), color, 1.5, 7.0)
+			"redundant":
+				color = Color("#73dca1")
+				label = "%d sources" % entry.sources.size()
+			"unpowered":
+				color = Color("#ff8e82")
+				label = "Unpowered"
+		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 14.0
+		var badge := Rect2(head - Vector2(width * 0.5, 10), Vector2(width, 20))
+		draw_rect(badge, Color(0.04, 0.06, 0.09, 0.92))
+		draw_string(font, badge.position + Vector2(7, 15), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
+	if overlay.fields.any(func(field): return field.selected):
+		var legend := "Amber Waystones lose power if their selected Resonator falls"
+		draw_string(font, Vector2(611, 70), legend, HORIZONTAL_ALIGNMENT_CENTER, 700, 16, Color.BLACK)
+		draw_string(font, Vector2(610, 69), legend, HORIZONTAL_ALIGNMENT_CENTER, 700, 16, Color("#fbbf24"))
 
 func selected_weapon_timing() -> Dictionary:
 	if selected_tags.size() != 1:
@@ -1961,8 +2035,6 @@ func _draw_rally_and_orders() -> void:
 		if u.build_progress >= 1.0 and u.has("support"):
 			_draw_range_ring(u.pos, float(u.support.range) + float(u.radius), Color("#9ae8d1"))
 		if u["is_structure"]:
-			if u.build_progress >= 1.0 and u.unit_type == "resonator":
-				_draw_range_ring(u.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
 			if u.build_progress >= 1.0 and u.detection_radius > 0.0:
 				_draw_range_ring(u.pos, u.detection_radius, Color(0.35, 0.87, 1.0, 0.7))
 			if u.build_progress >= 1.0 and RTSData.get_unit_def(u.unit_type).has("trains"):
