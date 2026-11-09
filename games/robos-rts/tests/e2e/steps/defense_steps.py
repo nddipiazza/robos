@@ -90,6 +90,30 @@ def start_from_map_picker(context):
     key(context, "Enter")
 
 
+@when('the commander filters battlefields to "{category}"')
+def filter_maps(context, category):
+    options = ("All maps", "Compact maps", "Large maps", "Two starts", "Multiple starts",
+               "Finite by default", "Water or bridges", "Cliffs or plateaus", "Watch stations", "Destructible blockers")
+    context.client.mouse(1660, 570)
+    context.client.mouse(1660, 570, pressed=False)
+    row_y = 606 + 27 * options.index(category)
+    context.client.mouse_move(1660, row_y)
+    context.client.mouse(1660, row_y)
+    context.client.mouse(1660, row_y, pressed=False)
+
+
+@then('the map picker lists "{maps}"')
+def map_options(context, maps):
+    options = context.client.ui()["state"]["setup_map_options"]
+    assert options == maps.split(","), options
+
+
+@when("the commander clicks Start new match")
+def start_match_click(context):
+    context.client.mouse(960, 768)
+    context.client.mouse(960, 768, pressed=False)
+
+
 @then("Glassline Basin starts with two economies and two flanking lanes")
 def glassline_opening(context):
     obs = context.client.get_observation()
