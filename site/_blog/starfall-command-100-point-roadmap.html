@@ -1,0 +1,65 @@
+---
+title: "Starfall Command finishes its 100-point RTS roadmap"
+nav_label: "Starfall Command Roadmap"
+date: 2026-11-09 19:50:00 +0000
+date_label: "Nov 9, 2026"
+tags:
+  - "Starfall Command"
+  - "RTS Gameplay"
+  - "Deterministic Testing"
+summary: "The last 58 items of Starfall Command’s 100-point roadmap are complete. Three factions now have distinct skirmish tech, the AI scouts and counters with paid commands, and 135 rendered and headless scenarios passed."
+description: "How Starfall Command finished its StarCraft II-inspired roadmap with three playable factions, reliable orders, and paid AI matches verified to structure elimination."
+og_image: /assets/blog/starfall-command-100-point-roadmap/title-screen.webp
+og_image_alt: "Starfall Command title screen with a ship above a planet and the Skirmish, Scenarios and Map Editor menu"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/starfall-command-100-point-roadmap/title-screen.webp' | relative_url }}" alt="Starfall Command title screen with a ship above a planet and the Skirmish, Scenarios and Map Editor menu" width="1600" height="900">
+    <figcaption>The title-screen test opens Skirmish, starts Iron Narrows, returns to the menu, and resumes the same match with its control group intact.</figcaption>
+  </figure>
+  <p>The last 58 open items of Starfall Command’s 100-point roadmap are on <code>main</code>. The project takes inspiration from StarCraft II’s economy, battlefield controls and faction design. Starfall’s three original factions are selectable for both sides in 1 vs. AI. The lobby previews Frontier Hunters, Iron Narrows and Glassline Basin, and lets you filter them by size, candidate starts, default deposits and terrain.</p>
+
+  <h2>Movement you can plan around</h2>
+  <p>Click inside a mineral field, geyser or building and the move order resolves to reachable ground at its edge. Ground units still route around deposits. Workers actively harvesting crystal can pass through other units on the way out and back, then return to normal collision when given a move or stop order. When a crossing closes, squads can recover through another route and continue their queued commands in order.</p>
+  <p>Those rules also shape the opponent. A worker scouts possible starts. A limited group intercepts a visible raid while the rest of the base keeps working. On Hard, a paid wave can split between two visible targets with viable routes and regroup after one falls. Aircraft and detected stealth can trigger paid counters. In one replay, the AI mined the aether, built a Workshop and Airframe Hangar, then sent its trained Kestrel to hit a returning transport.</p>
+
+  <h2>Three ways to build an army</h2>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-100-point-roadmap/rampart-transport.webp' | relative_url }}" alt="Rampart Transport selected beside an Airframe Hangar with two of six passenger slots filled" loading="lazy" width="1600" height="900">
+      <figcaption>Two Riflemen board a paid Rampart. The test drops them beyond the wall and recalls both through their existing control group.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-100-point-roadmap/brood-growth-node.webp' | relative_url }}" alt="Purple living ground surrounding a Brood Nest and Growth Node, also shown on the minimap" loading="lazy" width="1600" height="900">
+      <figcaption>A Growth Node extends living ground. A later artillery hit destroys the node, and the test checks that coverage recedes while the Nest retains its own area.</figcaption>
+    </figure>
+  </div>
+  <p><strong>Meridian Guard.</strong> A Muster Hall chooses between a second light-infantry production line and a Research Module. Halls and Workshops can lift, move and land. A Hub upgrade unlocks a short-lived Prospector that doubles crystal loads. The Airframe Hangar trains Rampart transports and Kestrels, which take 1.5 seconds to switch between air combat and ground assault.</p>
+  <p><strong>Gnarl Brood.</strong> Nests and Growth Nodes spread living ground that speeds up eligible troops. Brood Keepers add hatch slots after a delay. Skitterlings can hide underground, while Bile Crawlers can pay to evolve into armored ground melee. Drift Sacs provide mobile supply, Needlewings harass ground units, and linked Tunnel Mouths move squads through clear exits.</p>
+  <p><strong>Aurelian Concord.</strong> Resonators and anchored Lumen Carriers power Waystones. The power overlay marks which buildings depend on the selected source. Waystones can research deployment to a powered landing site. Heartstones can boost production or recall a squad that stays inside a timed marker. Warden barriers temporarily close ground paths, and Lattice Burst gives both armies a warning before its damage pulses. The Crownspire threatens Massive targets, and two cheaper Kestrels beat one under return fire in the counter test.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-100-point-roadmap/concord-power.webp' | relative_url }}" alt="Overlapping Concord power fields with labels showing one source, two sources and unpowered Waystones" loading="lazy" width="1600" height="900">
+      <figcaption>The amber Waystone loses power if the selected Resonator falls. Its neighbor stays online through the overlapping source.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-100-point-roadmap/lattice-warning.webp' | relative_url }}" alt="Aegis Warden selected beside the amber Lattice Burst warning circle and one-second countdown" loading="lazy" width="1600" height="900">
+      <figcaption>The amber circle shows the one-second warning before Lattice Burst begins hitting units on either side.</figcaption>
+    </figure>
+  </div>
+
+  <h2>What the tests proved</h2>
+  <p>The final commit passed 100 rendered gameplay scenarios, two title-screen scenarios, 33 deterministic backend scenarios and ten focused Godot suites. Rendered checks used real selections, hotkeys and clicks. The headless cases checked exact ticks, visibility, costs and refunds. All four paid Frontier Hunters build-order replays reached structure elimination.</p>
+  <p>The Hard Rush seed exposed a useful weakness in the player-side test driver. It had banked aether while sending wave after wave of Riflemen into the defense, and the match timed out at 1,200 simulated seconds. The revised driver spends that aether through a normal Workshop on siege units and upgrades. The same seed finished in about 756 game seconds.</p>
+  <div class="blog-log"># From games/robos-rts, with Python, behave and GODOT_BIN configured
+python run_cucumber_tests.py --backend
+RTS_MODE=human python -m behave tests/e2e/features/ui
+RTS_MODE=human RTS_TEST_TITLE=1 python -m behave tests/e2e/features/startup</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/robos-rts/' | relative_url }}">Play Starfall Command →</a>
+  <a href="{{ '/projects/robos-rts/' | relative_url }}">Player guide and faction reference →</a>
+  <a href="{{ '/projects/starfall-sc2-roadmap/' | relative_url }}">Completed roadmap →</a>
+  <a href="{{ '/blog/frontier-hunters-live-map-editor/' | relative_url }}">Earlier Frontier Hunters walkthrough →</a>
+  <span class="blog-commits">Verified build <a href="https://github.com/nddipiazza/robos/commit/801e889558100575837d4288052720e08d508bf7">801e8895</a></span>
+</div>
