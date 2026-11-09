@@ -630,6 +630,7 @@ func _draw_single(u: Dictionary) -> void:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
 		var brood := SimEngine.uses_brood_slots(u)
+		var active_slots := SimEngine.active_production_slots(u)
 		var exit_blocked := queue.any(func(item): return item.has("exit_retry_tick"))
 		if brood:
 			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOTS], 15, C_GOLD)
@@ -639,6 +640,10 @@ func _draw_single(u: Dictionary) -> void:
 			_text(Vector2(rx + 100.0, ry + 12), "Unpowered  ·  Production paused", 15, C_RED)
 		elif exit_blocked:
 			_text(Vector2(rx + 100.0, ry + 12), "Exit blocked", 15, C_GOLD)
+		elif active_slots > 1:
+			_text(Vector2(rx + 100.0, ry + 12), "Two lines active  ·  Right-click to cancel", 15, C_GOLD)
+		elif queue.size() > 1 and queue[1].progress > 0.0:
+			_text(Vector2(rx + 100.0, ry + 12), "Second job paused", 15, C_GOLD)
 		elif not queue.is_empty():
 			_text(Vector2(rx + 100.0, ry + 12), "Right-click a slot to cancel and refund", 15, C_MUTED)
 		for i in range(5):
@@ -654,9 +659,9 @@ func _draw_single(u: Dictionary) -> void:
 					var qt := _icon_for(str(item.unit_type))
 					if qt:
 						draw_texture_rect(qt, qr.grow(-3.0), false)
-				if i == 0 or brood:
+				if i < active_slots or float(item.progress) > 0.0:
 					var prog := clampf(float(queue[i]["progress"]) / maxf(0.1, float(queue[i]["total_time"])), 0.0, 1.0)
-					_bar(Rect2(qr.position.x, qr.end.y + 3, qr.size.x, 6), prog, Color("#e5e7eb"))
+					_bar(Rect2(qr.position.x, qr.end.y + 3, qr.size.x, 6), prog, Color("#e5e7eb") if i < active_slots else C_MUTED)
 		ry += 98.0
 	else:
 		ry += 4.0
