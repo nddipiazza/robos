@@ -730,6 +730,22 @@ func production_attachment(producer: Dictionary, completed_only: bool = true) ->
 		return {}
 	return attachment
 
+func _is_light_infantry_job(job: Dictionary) -> bool:
+	var definition: Dictionary = RTSData.get_unit_def(str(job.get("unit_type", "")))
+	return definition.get("attributes", []).has("Light")
+
+func active_production_slots(producer: Dictionary) -> int:
+	var queue: Array = producer.production_queue
+	if queue.is_empty() or (requires_power(producer.unit_type) and not is_powered(producer.owner, producer.pos)):
+		return 0
+	if uses_brood_slots(producer):
+		return queue.size()
+	if queue.size() >= 2 and producer.has("attachment_tag") and production_attachment(producer).get("unit_type") == "fabrication_module":
+		# Heavy units and research are FIFO barriers. Neither lane can skip a job.
+		if _is_light_infantry_job(queue[0]) and _is_light_infantry_job(queue[1]):
+			return 2
+	return 1
+
 func attachment_block_reason(producer: Dictionary, attachment_type: String) -> String:
 	var definition: Dictionary = RTSData.get_unit_def(attachment_type)
 	if producer.is_empty() or not units.has(producer.tag) or producer.unit_type != definition.get("attachment_for") \
@@ -1508,9 +1524,7 @@ func _update_structures(dt: float) -> void:
 			if u.brood_recharge >= BROOD_RECHARGE:
 				u.brood_recharge = 0.0
 				u.brood_slots += 1
-		if queue.is_empty() or (requires_power(u.unit_type) and not is_powered(u.owner, u.pos)):
-			continue
-		var active := queue.size() if brood else 1
+		var active := active_production_slots(u)
 		var index := 0
 		while index < active:
 			var item: Dictionary = queue[index]
@@ -3740,8 +3754,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["powered"] = is_powered(u.owner, u.pos)
 			if u.is_structure and u.build_progress < 1.0:
 				entry["builder_tag"] = construction_builder(u).get("tag", 0)
-			if (uses_brood_slots(u) or requires_power(u.unit_type)) and not u.production_queue.is_empty():
+			if not u.production_queue.is_empty():
 				entry["production_progress"] = u.production_queue.map(func(item): return snappedf(item.progress, 0.01))
+				entry["production_active_slots"] = active_production_slots(u)
 
 	var res_list: Array = []
 	for r in resources.values():

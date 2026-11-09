@@ -35,3 +35,24 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     And the commander presses "X"
     Then no "fabrication_module" exists
     And player 1 has 200 crystal, 100 aether and 0 supply used
+
+  Scenario: Train two light units together and refund one line from the command card
+    Given an RTS test scenario
+      """
+      {"name":"Dual production","paused":true,"decor":false,
+       "map":{"width":96,"height":64},"players":{"1":{"crystal":300,"aether":100}},
+       "units":[{"type":"colony_hub","owner":1,"x":16,"y":18},
+                {"id":"hall","type":"muster_hall","owner":1,"x":30.5,"y":30}]}
+      """
+    When the commander clicks unit "hall"
+    And the commander presses "X"
+    And the simulation advances 300 ticks
+    And the commander presses "A"
+    And the commander presses "A"
+    And the simulation advances 64 ticks
+    Then "hall" runs 2 paid production lines
+    And player 1 has 150 crystal, 75 aether and 2 supply used
+    And the battlefield is captured as "dual-production"
+    When the commander cancels production slot 2
+    Then "hall" runs 1 paid production line
+    And player 1 has 200 crystal, 75 aether and 1 supply used

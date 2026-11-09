@@ -463,7 +463,7 @@ var units: Dictionary = {
 	"fabrication_module": {
 		"id": "fabrication_module",
 		"name": "Fabrication Module",
-		"blurb": "A separately targetable installation built on the east pad of a Muster Hall.",
+		"blurb": "Lets its Muster Hall train two light infantry at once. Heavy jobs use one line.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"attachment_for": "muster_hall",
@@ -1072,7 +1072,7 @@ var abilities: Dictionary = {
 	"train_pioneer": {"id": "train_pioneer", "name": "Train Pioneer", "hotkey": "S", "target": "none", "unit": "pioneer"},
 	"train_rifleman": {"id": "train_rifleman", "name": "Train Rifleman", "hotkey": "A", "target": "none", "unit": "rifleman"},
 	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},
-	"attach_fabrication_module": {"id": "attach_fabrication_module", "name": "Build Fabrication Module", "hotkey": "X", "target": "none", "structure": "fabrication_module", "attachment": true, "desc": "Build on the east pad of this Muster Hall."},
+	"attach_fabrication_module": {"id": "attach_fabrication_module", "name": "Build Fabrication Module", "hotkey": "X", "target": "none", "structure": "fabrication_module", "attachment": true, "desc": "Build on the east pad for two simultaneous light infantry jobs."},
 	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
 	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},
