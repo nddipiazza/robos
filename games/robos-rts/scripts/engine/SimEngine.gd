@@ -27,6 +27,7 @@ const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
+const BRUSH_REVEAL_RADIUS := 6.0
 const FOOTPRINT_BIN_SIZE := 8.0
 const INFANTRY_CLEARANCE := 1.0
 const HEAVY_CLEARANCE := 2.0
@@ -79,6 +80,7 @@ var land_bridges: Array[Rect2] = []
 var water_cells: Dictionary = {}
 var unlimited_resources: bool = false
 var terrain_tiles: Array = []
+var _brush_cells: Dictionary = {}
 
 var players: Dictionary = {}
 var next_tag: int = 1001
@@ -175,6 +177,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	_income_buckets.clear()
 	nav_dirty = true
 	spatial_grid.clear()
+	_spatial_by_owner.clear()
 	terrain_obstacles.clear()
 	high_ground_zones.clear()
 	ramps.clear()
@@ -183,6 +186,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	water_cells.clear()
 	unlimited_resources = false
 	terrain_tiles.clear()
+	_brush_cells.clear()
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
@@ -492,6 +496,8 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	return {"ok": true, "scenario": scenario_name, "match": match_state.duplicate(true)}
 
 func _start_vision(enabled: bool) -> void:
+	if not _brush_cells.is_empty():
+		_rebuild_spatial_grid()
 	if enabled:
 		vision = Vision.new(map_width, map_height, players.keys())
 		if not high_ground_zones.is_empty() or not ramps.is_empty():
@@ -506,7 +512,9 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 		return true
 	if not can_see_position(player, unit.pos):
 		return false
-	if not unit.get("cloaked", false):
+	var cloaked := bool(unit.get("cloaked", false))
+	var concealed: bool = not _brush_cells.is_empty() and not unit.is_structure and not unit.is_worker and unit.attributes.has("Biological") and _brush_cells.has(Vector2i((unit.pos / 4.0).floor()))
+	if not cloaked and not concealed:
 		return true
 	if vision != null and vision.sweep_detects(player, unit.pos):
 		return true
@@ -514,6 +522,10 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 		if detector.owner == player and detector.hp > 0.0 and detector.build_progress >= 1.0:
 			var radius: float = detector.detection_radius
 			if unit.pos.distance_squared_to(detector.pos) <= radius * radius:
+				return true
+	if not cloaked:
+		for scout in query_units_in_radius(unit.pos, BRUSH_REVEAL_RADIUS):
+			if scout.owner == player and scout.hp > 0.0 and scout.build_progress >= 1.0 and scout.pos.distance_squared_to(unit.pos) <= BRUSH_REVEAL_RADIUS * BRUSH_REVEAL_RADIUS:
 				return true
 	return false
 
@@ -664,6 +676,8 @@ func _configure_water(map_cfg: Dictionary) -> void:
 					break
 	for tile in terrain_tiles:
 		var rect = Rect2(float(tile.x), float(tile.y), 4, 4)
+		if tile.terrain == "brush":
+			_brush_cells[Vector2i((rect.position / 4.0).floor())] = true
 		for x in range(int(rect.position.x / PATH_CELL_SIZE), int(rect.end.x / PATH_CELL_SIZE)):
 			for y in range(int(rect.position.y / PATH_CELL_SIZE), int(rect.end.y / PATH_CELL_SIZE)):
 				if tile.terrain == "water":

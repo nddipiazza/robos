@@ -36,7 +36,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **022 Splash with friendly fire.** Emplaced Howitzers apply reduced friendly splash and disclose it in the weapon tooltip.
 - [x] **023 Weapon wind-up indicator.** Selected weapons show when a shot is committed and when the next can fire.
 - [x] **024 Area warning decals.** Delayed area attacks show the footprint and detonation timing to players who can see them.
-- [ ] **025 Brush cover.** Infantry can hide in authored brush until a scout or nearby enemy reveals them.
+- [x] **025 Brush cover.** Infantry can hide in authored brush until a scout or nearby enemy reveals them.
 - [ ] **026 Watch stations.** A unit holding a neutral station reveals a fixed radius until it leaves or loses control.
 - [ ] **027 Destructible route blockers.** Breaking a neutral blocker opens a ground route in both navigation and the minimap.
 - [ ] **028 Healing support.** A paid support unit restores biological allies from a limited energy pool.

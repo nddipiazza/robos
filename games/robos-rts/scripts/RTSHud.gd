@@ -344,7 +344,7 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 	for bridge in SimEngine.land_bridges:
 		canvas.draw_rect(Rect2(mm.position + bridge.position * Vector2(sx, sy), bridge.size * Vector2(sx, sy)), Color("#94815d"))
 	for tile in SimEngine.terrain_tiles:
-		var color: Color = {"land": Color("#56683a"), "water": Color("#16364f"), "cliff": Color("#3a3029"), "plateau": Color("#a8946b")}.get(str(tile.terrain), Color.WHITE)
+		var color: Color = {"land": Color("#56683a"), "water": Color("#16364f"), "cliff": Color("#3a3029"), "plateau": Color("#a8946b"), "brush": Color("#295f48")}.get(str(tile.terrain), Color.WHITE)
 		canvas.draw_rect(Rect2(mm.position + Vector2(float(tile.x), float(tile.y)) * Vector2(sx, sy), Vector2(4, 4) * Vector2(sx, sy)), color)
 	for hg in SimEngine.high_ground_zones:
 		canvas.draw_rect(Rect2(mm.position + hg.position * Vector2(sx, sy), hg.size * Vector2(sx, sy)), Color("#a8946b"))

@@ -34,6 +34,10 @@ func _run() -> void:
 	doc.redo()
 	if doc.data.terrain_tiles.size() != 1:
 		failures.append("Redo failed to restore terrain")
+	doc.paint_terrain(Vector2(100, 112), "brush", 1)
+	round_trip.load_scenario(doc.to_scenario())
+	if round_trip.terrain_at(Vector2i(25, 28)) != "brush":
+		failures.append("Brush painting did not survive a map round-trip")
 	var large = Model.new()
 	large.new_blank(256, 256)
 	if large.fill_terrain(Vector2(4, 4), "water") != 4096:

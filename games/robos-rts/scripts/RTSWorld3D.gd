@@ -300,6 +300,7 @@ func _rebuild_static_3d_map() -> void:
 		_terrain_box(Vector3(bridge.size.x, 0.16, bridge.size.y), Vector3(bridge.get_center().x, 0.08, bridge.get_center().y), path)
 	for rect in SimEngine.merged_terrain_rects("land"):
 		_terrain_box(Vector3(rect.size.x, 0.16, rect.size.y), Vector3(rect.get_center().x, 0.08, rect.get_center().y), low)
+	_build_brush_cover()
 
 	# Rock rim around the map so the camera never sees the void
 	var rim := 18.0
@@ -403,6 +404,47 @@ func _rebuild_static_3d_map() -> void:
 			node.position = Vector3(resource.pos.x, SimEngine.get_elevation_at(resource.pos), resource.pos.y)
 			resource_nodes[tag] = node
 		_batch_static_geometry(resources_root)
+
+func _build_brush_cover() -> void:
+	var tiles := SimEngine.terrain_tiles.filter(func(tile): return tile.terrain == "brush")
+	if tiles.is_empty():
+		return
+	var ground := _get_mat("brush_ground", Color("#284937"), Color.BLACK, 0.0, 1.0)
+	var blades := CylinderMesh.new()
+	blades.top_radius = 0.0
+	blades.bottom_radius = 0.62
+	blades.height = 1.0
+	blades.radial_segments = 3
+	blades.rings = 0
+	var instances := MultiMesh.new()
+	instances.transform_format = MultiMesh.TRANSFORM_3D
+	instances.use_colors = true
+	instances.mesh = blades
+	instances.instance_count = tiles.size() * 7
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 1.0
+	var rng := RandomNumberGenerator.new()
+	var index := 0
+	for tile in tiles:
+		var corner := Vector2(tile.x, tile.y)
+		var center := corner + Vector2(2, 2)
+		var elevation := SimEngine.get_elevation_at(center)
+		_terrain_box(Vector3(4.0, 0.13, 4.0), Vector3(center.x, elevation + 0.065, center.y), ground)
+		rng.seed = hash(Vector2i(corner))
+		for _tuft in range(7):
+			var point := corner + Vector2(rng.randf_range(0.45, 3.55), rng.randf_range(0.45, 3.55))
+			var height := rng.randf_range(0.6, 1.7)
+			var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)).scaled(Vector3(1.0, height, 1.0))
+			var origin := Vector3(point.x, SimEngine.get_elevation_at(point) + height * 0.5 + 0.12, point.y)
+			instances.set_instance_transform(index, Transform3D(basis, origin))
+			instances.set_instance_color(index, Color("#376d47").lerp(Color("#7a9b58"), rng.randf()))
+			index += 1
+	var cover := MultiMeshInstance3D.new()
+	cover.multimesh = instances
+	cover.material_override = mat
+	cover.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	terrain_root.add_child(cover)
 
 func _batch_static_geometry(root: Node3D, chunked: bool = true) -> void:
 	# Merge static surfaces by material in small world chunks. Hundreds of tiny
