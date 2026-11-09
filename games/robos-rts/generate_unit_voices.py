@@ -145,6 +145,63 @@ UNIT_VOICE_PROFILES: dict[str, dict] = {
             ],
         },
     },
+    "drift_sac": {
+        "unit_name": "Drift Sac",
+        "voice": "en-US-ChristopherNeural",
+        "rate": "-12%",
+        "pitch": "-22Hz",
+        "lines": {
+            "select": [
+                {"id": "drift_sac_select_1", "text": "I carry the brood."},
+                {"id": "drift_sac_select_2", "text": "This one's drifting."},
+                {"id": "drift_sac_select_3", "text": "The air feeds me."},
+                {"id": "drift_sac_select_4", "text": "Keep the sharp ones away."},
+                {"id": "drift_sac_select_5", "text": "The nest can grow."},
+            ],
+            "move": [
+                {"id": "drift_sac_move_1", "text": "Following the warm air."},
+                {"id": "drift_sac_move_2", "text": "Drifting over."},
+                {"id": "drift_sac_move_3", "text": "I feel the current."},
+                {"id": "drift_sac_move_4", "text": "The brood will see."},
+            ],
+            "ready": [
+                {"id": "drift_sac_ready_1", "text": "The brood has room to grow."},
+                {"id": "drift_sac_ready_2", "text": "Drift Sac rising."},
+            ],
+        },
+    },
+    "needlewing": {
+        "unit_name": "Needlewing",
+        "voice": "en-US-ChristopherNeural",
+        "rate": "+12%",
+        "pitch": "-3Hz",
+        "lines": {
+            "select": [
+                {"id": "needlewing_select_1", "text": "Needlewing listens."},
+                {"id": "needlewing_select_2", "text": "My wings itch."},
+                {"id": "needlewing_select_3", "text": "Where do we sting?"},
+                {"id": "needlewing_select_4", "text": "I smell bare skin."},
+                {"id": "needlewing_select_5", "text": "The brood calls."},
+            ],
+            "move": [
+                {"id": "needlewing_move_1", "text": "Gliding low."},
+                {"id": "needlewing_move_2", "text": "Across the ridge."},
+                {"id": "needlewing_move_3", "text": "The wind is mine."},
+                {"id": "needlewing_move_4", "text": "Diving in."},
+            ],
+            "attack": [
+                {"id": "needlewing_attack_1", "text": "The groundlings never look up."},
+                {"id": "needlewing_attack_2", "text": "Sting and scatter."},
+                {"id": "needlewing_attack_3", "text": "Give the dirt a little venom."},
+                {"id": "needlewing_attack_4", "text": "Run. It makes this fun."},
+                {"id": "needlewing_attack_5", "text": "I'll leave a mark."},
+            ],
+            "ready": [
+                {"id": "needlewing_ready_1", "text": "Needles sharp."},
+                {"id": "needlewing_ready_2", "text": "Needlewing in the air."},
+            ],
+        },
+    },
     "forager": {
         "unit_name": "Forager",
         "voice": "en-US-ChristopherNeural",

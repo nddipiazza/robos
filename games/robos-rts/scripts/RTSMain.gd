@@ -1219,7 +1219,7 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 			return "Not enough crystal."
 		if int(p.get("aether", 0)) < int(cost["aether"]):
 			return "Not enough aether."
-		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
+		if adef.has("unit") and int(cost["supply"]) > 0 and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
 		"fighter_assault", "fighter_intercept":

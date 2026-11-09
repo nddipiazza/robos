@@ -973,5 +973,166 @@
         }
       ]
     }
+  },
+  "needlewing": {
+    "unit_name": "Needlewing",
+    "voice": "en-US-ChristopherNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "needlewing_select_1",
+          "text": "Needlewing listens.",
+          "path": "res://assets/audio/voice/needlewing_select_1.wav"
+        },
+        {
+          "id": "needlewing_select_2",
+          "text": "My wings itch.",
+          "path": "res://assets/audio/voice/needlewing_select_2.wav"
+        },
+        {
+          "id": "needlewing_select_3",
+          "text": "Where do we sting?",
+          "path": "res://assets/audio/voice/needlewing_select_3.wav"
+        },
+        {
+          "id": "needlewing_select_4",
+          "text": "I smell bare skin.",
+          "path": "res://assets/audio/voice/needlewing_select_4.wav"
+        },
+        {
+          "id": "needlewing_select_5",
+          "text": "The brood calls.",
+          "path": "res://assets/audio/voice/needlewing_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "needlewing_move_1",
+          "text": "Gliding low.",
+          "path": "res://assets/audio/voice/needlewing_move_1.wav"
+        },
+        {
+          "id": "needlewing_move_2",
+          "text": "Across the ridge.",
+          "path": "res://assets/audio/voice/needlewing_move_2.wav"
+        },
+        {
+          "id": "needlewing_move_3",
+          "text": "The wind is mine.",
+          "path": "res://assets/audio/voice/needlewing_move_3.wav"
+        },
+        {
+          "id": "needlewing_move_4",
+          "text": "Diving in.",
+          "path": "res://assets/audio/voice/needlewing_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "needlewing_attack_1",
+          "text": "The groundlings never look up.",
+          "path": "res://assets/audio/voice/needlewing_attack_1.wav"
+        },
+        {
+          "id": "needlewing_attack_2",
+          "text": "Sting and scatter.",
+          "path": "res://assets/audio/voice/needlewing_attack_2.wav"
+        },
+        {
+          "id": "needlewing_attack_3",
+          "text": "Give the dirt a little venom.",
+          "path": "res://assets/audio/voice/needlewing_attack_3.wav"
+        },
+        {
+          "id": "needlewing_attack_4",
+          "text": "Run. It makes this fun.",
+          "path": "res://assets/audio/voice/needlewing_attack_4.wav"
+        },
+        {
+          "id": "needlewing_attack_5",
+          "text": "I'll leave a mark.",
+          "path": "res://assets/audio/voice/needlewing_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "needlewing_ready_1",
+          "text": "Needles sharp.",
+          "path": "res://assets/audio/voice/needlewing_ready_1.wav"
+        },
+        {
+          "id": "needlewing_ready_2",
+          "text": "Needlewing in the air.",
+          "path": "res://assets/audio/voice/needlewing_ready_2.wav"
+        }
+      ]
+    }
+  },
+  "drift_sac": {
+    "unit_name": "Drift Sac",
+    "voice": "en-US-ChristopherNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "drift_sac_select_1",
+          "text": "I carry the brood.",
+          "path": "res://assets/audio/voice/drift_sac_select_1.wav"
+        },
+        {
+          "id": "drift_sac_select_2",
+          "text": "This one's drifting.",
+          "path": "res://assets/audio/voice/drift_sac_select_2.wav"
+        },
+        {
+          "id": "drift_sac_select_3",
+          "text": "The air feeds me.",
+          "path": "res://assets/audio/voice/drift_sac_select_3.wav"
+        },
+        {
+          "id": "drift_sac_select_4",
+          "text": "Keep the sharp ones away.",
+          "path": "res://assets/audio/voice/drift_sac_select_4.wav"
+        },
+        {
+          "id": "drift_sac_select_5",
+          "text": "The nest can grow.",
+          "path": "res://assets/audio/voice/drift_sac_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "drift_sac_move_1",
+          "text": "Following the warm air.",
+          "path": "res://assets/audio/voice/drift_sac_move_1.wav"
+        },
+        {
+          "id": "drift_sac_move_2",
+          "text": "Drifting over.",
+          "path": "res://assets/audio/voice/drift_sac_move_2.wav"
+        },
+        {
+          "id": "drift_sac_move_3",
+          "text": "I feel the current.",
+          "path": "res://assets/audio/voice/drift_sac_move_3.wav"
+        },
+        {
+          "id": "drift_sac_move_4",
+          "text": "The brood will see.",
+          "path": "res://assets/audio/voice/drift_sac_move_4.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "drift_sac_ready_1",
+          "text": "The brood has room to grow.",
+          "path": "res://assets/audio/voice/drift_sac_ready_1.wav"
+        },
+        {
+          "id": "drift_sac_ready_2",
+          "text": "Drift Sac rising.",
+          "path": "res://assets/audio/voice/drift_sac_ready_2.wav"
+        }
+      ]
+    }
   }
 }

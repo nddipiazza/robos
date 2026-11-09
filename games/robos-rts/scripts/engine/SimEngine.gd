@@ -3931,7 +3931,7 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if p["aether"] < v_cost:
 		emit_signal("notice", structure["owner"], "Not enough aether.", "error")
 		return false
-	if p["supply_used"] + s_cost > p["supply_cap"]:
+	if s_cost > 0 and p["supply_used"] + s_cost > p["supply_cap"]:
 		emit_signal("notice", structure["owner"], "Supply blocked. Build more supply structures.", "error")
 		return false
 	if structure["production_queue"].size() >= 5:
@@ -4054,9 +4054,9 @@ func _recompute_supplies() -> void:
 		if not players.has(pid):
 			continue
 		var def = RTSData.get_unit_def(u["unit_type"])
+		if u.build_progress >= 1.0:
+			players[pid]["supply_cap"] += supply_from(u)
 		if u["is_structure"]:
-			if u["build_progress"] >= 1.0:
-				players[pid]["supply_cap"] += supply_from(u)
 			for q in u["production_queue"]:
 				if q.has("upgrade"):
 					continue

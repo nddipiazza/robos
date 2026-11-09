@@ -151,6 +151,8 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"skitterling": _skitterling(root, glow)
 		"bile_crawler": _bile_crawler(root, glow)
 		"blight_hurler": _blight_hurler(root, glow)
+		"drift_sac": _drift_sac(root, glow)
+		"needlewing": _needlewing(root, glow)
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"mote": _mote(root, glow)
@@ -506,6 +508,30 @@ static func _blight_hurler(root: Node3D, glow: Material) -> void:
 		cone(root, 0.12, 0.7, m[2], Vector3(-0.75 + cos(a) * 0.55, 2.7, sin(a) * 0.55), Vector3(sin(a) * 30.0, 0, -cos(a) * 30.0), 5)
 	cyl(root, 0.12, 0.26, 1.4, m[2], Vector3(0.7, 2.0, 0), Vector3(0, 0, -38), 8)
 	_legs(root, m[2], 3, 0.8, 1.6, 0.1, 0.6, 0.0, 48.0)
+
+static func _drift_sac(root: Node3D, glow: Material) -> void:
+	var m := _bug_mats()
+	sph(root, 1.04, m[0], Vector3(-0.15, 0.62, 0), Vector3(1.17, 0.87, 1.13))
+	sph(root, 0.83, m[3], Vector3(-0.28, 0.32, 0), Vector3(1.14, 0.72, 1.16))
+	sph(root, 0.48, m[1], Vector3(0.86, 0.53, 0), Vector3(1.03, 0.74, 0.87))
+	for side in [-1.0, 1.0]:
+		sph(root, 0.10, glow, Vector3(1.11, 0.62, side * 0.27))
+		for segment in range(3):
+			var x := 0.42 - float(segment) * 0.47
+			cone(root, 0.15, 1.0 + segment * 0.12, m[2], Vector3(x, 0.06, side * 0.66), Vector3(-side * 18, 0, -34 - segment * 9), 6)
+			sph(root, 0.17, m[1], Vector3(x, 1.24, side * 0.38), Vector3(1.0, 0.55, 1.17))
+
+static func _needlewing(root: Node3D, glow: Material) -> void:
+	var m := _bug_mats()
+	sph(root, 0.42, m[0], Vector3(0.04, 0.39, 0), Vector3(1.63, 0.72, 0.91))
+	sph(root, 0.25, m[1], Vector3(0.68, 0.41, 0))
+	cone(root, 0.20, 1.12, m[2], Vector3(-0.76, 0.35, 0), Vector3(0, 0, 97), 6)
+	for side in [-1.0, 1.0]:
+		sph(root, 0.07, glow, Vector3(0.8, 0.48, side * 0.13))
+		var wing := sph(root, 0.64, m[3], Vector3(-0.31, 0.39, side * 0.73), Vector3(1.22, 0.12, 1.45))
+		wing.rotation_degrees.y = -side * 34.0
+		cone(root, 0.12, 1.68, m[2], Vector3(-0.37, 0.44, side * 0.68), Vector3(side * 68.0, -side * 16.0, 28.0), 6)
+		cone(root, 0.08, 0.54, m[1], Vector3(0.83, 0.32, side * 0.28), Vector3(0, 0, -84), 5)
 
 static func _brood_nest(root: Node3D, r: float, glow: Material) -> void:
 	var m := _bug_mats()

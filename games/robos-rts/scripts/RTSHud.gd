@@ -835,6 +835,8 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Interceptor Mode · Air only" if u.flight_height > 0.0 else "Assault Mode · Ground only")
 	if is_own and def.has("transport_capacity"):
 		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
+	if is_own and not u.is_structure and int(def.get("supply_provided", 0)) > 0:
+		status.append("Provides %d supply" % int(def.supply_provided))
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
