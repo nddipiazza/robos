@@ -739,6 +739,8 @@ func _draw_single(u: Dictionary) -> void:
 		if u.has("living_ground_speed_bonus"):
 			_speed_region = Rect2(x0 + 193.0, by - 11.0 + float(col_b.size()) * 24.0, 122.0, 25.0)
 		col_b.append(["Speed", "%.1f" % (0.0 if u.is_immobile else SimEngine.effective_move_speed(u))])
+	if u.detection_radius > 0.0:
+		col_a.append(["Detect", "%.1f" % u.detection_radius])
 	for i in range(col_a.size()):
 		var py := by + 8.0 + float(i) * 24.0
 		_text(Vector2(x0, py), str(col_a[i][0]), 15, C_MUTED)

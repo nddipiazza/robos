@@ -1389,5 +1389,72 @@
         }
       ]
     }
+  },
+  "veilseeker": {
+    "unit_name": "Veilseeker",
+    "voice": "en-US-AndrewNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "veilseeker_select_1",
+          "text": "Veilseeker standing by.",
+          "path": "res://assets/audio/voice/veilseeker_select_1.wav"
+        },
+        {
+          "id": "veilseeker_select_2",
+          "text": "Watching for distortions.",
+          "path": "res://assets/audio/voice/veilseeker_select_2.wav"
+        },
+        {
+          "id": "veilseeker_select_3",
+          "text": "Lens calibrated.",
+          "path": "res://assets/audio/voice/veilseeker_select_3.wav"
+        },
+        {
+          "id": "veilseeker_select_4",
+          "text": "Show me the blind spot.",
+          "path": "res://assets/audio/voice/veilseeker_select_4.wav"
+        },
+        {
+          "id": "veilseeker_select_5",
+          "text": "The aperture is clear.",
+          "path": "res://assets/audio/voice/veilseeker_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "veilseeker_move_1",
+          "text": "Shifting the sweep.",
+          "path": "res://assets/audio/voice/veilseeker_move_1.wav"
+        },
+        {
+          "id": "veilseeker_move_2",
+          "text": "Taking the next angle.",
+          "path": "res://assets/audio/voice/veilseeker_move_2.wav"
+        },
+        {
+          "id": "veilseeker_move_3",
+          "text": "Moving the lens.",
+          "path": "res://assets/audio/voice/veilseeker_move_3.wav"
+        },
+        {
+          "id": "veilseeker_move_4",
+          "text": "Surveying ahead.",
+          "path": "res://assets/audio/voice/veilseeker_move_4.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "veilseeker_ready_1",
+          "text": "Veilseeker optics online.",
+          "path": "res://assets/audio/voice/veilseeker_ready_1.wav"
+        },
+        {
+          "id": "veilseeker_ready_2",
+          "text": "Detection lattice ready.",
+          "path": "res://assets/audio/voice/veilseeker_ready_2.wav"
+        }
+      ]
+    }
   }
 }

@@ -3354,6 +3354,8 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 			_unlink_attachment(target)
 		_confirm_waiting_attack_loss(target)
 		units.erase(target["tag"])
+		if target.detection_radius > 0.0:
+			_detectors.erase(target)
 		if dead["is_structure"]:
 			nav_dirty = true
 		_recompute_supplies()

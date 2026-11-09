@@ -1746,6 +1746,7 @@ func ui_state() -> Dictionary:
 		"speed_tooltip": hud.speed_tooltip() if hud else "",
 		"order_lines_visible": _order_lines_visible(),
 		"weapon_ranges": _selected_weapon_ranges(),
+		"mobile_detection_ranges": _selected_mobile_detection_ranges(),
 		"weapon_timing": selected_weapon_timing(),
 		"power_overlay": _power_overlay(),
 		"area_warnings": _area_attack_warnings(),
@@ -2115,7 +2116,16 @@ func _selected_weapon_ranges() -> Array:
 				ranges.append({"tag": unit.tag, "maximum": weapon.range, "minimum": weapon.get("min_range", 0.0)})
 	return ranges
 
+func _selected_mobile_detection_ranges() -> Array[Dictionary]:
+	var ranges: Array[Dictionary] = []
+	for unit in selected_owned():
+		if not unit.is_structure and unit.hp > 0.0 and unit.build_progress >= 1.0 and unit.detection_radius > 0.0:
+			ranges.append({"tag": unit.tag, "radius": unit.detection_radius})
+	return ranges
+
 func _draw_rally_and_orders() -> void:
+	for detection in _selected_mobile_detection_ranges():
+		_draw_range_ring(SimEngine.units[detection.tag].pos, detection.radius, Color("#77f1ed"), 2.0)
 	for weapon in _selected_weapon_ranges():
 		var unit: Dictionary = SimEngine.units[weapon.tag]
 		_draw_range_ring(unit.pos, unit.radius + weapon.maximum, Color("#b093ff"))
