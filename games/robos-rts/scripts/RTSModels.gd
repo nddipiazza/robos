@@ -157,6 +157,9 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"brood_growth_node": _brood_growth_node(root, r, glow)
+		"spore_watch":
+			_brood_fixture(root, r, glow, false)
+			ring(root, r * 0.45, r * 0.57, glow, Vector3(0, 1.65, 0), Vector3.ZERO)
 		"mote": _mote(root, glow)
 		"farsight_wisp": _farsight_wisp(root, team)
 		"lumen_carrier": _lumen_carrier(root, team)

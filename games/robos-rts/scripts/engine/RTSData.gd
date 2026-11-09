@@ -685,7 +685,7 @@ var units: Dictionary = {
 			"sfx": "mandible_bite",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_brood_growth_node", "build_blight_spire"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_brood_growth_node", "build_blight_spire", "build_spore_watch"],
 		"dialogues": {
 			"select": [
 				{"id": "forager_select_1", "text": "The brood hears."},
@@ -948,6 +948,14 @@ var units: Dictionary = {
 		"is_structure": true, "is_extractor": true, "attributes": ["Armored", "Biological", "Structure"],
 		"crystal_cost": 50, "aether_cost": 0, "build_time": 21.0,
 		"max_hp": 500.0, "armor": 1.0, "radius": 2.0, "sight_range": 16.0,
+		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
+	},
+	"spore_watch": {
+		"id": "spore_watch", "name": "Spore Watch", "faction": FACTION_MONSTERS,
+		"blurb": "A Forager grows a dedicated detector that reveals nearby cloaked enemies.",
+		"is_structure": true, "attributes": ["Armored", "Biological", "Structure"],
+		"crystal_cost": 100, "aether_cost": 0, "build_time": 24.0,
+		"max_hp": 300.0, "radius": 1.65, "sight_range": 16.0, "detection_radius": 12.0,
 		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
 	},
 
@@ -1245,11 +1253,11 @@ var units: Dictionary = {
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
-		"blurb": "A powered relay spends energy to restore nearby allied shields, even during combat.",
+		"blurb": "A powered relay reveals nearby cloaked enemies and spends energy to restore allied shields.",
 		"is_structure": true, "attributes": ["Armored", "Structure"],
 		"crystal_cost": 100, "aether_cost": 0, "build_time": 26.0,
 		"max_hp": 150.0, "max_shields": 150.0, "armor": 1.0, "radius": 1.8,
-		"footprint": Vector2i(2, 2), "sight_range": 15.0, "push_priority": 100,
+		"footprint": Vector2i(2, 2), "sight_range": 15.0, "detection_radius": 12.0, "push_priority": 100,
 		"support": {"stat": "shields", "range": 7.0, "rate": 22.0, "max_energy": 100.0, "starting_energy": 50.0, "regen": 1.0, "ability": "restore_aegis"},
 		"abilities": []
 	},
@@ -1348,7 +1356,8 @@ var abilities: Dictionary = {
 	"build_brood_pod": {"id": "build_brood_pod", "name": "Grow Brood Pod", "hotkey": "B", "target": "point", "structure": "brood_pod"},
 	"build_brood_growth_node": {"id": "build_brood_growth_node", "name": "Grow Node", "hotkey": "T", "target": "point", "structure": "brood_growth_node"},
 	"build_spore_tap": {"id": "build_spore_tap", "name": "Grow Spore Tap", "hotkey": "R", "target": "point", "structure": "spore_tap"},
-	"build_blight_spire": {"id": "build_blight_spire", "name": "Grow Blight Spire", "hotkey": "T", "target": "point", "structure": "blight_spire"},
+	"build_blight_spire": {"id": "build_blight_spire", "name": "Grow Blight Spire", "hotkey": "Y", "target": "point", "structure": "blight_spire"},
+	"build_spore_watch": {"id": "build_spore_watch", "name": "Grow Spore Watch", "hotkey": "U", "target": "point", "structure": "spore_watch"},
 	"rally_worker": {"id": "rally_worker", "name": "Set Forager Rally", "hotkey": "G", "target": "point", "desc": "Route newly hatched Foragers without changing the army rally. Shift-click adds a waypoint."},
 	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "Set where new units move, follow or gather. Shift-click to add a waypoint."}
 }

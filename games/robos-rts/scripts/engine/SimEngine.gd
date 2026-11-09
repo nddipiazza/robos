@@ -643,7 +643,7 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 	if vision != null and vision.sweep_detects(player, unit.pos):
 		return true
 	for detector in _detectors:
-		if detector.owner == player and detector.hp > 0.0 and detector.build_progress >= 1.0:
+		if detector.owner == player and detector_is_active(detector):
 			var radius: float = detector.detection_radius
 			if unit.pos.distance_squared_to(detector.pos) <= radius * radius:
 				return true
@@ -652,6 +652,10 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 			if scout.owner == player and scout.hp > 0.0 and scout.build_progress >= 1.0 and scout.pos.distance_squared_to(unit.pos) <= BRUSH_REVEAL_RADIUS * BRUSH_REVEAL_RADIUS:
 				return true
 	return false
+
+func detector_is_active(detector: Dictionary) -> bool:
+	return float(detector.get("detection_radius", 0.0)) > 0.0 and detector.hp > 0.0 and detector.build_progress >= 1.0 \
+		and (not requires_power(detector.unit_type) or is_powered(detector.owner, detector.pos))
 
 func remembered_buildings(player: int) -> Array:
 	if vision == null:

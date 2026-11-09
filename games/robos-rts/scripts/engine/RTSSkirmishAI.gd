@@ -10,10 +10,17 @@ const WORKER_SCOUT_DURATION_TICKS := 90 * 64
 const WORKERS_BEFORE_SCOUT := 12
 const DEFENSE_RADIUS := 28.0
 const DEFENDER_CALL_DISTANCE := 36.0
+const AIR_DEFENSE_RADIUS := 40.0
+const AIR_DEFENDER_CALL_DISTANCE := 60.0
 const MAX_DEFENDERS := 4
 const MIN_SPLIT_ARMY := 8
 const FRONT_SPACING := 24.0
 const MAX_FRONT_PROBES := 6
+const AIR_EVIDENCE_TICKS := 210 * 64
+const STEALTH_EVIDENCE_TICKS := 75 * 64
+const RECON_RETRY_TICKS := 75 * 64
+const AIR_COUNTERS := {"humans": "kestrel_interceptor", "monsters": "bile_crawler", "aliens": "skirmisher"}
+const DETECTORS := {"humans": "sentry_turret", "monsters": "spore_watch", "aliens": "aegis_relay"}
 
 # Macro decisions use the same paid commands as the player. Difficulty changes
 # cadence, worker targets and army size, never damage, income or starting assets.
@@ -60,6 +67,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 		for order in worker.orders:
 			if order.type == "build" and int(order.get("structure_tag", 0)) == 0:
 				counts[order.structure_type] = int(counts.get(order.structure_type, 0)) + 1
+	var response := _counter_orders(pid, cfg, p.faction, mine, halls, counts)
 	var gas_workers := 0
 	var gas_limit := mini(3, maxi(0, available_workers - MINERAL_WORKERS_BEFORE_GAS))
 	var gas_tap: Dictionary = {}
@@ -78,7 +86,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 			if worker.orders.is_empty() or (worker.orders[0].type == "harvest" and target.get("unit_type") == roster.extractor):
 				SimEngine.issue_SmartHarvest(worker.tag)
 	if p.faction != RTSData.FACTION_HUMANS:
-		_step_asymmetric_macro(pid, cfg, mine, workers, army, halls, counts)
+		_step_asymmetric_macro(pid, cfg, mine, workers, army, halls, counts, response)
 		return
 	var pending_supply = int(counts.get("silo", 0)) + int(counts.get("silo_retracted", 0))
 	var finished_supply = 0
@@ -93,7 +101,10 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	if needs_muster_hall:
 		_build(workers, "muster_hall", base)
 		return
-	if strategy != "rush" and int(counts.get("aether_tap", 0)) == 0:
+	var air_needed: int = response.air
+	if not response.detector.is_empty():
+		_build(workers, response.detector, response.detector_site)
+	if (strategy != "rush" or air_needed > 0) and int(counts.get("aether_tap", 0)) == 0:
 		_build(workers, "aether_tap", base)
 		return
 	# Reserve the expansion cost instead of spending every income tick on units.
@@ -105,9 +116,11 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 			_build(workers, "colony_hub", expansion, true)
 			_attack(pid, army, cfg, false)
 			return
-	if strategy == "siege" and int(counts.get("workshop", 0)) == 0:
+	if (strategy == "siege" or air_needed > 0) and int(counts.get("workshop", 0)) == 0:
 		_build(workers, "workshop", base)
 		# Keep paying for infantry while waiting for the technology requirement.
+	elif air_needed > 0 and int(counts.get("airframe_hangar", 0)) == 0:
+		_build(workers, "airframe_hangar", base)
 	var production_target = 3 if difficulty == "hard" or strategy == "rush" else 2
 	if strategy == "siege":
 		production_target = 1
@@ -122,13 +135,83 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	for u in mine:
 		if not u.is_structure or u.build_progress < 1.0 or not u.production_queue.is_empty():
 			continue
-		if u.unit_type == "workshop":
+		if u.unit_type == "airframe_hangar" and air_needed > 0:
+			if SimEngine.issue_command([u.tag], "train_kestrel_interceptor").ok:
+				air_needed -= 1
+		elif u.unit_type == "workshop" and air_needed == 0:
 			SimEngine.issue_command([u.tag], "train_howitzer")
 		elif u.unit_type == "muster_hall":
 			# Siege reserves gas for the Workshop and its Howitzers.
-			var unit_type = "breacher" if strategy in ["economy", "balanced"] and army.size() % 3 == 2 and p.aether >= 25 else "rifleman"
+			var unit_type = "breacher" if air_needed == 0 and strategy in ["economy", "balanced"] and army.size() % 3 == 2 and p.aether >= 25 else "rifleman"
 			SimEngine.issue_command([u.tag], "train_" + unit_type)
 	_attack(pid, army, cfg, false)
+
+func _counter_orders(pid: int, cfg: Dictionary, faction: String, mine: Array, halls: Array, counts: Dictionary) -> Dictionary:
+	var evidence: Dictionary = cfg.get("counter_evidence", {})
+	var detector: String = DETECTORS[faction]
+	var detector_count: int = counts.get(detector, 0)
+	var tracked: Dictionary = evidence.get("cloak_track", {})
+	var track_seen := false
+	var seen_air := 0
+	var seen_cloak := false
+	var local_contact := {}
+	for enemy in SimEngine.units.values():
+		if enemy.owner == 0 or enemy.owner == pid or enemy.is_worker or enemy.is_structure or not SimEngine.can_see_unit(pid, enemy):
+			continue
+		if enemy.flight_height > 0.0:
+			seen_air += 1
+		if enemy.tag == tracked.get("tag", 0):
+			track_seen = true
+		var cloaked: bool = enemy.get("cloaked", false)
+		if not cloaked and (seen_cloak or not RTSData.get_unit_def(enemy.unit_type).get("abilities", []).has("phase_cloak")):
+			continue
+		for hall in halls:
+			if SimEngine.is_dropoff(hall, pid) and hall.pos.distance_squared_to(enemy.pos) <= DEFENSE_RADIUS * DEFENSE_RADIUS:
+				local_contact = {"tag": enemy.tag, "pos": enemy.pos, "hall": hall.tag, "seen_at": SimEngine.tick}
+				seen_cloak = seen_cloak or cloaked
+				break
+	if seen_air > 0:
+		evidence["air_goal"] = clampi(seen_air, 1, 3)
+		evidence["air_until"] = SimEngine.tick + AIR_EVIDENCE_TICKS
+	if not local_contact.is_empty():
+		var hall: Dictionary = SimEngine.units[local_contact.hall]
+		evidence["detector_site"] = hall.pos + (local_contact.pos - hall.pos).limit_length(7.0)
+		var previous_goal: int = evidence.get("detector_goal", 0) if SimEngine.tick < int(evidence.get("stealth_until", 0)) else 0
+		if seen_cloak and not evidence.get("cloak_visible", false):
+			previous_goal = maxi(previous_goal, mini(2, detector_count + 1))
+		evidence["detector_goal"] = maxi(previous_goal, 1)
+		evidence["stealth_until"] = SimEngine.tick + STEALTH_EVIDENCE_TICKS
+		evidence["cloak_track"] = local_contact
+	evidence["cloak_visible"] = seen_cloak
+	if faction == RTSData.FACTION_HUMANS and not track_seen and not tracked.is_empty():
+		_try_observed_sweep(pid, evidence, tracked)
+	cfg["counter_evidence"] = evidence
+
+	var air_needed := 0
+	if SimEngine.tick < int(evidence.get("air_until", 0)):
+		var counter: String = AIR_COUNTERS[faction]
+		var committed: int = counts.get(counter, 0)
+		for unit in mine:
+			if unit.is_structure:
+				for item in unit.production_queue:
+					if item.get("unit_type") == counter:
+						committed += 1
+		air_needed = maxi(0, int(evidence.air_goal) - committed)
+	var detector_needed: bool = SimEngine.tick < int(evidence.get("stealth_until", 0)) and detector_count < int(evidence.get("detector_goal", 0))
+	# A Sentry also provides an immediate local answer while airframes are built.
+	detector_needed = detector_needed or (faction == RTSData.FACTION_HUMANS and air_needed > 0 and detector_count == 0)
+	return {"air": air_needed, "detector": detector if detector_needed else "",
+		"detector_site": evidence.get("detector_site", halls[0].pos)}
+
+func _try_observed_sweep(pid: int, evidence: Dictionary, tracked: Dictionary) -> void:
+	# Investigate a last visible location. A sweep never receives the unit's
+	# hidden position, and actual detection is still required for escalation.
+	if SimEngine.vision == null or SimEngine.tick < int(evidence.get("next_recon", 0)):
+		return
+	if SimEngine.tick - int(tracked.seen_at) > 4 * 64 or not SimEngine.can_see_position(pid, tracked.pos):
+		return
+	if SimEngine.issue_command([tracked.hall], "recon_sweep", tracked.pos).ok:
+		evidence["next_recon"] = SimEngine.tick + RECON_RETRY_TICKS
 
 func _train_recovery_workers(halls: Array, worker_type: String, worker_count: int) -> void:
 	var committed := worker_count
@@ -144,7 +227,7 @@ func _train_recovery_workers(halls: Array, worker_type: String, worker_count: in
 		if SimEngine.issue_command([hall.tag], "train_" + worker_type).ok:
 			committed += 1
 
-func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Array, army: Array, halls: Array, counts: Dictionary) -> void:
+func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Array, army: Array, halls: Array, counts: Dictionary, response: Dictionary) -> void:
 	var p: Dictionary = SimEngine.players[pid]
 	var roster: Dictionary = RTSData.faction_info[p.faction]
 	var brood: bool = p.faction == RTSData.FACTION_MONSTERS
@@ -164,7 +247,10 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 			_build(workers, "waystone", base)
 		_attack(pid, army, cfg, false)
 		return
-	if strategy != "rush" and int(counts.get(roster.extractor, 0)) == 0 and (brood or int(counts.get("waystone", 0)) > 0):
+	var air_needed: int = response.air
+	if not response.detector.is_empty():
+		_build(workers, response.detector, response.detector_site)
+	if (strategy != "rush" or air_needed > 0) and int(counts.get(roster.extractor, 0)) == 0 and (brood or int(counts.get("waystone", 0)) > 0):
 		_build(workers, roster.extractor, base)
 	var pending_hall: bool = int(counts.get(roster.town_hall, 0)) > halls.size()
 	var building_hall: bool = pending_hall or halls.any(func(u): return u.build_progress < 1.0)
@@ -197,6 +283,9 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 				var train := "skitterling"
 				if committed_workers < worker_target and (workers.size() < 12 or producer.production_queue.size() == 0):
 					train = roster.worker
+				elif air_needed > 0:
+					if p.aether >= 25:
+						train = "bile_crawler"
 				elif strategy == "siege":
 					if p.aether >= 100:
 						train = "blight_hurler"
@@ -206,20 +295,26 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 					break
 				if train == roster.worker:
 					committed_workers += 1
+				elif air_needed > 0 and train == "bile_crawler":
+					air_needed -= 1
 		elif not brood and producer.production_queue.is_empty():
 			if producer.unit_type == roster.town_hall and committed_workers < worker_target:
 				if SimEngine.issue_command([producer.tag], "train_" + roster.worker).ok:
 					committed_workers += 1
 			elif producer.unit_type == "waystone" and SimEngine.is_powered(pid, producer.pos):
 				var train := "sunblade"
-				if strategy == "siege":
+				if air_needed > 0:
+					if p.aether >= 50:
+						train = "skirmisher"
+				elif strategy == "siege":
 					# A Waystone can still train a Sunblade with only a few
 					# supply slots left, without spending the saved aether.
 					if p.aether >= 200 and p.supply_cap - p.supply_used >= 6:
 						train = "spire_walker"
 				elif strategy != "rush" and p.aether >= 50:
 					train = "skirmisher"
-				SimEngine.issue_command([producer.tag], "train_" + train)
+				if SimEngine.issue_command([producer.tag], "train_" + train).ok and air_needed > 0 and train == "skirmisher":
+					air_needed -= 1
 	_attack(pid, army, cfg, false)
 
 func _build(workers: Array, structure_type: String, base: Vector2, exact: bool = false) -> void:
@@ -307,12 +402,13 @@ func _step_defense(pid: int, army: Array, halls: Array) -> void:
 	for hall in halls:
 		if not SimEngine.is_dropoff(hall, pid):
 			continue
-		for enemy in SimEngine.query_units_in_radius(hall.pos, DEFENSE_RADIUS, pid):
+		for enemy in SimEngine.query_units_in_radius(hall.pos, AIR_DEFENSE_RADIUS, pid):
 			if enemy.owner == 0 or enemy.is_worker or enemy.is_structure or not SimEngine.can_see_unit(pid, enemy):
 				continue
 			var distance: float = hall.pos.distance_squared_to(enemy.pos)
-			if distance <= DEFENSE_RADIUS * DEFENSE_RADIUS and distance < float(threats.get(enemy.tag, {}).get("distance", INF)):
-				threats[enemy.tag] = {"enemy": enemy, "center": hall.pos, "distance": distance}
+			var radius := AIR_DEFENSE_RADIUS if enemy.flight_height > 0.0 else DEFENSE_RADIUS
+			if distance <= radius * radius and distance < float(threats.get(enemy.tag, {}).get("distance", INF)):
+				threats[enemy.tag] = {"enemy": enemy, "center": hall.pos, "distance": distance, "radius_squared": radius * radius}
 	var available: Array[Dictionary] = []
 	var assigned := 0
 	var limit := mini(MAX_DEFENDERS, threats.size() + 1)
@@ -334,16 +430,21 @@ func _step_defense(pid: int, army: Array, halls: Array) -> void:
 	ordered.sort_custom(func(a, b): return a.distance < b.distance)
 	for threat in ordered:
 		var enemy: Dictionary = threat.enemy
-		available.sort_custom(func(a, b): return a.pos.distance_squared_to(enemy.pos) < b.pos.distance_squared_to(enemy.pos))
+		var airborne: bool = enemy.flight_height > 0.0
+		available.sort_custom(func(a, b):
+			if airborne and (a.flight_height > 0.0) != (b.flight_height > 0.0):
+				return a.flight_height > 0.0
+			return a.pos.distance_squared_to(enemy.pos) < b.pos.distance_squared_to(enemy.pos))
 		for soldier in available:
-			if not soldier.orders.is_empty() or soldier.pos.distance_squared_to(enemy.pos) > DEFENDER_CALL_DISTANCE * DEFENDER_CALL_DISTANCE:
+			var call_distance := AIR_DEFENDER_CALL_DISTANCE if airborne and soldier.flight_height > 0.0 else DEFENDER_CALL_DISTANCE
+			if not soldier.orders.is_empty() or soldier.pos.distance_squared_to(enemy.pos) > call_distance * call_distance:
 				continue
 			if not SimEngine.can_attack(soldier, enemy) or not _can_intercept(soldier, enemy):
 				continue
 			if SimEngine.issue_command([soldier.tag], "attack_target", enemy.pos, enemy.tag).ok:
 				soldier.erase("skirmish_route")
 				soldier.orders[0]["_defense_intercept"] = {
-					"origin": soldier.pos, "center": threat.center, "radius_squared": DEFENSE_RADIUS * DEFENSE_RADIUS,
+					"origin": soldier.pos, "center": threat.center, "radius_squared": threat.radius_squared,
 				}
 				assigned += 1
 				if assigned >= limit:
@@ -654,6 +755,8 @@ func _attack(pid: int, army: Array, cfg: Dictionary, desperate: bool) -> void:
 	var recoveries := 0
 	for soldier in army:
 		if soldier.is_immobile:
+			continue
+		if soldier.flight_height > 0.0 and not RTSData.get_unit_def(soldier.unit_type).get("weapon", {}).get("targets_ground", true):
 			continue
 		var route: Dictionary = soldier.get("skirmish_route", {})
 		var previous_front: int = route.get("front_tag", 0)
