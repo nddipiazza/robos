@@ -62,8 +62,8 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **042 Brood terrain bonuses.** Eligible Brood troops gain speed on living ground and tooltips show the effective speed.
 - [x] **043 Expansion of living ground.** Paid or energy-limited nodes extend the layer and decay after losing their source.
 - [x] **044 Nest support unit.** A paid defender can spend energy to add brood slots after a delay.
-- [ ] **045 Ground ambush.** Eligible units can burrow, with detection and mobility rules applied consistently.
-- [ ] **046 Unit morph branch.** A paid morph transforms an existing combat unit into a different battlefield role.
+- [x] **045 Ground ambush.** Eligible units can burrow, with detection and mobility rules applied consistently.
+- [x] **046 Unit morph branch.** A paid morph transforms an existing combat unit into a different battlefield role.
 - [x] **047 Mobile supply.** A paid, vulnerable Brood flyer grants supply and frees room for scouting.
 - [x] **048 Brood air harassment.** A light flyer attacks valid targets and is vulnerable to dedicated anti-air.
 - [x] **049 Siege denial.** A late-tier Brood ability temporarily denies an area without hiding its duration.
@@ -77,10 +77,10 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **054 Mobile power source.** A Concord carrier can deploy a temporary field while giving up movement.
 - [x] **055 Disposable scout.** A cheap, fragile scouting unit provides sight without attack power.
 - [x] **056 Mobile detector.** A paid Concord unit reveals hidden enemies within a displayed radius.
-- [ ] **057 Barrier placement.** A support ability briefly blocks ground paths with visible duration and size.
-- [ ] **058 Area spellcaster.** An energy-funded cast damages units in a telegraphed area, including allies.
-- [ ] **059 Defensive recall.** An energy-funded recall returns eligible units after a delay if they remain inside the marker.
-- [ ] **060 Heavy air capital unit.** A late-tech flyer has a specific anti-capital role and a demonstrated counter.
+- [x] **057 Barrier placement.** A support ability briefly blocks ground paths with visible duration and size.
+- [x] **058 Area spellcaster.** An energy-funded cast damages units in a telegraphed area, including allies.
+- [x] **059 Defensive recall.** An energy-funded recall returns eligible units after a delay if they remain inside the marker.
+- [x] **060 Heavy air capital unit.** A late-tech flyer has a specific anti-capital role and a demonstrated counter.
 
 ## 061–070 Skirmish maps and AI
 
