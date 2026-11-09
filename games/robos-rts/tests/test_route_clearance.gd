@@ -11,6 +11,7 @@ func _run() -> void:
 	sim = root.get_node("SimEngine")
 	_test_ramps()
 	_test_off_grid_ramp()
+	_test_fractional_off_grid_ramp()
 	_test_gate()
 	_test_off_grid_gate()
 	_test_corner_sweeps()
@@ -63,6 +64,19 @@ func _test_off_grid_ramp() -> void:
 				if rifle.orders.is_empty():
 					break
 			_check(rifle.pos.distance_to(goal) < 2.0, "Rifleman traverses the off-grid ramp from %s to %s" % [start, goal])
+
+func _test_fractional_off_grid_ramp() -> void:
+	sim.reset_state(42, 96, 96)
+	# After accounting for the rifleman's radius, only y=48.5 has a
+	# fine-grid center in the walkable band between y=48.2 and y=48.8.
+	sim.terrain_obstacles.append(Rect2(42, 0, 12, 47.35))
+	sim.terrain_obstacles.append(Rect2(42, 49.65, 12, 46.35))
+	var start := Vector2(26, 38)
+	var goal := Vector2(70, 53)
+	var rifle: Dictionary = sim.spawn_unit("rifleman", 1, start)
+	sim.issue_command([rifle.tag], "move", goal)
+	sim.step_ticks(1800)
+	_check(rifle.orders.is_empty() and rifle.pos.distance_to(goal) < 2.0, "The half-cell grid still reaches a fractional gap")
 
 func _test_gate() -> void:
 	for west_to_east in [true, false]:
