@@ -2096,6 +2096,77 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 				return true
 	return false
 
+func _start_choke_yield(leader: Dictionary, blocker: Dictionary, direction: Vector2, mineral_walkers: Dictionary) -> void:
+	var across := direction.orthogonal()
+	var gap: float = leader.radius + blocker.radius + 0.6
+	var midpoint: Vector2 = (leader.pos + blocker.pos) * 0.5
+	if direction.dot((blocker.pos - leader.pos).normalized()) < 0.65:
+		return
+	if not blocker.orders.is_empty():
+		if blocker.vel.dot(direction) >= -0.25:
+			return
+		# A consistent direction wins a head-on tie across the whole line.
+		if (direction.x if absf(direction.x) >= absf(direction.y) else direction.y) < 0.0:
+			return
+	var cliff_walk: bool = blocker.unit_type == "spire_walker"
+	if not (_is_point_blocked_by_static(midpoint + across * gap, blocker.radius, cliff_walk) and _is_point_blocked_by_static(midpoint - across * gap, blocker.radius, cliff_walk)):
+		return
+	for unit in query_units_in_radius(blocker.pos, 9.0):
+		if unit.owner != leader.owner or unit.is_structure or unit.is_immobile or unit.flight_height > 0.0 or unit.has("choke_yield") or mineral_walkers.has(unit.tag):
+			continue
+		if unit.attack_state != "idle":
+			continue
+		var offset: Vector2 = unit.pos - leader.pos
+		if offset.dot(direction) <= 0.0 or absf(offset.dot(across)) > gap or unit.vel.dot(direction) > 0.25:
+			continue
+		if not unit.orders.is_empty() and unit.vel.dot(direction) >= -0.25:
+			continue
+		var berth := _find_choke_berth(unit, direction, across, leader.radius + unit.radius + 0.8)
+		if not berth.is_empty():
+			unit["choke_yield"] = {"leader": leader.tag, "direction": direction, "turn": berth[0], "point": berth[1], "expires": tick + 6 * 64}
+
+func _find_choke_berth(unit: Dictionary, direction: Vector2, across: Vector2, gap: float) -> Array[Vector2]:
+	var from: Vector2 = unit.pos
+	var radius: float = unit.radius
+	var cliff_walk: bool = unit.unit_type == "spire_walker"
+	var side := 1.0 if unit.tag % 2 == 0 else -1.0
+	for step in range(25):
+		var turn := from + direction * float(step) * 0.5
+		if _is_point_blocked_by_static(turn, radius, cliff_walk):
+			break
+		for sign_value in [side, -side]:
+			var point := turn + across * gap * float(sign_value)
+			if _has_clear_line_of_walk(turn, point, radius, cliff_walk):
+				return [turn, point]
+	return []
+
+func _follow_choke_yield(unit: Dictionary, dt: float) -> void:
+	var yield_order: Dictionary = unit.choke_yield
+	var leader: Dictionary = units.get(yield_order.leader, {})
+	var direction: Vector2 = yield_order.direction
+	var point: Vector2 = yield_order.point
+	if leader.is_empty() or unit.attack_state != "idle" or tick >= int(yield_order.expires) or _is_point_blocked_by_static(point, unit.radius, unit.unit_type == "spire_walker"):
+		unit.erase("choke_yield")
+		unit.path.clear()
+		return
+	unit.pushed_timer = 0.35
+	var turn: Vector2 = yield_order.turn
+	if not yield_order.get("turn_reached", false) and unit.pos.distance_squared_to(turn) > 0.22:
+		_move_toward_point(unit, turn, dt)
+		return
+	yield_order["turn_reached"] = true
+	if unit.pos.distance_squared_to(point) > 0.16:
+		_move_toward_point(unit, point, dt)
+		return
+	unit.vel = Vector2.ZERO
+	if tick % 8 != int(unit.tag) % 8 or (leader.pos - turn).dot(direction) < 1.0:
+		return
+	for follower in query_units_in_radius(turn, 7.0):
+		if follower.owner == unit.owner and follower.vel.dot(direction) > 0.25 and (follower.pos - turn).dot(direction) < 1.0 and absf((follower.pos - turn).dot(direction.orthogonal())) < 2.5:
+			return
+	unit.erase("choke_yield")
+	unit.path.clear()
+
 func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_walkers: Dictionary = {}) -> void:
 	var neighbors_by_tag: Dictionary = {}
 	for tag in all_tags:
@@ -2104,6 +2175,11 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		var u: Dictionary = units[tag]
 		if u["is_structure"] or u["is_immobile"]:
 			continue
+		if u.has("choke_yield"):
+			if mineral_walkers.has(tag):
+				u.erase("choke_yield")
+			else:
+				_follow_choke_yield(u, dt)
 
 		var position: Vector2 = u["pos"]
 		var radius: float = u["radius"]
@@ -2139,6 +2215,8 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			var normal = delta_p / dist
 
 			if is_moving and not n["is_structure"]:
+				if not flying and n.owner == owner_id and n.attack_state == "idle" and not n.is_immobile and not u.has("choke_yield") and not n.has("choke_yield") and tick % 4 == int(tag) % 4 and dist < min_sep * 2.0:
+					_start_choke_yield(u, n, desired_vel.normalized(), mineral_walkers)
 				if dist < min_sep * 1.55:
 					var overlap_ratio = (min_sep * 1.55 - dist) / (min_sep * 1.55)
 					steer_force += normal * overlap_ratio * speed * 0.85
@@ -2631,6 +2709,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 		elif ctype == "stop":
 			_release_mining_slot(u)
+			u.erase("choke_yield")
 			u["orders"].clear()
 			u["path"].clear()
 			u["vel"] = Vector2.ZERO
@@ -2640,6 +2719,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 		elif ctype == "hold_position":
 			_release_mining_slot(u)
+			u.erase("choke_yield")
 			u["orders"] = [{"type": "hold_position"}]
 			u["path"].clear()
 			u["vel"] = Vector2.ZERO
@@ -2649,6 +2729,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 		if not queue:
 			_release_mining_slot(u)
+			u.erase("choke_yield")
 			u["orders"].clear()
 			u["path"].clear()
 
