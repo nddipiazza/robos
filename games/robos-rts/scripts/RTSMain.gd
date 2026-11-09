@@ -401,6 +401,8 @@ func unit_height(u: Dictionary) -> float:
 		return maxf(2.4, r * 1.5)
 	if u["unit_type"] == "spire_walker":
 		return 5.4
+	if u.unit_type == "lumen_carrier":
+		return 3.9 if u.is_immobile else 2.35
 	if u.unit_type == "prospector":
 		return 1.2
 	return 1.9 + r * 0.5
@@ -1135,7 +1137,7 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 			return {"ok": false, "pos": pos, "reason": "%s must be placed on a free aether vent." % def.name}
 		return _check_planned_placement(structure_id, pos, r)
 	if SimEngine.requires_power(structure_id) and not SimEngine.is_powered(local_player, pos):
-		return {"ok": false, "pos": pos, "reason": "Place the %s inside a Resonator's power field." % def.name}
+		return {"ok": false, "pos": pos, "reason": "Place the %s inside a friendly power field." % def.name}
 	if pos.x < r or pos.y < r or pos.x > SimEngine.map_width - r or pos.y > SimEngine.map_height - r:
 		return {"ok": false, "pos": pos, "reason": "Cannot build outside the map."}
 	for obs in SimEngine.terrain_obstacles:
@@ -1202,7 +1204,7 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if SimEngine.uses_brood_slots(pu) and not producers.any(func(u): return SimEngine.uses_brood_slots(u) and u.build_progress >= 1.0 and u.brood_slots > 0):
 			return "No brood slots ready."
 		if SimEngine.requires_power(pu.unit_type) and not producers.any(func(u): return u.unit_type == pu.unit_type and u.build_progress >= 1.0 and SimEngine.is_powered(u.owner, u.pos)):
-			return "Waystone needs a Resonator's power field."
+			return "Waystone needs a friendly power field."
 	if adef.has("upgrade"):
 		var reason := SimEngine.research_block_reason(local_player, adef.upgrade)
 		if not reason.is_empty():
@@ -1245,6 +1247,13 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		"fast_deploy":
 			if not selected_owned().any(func(unit): return SimEngine.fast_deployment_block_reason(unit).is_empty()):
 				return SimEngine.fast_deployment_block_reason(pu)
+		"deploy_power_field", "retract_power_field":
+			var deploy: bool = adef.id == "deploy_power_field"
+			if not selected_owned().any(func(unit): return SimEngine.carrier_field_block_reason(unit, deploy).is_empty()):
+				return SimEngine.carrier_field_block_reason(pu, deploy)
+		"move", "patrol":
+			if pu.unit_type == "lumen_carrier" and pu.is_immobile and not selected_owned().any(func(unit): return not unit.is_structure and not unit.is_immobile):
+				return "Fold the power field to move."
 		"return_cargo":
 			if not selected_owned().any(func(unit): return unit.is_worker and unit.cargo_amount > 0):
 				return "No worker is carrying resources."
@@ -1795,12 +1804,11 @@ func _power_overlay() -> Dictionary:
 	var show_overlay := pending_ability.begins_with("build_") and SimEngine.requires_power(pending_ability.trim_prefix("build_"))
 	var selected_sources: Array[int] = []
 	for unit in selected_owned():
-		if unit.unit_type == "resonator":
+		var radius := SimEngine.power_source_radius(unit)
+		if unit.unit_type in ["resonator", "waystone"] or radius > 0.0:
 			show_overlay = true
-			if unit.build_progress >= 1.0:
+			if radius > 0.0:
 				selected_sources.append(unit.tag)
-		elif unit.unit_type == "waystone":
-			show_overlay = true
 	if not show_overlay:
 		return {"visible": false}
 
@@ -1810,16 +1818,17 @@ func _power_overlay() -> Dictionary:
 	for unit in SimEngine.units.values():
 		if unit.owner != local_player or unit.build_progress < 1.0:
 			continue
-		if unit.unit_type == "resonator":
+		var radius := SimEngine.power_source_radius(unit)
+		if radius > 0.0:
 			sources.append(unit)
-			fields.append({"tag": unit.tag, "selected": selected_sources.has(unit.tag)})
+			fields.append({"tag": unit.tag, "selected": selected_sources.has(unit.tag), "radius": radius, "temporary": unit.unit_type == "lumen_carrier"})
 		elif unit.unit_type == "waystone":
 			waystones.append(unit)
 	var coverage: Array[Dictionary] = []
 	for waystone in waystones:
 		var covering: Array[int] = []
 		for source in sources:
-			if SimEngine.resonator_covers(source, waystone.pos):
+			if SimEngine.power_source_covers(source, waystone.pos):
 				covering.append(source.tag)
 		var state := "unpowered"
 		if covering.size() > 1:
@@ -1836,7 +1845,9 @@ func _draw_power_overlay(font: Font) -> void:
 	for field in overlay.fields:
 		var source: Dictionary = SimEngine.units[field.tag]
 		var color := Color("#9eeaff") if field.selected else Color(0.46, 0.60, 1.0, 0.75)
-		_draw_range_ring(source.pos, SimEngine.POWER_RADIUS, color, 2.5 if field.selected else 1.5)
+		if field.temporary:
+			color = Color("#e2c2ff") if field.selected else Color(0.70, 0.52, 1.0, 0.80)
+		_draw_range_ring(source.pos, field.radius, color, 2.5 if field.selected else 1.5)
 	for entry in overlay.waystones:
 		var unit: Dictionary = SimEngine.units[entry.tag]
 		var head := _unit_screen(unit, unit_height(unit) + 0.6) - Vector2(0, 23)
@@ -1861,7 +1872,7 @@ func _draw_power_overlay(font: Font) -> void:
 		draw_rect(badge, Color(0.04, 0.06, 0.09, 0.92))
 		draw_string(font, badge.position + Vector2(7, 15), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
 	if overlay.fields.any(func(field): return field.selected):
-		var legend := "Amber Waystones lose power if their selected Resonator falls"
+		var legend := "Amber Waystones lose power when the selected field ends"
 		draw_string(font, Vector2(611, 70), legend, HORIZONTAL_ALIGNMENT_CENTER, 700, 16, Color.BLACK)
 		draw_string(font, Vector2(610, 69), legend, HORIZONTAL_ALIGNMENT_CENTER, 700, 16, Color("#fbbf24"))
 

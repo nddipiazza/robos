@@ -497,6 +497,22 @@ def gen_charge_activate() -> list[float]:
     return out
 
 
+def gen_power_field(anchoring: bool) -> list[float]:
+    """Two resonant pulses rising on anchor and falling on fold."""
+    duration = 0.48
+    phase = 0.0
+    samples = []
+    for i in range(int(duration * SAMPLE_RATE)):
+        time = i / SAMPLE_RATE
+        progress = time / duration
+        pitch = 180.0 + 210.0 * (progress if anchoring else 1.0 - progress)
+        phase += 2.0 * math.pi * pitch / SAMPLE_RATE
+        chord = 0.65 * math.sin(phase) + 0.24 * math.sin(phase * 1.5) + 0.11 * math.sin(phase * 3.0)
+        envelope = _env_ad(time, 0.014, 0.23) + 0.65 * _env_ad(time - 0.14, 0.02, 0.28)
+        samples.append(chord * envelope)
+    return samples
+
+
 def gen_phase_step() -> list[float]:
     """Skirmisher Phase Step: dimensional teleport warp-out / warp-in shimmer."""
     dur = 0.34
@@ -851,6 +867,8 @@ GENERATORS = {
     "surge_activate": (gen_surge_activate, 0.85),
     "charge_activate": (gen_charge_activate, 0.85),
     "phase_step": (gen_phase_step, 0.86),
+    "power_field_anchor": (lambda: gen_power_field(True), 0.78),
+    "power_field_fold": (lambda: gen_power_field(False), 0.70),
     "siege_transform": (gen_siege_transform, 0.88),
     "silo_gate": (gen_silo_gate, 0.82),
     "vital_restore": (lambda: gen_support_pulse(360, 0.26), 0.50),

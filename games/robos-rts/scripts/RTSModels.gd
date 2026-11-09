@@ -156,6 +156,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"mote": _mote(root, glow)
+		"lumen_carrier": _lumen_carrier(root, team)
 		"sunblade": _sunblade(root, team)
 		"skirmisher": _skirmisher(root, team)
 		"spire_walker": _spire_walker(root, team)
@@ -589,6 +590,31 @@ static func _mote(root: Node3D, team: Material) -> void:
 	for side in [-1.0, 1.0]:
 		cone(hover, 0.12, 0.5, m[0], Vector3(-0.2, 0.0, side * 0.38), Vector3(side * 70.0, 0, 90), 4)
 	cone(root, 0.3, 0.7, mat("a_beam", CRYSTAL, CRYSTAL, 1.2, 0.0, 0.5, 0.25), Vector3(0, 0.4, 0), Vector3(180, 0, 0), 10)
+
+static func _lumen_carrier(root: Node3D, team: Material) -> void:
+	var m := _alien_mats()
+	var violet := mat("lumen_field", Color("#cda1ff"), Color("#a36bff"), 2.2, 0.1, 0.25)
+	var hover := Node3D.new()
+	hover.name = "Hover"
+	hover.position.y = 1.1
+	root.add_child(hover)
+	cyl(hover, 0.90, 1.24, 0.34, m[0], Vector3.ZERO, Vector3.ZERO, 8)
+	ring(hover, 0.92, 1.13, m[1], Vector3(0, 0.16, 0))
+	sph(hover, 0.53, m[2], Vector3(0, 0.42, 0), Vector3(1.0, 0.8, 1.0), 10)
+	for side in [-1.0, 1.0]:
+		box(hover, Vector3(1.75, 0.22, 0.48), team, Vector3(-0.15, 0.0, side * 0.98), Vector3(0, side * 18.0, 0))
+		cone(hover, 0.22, 0.65, m[1], Vector3(0.66, 0.02, side * 0.78), Vector3(0, 0, -90), 4)
+	var mast := Node3D.new()
+	mast.name = "PowerMast"
+	root.add_child(mast)
+	mast.hide()
+	cyl(mast, 0.18, 0.34, 1.5, m[1], Vector3(0, 1.75, 0), Vector3.ZERO, 8)
+	ring(mast, 0.68, 0.84, violet, Vector3(0, 2.66, 0), Vector3(0, 0, 20))
+	ring(mast, 0.94, 1.03, m[1], Vector3(0, 2.66, 0), Vector3(0, 0, -20))
+	sph(mast, 0.42, violet, Vector3(0, 2.66, 0), Vector3(0.7, 1.2, 0.7), 8)
+	for side in [-1.0, 1.0]:
+		box(mast, Vector3(0.38, 0.18, 1.08), m[0], Vector3(0, 0.20, side * 1.0))
+		box(mast, Vector3(0.22, 0.95, 0.24), m[1], Vector3(0, 0.56, side * 0.95), Vector3(side * 24.0, 0, 0))
 
 static func _sunblade(root: Node3D, team: Material) -> void:
 	var m := _alien_mats()
