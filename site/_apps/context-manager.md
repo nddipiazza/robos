@@ -6,6 +6,8 @@ icon: context-manager.svg
 summary: "Register GitHub repositories and local folders as context sources, check which agent instruction files they contain, and build one combined context text."
 description: "Context Manager keeps a list of repos and folders, scans them for files like AGENTS.md and README.md, and can draft AGENTS.md, Copilot instructions and a Mermaid graph with an AI helper that this repository does not include."
 permalink: /context-manager/
+redirect_from:
+  - /apps/context-manager/
 ---
 
 Context Manager answers "what will an agent read when it opens this repository?" You register sources, and the app shows which context files each one has.

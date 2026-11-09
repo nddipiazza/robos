@@ -30,7 +30,8 @@ for (const name of fs.readdirSync(packages).sort()) {
   const source = `https://github.com/nddipiazza/robos/tree/main/packages/${name}`;
   const entry = pkg.main && fs.existsSync(path.join(dir, pkg.main)) ? pkg.main : null;
   const meta = ['---', `title: ${JSON.stringify(title)}`, `package: ${name}`, `category: ${JSON.stringify(category)}`,
-    `component_type: ${isApp ? 'app' : 'component'}`, `permalink: /${name}/`, `summary: ${JSON.stringify(summary)}`, `description: ${JSON.stringify(summary)}`];
+    `component_type: ${isApp ? 'app' : 'component'}`, `permalink: /${name}/`, 'redirect_from:', `  - /apps/${name}/`,
+    `summary: ${JSON.stringify(summary)}`, `description: ${JSON.stringify(summary)}`];
   if (fs.existsSync(path.join(dir, 'icon.svg'))) {
     fs.copyFileSync(path.join(dir, 'icon.svg'), path.join(icons, `${name}.svg`));
     meta.push(`icon: ${name}.svg`);

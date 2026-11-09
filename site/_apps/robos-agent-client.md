@@ -4,6 +4,8 @@ package: robos-agent-client
 category: "libraries"
 component_type: component
 permalink: /robos-agent-client/
+redirect_from:
+  - /apps/robos-agent-client/
 summary: "RobOS Agent Client — agent CLI provider catalogs (Codex, AGY, Claude Code, GitHub Copilot) and the work-task backend invocations and runner used by Task Implementer, Dev Central and PR Review"
 description: "RobOS Agent Client — agent CLI provider catalogs (Codex, AGY, Claude Code, GitHub Copilot) and the work-task backend invocations and runner used by Task Implementer, Dev Central and PR Review"
 ---

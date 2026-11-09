@@ -6,6 +6,8 @@ icon: robos-desktop.svg
 summary: "Full-screen top bar and bottom dock for RobOS on a GNOME/X11 session, replacing the GNOME panel while it runs."
 description: "Shows a clock, notifications button, running-agent count and a dock of pinned and running windows. It hides the GNOME panel on start and restores it when you choose Back to GNOME."
 permalink: /robos-desktop/
+redirect_from:
+  - /apps/robos-desktop/
 ---
 
 Desktop Shell is the taskbar layer of the RobOS appliance desktop. It opens a full-screen window behind your other windows with a thin menu bar on top and a dock along the bottom. It targets the Ubuntu and GNOME session that the RobOS VM image provides.

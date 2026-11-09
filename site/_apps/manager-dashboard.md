@@ -6,6 +6,8 @@ icon: manager-dashboard.svg
 summary: "Team metrics for one GitHub repository: open issues, merged PRs, PR cycle time, deploy frequency, approval rate, tasks by stage and PRs per developer."
 description: "Manager Dashboard reads issues, pull requests, deployments and contributors through the gh CLI for the first repository of the active task server and computes a few simple counts. It is read-only."
 permalink: /manager-dashboard/
+redirect_from:
+  - /apps/manager-dashboard/
 ---
 
 Manager Dashboard gives a team lead a quick read on one repository. Every number is computed in the window from `gh` output, and the page refreshes every five minutes.

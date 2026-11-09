@@ -6,6 +6,8 @@ icon: remote-execution-studio.svg
 summary: "Records Remote Execution API (REAPI v2) clusters and generates .bazelrc, .buckconfig, Buildbarn and NativeLink configuration for them. Endpoint probes and cache statistics are sample values."
 description: "Stores cluster definitions in ~/.config/robos/remote-execution.json and the knowledge graph, and generates client and server config text from them. It does not connect to the clusters."
 permalink: /remote-execution-studio/
+redirect_from:
+  - /apps/remote-execution-studio/
 ---
 
 Remote Execution Studio helps you write configuration for a remote build cluster that speaks the Remote Execution API (REAPI v2), such as Buildbarn or NativeLink. You enter the cluster endpoints once, and the app generates the matching text for Bazel, Buck2 and the cluster's own services.

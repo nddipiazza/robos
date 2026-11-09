@@ -6,6 +6,8 @@ icon: agents-manager.svg
 summary: "Browse and continue sessions of Claude Code, GitHub Copilot and Codex, and configure each provider's login, models and MCP servers."
 description: "Agents Manager reads the session stores of the agent CLIs installed on your machine, lets you send follow-up messages to Claude Code and Copilot sessions, and edits per-provider MCP server lists."
 permalink: /agents-manager/
+redirect_from:
+  - /apps/agents-manager/
 ---
 
 Agents Manager is a window onto the coding-agent CLIs you already use. It does not run its own model. It detects which CLIs are installed and signed in, lists their past sessions, and opens a provider's settings.

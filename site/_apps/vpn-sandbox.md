@@ -12,6 +12,8 @@ related:
   - /pass-manager/
   - /software-center/
 permalink: /vpn-sandbox/
+redirect_from:
+  - /apps/vpn-sandbox/
 ---
 
 **RobOS VPN Sandbox** (`packages/vpn-sandbox`, window title **VPN App Launcher**) launches individual desktop or CLI applications (such as Firefox, Transmission, or `curl`) inside a dedicated Linux network namespace (`ip netns`) bound to your OpenVPN provider so that the application's traffic can only exit through the VPN tunnel (`tun0`) and your normal public IP is completely unreachable.

@@ -6,6 +6,8 @@ icon: workspace-manager.svg
 summary: "Window showing a sample multi-repo task workspace with sync, teardown and open-in-IDE buttons that return canned results. Discovery helpers exist in the code but are not wired to the window."
 description: "The interface is a prototype with built-in sample data. The main process also contains working helpers to find .vscode and .idea workspaces and detect installed IDEs."
 permalink: /workspace-manager/
+redirect_from:
+  - /apps/workspace-manager/
 ---
 
 Workspace Manager is partly a prototype. What you see in the window is sample data; some useful code exists behind it but the window does not call it yet.

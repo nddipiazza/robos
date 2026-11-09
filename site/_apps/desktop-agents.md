@@ -6,6 +6,8 @@ summary: "A prototype viewer that mocks up watching several agents on their own 
 description: "Desktop Agents Viewer draws three simulated agent screens on canvases from hardcoded data. It does not yet stream real desktops."
 icon: desktop-agents.svg
 permalink: /desktop-agents/
+redirect_from:
+  - /apps/desktop-agents/
 ---
 
 Desktop Agents Viewer is a prototype of a console for watching agents that each work on their own virtual display (`:10`, `:11`, `:12` in the sample data).

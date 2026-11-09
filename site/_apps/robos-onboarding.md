@@ -6,6 +6,8 @@ icon: robos-onboarding.svg
 summary: "Eleven-step first-run wizard for GPG, pass, pinentry, git identity, SSH, Chrome, GitHub login, AI agent keys and optional tools."
 description: "Walks through the credential and tooling setup a RobOS workstation needs, running the real gpg, pass, ssh-keygen and gh commands, and records completion in ~/.config/robos."
 permalink: /robos-onboarding/
+redirect_from:
+  - /apps/robos-onboarding/
 ---
 
 The Setup Wizard prepares a fresh Linux account for RobOS. Most steps run a normal command (`gpg`, `pass`, `ssh-keygen`, `gh`) on your behalf, so you can reproduce each one by hand.

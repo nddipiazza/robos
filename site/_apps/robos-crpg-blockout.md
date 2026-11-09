@@ -10,6 +10,8 @@ related:
   - /projects/crpg-realm/
   - /schemas/testing/crpg-battle-map/
 permalink: /robos-crpg-blockout/
+redirect_from:
+  - /apps/robos-crpg-blockout/
 ---
 
 `packages/robos-crpg-blockout` builds blockout (greybox) maps for the cRPG in `games/crpg-realm` ([Realm of Heroes]({{ '/projects/crpg-realm/' | relative_url }})). The input is a `robos:CRPGBattleMap` JSON-LD node whose `robos:mapObjects` are `robos:CRPGMapObject` nodes. The output is a background PNG and a collision grid. The scenario engine (`scripts/engine/ScenarioEngine.gd`) reads only the grid for movement, line of sight and cover, so the picture can later be replaced by real art without changing gameplay. It has no window; the [cRPG Editor]({{ '/crpg-editor/' | relative_url }}) runs its `build` command from the Maps tab.

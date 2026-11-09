@@ -6,6 +6,8 @@ icon: crpg-editor.svg
 summary: "Desktop editor for the cRPG in games/crpg-realm: campaigns, characters, items, enemies, spells, abilities and battle maps."
 description: "The cRPG Editor reads and writes the JSON-LD content files of games/crpg-realm, can build map collision grids with a Python tool, and can launch a campaign in the Godot 4 game."
 permalink: /crpg-editor/
+redirect_from:
+  - /apps/crpg-editor/
 ---
 
 The cRPG Editor is the authoring tool for the `robos-crpg` game ("Realm of Heroes", in `games/crpg-realm`). Each campaign, character, map and so on is one JSON-LD file in that folder, so the files can be committed and reviewed like code. The game itself and its test suite are described in [Tactical cRPG & Infinity AI Engine]({{ '/projects/crpg-realm/' | relative_url }}); a worked example is the [Campaign Editor Tutorial]({{ '/projects/crpg-realm/campaign-editor-tutorial/' | relative_url }}).

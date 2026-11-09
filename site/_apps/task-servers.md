@@ -6,6 +6,8 @@ icon: task-servers.svg
 summary: "Settings screen where you add Jira and GitHub issue trackers, store a pass path for the token, and test the connection."
 description: "Writes the task_servers list in ~/.config/robos/settings.json, which Task Planner, Task Implementer, Task Board, Report Builder and Stage Demo read. Only Jira and GitHub forms can test a connection."
 permalink: /task-servers/
+redirect_from:
+  - /apps/task-servers/
 ---
 
 Task Servers holds the connection details for the issue trackers that other RobOS apps use. It does not show issues itself.

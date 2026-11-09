@@ -4,6 +4,8 @@ package: robos-rule-engine
 category: "libraries"
 component_type: component
 permalink: /robos-rule-engine/
+redirect_from:
+  - /apps/robos-rule-engine/
 summary: "RobOS Rule Engine — event-driven rule matching and action execution"
 description: "RobOS Rule Engine — event-driven rule matching and action execution"
 ---

@@ -7,6 +7,8 @@ icon: household.svg
 summary: "Family financial-year sandbox: six account types, statement reconciliation, spending categories, split purchases, PDF tax review and local federal tax estimates."
 description: "A runnable browser prototype for an invented family's financial year, from January statements and everyday spending to February tax preparation."
 permalink: /household/
+redirect_from:
+  - /apps/household/
 ---
 
 > **Looking for the full walkthrough?** See the step-by-step visual guide with E2E screenshots of a family's financial year from January to tax season: [rowbose.com/family-finances](https://rowbose.com/family-finances/).

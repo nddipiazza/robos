@@ -8,6 +8,8 @@ description: "GraphQL Client lays out an endpoint box, query and variables edito
 related:
   - /rest-client/
 permalink: /graphql-client/
+redirect_from:
+  - /apps/graphql-client/
 ---
 
 GraphQL Client has the layout of a GraphQL explorer: an endpoint field (default `http://localhost:8443/graphql`), a **GraphQL Query / Mutation** editor, **Query Variables (JSON)**, a **Schema Documentation** panel and a **JSON Response** pane with a status line.

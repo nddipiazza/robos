@@ -6,6 +6,8 @@ summary: "MCP server with six workspace tools, backed by a JSON file of sample w
 description: "Built on the MCP framework. It records workspaces in ~/.config/robos/workspaces/workspaces.json; it does not create git worktrees, open an IDE or start dev servers."
 icon: workspace-manager-mcp.svg
 permalink: /workspace-manager-mcp/
+redirect_from:
+  - /apps/workspace-manager-mcp/
 ---
 
 Workspace Manager MCP is a prototype of an agent-facing workspace API. It keeps a list of workspace records in `~/.config/robos/workspaces/workspaces.json`, created on first run with two sample entries (`robos-core` and `robos-auth-service`, with paths under `/home/ndipiazza/`).

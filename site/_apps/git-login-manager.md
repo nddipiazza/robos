@@ -6,6 +6,8 @@ icon: git-login-manager.svg
 summary: "Checks that GitHub access works (gh login, SSH key, SSH connection, git identity) and walks you through fixing what fails."
 description: "Git Login Manager is a GitHub-only health check that runs in the background, opens when something is broken, and can run gh login, generate an SSH key and upload it to GitHub."
 permalink: /git-login-manager/
+redirect_from:
+  - /apps/git-login-manager/
 ---
 
 Git Login Manager keeps the GitHub credentials that other RobOS apps depend on in working order. It does not handle GitLab or Gitea, and it does not store personal access tokens; login uses the GitHub CLI's browser flow.

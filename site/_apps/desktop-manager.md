@@ -6,6 +6,8 @@ icon: desktop-manager.svg
 summary: "The background process that launches RobOS apps, restarts the ones marked keep-alive, owns the tray icon and listens on a Unix socket."
 description: "Desktop Manager keeps a registry of RobOS apps, supervises a few of them, shows an unread-notification tray icon and accepts JSON commands over a Unix socket. Its status window is hidden unless you ask for it."
 permalink: /desktop-manager/
+redirect_from:
+  - /apps/desktop-manager/
 ---
 
 Desktop Manager is infrastructure that other RobOS apps call. You normally do not open it.

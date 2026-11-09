@@ -6,6 +6,8 @@ icon: robos-dashboards.svg
 summary: "Create KGraph graphical dashboards from card layouts where each widget is any RobOS component, embeddable via <robos-dashboard> and castable to Smart TVs"
 description: "Create KGraph graphical dashboards from card layouts where each widget is any RobOS component, embeddable via <robos-dashboard> and castable to Smart TVs"
 permalink: /robos-dashboards/
+redirect_from:
+  - /apps/robos-dashboards/
 ---
 
 # RobOS Dashboards

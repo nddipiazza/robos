@@ -3,11 +3,70 @@ layout: default
 body_class: guide
 extra_css: /assets/app.css
 ---
+{%- assign grand_doc = nil -%}
+{%- if page.grand_parent -%}
+  {%- assign grand_doc = site.guides | where: "title", page.grand_parent | first -%}
+{%- endif -%}
+{%- assign parent_doc = nil -%}
+{%- if page.parent -%}
+  {%- assign parent_doc = site.guides | where: "title", page.parent | first -%}
+{%- endif -%}
 <section class="cr-page app-page"><div class="wrap">
 <article class="guide-body cr-body">
-<nav class="app-crumbs" aria-label="Breadcrumb"><a href="{{ '/apps/' | relative_url }}">Apps &amp; components</a> / {{ page.title }}</nav>
+<nav class="app-crumbs" aria-label="Breadcrumb">
+  <a href="{{ '/apps/' | relative_url }}">Apps &amp; components</a>
+  {%- if grand_doc %} / <a href="{{ grand_doc.url | relative_url }}">{{ grand_doc.title }}</a>{% elsif page.grand_parent %} / {{ page.grand_parent }}{% endif -%}
+  {%- if parent_doc %} / <a href="{{ parent_doc.url | relative_url }}">{{ parent_doc.title }}</a>{% elsif page.parent %} / {{ page.parent }}{% endif -%}
+  / {{ page.title }}
+</nav>
 <header class="app-hero"><div><h1>{{ page.title }}</h1>{% if page.summary %}<p class="lead">{{ page.summary }}</p>{% endif %}</div></header>
 <div class="app-content">{{ content }}</div>
+{%- assign raw_children = site.guides | where: "parent", page.title | sort_natural: "title" -%}
+{%- assign child_guides = "" | split: "" -%}
+{%- for c in raw_children -%}
+  {%- if c.sitemap != false and c.url != page.url -%}{%- assign child_guides = child_guides | push: c -%}{%- endif -%}
+{%- endfor -%}
+{%- if child_guides.size > 0 %}
+<section class="app-related">
+  <h2>In this section</h2>
+  <ul>
+  {%- for c in child_guides %}
+    <li><a href="{{ c.url | relative_url }}">{{ c.title }}</a></li>
+  {%- endfor %}
+  </ul>
+</section>
+{%- endif -%}
+{%- if page.parent -%}
+  {%- assign raw_sibs = site.guides | where: "parent", page.parent | sort_natural: "title" -%}
+  {%- assign sib_guides = "" | split: "" -%}
+  {%- assign sib_cur_idx = 0 -%}
+  {%- for s in raw_sibs -%}
+    {%- if s.sitemap != false -%}
+      {%- if s.url == page.url -%}{%- assign sib_cur_idx = sib_guides.size -%}{%- endif -%}
+      {%- assign sib_guides = sib_guides | push: s -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if sib_guides.size > 1 or parent_doc %}
+  {%- assign sib_total = sib_guides.size -%}
+  {%- assign sib_max = sib_total | minus: 1 -%}
+  {%- if sib_max > 8 -%}{%- assign sib_max = 8 -%}{%- endif %}
+<section class="app-related">
+  <h2>More in {{ page.parent }}</h2>
+  <ul>
+    {%- if parent_doc %}
+    <li><a href="{{ parent_doc.url | relative_url }}">{{ parent_doc.title }} overview</a></li>
+    {%- endif -%}
+    {%- if sib_max > 0 -%}
+      {%- for offset in (1..sib_max) -%}
+        {%- assign s_idx = sib_cur_idx | plus: offset | modulo: sib_total -%}
+        {%- assign s = sib_guides[s_idx] -%}
+    <li><a href="{{ s.url | relative_url }}">{{ s.title }}</a></li>
+      {%- endfor -%}
+    {%- endif %}
+  </ul>
+</section>
+  {%- endif -%}
+{%- endif %}
 </article>
 </div></section>
 {% include mermaid.html %}

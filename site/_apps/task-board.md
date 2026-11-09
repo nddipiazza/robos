@@ -6,6 +6,8 @@ icon: task-board.svg
 summary: "Read-only board and list view of the issues in the active GitHub task server, grouped by status."
 description: "Fetches up to 100 issues with the gh CLI and shows them as Kanban columns or a sortable table. It has no swimlanes, WIP limits or drag and drop."
 permalink: /task-board/
+redirect_from:
+  - /apps/task-board/
 ---
 
 Task Board shows GitHub issues as columns and as a table. It only reads issues; it cannot create or change them.

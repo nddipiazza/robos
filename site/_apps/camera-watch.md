@@ -11,6 +11,8 @@ related:
   - /movie-player/
   - /robos-tv/
 permalink: /camera-watch/
+redirect_from:
+  - /apps/camera-watch/
 ---
 
 RobOS Camera Watch (`packages/camera-watch`) watches the IP cameras on your home or office network. It uses two open-source pieces: the [`onvif`](https://github.com/agsh/onvif) package (MIT) for everything ONVIF, and `ffmpeg` for video. Nothing goes through a vendor cloud.

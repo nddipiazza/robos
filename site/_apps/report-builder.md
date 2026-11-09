@@ -6,6 +6,8 @@ icon: report-builder.svg
 summary: "Ask a question about a repository's issues and pull requests and get a written report from GitHub Copilot."
 description: "Fetches up to 200 issues and 200 pull requests with the gh CLI, asks gh copilot to answer your question from that data, and lets you save the report as JSON."
 permalink: /report-builder/
+redirect_from:
+  - /apps/report-builder/
 ---
 
 Report Builder answers questions such as "Stuck reviews" or "Workload distribution" about one GitHub repository. It collects recent issue and pull request data and passes it, with your question, to the GitHub Copilot CLI.

@@ -8,6 +8,8 @@ description: "Stores built-in and custom skills in ~/.config/robos/skills.json a
 related:
   - /robos-skills/
 permalink: /skills-manager/
+redirect_from:
+  - /apps/skills-manager/
 ---
 
 In this app a "skill" is an entry with a name, category, tags and either a shell command (for example `node packages/robos-graph/bin/kgraph-cli.js search "$QUERY"`) or a system prompt. The catalog feeds RobOS apps such as AI Prompt. It is separate from the `SKILL.md` agent skills that Claude Code and similar tools load; for those, see [Skills](/robos-skills/).

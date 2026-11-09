@@ -8,6 +8,8 @@ description: "Transcribes speech on the machine with a Whisper model and speaks 
 related:
   - /voice-prompt/
 permalink: /voice-prompt/
+redirect_from:
+  - /apps/voice-prompt/
 ---
 
 RobOS Voice turns speech into text and speaks text aloud. A third job, answering short questions by voice, is only partly built. This page is the app summary. Setup, the API and the command-line client are covered in [RobOS Voice](/voice-prompt/reference/).

@@ -6,6 +6,8 @@ icon: desktop-dashboard.svg
 summary: "A full-screen window that sits at desktop level and shows a grid of widgets; today it contains one clock and date widget."
 description: "Desktop Dashboard is the beginning of a widget-based desktop background. It has a widget registry and a single built-in Welcome widget. It shows no system statistics or launchers yet."
 permalink: /desktop-dashboard/
+redirect_from:
+  - /apps/desktop-dashboard/
 ---
 
 Desktop Dashboard creates a borderless window the size of the primary display's work area, with the X11 window type set to `DESKTOP` so it stays behind other windows and out of the task bar. It is visible on all workspaces and cannot be moved or resized.

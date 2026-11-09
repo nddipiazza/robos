@@ -9,6 +9,8 @@ description: "Take the courses stored in the knowledge graph: a searchable libra
 related:
   - /pr-review-theater/
 permalink: /robos-elearning/
+redirect_from:
+  - /apps/robos-elearning/
 ---
 
 RobOS eLearning plays courses defined as `robos:ELearning` nodes in the knowledge graph, read from `.robos/kgraphs/learning/package.jsonld`. It uses the graph store from [Knowledge Graph Explorer]({{ '/robos-graph/' | relative_url }}), so it needs that package next to it. The [PR Review Theater](/pr-review-theater/) uses the same courses for its knowledge-check stage. The product page is at [rowbose.com/elearning](https://rowbose.com/elearning/).
