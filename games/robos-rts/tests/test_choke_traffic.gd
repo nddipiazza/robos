@@ -12,6 +12,7 @@ func _run() -> void:
 	root.get_node("RTSCommanderAI").configure_from_scenario([])
 	_test_opposing_convoys()
 	_test_idle_and_cargo()
+	_test_overhead_traffic()
 	print("Choke traffic: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -61,3 +62,27 @@ func _test_idle_and_cargo() -> void:
 	_check(soldier.pos.x > 63.0 and soldier.orders.is_empty(), "An idle blocker yields to an advancing soldier")
 	_check(blocker.pos.x > 48.0, "The idle blocker clears the narrow lane instead of overlapping the soldier")
 	_check(sim.players[1].crystal_collected > 0, "The returning worker deposits cargo through the same choke")
+
+func _test_overhead_traffic() -> void:
+	var clear_tick := _yield_release_tick(0)
+	_check(clear_tick > 0, "The retreating rifleman yields and returns to its route")
+	_check(_yield_release_tick(clear_tick) == clear_tick, "A Kestrel overhead does not hold up ground traffic")
+
+func _yield_release_tick(flyer_arrival_tick: int) -> int:
+	_corridor()
+	var leader: Dictionary = sim.spawn_unit("rifleman", 1, Vector2(40, 24))
+	var retreat: Dictionary = sim.spawn_unit("rifleman", 1, Vector2(55, 24))
+	sim.issue_command([leader.tag], "move", Vector2(73, 24))
+	sim.issue_command([retreat.tag], "move", Vector2(23, 24))
+	var yielded := false
+	for _step in range(640):
+		if sim.tick + 1 == flyer_arrival_tick and retreat.has("choke_yield"):
+			var turn: Vector2 = retreat.choke_yield.turn
+			var flyer: Dictionary = sim.spawn_unit("kestrel_interceptor", 1, turn - Vector2(3, 0))
+			sim.issue_command([flyer.tag], "move", turn + Vector2(16, 0))
+		sim.step_ticks(1)
+		if retreat.has("choke_yield"):
+			yielded = true
+		elif yielded:
+			return sim.tick
+	return -1
