@@ -57,6 +57,7 @@ func _performance_snapshot() -> Dictionary:
 		"fps": Engine.get_frames_per_second(),
 		"draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		"objects": Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
+		"scene_nodes": Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 		"units": SimEngine.units.size(),
 		"capture_ms": last_capture_ms,
 		"readback_ms": last_readback_ms,
