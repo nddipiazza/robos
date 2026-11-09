@@ -31,6 +31,31 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "veilseeker": {
+        "unit_name": "Veilseeker",
+        "voice": "en-US-AndrewNeural",
+        "rate": "-5%",
+        "pitch": "-4Hz",
+        "lines": {
+            "select": [
+                {"id": "veilseeker_select_1", "text": "Veilseeker standing by."},
+                {"id": "veilseeker_select_2", "text": "Watching for distortions."},
+                {"id": "veilseeker_select_3", "text": "Lens calibrated."},
+                {"id": "veilseeker_select_4", "text": "Show me the blind spot."},
+                {"id": "veilseeker_select_5", "text": "The aperture is clear."},
+            ],
+            "move": [
+                {"id": "veilseeker_move_1", "text": "Shifting the sweep."},
+                {"id": "veilseeker_move_2", "text": "Taking the next angle."},
+                {"id": "veilseeker_move_3", "text": "Moving the lens."},
+                {"id": "veilseeker_move_4", "text": "Surveying ahead."},
+            ],
+            "ready": [
+                {"id": "veilseeker_ready_1", "text": "Veilseeker optics online."},
+                {"id": "veilseeker_ready_2", "text": "Detection lattice ready."},
+            ],
+        },
+    },
     "brood_keeper": {
         "unit_name": "Brood Keeper",
         "voice": "en-US-GuyNeural",

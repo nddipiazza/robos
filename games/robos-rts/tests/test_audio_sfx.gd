@@ -272,7 +272,7 @@ func _test_concord_support_cues() -> void:
 	sim.reset_state(42, 96, 64)
 	audio.reset_stats()
 	var minimums := {"select": 5, "move": 4, "ready": 2}
-	for unit_type in ["lumen_carrier", "farsight_wisp"]:
+	for unit_type in ["lumen_carrier", "farsight_wisp", "veilseeker"]:
 		for category in minimums:
 			var lines: Array = data.get_unit_dialogues(unit_type, category)
 			assert(lines.size() >= minimums[category], "Missing %s %s variants" % [unit_type, category])

@@ -1083,6 +1083,34 @@ var units: Dictionary = {
 			],
 		}
 	},
+	"veilseeker": {
+		"id": "veilseeker", "name": "Veilseeker", "faction": FACTION_ALIENS,
+		"blurb": "Unarmed ground skimmer. Reveals enemies hidden by cloak or brush inside its detection ring where the player has sight.",
+		"is_structure": false, "is_worker": false, "attributes": ["Armored", "Mechanical"],
+		"crystal_cost": 100, "aether_cost": 75, "supply_cost": 2, "build_time": 28.0,
+		"max_hp": 65.0, "max_shields": 55.0, "armor": 1.0, "radius": 1.14,
+		"speed": 6.8, "sight_range": 20.0, "detection_radius": 12.0,
+		"abilities": ["move", "stop"],
+		"dialogues": {
+			"select": [
+				{"id": "veilseeker_select_1", "text": "Veilseeker standing by."},
+				{"id": "veilseeker_select_2", "text": "Watching for distortions."},
+				{"id": "veilseeker_select_3", "text": "Lens calibrated."},
+				{"id": "veilseeker_select_4", "text": "Show me the blind spot."},
+				{"id": "veilseeker_select_5", "text": "The aperture is clear."}
+			],
+			"move": [
+				{"id": "veilseeker_move_1", "text": "Shifting the sweep."},
+				{"id": "veilseeker_move_2", "text": "Taking the next angle."},
+				{"id": "veilseeker_move_3", "text": "Moving the lens."},
+				{"id": "veilseeker_move_4", "text": "Surveying ahead."}
+			],
+			"ready": [
+				{"id": "veilseeker_ready_1", "text": "Veilseeker optics online."},
+				{"id": "veilseeker_ready_2", "text": "Detection lattice ready."}
+			]
+		}
+	},
 	"farsight_wisp": {
 		"id": "farsight_wisp", "name": "Farsight Wisp", "faction": FACTION_ALIENS,
 		"blurb": "Fragile scout that flies over terrain for up to 36 seconds. Unarmed with ordinary sight.",
@@ -1302,8 +1330,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp"],
-		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp"]
+		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp", "veilseeker"],
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp", "train_veilseeker"]
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
@@ -1394,6 +1422,7 @@ var abilities: Dictionary = {
 	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},
 	"train_lumen_carrier": {"id": "train_lumen_carrier", "name": "Summon Lumen Carrier", "hotkey": "L", "target": "none", "unit": "lumen_carrier"},
 	"train_farsight_wisp": {"id": "train_farsight_wisp", "name": "Summon Farsight Wisp", "hotkey": "V", "target": "none", "unit": "farsight_wisp"},
+	"train_veilseeker": {"id": "train_veilseeker", "name": "Summon Veilseeker", "hotkey": "T", "target": "none", "unit": "veilseeker"},
 	"deploy_power_field": {"id": "deploy_power_field", "name": "Anchor Power Field", "hotkey": "D", "target": "none", "sfx": "power_field_anchor", "desc": "Anchor in place and power nearby Concord structures and landing sites for up to 24 seconds."},
 	"retract_power_field": {"id": "retract_power_field", "name": "Fold Power Field", "hotkey": "R", "target": "none", "sfx": "power_field_fold", "desc": "End the field and restore movement. After folding or expiring, the field takes 18 seconds to recharge."},
 	"build_silo": {"id": "build_silo", "name": "Build Provision Silo", "hotkey": "B", "target": "point", "structure": "silo"},

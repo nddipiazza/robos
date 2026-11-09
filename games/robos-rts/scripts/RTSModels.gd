@@ -163,6 +163,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 			_brood_fixture(root, r, glow, false)
 			ring(root, r * 0.45, r * 0.57, glow, Vector3(0, 1.65, 0), Vector3.ZERO)
 		"mote": _mote(root, glow)
+		"veilseeker": _veilseeker(root, team)
 		"farsight_wisp": _farsight_wisp(root, team)
 		"lumen_carrier": _lumen_carrier(root, team)
 		"sunblade": _sunblade(root, team)
@@ -642,6 +643,22 @@ static func _mote(root: Node3D, team: Material) -> void:
 	for side in [-1.0, 1.0]:
 		cone(hover, 0.12, 0.5, m[0], Vector3(-0.2, 0.0, side * 0.38), Vector3(side * 70.0, 0, 90), 4)
 	cone(root, 0.3, 0.7, mat("a_beam", CRYSTAL, CRYSTAL, 1.2, 0.0, 0.5, 0.25), Vector3(0, 0.4, 0), Vector3(180, 0, 0), 10)
+
+static func _veilseeker(root: Node3D, team: Material) -> void:
+	var m := _alien_mats()
+	var scan := mat("veilseeker_scan", Color("#6dffed"), Color("#19c2cc"), 1.65, 0.12, 0.25)
+	var hover := Node3D.new()
+	hover.name = "Hover"
+	hover.position.y = 1.1
+	root.add_child(hover)
+	cyl(hover, 0.65, 0.92, 0.28, m[0], Vector3.ZERO, Vector3.ZERO, 6)
+	cyl(hover, 0.38, 0.52, 0.47, m[1], Vector3(0, 0.23, 0), Vector3.ZERO, 6)
+	ring(hover, 0.49, 0.60, team, Vector3(0.12, 0.62, 0), Vector3(0, 0, 52))
+	ring(hover, 0.29, 0.36, scan, Vector3(0.18, 0.67, 0), Vector3(0, 0, 52))
+	sph(hover, 0.24, scan, Vector3(0.22, 0.68, 0), Vector3(0.85, 0.80, 1.0), 8)
+	for side in [-1.0, 1.0]:
+		box(hover, Vector3(0.57, 0.16, 0.41), m[1], Vector3(-0.38, -0.03, side * 0.70), Vector3(0, side * 25.0, 0))
+		sph(hover, 0.10, scan, Vector3(-0.45, -0.01, side * 0.88), Vector3.ONE, 6)
 
 static func _farsight_wisp(root: Node3D, team: Material) -> void:
 	var m := _alien_mats()
