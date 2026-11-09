@@ -872,6 +872,7 @@ GENERATORS = {
     "siege_transform": (gen_siege_transform, 0.88),
     "silo_gate": (gen_silo_gate, 0.82),
     "vital_restore": (lambda: gen_support_pulse(360, 0.26), 0.50),
+    "brood_inject": (lambda: gen_support_pulse(182, 0.39), 0.52),
     "aegis_restore": (lambda: gen_support_pulse(530, 0.39), 0.56),
     # Unit & Structure Destruction
     "unit_death_human": (gen_unit_death_human, 0.86),

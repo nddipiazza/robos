@@ -83,6 +83,11 @@ const SALVAGE_TICKS := 5 * TICK_RATE
 const REINFORCED_SUPPLY := 8
 const BROOD_SLOTS := 3
 const BROOD_RECHARGE := 12.0
+const BROOD_SLOT_CAP := 5
+const BROOD_INJECT_COST := 25.0
+const BROOD_INJECT_RANGE := 7.0
+const BROOD_INJECT_DELAY := 12 * TICK_RATE
+const BROOD_INJECT_SLOTS := 2
 const POWER_RADIUS := 18.0
 const CARRIER_POWER_RADIUS := 12.0
 const CARRIER_POWER_TICKS := 24 * TICK_RATE
@@ -782,6 +787,20 @@ func _set_carrier_field(unit: Dictionary, deploy: bool) -> void:
 func uses_brood_slots(unit: Dictionary) -> bool:
 	return unit.unit_type == "brood_nest" and not match_state.is_empty()
 
+func brood_inject_block_reason(keeper: Dictionary, nest: Dictionary) -> String:
+	if keeper.unit_type != "brood_keeper" or keeper.energy < BROOD_INJECT_COST:
+		return "Requires a Brood Keeper with 25 energy."
+	if nest.is_empty() or nest.owner != keeper.owner or nest.build_progress < 1.0 or not uses_brood_slots(nest):
+		return "Select a completed friendly Brood Nest."
+	if nest.get("brood_inject_finish", 0) > 0:
+		return "A clutch is already growing at this Nest."
+	if nest.brood_slots >= BROOD_SLOT_CAP:
+		return "This Nest already has five brood slots."
+	return ""
+
+func brood_inject_remaining(nest: Dictionary) -> float:
+	return maxf(0.0, float(int(nest.get("brood_inject_finish", 0)) - tick) * TICK_DT)
+
 func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
 	if def.is_empty() or not pos.is_finite():
@@ -1180,7 +1199,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"cargo_amount": 0,
 		"harvest_timer": 0.0,
 		"harvest_target_tag": 0,
-		"energy": float(def.get("starting_energy", _starting_energy(unit_type))),
+		"energy": _starting_energy(unit_type),
 		"build_progress": build_progress,
 		"build_total_time": float(def.get("build_time", 20.0)),
 		"production_queue": [],
@@ -1192,13 +1211,14 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["living_ground_radius"] = def.living_ground_radius
 	if def.has("living_ground_speed_bonus"):
 		u["living_ground_speed_bonus"] = def.living_ground_speed_bonus
-	if def.has("energy_regen"):
-		u["energy_regen"] = def.energy_regen
-		u["max_energy"] = def.max_energy
 	if unit_type == "brood_nest":
 		u["brood_slots"] = BROOD_SLOTS
+		u["brood_bonus_slots"] = 0
 		u["brood_recharge"] = 0.0
 		u["worker_rally_route"] = []
+	if def.has("energy_profile"):
+		u["energy_profile"] = def.energy_profile
+		u["energy"] = def.energy_profile.start
 	if def.has("support"):
 		u["support"] = def.support
 		u["energy"] = def.support.starting_energy
@@ -1715,11 +1735,8 @@ func _update_structures(dt: float) -> void:
 			continue
 		var queue: Array = u["production_queue"]
 		var brood := uses_brood_slots(u)
-		if brood and u.brood_slots < BROOD_SLOTS:
-			u.brood_recharge += dt
-			if u.brood_recharge >= BROOD_RECHARGE:
-				u.brood_recharge = 0.0
-				u.brood_slots += 1
+		if brood:
+			_update_brood_slots(u, dt)
 		var active := active_production_slots(u)
 		# The tick at the deadline consumes the final interval of the boost.
 		var boost_active := active > 0 and int(u.get("production_boost_until", -1)) >= tick and is_powered(u.owner, u.pos)
@@ -1735,6 +1752,19 @@ func _update_structures(dt: float) -> void:
 			else:
 				item["exit_retry_tick"] = tick + PRODUCTION_EXIT_RETRY_TICKS
 				index += 1
+
+func _update_brood_slots(nest: Dictionary, dt: float) -> void:
+	if nest.brood_slots - nest.brood_bonus_slots < BROOD_SLOTS and nest.brood_slots < BROOD_SLOT_CAP:
+		nest.brood_recharge += dt
+		if nest.brood_recharge >= BROOD_RECHARGE:
+			nest.brood_recharge = 0.0
+			nest.brood_slots += 1
+	var finish: int = nest.get("brood_inject_finish", 0)
+	if finish > 0 and tick >= finish:
+		var new_slots := mini(BROOD_INJECT_SLOTS, BROOD_SLOT_CAP - int(nest.brood_slots))
+		nest.brood_slots += new_slots
+		nest.brood_bonus_slots += new_slots
+		nest.erase("brood_inject_finish")
 
 func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[Dictionary]) -> bool:
 	var item: Dictionary = structure.production_queue[index]
@@ -1882,10 +1912,10 @@ func _ground_production_exit_open(rim: Vector2, position: Vector2, heading: Vect
 	return false
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
-	if u.has("energy_regen"):
-		u.energy = minf(u.max_energy, u.energy + u.energy_regen * dt)
 	if u.has("power_field_until") and carrier_power_ticks(u) == 0:
 		_set_carrier_field(u, false)
+	if u.has("energy_profile"):
+		u.energy = minf(float(u.energy_profile.max), u.energy + float(u.energy_profile.regen) * dt)
 	if u.unit_type == "skirmisher":
 		if u.get("cloaked", false):
 			u.energy = maxf(0.0, u.energy - CLOAK_DRAIN * dt)
@@ -1976,6 +2006,19 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	var otype = str(order.get("type", "move"))
 
 	match otype:
+		"inject_brood":
+			var nest: Dictionary = units.get(order.target_tag, {})
+			if brood_inject_block_reason(u, nest).is_empty():
+				if _edge_distance(u, nest) > BROOD_INJECT_RANGE:
+					_follow_order_path(u, nest.pos, dt, u.radius + nest.radius + BROOD_INJECT_RANGE)
+					return
+				u.energy -= BROOD_INJECT_COST
+				u.facing = (nest.pos - u.pos).angle()
+				nest["brood_inject_finish"] = tick + BROOD_INJECT_DELAY
+				ability_triggered.emit(u, "inject_brood", nest.pos)
+			u.orders.pop_front()
+			u.path.clear()
+
 		"land":
 			var position: Vector2 = order.target_pos
 			if u.pos.distance_squared_to(position) > 0.04:
@@ -3496,6 +3539,13 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "restore_vitals" and (u.is_structure or not can_restore(u, units.get(target_tag, {}))):
 			continue
+		if ctype == "inject_brood":
+			if accepted > 0:
+				continue
+			var reason := brood_inject_block_reason(u, units.get(target_tag, {}))
+			if not reason.is_empty():
+				notice.emit(u.owner, reason, "warn")
+				continue
 		if ctype == "follow" and (u.is_structure or u.is_immobile or u.tag == target_tag or not _is_friendly_mobile(units.get(target_tag, {}), u.owner)):
 			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
@@ -3733,7 +3783,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				site["builder_tag"] = u.tag
 			accepted += 1
 
-		elif ctype in ["repair", "restore_vitals"]:
+		elif ctype in ["repair", "restore_vitals", "inject_brood"]:
 			u.orders.append({"type": ctype, "target_tag": target_tag})
 			accepted += 1
 		elif ctype == "unload_transport":
@@ -4149,15 +4199,22 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		return false
 	p["crystal"] -= m_cost
 	p["aether"] -= v_cost
+	var bonus_slot := false
 	if uses_brood_slots(structure):
+		bonus_slot = structure.brood_bonus_slots > 0
+		if bonus_slot:
+			structure.brood_bonus_slots -= 1
 		structure.brood_slots -= 1
-	structure["production_queue"].append({
+	var job := {
 		"unit_type": unit_type,
 		"crystal_cost": m_cost,
 		"aether_cost": v_cost,
 		"progress": 0.0,
 		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * build_time_scale())
-	})
+	}
+	if bonus_slot:
+		job["brood_bonus_slot"] = true
+	structure.production_queue.append(job)
 	_recompute_supplies()
 	return true
 
@@ -4241,10 +4298,14 @@ func _cancel_training(structure: Dictionary, index: int) -> bool:
 	if player.is_empty():
 		return false
 	var item: Dictionary = queue.pop_at(index)
-	if uses_brood_slots(structure):
-		structure.brood_slots = mini(BROOD_SLOTS, structure.brood_slots + 1)
-		if structure.brood_slots == BROOD_SLOTS:
-			structure.brood_recharge = 0.0
+	if uses_brood_slots(structure) and structure.brood_slots < BROOD_SLOT_CAP:
+		if item.get("brood_bonus_slot", false):
+			structure.brood_bonus_slots += 1
+			structure.brood_slots += 1
+		elif structure.brood_slots - structure.brood_bonus_slots < BROOD_SLOTS:
+			structure.brood_slots += 1
+			if structure.brood_slots - structure.brood_bonus_slots == BROOD_SLOTS:
+				structure.brood_recharge = 0.0
 	var definition: Dictionary = RTSData.get_unit_def(item.get("unit_type", ""))
 	player.crystal += int(item.get("crystal_cost", definition.get("crystal_cost", 50)))
 	player.aether += int(item.get("aether_cost", definition.get("aether_cost", 0)))
@@ -4459,8 +4520,6 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"skirmisher":
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["cloaked"] = u.get("cloaked", false)
-			"blight_hurler":
-				entry["energy"] = snappedf(u.energy, 0.01)
 			"lumen_carrier":
 				entry["power_field_active"] = carrier_power_ticks(u) > 0
 				if not limited or u.owner == perspective_player:
@@ -4479,6 +4538,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 					entry["deployment_target"] = {"x": deployment.x, "y": deployment.y}
 			if u.has("production_boost_until"):
 				entry["production_boost_ticks"] = production_boost_ticks(u)
+			if u.has("energy_profile"):
+				entry["energy"] = snappedf(u.energy, 0.01)
+				entry["max_energy"] = u.energy_profile.max
 			if u.has("attachment_tag"):
 				entry["attachment_tag"] = u.attachment_tag
 			if u.has("attachment_parent_tag"):
@@ -4493,6 +4555,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["worker_rally_route"] = _observed_rally(u.worker_rally_route)
 			if uses_brood_slots(u):
 				entry["brood_slots"] = u.brood_slots
+				entry["brood_inject_remaining"] = brood_inject_remaining(u)
 			if requires_power(u.unit_type):
 				entry["powered"] = is_powered(u.owner, u.pos)
 			if u.is_structure and u.build_progress < 1.0:

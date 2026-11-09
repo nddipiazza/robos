@@ -794,9 +794,7 @@ var units: Dictionary = {
 	"blight_hurler": {
 		"id": "blight_hurler",
 		"name": "Blight Hurler",
-		"max_energy": 100.0,
-		"starting_energy": 50.0,
-		"energy_regen": 1.0,
+		"energy_profile": {"max": 100.0, "start": 50.0, "regen": 1.0},
 		"blurb": "Lobs corrosive blight that splashes. Bonus damage to structures.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": false,
@@ -895,10 +893,57 @@ var units: Dictionary = {
 			],
 		}
 	},
+	"brood_keeper": {
+		"id": "brood_keeper", "name": "Brood Keeper", "faction": FACTION_MONSTERS,
+		"blurb": "Slow Nest defender. Seeds a clutch that adds two brood slots after a delay.",
+		"attributes": ["Biological", "Armored"],
+		"crystal_cost": 125, "aether_cost": 25, "supply_cost": 2, "build_time": 32.0,
+		"max_hp": 145.0, "armor": 1.0, "radius": 1.2, "speed": 5.2, "sight_range": 21.0,
+		"energy_profile": {"max": 75.0, "start": 25.0, "regen": 0.75},
+		"weapon": {
+			"name": "Caustic Spit", "sfx": "acid_spit", "attack_type": "ranged",
+			"damage": 9.0, "range": 8.0, "period": 1.25, "damage_point": 0.14,
+			"backswing": 0.25, "targets_air": true,
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "inject_brood"],
+		"dialogues": {
+			"select": [
+				{"id": "brood_keeper_select_1", "text": "I tend the young."},
+				{"id": "brood_keeper_select_2", "text": "The nest stirs."},
+				{"id": "brood_keeper_select_3", "text": "Keep close to the brood."},
+				{"id": "brood_keeper_select_4", "text": "The eggs are warm."},
+				{"id": "brood_keeper_select_5", "text": "I hear every hatchling."},
+			],
+			"move": [
+				{"id": "brood_keeper_move_1", "text": "I cross the ground."},
+				{"id": "brood_keeper_move_2", "text": "Make room for the keeper."},
+				{"id": "brood_keeper_move_3", "text": "I leave the clutch in your care."},
+				{"id": "brood_keeper_move_4", "text": "I know that scent."},
+			],
+			"attack": [
+				{"id": "brood_keeper_attack_1", "text": "Away from my brood."},
+				{"id": "brood_keeper_attack_2", "text": "Too close to the eggs."},
+				{"id": "brood_keeper_attack_3", "text": "The nest has teeth."},
+				{"id": "brood_keeper_attack_4", "text": "You woke the little ones."},
+				{"id": "brood_keeper_attack_5", "text": "A warning you can taste."},
+			],
+			"support": [
+				{"id": "brood_keeper_support_1", "text": "A clutch for the nest."},
+				{"id": "brood_keeper_support_2", "text": "Make space for the young."},
+				{"id": "brood_keeper_support_3", "text": "These eggs need a moment."},
+				{"id": "brood_keeper_support_4", "text": "The new clutch is seeded."},
+				{"id": "brood_keeper_support_5", "text": "Soon you will hear their feet."},
+			],
+			"ready": [
+				{"id": "brood_keeper_ready_1", "text": "The keeper has hatched."},
+				{"id": "brood_keeper_ready_2", "text": "I will watch the nest."},
+			],
+		},
+	},
 	"brood_nest": {
 		"id": "brood_nest",
 		"name": "Brood Nest",
-		"blurb": "Brood main base. Hatches Foragers, combat troops and flyers.",
+		"blurb": "Gnarl Brood main base. Grows living ground and hatches workers, combat troops and flyers.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": true,
 		"is_town_hall": true,
@@ -915,8 +960,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(5, 5),
 		"sight_range": 26.0,
 		"push_priority": 100,
-		"trains": ["forager", "skitterling", "bile_crawler", "blight_hurler", "drift_sac", "needlewing"],
-		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally", "rally_worker", "train_drift_sac", "train_needlewing"]
+		"trains": ["forager", "skitterling", "bile_crawler", "blight_hurler", "drift_sac", "needlewing", "brood_keeper"],
+		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally", "rally_worker", "train_drift_sac", "train_needlewing", "train_brood_keeper"]
 	},
 	"brood_pod": {
 		"id": "brood_pod", "name": "Brood Pod", "faction": FACTION_MONSTERS,
@@ -1296,6 +1341,7 @@ var abilities: Dictionary = {
 	"return_cargo": {"id": "return_cargo", "name": "Return Cargo", "hotkey": "D", "target": "none", "desc": "Deliver carried resources to a completed main base. Workers already gathering resume that assignment after delivery."},
 	"repair": {"id": "repair", "name": "Repair", "hotkey": "E", "target": "unit", "desc": "Repair a friendly mechanical unit or building. Crystal cost scales with the health restored."},
 	"restore_vitals": {"id": "restore_vitals", "name": "Treat Wounds", "hotkey": "E", "target": "unit", "desc": "Follow and heal a wounded biological ally. Each point restored spends one energy. Idle specialists heal nearby allies automatically.", "sfx": "vital_restore"},
+	"inject_brood": {"id": "inject_brood", "name": "Seed Clutch", "hotkey": "E", "target": "unit", "desc": "Spend 25 energy at a friendly Brood Nest to add two brood slots after 12 seconds. The Nest can hold up to five slots and grow one clutch at a time.", "sfx": "brood_inject"},
 	"restore_aegis": {"id": "restore_aegis", "name": "Restore Shields", "target": "none", "sfx": "aegis_restore"},
 	"auto_repair": {"id": "auto_repair", "name": "Auto-Repair", "hotkey": "Q", "target": "none", "desc": "Toggle repairs for idle Pioneers. They spend crystal to repair nearby friendly machinery. Manual orders take priority."},
 	"recon_sweep": {"id": "recon_sweep", "name": "Recon Sweep", "hotkey": "E", "target": "point", "desc": "Spend 50 Hub energy to reveal an area, including high ground, for 10 seconds."},
@@ -1339,6 +1385,7 @@ var abilities: Dictionary = {
 	"train_drift_sac": {"id": "train_drift_sac", "name": "Hatch Drift Sac", "hotkey": "F", "target": "none", "unit": "drift_sac", "desc": "Unarmed flying scout that provides 8 supply while alive."},
 	"train_needlewing": {"id": "train_needlewing", "name": "Hatch Needlewing", "hotkey": "N", "target": "none", "unit": "needlewing", "desc": "Fast flyer that fires venom needles at ground targets."},
 	"corrosive_miasma": {"id": "corrosive_miasma", "name": "Corrosive Miasma", "hotkey": "E", "target": "point", "sfx": "corrosive_lob", "desc": "Spend 50 energy to warn an area for one second, then slow and damage enemy ground troops in it for eight seconds. Requires a Blight Spire."},
+	"train_brood_keeper": {"id": "train_brood_keeper", "name": "Spawn Brood Keeper", "hotkey": "E", "target": "none", "unit": "brood_keeper"},
 	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
 	"research_fast_deployment": {"id": "research_fast_deployment", "name": "Research Fast Deployment", "hotkey": "F", "target": "none", "upgrade": "fast_deployment", "producer": "waystone", "desc": "Lets powered Waystones send a paid trainee directly to a visible powered site."},
 	"fast_deploy": {"id": "fast_deploy", "name": "Fast Deploy", "hotkey": "D", "target": "point", "desc": "Set a powered landing point for the next paid trainee. A successful deployment recharges for 20 seconds. If the site becomes unavailable, the unit uses the normal exit."},
