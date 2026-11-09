@@ -1020,7 +1020,7 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 100,
 		"trains": ["mote"],
-		"abilities": ["train_mote", "rally"]
+		"abilities": ["train_mote", "rally", "production_boost"]
 	},
 	"resonator": {
 		"id": "resonator",
@@ -1105,6 +1105,7 @@ var abilities: Dictionary = {
 	"reinforce_supply": {"id": "reinforce_supply", "name": "Reinforce Supply", "hotkey": "D", "target": "unit", "desc": "Spend 50 Hub energy to add 8 supply to a completed friendly Provision Silo once."},
 	"upgrade_hub": {"id": "upgrade_hub", "name": "Upgrade Hub Operations", "hotkey": "U", "target": "none", "desc": "Upgrade this Colony Hub's field operations. Its energy and existing powers carry over."},
 	"deploy_prospector": {"id": "deploy_prospector", "name": "Deploy Prospector", "hotkey": "M", "target": "resource", "sfx": "ui_build_place", "desc": "Spend 50 Hub energy to deploy a double-yield crystal miner for 45 seconds. Target a visible crystal field."},
+	"production_boost": {"id": "production_boost", "name": "Production Boost", "hotkey": "B", "target": "unit", "desc": "Spend 50 Heartstone energy to train units 50% faster at one powered friendly producer for 12 seconds."},
 	"salvage": {"id": "salvage", "name": "Salvage Silo", "hotkey": "V", "target": "none", "desc": "Recover 75% of this completed Silo's cost after 5 seconds. Damage interrupts salvage. Press again to cancel."},
 	"cancel_construction": {"id": "cancel_construction", "name": "Cancel Construction", "hotkey": "X", "target": "none", "desc": "Remove the foundation and refund 75% of the paid construction costs."},
 	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},

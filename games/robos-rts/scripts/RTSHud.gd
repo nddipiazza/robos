@@ -707,7 +707,7 @@ func _draw_single(u: Dictionary) -> void:
 	var hcol := Color("#3fcf6a") if ratio > 0.5 else (Color("#f0b232") if ratio > 0.25 else Color("#ee4b3f"))
 	_bar(Rect2(x0, by, 360, 15), ratio, hcol, "Health  %d / %d" % [int(ceil(u["hp"])), int(u["max_hp"])])
 	var energy_limit := float(u.get("support", {}).get("max_energy", 0.0))
-	if u.unit_type == "colony_hub":
+	if u.unit_type in ["colony_hub", "heartstone"]:
 		energy_limit = SimEngine.HUB_ENERGY_MAX
 	elif u.unit_type == "skirmisher":
 		energy_limit = SimEngine.CLOAK_ENERGY_MAX
@@ -761,6 +761,9 @@ func _draw_single(u: Dictionary) -> void:
 		ry += 62.0
 	elif def.has("trains") and is_own:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
+		var boost := SimEngine.production_boost_ticks(u)
+		if boost > 0:
+			_text_r(sp.end.x - 16.0, ry + 12, "Boost %.1fs" % (boost * SimEngine.TICK_DT), 15, Color("#b093ff"))
 		var queue: Array = u["production_queue"]
 		var brood := SimEngine.uses_brood_slots(u)
 		var active_slots := SimEngine.active_production_slots(u)
@@ -983,6 +986,9 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_rect(Rect2(c - Vector2(17, 15) * u, Vector2(34, 30) * u), C_GOLD, false, 3.0 * u)
 			draw_line(c - Vector2(9, 0) * u, c + Vector2(9, 0) * u, C_GOLD, 3.0 * u)
 			draw_line(c - Vector2(0, 9) * u, c + Vector2(0, 9) * u, C_GOLD, 3.0 * u)
+		"production_boost":
+			draw_polyline(P.call([[-19, -13], [-5, 0], [-19, 13]]), Color("#b093ff"), 4.0 * u, true)
+			draw_polyline(P.call([[-2, -13], [12, 0], [-2, 13]]), Color("#b093ff"), 4.0 * u, true)
 		"salvage":
 			draw_polyline(P.call([[-17, -7], [0, 10], [17, -7]]), C_GOLD, 4.0 * u, true)
 			draw_line(c - Vector2(16, -17) * u, c + Vector2(16, 17) * u, C_GOLD, 3.0 * u)
