@@ -1585,7 +1585,7 @@ func ui_state() -> Dictionary:
 		"order_lines_visible": _order_lines_visible(),
 		"weapon_ranges": _selected_weapon_ranges(),
 		"weapon_timing": selected_weapon_timing(),
-		"area_warnings": SimEngine.units.values().map(_area_attack_warning).filter(func(warning): return not warning.is_empty()),
+		"area_warnings": _area_attack_warnings(),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"path_feedback": _selected_path_feedback().map(func(feedback): return {
 			"tag": feedback.tag, "status": feedback.status, "endpoint": [feedback.endpoint.x, feedback.endpoint.y]
@@ -1616,6 +1616,8 @@ func _draw() -> void:
 	if world_3d == null or hud_hidden:
 		return
 	var font := ThemeDB.fallback_font
+	for warning in _area_attack_warnings():
+		_draw_area_attack_warning(warning)
 	_draw_rally_and_orders()
 	if pending_ability.begins_with("build_") and SimEngine.requires_power(pending_ability.trim_prefix("build_")):
 		for unit in SimEngine.units.values():
@@ -1636,10 +1638,6 @@ func _draw() -> void:
 		_draw_range_ring(deposit.pos, deposit.radius + 0.2, Color("#fbbf24"))
 	for u in SimEngine.units.values():
 		if SimEngine.can_see_unit(viewing_player(), u):
-			if u.attack_state == "windup":
-				var warning := _area_attack_warning(u)
-				if not warning.is_empty():
-					_draw_area_attack_warning(warning)
 			_draw_unit_bars(u, font)
 			if u.get("support_target_tag", 0) > 0:
 				var recipient: Dictionary = SimEngine.units.get(u.support_target_tag, {})
@@ -1696,6 +1694,17 @@ func selected_weapon_timing() -> Dictionary:
 		var saved_time := minf(float(unit.surge_timer), recovery / 1.5) * 0.5
 		return {"state": "Cooldown", "remaining": recovery - saved_time, "progress": 1.0 - recovery / float(weapon.period)}
 	return {"state": "Ready", "remaining": 0.0, "progress": 1.0}
+
+func _area_attack_warnings() -> Array:
+	var by_impact := {}
+	for attacker in SimEngine.units.values():
+		var warning := _area_attack_warning(attacker)
+		if warning.is_empty():
+			continue
+		var key := Vector3(warning.position[0], warning.position[1], warning.radius)
+		if not by_impact.has(key) or warning.remaining < by_impact[key].remaining:
+			by_impact[key] = warning
+	return by_impact.values()
 
 func _area_attack_warning(attacker: Dictionary) -> Dictionary:
 	if attacker.attack_state != "windup":

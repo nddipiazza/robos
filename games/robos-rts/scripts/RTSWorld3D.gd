@@ -13,6 +13,7 @@ const CAM_MIN_H := 28.0
 const CAM_MAX_H := 320.0
 const GROUND_TOP := 2.2
 const MAX_ACTIVE_FX := 192
+const DESTRUCTION_SMOKE := Color(0.15, 0.17, 0.19, 0.32)
 const FOG_ALPHA := [255, 152, 0]
 
 var camera_3d: Camera3D
@@ -945,6 +946,7 @@ func _on_unit_destroyed(dead: Dictionary) -> void:
 		_spawn_burst(base + Vector3(0, rad * 0.8, 0), col, rad * (1.2 if dead["is_structure"] else 0.9), 0.55, 2.8)
 		if dead["is_structure"]:
 			_spawn_burst(base + Vector3(rad * 0.3, rad * 1.2, 0), Color(1.0, 0.85, 0.5, 0.8), rad * 0.8, 0.8, 2.2)
+			_spawn_burst(base + Vector3(0, rad * 1.55, 0), DESTRUCTION_SMOKE, rad * 0.6, 1.2, 2.7)
 	if dead["unit_type"] != "shale_barrier":
 		_spawn_scorch(base, rad * (1.1 if dead["is_structure"] else 0.8))
 
