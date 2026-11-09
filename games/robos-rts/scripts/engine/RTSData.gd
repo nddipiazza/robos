@@ -338,7 +338,33 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 100,
 		"trains": ["pioneer"],
-		"abilities": ["train_pioneer", "rally", "recon_sweep", "reinforce_supply", "upgrade_hub"]
+		"abilities": ["train_pioneer", "rally", "recon_sweep", "reinforce_supply", "upgrade_hub", "deploy_prospector"]
+	},
+	"prospector": {
+		"id": "prospector", "name": "Prospector", "faction": FACTION_HUMANS,
+		"blurb": "Temporary mining machine. Hauls double crystal and cannot build or extract aether.",
+		"is_worker": true, "attributes": ["Light", "Mechanical"], "supply_cost": 0,
+		"max_hp": 50.0, "radius": 0.8, "speed": 7.8, "sight_range": 16.0,
+		"abilities": ["move", "stop", "harvest"],
+		"dialogues": {
+			"select": [
+				{"id": "prospector_select_1", "text": "Prospector ready."},
+				{"id": "prospector_select_2", "text": "Hopper empty."},
+				{"id": "prospector_select_3", "text": "Mineral scan online."},
+				{"id": "prospector_select_4", "text": "Drill waiting for coordinates."},
+				{"id": "prospector_select_5", "text": "Collection rig standing by."},
+			],
+			"move": [
+				{"id": "prospector_move_1", "text": "Rolling out."},
+				{"id": "prospector_move_2", "text": "Deposit marked."},
+				{"id": "prospector_move_3", "text": "Route acquired."},
+				{"id": "prospector_move_4", "text": "Retracting drill."},
+			],
+			"ready": [
+				{"id": "prospector_ready_1", "text": "Prospector on the ground."},
+				{"id": "prospector_ready_2", "text": "Mining rig deployed."},
+			],
+		},
 	},
 	"silo": {
 		"id": "silo",
@@ -1059,6 +1085,7 @@ var abilities: Dictionary = {
 	"recon_sweep": {"id": "recon_sweep", "name": "Recon Sweep", "hotkey": "E", "target": "point", "desc": "Spend 50 Hub energy to reveal an area, including high ground, for 10 seconds."},
 	"reinforce_supply": {"id": "reinforce_supply", "name": "Reinforce Supply", "hotkey": "D", "target": "unit", "desc": "Spend 50 Hub energy to add 8 supply to a completed friendly Provision Silo once."},
 	"upgrade_hub": {"id": "upgrade_hub", "name": "Upgrade Hub Operations", "hotkey": "U", "target": "none", "desc": "Upgrade this Colony Hub's field operations. Its energy and existing powers carry over."},
+	"deploy_prospector": {"id": "deploy_prospector", "name": "Deploy Prospector", "hotkey": "M", "target": "resource", "sfx": "ui_build_place", "desc": "Spend 50 Hub energy to deploy a double-yield crystal miner for 45 seconds. Target a visible crystal field."},
 	"salvage": {"id": "salvage", "name": "Salvage Silo", "hotkey": "V", "target": "none", "desc": "Recover 75% of this completed Silo's cost after 5 seconds. Damage interrupts salvage. Press again to cancel."},
 	"cancel_construction": {"id": "cancel_construction", "name": "Cancel Construction", "hotkey": "X", "target": "none", "desc": "Remove the foundation and refund 75% of the paid construction costs."},
 	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},

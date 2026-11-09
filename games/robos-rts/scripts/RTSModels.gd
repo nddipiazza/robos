@@ -128,6 +128,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 	var glow := team_glow(owner_id)
 	match unit_type:
 		"pioneer": _pioneer(root, team)
+		"prospector": _prospector(root, team, glow)
 		"rifleman": _rifleman(root, team)
 		"breacher": _breacher(root, team)
 		"triage_specialist": _triage_specialist(root, team)
@@ -218,6 +219,17 @@ static func _pioneer(root: Node3D, team: Material) -> void:
 	box(root, Vector3(0.7, 0.13, 0.13), dark, Vector3(0.5, 0.95, 0.32), Vector3(0, -12, 0))
 	var tip := mat("h_weld", Color("#ffb347"), Color("#ff8a1f"), 3.0, 0.0, 0.3)
 	sph(root, 0.1, tip, Vector3(0.88, 0.95, 0.3))
+
+static func _prospector(root: Node3D, team: Material, glow: Material) -> void:
+	var steel := mat("prospector_chassis", STEEL_DARK, Color.BLACK, 1.0, 0.45, 0.48)
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(1.44, 0.38, 0.36), steel, Vector3(-0.05, 0.23, 0.51 * side))
+		for x in [-0.52, 0.0, 0.52]:
+			cyl(root, 0.13, 0.13, 0.14, team, Vector3(x, 0.24, 0.69 * side), Vector3(90, 0, 0), 8)
+	box(root, Vector3(1.16, 0.51, 0.96), team, Vector3(-0.15, 0.52, 0))
+	box(root, Vector3(0.71, 0.24, 0.72), steel, Vector3(-0.31, 0.89, 0))
+	cyl(root, 0.10, 0.27, 0.72, steel, Vector3(0.73, 0.57, 0), Vector3(0, 0, -90), 8)
+	sph(root, 0.14, glow, Vector3(0.43, 0.88, 0))
 
 static func _rifleman(root: Node3D, team: Material) -> void:
 	var armor := mat("h_armor", STEEL, Color.BLACK, 1.0, 0.35, 0.55)

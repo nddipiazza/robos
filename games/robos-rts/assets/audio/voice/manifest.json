@@ -839,5 +839,72 @@
         }
       ]
     }
+  },
+  "prospector": {
+    "unit_name": "Prospector",
+    "voice": "en-US-GuyNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "prospector_select_1",
+          "text": "Prospector ready.",
+          "path": "res://assets/audio/voice/prospector_select_1.wav"
+        },
+        {
+          "id": "prospector_select_2",
+          "text": "Hopper empty.",
+          "path": "res://assets/audio/voice/prospector_select_2.wav"
+        },
+        {
+          "id": "prospector_select_3",
+          "text": "Mineral scan online.",
+          "path": "res://assets/audio/voice/prospector_select_3.wav"
+        },
+        {
+          "id": "prospector_select_4",
+          "text": "Drill waiting for coordinates.",
+          "path": "res://assets/audio/voice/prospector_select_4.wav"
+        },
+        {
+          "id": "prospector_select_5",
+          "text": "Collection rig standing by.",
+          "path": "res://assets/audio/voice/prospector_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "prospector_move_1",
+          "text": "Rolling out.",
+          "path": "res://assets/audio/voice/prospector_move_1.wav"
+        },
+        {
+          "id": "prospector_move_2",
+          "text": "Deposit marked.",
+          "path": "res://assets/audio/voice/prospector_move_2.wav"
+        },
+        {
+          "id": "prospector_move_3",
+          "text": "Route acquired.",
+          "path": "res://assets/audio/voice/prospector_move_3.wav"
+        },
+        {
+          "id": "prospector_move_4",
+          "text": "Retracting drill.",
+          "path": "res://assets/audio/voice/prospector_move_4.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "prospector_ready_1",
+          "text": "Prospector on the ground.",
+          "path": "res://assets/audio/voice/prospector_ready_1.wav"
+        },
+        {
+          "id": "prospector_ready_2",
+          "text": "Mining rig deployed.",
+          "path": "res://assets/audio/voice/prospector_ready_2.wav"
+        }
+      ]
+    }
   }
 }

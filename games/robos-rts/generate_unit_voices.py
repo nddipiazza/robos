@@ -31,6 +31,31 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "prospector": {
+        "unit_name": "Prospector",
+        "voice": "en-US-GuyNeural",
+        "rate": "+3%",
+        "pitch": "-12Hz",
+        "lines": {
+            "select": [
+                {"id": "prospector_select_1", "text": "Prospector ready."},
+                {"id": "prospector_select_2", "text": "Hopper empty."},
+                {"id": "prospector_select_3", "text": "Mineral scan online."},
+                {"id": "prospector_select_4", "text": "Drill waiting for coordinates."},
+                {"id": "prospector_select_5", "text": "Collection rig standing by."},
+            ],
+            "move": [
+                {"id": "prospector_move_1", "text": "Rolling out."},
+                {"id": "prospector_move_2", "text": "Deposit marked."},
+                {"id": "prospector_move_3", "text": "Route acquired."},
+                {"id": "prospector_move_4", "text": "Retracting drill."},
+            ],
+            "ready": [
+                {"id": "prospector_ready_1", "text": "Prospector on the ground."},
+                {"id": "prospector_ready_2", "text": "Mining rig deployed."},
+            ],
+        },
+    },
     "triage_specialist": {
         "unit_name": "Triage Specialist",
         "voice": "en-US-AvaNeural",

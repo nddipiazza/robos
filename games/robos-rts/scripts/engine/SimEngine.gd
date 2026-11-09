@@ -60,6 +60,7 @@ const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
 const HUB_POWER_COST := 50.0
 const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 30.0, "requires": ["muster_hall"]}
+const PROSPECTOR_LIFETIME_TICKS := 45 * TICK_RATE
 const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
 const SALVAGE_TICKS := 5 * TICK_RATE
@@ -655,7 +656,7 @@ func _finish_match(winner: int, reason: String) -> void:
 
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
-	if not worker.is_worker or not bool(def.get("is_structure", false)) or def.has("attachment_for") or def.get("faction", "") != worker.faction:
+	if not worker.is_worker or worker.unit_type == "prospector" or not bool(def.get("is_structure", false)) or def.has("attachment_for") or def.get("faction", "") != worker.faction:
 		return false
 	for required in def.get("requires", []):
 		if not has_tech_structure(worker.owner, str(required)):
@@ -1086,6 +1087,12 @@ func _step_single_tick() -> void:
 		if not units.has(tag):
 			continue
 		var u = units[tag]
+		if u.has("expires_tick") and tick >= int(u.expires_tick):
+			_release_mining_slot(u)
+			_confirm_waiting_attack_loss(u)
+			units.erase(tag)
+			unit_destroyed.emit(u)
+			continue
 		u["prev_pos"] = u["pos"]
 		_update_unit_timers(u, TICK_DT)
 		if u.has("support") and _step_support(u, TICK_DT):
@@ -2054,6 +2061,8 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			u.cargo_type = "aether" if is_gas else "crystal"
 			var source: Dictionary = resources.get(source_tag, {})
 			u.cargo_amount = deposit_yield(source) if not source.is_empty() else (4 if is_gas else 5)
+			if u.unit_type == "prospector":
+				u.cargo_amount *= 2
 			if resources.has(source_tag) and not unlimited_resources:
 				u.cargo_amount = mini(u.cargo_amount, int(source.amount))
 				source.amount -= u.cargo_amount
@@ -2148,7 +2157,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 func can_resume_construction(worker: Dictionary, site: Dictionary) -> bool:
 	if site.is_empty() or not site.is_structure or site.owner != worker.owner or site.faction != worker.faction:
 		return false
-	if not worker.is_worker or worker.is_immobile or site.build_progress >= 1.0 or site.get("auto_summon", false):
+	if not worker.is_worker or worker.unit_type == "prospector" or worker.is_immobile or site.build_progress >= 1.0 or site.get("auto_summon", false):
 		return false
 	var builder := construction_builder(site)
 	return builder.is_empty() or builder.tag == worker.tag
@@ -2224,6 +2233,19 @@ func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_
 			return false
 		vision.add_sweep(hub.owner, position, SWEEP_RADIUS, tick + SWEEP_TICKS)
 		_refresh_vision()
+	elif command == "deploy_prospector":
+		var deposit: Dictionary = resources.get(target_tag, {})
+		if not hub.get("hub_operations", false) or deposit.get("resource_type") != "crystal_field" or not deposit_present(deposit) or not can_see_position(hub.owner, deposit.pos):
+			return false
+		var radius: float = RTSData.get_unit_def("prospector").radius
+		var landing := _interaction_destination(hub.pos, deposit.pos, Vector2.INF, radius, radius + deposit.radius + HARVEST_REACH, false)
+		if not landing.is_finite():
+			return false
+		var helper := spawn_unit("prospector", hub.owner, landing)
+		helper["expires_tick"] = tick + PROSPECTOR_LIFETIME_TICKS
+		issue_command([helper.tag], "harvest", deposit.pos, deposit.tag)
+		ability_triggered.emit(helper, command, landing)
+		unit_production_finished.emit(helper, hub)
 	else:
 		var silo: Dictionary = units.get(target_tag, {})
 		if not _is_finished_silo(silo, hub.owner) or silo.get("supply_reinforced", false):
@@ -3038,7 +3060,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				u.attack_state = "idle"
 			accepted += 1
 			continue
-		if ctype in ["recon_sweep", "reinforce_supply"]:
+		if ctype in ["recon_sweep", "reinforce_supply", "deploy_prospector"]:
 			if accepted == 0 and _use_hub_power(u, ctype, target_pos, target_tag):
 				accepted += 1
 			continue
@@ -3076,6 +3098,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if ctype == "follow" and (u.is_structure or u.is_immobile or u.tag == target_tag or not _is_friendly_mobile(units.get(target_tag, {}), u.owner)):
 			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
+			continue
+		if ctype == "harvest" and u.unit_type == "prospector" and resources.get(target_tag, {}).get("resource_type") != "crystal_field":
 			continue
 		if ctype == "return_cargo":
 			if not u.is_worker or u.is_immobile or u.cargo_amount <= 0 or (target_tag > 0 and not is_dropoff(units.get(target_tag, {}), u.owner)):
@@ -3757,6 +3781,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"kills": u["kills"]
 		})
 		var entry: Dictionary = unit_list.back()
+		if u.has("expires_tick"):
+			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
 		if u.flight_height > 0.0:
 			entry["airborne"] = true
 		if u.get("hold_fire", false):
