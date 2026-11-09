@@ -97,16 +97,16 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 
 ## 071–080 Movement and command reliability
 
-- [ ] **071 Group arrival spacing.** Give a mixed army reachable destinations around one move click. Verify units settle without piling on the center or circling after arrival.
-- [ ] **072 Route changes during a move.** Replan when a raised gate, new foundation, or destroyed barrier changes the active route. Preserve the remaining Shift-queued waypoints.
-- [ ] **073 Unreachable order feedback.** Mark the reachable endpoint when a click lands across an impassable gap. Show which group members could not reach the requested side.
-- [ ] **074 Clearance through ramps and gates.** A heavy unit takes a wide enough route and a smaller unit can still use a narrow one. Test both directions and protect against clipping at diagonal corners.
-- [ ] **075 Choke traffic.** Opposing friendly groups get through a one-lane opening in bounded time. Cover idle blockers, army retreats, and workers returning cargo through the same choke.
-- [ ] **076 Production exit clearance.** Rally a newly trained squad past adjacent structures and deposits. A temporarily blocked exit holds units at a safe point and resumes when space opens.
-- [ ] **077 Queued target loss.** Destroy a queued target, deplete a queued deposit, and break a follow link. Each unit resolves the invalid leg and starts the next valid order once.
-- [ ] **078 Picking crowded targets.** Verify clicks on overlapping workers, units in cover, and flyers over ground troops select or target the intended visible object at each zoom level.
-- [ ] **079 Mixed selection orders.** A single context click can assign a worker, move an escort, and keep an incompatible unit’s active order. Validate the resulting orders for each subgroup.
-- [ ] **080 Input under battle load.** Issue move, attack, and stop in a dense fight. Confirm each order registers once and takes effect within the next simulation step at normal speed.
+- [x] **071 Group arrival spacing.** Give a mixed army reachable destinations around one move click. Verify units settle without piling on the center or circling after arrival.
+- [x] **072 Route changes during a move.** Replan when a raised gate, new foundation, or destroyed barrier changes the active route. Preserve the remaining Shift-queued waypoints.
+- [x] **073 Unreachable order feedback.** Mark the reachable endpoint when a click lands across an impassable gap. Show which group members could not reach the requested side.
+- [x] **074 Clearance through ramps and gates.** A heavy unit takes a wide enough route and a smaller unit can still use a narrow one. Test both directions and protect against clipping at diagonal corners.
+- [x] **075 Choke traffic.** Opposing friendly groups get through a one-lane opening in bounded time. Cover idle blockers, army retreats, and workers returning cargo through the same choke.
+- [x] **076 Production exit clearance.** Rally a newly trained squad past adjacent structures and deposits. A temporarily blocked exit holds units at a safe point and resumes when space opens.
+- [x] **077 Queued target loss.** Destroy a queued target, deplete a queued deposit, and break a follow link. Each unit resolves the invalid leg and starts the next valid order once.
+- [x] **078 Picking crowded targets.** Verify clicks on overlapping workers, units in cover, and flyers over ground troops select or target the intended visible object at each zoom level.
+- [x] **079 Mixed selection orders.** A single context click can assign a worker, move an escort, and keep an incompatible unit’s active order. Validate the resulting orders for each subgroup.
+- [x] **080 Input under battle load.** Issue move, attack, and stop in a dense fight. Confirm each order registers once and takes effect within the next simulation step at normal speed.
 
 ## 081–090 Combat and economy reliability
 
