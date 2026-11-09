@@ -192,6 +192,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	_footprint_bins.clear()
 	_income_buckets.clear()
 	nav_dirty = true
+	_navigation_revision = 0
 	spatial_grid.clear()
 	_spatial_by_owner.clear()
 	terrain_obstacles.clear()
@@ -1358,11 +1359,11 @@ func _rebuild_spatial_grid() -> void:
 
 func query_units_in_radius(center: Vector2, radius: float, exclude_owner: int = 0) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var reach = radius + _max_unit_radius
-	var x0 = int(floor((center.x - reach) / SPATIAL_CELL_SIZE))
-	var x1 = int(floor((center.x + reach) / SPATIAL_CELL_SIZE))
-	var y0 = int(floor((center.y - reach) / SPATIAL_CELL_SIZE))
-	var y1 = int(floor((center.y + reach) / SPATIAL_CELL_SIZE))
+	var reach := radius + _max_unit_radius
+	var x0 := floori((center.x - reach) / SPATIAL_CELL_SIZE)
+	var x1 := floori((center.x + reach) / SPATIAL_CELL_SIZE)
+	var y0 := floori((center.y - reach) / SPATIAL_CELL_SIZE)
+	var y1 := floori((center.y + reach) / SPATIAL_CELL_SIZE)
 	var grids: Array = [spatial_grid]
 	if exclude_owner != 0:
 		grids.clear()
@@ -1373,14 +1374,16 @@ func query_units_in_radius(center: Vector2, radius: float, exclude_owner: int = 
 		var grid: Dictionary = grid_value
 		for x in range(x0, x1 + 1):
 			for y in range(y0, y1 + 1):
-				var cell = Vector2i(x, y)
-				if grid.has(cell):
-					for tag in grid[cell]:
-						if units.has(tag):
-							var u: Dictionary = units[tag]
-							var combined_radius: float = radius + u["radius"]
-							if center.distance_squared_to(u["pos"]) <= combined_radius * combined_radius:
-								result.append(u)
+				var tags: Variant = grid.get(Vector2i(x, y))
+				if tags == null:
+					continue
+				for tag in tags:
+					var unit: Variant = units.get(tag)
+					if unit == null:
+						continue
+					var combined_radius: float = radius + unit.radius
+					if center.distance_squared_to(unit.pos) <= combined_radius * combined_radius:
+						result.append(unit)
 	return result
 
 func _update_structures(dt: float) -> void:
@@ -2628,7 +2631,8 @@ func _get_weapon_range(u: Dictionary) -> float:
 	return float(wpn.get("range", 0.0))
 
 func _edge_distance(a: Dictionary, b: Dictionary) -> float:
-	return max(0.0, a["pos"].distance_to(b["pos"]) - (float(a["radius"]) + float(b["radius"])))
+	var position: Vector2 = a.pos
+	return maxf(0.0, position.distance_to(b.pos) - (float(a.radius) + float(b.radius)))
 
 func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
 	return _weapon_can_hit(RTSData.get_unit_def(attacker.unit_type).get("weapon", {}), target)
@@ -2653,7 +2657,7 @@ func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: 
 	var best_score: float = -999999.0
 
 	for c in candidates:
-		if c["owner"] == 0 or c["owner"] == u["owner"] or c["hp"] <= 0.0 or not can_see_unit(u.owner, c):
+		if c["owner"] == 0 or c["owner"] == u["owner"] or c["hp"] <= 0.0:
 			continue
 		if not _weapon_can_hit(wpn, c):
 			continue
@@ -2679,7 +2683,8 @@ func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: 
 				if c.attributes.has(attr):
 					prio += float(preferences[attr])
 		var score = prio - d_edge * 2.5 - (c["hp"] / c["max_hp"]) * 10.0
-		if score > best_score:
+		# Only candidates that can win the current priority check need a fog query.
+		if score > best_score and can_see_unit(u.owner, c):
 			best_score = score
 			best = c
 
