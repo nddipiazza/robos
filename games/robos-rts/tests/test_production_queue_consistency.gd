@@ -168,33 +168,33 @@ func _test_workshop_queue(workshop: Dictionary, paid_buildings: Vector2i) -> voi
 	var armor_offer: Dictionary = sim.research_offer(1, "armor")
 	var weapons := Vector2i(weapons_offer.crystal, weapons_offer.aether)
 	var armor := Vector2i(armor_offer.crystal, armor_offer.aether)
-	var troops := _cost("howitzer") + _cost("kestrel_interceptor")
+	var troops := _cost("howitzer") + _cost("howitzer")
 	var starting_supply: int = player.supply_used
-	var troop_supply: int = data.get_unit_def("howitzer").supply_cost + data.get_unit_def("kestrel_interceptor").supply_cost
-	for command in ["train_howitzer", "research_weapons", "research_armor", "train_kestrel_interceptor"]:
+	var troop_supply: int = data.get_unit_def("howitzer").supply_cost + data.get_unit_def("howitzer").supply_cost
+	for command in ["train_howitzer", "research_weapons", "research_armor", "train_howitzer"]:
 		_check(sim.issue_command([workshop.tag], command).ok, "Accept Workshop job " + command)
-	if not _check(_job_names(workshop) == ["howitzer", "weapons", "armor", "kestrel_interceptor"]
+	if not _check(_job_names(workshop) == ["howitzer", "weapons", "armor", "howitzer"]
 		and _stock() == paid_buildings - troops - weapons - armor and player.supply_used == starting_supply + troop_supply,
 		"Training and research share one queue and only training reserves supply"):
 		return
 	sim.step_ticks(32)
 	var front: Dictionary = workshop.production_queue[0]
 	var progress: float = front.progress
-	_check(_cancel(workshop, 2) and _job_names(workshop) == ["howitzer", "weapons", "kestrel_interceptor"]
+	_check(_cancel(workshop, 2) and _job_names(workshop) == ["howitzer", "weapons", "howitzer"]
 		and front.progress == progress and _stock() == paid_buildings - troops - weapons,
 		"Canceling waiting armor refunds its cost without resetting the active unit")
 	_finish_front(workshop)
 	sim.step_ticks(32)
-	_check(deployed == ["howitzer"] and _job_names(workshop) == ["weapons", "kestrel_interceptor"]
+	_check(deployed == ["howitzer"] and _job_names(workshop) == ["weapons", "howitzer"]
 		and workshop.production_queue[0].progress > 0.0 and player.upgrades.weapons == 0,
 		"Only the front job progresses and unfinished research grants no upgrade")
 	_check(_cancel(workshop, 0) and _stock() == paid_buildings - troops and player.upgrades.weapons == 0,
 		"Canceling active research refunds its exact cost without granting the upgrade")
-	_check(sim.issue_command([workshop.tag], "research_weapons").ok and _job_names(workshop) == ["kestrel_interceptor", "weapons"]
+	_check(sim.issue_command([workshop.tag], "research_weapons").ok and _job_names(workshop) == ["howitzer", "weapons"]
 		and workshop.production_queue[1].progress == 0.0, "The refunded research can be queued again from zero behind the paid unit")
 	_finish_front(workshop)
 	_finish_front(workshop)
-	_check(deployed == ["howitzer", "kestrel_interceptor"] and workshop.production_queue.is_empty()
+	_check(deployed == ["howitzer", "howitzer"] and workshop.production_queue.is_empty()
 		and player.upgrades.weapons == 1 and player.upgrades.armor == 0
 		and _stock() == paid_buildings - troops - weapons and player.supply_used == starting_supply + troop_supply,
 		"The final queue deploys two paid units and applies only the completed research")

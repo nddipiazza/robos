@@ -120,6 +120,31 @@ UNIT_VOICE_PROFILES: dict[str, dict] = {
             ],
         },
     },
+    "rampart_transport": {
+        "unit_name": "Rampart Transport",
+        "voice": "en-US-AriaNeural",
+        "rate": "+1%",
+        "pitch": "-10Hz",
+        "lines": {
+            "select": [
+                {"id": "rampart_transport_select_1", "text": "Rampart on station."},
+                {"id": "rampart_transport_select_2", "text": "Doors locked. I'm listening."},
+                {"id": "rampart_transport_select_3", "text": "Six seats and a smooth flight."},
+                {"id": "rampart_transport_select_4", "text": "Troop lift standing by."},
+                {"id": "rampart_transport_select_5", "text": "Where are we dropping them?"},
+            ],
+            "move": [
+                {"id": "rampart_transport_move_1", "text": "On that vector."},
+                {"id": "rampart_transport_move_2", "text": "Taking the high route."},
+                {"id": "rampart_transport_move_3", "text": "Banking to the drop zone."},
+                {"id": "rampart_transport_move_4", "text": "Keep your straps tight."},
+            ],
+            "ready": [
+                {"id": "rampart_transport_ready_1", "text": "Rampart cleared for lift."},
+                {"id": "rampart_transport_ready_2", "text": "Cargo deck ready."},
+            ],
+        },
+    },
     "forager": {
         "unit_name": "Forager",
         "voice": "en-US-ChristopherNeural",

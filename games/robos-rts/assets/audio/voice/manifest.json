@@ -906,5 +906,72 @@
         }
       ]
     }
+  },
+  "rampart_transport": {
+    "unit_name": "Rampart Transport",
+    "voice": "en-US-AriaNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "rampart_transport_select_1",
+          "text": "Rampart on station.",
+          "path": "res://assets/audio/voice/rampart_transport_select_1.wav"
+        },
+        {
+          "id": "rampart_transport_select_2",
+          "text": "Doors locked. I'm listening.",
+          "path": "res://assets/audio/voice/rampart_transport_select_2.wav"
+        },
+        {
+          "id": "rampart_transport_select_3",
+          "text": "Six seats and a smooth flight.",
+          "path": "res://assets/audio/voice/rampart_transport_select_3.wav"
+        },
+        {
+          "id": "rampart_transport_select_4",
+          "text": "Troop lift standing by.",
+          "path": "res://assets/audio/voice/rampart_transport_select_4.wav"
+        },
+        {
+          "id": "rampart_transport_select_5",
+          "text": "Where are we dropping them?",
+          "path": "res://assets/audio/voice/rampart_transport_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "rampart_transport_move_1",
+          "text": "On that vector.",
+          "path": "res://assets/audio/voice/rampart_transport_move_1.wav"
+        },
+        {
+          "id": "rampart_transport_move_2",
+          "text": "Taking the high route.",
+          "path": "res://assets/audio/voice/rampart_transport_move_2.wav"
+        },
+        {
+          "id": "rampart_transport_move_3",
+          "text": "Banking to the drop zone.",
+          "path": "res://assets/audio/voice/rampart_transport_move_3.wav"
+        },
+        {
+          "id": "rampart_transport_move_4",
+          "text": "Keep your straps tight.",
+          "path": "res://assets/audio/voice/rampart_transport_move_4.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "rampart_transport_ready_1",
+          "text": "Rampart cleared for lift.",
+          "path": "res://assets/audio/voice/rampart_transport_ready_1.wav"
+        },
+        {
+          "id": "rampart_transport_ready_2",
+          "text": "Cargo deck ready.",
+          "path": "res://assets/audio/voice/rampart_transport_ready_2.wav"
+        }
+      ]
+    }
   }
 }

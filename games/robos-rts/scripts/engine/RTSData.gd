@@ -46,7 +46,7 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop", "build_sentry_turret"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop", "build_sentry_turret", "build_airframe_hangar"],
 		"dialogues": {
 			"select": [
 				{"id": "pioneer_select_1", "text": "What's up, Commander?"},
@@ -566,7 +566,7 @@ var units: Dictionary = {
 	"workshop": {
 		"id": "workshop",
 		"name": "Workshop",
-		"blurb": "Builds Howitzers and Kestrel Interceptors and researches weapon and armor upgrades. Requires a Muster Hall.",
+		"blurb": "Builds Howitzers, researches weapon and armor upgrades, and unlocks the Airframe Hangar. Requires a Muster Hall.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"requires": ["muster_hall"],
@@ -582,8 +582,44 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["howitzer", "kestrel_interceptor"],
-		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor", "train_kestrel_interceptor"]
+		"trains": ["howitzer"],
+		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor"]
+	},
+	"airframe_hangar": {
+		"id": "airframe_hangar", "name": "Airframe Hangar", "faction": FACTION_HUMANS,
+		"blurb": "Builds Kestrel Interceptors and Rampart Transports. Requires a Workshop.",
+		"is_structure": true, "requires": ["workshop"], "attributes": ["Armored", "Mechanical", "Structure"],
+		"crystal_cost": 150, "aether_cost": 100, "build_time": 36.0, "max_hp": 540.0,
+		"armor": 1.0, "radius": 3.0, "footprint": Vector2i(3, 3), "sight_range": 20.0, "push_priority": 100,
+		"trains": ["kestrel_interceptor", "rampart_transport"],
+		"abilities": ["train_kestrel_interceptor", "train_rampart_transport", "rally"]
+	},
+	"rampart_transport": {
+		"id": "rampart_transport", "name": "Rampart Transport", "faction": FACTION_HUMANS,
+		"blurb": "Unarmed aircraft that can board and deploy up to six ground troops.",
+		"attributes": ["Armored", "Mechanical", "Air"], "transport_capacity": 6,
+		"crystal_cost": 100, "aether_cost": 100, "supply_cost": 2, "build_time": 28.0,
+		"max_hp": 150.0, "armor": 1.0, "radius": 1.45, "speed": 10.0, "sight_range": 24.0, "flight_height": 7.0,
+		"dialogues": {
+			"select": [
+				{"id": "rampart_transport_select_1", "text": "Rampart on station."},
+				{"id": "rampart_transport_select_2", "text": "Doors locked. I'm listening."},
+				{"id": "rampart_transport_select_3", "text": "Six seats and a smooth flight."},
+				{"id": "rampart_transport_select_4", "text": "Troop lift standing by."},
+				{"id": "rampart_transport_select_5", "text": "Where are we dropping them?"},
+			],
+			"move": [
+				{"id": "rampart_transport_move_1", "text": "On that vector."},
+				{"id": "rampart_transport_move_2", "text": "Taking the high route."},
+				{"id": "rampart_transport_move_3", "text": "Banking to the drop zone."},
+				{"id": "rampart_transport_move_4", "text": "Keep your straps tight."},
+			],
+			"ready": [
+				{"id": "rampart_transport_ready_1", "text": "Rampart cleared for lift."},
+				{"id": "rampart_transport_ready_2", "text": "Cargo deck ready."},
+			],
+		},
+		"abilities": ["move", "stop", "load_transport", "unload_transport"]
 	},
 	"sentry_turret": {
 		"id": "sentry_turret",
@@ -1125,6 +1161,9 @@ var abilities: Dictionary = {
 	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
 	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},
+	"train_rampart_transport": {"id": "train_rampart_transport", "name": "Train Rampart Transport", "hotkey": "D", "target": "none", "unit": "rampart_transport"},
+	"load_transport": {"id": "load_transport", "name": "Load Nearby Troops", "hotkey": "L", "target": "none", "desc": "Board nearby friendly ground troops, up to six passengers."},
+	"unload_transport": {"id": "unload_transport", "name": "Unload Troops", "hotkey": "U", "target": "point", "desc": "Fly to the target and deploy all passengers at a clear ground site."},
 	"research_weapons": {"id": "research_weapons", "name": "Research Weapons", "hotkey": "W", "target": "none", "upgrade": "weapons", "producer": "workshop", "desc": "Each level adds one damage per hit to Meridian Guard combat units. Applies to units already in the field."},
 	"research_armor": {"id": "research_armor", "name": "Research Armor", "hotkey": "G", "target": "none", "upgrade": "armor", "producer": "workshop", "desc": "Each level adds one armor to Meridian Guard combat units. Applies to units already in the field."},
 	"research_surge_efficiency": {"id": "research_surge_efficiency", "name": "Research Efficient Surge", "hotkey": "T", "target": "none", "upgrade": "surge_efficiency", "producer": "muster_hall", "requires_attachment": "research_module", "desc": "Riflemen and Breachers spend 5 HP when activating Surge. Applies to units already in the field."},
@@ -1140,6 +1179,7 @@ var abilities: Dictionary = {
 	"build_aether_tap": {"id": "build_aether_tap", "name": "Build Aether Tap", "hotkey": "R", "target": "point", "structure": "aether_tap"},
 	"build_muster_hall": {"id": "build_muster_hall", "name": "Build Muster Hall", "hotkey": "X", "target": "point", "structure": "muster_hall"},
 	"build_workshop": {"id": "build_workshop", "name": "Build Workshop", "hotkey": "F", "target": "point", "structure": "workshop"},
+	"build_airframe_hangar": {"id": "build_airframe_hangar", "name": "Build Airframe Hangar", "hotkey": "J", "target": "point", "structure": "airframe_hangar"},
 	"build_sentry_turret": {"id": "build_sentry_turret", "name": "Build Sentry Turret", "hotkey": "T", "target": "point", "structure": "sentry_turret"},
 	"build_colony_hub": {"id": "build_colony_hub", "name": "Build Colony Hub", "hotkey": "C", "target": "point", "structure": "colony_hub"},
 	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},

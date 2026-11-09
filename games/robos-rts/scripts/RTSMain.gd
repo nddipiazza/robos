@@ -1000,6 +1000,12 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 	elif abil in ["rally", "rally_worker"]:
 		pending_ability = abil if _repeating_target else ""
 		_issue_rally_at(tags, wpos, queue, not minimap, abil, screen)
+	elif abil == "unload_transport":
+		if SimEngine.issue_command(tags, abil, wpos, 0, "", queue).ok:
+			pending_ability = ""
+			_spawn_marker(wpos, "move")
+		else:
+			push_message("Choose a clear ground drop site.", "warn")
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -1195,6 +1201,12 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
+		"load_transport":
+			if not selected_owned().any(func(unit): return unit.get("passengers", []).size() < RTSData.get_unit_def(unit.unit_type).get("transport_capacity", 0)):
+				return "Passenger bay is full."
+		"unload_transport":
+			if not selected_owned().any(func(unit): return not unit.get("passengers", []).is_empty()):
+				return "No troops aboard."
 		"deploy_prospector":
 			if not selected_owned().any(func(unit): return unit.get("hub_operations", false) and SimEngine.can_use_hub_power(unit)):
 				return "Requires 50 energy from an upgraded Colony Hub."
@@ -1239,7 +1251,8 @@ func get_card_buttons() -> Array[Dictionary]:
 		abils = abils + ["return_cargo"]
 		if pu.unit_type == "pioneer":
 			abils = abils + ["repair", "auto_repair"]
-	for i in range(mini(15, abils.size())):
+	var button_size := 48.0 if abils.size() > 15 else CARD_BTN
+	for i in range(mini(20, abils.size())):
 		var row := i / 5
 		var col := i % 5
 		var abil_id := str(abils[i])
@@ -1254,8 +1267,8 @@ func get_card_buttons() -> Array[Dictionary]:
 		buttons.append({
 			"ability_id": abil_id,
 			"def": adef,
-			"hotkey": GRID_KEYS[i] if match_menu and match_menu.grid_hotkeys else str(adef.get("hotkey", "")),
-			"rect": Rect2(CARD_ORIGIN + Vector2(col * (CARD_BTN + CARD_GAP), row * (CARD_BTN + CARD_GAP)), Vector2(CARD_BTN, CARD_BTN)),
+			"hotkey": GRID_KEYS[i] if match_menu and match_menu.grid_hotkeys and i < GRID_KEYS.length() else str(adef.get("hotkey", "")),
+			"rect": Rect2(CARD_ORIGIN + Vector2(col * (button_size + CARD_GAP), row * (button_size + CARD_GAP)), Vector2.ONE * button_size),
 			"blocked": _block_reason(adef, pu),
 			"cost": ability_cost(adef)
 		})
@@ -1317,27 +1330,33 @@ func _hotkey_char(ke: InputEventKey) -> String:
 	var s := OS.get_keycode_string(ke.keycode)
 	return s.to_upper() if s.length() == 1 else ""
 
-func _living_tags(tags: Array, owned_only: bool = false) -> Array[int]:
+func _living_tags(tags: Array, owned_only: bool = false, include_embarked: bool = false) -> Array[int]:
 	var out: Array[int] = []
 	var seen := {}
 	for tag in tags:
 		var t := int(tag)
+		if seen.has(t):
+			continue
 		var u: Dictionary = SimEngine.units.get(t, {})
-		if u.is_empty() or float(u.get("hp", 0.0)) <= 0.0:
+		if u.is_empty():
+			if include_embarked and SimEngine.is_embarked(t, local_player):
+				out.append(t)
+				seen[t] = true
+			continue
+		if float(u.get("hp", 0.0)) <= 0.0:
 			continue
 		if owned_only and int(u["owner"]) != local_player:
 			continue
 		if not SimEngine.can_see_unit(viewing_player(), u):
 			continue
-		if not seen.has(t):
-			out.append(t)
-			seen[t] = true
+		out.append(t)
+		seen[t] = true
 	return out
 
 func _prune_control_groups() -> void:
 	selected_tags = _living_tags(selected_tags)
 	for g in control_groups.keys():
-		var kept := _living_tags(control_groups[g], true)
+		var kept := _living_tags(control_groups[g], true, true)
 		if kept.is_empty():
 			control_groups.erase(g)
 		else:
@@ -1361,7 +1380,7 @@ func _set_control_group(g: int, tags: Array, append: bool = false, exclusive: bo
 			if other == g:
 				continue
 			var kept: Array[int] = []
-			for t in _living_tags(control_groups[other], true):
+			for t in _living_tags(control_groups[other], true, true):
 				if not incoming.has(t):
 					kept.append(t)
 			if kept.is_empty():
@@ -1369,7 +1388,7 @@ func _set_control_group(g: int, tags: Array, append: bool = false, exclusive: bo
 			else:
 				control_groups[other] = kept
 	if append:
-		var existing := _living_tags(control_groups.get(g, []), true)
+		var existing := _living_tags(control_groups.get(g, []), true, true)
 		for t in members:
 			if not existing.has(t):
 				existing.append(t)
@@ -1390,15 +1409,16 @@ func _handle_group_input(g: int, assign: bool, add: bool, exclusive: bool = fals
 
 func _recall_group(g: int, add: bool = false) -> void:
 	_prune_control_groups()
-	if not control_groups.has(g) or control_groups[g].is_empty():
+	var available := _living_tags(control_groups.get(g, []), true)
+	if available.is_empty():
 		_last_group_press.clear()
 		return
 	var now := Time.get_ticks_msec()
 	var last: int = int(_last_group_press.get(g, -10000))
-	_select_tags(control_groups[g], add)
+	_select_tags(available, add)
 	pending_ability = ""
 	if not add and now - last < 400 and world_3d:
-		var first: Dictionary = SimEngine.units[control_groups[g][0]]
+		var first: Dictionary = SimEngine.units[available[0]]
 		_focus_camera(first["pos"])
 	_last_group_press.clear()
 	if not add:
