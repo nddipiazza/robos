@@ -10,12 +10,16 @@ const DISPLAY_PREFS := "user://rts-display.cfg"
 const VOLUME_LEVELS := [100, 70, 40, 0]
 const PAN_SPEEDS := [28.0, 46.0, 72.0]
 const SkirmishPreview = preload("res://scripts/RTSSkirmishPreview.gd")
+const MAP_FILTER_LABELS := ["All maps", "Compact maps", "Large maps", "Two starts", "Multiple starts",
+	"Finite by default", "Water or bridges", "Cliffs or plateaus", "Watch stations", "Destructible blockers"]
 enum OrderLines { ALWAYS, SHIFT, HIDDEN }
+enum MapFilter { ALL, COMPACT, LARGE, TWO_STARTS, MULTIPLE_STARTS, FINITE, WATER, CLIFFS, STATIONS, BLOCKERS }
 
 var layout := Layout.BATTLE
 var panel: PanelContainer
 var result_panel: PanelContainer
 var map_picker: OptionButton
+var map_filter: OptionButton
 var player_faction: OptionButton
 var ai_faction: OptionButton
 var deposit_rules: OptionButton
@@ -51,7 +55,13 @@ func _ready() -> void:
 		map_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		map_preview.hide()
 		add_child(map_preview)
-		panel.visibility_changed.connect(func(): map_preview.visible = panel.visible)
+		var filters := _make_panel(map_preview.position + Vector2(0, map_preview.size.y + 14), Vector2(460, 0))
+		map_filter = _option(_panel_body(filters), "Filter maps", MAP_FILTER_LABELS, MapFilter.ALL)
+		map_filter.focus_mode = Control.FOCUS_CLICK
+		map_filter.item_selected.connect(_filter_maps)
+		panel.visibility_changed.connect(func():
+			map_preview.visible = panel.visible
+			filters.visible = panel.visible)
 		_build_skirmish_options(box)
 	if layout != Layout.SKIRMISH:
 		_build_display_options(box)
@@ -87,10 +97,10 @@ func _build_skirmish_options(box: VBoxContainer) -> void:
 	player_faction = _option(box, "Your faction", factions, 0)
 	ai_faction = _option(box, "AI faction", factions, 0)
 	_map_description = _label(box, "")
-	map_picker = _option(box, "Battlefield", SimEngine.SKIRMISH_MAPS.values(), 0)
+	map_picker = _option(box, "Battlefield", [], -1)
 	deposit_rules = _option(box, "Resource deposits", ["Unlimited", "Finite"], 0)
 	map_picker.item_selected.connect(_on_map_selected)
-	_on_map_selected(0)
+	_filter_maps(MapFilter.ALL)
 	difficulty = _option(box, "AI difficulty", ["Easy", "Normal", "Hard"], 1)
 	strategy = _option(box, "AI strategy", ["Rush", "Balanced", "Economy", "Siege"], 1)
 	speed = _option(box, "Game speed", ["1×", "2×", "4×", "8×"], 0)
@@ -239,8 +249,13 @@ func reset_views() -> void:
 	panel.hide()
 	result_panel.hide()
 	_show_results.hide()
-	var map_index := SimEngine.SKIRMISH_MAPS.keys().find(SimEngine.match_state.get("map_id", ""))
-	if map_index >= 0:
+	var map_id: String = SimEngine.match_state.get("map_id", "")
+	if SimEngine.SKIRMISH_MAPS.has(map_id):
+		var map_index := map_option_ids().find(map_id)
+		if map_index < 0:
+			map_filter.select(MapFilter.ALL)
+			_filter_maps(MapFilter.ALL)
+			map_index = map_option_ids().find(map_id)
 		map_picker.select(map_index)
 		_on_map_selected(map_index)
 		deposit_rules.select(0 if SimEngine.unlimited_resources else 1)
@@ -271,7 +286,7 @@ func _on_volume_selected(idx: int) -> void:
 		RTSAudio.set_volume_percent(VOLUME_LEVELS[idx])
 
 func _on_map_selected(index: int) -> void:
-	var map_id: String = SimEngine.SKIRMISH_MAPS.keys()[index]
+	var map_id: String = map_picker.get_item_metadata(index)
 	var data := SimEngine.skirmish_map_config(map_id)
 	var layout: Dictionary = data.get("map", {})
 	_map_description.text = "1 Player vs 1 AI\n%d × %d · %d possible starts" % [layout.get("width", 0), layout.get("height", 0), layout.get("starts", []).size()]
@@ -279,6 +294,55 @@ func _on_map_selected(index: int) -> void:
 		_map_description.text += " · " + str(data.menu_hint)
 	map_preview.set_map(data)
 	deposit_rules.select(0 if data.get("unlimited_resources", true) else 1)
+
+func selected_map_id() -> String:
+	return str(map_picker.get_item_metadata(map_picker.selected)) if map_picker and map_picker.selected >= 0 else ""
+
+func map_option_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for i in range(map_picker.item_count):
+		ids.append(str(map_picker.get_item_metadata(i)))
+	return ids
+
+func _filter_maps(filter_id: int) -> void:
+	var previous := selected_map_id()
+	var previous_deposits := deposit_rules.selected
+	map_picker.clear()
+	for map_id in SimEngine.SKIRMISH_MAPS:
+		var data := SimEngine.skirmish_map_config(map_id)
+		if not _matches_map_filter(data, filter_id):
+			continue
+		map_picker.add_item(SimEngine.SKIRMISH_MAPS[map_id])
+		map_picker.set_item_metadata(map_picker.item_count - 1, map_id)
+	map_picker.disabled = map_picker.item_count == 0
+	if map_picker.disabled:
+		_map_description.text = "No battlefields match this filter."
+		map_preview.set_map({})
+		return
+	var index := maxi(0, map_option_ids().find(previous))
+	map_picker.select(index)
+	_on_map_selected(index)
+	if selected_map_id() == previous:
+		deposit_rules.select(previous_deposits)
+
+func _matches_map_filter(data: Dictionary, filter_id: int) -> bool:
+	var layout: Dictionary = data.get("map", {})
+	if layout.is_empty():
+		return false
+	var longest_side := maxf(float(layout.width), float(layout.height))
+	match filter_id:
+		MapFilter.COMPACT: return longest_side <= 160
+		MapFilter.LARGE: return longest_side > 160
+		MapFilter.TWO_STARTS: return layout.starts.size() == 2
+		MapFilter.MULTIPLE_STARTS: return layout.starts.size() > 2
+		MapFilter.FINITE: return not data.get("unlimited_resources", true)
+		MapFilter.WATER:
+			return not layout.get("water_channels", []).is_empty() or not layout.get("bridges", []).is_empty() or layout.get("terrain_tiles", []).any(func(tile): return tile.terrain == "water")
+		MapFilter.CLIFFS:
+			return not layout.get("obstacles", []).is_empty() or not layout.get("high_ground", []).is_empty() or layout.get("terrain_tiles", []).any(func(tile): return tile.terrain in ["cliff", "plateau"])
+		MapFilter.STATIONS: return not layout.get("watch_stations", []).is_empty()
+		MapFilter.BLOCKERS: return not layout.get("route_blockers", []).is_empty()
+	return true
 
 func _on_health_selected(mode: int) -> void:
 	var display := ConfigFile.new()
@@ -302,7 +366,9 @@ func toggle() -> void:
 		map_picker.grab_focus()
 
 func _start() -> void:
-	var map_id: String = SimEngine.SKIRMISH_MAPS.keys()[map_picker.selected]
+	var map_id := selected_map_id()
+	if map_id.is_empty():
+		return
 	var settings := {"difficulty": ["easy", "normal", "hard"][difficulty.selected],
 		"strategy": ["rush", "balanced", "economy", "siege"][strategy.selected],
 		"player_faction": _faction_ids[player_faction.selected], "ai_faction": _faction_ids[ai_faction.selected],

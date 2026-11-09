@@ -29,3 +29,20 @@ Feature: Choose a duel, display settings and a postgame perspective
     And the preview shows Glassline Basin with its starts, expansions, stations and blockers
     When the commander starts the selected map from the picker
     Then Glassline Basin starts with two economies and two flanking lanes
+
+  Scenario: The map filter finds battlefields by size, starts, deposits and terrain
+    Given a Frontier Hunters match on "normal" difficulty with "balanced" AI and seed 42
+    When the commander presses "F8"
+    And the commander filters battlefields to "Compact maps"
+    Then the map picker lists "iron-narrows,glassline-basin"
+    When the commander filters battlefields to "Multiple starts"
+    Then the map picker lists "frontier-hunters"
+    When the commander filters battlefields to "Finite by default"
+    Then the map picker lists "iron-narrows,glassline-basin"
+    When the commander filters battlefields to "Water or bridges"
+    Then the map picker lists "frontier-hunters,iron-narrows"
+    When the commander filters battlefields to "Cliffs or plateaus"
+    Then the map picker lists "glassline-basin"
+    And the preview shows Glassline Basin with its starts, expansions, stations and blockers
+    When the commander clicks Start new match
+    Then Glassline Basin starts with two economies and two flanking lanes
