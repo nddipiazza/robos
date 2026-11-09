@@ -28,6 +28,8 @@ const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
 const BRUSH_REVEAL_RADIUS := 6.0
+const WATCH_STATION_CAPTURE := 4.0
+const WATCH_STATION_SIGHT := 32.0
 const FOOTPRINT_BIN_SIZE := 8.0
 const INFANTRY_CLEARANCE := 1.0
 const HEAVY_CLEARANCE := 2.0
@@ -81,6 +83,7 @@ var water_cells: Dictionary = {}
 var unlimited_resources: bool = false
 var terrain_tiles: Array = []
 var _brush_cells: Dictionary = {}
+var watch_stations: Array[Dictionary] = []
 
 var players: Dictionary = {}
 var next_tag: int = 1001
@@ -187,6 +190,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	unlimited_resources = false
 	terrain_tiles.clear()
 	_brush_cells.clear()
+	watch_stations.clear()
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
@@ -308,6 +312,7 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	decor_enabled = bool(data.get("decor", true))
 	unlimited_resources = bool(data.get("unlimited_resources", false))
 	_configure_water(map_cfg)
+	_configure_watch_stations(map_cfg)
 	if data.get("victory", "") == "all_structures":
 		players.erase(3)
 		match_state = {"mode": "annihilation_fixture", "status": "playing", "winner": 0, "reason": ""}
@@ -429,6 +434,7 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	_skirmish_source["seed"] = match_seed
 	unlimited_resources = bool(data.get("unlimited_resources", true))
 	_configure_water(map_cfg)
+	_configure_watch_stations(map_cfg)
 	players.erase(3)
 	scenario_name = str(data.get("name", "Frontier Hunters — 1 Player vs AI"))
 	var slots: Array = range(starts.size())
@@ -496,13 +502,44 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	return {"ok": true, "scenario": scenario_name, "match": match_state.duplicate(true)}
 
 func _start_vision(enabled: bool) -> void:
-	if not _brush_cells.is_empty():
+	if not _brush_cells.is_empty() or not watch_stations.is_empty():
 		_rebuild_spatial_grid()
 	if enabled:
 		vision = Vision.new(map_width, map_height, players.keys())
 		if not high_ground_zones.is_empty() or not ramps.is_empty():
 			vision.configure_elevation(get_elevation_at)
-		vision.update(units, tick)
+	_refresh_vision()
+
+func _configure_watch_stations(map_cfg: Dictionary) -> void:
+	var bounds := Rect2(0, 0, map_width, map_height)
+	var entries = map_cfg.get("watch_stations", [])
+	if not entries is Array:
+		return
+	for entry in entries:
+		if not entry is Dictionary:
+			continue
+		var position := Vector2(float(entry.get("x", -1)), float(entry.get("y", -1)))
+		if bounds.has_point(position):
+			watch_stations.append({"pos": position, "owner": 0})
+
+func _refresh_vision() -> void:
+	for station in watch_stations:
+		var owner := 0
+		for unit in query_units_in_radius(station.pos, WATCH_STATION_CAPTURE):
+			if unit.is_structure or unit.hp <= 0.0 or not players.has(unit.owner):
+				continue
+			if unit.pos.distance_squared_to(station.pos) > WATCH_STATION_CAPTURE * WATCH_STATION_CAPTURE:
+				continue
+			if owner != 0 and owner != unit.owner:
+				owner = 0
+				break
+			owner = unit.owner
+		station.owner = owner
+	if vision != null:
+		vision.update(units, tick, watch_stations, WATCH_STATION_SIGHT)
+
+func visible_watch_station_owner(station: Dictionary, player: int) -> int:
+	return station.owner if can_see_position(player, station.pos) else 0
 
 func can_see_position(player: int, pos: Vector2) -> bool:
 	return vision == null or player == 0 or vision.state_at(player, pos) == Vision.VISIBLE
@@ -913,8 +950,8 @@ func _step_single_tick() -> void:
 	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT, mineral_walkers)
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
-	if vision != null and tick % VISION_UPDATE_TICKS == 0:
-		vision.update(units, tick)
+	if tick % VISION_UPDATE_TICKS == 0 and (vision != null or not watch_stations.is_empty()):
+		_refresh_vision()
 	_check_match_result()
 	emit_signal("simulation_ticked", tick)
 
@@ -1762,7 +1799,7 @@ func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_
 		if vision == null or not position.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(position):
 			return false
 		vision.add_sweep(hub.owner, position, SWEEP_RADIUS, tick + SWEEP_TICKS)
-		vision.update(units, tick)
+		_refresh_vision()
 	else:
 		var silo: Dictionary = units.get(target_tag, {})
 		if not _is_finished_silo(silo, hub.owner) or silo.get("supply_reinforced", false):
@@ -2994,6 +3031,10 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		"resources": res_list,
 		"recent_events": events
 	}
+	if not watch_stations.is_empty():
+		observation.map["watch_stations"] = watch_stations.map(func(station):
+			return {"x": station.pos.x, "y": station.pos.y, "owner": visible_watch_station_owner(station, perspective_player), "capture_radius": WATCH_STATION_CAPTURE, "sight_radius": WATCH_STATION_SIGHT}
+		)
 	if limited:
 		observation["vision"] = {
 			"width": vision.size.x, "height": vision.size.y, "cell_size": Vision.CELL_SIZE,

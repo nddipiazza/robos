@@ -97,7 +97,7 @@ func _cover(sight: PlayerSight, center: Vector2i, radius: float, sees_high: bool
 			sight.high_deltas[left] += 1
 			sight.high_deltas[right] -= 1
 
-func update(units: Dictionary, tick: int) -> void:
+func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = [], station_sight: float = 0.0) -> void:
 	var stride := size.x + 1
 	var has_elevation := not _high_cells.is_empty()
 	for sight in _players.values():
@@ -112,6 +112,10 @@ func update(units: Dictionary, tick: int) -> void:
 			structures.append(unit)
 		var center := _cell(unit.pos)
 		_cover(sight, center, unit.sight_range, has_elevation and _high_cells[center.y * size.x + center.x] != 0)
+
+	for station in watch_stations:
+		if _players.has(station.owner):
+			_cover(_players[station.owner], _cell(station.pos), station_sight, has_elevation)
 
 	for i in range(_sweeps.size() - 1, -1, -1):
 		var sweep := _sweeps[i]

@@ -1544,6 +1544,14 @@ func _draw() -> void:
 				_draw_range_ring(unit.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
+	for station in SimEngine.watch_stations:
+		if SimEngine.can_see_position(viewing_player(), station.pos):
+			var owner := int(station.owner)
+			var color := Color("#c3d2da") if owner == 0 else RTSData.get_player_color(owner)
+			_draw_range_ring(station.pos, SimEngine.WATCH_STATION_CAPTURE, color)
+			var label_pos := world_to_screen(station.pos, 3.8) - Vector2(70, 0)
+			draw_string(font, label_pos + Vector2.ONE, "Watch station", HORIZONTAL_ALIGNMENT_CENTER, 140, 16, Color.BLACK)
+			draw_string(font, label_pos, "Watch station", HORIZONTAL_ALIGNMENT_CENTER, 140, 16, color.lightened(0.28))
 	var deposit := inspected_deposit()
 	if not deposit.is_empty():
 		_draw_range_ring(deposit.pos, deposit.radius + 0.2, Color("#fbbf24"))
