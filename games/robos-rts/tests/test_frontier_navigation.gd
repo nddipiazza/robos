@@ -23,10 +23,12 @@ func _run() -> void:
 				continue
 			var target = Vector2(float(b.x), float(b.y))
 			var path = sim.compute_smooth_path(from, target, 0.85)
+			if path.is_empty() or not path.back().is_equal_approx(target):
+				failures.append("Route stops short: %s -> %s" % [from, target])
 			var previous = from
 			for point in path:
-				if not sim._has_clear_line_of_walk(previous, point, 0.0):
-					failures.append("Water crossing in route %s -> %s at %s -> %s" % [from, target, previous, point])
+				if not sim._has_clear_line_of_walk(previous, point, 0.85):
+					failures.append("Blocked segment in route %s -> %s at %s -> %s" % [from, target, previous, point])
 				previous = point
 			routes += 1
 	for resource in sim.resources.values():
