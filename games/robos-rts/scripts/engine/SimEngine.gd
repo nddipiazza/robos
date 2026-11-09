@@ -3042,7 +3042,7 @@ func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 
 func active_living_ground_speed_bonus(unit: Dictionary) -> float:
 	var bonus := float(unit.get("living_ground_speed_bonus", 0.0))
-	return bonus if bonus > 0.0 and unit.flight_height <= 0.0 and has_living_ground(unit.pos) else 0.0
+	return bonus if bonus > 0.0 and not unit.is_immobile and unit.flight_height <= 0.0 and has_living_ground(unit.pos) else 0.0
 
 func effective_move_speed(unit: Dictionary) -> float:
 	if unit.is_immobile:
