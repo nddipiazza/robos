@@ -31,8 +31,11 @@ func _test_opposing_convoys() -> void:
 	for i in range(3):
 		eastbound.append(sim.spawn_unit("rifleman", 1, Vector2(34 - 2 * i, 24)))
 		westbound.append(sim.spawn_unit("rifleman", 1, Vector2(62 + 2 * i, 24)))
-		sim.issue_command([eastbound.back().tag], "move", Vector2(73, 23 + 2 * i))
-		sim.issue_command([westbound.back().tag], "move", Vector2(23, 23 + 2 * i), 0, "", true)
+	var east_tags: Array = eastbound.map(func(unit): return unit.tag)
+	var west_tags: Array = westbound.map(func(unit): return unit.tag)
+	sim.issue_command(east_tags, "move", Vector2(73, 25))
+	sim.issue_command(west_tags, "move", Vector2(26, 24))
+	sim.issue_command(west_tags, "move", Vector2(21, 29), 0, "", true)
 	sim.step_ticks(960)
 	_check(eastbound.all(func(unit): return unit.pos.x > 63.0 and unit.orders.is_empty()), "The advancing squad crosses the one-lane opening")
 	_check(westbound.all(func(unit): return unit.pos.x < 34.0 and unit.orders.is_empty()), "The retreating squad yields and finishes its queued route")
