@@ -153,6 +153,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"blight_hurler": _blight_hurler(root, glow)
 		"drift_sac": _drift_sac(root, glow)
 		"needlewing": _needlewing(root, glow)
+		"blight_spire": _blight_spire(root, glow)
 		"brood_nest": _brood_nest(root, r, glow)
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"mote": _mote(root, glow)
@@ -533,6 +534,17 @@ static func _needlewing(root: Node3D, glow: Material) -> void:
 		wing.rotation_degrees.y = -side * 34.0
 		cone(root, 0.12, 1.68, m[2], Vector3(-0.37, 0.44, side * 0.68), Vector3(side * 68.0, -side * 16.0, 28.0), 6)
 		cone(root, 0.08, 0.54, m[1], Vector3(0.83, 0.32, side * 0.28), Vector3(0, 0, -84), 5)
+
+static func _blight_spire(root: Node3D, glow: Material) -> void:
+	var m := _bug_mats()
+	sph(root, 2.3, m[0], Vector3(0, 0.28, 0), Vector3(1, 0.36, 1))
+	cyl(root, 0.47, 0.91, 3.2, m[1], Vector3(0, 1.88, 0), Vector3.ZERO, 7)
+	sph(root, 0.88, m[3], Vector3(0, 3.27, 0), Vector3(0.83, 1.0, 0.83))
+	for index in range(5):
+		var angle := TAU * index / 5.0
+		var outward := Vector3(cos(angle), 0, sin(angle))
+		cone(root, 0.25, 2.65, m[2], outward * 1.48 + Vector3(0, 1.6, 0), Vector3(18 * sin(angle), 0, -18 * cos(angle)), 6)
+		sph(root, 0.15, glow, outward * 0.8 + Vector3(0, 3.3, 0))
 
 static func _brood_nest(root: Node3D, r: float, glow: Material) -> void:
 	var m := _bug_mats()

@@ -712,7 +712,7 @@ func _draw_single(u: Dictionary) -> void:
 	var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
 	var hcol := Color("#3fcf6a") if ratio > 0.5 else (Color("#f0b232") if ratio > 0.25 else Color("#ee4b3f"))
 	_bar(Rect2(x0, by, 360, 15), ratio, hcol, "Health  %d / %d" % [int(ceil(u["hp"])), int(u["max_hp"])])
-	var energy_limit := float(u.get("support", {}).get("max_energy", 0.0))
+	var energy_limit := float(u.get("support", {}).get("max_energy", u.get("max_energy", 0.0)))
 	if u.unit_type in ["colony_hub", "heartstone"]:
 		energy_limit = SimEngine.HUB_ENERGY_MAX
 	elif u.unit_type == "skirmisher":
@@ -1012,6 +1012,10 @@ func _glyph(id: String, r: Rect2) -> void:
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
 			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
+		"corrosive_miasma":
+			draw_arc(c, 17.0 * u, 0.0, TAU, 28, Color("#bcf264"), 2.7 * u, true)
+			for offset in [Vector2(-7, 5), Vector2(1, -6), Vector2(8, 7)]:
+				draw_circle(c + offset * u, 3.0 * u, Color("#e8c27a"))
 		"load_transport", "unload_transport", "fighter_assault", "fighter_intercept":
 			var direction := -1.0 if id in ["load_transport", "fighter_intercept"] else 1.0
 			draw_rect(Rect2(c - Vector2(16, 16) * u, Vector2(32, 14) * u), accent, false, 3.0 * u)

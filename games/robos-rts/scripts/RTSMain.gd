@@ -1021,6 +1021,11 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			_spawn_marker(wpos, "move")
 		else:
 			push_message("Choose a clear ground drop site.", "warn")
+	elif abil == "corrosive_miasma":
+		if SimEngine.issue_command(tags, abil, wpos).ok:
+			pending_ability = ""
+		else:
+			push_message("Choose visible ground within the Hurler's cast range.", "warn")
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -1224,6 +1229,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(cost["supply"]) > 0 and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
+		"corrosive_miasma":
+			if not selected_owned().any(func(unit): return SimEngine.miasma_block_reason(unit).is_empty()):
+				return SimEngine.miasma_block_reason(pu)
 		"fighter_assault", "fighter_intercept":
 			if not selected_owned().any(func(unit): return SimEngine.fighter_mode_block_reason(unit, adef.id).is_empty()):
 				return SimEngine.fighter_mode_block_reason(pu, adef.id)
@@ -1743,6 +1751,7 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	for warning in _area_attack_warnings():
 		_draw_area_attack_warning(warning)
+	_draw_miasma_zones(font)
 	_draw_power_overlay(font)
 	_draw_rally_and_orders()
 	_draw_building_memory(font)
@@ -1790,6 +1799,20 @@ func _draw_recon_sweeps() -> void:
 		return
 	for sweep in SimEngine.vision.sweeps_for(viewing_player()):
 		_draw_range_ring(sweep.pos, sweep.radius, Color("#6fb6ff"))
+
+func _draw_miasma_zones(font: Font) -> void:
+	for zone in SimEngine.visible_miasma(viewing_player()):
+		var position := Vector2(zone.x, zone.y)
+		var color := Color("#e8c27a") if zone.warning else Color("#bcf264")
+		_draw_range_ring(position, zone.radius, color, 3.0)
+		_draw_range_ring(position, zone.radius * 0.9, Color(color, 0.45), 1.3)
+		var anchor := world_to_screen(position, 0.5) - Vector2(72, 4)
+		var label := "%s %.1fs" % ["Miasma incoming" if zone.warning else "Corrosive Miasma", zone.ticks * SimEngine.TICK_DT]
+		draw_string(font, anchor + Vector2.ONE, label, HORIZONTAL_ALIGNMENT_CENTER, 144, 15, Color.BLACK)
+		draw_string(font, anchor, label, HORIZONTAL_ALIGNMENT_CENTER, 144, 15, color)
+	if pending_ability == "corrosive_miasma" and hover_pos().y < HUD_TOP:
+		var point := screen_to_world(hover_pos())
+		_draw_range_ring(point, SimEngine.MIASMA_RADIUS, Color(0.78, 0.91, 0.43, 0.65))
 
 func _draw_range_ring(position: Vector2, radius: float, color: Color, width: float = 1.5) -> void:
 	var outline := PackedVector2Array()

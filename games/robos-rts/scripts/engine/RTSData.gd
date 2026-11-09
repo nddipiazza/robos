@@ -685,7 +685,7 @@ var units: Dictionary = {
 			"sfx": "mandible_bite",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_blight_spire"],
 		"dialogues": {
 			"select": [
 				{"id": "forager_select_1", "text": "The brood hears."},
@@ -794,6 +794,9 @@ var units: Dictionary = {
 	"blight_hurler": {
 		"id": "blight_hurler",
 		"name": "Blight Hurler",
+		"max_energy": 100.0,
+		"starting_energy": 50.0,
+		"energy_regen": 1.0,
 		"blurb": "Lobs corrosive blight that splashes. Bonus damage to structures.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": false,
@@ -826,7 +829,7 @@ var units: Dictionary = {
 			"impact_sfx": "explosion_splash",
 			"attack_type": "ranged"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack"]
+		"abilities": ["move", "stop", "hold_position", "attack", "corrosive_miasma"]
 	},
 	"drift_sac": {
 		"id": "drift_sac", "name": "Drift Sac", "faction": FACTION_MONSTERS,
@@ -922,6 +925,14 @@ var units: Dictionary = {
 		"crystal_cost": 75, "aether_cost": 0, "supply_provided": 8,
 		"build_time": 19.0, "max_hp": 400.0, "radius": 1.8, "sight_range": 16.0,
 		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
+	},
+	"blight_spire": {
+		"id": "blight_spire", "name": "Blight Spire", "faction": FACTION_MONSTERS,
+		"blurb": "Advanced Brood tech. Unlocks Corrosive Miasma for Blight Hurlers.",
+		"is_structure": true, "attributes": ["Armored", "Biological", "Structure"],
+		"requires": ["brood_nest"], "crystal_cost": 200, "aether_cost": 150, "build_time": 52.0,
+		"max_hp": 700.0, "armor": 1.0, "radius": 2.6, "sight_range": 17.0,
+		"footprint": Vector2i(3, 3), "push_priority": 100, "abilities": []
 	},
 	"spore_tap": {
 		"id": "spore_tap", "name": "Spore Tap", "faction": FACTION_MONSTERS,
@@ -1275,6 +1286,7 @@ var abilities: Dictionary = {
 	"train_blight_hurler": {"id": "train_blight_hurler", "name": "Spawn Blight Hurler", "hotkey": "V", "target": "none", "unit": "blight_hurler"},
 	"train_drift_sac": {"id": "train_drift_sac", "name": "Hatch Drift Sac", "hotkey": "F", "target": "none", "unit": "drift_sac", "desc": "Unarmed flying scout that provides 8 supply while alive."},
 	"train_needlewing": {"id": "train_needlewing", "name": "Hatch Needlewing", "hotkey": "N", "target": "none", "unit": "needlewing", "desc": "Fast flyer that fires venom needles at ground targets."},
+	"corrosive_miasma": {"id": "corrosive_miasma", "name": "Corrosive Miasma", "hotkey": "E", "target": "point", "sfx": "corrosive_lob", "desc": "Spend 50 energy to warn an area for one second, then slow and damage enemy ground troops in it for eight seconds. Requires a Blight Spire."},
 	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
 	"research_fast_deployment": {"id": "research_fast_deployment", "name": "Research Fast Deployment", "hotkey": "F", "target": "none", "upgrade": "fast_deployment", "producer": "waystone", "desc": "Lets powered Waystones send a paid trainee directly to a visible powered site."},
 	"fast_deploy": {"id": "fast_deploy", "name": "Fast Deploy", "hotkey": "D", "target": "point", "desc": "Set a powered landing point for the next paid trainee. A successful deployment recharges for 20 seconds. If the site becomes unavailable, the unit uses the normal exit."},
@@ -1299,6 +1311,7 @@ var abilities: Dictionary = {
 	"build_brood_nest": {"id": "build_brood_nest", "name": "Grow Brood Nest", "hotkey": "N", "target": "point", "structure": "brood_nest"},
 	"build_brood_pod": {"id": "build_brood_pod", "name": "Grow Brood Pod", "hotkey": "B", "target": "point", "structure": "brood_pod"},
 	"build_spore_tap": {"id": "build_spore_tap", "name": "Grow Spore Tap", "hotkey": "R", "target": "point", "structure": "spore_tap"},
+	"build_blight_spire": {"id": "build_blight_spire", "name": "Grow Blight Spire", "hotkey": "T", "target": "point", "structure": "blight_spire"},
 	"rally_worker": {"id": "rally_worker", "name": "Set Forager Rally", "hotkey": "G", "target": "point", "desc": "Route newly hatched Foragers without changing the army rally. Shift-click adds a waypoint."},
 	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "Set where new units move, follow or gather. Shift-click to add a waypoint."}
 }
