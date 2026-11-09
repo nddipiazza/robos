@@ -124,7 +124,7 @@ var _skirmish_source: Dictionary = {}
 var vision: Vision
 var frame_sim_usec: int = 0
 var frame_sim_ticks: int = 0
-var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
+var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0, "vision": 0}
 var _static_structures: Array[Dictionary] = []
 var _footprint_bins: Dictionary = {}
 var _clearance_grids: Dictionary = {}
@@ -554,7 +554,9 @@ func _refresh_vision() -> void:
 			owner = unit.owner
 		station.owner = owner
 	if vision != null:
+		var started := Time.get_ticks_usec()
 		vision.update(units, tick, watch_stations, WATCH_STATION_SIGHT)
+		profile_usec.vision += Time.get_ticks_usec() - started
 
 func visible_watch_station_owner(station: Dictionary, player: int) -> int:
 	return station.owner if can_see_position(player, station.pos) else 0

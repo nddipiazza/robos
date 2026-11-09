@@ -11,6 +11,8 @@ class PlayerSight:
 	var last_seen := PackedInt32Array()
 	var row_deltas := PackedInt32Array()
 	var high_deltas := PackedInt32Array()
+	var covered_rows := PackedByteArray()
+	var previous_rows := PackedByteArray()
 	var buildings := {}
 
 var size := Vector2i.ZERO
@@ -27,6 +29,8 @@ func _init(width: float, height: float, players: Array) -> void:
 		sight.cells.resize(size.x * size.y)
 		sight.last_seen.resize(size.x * size.y)
 		sight.row_deltas.resize((size.x + 1) * size.y)
+		sight.covered_rows.resize(size.y)
+		sight.previous_rows.resize(size.y)
 		_players[player] = sight
 
 func configure_elevation(elevation_at: Callable) -> void:
@@ -88,6 +92,7 @@ func _cover(sight: PlayerSight, center: Vector2i, radius: float, sees_high: bool
 	var top := center.y - (spans.size() >> 1)
 	# Difference arrays let each disk mark just two endpoints per row.
 	for row in range(maxi(0, top), mini(size.y, top + spans.size())):
+		sight.covered_rows[row] = 1
 		var reach := spans[row - top]
 		var left := row * stride + maxi(0, center.x - reach)
 		var right := row * stride + mini(size.x, center.x + reach + 1)
@@ -103,6 +108,7 @@ func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = []
 	for sight in _players.values():
 		sight.row_deltas.fill(0)
 		sight.high_deltas.fill(0)
+		sight.covered_rows.fill(0)
 	var structures: Array = []
 	for unit in units.values():
 		var sight: PlayerSight = _players.get(unit.owner)
@@ -128,6 +134,10 @@ func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = []
 	for player in _players:
 		var sight: PlayerSight = _players[player]
 		for y in range(size.y):
+			# Visit a vacated row once to turn its visible cells into explored fog.
+			if sight.covered_rows[y] == 0 and sight.previous_rows[y] == 0:
+				continue
+			sight.previous_rows[y] = sight.covered_rows[y]
 			var coverage := 0
 			var high_coverage := 0
 			for x in range(size.x):

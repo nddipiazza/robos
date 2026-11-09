@@ -31,6 +31,7 @@ var active_fx: Array[Dictionary] = []
 var cam_height: float = 50.0
 var anim_time: float = 0.0
 var sync_ms: float = 0.0
+var fog_sync_ms: float = 0.0
 
 var mat_cache: Dictionary = {}
 var _last_pos: Dictionary = {}
@@ -577,8 +578,9 @@ func _scatter_decor() -> void:
 # ---------------------------------------------------------------------------
 func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int = 1) -> void:
 	var sync_started = Time.get_ticks_usec()
-	anim_time += delta
 	_sync_fog(local_player)
+	fog_sync_ms = (Time.get_ticks_usec() - sync_started) / 1000.0
+	anim_time += delta
 	_viewing_player = local_player
 
 	# Resources

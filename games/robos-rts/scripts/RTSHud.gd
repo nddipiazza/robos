@@ -11,6 +11,7 @@ extends Node2D
 var main: Node2D
 var font: Font
 var draw_ms: float = 0.0
+var minimap_draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
 var _supply_region := Rect2()
 var _resource_regions: Dictionary = {}
@@ -322,6 +323,7 @@ func _draw_bottom_panel() -> void:
 	_draw_command_card()
 
 func _draw_minimap() -> void:
+	var started := Time.get_ticks_usec()
 	var mm: Rect2 = main.MINIMAP
 	draw_rect(mm.grow(6.0), Color("#07090c"))
 	draw_rect(mm.grow(6.0), C_EDGE_HI, false, 1.5)
@@ -330,6 +332,7 @@ func _draw_minimap() -> void:
 		var map_cells := Vector2(SimEngine.map_width, SimEngine.map_height) / SimEngine.Vision.CELL_SIZE
 		draw_texture_rect_region(main.world_3d.fog_texture, mm, Rect2(Vector2.ZERO, map_cells))
 	_draw_minimap_units()
+	minimap_draw_ms = (Time.get_ticks_usec() - started) / 1000.0
 
 func _draw_minimap_terrain(canvas: Node2D) -> void:
 	var mm: Rect2 = main.MINIMAP
