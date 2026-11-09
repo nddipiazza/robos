@@ -170,13 +170,23 @@ func _test_economy_and_ui_sfx() -> void:
 	assert(audio.sfx_counts.is_empty(), "Expected NO sound when finishing & returning minerals/gas (got: %s)" % str(audio.sfx_counts))
 
 func _test_human_unit_dialogues_and_voices() -> void:
-	assert(audio.voice_streams.size() == 145, "Expected 145 voice dialogue streams loaded, got %d" % audio.voice_streams.size())
-	for line_id in audio.voice_streams.keys():
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/audio/voice/manifest.json"))
+	var expected := {}
+	for profile in manifest.values():
+		for lines in profile.categories.values():
+			for line in lines:
+				assert(not expected.has(line.id), "Duplicate voice line ID: %s" % line.id)
+				expected[line.id] = line.text
+	assert(not expected.is_empty() and audio.voice_streams.size() == expected.size(), "Voice catalog and manifest have different counts")
+	for line_id in expected:
 		var wav_path := "res://assets/audio/voice/%s.wav" % line_id
 		assert(FileAccess.file_exists(wav_path), "Missing voice WAV file: %s" % wav_path)
-		var stream: AudioStreamWAV = audio.voice_streams[line_id]
+		var stream: AudioStreamWAV = audio.voice_streams.get(line_id)
 		assert(stream != null and stream.data.size() > 2000, "Invalid voice stream for %s" % line_id)
-		assert(str(audio.voice_texts.get(line_id, "")) != "", "Missing subtitle text for %s" % line_id)
+		assert(not str(expected[line_id]).is_empty() and audio.voice_texts.get(line_id) == expected[line_id], "Incorrect subtitle text for %s" % line_id)
+	var prospector_minimums := {"select": 5, "move": 4, "ready": 2}
+	for category in prospector_minimums:
+		assert(data.get_unit_dialogues("prospector", category).size() >= prospector_minimums[category], "Missing Prospector %s variants" % category)
 
 	# Verify Pioneer worker has >= 5 varieties for select, move, job_done, and attack, and cycles through all of them
 	var pioneer_select: Array = data.get_unit_dialogues("pioneer", "select")

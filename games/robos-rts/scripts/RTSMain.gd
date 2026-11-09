@@ -401,6 +401,8 @@ func unit_height(u: Dictionary) -> float:
 		return maxf(2.4, r * 1.5)
 	if u["unit_type"] == "spire_walker":
 		return 5.4
+	if u.unit_type == "prospector":
+		return 1.2
 	return 1.9 + r * 0.5
 
 func primary_type() -> String:
@@ -1032,6 +1034,15 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			pending_ability = ""
 		else:
 			push_message("Choose a map location for the sweep.", "warn")
+	elif abil == "deploy_prospector":
+		for deposit in SimEngine.resources.values():
+			if deposit.resource_type != "crystal_field" or wpos.distance_to(deposit.pos) > deposit.radius + 1.6:
+				continue
+			if SimEngine.issue_command(tags, abil, deposit.pos, deposit.tag).ok:
+				pending_ability = ""
+				_spawn_marker(deposit.pos, "gather")
+				return
+		push_message("Choose a visible crystal field with room to deploy.", "warn")
 	elif abil == "reinforce_supply":
 		var target := _order_target_at(wpos, screen)
 		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag).ok:
@@ -1173,6 +1184,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
+		"deploy_prospector":
+			if not selected_owned().any(func(unit): return unit.get("hub_operations", false) and SimEngine.can_use_hub_power(unit)):
+				return "Requires 50 energy from an upgraded Colony Hub."
 		"recon_sweep", "reinforce_supply":
 			if adef.id == "recon_sweep" and SimEngine.vision == null:
 				return "Fog of war is disabled."
@@ -1200,6 +1214,9 @@ func get_card_buttons() -> Array[Dictionary]:
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
 	if pu.is_structure and pu.build_progress < 1.0:
 		abils = ["cancel_construction"]
+	elif pu.unit_type == "colony_hub":
+		abils = abils.duplicate()
+		abils.erase("upgrade_hub" if pu.get("hub_operations", false) else "deploy_prospector")
 	elif not pu.is_worker and RTSData.get_unit_def(pu.unit_type).has("weapon"):
 		abils = abils + ["hold_fire"]
 	if abils.has("move"):

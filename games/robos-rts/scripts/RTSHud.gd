@@ -805,6 +805,8 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Holding fire")
 	if u.get("cloaked", false):
 		status.append("Cloaked")
+	if u.has("expires_tick"):
+		status.append("Deployment ends in %.0fs" % ceilf(maxi(0, int(u.expires_tick) - SimEngine.tick) * SimEngine.TICK_DT))
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
@@ -958,7 +960,7 @@ func _glyph(id: String, r: Rect2) -> void:
 		"research_armor":
 			draw_colored_polygon(P.call([[-16, -16], [16, -16], [16, 5], [0, 20], [-16, 5]]), Color("#6688b7"))
 			draw_polyline(P.call([[-8, 1], [-2, 7], [9, -6]]), col, 3.0 * u, true)
-		"harvest":
+		"harvest", "deploy_prospector":
 			_gem(c, 17.0 * u)
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
