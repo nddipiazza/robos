@@ -75,6 +75,30 @@ def record_result(context):
     context.finished_match = result["match"]
 
 
+@when("the commander queues a worker and starts a selection drag before surrender")
+def prepare_rematch_selection(context):
+    hub = next(unit for unit in context.client.get_observation()["units"]
+               if unit["owner"] == 1 and unit["unit_type"] == "colony_hub")
+    x, y = hub["pos"]["x"], hub["pos"]["y"]
+    context.client.focus_camera(x, y, 45)
+    click_world(context, x, y, height=2.0)
+    assert context.client.ui()["state"]["selected"] == [hub["tag"]]
+    context.client.key("1", ctrl=True)
+    context.client.key("1", pressed=False)
+    context.client.key("S")
+    context.client.key("S", pressed=False)
+    assert find_unit(context, hub["id"])["production_queue_len"] == 1
+    center_x, center_y = context.client.project((x, y, 1.0))[0]
+    context.client.mouse(center_x - 240, center_y - 150)
+    context.rematch_drag_end = (center_x + 240, center_y + 150)
+    context.client.mouse_move(*context.rematch_drag_end)
+
+
+@when("the commander releases the pre-rematch selection drag")
+def release_rematch_selection(context):
+    context.client.mouse(*context.rematch_drag_end, pressed=False)
+
+
 @then("the scorecard shows both commanders' mining totals")
 def scorecard(context):
     assert context.client.ui()["state"]["scorecard_visible"]
@@ -94,5 +118,9 @@ def rematched(context):
     assert match["status"] == "playing" and "scorecard" not in match, match
     for field in ("seed", "difficulty", "strategy", "assigned_starts"):
         assert match[field] == context.finished_match[field], match
-    assert observation["players"]["1"]["crystal_collected"] == 0
-    assert not context.client.ui()["state"]["scorecard_visible"]
+    assert all(observation["players"][seat]["crystal_collected"] == 0 for seat in ("1", "2"))
+    assert observation["players"]["1"]["crystal"] == 50
+    assert all(unit["production_queue_len"] == 0 for unit in observation["units"])
+    ui = context.client.ui()["state"]
+    assert not ui["scorecard_visible"]
+    assert not ui["selected"] and not ui["control_group_members"], ui
