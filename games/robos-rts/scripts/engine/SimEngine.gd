@@ -76,6 +76,9 @@ const REINFORCED_SUPPLY := 8
 const BROOD_SLOTS := 3
 const BROOD_RECHARGE := 12.0
 const POWER_RADIUS := 18.0
+const CARRIER_POWER_RADIUS := 12.0
+const CARRIER_POWER_TICKS := 24 * TICK_RATE
+const CARRIER_REARM_TICKS := 18 * TICK_RATE
 const CLOAK_ENERGY_MAX := 100.0
 const CLOAK_START_ENERGY := 25.0
 const CLOAK_DRAIN := 4.0
@@ -710,12 +713,52 @@ func requires_power(structure_type: String) -> bool:
 
 func is_powered(owner_id: int, pos: Vector2) -> bool:
 	for unit in units.values():
-		if unit.unit_type == "resonator" and unit.owner == owner_id and resonator_covers(unit, pos):
+		if unit.owner == owner_id and (unit.unit_type == "resonator" or unit.unit_type == "lumen_carrier") and power_source_covers(unit, pos):
 			return true
 	return false
 
-func resonator_covers(resonator: Dictionary, pos: Vector2) -> bool:
-	return resonator.build_progress >= 1.0 and resonator.pos.distance_squared_to(pos) <= POWER_RADIUS * POWER_RADIUS
+func power_source_radius(unit: Dictionary) -> float:
+	if unit.build_progress < 1.0:
+		return 0.0
+	if unit.unit_type == "resonator":
+		return POWER_RADIUS
+	if unit.unit_type == "lumen_carrier" and carrier_power_ticks(unit) > 0:
+		return CARRIER_POWER_RADIUS
+	return 0.0
+
+func power_source_covers(unit: Dictionary, pos: Vector2) -> bool:
+	var radius := power_source_radius(unit)
+	return radius > 0.0 and unit.pos.distance_squared_to(pos) <= radius * radius
+
+func carrier_power_ticks(unit: Dictionary) -> int:
+	return maxi(0, int(unit.get("power_field_until", 0)) - tick)
+
+func carrier_rearm_ticks(unit: Dictionary) -> int:
+	return maxi(0, int(unit.get("power_field_rearm", 0)) - tick)
+
+func carrier_field_block_reason(unit: Dictionary, deploy: bool) -> String:
+	if unit.unit_type != "lumen_carrier" or unit.build_progress < 1.0:
+		return "Select a completed Lumen Carrier."
+	if not deploy:
+		return "The power field is folded." if not unit.is_immobile else ""
+	if unit.is_immobile:
+		return "The power field is already anchored."
+	var remaining := carrier_rearm_ticks(unit)
+	return "The field recharges in %.1fs." % (remaining * TICK_DT) if remaining > 0 else ""
+
+func _set_carrier_field(unit: Dictionary, deploy: bool) -> void:
+	unit["is_immobile"] = deploy
+	if deploy:
+		unit["power_field_until"] = tick + CARRIER_POWER_TICKS
+		unit.orders.clear()
+		unit.path.clear()
+		unit.erase("choke_yield")
+		unit["vel"] = Vector2.ZERO
+		unit["has_home_pos"] = false
+	else:
+		unit.erase("power_field_until")
+		unit["power_field_rearm"] = tick + CARRIER_REARM_TICKS
+	ability_triggered.emit(unit, "deploy_power_field" if deploy else "retract_power_field", unit.pos)
 
 func uses_brood_slots(unit: Dictionary) -> bool:
 	return unit.unit_type == "brood_nest" and not match_state.is_empty()
@@ -1729,7 +1772,7 @@ func fast_deployment_block_reason(structure: Dictionary) -> String:
 	if not players[structure.owner].get("fast_deployment", false):
 		return "Research Fast Deployment first."
 	if not is_powered(structure.owner, structure.pos):
-		return "The Waystone needs a Resonator's power field."
+		return "The Waystone needs a friendly power field."
 	var remaining := fast_deployment_ticks(structure)
 	if remaining > 0:
 		return "Deployment recharges in %.1fs." % (remaining * TICK_DT)
@@ -1811,6 +1854,8 @@ func _ground_production_exit_open(rim: Vector2, position: Vector2, heading: Vect
 	return false
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
+	if u.has("power_field_until") and carrier_power_ticks(u) == 0:
+		_set_carrier_field(u, false)
 	if u.unit_type == "skirmisher":
 		if u.get("cloaked", false):
 			u.energy = maxf(0.0, u.energy - CLOAK_DRAIN * dt)
@@ -2456,7 +2501,7 @@ func production_boost_target_reason(owner: int, producer: Dictionary) -> String:
 	if producer.is_empty() or producer.owner != owner or not producer.is_structure or producer.build_progress < 1.0 or RTSData.get_unit_def(producer.unit_type).get("trains", []).is_empty():
 		return "Select a completed friendly producer."
 	if not is_powered(owner, producer.pos):
-		return "The producer needs a Resonator's power field."
+		return "The producer needs a friendly power field."
 	if production_boost_ticks(producer) > 0:
 		return "Production boost is already active."
 	return ""
@@ -3292,6 +3337,14 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			ability_triggered.emit(u, ctype, u.pos)
 			accepted += 1
 			continue
+		if ctype in ["deploy_power_field", "retract_power_field"]:
+			var deploy: bool = ctype == "deploy_power_field"
+			if carrier_field_block_reason(u, deploy).is_empty():
+				_set_carrier_field(u, deploy)
+				accepted += 1
+			continue
+		if u.unit_type == "lumen_carrier" and u.is_immobile and ctype != "stop":
+			continue
 		if u.armed_structure and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
 			continue
 		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
@@ -3925,7 +3978,7 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if not RTSData.get_unit_def(structure["unit_type"]).get("trains", []).has(unit_type):
 		return false
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
-		notice.emit(structure.owner, "Waystone needs a Resonator's power field.", "error")
+		notice.emit(structure.owner, "Waystone needs a friendly power field.", "error")
 		return false
 	if uses_brood_slots(structure) and structure.brood_slots <= 0:
 		notice.emit(structure.owner, "No brood slots ready.", "error")
@@ -4004,7 +4057,7 @@ func research_producer_block_reason(structure: Dictionary, upgrade: String) -> S
 	if structure.is_empty() or structure.unit_type != ability.get("producer") or structure.build_progress < 1.0 or structure.flight_height > 0.0:
 		return "Requires a completed research producer."
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
-		return "The Waystone needs a Resonator's power field."
+		return "The Waystone needs a friendly power field."
 	var required_attachment := str(ability.get("requires_attachment", ""))
 	if not required_attachment.is_empty() and production_attachment(structure).get("unit_type") != required_attachment:
 		return "Requires a completed Research Module."
@@ -4256,6 +4309,11 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"skirmisher":
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["cloaked"] = u.get("cloaked", false)
+			"lumen_carrier":
+				entry["power_field_active"] = carrier_power_ticks(u) > 0
+				if not limited or u.owner == perspective_player:
+					entry["power_field_ticks"] = carrier_power_ticks(u)
+					entry["power_field_rearm_ticks"] = carrier_rearm_ticks(u)
 			"silo", "silo_retracted":
 				entry["supply_reinforced"] = u.get("supply_reinforced", false)
 				entry["salvage_ticks"] = maxi(0, int(u.get("salvage_finish", 0)) - tick)

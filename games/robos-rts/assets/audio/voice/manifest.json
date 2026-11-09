@@ -1134,5 +1134,72 @@
         }
       ]
     }
+  },
+  "lumen_carrier": {
+    "unit_name": "Lumen Carrier",
+    "voice": "en-US-AvaNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "lumen_carrier_select_1",
+          "text": "Lumen Carrier, listening.",
+          "path": "res://assets/audio/voice/lumen_carrier_select_1.wav"
+        },
+        {
+          "id": "lumen_carrier_select_2",
+          "text": "The lattice is standing by.",
+          "path": "res://assets/audio/voice/lumen_carrier_select_2.wav"
+        },
+        {
+          "id": "lumen_carrier_select_3",
+          "text": "Where shall I anchor?",
+          "path": "res://assets/audio/voice/lumen_carrier_select_3.wav"
+        },
+        {
+          "id": "lumen_carrier_select_4",
+          "text": "Core stable. Field on call.",
+          "path": "res://assets/audio/voice/lumen_carrier_select_4.wav"
+        },
+        {
+          "id": "lumen_carrier_select_5",
+          "text": "I can bridge the dark.",
+          "path": "res://assets/audio/voice/lumen_carrier_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "lumen_carrier_move_1",
+          "text": "Moving the core.",
+          "path": "res://assets/audio/voice/lumen_carrier_move_1.wav"
+        },
+        {
+          "id": "lumen_carrier_move_2",
+          "text": "Route set.",
+          "path": "res://assets/audio/voice/lumen_carrier_move_2.wav"
+        },
+        {
+          "id": "lumen_carrier_move_3",
+          "text": "On my way to the line.",
+          "path": "res://assets/audio/voice/lumen_carrier_move_3.wav"
+        },
+        {
+          "id": "lumen_carrier_move_4",
+          "text": "Carrying the light forward.",
+          "path": "res://assets/audio/voice/lumen_carrier_move_4.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "lumen_carrier_ready_1",
+          "text": "Lumen Carrier assembled.",
+          "path": "res://assets/audio/voice/lumen_carrier_ready_1.wav"
+        },
+        {
+          "id": "lumen_carrier_ready_2",
+          "text": "Field core online.",
+          "path": "res://assets/audio/voice/lumen_carrier_ready_2.wav"
+        }
+      ]
+    }
   }
 }

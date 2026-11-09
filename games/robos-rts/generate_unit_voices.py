@@ -31,6 +31,31 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "lumen_carrier": {
+        "unit_name": "Lumen Carrier",
+        "voice": "en-US-AvaNeural",
+        "rate": "-4%",
+        "pitch": "-9Hz",
+        "lines": {
+            "select": [
+                {"id": "lumen_carrier_select_1", "text": "Lumen Carrier, listening."},
+                {"id": "lumen_carrier_select_2", "text": "The lattice is standing by."},
+                {"id": "lumen_carrier_select_3", "text": "Where shall I anchor?"},
+                {"id": "lumen_carrier_select_4", "text": "Core stable. Field on call."},
+                {"id": "lumen_carrier_select_5", "text": "I can bridge the dark."},
+            ],
+            "move": [
+                {"id": "lumen_carrier_move_1", "text": "Moving the core."},
+                {"id": "lumen_carrier_move_2", "text": "Route set."},
+                {"id": "lumen_carrier_move_3", "text": "On my way to the line."},
+                {"id": "lumen_carrier_move_4", "text": "Carrying the light forward."},
+            ],
+            "ready": [
+                {"id": "lumen_carrier_ready_1", "text": "Lumen Carrier assembled."},
+                {"id": "lumen_carrier_ready_2", "text": "Field core online."},
+            ],
+        },
+    },
     "prospector": {
         "unit_name": "Prospector",
         "voice": "en-US-GuyNeural",

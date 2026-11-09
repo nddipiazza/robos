@@ -1002,6 +1002,34 @@ var units: Dictionary = {
 			],
 		}
 	},
+	"lumen_carrier": {
+		"id": "lumen_carrier", "name": "Lumen Carrier", "faction": FACTION_ALIENS,
+		"blurb": "Unarmed field carrier. Anchors in place to provide temporary power for Concord infrastructure and deployments.",
+		"is_structure": false, "is_worker": false, "attributes": ["Armored", "Mechanical"],
+		"crystal_cost": 150, "aether_cost": 75, "supply_cost": 3, "build_time": 32.0,
+		"max_hp": 120.0, "max_shields": 80.0, "armor": 1.0, "radius": 1.65,
+		"speed": 6.4, "sight_range": 20.0, "push_priority": 5,
+		"abilities": ["move", "stop", "deploy_power_field", "retract_power_field"],
+		"dialogues": {
+			"select": [
+				{"id": "lumen_carrier_select_1", "text": "Lumen Carrier, listening."},
+				{"id": "lumen_carrier_select_2", "text": "The lattice is standing by."},
+				{"id": "lumen_carrier_select_3", "text": "Where shall I anchor?"},
+				{"id": "lumen_carrier_select_4", "text": "Core stable. Field on call."},
+				{"id": "lumen_carrier_select_5", "text": "I can bridge the dark."}
+			],
+			"move": [
+				{"id": "lumen_carrier_move_1", "text": "Moving the core."},
+				{"id": "lumen_carrier_move_2", "text": "Route set."},
+				{"id": "lumen_carrier_move_3", "text": "On my way to the line."},
+				{"id": "lumen_carrier_move_4", "text": "Carrying the light forward."}
+			],
+			"ready": [
+				{"id": "lumen_carrier_ready_1", "text": "Lumen Carrier assembled."},
+				{"id": "lumen_carrier_ready_2", "text": "Field core online."}
+			]
+		}
+	},
 	"sunblade": {
 		"id": "sunblade",
 		"name": "Sunblade",
@@ -1151,7 +1179,7 @@ var units: Dictionary = {
 	"waystone": {
 		"id": "waystone",
 		"name": "Waystone",
-		"blurb": "Summons Sunblades, Skirmishers and Spire Walkers. Requires a Resonator's power field in skirmish.",
+		"blurb": "Summons Concord troops and Lumen Carriers. Requires a friendly power field in skirmish.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
@@ -1166,8 +1194,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["sunblade", "skirmisher", "spire_walker"],
-		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy"]
+		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier"],
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier"]
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
@@ -1253,6 +1281,9 @@ var abilities: Dictionary = {
 	"train_sunblade": {"id": "train_sunblade", "name": "Summon Sunblade", "hotkey": "Z", "target": "none", "unit": "sunblade"},
 	"train_skirmisher": {"id": "train_skirmisher", "name": "Summon Skirmisher", "hotkey": "S", "target": "none", "unit": "skirmisher"},
 	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},
+	"train_lumen_carrier": {"id": "train_lumen_carrier", "name": "Summon Lumen Carrier", "hotkey": "L", "target": "none", "unit": "lumen_carrier"},
+	"deploy_power_field": {"id": "deploy_power_field", "name": "Anchor Power Field", "hotkey": "D", "target": "none", "sfx": "power_field_anchor", "desc": "Anchor in place and power nearby Concord structures and landing sites for up to 24 seconds."},
+	"retract_power_field": {"id": "retract_power_field", "name": "Fold Power Field", "hotkey": "R", "target": "none", "sfx": "power_field_fold", "desc": "End the field and restore movement. After folding or expiring, the field takes 18 seconds to recharge."},
 	"build_silo": {"id": "build_silo", "name": "Build Provision Silo", "hotkey": "B", "target": "point", "structure": "silo"},
 	"build_aether_tap": {"id": "build_aether_tap", "name": "Build Aether Tap", "hotkey": "R", "target": "point", "structure": "aether_tap"},
 	"build_muster_hall": {"id": "build_muster_hall", "name": "Build Muster Hall", "hotkey": "X", "target": "point", "structure": "muster_hall"},

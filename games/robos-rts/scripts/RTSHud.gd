@@ -737,7 +737,7 @@ func _draw_single(u: Dictionary) -> void:
 	if float(def.get("speed", 0.0)) > 0.0 or u.flight_height > 0.0:
 		if u.has("living_ground_speed_bonus"):
 			_speed_region = Rect2(x0 + 193.0, by - 11.0 + float(col_b.size()) * 24.0, 122.0, 25.0)
-		col_b.append(["Speed", "%.1f" % SimEngine.effective_move_speed(u)])
+		col_b.append(["Speed", "%.1f" % (0.0 if u.is_immobile else SimEngine.effective_move_speed(u))])
 	for i in range(col_a.size()):
 		var py := by + 8.0 + float(i) * 24.0
 		_text(Vector2(x0, py), str(col_a[i][0]), 15, C_MUTED)
@@ -841,6 +841,15 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
 	if is_own and not u.is_structure and int(def.get("supply_provided", 0)) > 0:
 		status.append("Provides %d supply" % int(def.supply_provided))
+	if is_own and u.unit_type == "lumen_carrier":
+		var field_time := SimEngine.carrier_power_ticks(u) * SimEngine.TICK_DT
+		var rearm_time := SimEngine.carrier_rearm_ticks(u) * SimEngine.TICK_DT
+		if field_time > 0.0:
+			status.append("Anchored  ·  Power field %.1fs" % field_time)
+		elif rearm_time > 0.0:
+			status.append("Mobile  ·  Field recharges %.1fs" % rearm_time)
+		else:
+			status.append("Mobile  ·  Field ready")
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
@@ -862,7 +871,7 @@ func _draw_single(u: Dictionary) -> void:
 		elif u.orders.is_empty() and u.support_target_tag > 0:
 			status.append("Treating wounds")
 	if is_own and not u["is_structure"]:
-		if not u.has("support") or not u.orders.is_empty() or u.support_target_tag == 0:
+		if not (u.unit_type == "lumen_carrier" and u.is_immobile) and (not u.has("support") or not u.orders.is_empty() or u.support_target_tag == 0):
 			status.append(_order_label(u))
 		if u.get("auto_repair", false):
 			status.append("Auto-repair on")
@@ -1031,6 +1040,11 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_arc(c + Vector2(8, 0) * u, 13.0 * u, -1.25, 1.25, 20, Color("#b093ff"), 3.0 * u, true)
 			draw_polyline(P.call([[1, -9], [11, 0], [1, 9]]), Color("#b093ff"), 3.0 * u, true)
 			draw_line(c - Vector2(20, 0) * u, c + Vector2(10, 0) * u, Color("#b093ff"), 3.0 * u)
+		"deploy_power_field", "retract_power_field":
+			var direction := 1.0 if id == "deploy_power_field" else -1.0
+			var violet := Color("#e2c2ff")
+			draw_arc(c, 17.0 * u, 0.0, TAU, 24, violet, 2.0 * u, true)
+			draw_polyline(P.call([[-7, -4 * direction], [0, 5 * direction], [7, -4 * direction]]), violet, 3.0 * u, true)
 		"salvage":
 			draw_polyline(P.call([[-17, -7], [0, 10], [17, -7]]), C_GOLD, 4.0 * u, true)
 			draw_line(c - Vector2(16, -17) * u, c + Vector2(16, 17) * u, C_GOLD, 3.0 * u)

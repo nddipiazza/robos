@@ -23,12 +23,13 @@ func _run() -> void:
 	_test_human_unit_dialogues_and_voices()
 	_test_asymmetric_worker_voices()
 	_test_support_cues()
+	_test_carrier_field_cues()
 	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
 
 func _test_all_wav_files_loaded() -> void:
 	assert(audio != null, "RTSAudio autoload must be registered")
-	assert(audio.SOUND_FILES.size() == 39, "Expected 39 sound files in catalog")
+	assert(audio.SOUND_FILES.size() == 41, "Expected 41 sound files in catalog")
 	for key in audio.SOUND_FILES.keys():
 		var path: String = str(audio.SOUND_FILES[key])
 		assert(FileAccess.file_exists(path), "Missing WAV file on disk: %s" % path)
@@ -265,3 +266,19 @@ func _test_support_cues() -> void:
 	sim.step_ticks(16)
 	assert(audio.sfx_counts.get("vital_restore", 0) == 1 and audio.sfx_counts.get("aegis_restore", 0) == 1)
 	assert(audio.dialogue_counts.get("triage_specialist:support", 0) == 1)
+
+func _test_carrier_field_cues() -> void:
+	sim.reset_state(42, 96, 64)
+	audio.reset_stats()
+	var minimums := {"select": 5, "move": 4, "ready": 2}
+	for category in minimums:
+		var lines: Array = data.get_unit_dialogues("lumen_carrier", category)
+		assert(lines.size() >= minimums[category], "Missing carrier %s variants" % category)
+		for line in lines:
+			assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
+		assert(audio.play_unit_dialogue("lumen_carrier", category, true).get("category") == category)
+	var carrier: Dictionary = sim.spawn_unit("lumen_carrier", 1, Vector2(25, 20))
+	assert(sim.issue_command([carrier.tag], "deploy_power_field").ok)
+	assert(sim.issue_command([carrier.tag], "retract_power_field").ok)
+	assert(audio.sfx_counts.get("power_field_anchor", 0) == 1)
+	assert(audio.sfx_counts.get("power_field_fold", 0) == 1)

@@ -707,7 +707,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 
 		var bob := 0.0
 		var ut := str(u["unit_type"])
-		if moving and not u["is_structure"] and ut != "howitzer" and ut != "spire_walker" and ut != "mote":
+		if moving and not u["is_structure"] and ut != "howitzer" and ut != "spire_walker" and ut != "mote" and ut != "lumen_carrier":
 			bob = absf(sin(anim_time * 13.0 + float(u_tag))) * 0.09
 		u_node.position = Vector3(u["pos"].x, elev + bob, u["pos"].y)
 		u_node.rotation.y = -float(u["facing"])
@@ -726,6 +726,11 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		var hover := u_node.get_node_or_null("Hover")
 		if hover:
 			hover.position.y = 1.1 + sin(anim_time * 2.4 + float(u_tag)) * 0.12
+		if ut == "lumen_carrier":
+			var field_active := SimEngine.carrier_power_ticks(u) > 0
+			u_node.get_node("PowerMast").visible = field_active
+			if field_active:
+				hover.position.y = 0.92
 		if u.is_worker:
 			u_node.get_node("CrystalCargo").visible = u.cargo_amount > 0 and u.cargo_type == "crystal"
 
@@ -798,6 +803,8 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 	else:
 		root = Models.build(str(u["unit_type"]), int(u["owner"]))
 		_cache_pick_bounds(u.unit_type, root)
+		if u.unit_type == "lumen_carrier":
+			_cache_pick_bounds("lumen_carrier_anchored", root, true)
 	root.set_meta("unit_type", u["unit_type"])
 
 	if u.is_worker:
@@ -842,7 +849,7 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 		root.add_child(sh_mi)
 	return root
 
-func _cache_pick_bounds(unit_type: String, model: Node3D) -> void:
+func _cache_pick_bounds(unit_type: String, model: Node3D, include_hidden: bool = false) -> void:
 	if _unit_pick_bounds.has(unit_type):
 		return
 	var bounds := AABB()
@@ -850,16 +857,21 @@ func _cache_pick_bounds(unit_type: String, model: Node3D) -> void:
 		var mesh := child as MeshInstance3D
 		var local := mesh.transform
 		var parent := mesh.get_parent() as Node3D
+		var visible_part := mesh.visible
 		while parent != model:
+			visible_part = visible_part and parent.visible
 			local = parent.transform * local
 			parent = parent.get_parent() as Node3D
+		if not visible_part and not include_hidden:
+			continue
 		var part := local * mesh.get_aabb()
 		bounds = bounds.merge(part) if bounds.has_volume() else part
 	_unit_pick_bounds[unit_type] = bounds
 
 func unit_pick_distance(unit: Dictionary, ray_origin: Vector3, ray_direction: Vector3) -> float:
 	var node: Node3D = unit_nodes.get(unit.tag)
-	var bounds: AABB = _unit_pick_bounds.get(unit.unit_type, AABB())
+	var body_type: String = "lumen_carrier_anchored" if unit.unit_type == "lumen_carrier" and unit.is_immobile else unit.unit_type
+	var bounds: AABB = _unit_pick_bounds.get(body_type, AABB())
 	if node == null or not node.visible or node.get_meta("unit_type") != unit.unit_type or not bounds.has_volume():
 		return INF
 	# Use the body transform without the selection ring, shields, or other effects.

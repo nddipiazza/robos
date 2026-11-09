@@ -82,7 +82,7 @@ func _merged_aabb(node: Node3D, xf: Transform3D, acc: Array) -> void:
 			else:
 				acc[0] = (acc[0] as AABB).merge(box)
 	for c in node.get_children():
-		if c is Node3D:
+		if c is Node3D and c.visible:
 			_merged_aabb(c, xf * (c as Node3D).transform, acc)
 
 func _frame_camera(model: Node3D) -> void:
