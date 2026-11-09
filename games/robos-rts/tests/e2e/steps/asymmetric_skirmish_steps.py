@@ -55,9 +55,10 @@ def invalid_faction(context):
     assert context.client.get_observation()["match"] == before
 
 
-@given('an Iron Narrows match against the "{opponent}" siege AI')
-def siege_opening(context, opponent):
-    result = context.client.new_match(map_id="iron-narrows", seed=42, difficulty="hard", strategy="siege", ai_faction=opponent)
+@given('an Iron Narrows match against the "{opponent}" {strategy} AI')
+def ai_opening(context, opponent, strategy):
+    difficulty = "normal" if strategy == "economy" else "hard"
+    result = context.client.new_match(map_id="iron-narrows", seed=42, difficulty=difficulty, strategy=strategy, ai_faction=opponent)
     assert result["ok"], result
     context.combat_types = {
         "monsters": {"skitterling", "bile_crawler", "blight_hurler"},
@@ -87,6 +88,15 @@ def paid_victory(context, supply, extractor):
     assert context.combat_types & context.finished_types, context.finished_types
     ai = context.last_obs["players"]["2"]
     assert ai["aether_collected"] > 0 and ai["crystal_collected"] > 0 and ai["units_trained"] > 0, ai
+
+
+@then('the AI has a finished "{hall}" at an expansion')
+def economy_expansion(context, hall):
+    match = context.last_obs["match"]
+    start = match["starts"][match["assigned_starts"]["2"]]
+    natural = min(match["expansions"], key=lambda p: (p["x"] - start["x"])**2 + (p["y"] - start["y"])**2)
+    bases = [u for u in context.last_obs["units"] if u["owner"] == 2 and u["unit_type"] == hall and u["build_progress"] == 1.0]
+    assert any(base["pos"]["x"] == natural["x"] and base["pos"]["y"] == natural["y"] for base in bases), bases
 
 
 @when("the commander picks Gnarl Brood versus Aurelian Concord")
