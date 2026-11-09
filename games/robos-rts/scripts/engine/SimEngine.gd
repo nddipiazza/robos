@@ -85,6 +85,9 @@ var _accum_time: float = 0.0
 
 # Map Editor <-> playtest handoff: holds the editor document while RTSMain playtests it.
 var editor_session: Dictionary = {}
+var startup_complete := false
+var resume_from_title := false
+var title_battle_view: Dictionary = {}
 var match_state: Dictionary = {}
 var _skirmish_source: Dictionary = {}
 var vision: Vision
@@ -108,14 +111,20 @@ func _ready() -> void:
 	call_deferred("_load_startup_scenario")
 
 func _load_startup_scenario() -> void:
-	load_default_scenario()
-
+	startup_complete = true
+	var scene := get_tree().current_scene
+	if scene and scene.has_method("waiting_on_title") and scene.waiting_on_title():
+		scenario_name = "Starfall Command"
+		paused = true
+		return
 	var args = OS.get_cmdline_user_args()
 	for arg in args:
 		if arg.begins_with("--scenario="):
 			var res = load_scenario_file(arg.split("=", true, 1)[1])
-			if not bool(res.get("ok", false)):
-				push_warning("[SimEngine] %s" % res.get("error", "Failed to load scenario"))
+			if bool(res.get("ok", false)):
+				return
+			push_warning("[SimEngine] %s" % res.get("error", "Failed to load scenario"))
+	load_default_scenario()
 
 func _process(delta: float) -> void:
 	frame_sim_usec = 0
@@ -160,6 +169,8 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	recent_events.clear()
 	command_history.clear()
 	match_state.clear()
+	resume_from_title = false
+	title_battle_view.clear()
 	_skirmish_source = {}
 	vision = null
 	_accum_time = 0.0

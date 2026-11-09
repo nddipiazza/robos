@@ -2,9 +2,14 @@ extends CanvasLayer
 
 signal observe_requested
 signal health_mode_changed(mode: int)
+signal back_requested
+
+enum Layout { BATTLE, SKIRMISH, SETTINGS }
 
 const DISPLAY_PREFS := "user://rts-display.cfg"
+const VOLUME_LEVELS := [100, 70, 40, 0]
 
+var layout := Layout.BATTLE
 var panel: PanelContainer
 var result_panel: PanelContainer
 var map_picker: OptionButton
@@ -24,30 +29,19 @@ var _map_description: Label
 
 func _ready() -> void:
 	layer = 10
-	panel = _make_panel(Vector2(630, 145), Vector2(660, 640))
+	var in_battle := layout == Layout.BATTLE
+	panel = _make_panel(Vector2(630, 145) if in_battle else Vector2(128, 246), Vector2(660, 640) if in_battle else Vector2(608, 0))
 	var box := _panel_body(panel)
-	var title = Label.new()
-	title.text = "SKIRMISH"
-	title.add_theme_font_size_override("font_size", 32)
-	box.add_child(title)
-	_map_description = _label(box, "")
-	map_picker = _option(box, "Battlefield", SimEngine.SKIRMISH_MAPS.values(), 0)
-	deposit_rules = _option(box, "Resource deposits", ["Unlimited", "Finite"], 0)
-	map_picker.item_selected.connect(_on_map_selected)
-	_on_map_selected(0)
-	difficulty = _option(box, "AI difficulty", ["Easy", "Normal", "Hard"], 1)
-	strategy = _option(box, "AI strategy", ["Rush", "Balanced", "Economy", "Siege"], 1)
-	speed = _option(box, "Game speed", ["1×", "2×", "4×", "8×"], 0)
-	volume = _option(box, "Sound volume", ["100%", "70%", "40%", "Muted"], 0)
-	volume.item_selected.connect(_on_volume_selected)
-	var display := ConfigFile.new()
-	display.load(DISPLAY_PREFS)
-	health_bars = _option(box, "Overhead health bars", ["Selected or damaged", "Always", "Off"], clampi(int(display.get_value("display", "health_bars", 0)), 0, 2))
-	health_bars.item_selected.connect(_on_health_selected)
-	var start = Button.new()
-	start.text = "Start new match"
-	start.pressed.connect(_start)
-	box.add_child(start)
+	_label(box, "SETTINGS" if layout == Layout.SETTINGS else "SKIRMISH", 32)
+	if layout != Layout.SETTINGS:
+		_build_skirmish_options(box)
+	if layout != Layout.SKIRMISH:
+		_build_display_options(box)
+	if layout != Layout.SETTINGS:
+		_button(box, "Start new match", _start)
+	if not in_battle:
+		_button(box, "Back", func(): back_requested.emit())
+		return
 	var resume = Button.new()
 	resume.text = "Resume (F8)"
 	resume.pressed.connect(toggle)
@@ -65,14 +59,44 @@ func _ready() -> void:
 	editor_button.text = "Map editor"
 	editor_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MapEditor.tscn"))
 	box.add_child(editor_button)
+	_button(box, "Main menu", _return_to_title)
 	_create_scorecard()
 	SimEngine.match_finished.connect(_open_result)
-	var explicit_scenario = false
-	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--scenario="):
-			explicit_scenario = true
-	if not explicit_scenario and SimEngine.rts_mode != "backend" and not SimEngine.editor_session.has("doc"):
-		call_deferred("toggle")
+
+func _build_skirmish_options(box: VBoxContainer) -> void:
+	_map_description = _label(box, "")
+	map_picker = _option(box, "Battlefield", SimEngine.SKIRMISH_MAPS.values(), 0)
+	deposit_rules = _option(box, "Resource deposits", ["Unlimited", "Finite"], 0)
+	map_picker.item_selected.connect(_on_map_selected)
+	_on_map_selected(0)
+	difficulty = _option(box, "AI difficulty", ["Easy", "Normal", "Hard"], 1)
+	strategy = _option(box, "AI strategy", ["Rush", "Balanced", "Economy", "Siege"], 1)
+	speed = _option(box, "Game speed", ["1×", "2×", "4×", "8×"], 0)
+
+func _build_display_options(box: VBoxContainer) -> void:
+	var current := 0
+	if RTSAudio:
+		current = 3 if RTSAudio.muted else maxi(0, VOLUME_LEVELS.find(RTSAudio.volume_percent))
+	volume = _option(box, "Sound volume", ["100%", "70%", "40%", "Muted"], current)
+	volume.item_selected.connect(_on_volume_selected)
+	var display := ConfigFile.new()
+	display.load(DISPLAY_PREFS)
+	health_bars = _option(box, "Overhead health bars", ["Selected or damaged", "Always", "Off"], clampi(int(display.get_value("display", "health_bars", 0)), 0, 2))
+	health_bars.item_selected.connect(_on_health_selected)
+
+func open_title_panel() -> void:
+	panel.show()
+	if map_picker:
+		map_picker.grab_focus()
+	else:
+		volume.grab_focus()
+
+func _return_to_title() -> void:
+	SimEngine.resume_from_title = not SimEngine.units.is_empty() and SimEngine.match_state.get("status") != "finished"
+	if SimEngine.resume_from_title:
+		get_parent().save_title_view()
+	SimEngine.paused = true
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/RTSStart.tscn")
 
 func _make_panel(position: Vector2, minimum_size: Vector2) -> PanelContainer:
 	var container := PanelContainer.new()
@@ -191,9 +215,8 @@ func _option(box: VBoxContainer, label_text: String, choices: Array, selected: i
 	return option
 
 func _on_volume_selected(idx: int) -> void:
-	var levels := [100, 70, 40, 0]
-	if RTSAudio and idx >= 0 and idx < levels.size():
-		RTSAudio.set_volume_percent(levels[idx])
+	if RTSAudio and idx >= 0 and idx < VOLUME_LEVELS.size():
+		RTSAudio.set_volume_percent(VOLUME_LEVELS[idx])
 
 func _on_map_selected(index: int) -> void:
 	_map_description.text = "1 Player vs 1 AI · Meridian Guard\n"
@@ -228,6 +251,7 @@ func _start() -> void:
 	if not SimEngine.start_skirmish(map_id, settings).ok:
 		return
 	SimEngine.sim_speed = float(1 << speed.selected)
-	_on_volume_selected(volume.selected)
+	if volume:
+		_on_volume_selected(volume.selected)
 	panel.hide()
 	SimEngine.paused = false
