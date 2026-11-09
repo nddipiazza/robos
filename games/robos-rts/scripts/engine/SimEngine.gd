@@ -1040,11 +1040,11 @@ func _index_footprint(footprint: Dictionary) -> void:
 func _footprint_bin(pos: Vector2) -> Vector2i:
 	return Vector2i(floori(pos.x / FOOTPRINT_BIN_SIZE), floori(pos.y / FOOTPRINT_BIN_SIZE))
 
-func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: bool, cell_size: float = PATH_CELL_SIZE) -> void:
+func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: bool, cell_size: float = PATH_CELL_SIZE, lattice_offset: float = 0.5) -> void:
 	grid.clear()
 	grid.region = Rect2i(0, 0, ceili(map_width / cell_size), ceili(map_height / cell_size))
 	grid.cell_size = Vector2.ONE * cell_size
-	grid.offset = grid.cell_size * 0.5
+	grid.offset = grid.cell_size * lattice_offset
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
@@ -1075,19 +1075,19 @@ func _mark_footprint(grid: AStarGrid2D, footprint: Dictionary, clearance: float)
 			if grid.get_point_position(cell).distance_squared_to(footprint.pos) < reach * reach:
 				grid.set_point_solid(cell)
 
-func _navigation_grid(radius: float, ignore_cliffs: bool, cell_size: float = PATH_CELL_SIZE) -> AStarGrid2D:
+func _navigation_grid(radius: float, ignore_cliffs: bool, cell_size: float = PATH_CELL_SIZE, lattice_offset: float = 0.5) -> AStarGrid2D:
 	if cell_size == PATH_CELL_SIZE and not ignore_cliffs and is_equal_approx(radius, INFANTRY_CLEARANCE):
 		return astar_grid
-	var key := Vector3(radius, float(ignore_cliffs), cell_size)
+	var key := Vector4(radius, float(ignore_cliffs), cell_size, lattice_offset)
 	if not _clearance_grids.has(key):
 		var grid: AStarGrid2D
-		if cell_size == PATH_CELL_SIZE or _has_off_grid_crossing(radius):
+		if cell_size == PATH_CELL_SIZE or _has_off_grid_crossing(radius, lattice_offset):
 			grid = AStarGrid2D.new()
-			_fill_navigation_grid(grid, radius, ignore_cliffs, cell_size)
+			_fill_navigation_grid(grid, radius, ignore_cliffs, cell_size, lattice_offset)
 		_clearance_grids[key] = grid
 	return _clearance_grids[key]
 
-func _has_off_grid_crossing(radius: float) -> bool:
+func _has_off_grid_crossing(radius: float, lattice_offset: float) -> bool:
 	# A continuous opening can fall entirely between coarse grid rows or columns.
 	# Check for such a gap before allocating a second grid on a partial route.
 	if terrain_obstacles.is_empty():
@@ -1100,29 +1100,30 @@ func _has_off_grid_crossing(radius: float) -> bool:
 	for i in range(terrain_obstacles.size()):
 		var a: Rect2 = terrain_obstacles[i]
 		for j in range(i + 1, terrain_obstacles.size()):
-			if _has_off_grid_gap_between(a, terrain_obstacles[j], radius):
+			if _has_off_grid_gap_between(a, terrain_obstacles[j], radius, lattice_offset):
 				return true
 		for gate in gates:
-			if _has_off_grid_gap_between(a, gate, radius):
+			if _has_off_grid_gap_between(a, gate, radius, lattice_offset):
 				return true
 	return false
 
-func _has_off_grid_gap_between(a: Rect2, b: Rect2, radius: float) -> bool:
+func _has_off_grid_gap_between(a: Rect2, b: Rect2, radius: float, lattice_offset: float) -> bool:
 	for axis in range(2):
 		var along := 1 - axis
 		if maxf(a.position[along], b.position[along]) >= minf(a.end[along], b.end[along]):
 			continue
 		var first := minf(a.end[axis], b.end[axis]) + radius
 		var last := maxf(a.position[axis], b.position[axis]) - radius
-		if first < last and _first_path_center(first, PATH_CELL_SIZE) >= last and _first_path_center(first, NARROW_PATH_CELL_SIZE) < last:
+		if first < last and _first_path_center(first, PATH_CELL_SIZE) >= last and _first_path_center(first, NARROW_PATH_CELL_SIZE, lattice_offset) < last:
 			return true
 	return false
 
-func _first_path_center(edge: float, cell_size: float) -> float:
-	return (ceilf(edge / cell_size - 0.5) + 0.5) * cell_size
+func _first_path_center(edge: float, cell_size: float, lattice_offset: float = 0.5) -> float:
+	return (ceilf(edge / cell_size - lattice_offset) + lattice_offset) * cell_size
 
 func _path_cell(grid: AStarGrid2D, pos: Vector2) -> Vector2i:
-	return Vector2i(pos / grid.cell_size).clamp(Vector2i.ZERO, grid.region.size - Vector2i.ONE)
+	var center_shift := grid.cell_size * 0.5 - grid.offset
+	return Vector2i((pos + center_shift) / grid.cell_size).clamp(Vector2i.ZERO, grid.region.size - Vector2i.ONE)
 
 func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float = 0.85, ignore_cliffs: bool = false, interaction_reach: float = INF) -> Array[Vector2]:
 	var started = Time.get_ticks_usec()
@@ -1141,8 +1142,12 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 
 	var path := _trace_navigation_grid(_navigation_grid(unit_radius, ignore_cliffs), start_pos, goal, unit_radius, ignore_cliffs)
 	if not ignore_cliffs and not path.back().is_equal_approx(goal):
-		var narrow_grid := _navigation_grid(unit_radius, false, NARROW_PATH_CELL_SIZE)
-		if narrow_grid != null:
+		# An integer-centered lane avoids giving a one-unit passage two
+		# parallel tracks. Try the half-cell lattice if the centered route fails.
+		for lattice_offset in [0.0, 0.5]:
+			var narrow_grid := _navigation_grid(unit_radius, false, NARROW_PATH_CELL_SIZE, lattice_offset)
+			if narrow_grid == null:
+				continue
 			var narrow_path := _trace_navigation_grid(narrow_grid, start_pos, goal, unit_radius, false)
 			if narrow_path.back().is_equal_approx(goal):
 				return narrow_path

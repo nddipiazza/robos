@@ -13,7 +13,8 @@ func _run() -> void:
 	_test_opposing_convoys()
 	_test_idle_and_cargo()
 	_test_overhead_traffic()
-	_test_crowded_entrance()
+	_test_crowded_entrance(49.0, 16.0)
+	_test_crowded_entrance(48.0, 34.0)
 	print("Choke traffic: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -88,19 +89,21 @@ func _yield_release_tick(flyer_arrival_tick: int) -> int:
 			return sim.tick
 	return -1
 
-func _test_crowded_entrance() -> void:
+func _test_crowded_entrance(center: float, length: float) -> void:
 	sim.reset_state(42, 96, 96)
-	sim.terrain_obstacles.append(Rect2(0, 40, 47.5, 16))
-	sim.terrain_obstacles.append(Rect2(50.5, 40, 45.5, 16))
+	var start := 48.0 - length * 0.5
+	var end := 48.0 + length * 0.5
+	sim.terrain_obstacles.append(Rect2(0, start, center - 1.5, length))
+	sim.terrain_obstacles.append(Rect2(center + 1.5, start, 96.0 - center - 1.5, length))
 	var advancing: Array[int] = []
 	var retreating: Array[int] = []
 	for offset in [Vector2.ZERO, Vector2(2, 0), Vector2(0, 2.3)]:
-		advancing.append(sim.spawn_unit("rifleman", 1, Vector2(49, 36) + Vector2(offset.x, -offset.y)).tag)
-		retreating.append(sim.spawn_unit("rifleman", 1, Vector2(49, 60) + offset).tag)
-	sim.issue_command(advancing, "move", Vector2(49, 68))
-	sim.issue_command(retreating, "move", Vector2(49, 28), 0, "", true)
+		advancing.append(sim.spawn_unit("rifleman", 1, Vector2(center, start - 4.0) + Vector2(offset.x, -offset.y)).tag)
+		retreating.append(sim.spawn_unit("rifleman", 1, Vector2(center, end + 4.0) + offset).tag)
+	sim.issue_command(advancing, "move", Vector2(center, end + 12.0))
+	sim.issue_command(retreating, "move", Vector2(center, start - 12.0), 0, "", true)
 	sim.step_ticks(1152)
-	_check(advancing.all(func(tag): return sim.units[tag].pos.y > 56.0 and sim.units[tag].orders.is_empty()),
+	_check(advancing.all(func(tag): return sim.units[tag].pos.y > end and sim.units[tag].orders.is_empty()),
 		"The advancing group returns to the lane after crowd steering displaces its approach")
-	_check(retreating.all(func(tag): return sim.units[tag].pos.y < 40.0 and sim.units[tag].orders.is_empty()),
+	_check(retreating.all(func(tag): return sim.units[tag].pos.y < start and sim.units[tag].orders.is_empty()),
 		"The retreating group also clears the crowded entrance")
