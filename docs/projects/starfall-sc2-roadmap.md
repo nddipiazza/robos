@@ -46,7 +46,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 ## 031–040 Meridian Guard tech
 
 - [ ] **031 Technology branch panel.** The faction card shows unlocked production, prerequisites, and costs.
-- [ ] **032 Production attachments.** Muster Halls can build an attachment when its pad is clear.
+- [x] **032 Production attachments.** Muster Halls can build an attachment when its pad is clear.
 - [ ] **033 Dual production attachment.** One attachment permits two concurrent light infantry jobs with normal costs.
 - [ ] **034 Research attachment.** A different attachment unlocks infantry abilities and competes for the same pad.
 - [ ] **035 Deployable supply headquarters.** A Colony Hub upgrade unlocks an alternative energy spend with the existing recon and supply powers.
@@ -84,11 +84,11 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 
 ## 061–070 Skirmish maps and AI
 
-- [ ] **061 Competitive map pool.** Add at least three original duel maps with distinct safe expansion and attack routes.
-- [ ] **062 Lobby map preview.** Display terrain, candidate starts, expansion sites, and special features before launch.
-- [ ] **063 Start symmetry checks.** Check opening travel and resource capacity from each spawn on competitive maps.
+- [x] **061 Competitive map pool.** Add at least three original duel maps with distinct safe expansion and attack routes.
+- [x] **062 Lobby map preview.** Display terrain, candidate starts, expansion sites, and special features before launch.
+- [x] **063 Start symmetry checks.** Check opening travel and resource capacity from each spawn on competitive maps.
 - [ ] **064 Map pool filters.** Filter by size, starts, finite deposits, and special terrain.
-- [ ] **065 AI build profiles.** Each faction has tested economic, aggressive, and tech-heavy openings.
+- [x] **065 AI build profiles.** Each faction has tested economic, aggressive, and tech-heavy openings.
 - [ ] **066 AI scouting worker.** The opponent scouts plausible starts and reacts to visible evidence.
 - [ ] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
 - [ ] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
@@ -110,29 +110,29 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 
 ## 081–090 Combat and economy reliability
 
-- [ ] **081 Attack-move pursuit limits.** An army resumes its original route after chasing a retreating unit beyond its pursuit range. Verify hold position remains anchored through the same encounter.
-- [ ] **082 Fire and movement timing.** Test move and stop on the ticks immediately before and after impact. Preserve valid shots and cooldowns across rapid alternating orders.
-- [ ] **083 Splash boundaries.** Match the warning ring to the actual hit radius at cliff edges and around large units. Check friendly fire, inner and outer damage, and air and ground overlap.
-- [ ] **084 High-ground engagements.** Verify low-ground units lose a target that climbs out of sight and regain it when a spotter arrives. Keep targeting, projectile cues, and fog consistent.
-- [ ] **085 Concealment under crossfire.** Test brush, cloak, sweeps, and detector loss together. Hidden targets stay out of attack selection, warning decals, and the minimap until revealed.
+- [x] **081 Attack-move pursuit limits.** An army resumes its original route after chasing a retreating unit beyond its pursuit range. Verify hold position remains anchored through the same encounter.
+- [x] **082 Fire and movement timing.** Test move and stop on the ticks immediately before and after impact. Preserve valid shots and cooldowns across rapid alternating orders.
+- [x] **083 Splash boundaries.** Match the warning ring to the actual hit radius at cliff edges and around large units. Check friendly fire, inner and outer damage, and air and ground overlap.
+- [x] **084 High-ground engagements.** Verify low-ground units lose a target that climbs out of sight and regain it when a spotter arrives. Keep targeting, projectile cues, and fog consistent.
+- [x] **085 Concealment under crossfire.** Test brush, cloak, sweeps, and detector loss together. Hidden targets stay out of attack selection, warning decals, and the minimap until revealed.
 - [x] **086 Support in a retreat.** Automatic treatment switches patients when the current ally dies or retreats outside range. Verify explicit orders take precedence and interrupted treatment spends energy only for restoration already delivered.
-- [ ] **087 Supply changes with queued units.** Destroy a supply provider during production, cancel one paid slot, then restore supply. Validate reservation and refund accounting for each faction.
-- [ ] **088 Mineral-line saturation at scale.** Test 12, 24, and 36 workers on finite and unlimited lines. Verify workers redistribute as slots open, deliver each load once, and recover when a path is blocked.
-- [ ] **089 Construction and repair under pressure.** Kill a builder during placement, replace it, and assign multiple repairers with a low bank. Verify one foundation charge and bounded repair spending.
+- [x] **087 Supply changes with queued units.** Destroy a supply provider during production, cancel one paid slot, then restore supply. Validate reservation and refund accounting for each faction.
+- [x] **088 Mineral-line saturation at scale.** Test 12, 24, and 36 workers on finite and unlimited lines. Verify workers redistribute as slots open, deliver each load once, and recover when a path is blocked.
+- [x] **089 Construction and repair under pressure.** Kill a builder during placement, replace it, and assign multiple repairers with a low bank. Verify one foundation charge and bounded repair spending.
 - [ ] **090 Production queue consistency.** Exercise queued training, research, and cancellation as buildings lose power or attachments. Check exact costs, refunds, prerequisites, and resumed progress.
 
 ## 091–100 Skirmish depth and performance
 
-- [ ] **091 AI economy recovery after a raid.** After losing workers, gas, or a production building, the AI rebuilds a working economy and resumes paid production from its surviving base.
-- [ ] **092 Opening timing and counterplay.** Measure first attack, expansion, and tech timings for the three factions on the same maps. Verify a timely defense has a viable paid answer to each opening.
-- [ ] **093 Unit counter and upgrade checks.** Run equal-cost encounters for core unit roles and weapon tiers. Verify each intended counter has a measurable advantage and that positioning can change the outcome.
-- [ ] **094 Expansion safety and counterattacks.** Verify each skirmish spawn can defend a nearby expansion and that its opponent has a distinct raiding or flanking route to contest it.
-- [ ] **095 Match end and rematch integrity.** Cover annihilation with unfinished structures, mutual destruction, and surrender. A rematch starts with clean resources, queues, selection, and AI orders.
-- [ ] **096 Large-army simulation stress.** Run two paid armies near the supply cap with active worker lines. Compare tick cost and verify repeated runs with the same seed and inputs reach the same result.
-- [ ] **097 Fog and minimap cost.** Profile a large explored map during simultaneous attacks and detection changes. Keep the minimap responsive and confirm fog updates within the simulation’s vision cadence.
-- [ ] **098 Combat rendering budget.** Stress a dense fight with projectiles, splash, smoke, and shield effects. Track frame times and keep selection, health bars, and commands readable during the burst.
-- [ ] **099 Long skirmish soak.** Play a sustained match through depletion, expansion, and repeated battles. Restart it several times and check for stalled commands, memory growth, and stale world objects.
-- [ ] **100 Core skirmish acceptance.** Play paid matches across faction pairings and maps from opening through victory or surrender. Require the movement, economy, combat, AI, and responsiveness checks to pass together.
+- [x] **091 AI economy recovery after a raid.** After losing workers, gas, or a production building, the AI rebuilds a working economy and resumes paid production from its surviving base.
+- [x] **092 Opening timing and counterplay.** Measure first attack, expansion, and tech timings for the three factions on the same maps. Verify a timely defense has a viable paid answer to each opening.
+- [x] **093 Unit counter and upgrade checks.** Run equal-cost encounters for core unit roles and weapon tiers. Verify each intended counter has a measurable advantage and that positioning can change the outcome.
+- [x] **094 Expansion safety and counterattacks.** Verify each skirmish spawn can defend a nearby expansion and that its opponent has a distinct raiding or flanking route to contest it.
+- [x] **095 Match end and rematch integrity.** Cover annihilation with unfinished structures, mutual destruction, and surrender. A rematch starts with clean resources, queues, selection, and AI orders.
+- [x] **096 Large-army simulation stress.** Run two paid armies near the supply cap with active worker lines. Compare tick cost and verify repeated runs with the same seed and inputs reach the same result.
+- [x] **097 Fog and minimap cost.** Profile a large explored map during simultaneous attacks and detection changes. Keep the minimap responsive and confirm fog updates within the simulation’s vision cadence.
+- [x] **098 Combat rendering budget.** Stress a dense fight with projectiles, splash, smoke, and shield effects. Track frame times and keep selection, health bars, and commands readable during the burst.
+- [x] **099 Long skirmish soak.** Play a sustained match through depletion, expansion, and repeated battles. Restart it several times and check for stalled commands, memory growth, and stale world objects.
+- [x] **100 Core skirmish acceptance.** Play paid matches across faction pairings and maps from opening through victory or surrender. Require the movement, economy, combat, AI, and responsiveness checks to pass together.
 
 ## Design references
 
