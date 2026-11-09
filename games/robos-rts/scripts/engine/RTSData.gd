@@ -166,6 +166,7 @@ var units: Dictionary = {
 			"attack_type": "ranged",
 			"damage": 10.0,
 			"bonus": {"Armored": 10.0},
+			"target_priority": {"Armored": 60.0},
 			"attacks": 1,
 			"range": 14.5,
 			"period": 1.07,
@@ -265,7 +266,7 @@ var units: Dictionary = {
 	"howitzer_emplaced": {
 		"id": "howitzer_emplaced",
 		"name": "Howitzer (Emplaced Mode)",
-		"blurb": "Deployed artillery. Range 31 with splash damage, minimum range 5. Cannot move until mobilized.",
+		"blurb": "Deployed artillery. Range 31, minimum range 5. Splash deals half damage to allies. Cannot move until mobilized.",
 		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
@@ -293,9 +294,10 @@ var units: Dictionary = {
 			"range": 31.0,
 			"min_range": 5.0,
 			"period": 2.14,
-			"damage_point": 0.12,
+			"damage_point": 0.35,
 			"backswing": 0.30,
-			"splash_radius": 3.5
+			"splash_radius": 3.5,
+			"friendly_splash": 0.5
 		},
 		"abilities": ["stop", "attack", "mobilize"],
 		"dialogues": {
@@ -631,6 +633,7 @@ var units: Dictionary = {
 			"name": "Corrosive Lob",
 			"damage": 18.0,
 			"bonus": {"Structure": 8.0},
+			"target_priority": {"Structure": 220.0},
 			"attacks": 1,
 			"range": 15.0,
 			"period": 1.14,
@@ -947,7 +950,7 @@ var abilities: Dictionary = {
 	"phase_cloak": {"id": "phase_cloak", "name": "Phase Cloak", "hotkey": "C", "target": "none", "desc": "Spend 25 energy to cloak. Cloak drains 4 energy per second. Detectors and recon sweeps can reveal this unit.", "sfx": "phase_step"},
 	"hold_fire": {"id": "hold_fire", "name": "Hold Fire", "hotkey": "K", "target": "none", "desc": "Toggle automatic attacks. Explicit attack orders can still fire."},
 	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5, "sfx": "charge_activate"},
-	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31 with splash, minimum range 5. Cannot move while emplaced.", "morph_to": "howitzer_emplaced", "sfx": "siege_transform"},
+	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31, minimum range 5. Splash deals half damage to allies. Cannot move while emplaced.", "morph_to": "howitzer_emplaced", "sfx": "siege_transform"},
 	"mobilize": {"id": "mobilize", "name": "Mobilize", "hotkey": "D", "target": "none", "desc": "Pack up so the howitzer can move again.", "morph_to": "howitzer", "sfx": "siege_transform"},
 	"retract_silo": {"id": "retract_silo", "name": "Retract Silo", "hotkey": "R", "target": "none", "desc": "Lower into the ground so units can walk over it.", "morph_to": "silo_retracted", "sfx": "silo_gate"},
 	"extend_silo": {"id": "extend_silo", "name": "Extend Silo", "hotkey": "R", "target": "none", "desc": "Raise the silo again to block the path.", "morph_to": "silo", "sfx": "silo_gate"},

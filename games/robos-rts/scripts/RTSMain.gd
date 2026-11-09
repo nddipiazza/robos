@@ -1508,6 +1508,8 @@ func ui_state() -> Dictionary:
 		"camera_pan_speed": match_menu.pan_speed if match_menu else 46.0,
 		"order_lines_visible": _order_lines_visible(),
 		"weapon_ranges": _selected_weapon_ranges(),
+		"weapon_timing": selected_weapon_timing(),
+		"area_warnings": SimEngine.units.values().map(_area_attack_warning).filter(func(warning): return not warning.is_empty()),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"worker_rally_previews": _worker_rally_previews.values().map(func(deposit): return deposit.tag),
 		"recent_income": SimEngine.recent_income(local_player),
@@ -1547,6 +1549,10 @@ func _draw() -> void:
 		_draw_range_ring(deposit.pos, deposit.radius + 0.2, Color("#fbbf24"))
 	for u in SimEngine.units.values():
 		if SimEngine.can_see_unit(viewing_player(), u):
+			if u.attack_state == "windup":
+				var warning := _area_attack_warning(u)
+				if not warning.is_empty():
+					_draw_area_attack_warning(warning)
 			_draw_unit_bars(u, font)
 			if u.get("cloaked", false):
 				_ellipse(world_to_screen(u.pos, 0.3), 12.0, Color(0.58, 0.83, 1.0, 0.7), 1.5)
@@ -1578,6 +1584,51 @@ func _draw_range_ring(position: Vector2, radius: float, color: Color) -> void:
 		var offset := Vector2.from_angle(TAU * i / 32.0) * radius
 		outline.append(world_to_screen(position + offset, 0.2))
 	draw_polyline(outline, color, 1.5, true)
+
+func selected_weapon_timing() -> Dictionary:
+	if selected_tags.size() != 1:
+		return {}
+	var unit: Dictionary = SimEngine.units.get(selected_tags[0], {})
+	if unit.is_empty() or unit.owner != local_player or unit.build_progress < 1.0:
+		return {}
+	var weapon: Dictionary = RTSData.get_unit_def(unit.unit_type).get("weapon", {})
+	if weapon.is_empty():
+		return {}
+	if unit.attack_state == "windup":
+		var remaining := float(unit.attack_state_timer)
+		return {"state": "Wind-up", "remaining": remaining, "progress": 1.0 - remaining / unit.attack_windup_duration}
+	if unit.weapon_cooldown > 0.0:
+		var recovery := float(unit.weapon_cooldown)
+		# Surge can wear off partway through the remaining cooldown.
+		var saved_time := minf(float(unit.surge_timer), recovery / 1.5) * 0.5
+		return {"state": "Cooldown", "remaining": recovery - saved_time, "progress": 1.0 - recovery / float(weapon.period)}
+	return {"state": "Ready", "remaining": 0.0, "progress": 1.0}
+
+func _area_attack_warning(attacker: Dictionary) -> Dictionary:
+	if attacker.attack_state != "windup":
+		return {}
+	var weapon: Dictionary = RTSData.get_unit_def(attacker.unit_type).get("weapon", {})
+	var radius := float(weapon.get("splash_radius", 0.0))
+	if radius <= 0.0 or not SimEngine.can_see_unit(viewing_player(), attacker):
+		return {}
+	var target: Dictionary = SimEngine.units.get(attacker.attack_target_tag, {})
+	if target.is_empty() or not SimEngine.can_see_unit(viewing_player(), target) or not SimEngine.can_see_unit(attacker.owner, target):
+		return {}
+	return {"position": [target.pos.x, target.pos.y], "radius": radius, "remaining": float(attacker.attack_state_timer), "fraction": float(attacker.attack_state_timer) / attacker.attack_windup_duration}
+
+func _draw_area_attack_warning(warning: Dictionary) -> void:
+	var position := Vector2(warning.position[0], warning.position[1])
+	var radius := float(warning.radius)
+	var fraction := clampf(warning.fraction, 0.0, 1.0)
+	var outline := PackedVector2Array()
+	for i in range(32):
+		var offset := Vector2.from_angle(TAU * i / 32.0 - PI / 2.0) * radius
+		outline.append(world_to_screen(position + offset, 0.25))
+	draw_colored_polygon(outline, Color(1.0, 0.29, 0.15, 0.15))
+	outline.append(outline[0])
+	draw_polyline(outline, Color("#ea624b"), 1.5, true)
+	var arc := outline.slice(0, maxi(2, ceili(32.0 * fraction) + 1))
+	draw_polyline(arc, Color("#ffb276"), 3.0, true)
 
 func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
 	var label := "%d/%d" % [site.assigned, site.ideal]

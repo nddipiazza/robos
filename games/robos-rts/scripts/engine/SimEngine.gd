@@ -805,6 +805,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"attack_state_timer": 0.0,
 		"attack_target_tag": 0,
 		"weapon_cooldown": 0.0,
+		"attack_windup_duration": 0.0,
 		"surge_timer": 0.0,
 		"charge_timer": 0.0,
 		"phase_cooldown": 0.0,
@@ -2036,6 +2037,7 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 	var wpn_range = float(wpn.get("range", 5.0))
 	var min_range = float(wpn.get("min_range", 0.0))
 	var scan_rad = wpn_range if range_only else max(wpn_range, float(u["sight_range"]))
+	var preferences: Dictionary = wpn.get("target_priority", {})
 
 	var candidates = query_units_in_radius(u["pos"], scan_rad + 2.5, u["owner"])
 	var best: Dictionary = {}
@@ -2055,8 +2057,12 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 			prio = 20.0
 		elif c["is_worker"]:
 			prio = 100.0
-		var in_range_bonus = 50.0 if d_edge <= wpn_range else 0.0
-		var score = prio + in_range_bonus - d_edge * 2.5 - (c["hp"] / c["max_hp"]) * 10.0
+		if d_edge <= wpn_range:
+			prio += 50.0
+			for attr in preferences:
+				if c.attributes.has(attr):
+					prio += float(preferences[attr])
+		var score = prio - d_edge * 2.5 - (c["hp"] / c["max_hp"]) * 10.0
 		if score > best_score:
 			best_score = score
 			best = c
@@ -2070,12 +2076,13 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 		return
 	var def = RTSData.get_unit_def(u["unit_type"])
 	var wpn = def.get("weapon", {})
-	if wpn.is_empty():
+	if wpn.is_empty() or _edge_distance(u, target) < float(wpn.get("min_range", 0.0)):
 		return
 	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	u["attack_state"] = "windup"
 	u["attack_target_tag"] = target["tag"]
-	u["attack_state_timer"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
+	u["attack_windup_duration"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
+	u["attack_state_timer"] = u["attack_windup_duration"]
 
 func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> void:
 	var def = RTSData.get_unit_def(attacker["unit_type"])
@@ -2094,15 +2101,17 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> vo
 		primary_target["slow_timer"] = 2.0
 
 	if splash_rad > 0.0:
+		var friendly_scale := float(wpn.get("friendly_splash", 0.0))
 		var splashed = query_units_in_radius(primary_target["pos"], splash_rad)
 		for s in splashed:
-			if s["tag"] == primary_target["tag"] or s["hp"] <= 0.0:
+			if s["tag"] == primary_target["tag"] or s["tag"] == attacker["tag"] or s["hp"] <= 0.0:
 				continue
-			if s["owner"] == attacker["owner"]:
+			var allegiance_scale := friendly_scale if s["owner"] == attacker["owner"] else 1.0
+			if allegiance_scale <= 0.0:
 				continue
 			var d = primary_target["pos"].distance_to(s["pos"])
 			var mult = 0.5 if d <= splash_rad * 0.5 else 0.25
-			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult)
+			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult * allegiance_scale)
 
 	var evt = {
 		"tick": tick,
@@ -2132,7 +2141,8 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	target["out_of_combat_timer"] = 0.0
 	if target.erase("salvage_finish"):
 		emit_signal("notice", target.owner, "Damage interrupted salvage.", "warn")
-	emit_signal("unit_damaged", target["owner"], target["pos"])
+	if target.owner != attacker.owner:
+		emit_signal("unit_damaged", target["owner"], target["pos"])
 
 	# Aegis Shields absorb damage before HP
 	if target["shields"] > 0.0:
