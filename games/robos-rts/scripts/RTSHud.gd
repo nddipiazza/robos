@@ -507,7 +507,10 @@ func _draw_multi() -> void:
 func _order_label(u: Dictionary) -> String:
 	if u["orders"].is_empty():
 		return "Engaging" if u.attack_state != "idle" else "Idle"
-	match str(u["orders"][0]["type"]):
+	var active: Dictionary = u.orders.front()
+	if active.get("waiting_for_route", false):
+		return "Waiting for route"
+	match str(active.type):
 		"move": return "Moving"
 		"attack_move": return "Attack-moving"
 		"patrol": return "Patrolling"

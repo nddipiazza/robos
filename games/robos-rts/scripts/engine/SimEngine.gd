@@ -22,6 +22,7 @@ signal scenario_loaded(scenario_name: String)
 signal paused_step
 signal notice(owner_id: int, text: String, kind: String)
 signal unit_damaged(owner_id: int, pos: Vector2)
+signal order_path_resolved(unit: Dictionary, order: Dictionary, requested: Vector2, endpoint: Vector2, status: String)
 signal weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, hit_shields: bool)
 signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
 signal resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2)
@@ -2165,21 +2166,33 @@ func _prepare_order_path(u: Dictionary, order: Dictionary) -> Vector2:
 				_update_path_reach(u, order, goal, anchor)
 				return slot
 	if _prepare_path(u, goal, 0.05):
-		_update_path_reach(u, order, goal, u.path.back())
+		var endpoint: Vector2 = u.path.back()
 		if order.has("_formation"):
 			_apply_group_arrival(u, order)
+		_update_path_reach(u, order, goal, endpoint)
 	return u.path.back()
 
 func _update_path_reach(u: Dictionary, order: Dictionary, requested: Vector2, endpoint: Vector2) -> void:
-	if u.flight_height > 0.0 or order.get("navigation_revision", -1) == _navigation_revision:
+	if u.flight_height > 0.0:
 		return
-	var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
-	var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
-	# A route that existed when this leg started can reopen after a gate
-	# lowers or a foundation dies. Keep the remaining queue in place.
-	order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_goal
-	order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_goal
-	order["navigation_revision"] = _navigation_revision
+	var revised: bool = order.get("navigation_revision", -1) != _navigation_revision
+	var show_feedback := not order_path_resolved.get_connections().is_empty()
+	var shortened := show_feedback and requested.is_finite() and endpoint.distance_squared_to(requested) > 1.0
+	var status := ""
+	if revised or shortened:
+		var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
+		var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
+		if revised:
+			# A route that existed when this leg started can reopen after a gate
+			# lowers or a foundation dies. Keep the remaining queue in place.
+			order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_goal
+			order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_goal
+			order["navigation_revision"] = _navigation_revision
+		if shortened:
+			status = "adjusted" if reaches_goal else ("waiting" if order.get("waiting_for_route", false) else "partial")
+	if show_feedback:
+		# Test reach against the unformed endpoint, then mark the actual slot.
+		order_path_resolved.emit(u, order, requested, u.path.back(), status)
 
 func _can_finish_path_order(u: Dictionary, order: Dictionary) -> bool:
 	return u.flight_height > 0.0 or (not nav_dirty and not order.get("waiting_for_route", false))

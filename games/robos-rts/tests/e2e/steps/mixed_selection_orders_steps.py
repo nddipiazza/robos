@@ -10,7 +10,7 @@ def select_mixed_group(context, names):
     for index, name in enumerate(names.split(",")):
         unit = find_unit(context, name.strip())
         pos = unit["pos"]
-        x, y = context.client.project((pos["x"], pos["y"], 1.15))[0]
+        x, y = context.client.project((pos["x"], pos["y"], pos["z"] + 1.15))[0]
         context.client.mouse(x, y, shift=index > 0)
         context.client.mouse(x, y, pressed=False, shift=index > 0)
 

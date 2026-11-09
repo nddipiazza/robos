@@ -22,6 +22,7 @@ const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
 const GRID_KEYS := "QWERTASDFGZXCVB"
 const EDGE_SCROLL_MARGIN := 14.0
+const PATH_FEEDBACK_FADE := 1.5
 
 var world_3d: Node3D
 var icons: Node
@@ -54,6 +55,7 @@ var attack_history: Array[Vector2] = []
 var _attack_cursor := -1
 var _tracked_tag := 0
 var click_markers: Array[Dictionary] = []
+var _path_feedback: Dictionary = {}
 var hover_override: Variant = null
 var show_help: bool = false
 var show_names: bool = false
@@ -76,6 +78,7 @@ func _ready() -> void:
 		set_process(false)
 		return
 	SimEngine.resource_depleted.connect(_on_resource_depleted)
+	SimEngine.order_path_resolved.connect(_on_order_path_resolved)
 	get_window().focus_exited.connect(_clear_held_keys)
 	world_3d = RTSWorld3DScript.new()
 	world_3d.name = "RTSWorld3D"
@@ -151,6 +154,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	_tracked_tag = 0
 	observer_player = -1
 	click_markers.clear()
+	_path_feedback.clear()
 	active_type = ""
 	banner_ttl = 4.5
 	focus_on_base()
@@ -370,6 +374,7 @@ func _process(delta: float) -> void:
 		click_markers[i]["ttl"] -= delta
 		if click_markers[i]["ttl"] <= 0.0:
 			click_markers.remove_at(i)
+	_expire_path_feedback(delta)
 
 	_prune_control_groups()
 
@@ -774,6 +779,38 @@ func _spawn_attack_marker(target: Dictionary) -> void:
 	if target.flight_height > 0.0:
 		height = float(target.flight_height) - SimEngine.get_elevation_at(target.pos) + 0.35
 	_spawn_marker(target.pos, "attack", height)
+
+func _on_order_path_resolved(unit: Dictionary, order: Dictionary, requested: Vector2, endpoint: Vector2, status: String) -> void:
+	if unit.owner != local_player:
+		return
+	if status.is_empty():
+		_path_feedback.erase(unit.tag)
+		return
+	_path_feedback[unit.tag] = {"order": order, "requested": requested, "endpoint": endpoint, "status": status, "ttl": PATH_FEEDBACK_FADE}
+
+func _expire_path_feedback(delta: float) -> void:
+	for tag in _path_feedback.keys():
+		var feedback: Dictionary = _path_feedback[tag]
+		var unit: Dictionary = SimEngine.units.get(tag, {})
+		if unit.is_empty() or unit.owner != local_player:
+			_path_feedback.erase(tag)
+		elif not unit.orders.is_empty():
+			var active: Dictionary = unit.orders.front()
+			if not is_same(active, feedback.order) or active.get("target_pos") != feedback.requested:
+				_path_feedback.erase(tag)
+		else:
+			feedback.ttl -= delta
+			var arrival := float(feedback.order.get("arrival_radius", 1.5))
+			if feedback.ttl <= 0.0 or unit.pos.distance_squared_to(feedback.endpoint) > pow(arrival * 2.8, 2.0):
+				_path_feedback.erase(tag)
+
+func _selected_path_feedback() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for tag in selected_tags:
+		if _path_feedback.has(tag) and SimEngine.units.has(tag) and SimEngine.units[tag].owner == local_player:
+			var feedback: Dictionary = _path_feedback[tag]
+			result.append({"tag": tag, "status": feedback.status, "endpoint": feedback.endpoint, "alpha": feedback.ttl / PATH_FEEDBACK_FADE})
+	return result
 
 func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true, command: String = "rally", screen: Vector2 = Vector2.INF) -> void:
 	var best_distance := INF
@@ -1551,6 +1588,9 @@ func ui_state() -> Dictionary:
 		"weapon_timing": selected_weapon_timing(),
 		"area_warnings": SimEngine.units.values().map(_area_attack_warning).filter(func(warning): return not warning.is_empty()),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
+		"path_feedback": _selected_path_feedback().map(func(feedback): return {
+			"tag": feedback.tag, "status": feedback.status, "endpoint": [feedback.endpoint.x, feedback.endpoint.y]
+		}),
 		"worker_rally_previews": _worker_rally_previews.values().map(func(deposit): return deposit.tag),
 		"recent_income": SimEngine.recent_income(local_player),
 		"camera_follow_tag": _tracked_tag,
@@ -1615,6 +1655,7 @@ func _draw() -> void:
 					_draw_saturation(u, site, font)
 	_draw_build_ghost()
 	_draw_click_markers()
+	_draw_path_feedback()
 	if show_names:
 		_draw_name_labels(font)
 	if is_box_selecting:
@@ -1748,6 +1789,32 @@ func _draw_click_markers() -> void:
 		col.a = 1.0 - t
 		_ellipse(sp, lerpf(26.0, 8.0, t), col, 2.5)
 
+func _draw_path_feedback() -> void:
+	var marked_endpoints := {}
+	for feedback in _selected_path_feedback():
+		var unit: Dictionary = SimEngine.units[feedback.tag]
+		var color := _path_feedback_color(feedback.status)
+		color.a = feedback.alpha
+		var shadow := Color(0.07, 0.08, 0.10, feedback.alpha * 0.9)
+		var badge := _unit_screen(unit, unit_height(unit) + 0.6) - Vector2(0, 23)
+		draw_circle(badge, 8.0, shadow)
+		draw_line(badge + Vector2(0, -4), badge + Vector2(0, 0), color, 2.0, true)
+		draw_circle(badge + Vector2(0, 3), 1.1, color)
+		if marked_endpoints.has(feedback.endpoint):
+			continue
+		marked_endpoints[feedback.endpoint] = true
+		var endpoint := world_to_screen(feedback.endpoint, 0.2)
+		_ellipse(endpoint, 12.0, shadow, 4.0)
+		_ellipse(endpoint, 12.0, color, 2.0)
+		if feedback.status == "waiting":
+			for x in [-3, 3]:
+				draw_line(endpoint + Vector2(x, -4), endpoint + Vector2(x, 4), color, 2.0, true)
+		else:
+			draw_circle(endpoint, 2.0, color)
+
+func _path_feedback_color(status: String) -> Color:
+	return Color("#fbbf24") if status == "adjusted" else Color("#ff9357")
+
 func _order_lines_visible() -> bool:
 	return not match_menu or match_menu.order_lines == MatchMenu.OrderLines.ALWAYS or (match_menu.order_lines == MatchMenu.OrderLines.SHIFT and _shift_held)
 
@@ -1793,6 +1860,7 @@ func _draw_rally_and_orders() -> void:
 		if not show_orders:
 			continue
 		var prev := sp
+		var feedback: Dictionary = _path_feedback.get(t, {})
 		for ord in u["orders"]:
 			var tp := Vector2.ZERO
 			var target: Dictionary = SimEngine.units.get(ord.get("target_tag", 0), {})
@@ -1821,7 +1889,11 @@ func _draw_rally_and_orders() -> void:
 				col = Color("#b9a3ef")
 			elif ot == "follow":
 				col = Color("#9eb5ff")
-			draw_line(prev, tp, col, 1.4)
+			if not feedback.is_empty() and is_same(ord, feedback.order) and ord.get("target_pos") == feedback.requested:
+				col = _path_feedback_color(feedback.status)
+				draw_dashed_line(prev, tp, col, 1.8, 7.0)
+			else:
+				draw_line(prev, tp, col, 1.4)
 			draw_circle(tp, 3.0, col)
 			prev = tp
 
