@@ -364,6 +364,12 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 func _draw_minimap_units() -> void:
 	var mm: Rect2 = main.MINIMAP
 	var viewer: int = main.viewing_player()
+	for station in SimEngine.watch_stations:
+		var pos: Vector2 = main.world_to_minimap(station.pos)
+		var owner := SimEngine.visible_watch_station_owner(station, viewer)
+		var color := Color("#d7e6ec") if owner == 0 else RTSData.get_player_color(owner)
+		var marker := PackedVector2Array([pos + Vector2(0, -4), pos + Vector2(4, 0), pos + Vector2(0, 4), pos + Vector2(-4, 0)])
+		draw_colored_polygon(marker, color)
 	for building in SimEngine.remembered_buildings(viewer):
 		var up: Vector2 = main.world_to_minimap(building.pos)
 		draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), C_MUTED, false, 1.0)

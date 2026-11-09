@@ -301,6 +301,15 @@ func _rebuild_static_3d_map() -> void:
 	for rect in SimEngine.merged_terrain_rects("land"):
 		_terrain_box(Vector3(rect.size.x, 0.16, rect.size.y), Vector3(rect.get_center().x, 0.08, rect.get_center().y), low)
 	_build_brush_cover()
+	if not SimEngine.watch_stations.is_empty():
+		var platform := _get_mat("watch_platform", Color("#37414d"))
+		var transmitter := _get_mat("watch_transmitter", Color("#8eafc1"), Color("#223e4a"))
+		for station in SimEngine.watch_stations:
+			var pos: Vector2 = station.pos
+			var elevation := SimEngine.get_elevation_at(pos)
+			_terrain_box(Vector3(3.4, 0.2, 3.4), Vector3(pos.x, elevation + 0.18, pos.y), platform)
+			_terrain_box(Vector3(0.42, 3.1, 0.42), Vector3(pos.x - 1.2, elevation + 1.65, pos.y - 1.2), platform)
+			_terrain_box(Vector3(1.4, 0.35, 0.65), Vector3(pos.x - 1.2, elevation + 3.18, pos.y - 1.2), transmitter)
 
 	# Rock rim around the map so the camera never sees the void
 	var rim := 18.0

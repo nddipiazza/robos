@@ -91,6 +91,8 @@ Both sides share vision across their own units and structures. The skirmish AI a
 
 Brush cover is walkable. It conceals biological combat units from enemy sight until an enemy comes within six world units or exposes them with detection. Workers and vehicles remain visible under normal sight rules.
 
+The Iron Narrows crossings each have a watch station. Keep a ground unit inside the four-unit ring to reveal 32 world units around the station. The station goes neutral when the ring is empty or contested. Scenario authors can place stations in the map's `watch_stations` list with `x` and `y` coordinates.
+
 For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
 
 The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for another base. Siege works toward faction-specific heavy units such as Howitzers, Blight Hurlers or Spire Walkers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.

@@ -37,7 +37,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **023 Weapon wind-up indicator.** Selected weapons show when a shot is committed and when the next can fire.
 - [x] **024 Area warning decals.** Delayed area attacks show the footprint and detonation timing to players who can see them.
 - [x] **025 Brush cover.** Infantry can hide in authored brush until a scout or nearby enemy reveals them.
-- [ ] **026 Watch stations.** A unit holding a neutral station reveals a fixed radius until it leaves or loses control.
+- [x] **026 Watch stations.** A unit holding a neutral station reveals a fixed radius until it leaves or loses control.
 - [ ] **027 Destructible route blockers.** Breaking a neutral blocker opens a ground route in both navigation and the minimap.
 - [ ] **028 Healing support.** A paid support unit restores biological allies from a limited energy pool.
 - [ ] **029 Shield restoration.** A powered Concord support structure spends energy to restore nearby allied shields.
