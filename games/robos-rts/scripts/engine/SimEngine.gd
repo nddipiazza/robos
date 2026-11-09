@@ -1128,6 +1128,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 	}
 	if def.has("living_ground_radius"):
 		u["living_ground_radius"] = def.living_ground_radius
+	if def.has("living_ground_speed_bonus"):
+		u["living_ground_speed_bonus"] = def.living_ground_speed_bonus
 	if unit_type == "brood_nest":
 		u["brood_slots"] = BROOD_SLOTS
 		u["brood_recharge"] = 0.0
@@ -2774,15 +2776,24 @@ func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 		u["vel"] = Vector2.ZERO
 		return
 	dir = dir.normalized()
-	var spd = float(u["speed"])
-	if u["surge_timer"] > 0.0:
-		spd *= 1.5
-	if u["charge_timer"] > 0.0:
-		spd *= 1.8
-	if u["slow_timer"] > 0.0:
-		spd *= 0.5
-	u["vel"] = dir * spd
+	u["vel"] = dir * effective_move_speed(u)
 	u["facing"] = dir.angle()
+
+func active_living_ground_speed_bonus(unit: Dictionary) -> float:
+	var bonus := float(unit.get("living_ground_speed_bonus", 0.0))
+	return bonus if bonus > 0.0 and unit.flight_height <= 0.0 and has_living_ground(unit.pos) else 0.0
+
+func effective_move_speed(unit: Dictionary) -> float:
+	if unit.is_immobile:
+		return 0.0
+	var speed: float = unit.speed
+	if unit.surge_timer > 0.0:
+		speed *= 1.5
+	if unit.charge_timer > 0.0:
+		speed *= 1.8
+	if unit.slow_timer > 0.0:
+		speed *= 0.5
+	return speed * (1.0 + active_living_ground_speed_bonus(unit))
 
 func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_arrival: float) -> bool:
 	var dist = u["pos"].distance_to(target_pos)
@@ -2937,7 +2948,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 						n["pushed_timer"] = 0.35
 
 		var final_vel = desired_vel + steer_force
-		var max_spd: float = speed * (1.5 if u["surge_timer"] > 0.0 else 1.0) * (1.8 if u["charge_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
+		var max_spd := effective_move_speed(u)
 		if final_vel.length() > max_spd and max_spd > 0.0:
 			final_vel = final_vel.normalized() * max_spd
 
@@ -4229,6 +4240,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["passengers"] = u.passengers.map(func(passenger): return passenger.tag)
 		if u.has("expires_tick"):
 			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
+		if u.has("living_ground_speed_bonus"):
+			entry["effective_speed"] = snappedf(effective_move_speed(u), 0.01)
+			entry["living_ground_speed_bonus"] = active_living_ground_speed_bonus(u)
 		if u.flight_height > 0.0:
 			entry["airborne"] = true
 		if u.has("fighter_mode_until") and (not limited or u.owner == perspective_player):

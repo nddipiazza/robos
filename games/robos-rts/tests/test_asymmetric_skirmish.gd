@@ -106,7 +106,13 @@ func _test_brood() -> void:
 	_check(nest.brood_slots == 1, "One slot regenerates every twelve seconds")
 	sim.step_ticks(8 * 64)
 	_check(sim.players[1].units_trained == 3, "All three paid hatches finished")
-	_check(_owned("skitterling").all(func(u): return u.pos.distance_to(army_goal) < 2.5 or (not u.orders.is_empty() and u.orders[0].target_pos == army_goal)), "Army units follow their own rally")
+	# Individually rallied hatchlings can settle beside a sibling already at the destination.
+	var rally_radius := 1.5 * 2.8
+	_check(_owned("skitterling").all(func(u):
+		if u.orders.is_empty():
+			return u.has_home_pos and u.home_pos.distance_to(army_goal) <= rally_radius and u.pos.distance_to(army_goal) <= rally_radius
+		return u.orders[0].target_pos == army_goal
+	), "Army units follow their own rally")
 	_check(_owned("forager").back().harvest_target_tag == patch.tag, "New Forager follows its worker rally")
 	_harvest_aether("forager", "spore_tap", nest.pos)
 

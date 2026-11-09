@@ -737,6 +737,7 @@ var units: Dictionary = {
 		"armor": 0.0,
 		"radius": 0.72,
 		"speed": 9.8,
+		"living_ground_speed_bonus": 0.3,
 		"sight_range": 20.0,
 		"push_priority": 2,
 		"weapon": {
@@ -771,6 +772,7 @@ var units: Dictionary = {
 		"armor": 1.0,
 		"radius": 1.15,
 		"speed": 7.0,
+		"living_ground_speed_bonus": 0.3,
 		"sight_range": 22.0,
 		"push_priority": 3,
 		"weapon": {
@@ -806,6 +808,7 @@ var units: Dictionary = {
 		"armor": 1.0,
 		"radius": 1.45,
 		"speed": 7.2,
+		"living_ground_speed_bonus": 0.3,
 		"sight_range": 24.0,
 		"push_priority": 4,
 		"weapon": {

@@ -32,3 +32,22 @@ Feature: Brood living ground appears on the battlefield and minimap
     And the simulation advances 1600 ticks
     Then the rendered living ground matches the visible map cells
     And the battlefield is captured as "living-ground-brood"
+
+  Scenario: A selected Skitterling shows the live speed modifier as it crosses the layer
+    Given an RTS test scenario
+      """
+      {"name":"Living ground pace","paused":true,"decor":false,
+       "map":{"width":112,"height":72},
+       "players":{"1":{"name":"Gnarl Brood","faction":"monsters"}},
+       "units":[{"type":"brood_nest","owner":1,"x":46,"y":34},
+                {"id":"runner","type":"skitterling","owner":1,"x":18,"y":42}]}
+      """
+    When the simulation advances 1600 ticks
+    And the commander frames (44, 42) at zoom height 74
+    And the commander Ctrl-clicks unit "runner"
+    Then the Skitterling tooltip shows 9.8 speed with the living ground bonus "inactive"
+    When the commander right-clicks terrain at (81, 42)
+    And the simulation advances 100 ticks
+    Then the Skitterling tooltip shows 12.7 speed with the living ground bonus "active"
+    When the simulation advances 370 ticks
+    Then the Skitterling tooltip shows 9.8 speed with the living ground bonus "inactive"
