@@ -273,7 +273,7 @@ func _draw() -> void:
 	for key in d.terrain_tiles:
 		var coords = str(key).split(",")
 		var pos = Vector2(float(coords[0]), float(coords[1])) * MapDocumentScript.TERRAIN_CELL_SIZE
-		var color: Color = {"land": COLOR_LOW, "water": Color("#204967"), "cliff": COLOR_CLIFF, "plateau": COLOR_HIGH}.get(str(d.terrain_tiles[key]), COLOR_LOW)
+		var color: Color = {"land": COLOR_LOW, "water": Color("#204967"), "cliff": COLOR_CLIFF, "plateau": COLOR_HIGH, "brush": Color("#295f48")}.get(str(d.terrain_tiles[key]), COLOR_LOW)
 		draw_rect(Rect2(world_to_screen(pos), Vector2.ONE * MapDocumentScript.TERRAIN_CELL_SIZE * view_scale), color)
 
 	for i in range(d["high_ground"].size()):

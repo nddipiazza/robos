@@ -51,7 +51,7 @@ Skirmish setup lets you choose Easy, Normal or Hard AI, its Rush, Balanced, Econ
 
 ## Frontier Hunters
 
-The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, and two river crossings. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
+The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, and two river crossings with brush cover on their approaches. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
 
 Frontier Hunters is a **256×256** map with two distinct starts drawn from eight perimeter bases. Each commander begins with their faction's main base, **12 workers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are inexhaustible by default. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
 
@@ -88,6 +88,8 @@ Skirmishers can use **C** to toggle Phase Cloak. Activation costs 25 energy and 
 Black terrain is unexplored. Dim terrain has been explored, and lit terrain is within friendly sight. Send a Pioneer ahead to find the opposing base or check an expansion. Enemy troops disappear when they leave sight, and combat outside your vision produces no new visible effects or world sounds. A building you previously saw leaves a **Last seen** footprint and a minimap marker until you scout the site again. A unit that loses sight of its focus-fire target moves to the last known position and attacks enemies it spots on the way.
 
 Both sides share vision across their own units and structures. The skirmish AI attacks visible or remembered buildings and searches possible bases when it has no known target. Sight uses unit ranges on a four-unit grid. Terrain elevation does not block sight in this version. Frontier Hunters enables fog by default. Other scenarios can set `"fog_of_war": true` to opt in.
+
+Brush cover is walkable. It conceals biological combat units from enemy sight until an enemy comes within six world units or exposes them with detection. Workers and vehicles remain visible under normal sight rules.
 
 For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
 
@@ -158,7 +160,7 @@ The editor opens the playable map with terrain, resources, start locations and e
 
 | Tool | Use |
 |:---|:---|
-| Terrain Brush (B) | Paint land, water, cliffs or plateaus with an adjustable brush; right-drag paints land. A full drag is one undo step. |
+| Terrain Brush (B) | Paint land, water, cliffs, plateaus or brush cover. Right-drag paints land. A full drag is one undo step. |
 | Bucket Fill (V), Sample (I) | Fill a connected terrain region, or sample terrain into the brush. |
 | Start Location (S), Expansion (A) | Place and move numbered base sites. Skirmishes support two to eight possible starts. |
 | Land Crossing (C) | Drag a crossing across a waterway; select and resize its rectangle. |
