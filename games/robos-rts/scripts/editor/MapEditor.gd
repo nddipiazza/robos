@@ -78,6 +78,9 @@ func _ready() -> void:
 	if SimEngine.editor_session.has("doc"):
 		doc = SimEngine.editor_session["doc"]
 		SimEngine.editor_session = {}
+	elif SimEngine.editor_session.has("menu_doc"):
+		doc = SimEngine.editor_session["menu_doc"]
+		SimEngine.editor_session.erase("menu_doc")
 	else:
 		doc = RTSMapDocument.new()
 		var start = _cmdline_map_arg()
@@ -234,10 +237,15 @@ func _build_top_bar() -> Control:
 	var spacer = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(spacer)
+	h.add_child(_button("Main Menu", _return_to_title))
 	var play = _button("▶ Playtest (F5)", _playtest, "Load this map into the 2.5D game. Press F10 in-game to come back.")
 	play.add_theme_color_override("font_color", Color("#4ade80"))
 	h.add_child(play)
 	return bar
+
+func _return_to_title() -> void:
+	SimEngine.editor_session["menu_doc"] = doc
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/RTSStart.tscn")
 
 func _button(text: String, cb: Callable, tip: String = "") -> Button:
 	var b = Button.new()

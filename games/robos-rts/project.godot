@@ -7,7 +7,7 @@ config_version=5
 
 config/name="RobOS RTS: Starfall Command"
 config/description="Deterministic 64Hz RTS with three asymmetric factions, an angled 3D camera and an HTTP/JSON bot API"
-run/main_scene="res://scenes/RTSMain.tscn"
+run/main_scene="res://scenes/RTSStart.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
 
