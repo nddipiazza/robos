@@ -1718,6 +1718,26 @@
       "robos:itemCategory": "weapon",
       "robos:namespace": "robos.jrpg",
       "robos:package": "jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:game:fantasy-light-warriors",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PCGame",
+        "robos:Game",
+        "schema:VideoGame"
+      ],
+      "dcterms:description": "Clean-room 8-bit 4-hero party JRPG (WIP: Act I Coneria to Temple of Fiends) powered by the RobOS Knowledge Graph, Godot 4.3, procedural pixel art and chiptune audio, 7 headless Cucumber suites, and a 12-milestone autonomous AI playthrough.",
+      "dcterms:title": "Fantasy: Light Warriors (WIP)",
+      "robos:combatModel": "turn-based-party-menu",
+      "robos:gameEngine": "Godot 4",
+      "robos:gameType": "jrpg",
+      "robos:namespace": "robos.jrpg",
+      "robos:package": "jrpg",
+      "robos:repository": "github.com/nddipiazza/robos/tree/main/games/fantasy-light-warriors",
+      "robos:ruleset": "fantasy-light-warriors",
+      "robos:targetPlatform": "Linux, Windows, macOS",
+      "robos:technology": "Godot 4 / GDScript"
     }
   ],
   "robos:package": "jrpg",

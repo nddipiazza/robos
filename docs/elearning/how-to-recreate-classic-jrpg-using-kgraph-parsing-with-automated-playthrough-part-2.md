@@ -167,21 +167,21 @@ grep -rn "StrategyWiki\|VGMaps\|CLV-P" ~/kgraphs/final-fantasy-nes-public/ | wc 
 - **Expected**: The parser writes 1,184 nodes and 50 clean-room generated images to ~/kgraphs/final-fantasy-nes-public, and grep returns 0 matches for any source filename.
 ![Publish the clean-room Knowledge Graph and verify zero source leaks](/assets/elearning/jrpg-kgraph/part2/m5-s1-clean-room-art-sheet.png)
 
-### Lab: Generate ~/Downloads/ff1/ff1-game and run godot4 --headless --import
+### Lab: Generate games/fantasy-light-warriors and run godot4 --headless --import
 - **Who**: Your AI agent runs a program
 - **Description**: Run build_ff1_godot_game.py to scaffold the Godot 4.3 project and rebuild Godot's binary .ctex texture caches in headless mode.
-- **Agent Prompt**: `Run python3 ~/Downloads/ff1/build_ff1_godot_game.py followed by godot4 --headless --path ~/Downloads/ff1/ff1-game --import and confirm all scenes and textures import cleanly.`
+- **Agent Prompt**: `Run python3 ~/Downloads/ff1/build_ff1_godot_game.py followed by godot4 --headless --path games/fantasy-light-warriors --import and confirm all scenes and textures import cleanly.`
 ```bash
 python3 ~/Downloads/ff1/build_ff1_godot_game.py
-godot4 --headless --path ~/Downloads/ff1/ff1-game --import
+godot4 --headless --path games/fantasy-light-warriors --import
 ```
 - **Expected**: The generator writes all 7 scenes and GDScript files, and Godot imports every texture cache cleanly with 0 errors.
-![Generate ~/Downloads/ff1/ff1-game and run godot4 --headless --import](/assets/elearning/jrpg-kgraph/part2/m5-s2-godot-build-and-import.png)
+![Generate games/fantasy-light-warriors and run godot4 --headless --import](/assets/elearning/jrpg-kgraph/part2/m5-s2-godot-build-and-import.png)
 
 ### Lab: Boot the game headlessly and inspect the 4 Light Warriors over port 8090
 - **Who**: Your AI agent runs a program
 - **Description**: Start the Godot game inside Xvfb, advance past TitleScreen and PartyCreate into Coneria, and query GET http://127.0.0.1:8090/api/v1/state.
-- **Agent Prompt**: `Launch ~/Downloads/ff1/ff1-game under Xvfb, advance from TitleScreen through PartyCreate into Coneria, and run curl -s http://127.0.0.1:8090/api/v1/state | jq . to inspect the party.`
+- **Agent Prompt**: `Launch games/fantasy-light-warriors under Xvfb, advance from TitleScreen through PartyCreate into Coneria, and run curl -s http://127.0.0.1:8090/api/v1/state | jq . to inspect the party.`
 ```bash
 curl -s http://127.0.0.1:8090/api/v1/state | jq .
 ```
@@ -231,9 +231,9 @@ How packages/robos-jrpg-parser/lib/playthrough.js generates modular Gherkin suit
 ### Lab: Run 04_shops_and_inn.feature headlessly to verify all 6 Coneria shop and inn scenarios
 - **Who**: Your AI agent runs a program
 - **Description**: Execute the isolated shop and inn Cucumber feature file under Xvfb and verify that all 6 scenarios and 46 steps pass in under 12 seconds.
-- **Agent Prompt**: `Run DISPLAY=:98 behave tests/e2e/features/04_shops_and_inn.feature --no-capture in ~/Downloads/ff1/ff1-game and report the scenario and step results.`
+- **Agent Prompt**: `Run DISPLAY=:98 behave tests/e2e/features/04_shops_and_inn.feature --no-capture in games/fantasy-light-warriors and report the scenario and step results.`
 ```bash
-cd ~/Downloads/ff1/ff1-game && DISPLAY=:98 behave tests/e2e/features/04_shops_and_inn.feature --no-capture
+cd games/fantasy-light-warriors && DISPLAY=:98 behave tests/e2e/features/04_shops_and_inn.feature --no-capture
 ```
 - **Expected**: All 6 scenarios (46 steps) pass in ~11.3 seconds with 0 failures, proving every shop type works and exits cleanly.
 ![Run 04_shops_and_inn.feature headlessly to verify all 6 Coneria shop and inn scenarios](/assets/elearning/jrpg-kgraph/part2/m7-s1-behave-shops-and-inn.png)
@@ -241,9 +241,9 @@ cd ~/Downloads/ff1/ff1-game && DISPLAY=:98 behave tests/e2e/features/04_shops_an
 ### Lab: Run isolated suites 01 through 06 to verify maps, NPCs, chests, and combat
 - **Who**: Your AI agent runs a program
 - **Description**: Run all six isolated mechanic feature files (01_start_new_game through 06_random_encounters_and_boss) to confirm every building block passes before the full playthrough.
-- **Agent Prompt**: `Run behave on features 01 through 06 in ~/Downloads/ff1/ff1-game/tests/e2e/features/ and confirm that party creation, map warps, NPC dialogues, shops, chests, and combat all pass.`
+- **Agent Prompt**: `Run behave on features 01 through 06 in games/fantasy-light-warriors/tests/e2e/features/ and confirm that party creation, map warps, NPC dialogues, shops, chests, and combat all pass.`
 ```bash
-cd ~/Downloads/ff1/ff1-game && DISPLAY=:98 behave \
+cd games/fantasy-light-warriors && DISPLAY=:98 behave \
   tests/e2e/features/01*.feature tests/e2e/features/02*.feature \
   tests/e2e/features/03*.feature tests/e2e/features/04*.feature \
   tests/e2e/features/05*.feature tests/e2e/features/06*.feature
@@ -254,9 +254,9 @@ cd ~/Downloads/ff1/ff1-game && DISPLAY=:98 behave \
 ### Lab: Run 07_checkpoint_kill_garland_1.feature to verify the 3-part checkpoint chain to Garland
 - **Who**: Your AI agent runs a program
 - **Description**: Run the checkpoint-chained Act I Cucumber feature that saves a JSON checkpoint after outfitting in Coneria (Milestone 6), after talking to the King (Milestone 8), and after defeating Garland (Milestone 12).
-- **Agent Prompt**: `Run DISPLAY=:98 behave tests/e2e/features/07_checkpoint_kill_garland_1.feature --no-capture in ~/Downloads/ff1/ff1-game and report how each scenario hands off its checkpoint.`
+- **Agent Prompt**: `Run DISPLAY=:98 behave tests/e2e/features/07_checkpoint_kill_garland_1.feature --no-capture in games/fantasy-light-warriors and report how each scenario hands off its checkpoint.`
 ```bash
-cd ~/Downloads/ff1/ff1-game && DISPLAY=:98 behave tests/e2e/features/07_checkpoint_kill_garland_1.feature --no-capture
+cd games/fantasy-light-warriors && DISPLAY=:98 behave tests/e2e/features/07_checkpoint_kill_garland_1.feature --no-capture
 ```
 - **Expected**: All 3 checkpoint-chained scenarios (21 steps) pass in ~72.1 seconds, ending with garland_defeated: true, princess_rescued: true, and bridge_built: true.
 ![Run 07_checkpoint_kill_garland_1.feature to verify the 3-part checkpoint chain to Garland](/assets/elearning/jrpg-kgraph/part2/m7-s3-garland-boss-battle.png)
@@ -268,9 +268,9 @@ Running the complete 12-milestone stepped playthrough (play_full_game.py --fresh
 ### Lab: Run play_full_game.py --fresh --stepped to clear all 12 Act I milestones
 - **Who**: Your AI agent runs a program
 - **Description**: Execute the full 12-milestone stepped playthrough from a fresh start at 3x speed and verify that every milestone produces an MP4 video, a JSON checkpoint, and a PNG screenshot.
-- **Agent Prompt**: `Run python3 tests/e2e/play_full_game.py --fresh --stepped --time-scale 3.0 in ~/Downloads/ff1/ff1-game and summarize the 12 milestones in tests/e2e/reports/playthrough/playthrough.json.`
+- **Agent Prompt**: `Run python3 tests/e2e/play_full_game.py --fresh --stepped --time-scale 3.0 in games/fantasy-light-warriors and summarize the 12 milestones in tests/e2e/reports/playthrough/playthrough.json.`
 ```bash
-cd ~/Downloads/ff1/ff1-game && python3 tests/e2e/play_full_game.py --fresh --stepped --time-scale 3.0
+cd games/fantasy-light-warriors && python3 tests/e2e/play_full_game.py --fresh --stepped --time-scale 3.0
 ```
 - **Expected**: All 12/12 milestones (01-create-light-warriors through 12-defeat-garland-1) complete in ~100.9s with status: "completed" and deaths: 0.
 ![Run play_full_game.py --fresh --stepped to clear all 12 Act I milestones](/assets/elearning/jrpg-kgraph/part2/m8-s1-stepped-playthrough-12-of-12.png)
@@ -278,21 +278,21 @@ cd ~/Downloads/ff1/ff1-game && python3 tests/e2e/play_full_game.py --fresh --ste
 ### Lab: Replay Milestone #3 alone (--stepped --only 3) and inspect Checkpoint #12
 - **Who**: Your AI agent runs a program
 - **Description**: Use --stepped --only 3 to load Checkpoint #2 and replay only the Coneria Weapon Shop milestone in 8 seconds, then inspect the final save state in checkpoints/12-defeat-garland-1.json.
-- **Agent Prompt**: `Run python3 tests/e2e/play_full_game.py --stepped --only 3 --time-scale 3.0 in ~/Downloads/ff1/ff1-game, then inspect tests/e2e/reports/playthrough/checkpoints/12-defeat-garland-1.json.`
+- **Agent Prompt**: `Run python3 tests/e2e/play_full_game.py --stepped --only 3 --time-scale 3.0 in games/fantasy-light-warriors, then inspect tests/e2e/reports/playthrough/checkpoints/12-defeat-garland-1.json.`
 ```bash
-cd ~/Downloads/ff1/ff1-game
+cd games/fantasy-light-warriors
 python3 tests/e2e/play_full_game.py --stepped --only 3 --time-scale 3.0
 jq . tests/e2e/reports/playthrough/checkpoints/12-defeat-garland-1.json
 ```
 - **Expected**: Milestone #3 replays from Checkpoint #2 in ~8.4s, and Checkpoint #12 confirms garland_defeated: true, princess_rescued: true, and bridge_built: true.
 ![Replay Milestone #3 alone (--stepped --only 3) and inspect Checkpoint #12](/assets/elearning/jrpg-kgraph/part2/m8-s2-checkpoint-single-replay.png)
 
-### Lab: Launch the RobOS Game Playthrough desktop viewer pointed at ~/Downloads/ff1/ff1-game
+### Lab: Launch the RobOS Game Playthrough desktop viewer pointed at games/fantasy-light-warriors
 - **Who**: You and your AI agent
-- **Description**: Open the RobOS Game Playthrough Electron app with --game-dir ~/Downloads/ff1/ff1-game to browse all 12 milestone cards, watch the per-milestone MP4 clips, and inspect the checkpoints.
-- **Agent Prompt**: `Launch packages/game-playthrough with npx electron --no-sandbox packages/game-playthrough --game-dir ~/Downloads/ff1/ff1-game so I can review the 12 Final Fantasy milestone videos and checkpoints.`
+- **Description**: Open the RobOS Game Playthrough Electron app with --game-dir games/fantasy-light-warriors to browse all 12 milestone cards, watch the per-milestone MP4 clips, and inspect the checkpoints.
+- **Agent Prompt**: `Launch packages/game-playthrough with npx electron --no-sandbox packages/game-playthrough --game-dir games/fantasy-light-warriors so I can review the 12 Final Fantasy milestone videos and checkpoints.`
 ```bash
-npx electron --no-sandbox packages/game-playthrough --game-dir ~/Downloads/ff1/ff1-game
+npx electron --no-sandbox packages/game-playthrough --game-dir games/fantasy-light-warriors
 ```
 - **Expected**: The RobOS Game Playthrough window opens showing "Final Fantasy (NES 1990)", 12 / 12 completed milestones on the left, and the video player and checkpoint inspector on the right.
-![Launch the RobOS Game Playthrough desktop viewer pointed at ~/Downloads/ff1/ff1-game](/assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png)
+![Launch the RobOS Game Playthrough desktop viewer pointed at games/fantasy-light-warriors](/assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png)

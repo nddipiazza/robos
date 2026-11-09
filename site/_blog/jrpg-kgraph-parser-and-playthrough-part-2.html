@@ -1,6 +1,6 @@
 ---
-title: "JRPG KGraph Parser & Automated Playthrough, Part 2: Rebuilding Final Fantasy (1990 NES) from Coneria to Defeating Garland"
-nav_label: "JRPG KGraph Parser Part 2 (FF1)"
+title: "JRPG KGraph Parser & Automated Playthrough, Part 2: Releasing Fantasy: Light Warriors (WIP) from Coneria to Defeating Garland"
+nav_label: "JRPG KGraph Parser Part 2 (Light Warriors)"
 date: 2026-11-09
 date_label: "Nov 9, 2026"
 tags:
@@ -8,20 +8,22 @@ tags:
   - "Knowledge Graph"
   - "Autonomous Agents"
   - "eLearning"
-summary: "In Part 1 we introduced robos-jrpg-parser and the beginner bootcamp on Ember Quest and Quest: Warrior Dragon. In Part 2 we walk through our separate, full-scale build of the 1990 North American NES release of Final Fantasy: harvesting 82 reference files into a private folder, closing the 5 gameplay blockers from the 6502 disassembly (including the critical-hit index bug and indoor ceiling palette swap), building the 4-hero Godot 4.3 engine with 2-step NES shop interiors, passing 7 isolated headless Cucumber suites, and clearing all 12 Chapter 1 milestones to defeat Garland in the RobOS Game Playthrough viewer."
-description: "Part 2 of the JRPG KGraph series: how we parsed 1,206 nodes for the 1990 NES release of Final Fantasy, built the 4-hero Godot 4.3 runtime and 2-step shop interiors, passed 7 isolated Cucumber suites, and ran the 12-milestone stepped AI playthrough to defeat Garland."
-seo_title: "Rebuilding Final Fantasy (1990 NES) with KGraph & Automated Playthrough · Part 2 · RobOS"
+summary: "In Part 1 we introduced robos-jrpg-parser and the beginner bootcamp on Ember Quest and Quest: Warrior Dragon. In Part 2 we release Fantasy: Light Warriors (WIP) (games/fantasy-light-warriors)—our clean-room 8-bit 4-hero party JRPG in Godot 4.3: harvesting 82 reference files into a private folder, closing the 5 gameplay blockers from the 6502 disassembly, generating 100% clean-room maps/sprites/chiptune audio, building 2-step NES shop interiors, passing 7 isolated headless Cucumber suites, and clearing all 12 Act I milestones to defeat Garland in the RobOS Game Playthrough viewer."
+description: "Part 2 of the JRPG KGraph series: releasing Fantasy: Light Warriors (WIP) in games/fantasy-light-warriors with a 1,206-node Knowledge Graph, 2-step shop interiors, 7 isolated Cucumber suites, and a 12-milestone stepped AI playthrough to defeat Garland."
+seo_title: "Fantasy: Light Warriors (WIP) — JRPG KGraph Parser & Automated Playthrough · Part 2 · RobOS"
 og_image: /assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png
-og_image_alt: "RobOS Game Playthrough desktop viewer showing all 12 completed Final Fantasy Chapter 1 milestones, the Garland boss victory screen, and Checkpoint #12 state"
+og_image_alt: "RobOS Game Playthrough desktop viewer showing all 12 completed Fantasy: Light Warriors (WIP) Act I milestones, the Garland boss victory screen, and Checkpoint #12 state"
 ---
 <div class="blog-body">
-  <p>In <a href="{{ '/blog/jrpg-kgraph-parser-and-playthrough/' | relative_url }}">Part 1 of this series</a> (and the companion <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}">Part 1 eLearning course</a>), we introduced <code>packages/robos-jrpg-parser</code> on a compact practice game (<em>Ember Quest</em>) and a single-hero Godot 4 bootcamp (<em>Quest: Warrior Dragon</em>). In parallel, we ran the exact same pipeline against a much larger target in a separate private workspace: the <strong>1990 North American NES release of <em>Final Fantasy</em></strong>.</p>
+  <p>In <a href="{{ '/blog/jrpg-kgraph-parser-and-playthrough/' | relative_url }}">Part 1 of this series</a> (and the companion <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}">Part 1 eLearning course</a>), we introduced <code>packages/robos-jrpg-parser</code> on a compact practice game (<em>Ember Quest</em>) and our single-hero clean-room remake (<a href="{{ '/games/quest-warrior-dragon/' | relative_url }}"><em>Quest: Warrior Dragon</em></a> in <code>games/quest-warrior-dragon</code>). In parallel, we ran the exact same pipeline against a classic 1990 8-bit 4-hero party RPG.</p>
 
-  <p>Today we are publishing <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}"><strong>Part 2 of the Interactive eLearning Course</strong> (<code>/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/</code>)</a> alongside this technical deep dive, walking through every engineering hurdle we hit taking the 4 Light Warriors from the title screen through Coneria's shops, Coneria Castle, and the Temple of Fiends to defeat Garland—and documenting exactly where the build left off at the North Bridge gateway to Chapter 2.</p>
+  <p>Just as we released our single-hero RPG under the clean-room, non-trademarked title <strong>Quest: Warrior Dragon</strong>, we are releasing our 4-hero party RPG in the repository as a playable Work-in-Progress under the clean-room title <a href="{{ '/games/fantasy-light-warriors/' | relative_url }}"><strong>Fantasy: Light Warriors (WIP)</strong> (<code>games/fantasy-light-warriors</code>)</a>—with 100% procedurally generated pixel-art maps, sprites, shop counters, and chiptune MP3 audio (<code>tools/generate_clean_room_assets.py</code>) so zero third-party ROM graphics, VGMaps sheets, or soundtrack rips are distributed.</p>
+
+  <p>Today we are publishing <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}"><strong>Part 2 of the Interactive eLearning Course</strong> (<code>/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/</code>)</a> alongside <a href="{{ '/games/fantasy-light-warriors/' | relative_url }}"><strong>Fantasy: Light Warriors (WIP)</strong></a>, walking through every engineering hurdle we hit taking the 4 Light Warriors from the title screen through Coneria's shops, Coneria Castle, and the Temple of Fiends to defeat Garland—and documenting where Act I leaves off at the North Bridge gateway to Act II.</p>
 
   <figure class="blog-fig">
-    <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png' | relative_url }}" alt="RobOS Game Playthrough desktop viewer showing all 12 completed Final Fantasy Chapter 1 milestones, the Garland boss victory screen, and Checkpoint #12 state" loading="lazy" style="object-fit:contain;max-height:none">
-    <figcaption>The <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough --game-dir ~/Downloads/ff1/ff1-game</code>) after completing all 12 Chapter 1 milestones in 100.9 seconds with 0 deaths: Garland (106 HP) is defeated, Princess Sara is rescued, and the North Bridge is built.</figcaption>
+    <img src="{{ '/assets/elearning/jrpg-kgraph/part2/m8-s3-robos-game-playthrough-viewer.png' | relative_url }}" alt="RobOS Game Playthrough desktop viewer showing all 12 completed Fantasy: Light Warriors (WIP) Act I milestones, the Garland boss victory screen, and Checkpoint #12 state" loading="lazy" style="object-fit:contain;max-height:none">
+    <figcaption>The <strong>RobOS Game Playthrough</strong> desktop app (<code>packages/game-playthrough --game-dir games/fantasy-light-warriors</code>) after completing all 12 Act I milestones in 100.9 seconds with 0 deaths: Garland (106 HP) is defeated, Princess Sara is rescued, and the North Bridge is built.</figcaption>
   </figure>
 
   <h3>1. Harvesting 82 Mixed Reference Files &amp; Quarantining GBA/PS1 Remakes</h3>
@@ -82,7 +84,7 @@ og_image_alt: "RobOS Game Playthrough desktop viewer showing all 12 completed Fi
   </div>
 
   <h3>4. 64&times;64 Walkable Grids, the Tree Spawn Bug, and the Indoor Ceiling Palette Swap</h3>
-  <p>When we first booted our Godot 4.3 project (<code>~/Downloads/ff1/ff1-game</code>) and ran our opening Gherkin scenario, every step passed—yet inspecting the recorded video frames exposed two classic visual bugs that unit tests never see:</p>
+  <p>When we first booted our Godot 4.3 project (<code>games/fantasy-light-warriors</code>) and ran our opening Gherkin scenario, every step passed—yet inspecting the recorded video frames exposed two classic visual bugs that unit tests never see:</p>
   <ul>
     <li><strong>The South Gate Border Tree at <code>(15, 22)</code>:</strong> Checking row <code>y=21</code> of <code>map_00_coneria.json</code> (<code>[14, 14, 16, 14, 14]</code>) showed that Coneria's south entrance is a single brick column wide at <code>x=16</code> (<code>tileId=16</code>, matching <code>lut_EntrTele_X = 16</code>) flanked by unwalkable border trees at <code>x=15</code> and <code>x=17</code> (<code>tileId=14</code>). Moving <code>spawn_tile</code> from <code>(15, 22)</code> to <code>Vector2i(16, 21)</code> placed the party squarely on the brick street.</li>
     <li><strong>Outside-Room Ceiling Palette vs. Inside-Room Chest Palette:</strong> In <code>lut_SMPalettes</code> (<code>$A000</code>), Outside-Room Palette 0 (<code>+0x00</code>) is <code>[0x0F, 0x30, 0x30, 0x30]</code> (solid white) so the NES PPU can hide unentered rooms behind a white ceiling, while Inside-Room Palette 0 (<code>+0x20</code>) is <code>[0x0F, 0x10, 0x17, 0x0F]</code> (black, silver, and wood brown). Swapping in Inside-Room Palette 0 and removing a debug <code>ColorRect</code> overlay turned flat teal squares back into crisp silver-and-brown treasure chests.</li>
@@ -121,7 +123,7 @@ og_image_alt: "RobOS Game Playthrough desktop viewer showing all 12 completed Fi
   </div>
 
   <h3>6. Seven Isolated Headless Cucumber Suites &rarr; 12-Milestone Stepped Playthrough</h3>
-  <p>Rather than discovering mechanic bugs midway through a full-game run, we built and passed <strong>7 headless Cucumber suites</strong> in <code>~/Downloads/ff1/ff1-game/tests/e2e/features/</code>:</p>
+  <p>Rather than discovering mechanic bugs midway through a full-game run, we built and passed <strong>7 headless Cucumber suites</strong> in <code>games/fantasy-light-warriors/tests/e2e/features/</code>:</p>
   <ul>
     <li><code>01_start_new_game_and_create_party.feature</code> — <code>TitleScreen</code> &rarr; <code>PartyCreate</code> (<code>ZEST</code>, <code>SAIL</code>, <code>ROBO</code>, <code>MAGE</code>) &rarr; <code>Coneria (16, 21)</code>.</li>
     <li><code>02_smoke_maps_and_transitions.feature</code> — Town, Overworld, Castle 1F/2F, and Temple of Fiends transitions.</li>
@@ -157,11 +159,12 @@ og_image_alt: "RobOS Game Playthrough desktop viewer showing all 12 completed Fi
     </figure>
   </div>
 
-  <p><strong>Where the FF1 project sits right now:</strong> At the end of Milestone #12 (<code>checkpoints/12-defeat-garland-1.json</code>), the Light Warriors have defeated Garland in the Temple of Fiends, rescued Princess Sara, and unlocked the <strong>North Bridge</strong> (<code>bridge_built: true</code>). Because our 1,206-node Knowledge Graph in <code>~/kgraphs/final-fantasy-nes</code> and the 61 decompressed <code>64&times;64</code> map grids in <code>~/Downloads/ff1/map_grids/</code> already contain every town, dungeon, monster, spell, shop, and treasure chest in the 1990 NES cartridge, Chapter 2 picks up directly at Checkpoint #12: crossing the North Bridge to Pravoka, defeating Bikke's Pirates to win the Ship, sailing to Elfland, looting the Crown from the Marsh Cave, and defeating Astos.</p>
+  <p><strong>Where <a href="{{ '/games/fantasy-light-warriors/' | relative_url }}">Fantasy: Light Warriors (WIP)</a> sits right now:</strong> At the end of Milestone #12 (<code>checkpoints/12-defeat-garland-1.json</code>), the Light Warriors have defeated Garland in the Temple of Fiends, rescued Princess Sara, and unlocked the <strong>North Bridge</strong> (<code>bridge_built: true</code>). Because our 1,206-node Knowledge Graph and the 61 decompressed <code>64&times;64</code> map grids already contain every town, dungeon, monster, spell, shop, and treasure chest, Act II picks up directly at Checkpoint #12: crossing the North Bridge to Pravoka, defeating Bikke's Pirates to win the Ship, sailing to Elfland, looting the Crown from the Marsh Cave, and defeating Astos.</p>
 </div>
 <div class="blog-links">
-  <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}">Take the Part 2 Course: Final Fantasy (NES 1990) from Coneria to Garland →</a>
+  <a href="{{ '/games/fantasy-light-warriors/' | relative_url }}">Explore Fantasy: Light Warriors (WIP) Game Page →</a>
+  <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough-part-2/' | relative_url }}">Take the Part 2 Course: Fantasy: Light Warriors (WIP) from Coneria to Garland →</a>
   <a href="{{ '/elearning/how-to-recreate-classic-jrpg-using-kgraph-parsing-with-automated-playthrough/' | relative_url }}">Part 1 Course: Beginner JRPG KGraph &amp; Godot Bootcamp →</a>
   <a href="{{ '/blog/jrpg-kgraph-parser-and-playthrough/' | relative_url }}">Read Part 1 Blog Post →</a>
-  <span class="blog-commits">Commits: 9bf77492 · 0f0e4e35 · 4c5adc85 · 6637fba5 · 606db9af · 41f73e45 · 68ef5965</span>
+  <span class="blog-commits">Commits: 9bf77492 · 0f0e4e35 · 4c5adc85 · 6637fba5 · 606db9af · 41f73e45 · 68ef5965 · dc6bcd9b</span>
 </div>

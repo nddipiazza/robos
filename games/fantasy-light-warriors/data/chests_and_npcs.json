@@ -1,0 +1,8680 @@
+{
+  "chests": [
+    {
+      "chestId": 1,
+      "hexId": "0x01",
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "x": 11,
+      "y": 11,
+      "itemId": 71,
+      "contents": "Iron Armor",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 2,
+      "hexId": "0x02",
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "x": 12,
+      "y": 11,
+      "itemId": 85,
+      "contents": "Iron Shield",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 3,
+      "hexId": "0x03",
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "x": 13,
+      "y": 11,
+      "itemId": 6,
+      "contents": "TNT",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 4,
+      "hexId": "0x04",
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "x": 16,
+      "y": 11,
+      "itemId": 38,
+      "contents": "Iron Staff",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 5,
+      "hexId": "0x05",
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "x": 17,
+      "y": 11,
+      "itemId": 39,
+      "contents": "Sabre",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 6,
+      "hexId": "0x06",
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "x": 18,
+      "y": 11,
+      "itemId": 43,
+      "contents": "Silver Dagger",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 7,
+      "hexId": "0x07",
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "x": 2,
+      "y": 3,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 8,
+      "hexId": "0x08",
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "x": 3,
+      "y": 3,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 9,
+      "hexId": "0x09",
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "x": 2,
+      "y": 32,
+      "itemId": 93,
+      "contents": "Cap",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 10,
+      "hexId": "0x0A",
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "x": 39,
+      "y": 32,
+      "itemId": 54,
+      "contents": "Rune Sword",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 11,
+      "hexId": "0x0B",
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "x": 38,
+      "y": 3,
+      "itemId": 53,
+      "contents": "Were Sword",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 12,
+      "hexId": "0x0C",
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "x": 39,
+      "y": 3,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 13,
+      "hexId": "0x0D",
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "x": 21,
+      "y": 1,
+      "itemId": 45,
+      "contents": "Silver Hammer",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 14,
+      "hexId": "0x0E",
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "x": 22,
+      "y": 1,
+      "itemId": 129,
+      "contents": "400 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 15,
+      "hexId": "0x0F",
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "x": 23,
+      "y": 1,
+      "itemId": 126,
+      "contents": "330 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 16,
+      "hexId": "0x10",
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "x": 24,
+      "y": 1,
+      "itemId": 101,
+      "contents": "Copper Gauntlet",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 17,
+      "hexId": "0x11",
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "x": 8,
+      "y": 13,
+      "itemId": 55,
+      "contents": "Power Staff",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 18,
+      "hexId": "0x12",
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "x": 12,
+      "y": 13,
+      "itemId": 102,
+      "contents": "Iron Gauntlet",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 19,
+      "hexId": "0x13",
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "x": 10,
+      "y": 14,
+      "itemId": 42,
+      "contents": "Falchon",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 20,
+      "hexId": "0x14",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 52,
+      "y": 8,
+      "itemId": 123,
+      "contents": "295 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 21,
+      "hexId": "0x15",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 10,
+      "y": 25,
+      "itemId": 78,
+      "contents": "Copper Bracelet",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 22,
+      "hexId": "0x16",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 23,
+      "y": 23,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 23,
+      "hexId": "0x17",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 38,
+      "y": 40,
+      "itemId": 128,
+      "contents": "385 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 24,
+      "hexId": "0x18",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 11,
+      "y": 23,
+      "itemId": 134,
+      "contents": "620 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 25,
+      "hexId": "0x19",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 9,
+      "y": 23,
+      "itemId": 33,
+      "contents": "Short Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 25,
+      "hexId": "0x19",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 26,
+      "y": 49,
+      "itemId": 33,
+      "contents": "Short Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 25,
+      "hexId": "0x19",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 37,
+      "y": 49,
+      "itemId": 33,
+      "contents": "Short Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 26,
+      "hexId": "0x1A",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 12,
+      "y": 7,
+      "itemId": 135,
+      "contents": "680 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 26,
+      "hexId": "0x1A",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 14,
+      "y": 50,
+      "itemId": 135,
+      "contents": "680 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 27,
+      "hexId": "0x1B",
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "x": 26,
+      "y": 7,
+      "itemId": 37,
+      "contents": "Large Dagger",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 28,
+      "hexId": "0x1C",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 23,
+      "y": 39,
+      "itemId": 2,
+      "contents": "CROWN",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 29,
+      "hexId": "0x1D",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 10,
+      "y": 8,
+      "itemId": 71,
+      "contents": "Iron Armor",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 29,
+      "hexId": "0x1D",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 25,
+      "y": 25,
+      "itemId": 71,
+      "contents": "Iron Armor",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 29,
+      "hexId": "0x1D",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 53,
+      "y": 38,
+      "itemId": 71,
+      "contents": "Iron Armor",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 30,
+      "hexId": "0x1E",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 12,
+      "y": 54,
+      "itemId": 79,
+      "contents": "Silver Bracelet",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 31,
+      "hexId": "0x1F",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 27,
+      "y": 53,
+      "itemId": 43,
+      "contents": "Silver Dagger",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 32,
+      "hexId": "0x20",
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "x": 52,
+      "y": 53,
+      "itemId": 139,
+      "contents": "1020 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 33,
+      "hexId": "0x21",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 22,
+      "y": 3,
+      "itemId": 130,
+      "contents": "450 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 34,
+      "hexId": "0x22",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 22,
+      "y": 4,
+      "itemId": 133,
+      "contents": "575 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 35,
+      "hexId": "0x23",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 3,
+      "y": 38,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 36,
+      "hexId": "0x24",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 4,
+      "y": 38,
+      "itemId": 95,
+      "contents": "Iron Helmet",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 37,
+      "hexId": "0x25",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 10,
+      "y": 41,
+      "itemId": 94,
+      "contents": "Wooden Helmet",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 38,
+      "hexId": "0x26",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 8,
+      "y": 41,
+      "itemId": 49,
+      "contents": "Dragon Sword",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 39,
+      "hexId": "0x27",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 9,
+      "y": 41,
+      "itemId": 43,
+      "contents": "Silver Dagger",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 40,
+      "hexId": "0x28",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 14,
+      "y": 41,
+      "itemId": 73,
+      "contents": "Silver Armor",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 41,
+      "hexId": "0x29",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 15,
+      "y": 41,
+      "itemId": 133,
+      "contents": "575 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 42,
+      "hexId": "0x2A",
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "x": 16,
+      "y": 41,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 43,
+      "hexId": "0x2B",
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "x": 1,
+      "y": 4,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 44,
+      "hexId": "0x2C",
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "x": 1,
+      "y": 7,
+      "itemId": 26,
+      "contents": "PURE Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 45,
+      "hexId": "0x2D",
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "x": 1,
+      "y": 5,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 46,
+      "hexId": "0x2E",
+      "mapId": 13,
+      "mapName": "Earth Cave B1",
+      "x": 28,
+      "y": 53,
+      "itemId": 138,
+      "contents": "880 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 47,
+      "hexId": "0x2F",
+      "mapId": 13,
+      "mapName": "Earth Cave B1",
+      "x": 29,
+      "y": 53,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 48,
+      "hexId": "0x30",
+      "mapId": 13,
+      "mapName": "Earth Cave B1",
+      "x": 39,
+      "y": 46,
+      "itemId": 26,
+      "contents": "PURE Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 49,
+      "hexId": "0x31",
+      "mapId": 13,
+      "mapName": "Earth Cave B1",
+      "x": 40,
+      "y": 47,
+      "itemId": 137,
+      "contents": "795 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 50,
+      "hexId": "0x32",
+      "mapId": 13,
+      "mapName": "Earth Cave B1",
+      "x": 33,
+      "y": 16,
+      "itemId": 144,
+      "contents": "1975 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 51,
+      "hexId": "0x33",
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "x": 39,
+      "y": 14,
+      "itemId": 52,
+      "contents": "Coral Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 52,
+      "hexId": "0x34",
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "x": 40,
+      "y": 14,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 53,
+      "hexId": "0x35",
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "x": 42,
+      "y": 16,
+      "itemId": 126,
+      "contents": "330 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 54,
+      "hexId": "0x36",
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "x": 21,
+      "y": 41,
+      "itemId": 149,
+      "contents": "5000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 55,
+      "hexId": "0x37",
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "x": 22,
+      "y": 43,
+      "itemId": 84,
+      "contents": "Wooden Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 56,
+      "hexId": "0x38",
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "x": 24,
+      "y": 43,
+      "itemId": 133,
+      "contents": "575 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 57,
+      "hexId": "0x39",
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "x": 16,
+      "y": 25,
+      "itemId": 139,
+      "contents": "1020 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 58,
+      "hexId": "0x3A",
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "x": 30,
+      "y": 13,
+      "itemId": 147,
+      "contents": "3400 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 59,
+      "hexId": "0x3B",
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "x": 49,
+      "y": 37,
+      "itemId": 22,
+      "contents": "TENT",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 60,
+      "hexId": "0x3C",
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "x": 49,
+      "y": 24,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 61,
+      "hexId": "0x3D",
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "x": 23,
+      "y": 37,
+      "itemId": 9,
+      "contents": "RUBY",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 62,
+      "hexId": "0x3E",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 17,
+      "y": 37,
+      "itemId": 140,
+      "contents": "1250 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 63,
+      "hexId": "0x3F",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 19,
+      "y": 38,
+      "itemId": 86,
+      "contents": "Silver Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 64,
+      "hexId": "0x40",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 16,
+      "y": 40,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 65,
+      "hexId": "0x41",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 37,
+      "y": 12,
+      "itemId": 150,
+      "contents": "5450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 66,
+      "hexId": "0x42",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 38,
+      "y": 12,
+      "itemId": 142,
+      "contents": "1520 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 67,
+      "hexId": "0x43",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 42,
+      "y": 12,
+      "itemId": 30,
+      "contents": "Wooden Staff",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 68,
+      "hexId": "0x44",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 44,
+      "y": 12,
+      "itemId": 147,
+      "contents": "3400 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 69,
+      "hexId": "0x45",
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "x": 37,
+      "y": 14,
+      "itemId": 141,
+      "contents": "1455 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 70,
+      "hexId": "0x46",
+      "mapId": 60,
+      "mapName": "Titan's Tunnel",
+      "x": 5,
+      "y": 19,
+      "itemId": 96,
+      "contents": "Silver Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 71,
+      "hexId": "0x47",
+      "mapId": 60,
+      "mapName": "Titan's Tunnel",
+      "x": 6,
+      "y": 19,
+      "itemId": 130,
+      "contents": "450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 72,
+      "hexId": "0x48",
+      "mapId": 60,
+      "mapName": "Titan's Tunnel",
+      "x": 7,
+      "y": 19,
+      "itemId": 134,
+      "contents": "620 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 73,
+      "hexId": "0x49",
+      "mapId": 60,
+      "mapName": "Titan's Tunnel",
+      "x": 8,
+      "y": 19,
+      "itemId": 41,
+      "contents": "Great Axe",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 74,
+      "hexId": "0x4A",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 5,
+      "y": 29,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 75,
+      "hexId": "0x4B",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 6,
+      "y": 29,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 76,
+      "hexId": "0x4C",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 8,
+      "y": 29,
+      "itemId": 144,
+      "contents": "1975 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 77,
+      "hexId": "0x4D",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 9,
+      "y": 29,
+      "itemId": 26,
+      "contents": "PURE Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 78,
+      "hexId": "0x4E",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 10,
+      "y": 29,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 79,
+      "hexId": "0x4F",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 10,
+      "y": 28,
+      "itemId": 141,
+      "contents": "1455 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 80,
+      "hexId": "0x50",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 10,
+      "y": 27,
+      "itemId": 86,
+      "contents": "Silver Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 81,
+      "hexId": "0x51",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 9,
+      "y": 27,
+      "itemId": 142,
+      "contents": "1520 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 82,
+      "hexId": "0x52",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 6,
+      "y": 27,
+      "itemId": 96,
+      "contents": "Silver Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 83,
+      "hexId": "0x53",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 7,
+      "y": 26,
+      "itemId": 103,
+      "contents": "Silver Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 84,
+      "hexId": "0x54",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 10,
+      "y": 26,
+      "itemId": 143,
+      "contents": "1760 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 85,
+      "hexId": "0x55",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 11,
+      "y": 28,
+      "itemId": 46,
+      "contents": "Silver Axe",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 86,
+      "hexId": "0x56",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 10,
+      "y": 4,
+      "itemId": 137,
+      "contents": "795 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 87,
+      "hexId": "0x57",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 11,
+      "y": 4,
+      "itemId": 136,
+      "contents": "750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 88,
+      "hexId": "0x58",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 18,
+      "y": 13,
+      "itemId": 50,
+      "contents": "Giant Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 89,
+      "hexId": "0x59",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 30,
+      "y": 13,
+      "itemId": 148,
+      "contents": "4150 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 90,
+      "hexId": "0x5A",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 26,
+      "y": 29,
+      "itemId": 142,
+      "contents": "1520 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 91,
+      "hexId": "0x5B",
+      "mapId": 33,
+      "mapName": "Gurgu Volcano B2",
+      "x": 25,
+      "y": 19,
+      "itemId": 96,
+      "contents": "Silver Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 92,
+      "hexId": "0x5C",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 34,
+      "y": 3,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 92,
+      "hexId": "0x5C",
+      "mapId": 36,
+      "mapName": "Gurgu Volcano B5",
+      "x": 57,
+      "y": 6,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 92,
+      "hexId": "0x5C",
+      "mapId": 36,
+      "mapName": "Gurgu Volcano B5",
+      "x": 54,
+      "y": 36,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 92,
+      "hexId": "0x5C",
+      "mapId": 36,
+      "mapName": "Gurgu Volcano B5",
+      "x": 58,
+      "y": 54,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 93,
+      "hexId": "0x5D",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 31,
+      "y": 1,
+      "itemId": 146,
+      "contents": "2750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 94,
+      "hexId": "0x5E",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 17,
+      "y": 9,
+      "itemId": 143,
+      "contents": "1760 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 95,
+      "hexId": "0x5F",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 48,
+      "y": 31,
+      "itemId": 30,
+      "contents": "Wooden Staff",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 96,
+      "hexId": "0x60",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 48,
+      "y": 32,
+      "itemId": 140,
+      "contents": "1250 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 97,
+      "hexId": "0x61",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 32,
+      "y": 19,
+      "itemId": 108,
+      "contents": "10 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 98,
+      "hexId": "0x62",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 34,
+      "y": 21,
+      "itemId": 117,
+      "contents": "155 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 99,
+      "hexId": "0x63",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 45,
+      "y": 11,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 100,
+      "hexId": "0x64",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 46,
+      "y": 11,
+      "itemId": 145,
+      "contents": "2000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 101,
+      "hexId": "0x65",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 4,
+      "y": 2,
+      "itemId": 48,
+      "contents": "Ice Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 101,
+      "hexId": "0x65",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 48,
+      "y": 12,
+      "itemId": 48,
+      "contents": "Ice Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 102,
+      "hexId": "0x66",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 4,
+      "y": 3,
+      "itemId": 138,
+      "contents": "880 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 103,
+      "hexId": "0x67",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 1,
+      "y": 3,
+      "itemId": 26,
+      "contents": "PURE Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 104,
+      "hexId": "0x68",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 4,
+      "y": 1,
+      "itemId": 87,
+      "contents": "Flame Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 105,
+      "hexId": "0x69",
+      "mapId": 35,
+      "mapName": "Gurgu Volcano B4",
+      "x": 2,
+      "y": 1,
+      "itemId": 153,
+      "contents": "7340 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 106,
+      "hexId": "0x6A",
+      "mapId": 36,
+      "mapName": "Gurgu Volcano B5",
+      "x": 9,
+      "y": 36,
+      "itemId": 74,
+      "contents": "Flame Armor",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 107,
+      "hexId": "0x6B",
+      "mapId": 15,
+      "mapName": "Ice Cave B1",
+      "x": 6,
+      "y": 22,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 108,
+      "hexId": "0x6C",
+      "mapId": 15,
+      "mapName": "Ice Cave B1",
+      "x": 9,
+      "y": 27,
+      "itemId": 161,
+      "contents": "10000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 109,
+      "hexId": "0x6D",
+      "mapId": 15,
+      "mapName": "Ice Cave B1",
+      "x": 19,
+      "y": 20,
+      "itemId": 159,
+      "contents": "9500 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 110,
+      "hexId": "0x6E",
+      "mapId": 15,
+      "mapName": "Ice Cave B1",
+      "x": 20,
+      "y": 20,
+      "itemId": 22,
+      "contents": "TENT",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 111,
+      "hexId": "0x6F",
+      "mapId": 15,
+      "mapName": "Ice Cave B1",
+      "x": 21,
+      "y": 20,
+      "itemId": 88,
+      "contents": "Ice Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 112,
+      "hexId": "0x70",
+      "mapId": 37,
+      "mapName": "Ice Cave B2",
+      "x": 51,
+      "y": 8,
+      "itemId": 68,
+      "contents": "Cloth",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 113,
+      "hexId": "0x71",
+      "mapId": 37,
+      "mapName": "Ice Cave B2",
+      "x": 49,
+      "y": 8,
+      "itemId": 47,
+      "contents": "Flame Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 114,
+      "hexId": "0x72",
+      "mapId": 37,
+      "mapName": "Ice Cave B2",
+      "x": 50,
+      "y": 9,
+      "itemId": 11,
+      "contents": "FLOATER",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 115,
+      "hexId": "0x73",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 39,
+      "y": 41,
+      "itemId": 155,
+      "contents": "7900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 116,
+      "hexId": "0x74",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 40,
+      "y": 41,
+      "itemId": 150,
+      "contents": "5450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 117,
+      "hexId": "0x75",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 39,
+      "y": 43,
+      "itemId": 160,
+      "contents": "9900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 118,
+      "hexId": "0x76",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 40,
+      "y": 43,
+      "itemId": 149,
+      "contents": "5000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 119,
+      "hexId": "0x77",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 41,
+      "y": 41,
+      "itemId": 119,
+      "contents": "180 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 120,
+      "hexId": "0x78",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 41,
+      "y": 43,
+      "itemId": 162,
+      "contents": "12350 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 121,
+      "hexId": "0x79",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 29,
+      "y": 10,
+      "itemId": 103,
+      "contents": "Silver Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 122,
+      "hexId": "0x7A",
+      "mapId": 38,
+      "mapName": "Ice Cave B3",
+      "x": 30,
+      "y": 10,
+      "itemId": 75,
+      "contents": "Ice Armor",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 123,
+      "hexId": "0x7B",
+      "mapId": 25,
+      "mapName": "Castle of Ordeals 2F",
+      "x": 22,
+      "y": 1,
+      "itemId": 104,
+      "contents": "Zeus Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 123,
+      "hexId": "0x7B",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 1,
+      "y": 22,
+      "itemId": 104,
+      "contents": "Zeus Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 124,
+      "hexId": "0x7C",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 2,
+      "y": 22,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 125,
+      "hexId": "0x7D",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 3,
+      "y": 22,
+      "itemId": 141,
+      "contents": "1455 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 126,
+      "hexId": "0x7E",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 4,
+      "y": 22,
+      "itemId": 153,
+      "contents": "7340 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 127,
+      "hexId": "0x7F",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 1,
+      "y": 1,
+      "itemId": 80,
+      "contents": "Gold Bracelet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 128,
+      "hexId": "0x80",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 1,
+      "y": 2,
+      "itemId": 48,
+      "contents": "Ice Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 129,
+      "hexId": "0x81",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 1,
+      "y": 3,
+      "itemId": 102,
+      "contents": "Iron Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 130,
+      "hexId": "0x82",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 22,
+      "y": 1,
+      "itemId": 57,
+      "contents": "Heal Staff",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 131,
+      "hexId": "0x83",
+      "mapId": 26,
+      "mapName": "Castle of Ordeals 3F",
+      "x": 15,
+      "y": 18,
+      "itemId": 13,
+      "contents": "TAIL",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 132,
+      "hexId": "0x84",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 55,
+      "y": 42,
+      "itemId": 141,
+      "contents": "1455 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 133,
+      "hexId": "0x85",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 55,
+      "y": 45,
+      "itemId": 145,
+      "contents": "2000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 134,
+      "hexId": "0x86",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 52,
+      "y": 47,
+      "itemId": 146,
+      "contents": "2750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 135,
+      "hexId": "0x87",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 40,
+      "y": 51,
+      "itemId": 146,
+      "contents": "2750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 136,
+      "hexId": "0x88",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 40,
+      "y": 52,
+      "itemId": 142,
+      "contents": "1520 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 137,
+      "hexId": "0x89",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 16,
+      "y": 36,
+      "itemId": 108,
+      "contents": "10 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 138,
+      "hexId": "0x8A",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 22,
+      "y": 34,
+      "itemId": 131,
+      "contents": "500 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 139,
+      "hexId": "0x8B",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 21,
+      "y": 34,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 140,
+      "hexId": "0x8C",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 12,
+      "y": 21,
+      "itemId": 133,
+      "contents": "575 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 141,
+      "hexId": "0x8D",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 15,
+      "y": 21,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 142,
+      "hexId": "0x8E",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 10,
+      "y": 9,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 143,
+      "hexId": "0x8F",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 38,
+      "y": 51,
+      "itemId": 159,
+      "contents": "9500 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 144,
+      "hexId": "0x90",
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "x": 34,
+      "y": 51,
+      "itemId": 118,
+      "contents": "160 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 149,
+      "hexId": "0x95",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 33,
+      "y": 7,
+      "itemId": 99,
+      "contents": "Ribbon",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 150,
+      "hexId": "0x96",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 34,
+      "y": 7,
+      "itemId": 160,
+      "contents": "9900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 151,
+      "hexId": "0x97",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 36,
+      "y": 7,
+      "itemId": 153,
+      "contents": "7340 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 152,
+      "hexId": "0x98",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 36,
+      "y": 9,
+      "itemId": 146,
+      "contents": "2750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 153,
+      "hexId": "0x99",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 41,
+      "y": 25,
+      "itemId": 154,
+      "contents": "7690 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 154,
+      "hexId": "0x9A",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 44,
+      "y": 25,
+      "itemId": 156,
+      "contents": "8135 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 155,
+      "hexId": "0x9B",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 6,
+      "y": 24,
+      "itemId": 150,
+      "contents": "5450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 156,
+      "hexId": "0x9C",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 9,
+      "y": 25,
+      "itemId": 128,
+      "contents": "385 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 157,
+      "hexId": "0x9D",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 10,
+      "y": 24,
+      "itemId": 105,
+      "contents": "Power Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 158,
+      "hexId": "0x9E",
+      "mapId": 43,
+      "mapName": "Sea Shrine B4",
+      "x": 16,
+      "y": 10,
+      "itemId": 56,
+      "contents": "Light Axe",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 159,
+      "hexId": "0x9F",
+      "mapId": 44,
+      "mapName": "Sea Shrine B3",
+      "x": 7,
+      "y": 14,
+      "itemId": 160,
+      "contents": "9900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 160,
+      "hexId": "0xA0",
+      "mapId": 44,
+      "mapName": "Sea Shrine B3",
+      "x": 36,
+      "y": 25,
+      "itemId": 145,
+      "contents": "2000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 161,
+      "hexId": "0xA1",
+      "mapId": 44,
+      "mapName": "Sea Shrine B3",
+      "x": 48,
+      "y": 13,
+      "itemId": 130,
+      "contents": "450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 162,
+      "hexId": "0xA2",
+      "mapId": 44,
+      "mapName": "Sea Shrine B3",
+      "x": 51,
+      "y": 5,
+      "itemId": 115,
+      "contents": "110 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 163,
+      "hexId": "0xA3",
+      "mapId": 45,
+      "mapName": "Sea Shrine B2",
+      "x": 7,
+      "y": 41,
+      "itemId": 56,
+      "contents": "Light Axe",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 164,
+      "hexId": "0xA4",
+      "mapId": 45,
+      "mapName": "Sea Shrine B2",
+      "x": 22,
+      "y": 1,
+      "itemId": 76,
+      "contents": "Opal Armor",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 165,
+      "hexId": "0xA5",
+      "mapId": 45,
+      "mapName": "Sea Shrine B2",
+      "x": 28,
+      "y": 23,
+      "itemId": 109,
+      "contents": "20 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 166,
+      "hexId": "0xA6",
+      "mapId": 45,
+      "mapName": "Sea Shrine B2",
+      "x": 28,
+      "y": 37,
+      "itemId": 58,
+      "contents": "Mage Staff",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 167,
+      "hexId": "0xA7",
+      "mapId": 45,
+      "mapName": "Sea Shrine B2",
+      "x": 38,
+      "y": 44,
+      "itemId": 162,
+      "contents": "12350 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 168,
+      "hexId": "0xA8",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 11,
+      "y": 18,
+      "itemId": 157,
+      "contents": "9000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 169,
+      "hexId": "0xA9",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 12,
+      "y": 18,
+      "itemId": 143,
+      "contents": "1760 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 170,
+      "hexId": "0xAA",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 13,
+      "y": 18,
+      "itemId": 81,
+      "contents": "Opal Bracelet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 171,
+      "hexId": "0xAB",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 12,
+      "y": 4,
+      "itemId": 146,
+      "contents": "2750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 172,
+      "hexId": "0xAC",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 18,
+      "y": 4,
+      "itemId": 161,
+      "contents": "10000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 173,
+      "hexId": "0xAD",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 20,
+      "y": 4,
+      "itemId": 108,
+      "contents": "10 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 174,
+      "hexId": "0xAE",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 19,
+      "y": 11,
+      "itemId": 148,
+      "contents": "4150 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 175,
+      "hexId": "0xAF",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 26,
+      "y": 11,
+      "itemId": 149,
+      "contents": "5000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 176,
+      "hexId": "0xB0",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 19,
+      "y": 25,
+      "itemId": 26,
+      "contents": "PURE Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 177,
+      "hexId": "0xB1",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 26,
+      "y": 25,
+      "itemId": 89,
+      "contents": "Opal Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 178,
+      "hexId": "0xB2",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 25,
+      "y": 4,
+      "itemId": 97,
+      "contents": "Opal Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 179,
+      "hexId": "0xB3",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 26,
+      "y": 4,
+      "itemId": 106,
+      "contents": "Opal Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 180,
+      "hexId": "0xB4",
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "x": 27,
+      "y": 4,
+      "itemId": 8,
+      "contents": "SLAB",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 181,
+      "hexId": "0xB5",
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "x": 15,
+      "y": 52,
+      "itemId": 60,
+      "contents": "Wizard Staff",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 182,
+      "hexId": "0xB6",
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "x": 16,
+      "y": 52,
+      "itemId": 99,
+      "contents": "Ribbon",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 183,
+      "hexId": "0xB7",
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "x": 17,
+      "y": 52,
+      "itemId": 164,
+      "contents": "13450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 184,
+      "hexId": "0xB8",
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "x": 18,
+      "y": 52,
+      "itemId": 151,
+      "contents": "6400 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 185,
+      "hexId": "0xB9",
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "x": 19,
+      "y": 52,
+      "itemId": 149,
+      "contents": "5000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 186,
+      "hexId": "0xBA",
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "x": 20,
+      "y": 52,
+      "itemId": 59,
+      "contents": "Defense",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 196,
+      "hexId": "0xC4",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 15,
+      "y": 15,
+      "itemId": 90,
+      "contents": "Aegis Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 197,
+      "hexId": "0xC5",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 16,
+      "y": 15,
+      "itemId": 146,
+      "contents": "2750 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 198,
+      "hexId": "0xC6",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 18,
+      "y": 15,
+      "itemId": 147,
+      "contents": "3400 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 199,
+      "hexId": "0xC7",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 17,
+      "y": 16,
+      "itemId": 169,
+      "contents": "18010 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 200,
+      "hexId": "0xC8",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 10,
+      "y": 15,
+      "itemId": 23,
+      "contents": "CABIN",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 201,
+      "hexId": "0xC9",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 21,
+      "y": 15,
+      "itemId": 98,
+      "contents": "Heal Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 202,
+      "hexId": "0xCA",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 20,
+      "y": 11,
+      "itemId": 138,
+      "contents": "880 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 203,
+      "hexId": "0xCB",
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "x": 18,
+      "y": 17,
+      "itemId": 61,
+      "contents": "Vorpal",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 204,
+      "hexId": "0xCC",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 17,
+      "y": 13,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 205,
+      "hexId": "0xCD",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 18,
+      "y": 14,
+      "itemId": 154,
+      "contents": "7690 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 206,
+      "hexId": "0xCE",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 19,
+      "y": 15,
+      "itemId": 51,
+      "contents": "Sun Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 207,
+      "hexId": "0xCF",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 18,
+      "y": 16,
+      "itemId": 161,
+      "contents": "10000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 208,
+      "hexId": "0xD0",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 17,
+      "y": 17,
+      "itemId": 77,
+      "contents": "Dragon Armor",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 209,
+      "hexId": "0xD1",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 14,
+      "y": 17,
+      "itemId": 156,
+      "contents": "8135 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 210,
+      "hexId": "0xD2",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 13,
+      "y": 16,
+      "itemId": 155,
+      "contents": "7900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 211,
+      "hexId": "0xD3",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 12,
+      "y": 15,
+      "itemId": 63,
+      "contents": "Thor Hammer",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 212,
+      "hexId": "0xD4",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 13,
+      "y": 14,
+      "itemId": 162,
+      "contents": "12350 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 213,
+      "hexId": "0xD5",
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "x": 14,
+      "y": 13,
+      "itemId": 163,
+      "contents": "13000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 214,
+      "hexId": "0xD6",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 2,
+      "y": 19,
+      "itemId": 160,
+      "contents": "9900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 215,
+      "hexId": "0xD7",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 3,
+      "y": 18,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 216,
+      "hexId": "0xD8",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 4,
+      "y": 19,
+      "itemId": 148,
+      "contents": "4150 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 217,
+      "hexId": "0xD9",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 5,
+      "y": 21,
+      "itemId": 155,
+      "contents": "7900 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 218,
+      "hexId": "0xDA",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 33,
+      "y": 21,
+      "itemId": 149,
+      "contents": "5000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 219,
+      "hexId": "0xDB",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 34,
+      "y": 20,
+      "itemId": 107,
+      "contents": "ProRing",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 220,
+      "hexId": "0xDC",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 35,
+      "y": 19,
+      "itemId": 152,
+      "contents": "6720 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 221,
+      "hexId": "0xDD",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 36,
+      "y": 19,
+      "itemId": 98,
+      "contents": "Heal Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 222,
+      "hexId": "0xDE",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 37,
+      "y": 22,
+      "itemId": 119,
+      "contents": "180 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 223,
+      "hexId": "0xDF",
+      "mapId": 47,
+      "mapName": "Sky Castle 1F",
+      "x": 19,
+      "y": 38,
+      "itemId": 64,
+      "contents": "Bane Sword",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 224,
+      "hexId": "0xE0",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 27,
+      "y": 33,
+      "itemId": 82,
+      "contents": "White Shirt",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 225,
+      "hexId": "0xE1",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 28,
+      "y": 33,
+      "itemId": 83,
+      "contents": "Black Shirt",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 226,
+      "hexId": "0xE2",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 35,
+      "y": 18,
+      "itemId": 99,
+      "contents": "Ribbon",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 227,
+      "hexId": "0xE3",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 27,
+      "y": 9,
+      "itemId": 106,
+      "contents": "Opal Gauntlet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 228,
+      "hexId": "0xE4",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 36,
+      "y": 20,
+      "itemId": 89,
+      "contents": "Opal Shield",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 229,
+      "hexId": "0xE5",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 8,
+      "y": 9,
+      "itemId": 96,
+      "contents": "Silver Helmet",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 230,
+      "hexId": "0xE6",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 11,
+      "y": 9,
+      "itemId": 24,
+      "contents": "HOUSE",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 231,
+      "hexId": "0xE7",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 1,
+      "y": 21,
+      "itemId": 138,
+      "contents": "880 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 232,
+      "hexId": "0xE8",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 4,
+      "y": 19,
+      "itemId": 163,
+      "contents": "13000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 233,
+      "hexId": "0xE9",
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "x": 10,
+      "y": 33,
+      "itemId": 7,
+      "contents": "ADAMANT",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 234,
+      "hexId": "0xEA",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 5,
+      "y": 20,
+      "itemId": 148,
+      "contents": "4150 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 235,
+      "hexId": "0xEB",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 4,
+      "y": 20,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 236,
+      "hexId": "0xEC",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 6,
+      "y": 20,
+      "itemId": 147,
+      "contents": "3400 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 237,
+      "hexId": "0xED",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 7,
+      "y": 20,
+      "itemId": 65,
+      "contents": "Katana",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 238,
+      "hexId": "0xEE",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 39,
+      "y": 19,
+      "itemId": 92,
+      "contents": "ProCape",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 239,
+      "hexId": "0xEF",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 39,
+      "y": 18,
+      "itemId": 68,
+      "contents": "Cloth",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 240,
+      "hexId": "0xF0",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 41,
+      "y": 18,
+      "itemId": 159,
+      "contents": "9500 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 241,
+      "hexId": "0xF1",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 41,
+      "y": 17,
+      "itemId": 27,
+      "contents": "SOFT Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 242,
+      "hexId": "0xF2",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 39,
+      "y": 17,
+      "itemId": 151,
+      "contents": "6400 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 243,
+      "hexId": "0xF3",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 41,
+      "y": 19,
+      "itemId": 156,
+      "contents": "8135 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 244,
+      "hexId": "0xF4",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 17,
+      "y": 5,
+      "itemId": 157,
+      "contents": "9000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 245,
+      "hexId": "0xF5",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 17,
+      "y": 6,
+      "itemId": 25,
+      "contents": "HEAL Potion",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 246,
+      "hexId": "0xF6",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 19,
+      "y": 5,
+      "itemId": 107,
+      "contents": "ProRing",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 247,
+      "hexId": "0xF7",
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "x": 19,
+      "y": 6,
+      "itemId": 150,
+      "contents": "5450 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 248,
+      "hexId": "0xF8",
+      "mapId": 58,
+      "mapName": "Temple of Fiends Revisited B4 (Air)",
+      "x": 51,
+      "y": 32,
+      "itemId": 67,
+      "contents": "Masmune",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 249,
+      "hexId": "0xF9",
+      "mapId": 56,
+      "mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "x": 54,
+      "y": 34,
+      "itemId": 173,
+      "contents": "26000 G",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 250,
+      "hexId": "0xFA",
+      "mapId": 56,
+      "mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "x": 24,
+      "y": 52,
+      "itemId": 65,
+      "contents": "Katana",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 251,
+      "hexId": "0xFB",
+      "mapId": 56,
+      "mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "x": 7,
+      "y": 30,
+      "itemId": 107,
+      "contents": "ProRing",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 252,
+      "hexId": "0xFC",
+      "mapId": 56,
+      "mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "x": 22,
+      "y": 30,
+      "itemId": 92,
+      "contents": "ProCape",
+      "mapHasMysticKeyDoors": true
+    },
+    {
+      "chestId": 253,
+      "hexId": "0xFD",
+      "mapId": 54,
+      "mapName": "Temple of Fiends Revisited 3F",
+      "x": 17,
+      "y": 15,
+      "itemId": 174,
+      "contents": "45000 G",
+      "mapHasMysticKeyDoors": false
+    },
+    {
+      "chestId": 254,
+      "hexId": "0xFE",
+      "mapId": 54,
+      "mapName": "Temple of Fiends Revisited 3F",
+      "x": 23,
+      "y": 15,
+      "itemId": 175,
+      "contents": "65000 G",
+      "mapHasMysticKeyDoors": false
+    }
+  ],
+  "npcs": [
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 0,
+      "objectId": 49,
+      "hexObjectId": "0x31",
+      "x": 16,
+      "y": 1,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        18,
+        67,
+        24,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The King is sure that\nsomeday the LIGHT\nWARRIORS will come to\nsave the Princess,\njust as in Lukahn's\nprophecy.",
+        "dialogue_2": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 1,
+      "objectId": 50,
+      "hexObjectId": "0x32",
+      "x": 7,
+      "y": 13,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        70,
+        24,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Go to the King.",
+        "dialogue_2": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 2,
+      "objectId": 52,
+      "hexObjectId": "0x34",
+      "x": 4,
+      "y": 1,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        69,
+        68,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "As legend foretold, once\nagain the ORBS shine!!\nQuickly, to fulfill the\nlegend, take them to the\nTemple north of here,\nand stand in the center.",
+        "dialogue_2": "Lukahn left this town,\nto join his colleagues\nat Crescent Lake."
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 3,
+      "objectId": 53,
+      "hexObjectId": "0x35",
+      "x": 15,
+      "y": 12,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        71,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I am Arylon, the Dancer!"
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 4,
+      "objectId": 54,
+      "hexObjectId": "0x36",
+      "x": 18,
+      "y": 20,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        72,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This is Coneria, the\ndream city."
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 5,
+      "objectId": 55,
+      "hexObjectId": "0x37",
+      "x": 5,
+      "y": 6,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        18,
+        51,
+        73,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Please!\nSave the Princess!",
+        "dialogue_2": "North of Coneria lives\na witch named Matoya."
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 6,
+      "objectId": 56,
+      "hexObjectId": "0x38",
+      "x": 27,
+      "y": 5,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        18,
+        51,
+        74,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Please!\nSave the Princess!",
+        "dialogue_2": "Matoya has poor\neyesight. She needs the\nCRYSTAL to see."
+      }
+    },
+    {
+      "mapId": 0,
+      "mapName": "Coneria",
+      "slot": 7,
+      "objectId": 57,
+      "hexObjectId": "0x39",
+      "x": 30,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        75,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "My home is Pravoka, a\nbeautiful port city far\neast of here."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 0,
+      "objectId": 4,
+      "hexObjectId": "0x04",
+      "x": 5,
+      "y": 7,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        8,
+        9,
+        10
+      ],
+      "dialogues": {
+        "dialogue_1": "Aye, I am Bikke the\nPirate, and surprised I\nam that you scurvy dogs\nhave the nerve to face\nme.\nMates!\nGet those landlubbers!",
+        "dialogue_2": "Okay, you got me.\nTake my SHIP.",
+        "dialogue_3": "I won't be any more\nbother. I promise."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 1,
+      "objectId": 63,
+      "hexObjectId": "0x3F",
+      "x": 13,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        82,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Thank you. We don't need\nto be afraid of pirates\nanymore."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 2,
+      "objectId": 63,
+      "hexObjectId": "0x3F",
+      "x": 12,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        82,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Thank you. We don't need\nto be afraid of pirates\nanymore."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 3,
+      "objectId": 63,
+      "hexObjectId": "0x3F",
+      "x": 24,
+      "y": 21,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        82,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Thank you. We don't need\nto be afraid of pirates\nanymore."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 4,
+      "objectId": 64,
+      "hexObjectId": "0x40",
+      "x": 29,
+      "y": 8,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        83,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I have escaped from\nMelmond, in the west.\nMy town is in trouble.\nPlease help them!!"
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 5,
+      "objectId": 65,
+      "hexObjectId": "0x41",
+      "x": 8,
+      "y": 14,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        84,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Elves live across\nthe sea. Matoya's HERB\nis the only thing that\nwill wake their Prince."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 6,
+      "objectId": 66,
+      "hexObjectId": "0x42",
+      "x": 19,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        4,
+        85,
+        86,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This town has been\ninvaded by pirates.",
+        "dialogue_2": "Ships can stop only at\nports. There are no\nports in the north."
+      }
+    },
+    {
+      "mapId": 1,
+      "mapName": "Pravoka",
+      "slot": 7,
+      "objectId": 67,
+      "hexObjectId": "0x43",
+      "x": 20,
+      "y": 25,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        4,
+        87,
+        88,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Help!",
+        "dialogue_2": "There are many dangerous\nmonsters in the sea.\nBe careful!"
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 0,
+      "objectId": 77,
+      "hexObjectId": "0x4D",
+      "x": 37,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        6,
+        97,
+        90,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Save our Prince!",
+        "dialogue_2": "The Prince is awake!\nThank you so much."
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 1,
+      "objectId": 78,
+      "hexObjectId": "0x4E",
+      "x": 38,
+      "y": 1,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        6,
+        98,
+        90,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Our Prince was to\nbecome the King of\nElfLand.",
+        "dialogue_2": "The Prince is awake!\nThank you so much."
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 2,
+      "objectId": 79,
+      "hexObjectId": "0x4F",
+      "x": 28,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        6,
+        99,
+        100,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Long ago I wandered to\nthe Northwest. I found\nan ancient castle that\nwas so spooky, I left\nimmediately.",
+        "dialogue_2": "Astos has been defeated?\nPeace will now return to\nElfLand."
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 3,
+      "objectId": 80,
+      "hexObjectId": "0x50",
+      "x": 24,
+      "y": 15,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        6,
+        101,
+        90,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Astos wears a disguise,\nand lurks in seclusion.",
+        "dialogue_2": "The Prince is awake!\nThank you so much."
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 4,
+      "objectId": 81,
+      "hexObjectId": "0x51",
+      "x": 9,
+      "y": 15,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        6,
+        102,
+        103,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Prince must wake\nsoon, or the power of\nthe Dark Elf will\ndominate!",
+        "dialogue_2": "Legend says an AIRSHIP\nis buried somewhere."
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 5,
+      "objectId": 82,
+      "hexObjectId": "0x52",
+      "x": 10,
+      "y": 6,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        104,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Swords and armors made\nof silver are\nvery powerful."
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 6,
+      "objectId": 83,
+      "hexObjectId": "0x53",
+      "x": 4,
+      "y": 5,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        17,
+        105,
+        107,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I can see a cave above\nthe crescent..\nTo the north of the\nvolcano, there you will\nfind the FLOATER.",
+        "dialogue_2": "The Prince must wake\nsoon, or the Dark Elf\nwill dominate!"
+      }
+    },
+    {
+      "mapId": 2,
+      "mapName": "Elfland",
+      "slot": 7,
+      "objectId": 84,
+      "hexObjectId": "0x54",
+      "x": 15,
+      "y": 27,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        11,
+        106,
+        107,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "In the desert south of\nthe crescent, something\nis emerging from below\nthe sand..\nUse the FLOATER!",
+        "dialogue_2": "The Prince must wake\nsoon, or the Dark Elf\nwill dominate!"
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 0,
+      "objectId": 11,
+      "hexObjectId": "0x0B",
+      "x": 26,
+      "y": 1,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        27,
+        28,
+        24
+      ],
+      "dialogues": {
+        "dialogue_1": "Everybody knows me.\nWhat?! You've never\nheard of Dr. Unne?",
+        "dialogue_2": "A SLAB!!\nThis SLAB will lead us\nto solve the riddle of\nthe Lefeinish!!\nNow, listen to me..",
+        "dialogue_3": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 1,
+      "objectId": 104,
+      "hexObjectId": "0x68",
+      "x": 8,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        12,
+        122,
+        121,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Melmond was once a\nbeautiful town.",
+        "dialogue_2": "The Vampire of the Earth\nCave is stealing the\nPower of the earth.\nWe need your help."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 2,
+      "objectId": 105,
+      "hexObjectId": "0x69",
+      "x": 22,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        123,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Titan who lives in\nthe tunnel eats gems.\nHe loves RUBIES."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 3,
+      "objectId": 106,
+      "hexObjectId": "0x6A",
+      "x": 21,
+      "y": 17,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        124,
+        125,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Vampire is gone, but\nthe earth continues to\nrot. What causes this?",
+        "dialogue_2": "I'm a farmer."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 4,
+      "objectId": 107,
+      "hexObjectId": "0x6B",
+      "x": 12,
+      "y": 1,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        21,
+        127,
+        126,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Look! The Earth ORB is\nshining again.",
+        "dialogue_2": "The Earth Cave is on\nthe peninsula southwest\nof this town."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 5,
+      "objectId": 108,
+      "hexObjectId": "0x6C",
+      "x": 14,
+      "y": 13,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        12,
+        129,
+        128,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Are you the\nLIGHT WARRIORS?",
+        "dialogue_2": "This town was invaded by\nthe Vampire. The Clinic\nwas destroyed and the\ntown was cursed."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 6,
+      "objectId": 109,
+      "hexObjectId": "0x6D",
+      "x": 15,
+      "y": 22,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        131,
+        24,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Vampire is gone, but\nthe earth still rots?..",
+        "dialogue_2": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 7,
+      "objectId": 110,
+      "hexObjectId": "0x6E",
+      "x": 29,
+      "y": 18,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        130,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Pass through the Titan's\nTunnel, then south to\nfind Sarda, the Sage."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 8,
+      "objectId": 111,
+      "hexObjectId": "0x6F",
+      "x": 24,
+      "y": 7,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        132,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "In the northern world,\nthere once was a\nprosperous civilization,\nbut now it is ruins."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 9,
+      "objectId": 112,
+      "hexObjectId": "0x70",
+      "x": 24,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        21,
+        134,
+        133,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "LIGHT WARRIORS..\nThanks to you, the earth\nis beginning to revive..",
+        "dialogue_2": "If the ORB of Earth\nbegins to shine again,\nthe earth shall revive."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 10,
+      "objectId": 113,
+      "hexObjectId": "0x71",
+      "x": 29,
+      "y": 9,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        135,
+        136,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "They say the ancient\npeople used a stone to\nmake their ship float.",
+        "dialogue_2": "OH! An AIRSHIP!\nThe fables are true, it\nreally exists!!"
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 11,
+      "objectId": 114,
+      "hexObjectId": "0x72",
+      "x": 20,
+      "y": 26,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        137,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Sarda does not fear the\nevils of the cave."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 12,
+      "objectId": 115,
+      "hexObjectId": "0x73",
+      "x": 22,
+      "y": 12,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        14,
+        24,
+        138,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "WARRIORS.\nRevive the Power of\nthe ORBS!",
+        "dialogue_2": "Well, well..\nYou have become fine\nWarriors."
+      }
+    },
+    {
+      "mapId": 3,
+      "mapName": "Melmond",
+      "slot": 13,
+      "objectId": 116,
+      "hexObjectId": "0x74",
+      "x": 25,
+      "y": 13,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        21,
+        134,
+        139,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "LIGHT WARRIORS..\nThanks to you, the earth\nis beginning to revive..",
+        "dialogue_2": "I am Jim. My home is the\nDwarf Village, but I am\nhere investigating."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 0,
+      "objectId": 21,
+      "hexObjectId": "0x15",
+      "x": 42,
+      "y": 10,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        43,
+        44,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Great job vanquishing\nthe Earth FIEND. Now,\nthe Fire FIEND wakes.\nWith this CANOE go to\nthe VOLCANO, and defeat\nthat FIEND also!",
+        "dialogue_2": "400 years ago, we lost\ncontrol of the Wind.\n200 years later we lost\nthe Water, then Earth,\nand Fire followed. The\nPowers that bind this\nworld are gone."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 1,
+      "objectId": 119,
+      "hexObjectId": "0x77",
+      "x": 38,
+      "y": 11,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        140,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "We, the Twelve Sages,\nwere lead here by the\nstars and prophecy."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 2,
+      "objectId": 120,
+      "hexObjectId": "0x78",
+      "x": 36,
+      "y": 10,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        150,
+        141,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Temple of FIENDS is\nin the center of the\nFour Altars. The time\nhas come to destroy the\nsource of evil.",
+        "dialogue_2": "Once the ORBS shined\nwith the power of Earth,\nWind, Fire, and Water.\nThe four FIENDS seized\nthose Powers."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 3,
+      "objectId": 121,
+      "hexObjectId": "0x79",
+      "x": 35,
+      "y": 8,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        151,
+        142,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "With the four ORBS\nshining again the Time\nGate can be broken. The\ntrue enemy is 2000 years\nin the past.",
+        "dialogue_2": "Earth, Wind, Fire, and\nWater..\nThe world is bound by\nthese four Powers."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 4,
+      "objectId": 122,
+      "hexObjectId": "0x7A",
+      "x": 35,
+      "y": 6,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        152,
+        143,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The world was suddenly\nthrown into disorder.\nYou must restore it.",
+        "dialogue_2": "Each element's power\nfocuses at its Altar.\nLocate, and crush the\nFiend. Then to make\nit shine, place the ORB\non the Altar it guarded!"
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 5,
+      "objectId": 123,
+      "hexObjectId": "0x7B",
+      "x": 36,
+      "y": 4,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        153,
+        144,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Time is repeating.\nIn order to break the\nTime-Loop you must\neliminate the enemy who\ncontrols from 2000 years\nin the past.",
+        "dialogue_2": "Four FIENDS are bent on\nthe world's destruction.\n200 years ago, the FIEND\nof Wind teamed with that\nof the Water to destroy\ncivilization."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 6,
+      "objectId": 124,
+      "hexObjectId": "0x7C",
+      "x": 38,
+      "y": 3,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        154,
+        145,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Someone travelled 2000\nyears to the past. The\nfour FIENDS were sent\nforward in time. Those\nFIENDS threaten to\ndestroy the world today.",
+        "dialogue_2": "The Earth FIEND causes\nthe rot of our land."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 7,
+      "objectId": 125,
+      "hexObjectId": "0x7D",
+      "x": 40,
+      "y": 3,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        155,
+        146,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I see now.\nSomeone who travelled\nback 2000 years is the\ncause of the world's\ndestruction. After 2000\nyears he will travel\nback again..\nThen again..Then again..",
+        "dialogue_2": "The Fire FIEND will\nburn everything up!"
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 8,
+      "objectId": 126,
+      "hexObjectId": "0x7E",
+      "x": 42,
+      "y": 4,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        156,
+        147,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Time will repeat itself\nevery 2000 years.\nBreak the Time-Loop!",
+        "dialogue_2": "As you restore light to\nthe ORBS, we will reveal\nmore secrets, please see\nus repeatedly."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 9,
+      "objectId": 127,
+      "hexObjectId": "0x7F",
+      "x": 43,
+      "y": 6,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        157,
+        148,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "In the Temple of FIENDS\nare the remaining SKY\nWARRIORS. They fought\nthe FIENDS and are now\nbats!",
+        "dialogue_2": "LIGHT WARRIORS,\nonly you can make the\nORBS shine again!!"
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 10,
+      "objectId": 128,
+      "hexObjectId": "0x80",
+      "x": 43,
+      "y": 8,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        149,
+        158,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Quickly, before all is\nburnt, hurry to Gurgu\nVolcano and stop the\nFIEND of Fire.",
+        "dialogue_2": "We must use force only\nfor just purposes."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 11,
+      "objectId": 129,
+      "hexObjectId": "0x81",
+      "x": 5,
+      "y": 1,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        18,
+        159,
+        16,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "For ten years I probed\nfor the FLOATER. CANOE\nnorth, to the Ice Cave.",
+        "dialogue_2": "z....z...."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 12,
+      "objectId": 130,
+      "hexObjectId": "0x82",
+      "x": 40,
+      "y": 11,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        160,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I am Lukahn.\nNow all legends and\nprophecy will be\nfulfilled. Our path has\nbeen decided."
+      }
+    },
+    {
+      "mapId": 4,
+      "mapName": "Crescent Lake",
+      "slot": 13,
+      "objectId": 131,
+      "hexObjectId": "0x83",
+      "x": 16,
+      "y": 7,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        161,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "LIGHT WARRIORS, you can\ndo it!"
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 0,
+      "objectId": 19,
+      "hexObjectId": "0x13",
+      "x": 49,
+      "y": 19,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        35,
+        36,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "That pirate trapped me\nin the BOTTLE.\nI will draw OXYALE from\nthe bottom of the spring\nfor you.",
+        "dialogue_2": "Thank you for saving me.\nRemember! OXYALE will\ngive you air."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 1,
+      "objectId": 174,
+      "hexObjectId": "0xAE",
+      "x": 56,
+      "y": 60,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        192,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This town is Gaia.."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 2,
+      "objectId": 175,
+      "hexObjectId": "0xAF",
+      "x": 41,
+      "y": 59,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        193,
+        254,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Have you been to the\ncity south of here? I\njust cannot understand\na word spoken there.\nI have wondered what\nlanguage..",
+        "dialogue_2": "What??\nYou can speak Lefeinish?"
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 3,
+      "objectId": 176,
+      "hexObjectId": "0xB0",
+      "x": 58,
+      "y": 41,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        194,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Legend says the SKY\nWARRIORS flew about,\nhere and there, from a\ncastle high in the sky."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 4,
+      "objectId": 177,
+      "hexObjectId": "0xB1",
+      "x": 10,
+      "y": 52,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        195,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I saw a shining object\nflying towards the east."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 5,
+      "objectId": 178,
+      "hexObjectId": "0xB2",
+      "x": 38,
+      "y": 54,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        196,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Unbelievable!\nYou are outsiders,\nright?\nHow did you get this far\nnorth?"
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 6,
+      "objectId": 179,
+      "hexObjectId": "0xB3",
+      "x": 12,
+      "y": 31,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        197,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Let me see.. Yes, there\nwas a professor that\nstudied Lefeinish."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 7,
+      "objectId": 180,
+      "hexObjectId": "0xB4",
+      "x": 27,
+      "y": 43,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        198,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Only a fairy can draw\nOXYALE from the spring."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 8,
+      "objectId": 181,
+      "hexObjectId": "0xB5",
+      "x": 58,
+      "y": 49,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        199,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Everyone thinks the\ntower in Yahnikurm\nDesert is a mirage.\nI wonder.."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 9,
+      "objectId": 182,
+      "hexObjectId": "0xB6",
+      "x": 16,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        200,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Hardy har, you are too\nlate! I BOTTLED the\nfairy and sold her to a\ncaravan."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 10,
+      "objectId": 183,
+      "hexObjectId": "0xB7",
+      "x": 23,
+      "y": 59,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        201,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Legends say that the\ncastle in the west is a\nplace to test courage."
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 11,
+      "objectId": 184,
+      "hexObjectId": "0xB8",
+      "x": 41,
+      "y": 51,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        202,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "?rewoP taerg evah uoy oD"
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 12,
+      "objectId": 185,
+      "hexObjectId": "0xB9",
+      "x": 41,
+      "y": 49,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        203,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "What's that broom up to?\nIt's talking backwards!"
+      }
+    },
+    {
+      "mapId": 5,
+      "mapName": "Gaia",
+      "slot": 13,
+      "objectId": 186,
+      "hexObjectId": "0xBA",
+      "x": 23,
+      "y": 54,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        204,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The fairy at the spring\nwas kidnapped."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 0,
+      "objectId": 16,
+      "hexObjectId": "0x10",
+      "x": 45,
+      "y": 30,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        37,
+        38,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I made a submarine to\nsave the mermaids. But,\nto go deep enough it\nwill require OXYALE.",
+        "dialogue_2": "WARRIORS, you have\nOXYALE. The mermaids\nwait, please help them!"
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 1,
+      "objectId": 147,
+      "hexObjectId": "0x93",
+      "x": 18,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        174,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "My father runs the\ncaravan. He is having a\nclose out sale near the\noasis in the western\ndesert."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 2,
+      "objectId": 148,
+      "hexObjectId": "0x94",
+      "x": 9,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        8,
+        163,
+        162,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Soar to my brother Unne\nwith the SLAB!",
+        "dialogue_2": "My brother Dr. Unne has\nstudied Lefeinish, the\nlanguage of the SKY\nWARRIORS. If he had the\nSLAB, he could teach it."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 3,
+      "objectId": 149,
+      "hexObjectId": "0x95",
+      "x": 21,
+      "y": 7,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        164,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Have you found OXYALE?"
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 4,
+      "objectId": 150,
+      "hexObjectId": "0x96",
+      "x": 30,
+      "y": 21,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        165,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "You have legs!"
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 5,
+      "objectId": 151,
+      "hexObjectId": "0x97",
+      "x": 17,
+      "y": 12,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        166,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "My legs are beautiful!\nIt's so nice to have\nlegs."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 6,
+      "objectId": 152,
+      "hexObjectId": "0x98",
+      "x": 20,
+      "y": 12,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        167,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Underhill, the Caravan\nMaster, had something\nvery strange.."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 7,
+      "objectId": 153,
+      "hexObjectId": "0x99",
+      "x": 19,
+      "y": 3,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        168,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Until 200 years ago the\nMermaids lived in the\nShrine. Then, in fire\nand smoke, it sank. The\nMermaids?.."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 8,
+      "objectId": 154,
+      "hexObjectId": "0x9A",
+      "x": 46,
+      "y": 23,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        20,
+        170,
+        169,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The power of Water!!\nNow, our country will\nprosper like before.",
+        "dialogue_2": "Until 200 years ago, the\nPower of Water brought\nus good fortune."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 9,
+      "objectId": 155,
+      "hexObjectId": "0x9B",
+      "x": 17,
+      "y": 39,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        14,
+        171,
+        172,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I saw BAHAMUT, but, to\nbe honored as a true\nwarrior I must return\nwith proof of my\ncourage.",
+        "dialogue_2": "Well, well..\nI see you have been\nhonored."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 10,
+      "objectId": 156,
+      "hexObjectId": "0x9C",
+      "x": 26,
+      "y": 14,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        173,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Avast ye landlubbers!\nStay out of me way."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 11,
+      "objectId": 157,
+      "hexObjectId": "0x9D",
+      "x": 31,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        175,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kope 'says' he saw a\nshining object fall."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 12,
+      "objectId": 158,
+      "hexObjectId": "0x9E",
+      "x": 4,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        176,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Fables say that when\nthe shrine sank, many\ntreasures were lost.\nAlso, they tell of a\ncryptic stone plate."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 13,
+      "objectId": 159,
+      "hexObjectId": "0x9F",
+      "x": 41,
+      "y": 27,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        177,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "My name is Kope.\nI saw it north, near the\nwaterfall. Believe me! I\nthink it was a robot."
+      }
+    },
+    {
+      "mapId": 6,
+      "mapName": "Onrac",
+      "slot": 14,
+      "objectId": 160,
+      "hexObjectId": "0xA0",
+      "x": 28,
+      "y": 4,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        178,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This town used to be\nprosperous 200 years\nago."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 0,
+      "objectId": 187,
+      "hexObjectId": "0xBB",
+      "x": 24,
+      "y": 21,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        205,
+        206,
+        208
+      ],
+      "dialogues": {
+        "dialogue_1": "With this CHIME you can\nenter the Mirage Tower.",
+        "dialogue_2": "The Mirage Tower was the\ngateway to our home in\nthe sky.",
+        "dialogue_3": "Lu..pa..?\nLu..pa..?"
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 1,
+      "objectId": 188,
+      "hexObjectId": "0xBC",
+      "x": 4,
+      "y": 8,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        207,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "400 years ago, we had an\nadvanced civilization.\nOur interest was the\nuniverse!!"
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 2,
+      "objectId": 189,
+      "hexObjectId": "0xBD",
+      "x": 19,
+      "y": 19,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        11,
+        208,
+        209,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "We are the Lefeinish.\nOnly our bravest became\nSKY WARRIORS. Your\nAIRSHIP was theirs."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 3,
+      "objectId": 190,
+      "hexObjectId": "0xBE",
+      "x": 33,
+      "y": 8,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        210,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "The FLOATING CASTLE..\nOur ancestors lived\nthere. The Mirage Tower\nis the entrance."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 4,
+      "objectId": 191,
+      "hexObjectId": "0xBF",
+      "x": 16,
+      "y": 10,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        11,
+        208,
+        211,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "At the time of\ndestruction a legend was\nborn.. In 400 years,\nWARRIORS with ORBS will\nappear to save our\npeople .\nAre you?.."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 5,
+      "objectId": 192,
+      "hexObjectId": "0xC0",
+      "x": 26,
+      "y": 14,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        212,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "We fought with TIAMAT,\nbut were unsuccessful.\nThe FIEND now inhabits\nour FLOATING CASTLE."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 6,
+      "objectId": 193,
+      "hexObjectId": "0xC1",
+      "x": 33,
+      "y": 13,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        213,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "Our last five Warriors\nleft to find the cause\nof the world's decay.\nWe Know they live, but,\nas bats."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 7,
+      "objectId": 194,
+      "hexObjectId": "0xC2",
+      "x": 35,
+      "y": 22,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        214,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "We knew that a great\npower controlled the\nFIENDS. Our five bravest\nWarriors left, never to\nreturn."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 8,
+      "objectId": 195,
+      "hexObjectId": "0xC3",
+      "x": 9,
+      "y": 15,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        215,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "We have passed on the\nlegends from generation\nto generation. But 400\nyears have caused our\nmemories to fade."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 9,
+      "objectId": 196,
+      "hexObjectId": "0xC4",
+      "x": 22,
+      "y": 10,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        11,
+        208,
+        216,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "Oh, the LIGHT WARRIORS!!\nThe legend is true!"
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 10,
+      "objectId": 197,
+      "hexObjectId": "0xC5",
+      "x": 6,
+      "y": 10,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        217,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "Until 400 years ago we\ncontrolled the Power of\nthe Wind. This enabled\nus to suspend the castle\nin the air."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 11,
+      "objectId": 198,
+      "hexObjectId": "0xC6",
+      "x": 28,
+      "y": 18,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        218,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "The power of Wind was\ntaken by TIAMAT."
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 12,
+      "objectId": 200,
+      "hexObjectId": "0xC8",
+      "x": 14,
+      "y": 20,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        220,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "I wonder if the robots\nmade by our ancestors\nare still moving?"
+      }
+    },
+    {
+      "mapId": 7,
+      "mapName": "Lefein",
+      "slot": 13,
+      "objectId": 201,
+      "hexObjectId": "0xC9",
+      "x": 7,
+      "y": 13,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        11,
+        208,
+        221,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Lu..pa..?\nLu..pa..?",
+        "dialogue_2": "The FLOATING CASTLE\nfloats high in the\nsky, seemingly among\nthe stars."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 0,
+      "objectId": 32,
+      "hexObjectId": "0x20",
+      "x": 14,
+      "y": 28,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        18,
+        49,
+        50,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?",
+        "dialogue_2": "Yes Sir!!\nI belong to the Honor\nGuard of Castle Coneria."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 1,
+      "objectId": 32,
+      "hexObjectId": "0x20",
+      "x": 10,
+      "y": 18,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        18,
+        49,
+        50,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?",
+        "dialogue_2": "Yes Sir!!\nI belong to the Honor\nGuard of Castle Coneria."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 2,
+      "objectId": 34,
+      "hexObjectId": "0x22",
+      "x": 2,
+      "y": 10,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        18,
+        51,
+        52,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Please!\nSave the Princess!",
+        "dialogue_2": "Thank you for rescuing\nthe Princess."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 3,
+      "objectId": 35,
+      "hexObjectId": "0x23",
+      "x": 8,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        1,
+        53,
+        54,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Legend says that the\nLUTE can break the evil\ngate.",
+        "dialogue_2": "Garland used to be a\ngood knight until.."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 4,
+      "objectId": 37,
+      "hexObjectId": "0x25",
+      "x": 7,
+      "y": 28,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        18,
+        55,
+        52,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "In sadness, the Queen\nlocked herself inside.",
+        "dialogue_2": "Thank you for rescuing\nthe Princess."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 5,
+      "objectId": 38,
+      "hexObjectId": "0x26",
+      "x": 7,
+      "y": 15,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        56,
+        57,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Princess was\nlooking for you!",
+        "dialogue_2": "So, you are the\nLIGHT WARRIORS?"
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 6,
+      "objectId": 41,
+      "hexObjectId": "0x29",
+      "x": 6,
+      "y": 24,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        18,
+        59,
+        60,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I am Jane, Queen of\nConeria. Please save my\ndaughter, Princess Sara.",
+        "dialogue_2": "Thank you for saving\nPrincess Sara."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 7,
+      "objectId": 42,
+      "hexObjectId": "0x2A",
+      "x": 17,
+      "y": 23,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        18,
+        61,
+        62,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Oh.. My sister..",
+        "dialogue_2": "My sister is back safe!\nThank you."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 8,
+      "objectId": 44,
+      "hexObjectId": "0x2C",
+      "x": 22,
+      "y": 9,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        5,
+        64,
+        65,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Use that KEY. Inside\nwhat you find will be\nquite helpful.",
+        "dialogue_2": "400 years ago the\nTreasury was locked by\nthe mystic KEY. Our\nancestors gave the KEY\nto the Prince of ElfLand\nfor safekeeping."
+      }
+    },
+    {
+      "mapId": 8,
+      "mapName": "Coneria Castle 1F",
+      "slot": 9,
+      "objectId": 46,
+      "hexObjectId": "0x2E",
+      "x": 14,
+      "y": 15,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        5,
+        66,
+        65,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This treasure room is\nlocked with the mystical\nKEY.",
+        "dialogue_2": "400 years ago the\nTreasury was locked by\nthe mystic KEY. Our\nancestors gave the KEY\nto the Prince of ElfLand\nfor safekeeping."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 0,
+      "objectId": 5,
+      "hexObjectId": "0x05",
+      "x": 9,
+      "y": 5,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        11,
+        12,
+        13
+      ],
+      "dialogues": {
+        "dialogue_1": "For five years the\nPrince has slept\nunder Astos' spell.\nOnly HERB can wake him!",
+        "dialogue_2": "Oh, this HERB will\nrelease the Prince from\nAstos' curse. Look!\nHe is waking..",
+        "dialogue_3": "Thank you.\nPeace will return to\nElfLand."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 1,
+      "objectId": 6,
+      "hexObjectId": "0x06",
+      "x": 8,
+      "y": 6,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        14,
+        15,
+        16
+      ],
+      "dialogues": {
+        "dialogue_1": "Is this a dream?..\nAre you, the\nLIGHT WARRIORS?..\nIs this for real?..\nSo, as legend says,\nI give you the mystic\nKEY.",
+        "dialogue_2": "I feel fine now.\nThank you.",
+        "dialogue_3": "z....z...."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 2,
+      "objectId": 69,
+      "hexObjectId": "0x45",
+      "x": 1,
+      "y": 1,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        91,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Cave of Dwarf is at\nthe west end of the Aldi\nSea."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 3,
+      "objectId": 70,
+      "hexObjectId": "0x46",
+      "x": 23,
+      "y": 14,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        6,
+        92,
+        90,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Without warning, Astos\nattacked our castle. Our\nPrince was laid under a\ncurse, and our treasury\nransacked.",
+        "dialogue_2": "The Prince is awake!\nThank you so much."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 4,
+      "objectId": 71,
+      "hexObjectId": "0x47",
+      "x": 2,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        4,
+        94,
+        93,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Is that it? The HERB to\nsave the Prince?",
+        "dialogue_2": "It is said there is a\nwitch who has HERBS.\nI believe that her name\nis..\nMatoya!"
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 5,
+      "objectId": 72,
+      "hexObjectId": "0x48",
+      "x": 19,
+      "y": 4,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        66,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This treasure room is\nlocked with the mystical\nKEY."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 6,
+      "objectId": 73,
+      "hexObjectId": "0x49",
+      "x": 15,
+      "y": 20,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        6,
+        89,
+        95,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Astos put the Prince to\nsleep.\nPlease! Save him!",
+        "dialogue_2": "The Prince keeps the\nmystic KEY until the\ncoming of the\nLIGHT WARRIORS."
+      }
+    },
+    {
+      "mapId": 9,
+      "mapName": "Elfland Castle",
+      "slot": 7,
+      "objectId": 74,
+      "hexObjectId": "0x4A",
+      "x": 17,
+      "y": 20,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        6,
+        89,
+        96,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Astos put the Prince to\nsleep.\nPlease! Save him!",
+        "dialogue_2": "Maybe it's only rumour,\nbut, I think the cause\nof all problems is to\nbe found in the cave of\nMarsh."
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 0,
+      "objectId": 7,
+      "hexObjectId": "0x07",
+      "x": 16,
+      "y": 6,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        17,
+        18,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Astos double-crossed us.\nGo south, to the Cave of\nMarsh, to retrieve the\nCROWN. Then, bring it\ndirectly back to me!",
+        "dialogue_2": "HA, HA, HA! I am Astos,\nKing of the Dark Elves.\nI have Matoya's CRYSTAL,\nand you shall give me\nthat CROWN, now!!!"
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 22,
+      "y": 8,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 28,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 4,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 19,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 11,
+      "y": 10,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 10,
+      "mapName": "Northwest Castle",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 4,
+      "y": 20,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 11,
+      "mapName": "Castle of Ordeals 1F",
+      "slot": 0,
+      "objectId": 132,
+      "hexObjectId": "0x84",
+      "x": 12,
+      "y": 13,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        132,
+        45,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Possession of the CROWN\nis required to test your\ncourage. Take it to the\nroyal throne, and bring\nback proof of your\ncourage. GOOD LUCK!"
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 0,
+      "objectId": 2,
+      "hexObjectId": "0x02",
+      "x": 20,
+      "y": 21,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        4,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "No one touches my\nPrincess!!\nLIGHT WARRIORS??\nYou impertinent fools.\nI, Garland, will knock\nyou all down!!"
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 1,
+      "objectId": 3,
+      "hexObjectId": "0x03",
+      "x": 20,
+      "y": 18,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        5,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "So, you are the\nLIGHT WARRIORS!\nThank you."
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 2,
+      "objectId": 58,
+      "hexObjectId": "0x3A",
+      "x": 17,
+      "y": 19,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        77,
+        76,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Help! The FIEND's curse\nturned us into bats.\nWith the ORBS shining\nanew, once again we\ncan speak!",
+        "dialogue_2": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 3,
+      "objectId": 59,
+      "hexObjectId": "0x3B",
+      "x": 18,
+      "y": 18,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        78,
+        76,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The Four FIENDS power\nis rooted 2000 years\nago. The real enemy is\nin that time.",
+        "dialogue_2": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 4,
+      "objectId": 60,
+      "hexObjectId": "0x3C",
+      "x": 18,
+      "y": 19,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        79,
+        76,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "When the 4 ORBS cover\nthe black ORB in the\ncenter of the palace,\nthe Time Gate can open.",
+        "dialogue_2": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 5,
+      "objectId": 61,
+      "hexObjectId": "0x3D",
+      "x": 23,
+      "y": 19,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        80,
+        76,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "You must travel back in\ntime 2000 years. Now,\nwith the ORBS shining,\nstand in the Time Gate.",
+        "dialogue_2": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 6,
+      "objectId": 62,
+      "hexObjectId": "0x3E",
+      "x": 22,
+      "y": 19,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        81,
+        76,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "We are the five lost\nSKY WARRIORS. 400 years\nago we battled against\nthe cause of the world's\ndestruction.",
+        "dialogue_2": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 12,
+      "mapName": "Temple of Fiends (Present)",
+      "slot": 7,
+      "objectId": 202,
+      "hexObjectId": "0xCA",
+      "x": 20,
+      "y": 17,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        33,
+        34,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The four ORBS now cover\nthe black ORB..\nTo take a step forward\nis to go back 2000 years\nin time.",
+        "dialogue_2": "The black ORB\nglitters ominously..\nBut nothing happens."
+      }
+    },
+    {
+      "mapId": 15,
+      "mapName": "Ice Cave B1",
+      "slot": 0,
+      "objectId": 19,
+      "hexObjectId": "0x13",
+      "x": 47,
+      "y": 30,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        35,
+        36,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "That pirate trapped me\nin the BOTTLE.\nI will draw OXYALE from\nthe bottom of the spring\nfor you.",
+        "dialogue_2": "Thank you for saving me.\nRemember! OXYALE will\ngive you air."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 0,
+      "objectId": 133,
+      "hexObjectId": "0x85",
+      "x": 28,
+      "y": 9,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        226,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "If you are brave enough,\ntry meeting the King of\nthe Dragons, BAHAMUT."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 1,
+      "objectId": 134,
+      "hexObjectId": "0x86",
+      "x": 41,
+      "y": 6,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        227,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Unprofitable business\nis not a practice of the\nDragons of Cardia."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 2,
+      "objectId": 135,
+      "hexObjectId": "0x87",
+      "x": 41,
+      "y": 22,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        228,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Long ago, Dragons and\nhumans lived and traded\ntogether."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 3,
+      "objectId": 136,
+      "hexObjectId": "0x88",
+      "x": 38,
+      "y": 52,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        229,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "You are not afraid of\nme??\nThen, I am impressed!"
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 4,
+      "objectId": 138,
+      "hexObjectId": "0x8A",
+      "x": 24,
+      "y": 31,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        231,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "We are going to the\nCastle of Ordeal to the\nnortheast. There we will\ntest, and bring back\nproof of our courage."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 5,
+      "objectId": 139,
+      "hexObjectId": "0x8B",
+      "x": 17,
+      "y": 37,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        232,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The proof of your\ncourage might be\nanything."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 6,
+      "objectId": 140,
+      "hexObjectId": "0x8C",
+      "x": 37,
+      "y": 30,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        233,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Have you met BAHAMUT,\nthe Dragon King? He\nhonors those with\ncourage as true\nwarriors."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 7,
+      "objectId": 141,
+      "hexObjectId": "0x8D",
+      "x": 13,
+      "y": 6,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        234,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Only the courageous ones\nbring back the proof of\ntheir courage."
+      }
+    },
+    {
+      "mapId": 16,
+      "mapName": "Cardia Islands",
+      "slot": 8,
+      "objectId": 142,
+      "hexObjectId": "0x8E",
+      "x": 21,
+      "y": 37,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        235,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Once in the north, there\nwere beautiful palaces\nand big mechanical\ncastles."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 0,
+      "objectId": 17,
+      "hexObjectId": "0x11",
+      "x": 20,
+      "y": 53,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        39,
+        40,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Take this CUBE. With it,\nyou can transfer to the\nFLOATING CASTLE.",
+        "dialogue_2": "Please.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 8,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 15,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 10,
+      "y": 41,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 23,
+      "y": 25,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 25,
+      "y": 9,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 40,
+      "y": 9,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 33,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 50,
+      "y": 35,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 43,
+      "y": 41,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 18,
+      "mapName": "Waterfall",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 58,
+      "y": 44,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 0,
+      "objectId": 8,
+      "hexObjectId": "0x08",
+      "x": 16,
+      "y": 45,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        19,
+        20,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "A rock blocks\nconstruction of my\ncanal.\nIf I only had TNT.",
+        "dialogue_2": "Oh, wonderful!\nNice work! Yes, yes\nindeed, this TNT is just\nwhat I need to finish my\ncanal. Now excuse me\nwhile I get to work!"
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 1,
+      "objectId": 9,
+      "hexObjectId": "0x09",
+      "x": 7,
+      "y": 2,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        21,
+        22,
+        24
+      ],
+      "dialogues": {
+        "dialogue_1": "For the LIGHT\nWARRIORS I will make a\ntruly legendary sword.\nHowever, my supply of\nADAMANT is exhausted.",
+        "dialogue_2": "ADAMANT!!\nNow let me make\nthe sword for you..\nHere, the best work I've\never done.\nIt is my gift.",
+        "dialogue_3": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 2,
+      "objectId": 88,
+      "hexObjectId": "0x58",
+      "x": 14,
+      "y": 21,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        108,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I'm looking for the\nFLOATER. I'll bet with\nit I could float\nanything."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 3,
+      "objectId": 89,
+      "hexObjectId": "0x59",
+      "x": 3,
+      "y": 10,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        109,
+        110,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Old Nerrick is a very\nrespectable Dwarf.",
+        "dialogue_2": "That sound?\nNerrick is digging a\ncanal."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 4,
+      "objectId": 90,
+      "hexObjectId": "0x5A",
+      "x": 22,
+      "y": 17,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        111,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Dwarves can see in the\ndark!"
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 5,
+      "objectId": 91,
+      "hexObjectId": "0x5B",
+      "x": 14,
+      "y": 7,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        112,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Did you meet Smith,\nour blacksmith?"
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 6,
+      "objectId": 92,
+      "hexObjectId": "0x5C",
+      "x": 21,
+      "y": 4,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        3,
+        111,
+        113,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Dwarves can see in the\ndark!",
+        "dialogue_2": "With the CRYSTAL, even\nthe blind can see.\nAstos stole it from\nMatoya."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 7,
+      "objectId": 93,
+      "hexObjectId": "0x5D",
+      "x": 2,
+      "y": 4,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        21,
+        115,
+        114,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The earth is reviving!\nThanks to you,\nLIGHT WARRIORS!",
+        "dialogue_2": "The earth is rotting\nslowly from the west.."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 8,
+      "objectId": 94,
+      "hexObjectId": "0x5E",
+      "x": 10,
+      "y": 15,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        116,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The <DE>..bracelet can\nprotect you, like\narmor."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 9,
+      "objectId": 95,
+      "hexObjectId": "0x5F",
+      "x": 10,
+      "y": 19,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        117,
+        110,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Oh, did you see that\ncanal? Old Nerrick truly\nis great indeed.",
+        "dialogue_2": "That sound?\nNerrick is digging a\ncanal."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 10,
+      "objectId": 96,
+      "hexObjectId": "0x60",
+      "x": 19,
+      "y": 14,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        118,
+        119,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Long ago, Coneria's\nTreasury safeguarded\nthe use of TNT.",
+        "dialogue_2": "Hurray!!"
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 11,
+      "objectId": 97,
+      "hexObjectId": "0x61",
+      "x": 13,
+      "y": 2,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        113,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "With the CRYSTAL, even\nthe blind can see.\nAstos stole it from\nMatoya."
+      }
+    },
+    {
+      "mapId": 19,
+      "mapName": "Dwarf Cave",
+      "slot": 12,
+      "objectId": 99,
+      "hexObjectId": "0x63",
+      "x": 18,
+      "y": 10,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        119,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Hurray!!"
+      }
+    },
+    {
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "slot": 0,
+      "objectId": 10,
+      "hexObjectId": "0x0A",
+      "x": 8,
+      "y": 1,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        23,
+        25,
+        26
+      ],
+      "dialogues": {
+        "dialogue_1": "Where is my CRYSTAL?\nI can't see anything\nwithout it.. Who stole\nmy CRYSTAL?",
+        "dialogue_2": "The Prince needs HERB?\nI'll trade the most\npowerful HERB to get my\nCRYSTAL back..\nOh! I can see!!",
+        "dialogue_3": "You have no more\nbusiness here. Go!!"
+      }
+    },
+    {
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "slot": 1,
+      "objectId": 100,
+      "hexObjectId": "0x64",
+      "x": 3,
+      "y": 13,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        120,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "....TCELES B HSUP\nA magic spell?"
+      }
+    },
+    {
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "slot": 2,
+      "objectId": 101,
+      "hexObjectId": "0x65",
+      "x": 11,
+      "y": 10,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        120,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "....TCELES B HSUP\nA magic spell?"
+      }
+    },
+    {
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "slot": 3,
+      "objectId": 102,
+      "hexObjectId": "0x66",
+      "x": 3,
+      "y": 7,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        120,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "....TCELES B HSUP\nA magic spell?"
+      }
+    },
+    {
+      "mapId": 20,
+      "mapName": "Matoya's Cave",
+      "slot": 4,
+      "objectId": 103,
+      "hexObjectId": "0x67",
+      "x": 13,
+      "y": 3,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        120,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "....TCELES B HSUP\nA magic spell?"
+      }
+    },
+    {
+      "mapId": 21,
+      "mapName": "Sarda's Cave",
+      "slot": 0,
+      "objectId": 13,
+      "hexObjectId": "0x0D",
+      "x": 2,
+      "y": 2,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        30,
+        24,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Use this ROD behind the\nVampire's room. Hiding\ndeep inside you will\nfind the cause of the\nearth's rot.",
+        "dialogue_2": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 22,
+      "mapName": "Marsh Cave B1",
+      "slot": 0,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 4,
+      "y": 3,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 22,
+      "mapName": "Marsh Cave B1",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 30,
+      "y": 36,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 22,
+      "mapName": "Marsh Cave B1",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 16,
+      "y": 21,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 22,
+      "mapName": "Marsh Cave B1",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 52,
+      "y": 22,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 22,
+      "mapName": "Marsh Cave B1",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 24,
+      "y": 28,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 23,
+      "mapName": "Mirage Tower 1F",
+      "slot": 0,
+      "objectId": 206,
+      "hexObjectId": "0xCE",
+      "x": 20,
+      "y": 5,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        224,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Are you the master?"
+      }
+    },
+    {
+      "mapId": 24,
+      "mapName": "Coneria Castle 2F",
+      "slot": 0,
+      "objectId": 1,
+      "hexObjectId": "0x01",
+      "x": 12,
+      "y": 4,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "dialogues": {
+        "dialogue_1": "LIGHT WARRIORS.. Just as\nin Lukahn's prophecy.\nGarland has kidnapped\nthe Princess. Please\nhelp her!!",
+        "dialogue_2": "Thank you for saving the\nPrincess. To aid your\nquest I ordered a bridge\nbuilt to the continent.\nGo now, and make the\nORBS shine again!!",
+        "dialogue_3": "The Princess always\nworries about you."
+      }
+    },
+    {
+      "mapId": 24,
+      "mapName": "Coneria Castle 2F",
+      "slot": 1,
+      "objectId": 18,
+      "hexObjectId": "0x12",
+      "x": 11,
+      "y": 5,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        6,
+        7,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This LUTE has been\npassed down from Queen\nto Princess for 2000\nyears. Garland stole it\nwhen he kidnapped me.\nPlease accept it as my\ngift, it just might come\nin handy.",
+        "dialogue_2": "Now, get ready for your\ntrip, and make the ORBS\nshine again."
+      }
+    },
+    {
+      "mapId": 24,
+      "mapName": "Coneria Castle 2F",
+      "slot": 2,
+      "objectId": 43,
+      "hexObjectId": "0x2B",
+      "x": 2,
+      "y": 29,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        18,
+        63,
+        52,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Reports say that Garland\nholds the Princess in a\nTemple to the northwest.",
+        "dialogue_2": "Thank you for rescuing\nthe Princess."
+      }
+    },
+    {
+      "mapId": 24,
+      "mapName": "Coneria Castle 2F",
+      "slot": 3,
+      "objectId": 48,
+      "hexObjectId": "0x30",
+      "x": 13,
+      "y": 9,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        18,
+        49,
+        52,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "The King is looking for\nthe LIGHT WARRIORS. You\ndo not happen to be them\ndo you?",
+        "dialogue_2": "Thank you for rescuing\nthe Princess."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 0,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 14,
+      "y": 17,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 27,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 6,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 15,
+      "y": 45,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 17,
+      "y": 51,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 22,
+      "y": 48,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 29,
+      "y": 53,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 34,
+      "y": 50,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 38,
+      "y": 43,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 49,
+      "y": 30,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 54,
+      "y": 40,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 11,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 47,
+      "y": 40,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 12,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 46,
+      "y": 51,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 27,
+      "mapName": "Marsh Cave B2",
+      "slot": 13,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 58,
+      "y": 56,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 0,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 6,
+      "y": 10,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 30,
+      "y": 8,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 17,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 44,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 42,
+      "y": 29,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 51,
+      "y": 4,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 47,
+      "y": 34,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 31,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 29,
+      "y": 32,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 16,
+      "y": 31,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 2,
+      "y": 30,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 11,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 6,
+      "y": 42,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 12,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 5,
+      "y": 49,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 13,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 20,
+      "y": 45,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 14,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 30,
+      "y": 54,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 28,
+      "mapName": "Marsh Cave B3",
+      "slot": 15,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 31,
+      "y": 47,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 0,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 10,
+      "y": 11,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 18,
+      "y": 15,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 10,
+      "y": 21,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 21,
+      "y": 22,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 15,
+      "y": 31,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 25,
+      "y": 36,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 27,
+      "y": 49,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 33,
+      "y": 40,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 29,
+      "y": 25,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 39,
+      "y": 22,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 31,
+      "y": 18,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 11,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 40,
+      "y": 16,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 29,
+      "mapName": "Earth Cave B2",
+      "slot": 12,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 38,
+      "y": 41,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 0,
+      "objectId": 12,
+      "hexObjectId": "0x0C",
+      "x": 26,
+      "y": 38,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        29,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "All living things were\nborn to die.\nNo one can defeat me,\nthe Vampire!!"
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 1,
+      "objectId": 22,
+      "hexObjectId": "0x16",
+      "x": 26,
+      "y": 27,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        255,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "There is a stone plate\non the floor..\nYou sense something..\nEvil?.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 11,
+      "y": 9,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 10,
+      "y": 10,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 9,
+      "y": 9,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 15,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 24,
+      "y": 15,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 17,
+      "y": 34,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 17,
+      "y": 32,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 18,
+      "y": 34,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 28,
+      "y": 18,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 11,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 26,
+      "y": 19,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 12,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 35,
+      "y": 20,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 13,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 39,
+      "y": 16,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 14,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 44,
+      "y": 12,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 30,
+      "mapName": "Earth Cave B3",
+      "slot": 15,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 47,
+      "y": 14,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 0,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 19,
+      "y": 40,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 16,
+      "y": 38,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 19,
+      "y": 36,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 10,
+      "y": 35,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 12,
+      "y": 42,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 24,
+      "y": 21,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 22,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 19,
+      "y": 27,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 21,
+      "y": 12,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 18,
+      "y": 18,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 39,
+      "y": 12,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 11,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 32,
+      "y": 18,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 12,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 36,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 13,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 33,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 14,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 36,
+      "y": 23,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 31,
+      "mapName": "Earth Cave B4",
+      "slot": 15,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 33,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 0,
+      "objectId": 27,
+      "hexObjectId": "0x1B",
+      "x": 12,
+      "y": 42,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        27,
+        250,
+        0,
+        122
+      ],
+      "dialogues": {
+        "dialogue_1": "The FIEND's ball cracks\nopen.. An ominous cloud\nrises, and an evil shape\ncongeals..\nIt is LICH, the FIEND of\nEarth.",
+        "dialogue_3": "Melmond was once a\nbeautiful town."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 1,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 17,
+      "y": 49,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 2,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 15,
+      "y": 35,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 3,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 26,
+      "y": 37,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 4,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 30,
+      "y": 46,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 5,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 31,
+      "y": 50,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 6,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 32,
+      "y": 55,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 7,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 36,
+      "y": 42,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 8,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 28,
+      "y": 31,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 9,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 18,
+      "y": 24,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 32,
+      "mapName": "Earth Cave B5",
+      "slot": 10,
+      "objectId": 87,
+      "hexObjectId": "0x57",
+      "x": 20,
+      "y": 26,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        76,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Kee..Kee.."
+      }
+    },
+    {
+      "mapId": 36,
+      "mapName": "Gurgu Volcano B5",
+      "slot": 0,
+      "objectId": 28,
+      "hexObjectId": "0x1C",
+      "x": 7,
+      "y": 55,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        28,
+        251,
+        0,
+        121
+      ],
+      "dialogues": {
+        "dialogue_1": "Is it you, the tinder\nthat defeated the FIEND\nof the Earth, and\ndisturbed my sleep?\nI, KARY will now show\nyou the force of Fire,\nand you shall burn in\nits flames!!",
+        "dialogue_3": "The Vampire of the Earth\nCave is stealing the\nPower of the earth.\nWe need your help."
+      }
+    },
+    {
+      "mapId": 39,
+      "mapName": "Bahamut's Room B2",
+      "slot": 0,
+      "objectId": 14,
+      "hexObjectId": "0x0E",
+      "x": 21,
+      "y": 3,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        31,
+        32,
+        24
+      ],
+      "dialogues": {
+        "dialogue_1": "I am BAHAMUT, King of\nthe Dragons. Bring me\nproof of your courage,\nto receive the honor\ndue true Warriors.",
+        "dialogue_2": "The TAIL of a rat proves\nyour courage. I shall\ngive you the honor due\ntrue Warriors.",
+        "dialogue_3": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+      }
+    },
+    {
+      "mapId": 39,
+      "mapName": "Bahamut's Room B2",
+      "slot": 1,
+      "objectId": 143,
+      "hexObjectId": "0x8F",
+      "x": 19,
+      "y": 7,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        236,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This is BAHAMUT's room."
+      }
+    },
+    {
+      "mapId": 39,
+      "mapName": "Bahamut's Room B2",
+      "slot": 2,
+      "objectId": 144,
+      "hexObjectId": "0x90",
+      "x": 23,
+      "y": 7,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        237,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "BAHAMUT verifies the\ntrue courage of all."
+      }
+    },
+    {
+      "mapId": 40,
+      "mapName": "Mirage Tower 2F",
+      "slot": 0,
+      "objectId": 204,
+      "hexObjectId": "0xCC",
+      "x": 19,
+      "y": 4,
+      "inRoom": false,
+      "standStill": false,
+      "talkParams": [
+        0,
+        222,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "One of us escaped with\na CUBE. He floated far\nto the west."
+      }
+    },
+    {
+      "mapId": 41,
+      "mapName": "Mirage Tower 3F",
+      "slot": 0,
+      "objectId": 205,
+      "hexObjectId": "0xCD",
+      "x": 9,
+      "y": 10,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        223,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Transporter operation\nrequires a CUBE."
+      }
+    },
+    {
+      "mapId": 42,
+      "mapName": "Sea Shrine B5",
+      "slot": 0,
+      "objectId": 29,
+      "hexObjectId": "0x1D",
+      "x": 12,
+      "y": 8,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        29,
+        252,
+        0,
+        120
+      ],
+      "dialogues": {
+        "dialogue_1": "The FIEND's ball is\nshattered, evaporating\nall the water.\nHo, Ho, Ho..\nHow foolhardy to dare\nchallenge me, KRAKEN the\nFIEND of the Water.",
+        "dialogue_3": "....TCELES B HSUP\nA magic spell?"
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 0,
+      "objectId": 163,
+      "hexObjectId": "0xA3",
+      "x": 6,
+      "y": 18,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        180,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "If we cannot regain the\nPower of Water, we will\nbecome bubbles, then\ndisappear."
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 1,
+      "objectId": 164,
+      "hexObjectId": "0xA4",
+      "x": 19,
+      "y": 5,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        181,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Are we going to become\nbubbles?"
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 2,
+      "objectId": 165,
+      "hexObjectId": "0xA5",
+      "x": 26,
+      "y": 18,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        182,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "As long as the FIEND of\nWater lives, we..\nOh, boo hoo."
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 3,
+      "objectId": 166,
+      "hexObjectId": "0xA6",
+      "x": 4,
+      "y": 25,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        183,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "You have responded\nto me!!"
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 4,
+      "objectId": 167,
+      "hexObjectId": "0xA7",
+      "x": 19,
+      "y": 18,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        184,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "This is the Shrine's top\nfloor. The FIEND of\nWater, KRAKEN lives on\nthe bottom floor."
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 5,
+      "objectId": 168,
+      "hexObjectId": "0xA8",
+      "x": 20,
+      "y": 12,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        185,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "I suppose you are the\nlegendary.."
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 6,
+      "objectId": 169,
+      "hexObjectId": "0xA9",
+      "x": 11,
+      "y": 11,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        19,
+        187,
+        186,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Now, order has returned.\nThe sea will be as it\nwas before, beautiful.",
+        "dialogue_2": "Please save the sea,\nand make the ORB shine\nagain!"
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 7,
+      "objectId": 170,
+      "hexObjectId": "0xAA",
+      "x": 4,
+      "y": 11,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        188,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "My friend Darryl went to\nthe land, then never\nreturned. I've often\nwondered what happened..\nMaybe, she grew legs and\nwalked away?"
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 8,
+      "objectId": 171,
+      "hexObjectId": "0xAB",
+      "x": 5,
+      "y": 4,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        189,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "Unbelievable!!\nYou can breathe\nunderwater?!\nI'm impressed!"
+      }
+    },
+    {
+      "mapId": 46,
+      "mapName": "Sea Shrine B1",
+      "slot": 9,
+      "objectId": 172,
+      "hexObjectId": "0xAC",
+      "x": 20,
+      "y": 26,
+      "inRoom": true,
+      "standStill": false,
+      "talkParams": [
+        0,
+        190,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "To unlock the Mirage\nTower the Lefeinish\nused a musical tone."
+      }
+    },
+    {
+      "mapId": 48,
+      "mapName": "Sky Castle 2F",
+      "slot": 0,
+      "objectId": 22,
+      "hexObjectId": "0x16",
+      "x": 26,
+      "y": 27,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        255,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "There is a stone plate\non the floor..\nYou sense something..\nEvil?.."
+      }
+    },
+    {
+      "mapId": 49,
+      "mapName": "Sky Castle 3F",
+      "slot": 0,
+      "objectId": 207,
+      "hexObjectId": "0xCF",
+      "x": 30,
+      "y": 25,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        225,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "You can look out over\nthe world from this\nwindow."
+      }
+    },
+    {
+      "mapId": 51,
+      "mapName": "Sky Castle 5F",
+      "slot": 0,
+      "objectId": 30,
+      "hexObjectId": "0x1E",
+      "x": 7,
+      "y": 5,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        30,
+        253,
+        0,
+        119
+      ],
+      "dialogues": {
+        "dialogue_1": "Lightning erupts from\nthe FIEND's ball..\nSo, you have come this\nfar..\nI, TIAMAT the FIEND of\nthe Wind will now put an\nend to your adventure!!",
+        "dialogue_3": "Hurray!!"
+      }
+    },
+    {
+      "mapId": 54,
+      "mapName": "Temple of Fiends Revisited 3F",
+      "slot": 0,
+      "objectId": 23,
+      "hexObjectId": "0x17",
+      "x": 20,
+      "y": 16,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        0,
+        255,
+        0,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "There is a stone plate\non the floor..\nYou sense something..\nEvil?.."
+      }
+    },
+    {
+      "mapId": 59,
+      "mapName": "Temple of Fiends Revisited B5 (Chaos)",
+      "slot": 0,
+      "objectId": 24,
+      "hexObjectId": "0x18",
+      "x": 15,
+      "y": 19,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        24,
+        46,
+        0,
+        25
+      ],
+      "dialogues": {
+        "dialogue_1": "Remember me, Garland?\nYour puny lot thought it\nhad defeated me. But,\nthe Four FIENDS sent me\nback 2000 years into\nthe past.",
+        "dialogue_3": "The Prince needs HERB?\nI'll trade the most\npowerful HERB to get my\nCRYSTAL back..\nOh! I can see!!"
+      }
+    },
+    {
+      "mapId": 59,
+      "mapName": "Temple of Fiends Revisited B5 (Chaos)",
+      "slot": 1,
+      "objectId": 25,
+      "hexObjectId": "0x19",
+      "x": 15,
+      "y": 18,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        25,
+        47,
+        0,
+        26
+      ],
+      "dialogues": {
+        "dialogue_1": "From here I sent the\nFour FIENDS to the\nfuture. The FIENDS will\nsend me back to here,\nand the Time-Loop will\ngo on.",
+        "dialogue_3": "You have no more\nbusiness here. Go!!"
+      }
+    },
+    {
+      "mapId": 59,
+      "mapName": "Temple of Fiends Revisited B5 (Chaos)",
+      "slot": 2,
+      "objectId": 26,
+      "hexObjectId": "0x1A",
+      "x": 15,
+      "y": 17,
+      "inRoom": true,
+      "standStill": true,
+      "talkParams": [
+        26,
+        48,
+        0,
+        123
+      ],
+      "dialogues": {
+        "dialogue_1": "After 2000 years, I will\nbe forgotten, and the\nTime-Loop will close. I\nwill live forever, and\nyou shall meet doom!!",
+        "dialogue_3": "The Titan who lives in\nthe tunnel eats gems.\nHe loves RUBIES."
+      }
+    },
+    {
+      "mapId": 60,
+      "mapName": "Titan's Tunnel",
+      "slot": 0,
+      "objectId": 20,
+      "hexObjectId": "0x14",
+      "x": 8,
+      "y": 7,
+      "inRoom": false,
+      "standStill": true,
+      "talkParams": [
+        0,
+        41,
+        42,
+        0
+      ],
+      "dialogues": {
+        "dialogue_1": "No one passes this road.",
+        "dialogue_2": "If you want pass, give\nme the RUBY..\nCrunch, crunch, crunch,\nmmm, it tastes so sweet.\nRubies are my favorite."
+      }
+    }
+  ]
+}

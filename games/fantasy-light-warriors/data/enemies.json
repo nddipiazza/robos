@@ -1,0 +1,5543 @@
+{
+  "enemies": [
+    {
+      "id": 1,
+      "romIndex": 0,
+      "name": "IMP",
+      "hp": 8,
+      "xp": 6,
+      "gold": 6,
+      "attack": 4,
+      "accuracy": 2,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 6,
+      "agility": 6,
+      "magicDefense": 16,
+      "morale": 106,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 2,
+      "romIndex": 1,
+      "name": "GrIMP",
+      "hp": 16,
+      "xp": 18,
+      "gold": 18,
+      "attack": 8,
+      "accuracy": 4,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 6,
+      "evade": 9,
+      "agility": 9,
+      "magicDefense": 23,
+      "morale": 120,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 3,
+      "romIndex": 2,
+      "name": "WOLF",
+      "hp": 20,
+      "xp": 24,
+      "gold": 6,
+      "attack": 8,
+      "accuracy": 5,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 28,
+      "morale": 105,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 4,
+      "romIndex": 3,
+      "name": "GrWOLF",
+      "hp": 72,
+      "xp": 93,
+      "gold": 22,
+      "attack": 14,
+      "accuracy": 18,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 54,
+      "agility": 54,
+      "magicDefense": 46,
+      "morale": 108,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 5,
+      "romIndex": 4,
+      "name": "WrWOLF",
+      "hp": 68,
+      "xp": 135,
+      "gold": 67,
+      "attack": 14,
+      "accuracy": 17,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 6,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 45,
+      "morale": 120,
+      "categories": [
+        "Magical",
+        "Were",
+        "Regen"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 6,
+      "romIndex": 5,
+      "name": "FrWOLF",
+      "hp": 92,
+      "xp": 402,
+      "gold": 200,
+      "attack": 25,
+      "accuracy": 23,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 54,
+      "agility": 54,
+      "magicDefense": 55,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 0,
+      "ai": {
+        "aiId": 0,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "FROST",
+          "FROST",
+          "FROST",
+          "FROST"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 7,
+      "romIndex": 6,
+      "name": "IGUANA",
+      "hp": 92,
+      "xp": 153,
+      "gold": 50,
+      "attack": 18,
+      "accuracy": 23,
+      "hits": 1,
+      "critRate": 10,
+      "defense": 12,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 55,
+      "morale": 134,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 8,
+      "romIndex": 7,
+      "name": "AGAMA",
+      "hp": 296,
+      "xp": 2472,
+      "gold": 1200,
+      "attack": 31,
+      "accuracy": 74,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 18,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 143,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 1,
+      "ai": {
+        "aiId": 1,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "HEAT",
+          "HEAT",
+          "HEAT",
+          "HEAT"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 9,
+      "romIndex": 8,
+      "name": "SAURIA",
+      "hp": 196,
+      "xp": 1977,
+      "gold": 658,
+      "attack": 30,
+      "accuracy": 54,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 91,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 2,
+      "ai": {
+        "aiId": 2,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "GLANCE",
+          "GLANCE",
+          "GLANCE",
+          "GLANCE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 10,
+      "romIndex": 9,
+      "name": "GIANT",
+      "hp": 240,
+      "xp": 879,
+      "gold": 879,
+      "attack": 38,
+      "accuracy": 60,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 120,
+      "morale": 136,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 11,
+      "romIndex": 10,
+      "name": "FrGIANT",
+      "hp": 336,
+      "xp": 1752,
+      "gold": 1752,
+      "attack": 60,
+      "accuracy": 78,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 150,
+      "morale": 200,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 12,
+      "romIndex": 11,
+      "name": "R.GIANT",
+      "hp": 300,
+      "xp": 1506,
+      "gold": 1506,
+      "attack": 73,
+      "accuracy": 83,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 135,
+      "morale": 200,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 13,
+      "romIndex": 12,
+      "name": "SAHAG",
+      "hp": 28,
+      "xp": 30,
+      "gold": 30,
+      "attack": 10,
+      "accuracy": 7,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 28,
+      "morale": 110,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 14,
+      "romIndex": 13,
+      "name": "R.SAHAG",
+      "hp": 64,
+      "xp": 105,
+      "gold": 105,
+      "attack": 15,
+      "accuracy": 16,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 78,
+      "agility": 78,
+      "magicDefense": 46,
+      "morale": 142,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 15,
+      "romIndex": 14,
+      "name": "WzSAHAG",
+      "hp": 204,
+      "xp": 882,
+      "gold": 882,
+      "attack": 47,
+      "accuracy": 51,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 101,
+      "morale": 200,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 16,
+      "romIndex": 15,
+      "name": "PIRATE",
+      "hp": 6,
+      "xp": 40,
+      "gold": 40,
+      "attack": 8,
+      "accuracy": 2,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 12,
+      "agility": 12,
+      "magicDefense": 15,
+      "morale": 255,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": true
+    },
+    {
+      "id": 17,
+      "romIndex": 16,
+      "name": "KYZOKU",
+      "hp": 50,
+      "xp": 60,
+      "gold": 120,
+      "attack": 14,
+      "accuracy": 13,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 6,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 37,
+      "morale": 106,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 18,
+      "romIndex": 17,
+      "name": "SHARK",
+      "hp": 120,
+      "xp": 267,
+      "gold": 66,
+      "attack": 22,
+      "accuracy": 30,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 70,
+      "morale": 121,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 19,
+      "romIndex": 18,
+      "name": "GrSHARK",
+      "hp": 344,
+      "xp": 2361,
+      "gold": 600,
+      "attack": 50,
+      "accuracy": 86,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 170,
+      "morale": 200,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 20,
+      "romIndex": 19,
+      "name": "OddEYE",
+      "hp": 10,
+      "xp": 42,
+      "gold": 10,
+      "attack": 4,
+      "accuracy": 2,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 84,
+      "agility": 84,
+      "magicDefense": 14,
+      "morale": 110,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 3,
+      "ai": {
+        "aiId": 3,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 128,
+        "spells": [],
+        "specialAttacks": [
+          "GAZE",
+          "GAZE",
+          "GAZE",
+          "GAZE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 21,
+      "romIndex": 20,
+      "name": "BigEYE",
+      "hp": 304,
+      "xp": 3591,
+      "gold": 3591,
+      "attack": 30,
+      "accuracy": 76,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 156,
+      "morale": 200,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 4,
+      "ai": {
+        "aiId": 4,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "GAZE",
+          "FLASH",
+          "GAZE",
+          "FLASH"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 22,
+      "romIndex": 21,
+      "name": "BONE",
+      "hp": 10,
+      "xp": 9,
+      "gold": 3,
+      "attack": 10,
+      "accuracy": 2,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 12,
+      "agility": 12,
+      "magicDefense": 17,
+      "morale": 124,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 23,
+      "romIndex": 22,
+      "name": "R.BONE",
+      "hp": 144,
+      "xp": 378,
+      "gold": 378,
+      "attack": 26,
+      "accuracy": 36,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 76,
+      "morale": 156,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 24,
+      "romIndex": 23,
+      "name": "CREEP",
+      "hp": 56,
+      "xp": 63,
+      "gold": 15,
+      "attack": 17,
+      "accuracy": 14,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 40,
+      "morale": 104,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 25,
+      "romIndex": 24,
+      "name": "CRAWL",
+      "hp": 84,
+      "xp": 186,
+      "gold": 200,
+      "attack": 1,
+      "accuracy": 21,
+      "hits": 8,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 51,
+      "morale": 106,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 26,
+      "romIndex": 25,
+      "name": "HYENA",
+      "hp": 120,
+      "xp": 288,
+      "gold": 72,
+      "attack": 22,
+      "accuracy": 30,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 76,
+      "morale": 122,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 27,
+      "romIndex": 26,
+      "name": "CEREBUS",
+      "hp": 192,
+      "xp": 1182,
+      "gold": 600,
+      "attack": 30,
+      "accuracy": 48,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 103,
+      "morale": 146,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 5,
+      "ai": {
+        "aiId": 5,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "SCORCH",
+          "SCORCH",
+          "SCORCH",
+          "SCORCH"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 28,
+      "romIndex": 27,
+      "name": "OGRE",
+      "hp": 100,
+      "xp": 195,
+      "gold": 195,
+      "attack": 18,
+      "accuracy": 25,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 18,
+      "agility": 18,
+      "magicDefense": 65,
+      "morale": 116,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 29,
+      "romIndex": 28,
+      "name": "GrOGRE",
+      "hp": 132,
+      "xp": 282,
+      "gold": 300,
+      "attack": 23,
+      "accuracy": 33,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 14,
+      "evade": 30,
+      "agility": 30,
+      "magicDefense": 71,
+      "morale": 126,
+      "categories": [
+        "Giant"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 30,
+      "romIndex": 29,
+      "name": "WzOGRE",
+      "hp": 144,
+      "xp": 723,
+      "gold": 723,
+      "attack": 23,
+      "accuracy": 36,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 54,
+      "agility": 54,
+      "magicDefense": 80,
+      "morale": 134,
+      "categories": [
+        "Giant",
+        "Mage",
+        "Regen"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 6,
+      "ai": {
+        "aiId": 6,
+        "spellCastChanceOutOf128": 64,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "RUSE",
+          "DARK",
+          "SLEP",
+          "HOLD",
+          "ICE2"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 31,
+      "romIndex": 30,
+      "name": "ASP",
+      "hp": 56,
+      "xp": 123,
+      "gold": 50,
+      "attack": 6,
+      "accuracy": 14,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 6,
+      "evade": 30,
+      "agility": 30,
+      "magicDefense": 46,
+      "morale": 107,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 32,
+      "romIndex": 31,
+      "name": "COBRA",
+      "hp": 80,
+      "xp": 165,
+      "gold": 50,
+      "attack": 22,
+      "accuracy": 20,
+      "hits": 1,
+      "critRate": 31,
+      "defense": 10,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 56,
+      "morale": 110,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 33,
+      "romIndex": 32,
+      "name": "SeaSNAKE",
+      "hp": 224,
+      "xp": 957,
+      "gold": 600,
+      "attack": 35,
+      "accuracy": 56,
+      "hits": 1,
+      "critRate": 0,
+      "defense": 12,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 116,
+      "morale": 200,
+      "categories": [
+        "Dragon",
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 34,
+      "romIndex": 33,
+      "name": "SCORPION",
+      "hp": 84,
+      "xp": 225,
+      "gold": 70,
+      "attack": 22,
+      "accuracy": 21,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 54,
+      "agility": 54,
+      "magicDefense": 55,
+      "morale": 112,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 35,
+      "romIndex": 34,
+      "name": "LOBSTER",
+      "hp": 148,
+      "xp": 639,
+      "gold": 300,
+      "attack": 35,
+      "accuracy": 37,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 18,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 85,
+      "morale": 200,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 36,
+      "romIndex": 35,
+      "name": "BULL",
+      "hp": 164,
+      "xp": 489,
+      "gold": 489,
+      "attack": 22,
+      "accuracy": 41,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 95,
+      "morale": 124,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 37,
+      "romIndex": 36,
+      "name": "ZomBULL",
+      "hp": 224,
+      "xp": 1050,
+      "gold": 1050,
+      "attack": 40,
+      "accuracy": 56,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 14,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 116,
+      "morale": 136,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 38,
+      "romIndex": 37,
+      "name": "TROLL",
+      "hp": 184,
+      "xp": 621,
+      "gold": 621,
+      "attack": 24,
+      "accuracy": 46,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 100,
+      "morale": 136,
+      "categories": [
+        "Regen"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 39,
+      "romIndex": 38,
+      "name": "SeaTROLL",
+      "hp": 216,
+      "xp": 852,
+      "gold": 852,
+      "attack": 40,
+      "accuracy": 54,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 110,
+      "morale": 200,
+      "categories": [
+        "Aquatic",
+        "Regen"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 40,
+      "romIndex": 39,
+      "name": "SHADOW",
+      "hp": 50,
+      "xp": 90,
+      "gold": 45,
+      "attack": 10,
+      "accuracy": 13,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 37,
+      "morale": 124,
+      "categories": [
+        "Magical",
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Blind"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 41,
+      "romIndex": 40,
+      "name": "IMAGE",
+      "hp": 86,
+      "xp": 231,
+      "gold": 231,
+      "attack": 22,
+      "accuracy": 22,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 90,
+      "agility": 90,
+      "magicDefense": 52,
+      "morale": 160,
+      "categories": [
+        "Magical",
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 42,
+      "romIndex": 41,
+      "name": "WRAITH",
+      "hp": 114,
+      "xp": 432,
+      "gold": 432,
+      "attack": 40,
+      "accuracy": 29,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 108,
+      "agility": 108,
+      "magicDefense": 67,
+      "morale": 160,
+      "categories": [
+        "Magical",
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 43,
+      "romIndex": 42,
+      "name": "GHOST",
+      "hp": 180,
+      "xp": 990,
+      "gold": 990,
+      "attack": 93,
+      "accuracy": 45,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 30,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 85,
+      "morale": 184,
+      "categories": [
+        "Magical",
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 44,
+      "romIndex": 43,
+      "name": "ZOMBIE",
+      "hp": 20,
+      "xp": 24,
+      "gold": 12,
+      "attack": 10,
+      "accuracy": 5,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 6,
+      "agility": 6,
+      "magicDefense": 25,
+      "morale": 120,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 45,
+      "romIndex": 44,
+      "name": "GHOUL",
+      "hp": 48,
+      "xp": 93,
+      "gold": 50,
+      "attack": 8,
+      "accuracy": 12,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 6,
+      "evade": 12,
+      "agility": 12,
+      "magicDefense": 36,
+      "morale": 124,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 46,
+      "romIndex": 45,
+      "name": "GEIST",
+      "hp": 56,
+      "xp": 117,
+      "gold": 117,
+      "attack": 8,
+      "accuracy": 14,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 46,
+      "agility": 46,
+      "magicDefense": 40,
+      "morale": 160,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 47,
+      "romIndex": 46,
+      "name": "SPECTER",
+      "hp": 52,
+      "xp": 150,
+      "gold": 150,
+      "attack": 20,
+      "accuracy": 13,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 45,
+      "morale": 160,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 48,
+      "romIndex": 47,
+      "name": "WORM",
+      "hp": 448,
+      "xp": 4344,
+      "gold": 1000,
+      "attack": 65,
+      "accuracy": 112,
+      "hits": 1,
+      "critRate": 10,
+      "defense": 10,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 200,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 49,
+      "romIndex": 48,
+      "name": "Sand W",
+      "hp": 200,
+      "xp": 2683,
+      "gold": 900,
+      "attack": 46,
+      "accuracy": 50,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 14,
+      "evade": 62,
+      "agility": 62,
+      "magicDefense": 103,
+      "morale": 124,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 7,
+      "ai": {
+        "aiId": 7,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "CRACK",
+          "CRACK",
+          "CRACK",
+          "CRACK"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 50,
+      "romIndex": 49,
+      "name": "Grey W",
+      "hp": 280,
+      "xp": 1671,
+      "gold": 400,
+      "attack": 50,
+      "accuracy": 70,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 31,
+      "evade": 4,
+      "agility": 4,
+      "magicDefense": 143,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 51,
+      "romIndex": 50,
+      "name": "EYE",
+      "hp": 162,
+      "xp": 3225,
+      "gold": 3225,
+      "attack": 30,
+      "accuracy": 42,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 30,
+      "evade": 12,
+      "agility": 12,
+      "magicDefense": 92,
+      "morale": 200,
+      "categories": [
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 8,
+      "ai": {
+        "aiId": 8,
+        "spellCastChanceOutOf128": 80,
+        "specialAttackChanceOutOf128": 80,
+        "spells": [
+          "XXXX",
+          "BRAK",
+          "RUB",
+          "LIT2",
+          "HOLD",
+          "MUTE",
+          "SLOW",
+          "SLEP"
+        ],
+        "specialAttacks": [
+          "GLANCE",
+          "SQUINT",
+          "GAZE",
+          "STARE"
+        ]
+      },
+      "boss": true
+    },
+    {
+      "id": 52,
+      "romIndex": 51,
+      "name": "PHANTOM",
+      "hp": 360,
+      "xp": 1,
+      "gold": 1,
+      "attack": 120,
+      "accuracy": 150,
+      "hits": 1,
+      "critRate": 40,
+      "defense": 60,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 160,
+      "morale": 200,
+      "categories": [
+        "Magical",
+        "Undead",
+        "Regen"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 9,
+      "ai": {
+        "aiId": 9,
+        "spellCastChanceOutOf128": 64,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [
+          "STOP",
+          "ZAP!",
+          "XFER",
+          "BRAK",
+          "RUB",
+          "HOLD",
+          "MUTE",
+          "SLOW"
+        ],
+        "specialAttacks": [
+          "GLARE",
+          "GLARE",
+          "GLARE",
+          "GLARE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 53,
+      "romIndex": 52,
+      "name": "MEDUSA",
+      "hp": 68,
+      "xp": 699,
+      "gold": 699,
+      "attack": 20,
+      "accuracy": 17,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 55,
+      "morale": 150,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": 2,
+      "ai": {
+        "aiId": 2,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "GLANCE",
+          "GLANCE",
+          "GLANCE",
+          "GLANCE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 54,
+      "romIndex": 53,
+      "name": "GrMEDUSA",
+      "hp": 96,
+      "xp": 1218,
+      "gold": 1218,
+      "attack": 11,
+      "accuracy": 24,
+      "hits": 10,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 70,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 2,
+      "ai": {
+        "aiId": 2,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "GLANCE",
+          "GLANCE",
+          "GLANCE",
+          "GLANCE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 55,
+      "romIndex": 54,
+      "name": "CATMAN",
+      "hp": 160,
+      "xp": 780,
+      "gold": 780,
+      "attack": 30,
+      "accuracy": 40,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 93,
+      "morale": 148,
+      "categories": [
+        "Magical",
+        "Were",
+        "Regen"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 56,
+      "romIndex": 55,
+      "name": "MANCAT",
+      "hp": 110,
+      "xp": 603,
+      "gold": 800,
+      "attack": 20,
+      "accuracy": 28,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 30,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 62,
+      "morale": 150,
+      "categories": [
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 10,
+      "ai": {
+        "aiId": 10,
+        "spellCastChanceOutOf128": 96,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "FIR2",
+          "SLOW",
+          "DARK",
+          "SLEP",
+          "FIRE",
+          "LIT",
+          "CURE",
+          "SLEP"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 57,
+      "romIndex": 56,
+      "name": "PEDE",
+      "hp": 222,
+      "xp": 1194,
+      "gold": 300,
+      "attack": 39,
+      "accuracy": 56,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 116,
+      "morale": 111,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 58,
+      "romIndex": 57,
+      "name": "GrPEDE",
+      "hp": 320,
+      "xp": 2244,
+      "gold": 1000,
+      "attack": 73,
+      "accuracy": 80,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 24,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 185,
+      "morale": 176,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Fire",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 59,
+      "romIndex": 58,
+      "name": "TIGER",
+      "hp": 132,
+      "xp": 438,
+      "gold": 108,
+      "attack": 22,
+      "accuracy": 33,
+      "hits": 2,
+      "critRate": 25,
+      "defense": 8,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 85,
+      "morale": 116,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 60,
+      "romIndex": 59,
+      "name": "Saber T",
+      "hp": 200,
+      "xp": 843,
+      "gold": 500,
+      "attack": 24,
+      "accuracy": 50,
+      "hits": 2,
+      "critRate": 70,
+      "defense": 8,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 106,
+      "morale": 180,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 61,
+      "romIndex": 60,
+      "name": "VAMPIRE",
+      "hp": 156,
+      "xp": 1200,
+      "gold": 2000,
+      "attack": 76,
+      "accuracy": 39,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 24,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 75,
+      "morale": 200,
+      "categories": [
+        "Magical",
+        "Undead",
+        "Regen"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 11,
+      "ai": {
+        "aiId": 11,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "DAZZLE",
+          "DAZZLE",
+          "DAZZLE",
+          "DAZZLE"
+        ]
+      },
+      "boss": true
+    },
+    {
+      "id": 62,
+      "romIndex": 61,
+      "name": "WzVAMP",
+      "hp": 300,
+      "xp": 2385,
+      "gold": 3000,
+      "attack": 90,
+      "accuracy": 42,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 28,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 84,
+      "morale": 200,
+      "categories": [
+        "Magical",
+        "Undead",
+        "Mage",
+        "Regen"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 12,
+      "ai": {
+        "aiId": 12,
+        "spellCastChanceOutOf128": 32,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [
+          "AFIR",
+          "MUTE",
+          "ICE2",
+          "ICE2",
+          "LIT2",
+          "LIT2",
+          "FIR2",
+          "FIR2"
+        ],
+        "specialAttacks": [
+          "DAZZLE",
+          "DAZZLE",
+          "DAZZLE",
+          "DAZZLE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 63,
+      "romIndex": 62,
+      "name": "GARGOYLE",
+      "hp": 80,
+      "xp": 132,
+      "gold": 80,
+      "attack": 12,
+      "accuracy": 20,
+      "hits": 4,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 45,
+      "agility": 45,
+      "magicDefense": 53,
+      "morale": 132,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 64,
+      "romIndex": 63,
+      "name": "R.GOYLE",
+      "hp": 94,
+      "xp": 387,
+      "gold": 387,
+      "attack": 10,
+      "accuracy": 24,
+      "hits": 4,
+      "critRate": 1,
+      "defense": 32,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 127,
+      "morale": 134,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Fire",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 13,
+      "ai": {
+        "aiId": 13,
+        "spellCastChanceOutOf128": 64,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "FIR2",
+          "HOLD",
+          "FIRE",
+          "FIRE"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 65,
+      "romIndex": 64,
+      "name": "EARTH",
+      "hp": 288,
+      "xp": 1536,
+      "gold": 768,
+      "attack": 66,
+      "accuracy": 72,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 18,
+      "agility": 18,
+      "magicDefense": 130,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 66,
+      "romIndex": 65,
+      "name": "FIRE",
+      "hp": 276,
+      "xp": 1620,
+      "gold": 800,
+      "attack": 50,
+      "accuracy": 69,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 130,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 67,
+      "romIndex": 66,
+      "name": "Frost D",
+      "hp": 200,
+      "xp": 1701,
+      "gold": 2000,
+      "attack": 53,
+      "accuracy": 50,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 120,
+      "agility": 120,
+      "magicDefense": 196,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Fire",
+        "Lightning"
+      ],
+      "resistances": [
+        "Poison/Stone",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 14,
+      "ai": {
+        "aiId": 14,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "BLIZZARD",
+          "BLIZZARD",
+          "BLIZZARD"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 68,
+      "romIndex": 67,
+      "name": "Red D",
+      "hp": 248,
+      "xp": 2904,
+      "gold": 4000,
+      "attack": 75,
+      "accuracy": 62,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 30,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 200,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Poison/Stone",
+        "Ice"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 15,
+      "ai": {
+        "aiId": 15,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "BLAZE",
+          "BLAZE",
+          "BLAZE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 69,
+      "romIndex": 68,
+      "name": "ZombieD",
+      "hp": 268,
+      "xp": 2331,
+      "gold": 999,
+      "attack": 56,
+      "accuracy": 67,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 30,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 135,
+      "morale": 200,
+      "categories": [
+        "Dragon",
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 70,
+      "romIndex": 69,
+      "name": "SCUM",
+      "hp": 24,
+      "xp": 84,
+      "gold": 20,
+      "attack": 1,
+      "accuracy": 1,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 255,
+      "evade": 0,
+      "agility": 0,
+      "magicDefense": 36,
+      "morale": 124,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Fire",
+        "Ice"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 71,
+      "romIndex": 70,
+      "name": "MUCK",
+      "hp": 76,
+      "xp": 255,
+      "gold": 70,
+      "attack": 30,
+      "accuracy": 19,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 7,
+      "evade": 4,
+      "agility": 4,
+      "magicDefense": 55,
+      "morale": 152,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 72,
+      "romIndex": 71,
+      "name": "OOZE",
+      "hp": 76,
+      "xp": 252,
+      "gold": 70,
+      "attack": 32,
+      "accuracy": 19,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 6,
+      "evade": 6,
+      "agility": 6,
+      "magicDefense": 55,
+      "morale": 144,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Fire",
+        "Ice"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 73,
+      "romIndex": 72,
+      "name": "SLIME",
+      "hp": 156,
+      "xp": 1101,
+      "gold": 900,
+      "attack": 49,
+      "accuracy": 39,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 255,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 85,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 74,
+      "romIndex": 73,
+      "name": "SPIDER",
+      "hp": 28,
+      "xp": 30,
+      "gold": 8,
+      "attack": 10,
+      "accuracy": 7,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 30,
+      "agility": 30,
+      "magicDefense": 28,
+      "morale": 109,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 75,
+      "romIndex": 74,
+      "name": "ARACHNID",
+      "hp": 64,
+      "xp": 141,
+      "gold": 50,
+      "attack": 5,
+      "accuracy": 16,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 46,
+      "morale": 111,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 76,
+      "romIndex": 75,
+      "name": "MANTICOR",
+      "hp": 164,
+      "xp": 1317,
+      "gold": 650,
+      "attack": 22,
+      "accuracy": 41,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 95,
+      "morale": 150,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 33,
+      "ai": {
+        "aiId": 33,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "STINGER",
+          "STINGER",
+          "STINGER",
+          "STINGER"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 77,
+      "romIndex": 76,
+      "name": "SPHINX",
+      "hp": 228,
+      "xp": 1160,
+      "gold": 1160,
+      "attack": 23,
+      "accuracy": 57,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 120,
+      "agility": 120,
+      "magicDefense": 115,
+      "morale": 132,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 78,
+      "romIndex": 77,
+      "name": "R.ANKYLO",
+      "hp": 256,
+      "xp": 1428,
+      "gold": 300,
+      "attack": 60,
+      "accuracy": 64,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 38,
+      "evade": 56,
+      "agility": 56,
+      "magicDefense": 130,
+      "morale": 146,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 79,
+      "romIndex": 78,
+      "name": "ANKYLO",
+      "hp": 352,
+      "xp": 2610,
+      "gold": 1,
+      "attack": 98,
+      "accuracy": 88,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 48,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 156,
+      "morale": 144,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 80,
+      "romIndex": 79,
+      "name": "MUMMY",
+      "hp": 80,
+      "xp": 300,
+      "gold": 300,
+      "attack": 30,
+      "accuracy": 20,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 60,
+      "morale": 172,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Sleep"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 81,
+      "romIndex": 80,
+      "name": "WzMUMMY",
+      "hp": 188,
+      "xp": 984,
+      "gold": 1000,
+      "attack": 43,
+      "accuracy": 47,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 24,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 95,
+      "morale": 148,
+      "categories": [
+        "Undead"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Sleep"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 82,
+      "romIndex": 81,
+      "name": "COCTRICE",
+      "hp": 50,
+      "xp": 186,
+      "gold": 200,
+      "attack": 1,
+      "accuracy": 10,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 47,
+      "morale": 124,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Stone"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 83,
+      "romIndex": 82,
+      "name": "PERILISK",
+      "hp": 44,
+      "xp": 423,
+      "gold": 500,
+      "attack": 20,
+      "accuracy": 11,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 45,
+      "morale": 124,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 16,
+      "ai": {
+        "aiId": 16,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "SQUINT",
+          "SQUINT",
+          "SQUINT",
+          "SQUINT"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 84,
+      "romIndex": 83,
+      "name": "WYVERN",
+      "hp": 212,
+      "xp": 1173,
+      "gold": 50,
+      "attack": 30,
+      "accuracy": 53,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 115,
+      "morale": 150,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 85,
+      "romIndex": 84,
+      "name": "WYRM",
+      "hp": 260,
+      "xp": 1218,
+      "gold": 502,
+      "attack": 40,
+      "accuracy": 65,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 22,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 131,
+      "morale": 150,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 86,
+      "romIndex": 85,
+      "name": "TYRO",
+      "hp": 480,
+      "xp": 3387,
+      "gold": 502,
+      "attack": 65,
+      "accuracy": 133,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 200,
+      "morale": 144,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 87,
+      "romIndex": 86,
+      "name": "T REX",
+      "hp": 600,
+      "xp": 7200,
+      "gold": 600,
+      "attack": 115,
+      "accuracy": 144,
+      "hits": 1,
+      "critRate": 30,
+      "defense": 10,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 200,
+      "morale": 150,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 88,
+      "romIndex": 87,
+      "name": "CARIBE",
+      "hp": 92,
+      "xp": 240,
+      "gold": 20,
+      "attack": 22,
+      "accuracy": 23,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 0,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 68,
+      "morale": 138,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 89,
+      "romIndex": 88,
+      "name": "R.CARIBE",
+      "hp": 172,
+      "xp": 546,
+      "gold": 46,
+      "attack": 37,
+      "accuracy": 43,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 83,
+      "morale": 142,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 90,
+      "romIndex": 89,
+      "name": "GATOR",
+      "hp": 184,
+      "xp": 816,
+      "gold": 900,
+      "attack": 42,
+      "accuracy": 46,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 103,
+      "morale": 138,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 91,
+      "romIndex": 90,
+      "name": "FrGATOR",
+      "hp": 288,
+      "xp": 1890,
+      "gold": 2000,
+      "attack": 56,
+      "accuracy": 72,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 143,
+      "morale": 142,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 92,
+      "romIndex": 91,
+      "name": "OCHO",
+      "hp": 208,
+      "xp": 1224,
+      "gold": 102,
+      "attack": 20,
+      "accuracy": 52,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 24,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 116,
+      "morale": 176,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 93,
+      "romIndex": 92,
+      "name": "NAOCHO",
+      "hp": 344,
+      "xp": 3189,
+      "gold": 500,
+      "attack": 35,
+      "accuracy": 86,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 32,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 170,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 94,
+      "romIndex": 93,
+      "name": "HYDRA",
+      "hp": 212,
+      "xp": 915,
+      "gold": 150,
+      "attack": 30,
+      "accuracy": 53,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 14,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 116,
+      "morale": 138,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 95,
+      "romIndex": 94,
+      "name": "R.HYDRA",
+      "hp": 182,
+      "xp": 1215,
+      "gold": 400,
+      "attack": 20,
+      "accuracy": 46,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 14,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 103,
+      "morale": 152,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 17,
+      "ai": {
+        "aiId": 17,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "CREMATE",
+          "CREMATE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 96,
+      "romIndex": 95,
+      "name": "GUARD",
+      "hp": 200,
+      "xp": 1224,
+      "gold": 400,
+      "attack": 25,
+      "accuracy": 50,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 40,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 110,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 97,
+      "romIndex": 96,
+      "name": "SENTRY",
+      "hp": 400,
+      "xp": 4000,
+      "gold": 2000,
+      "attack": 102,
+      "accuracy": 90,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 48,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 160,
+      "morale": 150,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 98,
+      "romIndex": 97,
+      "name": "WATER",
+      "hp": 300,
+      "xp": 1962,
+      "gold": 800,
+      "attack": 69,
+      "accuracy": 68,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 130,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 99,
+      "romIndex": 98,
+      "name": "AIR",
+      "hp": 358,
+      "xp": 1614,
+      "gold": 807,
+      "attack": 53,
+      "accuracy": 62,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 4,
+      "evade": 144,
+      "agility": 144,
+      "magicDefense": 130,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 100,
+      "romIndex": 99,
+      "name": "NAGA",
+      "hp": 356,
+      "xp": 2355,
+      "gold": 2355,
+      "attack": 9,
+      "accuracy": 71,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 8,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 116,
+      "morale": 200,
+      "categories": [
+        "Aquatic",
+        "Mage"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": 18,
+      "ai": {
+        "aiId": 18,
+        "spellCastChanceOutOf128": 96,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "LIT2",
+          "HOLD",
+          "SLOW",
+          "DARK",
+          "LIT",
+          "LOCK",
+          "SLEP",
+          "LIT"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 101,
+      "romIndex": 100,
+      "name": "GrNAGA",
+      "hp": 420,
+      "xp": 3489,
+      "gold": 4000,
+      "attack": 7,
+      "accuracy": 88,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 143,
+      "morale": 154,
+      "categories": [
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": 19,
+      "ai": {
+        "aiId": 19,
+        "spellCastChanceOutOf128": 96,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "RUSE",
+          "MUTE",
+          "SLOW",
+          "DARK",
+          "SLEP",
+          "FIRE",
+          "LIT",
+          "HEAL"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 102,
+      "romIndex": 101,
+      "name": "CHIMERA",
+      "hp": 300,
+      "xp": 2064,
+      "gold": 2500,
+      "attack": 30,
+      "accuracy": 60,
+      "hits": 4,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 130,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 20,
+      "ai": {
+        "aiId": 20,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "CREMATE",
+          "CREMATE",
+          "CREMATE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 103,
+      "romIndex": 102,
+      "name": "JIMERA",
+      "hp": 350,
+      "xp": 4584,
+      "gold": 5000,
+      "attack": 40,
+      "accuracy": 70,
+      "hits": 4,
+      "critRate": 1,
+      "defense": 18,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 143,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 21,
+      "ai": {
+        "aiId": 21,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "CREMATE",
+          "POISON",
+          "CREMATE",
+          "POISON"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 104,
+      "romIndex": 103,
+      "name": "WIZARD",
+      "hp": 84,
+      "xp": 276,
+      "gold": 300,
+      "attack": 30,
+      "accuracy": 21,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 66,
+      "agility": 66,
+      "magicDefense": 98,
+      "morale": 126,
+      "categories": [
+        "Magical",
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Fire",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 105,
+      "romIndex": 104,
+      "name": "SORCERER",
+      "hp": 112,
+      "xp": 822,
+      "gold": 999,
+      "attack": 1,
+      "accuracy": 28,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 12,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 187,
+      "morale": 130,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "Death"
+      ],
+      "aiId": 22,
+      "ai": {
+        "aiId": 22,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "TRANCE",
+          "TRANCE",
+          "TRANCE",
+          "TRANCE"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 106,
+      "romIndex": 105,
+      "name": "GARLAND",
+      "hp": 106,
+      "xp": 130,
+      "gold": 250,
+      "attack": 15,
+      "accuracy": 27,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 10,
+      "evade": 12,
+      "agility": 12,
+      "magicDefense": 64,
+      "morale": 255,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": true
+    },
+    {
+      "id": 107,
+      "romIndex": 106,
+      "name": "Gas D",
+      "hp": 352,
+      "xp": 4068,
+      "gold": 5000,
+      "attack": 72,
+      "accuracy": 68,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 200,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 23,
+      "ai": {
+        "aiId": 23,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "POISON",
+          "POISON",
+          "POISON"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 108,
+      "romIndex": 107,
+      "name": "Blue D",
+      "hp": 454,
+      "xp": 3274,
+      "gold": 2000,
+      "attack": 92,
+      "accuracy": 86,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 20,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 200,
+      "morale": 200,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 24,
+      "ai": {
+        "aiId": 24,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "THUNDER",
+          "THUNDER",
+          "THUNDER"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 109,
+      "romIndex": 108,
+      "name": "MudGOL",
+      "hp": 176,
+      "xp": 1257,
+      "gold": 800,
+      "attack": 64,
+      "accuracy": 44,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 7,
+      "evade": 28,
+      "agility": 28,
+      "magicDefense": 93,
+      "morale": 200,
+      "categories": [
+        "Magical",
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Lightning"
+      ],
+      "statusAttackAilment": [
+        "Poison"
+      ],
+      "aiId": 25,
+      "ai": {
+        "aiId": 25,
+        "spellCastChanceOutOf128": 32,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "FAST"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 110,
+      "romIndex": 109,
+      "name": "RockGOL",
+      "hp": 200,
+      "xp": 2385,
+      "gold": 1000,
+      "attack": 70,
+      "accuracy": 50,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 16,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 110,
+      "morale": 200,
+      "categories": [
+        "Magical",
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 26,
+      "ai": {
+        "aiId": 26,
+        "spellCastChanceOutOf128": 48,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "SLOW",
+          "SLOW",
+          "SLOW",
+          "SLOW",
+          "SLOW",
+          "SLOW",
+          "SLOW",
+          "SLOW"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 111,
+      "romIndex": 110,
+      "name": "IronGOL",
+      "hp": 304,
+      "xp": 6717,
+      "gold": 3000,
+      "attack": 93,
+      "accuracy": 76,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 100,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 143,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 27,
+      "ai": {
+        "aiId": 27,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 16,
+        "spells": [],
+        "specialAttacks": [
+          "TOXIC",
+          "TOXIC",
+          "TOXIC",
+          "TOXIC"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 112,
+      "romIndex": 111,
+      "name": "BADMAN",
+      "hp": 260,
+      "xp": 1263,
+      "gold": 1800,
+      "attack": 44,
+      "accuracy": 65,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 38,
+      "evade": 36,
+      "agility": 36,
+      "magicDefense": 135,
+      "morale": 200,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 113,
+      "romIndex": 112,
+      "name": "EVILMAN",
+      "hp": 190,
+      "xp": 2700,
+      "gold": 3000,
+      "attack": 55,
+      "accuracy": 48,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 32,
+      "evade": 42,
+      "agility": 42,
+      "magicDefense": 173,
+      "morale": 200,
+      "categories": [
+        "Magical",
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 28,
+      "ai": {
+        "aiId": 28,
+        "spellCastChanceOutOf128": 32,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "XFER",
+          "NUKE",
+          "XFER",
+          "XXXX",
+          "BLND"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 114,
+      "romIndex": 113,
+      "name": "ASTOS",
+      "hp": 168,
+      "xp": 2250,
+      "gold": 2000,
+      "attack": 26,
+      "accuracy": 42,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 40,
+      "evade": 78,
+      "agility": 78,
+      "magicDefense": 170,
+      "morale": 255,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 43,
+      "ai": {
+        "aiId": 43,
+        "spellCastChanceOutOf128": 96,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "RUB",
+          "SLO2",
+          "FAST",
+          "FIR2",
+          "LIT2",
+          "SLOW",
+          "DARK",
+          "SLEP"
+        ],
+        "specialAttacks": []
+      },
+      "boss": true
+    },
+    {
+      "id": 115,
+      "romIndex": 114,
+      "name": "MAGE",
+      "hp": 105,
+      "xp": 1095,
+      "gold": 1095,
+      "attack": 26,
+      "accuracy": 27,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 40,
+      "evade": 78,
+      "agility": 78,
+      "magicDefense": 170,
+      "morale": 200,
+      "categories": [
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 29,
+      "ai": {
+        "aiId": 29,
+        "spellCastChanceOutOf128": 64,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "RUB",
+          "LIT3",
+          "FIR3",
+          "BANE",
+          "SLO2",
+          "FIR3",
+          "STUN",
+          "LIT3"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 116,
+      "romIndex": 115,
+      "name": "FIGHTER",
+      "hp": 200,
+      "xp": 3420,
+      "gold": 3420,
+      "attack": 40,
+      "accuracy": 45,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 38,
+      "evade": 90,
+      "agility": 90,
+      "magicDefense": 186,
+      "morale": 158,
+      "categories": [
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 30,
+      "ai": {
+        "aiId": 30,
+        "spellCastChanceOutOf128": 48,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "WALL",
+          "XFER",
+          "HEL3",
+          "FOG2",
+          "INV2",
+          "CUR4",
+          "HEL2",
+          "CUR3"
+        ],
+        "specialAttacks": []
+      },
+      "boss": false
+    },
+    {
+      "id": 117,
+      "romIndex": 116,
+      "name": "MADPONY",
+      "hp": 64,
+      "xp": 63,
+      "gold": 15,
+      "attack": 10,
+      "accuracy": 16,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 2,
+      "evade": 22,
+      "agility": 22,
+      "magicDefense": 40,
+      "morale": 106,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "None"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": null,
+      "ai": null,
+      "boss": false
+    },
+    {
+      "id": 118,
+      "romIndex": 117,
+      "name": "NITEMARE",
+      "hp": 200,
+      "xp": 1272,
+      "gold": 700,
+      "attack": 30,
+      "accuracy": 50,
+      "hits": 3,
+      "critRate": 1,
+      "defense": 24,
+      "evade": 132,
+      "agility": 132,
+      "magicDefense": 100,
+      "morale": 200,
+      "categories": [
+        "Magical"
+      ],
+      "weaknesses": [
+        "Ice"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 31,
+      "ai": {
+        "aiId": 31,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "SNORTING",
+          "SNORTING",
+          "SNORTING",
+          "SNORTING"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 119,
+      "romIndex": 118,
+      "name": "WarMECH",
+      "hp": 1000,
+      "xp": 32000,
+      "gold": 32000,
+      "attack": 128,
+      "accuracy": 200,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 80,
+      "evade": 96,
+      "agility": 96,
+      "magicDefense": 200,
+      "morale": 200,
+      "categories": [
+        "Regen"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Fire",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 32,
+      "ai": {
+        "aiId": 32,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "NUCLEAR",
+          "NUCLEAR",
+          "NUCLEAR",
+          "NUCLEAR"
+        ]
+      },
+      "boss": false
+    },
+    {
+      "id": 120,
+      "romIndex": 119,
+      "name": "LICH",
+      "hp": 400,
+      "xp": 2200,
+      "gold": 3000,
+      "attack": 40,
+      "accuracy": 49,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 40,
+      "evade": 24,
+      "agility": 24,
+      "magicDefense": 120,
+      "morale": 255,
+      "categories": [
+        "Magical",
+        "Undead",
+        "Mage"
+      ],
+      "weaknesses": [
+        "Fire"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 34,
+      "ai": {
+        "aiId": 34,
+        "spellCastChanceOutOf128": 96,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "ICE2",
+          "SLP2",
+          "FAST",
+          "LIT2",
+          "HOLD",
+          "FIR2",
+          "SLOW",
+          "SLEP"
+        ],
+        "specialAttacks": []
+      },
+      "boss": true
+    },
+    {
+      "id": 121,
+      "romIndex": 120,
+      "name": "LICH",
+      "hp": 500,
+      "xp": 2000,
+      "gold": 1,
+      "attack": 50,
+      "accuracy": 64,
+      "hits": 1,
+      "critRate": 1,
+      "defense": 50,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 140,
+      "morale": 255,
+      "categories": [
+        "Magical",
+        "Undead",
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Death",
+        "Ice"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 35,
+      "ai": {
+        "aiId": 35,
+        "spellCastChanceOutOf128": 96,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "NUKE",
+          "STOP",
+          "ZAP!",
+          "XXXX",
+          "NUKE",
+          "STOP",
+          "ZAP!",
+          "XXXX"
+        ],
+        "specialAttacks": []
+      },
+      "boss": true
+    },
+    {
+      "id": 122,
+      "romIndex": 121,
+      "name": "KARY",
+      "hp": 600,
+      "xp": 2475,
+      "gold": 3000,
+      "attack": 40,
+      "accuracy": 63,
+      "hits": 6,
+      "critRate": 1,
+      "defense": 50,
+      "evade": 48,
+      "agility": 48,
+      "magicDefense": 183,
+      "morale": 255,
+      "categories": [
+        "Magical",
+        "Mage"
+      ],
+      "weaknesses": [
+        "Status"
+      ],
+      "resistances": [
+        "Poison/Stone",
+        "Fire",
+        "Ice",
+        "Lightning"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 36,
+      "ai": {
+        "aiId": 36,
+        "spellCastChanceOutOf128": 48,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "FIR2",
+          "DARK",
+          "FIR2",
+          "DARK",
+          "FIR2",
+          "HOLD",
+          "FIR2",
+          "HOLD"
+        ],
+        "specialAttacks": []
+      },
+      "boss": true
+    },
+    {
+      "id": 123,
+      "romIndex": 122,
+      "name": "KARY",
+      "hp": 700,
+      "xp": 2000,
+      "gold": 1,
+      "attack": 60,
+      "accuracy": 63,
+      "hits": 6,
+      "critRate": 1,
+      "defense": 60,
+      "evade": 60,
+      "agility": 60,
+      "magicDefense": 183,
+      "morale": 255,
+      "categories": [
+        "Magical",
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Poison/Stone",
+        "Fire",
+        "Ice",
+        "Lightning"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 37,
+      "ai": {
+        "aiId": 37,
+        "spellCastChanceOutOf128": 48,
+        "specialAttackChanceOutOf128": 0,
+        "spells": [
+          "FIR3",
+          "RUB",
+          "FIR3",
+          "RUB",
+          "FIR3",
+          "STUN",
+          "FIR3",
+          "STUN"
+        ],
+        "specialAttacks": []
+      },
+      "boss": true
+    },
+    {
+      "id": 124,
+      "romIndex": 123,
+      "name": "KRAKEN",
+      "hp": 800,
+      "xp": 4245,
+      "gold": 5000,
+      "attack": 50,
+      "accuracy": 90,
+      "hits": 8,
+      "critRate": 1,
+      "defense": 60,
+      "evade": 84,
+      "agility": 84,
+      "magicDefense": 160,
+      "morale": 255,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "Lightning"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 38,
+      "ai": {
+        "aiId": 38,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [],
+        "specialAttacks": [
+          "INK",
+          "INK",
+          "INK",
+          "INK"
+        ]
+      },
+      "boss": true
+    },
+    {
+      "id": 125,
+      "romIndex": 124,
+      "name": "KRAKEN",
+      "hp": 900,
+      "xp": 2000,
+      "gold": 1,
+      "attack": 70,
+      "accuracy": 114,
+      "hits": 8,
+      "critRate": 1,
+      "defense": 70,
+      "evade": 98,
+      "agility": 98,
+      "magicDefense": 200,
+      "morale": 255,
+      "categories": [
+        "Aquatic"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Fire",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 39,
+      "ai": {
+        "aiId": 39,
+        "spellCastChanceOutOf128": 48,
+        "specialAttackChanceOutOf128": 32,
+        "spells": [
+          "LIT2",
+          "LIT2",
+          "LIT2",
+          "LIT2",
+          "LIT2",
+          "LIT2",
+          "LIT2",
+          "LIT2"
+        ],
+        "specialAttacks": [
+          "INK",
+          "INK",
+          "INK",
+          "INK"
+        ]
+      },
+      "boss": true
+    },
+    {
+      "id": 126,
+      "romIndex": 125,
+      "name": "TIAMAT",
+      "hp": 1000,
+      "xp": 5496,
+      "gold": 6000,
+      "attack": 49,
+      "accuracy": 80,
+      "hits": 4,
+      "critRate": 1,
+      "defense": 80,
+      "evade": 72,
+      "agility": 72,
+      "magicDefense": 200,
+      "morale": 255,
+      "categories": [
+        "Dragon"
+      ],
+      "weaknesses": [
+        "Poison/Stone"
+      ],
+      "resistances": [
+        "Fire",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 40,
+      "ai": {
+        "aiId": 40,
+        "spellCastChanceOutOf128": 0,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [],
+        "specialAttacks": [
+          "THUNDER",
+          "POISON",
+          "BLIZZARD",
+          "BLAZE"
+        ]
+      },
+      "boss": true
+    },
+    {
+      "id": 127,
+      "romIndex": 126,
+      "name": "TIAMAT",
+      "hp": 1100,
+      "xp": 2000,
+      "gold": 1,
+      "attack": 75,
+      "accuracy": 85,
+      "hits": 4,
+      "critRate": 1,
+      "defense": 90,
+      "evade": 90,
+      "agility": 90,
+      "magicDefense": 200,
+      "morale": 255,
+      "categories": [
+        "Dragon",
+        "Mage"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Fire",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "None"
+      ],
+      "aiId": 41,
+      "ai": {
+        "aiId": 41,
+        "spellCastChanceOutOf128": 64,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [
+          "BANE",
+          "ICE2",
+          "LIT2",
+          "FIR2",
+          "BANE",
+          "ICE2",
+          "LIT2",
+          "FIR2"
+        ],
+        "specialAttacks": [
+          "THUNDER",
+          "POISON",
+          "BLIZZARD",
+          "BLAZE"
+        ]
+      },
+      "boss": true
+    },
+    {
+      "id": 128,
+      "romIndex": 127,
+      "name": "CHAOS",
+      "hp": 2000,
+      "xp": 0,
+      "gold": 0,
+      "attack": 100,
+      "accuracy": 200,
+      "hits": 2,
+      "critRate": 1,
+      "defense": 100,
+      "evade": 100,
+      "agility": 100,
+      "magicDefense": 200,
+      "morale": 255,
+      "categories": [
+        "None"
+      ],
+      "weaknesses": [
+        "None"
+      ],
+      "resistances": [
+        "Status",
+        "Poison/Stone",
+        "Time",
+        "Death",
+        "Fire",
+        "Ice",
+        "Lightning",
+        "Earth"
+      ],
+      "statusAttackAilment": [
+        "Paralyze"
+      ],
+      "aiId": 42,
+      "ai": {
+        "aiId": 42,
+        "spellCastChanceOutOf128": 64,
+        "specialAttackChanceOutOf128": 64,
+        "spells": [
+          "ICE3",
+          "LIT3",
+          "SLO2",
+          "CUR4",
+          "FIR3",
+          "ICE2",
+          "FAST",
+          "NUKE"
+        ],
+        "specialAttacks": [
+          "CRACK",
+          "INFERNO",
+          "SWIRL",
+          "TORNADO"
+        ]
+      },
+      "boss": true
+    }
+  ],
+  "aiScripts": [
+    {
+      "aiId": 0,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "FROST",
+        "FROST",
+        "FROST",
+        "FROST"
+      ]
+    },
+    {
+      "aiId": 1,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "HEAT",
+        "HEAT",
+        "HEAT",
+        "HEAT"
+      ]
+    },
+    {
+      "aiId": 2,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "GLANCE",
+        "GLANCE",
+        "GLANCE",
+        "GLANCE"
+      ]
+    },
+    {
+      "aiId": 3,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 128,
+      "spells": [],
+      "specialAttacks": [
+        "GAZE",
+        "GAZE",
+        "GAZE",
+        "GAZE"
+      ]
+    },
+    {
+      "aiId": 4,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "GAZE",
+        "FLASH",
+        "GAZE",
+        "FLASH"
+      ]
+    },
+    {
+      "aiId": 5,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "SCORCH",
+        "SCORCH",
+        "SCORCH",
+        "SCORCH"
+      ]
+    },
+    {
+      "aiId": 6,
+      "spellCastChanceOutOf128": 64,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "RUSE",
+        "DARK",
+        "SLEP",
+        "HOLD",
+        "ICE2"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 7,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "CRACK",
+        "CRACK",
+        "CRACK",
+        "CRACK"
+      ]
+    },
+    {
+      "aiId": 8,
+      "spellCastChanceOutOf128": 80,
+      "specialAttackChanceOutOf128": 80,
+      "spells": [
+        "XXXX",
+        "BRAK",
+        "RUB",
+        "LIT2",
+        "HOLD",
+        "MUTE",
+        "SLOW",
+        "SLEP"
+      ],
+      "specialAttacks": [
+        "GLANCE",
+        "SQUINT",
+        "GAZE",
+        "STARE"
+      ]
+    },
+    {
+      "aiId": 9,
+      "spellCastChanceOutOf128": 64,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [
+        "STOP",
+        "ZAP!",
+        "XFER",
+        "BRAK",
+        "RUB",
+        "HOLD",
+        "MUTE",
+        "SLOW"
+      ],
+      "specialAttacks": [
+        "GLARE",
+        "GLARE",
+        "GLARE",
+        "GLARE"
+      ]
+    },
+    {
+      "aiId": 10,
+      "spellCastChanceOutOf128": 96,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "FIR2",
+        "SLOW",
+        "DARK",
+        "SLEP",
+        "FIRE",
+        "LIT",
+        "CURE",
+        "SLEP"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 11,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "DAZZLE",
+        "DAZZLE",
+        "DAZZLE",
+        "DAZZLE"
+      ]
+    },
+    {
+      "aiId": 12,
+      "spellCastChanceOutOf128": 32,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [
+        "AFIR",
+        "MUTE",
+        "ICE2",
+        "ICE2",
+        "LIT2",
+        "LIT2",
+        "FIR2",
+        "FIR2"
+      ],
+      "specialAttacks": [
+        "DAZZLE",
+        "DAZZLE",
+        "DAZZLE",
+        "DAZZLE"
+      ]
+    },
+    {
+      "aiId": 13,
+      "spellCastChanceOutOf128": 64,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "FIR2",
+        "HOLD",
+        "FIRE",
+        "FIRE"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 14,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "BLIZZARD",
+        "BLIZZARD",
+        "BLIZZARD"
+      ]
+    },
+    {
+      "aiId": 15,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "BLAZE",
+        "BLAZE",
+        "BLAZE"
+      ]
+    },
+    {
+      "aiId": 16,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "SQUINT",
+        "SQUINT",
+        "SQUINT",
+        "SQUINT"
+      ]
+    },
+    {
+      "aiId": 17,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "CREMATE",
+        "CREMATE"
+      ]
+    },
+    {
+      "aiId": 18,
+      "spellCastChanceOutOf128": 96,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "LIT2",
+        "HOLD",
+        "SLOW",
+        "DARK",
+        "LIT",
+        "LOCK",
+        "SLEP",
+        "LIT"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 19,
+      "spellCastChanceOutOf128": 96,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "RUSE",
+        "MUTE",
+        "SLOW",
+        "DARK",
+        "SLEP",
+        "FIRE",
+        "LIT",
+        "HEAL"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 20,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "CREMATE",
+        "CREMATE",
+        "CREMATE"
+      ]
+    },
+    {
+      "aiId": 21,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "CREMATE",
+        "POISON",
+        "CREMATE",
+        "POISON"
+      ]
+    },
+    {
+      "aiId": 22,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "TRANCE",
+        "TRANCE",
+        "TRANCE",
+        "TRANCE"
+      ]
+    },
+    {
+      "aiId": 23,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "POISON",
+        "POISON",
+        "POISON"
+      ]
+    },
+    {
+      "aiId": 24,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "THUNDER",
+        "THUNDER",
+        "THUNDER"
+      ]
+    },
+    {
+      "aiId": 25,
+      "spellCastChanceOutOf128": 32,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "FAST"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 26,
+      "spellCastChanceOutOf128": 48,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "SLOW",
+        "SLOW",
+        "SLOW",
+        "SLOW",
+        "SLOW",
+        "SLOW",
+        "SLOW",
+        "SLOW"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 27,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 16,
+      "spells": [],
+      "specialAttacks": [
+        "TOXIC",
+        "TOXIC",
+        "TOXIC",
+        "TOXIC"
+      ]
+    },
+    {
+      "aiId": 28,
+      "spellCastChanceOutOf128": 32,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "XFER",
+        "NUKE",
+        "XFER",
+        "XXXX",
+        "BLND"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 29,
+      "spellCastChanceOutOf128": 64,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "RUB",
+        "LIT3",
+        "FIR3",
+        "BANE",
+        "SLO2",
+        "FIR3",
+        "STUN",
+        "LIT3"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 30,
+      "spellCastChanceOutOf128": 48,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "WALL",
+        "XFER",
+        "HEL3",
+        "FOG2",
+        "INV2",
+        "CUR4",
+        "HEL2",
+        "CUR3"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 31,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "SNORTING",
+        "SNORTING",
+        "SNORTING",
+        "SNORTING"
+      ]
+    },
+    {
+      "aiId": 32,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "NUCLEAR",
+        "NUCLEAR",
+        "NUCLEAR",
+        "NUCLEAR"
+      ]
+    },
+    {
+      "aiId": 33,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "STINGER",
+        "STINGER",
+        "STINGER",
+        "STINGER"
+      ]
+    },
+    {
+      "aiId": 34,
+      "spellCastChanceOutOf128": 96,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "ICE2",
+        "SLP2",
+        "FAST",
+        "LIT2",
+        "HOLD",
+        "FIR2",
+        "SLOW",
+        "SLEP"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 35,
+      "spellCastChanceOutOf128": 96,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "NUKE",
+        "STOP",
+        "ZAP!",
+        "XXXX",
+        "NUKE",
+        "STOP",
+        "ZAP!",
+        "XXXX"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 36,
+      "spellCastChanceOutOf128": 48,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "FIR2",
+        "DARK",
+        "FIR2",
+        "DARK",
+        "FIR2",
+        "HOLD",
+        "FIR2",
+        "HOLD"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 37,
+      "spellCastChanceOutOf128": 48,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "FIR3",
+        "RUB",
+        "FIR3",
+        "RUB",
+        "FIR3",
+        "STUN",
+        "FIR3",
+        "STUN"
+      ],
+      "specialAttacks": []
+    },
+    {
+      "aiId": 38,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [],
+      "specialAttacks": [
+        "INK",
+        "INK",
+        "INK",
+        "INK"
+      ]
+    },
+    {
+      "aiId": 39,
+      "spellCastChanceOutOf128": 48,
+      "specialAttackChanceOutOf128": 32,
+      "spells": [
+        "LIT2",
+        "LIT2",
+        "LIT2",
+        "LIT2",
+        "LIT2",
+        "LIT2",
+        "LIT2",
+        "LIT2"
+      ],
+      "specialAttacks": [
+        "INK",
+        "INK",
+        "INK",
+        "INK"
+      ]
+    },
+    {
+      "aiId": 40,
+      "spellCastChanceOutOf128": 0,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [],
+      "specialAttacks": [
+        "THUNDER",
+        "POISON",
+        "BLIZZARD",
+        "BLAZE"
+      ]
+    },
+    {
+      "aiId": 41,
+      "spellCastChanceOutOf128": 64,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [
+        "BANE",
+        "ICE2",
+        "LIT2",
+        "FIR2",
+        "BANE",
+        "ICE2",
+        "LIT2",
+        "FIR2"
+      ],
+      "specialAttacks": [
+        "THUNDER",
+        "POISON",
+        "BLIZZARD",
+        "BLAZE"
+      ]
+    },
+    {
+      "aiId": 42,
+      "spellCastChanceOutOf128": 64,
+      "specialAttackChanceOutOf128": 64,
+      "spells": [
+        "ICE3",
+        "LIT3",
+        "SLO2",
+        "CUR4",
+        "FIR3",
+        "ICE2",
+        "FAST",
+        "NUKE"
+      ],
+      "specialAttacks": [
+        "CRACK",
+        "INFERNO",
+        "SWIRL",
+        "TORNADO"
+      ]
+    },
+    {
+      "aiId": 43,
+      "spellCastChanceOutOf128": 96,
+      "specialAttackChanceOutOf128": 0,
+      "spells": [
+        "RUB",
+        "SLO2",
+        "FAST",
+        "FIR2",
+        "LIT2",
+        "SLOW",
+        "DARK",
+        "SLEP"
+      ],
+      "specialAttacks": []
+    }
+  ]
+}

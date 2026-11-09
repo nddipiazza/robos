@@ -44,8 +44,11 @@ function resolveGameDir() {
     fromReports,
     process.env.ROBOS_REPO && path.join(process.env.ROBOS_REPO, 'games', 'quest-warrior-dragon'),
     path.resolve(__dirname, '..', '..', 'games', 'quest-warrior-dragon'),
+    process.env.ROBOS_REPO && path.join(process.env.ROBOS_REPO, 'games', 'fantasy-light-warriors'),
+    path.resolve(__dirname, '..', '..', 'games', 'fantasy-light-warriors'),
     settings.gameDir,
     path.join(app.getPath('home'), 'source', 'robos', 'games', 'quest-warrior-dragon'),
+    path.join(app.getPath('home'), 'source', 'robos', 'games', 'fantasy-light-warriors'),
   ];
   return candidates.find(isGameDir) || '';
 }
