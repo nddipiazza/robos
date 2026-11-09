@@ -93,6 +93,7 @@ var spatial_grid: Dictionary = {}
 var _spatial_by_owner: Dictionary = {}
 var astar_grid: AStarGrid2D = AStarGrid2D.new()
 var nav_dirty: bool = true
+var _navigation_revision := 0
 
 var recent_events: Array[Dictionary] = []
 var command_history: Array[Dictionary] = []
@@ -984,6 +985,7 @@ func _step_single_tick() -> void:
 	emit_signal("simulation_ticked", tick)
 
 func _rebuild_astar_grid() -> void:
+	_navigation_revision += 1
 	_static_structures.clear()
 	_footprint_bins.clear()
 	_heavy_grid = null
@@ -1434,12 +1436,14 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			var target_pos := _prepare_order_path(u, order)
 			var arrival_rad: float = float(order.get("arrival_radius", 0.9))
 			if u.path.size() == 1 and u.pos.distance_to(target_pos) <= arrival_rad:
+				if not _can_finish_path_order(u, order):
+					return
 				u["orders"].pop_front()
 				u["path"].clear()
 				u["home_pos"] = u["pos"]
 				u["has_home_pos"] = true
 			else:
-				if _should_settle_in_group_arrival(u, target_pos, arrival_rad):
+				if _can_finish_path_order(u, order) and _should_settle_in_group_arrival(u, target_pos, arrival_rad):
 					u["orders"].pop_front()
 					u["path"].clear()
 					u["home_pos"] = u["pos"]
@@ -1481,6 +1485,8 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				var target_pos := _prepare_order_path(u, order)
 				var arrival_rad: float = float(order.get("arrival_radius", 1.5))
 				if u.path.size() == 1 and u.pos.distance_to(target_pos) <= arrival_rad:
+					if not _can_finish_path_order(u, order):
+						return
 					if otype == "patrol" and target_pos.distance_to(order.patrol_origin) > arrival_rad:
 						order.target_pos = order.patrol_origin
 						order.patrol_origin = target_pos
@@ -1969,8 +1975,21 @@ func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float, reach: fl
 	_follow_path(u, dt)
 
 func _prepare_order_path(u: Dictionary, order: Dictionary) -> Vector2:
-	_prepare_path(u, order.get("target_pos", u.pos), 0.05)
-	return u.path.back()
+	var requested: Vector2 = order.get("target_pos", u.pos)
+	_prepare_path(u, requested, 0.05)
+	var endpoint: Vector2 = u.path.back()
+	if u.flight_height <= 0.0 and order.get("navigation_revision", -1) != _navigation_revision:
+		var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
+		var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
+		# A route that existed when this leg started can reopen after a gate
+		# lowers or a foundation dies. Keep the remaining queue in place.
+		order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_goal
+		order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_goal
+		order["navigation_revision"] = _navigation_revision
+	return endpoint
+
+func _can_finish_path_order(u: Dictionary, order: Dictionary) -> bool:
+	return u.flight_height > 0.0 or (not nav_dirty and not order.get("waiting_for_route", false))
 
 func _prepare_path(u: Dictionary, target_pos: Vector2, tolerance: float, reach: float = INF) -> void:
 	if u.path.is_empty() or u.get("nav_goal", Vector2.INF).distance_squared_to(target_pos) > tolerance * tolerance:
