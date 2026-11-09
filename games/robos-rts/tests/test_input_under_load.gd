@@ -71,8 +71,12 @@ func _run() -> void:
 	_check(sim.sim_speed == 1.0 and sim.manual_step_requests == 0, "The fixture ran at normal speed on the frame clock")
 	print(JSON.stringify({"input_ticks": tested_ticks, "battle_units": sim.units.size(), "failures": failures}))
 	sim.paused = true
+	for player in root.get_node("RTSAudio").get_children():
+		if player is AudioStreamPlayer:
+			player.stop()
 	battle.queue_free()
-	await process_frame
+	# Let the audio mixer release active playback before the fixture exits.
+	await create_timer(0.15).timeout
 	await RenderingServer.frame_post_draw
 	quit.call_deferred(0 if failures.is_empty() else 1)
 
