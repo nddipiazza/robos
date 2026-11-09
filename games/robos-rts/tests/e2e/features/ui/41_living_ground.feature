@@ -51,3 +51,34 @@ Feature: Brood living ground appears on the battlefield and minimap
     Then the Skitterling tooltip shows 12.7 speed with the living ground bonus "active"
     When the simulation advances 370 ticks
     Then the Skitterling tooltip shows 9.8 speed with the living ground bonus "inactive"
+
+  Scenario: Pay for a Growth Node and watch its extension recede after combat
+    Given an RTS test scenario
+      """
+      {"name":"Brood growth node","paused":true,"decor":false,
+       "map":{"width":112,"height":72},
+       "players":{"1":{"name":"Gnarl Brood","faction":"monsters"}},
+       "units":[{"type":"brood_nest","owner":1,"x":30,"y":34},
+                {"id":"grower","type":"forager","owner":1,"x":50,"y":34},
+                {"id":"artillery","type":"howitzer_emplaced","owner":2,"x":78,"y":34}]}
+      """
+    When the artillery holds fire for the living ground test
+    And the simulation advances 1600 ticks
+    And the commander frames (51, 34) at zoom height 79
+    And the commander Ctrl-clicks unit "grower"
+    And the commander presses "T"
+    And the commander places a Growth Node at (70, 34)
+    Then no "brood_growth_node" exists
+    And player 1 has 400 crystal, 150 aether and 1 supply used
+    When the commander places a Growth Node at (54, 34)
+    And the simulation advances 1000 ticks
+    Then a finished "brood_growth_node" stands at (54, 34)
+    And player 1 has 340 crystal, 150 aether and 0 supply used
+    And the rendered living ground covers (70, 34)
+    And the battlefield is captured as "living-ground-node"
+    When the artillery destroys the Growth Node
+    Then the rendered living ground covers (70, 34)
+    When the simulation advances 240 ticks
+    Then the rendered living ground clears (70, 34)
+    And the rendered living ground covers (58, 34)
+    And the battlefield is captured as "living-ground-recession"

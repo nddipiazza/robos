@@ -1143,6 +1143,8 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 		return _check_planned_placement(structure_id, pos, r)
 	if SimEngine.requires_power(structure_id) and not SimEngine.is_powered(local_player, pos):
 		return {"ok": false, "pos": pos, "reason": "Place the %s inside a friendly power field." % def.name}
+	if def.get("requires_living_ground", false) and not SimEngine.has_active_living_ground(pos, local_player):
+		return {"ok": false, "pos": pos, "reason": "Place the %s on active friendly living ground." % def.name}
 	if pos.x < r or pos.y < r or pos.x > SimEngine.map_width - r or pos.y > SimEngine.map_height - r:
 		return {"ok": false, "pos": pos, "reason": "Cannot build outside the map."}
 	for obs in SimEngine.terrain_obstacles:
@@ -2258,6 +2260,8 @@ func _draw_build_ghost() -> void:
 	_draw_build_tile(Rect2(origin, Vector2.ONE * r * 2.0), outline, 0.0, 2.0)
 	if vent.is_finite():
 		_draw_range_ring(c, 0.8, Color("#5eead4"))
+	if placement.ok and definition.get("requires_living_ground", false):
+		_draw_range_ring(c, float(definition.living_ground_radius), Color("#c477b4"))
 
 func _draw_build_tile(tile: Rect2, color: Color, fill: float, width: float) -> void:
 	var points := PackedVector2Array([

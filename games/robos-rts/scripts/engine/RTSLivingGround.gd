@@ -3,6 +3,8 @@ extends RefCounted
 const CELL_SIZE := preload("res://scripts/engine/RTSVision.gd").CELL_SIZE
 const UPDATE_TICKS := 32
 const SPREAD_TICKS := 128
+const DECAY_DELAY_TICKS := 192
+const DECAY_RING_TICKS := 64
 const DIRECTIONS := [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]
 
 var extent: Vector2
@@ -10,6 +12,7 @@ var size: Vector2i
 var revision := 0
 var cells: Dictionary = {} # Cell -> owner -> covering source count.
 var _sources: Dictionary = {}
+var _decaying: Dictionary = {} # Cell -> owner -> expiry tick.
 
 func _init(width: float, height: float) -> void:
 	extent = Vector2(width, height)
@@ -24,10 +27,12 @@ func cell_rect(cell: Vector2i) -> Rect2:
 func cell_center(cell: Vector2i) -> Vector2:
 	return cell_rect(cell).get_center()
 
-func covers(position: Vector2, owner: int = 0) -> bool:
+func covers(position: Vector2, owner: int = 0, require_source: bool = false) -> bool:
 	if not Rect2(Vector2.ZERO, extent).has_point(position):
 		return false
 	var counts: Dictionary = cells.get(_cell_at(position), {})
+	if require_source:
+		return int(counts.get(owner, 0)) > 0
 	return not counts.is_empty() if owner == 0 else counts.has(owner)
 
 func update(units: Dictionary, tick: int, can_spread: Callable) -> void:
@@ -35,8 +40,7 @@ func update(units: Dictionary, tick: int, can_spread: Callable) -> void:
 		var unit: Dictionary = units.get(tag, {})
 		var source: Dictionary = _sources[tag]
 		if not _eligible(unit) or unit.owner != source.owner or _cell_at(unit.pos) != source.origin:
-			for cell in source.covered:
-				_change_coverage(cell, source.owner, -1)
+			_retire_source(source, tick)
 			_sources.erase(tag)
 
 	for unit in units.values():
@@ -52,11 +56,12 @@ func update(units: Dictionary, tick: int, can_spread: Callable) -> void:
 				"owner": unit.owner, "origin": origin, "radius": unit.living_ground_radius,
 				"covered": {origin: true}, "frontier": [origin], "next_tick": tick,
 			}
-			_change_coverage(origin, unit.owner, 1)
+			_add_coverage(origin, unit.owner)
 		var source: Dictionary = _sources[tag]
 		if tick >= source.next_tick and not source.frontier.is_empty():
 			_spread(source, can_spread)
 			source.next_tick = tick + SPREAD_TICKS
+	_expire_coverage(tick)
 
 func _eligible(unit: Dictionary) -> bool:
 	return float(unit.get("living_ground_radius", 0.0)) > 0.0 and unit.hp > 0.0 and unit.build_progress >= 1.0 and unit.owner > 0 and unit.flight_height <= 0.0
@@ -77,19 +82,43 @@ func _spread(source: Dictionary, can_spread: Callable) -> void:
 				continue
 			covered[candidate] = true
 			next_frontier.append(candidate)
-			_change_coverage(candidate, source.owner, 1)
+			_add_coverage(candidate, source.owner)
 	source.frontier = next_frontier
 
-func _change_coverage(cell: Vector2i, owner: int, amount: int) -> void:
+func _add_coverage(cell: Vector2i, owner: int) -> void:
 	var counts: Dictionary = cells.get(cell, {})
-	var previous: int = counts.get(owner, 0)
-	var count := previous + amount
-	if count > 0:
-		counts[owner] = count
-		cells[cell] = counts
-	else:
-		counts.erase(owner)
+	if not counts.has(owner):
+		revision += 1
+	counts[owner] = int(counts.get(owner, 0)) + 1
+	cells[cell] = counts
+	if _decaying.has(cell):
+		var expires: Dictionary = _decaying[cell]
+		expires.erase(owner)
+		if expires.is_empty():
+			_decaying.erase(cell)
+
+func _retire_source(source: Dictionary, tick: int) -> void:
+	var owner: int = source.owner
+	var origin := cell_center(source.origin)
+	for cell in source.covered:
+		var counts: Dictionary = cells[cell]
+		counts[owner] = int(counts[owner]) - 1
+		if counts[owner] == 0:
+			var rings := floori(maxf(0.0, float(source.radius) - origin.distance_to(cell_center(cell))) / CELL_SIZE)
+			var expires: Dictionary = _decaying.get(cell, {})
+			expires[owner] = tick + DECAY_DELAY_TICKS + rings * DECAY_RING_TICKS
+			_decaying[cell] = expires
+
+func _expire_coverage(tick: int) -> void:
+	for cell in _decaying.keys():
+		var expires: Dictionary = _decaying[cell]
+		var counts: Dictionary = cells[cell]
+		for owner in expires.keys():
+			if tick >= int(expires[owner]):
+				expires.erase(owner)
+				counts.erase(owner)
+				revision += 1
+		if expires.is_empty():
+			_decaying.erase(cell)
 		if counts.is_empty():
 			cells.erase(cell)
-	if previous == 0 or count == 0:
-		revision += 1

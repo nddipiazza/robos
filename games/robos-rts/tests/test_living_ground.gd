@@ -96,4 +96,6 @@ func _test_source_loss() -> void:
 	sim.issue_command([attacker.tag], "attack_target", first.pos, first.tag)
 	sim.step_ticks(96)
 	_check(not sim.units.has(first.tag), "The enemy kills the first Nest with a real attack")
-	_check(sim.has_living_ground(shared, 2) and not sim.has_living_ground(lost, 2), "Source loss clears exclusive coverage and retains shared cells")
+	_check(sim.has_living_ground(lost, 2) and not sim.has_active_living_ground(lost, 2), "Exclusive ground lingers briefly after losing its Nest")
+	sim.step_ticks(640)
+	_check(sim.has_active_living_ground(shared, 2) and not sim.has_living_ground(lost, 2), "Source loss expires exclusive coverage and retains shared cells")
