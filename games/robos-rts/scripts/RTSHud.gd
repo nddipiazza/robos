@@ -653,8 +653,9 @@ func _draw_single(u: Dictionary) -> void:
 			if i < queue.size():
 				var item: Dictionary = queue[i]
 				if item.has("upgrade"):
-					_glyph("research_" + item.upgrade, qr)
-					_text_r(qr.end.x - 5, qr.position.y + 16, str(item.level), 14, C_GOLD)
+					_glyph("upgrade_hub" if item.upgrade == "hub_operations" else "research_" + item.upgrade, qr)
+					if item.upgrade != "hub_operations":
+						_text_r(qr.end.x - 5, qr.position.y + 16, str(item.level), 14, C_GOLD)
 				else:
 					var qt := _icon_for(str(item.unit_type))
 					if qt:
@@ -818,7 +819,7 @@ func _glyph(id: String, r: Rect2) -> void:
 		"phase_cloak":
 			draw_arc(c, 18.0 * u, -2.8, 2.8, 24, accent, 3.0 * u, true)
 			draw_arc(c, 11.0 * u, 0.8, 5.4, 18, col, 2.0 * u, true)
-		"research_weapons":
+		"research_weapons", "upgrade_hub":
 			draw_polyline(P.call([[-19, 12], [-7, 0], [0, 7], [20, -13]]), C_GOLD, 4.0 * u, true)
 			draw_polyline(P.call([[10, -13], [20, -13], [20, -3]]), C_GOLD, 4.0 * u, true)
 		"research_armor":

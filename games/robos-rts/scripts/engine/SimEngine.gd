@@ -59,6 +59,7 @@ const PRODUCTION_EXIT_RETRY_TICKS := 8
 const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
 const HUB_POWER_COST := 50.0
+const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 30.0, "requires": ["muster_hall"]}
 const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
 const SALVAGE_TICKS := 5 * TICK_RATE
@@ -1541,6 +1542,10 @@ func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[D
 	var item: Dictionary = structure.production_queue[index]
 	if item.has("upgrade"):
 		structure.production_queue.remove_at(index)
+		if item.upgrade == "hub_operations":
+			structure["hub_operations"] = true
+			notice.emit(structure.owner, "Colony Hub operations upgraded.", "info")
+			return true
 		players[structure.owner].upgrades[item.upgrade] = item.level
 		notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
 		return true
@@ -2182,6 +2187,34 @@ func _is_finished_silo(unit: Dictionary, owner_id: int) -> bool:
 
 func can_use_hub_power(unit: Dictionary) -> bool:
 	return unit.unit_type == "colony_hub" and unit.build_progress >= 1.0 and unit.energy >= HUB_POWER_COST
+
+func hub_upgrade_block_reason(hub: Dictionary) -> String:
+	if hub.unit_type != "colony_hub" or hub.build_progress < 1.0:
+		return "Requires a completed Colony Hub."
+	if hub.get("hub_operations", false):
+		return "Operations already upgraded."
+	if hub.production_queue.any(func(item): return item.get("upgrade") == "hub_operations"):
+		return "Upgrade already queued."
+	if not has_tech_structure(hub.owner, "muster_hall"):
+		return "Requires Muster Hall."
+	if hub.production_queue.size() >= 5:
+		return "Colony Hub queue is full."
+	var player: Dictionary = players[hub.owner]
+	if player.crystal < HUB_OPERATIONS_OFFER.crystal:
+		return "Not enough crystal."
+	if player.aether < HUB_OPERATIONS_OFFER.aether:
+		return "Not enough aether."
+	return ""
+
+func _enqueue_hub_upgrade(hub: Dictionary) -> bool:
+	if not hub_upgrade_block_reason(hub).is_empty():
+		return false
+	var player: Dictionary = players[hub.owner]
+	player.crystal -= HUB_OPERATIONS_OFFER.crystal
+	player.aether -= HUB_OPERATIONS_OFFER.aether
+	hub.production_queue.append({"upgrade": "hub_operations", "level": 1, "crystal_cost": HUB_OPERATIONS_OFFER.crystal,
+		"aether_cost": HUB_OPERATIONS_OFFER.aether, "progress": 0.0, "total_time": HUB_OPERATIONS_OFFER.time * build_time_scale()})
+	return true
 
 func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_tag: int) -> bool:
 	if not can_use_hub_power(hub):
@@ -3009,6 +3042,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if accepted == 0 and _use_hub_power(u, ctype, target_pos, target_tag):
 				accepted += 1
 			continue
+		if ctype == "upgrade_hub":
+			if _enqueue_hub_upgrade(u):
+				accepted += 1
+			continue
 		if ctype == "salvage":
 			if _toggle_salvage(u):
 				accepted += 1
@@ -3727,6 +3764,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		match u.unit_type:
 			"colony_hub":
 				entry["energy"] = snappedf(u.energy, 0.01)
+				entry["hub_operations"] = u.get("hub_operations", false)
 			"skirmisher":
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["cloaked"] = u.get("cloaked", false)
