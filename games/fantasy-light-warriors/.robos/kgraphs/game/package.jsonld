@@ -1,0 +1,37 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:game",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "game",
+  "robos:namespace": "jrpg.final-fantasy.game",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Game & Sources",
+  "dcterms:description": "Fantasy: Light Warriors (WIP) clean-room Knowledge Graph.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Game",
+        "schema:VideoGame",
+        "jrpg:Game"
+      ],
+      "dcterms:title": "Fantasy: Light Warriors",
+      "robos:package": "game",
+      "dcterms:description": "Fantasy: Light Warriors (NES 1990), parsed from files a person collected.",
+      "robos:gameType": "jrpg",
+      "robos:ruleset": "fantasy-light-warriors-1990",
+      "jrpg:edition": "NES 1990",
+      "robos:namespace": "jrpg.fantasy-light-warriors.game"
+    }
+  ]
+}

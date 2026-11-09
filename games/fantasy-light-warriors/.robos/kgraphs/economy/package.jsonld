@@ -1,0 +1,1454 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:economy",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "economy",
+  "robos:namespace": "jrpg.final-fantasy.economy",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Shops & Inns",
+  "dcterms:description": "What each town sells.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:caravan-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Caravan item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:caravan"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Bottle",
+          "price": 50000
+        },
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Soft",
+          "price": 800
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria armor shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "armor",
+      "jrpg:stock": [
+        {
+          "name": "Cloth",
+          "price": 10
+        },
+        {
+          "name": "Wooden Armor",
+          "price": 50
+        },
+        {
+          "name": "Chain Mail",
+          "price": 80
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "FIRE",
+          "price": 100,
+          "level": 1
+        },
+        {
+          "name": "SLEP",
+          "price": 100,
+          "level": 1
+        },
+        {
+          "name": "LOCK",
+          "price": 100,
+          "level": 1
+        },
+        {
+          "name": "LIT",
+          "price": 100,
+          "level": 1
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 40,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 30,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Tent",
+          "price": 75
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-weapon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria weapon shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "weapon",
+      "jrpg:stock": [
+        {
+          "name": "Wooden Nunchuck",
+          "price": 10
+        },
+        {
+          "name": "Small Dagger",
+          "price": 5
+        },
+        {
+          "name": "Wooden Staff",
+          "price": 5
+        },
+        {
+          "name": "Rapier",
+          "price": 10
+        },
+        {
+          "name": "Iron Hammer",
+          "price": 10
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:coneria-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Coneria white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "CURE",
+          "price": 100,
+          "level": 1
+        },
+        {
+          "name": "HARM",
+          "price": 100,
+          "level": 1
+        },
+        {
+          "name": "FOG",
+          "price": 100,
+          "level": 1
+        },
+        {
+          "name": "RUSE",
+          "price": 100,
+          "level": 1
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake armor shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "armor",
+      "jrpg:stock": [
+        {
+          "name": "Silver Armor",
+          "price": 7500
+        },
+        {
+          "name": "Silver Shield",
+          "price": 2500
+        },
+        {
+          "name": "Buckler",
+          "price": 2500
+        },
+        {
+          "name": "Silver Helmet",
+          "price": 2500
+        },
+        {
+          "name": "Silver Gauntlet",
+          "price": 2500
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "LIT3",
+          "price": 20000,
+          "level": 6
+        },
+        {
+          "name": "RUB",
+          "price": 20000,
+          "level": 6
+        },
+        {
+          "name": "QAKE",
+          "price": 20000,
+          "level": 6
+        },
+        {
+          "name": "STUN",
+          "price": 20000,
+          "level": 6
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 300,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 200,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Soft",
+          "price": 800
+        },
+        {
+          "name": "Cabin",
+          "price": 250
+        },
+        {
+          "name": "House",
+          "price": 3000
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-weapon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake weapon shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "weapon",
+      "jrpg:stock": [
+        {
+          "name": "Silver Dagger",
+          "price": 800
+        },
+        {
+          "name": "Silver Sword",
+          "price": 4000
+        },
+        {
+          "name": "Silver Hammer",
+          "price": 2500
+        },
+        {
+          "name": "Silver Axe",
+          "price": 4500
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:crescent-lake-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Crescent Lake white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "SOFT",
+          "price": 20000,
+          "level": 6
+        },
+        {
+          "name": "EXIT",
+          "price": 20000,
+          "level": 6
+        },
+        {
+          "name": "FOG2",
+          "price": 20000,
+          "level": 6
+        },
+        {
+          "name": "INV2",
+          "price": 20000,
+          "level": 6
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland armor shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "armor",
+      "jrpg:stock": [
+        {
+          "name": "Iron Armor",
+          "price": 800
+        },
+        {
+          "name": "Copper Bracelet",
+          "price": 1000
+        },
+        {
+          "name": "Iron Shield",
+          "price": 100
+        },
+        {
+          "name": "Cap",
+          "price": 80
+        },
+        {
+          "name": "Wooden Helmet",
+          "price": 100
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "FIR2",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "HOLD",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "LIT2",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "LOK2",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "SLP2",
+          "price": 4000,
+          "level": 4
+        },
+        {
+          "name": "FAST",
+          "price": 4000,
+          "level": 4
+        },
+        {
+          "name": "CONF",
+          "price": 4000,
+          "level": 4
+        },
+        {
+          "name": "ICE2",
+          "price": 4000,
+          "level": 4
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 200,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Soft",
+          "price": 800
+        },
+        {
+          "name": "Tent",
+          "price": 75
+        },
+        {
+          "name": "Cabin",
+          "price": 250
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-weapon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland weapon shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "weapon",
+      "jrpg:stock": [
+        {
+          "name": "Iron Nunchuck",
+          "price": 200
+        },
+        {
+          "name": "Large Dagger",
+          "price": 175
+        },
+        {
+          "name": "Iron Staff",
+          "price": 200
+        },
+        {
+          "name": "Sabre",
+          "price": 450
+        },
+        {
+          "name": "Silver Sword",
+          "price": 4000
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:elfland-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Elfland white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "CUR2",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "HRM2",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "AFIR",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "HEAL",
+          "price": 1500,
+          "level": 3
+        },
+        {
+          "name": "PURE",
+          "price": 4000,
+          "level": 4
+        },
+        {
+          "name": "FEAR",
+          "price": 4000,
+          "level": 4
+        },
+        {
+          "name": "AICE",
+          "price": 4000,
+          "level": 4
+        },
+        {
+          "name": "AMUT",
+          "price": 4000,
+          "level": 4
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia armor shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "armor",
+      "jrpg:stock": [
+        {
+          "name": "Gold Bracelet",
+          "price": 50000
+        },
+        {
+          "name": "ProCape",
+          "price": 20000
+        },
+        {
+          "name": "ProRing",
+          "price": 20000
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "STOP",
+          "price": 60000,
+          "level": 8
+        },
+        {
+          "name": "ZAP!",
+          "price": 60000,
+          "level": 8
+        },
+        {
+          "name": "XXXX",
+          "price": 60000,
+          "level": 8
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 750,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Soft",
+          "price": 800
+        },
+        {
+          "name": "Cabin",
+          "price": 250
+        },
+        {
+          "name": "House",
+          "price": 3000
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-weapon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia weapon shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "weapon",
+      "jrpg:stock": [
+        {
+          "name": "CatClaw",
+          "price": 65000
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:gaia-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Gaia white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "WALL",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "XFER",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "FADE",
+          "price": 60000,
+          "level": 8
+        },
+        {
+          "name": "LIF2",
+          "price": 60000,
+          "level": 8
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:lefein-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Lefein black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "NUKE",
+          "price": 60000,
+          "level": 8
+        },
+        {
+          "name": "XXXX",
+          "price": 60000,
+          "level": 8
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:lefein-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Lefein white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "LIF2",
+          "price": 60000,
+          "level": 8
+        },
+        {
+          "name": "FADE",
+          "price": 60000,
+          "level": 8
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:melmond-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Melmond armor shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:shopKind": "armor",
+      "jrpg:stock": [
+        {
+          "name": "Steel Armor",
+          "price": 45000
+        },
+        {
+          "name": "Silver Bracelet",
+          "price": 5000
+        },
+        {
+          "name": "Iron Helmet",
+          "price": 450
+        },
+        {
+          "name": "Copper Gauntlet",
+          "price": 200
+        },
+        {
+          "name": "Iron Gauntlet",
+          "price": 750
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:melmond-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Melmond black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "FIR3",
+          "price": 8000,
+          "level": 5
+        },
+        {
+          "name": "BANE",
+          "price": 8000,
+          "level": 5
+        },
+        {
+          "name": "WARP",
+          "price": 8000,
+          "level": 5
+        },
+        {
+          "name": "SLO2",
+          "price": 8000,
+          "level": 5
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:melmond-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Melmond clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 250,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:melmond-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Melmond inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:melmond-weapon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Melmond weapon shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:shopKind": "weapon",
+      "jrpg:stock": [
+        {
+          "name": "Long Sword",
+          "price": 1500
+        },
+        {
+          "name": "Great Axe",
+          "price": 2000
+        },
+        {
+          "name": "Wooden Staff",
+          "price": 5
+        },
+        {
+          "name": "Sabre",
+          "price": 450
+        },
+        {
+          "name": "Falchon",
+          "price": 450
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:melmond-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Melmond white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "CUR3",
+          "price": 8000,
+          "level": 5
+        },
+        {
+          "name": "LIFE",
+          "price": 8000,
+          "level": 5
+        },
+        {
+          "name": "HRM3",
+          "price": 8000,
+          "level": 5
+        },
+        {
+          "name": "HEL2",
+          "price": 8000,
+          "level": 5
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:onrac-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Onrac black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "ICE3",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "BRK",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "SABR",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "BLND",
+          "price": 45000,
+          "level": 7
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:onrac-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Onrac clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:onrac-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Onrac inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 300,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:onrac-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Onrac item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Soft",
+          "price": 800
+        },
+        {
+          "name": "Cabin",
+          "price": 250
+        },
+        {
+          "name": "House",
+          "price": 3000
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:onrac-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Onrac white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "CUR4",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "HRM4",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "ARUB",
+          "price": 45000,
+          "level": 7
+        },
+        {
+          "name": "HEL3",
+          "price": 45000,
+          "level": 7
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka armor shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "armor",
+      "jrpg:stock": [
+        {
+          "name": "Wooden Armor",
+          "price": 50
+        },
+        {
+          "name": "Chain Mail",
+          "price": 80
+        },
+        {
+          "name": "Iron Armor",
+          "price": 800
+        },
+        {
+          "name": "Wooden Shield",
+          "price": 15
+        },
+        {
+          "name": "Gloves",
+          "price": 60
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-black-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka black-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "black-magic",
+      "jrpg:stock": [
+        {
+          "name": "ICE",
+          "price": 400,
+          "level": 2
+        },
+        {
+          "name": "DARK",
+          "price": 400,
+          "level": 2
+        },
+        {
+          "name": "TMPR",
+          "price": 400,
+          "level": 2
+        },
+        {
+          "name": "SLOW",
+          "price": 400,
+          "level": 2
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-clinic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka clinic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "clinic",
+      "robos:cost": 80,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-inn",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka inn shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "inn",
+      "robos:cost": 50,
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-item",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka item shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "item",
+      "jrpg:stock": [
+        {
+          "name": "Heal",
+          "price": 60
+        },
+        {
+          "name": "Pure",
+          "price": 75
+        },
+        {
+          "name": "Soft",
+          "price": 800
+        },
+        {
+          "name": "Tent",
+          "price": 75
+        },
+        {
+          "name": "Cabin",
+          "price": 250
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-weapon",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka weapon shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "weapon",
+      "jrpg:stock": [
+        {
+          "name": "Iron Hammer",
+          "price": 10
+        },
+        {
+          "name": "Short Sword",
+          "price": 550
+        },
+        {
+          "name": "Hand Axe",
+          "price": 550
+        },
+        {
+          "name": "Scimitar",
+          "price": 200
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:shop:pravoka-white-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:Shop"
+      ],
+      "dcterms:title": "Pravoka white-magic shop",
+      "robos:package": "economy",
+      "jrpg:town": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:shopKind": "white-magic",
+      "jrpg:stock": [
+        {
+          "name": "LAMP",
+          "price": 400,
+          "level": 2
+        },
+        {
+          "name": "MUTE",
+          "price": 400,
+          "level": 2
+        },
+        {
+          "name": "ALIT",
+          "price": 400,
+          "level": 2
+        },
+        {
+          "name": "INVS",
+          "price": 400,
+          "level": 2
+        }
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.economy"
+    }
+  ]
+}

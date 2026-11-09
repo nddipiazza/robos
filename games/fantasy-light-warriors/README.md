@@ -8,7 +8,7 @@
 
 - **Declarative KGraph & JSON Data (`data/`)**:
   - `data/maps/*.json`: 64x64 tile matrices, walkability flags, shop triggers, doors, stairs, NPC spawns, and treasure chest indices.
-  - `data/enemies.json`, `data/spells.json`, `data/classes_and_xp.json`, `data/encounters.json`, `data/chests_and_npcs.json`: Full 8-bit combat formulas, 12 hero classes, 64 spells, and 128 monster stat profiles.
+  - `.robos/kgraphs/` (`1,579` OSLC JSON-LD nodes across 11 packages) + `data/hero_classes.json`, `data/bestiary_stats.json`, `data/magic_catalog.json`, and `assets/generated/` (`50` AI-generated clean-room sprites, maps, and backdrops): Full 8-bit combat formulas, 12 hero classes, 64 spells, and 128 monster stat profiles.
   - `data/v1/milestones.json`: Ordered 12-milestone registry for Act I (`01-create-light-warriors` through `12-defeat-garland-1`).
 - **Authentic 2-Step 8-Bit Shop Interiors (`scripts/FF1MapScene.gd`)**:
   - Stepping onto a shop doorway in Coneria transitions into a dedicated black-background shop sub-scene displaying the merchant behind a wooden counter, the shop header, item prices, the pointing glove cursor, the party's gold pouch, and the four Light Warriors.

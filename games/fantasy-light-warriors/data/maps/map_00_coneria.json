@@ -20944,167 +20944,98 @@
   "npcs": [
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 0,
       "objectId": 49,
-      "hexObjectId": "0x31",
       "x": 16,
       "y": 1,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        18,
-        67,
-        24,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The King is sure that\nsomeday the LIGHT\nWARRIORS will come to\nsave the Princess,\njust as in Lukahn's\nprophecy.",
-        "dialogue_2": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 1,
       "objectId": 50,
-      "hexObjectId": "0x32",
       "x": 7,
       "y": 13,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        0,
-        70,
-        24,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Go to the King.",
-        "dialogue_2": "WARRIORS.\nRevive the Power of\nthe ORBS!"
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 2,
       "objectId": 52,
-      "hexObjectId": "0x34",
       "x": 4,
       "y": 1,
       "inRoom": false,
       "standStill": true,
-      "talkParams": [
-        0,
-        69,
-        68,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "As legend foretold, once\nagain the ORBS shine!!\nQuickly, to fulfill the\nlegend, take them to the\nTemple north of here,\nand stand in the center.",
-        "dialogue_2": "Lukahn left this town,\nto join his colleagues\nat Crescent Lake."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 3,
       "objectId": 53,
-      "hexObjectId": "0x35",
       "x": 15,
       "y": 12,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        0,
-        71,
-        0,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "I am Arylon, the Dancer!"
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 4,
       "objectId": 54,
-      "hexObjectId": "0x36",
       "x": 18,
       "y": 20,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        0,
-        72,
-        0,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "This is Coneria, the\ndream city."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 5,
       "objectId": 55,
-      "hexObjectId": "0x37",
       "x": 5,
       "y": 6,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        18,
-        51,
-        73,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Please!\nSave the Princess!",
-        "dialogue_2": "North of Coneria lives\na witch named Matoya."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 6,
       "objectId": 56,
-      "hexObjectId": "0x38",
       "x": 27,
       "y": 5,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        18,
-        51,
-        74,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Please!\nSave the Princess!",
-        "dialogue_2": "Matoya has poor\neyesight. She needs the\nCRYSTAL to see."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 0,
-      "mapName": "Coneria",
       "slot": 7,
       "objectId": 57,
-      "hexObjectId": "0x39",
       "x": 30,
       "y": 11,
       "inRoom": false,
       "standStill": false,
-      "talkParams": [
-        0,
-        75,
-        0,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "My home is Pravoka, a\nbeautiful port city far\neast of here."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     }
   ],

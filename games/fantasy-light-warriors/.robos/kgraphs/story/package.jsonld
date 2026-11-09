@@ -1,0 +1,2327 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:story",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "story",
+  "robos:namespace": "jrpg.final-fantasy.story",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Story & Progression",
+  "dcterms:description": "Main quest milestones in order.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:buy-the-bottle-at-the-desert-caravan",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Buy the Bottle at the Desert Caravan",
+      "robos:package": "story",
+      "jrpg:order": 100,
+      "jrpg:place": "Caravan",
+      "jrpg:requires": [
+        "40,000 Gil"
+      ],
+      "jrpg:grants": [
+        "Bottle"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:climb-the-mirage-tower-collect-adamantite-and-defeat-tiamat-in-the-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Climb the Mirage Tower, Collect Adamantite, and Defeat Tiamat in the Flying Fortress",
+      "robos:package": "story",
+      "jrpg:order": 28,
+      "jrpg:place": "Floating Castle",
+      "jrpg:requires": [
+        "Bell",
+        "Warp Cube"
+      ],
+      "jrpg:grants": [
+        "Adamantite",
+        "Excalibur",
+        "Aegis Shield",
+        "Vorpal Sword",
+        "Healing Helm",
+        "Dragon Mail",
+        "Sunblade",
+        "Thor's Hammer",
+        "Venom Blade",
+        "Protect Ring",
+        "Mythril Helm",
+        "White Robe",
+        "Black Robe",
+        "Protect Cloak",
+        "Sasuke"
+      ],
+      "jrpg:boss": "Tiamat",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:collect-adamantite-and-inspect-the-window-in-the-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Collect Adamantite and Inspect the Window in the Flying Fortress",
+      "robos:package": "story",
+      "jrpg:order": 89,
+      "jrpg:place": "Floating Castle",
+      "jrpg:requires": [
+        "Warp Cube"
+      ],
+      "jrpg:grants": [
+        "Adamantite"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:collect-the-rats-tail-and-defeat-the-dragon-zombies",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Collect the Rat's Tail and defeat the Dragon Zombies",
+      "robos:package": "story",
+      "jrpg:order": 131,
+      "jrpg:place": "Castle of Ordeals",
+      "jrpg:grants": [
+        "Healing Staff",
+        "Gold Bracelet",
+        "Ice Sword",
+        "Iron Gauntlet",
+        "Zeus Gauntlets",
+        "House",
+        "Rat's Tail"
+      ],
+      "jrpg:boss": "Dragon Zombies",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:collect-the-rats-tail-and-upgrade-classes-with-bahamut",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Collect the Rat's Tail and Upgrade Classes with Bahamut",
+      "robos:package": "story",
+      "jrpg:order": 23,
+      "jrpg:place": "Cardia Islands",
+      "jrpg:requires": [
+        "Rat's Tail"
+      ],
+      "jrpg:grants": [
+        "Rat's Tail",
+        "Ruby Armlet",
+        "Ice Brand",
+        "Steel Gloves",
+        "Cottage"
+      ],
+      "jrpg:boss": "Dragon Zombies",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:complete-the-citadel-of-trials-and-earn-class-change",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Complete the Citadel of Trials and Earn Class Change",
+      "robos:package": "story",
+      "jrpg:order": 39,
+      "jrpg:place": "Castle of Ordeals",
+      "jrpg:requires": [
+        "Airship"
+      ],
+      "jrpg:grants": [
+        "Class change"
+      ],
+      "jrpg:boss": "ZombieD",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:complete-the-trials-and-upgrade-classes",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Complete The Trials and Upgrade Classes",
+      "robos:package": "story",
+      "jrpg:order": 51,
+      "jrpg:place": "Cardia Islands",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:consult-the-circle-of-sages-in-crescent-lake",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Consult the Circle of Sages in Crescent Lake",
+      "robos:package": "story",
+      "jrpg:order": 118,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:requires": [
+        "Four crystals lit"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:cross-the-north-bridge",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Cross the North Bridge",
+      "robos:package": "story",
+      "jrpg:order": 110,
+      "jrpg:place": "Coneria",
+      "jrpg:requires": [
+        "Lute"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-astos-and-awaken-the-elf-prince",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Astos and Awaken the Elf Prince",
+      "robos:package": "story",
+      "jrpg:order": 32,
+      "jrpg:place": "Elfland",
+      "jrpg:requires": [
+        "Crown"
+      ],
+      "jrpg:grants": [
+        "Crystal Eye",
+        "Jolt Tonic",
+        "Mystic Key"
+      ],
+      "jrpg:boss": "Astos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-astos-and-obtain-matoyas-crystal-eye",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Astos and Obtain Matoya's Crystal Eye",
+      "robos:package": "story",
+      "jrpg:order": 9,
+      "jrpg:place": "Northwest Castle",
+      "jrpg:requires": [
+        "crown"
+      ],
+      "jrpg:grants": [
+        "crystal eye"
+      ],
+      "jrpg:boss": "astos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-astos-at-the-western-keep",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Astos at the Western Keep",
+      "robos:package": "story",
+      "jrpg:order": 113,
+      "jrpg:place": "Northwest Castle",
+      "jrpg:requires": [
+        "Crown"
+      ],
+      "jrpg:grants": [
+        "Crystal Lens"
+      ],
+      "jrpg:boss": "Astos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-bikkes-pirates-in-pravoka",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Bikke's Pirates in Pravoka",
+      "robos:package": "story",
+      "jrpg:order": 31,
+      "jrpg:place": "Pravoka",
+      "jrpg:grants": [
+        "Ship",
+        "SHIP"
+      ],
+      "jrpg:boss": "Pirates",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-bikkes-pirates-in-provoka",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Bikke's pirates in Provoka",
+      "robos:package": "story",
+      "jrpg:order": 5,
+      "jrpg:place": "Pravoka",
+      "jrpg:requires": [
+        "bridge"
+      ],
+      "jrpg:grants": [
+        "ship"
+      ],
+      "jrpg:boss": "9 pirates",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Chaos",
+      "robos:package": "story",
+      "jrpg:order": 127,
+      "jrpg:boss": "Chaos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-chaos-on-basement-5",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Chaos on Basement 5",
+      "robos:package": "story",
+      "jrpg:order": 126,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Chaos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-chaos-on-the-lowest-floor-of-the-temple-of-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Chaos on the Lowest Floor of the Temple of Chaos",
+      "robos:package": "story",
+      "jrpg:order": 45,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Chaos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-garland-and-rescue-princess-sara",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Garland and Rescue Princess Sara",
+      "robos:package": "story",
+      "jrpg:order": 46,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:grants": [
+        "Lute"
+      ],
+      "jrpg:boss": "Garland",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-garland-and-rescue-princess-sarah",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Garland and Rescue Princess Sarah",
+      "robos:package": "story",
+      "jrpg:order": 30,
+      "jrpg:place": "Coneria",
+      "jrpg:grants": [
+        "Lute",
+        "Bridge repaired"
+      ],
+      "jrpg:boss": "Garland",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-garland-at-the-temple-of-fiends",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Garland at the Temple of Fiends",
+      "robos:package": "story",
+      "jrpg:order": 3,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:grants": [
+        "bridge",
+        "flute"
+      ],
+      "jrpg:boss": "Garland",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-kary-and-relight-the-fire-crystal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Kary and Relight the Fire Crystal",
+      "robos:package": "story",
+      "jrpg:order": 97,
+      "jrpg:place": "Gurgu Volcano",
+      "jrpg:requires": [
+        "Canoe"
+      ],
+      "jrpg:grants": [
+        "Fire Crystal light"
+      ],
+      "jrpg:boss": "Kary",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-kary-and-restore-the-crystal-of-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Kary and Restore the Crystal of Fire",
+      "robos:package": "story",
+      "jrpg:order": 36,
+      "jrpg:place": "Gurgu Volcano",
+      "jrpg:grants": [
+        "Fire Crystal restored"
+      ],
+      "jrpg:boss": "Kary",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-kary-in-mt-gulg-to-light-the-fire-orb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Kary in Mt. Gulg to Light the Fire Orb",
+      "robos:package": "story",
+      "jrpg:order": 18,
+      "jrpg:place": "Gurgu Volcano",
+      "jrpg:requires": [
+        "canoe"
+      ],
+      "jrpg:grants": [
+        "fire orb"
+      ],
+      "jrpg:boss": "Kary",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-kary-on-basement-2-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Kary on Basement 2: Fire",
+      "robos:package": "story",
+      "jrpg:order": 123,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Kary",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-kraken-and-light-the-water-crystal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Kraken and Light the Water Crystal",
+      "robos:package": "story",
+      "jrpg:order": 104,
+      "jrpg:place": "Sea Shrine",
+      "jrpg:grants": [
+        "Water Crystal"
+      ],
+      "jrpg:boss": "Kraken",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-kraken-on-basement-3-water",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Kraken on Basement 3: Water",
+      "robos:package": "story",
+      "jrpg:order": 124,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Kraken",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-lich-and-get-the-canoe",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Lich and get the CANOE",
+      "robos:package": "story",
+      "jrpg:order": 74,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:grants": [
+        "CANOE"
+      ],
+      "jrpg:boss": "Lich",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-lich-on-basement-1-earth",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Lich on Basement 1: Earth",
+      "robos:package": "story",
+      "jrpg:order": 122,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Lich",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-blue-dragon-and-warp-to-the-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Blue Dragon and Warp to the Flying Fortress",
+      "robos:package": "story",
+      "jrpg:order": 41,
+      "jrpg:place": "Mirage Tower",
+      "jrpg:requires": [
+        "Warp Cube"
+      ],
+      "jrpg:boss": "Blue D",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-four-fiends-in-the-temple-of-chaos-basements",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Four Fiends in the Temple of Chaos Basements",
+      "robos:package": "story",
+      "jrpg:order": 44,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Tiamat",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-frost-dragon-in-the-ice-cavern",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Frost Dragon in the Ice Cavern",
+      "robos:package": "story",
+      "jrpg:order": 37,
+      "jrpg:place": "Ice Cave",
+      "jrpg:grants": [
+        "Ice Armor"
+      ],
+      "jrpg:boss": "Frost D",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-kraken-and-restore-the-crystal-of-water",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Kraken and Restore the Crystal of Water",
+      "robos:package": "story",
+      "jrpg:order": 40,
+      "jrpg:place": "Sea Shrine",
+      "jrpg:grants": [
+        "Water Crystal restored"
+      ],
+      "jrpg:boss": "Kraken",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-lich-and-light-the-earth-crystal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Lich and light the Earth Crystal",
+      "robos:package": "story",
+      "jrpg:order": 95,
+      "jrpg:place": "Earth Cave",
+      "jrpg:requires": [
+        "Earth Rod"
+      ],
+      "jrpg:boss": "Lich",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-lich-and-receive-the-canoe",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Lich and Receive the Canoe",
+      "robos:package": "story",
+      "jrpg:order": 50,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:requires": [
+        "Earth Rod"
+      ],
+      "jrpg:grants": [
+        "Canoe"
+      ],
+      "jrpg:boss": "Lich",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-lich-and-restore-the-crystal-of-earth",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Lich and Restore the Crystal of Earth",
+      "robos:package": "story",
+      "jrpg:order": 34,
+      "jrpg:place": "Earth Cave",
+      "jrpg:requires": [
+        "Earth Rod"
+      ],
+      "jrpg:grants": [
+        "Earth Crystal restored",
+        "Canoe"
+      ],
+      "jrpg:boss": "Lich",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-phantom-and-play-the-lute-on-floor-3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Phantom and Play the Lute on Floor 3",
+      "robos:package": "story",
+      "jrpg:order": 121,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:requires": [
+        "Lute"
+      ],
+      "jrpg:boss": "Phantom",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-phantom-at-the-temple-of-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Phantom at the Temple of Chaos",
+      "robos:package": "story",
+      "jrpg:order": 43,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:requires": [
+        "Wind Crystal restored"
+      ],
+      "jrpg:boss": "Phantom",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-red-dragon-in-mt-gulg",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Red Dragon in Mt. Gulg",
+      "robos:package": "story",
+      "jrpg:order": 35,
+      "jrpg:place": "Gurgu Volcano",
+      "jrpg:requires": [
+        "Canoe"
+      ],
+      "jrpg:grants": [
+        "Fire Armor"
+      ],
+      "jrpg:boss": "Red D",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-vampire-and-obtain-the-earth-rod",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Vampire and Obtain the Earth Rod",
+      "robos:package": "story",
+      "jrpg:order": 33,
+      "jrpg:place": "Earth Cave",
+      "jrpg:grants": [
+        "Star Ruby",
+        "Earth Rod"
+      ],
+      "jrpg:boss": "Vampire",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-vampire-in-terra-cavern-for-the-star-ruby",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Vampire in Terra Cavern for the Star Ruby",
+      "robos:package": "story",
+      "jrpg:order": 14,
+      "jrpg:place": "Earth Cave",
+      "jrpg:grants": [
+        "star ruby"
+      ],
+      "jrpg:boss": "vampire",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-the-vampire-in-the-earth-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat the Vampire in the Earth Cave",
+      "robos:package": "story",
+      "jrpg:order": 92,
+      "jrpg:place": "Earth Cave",
+      "jrpg:grants": [
+        "Star Ruby"
+      ],
+      "jrpg:boss": "Vampire",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-tiamat-and-restore-the-crystal-of-wind",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Tiamat and Restore the Crystal of Wind",
+      "robos:package": "story",
+      "jrpg:order": 42,
+      "jrpg:place": "Floating Castle",
+      "jrpg:requires": [
+        "Warp Cube"
+      ],
+      "jrpg:grants": [
+        "Wind Crystal restored"
+      ],
+      "jrpg:boss": "Tiamat",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:defeat-tiamat-on-basement-4-air",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Defeat Tiamat on Basement 4: Air",
+      "robos:package": "story",
+      "jrpg:order": 125,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:boss": "Tiamat",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:descend-the-temple-of-chaos-and-defeat-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Descend the Temple of Chaos and Defeat Chaos",
+      "robos:package": "story",
+      "jrpg:order": 29,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:requires": [
+        "Lute"
+      ],
+      "jrpg:grants": [
+        "Masamune"
+      ],
+      "jrpg:boss": "Chaos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:enter-and-climb-mirage-tower-and-warp-to-the-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Enter and Climb Mirage Tower and Warp to the Flying Fortress",
+      "robos:package": "story",
+      "jrpg:order": 88,
+      "jrpg:place": "Mirage Tower",
+      "jrpg:requires": [
+        "Chime",
+        "Warp Cube"
+      ],
+      "jrpg:grants": [
+        "Cabin",
+        "Aegis Shield",
+        "Vorpal Sword",
+        "Healing Helmet",
+        "House",
+        "Thor's Hammer",
+        "Sun Sword",
+        "Dragon Armor"
+      ],
+      "jrpg:boss": "Blue Dragon",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:enter-and-explore-the-marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Enter and explore the Marsh Cave",
+      "robos:package": "story",
+      "jrpg:order": 7,
+      "jrpg:place": "Marsh Cave",
+      "jrpg:grants": [
+        "broadsword",
+        "dagger",
+        "1300 gil"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:enter-the-castle-of-ordeal-and-warp-from-the-first-floor",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Enter the Castle of Ordeal and warp from the first floor",
+      "robos:package": "story",
+      "jrpg:order": 129,
+      "jrpg:place": "Castle of Ordeals",
+      "jrpg:requires": [
+        "Crown"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:enter-the-tower-of-mirage-and-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Enter the Tower of Mirage and Flying Fortress",
+      "robos:package": "story",
+      "jrpg:order": 79,
+      "jrpg:place": "Mirage Tower",
+      "jrpg:requires": [
+        "CHIME",
+        "CUBE"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:equip-party-and-train-in-corneria",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Equip party and train in Corneria",
+      "robos:package": "story",
+      "jrpg:order": 2,
+      "jrpg:place": "Coneria",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:feed-the-star-ruby-to-the-titan-and-get-the-earth-rod-from-sarda",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Feed the Star Ruby to the Titan and get the Earth Rod from Sarda",
+      "robos:package": "story",
+      "jrpg:order": 93,
+      "jrpg:place": "Titan's Tunnel",
+      "jrpg:requires": [
+        "Star Ruby"
+      ],
+      "jrpg:grants": [
+        "Earth Rod"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:fight-the-vampire-and-give-ruby-to-the-titan",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Fight the Vampire and give RUBY to the Titan",
+      "robos:package": "story",
+      "jrpg:order": 72,
+      "jrpg:place": "Earth Cave",
+      "jrpg:grants": [
+        "RUBY"
+      ],
+      "jrpg:boss": "Vampire",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:forge-excalibur-with-adamant",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Forge Excalibur with ADAMANT",
+      "robos:package": "story",
+      "jrpg:order": 80,
+      "jrpg:place": "Dwarf Cave",
+      "jrpg:requires": [
+        "ADAMANT"
+      ],
+      "jrpg:grants": [
+        "Excalibur"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:forge-the-excalibur-at-mt-duergar",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Forge the Excalibur at Mt. Duergar",
+      "robos:package": "story",
+      "jrpg:order": 119,
+      "jrpg:place": "Dwarf Cave",
+      "jrpg:requires": [
+        "Adamantite"
+      ],
+      "jrpg:grants": [
+        "Excalibur"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:give-nitro-powder-to-the-dwarf-to-open-the-canal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Give Nitro Powder to the Dwarf to Open the Canal",
+      "robos:package": "story",
+      "jrpg:order": 13,
+      "jrpg:place": "Dwarf Cave",
+      "jrpg:requires": [
+        "nitro powder"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:give-the-star-ruby-to-titan-and-obtain-the-earth-rod-from-the-sage",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Give the Star Ruby to Titan and Obtain the Earth Rod from the Sage",
+      "robos:package": "story",
+      "jrpg:order": 15,
+      "jrpg:place": "Titan's Tunnel",
+      "jrpg:requires": [
+        "star ruby"
+      ],
+      "jrpg:grants": [
+        "Earth Rod"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:give-the-tail-to-bahamut-for-the-class-upgrade",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Give the TAIL to Bahamut for the class upgrade",
+      "robos:package": "story",
+      "jrpg:order": 76,
+      "jrpg:place": "Cardia Islands",
+      "jrpg:requires": [
+        "CROWN",
+        "TAIL"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:give-tnt-to-nerrick-at-mt-duergar",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Give TNT to Nerrick at Mt. Duergar",
+      "robos:package": "story",
+      "jrpg:order": 117,
+      "jrpg:place": "Dwarf Cave",
+      "jrpg:requires": [
+        "TNT"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:learn-about-the-floater-in-crescent-lake",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Learn about the Floater in Crescent Lake",
+      "robos:package": "story",
+      "jrpg:order": 82,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:requires": [
+        "Fire Crystal"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:learn-lufenian-from-dr-unne-in-melmond",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Learn Lufenian from Dr. Unne in Melmond",
+      "robos:package": "story",
+      "jrpg:order": 86,
+      "jrpg:place": "Melmond",
+      "jrpg:requires": [
+        "Rosetta Stone"
+      ],
+      "jrpg:grants": [
+        "Lufenian language"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:learn-the-lefian-language-from-dr-unne",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Learn the Lefian language from Dr. Unne",
+      "robos:package": "story",
+      "jrpg:order": 78,
+      "jrpg:place": "Melmond",
+      "jrpg:requires": [
+        "SLAB"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:learn-the-lufenian-language",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Learn the Lufenian Language",
+      "robos:package": "story",
+      "jrpg:order": 53,
+      "jrpg:place": "Melmond",
+      "jrpg:requires": [
+        "Rosetta Stone"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:learn-the-lufenian-language-and-receive-the-bell-in-lefein",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Learn the Lufenian Language and Receive the Bell in Lefein",
+      "robos:package": "story",
+      "jrpg:order": 26,
+      "jrpg:place": "Lefein",
+      "jrpg:requires": [
+        "Rosetta Stone"
+      ],
+      "jrpg:grants": [
+        "Bell"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:meet-bahamut-in-the-dragon-caves",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Meet Bahamut in the Dragon Caves",
+      "robos:package": "story",
+      "jrpg:order": 21,
+      "jrpg:place": "Cardia Islands",
+      "jrpg:requires": [
+        "airship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:mystic-key-acquired",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Mystic Key acquired",
+      "robos:package": "story",
+      "jrpg:order": 58,
+      "jrpg:place": "Elfland Castle",
+      "jrpg:requires": [
+        "Mystic Key"
+      ],
+      "jrpg:grants": [
+        "Silver Hammer",
+        "Copper Gauntlet",
+        "Silver Bracelet",
+        "Silver Knife",
+        "Power Staff",
+        "Falchion",
+        "Iron Gauntlet",
+        "Iron Armor",
+        "Iron Shield",
+        "Iron Staff",
+        "Saber",
+        "Were Sword",
+        "Soft",
+        "Rune Sword",
+        "Iron Helmet",
+        "Dragon Sword",
+        "Wood Helmet",
+        "Silver Armor"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:navigate-the-citadel-of-trials",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Navigate the Citadel of Trials",
+      "robos:package": "story",
+      "jrpg:order": 22,
+      "jrpg:place": "Castle of Ordeals",
+      "jrpg:requires": [
+        "airship"
+      ],
+      "jrpg:grants": [
+        "gauntlets",
+        "healing staff"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:navigate-the-endless-maze-and-defeat-tiamat-in-the-flying-fortress",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Navigate the Endless Maze and Defeat Tiamat in the Flying Fortress",
+      "robos:package": "story",
+      "jrpg:order": 90,
+      "jrpg:place": "Floating Castle",
+      "jrpg:boss": "Tiamat",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:navigate-the-second-floor-column-maze",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Navigate the second floor column maze",
+      "robos:package": "story",
+      "jrpg:order": 130,
+      "jrpg:place": "Castle of Ordeals",
+      "jrpg:grants": [
+        "Zeus Gauntlets"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-bottled-faerie-and-oxyale",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the Bottled Faerie and Oxyale",
+      "robos:package": "story",
+      "jrpg:order": 24,
+      "jrpg:place": "Gaia",
+      "jrpg:requires": [
+        "Bottled Faerie"
+      ],
+      "jrpg:grants": [
+        "Bottled Faerie",
+        "Oxyale"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-crown-in-marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the CROWN in Marsh Cave",
+      "robos:package": "story",
+      "jrpg:order": 67,
+      "jrpg:place": "Marsh Cave",
+      "jrpg:grants": [
+        "CROWN"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-earth-rod-from-sarda",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the Earth Rod from Sarda",
+      "robos:package": "story",
+      "jrpg:order": 49,
+      "jrpg:place": "Sarda's Cave",
+      "jrpg:grants": [
+        "Earth Rod"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-levistone-and-raise-the-airship",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the Levistone and Raise the Airship",
+      "robos:package": "story",
+      "jrpg:order": 38,
+      "jrpg:place": "Ice Cave",
+      "jrpg:grants": [
+        "Levistone",
+        "Airship"
+      ],
+      "jrpg:boss": "Eye",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-rod-and-open-the-seal-in-terra-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the ROD and open the seal in Terra Cave",
+      "robos:package": "story",
+      "jrpg:order": 73,
+      "jrpg:place": "Sarda's Cave",
+      "jrpg:requires": [
+        "RUBY"
+      ],
+      "jrpg:grants": [
+        "ROD"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-warp-cube-in-the-waterfall-cavern",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the Warp Cube in the Waterfall Cavern",
+      "robos:package": "story",
+      "jrpg:order": 27,
+      "jrpg:place": "Waterfall Cavern",
+      "jrpg:grants": [
+        "Warp Cube",
+        "Spellbinder",
+        "Ribbon",
+        "Defender"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:obtain-the-warp-cube-in-waterfall-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Obtain the Warp Cube in Waterfall Cave",
+      "robos:package": "story",
+      "jrpg:order": 85,
+      "jrpg:place": "Waterfall Cave",
+      "jrpg:grants": [
+        "Warp Cube",
+        "Wizard's Staff",
+        "Ribbon",
+        "Defense"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:open-the-canal-at-mt-duergar",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Open the Canal at Mt. Duergar",
+      "robos:package": "story",
+      "jrpg:order": 48,
+      "jrpg:place": "Dwarf Cave",
+      "jrpg:requires": [
+        "Nitro Powder"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:open-the-stone-plate-in-the-earth-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Open the Stone Plate in the Earth Cave",
+      "robos:package": "story",
+      "jrpg:order": 94,
+      "jrpg:place": "Earth Cave",
+      "jrpg:requires": [
+        "Earth Rod"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:plunder-the-locked-treasure-vaults",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Plunder the Locked Treasure Vaults",
+      "robos:package": "story",
+      "jrpg:order": 109,
+      "jrpg:place": "Castle Coneria",
+      "jrpg:requires": [
+        "Key"
+      ],
+      "jrpg:grants": [
+        "Iron Armor",
+        "Iron Shield",
+        "TNT",
+        "Iron Staff",
+        "Saber",
+        "Silver knife",
+        "Were Sword",
+        "Soft",
+        "Rune Sword"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:prepare-in-cornelia-town-and-overworld",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Prepare in Cornelia Town and Overworld",
+      "robos:package": "story",
+      "jrpg:order": 108,
+      "jrpg:place": "Coneria",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:raise-the-airship-in-the-desert-south-of-crescent-lake",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Raise the Airship in the Desert South of Crescent Lake",
+      "robos:package": "story",
+      "jrpg:order": 20,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:requires": [
+        "stone"
+      ],
+      "jrpg:grants": [
+        "airship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:raise-the-airship-in-the-ryukahn-desert",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Raise the Airship in the Ryukahn Desert",
+      "robos:package": "story",
+      "jrpg:order": 84,
+      "jrpg:place": "Ryukahn Desert",
+      "jrpg:requires": [
+        "Floater"
+      ],
+      "jrpg:grants": [
+        "Airship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:raise-the-airship-with-the-floater",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Raise the AIRSHIP with the FLOATER",
+      "robos:package": "story",
+      "jrpg:order": 75,
+      "jrpg:place": "Ryukahn Desert",
+      "jrpg:requires": [
+        "FLOATER"
+      ],
+      "jrpg:grants": [
+        "AIRSHIP"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:receive-king-bahamuts-trial-in-the-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Receive King Bahamut's trial in the Cardia Islands",
+      "robos:package": "story",
+      "jrpg:order": 128,
+      "jrpg:place": "Cardia Islands",
+      "jrpg:requires": [
+        "Airship"
+      ],
+      "jrpg:grants": [
+        "Cabin",
+        "Soft",
+        "House"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:receive-the-chime-in-lufenia",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Receive the Chime in Lufenia",
+      "robos:package": "story",
+      "jrpg:order": 87,
+      "jrpg:place": "Lefein",
+      "jrpg:requires": [
+        "Airship",
+        "Lufenian language"
+      ],
+      "jrpg:grants": [
+        "Chime"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:recover-the-rosetta-stone-and-defeat-kraken-in-the-sunken-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Recover the Rosetta Stone and Defeat Kraken in the Sunken Shrine",
+      "robos:package": "story",
+      "jrpg:order": 25,
+      "jrpg:place": "Sea Shrine",
+      "jrpg:requires": [
+        "Oxyale"
+      ],
+      "jrpg:grants": [
+        "Rosetta Stone",
+        "Diamond Armor",
+        "Mage Staff",
+        "Light Axe",
+        "Diamond Armlet",
+        "Diamond Gloves",
+        "Diamond Helm",
+        "Diamond Shield",
+        "Giants Gloves",
+        "Ribbon"
+      ],
+      "jrpg:boss": "Kraken",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:recover-the-slab-from-the-upper-sea-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Recover the Slab from the Upper Sea Shrine",
+      "robos:package": "story",
+      "jrpg:order": 103,
+      "jrpg:place": "Sea Shrine",
+      "jrpg:requires": [
+        "Oxyale"
+      ],
+      "jrpg:grants": [
+        "Slab",
+        "Opal Bracelet"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:release-the-bottled-faerie-for-oxyale",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Release the Bottled Faerie for Oxyale",
+      "robos:package": "story",
+      "jrpg:order": 52,
+      "jrpg:place": "Gaia",
+      "jrpg:requires": [
+        "Bottled Faerie"
+      ],
+      "jrpg:grants": [
+        "Oxyale"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:release-the-faerie-and-obtain-oxyale",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Release the Faerie and Obtain Oxyale",
+      "robos:package": "story",
+      "jrpg:order": 101,
+      "jrpg:place": "Gaia",
+      "jrpg:requires": [
+        "Bottle"
+      ],
+      "jrpg:grants": [
+        "Oxyale"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:release-the-faerie-in-gaia-to-get-oxyale",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Release the faerie in Gaia to get OXYALE",
+      "robos:package": "story",
+      "jrpg:order": 77,
+      "jrpg:place": "Gaia",
+      "jrpg:requires": [
+        "BOTTLE"
+      ],
+      "jrpg:grants": [
+        "OXYALE"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:rescue-the-princess-and-open-the-seal-in-the-temple-of-chaos-past",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Rescue the princess and open the seal in the Temple of Chaos (Past)",
+      "robos:package": "story",
+      "jrpg:order": 81,
+      "jrpg:place": "Temple of Fiends Revisited (Past)",
+      "jrpg:requires": [
+        "LUTE"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:restore-matoyas-sight-and-awaken-the-elf-prince",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Restore Matoya's Sight and Awaken the Elf Prince",
+      "robos:package": "story",
+      "jrpg:order": 47,
+      "jrpg:place": "Matoya's Cave",
+      "jrpg:requires": [
+        "Crystal Eye"
+      ],
+      "jrpg:grants": [
+        "Jolt Tonic"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:retrieve-the-crown-from-marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Retrieve the Crown from Marsh Cave",
+      "robos:package": "story",
+      "jrpg:order": 112,
+      "jrpg:place": "Marsh Cave",
+      "jrpg:grants": [
+        "Crown"
+      ],
+      "jrpg:boss": "Piscodemons (Wizards)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:retrieve-the-crown-from-the-marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Retrieve the Crown from the Marsh Cave",
+      "robos:package": "story",
+      "jrpg:order": 8,
+      "jrpg:place": "Marsh Cave",
+      "jrpg:grants": [
+        "crown",
+        "Crown"
+      ],
+      "jrpg:boss": "wizards (piscodemons)",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:retrieve-the-floater-from-the-ice-cavern",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Retrieve the Floater from the Ice Cavern",
+      "robos:package": "story",
+      "jrpg:order": 83,
+      "jrpg:place": "Ice Cave",
+      "jrpg:requires": [
+        "Canoe"
+      ],
+      "jrpg:grants": [
+        "Floater"
+      ],
+      "jrpg:boss": "Evil Eye",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:retrieve-the-stone-from-the-ice-cavern",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Retrieve the Stone from the Ice Cavern",
+      "robos:package": "story",
+      "jrpg:order": 19,
+      "jrpg:place": "Ice Cave",
+      "jrpg:requires": [
+        "canoe"
+      ],
+      "jrpg:grants": [
+        "stone"
+      ],
+      "jrpg:boss": "evil eye",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:retrieve-the-warp-cube-from-the-waterfall-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Retrieve the Warp Cube from the Waterfall Cave",
+      "robos:package": "story",
+      "jrpg:order": 54,
+      "jrpg:place": "Waterfall Cave",
+      "jrpg:grants": [
+        "Warp Cube"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:retrieve-tnt-and-create-a-canal-at-mt-duergar",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Retrieve TNT and create a canal at Mt. Duergar",
+      "robos:package": "story",
+      "jrpg:order": 71,
+      "jrpg:place": "Dwarf Cave",
+      "jrpg:requires": [
+        "KEY",
+        "TNT"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:return-matoyas-crystal-lens",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Return Matoya's Crystal Lens",
+      "robos:package": "story",
+      "jrpg:order": 114,
+      "jrpg:place": "Matoya's Cave",
+      "jrpg:requires": [
+        "Crystal Lens"
+      ],
+      "jrpg:grants": [
+        "Herb"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:return-the-crystal-eye-to-matoya-for-the-herb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Return the Crystal Eye to Matoya for the Herb",
+      "robos:package": "story",
+      "jrpg:order": 10,
+      "jrpg:place": "Matoya's Cave",
+      "jrpg:requires": [
+        "crystal eye"
+      ],
+      "jrpg:grants": [
+        "herb"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:return-the-rats-tail-to-bahamut-for-class-upgrades",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Return the Rat's Tail to Bahamut for class upgrades",
+      "robos:package": "story",
+      "jrpg:order": 132,
+      "jrpg:place": "Cardia Islands",
+      "jrpg:requires": [
+        "Rat's Tail"
+      ],
+      "jrpg:grants": [
+        "Knight",
+        "Ninja",
+        "Master",
+        "Red Wizard",
+        "White Wizard",
+        "Black Wizard"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:revive-the-prince-of-elfheim",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Revive the Prince of Elfheim",
+      "robos:package": "story",
+      "jrpg:order": 115,
+      "jrpg:place": "Elfland Castle",
+      "jrpg:requires": [
+        "Herb"
+      ],
+      "jrpg:grants": [
+        "Mystic Key"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:sail-to-elfland-and-prepare-for-the-marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Sail to Elfland and prepare for the Marsh Cave",
+      "robos:package": "story",
+      "jrpg:order": 6,
+      "jrpg:place": "Elfland",
+      "jrpg:requires": [
+        "ship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:select-and-name-four-characters",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Select and name four characters",
+      "robos:package": "story",
+      "jrpg:order": 1,
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:set-sail-for-elfheim",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Set Sail for Elfheim",
+      "robos:package": "story",
+      "jrpg:order": 106,
+      "jrpg:place": "Pravoka",
+      "jrpg:requires": [
+        "Ship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:speak-with-the-sages-at-crescent-lake-and-receive-the-canoe",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Speak with the Sages at Crescent Lake and Receive the Canoe",
+      "robos:package": "story",
+      "jrpg:order": 96,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:requires": [
+        "Defeat Lich"
+      ],
+      "jrpg:grants": [
+        "Canoe"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:speak-with-the-twelve-sages-in-crescent-lake-to-receive-the-canoe",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Speak with the Twelve Sages in Crescent Lake to Receive the Canoe",
+      "robos:package": "story",
+      "jrpg:order": 17,
+      "jrpg:place": "Crescent Lake",
+      "jrpg:requires": [
+        "first orb"
+      ],
+      "jrpg:grants": [
+        "canoe"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:take-the-crystal-from-astos",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Take the CRYSTAL from Astos",
+      "robos:package": "story",
+      "jrpg:order": 68,
+      "jrpg:place": "Northwest Castle",
+      "jrpg:requires": [
+        "CROWN"
+      ],
+      "jrpg:grants": [
+        "CRYSTAL"
+      ],
+      "jrpg:boss": "Astos",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:take-the-submarine-to-the-sea-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Take the Submarine to the Sea Shrine",
+      "robos:package": "story",
+      "jrpg:order": 102,
+      "jrpg:place": "Onrac",
+      "jrpg:requires": [
+        "Oxyale"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-airship",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Airship",
+      "robos:package": "story",
+      "jrpg:order": 61,
+      "jrpg:place": "Ice Cave",
+      "jrpg:grants": [
+        "Flame Sword",
+        "Clothes",
+        "Silver Gloves",
+        "Ice Armor",
+        "Ether",
+        "Sleeping Bag",
+        "Ice Shield"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-crystal-of-air",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Crystal of Air",
+      "robos:package": "story",
+      "jrpg:order": 64,
+      "jrpg:place": "Floating Castle",
+      "jrpg:grants": [
+        "Wizard's Staff",
+        "Defense",
+        "Aegis Shield",
+        "Vorpal Sword",
+        "Healing Helmet",
+        "Thor's Hammer",
+        "Sun Sword",
+        "Dragon Armor",
+        "Protection Ring",
+        "Bane Sword",
+        "Adamantite",
+        "White Robe",
+        "Black Robe",
+        "Protect Ring",
+        "Katana",
+        "ProCape"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-crystal-of-earth",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Crystal of Earth",
+      "robos:package": "story",
+      "jrpg:order": 59,
+      "jrpg:place": "Earth Cave",
+      "jrpg:grants": [
+        "Coral Sword",
+        "Wooden Shield",
+        "Tent",
+        "Silver Helmet",
+        "Great Axe",
+        "Wooden Staff",
+        "Silver Shield"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-crystal-of-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Crystal of Fire",
+      "robos:package": "story",
+      "jrpg:order": 60,
+      "jrpg:place": "Gurgu Volcano",
+      "jrpg:grants": [
+        "Giant Sword",
+        "Silver Gauntlet",
+        "Silver Axe",
+        "Flame Shield",
+        "Ice Sword",
+        "Flame Mail"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-crystal-of-water",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Crystal of Water",
+      "robos:package": "story",
+      "jrpg:order": 63,
+      "jrpg:place": "Sea Shrine",
+      "jrpg:grants": [
+        "Opal Armor",
+        "Light Axe",
+        "Mage Staff",
+        "Opal Helmet",
+        "Opal Gauntlet",
+        "Opal Bracelet",
+        "Opal Shield",
+        "Ribbon",
+        "Power Gauntlet"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-journey-begins",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Journey Begins",
+      "robos:package": "story",
+      "jrpg:order": 56,
+      "jrpg:place": "Matoya's cave",
+      "jrpg:grants": [
+        "Potion",
+        "Antidote"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-kingdom-of-corneria",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Kingdom of Corneria",
+      "robos:package": "story",
+      "jrpg:order": 55,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:grants": [
+        "Cap",
+        "Cabin",
+        "Heal"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-prince-of-elfland",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Prince of Elfland",
+      "robos:package": "story",
+      "jrpg:order": 57,
+      "jrpg:place": "Marsh Cave",
+      "jrpg:grants": [
+        "Large Knife",
+        "Short Sword",
+        "Iron Armor",
+        "Copper Bracelet",
+        "House"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-temple-of-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Temple of Chaos",
+      "robos:package": "story",
+      "jrpg:order": 65,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:grants": [
+        "Protect Ring",
+        "Protect Cloak",
+        "Katana",
+        "Masmune"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:the-trials",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "The Trials",
+      "robos:package": "story",
+      "jrpg:order": 62,
+      "jrpg:place": "Castle of Ordeals",
+      "jrpg:grants": [
+        "Zeus Gauntlets",
+        "Healing Staff",
+        "Gold Bracelet",
+        "Ice Sword",
+        "Iron Gauntlet"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:trade-crystal-with-matoya-for-herb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Trade CRYSTAL with Matoya for HERB",
+      "robos:package": "story",
+      "jrpg:order": 69,
+      "jrpg:place": "Matoya's Cave",
+      "jrpg:requires": [
+        "CRYSTAL"
+      ],
+      "jrpg:grants": [
+        "HERB"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:travel-2000-years-into-the-past-via-the-black-crystal",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Travel 2000 Years into the Past via the Black Crystal",
+      "robos:package": "story",
+      "jrpg:order": 120,
+      "jrpg:place": "Temple of Fiends (Present)",
+      "jrpg:requires": [
+        "Four crystals lit"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:unlock-corneria-castle-and-obtain-nitro-powder",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Unlock Corneria Castle and Obtain Nitro Powder",
+      "robos:package": "story",
+      "jrpg:order": 12,
+      "jrpg:place": "Castle Coneria",
+      "jrpg:requires": [
+        "mystic key"
+      ],
+      "jrpg:grants": [
+        "nitro powder",
+        "saber",
+        "mythril knife",
+        "crosier",
+        "iron shield",
+        "steel plate"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:unlock-the-cornelia-castle-treasure-rooms",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Unlock the Cornelia Castle Treasure Rooms",
+      "robos:package": "story",
+      "jrpg:order": 116,
+      "jrpg:place": "Coneria",
+      "jrpg:requires": [
+        "Mystic Key"
+      ],
+      "jrpg:grants": [
+        "TNT"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:upgrade-your-character-class",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Upgrade your character class",
+      "robos:package": "story",
+      "jrpg:order": 66,
+      "jrpg:place": "Cardia Islands",
+      "jrpg:requires": [
+        "Rat's Tail"
+      ],
+      "jrpg:grants": [
+        "Upgraded character classes"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:use-the-earth-rod-and-defeat-lich-to-light-the-earth-orb",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Use the Earth Rod and Defeat Lich to Light the Earth Orb",
+      "robos:package": "story",
+      "jrpg:order": 16,
+      "jrpg:place": "Earth Cave",
+      "jrpg:requires": [
+        "Earth Rod"
+      ],
+      "jrpg:grants": [
+        "first orb"
+      ],
+      "jrpg:boss": "lich",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-gaia",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit Gaia",
+      "robos:package": "story",
+      "jrpg:order": 98,
+      "jrpg:place": "Gaia",
+      "jrpg:requires": [
+        "Airship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit Matoya's Cave",
+      "robos:package": "story",
+      "jrpg:order": 105,
+      "jrpg:place": "Matoya's Cave",
+      "jrpg:requires": [
+        "Sara is safe"
+      ],
+      "jrpg:grants": [
+        "Potion",
+        "Antidote"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-matoyas-house",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit Matoya's house",
+      "robos:package": "story",
+      "jrpg:order": 4,
+      "jrpg:place": "Matoya's Cave",
+      "jrpg:requires": [
+        "bridge"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-melmond",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit Melmond",
+      "robos:package": "story",
+      "jrpg:order": 91,
+      "jrpg:place": "Melmond",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-onrac",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit Onrac",
+      "robos:package": "story",
+      "jrpg:order": 99,
+      "jrpg:place": "Onrac",
+      "jrpg:requires": [
+        "Airship"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-the-king-of-cornelia",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit the King of Cornelia",
+      "robos:package": "story",
+      "jrpg:order": 107,
+      "jrpg:place": "Castle Coneria",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:visit-the-western-keep",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Visit the Western Keep",
+      "robos:package": "story",
+      "jrpg:order": 111,
+      "jrpg:place": "Northwest Castle",
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:wake-the-elf-prince",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Wake the Elf Prince",
+      "robos:package": "story",
+      "jrpg:order": 70,
+      "jrpg:place": "Elfland Castle",
+      "jrpg:requires": [
+        "HERB"
+      ],
+      "jrpg:grants": [
+        "KEY"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:milestone:wake-the-elf-prince-and-receive-the-mystic-key",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:StoryMilestone"
+      ],
+      "dcterms:title": "Wake the Elf Prince and Receive the Mystic Key",
+      "robos:package": "story",
+      "jrpg:order": 11,
+      "jrpg:place": "Elfland Castle",
+      "jrpg:requires": [
+        "herb"
+      ],
+      "jrpg:grants": [
+        "mystic key"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.story"
+    }
+  ]
+}

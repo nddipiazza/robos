@@ -1,0 +1,1888 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:magic",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "magic",
+  "robos:namespace": "jrpg.final-fantasy.magic",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Magic",
+  "dcterms:description": "Spells by school and level.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-1-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FIRE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Fire1",
+        "Fire",
+        "FIRE1"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 10,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Fire",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-1-lit",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LIT",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Bolt1",
+        "Thunder",
+        "BOLT1"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 10,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Lightning",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-1-lock",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LOCK",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Focus1",
+        "Focus",
+        "FOCUS1"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 20,
+      "jrpg:accuracy": 64,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-1-sleep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SLEEP",
+      "robos:package": "magic",
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 1,
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-1-slep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SLEP",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Sleep1",
+        "Sleep"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 32,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-2-dark",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "DARK",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Fog",
+        "Dark",
+        "FOG"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 8,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-2-ice",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "ICE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Ice1",
+        "Blizzard",
+        "ICE1"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 20,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Ice",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-2-slow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SLOW",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Slow"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 64,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-2-slow1",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SLOW1",
+      "robos:package": "magic",
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 2,
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-2-tmpr",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "TMPR",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Steel",
+        "Temper",
+        "STEEL"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "One ally",
+      "jrpg:power": 14,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-3-fir2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FIR2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Fire2",
+        "Fira",
+        "FIRE2"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 30,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Fire",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-3-hold",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HOLD",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Bind",
+        "Hold",
+        "BIND"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 16,
+      "jrpg:accuracy": 64,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-3-lit2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LIT2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Bolt2",
+        "Thundara",
+        "BOLT2"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 30,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Lightning",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-3-lok2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LOK2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Focus2",
+        "Focara",
+        "FOCUS2"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 20,
+      "jrpg:accuracy": 64,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-4-conf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "CONF",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Muddle",
+        "Confuse"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 128,
+      "jrpg:accuracy": 64,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-4-fast",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FAST",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Haste"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "One ally",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-4-ice2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "ICE2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Ice2",
+        "Blizzara"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 40,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Ice",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-4-slp2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SLP2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Sleep2",
+        "Sleepara"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 32,
+      "jrpg:accuracy": 64,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-5-bane",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "BANE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Poison",
+        "Scourge",
+        "POISON"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 1,
+      "jrpg:accuracy": 40,
+      "jrpg:element": "Poison/Stone",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-5-fir3",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FIR3",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Fire3",
+        "Firaga",
+        "FIRE3"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 50,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Fire",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-5-slo2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SLO2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Slow2",
+        "Slowara",
+        "SLOW2"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 64,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-5-warp",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "WARP",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Warp1",
+        "Teleport",
+        "WARP1"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 255,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-6-lit3",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LIT3",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Bolt3",
+        "Thundaga",
+        "BOLT3"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 60,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Lightning",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-6-qake",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "QAKE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Quake",
+        "QUAKE"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 1,
+      "jrpg:accuracy": 40,
+      "jrpg:element": "Earth",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-6-rub",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "RUB",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Reaper",
+        "Death",
+        "REAPER"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 1,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Death",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-6-stun",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "STUN",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Stun"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 16,
+      "jrpg:accuracy": 0,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-7-blnd",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "BLND",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Blind"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 8,
+      "jrpg:accuracy": 0,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-7-brak",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "BRAK",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Break",
+        "BREAK"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 2,
+      "jrpg:accuracy": 64,
+      "jrpg:element": "Poison/Stone",
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-7-ice3",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "ICE3",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Ice3",
+        "Blizzaga"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 70,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Ice",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-7-sabr",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SABR",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Saber"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "Self",
+      "jrpg:power": 16,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-8-nuke",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "NUKE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Flare",
+        "FLARE"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 100,
+      "jrpg:accuracy": 107,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-8-stop",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "Stop",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "STOP"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 16,
+      "jrpg:accuracy": 48,
+      "jrpg:element": "Time",
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-8-xxxx",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "XXXX",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Doom",
+        "Kill",
+        "DOOM"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 1,
+      "jrpg:accuracy": 0,
+      "jrpg:element": "Death",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+        },
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:black-8-zap",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "ZAP!",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Banish",
+        "BANISH"
+      ],
+      "jrpg:school": "black",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 1,
+      "jrpg:accuracy": 32,
+      "jrpg:element": "Time",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-1-cure",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "CURE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Cure1",
+        "Cure",
+        "CURE1"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "One ally",
+      "jrpg:power": 16,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-1-dark",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "DARK",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "FOG",
+        "Fog",
+        "Dark"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 8,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-1-fog",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FOG",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "SHLD1",
+        "Shld1",
+        "Protect"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "One ally",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-1-harm",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HARM",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Dia1",
+        "Dia",
+        "DIA"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 20,
+      "jrpg:accuracy": 24,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-1-ruse",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "RUSE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Blink",
+        "BLINK"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 1,
+      "jrpg:range": "Self",
+      "jrpg:power": 80,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+        }
+      ],
+      "robos:cost": 100,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-2-alit",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "ALIT",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "NulBolt",
+        "NulShock",
+        "NULBOLT"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 64,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-2-invs",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "INVS",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Invs1",
+        "Invis",
+        "INVS1"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "One ally",
+      "jrpg:power": 40,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-2-lamp",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LAMP",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Lamp",
+        "Blindna"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "One ally",
+      "jrpg:power": 8,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-2-mute",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "MUTE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Silence",
+        "SILENCE"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 2,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 64,
+      "jrpg:accuracy": 64,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+        }
+      ],
+      "robos:cost": 400,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-3-afir",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "AFIR",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "NulFire",
+        "NulBlaze",
+        "NULFIRE"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 16,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-3-cur2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "CUR2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Cure2",
+        "Cura",
+        "CURE2"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "One ally",
+      "jrpg:power": 33,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-3-heal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HEAL",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Heal"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 12,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-3-heal1",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HEAL1",
+      "robos:package": "magic",
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 3,
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-3-hrm2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HRM2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Dia2",
+        "Diara",
+        "DIA2"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 3,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 40,
+      "jrpg:accuracy": 24,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 1500,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-4-aice",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "AICE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "NulIce",
+        "NulFrost",
+        "NULICE"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 32,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-4-amut",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "AMUT",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Vox",
+        "VOX"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "One ally",
+      "jrpg:power": 64,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-4-fear",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FEAR",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Fear"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 40,
+      "jrpg:accuracy": 24,
+      "jrpg:element": "Status",
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-4-pure",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "PURE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Esuna",
+        "Poisona",
+        "ESUNA"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 4,
+      "jrpg:range": "One ally",
+      "jrpg:power": 4,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+        }
+      ],
+      "robos:cost": 4000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-5-cur3",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "CUR3",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Cure3",
+        "Curaga",
+        "CURE3"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "One ally",
+      "jrpg:power": 66,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-5-hel2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HEL2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Heal2",
+        "Healara"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 48,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-5-hrm3",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HRM3",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Dia3",
+        "Diaga",
+        "DIA3"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 60,
+      "jrpg:accuracy": 24,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-5-life",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LIFE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Life1",
+        "Life",
+        "LIFE1"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 5,
+      "jrpg:range": "Defeated ally",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 255,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+        }
+      ],
+      "robos:cost": 8000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-6-exit",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "EXIT",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Warp2",
+        "Exit",
+        "WARP2"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 255,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-6-fog2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FOG2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Shld2",
+        "Protera",
+        "SHLD2"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 12,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-6-inv2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "INV2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Invs2",
+        "Invisira"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 40,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-6-invis2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "INVIS2",
+      "robos:package": "magic",
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 6,
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-6-soft",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "SOFT",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Stona",
+        "STONA"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 6,
+      "jrpg:range": "One ally",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 255,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+        }
+      ],
+      "robos:cost": 20000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-7-arub",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "ARUB",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "NulMgc",
+        "NulDeath",
+        "NULMGC"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 137,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-7-cur4",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "CUR4",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Cure4",
+        "Curaja",
+        "CURE4"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "One ally",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-7-hel3",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HEL3",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Heal3",
+        "Healaga",
+        "HEAL3"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "Entire party",
+      "jrpg:power": 48,
+      "jrpg:accuracy": 48,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-7-hrm4",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "HRM4",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Dia4",
+        "Diaja",
+        "DIA4"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 7,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 80,
+      "jrpg:accuracy": 48,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+        }
+      ],
+      "robos:cost": 45000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-8-fade",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "FADE",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Holy",
+        "HOLY"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "All enemies",
+      "jrpg:power": 80,
+      "jrpg:accuracy": 107,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+        },
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-8-lif2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "LIF2",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Life2",
+        "Full-life",
+        "LIFE2"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "Defeated ally",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 255,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+        },
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-8-wall",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "WALL",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "NulAll",
+        "NULALL"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "One ally",
+      "jrpg:power": 255,
+      "jrpg:accuracy": 0,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:spell:white-8-xfer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action",
+        "jrpg:Spell"
+      ],
+      "dcterms:title": "XFER",
+      "robos:package": "magic",
+      "jrpg:altName": [
+        "Dispel",
+        "DISPEL"
+      ],
+      "jrpg:school": "white",
+      "jrpg:spellLevel": 8,
+      "jrpg:range": "One enemy",
+      "jrpg:power": 0,
+      "jrpg:accuracy": 107,
+      "jrpg:soldIn": [
+        {
+          "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+        }
+      ],
+      "robos:cost": 60000,
+      "robos:namespace": "jrpg.fantasy-light-warriors.magic"
+    }
+  ]
+}

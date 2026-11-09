@@ -1,0 +1,580 @@
+{
+  "spells": [
+    {
+      "id": 1,
+      "name": "CURE",
+      "school": "white",
+      "level": 1,
+      "effectivity": 16,
+      "accuracy": 0,
+      "price": 100
+    },
+    {
+      "id": 2,
+      "name": "HARM",
+      "school": "white",
+      "level": 1,
+      "effectivity": 20,
+      "accuracy": 24,
+      "price": 100
+    },
+    {
+      "id": 3,
+      "name": "FOG",
+      "school": "white",
+      "level": 1,
+      "effectivity": 8,
+      "accuracy": 0,
+      "price": 100
+    },
+    {
+      "id": 4,
+      "name": "RUSE",
+      "school": "white",
+      "level": 1,
+      "effectivity": 80,
+      "accuracy": 0,
+      "price": 100
+    },
+    {
+      "id": 5,
+      "name": "FIRE",
+      "school": "black",
+      "level": 1,
+      "effectivity": 10,
+      "accuracy": 24,
+      "price": 100
+    },
+    {
+      "id": 6,
+      "name": "SLEP",
+      "school": "black",
+      "level": 1,
+      "effectivity": 32,
+      "accuracy": 24,
+      "price": 100
+    },
+    {
+      "id": 7,
+      "name": "LOCK",
+      "school": "black",
+      "level": 1,
+      "effectivity": 20,
+      "accuracy": 64,
+      "price": 100
+    },
+    {
+      "id": 8,
+      "name": "LIT",
+      "school": "black",
+      "level": 1,
+      "effectivity": 10,
+      "accuracy": 24,
+      "price": 100
+    },
+    {
+      "id": 9,
+      "name": "LAMP",
+      "school": "white",
+      "level": 2,
+      "effectivity": 8,
+      "accuracy": 0,
+      "price": 400
+    },
+    {
+      "id": 10,
+      "name": "MUTE",
+      "school": "white",
+      "level": 2,
+      "effectivity": 64,
+      "accuracy": 64,
+      "price": 400
+    },
+    {
+      "id": 11,
+      "name": "ALIT",
+      "school": "white",
+      "level": 2,
+      "effectivity": 64,
+      "accuracy": 0,
+      "price": 400
+    },
+    {
+      "id": 12,
+      "name": "INVS",
+      "school": "white",
+      "level": 2,
+      "effectivity": 40,
+      "accuracy": 0,
+      "price": 400
+    },
+    {
+      "id": 13,
+      "name": "ICE",
+      "school": "black",
+      "level": 2,
+      "effectivity": 20,
+      "accuracy": 24,
+      "price": 400
+    },
+    {
+      "id": 14,
+      "name": "DARK",
+      "school": "black",
+      "level": 2,
+      "effectivity": 8,
+      "accuracy": 24,
+      "price": 400
+    },
+    {
+      "id": 15,
+      "name": "TMPR",
+      "school": "black",
+      "level": 2,
+      "effectivity": 14,
+      "accuracy": 0,
+      "price": 400
+    },
+    {
+      "id": 16,
+      "name": "SLOW",
+      "school": "black",
+      "level": 2,
+      "effectivity": 0,
+      "accuracy": 64,
+      "price": 400
+    },
+    {
+      "id": 17,
+      "name": "CUR2",
+      "school": "white",
+      "level": 3,
+      "effectivity": 33,
+      "accuracy": 0,
+      "price": 1500
+    },
+    {
+      "id": 18,
+      "name": "HRM2",
+      "school": "white",
+      "level": 3,
+      "effectivity": 40,
+      "accuracy": 24,
+      "price": 1500
+    },
+    {
+      "id": 19,
+      "name": "AFIR",
+      "school": "white",
+      "level": 3,
+      "effectivity": 16,
+      "accuracy": 0,
+      "price": 1500
+    },
+    {
+      "id": 20,
+      "name": "HEAL",
+      "school": "white",
+      "level": 3,
+      "effectivity": 12,
+      "accuracy": 0,
+      "price": 1500
+    },
+    {
+      "id": 21,
+      "name": "FIR2",
+      "school": "black",
+      "level": 3,
+      "effectivity": 30,
+      "accuracy": 24,
+      "price": 1500
+    },
+    {
+      "id": 22,
+      "name": "HOLD",
+      "school": "black",
+      "level": 3,
+      "effectivity": 16,
+      "accuracy": 64,
+      "price": 1500
+    },
+    {
+      "id": 23,
+      "name": "LIT2",
+      "school": "black",
+      "level": 3,
+      "effectivity": 30,
+      "accuracy": 24,
+      "price": 1500
+    },
+    {
+      "id": 24,
+      "name": "LOK2",
+      "school": "black",
+      "level": 3,
+      "effectivity": 20,
+      "accuracy": 64,
+      "price": 1500
+    },
+    {
+      "id": 25,
+      "name": "PURE",
+      "school": "white",
+      "level": 4,
+      "effectivity": 4,
+      "accuracy": 0,
+      "price": 4000
+    },
+    {
+      "id": 26,
+      "name": "FEAR",
+      "school": "white",
+      "level": 4,
+      "effectivity": 40,
+      "accuracy": 24,
+      "price": 4000
+    },
+    {
+      "id": 27,
+      "name": "AICE",
+      "school": "white",
+      "level": 4,
+      "effectivity": 32,
+      "accuracy": 0,
+      "price": 4000
+    },
+    {
+      "id": 28,
+      "name": "AMUT",
+      "school": "white",
+      "level": 4,
+      "effectivity": 64,
+      "accuracy": 0,
+      "price": 4000
+    },
+    {
+      "id": 29,
+      "name": "SLP2",
+      "school": "black",
+      "level": 4,
+      "effectivity": 32,
+      "accuracy": 64,
+      "price": 4000
+    },
+    {
+      "id": 30,
+      "name": "FAST",
+      "school": "black",
+      "level": 4,
+      "effectivity": 0,
+      "accuracy": 0,
+      "price": 4000
+    },
+    {
+      "id": 31,
+      "name": "CONF",
+      "school": "black",
+      "level": 4,
+      "effectivity": 128,
+      "accuracy": 64,
+      "price": 4000
+    },
+    {
+      "id": 32,
+      "name": "ICE2",
+      "school": "black",
+      "level": 4,
+      "effectivity": 40,
+      "accuracy": 24,
+      "price": 4000
+    },
+    {
+      "id": 33,
+      "name": "CUR3",
+      "school": "white",
+      "level": 5,
+      "effectivity": 66,
+      "accuracy": 0,
+      "price": 8000
+    },
+    {
+      "id": 34,
+      "name": "LIFE",
+      "school": "white",
+      "level": 5,
+      "effectivity": 0,
+      "accuracy": 255,
+      "price": 8000
+    },
+    {
+      "id": 35,
+      "name": "HRM3",
+      "school": "white",
+      "level": 5,
+      "effectivity": 60,
+      "accuracy": 24,
+      "price": 8000
+    },
+    {
+      "id": 36,
+      "name": "HEL2",
+      "school": "white",
+      "level": 5,
+      "effectivity": 48,
+      "accuracy": 0,
+      "price": 8000
+    },
+    {
+      "id": 37,
+      "name": "FIR3",
+      "school": "black",
+      "level": 5,
+      "effectivity": 50,
+      "accuracy": 24,
+      "price": 8000
+    },
+    {
+      "id": 38,
+      "name": "BANE",
+      "school": "black",
+      "level": 5,
+      "effectivity": 1,
+      "accuracy": 40,
+      "price": 8000
+    },
+    {
+      "id": 39,
+      "name": "WARP",
+      "school": "black",
+      "level": 5,
+      "effectivity": 0,
+      "accuracy": 255,
+      "price": 8000
+    },
+    {
+      "id": 40,
+      "name": "SLO2",
+      "school": "black",
+      "level": 5,
+      "effectivity": 0,
+      "accuracy": 64,
+      "price": 8000
+    },
+    {
+      "id": 41,
+      "name": "SOFT",
+      "school": "white",
+      "level": 6,
+      "effectivity": 0,
+      "accuracy": 255,
+      "price": 20000
+    },
+    {
+      "id": 42,
+      "name": "EXIT",
+      "school": "white",
+      "level": 6,
+      "effectivity": 0,
+      "accuracy": 255,
+      "price": 20000
+    },
+    {
+      "id": 43,
+      "name": "FOG2",
+      "school": "white",
+      "level": 6,
+      "effectivity": 12,
+      "accuracy": 0,
+      "price": 20000
+    },
+    {
+      "id": 44,
+      "name": "INV2",
+      "school": "white",
+      "level": 6,
+      "effectivity": 40,
+      "accuracy": 0,
+      "price": 20000
+    },
+    {
+      "id": 45,
+      "name": "LIT3",
+      "school": "black",
+      "level": 6,
+      "effectivity": 60,
+      "accuracy": 24,
+      "price": 20000
+    },
+    {
+      "id": 46,
+      "name": "RUB",
+      "school": "black",
+      "level": 6,
+      "effectivity": 1,
+      "accuracy": 24,
+      "price": 20000
+    },
+    {
+      "id": 47,
+      "name": "QAKE",
+      "school": "black",
+      "level": 6,
+      "effectivity": 1,
+      "accuracy": 40,
+      "price": 20000
+    },
+    {
+      "id": 48,
+      "name": "STUN",
+      "school": "black",
+      "level": 6,
+      "effectivity": 16,
+      "accuracy": 0,
+      "price": 20000
+    },
+    {
+      "id": 49,
+      "name": "CUR4",
+      "school": "white",
+      "level": 7,
+      "effectivity": 0,
+      "accuracy": 0,
+      "price": 45000
+    },
+    {
+      "id": 50,
+      "name": "HRM4",
+      "school": "white",
+      "level": 7,
+      "effectivity": 80,
+      "accuracy": 48,
+      "price": 45000
+    },
+    {
+      "id": 51,
+      "name": "ARUB",
+      "school": "white",
+      "level": 7,
+      "effectivity": 137,
+      "accuracy": 0,
+      "price": 45000
+    },
+    {
+      "id": 52,
+      "name": "HEL3",
+      "school": "white",
+      "level": 7,
+      "effectivity": 48,
+      "accuracy": 48,
+      "price": 45000
+    },
+    {
+      "id": 53,
+      "name": "ICE3",
+      "school": "black",
+      "level": 7,
+      "effectivity": 70,
+      "accuracy": 24,
+      "price": 45000
+    },
+    {
+      "id": 54,
+      "name": "BRAK",
+      "school": "black",
+      "level": 7,
+      "effectivity": 2,
+      "accuracy": 64,
+      "price": 45000
+    },
+    {
+      "id": 55,
+      "name": "SABR",
+      "school": "black",
+      "level": 7,
+      "effectivity": 16,
+      "accuracy": 0,
+      "price": 45000
+    },
+    {
+      "id": 56,
+      "name": "BLND",
+      "school": "black",
+      "level": 7,
+      "effectivity": 8,
+      "accuracy": 0,
+      "price": 45000
+    },
+    {
+      "id": 57,
+      "name": "LIF2",
+      "school": "white",
+      "level": 8,
+      "effectivity": 0,
+      "accuracy": 255,
+      "price": 60000
+    },
+    {
+      "id": 58,
+      "name": "FADE",
+      "school": "white",
+      "level": 8,
+      "effectivity": 80,
+      "accuracy": 107,
+      "price": 60000
+    },
+    {
+      "id": 59,
+      "name": "WALL",
+      "school": "white",
+      "level": 8,
+      "effectivity": 255,
+      "accuracy": 0,
+      "price": 60000
+    },
+    {
+      "id": 60,
+      "name": "XFER",
+      "school": "white",
+      "level": 8,
+      "effectivity": 0,
+      "accuracy": 107,
+      "price": 60000
+    },
+    {
+      "id": 61,
+      "name": "NUKE",
+      "school": "black",
+      "level": 8,
+      "effectivity": 100,
+      "accuracy": 107,
+      "price": 60000
+    },
+    {
+      "id": 62,
+      "name": "STOP",
+      "school": "black",
+      "level": 8,
+      "effectivity": 16,
+      "accuracy": 48,
+      "price": 60000
+    },
+    {
+      "id": 63,
+      "name": "ZAP!",
+      "school": "black",
+      "level": 8,
+      "effectivity": 1,
+      "accuracy": 32,
+      "price": 60000
+    },
+    {
+      "id": 64,
+      "name": "XXXX",
+      "school": "black",
+      "level": 8,
+      "effectivity": 1,
+      "accuracy": 0,
+      "price": 60000
+    }
+  ]
+}

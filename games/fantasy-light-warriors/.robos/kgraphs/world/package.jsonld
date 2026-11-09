@@ -1,0 +1,4909 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:world",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "world",
+  "robos:namespace": "jrpg.final-fantasy.world",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: World, Places & Maps",
+  "dcterms:description": "World and area maps, towns, castles, dungeons and regions.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x01-1-coneria-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x01 (1): Iron Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x01 (1)",
+      "jrpg:mapName": "Coneria Castle 1F",
+      "jrpg:coordinates": "(11, 11)",
+      "jrpg:contents": "Iron Armor",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x02-2-coneria-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x02 (2): Iron Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0x02 (2)",
+      "jrpg:mapName": "Coneria Castle 1F",
+      "jrpg:coordinates": "(12, 11)",
+      "jrpg:contents": "Iron Shield",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x03-3-coneria-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x03 (3): TNT",
+      "robos:package": "world",
+      "jrpg:chestId": "0x03 (3)",
+      "jrpg:mapName": "Coneria Castle 1F",
+      "jrpg:coordinates": "(13, 11)",
+      "jrpg:contents": "TNT",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x04-4-coneria-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x04 (4): Iron Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0x04 (4)",
+      "jrpg:mapName": "Coneria Castle 1F",
+      "jrpg:coordinates": "(16, 11)",
+      "jrpg:contents": "Iron Staff",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x05-5-coneria-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x05 (5): Sabre",
+      "robos:package": "world",
+      "jrpg:chestId": "0x05 (5)",
+      "jrpg:mapName": "Coneria Castle 1F",
+      "jrpg:coordinates": "(17, 11)",
+      "jrpg:contents": "Sabre",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x06-6-coneria-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x06 (6): Silver Dagger",
+      "robos:package": "world",
+      "jrpg:chestId": "0x06 (6)",
+      "jrpg:mapName": "Coneria Castle 1F",
+      "jrpg:coordinates": "(18, 11)",
+      "jrpg:contents": "Silver Dagger",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x07-7-temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x07 (7): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x07 (7)",
+      "jrpg:mapName": "Temple of Fiends (Present)",
+      "jrpg:coordinates": "(2, 3)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x08-8-temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x08 (8): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x08 (8)",
+      "jrpg:mapName": "Temple of Fiends (Present)",
+      "jrpg:coordinates": "(3, 3)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x09-9-temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x09 (9): Cap",
+      "robos:package": "world",
+      "jrpg:chestId": "0x09 (9)",
+      "jrpg:mapName": "Temple of Fiends (Present)",
+      "jrpg:coordinates": "(2, 32)",
+      "jrpg:contents": "Cap",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x0a-10-temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x0A (10): Rune Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x0A (10)",
+      "jrpg:mapName": "Temple of Fiends (Present)",
+      "jrpg:coordinates": "(39, 32)",
+      "jrpg:contents": "Rune Sword",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x0b-11-temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x0B (11): Were Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x0B (11)",
+      "jrpg:mapName": "Temple of Fiends (Present)",
+      "jrpg:coordinates": "(38, 3)",
+      "jrpg:contents": "Were Sword",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x0c-12-temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x0C (12): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x0C (12)",
+      "jrpg:mapName": "Temple of Fiends (Present)",
+      "jrpg:coordinates": "(39, 3)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x0d-13-elfland-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x0D (13): Silver Hammer",
+      "robos:package": "world",
+      "jrpg:chestId": "0x0D (13)",
+      "jrpg:mapName": "Elfland Castle",
+      "jrpg:coordinates": "(21, 1)",
+      "jrpg:contents": "Silver Hammer",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x0e-14-elfland-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x0E (14): 400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x0E (14)",
+      "jrpg:mapName": "Elfland Castle",
+      "jrpg:coordinates": "(22, 1)",
+      "jrpg:contents": "400 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x0f-15-elfland-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x0F (15): 330 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x0F (15)",
+      "jrpg:mapName": "Elfland Castle",
+      "jrpg:coordinates": "(23, 1)",
+      "jrpg:contents": "330 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x10-16-elfland-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x10 (16): Copper Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x10 (16)",
+      "jrpg:mapName": "Elfland Castle",
+      "jrpg:coordinates": "(24, 1)",
+      "jrpg:contents": "Copper Gauntlet",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x11-17-northwest-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x11 (17): Power Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0x11 (17)",
+      "jrpg:mapName": "Northwest Castle",
+      "jrpg:coordinates": "(8, 13)",
+      "jrpg:contents": "Power Staff",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x12-18-northwest-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x12 (18): Iron Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x12 (18)",
+      "jrpg:mapName": "Northwest Castle",
+      "jrpg:coordinates": "(12, 13)",
+      "jrpg:contents": "Iron Gauntlet",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x13-19-northwest-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x13 (19): Falchon",
+      "robos:package": "world",
+      "jrpg:chestId": "0x13 (19)",
+      "jrpg:mapName": "Northwest Castle",
+      "jrpg:coordinates": "(10, 14)",
+      "jrpg:contents": "Falchon",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x14-20-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x14 (20): 295 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x14 (20)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(52, 8)",
+      "jrpg:contents": "295 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x15-21-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x15 (21): Copper Bracelet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x15 (21)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(10, 25)",
+      "jrpg:contents": "Copper Bracelet",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x16-22-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x16 (22): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0x16 (22)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(23, 23)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x17-23-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x17 (23): 385 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x17 (23)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(38, 40)",
+      "jrpg:contents": "385 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x18-24-marsh-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x18 (24): 620 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x18 (24)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(11, 23)",
+      "jrpg:contents": "620 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x19-25-marsh-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x19 (25): Short Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x19 (25)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(9, 23)",
+      "jrpg:contents": "Short Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x19-25-marsh-cave-b2-2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x19 (25): Short Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x19 (25)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(26, 49)",
+      "jrpg:contents": "Short Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x19-25-marsh-cave-b2-3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x19 (25): Short Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x19 (25)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(37, 49)",
+      "jrpg:contents": "Short Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1a-26-marsh-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1A (26): 680 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1A (26)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(12, 7)",
+      "jrpg:contents": "680 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1a-26-marsh-cave-b2-2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1A (26): 680 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1A (26)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(14, 50)",
+      "jrpg:contents": "680 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1b-27-marsh-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1B (27): Large Dagger",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1B (27)",
+      "jrpg:mapName": "Marsh Cave B2",
+      "jrpg:coordinates": "(26, 7)",
+      "jrpg:contents": "Large Dagger",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1c-28-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1C (28): CROWN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1C (28)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(23, 39)",
+      "jrpg:contents": "CROWN",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1d-29-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1D (29): Iron Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1D (29)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(10, 8)",
+      "jrpg:contents": "Iron Armor",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1d-29-marsh-cave-b3-2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1D (29): Iron Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1D (29)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(25, 25)",
+      "jrpg:contents": "Iron Armor",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1d-29-marsh-cave-b3-3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1D (29): Iron Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1D (29)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(53, 38)",
+      "jrpg:contents": "Iron Armor",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1e-30-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1E (30): Silver Bracelet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1E (30)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(12, 54)",
+      "jrpg:contents": "Silver Bracelet",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x1f-31-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x1F (31): Silver Dagger",
+      "robos:package": "world",
+      "jrpg:chestId": "0x1F (31)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(27, 53)",
+      "jrpg:contents": "Silver Dagger",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x20-32-marsh-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x20 (32): 1020 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x20 (32)",
+      "jrpg:mapName": "Marsh Cave B3",
+      "jrpg:coordinates": "(52, 53)",
+      "jrpg:contents": "1020 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x21-33-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x21 (33): 450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x21 (33)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(22, 3)",
+      "jrpg:contents": "450 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x22-34-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x22 (34): 575 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x22 (34)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(22, 4)",
+      "jrpg:contents": "575 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x23-35-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x23 (35): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x23 (35)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(3, 38)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x24-36-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x24 (36): Iron Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x24 (36)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(4, 38)",
+      "jrpg:contents": "Iron Helmet",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x25-37-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x25 (37): Wooden Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x25 (37)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(10, 41)",
+      "jrpg:contents": "Wooden Helmet",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x26-38-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x26 (38): Dragon Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x26 (38)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(8, 41)",
+      "jrpg:contents": "Dragon Sword",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x27-39-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x27 (39): Silver Dagger",
+      "robos:package": "world",
+      "jrpg:chestId": "0x27 (39)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(9, 41)",
+      "jrpg:contents": "Silver Dagger",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x28-40-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x28 (40): Silver Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x28 (40)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(14, 41)",
+      "jrpg:contents": "Silver Armor",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x29-41-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x29 (41): 575 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x29 (41)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(15, 41)",
+      "jrpg:contents": "575 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x2a-42-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x2A (42): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0x2A (42)",
+      "jrpg:mapName": "Dwarf Cave",
+      "jrpg:coordinates": "(16, 41)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x2b-43-matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x2B (43): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x2B (43)",
+      "jrpg:mapName": "Matoya's Cave",
+      "jrpg:coordinates": "(1, 4)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x2c-44-matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x2C (44): PURE Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x2C (44)",
+      "jrpg:mapName": "Matoya's Cave",
+      "jrpg:coordinates": "(1, 7)",
+      "jrpg:contents": "PURE Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x2d-45-matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x2D (45): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x2D (45)",
+      "jrpg:mapName": "Matoya's Cave",
+      "jrpg:coordinates": "(1, 5)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x2e-46-earth-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x2E (46): 880 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x2E (46)",
+      "jrpg:mapName": "Earth Cave B1",
+      "jrpg:coordinates": "(28, 53)",
+      "jrpg:contents": "880 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x2f-47-earth-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x2F (47): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x2F (47)",
+      "jrpg:mapName": "Earth Cave B1",
+      "jrpg:coordinates": "(29, 53)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x30-48-earth-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x30 (48): PURE Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x30 (48)",
+      "jrpg:mapName": "Earth Cave B1",
+      "jrpg:coordinates": "(39, 46)",
+      "jrpg:contents": "PURE Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x31-49-earth-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x31 (49): 795 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x31 (49)",
+      "jrpg:mapName": "Earth Cave B1",
+      "jrpg:coordinates": "(40, 47)",
+      "jrpg:contents": "795 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x32-50-earth-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x32 (50): 1975 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x32 (50)",
+      "jrpg:mapName": "Earth Cave B1",
+      "jrpg:coordinates": "(33, 16)",
+      "jrpg:contents": "1975 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x33-51-earth-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x33 (51): Coral Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x33 (51)",
+      "jrpg:mapName": "Earth Cave B2",
+      "jrpg:coordinates": "(39, 14)",
+      "jrpg:contents": "Coral Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x34-52-earth-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x34 (52): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x34 (52)",
+      "jrpg:mapName": "Earth Cave B2",
+      "jrpg:coordinates": "(40, 14)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x35-53-earth-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x35 (53): 330 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x35 (53)",
+      "jrpg:mapName": "Earth Cave B2",
+      "jrpg:coordinates": "(42, 16)",
+      "jrpg:contents": "330 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x36-54-earth-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x36 (54): 5000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x36 (54)",
+      "jrpg:mapName": "Earth Cave B2",
+      "jrpg:coordinates": "(21, 41)",
+      "jrpg:contents": "5000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x37-55-earth-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x37 (55): Wooden Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0x37 (55)",
+      "jrpg:mapName": "Earth Cave B2",
+      "jrpg:coordinates": "(22, 43)",
+      "jrpg:contents": "Wooden Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x38-56-earth-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x38 (56): 575 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x38 (56)",
+      "jrpg:mapName": "Earth Cave B2",
+      "jrpg:coordinates": "(24, 43)",
+      "jrpg:contents": "575 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x39-57-earth-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x39 (57): 1020 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x39 (57)",
+      "jrpg:mapName": "Earth Cave B3",
+      "jrpg:coordinates": "(16, 25)",
+      "jrpg:contents": "1020 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x3a-58-earth-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x3A (58): 3400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x3A (58)",
+      "jrpg:mapName": "Earth Cave B3",
+      "jrpg:coordinates": "(30, 13)",
+      "jrpg:contents": "3400 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x3b-59-earth-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x3B (59): TENT",
+      "robos:package": "world",
+      "jrpg:chestId": "0x3B (59)",
+      "jrpg:mapName": "Earth Cave B3",
+      "jrpg:coordinates": "(49, 37)",
+      "jrpg:contents": "TENT",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x3c-60-earth-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x3C (60): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x3C (60)",
+      "jrpg:mapName": "Earth Cave B3",
+      "jrpg:coordinates": "(49, 24)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x3d-61-earth-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x3D (61): RUBY",
+      "robos:package": "world",
+      "jrpg:chestId": "0x3D (61)",
+      "jrpg:mapName": "Earth Cave B3",
+      "jrpg:coordinates": "(23, 37)",
+      "jrpg:contents": "RUBY",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x3e-62-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x3E (62): 1250 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x3E (62)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(17, 37)",
+      "jrpg:contents": "1250 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x3f-63-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x3F (63): Silver Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0x3F (63)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(19, 38)",
+      "jrpg:contents": "Silver Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x40-64-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x40 (64): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x40 (64)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(16, 40)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x41-65-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x41 (65): 5450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x41 (65)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(37, 12)",
+      "jrpg:contents": "5450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x42-66-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x42 (66): 1520 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x42 (66)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(38, 12)",
+      "jrpg:contents": "1520 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x43-67-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x43 (67): Wooden Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0x43 (67)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(42, 12)",
+      "jrpg:contents": "Wooden Staff",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x44-68-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x44 (68): 3400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x44 (68)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(44, 12)",
+      "jrpg:contents": "3400 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x45-69-earth-cave-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x45 (69): 1455 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x45 (69)",
+      "jrpg:mapName": "Earth Cave B4",
+      "jrpg:coordinates": "(37, 14)",
+      "jrpg:contents": "1455 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x46-70-titans-tunnel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x46 (70): Silver Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x46 (70)",
+      "jrpg:mapName": "Titan's Tunnel",
+      "jrpg:coordinates": "(5, 19)",
+      "jrpg:contents": "Silver Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x47-71-titans-tunnel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x47 (71): 450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x47 (71)",
+      "jrpg:mapName": "Titan's Tunnel",
+      "jrpg:coordinates": "(6, 19)",
+      "jrpg:contents": "450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x48-72-titans-tunnel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x48 (72): 620 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x48 (72)",
+      "jrpg:mapName": "Titan's Tunnel",
+      "jrpg:coordinates": "(7, 19)",
+      "jrpg:contents": "620 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x49-73-titans-tunnel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x49 (73): Great Axe",
+      "robos:package": "world",
+      "jrpg:chestId": "0x49 (73)",
+      "jrpg:mapName": "Titan's Tunnel",
+      "jrpg:coordinates": "(8, 19)",
+      "jrpg:contents": "Great Axe",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x4a-74-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x4A (74): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x4A (74)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(5, 29)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x4b-75-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x4B (75): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x4B (75)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(6, 29)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x4c-76-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x4C (76): 1975 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x4C (76)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(8, 29)",
+      "jrpg:contents": "1975 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x4d-77-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x4D (77): PURE Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x4D (77)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(9, 29)",
+      "jrpg:contents": "PURE Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x4e-78-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x4E (78): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x4E (78)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(10, 29)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x4f-79-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x4F (79): 1455 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x4F (79)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(10, 28)",
+      "jrpg:contents": "1455 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x50-80-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x50 (80): Silver Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0x50 (80)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(10, 27)",
+      "jrpg:contents": "Silver Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x51-81-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x51 (81): 1520 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x51 (81)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(9, 27)",
+      "jrpg:contents": "1520 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x52-82-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x52 (82): Silver Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x52 (82)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(6, 27)",
+      "jrpg:contents": "Silver Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x53-83-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x53 (83): Silver Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x53 (83)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(7, 26)",
+      "jrpg:contents": "Silver Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x54-84-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x54 (84): 1760 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x54 (84)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(10, 26)",
+      "jrpg:contents": "1760 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x55-85-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x55 (85): Silver Axe",
+      "robos:package": "world",
+      "jrpg:chestId": "0x55 (85)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(11, 28)",
+      "jrpg:contents": "Silver Axe",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x56-86-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x56 (86): 795 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x56 (86)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(10, 4)",
+      "jrpg:contents": "795 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x57-87-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x57 (87): 750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x57 (87)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(11, 4)",
+      "jrpg:contents": "750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x58-88-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x58 (88): Giant Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x58 (88)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(18, 13)",
+      "jrpg:contents": "Giant Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x59-89-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x59 (89): 4150 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x59 (89)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(30, 13)",
+      "jrpg:contents": "4150 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5a-90-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5A (90): 1520 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5A (90)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(26, 29)",
+      "jrpg:contents": "1520 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5b-91-gurgu-volcano-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5B (91): Silver Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5B (91)",
+      "jrpg:mapName": "Gurgu Volcano B2",
+      "jrpg:coordinates": "(25, 19)",
+      "jrpg:contents": "Silver Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5c-92-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5C (92): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5C (92)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(34, 3)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5c-92-gurgu-volcano-b5",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5C (92): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5C (92)",
+      "jrpg:mapName": "Gurgu Volcano B5",
+      "jrpg:coordinates": "(57, 6)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5c-92-gurgu-volcano-b5-2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5C (92): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5C (92)",
+      "jrpg:mapName": "Gurgu Volcano B5",
+      "jrpg:coordinates": "(54, 36)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5c-92-gurgu-volcano-b5-3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5C (92): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5C (92)",
+      "jrpg:mapName": "Gurgu Volcano B5",
+      "jrpg:coordinates": "(58, 54)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5d-93-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5D (93): 2750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5D (93)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(31, 1)",
+      "jrpg:contents": "2750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5e-94-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5E (94): 1760 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5E (94)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(17, 9)",
+      "jrpg:contents": "1760 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x5f-95-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x5F (95): Wooden Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0x5F (95)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(48, 31)",
+      "jrpg:contents": "Wooden Staff",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x60-96-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x60 (96): 1250 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x60 (96)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(48, 32)",
+      "jrpg:contents": "1250 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x61-97-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x61 (97): 10 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x61 (97)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(32, 19)",
+      "jrpg:contents": "10 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x62-98-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x62 (98): 155 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x62 (98)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(34, 21)",
+      "jrpg:contents": "155 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x63-99-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x63 (99): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0x63 (99)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(45, 11)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x64-100-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x64 (100): 2000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x64 (100)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(46, 11)",
+      "jrpg:contents": "2000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x65-101-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x65 (101): Ice Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x65 (101)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(4, 2)",
+      "jrpg:contents": "Ice Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x65-101-gurgu-volcano-b4-2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x65 (101): Ice Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x65 (101)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(48, 12)",
+      "jrpg:contents": "Ice Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x66-102-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x66 (102): 880 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x66 (102)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(4, 3)",
+      "jrpg:contents": "880 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x67-103-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x67 (103): PURE Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x67 (103)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(1, 3)",
+      "jrpg:contents": "PURE Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x68-104-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x68 (104): Flame Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0x68 (104)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(4, 1)",
+      "jrpg:contents": "Flame Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x69-105-gurgu-volcano-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x69 (105): 7340 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x69 (105)",
+      "jrpg:mapName": "Gurgu Volcano B4",
+      "jrpg:coordinates": "(2, 1)",
+      "jrpg:contents": "7340 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x6a-106-gurgu-volcano-b5",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x6A (106): Flame Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x6A (106)",
+      "jrpg:mapName": "Gurgu Volcano B5",
+      "jrpg:coordinates": "(9, 36)",
+      "jrpg:contents": "Flame Armor",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x6b-107-ice-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x6B (107): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x6B (107)",
+      "jrpg:mapName": "Ice Cave B1",
+      "jrpg:coordinates": "(6, 22)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x6c-108-ice-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x6C (108): 10000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x6C (108)",
+      "jrpg:mapName": "Ice Cave B1",
+      "jrpg:coordinates": "(9, 27)",
+      "jrpg:contents": "10000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x6d-109-ice-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x6D (109): 9500 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x6D (109)",
+      "jrpg:mapName": "Ice Cave B1",
+      "jrpg:coordinates": "(19, 20)",
+      "jrpg:contents": "9500 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x6e-110-ice-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x6E (110): TENT",
+      "robos:package": "world",
+      "jrpg:chestId": "0x6E (110)",
+      "jrpg:mapName": "Ice Cave B1",
+      "jrpg:coordinates": "(20, 20)",
+      "jrpg:contents": "TENT",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x6f-111-ice-cave-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x6F (111): Ice Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0x6F (111)",
+      "jrpg:mapName": "Ice Cave B1",
+      "jrpg:coordinates": "(21, 20)",
+      "jrpg:contents": "Ice Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x70-112-ice-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x70 (112): Cloth",
+      "robos:package": "world",
+      "jrpg:chestId": "0x70 (112)",
+      "jrpg:mapName": "Ice Cave B2",
+      "jrpg:coordinates": "(51, 8)",
+      "jrpg:contents": "Cloth",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x71-113-ice-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x71 (113): Flame Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x71 (113)",
+      "jrpg:mapName": "Ice Cave B2",
+      "jrpg:coordinates": "(49, 8)",
+      "jrpg:contents": "Flame Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x72-114-ice-cave-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x72 (114): FLOATER",
+      "robos:package": "world",
+      "jrpg:chestId": "0x72 (114)",
+      "jrpg:mapName": "Ice Cave B2",
+      "jrpg:coordinates": "(50, 9)",
+      "jrpg:contents": "FLOATER",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x73-115-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x73 (115): 7900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x73 (115)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(39, 41)",
+      "jrpg:contents": "7900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x74-116-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x74 (116): 5450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x74 (116)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(40, 41)",
+      "jrpg:contents": "5450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x75-117-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x75 (117): 9900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x75 (117)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(39, 43)",
+      "jrpg:contents": "9900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x76-118-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x76 (118): 5000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x76 (118)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(40, 43)",
+      "jrpg:contents": "5000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x77-119-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x77 (119): 180 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x77 (119)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(41, 41)",
+      "jrpg:contents": "180 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x78-120-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x78 (120): 12350 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x78 (120)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(41, 43)",
+      "jrpg:contents": "12350 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x79-121-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x79 (121): Silver Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x79 (121)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(29, 10)",
+      "jrpg:contents": "Silver Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7a-122-ice-cave-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7A (122): Ice Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7A (122)",
+      "jrpg:mapName": "Ice Cave B3",
+      "jrpg:coordinates": "(30, 10)",
+      "jrpg:contents": "Ice Armor",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7b-123-castle-of-ordeals-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7B (123): Zeus Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7B (123)",
+      "jrpg:mapName": "Castle of Ordeals 2F",
+      "jrpg:coordinates": "(22, 1)",
+      "jrpg:contents": "Zeus Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7b-123-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7B (123): Zeus Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7B (123)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(1, 22)",
+      "jrpg:contents": "Zeus Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7c-124-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7C (124): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7C (124)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(2, 22)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7d-125-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7D (125): 1455 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7D (125)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(3, 22)",
+      "jrpg:contents": "1455 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7e-126-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7E (126): 7340 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7E (126)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(4, 22)",
+      "jrpg:contents": "7340 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x7f-127-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x7F (127): Gold Bracelet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x7F (127)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(1, 1)",
+      "jrpg:contents": "Gold Bracelet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x80-128-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x80 (128): Ice Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0x80 (128)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(1, 2)",
+      "jrpg:contents": "Ice Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x81-129-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x81 (129): Iron Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x81 (129)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(1, 3)",
+      "jrpg:contents": "Iron Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x82-130-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x82 (130): Heal Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0x82 (130)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(22, 1)",
+      "jrpg:contents": "Heal Staff",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x83-131-castle-of-ordeals-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x83 (131): TAIL",
+      "robos:package": "world",
+      "jrpg:chestId": "0x83 (131)",
+      "jrpg:mapName": "Castle of Ordeals 3F",
+      "jrpg:coordinates": "(15, 18)",
+      "jrpg:contents": "TAIL",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x84-132-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x84 (132): 1455 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x84 (132)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(55, 42)",
+      "jrpg:contents": "1455 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x85-133-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x85 (133): 2000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x85 (133)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(55, 45)",
+      "jrpg:contents": "2000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x86-134-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x86 (134): 2750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x86 (134)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(52, 47)",
+      "jrpg:contents": "2750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x87-135-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x87 (135): 2750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x87 (135)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(40, 51)",
+      "jrpg:contents": "2750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x88-136-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x88 (136): 1520 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x88 (136)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(40, 52)",
+      "jrpg:contents": "1520 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x89-137-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x89 (137): 10 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x89 (137)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(16, 36)",
+      "jrpg:contents": "10 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x8a-138-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x8A (138): 500 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x8A (138)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(22, 34)",
+      "jrpg:contents": "500 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x8b-139-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x8B (139): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0x8B (139)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(21, 34)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x8c-140-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x8C (140): 575 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x8C (140)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(12, 21)",
+      "jrpg:contents": "575 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x8d-141-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x8D (141): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0x8D (141)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(15, 21)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x8e-142-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x8E (142): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0x8E (142)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(10, 9)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x8f-143-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x8F (143): 9500 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x8F (143)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(38, 51)",
+      "jrpg:contents": "9500 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x90-144-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x90 (144): 160 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x90 (144)",
+      "jrpg:mapName": "Cardia Islands",
+      "jrpg:coordinates": "(34, 51)",
+      "jrpg:contents": "160 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x95-149-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x95 (149): Ribbon",
+      "robos:package": "world",
+      "jrpg:chestId": "0x95 (149)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(33, 7)",
+      "jrpg:contents": "Ribbon",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x96-150-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x96 (150): 9900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x96 (150)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(34, 7)",
+      "jrpg:contents": "9900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x97-151-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x97 (151): 7340 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x97 (151)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(36, 7)",
+      "jrpg:contents": "7340 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x98-152-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x98 (152): 2750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x98 (152)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(36, 9)",
+      "jrpg:contents": "2750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x99-153-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x99 (153): 7690 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x99 (153)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(41, 25)",
+      "jrpg:contents": "7690 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x9a-154-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x9A (154): 8135 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x9A (154)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(44, 25)",
+      "jrpg:contents": "8135 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x9b-155-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x9B (155): 5450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x9B (155)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(6, 24)",
+      "jrpg:contents": "5450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x9c-156-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x9C (156): 385 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x9C (156)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(9, 25)",
+      "jrpg:contents": "385 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x9d-157-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x9D (157): Power Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0x9D (157)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(10, 24)",
+      "jrpg:contents": "Power Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x9e-158-sea-shrine-b4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x9E (158): Light Axe",
+      "robos:package": "world",
+      "jrpg:chestId": "0x9E (158)",
+      "jrpg:mapName": "Sea Shrine B4",
+      "jrpg:coordinates": "(16, 10)",
+      "jrpg:contents": "Light Axe",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0x9f-159-sea-shrine-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0x9F (159): 9900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0x9F (159)",
+      "jrpg:mapName": "Sea Shrine B3",
+      "jrpg:coordinates": "(7, 14)",
+      "jrpg:contents": "9900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa0-160-sea-shrine-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA0 (160): 2000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA0 (160)",
+      "jrpg:mapName": "Sea Shrine B3",
+      "jrpg:coordinates": "(36, 25)",
+      "jrpg:contents": "2000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa1-161-sea-shrine-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA1 (161): 450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA1 (161)",
+      "jrpg:mapName": "Sea Shrine B3",
+      "jrpg:coordinates": "(48, 13)",
+      "jrpg:contents": "450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa2-162-sea-shrine-b3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA2 (162): 110 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA2 (162)",
+      "jrpg:mapName": "Sea Shrine B3",
+      "jrpg:coordinates": "(51, 5)",
+      "jrpg:contents": "110 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa3-163-sea-shrine-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA3 (163): Light Axe",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA3 (163)",
+      "jrpg:mapName": "Sea Shrine B2",
+      "jrpg:coordinates": "(7, 41)",
+      "jrpg:contents": "Light Axe",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa4-164-sea-shrine-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA4 (164): Opal Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA4 (164)",
+      "jrpg:mapName": "Sea Shrine B2",
+      "jrpg:coordinates": "(22, 1)",
+      "jrpg:contents": "Opal Armor",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa5-165-sea-shrine-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA5 (165): 20 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA5 (165)",
+      "jrpg:mapName": "Sea Shrine B2",
+      "jrpg:coordinates": "(28, 23)",
+      "jrpg:contents": "20 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa6-166-sea-shrine-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA6 (166): Mage Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA6 (166)",
+      "jrpg:mapName": "Sea Shrine B2",
+      "jrpg:coordinates": "(28, 37)",
+      "jrpg:contents": "Mage Staff",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa7-167-sea-shrine-b2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA7 (167): 12350 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA7 (167)",
+      "jrpg:mapName": "Sea Shrine B2",
+      "jrpg:coordinates": "(38, 44)",
+      "jrpg:contents": "12350 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa8-168-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA8 (168): 9000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA8 (168)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(11, 18)",
+      "jrpg:contents": "9000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xa9-169-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xA9 (169): 1760 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xA9 (169)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(12, 18)",
+      "jrpg:contents": "1760 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xaa-170-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xAA (170): Opal Bracelet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xAA (170)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(13, 18)",
+      "jrpg:contents": "Opal Bracelet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xab-171-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xAB (171): 2750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xAB (171)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(12, 4)",
+      "jrpg:contents": "2750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xac-172-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xAC (172): 10000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xAC (172)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(18, 4)",
+      "jrpg:contents": "10000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xad-173-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xAD (173): 10 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xAD (173)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(20, 4)",
+      "jrpg:contents": "10 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xae-174-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xAE (174): 4150 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xAE (174)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(19, 11)",
+      "jrpg:contents": "4150 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xaf-175-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xAF (175): 5000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xAF (175)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(26, 11)",
+      "jrpg:contents": "5000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb0-176-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB0 (176): PURE Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB0 (176)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(19, 25)",
+      "jrpg:contents": "PURE Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb1-177-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB1 (177): Opal Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB1 (177)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(26, 25)",
+      "jrpg:contents": "Opal Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb2-178-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB2 (178): Opal Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB2 (178)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(25, 4)",
+      "jrpg:contents": "Opal Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb3-179-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB3 (179): Opal Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB3 (179)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(26, 4)",
+      "jrpg:contents": "Opal Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb4-180-sea-shrine-b1",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB4 (180): SLAB",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB4 (180)",
+      "jrpg:mapName": "Sea Shrine B1",
+      "jrpg:coordinates": "(27, 4)",
+      "jrpg:contents": "SLAB",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb5-181-waterfall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB5 (181): Wizard Staff",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB5 (181)",
+      "jrpg:mapName": "Waterfall",
+      "jrpg:coordinates": "(15, 52)",
+      "jrpg:contents": "Wizard Staff",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb6-182-waterfall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB6 (182): Ribbon",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB6 (182)",
+      "jrpg:mapName": "Waterfall",
+      "jrpg:coordinates": "(16, 52)",
+      "jrpg:contents": "Ribbon",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb7-183-waterfall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB7 (183): 13450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB7 (183)",
+      "jrpg:mapName": "Waterfall",
+      "jrpg:coordinates": "(17, 52)",
+      "jrpg:contents": "13450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb8-184-waterfall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB8 (184): 6400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB8 (184)",
+      "jrpg:mapName": "Waterfall",
+      "jrpg:coordinates": "(18, 52)",
+      "jrpg:contents": "6400 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xb9-185-waterfall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xB9 (185): 5000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xB9 (185)",
+      "jrpg:mapName": "Waterfall",
+      "jrpg:coordinates": "(19, 52)",
+      "jrpg:contents": "5000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xba-186-waterfall",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xBA (186): Defense",
+      "robos:package": "world",
+      "jrpg:chestId": "0xBA (186)",
+      "jrpg:mapName": "Waterfall",
+      "jrpg:coordinates": "(20, 52)",
+      "jrpg:contents": "Defense",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xc4-196-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xC4 (196): Aegis Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0xC4 (196)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(15, 15)",
+      "jrpg:contents": "Aegis Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xc5-197-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xC5 (197): 2750 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xC5 (197)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(16, 15)",
+      "jrpg:contents": "2750 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xc6-198-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xC6 (198): 3400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xC6 (198)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(18, 15)",
+      "jrpg:contents": "3400 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xc7-199-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xC7 (199): 18010 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xC7 (199)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(17, 16)",
+      "jrpg:contents": "18010 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xc8-200-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xC8 (200): CABIN",
+      "robos:package": "world",
+      "jrpg:chestId": "0xC8 (200)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(10, 15)",
+      "jrpg:contents": "CABIN",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xc9-201-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xC9 (201): Heal Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xC9 (201)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(21, 15)",
+      "jrpg:contents": "Heal Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xca-202-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xCA (202): 880 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xCA (202)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(20, 11)",
+      "jrpg:contents": "880 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xcb-203-mirage-tower-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xCB (203): Vorpal",
+      "robos:package": "world",
+      "jrpg:chestId": "0xCB (203)",
+      "jrpg:mapName": "Mirage Tower 1F",
+      "jrpg:coordinates": "(18, 17)",
+      "jrpg:contents": "Vorpal",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xcc-204-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xCC (204): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0xCC (204)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(17, 13)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xcd-205-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xCD (205): 7690 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xCD (205)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(18, 14)",
+      "jrpg:contents": "7690 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xce-206-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xCE (206): Sun Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0xCE (206)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(19, 15)",
+      "jrpg:contents": "Sun Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xcf-207-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xCF (207): 10000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xCF (207)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(18, 16)",
+      "jrpg:contents": "10000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd0-208-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD0 (208): Dragon Armor",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD0 (208)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(17, 17)",
+      "jrpg:contents": "Dragon Armor",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd1-209-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD1 (209): 8135 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD1 (209)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(14, 17)",
+      "jrpg:contents": "8135 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd2-210-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD2 (210): 7900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD2 (210)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(13, 16)",
+      "jrpg:contents": "7900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd3-211-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD3 (211): Thor Hammer",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD3 (211)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(12, 15)",
+      "jrpg:contents": "Thor Hammer",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd4-212-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD4 (212): 12350 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD4 (212)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(13, 14)",
+      "jrpg:contents": "12350 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd5-213-mirage-tower-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD5 (213): 13000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD5 (213)",
+      "jrpg:mapName": "Mirage Tower 2F",
+      "jrpg:coordinates": "(14, 13)",
+      "jrpg:contents": "13000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd6-214-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD6 (214): 9900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD6 (214)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(2, 19)",
+      "jrpg:contents": "9900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd7-215-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD7 (215): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD7 (215)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(3, 18)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd8-216-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD8 (216): 4150 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD8 (216)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(4, 19)",
+      "jrpg:contents": "4150 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xd9-217-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xD9 (217): 7900 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xD9 (217)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(5, 21)",
+      "jrpg:contents": "7900 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xda-218-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xDA (218): 5000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xDA (218)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(33, 21)",
+      "jrpg:contents": "5000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xdb-219-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xDB (219): ProRing",
+      "robos:package": "world",
+      "jrpg:chestId": "0xDB (219)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(34, 20)",
+      "jrpg:contents": "ProRing",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xdc-220-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xDC (220): 6720 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xDC (220)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(35, 19)",
+      "jrpg:contents": "6720 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xdd-221-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xDD (221): Heal Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xDD (221)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(36, 19)",
+      "jrpg:contents": "Heal Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xde-222-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xDE (222): 180 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xDE (222)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(37, 22)",
+      "jrpg:contents": "180 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xdf-223-sky-castle-1f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xDF (223): Bane Sword",
+      "robos:package": "world",
+      "jrpg:chestId": "0xDF (223)",
+      "jrpg:mapName": "Sky Castle 1F",
+      "jrpg:coordinates": "(19, 38)",
+      "jrpg:contents": "Bane Sword",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe0-224-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE0 (224): White Shirt",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE0 (224)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(27, 33)",
+      "jrpg:contents": "White Shirt",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe1-225-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE1 (225): Black Shirt",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE1 (225)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(28, 33)",
+      "jrpg:contents": "Black Shirt",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe2-226-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE2 (226): Ribbon",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE2 (226)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(35, 18)",
+      "jrpg:contents": "Ribbon",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe3-227-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE3 (227): Opal Gauntlet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE3 (227)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(27, 9)",
+      "jrpg:contents": "Opal Gauntlet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe4-228-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE4 (228): Opal Shield",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE4 (228)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(36, 20)",
+      "jrpg:contents": "Opal Shield",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe5-229-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE5 (229): Silver Helmet",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE5 (229)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(8, 9)",
+      "jrpg:contents": "Silver Helmet",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe6-230-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE6 (230): HOUSE",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE6 (230)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(11, 9)",
+      "jrpg:contents": "HOUSE",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe7-231-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE7 (231): 880 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE7 (231)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(1, 21)",
+      "jrpg:contents": "880 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe8-232-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE8 (232): 13000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE8 (232)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(4, 19)",
+      "jrpg:contents": "13000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xe9-233-sky-castle-2f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xE9 (233): ADAMANT",
+      "robos:package": "world",
+      "jrpg:chestId": "0xE9 (233)",
+      "jrpg:mapName": "Sky Castle 2F",
+      "jrpg:coordinates": "(10, 33)",
+      "jrpg:contents": "ADAMANT",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xea-234-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xEA (234): 4150 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xEA (234)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(5, 20)",
+      "jrpg:contents": "4150 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xeb-235-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xEB (235): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0xEB (235)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(4, 20)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xec-236-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xEC (236): 3400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xEC (236)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(6, 20)",
+      "jrpg:contents": "3400 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xed-237-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xED (237): Katana",
+      "robos:package": "world",
+      "jrpg:chestId": "0xED (237)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(7, 20)",
+      "jrpg:contents": "Katana",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xee-238-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xEE (238): ProCape",
+      "robos:package": "world",
+      "jrpg:chestId": "0xEE (238)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(39, 19)",
+      "jrpg:contents": "ProCape",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xef-239-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xEF (239): Cloth",
+      "robos:package": "world",
+      "jrpg:chestId": "0xEF (239)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(39, 18)",
+      "jrpg:contents": "Cloth",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf0-240-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF0 (240): 9500 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF0 (240)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(41, 18)",
+      "jrpg:contents": "9500 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf1-241-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF1 (241): SOFT Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF1 (241)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(41, 17)",
+      "jrpg:contents": "SOFT Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf2-242-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF2 (242): 6400 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF2 (242)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(39, 17)",
+      "jrpg:contents": "6400 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf3-243-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF3 (243): 8135 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF3 (243)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(41, 19)",
+      "jrpg:contents": "8135 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf4-244-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF4 (244): 9000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF4 (244)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(17, 5)",
+      "jrpg:contents": "9000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf5-245-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF5 (245): HEAL Potion",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF5 (245)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(17, 6)",
+      "jrpg:contents": "HEAL Potion",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf6-246-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF6 (246): ProRing",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF6 (246)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(19, 5)",
+      "jrpg:contents": "ProRing",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf7-247-sky-castle-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF7 (247): 5450 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF7 (247)",
+      "jrpg:mapName": "Sky Castle 3F",
+      "jrpg:coordinates": "(19, 6)",
+      "jrpg:contents": "5450 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf8-248-temple-of-fiends-revisited-b4-air",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF8 (248): Masmune",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF8 (248)",
+      "jrpg:mapName": "Temple of Fiends Revisited B4 (Air)",
+      "jrpg:coordinates": "(51, 32)",
+      "jrpg:contents": "Masmune",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xf9-249-temple-of-fiends-revisited-b2-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xF9 (249): 26000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xF9 (249)",
+      "jrpg:mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "jrpg:coordinates": "(54, 34)",
+      "jrpg:contents": "26000 G",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xfa-250-temple-of-fiends-revisited-b2-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xFA (250): Katana",
+      "robos:package": "world",
+      "jrpg:chestId": "0xFA (250)",
+      "jrpg:mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "jrpg:coordinates": "(24, 52)",
+      "jrpg:contents": "Katana",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xfb-251-temple-of-fiends-revisited-b2-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xFB (251): ProRing",
+      "robos:package": "world",
+      "jrpg:chestId": "0xFB (251)",
+      "jrpg:mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "jrpg:coordinates": "(7, 30)",
+      "jrpg:contents": "ProRing",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xfc-252-temple-of-fiends-revisited-b2-fire",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xFC (252): ProCape",
+      "robos:package": "world",
+      "jrpg:chestId": "0xFC (252)",
+      "jrpg:mapName": "Temple of Fiends Revisited B2 (Fire)",
+      "jrpg:coordinates": "(22, 30)",
+      "jrpg:contents": "ProCape",
+      "jrpg:requiresMysticKey": true,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xfd-253-temple-of-fiends-revisited-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xFD (253): 45000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xFD (253)",
+      "jrpg:mapName": "Temple of Fiends Revisited 3F",
+      "jrpg:coordinates": "(17, 15)",
+      "jrpg:contents": "45000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:chest:0xfe-254-temple-of-fiends-revisited-3f",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:TreasureChest"
+      ],
+      "dcterms:title": "Chest 0xFE (254): 65000 G",
+      "robos:package": "world",
+      "jrpg:chestId": "0xFE (254)",
+      "jrpg:mapName": "Temple of Fiends Revisited 3F",
+      "jrpg:coordinates": "(23, 15)",
+      "jrpg:contents": "65000 G",
+      "jrpg:requiresMysticKey": false,
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-caravan",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Caravan map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-caravan.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:caravan"
+      },
+      "jrpg:basis": "text-only",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Cardia Islands map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-cardia-islands.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:cardia-islands"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-castle-coneria",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Castle Coneria map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-castle-coneria.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:castle-coneria"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-castle-of-ordeals",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Castle of Ordeals map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-castle-of-ordeals.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:castle-of-ordeals"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-coneria",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Coneria map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-coneria.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-crescent-lake",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Crescent Lake map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-crescent-lake.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Dwarf Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-dwarf-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:dwarf-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-earth-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Earth Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-earth-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:earth-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-elfland",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Elfland map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-elfland.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-elfland-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Elfland castle map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-elfland-castle.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland-castle"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-floating-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Floating Castle map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-floating-castle.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:floating-castle"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-gaia",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Gaia map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-gaia.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-gurgu-volcano",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Gurgu Volcano map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-gurgu-volcano.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gurgu-volcano"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-ice-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Ice Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-ice-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:ice-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-lefein",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Lefein map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-lefein.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Marsh Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-marsh-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:marsh-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Matoya's Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-matoyas-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:matoyas-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-melmond",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Melmond map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-melmond.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-mirage-tower",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Mirage Tower map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-mirage-tower.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:mirage-tower"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-northwest-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Northwest Castle map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-northwest-castle.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:northwest-castle"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-onrac",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Onrac map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-onrac.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-pravoka",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Pravoka map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-pravoka.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-sardas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Sarda's Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-sardas-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:sardas-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-sea-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Sea Shrine map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-sea-shrine.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:sea-shrine"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-temple-of-fiends",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Temple of Fiends map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-temple-of-fiends.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:temple-of-fiends-present"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-temple-of-fiends-revisited",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Temple of Fiends Revisited map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-temple-of-fiends-revisited.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-titans-tunnel",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Titan's Tunnel map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-titans-tunnel.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:titans-tunnel"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:area-map-waterfall-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:AreaMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Waterfall Cave map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/area-map/area-map-waterfall-cave.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:place:waterfall-cave"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:battle-backdrop-battle-screen-example",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:BattleBackdrop",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Battle backdrop",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/battle-backdrop/battle-backdrop-clean-room-screen",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:battle-backdrop-battle2",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:BattleBackdrop",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Battle backdrop",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/battle-backdrop/battle-backdrop-battle2.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:battle-backdrop-battle3",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:BattleBackdrop",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Battle backdrop",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/battle-backdrop/battle-backdrop-battle3.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:battle-backdrop-battle4",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:BattleBackdrop",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Battle backdrop",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/battle-backdrop/battle-backdrop-battle4.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:battle-backdrop-strategywiki-fantasy-light-warriors-1-nes-combat",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:BattleBackdrop",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Battle backdrop",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/battle-backdrop/battle-backdrop-strategywiki-fantasy-light-warriors-1-nes-combat.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:world-map-world",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:WorldMap",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Fantasy: Light Warriors world map",
+      "robos:package": "world",
+      "schema:contentUrl": "assets/generated/world-map/world-map-world.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:aldi-sea",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Region"
+      ],
+      "dcterms:title": "Aldi Sea",
+      "robos:package": "world",
+      "robos:locationType": "region",
+      "jrpg:altName": [
+        "Inner Sea"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:caravan",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Caravan",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "Caravan",
+        "Desert Caravan",
+        "Desert Carvan"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:cardia-islands",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Region"
+      ],
+      "dcterms:title": "Cardia Islands",
+      "robos:package": "world",
+      "robos:locationType": "region",
+      "jrpg:altName": [
+        "Cardia Island",
+        "Carida",
+        "Bahamut's cave",
+        "Dragon Caves",
+        "Bahamut's Place",
+        "Dragon Islands",
+        "Bahamut's Cave",
+        "Dragon's Cave"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:castle-coneria",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Castle"
+      ],
+      "dcterms:title": "Castle Coneria",
+      "robos:package": "world",
+      "robos:locationType": "castle",
+      "jrpg:altName": [
+        "Corneria castle",
+        "Cornelia Castle",
+        "Castle Cornelia"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:castle-of-ordeals",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Castle"
+      ],
+      "dcterms:title": "Castle of Ordeals",
+      "robos:package": "world",
+      "robos:locationType": "castle",
+      "jrpg:altName": [
+        "Citadel of Trials",
+        "Citadel",
+        "Trial of Ordeals",
+        "Castle of Ordeal"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:coneria",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Coneria",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "Cornelia",
+        "Corneria",
+        "Coneria Town",
+        "CORNELIA",
+        "The Kingdom of Corneria",
+        "Conelia",
+        "Cornelia Town",
+        "Town of Cornelia",
+        "Cornelia Castle",
+        "Cornelia Kingdom"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:crescent-lake",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Crescent Lake",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:dwarf-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Dwarf Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Dwarf Place",
+        "Mt. Duergar",
+        "Mt. Duegar"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:earth-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Earth Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Terra Cave",
+        "Cavern of Earth",
+        "Terra Cavern",
+        "Cave of Earth"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Elfland",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "ELFHEIM",
+        "elf land",
+        "Elfheim",
+        "Elfland"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:elfland-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Castle"
+      ],
+      "dcterms:title": "Elfland Castle",
+      "robos:package": "world",
+      "robos:locationType": "castle",
+      "jrpg:altName": [
+        "Elfheim castle",
+        "Elf Castle",
+        "Elven Castle"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:floating-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Castle"
+      ],
+      "dcterms:title": "Floating Castle",
+      "robos:package": "world",
+      "robos:locationType": "castle",
+      "jrpg:altName": [
+        "Sky Fortress",
+        "Sky Castle",
+        "Flying Fortress"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gaia",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Gaia",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "Eye of the Hawk"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:gurgu-volcano",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Gurgu Volcano",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Mt. Gulg",
+        "Guru volcano",
+        "Volcano",
+        "Mt. Gulg Volcano"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:ice-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Ice Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Ice Cavern",
+        "Cavern of Ice"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:lefein",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Lefein",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "Lufenia",
+        "Town of Lufenia"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:marsh-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Marsh Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "marsh hole"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:matoyas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Matoya's Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Matoya's house",
+        "Matoya's"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:melmond",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Melmond",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:mirage-tower",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Mirage Tower",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Tower of Mirage",
+        "Mirage Tower"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:northwest-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Castle"
+      ],
+      "dcterms:title": "Northwest Castle",
+      "robos:package": "world",
+      "robos:locationType": "castle",
+      "jrpg:altName": [
+        "Western Keep",
+        "Astos Castle"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:onrac",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Onrac",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "Oncrac",
+        "Onlak"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:pravoka",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Town"
+      ],
+      "dcterms:title": "Pravoka",
+      "robos:package": "world",
+      "robos:locationType": "town",
+      "jrpg:altName": [
+        "Pravoka Town",
+        "PRAVOCA",
+        "Provoka",
+        "Pravoka region"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:ryukahn-desert",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Region"
+      ],
+      "dcterms:title": "Ryukahn Desert",
+      "robos:package": "world",
+      "robos:locationType": "region",
+      "jrpg:altName": [
+        "Lykion Desert",
+        "Desert of Ryukahn",
+        "Yahnikurm Desert",
+        "Yukon Desert",
+        "Great Eastern Desert"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:sardas-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Sarda's Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Sage's Cave",
+        "Cave of Sarda"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:sea-shrine",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Sea Shrine",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Sunken Shrine",
+        "Shrine of Water"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:temple-of-fiends-present",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Temple of Fiends (Present)",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Temple of Chaos",
+        "Chaos Shrine",
+        "Temple Of Fiends",
+        "Temple of Chaos (Past)",
+        "The Temple of Chaos",
+        "Temple of the Fiends"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:temple-of-fiends-revisited-past",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Temple of Fiends Revisited (Past)",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Temple of Chaos (Past)"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:tip-of-a-peninsula",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Region"
+      ],
+      "dcterms:title": "Tip Of A Peninsula",
+      "robos:package": "world",
+      "robos:locationType": "region",
+      "jrpg:altName": [
+        "Peninsula Tip Near Provoka",
+        "Power peninsula"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:titans-tunnel",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Titan's Tunnel",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Titan's Cave",
+        "Giant's Cave",
+        "Hall of Giants"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:waterfall-cave",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Waterfall Cave",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "jrpg:altName": [
+        "Waterfall Cavern",
+        "Waterfall"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:waterfall-cavern",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Dungeon"
+      ],
+      "dcterms:title": "Waterfall Cavern",
+      "robos:package": "world",
+      "robos:locationType": "dungeon",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:place:western-sea",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place",
+        "jrpg:Region"
+      ],
+      "dcterms:title": "Western Sea",
+      "robos:package": "world",
+      "robos:locationType": "region",
+      "robos:namespace": "jrpg.fantasy-light-warriors.world"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "version": "1.0.0",
+  "title": "Fantasy: Light Warriors (WIP) Knowledge Graph",
+  "generator": "robos-jrpg-parser",
+  "ontology": "ontology.jsonld",
+  "repositories": [
+    {
+      "id": "local",
+      "path": ".robos",
+      "packagesPath": "kgraphs",
+      "default": true
+    }
+  ],
+  "dependencies": [],
+  "packages": [
+    {
+      "id": "game",
+      "namespace": "jrpg.final-fantasy.game",
+      "title": "Fantasy: Light Warriors: Game & Sources",
+      "description": "Fantasy: Light Warriors (WIP) clean-room Knowledge Graph.",
+      "path": "kgraphs/game/package.jsonld",
+      "nodeCount": 1
+    },
+    {
+      "id": "world",
+      "namespace": "jrpg.final-fantasy.world",
+      "title": "Fantasy: Light Warriors: World, Places & Maps",
+      "description": "World and area maps, towns, castles, dungeons and regions.",
+      "path": "kgraphs/world/package.jsonld",
+      "nodeCount": 318
+    },
+    {
+      "id": "characters",
+      "namespace": "jrpg.final-fantasy.characters",
+      "title": "Fantasy: Light Warriors: Playable Classes",
+      "description": "Party classes and their sprites.",
+      "path": "kgraphs/characters/package.jsonld",
+      "nodeCount": 24
+    },
+    {
+      "id": "bestiary",
+      "namespace": "jrpg.final-fantasy.bestiary",
+      "title": "Fantasy: Light Warriors: Enemies & Bosses",
+      "description": "Every enemy with stats and rewards.",
+      "path": "kgraphs/bestiary/package.jsonld",
+      "nodeCount": 512
+    },
+    {
+      "id": "items",
+      "namespace": "jrpg.final-fantasy.items",
+      "title": "Fantasy: Light Warriors: Weapons, Armor & Items",
+      "description": "Equipment and items.",
+      "path": "kgraphs/items/package.jsonld",
+      "nodeCount": 107
+    },
+    {
+      "id": "magic",
+      "namespace": "jrpg.final-fantasy.magic",
+      "title": "Fantasy: Light Warriors: Magic",
+      "description": "Spells by school and level.",
+      "path": "kgraphs/magic/package.jsonld",
+      "nodeCount": 69
+    },
+    {
+      "id": "economy",
+      "namespace": "jrpg.final-fantasy.economy",
+      "title": "Fantasy: Light Warriors: Shops & Inns",
+      "description": "What each town sells.",
+      "path": "kgraphs/economy/package.jsonld",
+      "nodeCount": 49
+    },
+    {
+      "id": "ui",
+      "namespace": "jrpg.final-fantasy.ui",
+      "title": "Fantasy: Light Warriors: Menus & UI",
+      "description": "Menu layouts, battle layouts and rendered screens.",
+      "path": "kgraphs/ui/package.jsonld",
+      "nodeCount": 9
+    },
+    {
+      "id": "rules",
+      "namespace": "jrpg.final-fantasy.rules",
+      "title": "Fantasy: Light Warriors: Rule Engine",
+      "description": "Formulas, stats, statuses and elements.",
+      "path": "kgraphs/rules/package.jsonld",
+      "nodeCount": 337
+    },
+    {
+      "id": "story",
+      "namespace": "jrpg.final-fantasy.story",
+      "title": "Fantasy: Light Warriors: Story & Progression",
+      "description": "Main quest milestones in order.",
+      "path": "kgraphs/story/package.jsonld",
+      "nodeCount": 132
+    },
+    {
+      "id": "audio",
+      "namespace": "jrpg.final-fantasy.audio",
+      "title": "Fantasy: Light Warriors: Music",
+      "description": "Music tracks and where they play.",
+      "path": "kgraphs/audio/package.jsonld",
+      "nodeCount": 21
+    }
+  ]
+}

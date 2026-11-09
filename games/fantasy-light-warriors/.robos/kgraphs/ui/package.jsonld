@@ -1,0 +1,499 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:package:final-fantasy:ui",
+  "@type": [
+    "robos:Package"
+  ],
+  "robos:package": "ui",
+  "robos:namespace": "jrpg.final-fantasy.ui",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Fantasy: Light Warriors: Menus & UI",
+  "dcterms:description": "Menu layouts, battle layouts and rendered screens.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:menu-screen-equip",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuArt",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Menu screen",
+      "robos:package": "ui",
+      "schema:contentUrl": "assets/generated/menu-screen/menu-screen-clean-room-screen",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:equip"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:menu-screen-menu",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuArt",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Menu screen",
+      "robos:package": "ui",
+      "schema:contentUrl": "assets/generated/menu-screen/menu-screen-menu.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:menu"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:menu-screen-select-class",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuArt",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Menu screen",
+      "robos:package": "ui",
+      "schema:contentUrl": "assets/generated/menu-screen/menu-screen-select-class.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:select-class"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:image:menu-screen-strategywiki-fantasy-light-warriors-1-nes-subscreen",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuArt",
+        "jrpg:GeneratedImage"
+      ],
+      "dcterms:title": "Menu screen",
+      "robos:package": "ui",
+      "schema:contentUrl": "assets/generated/menu-screen/menu-screen-strategywiki-fantasy-light-warriors-1-nes-subscreen.png",
+      "jrpg:depicts": {
+        "@id": "urn:robos:jrpg:fantasy-light-warriors:game:fantasy-light-warriors"
+      },
+      "jrpg:basis": "reference",
+      "jrpg:model": "gemini-4-argon-medium",
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:battle-screen-example",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuScreen"
+      ],
+      "dcterms:title": "Fantasy: Light Warriors Battle Screen (Chaos Boss Fight)",
+      "robos:package": "ui",
+      "dcterms:description": "View combat execution as party member Arus attacks Chaos while monitoring party HP",
+      "jrpg:windows": [
+        {
+          "name": "Enemy View",
+          "x": 0.03,
+          "y": 0.02,
+          "width": 0.5,
+          "height": 0.62,
+          "contents": "Chaos boss sprite in front of temple pillars background"
+        },
+        {
+          "name": "Party View",
+          "x": 0.53,
+          "y": 0.02,
+          "width": 0.25,
+          "height": 0.62,
+          "contents": "Four party character sprites in vertical formation under temple pillars, with the top character (Arus) stepping forward swinging a sword"
+        },
+        {
+          "name": "Attacker Message Box",
+          "x": 0.03,
+          "y": 0.66,
+          "width": 0.31,
+          "height": 0.1,
+          "contents": "Acting character name: Arus"
+        },
+        {
+          "name": "Target Message Box",
+          "x": 0.03,
+          "y": 0.77,
+          "width": 0.31,
+          "height": 0.12,
+          "contents": "Target enemy name: CHAOS"
+        },
+        {
+          "name": "Party Member 1 Status",
+          "x": 0.78,
+          "y": 0.09,
+          "width": 0.19,
+          "height": 0.23,
+          "contents": "Arus HP 659"
+        },
+        {
+          "name": "Party Member 2 Status",
+          "x": 0.78,
+          "y": 0.32,
+          "width": 0.19,
+          "height": 0.21,
+          "contents": "Baku HP 358"
+        },
+        {
+          "name": "Party Member 3 Status",
+          "x": 0.78,
+          "y": 0.54,
+          "width": 0.19,
+          "height": 0.21,
+          "contents": "Sara HP 667"
+        },
+        {
+          "name": "Party Member 4 Status",
+          "x": 0.78,
+          "y": 0.75,
+          "width": 0.19,
+          "height": 0.21,
+          "contents": "Koko HP 452"
+        }
+      ],
+      "jrpg:cursor": "Not visible during combat action playback (normally a white pointing hand cursor moving vertically between commands or targets)",
+      "jrpg:palette": [
+        "#000000",
+        "#FFFFFF",
+        "#7C7C7C",
+        "#D8A028",
+        "#885800",
+        "#38B8B8",
+        "#005858",
+        "#D82800",
+        "#A870F8",
+        "#0088FC"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:equip",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuScreen"
+      ],
+      "dcterms:title": "Armor Menu",
+      "robos:package": "ui",
+      "dcterms:description": "View, equip, trade, and drop armor pieces held by each of the four party members.",
+      "jrpg:commands": [
+        "EQUIP",
+        "TRADE",
+        "DROP"
+      ],
+      "jrpg:windows": [
+        {
+          "name": "Header Window",
+          "x": 0.03,
+          "y": 0.01,
+          "width": 0.22,
+          "height": 0.13,
+          "contents": "Screen title 'ARMOR'"
+        },
+        {
+          "name": "Command Window",
+          "x": 0.25,
+          "y": 0.01,
+          "width": 0.72,
+          "height": 0.13,
+          "contents": "Horizontal action menu: EQUIP, TRADE, DROP"
+        },
+        {
+          "name": "Character 1 Name Window",
+          "x": 0.03,
+          "y": 0.16,
+          "width": 0.25,
+          "height": 0.13,
+          "contents": "First party member name ('AAAA')"
+        },
+        {
+          "name": "Character 1 Armor Window",
+          "x": 0.25,
+          "y": 0.16,
+          "width": 0.72,
+          "height": 0.2,
+          "contents": "2x2 grid of AAAA's armor slots showing equipped status ('E-'): E-Dragon (Armor), E-Aegis (Shield), E-Heal (Helm)"
+        },
+        {
+          "name": "Character 2 Name Window",
+          "x": 0.03,
+          "y": 0.37,
+          "width": 0.25,
+          "height": 0.13,
+          "contents": "Second party member name ('BBBB')"
+        },
+        {
+          "name": "Character 2 Armor Window",
+          "x": 0.25,
+          "y": 0.37,
+          "width": 0.72,
+          "height": 0.2,
+          "contents": "2x2 grid of BBBB's armor slots: Dragon (Armor), E-Zeus (Gauntlet), Power (Gauntlet), Opal (Gauntlet)"
+        },
+        {
+          "name": "Character 3 Name Window",
+          "x": 0.03,
+          "y": 0.59,
+          "width": 0.25,
+          "height": 0.13,
+          "contents": "Third party member name ('CCCC')"
+        },
+        {
+          "name": "Character 3 Armor Window",
+          "x": 0.25,
+          "y": 0.59,
+          "width": 0.72,
+          "height": 0.2,
+          "contents": "2x2 grid of CCCC's armor slots: E-White (Shirt), E-ProRing, Heal (Helm)"
+        },
+        {
+          "name": "Character 4 Name Window",
+          "x": 0.03,
+          "y": 0.8,
+          "width": 0.25,
+          "height": 0.13,
+          "contents": "Fourth party member name ('DDDD')"
+        },
+        {
+          "name": "Character 4 Armor Window",
+          "x": 0.25,
+          "y": 0.8,
+          "width": 0.72,
+          "height": 0.2,
+          "contents": "2x2 grid of DDDD's armor slots: Heal (Helm), E-Black (Shirt), E-ProRing"
+        }
+      ],
+      "jrpg:cursor": "A white gloved hand pointing right with gray shading and a drop shadow, moving horizontally between top commands (EQUIP, TRADE, DROP) and in a 2-column grid across the 4 armor slots of each character.",
+      "jrpg:palette": [
+        "#000000",
+        "#201888",
+        "#FFFFFF",
+        "#7C7C7C",
+        "#BCBCBC"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:ff1-nes-shop",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuScreen"
+      ],
+      "dcterms:title": "Item Shop",
+      "robos:package": "ui",
+      "dcterms:description": "Buy consumable items for the party or exit the shop back to the town map.",
+      "jrpg:commands": [
+        "Buy",
+        "Exit"
+      ],
+      "jrpg:windows": [
+        {
+          "name": "Shop Header",
+          "x": 0.38,
+          "y": 0.05,
+          "width": 0.25,
+          "height": 0.13,
+          "contents": "Displays the shop type label 'ITEM' on a magenta background."
+        },
+        {
+          "name": "Dialogue Box",
+          "x": 0.03,
+          "y": 0.12,
+          "width": 0.28,
+          "height": 0.41,
+          "contents": "Displays shopkeeper messages, currently showing 'Welcome' on a blue background."
+        },
+        {
+          "name": "Shop Scene",
+          "x": 0.34,
+          "y": 0.21,
+          "width": 0.32,
+          "height": 0.33,
+          "contents": "Depicts the shopkeeper behind a wooden counter with three barrels on the left and the four party members standing on the right."
+        },
+        {
+          "name": "Command Menu",
+          "x": 0.19,
+          "y": 0.62,
+          "width": 0.28,
+          "height": 0.34,
+          "contents": "Lists selectable shop actions ('Buy' and 'Exit') on a blue background."
+        },
+        {
+          "name": "Gold Display",
+          "x": 0.56,
+          "y": 0.84,
+          "width": 0.31,
+          "height": 0.13,
+          "contents": "Shows the party's current gold total ('400 G') on a green background."
+        }
+      ],
+      "jrpg:cursor": "A white gloved hand pointing right with a gray drop shadow on the left edge of the active menu item; moves vertically up and down between menu options.",
+      "jrpg:palette": [
+        "#000000",
+        "#FFFFFF",
+        "#201888",
+        "#94007B",
+        "#005000",
+        "#B83800",
+        "#7C7C7C"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:menu",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuScreen"
+      ],
+      "dcterms:title": "Main Menu",
+      "robos:package": "ui",
+      "dcterms:description": "View party status, orbs, and gold, and access item, magic, equipment, and status submenus",
+      "jrpg:commands": [
+        "ITEM",
+        "MAGIC",
+        "WEAPON",
+        "ARMOR",
+        "STATUS"
+      ],
+      "jrpg:windows": [
+        {
+          "name": "Orbs",
+          "x": 0.06,
+          "y": 0.07,
+          "width": 0.25,
+          "height": 0.25,
+          "contents": "Four elemental orbs (currently unlit gray circles)"
+        },
+        {
+          "name": "Gold",
+          "x": 0.03,
+          "y": 0.36,
+          "width": 0.31,
+          "height": 0.14,
+          "contents": "Party gold total (972992 G)"
+        },
+        {
+          "name": "Commands",
+          "x": 0.06,
+          "y": 0.54,
+          "width": 0.25,
+          "height": 0.43,
+          "contents": "Main menu command list: ITEM, MAGIC, WEAPON, ARMOR, STATUS"
+        },
+        {
+          "name": "Character 1 (JJ)",
+          "x": 0.34,
+          "y": 0.04,
+          "width": 0.31,
+          "height": 0.46,
+          "contents": "Fighter JJ sprite, level (L15), and HP (378/378)"
+        },
+        {
+          "name": "Character 2 (Xen)",
+          "x": 0.66,
+          "y": 0.04,
+          "width": 0.31,
+          "height": 0.46,
+          "contents": "Black Belt Xen sprite, level (L14), and HP (234/234)"
+        },
+        {
+          "name": "Character 3 (Dere)",
+          "x": 0.34,
+          "y": 0.54,
+          "width": 0.31,
+          "height": 0.43,
+          "contents": "White Mage Dere sprite, level (L15), HP (248/248), and spell charges by level (MAGIC 7/5/5/4/3/0/0/0)"
+        },
+        {
+          "name": "Character 4 (Shan)",
+          "x": 0.66,
+          "y": 0.54,
+          "width": 0.31,
+          "height": 0.43,
+          "contents": "Black Mage Shan sprite, level (L14), HP (181/181), and spell charges by level (MAGIC 7/5/4/4/2/0/0/0)"
+        }
+      ],
+      "jrpg:cursor": "A white gloved hand pointing right on the left edge of the command list that moves vertically between menu options (and among character panels when selecting a target)",
+      "jrpg:palette": [
+        "#000000",
+        "#002888",
+        "#FFFFFF",
+        "#B8B8B8",
+        "#787878",
+        "#D82800",
+        "#3CBCFC",
+        "#887000"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    },
+    {
+      "@id": "urn:robos:jrpg:fantasy-light-warriors:menu:select-class",
+      "@type": [
+        "oslc_am:Resource",
+        "jrpg:MenuScreen"
+      ],
+      "dcterms:title": "Class Select",
+      "robos:package": "ui",
+      "dcterms:description": "Choose the character classes for the four party members before starting a new game.",
+      "jrpg:commands": [
+        "FIGHTER",
+        "THIEF",
+        "Bl.BELT",
+        "RedMAGE"
+      ],
+      "jrpg:windows": [
+        {
+          "name": "Party Member 1 (Top-Left)",
+          "x": 0.13,
+          "y": 0.14,
+          "width": 0.3,
+          "height": 0.32,
+          "contents": "FIGHTER class name, Fighter sprite, and selection hand cursor"
+        },
+        {
+          "name": "Party Member 2 (Top-Right)",
+          "x": 0.57,
+          "y": 0.14,
+          "width": 0.3,
+          "height": 0.32,
+          "contents": "THIEF class name and Thief sprite"
+        },
+        {
+          "name": "Party Member 3 (Bottom-Left)",
+          "x": 0.13,
+          "y": 0.54,
+          "width": 0.3,
+          "height": 0.32,
+          "contents": "Bl.BELT class name and Black Belt sprite"
+        },
+        {
+          "name": "Party Member 4 (Bottom-Right)",
+          "x": 0.57,
+          "y": 0.54,
+          "width": 0.3,
+          "height": 0.32,
+          "contents": "RedMAGE class name and Red Mage sprite"
+        }
+      ],
+      "jrpg:cursor": "A white gloved hand with a gray drop shadow pointing right at the active character sprite; pressing A cycles through available classes for that slot and confirming advances the cursor to the next party member window.",
+      "jrpg:palette": [
+        "#000000",
+        "#002A88",
+        "#FCFCFC",
+        "#7C7C7C",
+        "#A81000",
+        "#3CBCFC"
+      ],
+      "robos:namespace": "jrpg.fantasy-light-warriors.ui"
+    }
+  ]
+}

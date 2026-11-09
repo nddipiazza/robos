@@ -161,69 +161,39 @@
   "chests": [
     {
       "chestId": 7,
-      "hexId": "0x07",
-      "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "x": 2,
       "y": 3,
-      "itemId": 23,
-      "contents": "CABIN",
-      "mapHasMysticKeyDoors": true
+      "contents": "CABIN"
     },
     {
       "chestId": 8,
-      "hexId": "0x08",
-      "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "x": 3,
       "y": 3,
-      "itemId": 25,
-      "contents": "HEAL Potion",
-      "mapHasMysticKeyDoors": true
+      "contents": "HEAL Potion"
     },
     {
       "chestId": 11,
-      "hexId": "0x0B",
-      "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "x": 38,
       "y": 3,
-      "itemId": 53,
-      "contents": "Were Sword",
-      "mapHasMysticKeyDoors": true
+      "contents": "Were Sword"
     },
     {
       "chestId": 12,
-      "hexId": "0x0C",
-      "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "x": 39,
       "y": 3,
-      "itemId": 27,
-      "contents": "SOFT Potion",
-      "mapHasMysticKeyDoors": true
+      "contents": "SOFT Potion"
     },
     {
       "chestId": 9,
-      "hexId": "0x09",
-      "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "x": 2,
       "y": 32,
-      "itemId": 93,
-      "contents": "Cap",
-      "mapHasMysticKeyDoors": true
+      "contents": "Cap"
     },
     {
       "chestId": 10,
-      "hexId": "0x0A",
-      "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "x": 39,
       "y": 32,
-      "itemId": 54,
-      "contents": "Rune Sword",
-      "mapHasMysticKeyDoors": true
+      "contents": "Rune Sword"
     }
   ],
   "teleports": [
@@ -5794,168 +5764,98 @@
   "npcs": [
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 0,
       "objectId": 2,
-      "hexObjectId": "0x02",
       "x": 20,
       "y": 21,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        0,
-        4,
-        0,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "No one touches my\nPrincess!!\nLIGHT WARRIORS??\nYou impertinent fools.\nI, Garland, will knock\nyou all down!!"
+        "dialogue_1": "No one touches the Princess! You Light Warriors are fools\u2014I, Garland, will knock you all down!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 1,
       "objectId": 3,
-      "hexObjectId": "0x03",
       "x": 20,
       "y": 18,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        0,
-        5,
-        0,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "So, you are the\nLIGHT WARRIORS!\nThank you."
+        "dialogue_1": "So you are the Light Warriors! Thank you\u2014let us return to Coneria Castle!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 2,
       "objectId": 58,
-      "hexObjectId": "0x3A",
       "x": 17,
       "y": 19,
       "inRoom": true,
       "standStill": false,
-      "talkParams": [
-        0,
-        77,
-        76,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "Help! The FIEND's curse\nturned us into bats.\nWith the ORBS shining\nanew, once again we\ncan speak!",
-        "dialogue_2": "Kee..Kee.."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 3,
       "objectId": 59,
-      "hexObjectId": "0x3B",
       "x": 18,
       "y": 18,
       "inRoom": true,
       "standStill": false,
-      "talkParams": [
-        0,
-        78,
-        76,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The Four FIENDS power\nis rooted 2000 years\nago. The real enemy is\nin that time.",
-        "dialogue_2": "Kee..Kee.."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 4,
       "objectId": 60,
-      "hexObjectId": "0x3C",
       "x": 18,
       "y": 19,
       "inRoom": true,
       "standStill": false,
-      "talkParams": [
-        0,
-        79,
-        76,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "When the 4 ORBS cover\nthe black ORB in the\ncenter of the palace,\nthe Time Gate can open.",
-        "dialogue_2": "Kee..Kee.."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 5,
       "objectId": 61,
-      "hexObjectId": "0x3D",
       "x": 23,
       "y": 19,
       "inRoom": true,
       "standStill": false,
-      "talkParams": [
-        0,
-        80,
-        76,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "You must travel back in\ntime 2000 years. Now,\nwith the ORBS shining,\nstand in the Time Gate.",
-        "dialogue_2": "Kee..Kee.."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 6,
       "objectId": 62,
-      "hexObjectId": "0x3E",
       "x": 22,
       "y": 19,
       "inRoom": true,
       "standStill": false,
-      "talkParams": [
-        0,
-        81,
-        76,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "We are the five lost\nSKY WARRIORS. 400 years\nago we battled against\nthe cause of the world's\ndestruction.",
-        "dialogue_2": "Kee..Kee.."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     },
     {
       "mapId": 12,
-      "mapName": "Temple of Fiends (Present)",
       "slot": 7,
       "objectId": 202,
-      "hexObjectId": "0xCA",
       "x": 20,
       "y": 17,
       "inRoom": true,
       "standStill": true,
-      "talkParams": [
-        0,
-        33,
-        34,
-        0
-      ],
       "dialogues": {
-        "dialogue_1": "The four ORBS now cover\nthe black ORB..\nTo take a step forward\nis to go back 2000 years\nin time.",
-        "dialogue_2": "The black ORB\nglitters ominously..\nBut nothing happens."
+        "dialogue_1": "Welcome to Coneria, the dream city of the Light Warriors!"
       }
     }
   ],

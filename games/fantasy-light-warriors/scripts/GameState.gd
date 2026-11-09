@@ -59,21 +59,21 @@ func _ready() -> void:
 	reset_to_new_game()
 
 func _load_nes_tables() -> void:
-	if FileAccess.file_exists("res://data/classes_and_xp.json"):
-		var f := FileAccess.open("res://data/classes_and_xp.json", FileAccess.READ)
+	if FileAccess.file_exists("res://data/hero_classes.json"):
+		var f := FileAccess.open("res://data/hero_classes.json", FileAccess.READ)
 		if f:
 			var parsed = JSON.parse_string(f.get_as_text())
 			if parsed is Dictionary:
 				classes_data = parsed.get("classes", [])
 				xp_table = parsed.get("xpTable", [])
-	if FileAccess.file_exists("res://data/enemies.json"):
-		var f := FileAccess.open("res://data/enemies.json", FileAccess.READ)
+	if FileAccess.file_exists("res://data/bestiary_stats.json"):
+		var f := FileAccess.open("res://data/bestiary_stats.json", FileAccess.READ)
 		if f:
 			var parsed = JSON.parse_string(f.get_as_text())
 			if parsed is Dictionary:
 				enemies_data = parsed.get("enemies", [])
-	if FileAccess.file_exists("res://data/spells.json"):
-		var f := FileAccess.open("res://data/spells.json", FileAccess.READ)
+	if FileAccess.file_exists("res://data/magic_catalog.json"):
+		var f := FileAccess.open("res://data/magic_catalog.json", FileAccess.READ)
 		if f:
 			var parsed = JSON.parse_string(f.get_as_text())
 			if parsed is Dictionary:

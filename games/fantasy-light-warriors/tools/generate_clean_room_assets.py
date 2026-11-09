@@ -4,7 +4,7 @@ Procedural Clean-Room Pixel Art & Chiptune Audio Generator for
 RobOS Fantasy: Light Warriors (WIP) (`games/fantasy-light-warriors`).
 
 Generates 100% original, copyright-free 8-bit assets directly from semantic
-game data (`data/maps/*.json`, `data/enemies.json`, `data/classes_and_xp.json`):
+game data (`data/maps/*.json`, `data/bestiary_stats.json`, `data/hero_classes.json`):
   1. Five 1024x1024 (`64x64` tiles of `16x16` px) Act I maps:
      - `assets/maps/coneria.png`
      - `assets/maps/coneria_castle_1f.png`
@@ -378,13 +378,18 @@ def generate_class_and_npc_sprites() -> None:
         walk.paste(f_side, (32, 0))
         walk.save(cls_dir / f"{slug}_walk.png")
 
-        # 32x48 battle sprite (2x scaled character with weapon in hand)
-        battle = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
-        scaled = f_side.resize((32, 32), Image.Resampling.NEAREST)
-        battle.paste(scaled, (0, 10))
-        bd = ImageDraw.Draw(battle)
-        bd.rectangle([2, 4, 5, 24], fill=(224, 232, 246, 255), outline=(20, 20, 28, 255))
-        battle.save(cls_dir / f"{slug}_battle.png")
+        # Prefer AI-generated clean-room sprite in assets/generated/class-sprite/ if present
+        ai_spr = ASSETS_DIR / "generated" / "class-sprite" / f"class-sprite-{slug.replace("_", "-")}.png"
+        if ai_spr.exists():
+            ai_im = Image.open(ai_spr).convert("RGBA").resize((32, 48), Image.Resampling.NEAREST)
+            ai_im.save(cls_dir / f"{slug}_battle.png")
+        else:
+            battle = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+            scaled = f_side.resize((32, 32), Image.Resampling.NEAREST)
+            battle.paste(scaled, (0, 10))
+            bd = ImageDraw.Draw(battle)
+            bd.rectangle([2, 4, 5, 24], fill=(224, 232, 246, 255), outline=(20, 20, 28, 255))
+            battle.save(cls_dir / f"{slug}_battle.png")
 
     # 28 NPC sprites (gfx_00..gfx_27)
     npc_palettes = [
