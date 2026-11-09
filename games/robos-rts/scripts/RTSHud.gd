@@ -624,10 +624,15 @@ func _draw_single(u: Dictionary) -> void:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
 		var brood := SimEngine.uses_brood_slots(u)
+		var exit_blocked := queue.any(func(item): return item.has("exit_retry_tick"))
 		if brood:
 			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOTS], 15, C_GOLD)
+			if exit_blocked:
+				_text(Vector2(rx + 235.0, ry + 12), "Exit blocked", 15, C_GOLD)
 		elif SimEngine.requires_power(u.unit_type) and not SimEngine.is_powered(u.owner, u.pos):
 			_text(Vector2(rx + 100.0, ry + 12), "Unpowered  ·  Production paused", 15, C_RED)
+		elif exit_blocked:
+			_text(Vector2(rx + 100.0, ry + 12), "Exit blocked", 15, C_GOLD)
 		elif not queue.is_empty():
 			_text(Vector2(rx + 100.0, ry + 12), "Right-click a slot to cancel and refund", 15, C_MUTED)
 		for i in range(5):

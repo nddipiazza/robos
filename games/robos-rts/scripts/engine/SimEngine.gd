@@ -49,6 +49,7 @@ const CONSTRUCTION_REFUND := 0.75
 const REPAIR_HP_PER_SECOND := 12.0
 const AUTO_REPAIR_RADIUS := 8.0
 const MAX_RALLY_WAYPOINTS := 8
+const PRODUCTION_EXIT_RETRY_TICKS := 8
 const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
 const HUB_POWER_COST := 50.0
@@ -1282,6 +1283,7 @@ func query_units_in_radius(center: Vector2, radius: float, exclude_owner: int = 
 	return result
 
 func _update_structures(dt: float) -> void:
+	var arrivals: Array[Dictionary] = []
 	for u in units.values():
 		if not u["is_structure"]:
 			continue
@@ -1313,26 +1315,26 @@ func _update_structures(dt: float) -> void:
 				u.brood_slots += 1
 		if queue.is_empty() or (requires_power(u.unit_type) and not is_powered(u.owner, u.pos)):
 			continue
-		var completed := 0
-		for index in range(queue.size() if brood else 1):
+		var active := queue.size() if brood else 1
+		var index := 0
+		while index < active:
 			var item: Dictionary = queue[index]
-			item.progress += dt
-			if item.progress >= item.total_time:
-				completed += 1
-		if completed == 0:
-			continue
-		var finished: Array[Dictionary] = []
-		for index in range((queue.size() if brood else 1) - 1, -1, -1):
-			if queue[index].progress >= queue[index].total_time:
-				finished.push_front(queue.pop_at(index))
-		for item in finished:
-			_finish_production(u, item)
+			item.progress = minf(item.progress + dt, item.total_time)
+			if item.progress < item.total_time or tick < int(item.get("exit_retry_tick", 0)):
+				index += 1
+			elif _try_finish_production(u, index, arrivals):
+				active -= 1
+			else:
+				item["exit_retry_tick"] = tick + PRODUCTION_EXIT_RETRY_TICKS
+				index += 1
 
-func _finish_production(structure: Dictionary, item: Dictionary) -> void:
+func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[Dictionary]) -> bool:
+	var item: Dictionary = structure.production_queue[index]
 	if item.has("upgrade"):
+		structure.production_queue.remove_at(index)
 		players[structure.owner].upgrades[item.upgrade] = item.level
 		notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
-		return
+		return true
 	var utype: String = item.unit_type
 	var is_worker := bool(RTSData.get_unit_def(utype).get("is_worker", false))
 	var route: Array = structure.rally_route
@@ -1341,10 +1343,16 @@ func _finish_production(structure: Dictionary, item: Dictionary) -> void:
 	var first := default_rally_position(structure)
 	if not route.is_empty():
 		first = rally_waypoint_position(route.front())
-	var spawn_pos := _rally_spawn_position(structure, first)
+	var spawn_pos := _rally_spawn_position(structure, first, utype, arrivals)
+	if not spawn_pos.is_finite():
+		return false
+	# The job already reserves this supply. Remove it before spawn_unit counts
+	# the recruit so the reservation is transferred exactly once.
+	structure.production_queue.remove_at(index)
 	var new_unit := spawn_unit(utype, structure.owner, spawn_pos)
 	if new_unit.is_empty():
-		return
+		return true
+	arrivals.append(new_unit)
 	players[structure.owner].units_trained += 1
 	unit_production_finished.emit(new_unit, structure)
 	if not route.is_empty():
@@ -1353,12 +1361,51 @@ func _finish_production(structure: Dictionary, item: Dictionary) -> void:
 		issue_SmartHarvest(new_unit.tag)
 	elif first.distance_to(structure.pos) > structure.radius + 1.5:
 		issue_command([new_unit.tag], "move", first)
+	return true
 
-func _rally_spawn_position(structure: Dictionary, first: Vector2) -> Vector2:
+func _rally_spawn_position(structure: Dictionary, first: Vector2, unit_type: String, arrivals: Array[Dictionary] = []) -> Vector2:
+	var definition: Dictionary = RTSData.get_unit_def(unit_type)
+	var radius: float = definition.get("radius", 0.85)
+	var flying: bool = float(definition.get("flight_height", 0.0)) > 0.0
+	var cliff_walk := unit_type == "spire_walker"
 	var direction: Vector2 = (first - structure.pos).normalized()
 	if direction.is_zero_approx():
 		direction = Vector2.RIGHT if structure.owner == 1 else Vector2.LEFT
-	return structure.pos + direction * (structure.radius + 1.8)
+	var rim: float = structure.radius + radius + 0.05
+	var distance: float = maxf(structure.radius + 1.8, rim)
+	var nearby := query_units_in_radius(structure.pos, distance + radius)
+	# The spatial index is built before production. Account for earlier births
+	# in this tick, including parallel jobs at the same Brood Nest.
+	nearby.append_array(arrivals)
+	for i in range(16):
+		var turn := ((i + 1) / 2) * (1 if i % 2 == 1 else -1)
+		var heading := direction.rotated(float(turn) * TAU / 16.0)
+		var position: Vector2 = structure.pos + heading * distance
+		if _map_clamped_position(position, radius) != position:
+			continue
+		if not flying and not _ground_production_exit_open(structure.pos + heading * rim, position, heading, radius, cliff_walk):
+			continue
+		var occupied := false
+		for other in nearby:
+			if other.is_structure or (other.flight_height > 0.0) != flying:
+				continue
+			var clearance: float = radius + other.radius
+			if position.distance_squared_to(other.pos) < clearance * clearance:
+				occupied = true
+				break
+		if not occupied:
+			return position
+	return Vector2.INF
+
+func _ground_production_exit_open(rim: Vector2, position: Vector2, heading: Vector2, radius: float, cliff_walk: bool) -> bool:
+	if _is_point_blocked_by_static(rim, radius, cliff_walk) or not _has_clear_line_of_walk(rim, position, radius, cliff_walk):
+		return false
+	# A free spawn point alone could be a pocket between footprints. Require
+	# space to leave it, allowing a turn around an adjacent obstacle.
+	for turn in [0.0, PI / 4.0, -PI / 4.0]:
+		if _has_clear_line_of_walk(position, position + heading.rotated(turn) * PATH_CELL_SIZE, radius, cliff_walk):
+			return true
+	return false
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u.unit_type == "skirmisher":
@@ -3064,7 +3111,10 @@ func default_worker_deposit(structure: Dictionary) -> Dictionary:
 	var route: Array = structure.get("worker_rally_route", structure.rally_route)
 	if not route.is_empty():
 		return {}
-	var spawn := _rally_spawn_position(structure, default_rally_position(structure))
+	var worker: String = RTSData.faction_info[structure.faction].worker
+	var spawn := _rally_spawn_position(structure, default_rally_position(structure), worker)
+	if not spawn.is_finite():
+		return {}
 	return _worker_crystal({"tag": 0, "owner": structure.owner, "pos": spawn})
 
 func _morph_unit_in_place(u: Dictionary, new_type: String) -> void:
