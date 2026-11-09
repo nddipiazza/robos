@@ -55,6 +55,161 @@ og_image_alt: "Starfall Command title screen with a ship above a planet and the 
 python run_cucumber_tests.py --backend
 RTS_MODE=human python -m behave tests/e2e/features/ui
 RTS_MODE=human RTS_TEST_TITLE=1 python -m behave tests/e2e/features/startup</div>
+
+  <section class="blog-release-notes" aria-labelledby="release-notes">
+    <h2 id="release-notes">Release notes</h2>
+    <p>All 100 shipped roadmap items, grouped by topic. Expand a section to read its entries.</p>
+    <details open>
+      <summary>001–010 Battlefield controls</summary>
+      <ul>
+        <li id="release-note-001"><strong>001 Personal map pings.</strong> Alt+G and a world or minimap click show the same location on both views without issuing a unit order.</li>
+        <li id="release-note-002"><strong>002 Center on selection.</strong> Home centers on the selected units without changing the selection or zoom.</li>
+        <li id="release-note-003"><strong>003 Keyboard zoom.</strong> Page Up and Page Down use the mouse wheel’s zoom limits.</li>
+        <li id="release-note-004"><strong>004 Camera pan speed.</strong> Settings saves a slow, standard, or fast pan speed for arrows and edge scroll.</li>
+        <li id="release-note-005"><strong>005 Selected weapon ranges.</strong> A toggle shows maximum and minimum range for selected friendly weapons, including emplaced Howitzers.</li>
+        <li id="release-note-006"><strong>006 Order line visibility.</strong> Settings offers always, while holding Shift, or hidden for selected mobile orders. Rally flags stay visible.</li>
+        <li id="release-note-007"><strong>007 Undo the last queued order.</strong> A shortcut removes the last future order and preserves the current job.</li>
+        <li id="release-note-008"><strong>008 Idle production selection.</strong> Cycle or select all completed idle combat producers that can operate.</li>
+        <li id="release-note-009"><strong>009 Reset rally routes.</strong> Restore default rallies on selected producers, including both routes at a Brood Nest.</li>
+        <li id="release-note-010"><strong>010 Consecutive targeted waypoints.</strong> Shift-click multiple move, attack-move, or rally points with one activation.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>011–020 Economy and construction</summary>
+      <ul>
+        <li id="release-note-011"><strong>011 Depleted crystal clears space.</strong> Empty finite patches disappear and release their footprint after paying their last load.</li>
+        <li id="release-note-012"><strong>012 Rich crystal deposits.</strong> A distinct deposit pays more per trip and displays its remaining reserves.</li>
+        <li id="release-note-013"><strong>013 Rich aether vents.</strong> A distinct vent pays more per trip through each faction’s extractor.</li>
+        <li id="release-note-014"><strong>014 Mineral line reassignment.</strong> When a drop-off is destroyed, workers transfer to an accessible surviving base.</li>
+        <li id="release-note-015"><strong>015 Gas build-to-gather.</strong> Assign workers to an unfinished friendly extractor so gathering starts when it completes.</li>
+        <li id="release-note-016"><strong>016 Gas transfer shortcut.</strong> Fill available gas slots from the current worker selection while leaving the rest on their current jobs.</li>
+        <li id="release-note-017"><strong>017 Default worker rally preview.</strong> A completed headquarters shows the deposit it would assign to its next worker.</li>
+        <li id="release-note-018"><strong>018 Live income counters.</strong> Hover crystal or aether to see recent income based on delivered loads.</li>
+        <li id="release-note-019"><strong>019 Build footprints on the ground.</strong> Show blocked tiles, snapping, and a distinct planned footprint while targeting construction.</li>
+        <li id="release-note-020"><strong>020 Construction handoff.</strong> A replacement Pioneer can claim a vacant foundation without paying twice, with ownership visible in its panel.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>021–030 Combat readability and tactical terrain</summary>
+      <ul>
+        <li id="release-note-021"><strong>021 Target priorities by unit role.</strong> Configured units prefer threats their weapons counter while explicit targets take precedence.</li>
+        <li id="release-note-022"><strong>022 Splash with friendly fire.</strong> Emplaced Howitzers apply reduced friendly splash and disclose it in the weapon tooltip.</li>
+        <li id="release-note-023"><strong>023 Weapon wind-up indicator.</strong> Selected weapons show when a shot is committed and when the next can fire.</li>
+        <li id="release-note-024"><strong>024 Area warning decals.</strong> Delayed area attacks show the footprint and detonation timing to players who can see them.</li>
+        <li id="release-note-025"><strong>025 Brush cover.</strong> Infantry can hide in authored brush until a scout or nearby enemy reveals them.</li>
+        <li id="release-note-026"><strong>026 Watch stations.</strong> A unit holding a neutral station reveals a fixed radius until it leaves or loses control.</li>
+        <li id="release-note-027"><strong>027 Destructible route blockers.</strong> Breaking a neutral blocker opens a ground route in both navigation and the minimap.</li>
+        <li id="release-note-028"><strong>028 Healing support.</strong> A paid support unit restores biological allies from a limited energy pool.</li>
+        <li id="release-note-029"><strong>029 Shield restoration.</strong> A powered Concord support structure spends energy to restore nearby allied shields.</li>
+        <li id="release-note-030"><strong>030 Ground and air targeting.</strong> Flying movement and weapon target domains let anti-air units counter flyers without affecting ground-only shots.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>031–040 Meridian Guard tech</summary>
+      <ul>
+        <li id="release-note-031"><strong>031 Technology branch panel.</strong> The faction card shows unlocked production, prerequisites, and costs.</li>
+        <li id="release-note-032"><strong>032 Production attachments.</strong> Muster Halls can build an attachment when its pad is clear.</li>
+        <li id="release-note-033"><strong>033 Dual production attachment.</strong> One attachment permits two concurrent light infantry jobs with normal costs.</li>
+        <li id="release-note-034"><strong>034 Research attachment.</strong> A different attachment unlocks infantry abilities and competes for the same pad.</li>
+        <li id="release-note-035"><strong>035 Deployable supply headquarters.</strong> A Colony Hub upgrade unlocks an alternative energy spend with the existing recon and supply powers.</li>
+        <li id="release-note-036"><strong>036 Timed mining helper.</strong> The upgraded Hub can deploy a short-lived crystal-only helper with a visible timer.</li>
+        <li id="release-note-037"><strong>037 Transport bay.</strong> A paid aircraft loads and unloads a capacity-limited squad at a valid drop site.</li>
+        <li id="release-note-038"><strong>038 Air production structure.</strong> A paid build path unlocks the transport and dedicated fighters.</li>
+        <li id="release-note-039"><strong>039 Fighter modes.</strong> A fighter switches attack domains with a transition delay and clear state indicator.</li>
+        <li id="release-note-040"><strong>040 Relocatable production.</strong> Eligible Meridian structures can lift and land on a valid footprint, with production suspended in flight.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>041–050 Gnarl Brood tech</summary>
+      <ul>
+        <li id="release-note-041"><strong>041 Living ground.</strong> Completed Brood bases spread a deterministic terrain layer visible in game and on the minimap.</li>
+        <li id="release-note-042"><strong>042 Brood terrain bonuses.</strong> Eligible Brood troops gain speed on living ground and tooltips show the effective speed.</li>
+        <li id="release-note-043"><strong>043 Expansion of living ground.</strong> Paid or energy-limited nodes extend the layer and decay after losing their source.</li>
+        <li id="release-note-044"><strong>044 Nest support unit.</strong> A paid defender can spend energy to add brood slots after a delay.</li>
+        <li id="release-note-045"><strong>045 Ground ambush.</strong> Eligible units can burrow, with detection and mobility rules applied consistently.</li>
+        <li id="release-note-046"><strong>046 Unit morph branch.</strong> A paid morph transforms an existing combat unit into a different battlefield role.</li>
+        <li id="release-note-047"><strong>047 Mobile supply.</strong> A paid, vulnerable Brood flyer grants supply and frees room for scouting.</li>
+        <li id="release-note-048"><strong>048 Brood air harassment.</strong> A light flyer attacks valid targets and is vulnerable to dedicated anti-air.</li>
+        <li id="release-note-049"><strong>049 Siege denial.</strong> A late-tier Brood ability temporarily denies an area without hiding its duration.</li>
+        <li id="release-note-050"><strong>050 Subterranean reinforcement.</strong> Linked paid entrances allow allied troops to travel between them under capacity and placement limits.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>051–060 Aurelian Concord tech</summary>
+      <ul>
+        <li id="release-note-051"><strong>051 Energy-backed production boost.</strong> A Heartstone can temporarily speed one friendly producer with a visible timer.</li>
+        <li id="release-note-052"><strong>052 Powered infrastructure overlay.</strong> Show overlapping power fields and which Waystones would lose coverage if a Resonator falls.</li>
+        <li id="release-note-053"><strong>053 Fast deployment upgrade.</strong> Research lets eligible Waystones deploy paid troops at powered locations with a cooldown.</li>
+        <li id="release-note-054"><strong>054 Mobile power source.</strong> A Concord carrier can deploy a temporary field while giving up movement.</li>
+        <li id="release-note-055"><strong>055 Disposable scout.</strong> A cheap, fragile scouting unit provides sight without attack power.</li>
+        <li id="release-note-056"><strong>056 Mobile detector.</strong> A paid Concord unit reveals hidden enemies within a displayed radius.</li>
+        <li id="release-note-057"><strong>057 Barrier placement.</strong> A support ability briefly blocks ground paths with visible duration and size.</li>
+        <li id="release-note-058"><strong>058 Area spellcaster.</strong> An energy-funded cast damages units in a telegraphed area, including allies.</li>
+        <li id="release-note-059"><strong>059 Defensive recall.</strong> An energy-funded recall returns eligible units after a delay if they remain inside the marker.</li>
+        <li id="release-note-060"><strong>060 Heavy air capital unit.</strong> A late-tech flyer has a specific anti-capital role and a demonstrated counter.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>061–070 Skirmish maps and AI</summary>
+      <ul>
+        <li id="release-note-061"><strong>061 Competitive map pool.</strong> Add at least three original duel maps with distinct safe expansion and attack routes.</li>
+        <li id="release-note-062"><strong>062 Lobby map preview.</strong> Display terrain, candidate starts, expansion sites, and special features before launch.</li>
+        <li id="release-note-063"><strong>063 Start symmetry checks.</strong> Check opening travel and resource capacity from each spawn on competitive maps.</li>
+        <li id="release-note-064"><strong>064 Map pool filters.</strong> Filter by size, starts, finite deposits, and special terrain.</li>
+        <li id="release-note-065"><strong>065 AI build profiles.</strong> Each faction has tested economic, aggressive, and tech-heavy openings.</li>
+        <li id="release-note-066"><strong>066 AI scouting worker.</strong> The opponent scouts plausible starts and reacts to visible evidence.</li>
+        <li id="release-note-067"><strong>067 AI defensive response.</strong> Idle defenders intercept a raid while harvesting and production continue elsewhere.</li>
+        <li id="release-note-068"><strong>068 AI multi-front attacks.</strong> High difficulty can split an attack across two routes with visible targets.</li>
+        <li id="release-note-069"><strong>069 AI air and stealth response.</strong> Opponents build counters to confirmed threats using the standard economy.</li>
+        <li id="release-note-070"><strong>070 AI route recovery.</strong> An army that loses a crossing or stalls at a neutral barrier tries another reachable route while its economy keeps running. Verify a paid opening reaches the enemy on both sides of a blocked crossing.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>071–080 Movement and command reliability</summary>
+      <ul>
+        <li id="release-note-071"><strong>071 Group arrival spacing.</strong> Give a mixed army reachable destinations around one move click. Verify units settle without piling on the center or circling after arrival.</li>
+        <li id="release-note-072"><strong>072 Route changes during a move.</strong> Replan when a raised gate, new foundation, or destroyed barrier changes the active route. Preserve the remaining Shift-queued waypoints.</li>
+        <li id="release-note-073"><strong>073 Unreachable order feedback.</strong> Mark the reachable endpoint when a click lands across an impassable gap. Show which group members could not reach the requested side.</li>
+        <li id="release-note-074"><strong>074 Clearance through ramps and gates.</strong> A heavy unit takes a wide enough route and a smaller unit can still use a narrow one. Test both directions and protect against clipping at diagonal corners.</li>
+        <li id="release-note-075"><strong>075 Choke traffic.</strong> Opposing friendly groups get through a one-lane opening in bounded time. Cover idle blockers, army retreats, and workers returning cargo through the same choke.</li>
+        <li id="release-note-076"><strong>076 Production exit clearance.</strong> Rally a newly trained squad past adjacent structures and deposits. A temporarily blocked exit holds units at a safe point and resumes when space opens.</li>
+        <li id="release-note-077"><strong>077 Queued target loss.</strong> Destroy a queued target, deplete a queued deposit, and break a follow link. Each unit resolves the invalid leg and starts the next valid order once.</li>
+        <li id="release-note-078"><strong>078 Picking crowded targets.</strong> Verify clicks on overlapping workers, units in cover, and flyers over ground troops select or target the intended visible object at each zoom level.</li>
+        <li id="release-note-079"><strong>079 Mixed selection orders.</strong> A single context click can assign a worker, move an escort, and keep an incompatible unit’s active order. Validate the resulting orders for each subgroup.</li>
+        <li id="release-note-080"><strong>080 Input under battle load.</strong> Issue move, attack, and stop in a dense fight. Confirm each order registers once and takes effect within the next simulation step at normal speed.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>081–090 Combat and economy reliability</summary>
+      <ul>
+        <li id="release-note-081"><strong>081 Attack-move pursuit limits.</strong> An army resumes its original route after chasing a retreating unit beyond its pursuit range. Verify hold position remains anchored through the same encounter.</li>
+        <li id="release-note-082"><strong>082 Fire and movement timing.</strong> Test move and stop on the ticks immediately before and after impact. Preserve valid shots and cooldowns across rapid alternating orders.</li>
+        <li id="release-note-083"><strong>083 Splash boundaries.</strong> Match the warning ring to the actual hit radius at cliff edges and around large units. Check friendly fire, inner and outer damage, and air and ground overlap.</li>
+        <li id="release-note-084"><strong>084 High-ground engagements.</strong> Verify low-ground units lose a target that climbs out of sight and regain it when a spotter arrives. Keep targeting, projectile cues, and fog consistent.</li>
+        <li id="release-note-085"><strong>085 Concealment under crossfire.</strong> Test brush, cloak, sweeps, and detector loss together. Hidden targets stay out of attack selection, warning decals, and the minimap until revealed.</li>
+        <li id="release-note-086"><strong>086 Support in a retreat.</strong> Automatic treatment switches patients when the current ally dies or retreats outside range. Verify explicit orders take precedence and interrupted treatment spends energy only for restoration already delivered.</li>
+        <li id="release-note-087"><strong>087 Supply changes with queued units.</strong> Destroy a supply provider during production, cancel one paid slot, then restore supply. Validate reservation and refund accounting for each faction.</li>
+        <li id="release-note-088"><strong>088 Mineral-line saturation at scale.</strong> Test 12, 24, and 36 workers on finite and unlimited lines. Verify workers redistribute as slots open, deliver each load once, and recover when a path is blocked.</li>
+        <li id="release-note-089"><strong>089 Construction and repair under pressure.</strong> Kill a builder during placement, replace it, and assign multiple repairers with a low bank. Verify one foundation charge and bounded repair spending.</li>
+        <li id="release-note-090"><strong>090 Production queue consistency.</strong> Exercise queued training, research, and cancellation as buildings lose power or attachments. Check exact costs, refunds, prerequisites, and resumed progress.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>091–100 Skirmish depth and performance</summary>
+      <ul>
+        <li id="release-note-091"><strong>091 AI economy recovery after a raid.</strong> After losing workers, gas, or a production building, the AI rebuilds a working economy and resumes paid production from its surviving base.</li>
+        <li id="release-note-092"><strong>092 Opening timing and counterplay.</strong> Measure first attack, expansion, and tech timings for the three factions on the same maps. Verify a timely defense has a viable paid answer to each opening.</li>
+        <li id="release-note-093"><strong>093 Unit counter and upgrade checks.</strong> Run equal-cost encounters for core unit roles and weapon tiers. Verify each intended counter has a measurable advantage and that positioning can change the outcome.</li>
+        <li id="release-note-094"><strong>094 Expansion safety and counterattacks.</strong> Verify each skirmish spawn can defend a nearby expansion and that its opponent has a distinct raiding or flanking route to contest it.</li>
+        <li id="release-note-095"><strong>095 Match end and rematch integrity.</strong> Cover annihilation with unfinished structures, mutual destruction, and surrender. A rematch starts with clean resources, queues, selection, and AI orders.</li>
+        <li id="release-note-096"><strong>096 Large-army simulation stress.</strong> Run two paid armies near the supply cap with active worker lines. Compare tick cost and verify repeated runs with the same seed and inputs reach the same result.</li>
+        <li id="release-note-097"><strong>097 Fog and minimap cost.</strong> Profile a large explored map during simultaneous attacks and detection changes. Keep the minimap responsive and confirm fog updates within the simulation’s vision cadence.</li>
+        <li id="release-note-098"><strong>098 Combat rendering budget.</strong> Stress a dense fight with projectiles, splash, smoke, and shield effects. Track frame times and keep selection, health bars, and commands readable during the burst.</li>
+        <li id="release-note-099"><strong>099 Long skirmish soak.</strong> Play a sustained match through depletion, expansion, and repeated battles. Restart it several times and check for stalled commands, memory growth, and stale world objects.</li>
+        <li id="release-note-100"><strong>100 Core skirmish acceptance.</strong> Play paid matches across faction pairings and maps from opening through victory or surrender. Require the movement, economy, combat, AI, and responsiveness checks to pass together.</li>
+      </ul>
+    </details>
+  </section>
 </div>
 <div class="blog-links">
   <a href="{{ '/games/robos-rts/' | relative_url }}">Play Starfall Command →</a>
