@@ -1111,6 +1111,8 @@ func _check_planned_placement(structure_id: String, position: Vector2, radius: f
 # Command card
 # ---------------------------------------------------------------------------
 func ability_cost(adef: Dictionary) -> Dictionary:
+	if adef.get("id") == "upgrade_hub":
+		return SimEngine.HUB_OPERATIONS_OFFER
 	if adef.has("upgrade"):
 		return SimEngine.research_offer(local_player, adef.upgrade)
 	var def_id := str(adef.get("unit", adef.get("structure", "")))
@@ -1131,6 +1133,8 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return ""
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
+	if adef.id == "upgrade_hub":
+		return SimEngine.hub_upgrade_block_reason(pu)
 	if adef.get("attachment", false):
 		return SimEngine.attachment_block_reason(pu, str(adef.structure))
 	if adef.has("unit"):
