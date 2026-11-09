@@ -162,13 +162,13 @@ func _counter_orders(pid: int, cfg: Dictionary, faction: String, mine: Array, ha
 			seen_air += 1
 		if enemy.tag == tracked.get("tag", 0):
 			track_seen = true
-		var cloaked: bool = enemy.get("cloaked", false)
-		if not cloaked and (seen_cloak or not RTSData.get_unit_def(enemy.unit_type).get("abilities", []).has("phase_cloak")):
+		var hidden: bool = enemy.get("cloaked", false) or enemy.get("burrowed", false)
+		if not hidden and (seen_cloak or not RTSData.get_unit_def(enemy.unit_type).get("abilities", []).has("phase_cloak")):
 			continue
 		for hall in halls:
 			if SimEngine.is_dropoff(hall, pid) and hall.pos.distance_squared_to(enemy.pos) <= DEFENSE_RADIUS * DEFENSE_RADIUS:
 				local_contact = {"tag": enemy.tag, "pos": enemy.pos, "hall": hall.tag, "seen_at": SimEngine.tick}
-				seen_cloak = seen_cloak or cloaked
+				seen_cloak = seen_cloak or hidden
 				break
 	if seen_air > 0:
 		evidence["air_goal"] = clampi(seen_air, 1, 3)

@@ -93,6 +93,7 @@ const BROOD_INJECT_COST := 25.0
 const BROOD_INJECT_RANGE := 7.0
 const BROOD_INJECT_DELAY := 12 * TICK_RATE
 const BROOD_INJECT_SLOTS := 2
+const BURROW_SIGHT := 8.0
 const POWER_RADIUS := 18.0
 const CARRIER_POWER_RADIUS := 12.0
 const CARRIER_POWER_TICKS := 24 * TICK_RATE
@@ -593,7 +594,7 @@ func _refresh_vision() -> void:
 	for station in watch_stations:
 		var owner := 0
 		for unit in query_units_in_radius(station.pos, WATCH_STATION_CAPTURE):
-			if unit.is_structure or unit.flight_height > 0.0 or unit.hp <= 0.0 or not players.has(unit.owner):
+			if unit.is_structure or unit.flight_height > 0.0 or unit.get("burrowed", false) or unit.hp <= 0.0 or not players.has(unit.owner):
 				continue
 			if unit.pos.distance_squared_to(station.pos) > WATCH_STATION_CAPTURE * WATCH_STATION_CAPTURE:
 				continue
@@ -651,9 +652,9 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 		return true
 	if not can_see_position(player, unit.pos):
 		return false
-	var cloaked := bool(unit.get("cloaked", false))
+	var requires_detection := bool(unit.get("cloaked", false)) or bool(unit.get("burrowed", false))
 	var concealed: bool = not _brush_cells.is_empty() and not unit.is_structure and not unit.is_worker and unit.flight_height <= 0.0 and unit.attributes.has("Biological") and _brush_cells.has(Vector2i((unit.pos / 4.0).floor()))
-	if not cloaked and not concealed:
+	if not requires_detection and not concealed:
 		return true
 	if vision != null and vision.sweep_detects(player, unit.pos):
 		return true
@@ -662,7 +663,7 @@ func can_see_unit(player: int, unit: Dictionary) -> bool:
 			var radius: float = detector.detection_radius
 			if unit.pos.distance_squared_to(detector.pos) <= radius * radius:
 				return true
-	if not cloaked:
+	if not requires_detection:
 		for scout in query_units_in_radius(unit.pos, BRUSH_REVEAL_RADIUS):
 			if scout.owner == player and scout.hp > 0.0 and scout.build_progress >= 1.0 and scout.pos.distance_squared_to(unit.pos) <= BRUSH_REVEAL_RADIUS * BRUSH_REVEAL_RADIUS:
 				return true
@@ -808,6 +809,37 @@ func brood_inject_block_reason(keeper: Dictionary, nest: Dictionary) -> String:
 func brood_inject_remaining(nest: Dictionary) -> float:
 	return maxf(0.0, float(int(nest.get("brood_inject_finish", 0)) - tick) * TICK_DT)
 
+func burrow_block_reason(unit: Dictionary, underground: bool) -> String:
+	if unit.flight_height > 0.0 or not RTSData.get_unit_def(unit.unit_type).get("abilities", []).has("burrow"):
+		return "This unit cannot burrow."
+	if unit.get("burrowed", false) == underground:
+		return "Already burrowed." if underground else "Already on the surface."
+	if _is_point_blocked_by_static(unit.pos, unit.radius):
+		return "Burrow needs clear ground." if underground else "The surface is blocked."
+	if not underground and nav_dirty:
+		# A foundation created this tick can still be missing from the footprint index.
+		for structure in units.values():
+			if not structure.is_structure or structure.is_walkable_structure or structure.flight_height > 0.0:
+				continue
+			if unit.pos.distance_to(structure.pos) < unit.radius + structure.radius:
+				return "The surface is blocked."
+	return ""
+
+func _set_burrowed(unit: Dictionary, underground: bool) -> void:
+	var definition: Dictionary = RTSData.get_unit_def(unit.unit_type)
+	unit["burrowed"] = underground
+	unit.is_immobile = underground or bool(definition.get("is_immobile", false))
+	unit.sight_range = minf(float(definition.sight_range), BURROW_SIGHT) if underground else float(definition.sight_range)
+	unit.orders.clear()
+	unit.path.clear()
+	unit.erase("choke_yield")
+	unit.vel = Vector2.ZERO
+	unit.home_pos = unit.pos
+	unit.has_home_pos = true
+	unit.attack_state = "idle"
+	unit.attack_state_timer = 0.0
+	unit.attack_target_tag = 0
+
 func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
 	if def.is_empty() or not pos.is_finite():
@@ -841,7 +873,7 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 
 func _ground_mobile_overlaps(point: Vector2, radius: float) -> bool:
 	for unit in units.values():
-		if not unit.is_structure and unit.flight_height <= 0.0 and point.distance_to(unit.pos) < radius + unit.radius:
+		if not unit.is_structure and unit.flight_height <= 0.0 and not unit.get("burrowed", false) and point.distance_to(unit.pos) < radius + unit.radius:
 			return true
 	return false
 
@@ -1900,7 +1932,7 @@ func _rally_spawn_position(structure: Dictionary, first: Vector2, unit_type: Str
 			continue
 		var occupied := false
 		for other in nearby:
-			if (other.is_structure and other.flight_height <= 0.0) or (other.flight_height > 0.0) != flying:
+			if (other.is_structure and other.flight_height <= 0.0) or other.get("burrowed", false) or (other.flight_height > 0.0) != flying:
 				continue
 			var clearance: float = radius + other.radius
 			if position.distance_squared_to(other.pos) < clearance * clearance:
@@ -1962,6 +1994,8 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	if u.has("fighter_mode_until"):
 		if tick >= int(u.fighter_mode_until):
 			_finish_fighter_mode(u)
+		return
+	if u.get("burrowed", false):
 		return
 
 	if u["attack_state"] == "windup":
@@ -3024,7 +3058,7 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 		return false
 	var neighbors = query_units_in_radius(u["pos"], u["radius"] * 2.4)
 	for n in neighbors:
-		if n["tag"] == u["tag"] or n["owner"] != u["owner"]:
+		if n["tag"] == u["tag"] or n["owner"] != u["owner"] or n.get("burrowed", false):
 			continue
 		if (u.flight_height > 0.0) != (n.flight_height > 0.0):
 			continue
@@ -3134,7 +3168,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		var flying: bool = u.flight_height > 0.0
 		for neighbor in neighbors:
 			var n: Dictionary = neighbor
-			if n["tag"] == tag or flying != (n.flight_height > 0.0):
+			if n["tag"] == tag or flying != (n.flight_height > 0.0) or n.get("burrowed", false):
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
@@ -3191,7 +3225,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		if not units.has(tag):
 			continue
 		var u: Dictionary = units[tag]
-		if u.is_structure and u.flight_height <= 0.0:
+		if (u.is_structure and u.flight_height <= 0.0) or u.get("burrowed", false):
 			continue
 		# Ground structures never moved between the passes; nearby mobiles moved by less
 		# than a tick. The wider steering query already covers collision contacts.
@@ -3199,7 +3233,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		var mineral_walking := mineral_walkers.has(tag)
 		var flying: bool = u.flight_height > 0.0
 		for n in neighbors:
-			if n["tag"] <= u["tag"] or flying != (n.flight_height > 0.0):
+			if n["tag"] <= u["tag"] or flying != (n.flight_height > 0.0) or n.get("burrowed", false):
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
@@ -3295,7 +3329,7 @@ func _edge_distance(a: Dictionary, b: Dictionary) -> float:
 	return maxf(0.0, position.distance_to(b.pos) - (float(a.radius) + float(b.radius)))
 
 func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
-	return _weapon_can_hit(RTSData.get_unit_def(attacker.unit_type).get("weapon", {}), target)
+	return not attacker.get("burrowed", false) and _weapon_can_hit(RTSData.get_unit_def(attacker.unit_type).get("weapon", {}), target)
 
 func _weapon_can_hit(weapon: Dictionary, target: Dictionary) -> bool:
 	return not weapon.is_empty() and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
@@ -3548,6 +3582,18 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 		if u.unit_type == "lumen_carrier" and u.is_immobile and ctype != "stop":
+			continue
+		if ctype in ["burrow", "surface"]:
+			var underground: bool = ctype == "burrow"
+			var reason := burrow_block_reason(u, underground)
+			if reason.is_empty():
+				_set_burrowed(u, underground)
+				ability_triggered.emit(u, ctype, u.pos)
+				accepted += 1
+			elif bool(u.get("burrowed", false)) != underground:
+				notice.emit(u.owner, reason, "warn")
+			continue
+		if u.get("burrowed", false):
 			continue
 		if u.armed_structure and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
 			continue
@@ -4066,7 +4112,7 @@ func _unload_transport(transport: Dictionary, center: Vector2) -> bool:
 	return _drop_ground_squad(transport.passengers, center)
 
 func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = {}) -> bool:
-	var ground := units.values().filter(func(unit): return unit.flight_height <= 0.0 and unit.pos.distance_squared_to(center) < 100.0)
+	var ground := units.values().filter(func(unit): return unit.flight_height <= 0.0 and not unit.get("burrowed", false) and unit.pos.distance_squared_to(center) < 100.0)
 	var landing_order := passengers.duplicate()
 	landing_order.sort_custom(func(a, b): return a.tag < b.tag if a.radius == b.radius else a.radius > b.radius)
 	var positions: Array[Vector2] = []
@@ -4679,6 +4725,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 					entry["tunnel_ticks"] = maxi(0, int(u.tunnel_arrival) - tick)
 		if u.has("expires_tick"):
 			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
+		if u.get("burrowed", false):
+			entry["burrowed"] = true
 		if u.has("living_ground_speed_bonus"):
 			entry["effective_speed"] = snappedf(effective_move_speed(u), 0.01)
 			entry["living_ground_speed_bonus"] = active_living_ground_speed_bonus(u)
