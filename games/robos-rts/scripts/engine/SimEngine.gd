@@ -75,6 +75,8 @@ const TUNNEL_TRAVEL_TICKS := 2 * 64
 const TUNNEL_EXIT_RETRY_TICKS := 16
 const CARAPACE_MORPH_TICKS := 6 * 64
 const CARAPACE_MORPH_OFFER := {"crystal": 75, "aether": 50, "supply": 1, "time": 6.0, "requires": ["blight_spire"], "def_id": "carapace_bulwark"}
+const PHASE_BARRIER_COST := 50.0
+const PHASE_BARRIER_RANGE := 14.0
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
@@ -1332,6 +1334,8 @@ func _step_single_tick() -> void:
 			_release_mining_slot(u)
 			_confirm_waiting_attack_loss(u)
 			units.erase(tag)
+			if u.is_structure:
+				nav_dirty = true
 			_recompute_supplies()
 			unit_destroyed.emit(u)
 			continue
@@ -3332,7 +3336,8 @@ func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
 	return not attacker.get("burrowed", false) and _weapon_can_hit(RTSData.get_unit_def(attacker.unit_type).get("weapon", {}), target)
 
 func _weapon_can_hit(weapon: Dictionary, target: Dictionary) -> bool:
-	return not weapon.is_empty() and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
+	return target.get("unit_type") != "phase_barrier" and not weapon.is_empty() \
+		and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
 
 func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: Dictionary = {}) -> Dictionary:
 	if u.get("hold_fire", false):
@@ -3554,6 +3559,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "send_tunnel_squad":
 			if _send_tunnel_squad(u):
+				accepted += 1
+			continue
+		if ctype == "phase_barrier":
+			if accepted == 0 and _cast_phase_barrier(u, target_pos):
 				accepted += 1
 			continue
 		if ctype == "corrosive_miasma":
@@ -4021,6 +4030,44 @@ func _fill_gas(workers: Array[Dictionary], tap_tag: int) -> Dictionary:
 
 func _is_friendly_mobile(unit: Dictionary, owner_id: int) -> bool:
 	return not unit.is_empty() and unit.owner == owner_id and not unit.is_structure and unit.hp > 0.0
+
+func phase_barrier_block_reason(caster: Dictionary) -> String:
+	if caster.get("unit_type") != "aegis_warden" or caster.build_progress < 1.0:
+		return "Select an Aegis Warden."
+	if caster.energy < PHASE_BARRIER_COST:
+		return "Requires 50 energy."
+	return ""
+
+func _cast_phase_barrier(caster: Dictionary, point: Vector2) -> bool:
+	if not phase_barrier_block_reason(caster).is_empty() or not point.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(point):
+		return false
+	if caster.pos.distance_squared_to(point) > PHASE_BARRIER_RANGE * PHASE_BARRIER_RANGE or not can_see_position(caster.owner, point):
+		return false
+	var radius: float = RTSData.get_unit_def("phase_barrier").radius
+	# The center must be open. The edge can touch cliff walls to seal a lane,
+	# but a ground unit already occupying the circle cannot be trapped inside.
+	if _is_point_blocked_by_static(point, 0.0) or _ground_mobile_overlaps(point, radius):
+		return false
+	for unit in units.values():
+		if not unit.is_structure or unit.is_walkable_structure or unit.flight_height > 0.0:
+			continue
+		var clearance: float = unit.radius + (radius if unit.unit_type == "phase_barrier" else 0.0)
+		if unit.pos.distance_squared_to(point) < clearance * clearance:
+			return false
+	var barrier := spawn_unit("phase_barrier", 0, point)
+	barrier["cast_owner"] = caster.owner
+	caster.energy -= PHASE_BARRIER_COST
+	ability_triggered.emit(caster, "phase_barrier", point)
+	return true
+
+func visible_phase_barriers(perspective: int) -> Array[Dictionary]:
+	var visible: Array[Dictionary] = []
+	for unit in units.values():
+		if unit.unit_type != "phase_barrier" or not unit.has("expires_tick"):
+			continue
+		if unit.get("cast_owner") == perspective or can_see_position(perspective, unit.pos):
+			visible.append({"x": unit.pos.x, "y": unit.pos.y, "radius": unit.radius, "ticks": maxi(0, int(unit.expires_tick) - tick)})
+	return visible
 
 func miasma_block_reason(caster: Dictionary) -> String:
 	if caster.unit_type != "blight_hurler":

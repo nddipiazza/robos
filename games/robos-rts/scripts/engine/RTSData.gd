@@ -1203,6 +1203,42 @@ var units: Dictionary = {
 			]
 		}
 	},
+	"aegis_warden": {
+		"id": "aegis_warden", "name": "Aegis Warden", "faction": FACTION_ALIENS,
+		"blurb": "Unarmed support caster. Shapes a temporary barrier that blocks ground paths while aircraft pass above it.",
+		"is_structure": false, "is_worker": false, "attributes": ["Light", "Biological"],
+		"crystal_cost": 100, "aether_cost": 75, "supply_cost": 2, "build_time": 30.0,
+		"max_hp": 55.0, "max_shields": 75.0, "armor": 0.0, "radius": 0.95,
+		"speed": 7.0, "sight_range": 22.0, "push_priority": 2,
+		"energy_profile": {"start": 50.0, "max": 150.0, "regen": 1.0},
+		"abilities": ["move", "stop", "hold_position", "phase_barrier"],
+		"dialogues": {
+			"select": [
+				{"id": "aegis_warden_select_1", "text": "An aegis answers."},
+				{"id": "aegis_warden_select_2", "text": "Where is the breach?"},
+				{"id": "aegis_warden_select_3", "text": "Geometry is our shield."},
+				{"id": "aegis_warden_select_4", "text": "Warden attuned."},
+				{"id": "aegis_warden_select_5", "text": "I hold the threshold."}
+			],
+			"move": [
+				{"id": "aegis_warden_move_1", "text": "Mark the line."},
+				{"id": "aegis_warden_move_2", "text": "I will take position."},
+				{"id": "aegis_warden_move_3", "text": "Keeping the passage clear."},
+				{"id": "aegis_warden_move_4", "text": "Through the aperture."}
+			],
+			"support": [
+				{"id": "aegis_warden_support_1", "text": "Barrier aligned."},
+				{"id": "aegis_warden_support_2", "text": "The ground route is sealed."},
+				{"id": "aegis_warden_support_3", "text": "Hold behind the field."},
+				{"id": "aegis_warden_support_4", "text": "Concord geometry, locked."},
+				{"id": "aegis_warden_support_5", "text": "That passage is ours."}
+			],
+			"ready": [
+				{"id": "aegis_warden_ready_1", "text": "The ward is attuned."},
+				{"id": "aegis_warden_ready_2", "text": "Aegis Warden standing by."}
+			]
+		}
+	},
 	"sunblade": {
 		"id": "sunblade",
 		"name": "Sunblade",
@@ -1367,8 +1403,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp", "veilseeker"],
-		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp", "train_veilseeker"]
+		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp", "veilseeker", "aegis_warden"],
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp", "train_veilseeker", "train_aegis_warden"]
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
@@ -1387,6 +1423,10 @@ var units: Dictionary = {
 		"crystal_cost": 75, "aether_cost": 0, "build_time": 21.0,
 		"max_hp": 250.0, "max_shields": 250.0, "armor": 1.0, "radius": 2.0, "sight_range": 16.0,
 		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
+	},
+	"phase_barrier": {
+		"id": "phase_barrier", "name": "Phase Barrier", "faction": "neutral",
+		"is_structure": true, "is_immobile": true, "max_hp": 1.0, "radius": 3.0, "sight_range": 0.0, "lifetime_seconds": 8,
 	},
 	"shale_barrier": {
 		"id": "shale_barrier", "name": "Shale Barrier", "faction": "neutral",
@@ -1421,6 +1461,7 @@ var abilities: Dictionary = {
 	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5, "sfx": "surge_activate"},
 	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0, "sfx": "phase_step"},
 	"phase_cloak": {"id": "phase_cloak", "name": "Phase Cloak", "hotkey": "C", "target": "none", "desc": "Spend 25 energy to cloak. Cloak drains 4 energy per second. Detectors and recon sweeps can reveal this unit.", "sfx": "phase_step"},
+	"phase_barrier": {"id": "phase_barrier", "name": "Phase Barrier", "hotkey": "F", "target": "point", "desc": "Spend 50 energy to block ground paths in a 3-unit radius for 8 seconds.", "sfx": "phase_barrier"},
 	"hold_fire": {"id": "hold_fire", "name": "Hold Fire", "hotkey": "K", "target": "none", "desc": "Toggle automatic attacks. Explicit attack orders can still fire."},
 	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5, "sfx": "charge_activate"},
 	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31, minimum range 5. Splash deals half damage to allies. Cannot move while emplaced.", "morph_to": "howitzer_emplaced", "sfx": "siege_transform"},
@@ -1462,6 +1503,7 @@ var abilities: Dictionary = {
 	"train_sunblade": {"id": "train_sunblade", "name": "Summon Sunblade", "hotkey": "Z", "target": "none", "unit": "sunblade"},
 	"train_skirmisher": {"id": "train_skirmisher", "name": "Summon Skirmisher", "hotkey": "S", "target": "none", "unit": "skirmisher"},
 	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},
+	"train_aegis_warden": {"id": "train_aegis_warden", "name": "Summon Aegis Warden", "hotkey": "G", "target": "none", "unit": "aegis_warden"},
 	"train_lumen_carrier": {"id": "train_lumen_carrier", "name": "Summon Lumen Carrier", "hotkey": "L", "target": "none", "unit": "lumen_carrier"},
 	"train_farsight_wisp": {"id": "train_farsight_wisp", "name": "Summon Farsight Wisp", "hotkey": "V", "target": "none", "unit": "farsight_wisp"},
 	"train_veilseeker": {"id": "train_veilseeker", "name": "Summon Veilseeker", "hotkey": "T", "target": "none", "unit": "veilseeker"},

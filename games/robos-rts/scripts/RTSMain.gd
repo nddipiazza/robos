@@ -448,7 +448,7 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 	var best_d := INF
 	var viewer := viewing_player()
 	for u in SimEngine.units.values():
-		if not SimEngine.can_see_unit(viewer, u):
+		if u.unit_type == "phase_barrier" or not SimEngine.can_see_unit(viewer, u):
 			continue
 		if camera:
 			var depth: float = world_3d.unit_pick_distance(u, ray_origin, ray_direction)
@@ -867,6 +867,8 @@ func _order_target_at(position: Vector2, screen: Vector2 = Vector2.INF) -> Dicti
 	var target: Dictionary = {}
 	var best_distance := INF
 	for unit in SimEngine.units.values():
+		if unit.unit_type == "phase_barrier":
+			continue
 		var distance: float = position.distance_to(unit.pos)
 		if unit.flight_height <= 0.0 and distance < best_distance and distance <= float(unit.radius) + 1.0 and SimEngine.can_see_unit(local_player, unit):
 			target = unit
@@ -1025,6 +1027,11 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			_spawn_marker(wpos, "move")
 		else:
 			push_message("Choose a clear ground drop site.", "warn")
+	elif abil == "phase_barrier":
+		if SimEngine.issue_command(tags, abil, wpos).ok:
+			pending_ability = ""
+		else:
+			push_message("Choose clear visible ground within the Warden's cast range.", "warn")
 	elif abil == "corrosive_miasma":
 		if SimEngine.issue_command(tags, abil, wpos).ok:
 			pending_ability = ""
@@ -1321,6 +1328,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 			var underground: bool = adef.id == "burrow"
 			if not selected_owned().any(func(unit): return SimEngine.burrow_block_reason(unit, underground).is_empty()):
 				return SimEngine.burrow_block_reason(pu, underground)
+		"phase_barrier":
+			if not selected_owned().any(func(unit): return SimEngine.phase_barrier_block_reason(unit).is_empty()):
+				return SimEngine.phase_barrier_block_reason(pu)
 		"surge":
 			if float(pu["hp"]) <= float(adef.hp_cost):
 				return "Not enough health."
@@ -1782,6 +1792,7 @@ func ui_state() -> Dictionary:
 		"power_overlay": _power_overlay(),
 		"recall_markers": SimEngine.defensive_recall_markers_for(viewing_player()),
 		"area_warnings": _area_attack_warnings(),
+		"phase_barriers": SimEngine.visible_phase_barriers(viewing_player()),
 		"pings": click_markers.filter(func(marker): return marker.kind == "ping").map(func(marker): return [marker.pos.x, marker.pos.y]),
 		"path_feedback": _selected_path_feedback().map(func(feedback): return {
 			"tag": feedback.tag, "status": feedback.status, "endpoint": [feedback.endpoint.x, feedback.endpoint.y]
@@ -1832,6 +1843,10 @@ func _draw() -> void:
 	if not deposit.is_empty():
 		_draw_range_ring(deposit.pos, deposit.radius + 0.2, Color("#fbbf24"))
 	for u in SimEngine.units.values():
+		if u.unit_type == "phase_barrier":
+			if u.get("cast_owner") == viewing_player() or SimEngine.can_see_position(viewing_player(), u.pos):
+				_draw_phase_barrier(u, font)
+			continue
 		if SimEngine.can_see_unit(viewing_player(), u):
 			_draw_unit_bars(u, font)
 			if u.get("support_target_tag", 0) > 0:
@@ -1848,6 +1863,13 @@ func _draw() -> void:
 				if site.ideal > 0:
 					_draw_saturation(u, site, font)
 	_draw_build_ghost()
+	if pending_ability == "phase_barrier":
+		var caster := primary_unit()
+		if not caster.is_empty():
+			var point := screen_to_world(hover_pos())
+			var color := Color("#78dfff")
+			_draw_range_ring(caster.pos, SimEngine.PHASE_BARRIER_RANGE, Color(color, 0.38))
+			_draw_range_ring(point, float(RTSData.get_unit_def("phase_barrier").radius), Color(color, 0.78), 2.0)
 	_draw_click_markers()
 	_draw_path_feedback()
 	if show_names:
@@ -1865,6 +1887,15 @@ func _draw_recon_sweeps() -> void:
 		return
 	for sweep in SimEngine.vision.sweeps_for(viewing_player()):
 		_draw_range_ring(sweep.pos, sweep.radius, Color("#6fb6ff"))
+
+func _draw_phase_barrier(barrier: Dictionary, font: Font) -> void:
+	var color := Color("#78dfff")
+	_draw_range_ring(barrier.pos, barrier.radius, color, 2.2)
+	var remaining := float(maxi(0, int(barrier.expires_tick) - SimEngine.tick)) / SimEngine.TICK_RATE
+	var label := "%.1fs" % remaining
+	var position := world_to_screen(barrier.pos, 2.45) - Vector2(35.0, 0.0)
+	draw_string(font, position + Vector2.ONE, label, HORIZONTAL_ALIGNMENT_CENTER, 70.0, 16, Color.BLACK)
+	draw_string(font, position, label, HORIZONTAL_ALIGNMENT_CENTER, 70.0, 16, color)
 
 func _draw_miasma_zones(font: Font) -> void:
 	for zone in SimEngine.visible_miasma(viewing_player()):
