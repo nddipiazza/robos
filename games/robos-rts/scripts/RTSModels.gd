@@ -133,6 +133,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"breacher": _breacher(root, team)
 		"triage_specialist": _triage_specialist(root, team)
 		"kestrel_interceptor": _kestrel_interceptor(root, team, glow)
+		"kestrel_assault": _kestrel_assault(root, team, glow)
 		"rampart_transport": _rampart_transport(root, team, glow)
 		"howitzer": _howitzer(root, r, team, false)
 		"howitzer_emplaced": _howitzer(root, r, team, true)
@@ -217,6 +218,14 @@ static func _rampart_transport(root: Node3D, team: Material, glow: Material) -> 
 		box(root, Vector3(1.5, 0.16, 0.62), team, Vector3(-0.25, 0.51, side * 0.94))
 		cyl(root, 0.33, 0.38, 1.75, hull, Vector3(-0.31, 0.48, side * 1.15), Vector3(0, 0, -90), 8)
 		sph(root, 0.26, glow, Vector3(-1.24, 0.48, side * 1.15), Vector3(0.46, 1, 1))
+
+static func _kestrel_assault(root: Node3D, team: Material, glow: Material) -> void:
+	_kestrel_interceptor(root, team, glow)
+	var strut := mat("kestrel_strut", STEEL_DARK)
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(0.15, 0.34, 0.17), strut, Vector3(0.21, 0.16, side * 0.62))
+		box(root, Vector3(0.57, 0.10, 0.25), team, Vector3(0.29, 0.06, side * 0.64))
+		cyl(root, 0.11, 0.16, 0.82, strut, Vector3(0.94, 0.45, side * 0.69), Vector3(0, 0, -90), 8)
 
 static func _airframe_hangar(root: Node3D, team: Material, glow: Material) -> void:
 	var steel := mat("airframe_steel", STEEL_DARK)

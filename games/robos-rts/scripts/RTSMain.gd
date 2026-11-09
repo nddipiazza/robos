@@ -20,7 +20,7 @@ const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
 const IDLE_PRODUCTION_BTN := Rect2(130.0, 786.0, 148.0, 48.0)
 const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
-const GRID_KEYS := "QWERTASDFGZXCVB"
+const GRID_KEYS := "QWERTASDFGZXCVBUHJKL"
 const EDGE_SCROLL_MARGIN := 14.0
 const FACTION_CARD := Rect2(8.0, 6.0, 238.0, 31.0)
 const PATH_FEEDBACK_FADE := 1.5
@@ -1216,6 +1216,9 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
 			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
+		"fighter_assault", "fighter_intercept":
+			if not selected_owned().any(func(unit): return SimEngine.fighter_mode_block_reason(unit, adef.id).is_empty()):
+				return SimEngine.fighter_mode_block_reason(pu, adef.id)
 		"load_transport":
 			if not selected_owned().any(func(unit): return unit.get("passengers", []).size() < RTSData.get_unit_def(unit.unit_type).get("transport_capacity", 0)):
 				return "Passenger bay is full."

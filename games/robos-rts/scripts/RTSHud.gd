@@ -815,6 +815,10 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Cloaked")
 	if u.has("expires_tick"):
 		status.append("Deployment ends in %.0fs" % ceilf(maxi(0, int(u.expires_tick) - SimEngine.tick) * SimEngine.TICK_DT))
+	if u.has("fighter_mode_until"):
+		status.append("%s %.1fs" % ["Landing" if u.flight_height > 0.0 else "Taking off", maxf(0.0, (u.fighter_mode_until - SimEngine.tick) * SimEngine.TICK_DT)])
+	elif u.unit_type in ["kestrel_interceptor", "kestrel_assault"]:
+		status.append("Interceptor Mode · Air only" if u.flight_height > 0.0 else "Assault Mode · Ground only")
 	if is_own and def.has("transport_capacity"):
 		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
 	if is_own and u.unit_type == "workshop" and not building:
@@ -979,8 +983,8 @@ func _glyph(id: String, r: Rect2) -> void:
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
 			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
-		"load_transport", "unload_transport":
-			var direction := -1.0 if id == "load_transport" else 1.0
+		"load_transport", "unload_transport", "fighter_assault", "fighter_intercept":
+			var direction := -1.0 if id in ["load_transport", "fighter_intercept"] else 1.0
 			draw_rect(Rect2(c - Vector2(16, 16) * u, Vector2(32, 14) * u), accent, false, 3.0 * u)
 			draw_line(c + Vector2(0, 7 - 10 * direction) * u, c + Vector2(0, 7 + 10 * direction) * u, col, 3.0 * u)
 			draw_polyline(P.call([[-7, 7 + 3 * direction], [0, 7 + 10 * direction], [7, 7 + 3 * direction]]), col, 3.0 * u, true)

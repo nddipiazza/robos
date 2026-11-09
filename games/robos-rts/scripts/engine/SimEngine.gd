@@ -64,6 +64,7 @@ const HUB_POWER_COST := 50.0
 const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 30.0, "requires": ["muster_hall"]}
 const PROSPECTOR_LIFETIME_TICKS := 45 * TICK_RATE
 const TRANSPORT_PICKUP_RADIUS := 6.5
+const FIGHTER_TRANSITION_TICKS := 96
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
@@ -1753,6 +1754,10 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 
 func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	u["vel"] = Vector2.ZERO
+	if u.has("fighter_mode_until"):
+		if tick >= int(u.fighter_mode_until):
+			_finish_fighter_mode(u)
+		return
 
 	if u["attack_state"] == "windup":
 		var target = units.get(u["attack_target_tag"], {})
@@ -3176,6 +3181,21 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype in ["fighter_assault", "fighter_intercept"]:
+			var reason := fighter_mode_block_reason(u, ctype)
+			if not reason.is_empty():
+				notice.emit(u.owner, reason, "warn")
+				continue
+			u.fighter_mode_until = tick + FIGHTER_TRANSITION_TICKS
+			u.is_immobile = true
+			u.attack_state = "idle"
+			u.attack_state_timer = 0.0
+			u.orders.clear()
+			u.path.clear()
+			u.vel = Vector2.ZERO
+			ability_triggered.emit(u, ctype, u.pos)
+			accepted += 1
+			continue
 		if u.armed_structure and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
 			continue
 		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
@@ -3253,6 +3273,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if ctype == "load_transport":
 			if _load_transport(u):
 				accepted += 1
+			elif RTSData.get_unit_def(u.unit_type).has("transport_capacity") and u.get("passengers", []).size() < RTSData.get_unit_def(u.unit_type).transport_capacity:
+				notice.emit(u.owner, "No troops in boarding range.", "warn")
 			continue
 		if ctype == "unload_transport" and not _valid_unload_order(u, target_pos):
 			continue
@@ -3764,6 +3786,36 @@ func _morph_unit_in_place(u: Dictionary, new_type: String) -> void:
 	if u["is_structure"]:
 		nav_dirty = true
 
+func _fighter_landing_clear(fighter: Dictionary) -> bool:
+	var point: Vector2 = fighter.pos
+	return not _is_point_blocked_by_static(point, fighter.radius) and not _ground_mobile_overlaps(point, fighter.radius)
+
+func fighter_mode_block_reason(fighter: Dictionary, ability: String) -> String:
+	var expected := "kestrel_interceptor" if ability == "fighter_assault" else "kestrel_assault"
+	if fighter.unit_type != expected:
+		return "Select a Kestrel in the matching mode."
+	if fighter.has("fighter_mode_until"):
+		return "Kestrel is switching modes."
+	if ability == "fighter_assault" and not _fighter_landing_clear(fighter):
+		return "Move the Kestrel above clear ground first."
+	return ""
+
+func _finish_fighter_mode(fighter: Dictionary) -> void:
+	fighter.erase("fighter_mode_until")
+	fighter.is_immobile = false
+	var landing: bool = fighter.unit_type == "kestrel_interceptor"
+	if landing and not _fighter_landing_clear(fighter):
+		notice.emit(fighter.owner, "Kestrel landing blocked. Interceptor mode retained.", "warn")
+		return
+	var next := "kestrel_assault" if landing else "kestrel_interceptor"
+	var pending: Array = fighter.orders.duplicate()
+	_morph_unit_in_place(fighter, next)
+	fighter.orders = pending
+	fighter.home_pos = fighter.pos
+	var def: Dictionary = RTSData.get_unit_def(next)
+	fighter.flight_height = float(def.flight_height)
+	fighter.attributes = def.attributes.duplicate()
+
 func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if not structure["is_structure"] or structure["build_progress"] < 1.0 or structure.flight_height > 0.0:
 		return false
@@ -4086,6 +4138,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
 		if u.flight_height > 0.0:
 			entry["airborne"] = true
+		if u.has("fighter_mode_until") and (not limited or u.owner == perspective_player):
+			entry["fighter_mode_ticks"] = maxi(0, int(u.fighter_mode_until) - tick)
 		if u.get("hold_fire", false):
 			entry["hold_fire"] = true
 		match u.unit_type:

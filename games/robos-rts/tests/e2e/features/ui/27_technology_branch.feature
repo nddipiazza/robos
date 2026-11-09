@@ -9,7 +9,8 @@ Feature: The faction card shows live technology and production
                 {"id":"builder","type":"pioneer","owner":1,"x":39,"y":22},
                 {"id":"silo","type":"silo","owner":1,"x":46,"y":25,"build_progress":0.95},
                 {"id":"hall","type":"muster_hall","owner":1,"x":55,"y":25,"build_progress":0.95},
-                {"id":"shop","type":"workshop","owner":1,"x":64,"y":25,"build_progress":0.95}]}
+                {"id":"shop","type":"workshop","owner":1,"x":64,"y":25,"build_progress":0.95},
+                {"id":"hangar","type":"airframe_hangar","owner":1,"x":72,"y":26,"build_progress":0.95}]}
       """
     When the commander frames (44, 25) at zoom height 48
     And the commander clicks unit "builder"
@@ -36,6 +37,10 @@ Feature: The faction card shows live technology and production
     Then technology "rifleman" is "Unlocked" and costs 50 crystal, 0 aether, and 1 supply
     And technology "sentry_turret" is "Available" and costs 125 crystal, 0 aether, and 0 supply
     When the commander right-clicks terrain at (64, 25)
+    And the simulation advances 220 ticks
+    Then technology "airframe_hangar" shows prerequisite "workshop" as "Complete"
+    And technology "kestrel_interceptor" shows prerequisite "airframe_hangar" as "Building"
+    When the commander right-clicks terrain at (72, 26)
     And the simulation advances 220 ticks
     Then technology "kestrel_interceptor" is "Unlocked" and costs 125 crystal, 100 aether, and 3 supply
     When player 1 issues "research_weapons" to unit "shop" toward (64.0, 25.0)

@@ -536,7 +536,7 @@ var units: Dictionary = {
 			"damage": 20.0, "range": 14.0, "period": 1.1, "damage_point": 0.12, "backswing": 0.28,
 			"targets_air": true, "targets_ground": false
 		},
-		"abilities": ["move", "stop", "hold_position", "attack"],
+		"abilities": ["move", "stop", "hold_position", "attack", "fighter_assault"],
 		"dialogues": {
 			"select": [
 				{"id": "kestrel_interceptor_select_1", "text": "Kestrel on station."},
@@ -1162,6 +1162,8 @@ var abilities: Dictionary = {
 	"attach_research_module": {"id": "attach_research_module", "name": "Build Research Module", "hotkey": "C", "target": "none", "structure": "research_module", "attachment": true, "desc": "Build on the east pad to research Efficient Surge."},
 	"lift": {"id": "lift", "name": "Lift", "hotkey": "L", "target": "none", "desc": "Take off and pause production. Finished attachments stay on the ground."},
 	"land": {"id": "land", "name": "Land", "hotkey": "L", "target": "point", "desc": "Fly to a clear landing site and resume production. Land beside a compatible module to reconnect."},
+	"fighter_assault": {"id": "fighter_assault", "name": "Assault Mode", "hotkey": "E", "target": "none", "sfx": "siege_transform", "desc": "Land on clear ground in 1.5 seconds and arm the ground-only cannons."},
+	"fighter_intercept": {"id": "fighter_intercept", "name": "Interceptor Mode", "hotkey": "E", "target": "none", "sfx": "siege_transform", "desc": "Take off in 1.5 seconds and arm the air-only missiles."},
 	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
 	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},
@@ -1209,6 +1211,19 @@ var player_colors: Dictionary = {
 	2: Color("#e0453a"),
 	3: Color("#f0c43c")
 }
+
+func _ready() -> void:
+	var assault: Dictionary = units.kestrel_interceptor.duplicate()
+	assault.merge({
+		"id": "kestrel_assault", "name": "Kestrel Assault",
+		"blurb": "Ground mode of the Kestrel. Twin autocannons engage ground targets.",
+		"attributes": ["Armored", "Mechanical"], "flight_height": 0.0, "speed": 5.8,
+		"weapon": {"name": "Twin Autocannons", "sfx": "autocannon_fire", "attack_type": "ranged",
+			"damage": 12.0, "attacks": 2, "range": 10.0, "period": 1.3, "damage_point": 0.18,
+			"backswing": 0.28, "targets_air": false, "targets_ground": true},
+		"abilities": ["move", "stop", "hold_position", "attack", "fighter_intercept"],
+	}, true)
+	units[assault.id] = assault
 
 func get_faction_name(faction_id: String) -> String:
 	return str(faction_info.get(faction_id, {}).get("name", faction_id.capitalize()))
