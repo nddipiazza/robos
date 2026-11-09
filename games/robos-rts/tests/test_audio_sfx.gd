@@ -23,7 +23,7 @@ func _run() -> void:
 	_test_human_unit_dialogues_and_voices()
 	_test_asymmetric_worker_voices()
 	_test_support_cues()
-	_test_carrier_field_cues()
+	_test_concord_support_cues()
 	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
 
@@ -267,16 +267,17 @@ func _test_support_cues() -> void:
 	assert(audio.sfx_counts.get("vital_restore", 0) == 1 and audio.sfx_counts.get("aegis_restore", 0) == 1)
 	assert(audio.dialogue_counts.get("triage_specialist:support", 0) == 1)
 
-func _test_carrier_field_cues() -> void:
+func _test_concord_support_cues() -> void:
 	sim.reset_state(42, 96, 64)
 	audio.reset_stats()
 	var minimums := {"select": 5, "move": 4, "ready": 2}
-	for category in minimums:
-		var lines: Array = data.get_unit_dialogues("lumen_carrier", category)
-		assert(lines.size() >= minimums[category], "Missing carrier %s variants" % category)
-		for line in lines:
-			assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
-		assert(audio.play_unit_dialogue("lumen_carrier", category, true).get("category") == category)
+	for unit_type in ["lumen_carrier", "farsight_wisp"]:
+		for category in minimums:
+			var lines: Array = data.get_unit_dialogues(unit_type, category)
+			assert(lines.size() >= minimums[category], "Missing %s %s variants" % [unit_type, category])
+			for line in lines:
+				assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
+			assert(audio.play_unit_dialogue(unit_type, category, true).get("category") == category)
 	var carrier: Dictionary = sim.spawn_unit("lumen_carrier", 1, Vector2(25, 20))
 	assert(sim.issue_command([carrier.tag], "deploy_power_field").ok)
 	assert(sim.issue_command([carrier.tag], "retract_power_field").ok)

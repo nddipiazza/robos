@@ -1021,6 +1021,33 @@ var units: Dictionary = {
 			],
 		}
 	},
+	"farsight_wisp": {
+		"id": "farsight_wisp", "name": "Farsight Wisp", "faction": FACTION_ALIENS,
+		"blurb": "Fragile scout that flies over terrain for up to 36 seconds. Unarmed with ordinary sight.",
+		"is_structure": false, "is_worker": false, "attributes": ["Light", "Mechanical"],
+		"crystal_cost": 45, "aether_cost": 0, "supply_cost": 1, "build_time": 12.0,
+		"max_hp": 22.0, "radius": 0.68, "speed": 9.6, "sight_range": 18.0,
+		"flight_height": 5.2, "lifetime_seconds": 36, "abilities": ["move", "stop"],
+		"dialogues": {
+			"select": [
+				{"id": "farsight_wisp_select_1", "text": "Farsight Wisp online."},
+				{"id": "farsight_wisp_select_2", "text": "Sending back a clear image."},
+				{"id": "farsight_wisp_select_3", "text": "I am ready to look ahead."},
+				{"id": "farsight_wisp_select_4", "text": "A little light for the road."},
+				{"id": "farsight_wisp_select_5", "text": "Where does the mist end?"}
+			],
+			"move": [
+				{"id": "farsight_wisp_move_1", "text": "Survey course set."},
+				{"id": "farsight_wisp_move_2", "text": "Gliding to the marker."},
+				{"id": "farsight_wisp_move_3", "text": "Crossing the ridge."},
+				{"id": "farsight_wisp_move_4", "text": "I will take a look."}
+			],
+			"ready": [
+				{"id": "farsight_wisp_ready_1", "text": "Farsight Wisp launched."},
+				{"id": "farsight_wisp_ready_2", "text": "Scout link is live."}
+			]
+		}
+	},
 	"lumen_carrier": {
 		"id": "lumen_carrier", "name": "Lumen Carrier", "faction": FACTION_ALIENS,
 		"blurb": "Unarmed field carrier. Anchors in place to provide temporary power for Concord infrastructure and deployments.",
@@ -1198,7 +1225,7 @@ var units: Dictionary = {
 	"waystone": {
 		"id": "waystone",
 		"name": "Waystone",
-		"blurb": "Summons Concord troops and Lumen Carriers. Requires a friendly power field in skirmish.",
+		"blurb": "Summons Concord troops and support units. Requires a friendly power field in skirmish.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
@@ -1213,8 +1240,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier"],
-		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier"]
+		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp"],
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp"]
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
@@ -1302,6 +1329,7 @@ var abilities: Dictionary = {
 	"train_skirmisher": {"id": "train_skirmisher", "name": "Summon Skirmisher", "hotkey": "S", "target": "none", "unit": "skirmisher"},
 	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},
 	"train_lumen_carrier": {"id": "train_lumen_carrier", "name": "Summon Lumen Carrier", "hotkey": "L", "target": "none", "unit": "lumen_carrier"},
+	"train_farsight_wisp": {"id": "train_farsight_wisp", "name": "Summon Farsight Wisp", "hotkey": "V", "target": "none", "unit": "farsight_wisp"},
 	"deploy_power_field": {"id": "deploy_power_field", "name": "Anchor Power Field", "hotkey": "D", "target": "none", "sfx": "power_field_anchor", "desc": "Anchor in place and power nearby Concord structures and landing sites for up to 24 seconds."},
 	"retract_power_field": {"id": "retract_power_field", "name": "Fold Power Field", "hotkey": "R", "target": "none", "sfx": "power_field_fold", "desc": "End the field and restore movement. After folding or expiring, the field takes 18 seconds to recharge."},
 	"build_silo": {"id": "build_silo", "name": "Build Provision Silo", "hotkey": "B", "target": "point", "structure": "silo"},

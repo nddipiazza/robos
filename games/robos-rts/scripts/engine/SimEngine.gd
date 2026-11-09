@@ -1197,6 +1197,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["energy"] = def.support.starting_energy
 		u["support_target_tag"] = 0
 		u["next_support_cue"] = 0
+	if def.has("lifetime_seconds"):
+		u["expires_tick"] = tick + int(def.lifetime_seconds) * TICK_RATE
 	units[tag] = u
 	if u.detection_radius > 0.0:
 		_detectors.append(u)
@@ -1264,6 +1266,7 @@ func _step_single_tick() -> void:
 			_release_mining_slot(u)
 			_confirm_waiting_attack_loss(u)
 			units.erase(tag)
+			_recompute_supplies()
 			unit_destroyed.emit(u)
 			continue
 		u["prev_pos"] = u["pos"]

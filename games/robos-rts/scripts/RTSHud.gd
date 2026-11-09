@@ -832,7 +832,8 @@ func _draw_single(u: Dictionary) -> void:
 	if u.get("cloaked", false):
 		status.append("Cloaked")
 	if u.has("expires_tick"):
-		status.append("Deployment ends in %.0fs" % ceilf(maxi(0, int(u.expires_tick) - SimEngine.tick) * SimEngine.TICK_DT))
+		var label := "Flight time %.0fs" if u.unit_type == "farsight_wisp" else "Deployment ends in %.0fs"
+		status.append(label % ceilf(maxi(0, int(u.expires_tick) - SimEngine.tick) * SimEngine.TICK_DT))
 	if u.has("fighter_mode_until"):
 		status.append("%s %.1fs" % ["Landing" if u.flight_height > 0.0 else "Taking off", maxf(0.0, (u.fighter_mode_until - SimEngine.tick) * SimEngine.TICK_DT)])
 	elif u.unit_type in ["kestrel_interceptor", "kestrel_assault"]:

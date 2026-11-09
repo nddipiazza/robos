@@ -158,6 +158,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"brood_growth_node": _brood_growth_node(root, r, glow)
 		"mote": _mote(root, glow)
+		"farsight_wisp": _farsight_wisp(root, team)
 		"lumen_carrier": _lumen_carrier(root, team)
 		"sunblade": _sunblade(root, team)
 		"skirmisher": _skirmisher(root, team)
@@ -613,6 +614,16 @@ static func _mote(root: Node3D, team: Material) -> void:
 	for side in [-1.0, 1.0]:
 		cone(hover, 0.12, 0.5, m[0], Vector3(-0.2, 0.0, side * 0.38), Vector3(side * 70.0, 0, 90), 4)
 	cone(root, 0.3, 0.7, mat("a_beam", CRYSTAL, CRYSTAL, 1.2, 0.0, 0.5, 0.25), Vector3(0, 0.4, 0), Vector3(180, 0, 0), 10)
+
+static func _farsight_wisp(root: Node3D, team: Material) -> void:
+	var m := _alien_mats()
+	var lens := mat("wisp_lens", Color("#dcfff4"), Color("#63ead5"), 2.3, 0.1, 0.2)
+	sph(root, 0.36, m[0], Vector3(0, 0.5, 0), Vector3(1.15, 0.72, 0.95), 8)
+	ring(root, 0.30, 0.42, team, Vector3(0.18, 0.52, 0), Vector3(0, 0, 80))
+	sph(root, 0.23, lens, Vector3(0.34, 0.54, 0), Vector3(0.68, 1, 1), 8)
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(0.74, 0.13, 0.22), m[1], Vector3(-0.15, 0.54, side * 0.36), Vector3(0, side * -29.0, side * 18.0))
+		sph(root, 0.09, lens, Vector3(-0.40, 0.64, side * 0.58), Vector3.ONE, 6)
 
 static func _lumen_carrier(root: Node3D, team: Material) -> void:
 	var m := _alien_mats()
