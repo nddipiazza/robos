@@ -909,7 +909,9 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 			_spawn_marker(target.pos, "gather")
 			return
 
-	if not workers.is_empty():
+	# The battlefield pick has precedence over a deposit near the projected ground point.
+	var picked_hostile: bool = screen.is_finite() and not target.is_empty() and target.owner != local_player
+	if not workers.is_empty() and not picked_hostile:
 		for r in SimEngine.resources.values():
 			if SimEngine.deposit_present(r) and SimEngine.can_see_position(local_player, r.pos) and wpos.distance_to(r.pos) <= float(r.radius) + 1.6:
 				SimEngine.issue_command(workers, "harvest", r.pos, r.tag, "", queue)

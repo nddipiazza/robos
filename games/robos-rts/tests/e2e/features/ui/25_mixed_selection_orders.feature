@@ -68,3 +68,23 @@ Feature: One context click dispatches compatible roles
     Then "mechanic" has a "repair" order for "tank"
     And "escort" has a "follow" order for "tank"
     And "tank" has orders "none"
+
+  Scenario: An enemy body near a deposit takes priority over gathering
+    Given an RTS test scenario
+      """
+      {"name":"Attack near minerals","paused":true,"decor":false,
+       "map":{"width":96,"height":64},
+       "units":[{"id":"miner","type":"pioneer","owner":1,"x":26,"y":21},
+                {"id":"escort","type":"rifleman","owner":1,"x":32,"y":25},
+                {"id":"enemy","type":"rifleman","owner":2,"x":44,"y":27.3}],
+       "resources":[{"id":"ore","type":"crystal_field","x":44,"y":24,"amount":500}]}
+      """
+    When the commander frames (36, 27) at zoom height 44
+    And the commander selects the mixed group "miner,escort"
+    Then the commander has selected "miner,escort"
+    When the commander right-clicks the projected body of "enemy" at (0.0, 1.15)
+    Then "miner" has an "attack_target" order for "enemy"
+    And "escort" has an "attack_target" order for "enemy"
+    When the commander right-clicks terrain at (44, 24)
+    Then "miner" gathers from deposit "ore"
+    And "escort" is ordered to move toward (44, 24)
