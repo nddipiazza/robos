@@ -28,7 +28,7 @@ Feature: Shortened routes mark their reachable endpoints
     Then "west" has orders "none"
     And shortened route markers fade
 
-  Scenario: A raised gate marks the active leg until the route reopens
+  Scenario Outline: A raised gate marks the active leg until the route reopens
     Given an RTS test scenario
       """
       {"name":"Waiting route feedback","paused":true,"decor":false,
@@ -39,7 +39,7 @@ Feature: Shortened routes mark their reachable endpoints
       """
     When the commander frames (50, 26) at zoom height 65
     And the commander clicks unit "scout"
-    And the commander right-clicks terrain at (76, 24)
+    And the commander right-clicks terrain at (<first_x>, 24)
     And the commander Shift-right-clicks terrain at (85, 36)
     And the simulation advances 75 ticks
     Then no selected routes are marked
@@ -54,6 +54,11 @@ Feature: Shortened routes mark their reachable endpoints
     When the simulation advances 650 ticks
     Then "scout" has orders "none"
     And unit "scout" is within 2.0 units of (85.0, 36.0)
+
+    Examples:
+      | first_x |
+      | 76      |
+      | 50      |
 
   Scenario: A click inside a cliff marks its reachable near edge
     Given an RTS test scenario

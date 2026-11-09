@@ -2177,19 +2177,23 @@ func _update_path_reach(u: Dictionary, order: Dictionary, requested: Vector2, en
 		return
 	var revised: bool = order.get("navigation_revision", -1) != _navigation_revision
 	var show_feedback := not order_path_resolved.get_connections().is_empty()
-	var shortened := show_feedback and requested.is_finite() and endpoint.distance_squared_to(requested) > 1.0
+	var shortened := requested.is_finite() and endpoint.distance_squared_to(requested) > 1.0
 	var status := ""
-	if revised or shortened:
+	if revised or (show_feedback and shortened):
 		var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
 		var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
 		if revised:
-			# A route that existed when this leg started can reopen after a gate
-			# lowers or a foundation dies. Keep the remaining queue in place.
-			order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_goal
-			order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_goal
+			# A raised gate or new foundation can cover the click itself.
+			# A newly projected edge does not complete a formerly exact leg.
+			var displaced: bool = shortened and order.get("_reachable_request", Vector2.INF) == requested
+			var reaches_active_leg := reaches_goal and not displaced
+			order["waiting_for_route"] = order.get("route_was_reachable", false) and not reaches_active_leg
+			order["route_was_reachable"] = order.get("route_was_reachable", false) or reaches_active_leg
 			order["navigation_revision"] = _navigation_revision
-		if shortened:
-			status = "adjusted" if reaches_goal else ("waiting" if order.get("waiting_for_route", false) else "partial")
+		if show_feedback and shortened:
+			status = "waiting" if order.get("waiting_for_route", false) else ("adjusted" if reaches_goal else "partial")
+	if requested.is_finite() and not shortened:
+		order["_reachable_request"] = requested
 	if show_feedback:
 		# Test reach against the unformed endpoint, then mark the actual slot.
 		order_path_resolved.emit(u, order, requested, u.path.back(), status)
@@ -3459,6 +3463,7 @@ func _observed_orders(orders: Array) -> Array:
 	for order in observed:
 		order.erase("_formation")
 		order.erase("_formation_anchor")
+		order.erase("_reachable_request")
 	return observed
 
 func get_observation(perspective_player: int = 0) -> Dictionary:
