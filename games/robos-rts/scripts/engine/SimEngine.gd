@@ -1465,13 +1465,18 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"attack_move", "patrol":
 			if otype == "patrol" and not order.has("patrol_origin"):
 				order["patrol_origin"] = u.pos
-			var enemy = _find_best_attack_target(u, false)
+			if u.has("skirmish_route"):
+				u.skirmish_route.erase("blocked_pursuit")
+			var enemy = _find_best_attack_target(u, bool(order.get("stay_on_route", false)))
 			if not enemy.is_empty():
 				var wpn_range = _get_weapon_range(u)
 				if _edge_distance(u, enemy) <= wpn_range:
 					_begin_attack_on(u, enemy)
 				else:
 					_approach_target(u, enemy["pos"], dt)
+					if u.has("skirmish_route"):
+						var reach: float = wpn_range + u.radius + enemy.radius + 0.75
+						u.skirmish_route["blocked_pursuit"] = u.path.back().distance_squared_to(enemy.pos) > reach * reach
 			else:
 				var target_pos := _prepare_order_path(u, order)
 				var arrival_rad: float = float(order.get("arrival_radius", 1.5))
@@ -2331,7 +2336,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		_recompute_supplies()
 		emit_signal("unit_destroyed", dead)
 
-func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vector2.ZERO, target_tag: int = 0, extra: String = "", queue: bool = false) -> Dictionary:
+func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vector2.ZERO, target_tag: int = 0, extra: String = "", queue: bool = false, stay_on_route: bool = false) -> Dictionary:
 	if match_state.get("status", "") == "finished":
 		return {"ok": false, "accepted": 0, "error": "Match has finished"}
 	var accepted: int = 0
@@ -2605,6 +2610,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 					"target_pos": target_pos,
 					"arrival_radius": dynamic_arrival
 				})
+				if stay_on_route:
+					u.orders.back()["stay_on_route"] = true
 			accepted += 1
 
 		elif ctype in ["attack_target", "force_attack"]:

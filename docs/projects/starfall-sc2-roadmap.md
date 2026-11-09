@@ -93,7 +93,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [ ] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
 - [ ] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
 - [ ] **069 AI air and stealth response.** Opponents build counters to confirmed threats using the standard economy.
-- [ ] **070 AI route recovery.** An army that loses a crossing or stalls at a neutral barrier tries another reachable route while its economy keeps running. Verify a paid opening reaches the enemy on both sides of a blocked crossing.
+- [x] **070 AI route recovery.** An army that loses a crossing or stalls at a neutral barrier tries another reachable route while its economy keeps running. Verify a paid opening reaches the enemy on both sides of a blocked crossing.
 
 ## 071–080 Movement and command reliability
 
