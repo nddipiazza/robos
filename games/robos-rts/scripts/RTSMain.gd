@@ -1695,6 +1695,7 @@ func ui_state() -> Dictionary:
 		"camera_focus": [f.x, f.y],
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
 		"camera_pan_speed": match_menu.pan_speed if match_menu else 46.0,
+		"living_ground_visible": world_3d.living_ground_visible_count if world_3d else 0,
 		"order_lines_visible": _order_lines_visible(),
 		"weapon_ranges": _selected_weapon_ranges(),
 		"weapon_timing": selected_weapon_timing(),

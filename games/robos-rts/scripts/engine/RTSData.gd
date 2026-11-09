@@ -832,6 +832,7 @@ var units: Dictionary = {
 		"faction": FACTION_MONSTERS,
 		"is_structure": true,
 		"is_town_hall": true,
+		"living_ground_radius": 24.0,
 		"attributes": ["Armored", "Biological", "Structure"],
 		"crystal_cost": 300,
 		"aether_cost": 0,

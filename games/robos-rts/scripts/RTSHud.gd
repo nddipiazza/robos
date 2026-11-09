@@ -462,8 +462,10 @@ func _draw_minimap() -> void:
 	draw_rect(mm.grow(6.0), Color("#07090c"))
 	draw_rect(mm.grow(6.0), C_EDGE_HI, false, 1.5)
 	draw_texture_rect(_minimap_texture(), mm, false)
+	var map_cells := Vector2(SimEngine.map_width, SimEngine.map_height) / SimEngine.Vision.CELL_SIZE
+	if main.world_3d.living_ground_texture:
+		draw_texture_rect_region(main.world_3d.living_ground_texture, mm, Rect2(Vector2.ZERO, map_cells), Color(1.0, 1.0, 1.0, 0.72))
 	if main.world_3d.fog_texture:
-		var map_cells := Vector2(SimEngine.map_width, SimEngine.map_height) / SimEngine.Vision.CELL_SIZE
 		draw_texture_rect_region(main.world_3d.fog_texture, mm, Rect2(Vector2.ZERO, map_cells))
 	_draw_minimap_units()
 	minimap_draw_ms = (Time.get_ticks_usec() - started) / 1000.0
