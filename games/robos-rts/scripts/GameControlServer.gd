@@ -45,13 +45,16 @@ func _sample_stats(samples: Array[float]) -> Dictionary:
 
 func _performance_snapshot() -> Dictionary:
 	var scene = get_tree().current_scene
-	var sync_ms = scene.world_3d.sync_ms if scene and "world_3d" in scene and scene.world_3d else 0.0
+	var world: Node = scene.world_3d if scene and "world_3d" in scene else null
+	var hud: Node = scene.hud if scene and "hud" in scene else null
 	return {
 		"ok": true,
 		"frame": _sample_stats(frame_samples),
 		"simulation": _sample_stats(sim_samples),
-		"sync_ms": sync_ms,
-		"hud_ms": scene.hud.draw_ms if scene and "hud" in scene and scene.hud else 0.0,
+		"sync_ms": world.sync_ms if world else 0.0,
+		"fog_sync_ms": world.fog_sync_ms if world else 0.0,
+		"hud_ms": hud.draw_ms if hud else 0.0,
+		"minimap_draw_ms": hud.minimap_draw_ms if hud else 0.0,
 		"process_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
 		"profile_usec": SimEngine.profile_usec.duplicate(),
 		"fps": Engine.get_frames_per_second(),
