@@ -45,12 +45,12 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 
 ## 031–040 Meridian Guard tech
 
-- [ ] **031 Technology branch panel.** The faction card shows unlocked production, prerequisites, and costs.
+- [x] **031 Technology branch panel.** The faction card shows unlocked production, prerequisites, and costs.
 - [x] **032 Production attachments.** Muster Halls can build an attachment when its pad is clear.
-- [ ] **033 Dual production attachment.** One attachment permits two concurrent light infantry jobs with normal costs.
-- [ ] **034 Research attachment.** A different attachment unlocks infantry abilities and competes for the same pad.
-- [ ] **035 Deployable supply headquarters.** A Colony Hub upgrade unlocks an alternative energy spend with the existing recon and supply powers.
-- [ ] **036 Timed mining helper.** The upgraded Hub can deploy a short-lived crystal-only helper with a visible timer.
+- [x] **033 Dual production attachment.** One attachment permits two concurrent light infantry jobs with normal costs.
+- [x] **034 Research attachment.** A different attachment unlocks infantry abilities and competes for the same pad.
+- [x] **035 Deployable supply headquarters.** A Colony Hub upgrade unlocks an alternative energy spend with the existing recon and supply powers.
+- [x] **036 Timed mining helper.** The upgraded Hub can deploy a short-lived crystal-only helper with a visible timer.
 - [ ] **037 Transport bay.** A paid aircraft loads and unloads a capacity-limited squad at a valid drop site.
 - [ ] **038 Air production structure.** A paid build path unlocks the transport and dedicated fighters.
 - [ ] **039 Fighter modes.** A fighter switches attack domains with a transition delay and clear state indicator.
@@ -71,7 +71,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 
 ## 051–060 Aurelian Concord tech
 
-- [ ] **051 Energy-backed production boost.** A Heartstone can temporarily speed one friendly producer with a visible timer.
+- [x] **051 Energy-backed production boost.** A Heartstone can temporarily speed one friendly producer with a visible timer.
 - [ ] **052 Powered infrastructure overlay.** Show overlapping power fields and which Waystones would lose coverage if a Resonator falls.
 - [ ] **053 Fast deployment upgrade.** Research lets eligible Waystones deploy paid troops at powered locations with a cooldown.
 - [ ] **054 Mobile power source.** A Concord carrier can deploy a temporary field while giving up movement.
@@ -87,9 +87,9 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **061 Competitive map pool.** Add at least three original duel maps with distinct safe expansion and attack routes.
 - [x] **062 Lobby map preview.** Display terrain, candidate starts, expansion sites, and special features before launch.
 - [x] **063 Start symmetry checks.** Check opening travel and resource capacity from each spawn on competitive maps.
-- [ ] **064 Map pool filters.** Filter by size, starts, finite deposits, and special terrain.
+- [x] **064 Map pool filters.** Filter by size, starts, finite deposits, and special terrain.
 - [x] **065 AI build profiles.** Each faction has tested economic, aggressive, and tech-heavy openings.
-- [ ] **066 AI scouting worker.** The opponent scouts plausible starts and reacts to visible evidence.
+- [x] **066 AI scouting worker.** The opponent scouts plausible starts and reacts to visible evidence.
 - [ ] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
 - [ ] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
 - [ ] **069 AI air and stealth response.** Opponents build counters to confirmed threats using the standard economy.
@@ -119,7 +119,7 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **087 Supply changes with queued units.** Destroy a supply provider during production, cancel one paid slot, then restore supply. Validate reservation and refund accounting for each faction.
 - [x] **088 Mineral-line saturation at scale.** Test 12, 24, and 36 workers on finite and unlimited lines. Verify workers redistribute as slots open, deliver each load once, and recover when a path is blocked.
 - [x] **089 Construction and repair under pressure.** Kill a builder during placement, replace it, and assign multiple repairers with a low bank. Verify one foundation charge and bounded repair spending.
-- [ ] **090 Production queue consistency.** Exercise queued training, research, and cancellation as buildings lose power or attachments. Check exact costs, refunds, prerequisites, and resumed progress.
+- [x] **090 Production queue consistency.** Exercise queued training, research, and cancellation as buildings lose power or attachments. Check exact costs, refunds, prerequisites, and resumed progress.
 
 ## 091–100 Skirmish depth and performance
 
