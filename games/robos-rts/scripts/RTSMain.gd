@@ -505,7 +505,7 @@ func idle_producers() -> Array[Dictionary]:
 	if observer_player >= 0:
 		return idle
 	for unit in SimEngine.units.values():
-		if unit.owner != local_player or not unit.is_structure or unit.build_progress < 1.0 or not unit.production_queue.is_empty():
+		if unit.owner != local_player or not unit.is_structure or unit.flight_height > 0.0 or unit.build_progress < 1.0 or not unit.production_queue.is_empty():
 			continue
 		var def: Dictionary = RTSData.get_unit_def(unit.unit_type)
 		if not def.has("trains") or (def.get("is_town_hall", false) and unit.unit_type != "brood_nest"):
@@ -880,6 +880,14 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 	var own := selected_owned()
 	if own.is_empty():
 		return
+	var airborne := own.filter(func(unit): return unit.is_structure and unit.flight_height > 0.0)
+	if not airborne.is_empty():
+		var result := SimEngine.issue_command(airborne.map(func(unit): return unit.tag), "move", wpos, 0, "", queue)
+		own = own.filter(func(unit): return not unit.is_structure or unit.flight_height <= 0.0)
+		if own.is_empty():
+			if result.ok:
+				_spawn_marker(wpos, "move")
+			return
 	var tags: Array = []
 	for u in own:
 		tags.append(u["tag"])
@@ -993,10 +1001,15 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		var ability_tags: Array = []
 		for u in own:
 			var unit_abilities: Array = RTSData.get_unit_def(u.unit_type).get("abilities", [])
-			if unit_abilities.has(abil) or (abil == "patrol" and unit_abilities.has("move")):
+			if unit_abilities.has(abil) or (abil == "patrol" and unit_abilities.has("move")) or (abil == "move" and u.is_structure and u.flight_height > 0.0):
 				ability_tags.append(u["tag"])
 		SimEngine.issue_command(ability_tags, abil, wpos, 0, "", queue)
 		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
+	elif abil == "land":
+		var producer := primary_unit()
+		if not producer.is_empty() and SimEngine.issue_command([producer.tag], "land", wpos, 0, "", queue).ok:
+			pending_ability = ""
+			_spawn_marker(producer.orders.back().target_pos, "move")
 	elif abil in ["rally", "rally_worker"]:
 		pending_ability = abil if _repeating_target else ""
 		_issue_rally_at(tags, wpos, queue, not minimap, abil, screen)
@@ -1176,6 +1189,8 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return SimEngine.hub_upgrade_block_reason(pu)
 	if adef.get("attachment", false):
 		return SimEngine.attachment_block_reason(pu, str(adef.structure))
+	if adef.id == "lift":
+		return SimEngine.lift_block_reason(pu)
 	if adef.has("unit"):
 		var producers := selected_owned()
 		if SimEngine.uses_brood_slots(pu) and not producers.any(func(u): return SimEngine.uses_brood_slots(u) and u.build_progress >= 1.0 and u.brood_slots > 0):
@@ -1240,12 +1255,14 @@ func get_card_buttons() -> Array[Dictionary]:
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
 	if pu.is_structure and pu.build_progress < 1.0:
 		abils = ["cancel_construction"]
+	elif pu.is_structure and pu.flight_height > 0.0:
+		abils = ["move", "stop", "land"]
 	elif pu.unit_type == "colony_hub":
 		abils = abils.duplicate()
 		abils.erase("upgrade_hub" if pu.get("hub_operations", false) else "deploy_prospector")
 	elif not pu.is_worker and RTSData.get_unit_def(pu.unit_type).has("weapon"):
 		abils = abils + ["hold_fire"]
-	if abils.has("move"):
+	if abils.has("move") and not pu.is_structure:
 		abils = abils + ["patrol"]
 	if pu.is_worker:
 		abils = abils + ["return_cargo"]
@@ -1297,7 +1314,7 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 	var tags: Array = []
 	for u in selected_owned():
 		var def: Dictionary = RTSData.get_unit_def(u.unit_type)
-		if def.get("abilities", []).has(abil_id) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
+		if def.get("abilities", []).has(abil_id) or (abil_id == "stop" and u.is_structure and u.flight_height > 0.0) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	var result := SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
 	if adef.get("attachment", false) and result.ok and RTSAudio:
@@ -2034,7 +2051,7 @@ func _draw_rally_and_orders() -> void:
 		var sp := _unit_screen(u, 0.2)
 		if u.build_progress >= 1.0 and u.has("support"):
 			_draw_range_ring(u.pos, float(u.support.range) + float(u.radius), Color("#9ae8d1"))
-		if u["is_structure"]:
+		if u.is_structure and u.flight_height <= 0.0:
 			if u.build_progress >= 1.0 and u.detection_radius > 0.0:
 				_draw_range_ring(u.pos, u.detection_radius, Color(0.35, 0.87, 1.0, 0.7))
 			if u.build_progress >= 1.0 and RTSData.get_unit_def(u.unit_type).has("trains"):
@@ -2107,7 +2124,7 @@ func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var hurt: bool = u["hp"] < u["max_hp"] - 0.5 or (u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] - 0.5)
 	var health := reveal_health_bars or health_bar_mode == 1 or (health_bar_mode == 0 and (is_sel or hurt))
 	var building: bool = u["is_structure"] and u["build_progress"] < 1.0
-	var producing: bool = u["is_structure"] and u["production_queue"].size() > 0 and is_sel
+	var producing: bool = u["is_structure"] and u.flight_height <= 0.0 and u["production_queue"].size() > 0 and is_sel
 	var salvage: int = maxi(0, int(u.get("salvage_finish", 0)) - SimEngine.tick)
 	if not (health or building or producing or salvage > 0):
 		return
@@ -2150,16 +2167,26 @@ func _bar(r: Rect2, frac: float, col: Color) -> void:
 	draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(frac, 0.0, 1.0), r.size.y)), col)
 
 func _draw_build_ghost() -> void:
-	if not pending_ability.begins_with("build_"):
+	var landing := pending_ability == "land"
+	if not landing and not pending_ability.begins_with("build_"):
 		return
-	var sid := str(RTSData.get_ability_def(pending_ability).get("structure", ""))
+	var producer := primary_unit() if landing else {}
+	if landing and producer.is_empty():
+		return
+	var sid := str(producer.unit_type) if landing else str(RTSData.get_ability_def(pending_ability).get("structure", ""))
 	if sid == "":
 		return
 	var mpos := hover_pos()
 	if mpos.y >= HUD_TOP:
 		return
 	var wpos := screen_to_world(mpos)
-	var placement := placement_for(sid, wpos)
+	var placement: Dictionary
+	if landing:
+		var position := SimEngine.production_landing_position(producer, wpos)
+		var reason := SimEngine.landing_block_reason(producer, position)
+		placement = {"pos": position, "reason": reason, "ok": reason.is_empty()}
+	else:
+		placement = placement_for(sid, wpos)
 	var r: float = float(RTSData.get_unit_def(sid).get("radius", 2.0))
 	var c: Vector2 = placement["pos"]
 	var definition: Dictionary = RTSData.get_unit_def(sid)

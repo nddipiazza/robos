@@ -480,11 +480,12 @@ var units: Dictionary = {
 		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 2.8,
+		"lift_speed": 3.2,
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
 		"trains": ["rifleman", "breacher", "triage_specialist"],
-		"abilities": ["train_rifleman", "train_breacher", "rally", "train_triage_specialist", "attach_fabrication_module", "attach_research_module", "research_surge_efficiency"]
+		"abilities": ["train_rifleman", "train_breacher", "rally", "train_triage_specialist", "attach_fabrication_module", "attach_research_module", "research_surge_efficiency", "lift"]
 	},
 	"fabrication_module": {
 		"id": "fabrication_module",
@@ -579,11 +580,12 @@ var units: Dictionary = {
 		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 3.0,
+		"lift_speed": 3.0,
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
 		"trains": ["howitzer"],
-		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor"]
+		"abilities": ["train_howitzer", "rally", "research_weapons", "research_armor", "lift"]
 	},
 	"airframe_hangar": {
 		"id": "airframe_hangar", "name": "Airframe Hangar", "faction": FACTION_HUMANS,
@@ -1158,6 +1160,8 @@ var abilities: Dictionary = {
 	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},
 	"attach_fabrication_module": {"id": "attach_fabrication_module", "name": "Build Fabrication Module", "hotkey": "X", "target": "none", "structure": "fabrication_module", "attachment": true, "desc": "Build on the east pad for two simultaneous light infantry jobs."},
 	"attach_research_module": {"id": "attach_research_module", "name": "Build Research Module", "hotkey": "C", "target": "none", "structure": "research_module", "attachment": true, "desc": "Build on the east pad to research Efficient Surge."},
+	"lift": {"id": "lift", "name": "Lift", "hotkey": "L", "target": "none", "desc": "Take off and pause production. Finished attachments stay on the ground."},
+	"land": {"id": "land", "name": "Land", "hotkey": "L", "target": "point", "desc": "Fly to a clear landing site and resume production. Land beside a compatible module to reconnect."},
 	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
 	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},

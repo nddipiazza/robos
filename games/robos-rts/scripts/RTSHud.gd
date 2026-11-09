@@ -729,7 +729,7 @@ func _draw_single(u: Dictionary) -> void:
 		col_b.append(["DPS", "%.1f" % dps])
 		col_a.append(["Range", "%.1f" % float(wpn.get("range", 0))])
 	col_a.append(["Armor", "%d" % (int(u["armor"]) + SimEngine.unit_upgrade_level(u, "armor"))])
-	if float(def.get("speed", 0.0)) > 0.0:
+	if float(def.get("speed", 0.0)) > 0.0 or u.flight_height > 0.0:
 		col_b.append(["Speed", "%.1f" % float(u["speed"])])
 	for i in range(col_a.size()):
 		var py := by + 8.0 + float(i) * 24.0
@@ -769,7 +769,9 @@ func _draw_single(u: Dictionary) -> void:
 		var brood := SimEngine.uses_brood_slots(u)
 		var active_slots := SimEngine.active_production_slots(u)
 		var exit_blocked := queue.any(func(item): return item.has("exit_retry_tick"))
-		if brood:
+		if u.flight_height > 0.0:
+			_text(Vector2(rx + 100.0, ry + 12), "Airborne  ·  Production paused", 15, C_GOLD)
+		elif brood:
 			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOTS], 15, C_GOLD)
 			if exit_blocked:
 				_text(Vector2(rx + 235.0, ry + 12), "Exit blocked", 15, C_GOLD)
@@ -1007,6 +1009,11 @@ func _glyph(id: String, r: Rect2) -> void:
 		"cancel_construction":
 			draw_line(c - Vector2(13, 13) * u, c + Vector2(13, 13) * u, C_RED, 5.0 * u)
 			draw_line(c - Vector2(-13, 13) * u, c + Vector2(-13, 13) * u, C_RED, 5.0 * u)
+		"lift", "land":
+			var direction := -1.0 if id == "lift" else 1.0
+			draw_line(c + Vector2(-18, 17) * u, c + Vector2(18, 17) * u, col, 4.0 * u)
+			draw_line(c + Vector2(0, -11 * direction) * u, c + Vector2(0, 11 * direction) * u, accent, 5.0 * u)
+			draw_colored_polygon(P.call([[-10, 7 * direction], [0, 17 * direction], [10, 7 * direction]]), accent)
 		"surge", "research_surge_efficiency":
 			draw_colored_polygon(P.call([[5, -22], [-13, 3], [-2, 3], [-6, 22], [14, -5], [2, -5]]), Color("#ffd24a"))
 		"phase_step":
