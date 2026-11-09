@@ -1456,5 +1456,99 @@
         }
       ]
     }
+  },
+  "carapace_bulwark": {
+    "unit_name": "Carapace Bulwark",
+    "voice": "en-US-GuyNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "carapace_bulwark_select_1",
+          "text": "Carapace set.",
+          "path": "res://assets/audio/voice/carapace_bulwark_select_1.wav"
+        },
+        {
+          "id": "carapace_bulwark_select_2",
+          "text": "Stand behind me.",
+          "path": "res://assets/audio/voice/carapace_bulwark_select_2.wav"
+        },
+        {
+          "id": "carapace_bulwark_select_3",
+          "text": "The shell will hold.",
+          "path": "res://assets/audio/voice/carapace_bulwark_select_3.wav"
+        },
+        {
+          "id": "carapace_bulwark_select_4",
+          "text": "Where is the breach?",
+          "path": "res://assets/audio/voice/carapace_bulwark_select_4.wav"
+        },
+        {
+          "id": "carapace_bulwark_select_5",
+          "text": "I have room for scars.",
+          "path": "res://assets/audio/voice/carapace_bulwark_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "carapace_bulwark_move_1",
+          "text": "My weight is moving.",
+          "path": "res://assets/audio/voice/carapace_bulwark_move_1.wav"
+        },
+        {
+          "id": "carapace_bulwark_move_2",
+          "text": "I will make a path.",
+          "path": "res://assets/audio/voice/carapace_bulwark_move_2.wav"
+        },
+        {
+          "id": "carapace_bulwark_move_3",
+          "text": "Closing the gap.",
+          "path": "res://assets/audio/voice/carapace_bulwark_move_3.wav"
+        },
+        {
+          "id": "carapace_bulwark_move_4",
+          "text": "Shell forward.",
+          "path": "res://assets/audio/voice/carapace_bulwark_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "carapace_bulwark_attack_1",
+          "text": "Your armor is thinner.",
+          "path": "res://assets/audio/voice/carapace_bulwark_attack_1.wav"
+        },
+        {
+          "id": "carapace_bulwark_attack_2",
+          "text": "Let me crack that open.",
+          "path": "res://assets/audio/voice/carapace_bulwark_attack_2.wav"
+        },
+        {
+          "id": "carapace_bulwark_attack_3",
+          "text": "That plate sounds hollow.",
+          "path": "res://assets/audio/voice/carapace_bulwark_attack_3.wav"
+        },
+        {
+          "id": "carapace_bulwark_attack_4",
+          "text": "Come closer. I can reach.",
+          "path": "res://assets/audio/voice/carapace_bulwark_attack_4.wav"
+        },
+        {
+          "id": "carapace_bulwark_attack_5",
+          "text": "One shell breaks today.",
+          "path": "res://assets/audio/voice/carapace_bulwark_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "carapace_bulwark_ready_1",
+          "text": "The shell has hardened.",
+          "path": "res://assets/audio/voice/carapace_bulwark_ready_1.wav"
+        },
+        {
+          "id": "carapace_bulwark_ready_2",
+          "text": "Bulwark standing.",
+          "path": "res://assets/audio/voice/carapace_bulwark_ready_2.wav"
+        }
+      ]
+    }
   }
 }

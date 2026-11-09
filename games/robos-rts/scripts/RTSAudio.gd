@@ -690,6 +690,8 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 		play_at(sfx_key, pos, 0.0, 0.035)
 	if ab_id in ["restore_vitals", "inject_brood"] and unit.owner == local_player_id:
 		play_unit_dialogue(unit.unit_type, "support")
+	elif ab_id == "carapace_ready" and unit.owner == local_player_id:
+		play_unit_dialogue(unit.unit_type, "ready")
 
 func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, unit_tag: int) -> void:
 	var unit: Dictionary = SimEngine.units.get(unit_tag, {})

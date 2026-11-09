@@ -789,7 +789,44 @@ var units: Dictionary = {
 			"targets_air": true,
 			"attack_type": "ranged"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack"]
+		"abilities": ["move", "stop", "hold_position", "attack", "morph_carapace"]
+	},
+	"carapace_bulwark": {
+		"id": "carapace_bulwark", "name": "Carapace Bulwark", "faction": FACTION_MONSTERS,
+		"blurb": "Evolved Bile Crawler. Heavy armor and close-range anti-armor claws.",
+		"attributes": ["Armored", "Biological"], "supply_cost": 3, "max_hp": 235.0,
+		"armor": 2.0, "radius": 1.15, "speed": 6.0, "sight_range": 19.0, "push_priority": 4,
+		"living_ground_speed_bonus": 0.30,
+		"weapon": {"name": "Plate Splitter", "sfx": "mandible_bite", "attack_type": "melee",
+			"damage": 24.0, "bonus": {"Armored": 8.0}, "range": 2.2, "period": 1.32,
+			"damage_point": 0.22, "backswing": 0.30, "targets_air": false, "targets_ground": true},
+		"abilities": ["move", "stop", "hold_position", "attack"],
+		"dialogues": {
+			"select": [
+				{"id": "carapace_bulwark_select_1", "text": "Carapace set."},
+				{"id": "carapace_bulwark_select_2", "text": "Stand behind me."},
+				{"id": "carapace_bulwark_select_3", "text": "The shell will hold."},
+				{"id": "carapace_bulwark_select_4", "text": "Where is the breach?"},
+				{"id": "carapace_bulwark_select_5", "text": "I have room for scars."},
+			],
+			"move": [
+				{"id": "carapace_bulwark_move_1", "text": "My weight is moving."},
+				{"id": "carapace_bulwark_move_2", "text": "I will make a path."},
+				{"id": "carapace_bulwark_move_3", "text": "Closing the gap."},
+				{"id": "carapace_bulwark_move_4", "text": "Shell forward."},
+			],
+			"attack": [
+				{"id": "carapace_bulwark_attack_1", "text": "Your armor is thinner."},
+				{"id": "carapace_bulwark_attack_2", "text": "Let me crack that open."},
+				{"id": "carapace_bulwark_attack_3", "text": "That plate sounds hollow."},
+				{"id": "carapace_bulwark_attack_4", "text": "Come closer. I can reach."},
+				{"id": "carapace_bulwark_attack_5", "text": "One shell breaks today."},
+			],
+			"ready": [
+				{"id": "carapace_bulwark_ready_1", "text": "The shell has hardened."},
+				{"id": "carapace_bulwark_ready_2", "text": "Bulwark standing."},
+			],
+		}
 	},
 	"blight_hurler": {
 		"id": "blight_hurler",
@@ -1413,6 +1450,8 @@ var abilities: Dictionary = {
 	"train_drift_sac": {"id": "train_drift_sac", "name": "Hatch Drift Sac", "hotkey": "F", "target": "none", "unit": "drift_sac", "desc": "Unarmed flying scout that provides 8 supply while alive."},
 	"train_needlewing": {"id": "train_needlewing", "name": "Hatch Needlewing", "hotkey": "N", "target": "none", "unit": "needlewing", "desc": "Fast flyer that fires venom needles at ground targets."},
 	"corrosive_miasma": {"id": "corrosive_miasma", "name": "Corrosive Miasma", "hotkey": "E", "target": "point", "sfx": "corrosive_lob", "desc": "Spend 50 energy to warn an area for one second, then slow and damage enemy ground troops in it for eight seconds. Requires a Blight Spire."},
+	"morph_carapace": {"id": "morph_carapace", "name": "Evolve Carapace Bulwark", "hotkey": "E", "target": "none", "sfx": "brood_inject", "desc": "Evolve into a heavily armored melee unit in six seconds. Requires a Blight Spire."},
+	"cancel_carapace_morph": {"id": "cancel_carapace_morph", "name": "Cancel Evolution", "hotkey": "X", "target": "none", "desc": "Stop the evolution and refund its paid resources and supply."},
 	"train_brood_keeper": {"id": "train_brood_keeper", "name": "Spawn Brood Keeper", "hotkey": "E", "target": "none", "unit": "brood_keeper"},
 	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
 	"research_fast_deployment": {"id": "research_fast_deployment", "name": "Research Fast Deployment", "hotkey": "F", "target": "none", "upgrade": "fast_deployment", "producer": "waystone", "desc": "Lets powered Waystones send a paid trainee directly to a visible powered site."},

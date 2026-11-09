@@ -1198,6 +1198,8 @@ func _check_planned_placement(structure_id: String, position: Vector2, radius: f
 func ability_cost(adef: Dictionary) -> Dictionary:
 	if adef.get("id") == "upgrade_hub":
 		return SimEngine.HUB_OPERATIONS_OFFER
+	if adef.get("id") == "morph_carapace":
+		return SimEngine.CARAPACE_MORPH_OFFER
 	if adef.has("upgrade"):
 		return SimEngine.research_offer(local_player, adef.upgrade)
 	var def_id := str(adef.get("unit", adef.get("structure", "")))
@@ -1220,6 +1222,10 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return "Under construction."
 	if adef.id == "upgrade_hub":
 		return SimEngine.hub_upgrade_block_reason(pu)
+	if adef.id == "morph_carapace":
+		if selected_owned().any(func(unit): return SimEngine.carapace_morph_block_reason(unit).is_empty()):
+			return ""
+		return SimEngine.carapace_morph_block_reason(pu)
 	if adef.get("attachment", false):
 		return SimEngine.attachment_block_reason(pu, str(adef.structure))
 	if adef.id == "lift":
@@ -1314,6 +1320,8 @@ func get_card_buttons() -> Array[Dictionary]:
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
 	if pu.is_structure and pu.build_progress < 1.0:
 		abils = ["cancel_construction"]
+	elif pu.has("carapace_morph_until"):
+		abils = ["cancel_carapace_morph"]
 	elif pu.is_structure and pu.flight_height > 0.0:
 		abils = ["move", "stop", "land"]
 	elif pu.unit_type == "colony_hub":
@@ -1373,7 +1381,7 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 	var tags: Array = []
 	for u in selected_owned():
 		var def: Dictionary = RTSData.get_unit_def(u.unit_type)
-		if def.get("abilities", []).has(abil_id) or (abil_id == "stop" and u.is_structure and u.flight_height > 0.0) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
+		if def.get("abilities", []).has(abil_id) or (abil_id == "cancel_carapace_morph" and u.has("carapace_morph_until")) or (abil_id == "stop" and u.is_structure and u.flight_height > 0.0) or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) or (abil_id == "return_cargo" and u.is_worker) or (abil_id == "auto_repair" and u.unit_type == "pioneer") or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	var result := SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
 	if adef.get("attachment", false) and result.ok and RTSAudio:
@@ -1808,6 +1816,8 @@ func _draw() -> void:
 					draw_line(_unit_screen(u, unit_height(u) * 0.65), _unit_screen(recipient, unit_height(recipient) * 0.55), beam, 2.5, true)
 			if u.get("cloaked", false):
 				_ellipse(world_to_screen(u.pos, 0.3), 12.0, Color(0.58, 0.83, 1.0, 0.7), 1.5)
+			if u.has("carapace_morph_until"):
+				_draw_range_ring(u.pos, u.radius + 0.65, Color("#dcb660"), 2.0)
 			if u.owner == local_player and _saturation.has(u.tag):
 				var site: Dictionary = _saturation[u.tag]
 				if site.ideal > 0:

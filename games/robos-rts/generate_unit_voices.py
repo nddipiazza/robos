@@ -316,6 +316,38 @@ UNIT_VOICE_PROFILES: dict[str, dict] = {
             ],
         },
     },
+    "carapace_bulwark": {
+        "unit_name": "Carapace Bulwark",
+        "voice": "en-US-GuyNeural",
+        "rate": "-7%",
+        "pitch": "-27Hz",
+        "lines": {
+            "select": [
+                {"id": "carapace_bulwark_select_1", "text": "Carapace set."},
+                {"id": "carapace_bulwark_select_2", "text": "Stand behind me."},
+                {"id": "carapace_bulwark_select_3", "text": "The shell will hold."},
+                {"id": "carapace_bulwark_select_4", "text": "Where is the breach?"},
+                {"id": "carapace_bulwark_select_5", "text": "I have room for scars."},
+            ],
+            "move": [
+                {"id": "carapace_bulwark_move_1", "text": "My weight is moving."},
+                {"id": "carapace_bulwark_move_2", "text": "I will make a path."},
+                {"id": "carapace_bulwark_move_3", "text": "Closing the gap."},
+                {"id": "carapace_bulwark_move_4", "text": "Shell forward."},
+            ],
+            "attack": [
+                {"id": "carapace_bulwark_attack_1", "text": "Your armor is thinner."},
+                {"id": "carapace_bulwark_attack_2", "text": "Let me crack that open."},
+                {"id": "carapace_bulwark_attack_3", "text": "That plate sounds hollow."},
+                {"id": "carapace_bulwark_attack_4", "text": "Come closer. I can reach."},
+                {"id": "carapace_bulwark_attack_5", "text": "One shell breaks today."},
+            ],
+            "ready": [
+                {"id": "carapace_bulwark_ready_1", "text": "The shell has hardened."},
+                {"id": "carapace_bulwark_ready_2", "text": "Bulwark standing."},
+            ],
+        },
+    },
     "forager": {
         "unit_name": "Forager",
         "voice": "en-US-ChristopherNeural",

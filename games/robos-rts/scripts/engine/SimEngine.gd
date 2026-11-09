@@ -73,6 +73,8 @@ const MIASMA_DURATION_TICKS := 8 * 64
 const TUNNEL_CAPACITY := 6
 const TUNNEL_TRAVEL_TICKS := 2 * 64
 const TUNNEL_EXIT_RETRY_TICKS := 16
+const CARAPACE_MORPH_TICKS := 6 * 64
+const CARAPACE_MORPH_OFFER := {"crystal": 75, "aether": 50, "supply": 1, "time": 6.0, "requires": ["blight_spire"], "def_id": "carapace_bulwark"}
 const PRODUCTION_BOOST_COST := 50.0
 const PRODUCTION_BOOST_TICKS := 12 * TICK_RATE
 const PRODUCTION_BOOST_RATE := 1.5
@@ -1946,6 +1948,10 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 
 func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	u["vel"] = Vector2.ZERO
+	if u.has("carapace_morph_until"):
+		if tick >= int(u.carapace_morph_until):
+			_finish_carapace_morph(u)
+		return
 	if u.has("fighter_mode_until"):
 		if tick >= int(u.fighter_mode_until):
 			_finish_fighter_mode(u)
@@ -3397,6 +3403,18 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "morph_carapace":
+			var reason := carapace_morph_block_reason(u)
+			if reason.is_empty():
+				_begin_carapace_morph(u)
+				accepted += 1
+			else:
+				notice.emit(u.owner, reason, "warn")
+			continue
+		if ctype == "cancel_carapace_morph":
+			if _cancel_carapace_morph(u):
+				accepted += 1
+			continue
 		if ctype == "link_tunnel":
 			if accepted == 0 and _link_tunnel(u, units.get(target_tag, {})):
 				accepted += 1
@@ -4167,6 +4185,56 @@ func _finish_fighter_mode(fighter: Dictionary) -> void:
 	fighter.flight_height = float(def.flight_height)
 	fighter.attributes = def.attributes.duplicate()
 
+func carapace_morph_block_reason(unit: Dictionary) -> String:
+	if unit.unit_type != "bile_crawler" or unit.is_immobile or not players.has(unit.owner):
+		return "Select a Bile Crawler ready to evolve."
+	if not has_tech_structure(unit.owner, "blight_spire"):
+		return "Requires a completed Blight Spire."
+	var stock: Dictionary = players[unit.owner]
+	if stock.crystal < CARAPACE_MORPH_OFFER.crystal or stock.aether < CARAPACE_MORPH_OFFER.aether:
+		return "Requires 75 crystal and 50 aether."
+	if stock.supply_used + CARAPACE_MORPH_OFFER.supply > stock.supply_cap:
+		return "Requires one additional supply."
+	return ""
+
+func _begin_carapace_morph(unit: Dictionary) -> void:
+	var stock: Dictionary = players[unit.owner]
+	stock.crystal -= CARAPACE_MORPH_OFFER.crystal
+	stock.aether -= CARAPACE_MORPH_OFFER.aether
+	unit["carapace_morph_until"] = tick + CARAPACE_MORPH_TICKS
+	unit.is_immobile = true
+	unit.attack_state = "idle"
+	unit.attack_state_timer = 0.0
+	unit.orders.clear()
+	unit.path.clear()
+	unit.vel = Vector2.ZERO
+	_recompute_supplies()
+	ability_triggered.emit(unit, "morph_carapace", unit.pos)
+
+func _cancel_carapace_morph(unit: Dictionary) -> bool:
+	if not unit.erase("carapace_morph_until"):
+		return false
+	unit.is_immobile = false
+	players[unit.owner].crystal += CARAPACE_MORPH_OFFER.crystal
+	players[unit.owner].aether += CARAPACE_MORPH_OFFER.aether
+	_recompute_supplies()
+	return true
+
+func _finish_carapace_morph(unit: Dictionary) -> void:
+	unit.erase("carapace_morph_until")
+	var health_ratio: float = unit.hp / unit.max_hp
+	var pending: Array = unit.orders.duplicate()
+	_morph_unit_in_place(unit, "carapace_bulwark")
+	var evolved: Dictionary = RTSData.get_unit_def(unit.unit_type)
+	unit.attributes = evolved.attributes.duplicate()
+	unit.max_hp = evolved.max_hp
+	unit.hp = evolved.max_hp * health_ratio
+	unit.armor = evolved.armor
+	unit.orders = pending
+	unit.home_pos = unit.pos
+	_recompute_supplies()
+	ability_triggered.emit(unit, "carapace_ready", unit.pos)
+
 func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if not structure["is_structure"] or structure["build_progress"] < 1.0 or structure.flight_height > 0.0:
 		return false
@@ -4337,6 +4405,8 @@ func _recompute_supplies() -> void:
 				players[pid]["supply_used"] += int(q_def.get("supply_cost", 1))
 		else:
 			players[pid]["supply_used"] += int(def.get("supply_cost", 1))
+			if u.has("carapace_morph_until"):
+				players[pid]["supply_used"] += CARAPACE_MORPH_OFFER.supply
 		for passenger in u.get("passengers", []):
 			players[pid]["supply_used"] += int(RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1))
 	for pid in players:
@@ -4513,6 +4583,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			entry["airborne"] = true
 		if u.has("fighter_mode_until") and (not limited or u.owner == perspective_player):
 			entry["fighter_mode_ticks"] = maxi(0, int(u.fighter_mode_until) - tick)
+		if u.has("carapace_morph_until"):
+			entry["carapace_morph_ticks"] = maxi(0, int(u.carapace_morph_until) - tick)
 		if u.get("hold_fire", false):
 			entry["hold_fire"] = true
 		match u.unit_type:
