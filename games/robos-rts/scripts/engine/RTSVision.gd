@@ -111,7 +111,8 @@ func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = []
 		if unit.is_structure:
 			structures.append(unit)
 		var center := _cell(unit.pos)
-		_cover(sight, center, unit.sight_range, has_elevation and _high_cells[center.y * size.x + center.x] != 0)
+		var sees_high: bool = has_elevation and (unit.flight_height > 0.0 or _high_cells[center.y * size.x + center.x] != 0)
+		_cover(sight, center, unit.sight_range, sees_high)
 
 	for station in watch_stations:
 		if _players.has(station.owner):

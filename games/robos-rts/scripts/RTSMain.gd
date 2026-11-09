@@ -318,6 +318,12 @@ func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
 		return world_3d.world_to_screen(wpos, y_offset)
 	return wpos * 13.5
 
+func _unit_screen(unit: Dictionary, local_height: float, x_offset: float = 0.0) -> Vector2:
+	var position: Vector2 = unit.pos + Vector2(x_offset, 0.0)
+	if unit.flight_height > 0.0 and world_3d and world_3d.camera_3d:
+		return world_3d.camera_3d.unproject_position(Vector3(position.x, unit.flight_height + local_height, position.y))
+	return world_to_screen(position, local_height)
+
 func screen_to_world(spos: Vector2) -> Vector2:
 	if world_3d and world_3d.camera_3d:
 		return world_3d.screen_to_world(spos)
@@ -412,14 +418,14 @@ func selected_owned() -> Array[Dictionary]:
 			out.append(u)
 	return out
 
-func _unit_at_screen(spos: Vector2) -> Dictionary:
+func _unit_at_screen(spos: Vector2, ground_only: bool = false) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d := 1e9
 	for u in SimEngine.units.values():
-		if not SimEngine.can_see_unit(viewing_player(), u):
+		if (ground_only and u.flight_height > 0.0) or not SimEngine.can_see_unit(viewing_player(), u):
 			continue
-		var center := world_to_screen(u["pos"], unit_height(u) * 0.45)
-		var edge := world_to_screen(u["pos"] + Vector2(float(u["radius"]), 0.0), unit_height(u) * 0.45)
+		var center := _unit_screen(u, unit_height(u) * 0.45)
+		var edge := _unit_screen(u, unit_height(u) * 0.45, u.radius)
 		var rad_px := maxf(16.0, center.distance_to(edge) * 1.05)
 		var d := center.distance_to(spos)
 		if d <= rad_px and d < best_d:
@@ -610,7 +616,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 
 	if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 		if pending_ability != "":
-			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed, false, mb.alt_pressed)
+			_execute_pending_ability_at(screen_to_world(mpos), mb.shift_pressed, false, mb.alt_pressed, mpos)
 			return
 		is_box_selecting = true
 		_box_pick_type = mb.ctrl_pressed or mb.meta_pressed
@@ -620,7 +626,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		if pending_ability != "":
 			pending_ability = ""
 			return
-		_issue_smart_right_click(screen_to_world(mpos), mb.shift_pressed)
+		_issue_smart_right_click(screen_to_world(mpos), mb.shift_pressed, mpos)
 
 # Returns true when the click landed on a HUD element.
 func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
@@ -720,7 +726,7 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_typ
 	for u in SimEngine.units.values():
 		if u["owner"] != local_player:
 			continue
-		var sp2 := world_to_screen(u["pos"], unit_height(u) * 0.4)
+		var sp2 := _unit_screen(u, unit_height(u) * 0.4)
 		if rect.has_point(sp2):
 			box_units.append(u)
 	var has_mobile := box_units.any(func(u): return not u["is_structure"])
@@ -735,9 +741,9 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_typ
 		if not pu2.is_empty() and int(pu2.get("owner", 0)) == local_player:
 			RTSAudio.play_unit_dialogue(str(pu2.get("unit_type", "")), "select")
 
-func _spawn_marker(pos: Vector2, kind: String) -> void:
+func _spawn_marker(pos: Vector2, kind: String, height: float = 0.1) -> void:
 	var duration := 5.0 if kind == "ping" else 0.7
-	click_markers.append({"pos": pos, "kind": kind, "ttl": duration, "max": duration})
+	click_markers.append({"pos": pos, "kind": kind, "ttl": duration, "max": duration, "height": height})
 	if RTSAudio:
 		var pu := primary_unit()
 		var utype := str(pu.get("unit_type", "")) if not pu.is_empty() and int(pu.get("owner", 0)) == local_player else ""
@@ -749,6 +755,12 @@ func _spawn_marker(pos: Vector2, kind: String) -> void:
 			RTSAudio.play_ui("ui_command_move")
 			if utype != "" and kind in ["move", "gather"]:
 				RTSAudio.play_unit_dialogue(utype, "move")
+
+func _spawn_attack_marker(target: Dictionary) -> void:
+	var height := 0.1
+	if target.flight_height > 0.0:
+		height = float(target.flight_height) - SimEngine.get_elevation_at(target.pos) + 0.35
+	_spawn_marker(target.pos, "attack", height)
 
 func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true, command: String = "rally") -> void:
 	var best_distance := INF
@@ -775,19 +787,23 @@ func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bo
 	if SimEngine.issue_command(tags, command, position, target_tag, "", queue).ok:
 		_spawn_marker(position, "rally")
 
-func _order_target_at(position: Vector2) -> Dictionary:
-	var target := _unit_at_screen(world_to_screen(position, 1.2))
+func _order_target_at(position: Vector2, screen: Vector2 = Vector2.INF) -> Dictionary:
+	if screen.is_finite():
+		var pointed := _unit_at_screen(screen)
+		if not pointed.is_empty() and pointed.flight_height > 0.0:
+			return pointed
+	var target := _unit_at_screen(world_to_screen(position, 1.2), true)
 	if not target.is_empty():
 		return target
 	var best_distance := INF
 	for unit in SimEngine.units.values():
 		var distance: float = position.distance_to(unit.pos)
-		if distance < best_distance and distance <= float(unit.radius) + 1.0 and SimEngine.can_see_unit(local_player, unit):
+		if unit.flight_height <= 0.0 and distance < best_distance and distance <= float(unit.radius) + 1.0 and SimEngine.can_see_unit(local_player, unit):
 			target = unit
 			best_distance = distance
 	return target
 
-func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
+func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vector2.INF) -> void:
 	var own := selected_owned()
 	if own.is_empty():
 		return
@@ -797,16 +813,16 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		var target := _order_target_at(wpos)
+		var target := _order_target_at(wpos, screen)
 		if not target.is_empty() and target.owner != local_player and own.any(func(unit): return unit.armed_structure):
 			var turrets := tags.filter(func(tag): return SimEngine.units[tag].armed_structure)
-			SimEngine.issue_command(turrets, "attack_target", target.pos, target.tag, "", queue)
-			_spawn_marker(target.pos, "attack")
+			if SimEngine.issue_command(turrets, "attack_target", target.pos, target.tag, "", queue).ok:
+				_spawn_attack_marker(target)
 		else:
 			_issue_rally_at(tags, wpos, queue)
 		return
 
-	var target := _order_target_at(wpos)
+	var target := _order_target_at(wpos, screen)
 	if not target.is_empty() and target.owner == local_player:
 		var builder := {}
 		var repairers: Array = []
@@ -817,6 +833,11 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 				repairers.append(unit.tag)
 		if not builder.is_empty():
 			SimEngine.issue_command([builder.tag], "resume_construction", target.pos, target.tag, "", queue)
+			_spawn_marker(target.pos, "move")
+			return
+		var medics := own.filter(func(unit): return not unit.is_structure and SimEngine.can_restore(unit, target))
+		if not medics.is_empty():
+			SimEngine.issue_command(medics.map(func(unit): return unit.tag), "restore_vitals", target.pos, target.tag, "", queue)
 			_spawn_marker(target.pos, "move")
 			return
 		if not repairers.is_empty():
@@ -839,8 +860,10 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 
 	if not target.is_empty():
 		if target["owner"] != local_player:
-			SimEngine.issue_command(tags, "attack_target", target["pos"], target["tag"], "", queue)
-			_spawn_marker(target["pos"], "attack")
+			if SimEngine.issue_command(tags, "attack_target", target.pos, target.tag, "", queue).ok:
+				_spawn_attack_marker(target)
+			else:
+				push_message("Selected weapons cannot hit that target.", "warn")
 			return
 		elif target.is_extractor and own.any(func(unit): return unit.is_worker):
 			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
@@ -865,7 +888,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	SimEngine.issue_command(tags, "move", wpos, 0, "", queue)
 	_spawn_marker(wpos, "move")
 
-func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false, force: bool = false) -> void:
+func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false, force: bool = false, screen: Vector2 = Vector2.INF) -> void:
 	if pending_ability == "ping":
 		pending_ability = ""
 		var position := wpos.clamp(Vector2.ZERO, Vector2(SimEngine.map_width, SimEngine.map_height))
@@ -882,13 +905,15 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		tags.append(u["tag"])
 	if abil == "attack":
 		pending_ability = abil if _repeating_target else ""
-		var tgt := {} if minimap else _order_target_at(wpos)
+		var tgt := {} if minimap else _order_target_at(wpos, screen)
 		if not tgt.is_empty() and tgt["owner"] != local_player:
-			SimEngine.issue_command(tags, "attack_target", tgt["pos"], tgt["tag"], "", queue)
-			_spawn_marker(tgt["pos"], "attack")
+			if SimEngine.issue_command(tags, "attack_target", tgt.pos, tgt.tag, "", queue).ok:
+				_spawn_attack_marker(tgt)
+			else:
+				push_message("Selected weapons cannot hit that target.", "warn")
 		elif force and not tgt.is_empty():
 			if SimEngine.issue_command(tags, "force_attack", tgt.pos, tgt.tag, "", queue).ok:
-				_spawn_marker(tgt.pos, "attack")
+				_spawn_attack_marker(tgt)
 		else:
 			SimEngine.issue_command(tags, "attack_move", wpos, 0, "", queue)
 			_spawn_marker(wpos, "attack")
@@ -925,10 +950,11 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			_spawn_marker(target.pos, "gather")
 		else:
 			push_message("No available gas slots or workers.", "warn")
-	elif abil == "repair":
+	elif abil in ["repair", "restore_vitals"]:
 		var target := _order_target_at(wpos)
 		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag, "", queue).ok:
-			push_message("Select a damaged friendly mechanical unit or building.", "warn")
+			var message := "Select a wounded biological ally." if abil == "restore_vitals" else "Select a damaged friendly mechanical unit or building."
+			push_message(message, "warn")
 			return
 		pending_ability = ""
 		_spawn_marker(target.pos, "move")
@@ -993,7 +1019,7 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 			return {"ok": false, "pos": pos, "reason": "%s must be placed on a free aether vent." % def.name}
 		return _check_planned_placement(structure_id, pos, r)
 	if SimEngine.requires_power(structure_id) and not SimEngine.is_powered(local_player, pos):
-		return {"ok": false, "pos": pos, "reason": "Place this Waystone inside a Resonator's power field."}
+		return {"ok": false, "pos": pos, "reason": "Place the %s inside a Resonator's power field." % def.name}
 	if pos.x < r or pos.y < r or pos.x > SimEngine.map_width - r or pos.y > SimEngine.map_height - r:
 		return {"ok": false, "pos": pos, "reason": "Cannot build outside the map."}
 	for obs in SimEngine.terrain_obstacles:
@@ -1538,7 +1564,7 @@ func _draw() -> void:
 		return
 	var font := ThemeDB.fallback_font
 	_draw_rally_and_orders()
-	if pending_ability == "build_waystone" and SimEngine.requires_power("waystone"):
+	if pending_ability.begins_with("build_") and SimEngine.requires_power(pending_ability.trim_prefix("build_")):
 		for unit in SimEngine.units.values():
 			if unit.owner == local_player and unit.unit_type == "resonator" and unit.build_progress >= 1.0 and not selected_tags.has(unit.tag):
 				_draw_range_ring(unit.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
@@ -1562,6 +1588,11 @@ func _draw() -> void:
 				if not warning.is_empty():
 					_draw_area_attack_warning(warning)
 			_draw_unit_bars(u, font)
+			if u.get("support_target_tag", 0) > 0:
+				var recipient: Dictionary = SimEngine.units.get(u.support_target_tag, {})
+				if not recipient.is_empty() and SimEngine.can_see_unit(viewing_player(), recipient):
+					var beam := Color("#8fdcff") if u.is_structure else Color("#a6f2ba")
+					draw_line(_unit_screen(u, unit_height(u) * 0.65), _unit_screen(recipient, unit_height(recipient) * 0.55), beam, 2.5, true)
 			if u.get("cloaked", false):
 				_ellipse(world_to_screen(u.pos, 0.3), 12.0, Color(0.58, 0.83, 1.0, 0.7), 1.5)
 			if u.owner == local_player and _saturation.has(u.tag):
@@ -1675,7 +1706,7 @@ func _draw_name_labels(font: Font) -> void:
 	for u in SimEngine.units.values():
 		if not SimEngine.can_see_unit(viewing_player(), u):
 			continue
-		var sp := world_to_screen(u["pos"], -0.2)
+		var sp := _unit_screen(u, -0.2)
 		if sp.y > HUD_TOP - 10.0 or sp.y < 50.0:
 			continue
 		var label := str(u["name"])
@@ -1692,7 +1723,7 @@ func _ellipse(center: Vector2, radius: float, col: Color, width: float = 2.0) ->
 func _draw_click_markers() -> void:
 	for m in click_markers:
 		var t: float = 1.0 - float(m["ttl"]) / float(m["max"])
-		var sp := world_to_screen(m["pos"], 0.1)
+		var sp := world_to_screen(m["pos"], m.height)
 		var col := Color("#4ade80")
 		match str(m["kind"]):
 			"ping": col = Color("#b093ff")
@@ -1726,9 +1757,11 @@ func _draw_rally_and_orders() -> void:
 		var u: Dictionary = SimEngine.units.get(t, {})
 		if u.is_empty() or u["owner"] != local_player:
 			continue
-		var sp := world_to_screen(u["pos"], 0.2)
+		var sp := _unit_screen(u, 0.2)
+		if u.build_progress >= 1.0 and u.has("support"):
+			_draw_range_ring(u.pos, float(u.support.range) + float(u.radius), Color("#9ae8d1"))
 		if u["is_structure"]:
-			if u.build_progress >= 1.0 and u.unit_type == "resonator" and SimEngine.requires_power("waystone"):
+			if u.build_progress >= 1.0 and u.unit_type == "resonator":
 				_draw_range_ring(u.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
 			if u.build_progress >= 1.0 and u.detection_radius > 0.0:
 				_draw_range_ring(u.pos, u.detection_radius, Color(0.35, 0.87, 1.0, 0.7))
@@ -1748,7 +1781,10 @@ func _draw_rally_and_orders() -> void:
 		var prev := sp
 		for ord in u["orders"]:
 			var tp := Vector2.ZERO
-			if ord.has("target_pos"):
+			var target: Dictionary = SimEngine.units.get(ord.get("target_tag", 0), {})
+			if not target.is_empty() and target.flight_height > 0.0 and SimEngine.can_see_unit(local_player, target):
+				tp = _unit_screen(target, 0.4)
+			elif ord.has("target_pos"):
 				var destination: Vector2 = ord.target_pos
 				if ord == u.orders.front() and ord.type in ["move", "attack_move", "patrol"] and not u.path.is_empty() and u.get("nav_goal") == destination:
 					destination = u.path.back()
@@ -1798,7 +1834,7 @@ func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
 	var salvage: int = maxi(0, int(u.get("salvage_finish", 0)) - SimEngine.tick)
 	if not (health or building or producing or salvage > 0):
 		return
-	var sp_head := world_to_screen(u["pos"], unit_height(u) + 0.6)
+	var sp_head := _unit_screen(u, unit_height(u) + 0.6)
 	if sp_head.y > HUD_TOP - 6.0 or sp_head.y < 10.0 or sp_head.x < -40.0 or sp_head.x > 1960.0:
 		return
 	var is_own: bool = u["owner"] == local_player

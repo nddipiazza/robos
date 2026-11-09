@@ -382,6 +382,9 @@ func _draw_minimap_units() -> void:
 			draw_circle(up, 4.5, Color("#302b2b"))
 			draw_line(up + Vector2(-3, -3), up + Vector2(3, 3), Color("#f3c697"), 1.5, true)
 			draw_line(up + Vector2(-3, 3), up + Vector2(3, -3), Color("#f3c697"), 1.5, true)
+		elif u.flight_height > 0.0:
+			var marker := PackedVector2Array([up + Vector2(0, -3), up + Vector2(3, 0), up + Vector2(0, 3), up + Vector2(-3, 0)])
+			draw_colored_polygon(marker, col)
 		elif u["is_structure"]:
 			draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), col)
 			draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), Color(0, 0, 0, 0.8), false, 1.0)
@@ -515,6 +518,7 @@ func _order_label(u: Dictionary) -> String:
 		"return_cargo": return "Returning cargo"
 		"build": return "Constructing"
 		"repair": return "Repairing"
+		"restore_vitals": return "Treating wounds" if u.support_target_tag > 0 else "Approaching wounded ally"
 		"hold_position": return "Holding position"
 	return "Active"
 
@@ -563,8 +567,12 @@ func _draw_single(u: Dictionary) -> void:
 	var ratio := clampf(u["hp"] / maxf(1.0, u["max_hp"]), 0.0, 1.0)
 	var hcol := Color("#3fcf6a") if ratio > 0.5 else (Color("#f0b232") if ratio > 0.25 else Color("#ee4b3f"))
 	_bar(Rect2(x0, by, 360, 15), ratio, hcol, "Health  %d / %d" % [int(ceil(u["hp"])), int(u["max_hp"])])
-	if is_own and u.unit_type in ["colony_hub", "skirmisher"]:
-		var energy_limit := SimEngine.HUB_ENERGY_MAX if u.unit_type == "colony_hub" else SimEngine.CLOAK_ENERGY_MAX
+	var energy_limit := float(u.get("support", {}).get("max_energy", 0.0))
+	if u.unit_type == "colony_hub":
+		energy_limit = SimEngine.HUB_ENERGY_MAX
+	elif u.unit_type == "skirmisher":
+		energy_limit = SimEngine.CLOAK_ENERGY_MAX
+	if is_own and energy_limit > 0.0:
 		by += 19.0
 		_bar(Rect2(x0, by, 360, 15), u.energy / energy_limit, Color("#6d8fe3"), "Energy  %d / %d" % [int(u.energy), int(energy_limit)])
 	by += 30.0
@@ -650,8 +658,17 @@ func _draw_single(u: Dictionary) -> void:
 	if is_own and u.unit_type == "workshop" and not building:
 		var upgrades: Dictionary = SimEngine.players[u.owner].upgrades
 		status.append("Weapons %d/%d   ·   Armor %d/%d" % [upgrades.weapons, SimEngine.MAX_UPGRADE_LEVEL, upgrades.armor, SimEngine.MAX_UPGRADE_LEVEL])
+	if is_own and u.has("support") and not building:
+		if u.is_structure:
+			if not SimEngine.is_powered(u.owner, u.pos):
+				status.append("Unpowered")
+			else:
+				status.append("Restoring shields" if u.support_target_tag > 0 else "Ready to restore shields")
+		elif u.orders.is_empty() and u.support_target_tag > 0:
+			status.append("Treating wounds")
 	if is_own and not u["is_structure"]:
-		status.append(_order_label(u))
+		if not u.has("support") or not u.orders.is_empty() or u.support_target_tag == 0:
+			status.append(_order_label(u))
 		if u.get("auto_repair", false):
 			status.append("Auto-repair on")
 		if int(u["cargo_amount"]) > 0:
@@ -678,9 +695,14 @@ func _draw_single(u: Dictionary) -> void:
 			label += "  %.2fs" % timing.remaining
 		var color := C_GOLD if timing.state == "Wind-up" else Color("#6d8fe3")
 		_bar(Rect2(rx, ry + 32.0, 275.0, 18.0), timing.progress, color, label)
+		var domains := "Ground"
+		if wpn.get("targets_air", false):
+			domains = "Ground and air" if wpn.get("targets_ground", true) else "Air"
 		var friendly_splash := float(wpn.get("friendly_splash", 0.0))
+		var details := "Targets  %s" % domains
 		if friendly_splash > 0.0:
-			_text(Vector2(rx, ry + 72.0), "Friendly splash  %d%%" % roundi(friendly_splash * 100.0), 15, C_GOLD)
+			details += "   ·   Friendly splash  %d%%" % roundi(friendly_splash * 100.0)
+		_text(Vector2(rx, ry + 72.0), details, 15, C_GOLD if friendly_splash > 0.0 else C_MUTED)
 
 	var blurb := str(def.get("blurb", ""))
 	if blurb != "":
@@ -782,6 +804,9 @@ func _glyph(id: String, r: Rect2) -> void:
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
 			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
+		"restore_vitals":
+			draw_rect(Rect2(c - Vector2(6, 18) * u, Vector2(12, 36) * u), Color("#a6f2ba"))
+			draw_rect(Rect2(c - Vector2(18, 6) * u, Vector2(36, 12) * u), Color("#a6f2ba"))
 		"repair", "auto_repair":
 			draw_line(c - Vector2(13, 0) * u, c + Vector2(13, 0) * u, C_AETHER, 5.0 * u)
 			draw_line(c - Vector2(0, 13) * u, c + Vector2(0, 13) * u, C_AETHER, 5.0 * u)
