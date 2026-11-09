@@ -26,7 +26,8 @@ def editor_preserves(context):
     assert len(scenario["map"]["starts"]) == 8
     assert len(scenario["map"]["water_channels"]) == 11
     assert scenario["unlimited_resources"] and scenario["mode"] == "skirmish"
-    assert len(scenario["resources"]) == 170
+    sites = len(scenario["map"]["starts"]) + len(scenario["map"]["expansions"])
+    assert len(scenario["resources"]) == sites * 10
     assert state["issues"] == [], state["issues"]
 
 
@@ -59,7 +60,8 @@ def authored_play(context):
     assert obs["match"]["mode"] == "1p_vs_ai" and obs["match"]["unlimited_resources"]
     assert obs["map"]["width"] == obs["map"]["height"] == 256
     assert len(obs["map"]["terrain_tiles"]) == 5
-    assert len(obs["units"]) == 26 and len(obs["resources"]) == 170
+    sites = len(obs["match"]["starts"]) + len(obs["match"]["expansions"])
+    assert len(obs["units"]) == 26 and len(obs["resources"]) == sites * 10
 
 
 @when("the player returns to the editor")

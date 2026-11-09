@@ -27,7 +27,8 @@ func _run() -> void:
 		failures.append("Player slots or unit metadata was lost")
 	doc.set_map_property("label", "Edited Hunters")
 	exported = doc.to_scenario()
-	if exported.name != "Edited Hunters" or exported.map.starts.size() != 8 or exported.resources.size() != 170:
+	var sites: int = source.map.starts.size() + source.map.expansions.size()
+	if exported.name != "Edited Hunters" or exported.map.starts != source.map.starts or exported.map.expansions != source.map.expansions or exported.resources.size() != sites * 10:
 		failures.append("Editable map fields did not round-trip")
 	doc.paint_terrain(Vector2(96, 112), "water", 1)
 	var round_trip = Model.new()
