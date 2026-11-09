@@ -401,6 +401,8 @@ func unit_height(u: Dictionary) -> float:
 		return maxf(2.4, r * 1.5)
 	if u["unit_type"] == "spire_walker":
 		return 5.4
+	if u.unit_type == "farsight_wisp":
+		return 0.95
 	if u.unit_type == "lumen_carrier":
 		return 3.9 if u.is_immobile else 2.35
 	if u.unit_type == "prospector":

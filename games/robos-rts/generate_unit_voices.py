@@ -31,6 +31,31 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "farsight_wisp": {
+        "unit_name": "Farsight Wisp",
+        "voice": "en-US-EmmaNeural",
+        "rate": "+6%",
+        "pitch": "+8Hz",
+        "lines": {
+            "select": [
+                {"id": "farsight_wisp_select_1", "text": "Farsight Wisp online."},
+                {"id": "farsight_wisp_select_2", "text": "Sending back a clear image."},
+                {"id": "farsight_wisp_select_3", "text": "I am ready to look ahead."},
+                {"id": "farsight_wisp_select_4", "text": "A little light for the road."},
+                {"id": "farsight_wisp_select_5", "text": "Where does the mist end?"},
+            ],
+            "move": [
+                {"id": "farsight_wisp_move_1", "text": "Survey course set."},
+                {"id": "farsight_wisp_move_2", "text": "Gliding to the marker."},
+                {"id": "farsight_wisp_move_3", "text": "Crossing the ridge."},
+                {"id": "farsight_wisp_move_4", "text": "I will take a look."},
+            ],
+            "ready": [
+                {"id": "farsight_wisp_ready_1", "text": "Farsight Wisp launched."},
+                {"id": "farsight_wisp_ready_2", "text": "Scout link is live."},
+            ],
+        },
+    },
     "lumen_carrier": {
         "unit_name": "Lumen Carrier",
         "voice": "en-US-AvaNeural",
