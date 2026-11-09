@@ -380,6 +380,7 @@ var units: Dictionary = {
 	},
 	"aether_tap": {
 		"id": "aether_tap",
+		"is_extractor": true,
 		"name": "Aether Tap",
 		"blurb": "Extracts aether from a vent. Pioneers carry it back to the Colony Hub.",
 		"faction": FACTION_HUMANS,
@@ -504,7 +505,40 @@ var units: Dictionary = {
 			"sfx": "mandible_bite",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest"]
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap"],
+		"dialogues": {
+			"select": [
+				{"id": "forager_select_1", "text": "The brood hears."},
+				{"id": "forager_select_2", "text": "Claws at your service."},
+				{"id": "forager_select_3", "text": "What shall grow here?"},
+				{"id": "forager_select_4", "text": "Point me to the vein."},
+				{"id": "forager_select_5", "text": "Always hungry. Always working."},
+			],
+			"move": [
+				{"id": "forager_move_1", "text": "Scuttling there."},
+				{"id": "forager_move_2", "text": "I smell a seam."},
+				{"id": "forager_move_3", "text": "Claws in motion."},
+				{"id": "forager_move_4", "text": "The tunnels call."},
+			],
+			"attack": [
+				{"id": "forager_attack_1", "text": "I bite harder than I look."},
+				{"id": "forager_attack_2", "text": "A brief interruption for lunch."},
+				{"id": "forager_attack_3", "text": "Those teeth are not for show."},
+				{"id": "forager_attack_4", "text": "Try chewing back."},
+				{"id": "forager_attack_5", "text": "I'll take a small sample."},
+			],
+			"job_done": [
+				{"id": "forager_job_done_1", "text": "The brood has taken root."},
+				{"id": "forager_job_done_2", "text": "Our new growth is ready."},
+				{"id": "forager_job_done_3", "text": "The shell has hardened."},
+				{"id": "forager_job_done_4", "text": "A new pulse in the colony."},
+				{"id": "forager_job_done_5", "text": "One more place to call ours."},
+			],
+			"ready": [
+				{"id": "forager_ready_1", "text": "Fresh claws for the brood."},
+				{"id": "forager_ready_2", "text": "Hatched and hungry."},
+			],
+		}
 	},
 	"skitterling": {
 		"id": "skitterling",
@@ -629,7 +663,23 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 100,
 		"trains": ["forager", "skitterling", "bile_crawler", "blight_hurler"],
-		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally"]
+		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally", "rally_worker"]
+	},
+	"brood_pod": {
+		"id": "brood_pod", "name": "Brood Pod", "faction": FACTION_MONSTERS,
+		"blurb": "A Forager grows into a Brood Pod. Provides 8 supply.",
+		"is_structure": true, "attributes": ["Armored", "Biological", "Structure"],
+		"crystal_cost": 75, "aether_cost": 0, "supply_provided": 8,
+		"build_time": 19.0, "max_hp": 400.0, "radius": 1.8, "sight_range": 16.0,
+		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
+	},
+	"spore_tap": {
+		"id": "spore_tap", "name": "Spore Tap", "faction": FACTION_MONSTERS,
+		"blurb": "A Forager grows into a Spore Tap on an aether vent. Three Foragers can harvest there efficiently.",
+		"is_structure": true, "is_extractor": true, "attributes": ["Armored", "Biological", "Structure"],
+		"crystal_cost": 50, "aether_cost": 0, "build_time": 21.0,
+		"max_hp": 500.0, "armor": 1.0, "radius": 2.0, "sight_range": 16.0,
+		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
 	},
 
 	# =========================================================================
@@ -667,7 +717,40 @@ var units: Dictionary = {
 			"sfx": "mote_spark",
 			"attack_type": "melee"
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_heartstone", "build_resonator", "build_waystone"]
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_heartstone", "build_resonator", "build_waystone", "build_aether_prism"],
+		"dialogues": {
+			"select": [
+				{"id": "mote_select_1", "text": "Signal received."},
+				{"id": "mote_select_2", "text": "Mote ready to align."},
+				{"id": "mote_select_3", "text": "Awaiting coordinates."},
+				{"id": "mote_select_4", "text": "All harmonics stable."},
+				{"id": "mote_select_5", "text": "The Concord is listening."},
+			],
+			"move": [
+				{"id": "mote_move_1", "text": "Drifting into position."},
+				{"id": "mote_move_2", "text": "Following the signal."},
+				{"id": "mote_move_3", "text": "Course adjusted."},
+				{"id": "mote_move_4", "text": "On the next harmonic."},
+			],
+			"attack": [
+				{"id": "mote_attack_1", "text": "I am rated for light demolition."},
+				{"id": "mote_attack_2", "text": "Consider this a small correction."},
+				{"id": "mote_attack_3", "text": "Your warranty has expired."},
+				{"id": "mote_attack_4", "text": "Applying a pointed disagreement."},
+				{"id": "mote_attack_5", "text": "An unexpected use of my toolkit."},
+			],
+			"job_done": [
+				{"id": "mote_job_done_1", "text": "The structure is aligned."},
+				{"id": "mote_job_done_2", "text": "Summoning complete."},
+				{"id": "mote_job_done_3", "text": "The pattern has stabilized."},
+				{"id": "mote_job_done_4", "text": "The lattice is ready."},
+				{"id": "mote_job_done_5", "text": "The Concord's reach extends."},
+			],
+			"ready": [
+				{"id": "mote_ready_1", "text": "Mote signal online."},
+				{"id": "mote_ready_2", "text": "I have joined the lattice."},
+			],
+		}
 	},
 	"sunblade": {
 		"id": "sunblade",
@@ -797,7 +880,7 @@ var units: Dictionary = {
 	"resonator": {
 		"id": "resonator",
 		"name": "Resonator",
-		"blurb": "Provides 8 supply.",
+		"blurb": "Provides 8 supply and powers nearby Waystones in skirmish.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
@@ -817,7 +900,7 @@ var units: Dictionary = {
 	"waystone": {
 		"id": "waystone",
 		"name": "Waystone",
-		"blurb": "Summons Sunblades, Skirmishers and Spire Walkers.",
+		"blurb": "Summons Sunblades, Skirmishers and Spire Walkers. Requires a Resonator's power field in skirmish.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
@@ -834,6 +917,14 @@ var units: Dictionary = {
 		"push_priority": 100,
 		"trains": ["sunblade", "skirmisher", "spire_walker"],
 		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally"]
+	},
+	"aether_prism": {
+		"id": "aether_prism", "name": "Aether Prism", "faction": FACTION_ALIENS,
+		"blurb": "Summoned on an aether vent. Three Motes can harvest there efficiently.",
+		"is_structure": true, "is_extractor": true, "attributes": ["Armored", "Structure"],
+		"crystal_cost": 75, "aether_cost": 0, "build_time": 21.0,
+		"max_hp": 250.0, "max_shields": 250.0, "armor": 1.0, "radius": 2.0, "sight_range": 16.0,
+		"footprint": Vector2i(2, 2), "push_priority": 100, "abilities": []
 	}
 }
 
@@ -882,14 +973,19 @@ var abilities: Dictionary = {
 	"build_colony_hub": {"id": "build_colony_hub", "name": "Build Colony Hub", "hotkey": "C", "target": "point", "structure": "colony_hub"},
 	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},
 	"build_resonator": {"id": "build_resonator", "name": "Summon Resonator", "hotkey": "E", "target": "point", "structure": "resonator"},
-	"build_waystone": {"id": "build_waystone", "name": "Summon Waystone", "hotkey": "G", "target": "point", "structure": "waystone"},
+	"build_waystone": {"id": "build_waystone", "name": "Summon Waystone", "hotkey": "W", "target": "point", "structure": "waystone"},
+	"build_aether_prism": {"id": "build_aether_prism", "name": "Summon Aether Prism", "hotkey": "R", "target": "point", "structure": "aether_prism"},
+	"build_brood_nest": {"id": "build_brood_nest", "name": "Grow Brood Nest", "hotkey": "N", "target": "point", "structure": "brood_nest"},
+	"build_brood_pod": {"id": "build_brood_pod", "name": "Grow Brood Pod", "hotkey": "B", "target": "point", "structure": "brood_pod"},
+	"build_spore_tap": {"id": "build_spore_tap", "name": "Grow Spore Tap", "hotkey": "R", "target": "point", "structure": "spore_tap"},
+	"rally_worker": {"id": "rally_worker", "name": "Set Forager Rally", "hotkey": "G", "target": "point", "desc": "Route newly hatched Foragers without changing the army rally. Shift-click adds a waypoint."},
 	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "Set where new units move, follow or gather. Shift-click to add a waypoint."}
 }
 
 var faction_info: Dictionary = {
-	"humans": {"name": "Meridian Guard", "color": Color("#4f8cf0"), "town_hall": "colony_hub", "worker": "pioneer"},
-	"monsters": {"name": "Gnarl Brood", "color": Color("#e0453a"), "town_hall": "brood_nest", "worker": "forager"},
-	"aliens": {"name": "Aurelian Concord", "color": Color("#f0c43c"), "town_hall": "heartstone", "worker": "mote"}
+	"humans": {"name": "Meridian Guard", "color": Color("#4f8cf0"), "town_hall": "colony_hub", "worker": "pioneer", "extractor": "aether_tap"},
+	"monsters": {"name": "Gnarl Brood", "color": Color("#e0453a"), "town_hall": "brood_nest", "worker": "forager", "extractor": "spore_tap"},
+	"aliens": {"name": "Aurelian Concord", "color": Color("#f0c43c"), "town_hall": "heartstone", "worker": "mote", "extractor": "aether_prism"}
 }
 
 var player_colors: Dictionary = {

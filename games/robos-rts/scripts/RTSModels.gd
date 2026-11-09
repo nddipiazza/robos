@@ -23,6 +23,7 @@ const ACID := Color("#5f9a1a")
 const IVORY := Color("#bdb297")
 const GOLD := Color("#b68d2c")
 const CRYSTAL := Color("#4fd1ff")
+const GAS := Color("#53dea0")
 const STONE_DARK := Color("#3a4150")
 
 static func mat(key: String, color: Color, emit: Color = Color.BLACK, emit_energy: float = 1.0, metallic: float = 0.15, rough: float = 0.7, alpha: float = 1.0) -> StandardMaterial3D:
@@ -143,6 +144,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"bile_crawler": _bile_crawler(root, glow)
 		"blight_hurler": _blight_hurler(root, glow)
 		"brood_nest": _brood_nest(root, r, glow)
+		"brood_pod", "spore_tap": _brood_fixture(root, r, glow, unit_type == "spore_tap")
 		"mote": _mote(root, glow)
 		"sunblade": _sunblade(root, team)
 		"skirmisher": _skirmisher(root, team)
@@ -150,6 +152,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"heartstone": _heartstone(root, r, team)
 		"resonator": _resonator(root, team)
 		"waystone": _waystone(root, r, team)
+		"aether_prism": _aether_prism(root, r, glow)
 		_: box(root, Vector3(r * 1.5, 1.4, r * 1.5), mat("fallback", STEEL), Vector3(0, 0.7, 0))
 	return root
 
@@ -407,6 +410,21 @@ static func _brood_nest(root: Node3D, r: float, glow: Material) -> void:
 # ---------------------------------------------------------------------------
 # Aliens — Aurelian Concord
 # ---------------------------------------------------------------------------
+static func _brood_fixture(root: Node3D, radius: float, glow: Material, extractor: bool) -> void:
+	var m := _bug_mats()
+	sph(root, radius, m[0], Vector3(0, 0.25, 0), Vector3(1, 0.44, 1))
+	for i in range(5):
+		var angle := TAU * float(i) / 5.0
+		var pos := Vector3(cos(angle), 0, sin(angle)) * (radius * 0.67)
+		cone(root, 0.23, 1.3, m[2], pos + Vector3.UP * 0.85, Vector3.ZERO, 5)
+		if not extractor:
+			sph(root, 0.48, glow, pos * 0.8 + Vector3.UP * 0.83, Vector3(0.9, 1.35, 0.9))
+	if extractor:
+		var gas := mat("spore_aether", GAS, GAS, 0.8, 0.05, 0.55)
+		cyl(root, 0.65, 0.95, 1.9, m[1], Vector3(0, 1.35, 0), Vector3.ZERO, 8)
+		ring(root, 0.4, 0.71, gas, Vector3(0, 2.36, 0), Vector3.ZERO)
+		sph(root, 0.35, gas, Vector3(0, 2.45, 0), Vector3(1, 0.65, 1))
+
 static func _alien_mats() -> Array:
 	return [
 		mat("a_ivory", IVORY, Color.BLACK, 1.0, 0.2, 0.4),
@@ -521,6 +539,19 @@ static func _waystone(root: Node3D, r: float, team: Material) -> void:
 	box(root, Vector3(r * 1.7, 0.8, 1.1), m[1], Vector3(0, 4.65, 0))
 	sph(root, 0.26, team, Vector3(0, 4.65, 0.58))
 	quad(root, Vector2(r * 1.05, 3.7), portal, Vector3(0, 2.4, 0), Vector3.ZERO)
+
+static func _aether_prism(root: Node3D, radius: float, glow: Material) -> void:
+	var m := _alien_mats()
+	var gas := mat("prism_aether", GAS, GAS, 0.9, 0.1, 0.35)
+	cyl(root, radius * 0.85, radius, 0.42, m[3], Vector3.UP * 0.23, Vector3.ZERO, 6)
+	for i in range(3):
+		var angle := TAU * float(i) / 3.0
+		var pos := Vector3(cos(angle), 0, sin(angle)) * (radius * 0.62)
+		cyl(root, 0.2, 0.33, 2.2, m[0], pos + Vector3.UP * 1.24, Vector3.ZERO, 4)
+		sph(root, 0.18, glow, pos + Vector3.UP * 2.44)
+	cyl(root, 0.0, 0.72, 1.35, gas, Vector3.UP * 2.35, Vector3.ZERO, 6)
+	cyl(root, 0.72, 0.0, 0.8, gas, Vector3.UP * 1.28, Vector3.ZERO, 6)
+	ring(root, 1.02, 1.12, m[1], Vector3.UP * 1.67, Vector3.ZERO)
 
 # ---------------------------------------------------------------------------
 # Resources

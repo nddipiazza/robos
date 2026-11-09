@@ -643,7 +643,7 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	if hit_shields or float(target.get("shields", 0.0)) > 0.0:
 		play_at("shield_hit", target_pos, -2.0, 0.05)
 
-	if not attacker.is_structure and int(attacker.get("owner", 0)) == local_player_id and str(attacker.get("faction", "")) == RTSData.FACTION_HUMANS:
+	if not attacker.is_structure and int(attacker.get("owner", 0)) == local_player_id and not RTSData.get_unit_dialogues(unit_type, "attack").is_empty():
 		var now_sec: float = float(Time.get_ticks_msec()) * 0.001
 		if not cooldown_enabled or (now_sec - _last_auto_attack_voice_sec >= 7.0 and now_sec - _last_voice_time_sec >= 2.5):
 			if _compute_spatial_db(attacker_pos) > -79.0:
@@ -703,14 +703,13 @@ func _on_resource_gathered(unit: Dictionary, resource_type: String, pos: Vector2
 func _on_unit_production_finished(unit: Dictionary, _structure: Dictionary) -> void:
 	if int(unit.get("owner", 0)) == local_player_id:
 		play_at("unit_ready", unit.get("pos", Vector2.ZERO), -1.0, 0.03)
-		if str(unit.get("faction", "")) == RTSData.FACTION_HUMANS:
-			play_unit_dialogue(str(unit.get("unit_type", "")), "ready")
+		play_unit_dialogue(str(unit.get("unit_type", "")), "ready")
 
 func _on_structure_construction_finished(structure: Dictionary) -> void:
 	if int(structure.get("owner", 0)) == local_player_id:
 		play_at("structure_complete", structure.get("pos", Vector2.ZERO), 0.0, 0.02)
-		if str(structure.get("faction", "")) == RTSData.FACTION_HUMANS:
-			play_unit_dialogue("pioneer", "job_done", true)
+		var worker: String = RTSData.faction_info.get(structure.faction, {}).get("worker", "")
+		play_unit_dialogue(worker, "job_done", true)
 
 func _on_sim_notice(owner_id: int, text: String, kind: String) -> void:
 	var lower_text: String = text.to_lower()

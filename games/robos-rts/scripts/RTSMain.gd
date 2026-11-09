@@ -562,7 +562,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	if MINIMAP.grow(6.0).has_point(mpos):
 		_last_group_press.clear()
 		if left:
-			if pending_ability in ["attack", "move", "patrol", "rally", "recon_sweep"]:
+			if pending_ability in ["attack", "move", "patrol", "rally", "rally_worker", "recon_sweep"]:
 				_execute_pending_ability_at(minimap_to_world(mpos), mb.shift_pressed, true)
 			elif world_3d and not _jump_to_attack_pin(mpos):
 				mm_dragging = true
@@ -676,13 +676,13 @@ func _spawn_marker(pos: Vector2, kind: String) -> void:
 			if utype != "" and kind in ["move", "gather"]:
 				RTSAudio.play_unit_dialogue(utype, "move")
 
-func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true) -> void:
+func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true, command: String = "rally") -> void:
 	var best_distance := INF
 	var target_tag := 0
 	# A worker rally can bind to a visible deposit or a finished friendly tap.
 	var candidates: Array = SimEngine.resources.values()
 	for unit in SimEngine.units.values():
-		if unit.unit_type == "aether_tap" and unit.owner == local_player:
+		if unit.is_extractor and unit.owner == local_player:
 			candidates.append(unit)
 	for candidate in candidates:
 		var distance: float = position.distance_to(candidate.pos)
@@ -698,7 +698,7 @@ func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bo
 		if not unit.is_empty() and unit.owner == local_player and not unit.is_structure:
 			target_tag = unit.tag
 			position = unit.pos
-	if SimEngine.issue_command(tags, "rally", position, target_tag, "", queue).ok:
+	if SimEngine.issue_command(tags, command, position, target_tag, "", queue).ok:
 		_spawn_marker(position, "rally")
 
 func _order_target_at(position: Vector2) -> Dictionary:
@@ -766,7 +766,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 			SimEngine.issue_command(tags, "attack_target", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "attack")
 			return
-		elif target["unit_type"] == "aether_tap":
+		elif target.is_extractor:
 			SimEngine.issue_command(tags, "harvest", target["pos"], target["tag"], "", queue)
 			_spawn_marker(target["pos"], "gather")
 			return
@@ -819,9 +819,9 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 				ability_tags.append(u["tag"])
 		SimEngine.issue_command(ability_tags, abil, wpos, 0, "", queue)
 		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
-	elif abil == "rally":
+	elif abil in ["rally", "rally_worker"]:
 		pending_ability = ""
-		_issue_rally_at(tags, wpos, queue, not minimap)
+		_issue_rally_at(tags, wpos, queue, not minimap, abil)
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -866,7 +866,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 					best_d = d
 					best = u
 		if not best.is_empty() and SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue).ok:
-			if not queue:
+			if not queue or best.unit_type == "forager":
 				pending_ability = ""
 			if RTSAudio:
 				RTSAudio.play_ui("ui_build_place")
@@ -879,7 +879,7 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 	var pos := wpos
 	if not SimEngine.can_see_position(local_player, pos):
 		return {"ok": false, "pos": pos, "reason": "Scout this location before building."}
-	if structure_id == "aether_tap":
+	if def.get("is_extractor", false):
 		var best_d := 7.0
 		var found := false
 		for res in SimEngine.resources.values():
@@ -888,15 +888,17 @@ func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
 				if d < best_d:
 					var taken := false
 					for u in SimEngine.units.values():
-						if u["unit_type"] == "aether_tap" and u["pos"].distance_to(res["pos"]) < 1.0:
+						if u.is_extractor and u["pos"].distance_to(res["pos"]) < 1.0:
 							taken = true
 					if not taken:
 						best_d = d
 						pos = res["pos"]
 						found = true
 		if not found:
-			return {"ok": false, "pos": pos, "reason": "An Aether Tap must be built on a free aether vent."}
+			return {"ok": false, "pos": pos, "reason": "%s must be placed on a free aether vent." % def.name}
 		return _check_planned_placement(structure_id, pos, r)
+	if SimEngine.requires_power(structure_id) and not SimEngine.is_powered(local_player, pos):
+		return {"ok": false, "pos": pos, "reason": "Place this Waystone inside a Resonator's power field."}
 	if pos.x < r or pos.y < r or pos.x > SimEngine.map_width - r or pos.y > SimEngine.map_height - r:
 		return {"ok": false, "pos": pos, "reason": "Cannot build outside the map."}
 	for obs in SimEngine.terrain_obstacles:
@@ -957,6 +959,12 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return ""
 	if pu["is_structure"] and float(pu["build_progress"]) < 1.0:
 		return "Under construction."
+	if adef.has("unit"):
+		var producers := selected_owned()
+		if SimEngine.uses_brood_slots(pu) and not producers.any(func(u): return SimEngine.uses_brood_slots(u) and u.build_progress >= 1.0 and u.brood_slots > 0):
+			return "No brood slots ready."
+		if SimEngine.requires_power(pu.unit_type) and not producers.any(func(u): return u.unit_type == pu.unit_type and u.build_progress >= 1.0 and SimEngine.is_powered(u.owner, u.pos)):
+			return "Waystone needs a Resonator's power field."
 	if adef.has("upgrade"):
 		var reason := SimEngine.research_block_reason(local_player, adef.upgrade)
 		if not reason.is_empty():
@@ -974,7 +982,7 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		if int(p.get("aether", 0)) < int(cost["aether"]):
 			return "Not enough aether."
 		if adef.has("unit") and int(p.get("supply_used", 0)) + int(cost["supply"]) > int(p.get("supply_cap", 0)):
-			return "Supply blocked. Build more Provision Silos."
+			return "Supply blocked. Build more supply structures."
 	match str(adef.get("id", "")):
 		"recon_sweep", "reinforce_supply":
 			if adef.id == "recon_sweep" and SimEngine.vision == null:
@@ -1063,6 +1071,10 @@ func _train_on_best(abil_id: String, count: int) -> void:
 	for i in range(count):
 		var best: Dictionary = {}
 		for producer in producers:
+			if SimEngine.uses_brood_slots(producer) and producer.brood_slots <= 0:
+				continue
+			if SimEngine.requires_power(producer.unit_type) and not SimEngine.is_powered(producer.owner, producer.pos):
+				continue
 			if best.is_empty() or producer.production_queue.size() < best.production_queue.size():
 				best = producer
 		if best.is_empty() or not SimEngine.issue_command([best.tag], abil_id).ok:
@@ -1387,6 +1399,10 @@ func _draw() -> void:
 		return
 	var font := ThemeDB.fallback_font
 	_draw_rally_and_orders()
+	if pending_ability == "build_waystone" and SimEngine.requires_power("waystone"):
+		for unit in SimEngine.units.values():
+			if unit.owner == local_player and unit.unit_type == "resonator" and unit.build_progress >= 1.0 and not selected_tags.has(unit.tag):
+				_draw_range_ring(unit.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
 	var deposit := inspected_deposit()
@@ -1497,10 +1513,17 @@ func _draw_rally_and_orders() -> void:
 			continue
 		var sp := world_to_screen(u["pos"], 0.2)
 		if u["is_structure"]:
+			if u.build_progress >= 1.0 and u.unit_type == "resonator" and SimEngine.requires_power("waystone"):
+				_draw_range_ring(u.pos, SimEngine.POWER_RADIUS, Color("#7a9bff"))
 			if u.build_progress >= 1.0 and u.detection_radius > 0.0:
 				_draw_range_ring(u.pos, u.detection_radius, Color(0.35, 0.87, 1.0, 0.7))
 			if u.build_progress >= 1.0 and RTSData.get_unit_def(u.unit_type).has("trains"):
-				_draw_rally_route(u, sp)
+				var route: Array = u.rally_route
+				if route.is_empty():
+					route = [{"kind": "move", "pos": SimEngine.default_rally_position(u)}]
+				_draw_rally_route(route, sp, Color("#fbbf24"))
+				if u.unit_type == "brood_nest":
+					_draw_rally_route(u.worker_rally_route, sp, Color("#5eead4"))
 			continue
 		var prev := sp
 		for ord in u["orders"]:
@@ -1529,14 +1552,11 @@ func _draw_rally_and_orders() -> void:
 			draw_circle(tp, 3.0, col)
 			prev = tp
 
-func _draw_rally_route(unit: Dictionary, start: Vector2) -> void:
-	var route: Array = unit.rally_route
-	if route.is_empty():
-		route = [{"kind": "move", "pos": SimEngine.default_rally_position(unit)}]
+func _draw_rally_route(route: Array, start: Vector2, base_color: Color) -> void:
 	var last := start
 	for waypoint in route:
 		var end := world_to_screen(SimEngine.rally_waypoint_position(waypoint), 0.2)
-		var color := Color("#fbbf24")
+		var color := base_color
 		if waypoint.kind == "harvest":
 			color = Color("#5eead4")
 		elif waypoint.kind == "follow":

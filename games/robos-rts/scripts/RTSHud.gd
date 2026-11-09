@@ -425,7 +425,7 @@ func _draw_deposit(deposit: Dictionary, panel: Rect2) -> void:
 	var reserves := "Unlimited reserves" if SimEngine.unlimited_resources else ("%d remaining" % deposit.amount if not depleted else "Depleted")
 	_text(panel.position + Vector2(108, 96), reserves, 20)
 	if not depleted:
-		var hint := "Build an Aether Tap to harvest." if is_aether else "Right-click with workers to gather."
+		var hint := "Build your faction's extractor to harvest." if is_aether else "Right-click with workers to gather."
 		_text(panel.position + Vector2(108, 132), hint, 16, C_MUTED)
 
 func _draw_multi() -> void:
@@ -567,7 +567,12 @@ func _draw_single(u: Dictionary) -> void:
 	elif def.has("trains") and is_own:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
-		if not queue.is_empty():
+		var brood := SimEngine.uses_brood_slots(u)
+		if brood:
+			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOTS], 15, C_GOLD)
+		elif SimEngine.requires_power(u.unit_type) and not SimEngine.is_powered(u.owner, u.pos):
+			_text(Vector2(rx + 100.0, ry + 12), "Unpowered  ·  Production paused", 15, C_RED)
+		elif not queue.is_empty():
 			_text(Vector2(rx + 100.0, ry + 12), "Right-click a slot to cancel and refund", 15, C_MUTED)
 		for i in range(5):
 			var qr := _production_rect(i)
@@ -582,7 +587,7 @@ func _draw_single(u: Dictionary) -> void:
 					var qt := _icon_for(str(item.unit_type))
 					if qt:
 						draw_texture_rect(qt, qr.grow(-3.0), false)
-				if i == 0:
+				if i == 0 or brood:
 					var prog := clampf(float(queue[i]["progress"]) / maxf(0.1, float(queue[i]["total_time"])), 0.0, 1.0)
 					_bar(Rect2(qr.position.x, qr.end.y + 3, qr.size.x, 6), prog, Color("#e5e7eb"))
 		ry += 98.0
@@ -761,7 +766,7 @@ func _glyph(id: String, r: Rect2) -> void:
 		"extend_silo":
 			draw_rect(Rect2(c + Vector2(-14, -2) * u, Vector2(28, 18) * u), Color("#8d98a6"))
 			draw_colored_polygon(P.call([[-8, -2], [8, -2], [8, -10], [14, -10], [0, -22], [-14, -10], [-8, -10]]), accent)
-		"rally":
+		"rally", "rally_worker":
 			draw_line(c + Vector2(-8, 18) * u, c + Vector2(-8, -18) * u, col, 3.0 * u)
 			draw_colored_polygon(P.call([[-8, -18], [16, -10], [-8, -2]]), Color("#fbbf24"))
 		_:
