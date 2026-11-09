@@ -57,8 +57,11 @@ class RTSClient:
         *,
         map_id: str = "frontier-hunters",
         unlimited_resources: Optional[bool] = None,
+        player_faction: str = "humans",
+        ai_faction: str = "humans",
     ) -> Dict[str, Any]:
-        payload = {"difficulty": difficulty, "strategy": strategy, "map_id": map_id}
+        payload = {"difficulty": difficulty, "strategy": strategy, "map_id": map_id,
+                   "player_faction": player_faction, "ai_faction": ai_faction}
         if seed is not None:
             payload["seed"] = seed
         if unlimited_resources is not None:

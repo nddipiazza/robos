@@ -2,8 +2,7 @@
 """
 generate_unit_voices.py — AI Voice Dialogue Generator for RobOS RTS: Starfall Command.
 
-Synthesizes spoken dialogue lines for playable RTS units (Meridian Guard human characters:
-Pioneer, Rifleman, Breacher, Howitzer) across all unit interactions:
+Synthesizes spoken dialogue lines for Starfall Command units across their interactions:
   - select   (clicked / selected in-game)
   - move     (ordered to move or gather)
   - attack   (ordered to attack or engaging an enemy with a witty line)
@@ -32,6 +31,84 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "forager": {
+        "unit_name": "Forager",
+        "voice": "en-US-ChristopherNeural",
+        "rate": "+6%",
+        "pitch": "-18Hz",
+        "lines": {
+            "select": [
+                {"id": "forager_select_1", "text": "The brood hears."},
+                {"id": "forager_select_2", "text": "Claws at your service."},
+                {"id": "forager_select_3", "text": "What shall grow here?"},
+                {"id": "forager_select_4", "text": "Point me to the vein."},
+                {"id": "forager_select_5", "text": "Always hungry. Always working."},
+            ],
+            "move": [
+                {"id": "forager_move_1", "text": "Scuttling there."},
+                {"id": "forager_move_2", "text": "I smell a seam."},
+                {"id": "forager_move_3", "text": "Claws in motion."},
+                {"id": "forager_move_4", "text": "The tunnels call."},
+            ],
+            "attack": [
+                {"id": "forager_attack_1", "text": "I bite harder than I look."},
+                {"id": "forager_attack_2", "text": "A brief interruption for lunch."},
+                {"id": "forager_attack_3", "text": "Those teeth are not for show."},
+                {"id": "forager_attack_4", "text": "Try chewing back."},
+                {"id": "forager_attack_5", "text": "I'll take a small sample."},
+            ],
+            "job_done": [
+                {"id": "forager_job_done_1", "text": "The brood has taken root."},
+                {"id": "forager_job_done_2", "text": "Our new growth is ready."},
+                {"id": "forager_job_done_3", "text": "The shell has hardened."},
+                {"id": "forager_job_done_4", "text": "A new pulse in the colony."},
+                {"id": "forager_job_done_5", "text": "One more place to call ours."},
+            ],
+            "ready": [
+                {"id": "forager_ready_1", "text": "Fresh claws for the brood."},
+                {"id": "forager_ready_2", "text": "Hatched and hungry."},
+            ],
+        },
+    },
+    "mote": {
+        "unit_name": "Mote",
+        "voice": "en-GB-SoniaNeural",
+        "rate": "+4%",
+        "pitch": "+12Hz",
+        "lines": {
+            "select": [
+                {"id": "mote_select_1", "text": "Signal received."},
+                {"id": "mote_select_2", "text": "Mote ready to align."},
+                {"id": "mote_select_3", "text": "Awaiting coordinates."},
+                {"id": "mote_select_4", "text": "All harmonics stable."},
+                {"id": "mote_select_5", "text": "The Concord is listening."},
+            ],
+            "move": [
+                {"id": "mote_move_1", "text": "Drifting into position."},
+                {"id": "mote_move_2", "text": "Following the signal."},
+                {"id": "mote_move_3", "text": "Course adjusted."},
+                {"id": "mote_move_4", "text": "On the next harmonic."},
+            ],
+            "attack": [
+                {"id": "mote_attack_1", "text": "I am rated for light demolition."},
+                {"id": "mote_attack_2", "text": "Consider this a small correction."},
+                {"id": "mote_attack_3", "text": "Your warranty has expired."},
+                {"id": "mote_attack_4", "text": "Applying a pointed disagreement."},
+                {"id": "mote_attack_5", "text": "An unexpected use of my toolkit."},
+            ],
+            "job_done": [
+                {"id": "mote_job_done_1", "text": "The structure is aligned."},
+                {"id": "mote_job_done_2", "text": "Summoning complete."},
+                {"id": "mote_job_done_3", "text": "The pattern has stabilized."},
+                {"id": "mote_job_done_4", "text": "The lattice is ready."},
+                {"id": "mote_job_done_5", "text": "The Concord's reach extends."},
+            ],
+            "ready": [
+                {"id": "mote_ready_1", "text": "Mote signal online."},
+                {"id": "mote_ready_2", "text": "I have joined the lattice."},
+            ],
+        },
+    },
     "pioneer": {
         "unit_name": "Pioneer",
         "voice": "en-US-BrianMultilingualNeural",

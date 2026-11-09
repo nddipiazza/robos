@@ -76,7 +76,8 @@ def remember_match(context):
 @when("the commander returns to the title from the battlefield")
 def return_to_title(context):
     key(context, "F8")
-    key(context, "Tab", shift=True)
+    for _ in range(3):
+        key(context, "Tab", shift=True)
     key(context, "Enter")
     title_page(context, "main")
 

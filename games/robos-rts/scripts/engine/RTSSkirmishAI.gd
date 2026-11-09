@@ -9,6 +9,10 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	var cadence = {"easy": 256, "normal": 128, "hard": 64}[difficulty]
 	cfg["next_tick"] = SimEngine.tick + cadence
 	var strategy = str(cfg.get("strategy", "balanced"))
+	var p: Dictionary = SimEngine.players.get(pid, {})
+	var roster: Dictionary = RTSData.faction_info.get(p.get("faction", ""), {})
+	if roster.is_empty():
+		return
 	var mine: Array = []
 	var workers: Array = []
 	var army: Array = []
@@ -23,13 +27,12 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 			workers.append(u)
 		elif not u.is_structure:
 			army.append(u)
-		if u.unit_type == "colony_hub":
+		if u.unit_type == roster.town_hall:
 			halls.append(u)
 	if halls.is_empty():
 		_attack(pid, army, cfg, true)
 		return
 	var base: Vector2 = halls[0].pos
-	var p: Dictionary = SimEngine.players[pid]
 	# Include pending construction orders to avoid repeatedly replacing builders.
 	for worker in workers:
 		for order in worker.orders:
@@ -38,7 +41,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 	var gas_workers = 0
 	var gas_tap: Dictionary = {}
 	for u in mine:
-		if u.unit_type == "aether_tap" and u.build_progress >= 1.0 and (SimEngine.unlimited_resources or not SimEngine.worker_rally_resource(pid, u.tag).is_empty()):
+		if u.unit_type == roster.extractor and u.build_progress >= 1.0 and (SimEngine.unlimited_resources or not SimEngine.worker_rally_resource(pid, u.tag).is_empty()):
 			gas_tap = u
 	for worker in workers:
 		if not worker.orders.is_empty() and worker.orders[0].type == "build":
@@ -49,6 +52,9 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 				SimEngine.issue_command([worker.tag], "harvest", Vector2.ZERO, gas_tap.tag)
 		elif worker.orders.is_empty():
 			SimEngine.issue_SmartHarvest(worker.tag)
+	if p.faction != RTSData.FACTION_HUMANS:
+		_step_asymmetric_macro(pid, cfg, mine, workers, army, halls, counts)
+		return
 	var pending_supply = int(counts.get("silo", 0)) + int(counts.get("silo_retracted", 0))
 	var finished_supply = 0
 	for u in mine:
@@ -96,6 +102,75 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 			SimEngine.issue_command([u.tag], "train_" + unit_type)
 	_attack(pid, army, cfg, false)
 
+func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Array, army: Array, halls: Array, counts: Dictionary) -> void:
+	var p: Dictionary = SimEngine.players[pid]
+	var roster: Dictionary = RTSData.faction_info[p.faction]
+	var brood: bool = p.faction == RTSData.FACTION_MONSTERS
+	var supply_type := "brood_pod" if brood else "resonator"
+	var base: Vector2 = halls[0].pos
+	var strategy: String = cfg.get("strategy", "balanced")
+	var difficulty: String = cfg.get("difficulty", "normal")
+	var completed_supply := mine.filter(func(u): return u.unit_type == supply_type and u.build_progress >= 1.0).size()
+	if p.supply_cap < 200 and p.supply_cap - p.supply_used <= 4:
+		if int(counts.get(supply_type, 0)) == completed_supply:
+			_build(workers, supply_type, base)
+		_attack(pid, army, cfg, false)
+		return
+	if not brood and not mine.any(func(u): return u.unit_type == "waystone"):
+		if int(counts.get("waystone", 0)) == 0:
+			_build(workers, "waystone", base)
+		_attack(pid, army, cfg, false)
+		return
+	if strategy != "rush" and int(counts.get(roster.extractor, 0)) == 0 and (brood or int(counts.get("waystone", 0)) > 0):
+		_build(workers, roster.extractor, base)
+	var building_hall: bool = int(counts.get(roster.town_hall, 0)) > halls.size() or halls.any(func(u): return u.build_progress < 1.0)
+	var wants_expansion: bool = strategy == "economy" and workers.size() >= 18 and SimEngine.sim_time >= 85 and halls.size() < 2
+	var needs_expansion: bool = not SimEngine.unlimited_resources and workers.size() >= 12 and _needs_new_mineral_line(halls)
+	if not building_hall and (wants_expansion or needs_expansion):
+		var expansion := _expansion_position(pid, base)
+		if expansion != Vector2.ZERO:
+			_build(workers, roster.town_hall, expansion, true)
+			_attack(pid, army, cfg, false)
+			return
+	if not building_hall and brood and halls.size() < 3 and p.crystal >= 375 and workers.size() >= 13:
+		_build(workers, roster.town_hall, base)
+	if not brood and int(counts.get("waystone", 0)) < (3 if difficulty == "hard" else 2) and p.crystal >= 180:
+		_build(workers, "waystone", base)
+	var worker_target: int = {"easy": 14, "normal": 20, "hard": 24}[difficulty] + (5 if strategy == "economy" else 0)
+	var committed_workers := workers.size()
+	for hall in halls:
+		for item in hall.production_queue:
+			if item.get("unit_type") == roster.worker:
+				committed_workers += 1
+	for producer in mine:
+		if producer.build_progress < 1.0:
+			continue
+		if brood and producer.unit_type == roster.town_hall:
+			for i in range(int(producer.brood_slots)):
+				var train := "skitterling"
+				if committed_workers < worker_target and (workers.size() < 12 or producer.production_queue.size() == 0):
+					train = roster.worker
+				elif strategy == "siege" and p.aether >= 100:
+					train = "blight_hurler"
+				elif strategy != "rush" and p.aether >= 25:
+					train = "bile_crawler"
+				if not SimEngine.issue_command([producer.tag], "train_" + train).ok:
+					break
+				if train == roster.worker:
+					committed_workers += 1
+		elif not brood and producer.production_queue.is_empty():
+			if producer.unit_type == roster.town_hall and committed_workers < worker_target:
+				if SimEngine.issue_command([producer.tag], "train_" + roster.worker).ok:
+					committed_workers += 1
+			elif producer.unit_type == "waystone" and SimEngine.is_powered(pid, producer.pos):
+				var train := "sunblade"
+				if strategy == "siege" and p.aether >= 200:
+					train = "spire_walker"
+				elif strategy != "rush" and p.aether >= 50:
+					train = "skirmisher"
+				SimEngine.issue_command([producer.tag], "train_" + train)
+	_attack(pid, army, cfg, false)
+
 func _build(workers: Array, structure_type: String, base: Vector2, exact: bool = false) -> void:
 	if workers.is_empty():
 		return
@@ -106,7 +181,7 @@ func _build(workers: Array, structure_type: String, base: Vector2, exact: bool =
 	var candidate = Vector2.ZERO
 	if exact:
 		candidate = base
-	elif structure_type == "aether_tap":
+	elif def.get("is_extractor", false):
 		for res in SimEngine.resources.values():
 			if res.resource_type == "aether_vent" and res.pos.distance_to(base) < 24 and SimEngine.can_place_structure(structure_type, res.pos):
 				candidate = res.pos
@@ -116,6 +191,8 @@ func _build(workers: Array, structure_type: String, base: Vector2, exact: bool =
 			for i in range(16):
 				var angle = TAU * float(i) / 16.0
 				var pos = base + Vector2(cos(angle), sin(angle)) * radius
+				if SimEngine.requires_power(structure_type) and not SimEngine.is_powered(workers[0].owner, pos):
+					continue
 				if SimEngine.can_place_structure(structure_type, pos):
 					candidate = pos
 					break

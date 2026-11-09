@@ -53,13 +53,27 @@ Skirmish setup lets you choose Easy, Normal or Hard AI, its Rush, Balanced, Econ
 
 The **F8** setup menu also offers **Iron Narrows**, a 128 × 96 duel map with two fixed sites, two expansion pockets, and two river crossings. Pick finite or unlimited deposits on either battlefield. Frontier Hunters defaults to unlimited deposits. Iron Narrows defaults to 1,500 crystal per patch and 2,250 aether per vent. Same-seed rematches keep both the map and the deposit rule.
 
-This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two distinct starting sites are selected randomly from the map's eight perimeter bases. Each commander starts with one Colony Hub, **12 Pioneers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are **inexhaustible**. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
+Frontier Hunters is a **256×256** map with two distinct starts drawn from eight perimeter bases. Each commander begins with their faction's main base, **12 workers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are inexhaustible by default. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
 
 ![Frontier Hunters: the full 256×256 battlefield with waterways, crossings and expansion resources]({{ '/assets/images/robos-rts/34-frontier-hunters-map.png' | relative_url }}){: .robos-zoomable-img }
 
 **Win by destroying every opposing structure**, including expansions and unfinished construction, or by accepting the opponent's surrender. Losing a main base or all workers alone does not end the match. The terminal result freezes the simulation and rejects further commands. Supply is capped at 200. Construction and training use the unit registry's full durations; accelerated play advances the same simulation faster.
 
 Click a visible deposit to inspect its remaining reserves. When your workers empty a finite field or vent, the HUD reports the depletion. Hover over supply to see deployed and reserved supply, free capacity and capacity under construction. Selecting several producers shows each building's queue count and active job progress on its portrait.
+
+### Skirmish factions
+
+Pick **Your faction** and **AI faction** independently on the skirmish setup screen. Both default to Meridian Guard. **Random** chooses a faction from the match seed, and a same-seed rematch preserves the factions and starting sites. The results screen lists both resolved factions.
+
+| Faction | Main base | Supply | Aether |
+|:---|:---|:---|:---|
+| Meridian Guard | Colony Hub | Provision Silo | Aether Tap |
+| Gnarl Brood | Brood Nest | Brood Pod | Spore Tap |
+| Aurelian Concord | Heartstone | Resonator | Aether Prism |
+
+**Gnarl Brood.** Foragers grow into structures, freeing their supply slot as construction begins. Cancel an unfinished morph to recover the worker and 75% of the paid cost. Each completed Brood Nest begins with three brood slots. A paid unit consumes one slot and hatches alongside other active jobs. One slot regenerates every 12 seconds up to three. **Y** sets the army rally, **G** sets the Forager rally, and right-clicking a usable deposit also sets the Forager rally.
+
+**Aurelian Concord.** Motes can leave after starting a summon. Press **W** with a Mote selected to place a Waystone within 18 units of a completed friendly Resonator. Select a Resonator or start placing a Waystone to see the power field. If all nearby Resonators are destroyed, a Waystone pauses its active production until power returns.
 
 ### Scouting and fog of war
 
@@ -73,7 +87,7 @@ Both sides share vision across their own units and structures. The skirmish AI a
 
 For automation, call `get_observation(player=1)` for that player's sight, or pass player `0` for the full observer view used in test assertions. The player view includes the visibility grid and last-seen buildings. It omits hidden units, the opponent's start assignment and economy, and private orders. Map geometry and candidate start locations remain public. The local control server also exposes the observer view for diagnostics.
 
-The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for a second base; Siege builds gas extraction and a Workshop for Howitzers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.
+The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for another base. Siege works toward faction-specific heavy units such as Howitzers, Blight Hurlers or Spire Walkers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.
 
 The bot API starts a replayable match with `POST /match {"seed":42,"difficulty":"hard","strategy":"rush"}`. Omit the seed for a fresh random assignment. `POST /match {"action":"surrender","player":1}` concedes. Observations include match status, winner, reason, seed and starting-site assignments. Existing mechanics scenarios remain available by slug; `starfall-canyon` loads the older three-faction showcase.
 
@@ -421,7 +435,7 @@ The game runs an HTTP/JSON server (port 18095, or `RTS_WEB_SERVICE_PORT`). The C
 | `POST /step`, `POST /pause` | Advance ticks; pause real-time play (`/step` still works) |
 | `POST /playback`, `GET /performance` | Control live speed/pause without stepping; inspect frame timings |
 | `POST /scenario` | Load a scenario by slug (`default` for the main map) or an inline definition |
-| `POST /match` | Start or surrender a skirmish, or send `{"action":"rematch"}` after it ends to replay the opening. New games accept `map_id` and `unlimited_resources` overrides. The finished match contains both sides' scorecard totals. |
+| `POST /match` | Start or surrender a skirmish, or send `{"action":"rematch"}` after it ends to replay the opening. New games accept `map_id`, `unlimited_resources`, `player_faction`, and `ai_faction`. Faction values are `humans`, `monsters`, `aliens`, or `random`. The finished match contains both sides' scorecard totals. |
 | `POST /directive` | Turn a built-in AI mode on or off for a player |
 | `POST /select`, `POST /camera`, `POST /ui` | Selection, camera and HUD state |
 | `POST /input` | Inject mouse and key events through the real input handlers |

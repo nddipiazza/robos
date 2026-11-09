@@ -25,7 +25,7 @@ An open-source deterministic 64Hz Real-Time Strategy (RTS) game and engine built
 
 ## Running the Game & E2E Tests
 
-The default playable mode is **Frontier Hunters**, one human versus one AI using Meridian Guard units. `scenarios/frontier-hunters.jsonld` defines the rich eight-start map. Each seat gets a distinct seeded random start, one Colony Hub, 12 Pioneers, 50 crystal and no aether. `SimEngine.match_state` tracks annihilation/surrender and freezes completed matches. `RTSSkirmishAI.gd` builds through paid commands; difficulty affects decisions, not resources. The F8 match menu selects difficulty, strategy and game speed. `starfall-canyon` retains the three-faction mechanics showcase.
+The default playable mode is **Frontier Hunters**, one human versus one AI with Meridian Guard selected for both seats. Each seat can select any faction or a seeded Random faction. Each starts at a distinct seeded site with its own base, 12 workers, 50 crystal and no aether. `SimEngine.match_state` tracks annihilation/surrender and freezes completed matches. `RTSSkirmishAI.gd` builds through paid commands. Difficulty affects its decisions. The title and F8 menus select factions, difficulty, strategy and speed. `starfall-canyon` retains the three-faction mechanics showcase.
 
 Frontier Hunters is 256×256 with unlimited crystal/aether, waterways, land crossings and interior expansions. `terrain_tiles` are 4-unit brush overrides shared by rendering, collision, pathfinding and map persistence. Do not let resource amounts stand in for infinity: the `unlimited_resources` rule prevents depletion for both resources.
 

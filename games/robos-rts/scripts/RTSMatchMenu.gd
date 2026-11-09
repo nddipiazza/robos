@@ -13,6 +13,8 @@ var layout := Layout.BATTLE
 var panel: PanelContainer
 var result_panel: PanelContainer
 var map_picker: OptionButton
+var player_faction: OptionButton
+var ai_faction: OptionButton
 var deposit_rules: OptionButton
 var health_bars: OptionButton
 var difficulty: OptionButton
@@ -28,6 +30,7 @@ var _score_values: Dictionary = {}
 var _rematch: Button
 var _show_results: Button
 var _map_description: Label
+var _faction_ids: Array = []
 
 func _ready() -> void:
 	layer = 10
@@ -66,6 +69,10 @@ func _ready() -> void:
 	SimEngine.match_finished.connect(_open_result)
 
 func _build_skirmish_options(box: VBoxContainer) -> void:
+	_faction_ids = RTSData.faction_info.keys() + ["random"]
+	var factions := _faction_ids.map(func(id): return RTSData.get_faction_name(id))
+	player_faction = _option(box, "Your faction", factions, 0)
+	ai_faction = _option(box, "AI faction", factions, 0)
 	_map_description = _label(box, "")
 	map_picker = _option(box, "Battlefield", SimEngine.SKIRMISH_MAPS.values(), 0)
 	deposit_rules = _option(box, "Resource deposits", ["Unlimited", "Finite"], 0)
@@ -198,7 +205,9 @@ func _open_result() -> void:
 	_score_title.text = outcome
 	var seconds := floori(state.finished_tick * SimEngine.TICK_DT)
 	var reason := "Surrender" if state.reason == "surrender" else "Annihilation"
-	_score_detail.text = "%s  ·  %d:%02d" % [reason, seconds / 60, seconds % 60]
+	_score_detail.text = "%s vs %s   ·   %s   ·   %d:%02d" % [
+		RTSData.get_faction_name(SimEngine.players[1].faction), RTSData.get_faction_name(SimEngine.players[2].faction),
+		reason, seconds / 60, seconds % 60]
 	for stat in _score_values:
 		for player in [1, 2]:
 			_score_values[stat][player - 1].text = str(state.scorecard[str(player)][stat])
@@ -215,6 +224,9 @@ func reset_views() -> void:
 		map_picker.select(map_index)
 		_on_map_selected(map_index)
 		deposit_rules.select(0 if SimEngine.unlimited_resources else 1)
+	var choices: Dictionary = SimEngine.match_state.get("faction_choices", {})
+	player_faction.select(maxi(0, _faction_ids.find(choices.get("1", ""))))
+	ai_faction.select(maxi(0, _faction_ids.find(choices.get("2", ""))))
 
 func restart() -> void:
 	SimEngine.rematch()
@@ -239,7 +251,7 @@ func _on_volume_selected(idx: int) -> void:
 		RTSAudio.set_volume_percent(VOLUME_LEVELS[idx])
 
 func _on_map_selected(index: int) -> void:
-	_map_description.text = "1 Player vs 1 AI · Meridian Guard\n"
+	_map_description.text = "1 Player vs 1 AI\n"
 	_map_description.text += "256 × 256 · Eight possible starts" if index == 0 else "128 × 96 · Two starts · Two river crossings"
 	deposit_rules.select(0 if index == 0 else 1)
 
@@ -268,6 +280,7 @@ func _start() -> void:
 	var map_id: String = SimEngine.SKIRMISH_MAPS.keys()[map_picker.selected]
 	var settings := {"difficulty": ["easy", "normal", "hard"][difficulty.selected],
 		"strategy": ["rush", "balanced", "economy", "siege"][strategy.selected],
+		"player_faction": _faction_ids[player_faction.selected], "ai_faction": _faction_ids[ai_faction.selected],
 		"unlimited_resources": deposit_rules.selected == 0}
 	if not SimEngine.start_skirmish(map_id, settings).ok:
 		return

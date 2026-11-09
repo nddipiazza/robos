@@ -40,6 +40,9 @@ const SWEEP_RADIUS := 16.0
 const SWEEP_TICKS := 10 * TICK_RATE
 const SALVAGE_TICKS := 5 * TICK_RATE
 const REINFORCED_SUPPLY := 8
+const BROOD_SLOTS := 3
+const BROOD_RECHARGE := 12.0
+const POWER_RADIUS := 18.0
 const CLOAK_ENERGY_MAX := 100.0
 const CLOAK_START_ENERGY := 25.0
 const CLOAK_DRAIN := 4.0
@@ -382,7 +385,7 @@ func start_skirmish(map_id: String = "frontier-hunters", options: Dictionary = {
 	if not SKIRMISH_MAPS.has(map_id):
 		return {"ok": false, "error": "Unknown skirmish map."}
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/%s.jsonld" % map_id))
-	for key in ["seed", "difficulty", "strategy", "unlimited_resources"]:
+	for key in ["seed", "difficulty", "strategy", "unlimited_resources", "player_faction", "ai_faction"]:
 		if options.has(key):
 			data[key] = options[key]
 	return _load_skirmish(data)
@@ -394,6 +397,12 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	var starts: Array = map_cfg.get("starts", [])
 	var difficulty = str(data.get("difficulty", "normal"))
 	var strategy = str(data.get("strategy", "balanced"))
+	var player_faction := str(data.get("player_faction", RTSData.FACTION_HUMANS))
+	var ai_faction := str(data.get("ai_faction", RTSData.FACTION_HUMANS))
+	var faction_ids: Array = RTSData.faction_info.keys()
+	for choice in [player_faction, ai_faction]:
+		if choice != "random" and not RTSData.faction_info.has(choice):
+			return {"ok": false, "error": "Unknown skirmish faction."}
 	if starts.size() < 2 or starts.size() > 8 or not difficulty in ["easy", "normal", "hard"] or not strategy in ["rush", "balanced", "economy", "siege"]:
 		return {"ok": false, "error": "Expected 2–8 starts and a supported difficulty/strategy"}
 	var match_seed = int(data.get("seed", Time.get_unix_time_from_system() * 1000.0 + Time.get_ticks_msec()))
@@ -410,11 +419,18 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		var temp = slots[i]
 		slots[i] = slots[j]
 		slots[j] = temp
+	# Faction rolls do not change which starting sites a given seed selects.
+	var faction_rng := RandomNumberGenerator.new()
+	faction_rng.seed = match_seed ^ 0x348ba701
+	var rolled := [faction_ids[faction_rng.randi_range(0, faction_ids.size() - 1)], faction_ids[faction_rng.randi_range(0, faction_ids.size() - 1)]]
+	var choices := {"1": player_faction, "2": ai_faction}
+	var factions := {"1": rolled[0] if player_faction == "random" else player_faction,
+		"2": rolled[1] if ai_faction == "random" else ai_faction}
 	match_state = {"mode": "1p_vs_ai", "status": "playing", "winner": 0, "reason": "", "seed": match_seed,
 		"map_id": str(data.get("map_id", "custom")),
 		"difficulty": difficulty, "strategy": strategy, "unlimited_resources": unlimited_resources,
 		"starts": starts.duplicate(true), "expansions": map_cfg.get("expansions", []).duplicate(true),
-		"assigned_starts": {"1": slots[0], "2": slots[1]}}
+		"assigned_starts": {"1": slots[0], "2": slots[1]}, "factions": factions, "faction_choices": choices}
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(float(obs.x), float(obs.y), float(obs.w), float(obs.h)))
 	var resource_sites = starts + map_cfg.get("expansions", [])
@@ -440,16 +456,18 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		for resource in data.resources:
 			spawn_resource(str(resource.type), Vector2(float(resource.x), float(resource.y)), int(resource.get("amount", 1500)), str(resource.get("id", "")))
 	for pid in [1, 2]:
-		players[pid]["faction"] = "humans"
+		var faction: String = factions[str(pid)]
+		var roster: Dictionary = RTSData.faction_info[faction]
+		players[pid]["faction"] = faction
 		players[pid]["name"] = "Commander" if pid == 1 else "AI Commander"
 		players[pid]["crystal"] = 50
 		players[pid]["aether"] = 0
 		var start: Dictionary = starts[slots[pid - 1]]
 		var base = Vector2(float(start.x), float(start.y))
-		spawn_unit("colony_hub", pid, base)
+		spawn_unit(roster.town_hall, pid, base)
 		for i in range(12):
 			var angle = TAU * float(i) / 12.0
-			var worker = spawn_unit("pioneer", pid, base + Vector2(cos(angle), sin(angle)) * 7.0)
+			var worker = spawn_unit(roster.worker, pid, base + Vector2(cos(angle), sin(angle)) * 7.0)
 			issue_SmartHarvest(worker.tag, crystal_lines.get(slots[pid - 1], {}))
 	_rebuild_astar_grid()
 	_recompute_supplies()
@@ -541,7 +559,21 @@ func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> boo
 				found = true
 		if not found:
 			return false
+	if requires_power(structure_type) and not is_powered(worker.owner, pos):
+		return false
 	return can_place_structure(structure_type, pos)
+
+func requires_power(structure_type: String) -> bool:
+	return structure_type == "waystone" and not match_state.is_empty()
+
+func is_powered(owner_id: int, pos: Vector2) -> bool:
+	for unit in units.values():
+		if unit.unit_type == "resonator" and unit.owner == owner_id and unit.build_progress >= 1.0 and unit.pos.distance_squared_to(pos) <= POWER_RADIUS * POWER_RADIUS:
+			return true
+	return false
+
+func uses_brood_slots(unit: Dictionary) -> bool:
+	return unit.unit_type == "brood_nest" and not match_state.is_empty()
 
 func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
@@ -550,7 +582,8 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 	var radius = float(def.get("radius", 2.0))
 	if is_water_at(pos, radius):
 		return false
-	if structure_type == "aether_tap":
+	var extractor := bool(def.get("is_extractor", false))
+	if extractor:
 		var vent_found = false
 		for res in resources.values():
 			if res.resource_type == "aether_vent" and pos.distance_to(res.pos) <= 0.5:
@@ -567,7 +600,7 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 			return false
 	for res in resources.values():
 		if pos.distance_to(res.pos) < radius + float(res.radius) + 0.5:
-			if structure_type != "aether_tap" or res.resource_type != "aether_vent":
+			if not extractor or res.resource_type != "aether_vent":
 				return false
 	return true
 
@@ -713,6 +746,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"sight_range": float(def.get("sight_range", 20.0)),
 		"push_priority": int(def.get("push_priority", 1)),
 		"is_structure": bool(def.get("is_structure", false)),
+		"is_extractor": bool(def.get("is_extractor", false)),
 		"is_walkable_structure": bool(def.get("is_walkable_structure", false)),
 		"is_worker": bool(def.get("is_worker", false)),
 		"is_immobile": bool(def.get("is_immobile", false)),
@@ -744,6 +778,10 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"kills": 0,
 		"damage_dealt": 0.0
 	}
+	if unit_type == "brood_nest":
+		u["brood_slots"] = BROOD_SLOTS
+		u["brood_recharge"] = 0.0
+		u["worker_rally_route"] = []
 	units[tag] = u
 	if u.detection_radius > 0.0:
 		_detectors.append(u)
@@ -847,7 +885,7 @@ func _rebuild_astar_grid() -> void:
 			_detectors.append(u)
 		if u.is_structure and bool(RTSData.get_unit_def(u.unit_type).get("is_town_hall", false)):
 			_town_halls.append(u)
-		if u.unit_type == "aether_tap":
+		if u.is_extractor:
 			for resource in resources.values():
 				if resource.resource_type == "aether_vent" and resource.pos.distance_squared_to(u.pos) < 1.0:
 					_gas_source_by_tap[u.tag] = resource.tag
@@ -1047,35 +1085,57 @@ func _update_structures(dt: float) -> void:
 			emit_signal("notice", u.owner, "%s salvaged." % u.name, "info")
 			continue
 		var queue: Array = u["production_queue"]
-		if queue.size() > 0:
-			var item = queue[0]
-			item["progress"] += dt
-			if item["progress"] >= item["total_time"]:
-				queue.pop_front()
-				if item.has("upgrade"):
-					players[u.owner].upgrades[item.upgrade] = item.level
-					emit_signal("notice", u.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
-					continue
-				var utype = str(item["unit_type"])
-				var route: Array = u.rally_route
-				var first := default_rally_position(u)
-				if not route.is_empty():
-					first = rally_waypoint_position(route.front())
-				var spawn_dir = (first - u.pos).normalized()
-				if spawn_dir.length_squared() < 0.01:
-					spawn_dir = Vector2.RIGHT if u["owner"] == 1 else Vector2.LEFT
-				var spawn_pos = u["pos"] + spawn_dir * (u["radius"] + 1.8)
-				var new_unit = spawn_unit(utype, u["owner"], spawn_pos)
-				if new_unit.is_empty():
-					continue
-				players[u.owner].units_trained += 1
-				emit_signal("unit_production_finished", new_unit, u)
-				if not route.is_empty():
-					_apply_rally_route(new_unit, route)
-				elif new_unit.is_worker and not match_state.is_empty():
-					issue_SmartHarvest(new_unit.tag)
-				elif first.distance_to(u.pos) > u.radius + 1.5:
-					issue_command([new_unit.tag], "move", first)
+		var brood := uses_brood_slots(u)
+		if brood and u.brood_slots < BROOD_SLOTS:
+			u.brood_recharge += dt
+			if u.brood_recharge >= BROOD_RECHARGE:
+				u.brood_recharge = 0.0
+				u.brood_slots += 1
+		if queue.is_empty() or (requires_power(u.unit_type) and not is_powered(u.owner, u.pos)):
+			continue
+		var completed := 0
+		for index in range(queue.size() if brood else 1):
+			var item: Dictionary = queue[index]
+			item.progress += dt
+			if item.progress >= item.total_time:
+				completed += 1
+		if completed == 0:
+			continue
+		var finished: Array[Dictionary] = []
+		for index in range((queue.size() if brood else 1) - 1, -1, -1):
+			if queue[index].progress >= queue[index].total_time:
+				finished.push_front(queue.pop_at(index))
+		for item in finished:
+			_finish_production(u, item)
+
+func _finish_production(structure: Dictionary, item: Dictionary) -> void:
+	if item.has("upgrade"):
+		players[structure.owner].upgrades[item.upgrade] = item.level
+		notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
+		return
+	var utype: String = item.unit_type
+	var is_worker := bool(RTSData.get_unit_def(utype).get("is_worker", false))
+	var route: Array = structure.rally_route
+	if structure.unit_type == "brood_nest" and is_worker:
+		route = structure.worker_rally_route
+	var first := default_rally_position(structure)
+	if not route.is_empty():
+		first = rally_waypoint_position(route.front())
+	var spawn_dir: Vector2 = (first - structure.pos).normalized()
+	if spawn_dir.length_squared() < 0.01:
+		spawn_dir = Vector2.RIGHT if structure.owner == 1 else Vector2.LEFT
+	var spawn_pos: Vector2 = structure.pos + spawn_dir * (structure.radius + 1.8)
+	var new_unit := spawn_unit(utype, structure.owner, spawn_pos)
+	if new_unit.is_empty():
+		return
+	players[structure.owner].units_trained += 1
+	unit_production_finished.emit(new_unit, structure)
+	if not route.is_empty():
+		_apply_rally_route(new_unit, route)
+	elif is_worker and not match_state.is_empty():
+		issue_SmartHarvest(new_unit.tag)
+	elif first.distance_to(structure.pos) > structure.radius + 1.5:
+		issue_command([new_unit.tag], "move", first)
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u.unit_type == "skirmisher":
@@ -1320,7 +1380,7 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	if resources.has(res_tag):
 		target_entity = resources[res_tag]
 		is_gas = (target_entity["resource_type"] == "aether_vent")
-	elif units.has(res_tag) and units[res_tag].get("unit_type") == "aether_tap":
+	elif units.has(res_tag) and units[res_tag].is_extractor:
 		target_entity = units[res_tag]
 		is_gas = true
 	else:
@@ -1408,6 +1468,12 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				if u["unit_type"] == "mote":
 					s_unit["auto_summon"] = true
 					u["orders"].pop_front()
+				elif u.unit_type == "forager":
+					s_unit["auto_summon"] = true
+					s_unit["morph_worker"] = {"id": u.id, "hp": u.hp, "cargo_type": u.cargo_type, "cargo_amount": u.cargo_amount}
+					_release_mining_slot(u)
+					units.erase(u.tag)
+					_recompute_supplies()
 			else:
 				emit_signal("notice", u["owner"], "Not enough %s to build." % ("crystal" if p["crystal"] < m_cost else "aether"), "error")
 				u["orders"].pop_front()
@@ -1452,6 +1518,10 @@ func _cancel_construction(site: Dictionary) -> bool:
 		return false
 	var costs: Vector2i = site.get("construction_cost", Vector2i.ZERO)
 	_refund_structure(site, costs)
+	if site.has("morph_worker"):
+		var worker = spawn_unit("forager", site.owner, site.pos, site.morph_worker.id)
+		for key in ["hp", "cargo_type", "cargo_amount"]:
+			worker[key] = site.morph_worker[key]
 	emit_signal("notice", site.owner, "%s construction cancelled." % site.name, "info")
 	return true
 
@@ -2071,8 +2141,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 
-		elif ctype == "rally":
-			if _set_rally(u, target_pos, target_tag, queue):
+		elif ctype in ["rally", "rally_worker"]:
+			if _set_rally(u, target_pos, target_tag, queue, ctype == "rally_worker"):
 				accepted += 1
 			continue
 
@@ -2204,12 +2274,10 @@ func rally_waypoint_position(waypoint: Dictionary) -> Vector2:
 		return units[waypoint.target_tag].pos
 	return waypoint.pos
 
-func _set_rally(structure: Dictionary, position: Vector2, target_tag: int, append: bool) -> bool:
+func _set_rally(structure: Dictionary, position: Vector2, target_tag: int, append: bool, workers: bool = false) -> bool:
 	if not structure.is_structure or structure.build_progress < 1.0 or not RTSData.get_unit_def(structure.unit_type).has("trains"):
 		return false
-	var route: Array = structure.rally_route
-	if append and route.size() >= MAX_RALLY_WAYPOINTS:
-		emit_signal("notice", structure.owner, "Rally route already has eight waypoints.", "warn")
+	if workers and structure.unit_type != "brood_nest":
 		return false
 	var kind := "move"
 	if target_tag > 0:
@@ -2224,6 +2292,12 @@ func _set_rally(structure: Dictionary, position: Vector2, target_tag: int, appen
 		else:
 			return false
 	if not position.is_finite():
+		return false
+	var route: Array = structure.rally_route
+	if structure.unit_type == "brood_nest" and (workers or kind == "harvest"):
+		route = structure.worker_rally_route
+	if append and route.size() >= MAX_RALLY_WAYPOINTS:
+		notice.emit(structure.owner, "Rally route already has eight waypoints.", "warn")
 		return false
 	if not append:
 		route.clear()
@@ -2249,7 +2323,7 @@ func worker_rally_resource(owner_id: int, target_tag: int) -> Dictionary:
 	if not deposit.is_empty() and deposit.resource_type == "crystal_field" and (unlimited_resources or deposit.amount > 0):
 		return deposit
 	var tap: Dictionary = units.get(target_tag, {})
-	if not tap.is_empty() and tap.owner == owner_id and tap.unit_type == "aether_tap" and tap.hp > 0 and tap.build_progress >= 1.0:
+	if not tap.is_empty() and tap.owner == owner_id and tap.is_extractor and tap.hp > 0 and tap.build_progress >= 1.0:
 		var vent: Dictionary = resources.get(_gas_source_by_tap.get(target_tag, 0), {})
 		if not vent.is_empty() and (unlimited_resources or vent.amount > 0):
 			return tap
@@ -2289,6 +2363,12 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		return false
 	if not RTSData.get_unit_def(structure["unit_type"]).get("trains", []).has(unit_type):
 		return false
+	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
+		notice.emit(structure.owner, "Waystone needs a Resonator's power field.", "error")
+		return false
+	if uses_brood_slots(structure) and structure.brood_slots <= 0:
+		notice.emit(structure.owner, "No brood slots ready.", "error")
+		return false
 	var p = players.get(structure["owner"], {})
 	if p.is_empty():
 		return false
@@ -2302,13 +2382,15 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		emit_signal("notice", structure["owner"], "Not enough aether.", "error")
 		return false
 	if p["supply_used"] + s_cost > p["supply_cap"]:
-		emit_signal("notice", structure["owner"], "Supply blocked. Build more Provision Silos.", "error")
+		emit_signal("notice", structure["owner"], "Supply blocked. Build more supply structures.", "error")
 		return false
 	if structure["production_queue"].size() >= 5:
 		emit_signal("notice", structure["owner"], "Production queue is full.", "error")
 		return false
 	p["crystal"] -= m_cost
 	p["aether"] -= v_cost
+	if uses_brood_slots(structure):
+		structure.brood_slots -= 1
 	structure["production_queue"].append({
 		"unit_type": unit_type,
 		"crystal_cost": m_cost,
@@ -2368,6 +2450,10 @@ func _cancel_training(structure: Dictionary, index: int) -> bool:
 	if player.is_empty():
 		return false
 	var item: Dictionary = queue.pop_at(index)
+	if uses_brood_slots(structure):
+		structure.brood_slots = mini(BROOD_SLOTS, structure.brood_slots + 1)
+		if structure.brood_slots == BROOD_SLOTS:
+			structure.brood_recharge = 0.0
 	var definition: Dictionary = RTSData.get_unit_def(item.get("unit_type", ""))
 	player.crystal += int(item.get("crystal_cost", definition.get("crystal_cost", 50)))
 	player.aether += int(item.get("aether_cost", definition.get("aether_cost", 0)))
@@ -2420,7 +2506,7 @@ func worker_saturation(owner_id: int) -> Dictionary:
 	for unit in units.values():
 		if unit.owner != owner_id or not unit.is_structure or unit.build_progress < 1.0:
 			continue
-		if unit.unit_type == "aether_tap":
+		if unit.is_extractor:
 			var vent: int = _gas_source_by_tap.get(unit.tag, 0)
 			var source: Dictionary = resources.get(vent, {})
 			if not source.is_empty() and (source.amount > 0 or unlimited_resources):
@@ -2545,12 +2631,17 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["salvage_ticks"] = maxi(0, int(u.get("salvage_finish", 0)) - tick)
 			"pioneer":
 				entry["auto_repair"] = u.get("auto_repair", false)
-		if not u.rally_route.is_empty() and (not limited or u.owner == perspective_player):
-			var route := []
-			for waypoint in u.rally_route:
-				var position := rally_waypoint_position(waypoint)
-				route.append({"kind": waypoint.kind, "target_tag": waypoint.target_tag, "x": position.x, "y": position.y})
-			entry["rally_route"] = route
+		if not limited or u.owner == perspective_player:
+			if not u.rally_route.is_empty():
+				entry["rally_route"] = _observed_rally(u.rally_route)
+			if u.unit_type == "brood_nest" and not u.worker_rally_route.is_empty():
+				entry["worker_rally_route"] = _observed_rally(u.worker_rally_route)
+			if uses_brood_slots(u):
+				entry["brood_slots"] = u.brood_slots
+			if requires_power(u.unit_type):
+				entry["powered"] = is_powered(u.owner, u.pos)
+			if (uses_brood_slots(u) or requires_power(u.unit_type)) and not u.production_queue.is_empty():
+				entry["production_progress"] = u.production_queue.map(func(item): return snappedf(item.progress, 0.01))
 
 	var res_list: Array = []
 	for r in resources.values():
@@ -2610,6 +2701,11 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"last_seen_buildings": memory,
 		}
 	return observation
+
+func _observed_rally(route: Array) -> Array:
+	return route.map(func(waypoint):
+		var position := rally_waypoint_position(waypoint)
+		return {"kind": waypoint.kind, "target_tag": waypoint.target_tag, "x": position.x, "y": position.y})
 
 func _water_to_arrays() -> Array:
 	var out: Array = []

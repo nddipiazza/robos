@@ -409,5 +409,247 @@
         }
       ]
     }
+  },
+  "forager": {
+    "unit_name": "Forager",
+    "voice": "en-US-ChristopherNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "forager_select_1",
+          "text": "The brood hears.",
+          "path": "res://assets/audio/voice/forager_select_1.wav"
+        },
+        {
+          "id": "forager_select_2",
+          "text": "Claws at your service.",
+          "path": "res://assets/audio/voice/forager_select_2.wav"
+        },
+        {
+          "id": "forager_select_3",
+          "text": "What shall grow here?",
+          "path": "res://assets/audio/voice/forager_select_3.wav"
+        },
+        {
+          "id": "forager_select_4",
+          "text": "Point me to the vein.",
+          "path": "res://assets/audio/voice/forager_select_4.wav"
+        },
+        {
+          "id": "forager_select_5",
+          "text": "Always hungry. Always working.",
+          "path": "res://assets/audio/voice/forager_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "forager_move_1",
+          "text": "Scuttling there.",
+          "path": "res://assets/audio/voice/forager_move_1.wav"
+        },
+        {
+          "id": "forager_move_2",
+          "text": "I smell a seam.",
+          "path": "res://assets/audio/voice/forager_move_2.wav"
+        },
+        {
+          "id": "forager_move_3",
+          "text": "Claws in motion.",
+          "path": "res://assets/audio/voice/forager_move_3.wav"
+        },
+        {
+          "id": "forager_move_4",
+          "text": "The tunnels call.",
+          "path": "res://assets/audio/voice/forager_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "forager_attack_1",
+          "text": "I bite harder than I look.",
+          "path": "res://assets/audio/voice/forager_attack_1.wav"
+        },
+        {
+          "id": "forager_attack_2",
+          "text": "A brief interruption for lunch.",
+          "path": "res://assets/audio/voice/forager_attack_2.wav"
+        },
+        {
+          "id": "forager_attack_3",
+          "text": "Those teeth are not for show.",
+          "path": "res://assets/audio/voice/forager_attack_3.wav"
+        },
+        {
+          "id": "forager_attack_4",
+          "text": "Try chewing back.",
+          "path": "res://assets/audio/voice/forager_attack_4.wav"
+        },
+        {
+          "id": "forager_attack_5",
+          "text": "I'll take a small sample.",
+          "path": "res://assets/audio/voice/forager_attack_5.wav"
+        }
+      ],
+      "job_done": [
+        {
+          "id": "forager_job_done_1",
+          "text": "The brood has taken root.",
+          "path": "res://assets/audio/voice/forager_job_done_1.wav"
+        },
+        {
+          "id": "forager_job_done_2",
+          "text": "Our new growth is ready.",
+          "path": "res://assets/audio/voice/forager_job_done_2.wav"
+        },
+        {
+          "id": "forager_job_done_3",
+          "text": "The shell has hardened.",
+          "path": "res://assets/audio/voice/forager_job_done_3.wav"
+        },
+        {
+          "id": "forager_job_done_4",
+          "text": "A new pulse in the colony.",
+          "path": "res://assets/audio/voice/forager_job_done_4.wav"
+        },
+        {
+          "id": "forager_job_done_5",
+          "text": "One more place to call ours.",
+          "path": "res://assets/audio/voice/forager_job_done_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "forager_ready_1",
+          "text": "Fresh claws for the brood.",
+          "path": "res://assets/audio/voice/forager_ready_1.wav"
+        },
+        {
+          "id": "forager_ready_2",
+          "text": "Hatched and hungry.",
+          "path": "res://assets/audio/voice/forager_ready_2.wav"
+        }
+      ]
+    }
+  },
+  "mote": {
+    "unit_name": "Mote",
+    "voice": "en-GB-SoniaNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "mote_select_1",
+          "text": "Signal received.",
+          "path": "res://assets/audio/voice/mote_select_1.wav"
+        },
+        {
+          "id": "mote_select_2",
+          "text": "Mote ready to align.",
+          "path": "res://assets/audio/voice/mote_select_2.wav"
+        },
+        {
+          "id": "mote_select_3",
+          "text": "Awaiting coordinates.",
+          "path": "res://assets/audio/voice/mote_select_3.wav"
+        },
+        {
+          "id": "mote_select_4",
+          "text": "All harmonics stable.",
+          "path": "res://assets/audio/voice/mote_select_4.wav"
+        },
+        {
+          "id": "mote_select_5",
+          "text": "The Concord is listening.",
+          "path": "res://assets/audio/voice/mote_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "mote_move_1",
+          "text": "Drifting into position.",
+          "path": "res://assets/audio/voice/mote_move_1.wav"
+        },
+        {
+          "id": "mote_move_2",
+          "text": "Following the signal.",
+          "path": "res://assets/audio/voice/mote_move_2.wav"
+        },
+        {
+          "id": "mote_move_3",
+          "text": "Course adjusted.",
+          "path": "res://assets/audio/voice/mote_move_3.wav"
+        },
+        {
+          "id": "mote_move_4",
+          "text": "On the next harmonic.",
+          "path": "res://assets/audio/voice/mote_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "mote_attack_1",
+          "text": "I am rated for light demolition.",
+          "path": "res://assets/audio/voice/mote_attack_1.wav"
+        },
+        {
+          "id": "mote_attack_2",
+          "text": "Consider this a small correction.",
+          "path": "res://assets/audio/voice/mote_attack_2.wav"
+        },
+        {
+          "id": "mote_attack_3",
+          "text": "Your warranty has expired.",
+          "path": "res://assets/audio/voice/mote_attack_3.wav"
+        },
+        {
+          "id": "mote_attack_4",
+          "text": "Applying a pointed disagreement.",
+          "path": "res://assets/audio/voice/mote_attack_4.wav"
+        },
+        {
+          "id": "mote_attack_5",
+          "text": "An unexpected use of my toolkit.",
+          "path": "res://assets/audio/voice/mote_attack_5.wav"
+        }
+      ],
+      "job_done": [
+        {
+          "id": "mote_job_done_1",
+          "text": "The structure is aligned.",
+          "path": "res://assets/audio/voice/mote_job_done_1.wav"
+        },
+        {
+          "id": "mote_job_done_2",
+          "text": "Summoning complete.",
+          "path": "res://assets/audio/voice/mote_job_done_2.wav"
+        },
+        {
+          "id": "mote_job_done_3",
+          "text": "The pattern has stabilized.",
+          "path": "res://assets/audio/voice/mote_job_done_3.wav"
+        },
+        {
+          "id": "mote_job_done_4",
+          "text": "The lattice is ready.",
+          "path": "res://assets/audio/voice/mote_job_done_4.wav"
+        },
+        {
+          "id": "mote_job_done_5",
+          "text": "The Concord's reach extends.",
+          "path": "res://assets/audio/voice/mote_job_done_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "mote_ready_1",
+          "text": "Mote signal online.",
+          "path": "res://assets/audio/voice/mote_ready_1.wav"
+        },
+        {
+          "id": "mote_ready_2",
+          "text": "I have joined the lattice.",
+          "path": "res://assets/audio/voice/mote_ready_2.wav"
+        }
+      ]
+    }
   }
 }

@@ -21,7 +21,8 @@ func _run() -> void:
 	_test_abilities_and_deaths_sfx()
 	_test_economy_and_ui_sfx()
 	_test_human_unit_dialogues_and_voices()
-	print("PASS test_audio_sfx (all 37 SFX + 71 human voice dialogue WAV streams verified)")
+	_test_asymmetric_worker_voices()
+	print("PASS test_audio_sfx (all 37 SFX + 113 voice dialogue WAV streams verified)")
 	quit(0)
 
 func _test_all_wav_files_loaded() -> void:
@@ -168,8 +169,7 @@ func _test_economy_and_ui_sfx() -> void:
 	assert(audio.sfx_counts.is_empty(), "Expected NO sound when finishing & returning minerals/gas (got: %s)" % str(audio.sfx_counts))
 
 func _test_human_unit_dialogues_and_voices() -> void:
-	# Verify all 71 voice dialogue WAVs exist on disk and are loaded into RTSAudio.voice_streams
-	assert(audio.voice_streams.size() == 71, "Expected 71 voice dialogue streams loaded, got %d" % audio.voice_streams.size())
+	assert(audio.voice_streams.size() == 113, "Expected 113 voice dialogue streams loaded, got %d" % audio.voice_streams.size())
 	for line_id in audio.voice_streams.keys():
 		var wav_path := "res://assets/audio/voice/%s.wav" % line_id
 		assert(FileAccess.file_exists(wav_path), "Missing voice WAV file: %s" % wav_path)
@@ -221,3 +221,14 @@ func _test_human_unit_dialogues_and_voices() -> void:
 		sim.step_ticks(4)
 		seen_jobs[audio.last_spoken_line_id] = true
 	assert(seen_jobs.size() == 5, "Expected 5 distinct pioneer job_done lines across 5 completed builds, got %s" % str(seen_jobs))
+
+func _test_asymmetric_worker_voices() -> void:
+	var minimums := {"select": 5, "move": 4, "attack": 5, "job_done": 5, "ready": 2}
+	for worker in ["forager", "mote"]:
+		for category in minimums:
+			var lines: Array = data.get_unit_dialogues(worker, category)
+			assert(lines.size() >= minimums[category], "Missing %s %s variants" % [worker, category])
+			for line in lines:
+				assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
+			var played: Dictionary = audio.play_unit_dialogue(worker, category, true)
+			assert(played.get("unit_type") == worker and played.get("category") == category)
