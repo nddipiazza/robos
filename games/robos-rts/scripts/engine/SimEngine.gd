@@ -2474,6 +2474,14 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		if final_vel.length_squared() > 0.001:
 			_move_on_terrain(u, position + final_vel * dt)
 			u["vel"] = final_vel
+		if not flying and is_moving and not u.path.is_empty() and not u.has("choke_yield") and tick % 16 == int(tag) % 16:
+			# Crowd steering can move a unit off the clear segment it planned
+			# through a choke. Replan from its new approach if the wall stops it.
+			var minimum_progress := speed * dt * 0.2
+			if position.distance_squared_to(u.pos) < minimum_progress * minimum_progress:
+				var cliff_walk: bool = u.unit_type == "spire_walker"
+				if not _is_point_blocked_by_static(u.pos, radius, cliff_walk) and not _has_clear_line_of_walk(u.pos, u.path.front(), radius, cliff_walk):
+					u.path.clear()
 
 	for tag in all_tags:
 		if not units.has(tag):
