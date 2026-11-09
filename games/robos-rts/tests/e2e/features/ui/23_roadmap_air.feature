@@ -52,6 +52,36 @@ Feature: Paid aircraft and ground or air targeting
     When the commander clicks control slot 1 with "none"
     Then the commander has selected "first,second"
 
+  Scenario: The Kestrel lands and changes its target domain after a delay
+    Given an RTS test scenario
+      """
+      {"name":"Kestrel flight modes","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"fighter","type":"kestrel_interceptor","owner":1,"x":32,"y":29},
+                {"id":"ground","type":"silo","owner":2,"x":42,"y":29},
+                {"id":"air","type":"rampart_transport","owner":2,"x":35,"y":23}]}
+      """
+    When the commander frames (36, 29) at zoom height 46
+    And the commander clicks the airborne unit "fighter"
+    And the commander presses "K"
+    And the commander presses "E"
+    Then "fighter" is in "kestrel_interceptor" with 96 switch ticks left
+    And the battlefield is captured as "kestrel-landing"
+    When the simulation advances 95 ticks
+    Then "fighter" is in "kestrel_interceptor" with 1 switch ticks left
+    When the simulation advances 1 ticks
+    Then "fighter" is in "kestrel_assault" with 0 switch ticks left
+    When the commander right-clicks the airborne unit "air"
+    Then "fighter" has orders "none"
+    When the commander right-clicks terrain at (42, 29)
+    And the simulation advances 70 ticks
+    Then "ground" has taken damage
+    When the commander presses "E"
+    And the simulation advances 96 ticks
+    Then "fighter" is in "kestrel_interceptor" with 0 switch ticks left
+    When the commander right-clicks the airborne unit "air"
+    And the simulation advances 70 ticks
+    Then "air" has taken damage
+
   Scenario: A ground-only mortar cannot hit a flyer while a Rifleman can target it
     Given an RTS test scenario
       """

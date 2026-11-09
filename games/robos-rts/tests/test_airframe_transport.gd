@@ -10,6 +10,7 @@ func _run() -> void:
 	var sim: Node = root.get_node("SimEngine")
 	_test_airframe(sim)
 	_test_cargo(sim)
+	_test_fighter_transition(sim)
 	print("Airframe and transport: ", "passed" if failures.is_empty() else failures)
 	quit(0 if failures.is_empty() else 1)
 
@@ -91,3 +92,18 @@ func _check(ok: bool, message: String) -> bool:
 	if not ok:
 		failures.append(message)
 	return ok
+
+func _test_fighter_transition(sim: Node) -> void:
+	sim.load_scenario_dict({"paused": true, "map": {"width": 104, "height": 64,
+		"obstacles": [{"x": 44, "y": 0, "w": 8, "h": 64}]},
+		"units": [{"type": "kestrel_interceptor", "owner": 1, "x": 47, "y": 26}]})
+	var fighter: Dictionary = sim.units.values()[0]
+	_check(not sim.issue_command([fighter.tag], "fighter_assault").ok, "Kestrel cannot land on impassable terrain")
+	_check(sim.issue_command([fighter.tag], "move", Vector2(57, 26)).ok, "Fly to a clear site")
+	sim.step_ticks(80)
+	_check(sim.issue_command([fighter.tag], "fighter_assault").ok, "Kestrel starts switching over clear ground")
+	var blocker: Dictionary = sim.spawn_unit("silo", 1, fighter.pos)
+	sim.step_ticks(sim.FIGHTER_TRANSITION_TICKS)
+	_check(fighter.unit_type == "kestrel_interceptor" and fighter.flight_height > 0.0 and not fighter.has("fighter_mode_until"),
+		"A footprint placed during the transition prevents an invalid touchdown")
+	_check(sim.units.has(blocker.tag), "Landing failure leaves the blocker intact")

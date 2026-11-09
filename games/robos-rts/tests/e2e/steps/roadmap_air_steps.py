@@ -31,6 +31,13 @@ def transport_drop(context, first, second):
     assert transport["passengers"] == [], transport
 
 
+@then('"{name}" is in "{mode}" with {ticks:d} switch ticks left')
+def fighter_mode(context, name, mode, ticks):
+    unit = find_unit(context, name)
+    assert unit["unit_type"] == mode and unit.get("fighter_mode_ticks", 0) == ticks, unit
+    assert unit.get("airborne", False) == (mode == "kestrel_interceptor"), unit
+
+
 @when('the commander clicks the airborne unit "{name}"')
 def click_airborne(context, name):
     _click_airborne(context, name, 1)
