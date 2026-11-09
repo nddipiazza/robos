@@ -51,14 +51,14 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **034 Research attachment.** A different attachment unlocks infantry abilities and competes for the same pad.
 - [x] **035 Deployable supply headquarters.** A Colony Hub upgrade unlocks an alternative energy spend with the existing recon and supply powers.
 - [x] **036 Timed mining helper.** The upgraded Hub can deploy a short-lived crystal-only helper with a visible timer.
-- [ ] **037 Transport bay.** A paid aircraft loads and unloads a capacity-limited squad at a valid drop site.
-- [ ] **038 Air production structure.** A paid build path unlocks the transport and dedicated fighters.
-- [ ] **039 Fighter modes.** A fighter switches attack domains with a transition delay and clear state indicator.
-- [ ] **040 Relocatable production.** Eligible Meridian structures can lift and land on a valid footprint, with production suspended in flight.
+- [x] **037 Transport bay.** A paid aircraft loads and unloads a capacity-limited squad at a valid drop site.
+- [x] **038 Air production structure.** A paid build path unlocks the transport and dedicated fighters.
+- [x] **039 Fighter modes.** A fighter switches attack domains with a transition delay and clear state indicator.
+- [x] **040 Relocatable production.** Eligible Meridian structures can lift and land on a valid footprint, with production suspended in flight.
 
 ## 041–050 Gnarl Brood tech
 
-- [ ] **041 Living ground.** Completed Brood bases spread a deterministic terrain layer visible in game and on the minimap.
+- [x] **041 Living ground.** Completed Brood bases spread a deterministic terrain layer visible in game and on the minimap.
 - [ ] **042 Brood terrain bonuses.** Eligible Brood troops gain speed on living ground and tooltips show the effective speed.
 - [ ] **043 Expansion of living ground.** Paid or energy-limited nodes extend the layer and decay after losing their source.
 - [ ] **044 Nest support unit.** A paid defender can spend energy to add brood slots after a delay.
@@ -72,8 +72,8 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 ## 051–060 Aurelian Concord tech
 
 - [x] **051 Energy-backed production boost.** A Heartstone can temporarily speed one friendly producer with a visible timer.
-- [ ] **052 Powered infrastructure overlay.** Show overlapping power fields and which Waystones would lose coverage if a Resonator falls.
-- [ ] **053 Fast deployment upgrade.** Research lets eligible Waystones deploy paid troops at powered locations with a cooldown.
+- [x] **052 Powered infrastructure overlay.** Show overlapping power fields and which Waystones would lose coverage if a Resonator falls.
+- [x] **053 Fast deployment upgrade.** Research lets eligible Waystones deploy paid troops at powered locations with a cooldown.
 - [ ] **054 Mobile power source.** A Concord carrier can deploy a temporary field while giving up movement.
 - [ ] **055 Disposable scout.** A cheap, fragile scouting unit provides sight without attack power.
 - [ ] **056 Mobile detector.** A paid Concord unit reveals hidden enemies within a displayed radius.
@@ -90,8 +90,8 @@ Work proceeds in numbered groups of ten. An item is complete once it works throu
 - [x] **064 Map pool filters.** Filter by size, starts, finite deposits, and special terrain.
 - [x] **065 AI build profiles.** Each faction has tested economic, aggressive, and tech-heavy openings.
 - [x] **066 AI scouting worker.** The opponent scouts plausible starts and reacts to visible evidence.
-- [ ] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
-- [ ] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
+- [x] **067 AI defensive response.** Idle defenders intercept a raid while harvesting and production continue elsewhere.
+- [x] **068 AI multi-front attacks.** High difficulty can split an attack across two routes with visible targets.
 - [ ] **069 AI air and stealth response.** Opponents build counters to confirmed threats using the standard economy.
 - [x] **070 AI route recovery.** An army that loses a crossing or stalls at a neutral barrier tries another reachable route while its economy keeps running. Verify a paid opening reaches the enemy on both sides of a blocked crossing.
 
