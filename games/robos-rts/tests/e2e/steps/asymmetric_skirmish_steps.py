@@ -116,7 +116,11 @@ def starting_bases(context):
     observation = context.client.get_observation()
     assert observation["match"]["factions"] == {"1": "monsters", "2": "aliens"}
     assert observation["match"]["map_id"] == "iron-narrows"
-    assert {unit["unit_type"] for unit in observation["units"] if unit["is_structure"]} == {"brood_nest", "heartstone"}
+    bases = sorted(
+        (unit["owner"], unit["unit_type"]) for unit in observation["units"]
+        if unit["is_structure"] and unit["owner"] in (1, 2)
+    )
+    assert bases == [(1, "brood_nest"), (2, "heartstone")], bases
 
 
 def brood_nest(context):

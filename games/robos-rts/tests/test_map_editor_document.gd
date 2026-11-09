@@ -11,6 +11,7 @@ func _run() -> void:
 	source["campaign"] = {"mission": "arrival", "objectives": [{"id": "hold_crossing", "event": "area_control", "target": 9}]}
 	source["map"]["multiplayer"] = {"slots": 8, "teams": [1, 2], "version": 3}
 	source["map"]["watch_stations"] = [{"x": 60, "y": 68}]
+	source["map"]["route_blockers"] = [{"x": 52, "y": 40, "id": "shale_cut"}]
 	source["players"] = {"1": {"faction": "humans", "team": "alpha"}, "8": {"faction": "aliens", "team": "beta", "controller": "network"}}
 	source["units"] = [{"type": "pioneer", "owner": 1, "x": 32, "y": 32, "mission_tag": "hero", "build_progress": 1.0}]
 	doc.load_scenario(source)
@@ -20,6 +21,8 @@ func _run() -> void:
 		failures.append("Campaign and multiplayer metadata was lost")
 	if exported.map.watch_stations != source.map.watch_stations:
 		failures.append("Watch station placements were lost")
+	if exported.map.route_blockers != source.map.route_blockers:
+		failures.append("Route blocker placements were lost")
 	if exported.players["8"] != source.players["8"] or exported.players["1"].team != "alpha" or exported.units[0].mission_tag != "hero":
 		failures.append("Player slots or unit metadata was lost")
 	doc.set_map_property("label", "Edited Hunters")

@@ -155,7 +155,7 @@ func _run_swarm_rush(pid: int, fallback_target: Vector2) -> void:
 	var enemy_targets: Array[Dictionary] = []
 	var attackers: Array[int] = []
 	for u in SimEngine.units.values():
-		if u["owner"] != pid and u["hp"] > 0.0:
+		if u.owner != 0 and u.owner != pid and u.hp > 0.0:
 			enemy_targets.append(u)
 		elif u["owner"] == pid and not u["is_structure"] and not u["is_worker"]:
 			if u["orders"].is_empty():

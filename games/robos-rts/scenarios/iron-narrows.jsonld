@@ -15,6 +15,7 @@
     "expansions": [{"x": 34, "y": 21}, {"x": 94, "y": 75}],
     "water_channels": [{"width": 10, "points": [[64, 0], [64, 96]]}],
     "watch_stations": [{"x": 64, "y": 24}, {"x": 64, "y": 72}],
+    "route_blockers": [{"x": 64, "y": 48, "id": "central_shale"}],
     "terrain_tiles": [
       {"x": 48, "y": 20, "terrain": "brush"}, {"x": 52, "y": 20, "terrain": "brush"},
       {"x": 48, "y": 24, "terrain": "brush"}, {"x": 52, "y": 24, "terrain": "brush"},
@@ -23,6 +24,7 @@
     ],
     "bridges": [
       {"x": 54, "y": 16, "w": 20, "h": 16},
+      {"x": 54, "y": 44, "w": 20, "h": 8},
       {"x": 54, "y": 64, "w": 20, "h": 16}
     ]
   }

@@ -313,6 +313,7 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	unlimited_resources = bool(data.get("unlimited_resources", false))
 	_configure_water(map_cfg)
 	_configure_watch_stations(map_cfg)
+	_spawn_route_blockers(map_cfg)
 	if data.get("victory", "") == "all_structures":
 		players.erase(3)
 		match_state = {"mode": "annihilation_fixture", "status": "playing", "winner": 0, "reason": ""}
@@ -435,6 +436,7 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	unlimited_resources = bool(data.get("unlimited_resources", true))
 	_configure_water(map_cfg)
 	_configure_watch_stations(map_cfg)
+	_spawn_route_blockers(map_cfg)
 	players.erase(3)
 	scenario_name = str(data.get("name", "Frontier Hunters — 1 Player vs AI"))
 	var slots: Array = range(starts.size())
@@ -540,6 +542,18 @@ func _refresh_vision() -> void:
 
 func visible_watch_station_owner(station: Dictionary, player: int) -> int:
 	return station.owner if can_see_position(player, station.pos) else 0
+
+func _spawn_route_blockers(map_cfg: Dictionary) -> void:
+	var bounds := Rect2(0, 0, map_width, map_height)
+	var entries = map_cfg.get("route_blockers", [])
+	if not entries is Array:
+		return
+	for entry in entries:
+		if not entry is Dictionary:
+			continue
+		var position := Vector2(float(entry.get("x", -1)), float(entry.get("y", -1)))
+		if bounds.has_point(position):
+			spawn_unit("shale_barrier", 0, position, str(entry.get("id", "")))
 
 func can_see_position(player: int, pos: Vector2) -> bool:
 	return vision == null or player == 0 or vision.state_at(player, pos) == Vision.VISIBLE
@@ -810,6 +824,9 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 	if def.is_empty():
 		push_warning("[SimEngine] Unknown unit_type: " + unit_type)
 		return {}
+	if def.get("faction") == "neutral":
+		owner_id = 0
+		build_progress = 1.0
 
 	var tag = next_tag
 	next_tag += 1
@@ -1107,7 +1124,9 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 		idx = furthest
 		if idx == waypoints.size() - 1:
 			break
-	return [start_pos] if smoothed.is_empty() else smoothed
+	if smoothed.is_empty():
+		smoothed.append(start_pos)
+	return smoothed
 
 func _interaction_destination(from: Vector2, target: Vector2, fallback: Vector2, radius: float, reach: float, ignore_cliffs: bool) -> Vector2:
 	# A neighboring deposit can block the direct approach even though the assigned
@@ -2095,7 +2114,7 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 	var best_score: float = -999999.0
 
 	for c in candidates:
-		if c["owner"] == u["owner"] or c["hp"] <= 0.0 or not can_see_unit(u.owner, c):
+		if c["owner"] == 0 or c["owner"] == u["owner"] or c["hp"] <= 0.0 or not can_see_unit(u.owner, c):
 			continue
 		var d_edge = _edge_distance(u, c)
 		if d_edge < min_range:
@@ -2212,7 +2231,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	attacker["damage_dealt"] += hp_dmg
 
 	if target["hp"] <= 0.0:
-		if attacker.owner != target.owner:
+		if target.owner != 0 and attacker.owner != target.owner:
 			attacker["kills"] += 1
 			if players.has(attacker["owner"]):
 				players[attacker["owner"]]["units_killed"] += 1
