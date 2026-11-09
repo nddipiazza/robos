@@ -418,12 +418,25 @@ func selected_owned() -> Array[Dictionary]:
 			out.append(u)
 	return out
 
-func _unit_at_screen(spos: Vector2, ground_only: bool = false) -> Dictionary:
+func _unit_at_screen(spos: Vector2) -> Dictionary:
+	var camera: Camera3D = world_3d.camera_3d if world_3d else null
+	var ray_origin := camera.project_ray_origin(spos) if camera else Vector3.ZERO
+	var ray_direction := camera.project_ray_normal(spos) if camera else Vector3.ZERO
 	var best: Dictionary = {}
-	var best_d := 1e9
+	var best_depth := INF
+	var best_d := INF
+	var viewer := viewing_player()
 	for u in SimEngine.units.values():
-		if (ground_only and u.flight_height > 0.0) or not SimEngine.can_see_unit(viewing_player(), u):
+		if not SimEngine.can_see_unit(viewer, u):
 			continue
+		if camera:
+			var depth: float = world_3d.unit_pick_distance(u, ray_origin, ray_direction)
+			if depth < best_depth or (depth < INF and is_equal_approx(depth, best_depth) and int(u.tag) < int(best.tag)):
+				best_depth = depth
+				best = u
+		if best_depth < INF:
+			continue
+		# Keep a small click tolerance for distant units and synthetic headless input.
 		var center := _unit_screen(u, unit_height(u) * 0.45)
 		var edge := _unit_screen(u, unit_height(u) * 0.45, u.radius)
 		var rad_px := maxf(16.0, center.distance_to(edge) * 1.05)
@@ -707,7 +720,7 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_typ
 		if pick_type and clicked["owner"] == local_player:
 			for u in SimEngine.units.values():
 				if u.hp > 0.0 and u["owner"] == clicked["owner"] and u["unit_type"] == clicked["unit_type"]:
-					var sp := world_to_screen(u["pos"])
+					var sp := _unit_screen(u, unit_height(u) * 0.4)
 					if sp.y < HUD_TOP and sp.y > 0.0 and sp.x > 0.0 and sp.x < 1920.0:
 						if not selected_tags.has(u["tag"]):
 							selected_tags.append(u["tag"])
@@ -762,7 +775,7 @@ func _spawn_attack_marker(target: Dictionary) -> void:
 		height = float(target.flight_height) - SimEngine.get_elevation_at(target.pos) + 0.35
 	_spawn_marker(target.pos, "attack", height)
 
-func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true, command: String = "rally") -> void:
+func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true, command: String = "rally", screen: Vector2 = Vector2.INF) -> void:
 	var best_distance := INF
 	var target_tag := 0
 	# A worker rally can bind to a visible deposit or a finished friendly tap.
@@ -780,7 +793,7 @@ func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bo
 	if target_tag > 0:
 		position = SimEngine.worker_rally_resource(local_player, target_tag).pos
 	elif allow_unit:
-		var unit := _order_target_at(position)
+		var unit := _order_target_at(position, screen)
 		if not unit.is_empty() and unit.owner == local_player and not unit.is_structure:
 			target_tag = unit.tag
 			position = unit.pos
@@ -789,12 +802,8 @@ func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bo
 
 func _order_target_at(position: Vector2, screen: Vector2 = Vector2.INF) -> Dictionary:
 	if screen.is_finite():
-		var pointed := _unit_at_screen(screen)
-		if not pointed.is_empty() and pointed.flight_height > 0.0:
-			return pointed
-	var target := _unit_at_screen(world_to_screen(position, 1.2), true)
-	if not target.is_empty():
-		return target
+		return _unit_at_screen(screen)
+	var target: Dictionary = {}
 	var best_distance := INF
 	for unit in SimEngine.units.values():
 		var distance: float = position.distance_to(unit.pos)
@@ -819,7 +828,7 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 			if SimEngine.issue_command(turrets, "attack_target", target.pos, target.tag, "", queue).ok:
 				_spawn_attack_marker(target)
 		else:
-			_issue_rally_at(tags, wpos, queue)
+			_issue_rally_at(tags, wpos, queue, true, "rally", screen)
 		return
 
 	var target := _order_target_at(wpos, screen)
@@ -928,7 +937,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
 	elif abil in ["rally", "rally_worker"]:
 		pending_ability = abil if _repeating_target else ""
-		_issue_rally_at(tags, wpos, queue, not minimap, abil)
+		_issue_rally_at(tags, wpos, queue, not minimap, abil, screen)
 	elif abil == "harvest":
 		pending_ability = ""
 		for r in SimEngine.resources.values():
@@ -940,7 +949,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 				return
 		push_message("Select a crystal field or aether vent.", "warn")
 	elif abil == "fill_gas":
-		var target := _order_target_at(wpos)
+		var target := _order_target_at(wpos, screen)
 		if target.is_empty() or not target.is_extractor or target.owner != local_player:
 			push_message("Select a friendly extractor.", "warn")
 			return
@@ -951,7 +960,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		else:
 			push_message("No available gas slots or workers.", "warn")
 	elif abil in ["repair", "restore_vitals"]:
-		var target := _order_target_at(wpos)
+		var target := _order_target_at(wpos, screen)
 		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag, "", queue).ok:
 			var message := "Select a wounded biological ally." if abil == "restore_vitals" else "Select a damaged friendly mechanical unit or building."
 			push_message(message, "warn")
@@ -964,7 +973,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		else:
 			push_message("Choose a map location for the sweep.", "warn")
 	elif abil == "reinforce_supply":
-		var target := _order_target_at(wpos)
+		var target := _order_target_at(wpos, screen)
 		if target.is_empty() or not SimEngine.issue_command(tags, abil, target.pos, target.tag).ok:
 			push_message("Select a completed, unreinforced friendly Provision Silo.", "warn")
 			return
