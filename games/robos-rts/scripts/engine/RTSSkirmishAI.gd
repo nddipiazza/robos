@@ -114,7 +114,8 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 		if u.unit_type == "workshop":
 			SimEngine.issue_command([u.tag], "train_howitzer")
 		elif u.unit_type == "muster_hall":
-			var unit_type = "breacher" if strategy != "rush" and army.size() % 3 == 2 and p.aether >= 25 else "rifleman"
+			# Siege reserves gas for the Workshop and its Howitzers.
+			var unit_type = "breacher" if strategy in ["economy", "balanced"] and army.size() % 3 == 2 and p.aether >= 25 else "rifleman"
 			SimEngine.issue_command([u.tag], "train_" + unit_type)
 	_attack(pid, army, cfg, false)
 
@@ -185,8 +186,9 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 				var train := "skitterling"
 				if committed_workers < worker_target and (workers.size() < 12 or producer.production_queue.size() == 0):
 					train = roster.worker
-				elif strategy == "siege" and p.aether >= 100:
-					train = "blight_hurler"
+				elif strategy == "siege":
+					if p.aether >= 100:
+						train = "blight_hurler"
 				elif strategy != "rush" and p.aether >= 25:
 					train = "bile_crawler"
 				if not SimEngine.issue_command([producer.tag], "train_" + train).ok:
@@ -199,8 +201,11 @@ func _step_asymmetric_macro(pid: int, cfg: Dictionary, mine: Array, workers: Arr
 					committed_workers += 1
 			elif producer.unit_type == "waystone" and SimEngine.is_powered(pid, producer.pos):
 				var train := "sunblade"
-				if strategy == "siege" and p.aether >= 200:
-					train = "spire_walker"
+				if strategy == "siege":
+					# A Waystone can still train a Sunblade with only a few
+					# supply slots left, without spending the saved aether.
+					if p.aether >= 200 and p.supply_cap - p.supply_used >= 6:
+						train = "spire_walker"
 				elif strategy != "rush" and p.aether >= 50:
 					train = "skirmisher"
 				SimEngine.issue_command([producer.tag], "train_" + train)
