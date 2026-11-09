@@ -8,6 +8,9 @@ const MINERAL_WORKERS_BEFORE_GAS := 3
 const WORKER_SCOUT_START_TICKS := 40 * 64
 const WORKER_SCOUT_DURATION_TICKS := 90 * 64
 const WORKERS_BEFORE_SCOUT := 12
+const DEFENSE_RADIUS := 28.0
+const DEFENDER_CALL_DISTANCE := 36.0
+const MAX_DEFENDERS := 4
 
 # Macro decisions use the same paid commands as the player. Difficulty changes
 # cadence, worker targets and army size, never damage, income or starting assets.
@@ -38,6 +41,7 @@ func step_player(pid: int, cfg: Dictionary) -> void:
 			army.append(u)
 		if u.unit_type == roster.town_hall:
 			halls.append(u)
+	_step_defense(pid, army, halls)
 	if halls.is_empty():
 		_attack(pid, army, cfg, true)
 		return
@@ -292,6 +296,63 @@ func _known_enemy_buildings(pid: int) -> Array:
 		if enemy.owner != 0 and enemy.owner != pid and enemy.is_structure and SimEngine.can_see_unit(pid, enemy):
 			known.append(enemy)
 	return known
+
+func _step_defense(pid: int, army: Array, halls: Array) -> void:
+	if army.is_empty():
+		return
+	var threats := {}
+	for hall in halls:
+		if not SimEngine.is_dropoff(hall, pid):
+			continue
+		for enemy in SimEngine.query_units_in_radius(hall.pos, DEFENSE_RADIUS, pid):
+			if enemy.owner == 0 or enemy.is_worker or enemy.is_structure or not SimEngine.can_see_unit(pid, enemy):
+				continue
+			var distance: float = hall.pos.distance_squared_to(enemy.pos)
+			if distance <= DEFENSE_RADIUS * DEFENSE_RADIUS and distance < float(threats.get(enemy.tag, {}).get("distance", INF)):
+				threats[enemy.tag] = {"enemy": enemy, "center": hall.pos, "distance": distance}
+	var available: Array[Dictionary] = []
+	var assigned := 0
+	var limit := mini(MAX_DEFENDERS, threats.size() + 1)
+	for soldier in army:
+		var order: Dictionary = soldier.orders.front() if not soldier.orders.is_empty() else {}
+		if not order.has("_defense_intercept"):
+			if not threats.is_empty() and not soldier.is_immobile and order.is_empty():
+				available.append(soldier)
+			continue
+		if assigned < limit and threats.has(order.target_tag):
+			assigned += 1
+			continue
+		SimEngine.issue_command([soldier.tag], "move", order._defense_intercept.origin)
+	if threats.is_empty() or available.is_empty():
+		return
+	if assigned >= limit:
+		return
+	var ordered: Array = threats.values()
+	ordered.sort_custom(func(a, b): return a.distance < b.distance)
+	for threat in ordered:
+		var enemy: Dictionary = threat.enemy
+		available.sort_custom(func(a, b): return a.pos.distance_squared_to(enemy.pos) < b.pos.distance_squared_to(enemy.pos))
+		for soldier in available:
+			if not soldier.orders.is_empty() or soldier.pos.distance_squared_to(enemy.pos) > DEFENDER_CALL_DISTANCE * DEFENDER_CALL_DISTANCE:
+				continue
+			if not SimEngine.can_attack(soldier, enemy) or not _can_intercept(soldier, enemy):
+				continue
+			if SimEngine.issue_command([soldier.tag], "attack_target", enemy.pos, enemy.tag).ok:
+				soldier.erase("skirmish_route")
+				soldier.orders[0]["_defense_intercept"] = {
+					"origin": soldier.pos, "center": threat.center, "radius_squared": DEFENSE_RADIUS * DEFENSE_RADIUS,
+				}
+				assigned += 1
+				if assigned >= limit:
+					return
+
+func _can_intercept(soldier: Dictionary, enemy: Dictionary) -> bool:
+	var weapon: Dictionary = RTSData.get_unit_def(soldier.unit_type).get("weapon", {})
+	var reach: float = float(weapon.get("range", 0.0)) + soldier.radius + enemy.radius
+	if soldier.flight_height > 0.0 or soldier.pos.distance_squared_to(enemy.pos) <= reach * reach:
+		return true
+	var path: Array[Vector2] = SimEngine.compute_smooth_path(soldier.pos, enemy.pos, soldier.radius, soldier.unit_type == "spire_walker", reach)
+	return path.back().distance_squared_to(enemy.pos) <= reach * reach
 
 func _step_worker_scout(pid: int, cfg: Dictionary, workers: Array, base: Vector2) -> int:
 	if SimEngine.vision == null or SimEngine.tick < WORKER_SCOUT_START_TICKS:
