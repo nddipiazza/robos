@@ -6,6 +6,8 @@ summary: "MCP server with six tools for preferences, notifications, a tool inven
 description: "Built on the MCP framework. It stores its state in ~/.config/robos/system/state.json and does not read live system data or the real toast daemon."
 icon: system-mcp.svg
 permalink: /system-mcp/
+redirect_from:
+  - /apps/system-mcp/
 ---
 
 System MCP exposes a small set of "system" tools to an agent. The data comes from `~/.config/robos/system/state.json`, which is created with built-in sample values on first run and edited by the tools afterwards.

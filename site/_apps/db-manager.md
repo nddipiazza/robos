@@ -6,6 +6,8 @@ icon: db-manager.svg
 summary: "A SQL studio prototype with a connection tree, table viewer, DDL view and SQL console; it currently shows built-in sample data."
 description: "Relational DB Manager lays out a DBeaver-style window for browsing schemas and running SQL. Schemas, rows and query results come from fixed sample data, not from a database connection."
 permalink: /db-manager/
+redirect_from:
+  - /apps/db-manager/
 ---
 
 Relational DB Manager is shaped like a database IDE: a **Database Explorer** tree on the left, and tabs for table data, a SQL console and DDL on the right. The connection list is stored configuration. Everything that would come from a database is a placeholder.

@@ -66,11 +66,22 @@ Links to other apps use their root package URL.
 
 {%- assign siblings = site.apps | where: "category", page.category | sort_natural: "title" -%}
 {%- if cat and siblings.size > 1 %}
+{%- assign cur_idx = 0 -%}
+{%- for a in siblings -%}
+  {%- if a.url == page.url -%}{%- assign cur_idx = forloop.index0 -%}{%- endif -%}
+{%- endfor -%}
+{%- assign total_sibs = siblings.size -%}
+{%- assign max_cards = total_sibs | minus: 1 -%}
+{%- if max_cards > 6 -%}{%- assign max_cards = 6 -%}{%- endif -%}
 <section class="app-more">
-  <h2>More in {{ cat.name }}</h2>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+    <h2 style="margin:0">More in {{ cat.name }}</h2>
+    <a class="small muted" href="{{ '/apps/' | relative_url }}#{{ cat.id }}">All {{ siblings.size }} in {{ cat.name }} →</a>
+  </div>
   <div class="app-grid">
-  {%- for a in siblings %}
-    {%- if a.url != page.url %}
+  {%- for offset in (1..max_cards) %}
+    {%- assign idx = cur_idx | plus: offset | modulo: total_sibs -%}
+    {%- assign a = siblings[idx] -%}
     <a class="card app-card" href="{{ '/' | append: a.package | append: '/' | relative_url }}">
       {%- if a.icon -%}<img src="{{ '/assets/images/icons/' | append: a.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ a.title | slice: 0 }}</span>{%- endif -%}
       <div>
@@ -78,7 +89,6 @@ Links to other apps use their root package URL.
         <p>{{ a.summary | escape }}</p>
       </div>
     </a>
-    {%- endif %}
   {%- endfor %}
   </div>
 </section>

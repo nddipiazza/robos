@@ -6,6 +6,8 @@ summary: "An MCP server that lets agents list Buildkite builds and read failed-j
 description: "ci-monitor-mcp exposes six robos_ci_* tools and two resources. It reads Buildkite only, never retries builds, and returns an empty list for deployments."
 icon: ci-monitor-mcp.svg
 permalink: /ci-monitor-mcp/
+redirect_from:
+  - /apps/ci-monitor-mcp/
 ---
 
 This package is both an MCP server and a small Electron console window for watching its calls. Agents use the tools to check CI without opening Buildkite.

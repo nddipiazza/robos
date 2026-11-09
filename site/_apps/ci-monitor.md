@@ -6,6 +6,8 @@ icon: ci-monitor.svg
 summary: "Lists recent GitHub Actions runs and Buildkite builds, shows job results and failed-job logs, and can re-run GitHub workflows."
 description: "CI Monitor reads runs through the gh CLI or the Buildkite REST API, shows jobs and the tail of failed logs, and summarizes failures with simple pattern matching."
 permalink: /ci-monitor/
+redirect_from:
+  - /apps/ci-monitor/
 ---
 
 CI Monitor shows the latest 30 runs per repository, refreshed every 30 seconds. Choose **GitHub Actions** or **Buildkite** in the provider dropdown, then filter by **All Runs**, **In Progress**, **Completed** or **Failed** and by branch. Counters above the list show **Total**, **Passed**, **Failed** and **Running**.

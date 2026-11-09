@@ -6,6 +6,8 @@ icon: notifications.svg
 summary: "Shows the notification history stored in ~/.config/robos/notifications.json, with filters by category, tier and date, and edits the notification preferences."
 description: "Notifications Center reads and edits the notification list and preference files that Desktop Manager and the toast app use. It does not create notifications itself."
 permalink: /notifications/
+redirect_from:
+  - /apps/notifications/
 ---
 
 Notifications Center is the history view behind the tray icon. [Desktop Manager]({{ '/desktop-manager/' | relative_url }}) shows it when you click the tray icon, and the tray tooltip counts the unread entries in the same file.

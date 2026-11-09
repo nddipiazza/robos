@@ -75,11 +75,19 @@ const seoCheckedPages = [
   'games/quest-warrior-dragon/docs/index.html',
   'games/quest-warrior-dragon/ai-playthrough/index.html',
   'games/quest-warrior-dragon/proof-of-viability.html',
+  'games/party-game/index.html',
+  'games/party-game/docs/index.html',
+  'games/fantasy-light-warriors/index.html',
+  'elearning/index.html',
   'getting-started/index.html',
   'schemas/index.html',
   'system-documentation/index.html',
   'projects/crpg-realm/elearning/index.html',
 ];
+// Every eLearning course under site/elearning/<slug>/index.html must carry full SEO tags.
+for (const entry of fs.readdirSync(path.resolve(__dirname, '../site/elearning'), { withFileTypes: true })) {
+  if (entry.isDirectory()) seoCheckedPages.push(`elearning/${entry.name}/index.html`);
+}
 // Every blog post has its own page at /blog/<slug>/ (site/_blog/<slug>.html).
 const blogPosts = fs.readdirSync(path.resolve(__dirname, '../site/_blog')).filter((f) => f.endsWith('.html'));
 assert.ok(blogPosts.length > 0, 'No blog posts in site/_blog');

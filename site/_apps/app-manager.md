@@ -6,6 +6,8 @@ icon: app-manager.svg
 summary: "Choose, download, launch and remove RobOS apps"
 description: "Choose, download, launch and remove RobOS apps"
 permalink: /app-manager/
+redirect_from:
+  - /apps/app-manager/
 ---
 
 Use the same RobOS App Manager on Windows, Ubuntu GNOME and macOS. The base download contains the manager and one shared Electron runtime. Apps are separate downloads for your OS and CPU.

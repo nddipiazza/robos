@@ -6,6 +6,8 @@ icon: mcp-manager.svg
 summary: "Lists the MCP servers registered on this machine, lets you call their tools from a form, and records which agents should have which servers."
 description: "MCP Manager reads ~/.config/robos/mcp/servers.json and calls tools over HTTP when a server has an endpoint. Otherwise the tester returns a simulated result, and the saved agent access matrix is not enforced by anything yet."
 permalink: /mcp-manager/
+redirect_from:
+  - /apps/mcp-manager/
 ---
 
 MCP Manager is a small admin window for the MCP servers that RobOS apps register. It has three tabs: **Registered Servers**, **Tool & Resource Tester** and **Agent Access Matrix**. Counters above them show servers, tools and resources discovered.

@@ -6,6 +6,8 @@ icon: people-directory.svg
 summary: "Searchable list of people with contact and org fields, stored as JSON files on your machine."
 description: "Add, edit and import people (including from LDIF), filter by department, and mark which person is you. An optional AI box can create entries from a text description."
 permalink: /people-directory/
+redirect_from:
+  - /apps/people-directory/
 ---
 
 People Directory keeps one JSON file per person under `~/.config/robos/people/`. It is a local address book for a team, not a connection to a corporate directory.

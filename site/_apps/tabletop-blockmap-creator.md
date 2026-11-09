@@ -6,6 +6,8 @@ icon: tabletop-blockmap-creator.svg
 summary: "Calibrate a dungeon board image to a tile grid and mark its corridors and rooms, then save the result into a game cartridge."
 description: "Open a board image, set tile size and offsets, paint corridor tiles and define rooms, then write the map into a cartridge JSON file for the tabletop game."
 permalink: /tabletop-blockmap-creator/
+redirect_from:
+  - /apps/tabletop-blockmap-creator/
 ---
 
 Blockmap Creator turns a picture of a board into data the game can use. You line a square grid up with the artwork, mark which tiles are corridor floor, and outline the rooms. The geometry it writes is the fixed part of a map. Quest content (furniture, doors, monsters, notes) belongs to the cartridge and is edited in [Tabletop Studio]({{ '/robos-tabletop/' | relative_url }}).

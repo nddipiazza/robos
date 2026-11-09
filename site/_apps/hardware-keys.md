@@ -7,6 +7,8 @@ icon: hardware-keys.svg
 summary: "YubiKey & FIDO2 physical push keys, touch verification, ed25519-sk SSH keys, Passkeys, and PAM U2F security studio"
 description: "YubiKey & FIDO2 physical push keys, touch verification, ed25519-sk SSH keys, Passkeys, and PAM U2F security studio"
 permalink: /hardware-keys/
+redirect_from:
+  - /apps/hardware-keys/
 ---
 
 **RobOS Hardware Keys** (`packages/hardware-keys`) is the physical security key studio for YubiKey, Security Key C NFC, SoloKey, Nitrokey, and FIDO2/U2F hardware authenticators.

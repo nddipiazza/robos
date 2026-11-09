@@ -385,7 +385,36 @@ grand_parent: RobOS Platform
 
     <main class="docs-content" id="main-content" role="main">
       <div id="content-container">
-        <!-- Rendered dynamically -->
+        <div class="entity-header">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+            <span class="badge">Applications</span>
+            <span class="badge badge-green">robos:DesktopApp</span>
+          </div>
+          <h2 class="entity-title">RobOS Documentation</h2>
+          <p class="entity-desc">RobOS Living Documentation Hub &amp; Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.</p>
+          <div class="entity-meta-grid">
+            <div class="meta-item"><strong>KGraph Target Entity</strong><code>urn:robos:app:robos-documentation</code></div>
+            <div class="meta-item"><strong>Owner Team</strong><code>platform-team</code></div>
+            <div class="meta-item"><strong>Repository</strong><code>github.com/nddipiazza/robos</code></div>
+            <div class="meta-item"><strong>Artifact File</strong><code>site/_apps/robos-documentation.md</code></div>
+          </div>
+        </div>
+        <article class="markdown-body">
+          <p>RobOS Documentation tracks documentation coverage for the architecture recorded in the Dual-State Knowledge Graph (<code>.robos/knowledge-graph.jsonld</code>) and exports verified HTML specification sites with W3C SHACL validation gates.</p>
+          <h2>Use it</h2>
+          <ol>
+            <li>Open <a href="/robos-documentation/">RobOS Documentation</a> to inspect every documentable entity across Services, Applications, Databases &amp; Streams, DevOps, and Platforms.</li>
+            <li>Select an entity to read its rendered Living Documentation, edit the Markdown artifact, trace upstream and downstream relations in the <a href="/knowledge-graph/">Knowledge Graph</a>, or inspect its raw OSLC JSON-LD node.</li>
+            <li>Export a self-contained static HTML hub with <code>node packages/robos-documentation/cli-export-web.js --output=docs/system-documentation/index.html --permalink=/system-documentation/</code>.</li>
+          </ol>
+          <h2>Related architecture &amp; schema references</h2>
+          <ul>
+            <li><a href="/architecture/">System Architecture</a> — Electron desktop apps, shared <code>/usr/local/share/robos/</code> libraries, KGraph packages, and MCP bridges.</li>
+            <li><a href="/knowledge-graph/">Dual-State Knowledge Graph</a> — World 1 (<code>main</code>) vs World 2 (branch) semantic diffing and blast-radius analysis.</li>
+            <li><a href="/schemas/">KGraph Ontology &amp; W3C SHACL Schemas</a> — Full RDF class and shape catalog across core, DevOps, games, and enterprise domains.</li>
+            <li><a href="/apps/">Apps &amp; Components Directory</a> — Browse all RobOS desktop applications, CLIs, shared libraries, and MCP servers.</li>
+          </ul>
+        </article>
       </div>
     </main>
   </div>

@@ -6,6 +6,8 @@ icon: robos-toast.svg
 summary: "Shows overlay toast windows for new entries in ~/.config/robos/notifications.json, with tiers, categories, do-not-disturb and anti-spam limits."
 description: "Watches the notifications file that robos-notify and other apps write to, and displays a stack of toast windows. A console window edits the settings and can simulate alerts."
 permalink: /robos-toast/
+redirect_from:
+  - /apps/robos-toast/
 ---
 
 The Toast Daemon turns entries in `~/.config/robos/notifications.json` into on-screen toasts. Anything that appends an entry with `read: false` and a new `id` triggers one, for example `robos-notify` from [RobOS CLI Tools]({{ '/robos-cli/' | relative_url }}) or the lock notice from [Pass Manager]({{ '/pass-manager/' | relative_url }}).

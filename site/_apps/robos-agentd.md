@@ -6,6 +6,8 @@ summary: "Keeps a registry of sub-agent sessions, each with its own home directo
 description: "Creates a per-task session record, home folder, shell environment and log, and archives the log on termination. It does not yet create Linux users, cgroups or virtual displays."
 icon: robos-agentd.svg
 permalink: /robos-agentd/
+redirect_from:
+  - /apps/robos-agentd/
 ---
 
 Agent Daemon manages "sub-agent sessions". A session is a record plus a home directory with a prepared shell environment. Other RobOS code, such as the [Agent Session Library]({{ '/robos-agent-session/' | relative_url }}), asks the daemon to create and end sessions.

@@ -4,6 +4,8 @@ package: robos-ui
 category: "libraries"
 component_type: component
 permalink: /robos-ui/
+redirect_from:
+  - /apps/robos-ui/
 summary: "RobOS UI Component Library — reusable Web Components for RobOS Electron apps"
 description: "RobOS UI Component Library — reusable Web Components for RobOS Electron apps"
 ---

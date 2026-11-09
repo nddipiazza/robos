@@ -6,6 +6,8 @@ summary: "Prototype screen for listing apps and daemons with start, stop and hea
 description: "A prototype of an app and runtime manager for Dev Containers, Mise and Nix. Today it renders a fixed sample list; it does not read your project or run containers."
 icon: package-manager.svg
 permalink: /package-manager/
+redirect_from:
+  - /apps/package-manager/
 ---
 
 Package Manager is a prototype. It is meant to become a screen for the apps and background services of a project, but the current code shows a fixed sample list and does not run anything.

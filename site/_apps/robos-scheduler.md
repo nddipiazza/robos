@@ -4,6 +4,8 @@ package: robos-scheduler
 category: "libraries"
 component_type: component
 permalink: /robos-scheduler/
+redirect_from:
+  - /apps/robos-scheduler/
 summary: "RobOS Scheduler — cron-based and event-triggered job scheduling"
 description: "RobOS Scheduler — cron-based and event-triggered job scheduling"
 ---

@@ -6,6 +6,8 @@ icon: dev-discussions.svg
 summary: "A chat-style view of discussion threads attached to tasks and pull requests, stored in a local cache with optional posting to GitHub."
 description: "Dev Discussions organizes threads as project, feature and work item, saves comments to a local JSON cache and can post them to GitHub with gh. It starts with sample Acme and RobOS data."
 permalink: /dev-discussions/
+redirect_from:
+  - /apps/dev-discussions/
 ---
 
 Dev Discussions presents comments on work items and pull requests the way a team chat does: a workspace and project tree on the left, a thread in the middle, a composer at the bottom.

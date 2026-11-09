@@ -7,6 +7,8 @@ icon: app-mesh.svg
 summary: "Zero-Trust App & IPC Port Mesh for connecting RobOS applications across machines (mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard)"
 description: "Zero-Trust App & IPC Port Mesh for connecting RobOS applications across machines (mTLS 1.3, OpenZiti, Tailscale, NetBird, WireGuard)"
 permalink: /app-mesh/
+redirect_from:
+  - /apps/app-mesh/
 ---
 
 **RobOS App Mesh** creates a private, provider-agnostic Zero-Trust network specifically for RobOS applications and their IPC/service ports across machines—whether on the same LAN or across different networks.

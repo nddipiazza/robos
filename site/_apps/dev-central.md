@@ -6,6 +6,8 @@ icon: dev-central.svg
 summary: "Your daily task list: issues from your task servers as an epic tree, with buttons to start design or implementation agents and to open the related PR."
 description: "Dev Central shows tasks from the task servers configured in RobOS (GitHub issues, Jira), groups them under epics by workflow stage, and launches agent runs and PR review from each row. A legacy dashboard is available with --v1."
 permalink: /dev-central/
+redirect_from:
+  - /apps/dev-central/
 ---
 
 Dev Central is where you see what is assigned to you and what to do next with it. Since v2 the default window is a task tree. The older dashboard (v0.8.2: overview cards, my PRs, standup) is still in the package.

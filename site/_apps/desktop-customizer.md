@@ -6,6 +6,8 @@ icon: desktop-customizer.svg
 summary: "A slash-command console that changes GNOME settings (clock, taskbar, theme, shortcuts, startup apps) and keeps git-backed snapshots to roll back."
 description: "Desktop Customizer runs commands such as /theme dark and /move-clock left through gsettings and dconf. Plain-English input is not implemented yet."
 permalink: /desktop-customizer/
+redirect_from:
+  - /apps/desktop-customizer/
 ---
 
 Desktop Customizer is a command box for the GNOME desktop that RobOS runs on. You type a slash command, and the app calls `gsettings`, `dconf` or edits `~/.config/gtk-3.0/gtk.css`. Type `/help` for the full list.

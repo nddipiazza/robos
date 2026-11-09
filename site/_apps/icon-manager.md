@@ -6,6 +6,8 @@ icon: icon-manager.svg
 summary: "Shows the icon of every installed RobOS app, lets you replace one, and rewrites the apps' installed icon.svg and .desktop Icon= lines."
 description: "Icon Manager finds RobOS apps from their .desktop files, shows each icon in a grid, and writes a chosen icon into /usr/local/share/robos using sudo when needed."
 permalink: /icon-manager/
+redirect_from:
+  - /apps/icon-manager/
 ---
 
 Icon Manager is for changing how RobOS apps look in the launcher and dock. It is not a general icon library.

@@ -11,6 +11,8 @@ related:
   - /projects/crpg-realm/campaign-editor-tutorial/
   - /projects/crpg-realm/reference/
 permalink: /crpg-builder/
+redirect_from:
+  - /apps/crpg-builder/
 ---
 
 `packages/crpg-builder` (npm name `robos-crpg-builder`) holds two command-line scripts and the libraries behind them. `bin/crpg-builder.js` generates a Godot 4 project from the cRPG knowledge graph. `bin/crpg-cartridge.js` bundles a campaign into a player cartridge for the [Realm of Heroes]({{ '/projects/crpg-realm/' | relative_url }}) game. The package has no dependencies and no window. Only `crpg-builder` is listed under `bin` in `package.json`, so run the cartridge script with `node`.

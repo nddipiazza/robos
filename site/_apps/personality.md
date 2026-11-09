@@ -4,6 +4,8 @@ package: personality
 category: "ai-agents"
 component_type: app
 permalink: /personality/
+redirect_from:
+  - /apps/personality/
 summary: "Talk to an AI personality with a face, a voice, ears and eyes"
 description: "Talk to an AI personality with a face, a voice, ears and eyes: an animated face in a window or on a TV, spoken answers with captions, a microphone, and a Camera Watch camera."
 icon: personality.svg

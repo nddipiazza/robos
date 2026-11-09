@@ -6,6 +6,8 @@ icon: rest-client.svg
 summary: "Request editor and collection runner wired to a sample Acme Petshop collection on a local Kubernetes cluster. It is a demo built around that one scenario, not a general REST client yet."
 description: "Sends HTTP requests from a built-in sample collection to a service on port 8443 and shows the response. Collections, the AI generator and the report buttons use fixed sample content."
 permalink: /rest-client/
+redirect_from:
+  - /apps/rest-client/
 ---
 
 REST API Client has the layout of a Bruno-style client: a collections tree, a request editor, a response pane and a collection runner. Today it works only for a demo scenario, the Acme Petshop services running on a local kind cluster. You cannot yet add your own collections or point it at an arbitrary base URL.

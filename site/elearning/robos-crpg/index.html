@@ -6,6 +6,8 @@ permalink: /elearning/robos-crpg/
 redirect_from:
   - /elearning/robos-crpg
   - /elearning/robos-crpg.html
+  - /elearning/robos-crpg-engine/
+  - /elearning/robos-crpg-engine.html
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -1550,7 +1552,7 @@ redirect_from:
         <article class="doc-article">
           <h1>Engine Specification</h1>
 
-<p>A compact specification of what the <code>games/crpg-realm</code> engine actually does, taken from the code. It covers the runtime layout, the dice and combat math in <code>CombatManager.gd</code>, saves, spells, traps, fog of war, pathfinding, the data layer and the test harness. Where the game departs from D&D 5e, this page says so. For a guided course on the same material, see the <a href="/projects/crpg-realm/elearning/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">interactive eLearning app</a>.</p>
+<p>A compact specification of what the <code>games/crpg-realm</code> engine actually does, taken from the code. It covers the runtime layout, the dice and combat math in <code>CombatManager.gd</code>, saves, spells, traps, fog of war, pathfinding, the data layer and the test harness. Where the game departs from D&D 5e, this page says so. For a guided course on the same material, see the <a href="/elearning/robos-crpg/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">interactive eLearning app</a>.</p>
 
 <h2>Table of contents</h2>
 
@@ -1700,7 +1702,7 @@ DCs are set per trap instance in the scenes (for example in <code>AncientCatacom
 
 <p>- <code>data/<em>.json</code> files are JSON arrays of objects with an <code>id</code> field (except <code>game.json</code>).<br>- The <code>DataStore</code> autoload iterates each array into a dictionary keyed by id. <code>npcs</code>, <code>monsters</code>, <code>spells</code> and <code>items</code> hold <code>NPCData</code>, <code>MonsterData</code>, <code>SpellData</code> and <code>ItemData</code> objects; the rest hold plain dictionaries.<br>- Runtime reads: items (<code>GameState.get_item_data()</code>), dialogue trees, NPC records, traps. Spells, monsters, classes and races are loaded but their numbers are not used by combat or character creation.<br>- Three schemas exist in <code>schemas/</code>; nothing validates at runtime.<br>- Mods: <code>DataStoreV1.load_mods()</code> scans <code>res://mods/</code> and <code>user://mods/</code>; <code>_load_single_mod()</code> merges only a <code>traps_file</code> array.<br>- <code>packages/crpg-builder</code> generated the first version of these files. Do not re-run it against the game; it overwrites the hand-edited data, <code>DataStoreV1.gd</code> and <code>project.godot</code>.</p>
 
-<p>Details: <a href="/projects/crpg-realm/game-creation-process/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Game Creation Process</a>.</p>
+<p>Details: <a href="/projects/crpg-realm/reference/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">CRPG Reference</a>.</p>
 
 <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
 

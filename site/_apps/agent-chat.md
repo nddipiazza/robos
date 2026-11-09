@@ -6,6 +6,8 @@ icon: agent-chat.svg
 summary: "A chat window with session history, a model and mode selector and tool cards; replies are currently scripted samples."
 description: "Agent Chat is a prototype of a Copilot-style chat for RobOS. It stores sessions locally and scans prompts for secrets, but it does not call a language model yet."
 permalink: /agent-chat/
+redirect_from:
+  - /apps/agent-chat/
 ---
 
 Agent Chat is the chat front end for the RobOS app suite. Today it is a working interface over scripted behavior.

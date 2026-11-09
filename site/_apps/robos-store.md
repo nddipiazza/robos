@@ -4,6 +4,8 @@ package: robos-store
 category: "libraries"
 component_type: component
 permalink: /robos-store/
+redirect_from:
+  - /apps/robos-store/
 summary: "RobOS Distributed Config Store — git-backed, versioned, team-shared configuration"
 description: "RobOS Distributed Config Store — git-backed, versioned, team-shared configuration"
 ---

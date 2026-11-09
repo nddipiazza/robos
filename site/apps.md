@@ -22,6 +22,7 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     <a href="#{{ cat.id }}">{{ cat.name }}</a>
     {%- endif -%}
   {%- endfor %}
+    <a href="#reference-guides">Reference guides</a>
   </nav>
 </div>
 
@@ -140,5 +141,56 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
     </div>
   </div>
 {%- endif %}
+  <div class="app-group" id="reference-guides">
+    <div class="app-group-head">
+      <h2>Reference guides &amp; architecture</h2>
+      <span class="muted small">Platform handbooks, KGraph ontologies, MCP tool catalogs, and package specifications</span>
+    </div>
+    <div class="app-grid">
+    {%- assign root_guides = site.guides | sort_natural: "title" -%}
+    {%- for g in root_guides -%}
+      {%- if g.parent == nil and g.sitemap != false -%}
+      <a class="card app-card" href="{{ g.url | relative_url }}" data-s="{{ g.title | append: ' ' | append: g.description | downcase | escape }}">
+        <span class="ph">{{ g.title | slice: 0 }}</span>
+        <div>
+          <h3>{{ g.title }}</h3>
+          <code class="app-pkg">{{ g.url }}</code>
+          <p>{{ g.description | escape }}</p>
+        </div>
+      </a>
+      {%- endif -%}
+    {%- endfor -%}
+      <a class="card app-card" href="{{ '/mcp-servers/' | relative_url }}" data-s="mcp servers model context protocol tools kgraph voice git ide">
+        <span class="ph">M</span>
+        <div>
+          <h3>MCP Servers Reference</h3>
+          <code class="app-pkg">/mcp-servers/</code>
+          <p>Every Model Context Protocol server shipped in RobOS, its tool schemas, ports, and KGraph permissions.</p>
+        </div>
+      </a>
+      <a class="card app-card" href="{{ '/system-documentation/' | relative_url }}" data-s="system documentation living architecture hub kgraph shacl">
+        <span class="ph">S</span>
+        <div>
+          <h3>Living System Documentation</h3>
+          <code class="app-pkg">/system-documentation/</code>
+          <p>Interactive system documentation and W3C SHACL-verified architectural artifacts exported from the KGraph.</p>
+        </div>
+      </a>
+    {%- assign ref_apps = site.apps | sort_natural: "title" -%}
+    {%- for app in ref_apps -%}
+      {%- assign root_path = '/' | append: app.package | append: '/' -%}
+      {%- if app.url != root_path -%}
+      <a class="card app-card" href="{{ app.url | relative_url }}" data-s="{{ app.title | append: ' reference ' | append: app.package | append: ' ' | append: app.summary | downcase | escape }}">
+        {%- if app.icon -%}<img src="{{ '/assets/images/icons/' | append: app.icon | relative_url }}" width="40" height="40" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
+        <div>
+          <h3>{{ app.title }} Reference</h3>
+          <code class="app-pkg">{{ app.url }}</code>
+          <p>{{ app.summary | escape }}</p>
+        </div>
+      </a>
+      {%- endif -%}
+    {%- endfor -%}
+    </div>
+  </div>
   <p class="muted" id="app-none" hidden style="text-align:center;margin-top:48px">No apps match that search.</p>
 </div>

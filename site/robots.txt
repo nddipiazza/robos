@@ -11,6 +11,8 @@ User-agent: Slurp
 User-agent: YandexBot
 User-agent: Baiduspider
 Allow: /
+Disallow: /404.html
+Disallow: /404/
 
 User-agent: OAI-SearchBot
 User-agent: ChatGPT-User
@@ -30,6 +32,8 @@ User-agent: Meta-ExternalFetcher
 User-agent: CCBot
 User-agent: cohere-ai
 Allow: /
+Disallow: /404.html
+Disallow: /404/
 
 User-agent: facebookexternalhit
 User-agent: Twitterbot
@@ -39,6 +43,8 @@ User-agent: Discordbot
 User-agent: WhatsApp
 User-agent: TelegramBot
 Allow: /
+Disallow: /404.html
+Disallow: /404/
 
 User-agent: *
 Allow: /

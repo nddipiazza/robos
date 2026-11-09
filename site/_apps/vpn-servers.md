@@ -11,6 +11,8 @@ related:
   - /pass-manager/
   - /robos-preferences/
 permalink: /vpn-servers/
+redirect_from:
+  - /apps/vpn-servers/
 ---
 
 **RobOS VPN Servers** (`packages/vpn-servers`, window title **VPN Servers & Accounts**) manages the OpenVPN providers, encrypted account credentials, and `.ovpn` server profiles used by [RobOS VPN Sandbox]({{ '/vpn-sandbox/' | relative_url }}) and [RobOS Preferences]({{ '/robos-preferences/' | relative_url }}).

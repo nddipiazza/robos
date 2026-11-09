@@ -6,6 +6,8 @@ icon: app-launcher.svg
 summary: "The home screen of the RobOS phone: the time, the date and every app, with the RobOS apps first."
 description: "RobOS Home for Android is the launcher built into the RobOS phone image. It shows the time, the date and every launchable app, RobOS apps first."
 permalink: /robos-launcher-android/
+redirect_from:
+  - /apps/robos-launcher-android/
 landing: /phone/
 ---
 

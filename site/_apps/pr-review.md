@@ -9,6 +9,8 @@ description: "Opens a task, a PR URL or a saved local review, and walks through 
 related:
   - /pr-review-theater/
 permalink: /pr-review/
+redirect_from:
+  - /apps/pr-review/
 ---
 
 This is the app behind the review flow described in [PR Review Theater](/pr-review-theater/). It reads pull requests with the `gh` CLI, so it needs `gh` signed in and a GitHub task server (see [Task Servers]({{ '/task-servers/' | relative_url }})).
