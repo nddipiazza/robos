@@ -1644,5 +1644,99 @@
         }
       ]
     }
+  },
+  "crownspire": {
+    "unit_name": "Crownspire Dreadnought",
+    "voice": "en-US-BrianNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "crownspire_select_1",
+          "text": "Crownspire on station.",
+          "path": "res://assets/audio/voice/crownspire_select_1.wav"
+        },
+        {
+          "id": "crownspire_select_2",
+          "text": "Lance crew standing by.",
+          "path": "res://assets/audio/voice/crownspire_select_2.wav"
+        },
+        {
+          "id": "crownspire_select_3",
+          "text": "Command deck is yours.",
+          "path": "res://assets/audio/voice/crownspire_select_3.wav"
+        },
+        {
+          "id": "crownspire_select_4",
+          "text": "Core pressure steady.",
+          "path": "res://assets/audio/voice/crownspire_select_4.wav"
+        },
+        {
+          "id": "crownspire_select_5",
+          "text": "The fleet has its crown.",
+          "path": "res://assets/audio/voice/crownspire_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "crownspire_move_1",
+          "text": "Helm, make the turn.",
+          "path": "res://assets/audio/voice/crownspire_move_1.wav"
+        },
+        {
+          "id": "crownspire_move_2",
+          "text": "Course plotted.",
+          "path": "res://assets/audio/voice/crownspire_move_2.wav"
+        },
+        {
+          "id": "crownspire_move_3",
+          "text": "Moving the formation.",
+          "path": "res://assets/audio/voice/crownspire_move_3.wav"
+        },
+        {
+          "id": "crownspire_move_4",
+          "text": "Steady thrust ahead.",
+          "path": "res://assets/audio/voice/crownspire_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "crownspire_attack_1",
+          "text": "Lance crew, open the aperture.",
+          "path": "res://assets/audio/voice/crownspire_attack_1.wav"
+        },
+        {
+          "id": "crownspire_attack_2",
+          "text": "Let the big hull take it.",
+          "path": "res://assets/audio/voice/crownspire_attack_2.wav"
+        },
+        {
+          "id": "crownspire_attack_3",
+          "text": "Bring the main lens to bear.",
+          "path": "res://assets/audio/voice/crownspire_attack_3.wav"
+        },
+        {
+          "id": "crownspire_attack_4",
+          "text": "One beam should settle that.",
+          "path": "res://assets/audio/voice/crownspire_attack_4.wav"
+        },
+        {
+          "id": "crownspire_attack_5",
+          "text": "Their flagship is in our sights.",
+          "path": "res://assets/audio/voice/crownspire_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "crownspire_ready_1",
+          "text": "Crownspire has cleared the Waystone.",
+          "path": "res://assets/audio/voice/crownspire_ready_1.wav"
+        },
+        {
+          "id": "crownspire_ready_2",
+          "text": "Capital ship standing by.",
+          "path": "res://assets/audio/voice/crownspire_ready_2.wav"
+        }
+      ]
+    }
   }
 }

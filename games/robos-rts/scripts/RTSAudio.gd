@@ -23,6 +23,7 @@ const SOUND_FILES: Dictionary = {
 	"corrosive_lob": "res://assets/audio/sfx/corrosive_lob.wav",
 	"needler_fire": "res://assets/audio/sfx/needler_fire.wav",
 	"prism_beam": "res://assets/audio/sfx/prism_beam.wav",
+	"crown_lance": "res://assets/audio/sfx/crown_lance.wav",
 
 	# Melee Attack Strikes & Workers
 	"claw_slash": "res://assets/audio/sfx/claw_slash.wav",
@@ -110,6 +111,7 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"corrosive_lob": -1.0,
 	"needler_fire": -2.0,
 	"prism_beam": -0.5,
+	"crown_lance": 0.0,
 	"claw_slash": -1.5,
 	"mandible_bite": -2.0,
 	"light_blade_strike": -1.0,
@@ -152,6 +154,7 @@ const SOUND_MIN_INTERVAL_SEC: Dictionary = {
 	"corrosive_lob": 0.055,
 	"needler_fire": 0.04,
 	"prism_beam": 0.055,
+	"crown_lance": 0.08,
 	"claw_slash": 0.035,
 	"mandible_bite": 0.045,
 	"light_blade_strike": 0.04,

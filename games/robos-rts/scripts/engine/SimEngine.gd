@@ -4442,6 +4442,10 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
 		notice.emit(structure.owner, "Waystone needs a friendly power field.", "error")
 		return false
+	for requirement in u_def.get("requires", []):
+		if not has_tech_structure(structure.owner, requirement):
+			notice.emit(structure.owner, "Requires %s." % RTSData.get_unit_def(requirement).name, "error")
+			return false
 	if uses_brood_slots(structure) and structure.brood_slots <= 0:
 		notice.emit(structure.owner, "No brood slots ready.", "error")
 		return false

@@ -1308,6 +1308,47 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "phase_step", "phase_cloak"]
 	},
+	"crownspire": {
+		"id": "crownspire", "name": "Crownspire Dreadnought", "faction": FACTION_ALIENS,
+		"blurb": "Slow capital ship with a heavy lance that deals bonus damage to Massive targets in the air or on the ground.",
+		"is_structure": false, "is_worker": false, "attributes": ["Armored", "Mechanical", "Massive", "Air"],
+		"crystal_cost": 400, "aether_cost": 300, "supply_cost": 8, "build_time": 68.0, "requires": ["aegis_relay"],
+		"max_hp": 240.0, "max_shields": 120.0, "armor": 2.0, "radius": 2.6,
+		"speed": 5.0, "sight_range": 27.0, "flight_height": 9.0, "push_priority": 8,
+		"weapon": {
+			"name": "Crown Lance", "sfx": "crown_lance", "attack_type": "ranged",
+			"damage": 18.0, "bonus": {"Massive": 62.0}, "range": 18.0, "period": 2.6,
+			"damage_point": 0.34, "backswing": 0.52, "beam_width": 0.32,
+			"targets_air": true, "targets_ground": true
+		},
+		"abilities": ["move", "stop", "hold_position", "attack"],
+		"dialogues": {
+			"select": [
+				{"id": "crownspire_select_1", "text": "Crownspire on station."},
+				{"id": "crownspire_select_2", "text": "Lance crew standing by."},
+				{"id": "crownspire_select_3", "text": "Command deck is yours."},
+				{"id": "crownspire_select_4", "text": "Core pressure steady."},
+				{"id": "crownspire_select_5", "text": "The fleet has its crown."}
+			],
+			"move": [
+				{"id": "crownspire_move_1", "text": "Helm, make the turn."},
+				{"id": "crownspire_move_2", "text": "Course plotted."},
+				{"id": "crownspire_move_3", "text": "Moving the formation."},
+				{"id": "crownspire_move_4", "text": "Steady thrust ahead."}
+			],
+			"attack": [
+				{"id": "crownspire_attack_1", "text": "Lance crew, open the aperture."},
+				{"id": "crownspire_attack_2", "text": "Let the big hull take it."},
+				{"id": "crownspire_attack_3", "text": "Bring the main lens to bear."},
+				{"id": "crownspire_attack_4", "text": "One beam should settle that."},
+				{"id": "crownspire_attack_5", "text": "Their flagship is in our sights."}
+			],
+			"ready": [
+				{"id": "crownspire_ready_1", "text": "Crownspire has cleared the Waystone."},
+				{"id": "crownspire_ready_2", "text": "Capital ship standing by."}
+			]
+		}
+	},
 	"spire_walker": {
 		"id": "spire_walker",
 		"name": "Spire Walker",
@@ -1403,8 +1444,8 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp", "veilseeker", "aegis_warden"],
-		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp", "train_veilseeker", "train_aegis_warden"]
+		"trains": ["sunblade", "skirmisher", "spire_walker", "lumen_carrier", "farsight_wisp", "veilseeker", "aegis_warden", "crownspire"],
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally", "research_fast_deployment", "fast_deploy", "train_lumen_carrier", "train_farsight_wisp", "train_veilseeker", "train_aegis_warden", "train_crownspire"]
 	},
 	"aegis_relay": {
 		"id": "aegis_relay", "name": "Aegis Relay", "faction": FACTION_ALIENS,
@@ -1507,6 +1548,7 @@ var abilities: Dictionary = {
 	"train_lumen_carrier": {"id": "train_lumen_carrier", "name": "Summon Lumen Carrier", "hotkey": "L", "target": "none", "unit": "lumen_carrier"},
 	"train_farsight_wisp": {"id": "train_farsight_wisp", "name": "Summon Farsight Wisp", "hotkey": "V", "target": "none", "unit": "farsight_wisp"},
 	"train_veilseeker": {"id": "train_veilseeker", "name": "Summon Veilseeker", "hotkey": "T", "target": "none", "unit": "veilseeker"},
+	"train_crownspire": {"id": "train_crownspire", "name": "Summon Crownspire", "hotkey": "N", "target": "none", "unit": "crownspire"},
 	"deploy_power_field": {"id": "deploy_power_field", "name": "Anchor Power Field", "hotkey": "D", "target": "none", "sfx": "power_field_anchor", "desc": "Anchor in place and power nearby Concord structures and landing sites for up to 24 seconds."},
 	"retract_power_field": {"id": "retract_power_field", "name": "Fold Power Field", "hotkey": "R", "target": "none", "sfx": "power_field_fold", "desc": "End the field and restore movement. After folding or expiring, the field takes 18 seconds to recharge."},
 	"build_silo": {"id": "build_silo", "name": "Build Provision Silo", "hotkey": "B", "target": "point", "structure": "silo"},

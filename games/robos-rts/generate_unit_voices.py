@@ -31,6 +31,38 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "crownspire": {
+        "unit_name": "Crownspire Dreadnought",
+        "voice": "en-US-BrianNeural",
+        "rate": "-8%",
+        "pitch": "-11Hz",
+        "lines": {
+            "select": [
+                {"id": "crownspire_select_1", "text": "Crownspire on station."},
+                {"id": "crownspire_select_2", "text": "Lance crew standing by."},
+                {"id": "crownspire_select_3", "text": "Command deck is yours."},
+                {"id": "crownspire_select_4", "text": "Core pressure steady."},
+                {"id": "crownspire_select_5", "text": "The fleet has its crown."},
+            ],
+            "move": [
+                {"id": "crownspire_move_1", "text": "Helm, make the turn."},
+                {"id": "crownspire_move_2", "text": "Course plotted."},
+                {"id": "crownspire_move_3", "text": "Moving the formation."},
+                {"id": "crownspire_move_4", "text": "Steady thrust ahead."},
+            ],
+            "attack": [
+                {"id": "crownspire_attack_1", "text": "Lance crew, open the aperture."},
+                {"id": "crownspire_attack_2", "text": "Let the big hull take it."},
+                {"id": "crownspire_attack_3", "text": "Bring the main lens to bear."},
+                {"id": "crownspire_attack_4", "text": "One beam should settle that."},
+                {"id": "crownspire_attack_5", "text": "Their flagship is in our sights."},
+            ],
+            "ready": [
+                {"id": "crownspire_ready_1", "text": "Crownspire has cleared the Waystone."},
+                {"id": "crownspire_ready_2", "text": "Capital ship standing by."},
+            ],
+        },
+    },
     "aegis_warden": {
         "unit_name": "Aegis Warden",
         "voice": "en-US-AndrewNeural",

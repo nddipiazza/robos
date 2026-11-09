@@ -170,6 +170,7 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"aegis_warden": _aegis_warden(root, team)
 		"sunblade": _sunblade(root, team)
 		"skirmisher": _skirmisher(root, team)
+		"crownspire": _crownspire(root, team)
 		"spire_walker": _spire_walker(root, team)
 		"heartstone": _heartstone(root, r, team)
 		"resonator": _resonator(root, team)
@@ -757,6 +758,23 @@ static func _skirmisher(root: Node3D, team: Material) -> void:
 	cyl(root, 0.06, 0.08, 2.5, m[3], Vector3(1.0, 1.75, 0.3), Vector3(0, 0, -86), 8)
 	sph(root, 0.1, m[2], Vector3(2.28, 1.72, 0.3))
 	box(root, Vector3(0.5, 0.2, 0.18), m[1], Vector3(0.3, 1.72, 0.3))
+
+static func _crownspire(root: Node3D, team: Material) -> void:
+	var m := _alien_mats()
+	var flux := mat("crown_flux", Color("#97fffd"), Color("#4bd9ed"), 2.15, 0.2, 0.22)
+	var dark := mat("crown_inset", Color("#254052"), Color.BLACK, 1.0, 0.35, 0.55)
+	cyl(root, 0.52, 1.01, 4.2, m[0], Vector3(-0.45, 0.65, 0), Vector3(0, 0, -90), 6)
+	cyl(root, 0.33, 0.56, 2.0, dark, Vector3(1.52, 0.70, 0), Vector3(0, 0, -90), 8)
+	ring(root, 0.49, 0.63, m[1], Vector3(1.26, 0.70, 0), Vector3(0, 0, 90))
+	ring(root, 0.25, 0.36, flux, Vector3(2.47, 0.70, 0), Vector3(0, 0, 90))
+	sph(root, 0.29, flux, Vector3(2.55, 0.70, 0), Vector3(0.60, 1.0, 1.0), 8)
+	box(root, Vector3(1.2, 0.24, 0.76), team, Vector3(-0.51, 1.48, 0))
+	sph(root, 0.29, flux, Vector3(-0.39, 1.63, 0), Vector3(1.48, 0.43, 0.8), 8)
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(2.68, 0.34, 0.61), m[1], Vector3(-0.55, 0.76, side * 1.19), Vector3(0, side * -31.0, side * 8.0))
+		cyl(root, 0.21, 0.44, 1.62, m[0], Vector3(-1.45, 0.62, side * 1.52), Vector3(0, 0, -90), 6)
+		sph(root, 0.31, flux, Vector3(-2.20, 0.61, side * 1.52), Vector3(0.60, 1.0, 1.0), 8)
+		box(root, Vector3(1.16, 0.24, 0.19), team, Vector3(-0.34, 0.87, side * 1.68), Vector3(0, side * -28.0, 0))
 
 static func _spire_walker(root: Node3D, team: Material) -> void:
 	var m := _alien_mats()
