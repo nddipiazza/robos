@@ -12,6 +12,7 @@ func _run() -> void:
 	_test_ramps()
 	_test_off_grid_ramp()
 	_test_gate()
+	_test_off_grid_gate()
 	_test_corner_sweeps()
 	_test_visible_start_cell()
 	print("Route clearance checks: ", "passed" if failures.is_empty() else str(failures))
@@ -72,6 +73,37 @@ func _test_gate() -> void:
 				if gate_open:
 					sim.issue_command([gate.tag], "retract_silo")
 				_cross(kind, west_to_east, gate_open or kind != "howitzer")
+
+func _test_off_grid_gate() -> void:
+	for west_to_east in [true, false]:
+		for kind in ["rifleman", "howitzer"]:
+			sim.reset_state(42, 128, 96)
+			sim.terrain_obstacles.append(Rect2(58, 0, 12, 18))
+			sim.terrain_obstacles.append(Rect2(58, 25, 12, 71))
+			var gate: Dictionary = sim.spawn_unit("silo_retracted", 1, Vector2(64, 20.6))
+			var start := Vector2(30, 17) if west_to_east else Vector2(98, 29)
+			var goal := Vector2(98, 29) if west_to_east else Vector2(30, 17)
+			var unit: Dictionary = sim.spawn_unit(kind, 1, start)
+			sim.issue_command([unit.tag], "move", goal)
+			sim.step_ticks(75)
+			_check(unit.path.back().is_equal_approx(goal), "Both sizes can reach the open crossing")
+			sim.issue_command([gate.tag], "extend_silo")
+			var clear := true
+			for _tick in range(1400):
+				sim.step_ticks(1)
+				clear = clear and not sim._is_point_blocked_by_static(unit.pos, unit.radius)
+				if unit.orders.is_empty():
+					break
+			var direction := "west to east" if west_to_east else "east to west"
+			_check(clear, "%s stays out of the raised gate and cliffs" % kind)
+			if kind == "rifleman":
+				_check(unit.orders.is_empty() and unit.pos.distance_to(goal) < 2.0,
+					"Rifleman crosses the off-grid gap %s (ended %s)" % [direction, unit.pos])
+			else:
+				_check(not unit.orders.is_empty() and unit.orders[0].waiting_for_route and (unit.pos.x < 64.0) == west_to_east,
+					"Howitzer waits at the raised gate %s" % direction)
+				_check(sim._navigation_grid(unit.radius, false, 1.0) == null,
+					"A gap too small for the Howitzer does not require a finer grid")
 
 func _cross(kind: String, west_to_east: bool, narrow: bool) -> void:
 	var from := Vector2(30, 17) if west_to_east else Vector2(98, 29)
