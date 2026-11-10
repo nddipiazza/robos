@@ -292,3 +292,71 @@ code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: #58a6ff;
 }
+
+.highlight-card {
+  border-color: rgba(0, 188, 212, 0.45);
+  background: linear-gradient(180deg, rgba(0, 188, 212, 0.06), var(--bg-secondary));
+}
+
+.inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.named-cals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.named-cal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+}
+
+.named-cal-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 7px;
+}
+
+.family-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.family-chip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.family-chip-pill.selected {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.18);
+  font-weight: 600;
+}
+
+.hidden {
+  display: none !important;
+}

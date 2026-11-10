@@ -604,6 +604,16 @@ function normalizePerson(raw = {}) {
   p.username = String(p.username || '').trim();
   p.pronouns = String(p.pronouns || '').trim();
   p.ageRange = String(p.ageRange || '').trim();
+  if (p.age !== undefined && p.age !== null && p.age !== '') {
+    p.age = Number.isFinite(Number(p.age)) ? Number(p.age) : String(p.age).trim();
+  }
+  p.birthday = String(p.birthday || '').trim();
+  p.relationshipRole = String(p.relationshipRole || '').trim();
+  p.robosPersonalitySummary = String(p.robosPersonalitySummary || '').trim();
+  p.interactionPreferences = String(p.interactionPreferences || '').trim();
+  p.professionalBackground = String(p.professionalBackground || '').trim();
+  p.currentProjects = String(p.currentProjects || '').trim();
+  p.memorableEvents = splitList(p.memorableEvents);
   p.email = String(p.email || '').trim();
   p.phone = String(p.phone || '').trim();
   p.location = String(p.location || '').trim();
@@ -918,6 +928,30 @@ function buildPartyGuestProfile(person, { configDir } = {}) {
   };
 }
 
+function listFamilyPeople(opts = {}) {
+  const all = loadAllPeople(opts);
+  const family = all.filter((p) => {
+    const groups = Array.isArray(p.groups) ? p.groups.map((g) => String(g).toLowerCase()) : [];
+    return groups.includes('family') || groups.includes('household') || Boolean(p.family?.partnerUid || p.family?.children?.length || p.relationshipRole);
+  });
+  return family.length > 0 ? family : all;
+}
+
+function findPersonByQuery(query, opts = {}) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return null;
+  const all = loadAllPeople(opts);
+  return (
+    all.find((p) => String(p.uid || '').toLowerCase() === q) ||
+    all.find((p) => String(p.email || '').toLowerCase() === q) ||
+    all.find((p) => String(p.nickname || '').toLowerCase() === q) ||
+    all.find((p) => String(p.firstName || '').toLowerCase() === q) ||
+    all.find((p) => String(p.displayName || '').toLowerCase() === q) ||
+    all.find((p) => String(p.displayName || '').toLowerCase().includes(q) || String(p.nickname || '').toLowerCase().includes(q)) ||
+    null
+  );
+}
+
 module.exports = {
   DEFAULT_PROFILES,
   DEFAULT_HOUSE_PROFILE,
@@ -929,6 +963,8 @@ module.exports = {
   withResolvedPhotos,
   ensureDefaultProfiles,
   loadAllPeople,
+  listFamilyPeople,
+  findPersonByQuery,
   getPerson,
   savePerson,
   savePersonPhoto,

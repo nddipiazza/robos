@@ -140,4 +140,86 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.ok(fs.existsSync(path.join(TMP_HOME, '.config', 'robos', 'cloud-accounts.json')));
     assert.ok(fs.existsSync(path.join(TMP_HOME, '.thunderbird', 'profiles.ini')));
   });
+
+  it('parses Named & Shared Google Calendars from CalDAV PROPFIND XML and preserves additionalCalendars in Thunderbird', () => {
+    const namedCals = require(path.resolve(__dirname, '../../../google-calendar/lib/named-calendars'));
+    const sampleXml = `<?xml version="1.0" encoding="UTF-8"?>
+<D:multistatus xmlns:D="DAV:" xmlns:caldav="urn:ietf:params:xml:ns:caldav" xmlns:cs="http://calendarserver.org/ns/" xmlns:ical="http://apple.com/ns/ical/">
+  <D:response>
+    <D:href>/caldav/v2/alice%40example.com/events/</D:href>
+    <D:propstat>
+      <D:prop>
+        <D:displayname>alice@example.com</D:displayname>
+        <ical:calendar-color>#D06B64FF</ical:calendar-color>
+        <D:resourcetype><D:collection/><caldav:calendar/></D:resourcetype>
+      </D:prop>
+    </D:propstat>
+  </D:response>
+  <D:response>
+    <D:href>/caldav/v2/family12345%40group.calendar.google.com/events/</D:href>
+    <D:propstat>
+      <D:prop>
+        <D:displayname>Family</D:displayname>
+        <ical:calendar-color>#FFAD46FF</ical:calendar-color>
+        <D:resourcetype><D:collection/><caldav:calendar/><cs:shared/></D:resourcetype>
+      </D:prop>
+    </D:propstat>
+  </D:response>
+</D:multistatus>`;
+
+    const parsed = namedCals.parseCaldavCalendarHomeXml(sampleXml, 'alice@example.com');
+    assert.strictEqual(parsed.length, 2);
+    assert.strictEqual(parsed[0].primary, true);
+    assert.strictEqual(parsed[1].name, 'Family');
+    assert.strictEqual(parsed[1].shared, true);
+    assert.strictEqual(parsed[1].writable, true);
+
+    tb.configureThunderbirdForGoogleAccount(alice.id, {
+      enableCalendar: true,
+      additionalCalendars: [{ id: parsed[1].id, summary: parsed[1].name, backgroundColor: parsed[1].color, writable: true }],
+    }, OPTS);
+    tb.configureAllGoogleAccountsInThunderbird(OPTS);
+    const userJs = readUserJs();
+    assert.ok(userJs.includes('"Family"'), 'Named Family calendar written to Thunderbird user.js');
+  });
+
+  it('parses natural-language event requests and renders the 1-button Google Doc Access Form', () => {
+    const namedCals = require(path.resolve(__dirname, '../../../google-calendar/lib/named-calendars'));
+    const accessDoc = require(path.resolve(__dirname, '../../../google-calendar/lib/access-doc-sync'));
+
+    const parsed = namedCals.parseNaturalLanguageEvent(
+      'Add Dentist appointment on 2026-11-20 at 3pm for 90 minutes on the Family calendar at Madison Dental',
+      {
+        calendars: [{ id: 'family123@group.calendar.google.com', name: 'Family', writable: true }],
+        familyMembers: [{ uid: 'leo', name: 'Leo', nickname: 'Leo', firstName: 'Leo', email: 'leo@example.com', avatar: '🦞' }],
+      }
+    );
+    assert.strictEqual(parsed.calendarId, 'family123@group.calendar.google.com');
+    assert.strictEqual(parsed.startDate, '2026-11-20');
+    assert.strictEqual(parsed.startTime, '15:00');
+    assert.strictEqual(parsed.endTime, '16:30');
+    assert.strictEqual(parsed.location, 'Madison Dental');
+
+    const ics = namedCals.buildIcsCalendarEvent({
+      uid: 'test-uid-1',
+      summary: 'Family Dinner',
+      start: '2026-11-20T23:00:00.000Z',
+      end: '2026-11-21T00:30:00.000Z',
+      location: 'Red Lobster',
+      attendees: [{ name: 'Leo', email: 'leo@example.com' }],
+      reminderMinutes: 30,
+    });
+    assert.ok(ics.includes('SUMMARY:Family Dinner'));
+    assert.ok(ics.includes('LOCATION:Red Lobster'));
+    assert.ok(ics.includes('mailto:leo@example.com'));
+
+    const html = accessDoc.renderCalendarAccessDocHtml({
+      webAppUrl: 'https://demo-cal.trycloudflare.com/?auth=secret123',
+      calendars: [{ id: 'family123@group.calendar.google.com', name: 'Family', isFamilyCalendar: true, writable: true }],
+      events: [],
+    });
+    assert.ok(html.includes('CLICK THIS TO OPEN THE ROBOS ADD CALENDAR EVENT APP'));
+    assert.ok(html.includes('https://demo-cal.trycloudflare.com/?auth=secret123'));
+    assert.ok(html.includes('DO NOT TRY TO EDIT THIS DOC'));
+  });
 });

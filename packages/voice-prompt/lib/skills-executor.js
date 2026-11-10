@@ -37,6 +37,7 @@ class SkillsExecutor {
       { id: 'media-watch-status', label: 'Where Did We Leave Off?', intent: 'Answer which season and episode of a show you left off on (on any of your computers), what is next, or whether you watched a movie', patterns: ['what season of [show] did we leave off on', 'where did we leave off on [show]', 'what episode are we on in [show]', 'have we seen [movie]', 'what are we watching'] },
       { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
       { id: 'shopping-lists', label: 'Manage Household Shopping Lists (Grocery, Target, Costco)', intent: 'Add, check off, remove, adjust quantity, sync with Google Docs/Drive, or read items on Grocery, Target, and Costco shopping lists', patterns: ['add [items] to grocery/target/costco list', 'check off [item] on shopping list', 'remove [item] from target list', 'what is on my costco list', 'clear checked on grocery list'] },
+      { id: 'google-calendar', label: 'Manage Google Calendar, Named Family Calendars & Access Google Doc', intent: 'Create/list Google Calendar events on Named Calendars (Family, Primary), list named calendars, or sync the 1-button Calendar Request Google Doc', patterns: ['add [event] to family calendar', 'schedule [event] on [date] at [time]', 'what google calendars do I have', 'sync calendar google doc'] },
       { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['hello robos', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
@@ -133,6 +134,57 @@ class SkillsExecutor {
           response: shopRes.spoken || shopRes.text,
           data: shopRes.data || null,
         };
+      } catch {}
+    }
+
+    // 1.6 Google Calendar & Family Calendars Skill
+    const isCalendarSkillCmd =
+      /^\/google-calendar\b/i.test(query) ||
+      (/\b(?:calendar|appointment)\b/i.test(query) &&
+        /\b(?:add|create|schedule|put|book|list|show|what|sync)\b/i.test(query) &&
+        !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?(?:google\s+)?calendar(?:\s+app|\s+window)?$/i.test(query));
+    if (isCalendarSkillCmd) {
+      try {
+        const namedCals = require('../../google-calendar/lib/named-calendars');
+        const accessDocSync = require('../../google-calendar/lib/access-doc-sync');
+        const cleanCal = query.replace(/^\/google-calendar\s*/i, '').trim();
+
+        if (/\b(?:sync|create|update)\b.*\b(?:google\s+doc|access\s+doc|access\s+form)\b/i.test(cleanCal)) {
+          const docRes = await accessDocSync.syncCalendarAccessDocWithGoogleDrive({
+            homeDir: this.homeDir,
+            configDir: this.configDir,
+            shareWithFamily: true,
+          });
+          const msg = `Updated your Google Doc "${docRes.docTitle}" with the 1-button link to the RobOS Add Calendar Event web app.`;
+          return { ok: true, skill: 'google-calendar', actionDone: msg, response: msg, data: docRes };
+        }
+
+        if (/\b(?:what|which|list|show)\b.*\bcalendars\b/i.test(cleanCal)) {
+          const disc = await namedCalendars.discoverNamedCalendars(null, { homeDir: this.homeDir, configDir: this.configDir });
+          const names = disc.calendars.map((c) => c.name).join(', ');
+          const msg = `You have ${disc.calendars.length} named Google Calendars: ${names}.`;
+          return { ok: true, skill: 'google-calendar', actionDone: msg, response: msg, data: disc };
+        }
+
+        if (/\b(?:add|create|schedule|put|book)\b/i.test(cleanCal)) {
+          const state = await namedCalendars.listEventsAcrossNamedCalendars(null, {
+            homeDir: this.homeDir,
+            configDir: this.configDir,
+            skipNetwork: true,
+          });
+          const parsed = namedCalendars.parseNaturalLanguageEvent(cleanCal, {
+            homeDir: this.homeDir,
+            configDir: this.configDir,
+            familyMembers: state.familyMembers,
+            calendars: state.calendars,
+          });
+          const created = await namedCalendars.createNamedCalendarEvent(parsed, {
+            homeDir: this.homeDir,
+            configDir: this.configDir,
+          });
+          const msg = `Added "${created.event.summary}" to your ${created.event.calendarName} calendar on ${created.event.startDate || created.event.start.slice(0, 10)}.`;
+          return { ok: true, skill: 'google-calendar', actionDone: msg, response: msg, data: created };
+        }
       } catch {}
     }
 
