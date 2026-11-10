@@ -56,15 +56,16 @@ function isLocalLoopbackRequest(req) {
 
 function getAllowedGoogleEmails(state) {
   const emails = new Set();
-  for (const acc of listGoogleAccounts() || []) {
-    if (acc.email) emails.add(acc.email.toLowerCase());
-  }
-  const m = String(state?.sync?.accountId || '').match(/^google-(.+)-gmail-com$/i);
-  if (m) emails.add(`${m[1].replace(/-/g, '.')}@gmail.com`.toLowerCase());
   if (process.env.ROBOS_ALLOWED_GOOGLE_EMAIL) {
     for (const e of process.env.ROBOS_ALLOWED_GOOGLE_EMAIL.split(',')) {
       if (e.trim()) emails.add(e.trim().toLowerCase());
     }
+    return [...emails];
+  }
+  const m = String(state?.sync?.accountId || '').match(/^google-(.+)-gmail-com$/i);
+  if (m) emails.add(`${m[1].replace(/-/g, '.')}@gmail.com`.toLowerCase());
+  for (const acc of listGoogleAccounts() || []) {
+    if (acc.email) emails.add(acc.email.toLowerCase());
   }
   return [...emails];
 }

@@ -1,0 +1,125 @@
+---
+title: "Exposing RobOS Shopping Lists to Android Without a Custom App or VPN: Google-Gated PWA, Outbound HTTPS Tunnel & \"Ok Nabu\" Voice Sync"
+nav_label: "Shopping Lists Android PWA + Voice"
+date: 2026-11-10 15:00:00 +0000
+date_label: "Nov 10, 2026"
+tags:
+  - "Household"
+  - "Shopping Lists"
+  - "Security"
+  - "Voice"
+summary: "We upgraded <a href=\"/shopping-lists/\">RobOS Shopping Lists</a> (<code>packages/shopping-lists</code>) so you can use it on an Android phone over 5G or Wi-Fi <strong>without installing any custom Android APK or turning on a mobile VPN</strong>: an outbound-only Cloudflare HTTPS tunnel fronts the installable Android Progressive Web App (<code>:19225</code>), guarded by a <strong>401 Google Login &amp; 256-bit Google-Doc Capability Gate</strong>, while <strong>\"Ok Nabu\"</strong> all-day voice commands normalize Whisper phonetic mishearings and auto-sync a redesigned, newest-first 4-column table (with <code>ADDED</code> timestamps) to your private Google Docs."
+description: "How RobOS Shopping Lists exposes its local mobile webapp (:19225) to Android phones over 5G without a custom APK or mobile VPN using an outbound-only HTTPS tunnel, a 256-bit capability link inside private Google Docs, 1-year HttpOnly session cookies, 'Ok Nabu' Whisper phonetic normalization, and newest-first timestamped Google Docs tables."
+og_image: /assets/blog/shopping-lists/shopping-lists-google-gated-pwa-architecture.jpg
+og_image_alt: "RobOS Shopping Lists — Google-Gated Android PWA, Outbound Tunnel & 'Ok Nabu' Voice Architecture"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/shopping-lists/shopping-lists-google-gated-pwa-architecture.jpg' | relative_url }}" alt="RobOS Shopping Lists technical architecture diagram showing Android Phone PWA & Google Docs Mobile App, Security & Outbound Edge Layer, RobOS Household Core, and 'Ok Nabu' Voice Pipeline" loading="lazy" width="1408" height="768">
+    <figcaption><strong>End-to-End Architecture.</strong> 1) Android Chrome PWA &amp; Google Docs Mobile App, 2) Google Account Login Gate + Outbound-Only Cloudflare Tunnel + 256-Bit <code>HttpOnly</code> Session Cookie Gate, 3) Persistent Store with <code>fs.watchFile</code> SSE push &amp; two-way Google Docs sync, and 4) All-day <code>"Ok Nabu"</code> voice pipeline with Whisper phonetic normalization.</figcaption>
+  </figure>
+
+  <p><strong>The problem in the grocery aisle.</strong> After shipping <a href="{{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}">RobOS Shopping Lists</a> for <strong>1) Grocery</strong>, <strong>2) Target</strong>, and <strong>3) Costco</strong>, three real-world usability and security questions came up immediately:</p>
+  <ol>
+    <li><strong>Can we expose the local webapp (<code>:19225</code>) to an Android phone without any custom Android app or mobile VPN?</strong> Sideloading a custom APK or remembering to toggle a VPN on your phone in the middle of Costco adds friction.</li>
+    <li><strong>How do we make that public URL secure without opening router ports?</strong> If the webapp is reachable over 5G cellular, what stops a stranger on the internet (or another device on Wi-Fi) from finding it? Can we wrap access in our existing Google login?</li>
+    <li><strong>Why did the Google Docs format bury newly added voice items?</strong> Speaking <em>"Ok Nabu, add 2 gallons of whole milk and blueberries to my grocery list"</em> suffered from two issues: small local Whisper models (<code>Xenova/whisper-tiny.en</code>) phonetically misheard <code>"my grocery list"</code> as <code>"the Mike Rotary list"</code> or <code>"my grodery list"</code>, and the Google Doc grouped items by aisle without timestamps — burying newly spoken items halfway down the page.</li>
+  </ol>
+
+  <h2>1. Architecture Overview (Mermaid Schematic)</h2>
+  <pre><code class="language-mermaid">flowchart LR
+    subgraph Phone["1. Android Phone (5G / Wi-Fi, Zero APK, Zero VPN)"]
+        PWA["Chrome Android PWA\n(manifest.webmanifest + sw.js)"]
+        GDocApp["Google Docs Mobile App\n(4-Col Table: ITEM &amp; QTY | AISLE | EST. | ADDED)"]
+        LaunchLink["1-Tap Launch Link in Google Doc\n(?auth=256-bit-key -&gt; 1-Yr HttpOnly Cookie)"]
+        GDocApp --&gt; LaunchLink --&gt; PWA
+    end
+
+    subgraph Edge["2. Security &amp; Outbound Edge Layer"]
+        GoogleGate["Google Account Login Gate\n(Protects Private Google Docs in Drive)"]
+        Tunnel["Outbound-Only Cloudflare Tunnel\n(cloudflared TLS/QUIC -&gt; 127.0.0.1:19225)"]
+        AuthGate["lib/mobile-server.js Auth Gate\n(401 Unauthorized without robos_shop_session)"]
+        GoogleGate --&gt; GDocApp
+        PWA &lt;--&gt; Tunnel &lt;--&gt; AuthGate
+    end
+
+    subgraph Core["3. RobOS Household Core (packages/shopping-lists)"]
+        Store[("Persistent Store\nshopping-lists.json + fs.watchFile")]
+        SSE["SSE Live Push Stream\n(/api/events to Android PWA)"]
+        DriveSync["Two-Way Google Docs Sync\n(lib/google-docs-format.js &amp; google-drive-sync.js)"]
+        AuthGate &lt;--&gt; Store
+        Store --&gt; SSE --&gt; PWA
+        Store &lt;--&gt; DriveSync &lt;--&gt; GDocApp
+    end
+
+    subgraph Voice["4. 'Ok Nabu' All-Day Voice Pipeline"]
+        Satellite["ESPHome Voice Satellite\n+ WakeWordDetector ('Ok Nabu')"]
+        Phonetic["normalizeShoppingVoiceTranscript\n(Fixes Whisper phonetic store mishearings)"]
+        Router["NabuCommandRouter -&gt; SkillsExecutor\n-&gt; executeTextCommand -&gt; Auto Drive Sync"]
+        Satellite --&gt; Phonetic --&gt; Router --&gt; Store
+    end</code></pre>
+
+  <h2>2. Outbound-Only HTTPS Tunnel + 256-Bit Google-Doc Capability Gate</h2>
+  <p>Instead of opening any inbound port on the home router or Linux firewall (no UPnP, no NAT port forwarding), <code>packages/shopping-lists/serve.js</code> spawns an <strong>outbound-only Cloudflare Quick Tunnel</strong> (<code>cloudflared tunnel --url http://127.0.0.1:19225</code>):</p>
+  <ul>
+    <li><strong>Zero Inbound Ports Exposed:</strong> Your machine initiates an outbound encrypted TLS/QUIC connection (port <code>443</code>) to Cloudflare's edge and proxies traffic strictly to <code>127.0.0.1:19225</code>. Your home IP remains completely hidden.</li>
+    <li><strong>401 Google Login Gate for Strangers:</strong> Every request arriving through the tunnel (or from any non-loopback address) carries proxy headers (<code>cf-connecting-ip</code> / <code>x-forwarded-for</code>). <code>isLocalLoopbackRequest()</code> in <code>packages/shopping-lists/lib/mobile-server.js</code> intercepts unauthenticated requests and returns <code>401 Unauthorized</code> with a <strong>🔒 Protected by Google Login</strong> screen.</li>
+    <li><strong>Wrapped in Your Google Login via Private Google Docs:</strong> How does your Android phone authenticate without typing passwords? On startup, <code>store.js</code> generates a persistent <strong>256-bit cryptographic token</strong> (64 hex characters, $2^{256}$ combinations) and embeds the authenticated launch URL (<code>https://&lt;tunnel&gt;.trycloudflare.com/?auth=&lt;256-bit-key&gt;</code>) into the <strong>📱 Open Interactive Add/Remove Form</strong> link at the very top of your private <strong>Grocery</strong>, <strong>Target</strong>, and <strong>Costco</strong> Google Docs.</li>
+    <li><strong>1-Year <code>HttpOnly; Secure; SameSite=Lax</code> Cookie Exchange:</strong> Because your Google Docs in Google Drive are already protected by your Google account login, <em>only you</em> (and family members you share the Drive folder with) can open the Google Doc and tap that link. The first time you tap it on your Android phone, <code>mobile-server.js</code> verifies the 256-bit token in constant time (<code>crypto.timingSafeEqual</code>), sets a 1-year <code>HttpOnly</code> HMAC session cookie (<code>robos_shop_session</code>), and issues a <code>302</code> redirect to <code>/</code> so the secret token is immediately stripped from the browser address bar.</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/shopping-lists/07-google-login-gate.png' | relative_url }}" alt="401 Protected by Google Login gate screen shown to unauthenticated visitors" loading="lazy" width="980" height="860">
+      <figcaption><strong>401 Google Login Gate (<code>lib/mobile-server.js</code>).</strong> Unauthenticated visitors on the tunnel or LAN see a locked gate directing them to sign in via their private Google Doc or Google OAuth.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/shopping-lists/08-android-pwa-qr-pairing.png' | relative_url }}" alt="Android QR Pairing page showing Anywhere / 5G Google-Gated Public HTTPS QR code and Home Wi-Fi LAN QR code" loading="lazy" width="980" height="860">
+      <figcaption><strong>Zero-APK Android Pairing (<code>/qr</code>).</strong> Scan once or tap from your Google Doc, then tap Chrome's <strong>⋮ → Add to Home screen</strong> to install the standalone PWA.</figcaption>
+    </figure>
+  </div>
+
+  <h2>3. Redesigned Google Docs Layout: 4-Column Tables, Newest-First Sorting &amp; Added Timestamps</h2>
+  <p>We replaced the multi-heading paragraph layout in <code>packages/shopping-lists/lib/google-docs-format.js</code> with a clean, scannable <strong>4-column table</strong> designed for mobile readability in the Google Docs Android app:</p>
+  <ul>
+    <li><strong>Columns:</strong> <code>ITEM &amp; QTY</code> | <code>AISLE</code> | <code>EST.</code> | <code>ADDED</code> (human-readable timestamp, e.g., <code>Nov 10, 2026, 11:48 AM</code>).</li>
+    <li><strong>Newest First at Row #1:</strong> Unchecked items in <code>🛒 Items To Buy</code> are sorted by <code>updatedAt || addedAt</code> descending. When you say <em>"Ok Nabu, add 2 gallons of whole milk and blueberries to my grocery list"</em> (or re-add an existing item, which refreshes its timestamp and increments its quantity), those items immediately appear at <strong>Row #1 and Row #2</strong> at the top of the table.</li>
+    <li><strong>Separate Checked-Off Table &amp; Two-Way Round-Trip:</strong> Completed items sit in a clean <code>✅ Checked Off / In Cart</code> table at the bottom with a <code>CHECKED OFF</code> timestamp column, while <code>parseGoogleDocText()</code> preserves full two-way plain-text table parsing when pulling mobile edits back from Google Docs.</li>
+  </ul>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/shopping-lists/06-google-doc-timestamped-table.png' | relative_url }}" alt="Redesigned Google Doc view showing the 4-column table with ITEM & QTY, AISLE, EST., and ADDED timestamps sorted Newest First" loading="lazy" width="980" height="860">
+    <figcaption><strong>Redesigned Google Doc Table (<code>renderGoogleDocHtml</code>).</strong> Newly spoken items (<code>Blueberries — 1 ea</code> and <code>Whole milk — 2 gal</code>) appear at Row #1 and Row #2 with their aisle and <code>ADDED</code> timestamp.</figcaption>
+  </figure>
+
+  <h2>4. All-Day "Ok Nabu" Voice Commands &amp; Whisper Phonetic Store Normalization</h2>
+  <p>When running all-day voice listening through an ESPHome voice satellite (<code>packages/robos-voice/lib/esphome-voice-service.js</code> and <code>packages/robos-voice/lib/nabu-command-router.js</code>), small local STT models like <code>Xenova/whisper-tiny.en</code> frequently mishear store names in casual speech (for example, transcribing <em>"my grocery list"</em> as <em>"the Mike Rotary list"</em>, <em>"my grodery list"</em>, or <em>"my glossary list"</em>). We added <code>normalizeShoppingVoiceTranscript()</code> in <code>packages/shopping-lists/lib/defaults.js</code> and wired it across the voice pipeline:</p>
+  <ul>
+    <li>Normalizes phonetic Whisper store variants (<code>mike rotary</code>, <code>grodery</code>, <code>groshery</code>, <code>glossary</code>, <code>rosary</code> $\rightarrow$ <code>grocery</code>; <code>cosco</code>, <code>cost go</code>, <code>cuzco</code> $\rightarrow$ <code>costco</code>) before intent routing and store extraction.</li>
+    <li>Automatically triggers <code>syncWithGoogleDrive()</code> after every spoken or CLI mutation so your Google Docs update within ~1 second of speaking to Nabu.</li>
+    <li>Watches <code>~/.config/robos/household/shopping-lists.json</code> via <code>fs.watchFile</code> in <code>mobile-server.js</code> so any item added by voice immediately broadcasts over SSE (<code>/api/events</code>) to open Android phone browsers.</li>
+  </ul>
+
+  <div class="blog-log">
+    <div class="blog-log-head">Reproducible CLI, PWA Server &amp; Test Commands</div>
+    <pre><code># 1. Start the Google-Gated Android PWA server (:19225) + Outbound HTTPS Tunnel
+node packages/shopping-lists/serve.js
+
+# 2. Or run local Wi-Fi only (disable outbound Cloudflare tunnel)
+SHOPPING_LISTS_NO_TUNNEL=1 node packages/shopping-lists/serve.js
+
+# 3. Test an "Ok Nabu" spoken command from the CLI (auto-syncs Google Docs)
+node packages/shopping-lists/bin/shopping-lists.js "Ok Nabu, add 2 gallons of whole milk and blueberries to my grocery list"
+
+# 4. Run the full 9-test unit suite (store, Google Docs table round-trip, voice &amp; Nabu routing)
+node --test packages/robos-test/tests/shopping-lists/unit.test.js</code></pre>
+  </div>
+
+  <div class="blog-links">
+    <a href="{{ '/shopping-lists/' | relative_url }}">Shopping Lists Landing Page →</a>
+    <a href="{{ '/shopping-lists/reference/' | relative_url }}">Package Reference →</a>
+    <a href="{{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}">Part 1: Two-Way Google Docs &amp; Mobile Form →</a>
+    <a href="https://github.com/nddipiazza/robos/tree/main/packages/shopping-lists">Source Code (<code>packages/shopping-lists</code>) →</a>
+    <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/28c58dce">28c58dce</a> · <a href="https://github.com/nddipiazza/robos/commit/f5d7505d">f5d7505d</a> · <a href="https://github.com/nddipiazza/robos/commit/3f6a400a">3f6a400a</a> · <a href="https://github.com/nddipiazza/robos/commit/2d4c0d71">2d4c0d71</a></span>
+  </div>
+</div>
