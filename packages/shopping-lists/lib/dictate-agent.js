@@ -3,11 +3,11 @@
 /**
  * RobOS Shopping Lists — Voice Dictation -> Whisper STT -> RobOS Agent (`/shopping-lists` Skill) Pipeline
  *
- * Accepts raw recorded audio (WebM/Opus, OGG, MP4/AAC, WAV) from the Android PWA (`:19225`)
+ * Accepts raw recorded audio (WebM/Opus, OGG/Opus, MP4/AAC, WAV) from the Android PWA (`:19225`)
  * or Desktop Electron App (`packages/shopping-lists`), transcribes it with Whisper STT
- * (`packages/voice-prompt/lib/stt-engine.js` + `ffmpeg`), and uses the active RobOS AI Agent
+ * (`packages/voice-prompt/lib/stt-engine.js` + `ffmpeg`), and uses the RobOS AI Agent
  * (`robos-lib/ai-agent`) + `/shopping-lists` skill (`SkillsExecutor` / `executeTextCommand`)
- * to turn free-form spoken dictation into structured shopping list actions across
+ * to turn spoken dictation into structured shopping list actions across
  * 1) Grocery, 2) Target, and 3) Costco.
  */
 
@@ -50,10 +50,51 @@ function getSharedSttEngine() {
   return sharedSttEngine;
 }
 
+// Pre-warm the Whisper STT worker in the background when server starts (outside unit test mode)
+if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+  try { getSharedSttEngine(); } catch {}
+}
+
+/**
+ * Safely decode a base64 audio string or Data URL (including multi-parameter MIME types
+ * like `data:audio/webm;codecs=opus;base64,...` or `data:audio/mp4;codecs=mp4a.40.2;base64,...`).
+ */
+function decodeBase64Audio(audioBase64) {
+  const raw = String(audioBase64 || '').trim();
+  if (!raw) return Buffer.alloc(0);
+  const commaIdx = raw.indexOf(',');
+  const b64 = (raw.startsWith('data:') && commaIdx !== -1)
+    ? raw.slice(commaIdx + 1)
+    : raw.replace(/^data:.*?;base64,/i, '');
+  return Buffer.from(b64.replace(/\s+/g, ''), 'base64');
+}
+
+/**
+ * Boost quiet laptop/phone microphone recordings before passing PCM samples to Whisper.
+ */
+function normalizeAudioSamples(samples) {
+  if (!samples || !samples.length) return samples;
+  let peak = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const a = Math.abs(samples[i]);
+    if (a > peak) peak = a;
+  }
+  if (peak > 0.004 && peak < 0.85) {
+    const gain = Math.min(15.0, 0.85 / peak);
+    const out = new Float32Array(samples.length);
+    for (let i = 0; i < samples.length; i++) {
+      out[i] = Math.max(-1, Math.min(1, samples[i] * gain));
+    }
+    return out;
+  }
+  return samples;
+}
+
 function convertAudioBufferToWav16k(audioBuffer, ext = 'webm') {
   return new Promise((resolve, reject) => {
     const tmpBase = path.join(os.tmpdir(), `robos-shop-dictate-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
-    const inFile = `${tmpBase}.${ext.replace(/[^a-z0-9]/gi, '') || 'webm'}`;
+    const cleanExt = ext.replace(/[^a-z0-9]/gi, '') || 'webm';
+    const inFile = `${tmpBase}.${cleanExt}`;
     const outWav = `${tmpBase}.wav`;
 
     try {
@@ -64,13 +105,18 @@ function convertAudioBufferToWav16k(audioBuffer, ext = 'webm') {
 
     execFile(
       'ffmpeg',
-      ['-y', '-i', inFile, '-ar', '16000', '-ac', '1', '-c:a', 'pcm_s16le', outWav],
+      ['-nostdin', '-hide_banner', '-loglevel', 'error', '-y', '-i', inFile, '-ar', '16000', '-ac', '1', '-c:a', 'pcm_s16le', outWav],
       { timeout: 15000 },
-      (err) => {
+      (err, _stdout, stderr) => {
         try { fs.unlinkSync(inFile); } catch {}
         if (err || !fs.existsSync(outWav)) {
           try { fs.unlinkSync(outWav); } catch {}
-          return reject(new Error(`Audio decoding failed: ${err?.message || 'ffmpeg could not convert audio'}`));
+          const firstErrLine = String(stderr || err?.message || 'ffmpeg could not convert audio')
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter(Boolean)
+            .pop() || 'Unsupported or empty audio recording';
+          return reject(new Error(`Audio decoding failed: ${firstErrLine}`));
         }
         resolve(outWav);
       },
@@ -99,12 +145,19 @@ async function transcribeAudioBuffer(audioBuffer, { mimeType = 'audio/webm', stt
   let wavPath = '';
   try {
     wavPath = await convertAudioBufferToWav16k(audioBuffer, ext);
-    const samples = sttMod?.readWavToFloat32 ? sttMod.readWavToFloat32(wavPath) : null;
-    if (!samples || samples.length === 0) return '';
+    const rawSamples = sttMod?.readWavToFloat32 ? sttMod.readWavToFloat32(wavPath) : null;
+    if (!rawSamples || rawSamples.length === 0) return '';
+    const samples = normalizeAudioSamples(rawSamples);
     const engine = getSharedSttEngine();
     if (!engine) return '';
-    const result = await engine.transcribeAsync(samples);
-    const cleaned = sttMod?.cleanTranscript ? sttMod.cleanTranscript(result?.text || '') : String(result?.text || '').trim();
+    const opts = samples.length > 16000 * 30 ? { chunk_length_s: 30, stride_length_s: 5 } : {};
+    const result = await engine.transcribeAsync(samples, opts);
+    let cleaned = sttMod?.cleanTranscript ? sttMod.cleanTranscript(result?.text || '') : String(result?.text || '').trim();
+    cleaned = cleaned
+      .replace(/\((?:blank[\s_]*audio|silence|music|applause|laughter|noise|sigh|groan|cough|sound|whistle|whistling|inaudible|static|clicking|breathing|bell|beep|tone)\)/gi, '')
+      .replace(/\*[^*]{1,30}\*/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     return normalizeShoppingVoiceTranscript(cleaned);
   } finally {
     if (wavPath) {
@@ -120,21 +173,20 @@ async function transcribeAudioBuffer(audioBuffer, { mimeType = 'audio/webm', stt
  */
 function extractOfflineSkillCommandsFromDictation(transcript, defaultListId = 'grocery') {
   const norm = normalizeShoppingVoiceTranscript(transcript || '')
-    .replace(/^(?:ok|okay|hey|hi|yo)\s+nabu[\s,.:;-]*/i, '')
+    .replace(/^(?:ok|okay|hey|hi|yo)\s+(?:nabu|robos|row\s+bose)[\s,.:;-]*/i, '')
     .trim();
   if (!norm) return [];
 
-  // If it already starts with a direct command verb (add, check, remove, clear, undo, etc.) and has no conversational preamble,
-  // check if it has multiple store clauses separated by "and also" / "then" / ";"
+  // Split multi-clause sentences separated by ";", ".", "and also", "then", or ", and <verb / store clause>"
   const clauses = norm
-    .split(/\s*(?:;\s*|\.\s+|\band\s+also\b|\bthen\s+(?:also\s+)?(?=(?:add|put|grab|get|buy|need|check|remove|delete)\b))\s*/i)
+    .split(/\s*(?:;\s*|\.\s+|,?\s*\band\s+also\b|,?\s*\bthen\s+(?:also\s+)?(?=(?:add|put|grab|get|buy|need|check|uncheck|remove|delete|clear|undo)\b)|,\s*(?:and\s+)?(?:also\s+)?(?=(?:add|put|grab|get|buy|need|check|uncheck|remove|delete|clear|undo)\b)|,\s*and\s+(?=[^,;]+\b(?:to|at|on|in|from|for)\s+(?:my\s+|the\s+|our\s+)?(?:grocery|target|costco)\b))\s*/i)
     .map((c) => c.trim())
     .filter(Boolean);
 
   const commands = [];
   for (let clause of clauses) {
-    // Strip conversational filler ("we're making tacos tonight so", "can you please", "I need to grab")
     clause = clause
+      .replace(/^(?:and\s+also|also|and|then)\s+/i, '')
       .replace(/^(?:we(?:'re|\s+are)\s+[^,]+?\s+so\s+)/i, '')
       .replace(/^(?:i\s+(?:really\s+)?(?:need|want|have)\s+to\s+(?:get|buy|grab|pick\s+up|add)\s+)/i, 'add ')
       .replace(/^(?:(?:can|could|would)\s+you\s+(?:please\s+)?)?(?:please\s+)?(?:go\s+ahead\s+and\s+)?/i, '')
@@ -143,7 +195,7 @@ function extractOfflineSkillCommandsFromDictation(transcript, defaultListId = 'g
       .trim();
 
     if (!clause) continue;
-    if (!/^(?:add|put|buy|get|need|check|mark|tick|cross|uncheck|remove|delete|drop|increase|decrease|set|change|clear|undo|list|show|what)\b/i.test(clause)) {
+    if (!/^(?:add|put|buy|get|need|check|mark|tick|cross|uncheck|remove|delete|drop|increase|decrease|set|change|qty|quantity|more|less|fewer|clear|undo|list|show|what)\b/i.test(clause)) {
       clause = `add ${clause}`;
     }
     commands.push(clause);
@@ -152,14 +204,65 @@ function extractOfflineSkillCommandsFromDictation(transcript, defaultListId = 'g
   return commands.length ? commands : [`add ${norm} @${defaultListId}`];
 }
 
+function isExecutableBinaryOnPath(bin) {
+  if (!bin) return false;
+  return (process.env.PATH || '').split(path.delimiter).some((dir) => {
+    try {
+      fs.accessSync(path.join(dir, bin), fs.constants.X_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+function resolveAvailableAgentOptions() {
+  if (!aiAgentMod) return { timeoutMs: 10000, cliTimeoutMs: 10000 };
+  try {
+    const activeId = aiAgentMod.getActiveProviderId?.() || 'github-copilot';
+    const activeDef = aiAgentMod.PROVIDER_MAP?.[activeId];
+    const activeBin = activeDef && aiAgentMod.resolveBin ? aiAgentMod.resolveBin(activeDef) : activeDef?.bin;
+    if (activeBin && isExecutableBinaryOnPath(activeBin)) {
+      return {
+        providerId: activeId,
+        ...(activeId === 'antigravity' ? { model: 'Gemini 3.8 Flash (Low)' } : {}),
+        timeoutMs: 10000,
+        cliTimeoutMs: 10000,
+      };
+    }
+    for (const p of aiAgentMod.PROVIDERS || []) {
+      const candidateBin = aiAgentMod.resolveBin ? aiAgentMod.resolveBin(p) : p.bin;
+      if (candidateBin && isExecutableBinaryOnPath(candidateBin)) {
+        return {
+          providerId: p.id,
+          ...(p.id === 'antigravity' ? { model: 'Gemini 3.8 Flash (Low)' } : {}),
+          timeoutMs: 10000,
+          cliTimeoutMs: 10000,
+        };
+      }
+    }
+  } catch {}
+  return { timeoutMs: 10000, cliTimeoutMs: 10000 };
+}
+
+function needsConversationalRecipeReasoning(norm) {
+  return /\b(?:making|cooking|baking|preparing|recipe|ingredients?\s+for|what\s+do\s+(?:i|we)\s+need\s+for|dinner\s+tonight|breakfast|lunch)\b/i.test(norm);
+}
+
 /**
  * Uses the active RobOS AI Agent (`robos-lib/ai-agent`) grounded in the `/shopping-lists`
- * skill grammar to translate any spoken dictation into `/shopping-lists` skill commands.
+ * skill grammar to translate spoken dictation into `/shopping-lists` skill commands.
  */
-async function planSkillCommandsWithAgent(transcript, store, { defaultListId = 'grocery', aiAskFn } = {}) {
-  const ask = aiAskFn || (aiAgentMod && typeof aiAgentMod.ask === 'function' ? aiAgentMod.ask.bind(aiAgentMod) : null);
+async function planSkillCommandsWithAgent(transcript, store, { defaultListId = 'grocery', aiAskFn, forceAgent = false } = {}) {
   const norm = normalizeShoppingVoiceTranscript(transcript || '');
   if (!norm) return { usedAgent: false, commands: [] };
+
+  const shouldUseAgent = Boolean(aiAskFn)
+    || Boolean(forceAgent)
+    || Boolean(aiAgentMod?.listProviders?.()?.api)
+    || needsConversationalRecipeReasoning(norm);
+
+  const ask = aiAskFn || (shouldUseAgent && aiAgentMod && typeof aiAgentMod.ask === 'function' ? aiAgentMod.ask.bind(aiAgentMod) : null);
 
   if (ask) {
     try {
@@ -181,12 +284,13 @@ async function planSkillCommandsWithAgent(transcript, store, { defaultListId = '
         '  - "clear checked @grocery|@target|@costco" or "undo"',
         'Rules:',
         '  1. Extract all items, quantities, units (ea, pack, lb, oz, gal, case, bag, box, bunch), prices, notes, and store routing (@grocery, @target, @costco).',
-        '  2. If the user mentions a dish or recipe Alongside specific ingredients, add the requested ingredients.',
+        '  2. If the user mentions a dish or recipe alongside specific ingredients, add the requested ingredients.',
         '  3. Return ONLY a valid JSON object: {"commands": ["add ...", ...], "agentNote": "1-sentence summary"}.',
         `Spoken dictation transcript: ${JSON.stringify(norm)}`,
       ].join('\n');
 
-      const rawReply = await ask(prompt, { timeoutMs: 18000 });
+      const askOpts = aiAskFn ? { timeoutMs: 12000 } : resolveAvailableAgentOptions();
+      const rawReply = await ask(prompt, askOpts);
       const textReply = typeof rawReply === 'string' ? rawReply : (rawReply?.text || rawReply?.output || '');
       const jsonMatch = textReply.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -224,9 +328,10 @@ async function processDictationAudio({
   autoSync = true,
   sttTranscribeFn,
   aiAskFn,
+  forceAgent = false,
 } = {}) {
   const effectiveListId = listId || store.getSnapshot().activeListId || 'grocery';
-  const buf = audioBuffer || (audioBase64 ? Buffer.from(String(audioBase64).replace(/^data:[^;]+;base64,/, ''), 'base64') : null);
+  const buf = audioBuffer || (audioBase64 ? decodeBase64Audio(audioBase64) : null);
 
   let transcript = '';
   if (buf && buf.length > 0) {
@@ -241,27 +346,49 @@ async function processDictationAudio({
   }
 
   if (!transcript || !transcript.trim()) {
-    throw new Error('Could not hear any speech in the recording. Hold or tap Dictate and speak clearly.');
+    throw new Error('Could not hear any speech in the recording. Tap Dictate, speak clearly, and tap Stop & Send.');
   }
 
-  // 1. Plan `/shopping-lists` skill commands using the RobOS AI Agent (with offline fallback)
-  const plan = await planSkillCommandsWithAgent(transcript, store, {
+  // 1. Plan `/shopping-lists` skill commands using the RobOS AI Agent / `/shopping-lists` skill planner
+  let plan = await planSkillCommandsWithAgent(transcript, store, {
     defaultListId: effectiveListId,
     aiAskFn,
+    forceAgent,
   });
 
   // 2. Execute each `/shopping-lists` skill command through SkillsExecutor / executeTextCommand
-  const results = [];
-  const summaries = [];
+  let results = [];
+  let summaries = [];
   const executor = skillsExecutorMod?.defaultSkillsExecutor;
 
-  for (const cmd of plan.commands) {
-    const res = await executeTextCommand(store, cmd, {
-      listId: effectiveListId,
-      autoSync,
+  const runCommands = async (cmds) => {
+    const outResults = [];
+    const outSummaries = [];
+    for (const cmd of cmds) {
+      const res = await executeTextCommand(store, cmd, {
+        listId: effectiveListId,
+        autoSync,
+      });
+      outResults.push({ command: cmd, ...res });
+      const msg = res.summary || res.spoken || res.text;
+      if (msg) outSummaries.push(msg);
+    }
+    return { outResults, outSummaries };
+  };
+
+  ({ outResults: results, outSummaries: summaries } = await runCommands(plan.commands));
+
+  // If offline skill command parsing did not match any actionable items and we haven't asked the AI agent yet,
+  // escalate to the RobOS AI Agent (`robos-lib/ai-agent`) automatically.
+  if (!plan.usedAgent && !aiAskFn && results.length > 0 && results.every((r) => !r.ok)) {
+    const escalated = await planSkillCommandsWithAgent(transcript, store, {
+      defaultListId: effectiveListId,
+      forceAgent: true,
     });
-    results.push({ command: cmd, ...res });
-    if (res.summary) summaries.push(res.summary);
+    if (escalated.usedAgent && escalated.commands.length > 0) {
+      plan = escalated;
+      ({ outResults: results, outSummaries: summaries } = await runCommands(plan.commands));
+    }
   }
 
   // Record skill invocation in SkillsExecutor telemetry if available
@@ -292,6 +419,7 @@ async function processDictationAudio({
 }
 
 module.exports = {
+  decodeBase64Audio,
   convertAudioBufferToWav16k,
   transcribeAudioBuffer,
   extractOfflineSkillCommandsFromDictation,

@@ -1,8 +1,8 @@
 'use strict';
 
-let app, BrowserWindow, ipcMain, dialog, shell, clipboard;
+let app, BrowserWindow, ipcMain, dialog, shell, clipboard, session;
 try {
-  ({ app, BrowserWindow, ipcMain, dialog, shell, clipboard } = require('electron'));
+  ({ app, BrowserWindow, ipcMain, dialog, shell, clipboard, session } = require('electron'));
 } catch (error) {
   if (process.versions.electron) throw error;
 }
@@ -336,8 +336,9 @@ function registerIpc() {
       mimeType: payload.mimeType || 'audio/webm',
       transcriptHint: payload.transcriptHint || payload.transcript || '',
       listId: payload.listId,
-      autoSync: !TEST,
+      autoSync: false,
     });
+    scheduleAutoDriveSync();
     return { ...res, state: buildFullState() };
   });
 }
@@ -402,6 +403,10 @@ if (app) {
   } else {
     app.on?.('second-instance', createWindow);
     app.whenReady?.().then(async () => {
+      try {
+        session?.defaultSession?.setPermissionCheckHandler?.(() => true);
+        session?.defaultSession?.setPermissionRequestHandler?.((_wc, _perm, callback) => callback(true));
+      } catch {}
       registerIpc();
       try {
         mobileInfo = await mobileServer.listen(WEB_PORT, TEST ? '127.0.0.1' : '0.0.0.0');

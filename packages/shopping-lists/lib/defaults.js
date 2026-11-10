@@ -152,34 +152,34 @@ const DEFAULT_LISTS = [
 
 const KEYWORD_AISLES = {
   grocery: [
-    [/\b(apple|banana|avocado|spinach|lettuce|kale|tomato|onion|garlic|potato|\w*berr(?:y|ies)|lemon|lime|cilantro|parsley|carrot|pepper|broccoli|cucumber|fruit|herb|mushroom|grape|orange)\b/i, 'Produce'],
-    [/\b(milk|egg|yogurt|butter|cheese|cream|cheddar|mozzarella|parmesan|kefir|sour cream|oatmilk)\b/i, 'Dairy & Eggs'],
-    [/\b(bread|loaf|sourdough|bagel|baguette|muffin|tortilla|brioche|bun|roll|pita)\b/i, 'Bakery'],
-    [/\b(chicken|beef|steak|salmon|shrimp|pork|bacon|sausage|turkey|fish|cod|tuna|ground)\b/i, 'Meat & Seafood'],
-    [/\b(frozen|ice cream|pizza|peas|waffle|popsicle|sorbet)\b/i, 'Frozen'],
-    [/\b(coffee|tea|water|juice|soda|seltzer|sparkling|kombucha|espresso|milk|wine|beer)\b/i, 'Beverages'],
-    [/\b(chip|cracker|pretzel|popcorn|granola|bar|cookie|chocolate|almond|nut|hummus)\b/i, 'Snacks'],
-    [/\b(soap|sponge|foil|napkin|towel|trash|bleach|cleaner|wipe)\b/i, 'Household'],
+    [/\b(apple|banana|avocado|spinach|lettuce|kale|tomato|onion|garlic|potato|\w*berr(?:y|ies)|lemon|lime|cilantro|parsley|carrot|pepper|broccoli|cucumber|fruit|herb|mushroom|grape|orange)(?:s|es)?\b/i, 'Produce'],
+    [/\b(milk|egg|yogurt|butter|cheese|cream|cheddar|mozzarella|parmesan|kefir|sour cream|oatmilk)(?:s|es)?\b/i, 'Dairy & Eggs'],
+    [/\b(bread|loaf|loaves|sourdough|bagel|baguette|muffin|tortilla|brioche|bun|roll|pita)(?:s|es)?\b/i, 'Bakery'],
+    [/\b(chicken|beef|steak|salmon|shrimp|pork|bacon|sausage|turkey|fish|cod|tuna|ground)(?:s|es)?\b/i, 'Meat & Seafood'],
+    [/\b(frozen|ice cream|pizza|pea|waffle|popsicle|sorbet)(?:s|es)?\b/i, 'Frozen'],
+    [/\b(coffee|tea|water|juice|soda|seltzer|sparkling|kombucha|espresso|milk|wine|beer)(?:s|es)?\b/i, 'Beverages'],
+    [/\b(chip|cracker|pretzel|popcorn|granola|bar|cookie|chocolate|almond|nut|hummus)(?:s|es)?\b/i, 'Snacks'],
+    [/\b(soap|sponge|foil|napkin|towel|trash|bleach|cleaner|wipe)(?:s|es)?\b/i, 'Household'],
   ],
   target: [
-    [/\b(laundry|detergent|pod|dishwasher|tissue|paper towel|trash|bleach|cleaner|lysol|swiffer|wipe)\b/i, 'Household Essentials'],
-    [/\b(soap|shampoo|conditioner|toothpaste|toothbrush|deodorant|lotion|razor|face|sunscreen|wash|floss)\b/i, 'Personal Care & Beauty'],
-    [/\b(ibuprofen|tylenol|allergy|vitamin|band-aid|bandage|cough|medicine|melatonin|thermometer|aid)\b/i, 'Health & Pharmacy'],
-    [/\b(ziploc|parchment|foil|spatula|mug|plate|tupperware|container|wrap|sponge)\b/i, 'Kitchen & Dining'],
-    [/\b(bin|hanger|basket|candle|pillow|sheet|towel|lamp|frame|organizer|storage)\b/i, 'Home & Storage'],
-    [/\b(diaper|toy|crayon|lego|cat|dog|pet|treat|litter|marker|kid)\b/i, 'Kids & Pets'],
-    [/\b(battery|batteries|cable|usb|charger|hdmi|airtag|headphone|adapter)\b/i, 'Electronics & Tech'],
+    [/\b(laundry|detergent|pod|dishwasher|tissue|paper towel|trash|bleach|cleaner|lysol|swiffer|wipe)(?:s|es)?\b/i, 'Household Essentials'],
+    [/\b(soap|shampoo|conditioner|toothpaste|toothbrush|deodorant|lotion|razor|face|sunscreen|wash|floss)(?:s|es)?\b/i, 'Personal Care & Beauty'],
+    [/\b(ibuprofen|tylenol|allergy|vitamin|band-aid|bandage|cough|medicine|melatonin|thermometer|aid)(?:s|es)?\b/i, 'Health & Pharmacy'],
+    [/\b(ziploc|parchment|foil|spatula|mug|plate|tupperware|container|wrap|sponge)(?:s|es)?\b/i, 'Kitchen & Dining'],
+    [/\b(bin|hanger|basket|candle|pillow|sheet|towel|lamp|frame|organizer|storage)(?:s|es)?\b/i, 'Home & Storage'],
+    [/\b(diaper|toy|crayon|lego|cat|dog|pet|treat|litter|marker|kid)(?:s|es)?\b/i, 'Kids & Pets'],
+    [/\b(battery|batteries|cable|usb|charger|hdmi|airtag|headphone|adapter)(?:s|es)?\b/i, 'Electronics & Tech'],
   ],
   costco: [
     [/\b(kirkland)\b/i, 'Kirkland Signature'],
-    [/\b(rotisserie|deli|ravioli|butter|kerrygold|cheese|salami|prosciutto|hummus|queso)\b/i, 'Rotisserie & Deli'],
-    [/\b(berry|berries|avocado|spinach|salad|apple|banana|grape|mango|produce|broccoli)\b/i, 'Bulk Produce'],
-    [/\b(steak|ribeye|chicken breast|thigh|ground beef|pork|brisket|lamb|bacon)\b/i, 'Meat & Poultry'],
-    [/\b(frozen|chunk|salmon|mahi|dumpling|gyoza|berry|pizza|lasagna|ice cream)\b/i, 'Freezer Bulk'],
-    [/\b(paper towel|bath tissue|toilet paper|trash bag|detergent|cascade|dawn|clorox|wipe)\b/i, 'Paper & Cleaning'],
-    [/\b(water|topo chico|coffee|kirkland roast|protein shake|juice|case|soda|seltzer)\b/i, 'Beverages & Cases'],
-    [/\b(croissant|muffin|danish|cake|cookie|pie|bagel|bakery)\b/i, 'Bakery & Sweet'],
-    [/\b(olive oil|oil|syrup|honey|rice|quinoa|pasta|flour|spice|oat|nut|almond|peanut butter)\b/i, 'Pantry & Oils'],
+    [/\b(rotisserie|deli|ravioli|butter|kerrygold|cheese|salami|prosciutto|hummus|queso)(?:s|es)?\b/i, 'Rotisserie & Deli'],
+    [/\b(berry|berries|avocado|spinach|salad|apple|banana|grape|mango|produce|broccoli)(?:s|es)?\b/i, 'Bulk Produce'],
+    [/\b(steak|ribeye|chicken breast|thigh|ground beef|pork|brisket|lamb|bacon)(?:s|es)?\b/i, 'Meat & Poultry'],
+    [/\b(frozen|chunk|salmon|mahi|dumpling|gyoza|berry|pizza|lasagna|ice cream)(?:s|es)?\b/i, 'Freezer Bulk'],
+    [/\b(paper towel|bath tissue|toilet paper|trash bag|detergent|cascade|dawn|clorox|wipe)(?:s|es)?\b/i, 'Paper & Cleaning'],
+    [/\b(water|topo chico|coffee|kirkland roast|protein shake|juice|case|soda|seltzer)(?:s|es)?\b/i, 'Beverages & Cases'],
+    [/\b(croissant|muffin|danish|cake|cookie|pie|bagel|bakery)(?:s|es)?\b/i, 'Bakery & Sweet'],
+    [/\b(olive oil|oil|syrup|honey|rice|quinoa|pasta|flour|spice|oat|nut|almond|peanut butter)(?:s|es)?\b/i, 'Pantry & Oils'],
   ],
 };
 
@@ -313,7 +313,7 @@ function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
 
   const initialParts = preCleaned
     .split(/\r?\n|,|;/)
-    .map((p) => p.replace(/^[\s•\-*☐☑✓+]+/, '').trim())
+    .map((p) => p.replace(/^[\s•\-*☐☑✓+]+/, '').replace(/^(?:and\s+also|and|also|plus|then)\s+/i, '').trim())
     .filter(Boolean);
 
   const parts = [];
@@ -335,6 +335,7 @@ function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
       .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?(?:target|costco|grocery|shopping)(?:\s+shopping)?(?:\s+lists?)?\b/gi, ' ')
       .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?lists?\b/gi, ' ')
       .replace(/^(?:target|costco|grocery):\s*/i, '')
+      .replace(/^(?:and\s+also|and|also|plus|then)\s+/i, '')
       .replace(/[.!?]+$/g, '')
       .replace(/\s+/g, ' ')
       .trim();

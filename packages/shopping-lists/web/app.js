@@ -48,8 +48,14 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || 'Request failed');
+    const rawText = await res.text();
+    let data = {};
+    try {
+      data = rawText ? JSON.parse(rawText) : {};
+    } catch {
+      throw new Error(`Server error (${res.status}): ${rawText.slice(0, 140) || 'Invalid response'}`);
+    }
+    if (!res.ok || data.error) throw new Error(data.error || `Request failed (${res.status})`);
     if (data.state) {
       state = data.state;
       render();
@@ -386,6 +392,47 @@
     el.hidden = !show;
   }
 
+  async function sendAudioBlobToAgent(blob, mimeType, transcriptHint = '') {
+    const btn = document.getElementById('m-dictate-btn');
+    const icon = document.getElementById('m-dictate-icon');
+    const label = document.getElementById('m-dictate-label');
+    btn.classList.remove('recording');
+    btn.classList.add('busy');
+    btn.disabled = true;
+    icon.textContent = '⏳';
+    label.textContent = 'Agent…';
+    setDictateBanner('⏳ <strong>Transcribing audio &amp; running RobOS Agent (<code>/shopping-lists</code> skill)…</strong>');
+
+    try {
+      const audioBase64 = await blobToBase64(blob);
+      const list = getActiveList();
+      const res = await apiPost('/api/dictate', {
+        audioBase64,
+        mimeType: mimeType || blob.type || 'audio/webm',
+        transcriptHint,
+        listId: list?.id,
+      });
+      const cmdsHtml = (res.skillCommands || []).map((c) => `<code>${esc(c)}</code>`).join(' · ');
+      setDictateBanner(
+        `<div>🎙️ <strong>Heard:</strong> "${esc(res.transcript)}"</div>`
+        + `<div style="margin-top:4px;color:#34d399;">🤖 <strong>RobOS Agent (<code>/shopping-lists</code>):</strong> ${esc(res.summary)}</div>`
+        + (cmdsHtml ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8;">Skill commands: ${cmdsHtml}</div>` : ''),
+        true,
+      );
+      showToast(res.summary || 'Dictation applied to shopping list!');
+    } catch (err) {
+      setDictateBanner(`⚠️ <strong>Dictation failed:</strong> ${esc(err.message)}`, true);
+      showToast(err.message);
+    } finally {
+      btn.classList.remove('busy');
+      btn.disabled = false;
+      icon.textContent = '🎙️';
+      label.textContent = 'Dictate';
+      mediaRecorder = null;
+      mediaStream = null;
+    }
+  }
+
   async function toggleDictation() {
     const btn = document.getElementById('m-dictate-btn');
     const icon = document.getElementById('m-dictate-icon');
@@ -396,6 +443,29 @@
       clearInterval(recordTimer);
       try { if (speechRec) speechRec.stop(); } catch {}
       mediaRecorder.stop();
+      return;
+    }
+
+    // Fallback for plain HTTP non-localhost origins where Chrome disables navigator.mediaDevices
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      const httpsUrl = state?.sync?.appsScriptWebAppUrl || state?.sync?.publicTunnelUrl || '';
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'audio/*';
+      fileInput.capture = 'user';
+      fileInput.onchange = () => {
+        const file = fileInput.files?.[0];
+        if (file) sendAudioBlobToAgent(file, file.type || 'audio/webm', '');
+      };
+      if (httpsUrl && window.location.protocol === 'http:') {
+        setDictateBanner(
+          `🔒 Chrome requires HTTPS for live mic streaming (`
+          + `<a href="${esc(httpsUrl)}" style="color:#38bdf8;font-weight:700;">Switch to HTTPS URL</a>), `
+          + `or record a voice clip in the picker that just opened.`,
+          true,
+        );
+      }
+      fileInput.click();
       return;
     }
 
@@ -438,43 +508,9 @@
         try {
           if (mediaStream) mediaStream.getTracks().forEach((t) => t.stop());
         } catch {}
-        btn.classList.remove('recording');
-        btn.classList.add('busy');
-        btn.disabled = true;
-        icon.textContent = '⏳';
-        label.textContent = 'Agent…';
-        setDictateBanner('⏳ <strong>Transcribing audio &amp; running RobOS Agent (<code>/shopping-lists</code> skill)…</strong>');
-
-        try {
-          const mimeType = mediaRecorder.mimeType || 'audio/webm';
-          const blob = new Blob(audioChunks, { type: mimeType });
-          const audioBase64 = await blobToBase64(blob);
-          const list = getActiveList();
-          const res = await apiPost('/api/dictate', {
-            audioBase64,
-            mimeType,
-            transcriptHint: browserTranscript,
-            listId: list?.id,
-          });
-          const cmdsHtml = (res.skillCommands || []).map((c) => `<code>${esc(c)}</code>`).join(' · ');
-          setDictateBanner(
-            `<div>🎙️ <strong>Heard:</strong> "${esc(res.transcript)}"</div>`
-            + `<div style="margin-top:4px;color:#34d399;">🤖 <strong>RobOS Agent (<code>/shopping-lists</code>):</strong> ${esc(res.summary)}</div>`
-            + (cmdsHtml ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8;">Skill commands: ${cmdsHtml}</div>` : ''),
-            true,
-          );
-          showToast(res.summary || 'Dictation applied to shopping list!');
-        } catch (err) {
-          setDictateBanner(`⚠️ <strong>Dictation failed:</strong> ${esc(err.message)}`, true);
-          showToast(err.message);
-        } finally {
-          btn.classList.remove('busy');
-          btn.disabled = false;
-          icon.textContent = '🎙️';
-          label.textContent = 'Dictate';
-          mediaRecorder = null;
-          mediaStream = null;
-        }
+        const mimeType = mediaRecorder?.mimeType || 'audio/webm';
+        const blob = new Blob(audioChunks, { type: mimeType });
+        await sendAudioBlobToAgent(blob, mimeType, browserTranscript);
       };
 
       mediaRecorder.start(250);
@@ -488,6 +524,7 @@
         label.textContent = `Stop & Send (${recordSeconds}s)`;
       }, 1000);
     } catch (err) {
+      setDictateBanner(`⚠️ <strong>Microphone error:</strong> ${esc(err.message || 'Check browser mic permission')}`, true);
       showToast(`Microphone error: ${err.message || 'Check browser mic permission'}`);
     }
   }
