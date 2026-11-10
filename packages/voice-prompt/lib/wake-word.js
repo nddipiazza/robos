@@ -3,8 +3,8 @@
 const EventEmitter = require('events');
 
 const WAKE_PATTERNS = [
-  /(?:^|\b)(?:hello|hey|hi|ok|okay)[,\s.-]*(?:robos|rob\s+os|rob-os|row\s+bose|row-bose|rowbose|roh\s+bose|robust|robot)\b/i,
-  /(?:^|\b)(?:robos|rob\s+os|rob-os|row\s+bose|row-bose|rowbose|roh\s+bose)\b/i,
+  /(?:^|\b)(?:hello|hey|hi|ok|okay)[,\s.-]*(?:nabu|na\s+bu|naboo|robos|rob\s+os|rob-os|row\s+bose|row-bose|rowbose|roh\s+bose|robust|robot)\b/i,
+  /(?:^|\b)(?:nabu|na\s+bu|naboo|robos|rob\s+os|rob-os|row\s+bose|row-bose|rowbose|roh\s+bose)\b/i,
 ];
 
 class WakeWordDetector extends EventEmitter {

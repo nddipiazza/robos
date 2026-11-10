@@ -411,7 +411,9 @@ async function handleExecuteVoiceCommand(commandId, args = '', text = '') {
     return desktopAssistant.skillsExecutor.executeOpenApp(cmd.targetId);
   }
 
-  const query = args ? `${cmd.matchers[0]} ${args}` : (text || cmd.matchers[0]);
+  const query = (cmd.targetId === 'shopping-lists' && text)
+    ? text
+    : (args ? `${cmd.matchers[0]} ${args}` : (text || cmd.matchers[0]));
   return desktopAssistant.skillsExecutor.executeCommand(query, context, { ttsEngine });
 }
 
