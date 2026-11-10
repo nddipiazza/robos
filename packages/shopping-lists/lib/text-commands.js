@@ -11,7 +11,23 @@
  *   5. Printable Skills & Text Commands Reference (`/guide` and `PRINTABLE-GUIDE.md`)
  */
 
-const { syncWithGoogleDrive } = require('./google-drive-sync');
+const { syncWithGoogleDrive, listGoogleAccounts } = require('./google-drive-sync');
+
+async function maybeAutoSyncDrive(store, options = {}) {
+  if (options.autoSync === false || process.env.ROBOS_TEST === '1') return null;
+  try {
+    const snap = store.getSnapshot();
+    const hasAccount = Boolean(snap.sync?.accountId) || listGoogleAccounts().some((a) => a.signedIn);
+    if (!hasAccount) return null;
+    return await syncWithGoogleDrive({
+      store,
+      pullFromDocs: false,
+      fetchImpl: options.fetchImpl,
+    });
+  } catch {
+    return null;
+  }
+}
 
 function resolveStoreIdFromText(text, lists, fallbackId = null) {
   const s = String(text || '').toLowerCase();
@@ -216,6 +232,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
   // 2. UNDO
   if (/^(?:undo|undo\s+last(?:\s+action)?)$/i.test(cleanedInput)) {
     const res = store.undo();
+    if (res.restored) await maybeAutoSyncDrive(store, options);
     const msg = res.restored ? `Undid: ${res.label}.` : 'Nothing to undo.';
     return {
       ok: res.restored,
@@ -232,6 +249,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
     const targetId = explicitListId || defaultListId;
     const listName = snap0.lists.find((l) => l.id === targetId)?.name || targetId;
     const res = store.clearChecked(targetId);
+    await maybeAutoSyncDrive(store, options);
     const msg = `Cleared ${res.removedCount} checked item${res.removedCount === 1 ? '' : 's'} from ${listName}.`;
     return {
       ok: true,
@@ -249,6 +267,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
     const targetId = explicitListId || defaultListId;
     const listName = snap0.lists.find((l) => l.id === targetId)?.name || targetId;
     const res = store.checkAll(targetId, checked);
+    await maybeAutoSyncDrive(store, options);
     const msg = `${checked ? 'Checked' : 'Unchecked'} all items in ${listName}.`;
     return {
       ok: true,
@@ -261,13 +280,20 @@ async function executeTextCommand(store, rawInput, options = {}) {
 
   // 5. SYNC WITH GOOGLE DRIVE
   if (/^(?:sync|sync\s+drive|sync\s+google\s+drive|sync\s+docs|pull\s+drive|push\s+drive)(?:\s+(--pull|pull))?$/i.test(cleanedInput)) {
-    const pullChanges = /\bpull\b/i.test(cleanedInput) || options.pull !== false;
-    const res = await syncWithGoogleDrive(store, { pullChanges, fetchImpl: options.fetchImpl });
+    const pullChanges = /\bpull\b/i.test(cleanedInput) || Boolean(options.pull);
+    const res = await syncWithGoogleDrive({
+      store,
+      pullFromDocs: pullChanges,
+      fetchImpl: options.fetchImpl,
+    });
+    const docLines = Object.entries(res.docUrls || {}).map(([id, url]) => `  • ${id}: ${url}`);
+    const spoken = `Synced Grocery, Target, and Costco shopping lists with Google Drive.`;
+    const text = `${spoken}\n  • Drive Folder: ${res.folderUrl}\n${docLines.join('\n')}`;
     return {
       ok: res.ok,
       skill: 'shopping-lists:sync',
-      spoken: res.message,
-      text: res.message,
+      spoken,
+      text,
       data: res,
     };
   }
@@ -321,6 +347,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
       return { ok: false, skill: 'shopping-lists:uncheck', spoken: msg, text: msg };
     }
     const res = store.toggleItem(found.list.id, found.item.id, false);
+    await maybeAutoSyncDrive(store, options);
     const msg = `Unchecked "${res.item.name}" on ${found.list.name}.`;
     return { ok: true, skill: 'shopping-lists:uncheck', spoken: msg, text: msg, data: res };
   }
@@ -335,6 +362,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
       return { ok: false, skill: 'shopping-lists:check', spoken: msg, text: msg };
     }
     const res = store.toggleItem(found.list.id, found.item.id, true);
+    await maybeAutoSyncDrive(store, options);
     const msg = `Checked off "${res.item.name}" on ${found.list.name}.`;
     return { ok: true, skill: 'shopping-lists:check', spoken: msg, text: msg, data: res };
   }
@@ -356,6 +384,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
     } else {
       res = store.updateItem(found.list.id, found.item.id, { qty: Number(rawNum) });
     }
+    await maybeAutoSyncDrive(store, options);
     const msg = `Updated "${res.item.name}" quantity to ${res.item.qty} ${res.item.unit} on ${found.list.name}.`;
     return { ok: true, skill: 'shopping-lists:qty', spoken: msg, text: msg, data: res };
   }
@@ -370,6 +399,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
       return { ok: false, skill: 'shopping-lists:qty', spoken: msg, text: msg };
     }
     const res = store.adjustItemQty(found.list.id, found.item.id, delta);
+    await maybeAutoSyncDrive(store, options);
     const msg = `Updated "${res.item.name}" quantity to ${res.item.qty} ${res.item.unit} on ${found.list.name}.`;
     return { ok: true, skill: 'shopping-lists:qty', spoken: msg, text: msg, data: res };
   }
@@ -384,6 +414,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
       return { ok: false, skill: 'shopping-lists:remove', spoken: msg, text: msg };
     }
     const res = store.removeItem(found.list.id, found.item.id);
+    await maybeAutoSyncDrive(store, options);
     const msg = `Removed "${res.removed.name}" from ${found.list.name}.`;
     return { ok: true, skill: 'shopping-lists:remove', spoken: msg, text: msg, data: res };
   }
@@ -400,6 +431,8 @@ async function executeTextCommand(store, rawInput, options = {}) {
     const msg = `No items recognized in "${rawInput}".`;
     return { ok: false, skill: 'shopping-lists:add', spoken: msg, text: msg };
   }
+
+  await maybeAutoSyncDrive(store, options);
 
   const listMap = new Map(batchRes.state.lists.map((l) => [l.id, l]));
   const summaryParts = batchRes.added.map((entry) => {
