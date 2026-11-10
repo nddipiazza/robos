@@ -94,6 +94,8 @@
     if (state.sync?.folderUrl) {
       docLinks.push(`<a class="m-doc-chip" href="${esc(state.sync.folderUrl)}" target="_blank" rel="noopener">📁 Google Drive Folder</a>`);
     }
+    docLinks.push(`<button type="button" class="m-doc-chip" id="m-sync-drive-btn" style="cursor:pointer;border:1px solid #30363d;background:#161b22;color:#e2e8f0">🔄 Sync Docs</button>`);
+    docLinks.push(`<a class="m-doc-chip" href="/qr" target="_blank" rel="noopener">📱 QR / Phone Link</a>`);
     document.getElementById('m-docs-bar').innerHTML = docLinks.join('');
 
     // Units & Aisles (repopulate when active list changes)
@@ -137,11 +139,21 @@
       groups.get(a).push(it);
     }
 
+    const formatShortTs = (iso) => {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    };
+
     const renderCard = (it) => {
       const b = badgeMap.get(it.badge);
       const tagHtml = b ? `<span class="m-tag" style="color:${esc(b.color)}">${esc(b.icon)} ${esc(b.label)}</span>` : '';
       const priceStr = it.estPrice != null ? ` · $${(it.estPrice * it.qty).toFixed(2)}` : '';
       const noteStr = it.note ? ` · ${esc(it.note)}` : '';
+      const tsLabel = it.checked
+        ? (formatShortTs(it.checkedAt || it.updatedAt) ? ` · Checked ${formatShortTs(it.checkedAt || it.updatedAt)}` : '')
+        : (formatShortTs(it.addedAt || it.updatedAt) ? ` · Added ${formatShortTs(it.addedAt || it.updatedAt)}` : '');
       return `
         <div class="m-item-card ${it.checked ? 'checked' : ''}" data-item-id="${esc(it.id)}">
           <button type="button" class="m-check-btn" data-action="toggle" data-id="${esc(it.id)}" aria-label="Check off ${esc(it.name)}">
@@ -152,7 +164,7 @@
               <span class="m-item-name">${esc(it.name)}</span>
               ${tagHtml}
             </div>
-            <div class="m-item-sub">${esc(it.aisle)}${priceStr}${noteStr}</div>
+            <div class="m-item-sub">${esc(it.aisle)}${priceStr}${noteStr}${esc(tsLabel)}</div>
           </div>
           <div class="m-item-actions">
             <button type="button" class="m-row-step" data-action="dec" data-id="${esc(it.id)}" aria-label="Decrease quantity">−</button>
@@ -181,6 +193,21 @@
   }
 
   // Event listeners
+  document.getElementById('m-docs-bar').addEventListener('click', async (e) => {
+    const syncBtn = e.target.closest('#m-sync-drive-btn');
+    if (!syncBtn) return;
+    syncBtn.disabled = true;
+    syncBtn.textContent = '⏳ Syncing…';
+    try {
+      await apiPost('/api/sync', {});
+      showToast('Synced all 3 lists with Google Docs!');
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      render();
+    }
+  });
+
   document.getElementById('m-store-tabs').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-list-id]');
     if (!btn) return;
@@ -360,6 +387,9 @@
     es.onopen = () => {
       document.getElementById('m-live-text').textContent = 'Live Sync';
     };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   }
 
   boot().catch((err) => showToast(err.message));

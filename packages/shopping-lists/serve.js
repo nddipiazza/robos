@@ -10,7 +10,13 @@ async function main() {
   const store = createStore();
   const mobile = createMobileServer({ store });
   const info = await mobile.listen(port, host);
-  console.log(`RobOS Household Shopping Lists mobile form server: ${info.localUrl} (LAN: ${info.lanUrl})`);
+  console.log(`RobOS Household Shopping Lists mobile PWA server:`);
+  console.log(`  • Local:     ${info.localUrl}`);
+  console.log(`  • Home Wi-Fi: ${info.lanUrl}`);
+  if (info.tailscaleUrl) {
+    console.log(`  • Tailscale:  ${info.tailscaleUrl}`);
+  }
+  console.log(`  • Phone QR:   ${info.lanUrl}/qr`);
 }
 
 if (require.main === module) {
