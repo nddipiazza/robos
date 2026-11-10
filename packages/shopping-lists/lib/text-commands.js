@@ -12,6 +12,7 @@
  */
 
 const { syncWithGoogleDrive, listGoogleAccounts } = require('./google-drive-sync');
+const { normalizeShoppingVoiceTranscript } = require('./defaults');
 
 async function maybeAutoSyncDrive(store, options = {}) {
   if (options.autoSync === false || process.env.ROBOS_TEST === '1') return null;
@@ -197,7 +198,7 @@ function renderPrintableChecklist(snapshot, targetListId = 'all', filterMode = '
  * Execute a natural-language or shorthand text command against a ShoppingListsStore.
  */
 async function executeTextCommand(store, rawInput, options = {}) {
-  const input = String(rawInput || '').trim();
+  const input = normalizeShoppingVoiceTranscript(String(rawInput || '').trim());
   if (!input) {
     return {
       ok: false,

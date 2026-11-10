@@ -152,7 +152,7 @@ const DEFAULT_LISTS = [
 
 const KEYWORD_AISLES = {
   grocery: [
-    [/\b(apple|banana|avocado|spinach|lettuce|kale|tomato|onion|garlic|potato|berry|berries|lemon|lime|cilantro|parsley|carrot|pepper|broccoli|cucumber|fruit|herb|mushroom|grape|orange)\b/i, 'Produce'],
+    [/\b(apple|banana|avocado|spinach|lettuce|kale|tomato|onion|garlic|potato|\w*berr(?:y|ies)|lemon|lime|cilantro|parsley|carrot|pepper|broccoli|cucumber|fruit|herb|mushroom|grape|orange)\b/i, 'Produce'],
     [/\b(milk|egg|yogurt|butter|cheese|cream|cheddar|mozzarella|parmesan|kefir|sour cream|oatmilk)\b/i, 'Dairy & Eggs'],
     [/\b(bread|loaf|sourdough|bagel|baguette|muffin|tortilla|brioche|bun|roll|pita)\b/i, 'Bakery'],
     [/\b(chicken|beef|steak|salmon|shrimp|pork|bacon|sausage|turkey|fish|cod|tuna|ground)\b/i, 'Meat & Seafood'],
@@ -200,8 +200,51 @@ function detectAisle(list, itemName) {
   return 'General';
 }
 
+/**
+ * Normalize Whisper STT phonetic mishearings for "Grocery", "Target", and "Costco" shopping lists.
+ * Examples from Whisper tiny.en over ESPHome 16kHz mic:
+ *   - "my grocery list" -> "the Mike Rotary list", "my grodery list", "my rotary list", "my rosary list", "my glossary list"
+ *   - "my costco list"  -> "my cosco list", "my cost co list", "my cusco list", "my rosco list"
+ *   - "my target list"  -> "my tar get list", "my targe list", "my targit list"
+ */
+function normalizeShoppingVoiceTranscript(rawText) {
+  let s = String(rawText || '');
+  if (!s.trim()) return s;
+
+  // 1. Direct phonetic aliases for Grocery, Target, and Costco
+  s = s
+    .replace(/\b(?:mike\s+rotary|my\s+rotary|rotary|rosary|grodery|grosery|grossary|grossery|glossary|roastery|grow\s*siri|grow\s*serie|groceries)\b(?=\s+lists?\b)/gi, 'grocery')
+    .replace(/\b(?:mike\s+rotary|grodery|grosery|grossary|grossery|groceries)\b/gi, 'grocery')
+    .replace(/\b(?:cosco|cost\s+co|cost\s+go|cusco|cuzco|rosco|roscoe|pasco|bosco)\b(?=\s+lists?\b)/gi, 'costco')
+    .replace(/\b(?:cosco|cost\s+co|cusco|cuzco)\b/gi, 'costco')
+    .replace(/\b(?:tar\s+get|targe|targit|tarjet)\b(?=\s+lists?\b)/gi, 'target');
+
+  // 2. If the utterance is a list command ("add/put/buy/get/remove/check/what is on ... to/on/in/from [words] list")
+  //    and [words] was still mangled by STT into something unknown (not grocery/target/costco/shopping and not task/todo/issue/ticket),
+  //    resolve [words] phonetically to target, costco, or default to grocery!
+  if (
+    /^(?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|robos)[,.:;!\s]*)?(?:please\s+)?(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?|what(?:'s|\s+is|\s+are)\s+on|show|read)\b/i.test(s) &&
+    !/\b(?:task|tasks|todo|to-do|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(s)
+  ) {
+    s = s.replace(
+      /\b(to|on|in|from|at|for)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z\s'-]{1,28}?)\s+(lists?)\b/gi,
+      (full, prep, middle, listWord) => {
+        const m = middle.trim().toLowerCase();
+        if (/^(?:grocery|target|costco|shopping|my\s+grocery|my\s+target|my\s+costco|my\s+shopping)$/.test(m)) {
+          return full;
+        }
+        if (/tar|trg|targe/.test(m)) return `${prep} my target ${listWord}`;
+        if (/cos|cst|ksk|kirk|rosc|cusc|pasc|bosc/.test(m)) return `${prep} my costco ${listWord}`;
+        return `${prep} my grocery ${listWord}`;
+      },
+    );
+  }
+
+  return s;
+}
+
 function detectTargetStoreId(chunk, defaultListId, availableListIds) {
-  const s = String(chunk || '');
+  const s = normalizeShoppingVoiceTranscript(chunk);
   if (/(?:^|\s)@target\b|\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?target(?:\s+shopping)?(?:\s+lists?)?\b|\btarget:/i.test(s) && availableListIds.includes('target')) return 'target';
   if (/(?:^|\s)@costco\b|\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?costco(?:\s+shopping)?(?:\s+lists?)?\b|\b(?:costco:|kirkland|bulk|case of)\b/i.test(s) && availableListIds.includes('costco')) return 'costco';
   if (/(?:^|\s)@grocery\b|\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?grocery(?:\s+shopping)?(?:\s+lists?)?\b|\bgrocery:/i.test(s) && availableListIds.includes('grocery')) return 'grocery';
@@ -256,7 +299,7 @@ function splitSpokenAndItems(str) {
 function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
   const listIds = lists.map((l) => l.id);
   const listMap = new Map(lists.map((l) => [l.id, l]));
-  const rawString = String(rawText || '');
+  const rawString = normalizeShoppingVoiceTranscript(rawText);
   const sentenceStoreId = detectTargetStoreId(rawString, defaultListId, listIds);
   const hasExplicitCommas = /[\r\n,;]/.test(rawString);
 
@@ -365,5 +408,6 @@ module.exports = {
   BADGES,
   DEFAULT_LISTS,
   detectAisle,
+  normalizeShoppingVoiceTranscript,
   parseSmartItemsOffline,
 };

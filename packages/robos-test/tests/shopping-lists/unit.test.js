@@ -453,6 +453,17 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       assert.equal(r4.ok, true);
       assert.equal(r4.skill, 'shopping-lists:list');
       assert.match(r4.response, /Target list has/i);
+
+      // 5. Tolerates Whisper tiny.en phonetic mishearings ("to the Mike Rotary list" / "to my grodery list")
+      const r5 = await executeNabuCommand(
+        'Add two gallons of whole milk and blueberries to the Mike Rotary list.',
+        { configDir: executor.configDir, skillsExecutor: executor, autoLaunchPlayers: false },
+      );
+      assert.equal(r5.ok, true);
+      assert.equal(r5.skill, 'shopping-lists:add');
+      assert.equal(r5.data.added.length, 2);
+      assert.equal(r5.data.added[0].listId, 'grocery');
+      assert.equal(r5.data.added[1].listId, 'grocery');
     } finally {
       cleanup();
     }
