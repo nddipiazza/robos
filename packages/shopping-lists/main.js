@@ -22,6 +22,7 @@ const {
   syncWithGoogleDrive,
   shareShoppingFolder,
 } = require('./lib/google-drive-sync');
+const { processDictationAudio } = require('./lib/dictate-agent');
 
 const APP_ID = 'shopping-lists';
 const DEBUG_PORT = Number(process.env.ROBOS_DEBUG_PORT || 19224);
@@ -326,6 +327,18 @@ function registerIpc() {
     if (TEST) return { opened: true, url: target, simulated: true };
     if (shell) await shell.openExternal(target);
     return { opened: true, url: target };
+  });
+
+  ipcMain.handle('shopping-lists:dictate', async (_e, payload = {}) => {
+    const res = await processDictationAudio({
+      store,
+      audioBase64: payload.audioBase64,
+      mimeType: payload.mimeType || 'audio/webm',
+      transcriptHint: payload.transcriptHint || payload.transcript || '',
+      listId: payload.listId,
+      autoSync: !TEST,
+    });
+    return { ...res, state: buildFullState() };
   });
 }
 

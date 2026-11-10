@@ -12,6 +12,7 @@ const { syncWithGoogleDrive, shareShoppingFolder, GDOC_MIME, FOLDER_MIME } = req
 const { generateAppsScriptCodeGs, generateAppsScriptIndexHtml } = require('../../../shopping-lists/lib/apps-script-bundle');
 const { buildMatrix, renderQrSvg } = require('../../../shopping-lists/lib/qr');
 const { executeTextCommand, renderPrintableGuideHtml } = require('../../../shopping-lists/lib/text-commands');
+const { processDictationAudio } = require('../../../shopping-lists/lib/dictate-agent');
 
 function makeTempStore() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-shopping-unit-'));
@@ -464,6 +465,60 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       assert.equal(r5.data.added.length, 2);
       assert.equal(r5.data.added[0].listId, 'grocery');
       assert.equal(r5.data.added[1].listId, 'grocery');
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('processes audio dictation via Whisper STT and the RobOS Agent /shopping-lists skill', async () => {
+    const { store, cleanup } = makeTempStore();
+    try {
+      // 1. With RobOS AI Agent planning `/shopping-lists` skill commands from transcribed audio
+      const dummyAudio = Buffer.from('fake-webm-audio-payload');
+      const rAgent = await processDictationAudio({
+        store,
+        audioBuffer: dummyAudio,
+        mimeType: 'audio/webm',
+        autoSync: false,
+        sttTranscribeFn: async () => 'We are making tacos tonight so grab two pounds of ground beef and salsa for the Mike Rotary list, and put laundry pods on Target.',
+        aiAskFn: async (prompt) => {
+          assert.match(prompt, /\/shopping-lists/);
+          assert.match(prompt, /the grocery list/i); // Phonetic normalization applied before agent prompt
+          return JSON.stringify({
+            commands: [
+              'add 2 lb ground beef, 1 jar salsa @grocery',
+              'add 1 pack laundry pods @target',
+            ],
+            agentNote: 'Added taco ingredients to Grocery and laundry pods to Target.',
+          });
+        },
+      });
+
+      assert.equal(rAgent.ok, true);
+      assert.equal(rAgent.usedAgent, true);
+      assert.equal(rAgent.skillCommands.length, 2);
+      const grocery = rAgent.state.lists.find((l) => l.id === 'grocery');
+      const target = rAgent.state.lists.find((l) => l.id === 'target');
+      assert.ok(grocery.items.some((i) => /ground beef/i.test(i.name) && i.qty === 2));
+      assert.ok(grocery.items.some((i) => /salsa/i.test(i.name)));
+      assert.ok(target.items.some((i) => /laundry pods/i.test(i.name)));
+
+      // 2. Offline fallback when no external AI agent is configured
+      const rOffline = await processDictationAudio({
+        store,
+        audioBuffer: dummyAudio,
+        mimeType: 'audio/webm',
+        autoSync: false,
+        sttTranscribeFn: async () => 'I need 3 bags of coffee beans at Costco, and also check off salsa on my grocery list',
+        aiAskFn: async () => { throw new Error('offline'); },
+      });
+
+      assert.equal(rOffline.ok, true);
+      assert.equal(rOffline.usedAgent, false);
+      const costco = rOffline.state.lists.find((l) => l.id === 'costco');
+      const groceryAfter = rOffline.state.lists.find((l) => l.id === 'grocery');
+      assert.ok(costco.items.some((i) => /coffee beans/i.test(i.name) && i.qty === 3));
+      assert.ok(groceryAfter.items.find((i) => /salsa/i.test(i.name))?.checked);
     } finally {
       cleanup();
     }

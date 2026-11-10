@@ -27,6 +27,7 @@ const api = {
   getAppsScriptBundle: () => ipcRenderer.invoke('shopping-lists:getAppsScriptBundle'),
   copyText: (text) => ipcRenderer.invoke('shopping-lists:copyText', text),
   openExternal: (url) => ipcRenderer.invoke('shopping-lists:openExternal', url),
+  dictate: (payload) => ipcRenderer.invoke('shopping-lists:dictate', payload),
   onState: (cb) => {
     const handler = (_event, payload) => cb(payload);
     ipcRenderer.on('shopping-lists:state', handler);

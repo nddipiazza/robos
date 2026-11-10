@@ -84,10 +84,13 @@
               <span>Add Item to <strong id="form-store-name">Grocery</strong></span>
               <span class="auto-aisle-hint" id="auto-aisle-hint"></span>
             </div>
-            <div class="form-header-actions">
+            <div class="form-header-actions" style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-ghost-sm" id="btn-dictate" style="border-color:rgba(16,185,129,0.45);background:rgba(16,185,129,0.14);color:#34d399;font-weight:700;">🎙️ Dictate to Agent</button>
               <button type="button" class="btn-ghost-sm" id="btn-toggle-smart-paste">⚡ Multi-Item / AI Smart Paste</button>
             </div>
           </div>
+
+          <div id="dictate-status-banner" hidden style="margin-bottom:10px;padding:10px 12px;border-radius:10px;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.3);font-size:12.5px;line-height:1.5;"></div>
 
           <div class="form-row-main">
             <div class="field-grow">

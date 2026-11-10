@@ -471,6 +471,89 @@
     showToast(res.removedCount ? `Cleared ${res.removedCount} checked item(s)` : 'No checked items to clear');
   });
 
+  // ── Desktop Voice Dictation -> Whisper STT -> RobOS Agent (`/shopping-lists` skill) ──
+  let deskRecorder = null;
+  let deskStream = null;
+  let deskChunks = [];
+  let deskTimer = null;
+  let deskSecs = 0;
+
+  document.getElementById('btn-dictate')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-dictate');
+    const banner = document.getElementById('dictate-status-banner');
+    const setBanner = (html, show = true) => {
+      if (!banner) return;
+      banner.innerHTML = html;
+      banner.hidden = !show;
+    };
+
+    if (deskRecorder && deskRecorder.state === 'recording') {
+      clearInterval(deskTimer);
+      deskRecorder.stop();
+      return;
+    }
+
+    try {
+      deskChunks = [];
+      deskStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus']
+        .find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+      deskRecorder = preferredMime ? new MediaRecorder(deskStream, { mimeType: preferredMime }) : new MediaRecorder(deskStream);
+      deskRecorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) deskChunks.push(ev.data);
+      };
+      deskRecorder.onstop = async () => {
+        try { if (deskStream) deskStream.getTracks().forEach((t) => t.stop()); } catch {}
+        btn.disabled = true;
+        btn.textContent = '⏳ Agent Processing…';
+        setBanner('⏳ <strong>Whisper STT + RobOS Agent (<code>/shopping-lists</code> skill) processing audio…</strong>');
+        try {
+          const mimeType = deskRecorder.mimeType || 'audio/webm';
+          const blob = new Blob(deskChunks, { type: mimeType });
+          const audioBase64 = await new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onloadend = () => resolve(String(r.result || ''));
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+          });
+          const list = activeList();
+          const res = await api.dictate({ audioBase64, mimeType, listId: list?.id });
+          if (res.state) {
+            state = res.state;
+            render();
+          }
+          const cmdsHtml = (res.skillCommands || []).map((c) => `<code>${esc(c)}</code>`).join(' · ');
+          setBanner(
+            `<div>🎙️ <strong>Heard:</strong> "${esc(res.transcript)}"</div>`
+            + `<div style="margin-top:4px;color:#34d399;">🤖 <strong>RobOS Agent (<code>/shopping-lists</code>):</strong> ${esc(res.summary)}</div>`
+            + (cmdsHtml ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8;">Skill commands: ${cmdsHtml}</div>` : ''),
+            true,
+          );
+          showToast(res.summary || 'Dictation applied!');
+        } catch (err) {
+          setBanner(`⚠️ <strong>Dictation failed:</strong> ${esc(err.message)}`, true);
+          showToast(err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '🎙️ Dictate to Agent';
+          deskRecorder = null;
+          deskStream = null;
+        }
+      };
+
+      deskRecorder.start(250);
+      deskSecs = 0;
+      btn.textContent = '🔴 Stop & Send (0s)';
+      setBanner('🔴 <strong>Listening…</strong> Speak your items or recipe, then click <strong>Stop &amp; Send</strong>.');
+      deskTimer = setInterval(() => {
+        deskSecs += 1;
+        btn.textContent = `🔴 Stop & Send (${deskSecs}s)`;
+      }, 1000);
+    } catch (err) {
+      showToast(`Microphone error: ${err.message || 'Check microphone permission'}`);
+    }
+  });
+
   document.getElementById('btn-export-csv').addEventListener('click', async () => {
     const list = activeList();
     const res = await api.exportHouseholdCsv(list.id, { saveDialog: true });
