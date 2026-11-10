@@ -55,7 +55,7 @@ function renderGoogleDocHtml(list, options = {}) {
   const stats = list.stats || computeListStats(list);
   const accent = list.accent || '#10b981';
   const syncedAt = options.syncedAt ? formatTimestamp(options.syncedAt) : formatTimestamp(new Date().toISOString());
-  const formUrl = options.appsScriptWebAppUrl || options.mobileFormUrl || '';
+  const formUrl = options.appsScriptWebAppUrl || options.mobileFormUrl || options.mobileLanUrl || '';
   const folderUrl = options.folderUrl || '';
   const siblingDocUrls = options.docUrls || {};
 
@@ -91,10 +91,40 @@ function renderGoogleDocHtml(list, options = {}) {
   if (folderUrl) {
     navLinks.push(`<a href="${escHtml(folderUrl)}" style="color:#334155;text-decoration:none;font-weight:bold;">📁 Google Drive Folder</a>`);
   }
-  if (formUrl) {
-    const sep = formUrl.includes('?') ? '&' : '?';
-    navLinks.push(`<a href="${escHtml(`${formUrl}${sep}list=${encodeURIComponent(list.id)}`)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">📱 Open ${escHtml(list.name)} Interactive Add/Remove Form</a>`);
-  }
+
+  const editorHref = formUrl
+    ? `${formUrl}${formUrl.includes('?') ? '&' : '?'}list=${encodeURIComponent(list.id)}`
+    : '';
+
+  const editorCalloutHtml = editorHref
+    ? `
+      <table style="width:100%;border-collapse:collapse;margin:12px 0 10px 0;border:3px solid #0284c7;background-color:#eff6ff;">
+        <tr>
+          <td style="padding:16px 18px;text-align:center;">
+            <p style="margin:0 0 6px 0;font-size:16pt;font-weight:bold;line-height:1.3;">
+              <a href="${escHtml(editorHref)}" style="color:#0369a1;text-decoration:underline;font-weight:bold;">👉 CLICK THIS TO SEE THE LIST EDITOR (${escHtml(list.name.toUpperCase())})</a>
+            </p>
+            <p style="margin:0 0 8px 0;font-size:11pt;">
+              <a href="${escHtml(editorHref)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">📱 Open ${escHtml(list.name)} Interactive Add/Remove Form &amp; Voice Dictation →</a>
+            </p>
+            <p style="margin:0;padding:8px 10px;background-color:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:10pt;font-weight:bold;">
+              ⚠️ DO NOT TRY TO EDIT THIS DOC — This Google Doc is for data purposes and is READ-ONLY. Use the List Editor link above (or "Ok Nabu") to add, check off, or remove items.
+            </p>
+          </td>
+        </tr>
+      </table>
+    `
+    : `
+      <table style="width:100%;border-collapse:collapse;margin:12px 0 10px 0;border:2px solid #dc2626;background-color:#fef2f2;">
+        <tr>
+          <td style="padding:12px 14px;text-align:center;">
+            <p style="margin:0;color:#991b1b;font-size:10.5pt;font-weight:bold;">
+              ⚠️ DO NOT TRY TO EDIT THIS DOC — This Google Doc is for data purposes and is READ-ONLY.
+            </p>
+          </td>
+        </tr>
+      </table>
+    `;
 
   const renderTableRows = (items, isChecked) => {
     return items.map((it, rowIndex) => {
@@ -191,7 +221,8 @@ function renderGoogleDocHtml(list, options = {}) {
     </tr>
   </table>
 
-  ${navLinks.length ? `<p style="margin:8px 0 12px 0;font-size:10pt;color:#475569;">${navLinks.join(' &nbsp;·&nbsp; ')}</p>` : ''}
+  ${editorCalloutHtml}
+  ${navLinks.length ? `<p style="margin:6px 0 12px 0;font-size:10pt;color:#475569;">Switch list: ${navLinks.join(' &nbsp;·&nbsp; ')}</p>` : ''}
 
   ${toBuySectionHtml}
   ${checkedSectionHtml}
@@ -223,7 +254,7 @@ function parseGoogleDocText(plainText, existingList) {
     const line = rawLine.replace(/\u00a0/g, ' ').trim();
     if (!line) continue;
 
-    if (/^(RobOS Household|Switch list:|📱|👉|🏠|💡|Synced by|🎉 Every item|ITEM & QTY|AISLE|EST\.|ADDED|CHECKED OFF)/i.test(line)) continue;
+    if (/^(RobOS Household|Switch list:|📱|👉|⚠️|DO NOT TRY TO EDIT|CLICK THIS TO SEE|🏠|💡|Synced by|🎉 Every item|ITEM & QTY|AISLE|EST\.|ADDED|CHECKED OFF)/i.test(line)) continue;
     if (/^\d+\s+to buy\b/i.test(line)) continue;
     if (/^↳/.test(line)) {
       if (parsedItems.length > 0) {
