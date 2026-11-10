@@ -92,7 +92,8 @@ function renderGoogleDocHtml(list, options = {}) {
     navLinks.push(`<a href="${escHtml(folderUrl)}" style="color:#334155;text-decoration:none;font-weight:bold;">📁 Google Drive Folder</a>`);
   }
   if (formUrl) {
-    navLinks.push(`<a href="${escHtml(formUrl)}?list=${encodeURIComponent(list.id)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">📱 Open ${escHtml(list.name)} Interactive Add/Remove Form</a>`);
+    const sep = formUrl.includes('?') ? '&' : '?';
+    navLinks.push(`<a href="${escHtml(`${formUrl}${sep}list=${encodeURIComponent(list.id)}`)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">📱 Open ${escHtml(list.name)} Interactive Add/Remove Form</a>`);
   }
 
   const renderTableRows = (items, isChecked) => {
