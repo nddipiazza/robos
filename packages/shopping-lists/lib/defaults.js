@@ -211,8 +211,9 @@ function normalizeShoppingVoiceTranscript(rawText) {
   let s = String(rawText || '');
   if (!s.trim()) return s;
 
-  // 1. Direct phonetic aliases for Grocery, Target, and Costco
+  // 1. Direct phonetic aliases for Grocery, Target, and Costco + common brand mishearings
   s = s
+    .replace(/\bwheat\s+things\b/gi, 'Wheat Thins')
     .replace(/\b(?:mike\s+rotary|my\s+rotary|rotary|rosary|grodery|grosery|grossary|grossery|glossary|roastery|grow\s*siri|grow\s*serie|groceries)\b(?=\s+lists?\b)/gi, 'grocery')
     .replace(/\b(?:mike\s+rotary|grodery|grosery|grossary|grossery|groceries)\b/gi, 'grocery')
     .replace(/\b(?:cosco|cost\s+co|cost\s+go|cusco|cuzco|rosco|roscoe|pasco|bosco)\b(?=\s+lists?\b)/gi, 'costco')
@@ -334,12 +335,16 @@ function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
       .replace(/(?:^|\s)@(?:target|costco|grocery)\b/gi, ' ')
       .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?(?:target|costco|grocery|shopping)(?:\s+shopping)?(?:\s+lists?)?\b/gi, ' ')
       .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?lists?\b/gi, ' ')
+      .replace(/[.,;!\s]+(?:my\s+|the\s+|our\s+)?(?:target|costco|grocery|shopping)\s+lists?\b/gi, ' ')
       .replace(/^(?:target|costco|grocery):\s*/i, '')
       .replace(/^(?:and\s+also|and|also|plus|then)\s+/i, '')
-      .replace(/[.!?]+$/g, '')
+      .replace(/^[.,;!\-\s]+|[.!?,;:\s]+$/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     if (!cleaned) continue;
+    if (/^(?:my\s+|the\s+|our\s+)?(?:target|costco|grocery|shopping|lists?)(?:\s+(?:target|costco|grocery|shopping|lists?))*$/i.test(cleaned)) {
+      continue;
+    }
 
     // Extract optional inline note in parentheses at the end: e.g. "Honeycrisp apples (extra crisp)"
     let note = '';
