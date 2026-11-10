@@ -308,7 +308,9 @@ function createStore(options = {}) {
           existing.estPrice = roundMoney(payload.estPrice);
         }
         if (payload.aisle && payload.aisle !== 'auto') existing.aisle = String(payload.aisle).trim();
+        existing.addedAt = nowIso;
         existing.updatedAt = nowIso;
+        list.items = [existing, ...list.items.filter((it) => it.id !== existing.id)];
         list.updatedAt = nowIso;
         persist({ reason: 'increment-item' });
         return { item: { ...existing }, merged: true, state: getSnapshot() };
