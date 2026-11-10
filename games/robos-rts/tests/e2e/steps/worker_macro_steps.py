@@ -33,6 +33,56 @@ def shift_place(context, x, y):
     click_world(context, x, y, shift=True)
 
 
+@when("the commander Shift-right-clicks at ({x:d}, {y:d})")
+def shift_context_click(context, x, y):
+    sx, sy = context.client.project((x, y, 0))[0]
+    context.client.mouse(sx, sy, button=2, shift=True)
+    context.client.mouse(sx, sy, button=2, pressed=False, shift=True)
+
+
+@when("the commander holds Shift")
+def hold_shift(context):
+    context.client.key("Shift")
+
+
+@when("the commander releases Shift")
+def release_shift(context):
+    context.client.key("Shift", pressed=False)
+
+
+def click_card(context, slot, button):
+    x = 1592 + ((slot - 1) % 5) * 70
+    y = 894 + ((slot - 1) // 5) * 70
+    context.client.mouse(x, y, button=button)
+    context.client.mouse(x, y, button=button, pressed=False)
+
+
+@when("the commander clicks worker card slot {slot:d}")
+def click_worker_card(context, slot):
+    click_card(context, slot, 1)
+
+
+@when("the commander right-clicks worker card slot {slot:d}")
+@when("the commander right-clicks command card slot {slot:d}")
+def context_worker_card(context, slot):
+    click_card(context, slot, 2)
+
+
+@then('the worker build page is "{page}"')
+def worker_build_page(context, page):
+    assert (context.client.ui()["state"]["worker_build_page"] or "root") == page
+
+
+@then("no placement is active")
+def no_placement(context):
+    assert not context.client.ui()["state"]["pending_ability"]
+
+
+@then('"{name}" has Auto-Repair {status}')
+def auto_repair(context, name, status):
+    assert find_unit(context, name)["auto_repair"] == (status == "on")
+
+
 @when("the commander selects the building at ({x:d}, {y:d})")
 def select_building(context, x, y):
     click_world(context, x, y, height=1.15)
@@ -64,6 +114,12 @@ def finished_site(context, type_id, x, y):
 @then("no building stands at ({x:d}, {y:d})")
 def cancelled_site(context, x, y):
     assert building_at(context, x, y) is None
+
+
+@then("construction at ({x:d}, {y:d}) is progressing")
+def progressing_site(context, x, y):
+    site = building_at(context, x, y)
+    assert site and 0.1 < site["build_progress"] < 1.0, site
 
 
 @then('"{name}" is fully repaired at a crystal cost')

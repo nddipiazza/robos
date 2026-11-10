@@ -147,6 +147,8 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"workshop": _workshop(root, r, team)
 		"airframe_hangar": _airframe_hangar(root, team, glow)
 		"sentry_turret": _sentry_turret(root, r, team)
+		"field_bunker": _field_bunker(root, team)
+		"field_armory": _field_armory(root, team, glow)
 		"forager": _forager(root, glow)
 		"skitterling": _skitterling(root, glow)
 		"bile_crawler": _bile_crawler(root, glow)
@@ -177,10 +179,24 @@ static func build(unit_type: String, owner_id: int) -> Node3D:
 		"aegis_relay": _aegis_relay(root, r, glow)
 		"waystone": _waystone(root, r, team)
 		"aether_prism": _aether_prism(root, r, glow)
+		"propaganda_statue": _propaganda_statue(root, team)
 		"shale_barrier": _shale_barrier(root)
 		"phase_barrier": _phase_barrier(root, r)
 		_: box(root, Vector3(r * 1.5, 1.4, r * 1.5), mat("fallback", STEEL), Vector3(0, 0.7, 0))
 	return root
+
+static func _propaganda_statue(root: Node3D, team: Material) -> void:
+	var stone := mat("directorate_stone", Color("#778194"))
+	var trim := mat("directorate_trim", Color("#343e50"))
+	box(root, Vector3(3.5, 0.32, 3.5), trim, Vector3(0, 0.16, 0))
+	box(root, Vector3(2.55, 0.92, 2.55), stone, Vector3(0, 0.76, 0))
+	box(root, Vector3(1.25, 0.32, 0.12), team, Vector3(0, 0.79, 1.32))
+	for side in [-1, 1]:
+		box(root, Vector3(0.48, 1.32, 0.60), stone, Vector3(side * 0.37, 1.88, 0))
+	box(root, Vector3(1.42, 1.2, 0.78), stone, Vector3(0, 3.05, 0))
+	box(root, Vector3(0.42, 1.40, 0.53), stone, Vector3(-0.86, 2.99, 0))
+	box(root, Vector3(0.45, 1.75, 0.55), stone, Vector3(0.90, 3.56, 0), Vector3(0, 0, -15))
+	sph(root, 0.40, stone, Vector3(0, 3.99, 0), Vector3(0.93, 1.15, 0.90), 8)
 
 static func _aegis_warden(root: Node3D, team: Material) -> void:
 	var m := _alien_mats()
@@ -275,6 +291,27 @@ static func _airframe_hangar(root: Node3D, team: Material, glow: Material) -> vo
 # ---------------------------------------------------------------------------
 # Humans — Meridian Guard
 # ---------------------------------------------------------------------------
+static func _field_bunker(root: Node3D, team: Material) -> void:
+	var slab := mat("field_bunker_slab", Color("#68716b"))
+	var ports := mat("field_bunker_ports", STEEL_DARK)
+	box(root, Vector3(3.8, 0.35, 3.6), ports, Vector3(0, 0.18, 0))
+	box(root, Vector3(3.1, 1.45, 3.0), slab, Vector3(0, 0.9, 0))
+	box(root, Vector3(2.65, 0.29, 2.65), team, Vector3(0, 1.76, 0))
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(2.4, 0.36, 0.12), ports, Vector3(0, 1.22, side * 1.52))
+		box(root, Vector3(0.12, 0.36, 2.3), ports, Vector3(side * 1.56, 1.22, 0))
+
+static func _field_armory(root: Node3D, team: Material, glow: Material) -> void:
+	var casing := mat("field_armory_case", Color("#647283"))
+	var steel := mat("field_armory_steel", STEEL_DARK)
+	box(root, Vector3(4.4, 0.4, 4.1), steel, Vector3(0, 0.2, 0))
+	box(root, Vector3(3.9, 2.05, 3.5), casing, Vector3(0, 1.18, 0))
+	box(root, Vector3(3.7, 0.31, 3.4), team, Vector3(0, 2.28, 0))
+	for side in [-1.0, 1.0]:
+		box(root, Vector3(0.36, 0.42, 2.7), steel, Vector3(side * 1.2, 2.6, 0))
+		box(root, Vector3(0.72, 0.2, 0.1), glow, Vector3(side * 1.1, 1.65, 1.77))
+	box(root, Vector3(1.1, 1.35, 0.15), steel, Vector3(0, 0.94, 1.78))
+
 static func _pioneer(root: Node3D, team: Material) -> void:
 	var suit := mat("h_suit", WORK_SUIT, Color.BLACK, 1.0, 0.1, 0.8)
 	var dark := mat("h_dark", STEEL_DARK, Color.BLACK, 1.0, 0.4, 0.6)

@@ -373,7 +373,7 @@ func _build_tool_panel() -> Control:
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.add_theme_color_override("font_color", Color("#64748b"))
 	help.add_theme_font_size_override("font_size", 12)
-	help.text = "Drag to paint terrain rects; click to place.\nRight-click erases.\nWheel zooms, middle-drag or Space+drag pans.\nDrag a selected rect's corner handle to resize.\nDel delete · Ctrl+D duplicate · arrows nudge.\nRamps descend west → east (high ground on the left)."
+	help.text = "Drag to paint terrain rects; click to place.\nRight-click erases.\nWheel zooms, middle-drag or Space+drag pans.\nDrag a selected rect's corner handle to resize.\nDel delete · Ctrl+D duplicate · arrows nudge.\nRamps rise toward a plateau at either end."
 	v.add_child(help)
 	return v
 

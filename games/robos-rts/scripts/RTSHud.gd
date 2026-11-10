@@ -235,12 +235,12 @@ func technology_state() -> Dictionary:
 	if roster.is_empty():
 		return {"visible": true, "faction": faction, "rows": []}
 	var worker: Dictionary = RTSData.get_unit_def(roster.worker)
-	var structures := SimEngine.units.values().filter(func(unit): return unit.owner == owner and unit.is_structure)
+	var structures := SimEngine.units.values().filter(func(unit): return unit.owner == owner and unit.is_structure and not unit.get("campaign_reserve", false))
 	var states := {}
 	var rows: Array[Dictionary] = []
 	for ability_id in worker.abilities:
 		var ability := RTSData.get_ability_def(ability_id)
-		if not ability.has("structure"):
+		if not ability.has("structure") or not SimEngine.campaign_allows_ability(owner, ability_id):
 			continue
 		var type: String = ability.structure
 		var definition := RTSData.get_unit_def(type)
@@ -266,6 +266,8 @@ func technology_state() -> Dictionary:
 			var power_state := "Missing" if producer_state == "Unpowered" else ("Complete" if requirement.state == "Complete" else "Site")
 			producer_requirements.append({"id": "power", "name": "Power field", "state": power_state})
 		for trainee in definition.get("trains", []):
+			if not SimEngine.campaign_allows_ability(owner, "train_" + trainee):
+				continue
 			var train: Dictionary = RTSData.get_unit_def(trainee)
 			var train_requirements := producer_requirements.duplicate()
 			var train_state := producer_state
@@ -274,11 +276,16 @@ func technology_state() -> Dictionary:
 				train_requirements.append(needed)
 				if needed.state != "Complete":
 					train_state = "Locked"
+			if SimEngine.campaign != null and owner == 1 and trainee == "triage_specialist":
+				var equipped := structures.any(func(producer): return producer.unit_type == type and SimEngine.campaign_training_block_reason(producer, trainee).is_empty())
+				train_requirements.append({"id": "research_module", "name": "Attached Research Module", "state": "Complete" if equipped else "Missing"})
+				if not equipped:
+					train_state = "Locked"
 			rows.append({"id": trainee, "section": "Production", "name": train.name, "state": train_state,
 				"requirements": train_requirements, "cost": main.ability_cost({"unit": trainee})})
 		for action in definition.get("abilities", []):
 			var research := RTSData.get_ability_def(action)
-			if not research.has("upgrade"):
+			if not research.has("upgrade") or not SimEngine.campaign_allows_ability(owner, action):
 				continue
 			var offer: Dictionary = main.ability_cost(research)
 			var research_state := producer_state
@@ -484,6 +491,13 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 	var sx := mm.size.x / SimEngine.map_width
 	var sy := mm.size.y / SimEngine.map_height
 	canvas.draw_rect(mm, Color("#56683a"))
+	if not SimEngine.ground_regions.is_empty():
+		canvas.draw_rect(mm, Color("#3f2c28"))
+		for region in SimEngine.ground_regions:
+			var polygon := PackedVector2Array()
+			for point in region:
+				polygon.append(mm.position + point * Vector2(sx, sy))
+			canvas.draw_colored_polygon(polygon, Color("#8f8067"))
 	for water in SimEngine.water_polygons:
 		var points = PackedVector2Array()
 		for point in water:
@@ -491,6 +505,11 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 		canvas.draw_colored_polygon(points, Color("#16364f"))
 	for bridge in SimEngine.land_bridges:
 		canvas.draw_rect(Rect2(mm.position + bridge.position * Vector2(sx, sy), bridge.size * Vector2(sx, sy)), Color("#94815d"))
+	for deck in SimEngine.bridge_decks:
+		var polygon := PackedVector2Array()
+		for point in deck:
+			polygon.append(mm.position + point * Vector2(sx, sy))
+		canvas.draw_colored_polygon(polygon, Color("#94815d"))
 	for tile in SimEngine.terrain_tiles:
 		var color: Color = {"land": Color("#56683a"), "water": Color("#16364f"), "cliff": Color("#3a3029"), "plateau": Color("#a8946b"), "brush": Color("#295f48")}.get(str(tile.terrain), Color.WHITE)
 		canvas.draw_rect(Rect2(mm.position + Vector2(float(tile.x), float(tile.y)) * Vector2(sx, sy), Vector2(4, 4) * Vector2(sx, sy)), color)
@@ -539,6 +558,14 @@ func _draw_minimap_units() -> void:
 		else:
 			draw_rect(Rect2(up - Vector2(1.5, 1.5), Vector2(3, 3)), col)
 
+	if main.campaign_hud and main.campaign_hud.state.get("status") == "playing":
+		for objective in main.campaign_hud.state.markers:
+			var point := Vector2(objective.point[0], objective.point[1])
+			var pos: Vector2 = main.world_to_minimap(point)
+			var color := Color("#ffcd77") if objective.bonus else Color("#86e6f1")
+			var diamond := PackedVector2Array([pos + Vector2(0, -5), pos + Vector2(5, 0), pos + Vector2(0, 5), pos + Vector2(-5, 0), pos + Vector2(0, -5)])
+			draw_polyline(diamond, Color.BLACK, 4.0, true)
+			draw_polyline(diamond, color, 2.0, true)
 	for a in main.alerts:
 		var t: float = 1.0 - float(a["ttl"]) / float(a["max"])
 		var ap: Vector2 = main.world_to_minimap(a["pos"])
@@ -663,6 +690,7 @@ func _order_label(u: Dictionary) -> String:
 		"attack_move": return "Attack-moving"
 		"patrol": return "Patrolling"
 		"follow": return "Following"
+		"enter_bunker": return "Entering bunker"
 		"attack_target": return "Attacking"
 		"force_attack": return "Force-firing"
 		"harvest": return "Gathering"
@@ -688,6 +716,7 @@ func _draw_single(u: Dictionary) -> void:
 	var sp: Rect2 = main.SEL_PANEL
 	var def: Dictionary = RTSData.get_unit_def(str(u["unit_type"]))
 	var is_own: bool = u["owner"] == main.local_player
+	var show_garrison: bool = is_own and u.unit_type == "field_bunker" and u.build_progress >= 1.0
 	var pcol := RTSData.get_player_color(int(u["owner"]))
 
 	# Portrait
@@ -734,7 +763,7 @@ func _draw_single(u: Dictionary) -> void:
 	by += 30.0
 
 	# Stats: two columns, labels muted, values bright
-	var wpn: Dictionary = def.get("weapon", {})
+	var wpn: Dictionary = {} if show_garrison else def.get("weapon", {})
 	var col_a: Array = []
 	var col_b: Array = []
 	if not wpn.is_empty():
@@ -770,6 +799,19 @@ func _draw_single(u: Dictionary) -> void:
 			_text(Vector2(rx + 177, ry + 14), status, 15, C_GOLD if builder.is_empty() else C_MUTED)
 		_bar(Rect2(rx, ry + 24, 420, 18), float(u["build_progress"]), C_GOLD, "%d%%" % int(float(u["build_progress"]) * 100.0))
 		ry += 62.0
+	elif show_garrison:
+		var passengers: Array = u.get("passengers", [])
+		var capacity: int = def.transport_capacity
+		_text(Vector2(rx, ry + 12), "Garrison  %d / %d" % [passengers.size(), capacity], 17, C_TEXT)
+		for i in range(capacity):
+			var slot := _production_rect(i)
+			_vgrad(slot, Color("#252c37"), Color("#12161c"))
+			draw_rect(slot, C_EDGE_HI if i < passengers.size() else C_EDGE, false, 1.0)
+			if i < passengers.size():
+				var portrait := _icon_for(passengers[i].unit_type)
+				if portrait:
+					draw_texture_rect(portrait, slot.grow(-3.0), false)
+		ry += 78.0
 	elif def.has("trains") and is_own:
 		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
@@ -846,7 +888,7 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Interceptor Mode · Air only" if u.flight_height > 0.0 else "Assault Mode · Ground only")
 	if u.has("carapace_morph_until"):
 		status.append("Evolving %.1fs" % ((u.carapace_morph_until - SimEngine.tick) * SimEngine.TICK_DT))
-	if is_own and def.has("transport_capacity"):
+	if is_own and u.unit_type != "field_bunker" and def.has("transport_capacity"):
 		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
 	if is_own and u.unit_type == "tunnel_mouth" and not building:
 		var partner := SimEngine.linked_tunnel(u)
@@ -912,7 +954,7 @@ func _draw_single(u: Dictionary) -> void:
 		_text(Vector2(sx, ry + 16), str(s), 16, C_TEXT)
 		sx += _text_w(str(s), 16) + 36.0
 
-	var timing: Dictionary = main.selected_weapon_timing()
+	var timing: Dictionary = {} if show_garrison else main.selected_weapon_timing()
 	if not timing.is_empty():
 		var label := str(timing.state)
 		if timing.remaining > 0.0:
@@ -986,13 +1028,17 @@ func _draw_command_card() -> void:
 		if pending:
 			border = C_GOLD
 			bw = 3.0
-		if not pu.is_empty() and ((btn.ability_id == "auto_repair" and pu.get("auto_repair", false)) or (btn.ability_id == "salvage" and pu.get("salvage_finish", 0) > SimEngine.tick) or (btn.ability_id == "hold_fire" and pu.get("hold_fire", false)) or (btn.ability_id == "phase_cloak" and pu.get("cloaked", false))):
+		var autocast: String = main.AUTOCAST_COMMANDS.get(btn.ability_id, "")
+		var autocast_enabled: bool = not autocast.is_empty() and pu.get(autocast, false)
+		if autocast_enabled:
+			draw_rect(r.grow(3.0), Color(C_AETHER, 0.3), false, 2.0)
+		if not pu.is_empty() and (autocast_enabled or (btn.ability_id == "salvage" and pu.get("salvage_finish", 0) > SimEngine.tick) or (btn.ability_id == "hold_fire" and pu.get("hold_fire", false)) or (btn.ability_id == "phase_cloak" and pu.get("cloaked", false))):
 			border = C_AETHER
 			bw = 3.0
 		draw_rect(r, border, false, bw)
 		var hk: String = btn.hotkey
 		if hk != "":
-			var badge := Rect2(r.position + Vector2(3, 3), Vector2(19, 19))
+			var badge := Rect2(r.position + Vector2(3, 3), Vector2(31 if hk.length() > 1 else 19, 19))
 			draw_rect(badge, Color(0, 0, 0, 0.72))
 			_text(Vector2(badge.position.x, badge.position.y + 15), hk, 14, C_GOLD if not blocked else C_MUTED, HORIZONTAL_ALIGNMENT_CENTER, badge.size.x)
 
@@ -1007,6 +1053,22 @@ func _glyph(id: String, r: Rect2) -> void:
 			out.append(c + Vector2(p[0], p[1]) * u)
 		return out
 	match id:
+		"worker_basic", "worker_advanced":
+			var bright := accent if id == "worker_basic" else C_GOLD
+			draw_colored_polygon(P.call([[-20, 16], [-20, -4], [0, -17], [20, -4], [20, 16]]), Color("#354c65"))
+			draw_polyline(P.call([[-20, 16], [-20, -4], [0, -17], [20, -4], [20, 16], [-20, 16]]), bright, 2.0 * u, true)
+			draw_polyline(P.call([[-8, 15], [-8, 1], [8, 1], [8, 15]]), col, 2.0 * u, true)
+			if id == "worker_advanced":
+				draw_polyline(P.call([[-11, -10], [0, -23], [11, -10]]), bright, 2.0 * u, true)
+		"worker_back":
+			draw_polyline(P.call([[-5, -15], [-20, 0], [-5, 15]]), col, 4.0 * u, true)
+			draw_polyline(P.call([[-19, 0], [18, 0]]), col, 4.0 * u, true)
+		"halt_construction":
+			for x in [-12, 5]:
+				draw_rect(Rect2(c + Vector2(x, -14) * u, Vector2(7, 28) * u), Color("#e06a5e"))
+		"train_pioneer":
+			_person(c, 17.0 * u, Color("#f0a24c"))
+			draw_arc(c + Vector2(0, -8) * u, 8.0 * u, PI, TAU, 16, col, 3.0 * u, true)
 		"move":
 			draw_colored_polygon(P.call([[-20, -6], [3, -6], [3, -17], [22, 0], [3, 17], [3, 6], [-20, 6]]), accent)
 		"patrol":
@@ -1063,7 +1125,7 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_arc(c - Vector2(12, 0) * u, 8 * u, 0, TAU, 14, Color("#a3d270"), 2.4 * u, true)
 			draw_arc(c + Vector2(12, 0) * u, 8 * u, 0, TAU, 14, Color("#a3d270"), 2.4 * u, true)
 			draw_line(c - Vector2(5, 0) * u, c + Vector2(5, 0) * u, col, 3.2 * u)
-		"load_transport", "unload_transport", "fighter_assault", "fighter_intercept":
+		"load_transport", "unload_transport", "unload_bunker", "fighter_assault", "fighter_intercept":
 			var direction := -1.0 if id in ["load_transport", "fighter_intercept"] else 1.0
 			draw_rect(Rect2(c - Vector2(16, 16) * u, Vector2(32, 14) * u), accent, false, 3.0 * u)
 			draw_line(c + Vector2(0, 7 - 10 * direction) * u, c + Vector2(0, 7 + 10 * direction) * u, col, 3.0 * u)

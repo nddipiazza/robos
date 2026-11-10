@@ -57,6 +57,7 @@ const MAX_RALLY_WAYPOINTS := 8
 const ATTACHMENT_PAD_OFFSET := Vector2(5.5, 0.0)
 const ATTACHMENT_LANDING_SNAP := 2.0
 const PRODUCTION_FLIGHT_HEIGHT := 8.0
+const PRODUCTION_QUEUE_CAPACITY := 5
 const PRODUCTION_EXIT_RETRY_TICKS := 8
 const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
@@ -138,6 +139,8 @@ var ramps: Array[Rect2] = []
 var water_polygons: Array[PackedVector2Array] = []
 var land_bridges: Array[Rect2] = []
 var water_cells: Dictionary = {}
+var ground_regions: Array[PackedVector2Array] = []
+var bridge_decks: Array[PackedVector2Array] = []
 var unlimited_resources: bool = false
 var terrain_tiles: Array = []
 var _brush_cells: Dictionary = {}
@@ -166,6 +169,8 @@ var startup_complete := false
 var resume_from_title := false
 var title_battle_view: Dictionary = {}
 var match_state: Dictionary = {}
+const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
+var campaign: Campaign
 var _skirmish_source: Dictionary = {}
 var vision: Vision
 var living_ground := LivingGround.new(128.0, 96.0)
@@ -210,7 +215,7 @@ func _load_startup_scenario() -> void:
 func _process(delta: float) -> void:
 	frame_sim_usec = 0
 	frame_sim_ticks = 0
-	if rts_mode == "backend" or paused or match_state.get("status", "") == "finished":
+	if rts_mode == "backend" or paused or _scenario_finished():
 		return
 	var started = Time.get_ticks_usec()
 	# Keep input/rendering responsive when fast-forward or a slow capture exhausts
@@ -251,6 +256,8 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	water_polygons.clear()
 	land_bridges.clear()
 	water_cells.clear()
+	ground_regions.clear()
+	bridge_decks.clear()
 	unlimited_resources = false
 	terrain_tiles.clear()
 	_brush_cells.clear()
@@ -261,6 +268,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	_defensive_recalls.clear()
 	command_history.clear()
 	match_state.clear()
+	campaign = null
 	resume_from_title = false
 	title_battle_view.clear()
 	_skirmish_source = {}
@@ -368,7 +376,7 @@ func load_legacy_scenario() -> void:
 	_recompute_supplies()
 	emit_signal("scenario_loaded", scenario_name)
 
-func load_scenario_dict(data: Dictionary) -> Dictionary:
+func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: String = "normal") -> Dictionary:
 	if str(data.get("mode", "")) == "skirmish":
 		return _load_skirmish(data)
 	var s_seed = int(data.get("seed", 42))
@@ -434,6 +442,8 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 		var base_y = float(u.get("y", 30.0))
 		var utype = str(u.get("type", "rifleman"))
 		var owner_id = int(u.get("owner", u.get("player", 1)))
+		if campaign_index == Campaign.DEFENSE and difficulty == "casual" and owner_id == 1 and utype in Campaign.CASUAL_DISABLED_STRUCTURES:
+			continue
 		var spread = float(u.get("spread", 2.1))
 		var cols = max(1, int(ceil(sqrt(float(count)))))
 		for idx in range(count):
@@ -452,6 +462,11 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	_recompute_supplies()
 	RTSCommanderAI.configure_from_scenario(data.get("directives", []))
 	_start_vision(bool(data.get("fog_of_war", false)))
+	if campaign_index >= 0:
+		campaign = Campaign.new(self, campaign_index, difficulty)
+		sim_speed = campaign.playback_speed()
+		if difficulty in ["hard", "brutal"]:
+			_refresh_vision()
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "unit_count": units.size()}
 
@@ -465,14 +480,21 @@ func resolve_scenario_path(slug_or_path: String) -> String:
 			return candidate
 	return ""
 
-func load_scenario_file(slug_or_path: String) -> Dictionary:
+func load_scenario_file(slug_or_path: String, difficulty: String = "normal") -> Dictionary:
+	if difficulty not in Campaign.DIFFICULTIES:
+		return {"ok": false, "error": "Unknown campaign difficulty."}
 	var file_path = resolve_scenario_path(slug_or_path)
 	if file_path == "":
 		return {"ok": false, "error": "Scenario file not found: " + slug_or_path}
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(file_path))
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {"ok": false, "error": "Scenario is not a JSON object: " + file_path}
-	return load_scenario_dict(parsed)
+	return load_scenario_dict(parsed, Campaign.mission_for_path(file_path), difficulty)
+
+func start_campaign(index: int, difficulty: String = "normal") -> Dictionary:
+	if index < 0 or index >= Campaign.MISSIONS.size():
+		return {"ok": false, "error": "Unknown campaign mission."}
+	return load_scenario_file(Campaign.MISSIONS[index].id, difficulty)
 
 func start_skirmish(map_id: String = "frontier-hunters", options: Dictionary = {}) -> Dictionary:
 	if not SKIRMISH_MAPS.has(map_id):
@@ -733,6 +755,10 @@ func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> boo
 	var def = RTSData.get_unit_def(structure_type)
 	if not worker.is_worker or worker.unit_type == "prospector" or not bool(def.get("is_structure", false)) or def.has("attachment_for") or def.get("faction", "") != worker.faction:
 		return false
+	if def.get("campaign_only", false) and (campaign == null or worker.owner != 1):
+		return false
+	if campaign != null and worker.owner == 1 and structure_type not in campaign.roster.structures:
+		return false
 	for required in def.get("requires", []):
 		if not has_tech_structure(worker.owner, str(required)):
 			return false
@@ -745,7 +771,7 @@ func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> boo
 func has_tech_structure(owner_id: int, type_id: String) -> bool:
 	var retracted_type := type_id + "_retracted"
 	for unit in units.values():
-		if unit.owner != owner_id or not unit.is_structure or unit.build_progress < 1.0:
+		if unit.owner != owner_id or not unit.is_structure or unit.build_progress < 1.0 or unit.get("campaign_reserve", false):
 			continue
 		if unit.unit_type == type_id or unit.unit_type == retracted_type:
 			return true
@@ -887,6 +913,11 @@ func _ground_mobile_overlaps(point: Vector2, radius: float) -> bool:
 		if not unit.is_structure and unit.flight_height <= 0.0 and not unit.get("burrowed", false) and point.distance_to(unit.pos) < radius + unit.radius:
 			return true
 	return false
+
+func silo_raise_block_reason(silo: Dictionary) -> String:
+	if _ground_mobile_overlaps(silo.pos, silo.radius):
+		return "Move ground units off the Silo before raising it."
+	return ""
 
 func production_attachment_pad(producer: Dictionary) -> Vector2:
 	return producer.pos + ATTACHMENT_PAD_OFFSET
@@ -1069,6 +1100,8 @@ func is_build_tile_blocked(point: Vector2, player: int, allowed_vent: Vector2 = 
 
 func _configure_water(map_cfg: Dictionary) -> void:
 	terrain_tiles = map_cfg.get("terrain_tiles", []).duplicate(true)
+	ground_regions.assign(_map_polygons(map_cfg.get("ground_regions", [])))
+	bridge_decks.assign(_map_polygons(map_cfg.get("bridge_decks", [])))
 	for bridge in map_cfg.get("bridges", []):
 		land_bridges.append(Rect2(float(bridge.x), float(bridge.y), float(bridge.w), float(bridge.h)))
 	for channel in map_cfg.get("water_channels", []):
@@ -1086,6 +1119,13 @@ func _configure_water(map_cfg: Dictionary) -> void:
 				if bridge.has_point(pos):
 					on_bridge = true
 			if on_bridge:
+				continue
+			if not bridge_decks.is_empty() and bridge_decks.any(func(deck): return Geometry2D.is_point_in_polygon(pos, deck)):
+				continue
+			# Water and the terrain outside an authored ground outline share the
+			# ground-blocking grid used by movement and placement.
+			if not ground_regions.is_empty() and not ground_regions.any(func(region): return Geometry2D.is_point_in_polygon(pos, region)):
+				water_cells[Vector2i(x, y)] = true
 				continue
 			for polygon in water_polygons:
 				if Geometry2D.is_point_in_polygon(pos, polygon):
@@ -1110,6 +1150,19 @@ func _configure_water(map_cfg: Dictionary) -> void:
 					terrain_obstacles.append(rect)
 				"plateau":
 					high_ground_zones.append(rect)
+
+func _map_polygons(definitions: Array) -> Array[PackedVector2Array]:
+	var polygons: Array[PackedVector2Array] = []
+	for definition in definitions:
+		if not definition is Array:
+			continue
+		var polygon := PackedVector2Array()
+		for point in definition:
+			if point is Array and point.size() >= 2:
+				polygon.append(Vector2(float(point[0]), float(point[1])))
+		if polygon.size() >= 3:
+			polygons.append(polygon)
+	return polygons
 
 # Compile brush cells into rectangles so a large bucket fill does not create
 # thousands of terrain meshes or repeated shoreline geometry.
@@ -1266,6 +1319,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["brood_bonus_slots"] = 0
 		u["brood_recharge"] = 0.0
 		u["worker_rally_route"] = []
+	if u.unit_type == "pioneer":
+		u["auto_repair"] = true
 	if def.has("energy_profile"):
 		u["energy_profile"] = def.energy_profile
 		u["energy"] = def.energy_profile.start
@@ -1274,6 +1329,8 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["energy"] = def.support.starting_energy
 		u["support_target_tag"] = 0
 		u["next_support_cue"] = 0
+		if unit_type == "triage_specialist":
+			u["auto_heal"] = true
 	if def.has("lifetime_seconds"):
 		u["expires_tick"] = tick + int(def.lifetime_seconds) * TICK_RATE
 	units[tag] = u
@@ -1292,11 +1349,22 @@ func _starting_energy(unit_type: String) -> float:
 		"skirmisher": return 75.0
 	return 0.0
 
+func ramp_rises_east(ramp: Rect2, plateaus: Array[Rect2]) -> bool:
+	var middle := ramp.get_center().y
+	var west := Vector2(ramp.position.x - 0.01, middle)
+	var east := Vector2(ramp.end.x + 0.01, middle)
+	var east_is_high := false
+	for plateau in plateaus:
+		if plateau.has_point(west):
+			return false
+		east_is_high = east_is_high or plateau.has_point(east)
+	return east_is_high
+
 func get_elevation_at(pos: Vector2) -> float:
 	for rmp in ramps:
 		if rmp.has_point(pos):
-			var t = clampf((pos.x - rmp.position.x) / max(1.0, rmp.size.x), 0.0, 1.0)
-			return lerp(2.2, 0.0, t)
+			var t := (pos.x - rmp.position.x) / rmp.size.x
+			return 2.2 * (t if ramp_rises_east(rmp, high_ground_zones) else 1.0 - t)
 	for hg in high_ground_zones:
 		if hg.has_point(pos):
 			return 2.2
@@ -1310,9 +1378,12 @@ func step_ticks(count: int = 1) -> void:
 	if paused:
 		emit_signal("paused_step")
 	for _i in range(count):
-		if match_state.get("status", "") == "finished":
+		if _scenario_finished():
 			break
 		_step_single_tick()
+
+func _scenario_finished() -> bool:
+	return match_state.get("status", "") == "finished" or (campaign != null and campaign.status != "playing")
 
 func _step_single_tick() -> void:
 	tick += 1
@@ -1373,6 +1444,8 @@ func _step_single_tick() -> void:
 	if tick % VISION_UPDATE_TICKS == 0 and (vision != null or not watch_stations.is_empty()):
 		_refresh_vision()
 	_check_match_result()
+	if campaign != null:
+		campaign.step(self)
 	emit_signal("simulation_ticked", tick)
 
 func _rebuild_astar_grid() -> void:
@@ -1668,7 +1741,7 @@ func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliff
 	var previous := a
 	for i in range(1, steps + 1):
 		var p := a.lerp(b, float(i) / float(steps))
-		if check_water and is_water_at(p, radius * 0.5):
+		if check_water and _walk_segment_hits_water(previous, p, radius * 0.5):
 			return false
 		for footprint in _footprint_bins.get(_footprint_bin(p), NO_FOOTPRINTS):
 			var reach: float = footprint.radius + radius
@@ -1677,6 +1750,29 @@ func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliff
 				return false
 		previous = p
 	return true
+
+func _walk_segment_hits_water(a: Vector2, b: Vector2, clearance: float) -> bool:
+	var margin := Vector2.ONE * clearance
+	var first := Vector2i(((a.min(b) - margin) / PATH_CELL_SIZE).floor())
+	var last := Vector2i(((a.max(b) + margin) / PATH_CELL_SIZE).floor())
+	var cell_size := Vector2.ONE * PATH_CELL_SIZE
+	var clearance_squared := clearance * clearance
+	for x in range(first.x, last.x + 1):
+		for y in range(first.y, last.y + 1):
+			if not water_cells.has(Vector2i(x, y)):
+				continue
+			var cell := Rect2(Vector2(x, y) * PATH_CELL_SIZE, cell_size)
+			if b.distance_squared_to(b.clamp(cell.position, cell.end)) <= clearance_squared:
+				return true
+			# Match is_water_at: straight sides and rounded corners.
+			var horizontal := cell.grow_side(SIDE_LEFT, clearance).grow_side(SIDE_RIGHT, clearance)
+			var vertical := cell.grow_side(SIDE_TOP, clearance).grow_side(SIDE_BOTTOM, clearance)
+			if _walk_segment_enters_rect(a, b, horizontal) or _walk_segment_enters_rect(a, b, vertical):
+				return true
+			for corner in [cell.position, cell.end, Vector2(cell.position.x, cell.end.y), Vector2(cell.end.x, cell.position.y)]:
+				if Geometry2D.get_closest_point_to_segment(corner, a, b).distance_squared_to(corner) <= clearance_squared:
+					return true
+	return false
 
 func _walk_segment_enters_rect(a: Vector2, b: Vector2, rect: Rect2) -> bool:
 	# Slab intersection catches brief diagonal corner crossings between grid
@@ -2001,6 +2097,9 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 
 func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	u["vel"] = Vector2.ZERO
+	if u.unit_type == "field_bunker":
+		_update_bunker_garrison(u, dt)
+		return
 	if u.has("carapace_morph_until"):
 		if tick >= int(u.carapace_morph_until):
 			_finish_carapace_morph(u)
@@ -2227,6 +2326,18 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				if u.orders.size() > 1:
 					u.orders.pop_front()
 
+		"enter_bunker":
+			var bunker: Dictionary = units.get(order.target_tag, {})
+			if not can_enter_bunker(u, bunker):
+				u.orders.pop_front()
+				u.path.clear()
+			elif _edge_distance(u, bunker) <= 1.2 and _has_carrier_access(u.pos, u.radius, bunker):
+				var garrison: Array = bunker.get("passengers", [])
+				_embark_ground_unit(garrison, u)
+				bunker["passengers"] = garrison
+			else:
+				_approach_target(u, bunker.pos, dt)
+
 		"build":
 			_process_worker_build_order(u, order, dt)
 
@@ -2257,6 +2368,8 @@ func _waiting_target_lost(unit: Dictionary, order: Dictionary) -> bool:
 			return target.is_empty() or target.hp <= 0.0 or target.owner != unit.owner or not can_attack(unit, target)
 		"follow":
 			return not _is_friendly_mobile(target, unit.owner)
+		"enter_bunker":
+			return not can_enter_bunker(unit, target)
 		"harvest":
 			var source: Dictionary = resources.get(order.target_tag, {})
 			if source.is_empty():
@@ -2606,7 +2719,7 @@ func hub_upgrade_block_reason(hub: Dictionary) -> String:
 		return "Upgrade already queued."
 	if not has_tech_structure(hub.owner, "muster_hall"):
 		return "Requires Muster Hall."
-	if hub.production_queue.size() >= 5:
+	if hub.production_queue.size() >= PRODUCTION_QUEUE_CAPACITY:
 		return "Colony Hub queue is full."
 	var player: Dictionary = players[hub.owner]
 	if player.crystal < HUB_OPERATIONS_OFFER.crystal:
@@ -2844,6 +2957,9 @@ func _step_support(source: Dictionary, dt: float) -> bool:
 		return false
 	source.energy = minf(config.max_energy, source.energy + float(config.regen) * dt)
 	var order: Dictionary = source.orders.front() if not source.orders.is_empty() else {}
+	var triage: bool = source.unit_type == "triage_specialist"
+	var auto_heal: bool = triage and source.get("auto_heal", false)
+	var advancing: bool = auto_heal and order.get("type") == "attack_move"
 	var target: Dictionary = {}
 	if order.get("type") == "restore_vitals":
 		target = units.get(order.target_tag, {})
@@ -2856,33 +2972,52 @@ func _step_support(source: Dictionary, dt: float) -> bool:
 			_follow_order_path(source, target.pos, dt, source.radius + target.radius + float(config.range))
 			return true
 		source.path.clear()
-	elif order.is_empty() or (order.type == "hold_position" and source.orders.size() == 1):
-		target = units.get(previous, {})
-		if not can_restore(source, target) or _edge_distance(source, target) > float(config.range):
-			target = {}
-			if tick % 8 == int(source.tag) % 8:
-				var nearest := float(config.range)
-				for candidate in query_units_in_radius(source.pos, nearest + float(source.radius)):
-					if not can_restore(source, candidate):
-						continue
-					var distance := _edge_distance(source, candidate)
-					if distance <= nearest:
-						target = candidate
-						nearest = distance
+	elif advancing or order.is_empty() or (order.type == "hold_position" and source.orders.size() == 1):
+		if not triage or auto_heal:
+			target = _automatic_support_target(source, previous, float(config.range), triage)
 	if target.is_empty():
 		return false
 	var stat: String = config.stat
 	var amount := minf(minf(float(config.rate) * dt, source.energy), float(target["max_" + stat]) - float(target[stat]))
 	target[stat] += amount
 	source.energy -= amount
-	source.vel = Vector2.ZERO
 	source.support_target_tag = target.tag
-	if not source.is_structure:
-		source.facing = (target.pos - source.pos).angle()
+	if not advancing:
+		source.vel = Vector2.ZERO
+		if not source.is_structure:
+			source.facing = (target.pos - source.pos).angle()
 	if previous != target.tag and tick >= source.next_support_cue:
 		source.next_support_cue = tick + 64
 		ability_triggered.emit(source, config.ability, target.pos)
-	return true
+	return not advancing
+
+func _automatic_support_target(source: Dictionary, previous: int, reach: float, prioritize_value: bool) -> Dictionary:
+	var target: Dictionary = units.get(previous, {})
+	if not can_restore(source, target) or _edge_distance(source, target) > reach:
+		target = {}
+	if tick % 8 != int(source.tag) % 8 or (not prioritize_value and not target.is_empty()):
+		return target
+	var best_value := -1
+	var nearest := reach
+	if not target.is_empty():
+		var current := RTSData.get_unit_def(target.unit_type)
+		best_value = int(current.get("crystal_cost", 0)) + int(current.get("aether_cost", 0))
+		nearest = _edge_distance(source, target)
+	for candidate in query_units_in_radius(source.pos, reach + float(source.radius)):
+		if not can_restore(source, candidate):
+			continue
+		var distance := _edge_distance(source, candidate)
+		if distance > reach:
+			continue
+		var value := 0
+		if prioritize_value:
+			var definition := RTSData.get_unit_def(candidate.unit_type)
+			value = int(definition.get("crystal_cost", 0)) + int(definition.get("aether_cost", 0))
+		if value > best_value or (value == best_value and distance <= nearest and target.get("tag") != previous):
+			target = candidate
+			best_value = value
+			nearest = distance
+	return target
 
 func _approach_target(u: Dictionary, target_pos: Vector2, dt: float) -> void:
 	_prepare_path(u, target_pos, 1.0)
@@ -3072,7 +3207,7 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 		return false
 	var neighbors = query_units_in_radius(u["pos"], u["radius"] * 2.4)
 	for n in neighbors:
-		if n["tag"] == u["tag"] or n["owner"] != u["owner"] or n.get("burrowed", false):
+		if n["tag"] == u["tag"] or n["owner"] != u["owner"] or n.is_walkable_structure or n.get("burrowed", false):
 			continue
 		if (u.flight_height > 0.0) != (n.flight_height > 0.0):
 			continue
@@ -3144,7 +3279,11 @@ func _follow_choke_yield(unit: Dictionary, dt: float, mineral_walkers: Dictionar
 		_move_toward_point(unit, point, dt)
 		return
 	unit.vel = Vector2.ZERO
-	if tick % 8 != int(unit.tag) % 8 or (leader.pos - turn).dot(direction) < 1.0:
+	if tick % 8 != int(unit.tag) % 8:
+		return
+	# The unit that opened the passage may have reached its own destination
+	# short of this berth. It no longer needs to hold this unit aside.
+	if (leader.pos - turn).dot(direction) < 1.0 and (not leader.orders.is_empty() or leader.vel.dot(direction) > 0.25):
 		return
 	for follower in query_units_in_radius(turn, 7.0):
 		if follower.flight_height > 0.0 or mineral_walkers.has(follower.tag):
@@ -3282,11 +3421,15 @@ func _map_clamped_position(p: Vector2, radius: float) -> Vector2:
 func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, previous: Vector2 = Vector2.INF) -> Vector2:
 	var res := _map_clamped_position(p, radius)
 	if not ignore_cliffs:
-		if is_water_at(res, radius * 0.5):
-			if previous.is_finite() and not is_water_at(previous, radius * 0.5):
-				return previous
-			var cell := _find_nearest_walkable_cell(astar_grid, res, res)
-			res = astar_grid.get_point_position(cell)
+		if not water_cells.is_empty():
+			var clearance := radius * 0.5
+			var touches_water := _walk_segment_hits_water(previous, res, clearance) if previous.is_finite() else is_water_at(res, clearance)
+			if touches_water:
+				if previous.is_finite() and not is_water_at(previous, clearance):
+					return _slide_along_static(previous, res, radius, ignore_cliffs)
+				if is_water_at(res, clearance):
+					var cell := _find_nearest_walkable_cell(astar_grid, res, res)
+					res = astar_grid.get_point_position(cell)
 		for obs in terrain_obstacles:
 			var exp_rect := obs.grow(radius)
 			if previous.is_finite() and not exp_rect.has_point(previous) and _walk_segment_enters_rect(previous, res, exp_rect):
@@ -3343,23 +3486,72 @@ func _edge_distance(a: Dictionary, b: Dictionary) -> float:
 	return maxf(0.0, position.distance_to(b.pos) - (float(a.radius) + float(b.radius)))
 
 func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
-	return not attacker.get("burrowed", false) and _weapon_can_hit(RTSData.get_unit_def(attacker.unit_type).get("weapon", {}), target)
+	if attacker.unit_type == "field_bunker":
+		return attacker.get("passengers", []).any(func(unit): return _weapon_can_hit(_active_weapon(unit), target))
+	return not attacker.get("burrowed", false) and _weapon_can_hit(_active_weapon(attacker), target)
+
+func _active_weapon(unit: Dictionary) -> Dictionary:
+	return RTSData.get_unit_def(unit.unit_type).get("weapon", {})
 
 func _weapon_can_hit(weapon: Dictionary, target: Dictionary) -> bool:
 	return target.get("unit_type") != "phase_barrier" and not weapon.is_empty() \
 		and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
 
-func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: Dictionary = {}) -> Dictionary:
+func _bunker_shot_in_range(bunker: Dictionary, weapon: Dictionary, target: Dictionary) -> bool:
+	if target.is_empty() or target.hp <= 0.0 or not _weapon_can_hit(weapon, target):
+		return false
+	var distance := _edge_distance(bunker, target)
+	return distance <= minf(_get_weapon_range(bunker), float(weapon.get("range", 5.0))) \
+		and distance >= float(weapon.get("min_range", 0.0)) and can_see_unit(bunker.owner, target)
+
+func _update_bunker_garrison(bunker: Dictionary, dt: float) -> void:
+	_start_waiting_target_order(bunker)
+	var focus: Dictionary = {}
+	if not bunker.orders.is_empty():
+		var order: Dictionary = bunker.orders[0]
+		focus = units.get(order.get("target_tag", 0), {})
+		if focus.is_empty() or not can_attack(bunker, focus) or not can_see_unit(bunker.owner, focus) \
+			or _edge_distance(bunker, focus) > _get_weapon_range(bunker):
+			bunker.orders.pop_front()
+			focus = {}
+
+	var ports := _active_weapon(bunker)
+	for shooter in bunker.get("passengers", []):
+		_update_unit_timers(shooter, dt)
+		var weapon := _active_weapon(shooter)
+		if weapon.is_empty():
+			continue
+		if shooter.attack_state == "windup":
+			var target: Dictionary = units.get(shooter.attack_target_tag, {})
+			if _bunker_shot_in_range(bunker, weapon, target):
+				shooter.attack_state_timer -= dt
+				if shooter.attack_state_timer > 0.0:
+					continue
+				_execute_weapon_hit(bunker, target, shooter)
+				shooter.weapon_cooldown = maxf(float(ports.period), float(weapon.get("period", 0.8)))
+			shooter.attack_state = "idle"
+		if shooter.weapon_cooldown > 0.0:
+			continue
+		var target := focus if not focus.is_empty() else _find_best_attack_target(bunker, true, {}, weapon)
+		if _bunker_shot_in_range(bunker, weapon, target):
+			bunker.facing = (target.pos - bunker.pos).angle()
+			shooter.attack_state = "windup"
+			shooter.attack_target_tag = target.tag
+			shooter.attack_state_timer = maxf(float(ports.damage_point), float(weapon.get("damage_point", 0.08)))
+
+func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: Dictionary = {}, garrison_weapon: Dictionary = {}) -> Dictionary:
 	if u.get("hold_fire", false):
 		return {}
-	var def = RTSData.get_unit_def(u["unit_type"])
-	var wpn = def.get("weapon", {})
+	var wpn := _active_weapon(u) if garrison_weapon.is_empty() else garrison_weapon
 	if wpn.is_empty():
 		return {}
 	var wpn_range = float(wpn.get("range", 5.0))
+	if not garrison_weapon.is_empty():
+		wpn_range = minf(wpn_range, _get_weapon_range(u))
 	var min_range = float(wpn.get("min_range", 0.0))
 	var scan_radius: float = (wpn_range if range_only else maxf(wpn_range, float(u["sight_range"]))) + 2.5
 	var preferences: Dictionary = wpn.get("target_priority", {})
+	var focus_triage: bool = campaign != null and campaign.difficulty == "brutal" and u.owner == 2
 
 	var candidates = query_units_in_radius(u["pos"], scan_radius, u["owner"])
 	var best: Dictionary = {}
@@ -3367,6 +3559,10 @@ func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: 
 
 	for c in candidates:
 		if c["owner"] == 0 or c["owner"] == u["owner"] or c["hp"] <= 0.0:
+			continue
+		# The optional monuments are deliberate targets. Attack-move keeps
+		# the squad on the mission route after it clears their guards.
+		if c.unit_type == "propaganda_statue":
 			continue
 		if not _weapon_can_hit(wpn, c):
 			continue
@@ -3388,6 +3584,8 @@ func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: 
 			prio = 100.0
 		if d_edge <= wpn_range:
 			prio += 50.0
+			if focus_triage and c.unit_type == "triage_specialist":
+				prio += 175.0
 			for attr in preferences:
 				if c.attributes.has(attr):
 					prio += float(preferences[attr])
@@ -3404,8 +3602,7 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 	u["facing"] = (target["pos"] - u["pos"]).angle()
 	if u["weapon_cooldown"] > 0.0:
 		return
-	var def = RTSData.get_unit_def(u["unit_type"])
-	var wpn = def.get("weapon", {})
+	var wpn := _active_weapon(u)
 	if not _weapon_can_hit(wpn, target) or _edge_distance(u, target) < float(wpn.get("min_range", 0.0)):
 		return
 	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
@@ -3414,13 +3611,14 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 	u["attack_windup_duration"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
 	u["attack_state_timer"] = u["attack_windup_duration"]
 
-func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> bool:
-	var def = RTSData.get_unit_def(attacker["unit_type"])
-	var wpn = def.get("weapon", {})
+func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary, shooter: Dictionary = {}) -> bool:
+	if shooter.is_empty():
+		shooter = attacker
+	var wpn := _active_weapon(shooter)
 	if not _weapon_can_hit(wpn, primary_target):
 		return false
 
-	var base_dmg = float(wpn.get("damage", 6.0)) + unit_upgrade_level(attacker, "weapons")
+	var base_dmg = float(wpn.get("damage", 6.0)) + unit_upgrade_level(shooter, "weapons")
 	var bonus_dict: Dictionary = wpn.get("bonus", {})
 	var splash_rad = float(wpn.get("splash_radius", 0.0))
 	var slow_factor = float(wpn.get("concussive_slow", 0.0))
@@ -3464,6 +3662,9 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary) -> bo
 	return true
 
 func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float) -> void:
+	# The stranded militia trade fire until contact without clearing the pocket or dying off-screen.
+	if attacker.get("campaign_stranded", false) or target.get("campaign_stranded", false) or int(target.get("rescue_cover_until", 0)) > tick:
+		return
 	var dmg = base_dmg
 	var attrs: Array = target.get("attributes", [])
 	for attr in bonus_dict.keys():
@@ -3515,15 +3716,20 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		_recompute_supplies()
 		emit_signal("unit_destroyed", dead)
 
+func campaign_allows_ability(owner: int, ability_id: String) -> bool:
+	if campaign == null or owner != 1:
+		return ability_id not in ["build_field_bunker", "build_field_armory"]
+	return campaign.allows_ability(ability_id, RTSData.get_ability_def(ability_id))
+
 func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vector2.ZERO, target_tag: int = 0, extra: String = "", queue: bool = false, stay_on_route: bool = false) -> Dictionary:
-	if match_state.get("status", "") == "finished":
-		return {"ok": false, "accepted": 0, "error": "Match has finished"}
+	if _scenario_finished():
+		return {"ok": false, "accepted": 0, "error": "Mission has finished" if campaign != null else "Match has finished"}
 	var accepted: int = 0
 	var valid_units: Array[Dictionary] = []
 	var seen := {}
 	for t in unit_tags:
 		var tag_int = int(t)
-		if units.has(tag_int) and not seen.has(tag_int):
+		if units.has(tag_int) and not units[tag_int].get("campaign_scripted", false) and not seen.has(tag_int):
 			seen[tag_int] = true
 			valid_units.append(units[tag_int])
 
@@ -3551,6 +3757,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if not campaign_allows_ability(u.owner, ctype):
+			notice.emit(u.owner, "That command is unavailable in this mission.", "warn")
+			continue
 		if ctype == "morph_carapace":
 			var reason := carapace_morph_block_reason(u)
 			if reason.is_empty():
@@ -3618,7 +3827,12 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if u.get("burrowed", false):
 			continue
-		if u.armed_structure and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
+		if u.unit_type == "field_bunker" and ctype == "unload_bunker":
+			if not u.get("passengers", []).is_empty() and _drop_ground_squad(u.passengers, u.pos):
+				accepted += 1
+			continue
+		var boarding_bunker: bool = u.unit_type == "field_bunker" and ctype == "load_transport"
+		if u.armed_structure and not boarding_bunker and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
 			continue
 		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
 			continue
@@ -3716,6 +3930,13 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 					u.path.clear()
 				accepted += 1
 			continue
+		if ctype == "auto_heal":
+			if u.unit_type == "triage_specialist":
+				u["auto_heal"] = not u.get("auto_heal", false)
+				if not u.auto_heal and (u.orders.is_empty() or u.orders[0].type != "restore_vitals"):
+					u.support_target_tag = 0
+				accepted += 1
+			continue
 		if ctype == "cancel_construction":
 			if _cancel_construction(u):
 				accepted += 1
@@ -3739,6 +3960,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				notice.emit(u.owner, reason, "warn")
 				continue
 		if ctype == "follow" and (u.is_structure or u.is_immobile or u.tag == target_tag or not _is_friendly_mobile(units.get(target_tag, {}), u.owner)):
+			continue
+		if ctype == "enter_bunker" and not can_enter_bunker(u, units.get(target_tag, {})):
 			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
 			continue
@@ -3773,6 +3996,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				continue
 		if ctype.begins_with("build_") or ctype == "build":
 			var stype_check = ctype.trim_prefix("build_") if ctype != "build" else extra
+			if queue and u.unit_type == "forager" and u.orders.any(func(order): return order.type == "build"):
+				continue
 			if not _can_build(u, stype_check, target_pos):
 				continue
 
@@ -3843,18 +4068,18 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 
-		elif ctype == "retract_silo":
-			if u["unit_type"] == "silo":
-				_morph_unit_in_place(u, "silo_retracted")
-				emit_signal("ability_triggered", u, "retract_silo", u["pos"])
-				accepted += 1
-			continue
-
-		elif ctype == "extend_silo":
-			if u["unit_type"] == "silo_retracted":
-				_morph_unit_in_place(u, "silo")
-				emit_signal("ability_triggered", u, "extend_silo", u["pos"])
-				accepted += 1
+		elif ctype in ["retract_silo", "extend_silo"]:
+			var raising: bool = ctype == "extend_silo"
+			if u.unit_type != ("silo_retracted" if raising else "silo") or u.build_progress < 1.0:
+				continue
+			if raising:
+				var reason := silo_raise_block_reason(u)
+				if not reason.is_empty():
+					notice.emit(u.owner, reason, "warn")
+					continue
+			_morph_unit_in_place(u, "silo" if raising else "silo_retracted")
+			ability_triggered.emit(u, ctype, u.pos)
+			accepted += 1
 			continue
 
 		elif ctype.begins_with("train_"):
@@ -3928,6 +4153,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype == "follow":
 			_append_target_order(u, {"type": "follow", "target_tag": target_tag})
 			u.has_home_pos = false
+			accepted += 1
+
+		elif ctype == "enter_bunker":
+			_append_target_order(u, {"type": "enter_bunker", "target_tag": target_tag, "target_pos": units[target_tag].pos})
 			accepted += 1
 
 		elif ctype in ["attack", "attack_move"]:
@@ -4159,17 +4388,41 @@ func _step_miasma() -> void:
 					_apply_damage_to_target(zone.source, target, 9.0, {}, 1.0)
 
 func _load_transport(transport: Dictionary) -> bool:
+	if transport.build_progress < 1.0:
+		return false
 	var capacity: int = RTSData.get_unit_def(transport.unit_type).get("transport_capacity", 0)
 	return _board_ground_squad(transport, capacity)
+
+func can_enter_bunker(unit: Dictionary, bunker: Dictionary) -> bool:
+	if bunker.get("unit_type") != "field_bunker" or bunker.build_progress < 1.0 or bunker.hp <= 0.0:
+		return false
+	return _is_friendly_mobile(unit, bunker.owner) and is_bunker_infantry(unit) \
+		and bunker.get("passengers", []).size() < RTSData.get_unit_def(bunker.unit_type).transport_capacity
+
+func is_bunker_infantry(unit: Dictionary) -> bool:
+	return unit.flight_height <= 0.0 and not unit.is_immobile and not unit.get("burrowed", false) \
+		and not unit.get("campaign_scripted", false) and RTSData.get_unit_def(unit.unit_type).get("bunker_garrison", false)
+
+func _embark_ground_unit(passengers: Array, passenger: Dictionary) -> void:
+	passenger.orders.clear()
+	passenger.path.clear()
+	passenger.attack_state = "idle"
+	passenger.vel = Vector2.ZERO
+	_confirm_waiting_attack_loss(passenger)
+	passengers.append(passenger)
+	units.erase(passenger.tag)
 
 func _board_ground_squad(carrier: Dictionary, capacity: int, tunnel: bool = false) -> bool:
 	var passengers: Array = carrier.get("passengers", [])
 	if passengers.size() >= capacity:
 		return false
 	var candidates := units.values().filter(func(unit):
+		if carrier.pos.distance_squared_to(unit.pos) > TRANSPORT_PICKUP_RADIUS * TRANSPORT_PICKUP_RADIUS:
+			return false
+		if carrier.unit_type == "field_bunker":
+			return can_enter_bunker(unit, carrier)
 		return _is_friendly_mobile(unit, carrier.owner) and unit.flight_height <= 0.0 and not unit.is_worker and not unit.is_immobile \
-			and carrier.pos.distance_squared_to(unit.pos) <= TRANSPORT_PICKUP_RADIUS * TRANSPORT_PICKUP_RADIUS \
-			and (not tunnel or _has_tunnel_access(unit.pos, unit.radius, carrier)))
+			and not unit.get("campaign_scripted", false) and (not tunnel or _has_carrier_access(unit.pos, unit.radius, carrier)))
 	candidates.sort_custom(func(a, b):
 		var a_distance: float = carrier.pos.distance_squared_to(a.pos)
 		var b_distance: float = carrier.pos.distance_squared_to(b.pos)
@@ -4178,13 +4431,7 @@ func _board_ground_squad(carrier: Dictionary, capacity: int, tunnel: bool = fals
 	for passenger in candidates:
 		if passengers.size() >= capacity:
 			break
-		passenger.orders.clear()
-		passenger.path.clear()
-		passenger.attack_state = "idle"
-		passenger.vel = Vector2.ZERO
-		_confirm_waiting_attack_loss(passenger)
-		passengers.append(passenger)
-		units.erase(passenger.tag)
+		_embark_ground_unit(passengers, passenger)
 		loaded = true
 	if loaded:
 		carrier["passengers"] = passengers
@@ -4220,7 +4467,7 @@ func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = 
 		for candidate in candidates:
 			if _map_clamped_position(candidate, passenger.radius) != candidate or _is_point_blocked_by_static(candidate, passenger.radius):
 				continue
-			if not mouth.is_empty() and not _has_tunnel_access(candidate, passenger.radius, mouth):
+			if not mouth.is_empty() and not _has_carrier_access(candidate, passenger.radius, mouth):
 				continue
 			if ground.any(func(unit): return candidate.distance_squared_to(unit.pos) < pow(passenger.radius + unit.radius, 2.0)):
 				continue
@@ -4240,6 +4487,7 @@ func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = 
 		passenger.pos = positions[i]
 		passenger.prev_pos = positions[i]
 		passenger.home_pos = positions[i]
+		passenger.attack_state = "idle"
 		units[passenger.tag] = passenger
 	passengers.clear()
 	return true
@@ -4253,9 +4501,9 @@ func linked_tunnel(mouth: Dictionary) -> Dictionary:
 func _ready_tunnel(mouth: Dictionary) -> bool:
 	return mouth.get("unit_type") == "tunnel_mouth" and mouth.build_progress >= 1.0 and mouth.hp > 0.0
 
-func _has_tunnel_access(point: Vector2, radius: float, mouth: Dictionary) -> bool:
-	var offset: Vector2 = point - mouth.pos
-	var lip: Vector2 = mouth.pos + offset.normalized() * (mouth.radius + radius + 0.3)
+func _has_carrier_access(point: Vector2, radius: float, carrier: Dictionary) -> bool:
+	var offset: Vector2 = point - carrier.pos
+	var lip: Vector2 = carrier.pos + offset.normalized() * (carrier.radius + radius + 0.3)
 	return _has_clear_line_of_walk(point, lip, radius)
 
 func _link_tunnel(mouth: Dictionary, partner: Dictionary) -> bool:
@@ -4479,6 +4727,15 @@ func _finish_carapace_morph(unit: Dictionary) -> void:
 	_recompute_supplies()
 	ability_triggered.emit(unit, "carapace_ready", unit.pos)
 
+func campaign_training_block_reason(structure: Dictionary, unit_type: String) -> String:
+	if campaign == null or structure.owner != 1:
+		return ""
+	if not campaign.allows_training(unit_type):
+		return "That unit is unavailable in this mission."
+	if unit_type == "triage_specialist" and production_attachment(structure).get("unit_type") != "research_module":
+		return "Requires an attached Research Module."
+	return ""
+
 func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if not structure["is_structure"] or structure["build_progress"] < 1.0 or structure.flight_height > 0.0:
 		return false
@@ -4486,6 +4743,10 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if u_def.is_empty():
 		return false
 	if not RTSData.get_unit_def(structure["unit_type"]).get("trains", []).has(unit_type):
+		return false
+	var campaign_reason := campaign_training_block_reason(structure, unit_type)
+	if not campaign_reason.is_empty():
+		notice.emit(structure.owner, campaign_reason, "error")
 		return false
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
 		notice.emit(structure.owner, "Waystone needs a friendly power field.", "error")
@@ -4512,7 +4773,7 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	if s_cost > 0 and p["supply_used"] + s_cost > p["supply_cap"]:
 		emit_signal("notice", structure["owner"], "Supply blocked. Build more supply structures.", "error")
 		return false
-	if structure["production_queue"].size() >= 5:
+	if structure["production_queue"].size() >= PRODUCTION_QUEUE_CAPACITY:
 		emit_signal("notice", structure["owner"], "Production queue is full.", "error")
 		return false
 	p["crystal"] -= m_cost
@@ -4537,9 +4798,10 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	return true
 
 func unit_upgrade_level(unit: Dictionary, upgrade: String) -> int:
+	var campaign_bonus := int(unit.get("campaign_" + upgrade, 0)) if campaign != null and unit.owner == 2 else 0
 	if unit.faction != "humans" or unit.is_structure or unit.is_worker:
-		return 0
-	return players.get(unit.owner, {}).get("upgrades", {}).get(upgrade, 0)
+		return campaign_bonus
+	return campaign_bonus + int(players.get(unit.owner, {}).get("upgrades", {}).get(upgrade, 0))
 
 func surge_hp_cost(unit: Dictionary) -> float:
 	var base_cost := float(RTSData.get_ability_def("surge").hp_cost)
@@ -4557,7 +4819,8 @@ func research_offer(owner_id: int, upgrade: String) -> Dictionary:
 	if not upgrades.has(upgrade):
 		return {}
 	var completed: int = upgrades[upgrade]
-	if completed >= MAX_UPGRADE_LEVEL:
+	var max_level := 1 if campaign != null and owner_id == 1 else MAX_UPGRADE_LEVEL
+	if completed >= max_level:
 		return {}
 	return {"level": completed + 1, "crystal": 100 + completed * 75, "aether": 100 + completed * 75,
 		"supply": 0, "time": 40.0 + completed * 15.0, "requires": []}
@@ -4575,14 +4838,15 @@ func research_block_reason(owner_id: int, upgrade: String) -> String:
 
 func research_producer_block_reason(structure: Dictionary, upgrade: String) -> String:
 	var ability: Dictionary = RTSData.get_ability_def("research_" + upgrade)
-	if structure.is_empty() or structure.unit_type != ability.get("producer") or structure.build_progress < 1.0 or structure.flight_height > 0.0:
+	var producer_matches: bool = structure.get("unit_type") == ability.get("producer") or (structure.get("unit_type") == "field_armory" and upgrade in ["weapons", "armor"])
+	if structure.is_empty() or not producer_matches or structure.build_progress < 1.0 or structure.flight_height > 0.0:
 		return "Requires a completed research producer."
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
 		return "The Waystone needs a friendly power field."
 	var required_attachment := str(ability.get("requires_attachment", ""))
 	if not required_attachment.is_empty() and production_attachment(structure).get("unit_type") != required_attachment:
 		return "Requires a completed Research Module."
-	if structure.production_queue.size() >= 5:
+	if structure.production_queue.size() >= PRODUCTION_QUEUE_CAPACITY:
 		return "%s queue is full." % structure.name
 	return ""
 
@@ -4640,7 +4904,7 @@ func _recompute_supplies() -> void:
 
 	for u in units.values():
 		var pid = u["owner"]
-		if not players.has(pid):
+		if not players.has(pid) or u.get("campaign_reserve", false):
 			continue
 		var def = RTSData.get_unit_def(u["unit_type"])
 		if u.build_progress >= 1.0:
@@ -4816,6 +5080,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		})
 		var entry: Dictionary = unit_list.back()
 		if u.owner == perspective_player or perspective_player == 0:
+			if u.get("campaign_scripted", false):
+				entry["campaign_scripted"] = true
 			if u.has("passengers"):
 				entry["passengers"] = u.passengers.map(func(passenger): return passenger.tag)
 			if u.unit_type == "tunnel_mouth":
@@ -4873,6 +5139,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["max_energy"] = u.support.max_energy
 				entry["support_target_tag"] = u.support_target_tag
+				if u.unit_type == "triage_specialist":
+					entry["auto_heal"] = u.get("auto_heal", false)
 			if not u.rally_route.is_empty():
 				entry["rally_route"] = _observed_rally(u.rally_route)
 			if u.unit_type == "brood_nest" and not u.worker_rally_route.is_empty():
@@ -4924,6 +5192,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 	var observation := {
 		"tick": tick,
 		"match": match_view,
+		"campaign": campaign.snapshot(self, perspective_player) if campaign != null and perspective_player in [0, 1] else {},
 		"sim_time": snappedf(sim_time, 0.01),
 		"scenario": scenario_name,
 		"rts_mode": rts_mode,
@@ -4934,7 +5203,8 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"obstacles": _rects_to_dicts(terrain_obstacles),
 			"high_ground": _rects_to_dicts(high_ground_zones),
 			"ramps": _rects_to_dicts(ramps),
-			"water": _water_to_arrays(), "bridges": _rects_to_dicts(land_bridges),
+			"water": _polygons_to_arrays(water_polygons), "bridges": _rects_to_dicts(land_bridges),
+			"ground_regions": _polygons_to_arrays(ground_regions), "bridge_decks": _polygons_to_arrays(bridge_decks),
 			"terrain_tiles": terrain_tiles.duplicate(true),
 			"living_ground": {
 				"cell_size": LivingGround.CELL_SIZE,
@@ -4968,9 +5238,9 @@ func _observed_rally(route: Array) -> Array:
 		var position := rally_waypoint_position(waypoint)
 		return {"kind": waypoint.kind, "target_tag": waypoint.target_tag, "x": position.x, "y": position.y})
 
-func _water_to_arrays() -> Array:
+func _polygons_to_arrays(polygons: Array[PackedVector2Array]) -> Array:
 	var out: Array = []
-	for polygon in water_polygons:
+	for polygon in polygons:
 		var points: Array = []
 		for point in polygon:
 			points.append([point.x, point.y])

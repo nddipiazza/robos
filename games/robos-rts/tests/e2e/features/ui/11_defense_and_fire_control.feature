@@ -10,6 +10,7 @@ Feature: Defend a base and control when squads fire
                 {"id":"raider","type":"pioneer","owner":2,"x":46,"y":25}]}
       """
     When the commander clicks unit "builder"
+    And the commander presses "B"
     And the commander presses "T"
     And the commander places a building at (35, 25)
     And the simulation advances 720 ticks
@@ -52,3 +53,34 @@ Feature: Defend a base and control when squads fire
     Then "alpha" has orders "force_attack"
     When the simulation advances 24 ticks
     Then "ally" has taken damage
+
+  Scenario: Infantry can walk into a bunker, join nearby troops and unload
+    Given an RTS test scenario
+      """
+      {"name":"Bunker garrison","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"bunker","type":"field_bunker","owner":1,"x":43,"y":29},
+                {"id":"heavy","type":"breacher","owner":1,"x":25,"y":28},
+                {"id":"rifle","type":"rifleman","owner":1,"x":47,"y":29},
+                {"id":"spare","type":"rifleman","owner":1,"x":47,"y":33},
+                {"id":"waiting","type":"rifleman","owner":1,"x":25,"y":35},
+                {"id":"medic","type":"triage_specialist","owner":1,"x":43,"y":34},
+                {"id":"worker","type":"pioneer","owner":1,"x":43,"y":24}]}
+      """
+    When the commander clicks unit "heavy"
+    And the commander right-clicks the projected body of "bunker" at (0.0, 1.9)
+    Then "heavy" has an "enter_bunker" order for "bunker"
+    When the simulation advances 300 ticks
+    Then "bunker" has 1 garrisoned units
+    When the commander clicks unit "bunker"
+    And the commander presses "L"
+    Then "bunker" has 4 garrisoned units
+    And "worker" has orders "none"
+    When the commander clicks unit "waiting"
+    And the commander right-clicks the projected body of "bunker" at (0.0, 1.9)
+    Then the commander is told the bunker is full
+    And "waiting" has orders "none"
+    When the commander clicks unit "bunker"
+    And the commander presses "U"
+    Then "bunker" has 0 garrisoned units
+    When the commander clicks unit "heavy"
+    Then the commander has selected "heavy"

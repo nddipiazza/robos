@@ -4,6 +4,8 @@ extends Node2D
 # The HUD (resource readout, minimap, selection panel, command card) lives in RTSHud.gd.
 
 const RTSWorld3DScript = preload("res://scripts/RTSWorld3D.gd")
+const CampaignHud = preload("res://scripts/RTSCampaignHud.gd")
+const NO_SELECTION: Array[int] = []
 const RTSIconsScript = preload("res://scripts/RTSIcons.gd")
 const RTSHudScript = preload("res://scripts/RTSHud.gd")
 const GameInput = preload("res://scripts/RTSGameInput.gd")
@@ -21,6 +23,28 @@ const IDLE_PRODUCTION_BTN := Rect2(130.0, 786.0, 148.0, 48.0)
 const CONTROL_GROUP_KEYS := [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const CAMERA_KEYS := [KEY_F3, KEY_F4, KEY_F9, KEY_F11]
 const GRID_KEYS := "QWERTASDFGZXCVBUHJKL"
+const AUTOCAST_COMMANDS := {"repair": "auto_repair", "restore_vitals": "auto_heal"}
+const TRAIN_REPEAT_DELAY := 0.35
+const TRAIN_REPEAT_INTERVAL := 0.075
+const WORKER_CARD_ROOT := ["move", "stop", "hold_position", "patrol", "attack", "harvest", "return_cargo", "", "", "", "worker_basic", "worker_advanced", "", "", ""]
+const WORKER_BUILD_PAGES := {
+	"pioneer": {
+		"verb": "Build", "tech": "muster_hall",
+		"basic": {0: "build_colony_hub", 1: "build_aether_tap", 2: "build_silo",
+			5: "build_muster_hall", 6: "build_field_armory", 10: "build_field_bunker", 11: "build_sentry_turret"},
+		"advanced": {5: "build_workshop", 10: "build_airframe_hangar"},
+	},
+	"forager": {
+		"verb": "Grow", "tech": "brood_nest",
+		"basic": {0: "build_brood_nest", 1: "build_spore_tap", 3: "build_brood_pod", 4: "build_brood_growth_node", 11: "build_spore_watch"},
+		"advanced": {2: "build_blight_spire", 5: "build_tunnel_mouth"},
+	},
+	"mote": {
+		"verb": "Summon",
+		"basic": {0: "build_heartstone", 1: "build_aether_prism", 2: "build_resonator", 5: "build_waystone", 12: "build_aegis_relay"},
+		"advanced": {},
+	},
+}
 const EDGE_SCROLL_MARGIN := 14.0
 const FACTION_CARD := Rect2(8.0, 6.0, 238.0, 31.0)
 const PATH_FEEDBACK_FADE := 1.5
@@ -29,6 +53,7 @@ const SPLASH_RING_SEGMENTS := 32
 var world_3d: Node3D
 var icons: Node
 var hud: Node2D
+var campaign_hud: CampaignHud
 var match_menu: CanvasLayer
 
 var local_player: int = 1
@@ -37,6 +62,8 @@ var health_bar_mode := 0
 var reveal_health_bars := false
 var _shift_held := false
 var _repeating_target := false
+var _training_repeat := {}
+var _training_repeat_timer := Timer.new()
 var _show_weapon_ranges := false
 var selected_tags: Array[int] = []
 var _inspected_deposit_tag := 0
@@ -51,6 +78,7 @@ var mm_dragging: bool = false
 var mid_dragging: bool = false
 
 var pending_ability: String = ""
+var _worker_build_page := ""
 var messages: Array[Dictionary] = []
 var alerts: Array[Dictionary] = []
 var attack_history: Array[Vector2] = []
@@ -76,6 +104,9 @@ func _ready() -> void:
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 	SimEngine.notice.connect(_on_notice)
 	SimEngine.unit_damaged.connect(_on_unit_damaged)
+	_training_repeat_timer.one_shot = true
+	_training_repeat_timer.timeout.connect(_repeat_training_hotkey)
+	add_child(_training_repeat_timer)
 	# Headless runs (E2E tests) only need the sim and the control server, so skip rendering.
 	if DisplayServer.get_name() == "headless":
 		set_process(false)
@@ -100,10 +131,14 @@ func _ready() -> void:
 	hud.name = "RTSHud"
 	hud.main = self
 	add_child(hud)
+	campaign_hud = CampaignHud.new()
+	campaign_hud.battle = self
+	add_child(campaign_hud)
 	match_menu = MatchMenu.new()
 	add_child(match_menu)
 	match_menu.observe_requested.connect(_enter_observer)
 	match_menu.health_mode_changed.connect(func(mode): health_bar_mode = mode)
+	match_menu.campaign_restart_requested.connect(campaign_hud.open_restart_picker)
 	health_bar_mode = match_menu.health_bars.selected
 	_on_scenario_loaded(SimEngine.scenario_name)
 	_restore_title_view()
@@ -135,7 +170,7 @@ func _restore_title_view() -> void:
 func _on_scenario_loaded(_name: String) -> void:
 	if match_menu:
 		match_menu.reset_views()
-	if not SimEngine.match_state.is_empty():
+	if SimEngine.campaign != null or not SimEngine.match_state.is_empty():
 		local_player = 1
 	if RTSAudio:
 		RTSAudio.local_player_id = local_player
@@ -148,6 +183,7 @@ func _on_scenario_loaded(_name: String) -> void:
 	technology_open = false
 	pending_ability = ""
 	_repeating_target = false
+	_worker_build_page = ""
 	control_groups.clear()
 	_last_group_press.clear()
 	_camera_bookmarks.clear()
@@ -166,6 +202,10 @@ func _on_scenario_loaded(_name: String) -> void:
 	active_type = ""
 	banner_ttl = 4.5
 	focus_on_base()
+	if campaign_hud:
+		campaign_hud.reset()
+		if SimEngine.campaign != null and SimEngine.campaign.mission_index == SimEngine.Campaign.ASSAULT:
+			_select_all_army()
 
 func _on_notice(owner_id: int, text: String, kind: String) -> void:
 	if owner_id == local_player:
@@ -351,14 +391,16 @@ func world_to_minimap(wpos: Vector2) -> Vector2:
 func hover_pos() -> Vector2:
 	if hover_override is Vector2:
 		return hover_override
-	return get_viewport().get_mouse_position()
+	var viewport := get_viewport()
+	return viewport.get_mouse_position() if viewport else Vector2(-1.0, -1.0)
 
 # ---------------------------------------------------------------------------
 # Frame loop
 # ---------------------------------------------------------------------------
 func _process(delta: float) -> void:
-	_handle_camera_pan(delta)
-	_update_camera_tracking()
+	if not campaign_hud or not campaign_hud.blocks_battle_input():
+		_handle_camera_pan(delta)
+		_update_camera_tracking()
 	_saturation_refresh -= delta
 	if _saturation_refresh <= 0.0 and not hud_hidden:
 		_saturation = SimEngine.worker_saturation(local_player)
@@ -387,7 +429,8 @@ func _process(delta: float) -> void:
 	_prune_control_groups()
 
 	if world_3d:
-		world_3d.sync_3d_entities(selected_tags, delta, viewing_player())
+		var visible_selection := NO_SELECTION if campaign_hud and campaign_hud.cinematic() else selected_tags
+		world_3d.sync_3d_entities(visible_selection, delta, viewing_player())
 	queue_redraw()
 	if hud:
 		hud.queue_redraw()
@@ -435,7 +478,7 @@ func selected_owned() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for t in selected_tags:
 		var u: Dictionary = SimEngine.units.get(t, {})
-		if not u.is_empty() and u["owner"] == local_player:
+		if not u.is_empty() and u["owner"] == local_player and not u.get("campaign_scripted", false):
 			out.append(u)
 	return out
 
@@ -468,6 +511,8 @@ func _unit_at_screen(spos: Vector2) -> Dictionary:
 	return best
 
 func _select_tags(tags: Array, add: bool = false) -> void:
+	_cancel_training_repeat()
+	_close_worker_build_page()
 	_last_group_press.clear()
 	_inspected_deposit_tag = 0
 	if not add:
@@ -545,7 +590,7 @@ func _select_all_army(ungrouped_only: bool = false) -> void:
 				assigned[tag] = true
 	var tags: Array[int] = []
 	for unit in SimEngine.units.values():
-		if unit.owner == local_player and unit.hp > 0.0 and not unit.is_worker and not unit.is_structure and not assigned.has(unit.tag):
+		if unit.owner == local_player and unit.hp > 0.0 and not unit.is_worker and not unit.is_structure and not unit.get("campaign_scripted", false) and not assigned.has(unit.tag):
 			tags.append(unit.tag)
 	if not tags.is_empty():
 		pending_ability = ""
@@ -579,6 +624,8 @@ func _select_next_idle_worker() -> void:
 # ---------------------------------------------------------------------------
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey:
+		if not _training_repeat.is_empty() and not event.pressed and event.keycode == _training_repeat.keycode:
+			_cancel_training_repeat()
 		if event.keycode == KEY_ALT:
 			reveal_health_bars = event.pressed
 		elif event.keycode == KEY_SHIFT:
@@ -589,12 +636,30 @@ func _input(event: InputEvent) -> void:
 func _clear_held_keys() -> void:
 	reveal_health_bars = false
 	_shift_held = false
+	_cancel_training_repeat()
 	_clear_repeated_target()
 
 func _clear_repeated_target() -> void:
 	if _repeating_target:
+		_close_worker_build_page()
 		pending_ability = ""
 		_repeating_target = false
+
+func _close_worker_build_page() -> void:
+	_worker_build_page = ""
+	if pending_ability.begins_with("build_"):
+		pending_ability = ""
+		_repeating_target = false
+
+func _context_click(wpos: Vector2, shift: bool, screen: Vector2 = Vector2.INF) -> void:
+	if not pending_ability.is_empty():
+		var queue_after_build := shift and _repeating_target and pending_ability.begins_with("build_")
+		pending_ability = ""
+		_repeating_target = false
+		if not queue_after_build:
+			return
+	_close_worker_build_page()
+	_issue_smart_right_click(wpos, shift, screen)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if match_menu and (match_menu.panel.visible or match_menu.result_panel.visible):
@@ -605,6 +670,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				match_menu.restart()
 			elif match_menu.result_panel.visible and event.keycode == KEY_O:
 				_enter_observer()
+		return
+	if campaign_hud and campaign_hud.blocks_battle_input():
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_ESCAPE and campaign_hud.restart_picker_visible():
+				campaign_hud.cancel_restart()
+			elif event.keycode in [KEY_SPACE, KEY_ESCAPE]:
+				campaign_hud.skip_cinematic()
+			elif event.keycode == KEY_F8 and campaign_hud.cinematic():
+				match_menu.toggle()
 		return
 	if event is InputEventMouseButton:
 		_on_mouse_button(event as InputEventMouseButton)
@@ -665,10 +739,7 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		box_start_screen = mpos
 		box_end_screen = mpos
 	elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-		if pending_ability != "":
-			pending_ability = ""
-			return
-		_issue_smart_right_click(screen_to_world(mpos), mb.shift_pressed, mpos)
+		_context_click(screen_to_world(mpos), mb.shift_pressed, mpos)
 
 # Returns true when the click landed on a HUD element.
 func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
@@ -686,7 +757,10 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 				mm_dragging = true
 				_focus_camera(minimap_to_world(mpos))
 		elif right:
-			_issue_smart_right_click(minimap_to_world(mpos), mb.shift_pressed)
+			if not _worker_build_page.is_empty():
+				_context_click(minimap_to_world(mpos), mb.shift_pressed)
+			else:
+				_issue_smart_right_click(minimap_to_world(mpos), mb.shift_pressed)
 		return true
 
 	if left and idle_workers().size() > 0 and IDLE_BTN.has_point(mpos):
@@ -707,6 +781,16 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 				SimEngine.issue_command([unit.tag], "cancel_training", Vector2.ZERO, 0, str(slot))
 				return true
 
+	if right and primary_type() in ["pioneer", "triage_specialist"]:
+		var primary := primary_unit()
+		for btn in get_card_buttons():
+			var command: String = AUTOCAST_COMMANDS.get(btn.ability_id, "")
+			if not command.is_empty() and btn.rect.has_point(mpos):
+				var enabled := bool(primary.get(command, false))
+				var tags := selected_owned().filter(func(unit): return unit.unit_type == primary.unit_type and unit.get(command, false) == enabled).map(func(unit): return unit.tag)
+				SimEngine.issue_command(tags, command)
+				return true
+
 	if left:
 		for g in hud.group_tab_rects().keys():
 			if hud.group_tab_rects()[g].has_point(mpos):
@@ -717,6 +801,7 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 		for c in cells:
 			if c["rect"].has_point(mpos):
 				if mb.shift_pressed:
+					_close_worker_build_page()
 					selected_tags.erase(c["tag"])
 				elif mb.ctrl_pressed or mb.meta_pressed:
 					var unit_type: String = SimEngine.units[c.tag].unit_type
@@ -733,6 +818,8 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 	return mpos.y >= HUD_TOP
 
 func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, pick_type: bool) -> void:
+	_cancel_training_repeat()
+	_close_worker_build_page()
 	_last_group_press.clear()
 	_inspected_deposit_tag = 0
 	if not add_shift:
@@ -837,20 +924,21 @@ func _selected_path_feedback() -> Array[Dictionary]:
 	return result
 
 func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bool = true, command: String = "rally", screen: Vector2 = Vector2.INF) -> void:
-	var best_distance := INF
-	var target_tag := 0
-	# A worker rally can bind to a visible deposit or a finished friendly tap.
-	var candidates: Array = SimEngine.resources.values()
-	for unit in SimEngine.units.values():
-		if unit.is_extractor and unit.owner == local_player:
-			candidates.append(unit)
-	for candidate in candidates:
-		var distance: float = position.distance_to(candidate.pos)
-		if distance >= best_distance or distance > float(candidate.radius) + 1.6:
-			continue
-		if SimEngine.can_see_position(local_player, candidate.pos) and not SimEngine.worker_rally_resource(local_player, candidate.tag).is_empty():
-			target_tag = candidate.tag
-			best_distance = distance
+	var target_tag: int = world_3d.crystal_at_screen(screen, local_player) if world_3d and screen.is_finite() else 0
+	if target_tag == 0:
+		var best_distance := INF
+		# Ground and minimap clicks can snap to a nearby deposit or finished tap.
+		var candidates: Array = SimEngine.resources.values()
+		for unit in SimEngine.units.values():
+			if unit.is_extractor and unit.owner == local_player:
+				candidates.append(unit)
+		for candidate in candidates:
+			var distance: float = position.distance_to(candidate.pos)
+			if distance >= best_distance or distance > float(candidate.radius) + 1.6:
+				continue
+			if SimEngine.can_see_position(local_player, candidate.pos) and not SimEngine.worker_rally_resource(local_player, candidate.tag).is_empty():
+				target_tag = candidate.tag
+				best_distance = distance
 	if target_tag > 0:
 		position = SimEngine.worker_rally_resource(local_player, target_tag).pos
 	elif allow_unit:
@@ -859,7 +947,8 @@ func _issue_rally_at(tags: Array, position: Vector2, queue: bool, allow_unit: bo
 			target_tag = unit.tag
 			position = unit.pos
 	if SimEngine.issue_command(tags, command, position, target_tag, "", queue).ok:
-		_spawn_marker(position, "rally")
+		var crystal_height: float = world_3d.crystal_center_height(target_tag) if world_3d else 0.0
+		_spawn_marker(position, "rally", maxf(0.1, crystal_height))
 
 func _order_target_at(position: Vector2, screen: Vector2 = Vector2.INF) -> Dictionary:
 	if screen.is_finite():
@@ -913,6 +1002,14 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 
 	var workers := own.filter(func(unit): return unit.is_worker and not unit.is_immobile).map(func(unit): return unit.tag)
 	if not target.is_empty() and target.owner == local_player:
+		if target.unit_type == "field_bunker":
+			var infantry := own.filter(SimEngine.is_bunker_infantry)
+			if not infantry.is_empty() and target.build_progress >= 1.0:
+				if not SimEngine.can_enter_bunker(infantry[0], target):
+					push_message("Bunker is full. Select it and use Unload Bunker.", "warn")
+				elif SimEngine.issue_command(infantry.map(func(unit): return unit.tag), "enter_bunker", target.pos, target.tag, "", queue).ok:
+					_spawn_marker(target.pos, "move")
+				return
 		var builder := {}
 		var repairers: Array = []
 		for unit in own:
@@ -986,7 +1083,8 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 		pending_ability = ""
 		return
 	var abil := pending_ability
-	_repeating_target = queue and abil in ["attack", "move", "rally", "rally_worker"]
+	if not abil.begins_with("build_"):
+		_repeating_target = queue and abil in ["attack", "move", "rally", "rally_worker"]
 	var tags: Array = []
 	for u in own:
 		tags.append(u["tag"])
@@ -1137,18 +1235,32 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 			return
 		var best: Dictionary = {}
 		var best_d := 1e9
+		var best_has_build := false
 		for u in own:
-			if RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil):
-				var d: float = u["pos"].distance_to(placement["pos"])
-				if d < best_d:
-					best_d = d
-					best = u
+			if not RTSData.get_unit_def(u.unit_type).get("abilities", []).has(abil):
+				continue
+			var has_build: bool = u.orders.any(func(order): return order.type == "build")
+			if has_build and u.unit_type == "forager":
+				continue
+			var d: float = u.pos.distance_squared_to(placement.pos)
+			if not queue and has_build != best_has_build and not best.is_empty():
+				if has_build:
+					continue
+			elif d >= best_d:
+				continue
+			best_d = d
+			best = u
+			best_has_build = has_build
 		if not best.is_empty() and SimEngine.issue_command([best["tag"]], abil, placement["pos"], 0, "", queue).ok:
-			if not queue or best.unit_type == "forager":
+			_repeating_target = queue
+			if not queue:
+				_close_worker_build_page()
 				pending_ability = ""
 			if RTSAudio:
 				RTSAudio.play_ui("ui_build_place")
 			_spawn_marker(placement["pos"], "move")
+		elif best.is_empty() and primary_type() == "forager":
+			push_message("Select a Forager without a structure order.", "warn")
 
 # Validates a structure placement for the local player and snaps aether taps to vents.
 func placement_for(structure_id: String, wpos: Vector2) -> Dictionary:
@@ -1246,8 +1358,15 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		return SimEngine.attachment_block_reason(pu, str(adef.structure))
 	if adef.id == "lift":
 		return SimEngine.lift_block_reason(pu)
+	if adef.id == "extend_silo":
+		if selected_owned().any(func(unit): return unit.unit_type == "silo_retracted" and unit.build_progress >= 1.0 and SimEngine.silo_raise_block_reason(unit).is_empty()):
+			return ""
+		return SimEngine.silo_raise_block_reason(pu)
 	if adef.has("unit"):
 		var producers := selected_owned()
+		var campaign_reason := SimEngine.campaign_training_block_reason(pu, adef.unit)
+		if not campaign_reason.is_empty() and not producers.any(func(u): return u.unit_type == pu.unit_type and SimEngine.campaign_training_block_reason(u, adef.unit).is_empty()):
+			return campaign_reason
 		if SimEngine.uses_brood_slots(pu) and not producers.any(func(u): return SimEngine.uses_brood_slots(u) and u.build_progress >= 1.0 and u.brood_slots > 0):
 			return "No brood slots ready."
 		if SimEngine.requires_power(pu.unit_type) and not producers.any(func(u): return u.unit_type == pu.unit_type and u.build_progress >= 1.0 and SimEngine.is_powered(u.owner, u.pos)):
@@ -1288,6 +1407,12 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 		"unload_transport":
 			if not selected_owned().any(func(unit): return not unit.get("passengers", []).is_empty()):
 				return "No troops aboard."
+		"unload_bunker":
+			if pu.get("passengers", []).is_empty():
+				return "The bunker is empty."
+		"attack":
+			if pu.unit_type == "field_bunker" and not pu.get("passengers", []).any(func(unit): return RTSData.get_unit_def(unit.unit_type).has("weapon")):
+				return "Load Riflemen or Breachers to fire."
 		"deploy_prospector":
 			if not selected_owned().any(func(unit): return unit.get("hub_operations", false) and SimEngine.can_use_hub_power(unit)):
 				return "Requires 50 energy from an upgraded Colony Hub."
@@ -1339,11 +1464,86 @@ func _block_reason(adef: Dictionary, pu: Dictionary) -> String:
 				return "Not enough health."
 	return ""
 
+func _card_button(adef: Dictionary, slot: int, hotkey: String, button_size: float, blocked: String) -> Dictionary:
+	var offset := Vector2(slot % 5, slot / 5) * (button_size + CARD_GAP)
+	return {
+		"ability_id": adef.id,
+		"def": adef,
+		"hotkey": hotkey,
+		"rect": Rect2(CARD_ORIGIN + offset, Vector2.ONE * button_size),
+		"blocked": blocked,
+		"cost": ability_cost(adef),
+	}
+
+func _worker_is_building(unit: Dictionary) -> bool:
+	return unit.unit_type == "pioneer" and not unit.orders.is_empty() and unit.orders[0].type == "build"
+
+func _worker_card_buttons(worker: Dictionary, grid: bool) -> Array[Dictionary]:
+	var layout: Dictionary = WORKER_BUILD_PAGES[worker.unit_type]
+	var buttons: Array[Dictionary] = []
+	if not _worker_build_page.is_empty():
+		var page: Dictionary = layout[_worker_build_page]
+		for slot in page:
+			var id: String = page[slot]
+			if not SimEngine.campaign_allows_ability(local_player, id):
+				continue
+			var adef := RTSData.get_ability_def(id)
+			var hotkey: String = GRID_KEYS[slot] if grid else adef.hotkey
+			buttons.append(_card_button(adef, slot, hotkey, CARD_BTN, _block_reason(adef, worker)))
+		var back := {"id": "worker_back", "name": "Back", "desc": "Return to worker orders."}
+		buttons.append(_card_button(back, 14, "Esc", CARD_BTN, ""))
+		return buttons
+
+	var slots := WORKER_CARD_ROOT.duplicate()
+	if worker.unit_type == "pioneer":
+		slots[7] = "repair"
+		slots[14] = "halt_construction"
+	for slot in range(slots.size()):
+		var id: String = slots[slot]
+		if id.is_empty():
+			continue
+		var adef: Dictionary
+		var blocked := ""
+		var hotkey := ""
+		match id:
+			"worker_basic", "worker_advanced":
+				var advanced := id == "worker_advanced"
+				var page: Dictionary = layout.advanced if advanced else layout.basic
+				if not page.values().any(func(ability): return SimEngine.campaign_allows_ability(local_player, ability)):
+					continue
+				var name := "%s %s Structures" % [layout.verb, "Advanced" if advanced else "Basic"]
+				adef = {"id": id, "name": name, "desc": "Open the construction menu."}
+				if advanced and not SimEngine.has_tech_structure(local_player, layout.tech):
+					blocked = "Requires a completed %s." % RTSData.get_unit_def(layout.tech).name
+				hotkey = "V" if advanced else "B"
+			"halt_construction":
+				adef = {"id": id, "name": "Halt Construction", "desc": "Stop building and leave the foundation for a Pioneer to finish."}
+				if not selected_owned().any(_worker_is_building):
+					blocked = "No selected Pioneer is building."
+				hotkey = "T"
+			_:
+				if not SimEngine.campaign_allows_ability(local_player, id):
+					continue
+				adef = RTSData.get_ability_def(id)
+				hotkey = str(adef.get("hotkey", ""))
+				if id == "return_cargo":
+					hotkey = "C"
+				elif id == "repair":
+					adef = adef.duplicate()
+					adef.desc += " Right-click to toggle Auto-Repair."
+					hotkey = "R"
+				blocked = _block_reason(adef, worker)
+		buttons.append(_card_button(adef, slot, GRID_KEYS[slot] if grid else hotkey, CARD_BTN, blocked))
+	return buttons
+
 func get_card_buttons() -> Array[Dictionary]:
 	var buttons: Array[Dictionary] = []
 	var pu := primary_unit()
-	if pu.is_empty() or pu["owner"] != local_player or observer_player >= 0:
+	if pu.is_empty() or pu["owner"] != local_player or pu.get("campaign_scripted", false) or observer_player >= 0:
 		return buttons
+	var grid: bool = match_menu != null and match_menu.grid_hotkeys
+	if WORKER_BUILD_PAGES.has(pu.unit_type) and not pu.get("burrowed", false):
+		return _worker_card_buttons(pu, grid)
 	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
 	if pu.is_structure and pu.build_progress < 1.0:
 		abils = ["cancel_construction"]
@@ -1362,12 +1562,9 @@ func get_card_buttons() -> Array[Dictionary]:
 		abils = abils + ["patrol"]
 	if pu.is_worker:
 		abils = abils + ["return_cargo"]
-		if pu.unit_type == "pioneer":
-			abils = abils + ["repair", "auto_repair"]
+	abils = abils.filter(func(id): return SimEngine.campaign_allows_ability(local_player, id))
 	var button_size := 48.0 if abils.size() > 15 else CARD_BTN
 	for i in range(mini(20, abils.size())):
-		var row := i / 5
-		var col := i % 5
 		var abil_id := str(abils[i])
 		var adef := RTSData.get_ability_def(abil_id)
 		if abil_id == "surge":
@@ -1377,18 +1574,13 @@ func get_card_buttons() -> Array[Dictionary]:
 				adef["name"] = "Efficient Surge"
 				adef["hp_cost"] = hp_cost
 				adef["desc"] = "Spend %d HP for +50%% movement and attack speed for 11 seconds." % int(hp_cost)
-		buttons.append({
-			"ability_id": abil_id,
-			"def": adef,
-			"hotkey": GRID_KEYS[i] if match_menu and match_menu.grid_hotkeys and i < GRID_KEYS.length() else str(adef.get("hotkey", "")),
-			"rect": Rect2(CARD_ORIGIN + Vector2(col * (button_size + CARD_GAP), row * (button_size + CARD_GAP)), Vector2.ONE * button_size),
-			"blocked": _block_reason(adef, pu),
-			"cost": ability_cost(adef)
-		})
+		var hotkey := GRID_KEYS[i] if grid else str(adef.get("hotkey", ""))
+		if abil_id == "cancel_construction" and pu.has("morph_worker"):
+			hotkey = "Esc"
+		buttons.append(_card_button(adef, i, hotkey, button_size, _block_reason(adef, pu)))
 	return buttons
 
 func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
-	_repeating_target = false
 	var abil_id: String = btn["ability_id"]
 	var adef: Dictionary = btn["def"]
 	if str(btn["blocked"]) != "":
@@ -1396,6 +1588,22 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 		if RTSAudio:
 			RTSAudio.play_ui("ui_error")
 		return
+	_repeating_target = false
+	match abil_id:
+		"worker_basic", "worker_advanced":
+			pending_ability = ""
+			_worker_build_page = "basic" if abil_id == "worker_basic" else "advanced"
+			if RTSAudio:
+				RTSAudio.play_ui("ui_select")
+			return
+		"worker_back":
+			_close_worker_build_page()
+			return
+		"halt_construction":
+			var builders := selected_owned().filter(_worker_is_building)
+			SimEngine.issue_command(builders.map(func(unit): return unit.tag), "stop")
+			pending_ability = ""
+			return
 	var target_mode := str(adef.get("target", "none"))
 	if target_mode in ["point", "point_or_unit", "resource", "unit"]:
 		pending_ability = abil_id
@@ -1416,27 +1624,32 @@ func _trigger_card_button(btn: Dictionary, shift: bool = false) -> void:
 			or (abil_id == "stop" and u.is_structure and u.flight_height > 0.0) \
 			or (abil_id == "hold_fire" and not u.is_worker and def.has("weapon")) \
 			or (abil_id == "return_cargo" and u.is_worker) \
-			or (abil_id == "auto_repair" and u.unit_type == "pioneer") \
 			or (abil_id == "cancel_construction" and u.unit_type == primary_type()):
 			tags.append(u["tag"])
 	var result := SimEngine.issue_command(tags, abil_id, Vector2.ZERO, 0, "", shift and abil_id in ["stop", "hold_position"])
 	if adef.get("attachment", false) and result.ok and RTSAudio:
 		RTSAudio.play_ui("ui_build_place")
 
-func _train_on_best(abil_id: String, count: int) -> void:
+func _train_on_best(abil_id: String, count: int, skip_full_queues: bool = false) -> void:
 	var producers: Array[Dictionary] = []
-	var upgrade := str(RTSData.get_ability_def(abil_id).get("upgrade", ""))
+	var ability := RTSData.get_ability_def(abil_id)
+	var upgrade := str(ability.get("upgrade", ""))
+	var unit_type := str(ability.get("unit", ""))
 	for u in selected_owned():
 		if not RTSData.get_unit_def(u["unit_type"]).get("abilities", []).has(abil_id):
 			continue
-		if float(u["build_progress"]) < 1.0:
+		if float(u["build_progress"]) < 1.0 or u.flight_height > 0.0:
 			continue
 		if not upgrade.is_empty() and not SimEngine.research_producer_block_reason(u, upgrade).is_empty():
+			continue
+		if not unit_type.is_empty() and not SimEngine.campaign_training_block_reason(u, unit_type).is_empty():
 			continue
 		producers.append(u)
 	for i in range(count):
 		var best: Dictionary = {}
 		for producer in producers:
+			if skip_full_queues and producer.production_queue.size() >= SimEngine.PRODUCTION_QUEUE_CAPACITY:
+				continue
 			if SimEngine.uses_brood_slots(producer) and producer.brood_slots <= 0:
 				continue
 			if SimEngine.requires_power(producer.unit_type) and not SimEngine.is_powered(producer.owner, producer.pos):
@@ -1445,6 +1658,26 @@ func _train_on_best(abil_id: String, count: int) -> void:
 				best = producer
 		if best.is_empty() or not SimEngine.issue_command([best.tag], abil_id).ok:
 			break
+
+func _cancel_training_repeat() -> void:
+	_training_repeat_timer.stop()
+	_training_repeat.clear()
+
+func _repeat_training_hotkey() -> void:
+	if _training_repeat.is_empty():
+		return
+	if selected_tags != _training_repeat.selection \
+		or (match_menu and (match_menu.panel.visible or match_menu.result_panel.visible)) \
+		or (campaign_hud and campaign_hud.blocks_battle_input()):
+		_cancel_training_repeat()
+		return
+	for btn in get_card_buttons():
+		if btn.ability_id == _training_repeat.ability_id:
+			if btn.blocked.is_empty():
+				_train_on_best(btn.ability_id, 1, true)
+			_training_repeat_timer.start(TRAIN_REPEAT_INTERVAL)
+			return
+	_cancel_training_repeat()
 
 func _hotkey_char(ke: InputEventKey) -> String:
 	var s := OS.get_keycode_string(ke.keycode)
@@ -1547,6 +1780,7 @@ func _recall_group(g: int, add: bool = false) -> void:
 func _set_local_player(player: int) -> void:
 	if player == local_player:
 		return
+	_close_worker_build_page()
 	local_player = player
 	if RTSAudio:
 		RTSAudio.local_player_id = local_player
@@ -1565,6 +1799,7 @@ func _set_local_player(player: int) -> void:
 	pending_ability = ""
 
 func _handle_hotkey(ke: InputEventKey) -> void:
+	_cancel_training_repeat()
 	if ke.alt_pressed and ke.keycode == KEY_G:
 		_repeating_target = false
 		pending_ability = "ping"
@@ -1632,10 +1867,16 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			_repeating_target = false
 			if show_help:
 				show_help = false
-			elif pending_ability.is_empty() and technology_open:
+			elif not pending_ability.is_empty():
+				pending_ability = ""
+			elif not _worker_build_page.is_empty():
+				_close_worker_build_page()
+			elif technology_open:
 				technology_open = false
 			else:
-				pending_ability = ""
+				var site := primary_unit()
+				if site.has("morph_worker") and site.owner == local_player and site.build_progress < 1.0 and observer_player < 0:
+					SimEngine.issue_command([site.tag], "cancel_construction")
 			return
 		KEY_F1, KEY_QUESTION:
 			show_help = not show_help
@@ -1651,6 +1892,7 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				if not u.is_empty() and not types.has(u["unit_type"]):
 					types.append(u["unit_type"])
 			if types.size() > 1:
+				_close_worker_build_page()
 				var i := types.find(primary_type())
 				var direction := -1 if ke.shift_pressed else 1
 				active_type = types[posmod(i + direction, types.size())]
@@ -1712,6 +1954,13 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 	for btn in get_card_buttons():
 		if btn.hotkey == hk:
 			_trigger_card_button(btn, ke.shift_pressed)
+			if not ke.shift_pressed and not ke.meta_pressed and btn.ability_id.begins_with("train_"):
+				_training_repeat = {
+					"keycode": ke.keycode,
+					"ability_id": btn.ability_id,
+					"selection": selected_tags.duplicate(),
+				}
+				_training_repeat_timer.start(TRAIN_REPEAT_DELAY)
 			return
 
 # External state hook used by the control server (screenshots, scripted demos)
@@ -1769,6 +2018,7 @@ func ui_state() -> Dictionary:
 	return {
 		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"scorecard_visible": match_menu != null and match_menu.result_panel.visible,
+		"campaign_presentation": campaign_hud.presentation_state() if campaign_hud and SimEngine.campaign != null else {},
 		"setup_map": match_menu.selected_map_id() if match_menu != null else "",
 		"setup_map_options": match_menu.map_option_ids() if match_menu != null else [],
 		"map_preview": match_menu.map_preview.preview_state() if match_menu != null and match_menu.map_preview else {},
@@ -1782,6 +2032,7 @@ func ui_state() -> Dictionary:
 		"selected": tags,
 		"primary_type": primary_type(),
 		"pending_ability": pending_ability,
+		"worker_build_page": _worker_build_page,
 		"messages": msgs,
 		"camera_focus": [f.x, f.y],
 		"camera_height": world_3d.cam_height if world_3d else 0.0,
@@ -1816,6 +2067,7 @@ func inject_input(d: Dictionary) -> void:
 	if not event:
 		return
 	if DisplayServer.get_name() == "headless":
+		_input(event)
 		_unhandled_input(event)
 	else:
 		get_viewport().push_input(event)
@@ -1824,7 +2076,7 @@ func inject_input(d: Dictionary) -> void:
 # In-world 2D overlays (unit bars, orders, markers, build ghost, selection box)
 # ---------------------------------------------------------------------------
 func _draw() -> void:
-	if world_3d == null or hud_hidden:
+	if world_3d == null or hud_hidden or (campaign_hud and campaign_hud.cinematic()):
 		return
 	var font := ThemeDB.fallback_font
 	for warning in _area_attack_warnings():
@@ -1836,6 +2088,7 @@ func _draw() -> void:
 	_draw_building_memory(font)
 	_draw_recon_sweeps()
 	_draw_recall_markers(font)
+	_draw_campaign_markers(font)
 	for station in SimEngine.watch_stations:
 		if SimEngine.can_see_position(viewing_player(), station.pos):
 			var owner := int(station.owner)
@@ -1886,6 +2139,28 @@ func _draw() -> void:
 		)
 		draw_rect(sel_rect, Color(0.45, 1.0, 0.55, 0.08))
 		draw_rect(sel_rect, Color(0.55, 1.0, 0.65, 0.9), false, 1.5)
+
+func _draw_campaign_markers(font: Font) -> void:
+	if not campaign_hud or campaign_hud.state.get("status") != "playing":
+		return
+	for marker in campaign_hud.state.markers:
+		var point := Vector2(marker.point[0], marker.point[1])
+		var color: Color = CampaignHud.GOLD if marker.bonus else CampaignHud.CYAN
+		var center := world_to_screen(point, 2.5)
+		if not Rect2(0, 54, 1920, HUD_TOP - 58).has_point(center):
+			continue
+		if marker.kind in ["artifact", "cache"]:
+			var hover := 0.35 * sin(SimEngine.sim_time * 3.0)
+			var core := world_to_screen(point, 1.8 + hover)
+			var crystal := PackedVector2Array([core + Vector2(0, -12), core + Vector2(8, -2), core + Vector2(0, 12), core + Vector2(-8, -2)])
+			draw_line(world_to_screen(point, 0.15), core, Color(color, 0.35), 3.0, true)
+			draw_colored_polygon(crystal, color)
+			draw_line(crystal[0], crystal[2], Color("#fff3ce"), 1.5, true)
+		if marker.kind not in ["carrier", "hero"]:
+			_draw_range_ring(point, 2.6 if marker.bonus else 4.5, color, 2.0)
+		var label_at := center - Vector2(118, 16)
+		draw_string(font, label_at + Vector2.ONE, marker.label, HORIZONTAL_ALIGNMENT_CENTER, 236, 18, Color.BLACK)
+		draw_string(font, label_at, marker.label, HORIZONTAL_ALIGNMENT_CENTER, 236, 18, color)
 
 func _draw_recon_sweeps() -> void:
 	if SimEngine.vision == null:
@@ -2114,11 +2389,14 @@ func _draw_splash_ring(position: Vector2, radius: float, color: Color, width: fl
 func _draw_saturation(unit: Dictionary, site: Dictionary, font: Font) -> void:
 	var label := "%d/%d" % [site.assigned, site.ideal]
 	var center := world_to_screen(unit.pos, unit_height(unit) + 1.8)
-	var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 20.0
-	var badge := Rect2(center - Vector2(width * 0.5, 11.0), Vector2(width, 22.0))
 	var color := Color("#52e08a") if site.type == "aether" else Color("#5eead4")
 	if site.assigned > site.ideal:
 		color = Color("#fbbf24")
+	_draw_count_badge(center, label, font, color)
+
+func _draw_count_badge(center: Vector2, label: String, font: Font, color: Color) -> void:
+	var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 20.0
+	var badge := Rect2(center - Vector2(width * 0.5, 11.0), Vector2(width, 22.0))
 	draw_rect(badge, Color(0.03, 0.06, 0.09, 0.92))
 	draw_string(font, badge.position + Vector2(0.0, 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, width, 16, color)
 
@@ -2303,29 +2581,37 @@ func _draw_rally_and_orders() -> void:
 func _draw_rally_route(route: Array, start: Vector2, base_color: Color) -> void:
 	var last := start
 	for waypoint in route:
-		var end := world_to_screen(SimEngine.rally_waypoint_position(waypoint), 0.2)
+		var crystal_height: float = world_3d.crystal_center_height(waypoint.target_tag) if waypoint.kind == "harvest" else 0.0
+		var end := world_to_screen(SimEngine.rally_waypoint_position(waypoint), maxf(0.2, crystal_height))
 		var color := base_color
 		if waypoint.kind == "harvest":
 			color = Color("#5eead4")
 		elif waypoint.kind == "follow":
 			color = Color("#9eb5ff")
 		draw_dashed_line(last, end, color, 1.5, 6.0)
+		if crystal_height > 0.0:
+			draw_circle(end, 3.0, color)
 		draw_line(end, end + Vector2(0, -26), color, 2.0)
 		draw_colored_polygon(PackedVector2Array([end + Vector2(0, -26), end + Vector2(16, -21), end + Vector2(0, -15)]), color)
 		last = end
 
-func _draw_unit_bars(u: Dictionary, _font: Font) -> void:
+func _draw_unit_bars(u: Dictionary, font: Font) -> void:
 	var is_sel := selected_tags.has(u["tag"])
 	var hurt: bool = u["hp"] < u["max_hp"] - 0.5 or (u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] - 0.5)
 	var health := reveal_health_bars or health_bar_mode == 1 or (health_bar_mode == 0 and (is_sel or hurt))
 	var building: bool = u["is_structure"] and u["build_progress"] < 1.0
+	var garrison: bool = u.unit_type == "field_bunker" and u.owner == local_player and not building
 	var producing: bool = u["is_structure"] and u.flight_height <= 0.0 and u["production_queue"].size() > 0 and is_sel
 	var salvage: int = maxi(0, int(u.get("salvage_finish", 0)) - SimEngine.tick)
-	if not (health or building or producing or salvage > 0):
+	if not (health or building or garrison or producing or salvage > 0):
 		return
 	var sp_head := _unit_screen(u, unit_height(u) + 0.6)
 	if sp_head.y > HUD_TOP - 6.0 or sp_head.y < 10.0 or sp_head.x < -40.0 or sp_head.x > 1960.0:
 		return
+	if garrison:
+		var count: int = u.get("passengers", []).size()
+		var capacity: int = RTSData.get_unit_def(u.unit_type).transport_capacity
+		_draw_count_badge(sp_head - Vector2(0, 26), "%d/%d" % [count, capacity], font, Color("#5eead4") if count > 0 else Color("#a8b4c2"))
 	var is_own: bool = u["owner"] == local_player
 	var bar_w := clampf(float(u["radius"]) * 26.0, 30.0, 104.0)
 	var bar_h := 4.0
@@ -2403,6 +2689,13 @@ func _draw_build_ghost() -> void:
 		_draw_range_ring(c, 0.8, Color("#5eead4"))
 	if placement.ok and definition.get("requires_living_ground", false):
 		_draw_range_ring(c, float(definition.living_ground_radius), Color("#c477b4"))
+	if not landing and sid == "muster_hall" and (SimEngine.campaign_allows_ability(local_player, "attach_research_module") or SimEngine.campaign_allows_ability(local_player, "attach_fabrication_module")):
+		var pad := SimEngine.production_attachment_pad({"pos": c})
+		var pad_radius: float = RTSData.get_unit_def("research_module").radius
+		var pad_clear: bool = SimEngine.can_see_position(local_player, pad) \
+			and is_equal_approx(SimEngine.get_elevation_at(pad), SimEngine.get_elevation_at(c)) \
+			and _check_planned_placement("research_module", pad, pad_radius).ok
+		_draw_build_tile(Rect2(pad - Vector2.ONE * pad_radius, Vector2.ONE * pad_radius * 2.0), valid_color if pad_clear else blocked_color, 0.08, 1.0)
 
 func _draw_build_tile(tile: Rect2, color: Color, fill: float, width: float) -> void:
 	var points := PackedVector2Array([

@@ -1,4 +1,5 @@
 from math import hypot
+from time import monotonic, sleep
 
 from behave import then, when
 
@@ -81,6 +82,39 @@ def cancel_slot(context, slot):
 @then('"{name}" has {count:d} units in production')
 def production_count(context, name, count):
     assert find_unit(context, name)["production_queue_len"] == count
+
+
+@when('the commander holds "{key}" to train')
+def hold_training_key(context, key):
+    context.client.key(key)
+
+
+@when('the commander releases "{key}"')
+def release_key(context, key):
+    context.client.key(key, pressed=False)
+
+
+@then('"{name}" keeps 1 queued unit during the initial repeat delay')
+def initial_training_delay(context, name):
+    production_count(context, name, 1)
+    sleep(0.12)
+    production_count(context, name, 1)
+
+
+@then('"{name}" eventually has at least {count:d} units in production')
+def wait_for_production_count(context, name, count):
+    deadline = monotonic() + 3
+    while find_unit(context, name)["production_queue_len"] < count:
+        assert monotonic() < deadline, f"{name} did not queue {count} units"
+        sleep(0.02)
+
+
+@then('production at "{name}" receives no further orders')
+def production_stops_repeating(context, name):
+    count = find_unit(context, name)["production_queue_len"]
+    assert count < 5, "The queue must have room for another unit"
+    sleep(0.45)
+    production_count(context, name, count)
 
 
 @then("the production controls are captured")

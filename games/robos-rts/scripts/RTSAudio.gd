@@ -305,6 +305,12 @@ func _connect_sim_signals() -> void:
 	if not SimEngine.scenario_loaded.is_connected(_on_scenario_loaded):
 		SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 
+func can_play_campaign_voice() -> bool:
+	return _should_output_audio()
+
+func load_campaign_voice(cue_id: String) -> AudioStreamWAV:
+	return _parse_riff_wav(FileAccess.get_file_as_bytes("res://assets/audio/campaign/%s.wav" % cue_id))
+
 func _load_wav_stream(path: String, fallback_key: String = "") -> AudioStreamWAV:
 	if FileAccess.file_exists(path):
 		var raw: PackedByteArray = FileAccess.get_file_as_bytes(path)

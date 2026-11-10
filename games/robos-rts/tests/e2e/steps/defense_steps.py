@@ -3,6 +3,18 @@ from behave import given, then, when
 from tactical_controls_steps import find_unit
 
 
+@then('"{name}" has {count:d} garrisoned units')
+def garrison_count(context, name, count):
+    unit = find_unit(context, name)
+    assert len(unit.get("passengers", [])) == count, unit
+
+
+@then("the commander is told the bunker is full")
+def bunker_full_notice(context):
+    messages = context.client.ui()["state"]["messages"]
+    assert any(message.startswith("Bunker is full.") for message in messages), messages
+
+
 @given("a finite Iron Narrows skirmish")
 def iron_narrows(context):
     result = context.client.new_match("normal", "balanced", 9, map_id="iron-narrows", unlimited_resources=False)

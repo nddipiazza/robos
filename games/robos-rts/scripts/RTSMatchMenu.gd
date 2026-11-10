@@ -3,6 +3,7 @@ extends CanvasLayer
 signal observe_requested
 signal health_mode_changed(mode: int)
 signal back_requested
+signal campaign_restart_requested
 
 enum Layout { BATTLE, SKIRMISH, SETTINGS }
 
@@ -41,6 +42,12 @@ var _show_results: Button
 var _map_description: Label
 var map_preview: Control
 var _faction_ids: Array = []
+var _skirmish_options: VBoxContainer
+var _start_button: Button
+var _surrender_button: Button
+var _editor_button: Button
+var _retry_mission: Button
+var _resume_button: Button
 
 func _ready() -> void:
 	layer = 10
@@ -60,33 +67,28 @@ func _ready() -> void:
 		map_filter.focus_mode = Control.FOCUS_CLICK
 		map_filter.item_selected.connect(_filter_maps)
 		panel.visibility_changed.connect(func():
-			map_preview.visible = panel.visible
-			filters.visible = panel.visible)
-		_build_skirmish_options(box)
+			map_preview.visible = panel.visible and (not in_battle or SimEngine.campaign == null)
+			filters.visible = map_preview.visible)
+		_skirmish_options = VBoxContainer.new()
+		_skirmish_options.add_theme_constant_override("separation", 18)
+		box.add_child(_skirmish_options)
+		_build_skirmish_options(_skirmish_options)
 	if layout != Layout.SKIRMISH:
 		_build_display_options(box)
 	if layout != Layout.SETTINGS:
-		_button(box, "Start new match", _start)
+		_start_button = _button(box, "Start new match", _start)
 	if not in_battle:
 		_button(box, "Back", func(): back_requested.emit())
 		return
-	var resume = Button.new()
-	resume.text = "Resume (F8)"
-	resume.pressed.connect(toggle)
-	box.add_child(resume)
+	_resume_button = _button(box, "Resume (F8)", toggle)
 	_show_results = _button(box, "Match results", _open_result)
 	_show_results.hide()
-	var surrender_button = Button.new()
-	surrender_button.text = "Surrender"
-	surrender_button.pressed.connect(func():
+	_surrender_button = _button(box, "Surrender", func():
 		SimEngine.surrender(1)
 		panel.hide()
 		SimEngine.paused = false)
-	box.add_child(surrender_button)
-	var editor_button = Button.new()
-	editor_button.text = "Map editor"
-	editor_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MapEditor.tscn"))
-	box.add_child(editor_button)
+	_editor_button = _button(box, "Map editor", func(): get_tree().change_scene_to_file("res://scenes/MapEditor.tscn"))
+	_retry_mission = _button(box, "Restart mission", func(): campaign_restart_requested.emit())
 	_button(box, "Main menu", _return_to_title)
 	_create_scorecard()
 	SimEngine.match_finished.connect(_open_result)
@@ -129,6 +131,7 @@ func _build_display_options(box: VBoxContainer) -> void:
 		pan.item_selected.connect(func(index): _save_control("pan_speed", index))
 		var lines := _option(box, "Unit order lines", ["Always", "Hold Shift", "Hidden"], order_lines)
 		lines.item_selected.connect(func(index): _save_control("order_lines", index))
+	_button(box, "Toggle fullscreen", RTSDisplay.toggle_fullscreen)
 
 func _save_control(key: String, value: Variant) -> void:
 	var display := ConfigFile.new()
@@ -149,7 +152,7 @@ func open_title_panel() -> void:
 		volume.grab_focus()
 
 func _return_to_title() -> void:
-	SimEngine.resume_from_title = not SimEngine.units.is_empty() and SimEngine.match_state.get("status") != "finished"
+	SimEngine.resume_from_title = not SimEngine.units.is_empty() and not SimEngine._scenario_finished()
 	if SimEngine.resume_from_title:
 		get_parent().save_title_view()
 	SimEngine.paused = true
@@ -249,6 +252,12 @@ func reset_views() -> void:
 	panel.hide()
 	result_panel.hide()
 	_show_results.hide()
+	var in_campaign := SimEngine.campaign != null
+	_skirmish_options.visible = not in_campaign
+	_start_button.visible = not in_campaign
+	_surrender_button.visible = not in_campaign
+	_editor_button.visible = not in_campaign
+	_retry_mission.visible = in_campaign
 	var map_id: String = SimEngine.match_state.get("map_id", "")
 	if SimEngine.SKIRMISH_MAPS.has(map_id):
 		var map_index := map_option_ids().find(map_id)
@@ -356,14 +365,15 @@ func toggle() -> void:
 	result_panel.hide()
 	if panel.visible:
 		panel.hide()
-		SimEngine.sim_speed = float(1 << speed.selected)
+		if SimEngine.campaign == null:
+			SimEngine.sim_speed = float(1 << speed.selected)
 		_on_volume_selected(volume.selected)
 		SimEngine.paused = was_paused
 	else:
 		was_paused = SimEngine.paused
 		SimEngine.paused = true
 		panel.show()
-		map_picker.grab_focus()
+		(_resume_button if SimEngine.campaign != null else map_picker).grab_focus()
 
 func _start() -> void:
 	var map_id := selected_map_id()

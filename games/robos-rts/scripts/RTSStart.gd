@@ -5,6 +5,7 @@ const EDITOR_SCENE := "res://scenes/MapEditor.tscn"
 const BACKDROP := "res://assets/ui/starfall-orbit.webp"
 const MatchMenu = preload("res://scripts/RTSMatchMenu.gd")
 const GameInput = preload("res://scripts/RTSGameInput.gd")
+const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
 const SCENARIOS := [
 	["starfall-canyon", "Starfall Canyon", "Three-faction showcase"],
 	["colony-macro-economy", "Colony Economy", "Gather, build, and train an army"],
@@ -19,6 +20,10 @@ var _leaving := false
 var _page := "main"
 var _home: Control
 var _scenarios: Control
+var _campaign: Control
+var _campaign_error: Label
+var _campaign_difficulty: OptionButton
+var _mission_buttons: Array[Button] = []
 var _options: CanvasLayer
 var _first_button: Button
 var _back_focus: Button
@@ -40,6 +45,7 @@ func _ready() -> void:
 	keys.position = Vector2(130, 972)
 	_build_main_page()
 	_build_scenario_page()
+	_build_campaign_page()
 	_first_button.grab_focus()
 
 func waiting_on_title() -> bool:
@@ -104,10 +110,12 @@ func _build_main_page() -> void:
 	_home.add_child(rule)
 	var buttons := _stack(_home, Vector2(130, 366), 510)
 	if SimEngine.resume_from_title:
-		_first_button = _add_menu_button(buttons, "resume", "Resume Match", "Paused battlefield", _resume)
-	var skirmish := _add_menu_button(buttons, "skirmish", "Skirmish", "1 vs. AI", func(): _open_options(MatchMenu.Layout.SKIRMISH, "skirmish"))
+		var resume_label := "Resume Mission" if SimEngine.campaign != null else "Resume Match"
+		_first_button = _add_menu_button(buttons, "resume", resume_label, "Paused battlefield", _resume)
+	var campaign := _add_menu_button(buttons, "campaign", "Campaign", "Ashfall Signal", _open_campaign)
 	if not _first_button:
-		_first_button = skirmish
+		_first_button = campaign
+	_add_menu_button(buttons, "skirmish", "Skirmish", "1 vs. AI", func(): _open_options(MatchMenu.Layout.SKIRMISH, "skirmish"))
 	_add_menu_button(buttons, "scenarios", "Scenarios", "Practice and showcases", _open_scenarios)
 	_add_menu_button(buttons, "editor", "Map Editor", "Create a battlefield", func(): _change_scene(EDITOR_SCENE))
 	var gap := Control.new()
@@ -128,6 +136,61 @@ func _build_scenario_page() -> void:
 	_menu_button(buttons, "Back", "", _show_home)
 	_error = _label(buttons, "", 18, Color("#ff948c"))
 	_scenarios.hide()
+
+func _build_campaign_page() -> void:
+	_campaign = Control.new()
+	add_child(_campaign)
+	var eyebrow := _label(_campaign, "STARFALL COMMAND  /  CAMPAIGN", 18, Color("#8bd5e0"))
+	eyebrow.position = Vector2(130, 143)
+	var title := _label(_campaign, "Ashfall Signal", 62, Color("#ecf5ff"))
+	title.position = Vector2(126, 177)
+	var brief := _label(_campaign, "Break the Directorate blockade and bring the frontier colonists home.", 23, Color("#b7cbd9"))
+	brief.position = Vector2(130, 270)
+	var buttons := _stack(_campaign, Vector2(130, 342), 800)
+	var difficulty_row := HBoxContainer.new()
+	difficulty_row.add_theme_constant_override("separation", 16)
+	buttons.add_child(difficulty_row)
+	_label(difficulty_row, "Difficulty", 20, Color("#b7cbd9"))
+	_campaign_difficulty = OptionButton.new()
+	_campaign_difficulty.custom_minimum_size = Vector2(180, 40)
+	_campaign_difficulty.add_theme_font_size_override("font_size", 20)
+	for difficulty in Campaign.DIFFICULTIES:
+		_campaign_difficulty.add_item(difficulty.capitalize())
+	var selected := SimEngine.campaign.difficulty if SimEngine.campaign != null else "normal"
+	_campaign_difficulty.select(Campaign.DIFFICULTIES.find(selected))
+	difficulty_row.add_child(_campaign_difficulty)
+	var completed := Campaign.completed_missions()
+	for index in Campaign.MISSIONS.size():
+		var mission: Dictionary = Campaign.MISSIONS[index]
+		var detail: String = mission.brief
+		if not Campaign.mission_available(index, completed):
+			detail = "Locked  /  Complete mission %d first" % index
+		elif mission.id in completed:
+			detail = "Completed  /  Replay mission"
+		var button := _menu_button(buttons, "%02d   %s" % [index + 1, mission.title], detail, _play_mission.bind(index))
+		button.disabled = not Campaign.mission_available(index, completed)
+		_mission_buttons.append(button)
+	_menu_button(buttons, "Back", "", _show_home)
+	_campaign_error = _label(buttons, "", 18, Color("#ff948c"))
+	_campaign.hide()
+
+func _open_campaign() -> void:
+	_back_focus = _menu_buttons.campaign
+	_page = "campaign"
+	_home.hide()
+	_campaign.show()
+	_campaign_error.text = ""
+	var completed := Campaign.completed_missions()
+	for index in _mission_buttons.size():
+		if not _mission_buttons[index].disabled and Campaign.MISSIONS[index].id not in completed:
+			_mission_buttons[index].grab_focus()
+			return
+	_mission_buttons.back().grab_focus()
+
+func _play_mission(index: int) -> void:
+	var result := SimEngine.start_campaign(index, Campaign.DIFFICULTIES[_campaign_difficulty.selected])
+	if not result.ok:
+		_campaign_error.text = result.error
 
 func _stack(parent: Control, at: Vector2, width: float) -> VBoxContainer:
 	var stack := VBoxContainer.new()
@@ -210,6 +273,7 @@ func _show_home() -> void:
 		_options.queue_free()
 		_options = null
 	_scenarios.hide()
+	_campaign.hide()
 	_page = "main"
 	_home.show()
 	if _back_focus:
@@ -253,7 +317,12 @@ func inject_input(request: Dictionary) -> void:
 		get_viewport().push_input(event)
 
 func ui_state() -> Dictionary:
-	return {"screen": "title", "page": _page, "resume_available": SimEngine.resume_from_title}
+	return {
+		"screen": "title", "page": _page, "resume_available": SimEngine.resume_from_title,
+		"campaign_unlocked": _mission_buttons.map(func(button): return not button.disabled),
+		"campaign_difficulty": Campaign.DIFFICULTIES[_campaign_difficulty.selected] if _campaign_difficulty else "normal",
+		"fullscreen": RTSDisplay.is_fullscreen(),
+	}
 
 func apply_ui_state(_request: Dictionary) -> Dictionary:
 	return ui_state()

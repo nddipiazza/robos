@@ -44,7 +44,8 @@ Feature: Resonator coverage shows which Waystones rely on a single source
     And the power overlay shows "overlap" as "single" with "east_source"
     When the commander clicks the projected body of "builder" at (0.0, 1.15)
     Then the infrastructure overlay is hidden
-    When the commander presses "W"
+    When the commander presses "B"
+    And the commander presses "G"
     Then only power fields "east_source" are shown
     When the commander presses "Escape"
     Then the infrastructure overlay is hidden

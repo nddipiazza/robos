@@ -25,5 +25,6 @@ Feature: Choose skirmish factions and use separate Brood rallies
     And the commander presses "G"
     Then the command card is targeting "harvest"
     When the commander presses "Escape"
-    And the commander presses "W"
+    And the commander presses "B"
+    And the commander presses "G"
     Then the command card is targeting "build_waystone"

@@ -347,12 +347,23 @@ func _rebuild_static_3d_map() -> void:
 	var mw := SimEngine.map_width
 	var mh := SimEngine.map_height
 	var low := _noise_mat("low_ground", Color("#33452a"), Color("#617243"), 0.012, 46.0)
+	var assault := SimEngine.campaign != null and SimEngine.campaign.mission_index == SimEngine.Campaign.ASSAULT
+	if assault:
+		low = _noise_mat("vesper_ground", Color("#394152"), Color("#7b7f81"), 0.014, 37.0)
+	elif SimEngine.campaign != null and SimEngine.campaign.mission_index == SimEngine.Campaign.RECOVERY:
+		low = _noise_mat("white_ridge_ground", Color("#605b52"), Color("#998c70"), 0.016, 41.0)
 	var high := _noise_mat("high_ground", Color("#625640"), Color("#b0a283"), 0.014, 40.0)
 	var rock := _noise_mat("rock", Color("#3a3029"), Color("#5d4e42"), 0.03, 14.0, 4, 0.6)
 	var path := _noise_mat("ramp", Color("#7d6b4b"), Color("#a08c64"), 0.02, 24.0)
 
 	# Low ground
-	_terrain_box(Vector3(mw, 1.0, mh), Vector3(mw * 0.5, -0.5, mh * 0.5), low)
+	var ground_material := low
+	if not SimEngine.ground_regions.is_empty():
+		ground_material = _noise_mat("campaign_badlands", Color("#261e1d"), Color("#5b3729"), 0.022, 34.0)
+		low.cull_mode = BaseMaterial3D.CULL_DISABLED
+		for region in SimEngine.ground_regions:
+			_terrain_polygon(region, 0.012, low)
+	_terrain_box(Vector3(mw, 1.0, mh), Vector3(mw * 0.5, -0.5, mh * 0.5), ground_material)
 	var water = _noise_mat("river_water", Color("#102c4b"), Color("#39718b"), 0.04, 16.0)
 	water.cull_mode = BaseMaterial3D.CULL_DISABLED
 	water.roughness = 0.35
@@ -364,6 +375,10 @@ func _rebuild_static_3d_map() -> void:
 		_terrain_polygon(polygon, 0.055, water)
 	for bridge in SimEngine.land_bridges:
 		_terrain_box(Vector3(bridge.size.x, 0.16, bridge.size.y), Vector3(bridge.get_center().x, 0.08, bridge.get_center().y), path)
+	if not SimEngine.bridge_decks.is_empty():
+		path.cull_mode = BaseMaterial3D.CULL_DISABLED
+		for deck in SimEngine.bridge_decks:
+			_terrain_polygon(deck, 0.085, path)
 	for rect in SimEngine.merged_terrain_rects("land"):
 		_terrain_box(Vector3(rect.size.x, 0.16, rect.size.y), Vector3(rect.get_center().x, 0.08, rect.get_center().y), low)
 	_build_brush_cover()
@@ -423,9 +438,9 @@ func _rebuild_static_3d_map() -> void:
 			var cx := pc.position.x + pc.size.x * 0.5
 			var cz := pc.position.y + pc.size.y * 0.5
 			_terrain_box(Vector3(pc.size.x, GROUND_TOP - 0.3, pc.size.y), Vector3(cx, (GROUND_TOP - 0.3) * 0.5, cz), rock)
-			_terrain_box(Vector3(pc.size.x + 0.5, 0.34, pc.size.y + 0.5), Vector3(cx, GROUND_TOP - 0.17, cz), high)
+			_terrain_box(Vector3(pc.size.x, 0.34, pc.size.y), Vector3(cx, GROUND_TOP - 0.17, cz), high)
 
-	# Ramps are right-angle wedges: high edge on the west, sloping down to the east
+	# The wedge's high end meets the plateau used by simulation elevation.
 	for rmp in SimEngine.ramps:
 		var prism := PrismMesh.new()
 		prism.size = Vector3(rmp.size.x, GROUND_TOP, rmp.size.y)
@@ -434,12 +449,17 @@ func _rebuild_static_3d_map() -> void:
 		rmi.mesh = prism
 		rmi.material_override = path
 		rmi.position = Vector3(rmp.position.x + rmp.size.x * 0.5, GROUND_TOP * 0.5, rmp.position.y + rmp.size.y * 0.5)
+		if SimEngine.ramp_rises_east(rmp, SimEngine.high_ground_zones):
+			rmi.rotation.y = PI
 		terrain_root.add_child(rmi)
 
 	# Cliff walls: dark rock core, ragged boulders on top
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7731
 	for obs in SimEngine.terrain_obstacles:
+		if assault:
+			_vesper_block(obs)
+			continue
 		var h := 5.2
 		var cx2 := obs.position.x + obs.size.x * 0.5
 		var cz2 := obs.position.y + obs.size.y * 0.5
@@ -464,6 +484,8 @@ func _rebuild_static_3d_map() -> void:
 			boulder.rotation_degrees = Vector3(rng.randf() * 40.0, rng.randf() * 360.0, rng.randf() * 40.0)
 			terrain_root.add_child(boulder)
 
+	if SimEngine.campaign != null:
+		_campaign_landmark(assault)
 	_scatter_decor()
 	_batch_static_geometry(decor_root)
 	_batch_static_geometry(terrain_root)
@@ -474,11 +496,109 @@ func _rebuild_static_3d_map() -> void:
 			var resource: Dictionary = SimEngine.resources[tag]
 			if resource.resource_type != "crystal_field":
 				continue
-			var node = Models.build_resource(resource.resource_type, tag, resource.rich)
-			resources_root.add_child(node)
-			node.position = Vector3(resource.pos.x, SimEngine.get_elevation_at(resource.pos), resource.pos.y)
-			resource_nodes[tag] = node
+			_add_resource_node(resource)
 		_batch_static_geometry(resources_root)
+
+func _add_resource_node(resource: Dictionary) -> Node3D:
+	var node := Models.build_resource(resource.resource_type, resource.tag, resource.rich)
+	if resource.resource_type == "crystal_field":
+		var shards: Array[AABB] = []
+		var cluster := AABB()
+		for child in node.get_children():
+			if child is MeshInstance3D and child.name.begins_with("Crystal"):
+				var bounds: AABB = child.transform * child.get_aabb()
+				cluster = cluster.merge(bounds) if not shards.is_empty() else bounds
+				shards.append(bounds)
+		# Keep these local bounds when the crystal meshes are baked into a batch.
+		node.set_meta("crystal_pick_bounds", shards)
+		node.set_meta("crystal_center_height", cluster.get_center().y)
+	resources_root.add_child(node)
+	node.position = Vector3(resource.pos.x, SimEngine.get_elevation_at(resource.pos), resource.pos.y)
+	resource_nodes[resource.tag] = node
+	return node
+
+func crystal_at_screen(screen: Vector2, player: int) -> int:
+	var origin := camera_3d.project_ray_origin(screen)
+	var direction := camera_3d.project_ray_normal(screen)
+	var best_tag := 0
+	var best_depth := INF
+	for tag in resource_nodes:
+		var node: Node3D = resource_nodes[tag]
+		if not node.has_meta("crystal_pick_bounds"):
+			continue
+		var resource: Dictionary = SimEngine.resources.get(tag, {})
+		if resource.is_empty() or not SimEngine.deposit_present(resource) or not SimEngine.can_see_position(player, resource.pos):
+			continue
+		var transform := node.global_transform
+		var local := transform.affine_inverse()
+		var local_origin := local * origin
+		var local_direction := local.basis * direction
+		for bounds: AABB in node.get_meta("crystal_pick_bounds"):
+			var hit: Variant = bounds.intersects_ray(local_origin, local_direction)
+			if hit is Vector3:
+				var depth := origin.distance_squared_to(transform * hit)
+				if depth < best_depth:
+					best_depth = depth
+					best_tag = tag
+	return best_tag
+
+func crystal_center_height(tag: int) -> float:
+	var node: Node3D = resource_nodes.get(tag)
+	return float(node.get_meta("crystal_center_height", 0.0)) * node.scale.y if node else 0.0
+
+func _vesper_block(footprint: Rect2) -> void:
+	var center := footprint.get_center()
+	var width := footprint.size.x
+	var depth := footprint.size.y
+	var wall := _get_mat("vesper_wall", Color("#555b68"))
+	var steel := _get_mat("vesper_roof", Color("#2a3445"))
+	var windows := _get_mat("vesper_windows", Color("#6bced6"), Color("#397883"))
+	_terrain_box(Vector3(width, 5.2, depth), Vector3(center.x, 2.6, center.y), wall)
+	_terrain_box(Vector3(width + 0.15, 0.32, depth + 0.15), Vector3(center.x, 5.3, center.y), steel)
+	_terrain_box(Vector3(width * 0.35, 1.4, depth * 0.44), Vector3(center.x + width * 0.19, 6.12, center.y - depth * 0.1), steel)
+	for offset in [-1, 1]:
+		_terrain_box(Vector3(width - 1.7, 0.32, 0.14), Vector3(center.x, 3.55, center.y + offset * depth * 0.5), windows)
+		_terrain_box(Vector3(0.14, 0.32, depth - 1.7), Vector3(center.x + offset * width * 0.5, 3.55, center.y), windows)
+
+func _campaign_landmark(assault: bool) -> void:
+	var steel := _get_mat("campaign_pad", Color("#2c3a48"))
+	var lights := _get_mat("campaign_lights", Color("#8ceef1"), Color("#63b6c0"))
+	var mission = SimEngine.campaign
+	if assault:
+		var hq: Vector2 = mission.CHECKPOINTS.back().point
+		_terrain_box(Vector3(9, 0.12, 8), Vector3(hq.x, 0.06, hq.y), steel)
+		_campaign_road(PackedVector2Array([
+			Vector2(121, 114), Vector2(122, 132), Vector2(117, 142), Vector2(95, 141),
+			Vector2(60, 140), Vector2(36, 129), Vector2(32, 118), Vector2(41, 104),
+			Vector2(55, 95), Vector2(48, 82), Vector2(37, 75), Vector2(34, 69), Vector2(37, 59),
+			Vector2(59, 55), Vector2(73, 46), Vector2(83, 34), Vector2(94, 11),
+		]), Color("#383e46"))
+	elif mission.mission_index == mission.RECOVERY:
+		var dig: Vector2 = mission.DIG_SITE
+		_terrain_box(Vector3(9, 0.12, 7), Vector3(dig.x, 0.06, dig.y), steel)
+		for offset in [-3.7, 3.7]:
+			_terrain_box(Vector3(0.24, 0.17, 5.6), Vector3(dig.x + offset, 0.14, dig.y), lights)
+		_campaign_road(PackedVector2Array([
+			Vector2(106, 136), Vector2(114, 116), Vector2(113, 102), Vector2(105, 89),
+			Vector2(88, 87), Vector2(70, 81), Vector2(59, 82), Vector2(49, 87),
+			Vector2(36, 86), Vector2(34, 72), Vector2(32, 55), Vector2(39, 29),
+		]), Color("#6f6250"))
+		_campaign_road(PackedVector2Array([
+			Vector2(31, 129), Vector2(41, 109), Vector2(42, 98), Vector2(49, 87),
+		]), Color("#6f6250"))
+	else:
+		var pad: Vector2 = mission.LANDING_ZONE
+		var height := SimEngine.get_elevation_at(pad)
+		_terrain_box(Vector3(8.0, 0.14, 8.0), Vector3(pad.x, height + 0.07, pad.y), steel)
+		for offset in [-3.7, 3.7]:
+			_terrain_box(Vector3(0.24, 0.17, 6.9), Vector3(pad.x + offset, height + 0.14, pad.y), lights)
+		_terrain_box(Vector3(2.2, 0.17, 0.24), Vector3(pad.x, height + 0.14, pad.y), lights)
+
+func _campaign_road(points: PackedVector2Array, color: Color) -> void:
+	var road := _get_mat("campaign_road_%s" % color.to_html(false), color, Color.BLACK, 0.0, 0.95)
+	road.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for polygon in Geometry2D.offset_polyline(points, 3.7, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND):
+		_terrain_polygon(polygon, 0.035, road)
 
 func _build_brush_cover() -> void:
 	var tiles := SimEngine.terrain_tiles.filter(func(tile): return tile.terrain == "brush")
@@ -653,15 +773,12 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		var r: Dictionary = SimEngine.resources[r_tag]
 		if not SimEngine.deposit_present(r):
 			continue
-		if not resource_nodes.has(r_tag):
-			var node := Models.build_resource(str(r["resource_type"]), int(r_tag), r.rich)
-			resources_root.add_child(node)
-			resource_nodes[r_tag] = node
-		var rn: Node3D = resource_nodes[r_tag]
+		var rn: Node3D = resource_nodes[r_tag] if resource_nodes.has(r_tag) else _add_resource_node(r)
 		rn.position = Vector3(r["pos"].x, SimEngine.get_elevation_at(r["pos"]), r["pos"].y)
 		if r["resource_type"] == "crystal_field":
-			var frac := clampf(float(r["amount"]) / 1500.0, 0.25, 1.0)
-			rn.scale = Vector3(1.0, 0.45 + 0.55 * frac, 1.0)
+			if not SimEngine.unlimited_resources:
+				var frac := clampf(float(r["amount"]) / 1500.0, 0.25, 1.0)
+				rn.scale = Vector3(1.0, 0.45 + 0.55 * frac, 1.0)
 		else:
 			for i in range(3):
 				var pl := rn.get_node_or_null("Plume%d" % i)

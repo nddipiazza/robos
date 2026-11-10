@@ -3,6 +3,14 @@ from behave import then, when
 from tactical_controls_steps import find_unit
 
 
+@then('"{name}" has Auto-Heal {status}')
+def auto_heal_state(context, name, status):
+    unit = find_unit(context, name)
+    assert unit["auto_heal"] == (status == "on"), unit
+    if status == "off" and not unit["orders"]:
+        assert not unit["support_target_tag"], unit
+
+
 @when('the commander selects the completed "{unit_type}"')
 def select_completed(context, unit_type):
     unit = next(u for u in context.client.get_observation()["units"]

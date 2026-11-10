@@ -66,7 +66,8 @@ Feature: Brood living ground appears on the battlefield and minimap
     And the simulation advances 1600 ticks
     And the commander frames (51, 34) at zoom height 79
     And the commander Ctrl-clicks unit "grower"
-    And the commander presses "T"
+    And the commander presses "B"
+    And the commander presses "C"
     And the commander places a Growth Node at (70, 34)
     Then no "brood_growth_node" exists
     And player 1 has 400 crystal, 150 aether and 1 supply used

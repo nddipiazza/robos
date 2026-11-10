@@ -60,6 +60,34 @@ Feature: Shortened routes mark their reachable endpoints
       | 76      |
       | 50      |
 
+  Scenario: Lowering a Provision Silo lets infantry walk over it safely
+    Given an RTS test scenario
+      """
+      {"name":"Silo crossing","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"gate","type":"silo","owner":1,"x":44,"y":27},
+                {"id":"scout","type":"rifleman","owner":1,"x":32,"y":27}]}
+      """
+    When the commander clicks unit "gate"
+    And the commander presses "Ctrl+1"
+    And the commander presses "R"
+    Then player 1 has 1 surviving "silo_retracted" units
+    And player 1 has supply cap of at least 8
+    When the commander clicks unit "scout"
+    And the commander presses "Ctrl+2"
+    And the commander right-clicks terrain at (44, 27)
+    And the simulation advances 280 ticks
+    Then unit "scout" is within 1.6 units of (44.0, 27.0)
+    When the commander presses "1"
+    And the commander presses "R"
+    Then player 1 has 1 surviving "silo_retracted" units
+    When the commander presses "2"
+    And the commander right-clicks terrain at (56, 27)
+    And the simulation advances 280 ticks
+    Then unit "scout" is within 1.6 units of (56.0, 27.0)
+    When the commander presses "1"
+    And the commander presses "R"
+    Then player 1 has 1 surviving "silo" units
+
   Scenario: A click inside a cliff marks its reachable near edge
     Given an RTS test scenario
       """

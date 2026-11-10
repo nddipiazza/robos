@@ -1,0 +1,92 @@
+{
+  "name": "Hold for Dawn",
+  "seed": 717,
+  "decor": false,
+  "fog_of_war": true,
+  "map": {
+    "width": 168,
+    "height": 161,
+    "water_channels": [
+      {
+        "width": 14,
+        "points": [
+          [39, 169],
+          [48, 145],
+          [54, 123],
+          [59, 109],
+          [69, 101],
+          [83, 91],
+          [98, 79],
+          [112, 69],
+          [139, 72],
+          [169, 65],
+          [179, 63]
+        ]
+      }
+    ],
+    "bridge_decks": [
+      [
+        [52, 79],
+        [60, 74],
+        [83, 101],
+        [75, 108]
+      ],
+      [
+        [92, 82],
+        [115, 57],
+        [124, 65],
+        [101, 90]
+      ]
+    ],
+    "high_ground": [
+      {"x": 109, "y": 99, "w": 45, "h": 48}
+    ],
+    "ramps": [
+      {"x": 103, "y": 100, "w": 6, "h": 18}
+    ],
+    "obstacles": [
+      {"x": 25, "y": 11, "w": 18, "h": 11},
+      {"x": 52, "y": 31, "w": 16, "h": 11},
+      {"x": 85, "y": 36, "w": 17, "h": 12},
+      {"x": 124, "y": 22, "w": 17, "h": 10},
+      {"x": 145, "y": 45, "w": 15, "h": 7},
+      {"x": 27, "y": 93, "w": 16, "h": 12},
+      {"x": 63, "y": 130, "w": 19, "h": 13},
+      {"x": 90, "y": 143, "w": 11, "h": 10}
+    ]
+  },
+  "players": {
+    "1": {"faction": "humans", "crystal": 475, "aether": 125},
+    "2": {"faction": "monsters", "crystal": 0, "aether": 0}
+  },
+  "resources": [
+    {"type": "crystal_field", "x": 140, "y": 110, "amount": 2000},
+    {"type": "crystal_field", "x": 141, "y": 116, "amount": 2000},
+    {"type": "crystal_field", "x": 142, "y": 122, "amount": 2000},
+    {"type": "crystal_field", "x": 140, "y": 128, "amount": 2000},
+    {"type": "crystal_field", "x": 137, "y": 134, "amount": 2000},
+    {"type": "crystal_field", "x": 145, "y": 129, "amount": 2000},
+    {"type": "crystal_field", "x": 143, "y": 136, "amount": 2000},
+    {"type": "aether_vent", "x": 130, "y": 104, "amount": 2250}
+  ],
+  "units": [
+    {"type": "colony_hub", "owner": 1, "x": 124, "y": 120, "id": "evac_hub"},
+    {"type": "muster_hall", "owner": 1, "x": 114, "y": 116},
+    {"type": "muster_hall", "owner": 1, "x": 119, "y": 129},
+    {"type": "field_armory", "owner": 1, "x": 134, "y": 142},
+    {"type": "silo", "owner": 1, "x": 122, "y": 108},
+    {"type": "silo", "owner": 1, "x": 123, "y": 134},
+    {"type": "silo", "owner": 1, "x": 117, "y": 104},
+    {"type": "pioneer", "owner": 1, "x": 128, "y": 117, "count": 8, "spread": 2.05, "auto_harvest": true},
+    {"type": "rifleman", "owner": 1, "x": 102, "y": 119, "count": 14, "spread": 2.1},
+    {"type": "triage_specialist", "owner": 1, "x": 106, "y": 121, "count": 2, "spread": 2},
+    {"type": "field_bunker", "owner": 1, "x": 101, "y": 105, "id": "north_bunker"},
+    {"type": "field_bunker", "owner": 1, "x": 94, "y": 111, "id": "west_bunker"},
+    {"type": "sentry_turret", "owner": 1, "x": 104, "y": 134},
+    {"type": "sentry_turret", "owner": 1, "x": 112, "y": 135},
+    {"type": "skitterling", "owner": 2, "x": 141, "y": 37, "count": 4, "spread": 2},
+    {"type": "bile_crawler", "owner": 2, "x": 143, "y": 40},
+    {"type": "skitterling", "owner": 2, "x": 26, "y": 59, "count": 4, "spread": 2},
+    {"type": "bile_crawler", "owner": 2, "x": 30, "y": 61}
+  ]
+}

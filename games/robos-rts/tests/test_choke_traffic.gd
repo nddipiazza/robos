@@ -15,6 +15,7 @@ func _run() -> void:
 	_test_overhead_traffic()
 	_test_crowded_entrance(49.0, 16.0)
 	_test_crowded_entrance(48.0, 34.0)
+	_test_hold_for_dawn_bridge()
 	print("Choke traffic: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -107,3 +108,23 @@ func _test_crowded_entrance(center: float, length: float) -> void:
 		"The advancing group returns to the lane after crowd steering displaces its approach")
 	_check(retreating.all(func(tag): return sim.units[tag].pos.y < start and sim.units[tag].orders.is_empty()),
 		"The retreating group also clears the crowded entrance")
+
+func _test_hold_for_dawn_bridge() -> void:
+	var setup: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/campaign-hold-for-dawn.json"))
+	setup["paused"] = true
+	setup["fog_of_war"] = false
+	setup["units"] = setup.units.filter(func(unit):
+		return unit.owner == 1 and unit.type in ["colony_hub", "silo", "muster_hall", "field_bunker", "sentry_turret"])
+	sim.load_scenario_dict(setup)
+	var squad: Array[Dictionary] = []
+	var start := Vector2(123.2708, 44.4156)
+	for i in range(24):
+		var position := start + Vector2(i % 5 - 2, i / 5 - 2) * 1.95
+		if not sim._is_point_blocked_by_static(position, 1.25):
+			squad.append(sim.spawn_unit("breacher", 1, position))
+	var goal := Vector2(90.45321, 107.1294)
+	var tags := squad.map(func(unit): return unit.tag)
+	_check(sim.issue_command(tags, "attack_move", goal).ok, "The squad accepts an order across the northeast bridge")
+	sim.step_ticks(1300)
+	_check(squad.all(func(unit): return unit.pos.y > 95.0 and unit.orders.is_empty()),
+		"Every Breacher crosses and finishes after nearby troops reach their destinations")

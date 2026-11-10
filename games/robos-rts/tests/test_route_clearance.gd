@@ -16,6 +16,8 @@ func _run() -> void:
 	_test_off_grid_gate()
 	_test_corner_sweeps()
 	_test_visible_start_cell()
+	_test_shoreline_corner()
+	_test_squad_rounds_shoreline()
 	print("Route clearance checks: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -33,6 +35,11 @@ func _layout(narrow_start: float, narrow_end: float) -> void:
 	sim.ramps.append(Rect2(56, 60, 16, 14))
 
 func _test_ramps() -> void:
+	_layout(21.7, 24.3)
+	_check(is_equal_approx(sim.get_elevation_at(Vector2(56, 23)), 2.2)
+		and is_equal_approx(sim.get_elevation_at(Vector2(64, 23)), 1.1)
+		and is_equal_approx(sim.get_elevation_at(Vector2(72, 23)), 0.0),
+		"A west-side plateau still slopes down toward the east")
 	for west_to_east in [true, false]:
 		for kind in ["rifleman", "bile_crawler", "howitzer"]:
 			_layout(21.7, 24.3)
@@ -174,3 +181,47 @@ func _test_visible_start_cell() -> void:
 		for point in path:
 			_check(sim._has_clear_line_of_walk(previous, point, 0.85), "Route from the wall lip uses a visible start node")
 			previous = point
+
+func _shoreline_layout() -> void:
+	sim.reset_state(42, 96, 80)
+	for x in range(20, 29):
+		for y in range(16, 25):
+			sim.water_cells[Vector2i(x, y)] = true
+
+func _test_shoreline_corner() -> void:
+	_shoreline_layout()
+	var start := Vector2(39.5, 32.24)
+	var end := Vector2(40.24, 31.5)
+	var rifle: Dictionary = sim.spawn_unit("rifleman", 1, start)
+	_check(not sim.is_water_at(start, 0.425) and not sim.is_water_at(end, 0.425), "Both ends of the shoreline sweep are dry")
+	_check(not sim._has_clear_line_of_walk(start, end, rifle.radius), "The short diagonal clips the shoreline between dry endpoints")
+	sim._move_on_terrain(rifle, end)
+	_check(rifle.pos.is_equal_approx(Vector2(start.x, end.y)), "A blocked step slides along the shoreline without crossing it")
+
+	sim._rebuild_astar_grid()
+	start = Vector2(32.20168, 36.73375)
+	end = Vector2(51.0239, 24.43831)
+	_check(not sim._has_clear_line_of_walk(start, end, rifle.radius), "A long path cannot skip a glancing hit between samples")
+	var path: Array[Vector2] = sim.compute_smooth_path(start, end, rifle.radius)
+	_check(path.size() > 1 and path.back().is_equal_approx(end), "The path turns around the shoreline corner and reaches the click")
+
+func _test_squad_rounds_shoreline() -> void:
+	for command in ["move", "attack_move"]:
+		_shoreline_layout()
+		var squad: Array[Dictionary] = []
+		var start := Vector2(31.29695, 40.85474)
+		for i in range(12):
+			squad.append(sim.spawn_unit("rifleman", 1, start + Vector2((i % 3) * 2.0, (i / 3) * 2.0)))
+		var tags := squad.map(func(unit): return unit.tag)
+		sim.issue_command(tags, command, Vector2(52.03688, 29.2878))
+		sim.issue_command(tags, "move", Vector2(66, 23), 0, "", true)
+		var dry := true
+		for _tick in range(1000):
+			sim.step_ticks(1)
+			dry = dry and squad.all(func(unit): return not sim.is_water_at(unit.pos, unit.radius * 0.5))
+			if squad.all(func(unit): return unit.orders.is_empty()):
+				break
+		_check(dry, "The %s squad stays on dry ground" % command)
+		for unit in squad:
+			_check(unit.orders.is_empty() and unit.pos.distance_to(Vector2(66, 23)) < 9.0,
+				"The %s squad clears the corner and finishes the queued move (unit %d at %s)" % [command, unit.tag, unit.pos])

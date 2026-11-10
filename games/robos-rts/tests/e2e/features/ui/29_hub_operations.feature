@@ -10,7 +10,7 @@ Feature: Upgrade and deploy temporary mining machinery
        "resources":[{"type":"crystal_field","x":34,"y":21,"amount":80}]}
       """
     When the commander clicks unit "hub"
-    And the commander presses "U"
+    And the commander presses "B"
     And the simulation advances 480 ticks
     Then the Hub's field operations are upgraded
     When the commander presses "M"

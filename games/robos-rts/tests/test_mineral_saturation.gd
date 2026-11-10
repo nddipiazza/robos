@@ -144,18 +144,20 @@ func _test_blocked_line() -> void:
 	var returning := {}
 	for _tick in range(1600):
 		sim.step_ticks(1)
+		if not sim.silo_raise_block_reason(gate).is_empty():
+			continue
 		for worker in workers:
 			if worker.pos.x > 56.0 and worker.cargo_amount > 0:
 				returning = worker
 				break
 		if not returning.is_empty():
 			break
-	_check(not returning.is_empty(), "Opening the gate lets miners reach the original patch")
+	_check(not returning.is_empty(), "A loaded worker returns while the gate is clear")
 	if not returning.is_empty():
 		var load: int = returning.cargo_amount
-		sim.issue_command([gate.tag], "extend_silo")
+		_check(sim.issue_command([gate.tag], "extend_silo").ok, "Raise the gate while its footprint is clear")
 		sim.step_ticks(320)
-		_check(returning.cargo_amount == load and sim.players[1].crystal_collected == 17, "A blocked return keeps the load intact and unpaid")
+		_check(returning.cargo_amount == load and returning.pos.x > gate.pos.x, "The blocked worker stays across the gate with its cargo intact")
 		sim.issue_command([gate.tag], "retract_silo")
 	for _sample in range(180):
 		sim.step_ticks(32)
