@@ -211,28 +211,35 @@ function normalizeShoppingVoiceTranscript(rawText) {
   let s = String(rawText || '');
   if (!s.trim()) return s;
 
-  // 1. Direct phonetic aliases for Grocery, Target, and Costco + common brand mishearings
+  // 1. De-hyphenate and normalize phonetic aliases for Grocery, Target, and Costco (e.g. "cost-co-shopping list", "tar-get-list", "grow-siri")
   s = s
     .replace(/\bwheat\s+things\b/gi, 'Wheat Thins')
-    .replace(/\b(?:mike\s+rotary|my\s+rotary|rotary|rosary|grodery|grosery|grossary|grossery|glossary|roastery|grow\s*siri|grow\s*serie|groceries)\b(?=\s+lists?\b)/gi, 'grocery')
-    .replace(/\b(?:mike\s+rotary|grodery|grosery|grossary|grossery|groceries)\b/gi, 'grocery')
-    .replace(/\b(?:cosco|cost\s+co|cost\s+go|cusco|cuzco|rosco|roscoe|pasco|bosco)\b(?=\s+lists?\b)/gi, 'costco')
-    .replace(/\b(?:cosco|cost\s+co|cusco|cuzco)\b/gi, 'costco')
-    .replace(/\b(?:tar\s+get|targe|targit|tarjet)\b(?=\s+lists?\b)/gi, 'target');
+    .replace(/\b(?:cost|cos|cus|cuz|ros|pas|bos|kos)[\s\-_]*(?:co|go|ko|coe)\b/gi, 'costco')
+    .replace(/\b(?:tar)[\s\-_]+(?:get|git|jet|ge)\b/gi, 'target')
+    .replace(/\b(?:targit|tarjet)\b/gi, 'target')
+    .replace(/\b(?:mike[\s\-_]+rotary|my[\s\-_]+rotary|grodery|grosery|grossary|grossery|grow[\s\-_]*siri|grow[\s\-_]*serie|groceries)\b/gi, 'grocery')
+    .replace(/\b(costco|target|grocery|shopping)[\-_]+(?=[a-z])/gi, '$1 ')
+    .replace(/(?<=[a-z])[\-_]+(costco|target|grocery|shopping|lists?)\b/gi, ' $1')
+    .replace(/\b(?:rotary|rosary|glossary|roastery)\b(?=[\s\-_]+(?:shopping[\s\-_]+)?lists?\b)/gi, 'grocery')
+    .replace(/\b(?:targe)\b(?=[\s\-_]+(?:shopping[\s\-_]+)?lists?\b)/gi, 'target');
 
-  // 2. If the utterance is a list command ("add/put/buy/get/remove/check/what is on ... to/on/in/from [words] list")
-  //    and [words] was still mangled by STT into something unknown (not grocery/target/costco/shopping and not task/todo/issue/ticket),
+  // 2. If the utterance targets "[words] list" (with or without a leading "add" verb, e.g. "Rotisserie chicken to the cost-co-shopping list")
+  //    and [words] was mangled by STT into something unknown (not task/todo/issue/ticket/movie/playlist),
   //    resolve [words] phonetically to target, costco, or default to grocery!
   if (
-    /^(?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|robos)[,.:;!\s]*)?(?:please\s+)?(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?|what(?:'s|\s+is|\s+are)\s+on|show|read)\b/i.test(s) &&
+    (/\b(?:to|on|in|from|at|for)\s+(?:the\s+|my\s+|our\s+)?[a-z][a-z\s'\-]{1,32}?\s+lists?\b/i.test(s) ||
+      /^(?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|robos)[,.:;!\s]*)?(?:please\s+)?(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?|what(?:'s|\s+is|\s+are)\s+on|show|read)\b/i.test(s)) &&
     !/\b(?:task|tasks|todo|to-do|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(s)
   ) {
     s = s.replace(
-      /\b(to|on|in|from|at|for)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z\s'-]{1,28}?)\s+(lists?)\b/gi,
+      /\b(to|on|in|from|at|for)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z\s'\-]{1,32}?)\s+(lists?)\b/gi,
       (full, prep, middle, listWord) => {
-        const m = middle.trim().toLowerCase();
-        if (/^(?:grocery|target|costco|shopping|my\s+grocery|my\s+target|my\s+costco|my\s+shopping)$/.test(m)) {
+        const m = middle.replace(/[\-_]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        if (/^(?:grocery|target|costco|shopping|(?:my|the|our)\s+(?:grocery|target|costco|shopping))$/.test(m)) {
           return full;
+        }
+        if (/^(?:grocery|target|costco)\s+shopping$/.test(m)) {
+          return `${prep} my ${m.replace(/\s+shopping$/, '')} ${listWord}`;
         }
         if (/tar|trg|targe/.test(m)) return `${prep} my target ${listWord}`;
         if (/cos|cst|ksk|kirk|rosc|cusc|pasc|bosc/.test(m)) return `${prep} my costco ${listWord}`;
