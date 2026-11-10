@@ -203,12 +203,14 @@ describe('RobOS Shopping Lists E2E', () => {
       );
 
       // Switch to 2) Target and verify Target items render
+      await new Promise((r) => setTimeout(r, 250));
       await evalJS(port, `document.querySelector('[data-select-list="target"]').click(); true`);
       await waitFor(
-        () => evalJS(port, `document.querySelector('#hero-name').textContent.includes('Target')`),
+        () => evalJS(port, `document.querySelector('#hero-name').textContent.includes('Target') && document.body.innerText.includes('Laundry Pods')`),
         8000,
         'Target list active',
       );
+      await new Promise((r) => setTimeout(r, 250));
       await screenshot(port, '02-target-list.png');
 
       // Simulate mobile phone opening the Mobile Form Server and adding + removing items on 3) Costco

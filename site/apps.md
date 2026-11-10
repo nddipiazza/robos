@@ -57,6 +57,14 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
           <p>A synthetic family's financial year from January statements and everyday spending splits to February W-2/1099 PDF field review and local federal tax estimates.</p>
         </div>
       </a>
+      <a class="card app-card" href="{{ '/shopping-lists/' | relative_url }}" data-s="robos shopping lists household grocery target costco google docs google drive mobile form qr code skills text commands">
+        <img src="{{ '/assets/images/icons/shopping-lists.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <div>
+          <h3>RobOS Shopping Lists</h3>
+          <code class="app-pkg">Household Guide · /shopping-lists/</code>
+          <p>Pre-seeded Grocery, Target, and Costco household lists with form-style add/remove buttons, 1-tap staple chips, <code>/shopping-lists</code> AI skill, and two-way Google Docs &amp; Drive sync.</p>
+        </div>
+      </a>
       <a class="card app-card" href="{{ '/games/' | relative_url }}" data-s="robos games realm of heroes crpg tabletop rpg heroquest starfall command rts godot 4">
         <img src="{{ '/assets/images/icons/robos-tabletop.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
