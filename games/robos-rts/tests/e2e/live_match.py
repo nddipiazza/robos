@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from frontier_bot import FrontierBuildBot
+from window_capture import WindowCapture
 
 
 def timestamp(seconds):
@@ -45,7 +46,11 @@ class LiveMatch:
         self.output = (context.reports_dir / "realtime" / f"{slug}-{stamp}").resolve()
         self.output.mkdir(parents=True)
         self.frames_dir = self.output / "frames"
-        if self.record:
+        self.window_capture = (
+            WindowCapture(shutil.which("ffmpeg"), context.godot_proc.pid, self.output)
+            if getattr(context, "record_window", False) else None
+        )
+        if self.record and not self.window_capture:
             self.frames_dir.mkdir()
         self.created = time.monotonic()
         self.actions = PlayerActions(self.client)
@@ -82,6 +87,10 @@ class LiveMatch:
         return True
 
     def capture(self):
+        if self.window_capture:
+            if self.window_capture.started is None:
+                self.window_capture.start()
+            return
         if self.record:
             if not self.drain_capture():
                 return
@@ -188,6 +197,10 @@ class LiveMatch:
 
     def finish(self, status):
         self.drain_capture(wait=True)
+        video_offset = 0
+        if self.window_capture and self.window_capture.started is not None:
+            self.window_capture.stop()
+            video_offset = self.window_capture.started - self.created
         self.final = self.final or self.client.get_observation()
         health = self.client.health()
         report = {"status": status, "purpose": self.purpose, "build": self.build, "speed": self.speed, "wall_seconds": self.wall_seconds,
@@ -203,7 +216,7 @@ class LiveMatch:
         for i, event in enumerate(self.events):
             start = event["wall_seconds"]
             end = self.events[i+1]["wall_seconds"] if i+1 < len(self.events) else time.monotonic()-self.created+0.1
-            captions.append(f"{timestamp(start)} --> {timestamp(end)}\n{event['stage']}\n{event['proof']}\n")
+            captions.append(f"{timestamp(start - video_offset)} --> {timestamp(end - video_offset)}\n{event['stage']}\n{event['proof']}\n")
             rows.append(f"| {timestamp(start)} | {event['game_seconds']:.1f}s | {event['stage']} |")
         (self.output / "walkthrough.vtt").write_text("\n".join(captions), encoding="utf-8")
         (self.output / "walkthrough.md").write_text(

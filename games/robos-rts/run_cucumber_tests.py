@@ -39,6 +39,9 @@ def main() -> int:
             os.environ["RTS_TEST_SPEED"] = speed
         elif arg == "--record":
             os.environ["RTS_RECORD"] = "1"
+        elif arg == "--record-window":
+            os.environ["RTS_RECORD"] = "1"
+            os.environ["RTS_RECORD_WINDOW"] = "1"
         elif arg == "--show-window":
             os.environ["RTS_SHOW_WINDOW"] = "1"
         elif arg == "--keep-open":
