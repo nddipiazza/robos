@@ -1,12 +1,13 @@
 'use strict';
 
 /**
- * Mobile-first Google Docs HTML renderer & two-way Google Docs plain-text parser.
+ * Clean, human-friendly Google Docs HTML renderer & two-way Google Docs plain-text parser.
  *
- * Google Drive v3 converts uploaded `text/html` into a native `application/vnd.google-apps.document`
- * that opens cleanly in the Google Docs and Google Drive iOS/Android mobile apps, complete with
- * store color headers, aisle groupings, `☐`/`☑` checkboxes, quantities, prices, and a prominent
- * 1-tap button at the top to launch the interactive Mobile Add/Remove Form Web App.
+ * Renders each shopping list as a scannable, mobile- and desktop-friendly Google Doc table:
+ *   - Sorted Newest-Added First so voice/form additions appear immediately at the top
+ *   - Explicit "Added" timestamp column on every item (e.g. "Nov 10, 2026, 8:51 AM")
+ *   - Clean columns: Item & Qty | Aisle | Est. Price | Added Timestamp
+ *   - Separate "✅ Checked Off / In Cart" table at the bottom with Checked timestamp
  */
 
 const { BADGES, detectAisle } = require('./defaults');
@@ -34,109 +35,142 @@ function formatQty(qty, unit) {
   return `${q} ${u}`;
 }
 
+function formatTimestamp(isoStr) {
+  if (!isoStr) return '—';
+  const d = new Date(isoStr);
+  if (Number.isNaN(d.getTime())) return String(isoStr);
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 /**
- * Renders HTML designed specifically for Google Docs mobile conversion & mobile-preview display.
+ * Renders HTML designed for clean, human-readable Google Docs viewing on phone & desktop.
  */
 function renderGoogleDocHtml(list, options = {}) {
   const stats = list.stats || computeListStats(list);
   const accent = list.accent || '#10b981';
-  const syncedAt = options.syncedAt
-    ? new Date(options.syncedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
-    : 'Live';
+  const syncedAt = options.syncedAt ? formatTimestamp(options.syncedAt) : formatTimestamp(new Date().toISOString());
   const formUrl = options.appsScriptWebAppUrl || options.mobileFormUrl || '';
-  const lanFormUrl = options.mobileLanUrl || '';
   const folderUrl = options.folderUrl || '';
   const siblingDocUrls = options.docUrls || {};
 
-  const unchecked = (list.items || []).filter((it) => !it.checked);
-  const checked = (list.items || []).filter((it) => it.checked);
+  // Sort unchecked items Newest First so newly added voice/form items appear right at the top
+  const unchecked = (list.items || [])
+    .filter((it) => !it.checked)
+    .map((it, idx) => ({ it, idx }))
+    .sort((a, b) => {
+      const ta = new Date(a.it.updatedAt || a.it.addedAt || 0).getTime() || 0;
+      const tb = new Date(b.it.updatedAt || b.it.addedAt || 0).getTime() || 0;
+      if (tb !== ta) return tb - ta;
+      return a.idx - b.idx;
+    })
+    .map((x) => x.it);
 
-  // Group unchecked items by aisle in canonical aisle order
-  const byAisle = new Map();
-  for (const a of list.aisles || []) byAisle.set(a, []);
-  for (const it of unchecked) {
-    const a = it.aisle || 'General';
-    if (!byAisle.has(a)) byAisle.set(a, []);
-    byAisle.get(a).push(it);
-  }
+  const checked = (list.items || [])
+    .filter((it) => it.checked)
+    .map((it, idx) => ({ it, idx }))
+    .sort((a, b) => {
+      const ta = new Date(a.it.checkedAt || a.it.updatedAt || 0).getTime() || 0;
+      const tb = new Date(b.it.checkedAt || b.it.updatedAt || 0).getTime() || 0;
+      if (tb !== ta) return tb - ta;
+      return a.idx - b.idx;
+    })
+    .map((x) => x.it);
 
   const navLinks = [];
-  for (const [id, label] of [['grocery', '🥬 Grocery'], ['target', '🎯 Target'], ['costco', '📦 Costco']]) {
+  for (const [id, label] of [['grocery', '🥬 Grocery List'], ['target', '🎯 Target List'], ['costco', '📦 Costco List']]) {
     if (id !== list.id && siblingDocUrls[id]) {
       navLinks.push(`<a href="${escHtml(siblingDocUrls[id])}" style="color:${accent};text-decoration:none;font-weight:bold;">${label}</a>`);
     }
   }
   if (folderUrl) {
-    navLinks.push(`<a href="${escHtml(folderUrl)}" style="color:#475569;text-decoration:none;">📁 All Lists in Drive</a>`);
+    navLinks.push(`<a href="${escHtml(folderUrl)}" style="color:#334155;text-decoration:none;font-weight:bold;">📁 Google Drive Folder</a>`);
+  }
+  if (formUrl) {
+    navLinks.push(`<a href="${escHtml(formUrl)}?list=${encodeURIComponent(list.id)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">📱 Open ${escHtml(list.name)} Interactive Add/Remove Form</a>`);
   }
 
-  const renderItemLine = (it, isChecked) => {
-    const box = isChecked ? '☑' : '☐';
-    const badge = BADGE_MAP.get(it.badge);
-    const badgeHtml = badge
-      ? ` <span style="background-color:#f1f5f9;color:${badge.color};font-size:9pt;font-weight:bold;padding:1px 5px;border-radius:4px;">[${escHtml(badge.icon)} ${escHtml(badge.label.toUpperCase())}]</span>`
-      : '';
-    const priceStr = it.estPrice != null ? ` · <span style="color:#0f766e;font-weight:bold;">${formatMoney(it.estPrice * (it.qty || 1))}</span>` : '';
-    const noteStr = it.note ? `<br/><span style="color:#64748b;font-size:9.5pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↳ ${escHtml(it.note)}</span>` : '';
-    const nameStyle = isChecked
-      ? 'text-decoration:line-through;color:#94a3b8;font-weight:normal;'
-      : 'color:#0f172a;font-weight:bold;';
-    return `<p style="margin:6px 0 8px 0;line-height:1.38;font-size:11.5pt;">`
-      + `<span style="font-size:13pt;">${box}</span>&nbsp; `
-      + `<span style="${nameStyle}">${escHtml(it.name)}</span> `
-      + `<span style="color:#334155;font-size:10.5pt;">— ${escHtml(formatQty(it.qty, it.unit))}</span>`
-      + `${priceStr}${badgeHtml}${noteStr}`
-      + `</p>`;
+  const renderTableRows = (items, isChecked) => {
+    return items.map((it, rowIndex) => {
+      const box = isChecked ? '☑' : '☐';
+      const rowBg = rowIndex % 2 === 1 ? '#f8fafc' : '#ffffff';
+      const badge = BADGE_MAP.get(it.badge);
+      const badgeText = badge ? ` [${badge.icon} ${badge.label.toUpperCase()}]` : '';
+      const lineTotal = it.estPrice != null ? formatMoney(it.estPrice * (it.qty || 1)) : '—';
+      const nameStyle = isChecked
+        ? 'text-decoration:line-through;color:#64748b;font-weight:normal;'
+        : 'color:#0f172a;font-weight:bold;';
+      const ts = formatTimestamp(isChecked ? (it.checkedAt || it.updatedAt || it.addedAt) : (it.addedAt || it.updatedAt));
+      const noteLine = it.note
+        ? `<p style="margin:3px 0 0 22px;font-size:9.5pt;color:#475569;">↳ ${escHtml(it.note)}</p>`
+        : '';
+
+      return `
+        <tr style="background-color:${rowBg};">
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;vertical-align:top;">
+            <p style="margin:0;font-size:11pt;line-height:1.35;">${box} <span style="${nameStyle}">${escHtml(it.name)}</span> — <span style="color:#1e293b;font-weight:bold;">${escHtml(formatQty(it.qty, it.unit))}</span><span style="color:#0f766e;font-size:9.5pt;">${escHtml(badgeText)}</span></p>
+            ${noteLine}
+          </td>
+          <td style="padding:10px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;font-size:10pt;color:#334155;">
+            <p style="margin:0;">${escHtml(it.aisle || 'General')}</p>
+          </td>
+          <td style="padding:10px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;font-size:10pt;color:#0f766e;font-weight:bold;text-align:right;">
+            <p style="margin:0;">${escHtml(lineTotal)}</p>
+          </td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;vertical-align:top;font-size:9.5pt;color:#475569;">
+            <p style="margin:0;">${escHtml(ts)}</p>
+          </td>
+        </tr>
+      `;
+    }).join('\n');
   };
 
-  let aisleHtml = '';
-  for (const [aisle, items] of byAisle.entries()) {
-    if (!items.length) continue;
-    aisleHtml += `
-      <h2 style="margin:18px 0 6px 0;padding:5px 10px;background-color:#f8fafc;border-left:4px solid ${accent};color:#0f172a;font-size:12pt;font-family:Arial,sans-serif;">
-        ${escHtml(aisle)} (${items.length})
-      </h2>
-      ${items.map((it) => renderItemLine(it, false)).join('\n')}
-    `;
-  }
-
-  if (!unchecked.length) {
-    aisleHtml = `<p style="padding:14px;background-color:#ecfdf5;color:#065f46;font-weight:bold;border-radius:6px;">🎉 Every item on ${escHtml(list.name)} is checked off!</p>`;
-  }
-
-  let checkedHtml = '';
-  if (checked.length) {
-    checkedHtml = `
-      <h2 style="margin:22px 0 6px 0;padding:5px 10px;background-color:#f1f5f9;border-left:4px solid #94a3b8;color:#475569;font-size:11.5pt;font-family:Arial,sans-serif;">
-        ✅ In Cart / Checked Off (${checked.length})
-      </h2>
-      ${checked.map((it) => renderItemLine(it, true)).join('\n')}
-    `;
-  }
-
-  const formBannerHtml = formUrl || lanFormUrl
+  const toBuySectionHtml = unchecked.length
     ? `
-      <table style="width:100%;border-collapse:collapse;margin:10px 0 14px 0;background-color:#f0fdf4;border:2px solid ${accent};">
-        <tr>
-          <td style="padding:12px 14px;font-family:Arial,sans-serif;">
-            <p style="margin:0 0 6px 0;font-size:11pt;font-weight:bold;color:#0f172a;">
-              📱 Easy Mobile Form — Add, Check Off, or Remove Items with Buttons:
-            </p>
-            ${formUrl ? `<p style="margin:4px 0;"><a href="${escHtml(formUrl)}?list=${encodeURIComponent(list.id)}" style="color:${accent};font-size:12pt;font-weight:bold;">👉 Open ${escHtml(list.name)} Interactive Add/Remove Form (Anywhere / Mobile)</a></p>` : ''}
-            ${lanFormUrl && lanFormUrl !== formUrl ? `<p style="margin:4px 0;font-size:10pt;"><a href="${escHtml(lanFormUrl)}?list=${encodeURIComponent(list.id)}" style="color:#0284c7;font-weight:bold;">🏠 Open Home Wi-Fi / RobOS Mesh Instant Form</a></p>` : ''}
-          </td>
-        </tr>
+      <h2 style="margin:18px 0 8px 0;font-size:13pt;color:#0f172a;font-family:Arial,sans-serif;">
+        🛒 Items To Buy (${unchecked.length}) — Newest First
+      </h2>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;font-family:Arial,sans-serif;">
+        <thead>
+          <tr style="background-color:#f1f5f9;">
+            <th style="padding:9px 12px;border-bottom:2px solid ${accent};text-align:left;font-size:9.5pt;color:#334155;width:44%;">ITEM &amp; QTY</th>
+            <th style="padding:9px 10px;border-bottom:2px solid ${accent};text-align:left;font-size:9.5pt;color:#334155;width:22%;">AISLE</th>
+            <th style="padding:9px 10px;border-bottom:2px solid ${accent};text-align:right;font-size:9.5pt;color:#334155;width:12%;">EST.</th>
+            <th style="padding:9px 12px;border-bottom:2px solid ${accent};text-align:left;font-size:9.5pt;color:#334155;width:22%;">ADDED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${renderTableRows(unchecked, false)}
+        </tbody>
       </table>
     `
-    : `
-      <table style="width:100%;border-collapse:collapse;margin:10px 0 14px 0;background-color:#f8fafc;border:1px solid #cbd5e1;">
-        <tr>
-          <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:10pt;color:#334155;">
-            💡 <b>Tip:</b> Open the <b>RobOS Shopping Lists</b> mobile form (or deploy the included Google Drive Apps Script Web App) for 1-tap <b>+ Add</b> / <b>−</b> / <b>Remove</b> buttons right from your phone. You can also edit lines directly in this Google Doc (` + '`☐`' + ` / ` + '`☑`' + `) and sync back!
-          </td>
-        </tr>
+    : `<p style="padding:12px;background-color:#ecfdf5;color:#065f46;font-weight:bold;border:1px solid #a7f3d0;">🎉 Every item on ${escHtml(list.name)} is checked off!</p>`;
+
+  const checkedSectionHtml = checked.length
+    ? `
+      <h2 style="margin:24px 0 8px 0;font-size:12pt;color:#475569;font-family:Arial,sans-serif;">
+        ✅ Checked Off / In Cart (${checked.length})
+      </h2>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;font-family:Arial,sans-serif;">
+        <thead>
+          <tr style="background-color:#f8fafc;">
+            <th style="padding:8px 12px;border-bottom:1px solid #cbd5e1;text-align:left;font-size:9pt;color:#64748b;width:44%;">ITEM &amp; QTY</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #cbd5e1;text-align:left;font-size:9pt;color:#64748b;width:22%;">AISLE</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #cbd5e1;text-align:right;font-size:9pt;color:#64748b;width:12%;">EST.</th>
+            <th style="padding:8px 12px;border-bottom:1px solid #cbd5e1;text-align:left;font-size:9pt;color:#64748b;width:22%;">CHECKED OFF</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${renderTableRows(checked, true)}
+        </tbody>
       </table>
-    `;
+    `
+    : '';
 
   return `<!DOCTYPE html>
 <html>
@@ -144,39 +178,31 @@ function renderGoogleDocHtml(list, options = {}) {
   <meta charset="UTF-8">
   <title>${escHtml(list.docTitle || `${list.name} — RobOS Shopping List`)}</title>
 </head>
-<body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:680px;margin:0 auto;padding:8px;">
+<body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:720px;margin:0 auto;padding:8px;">
   <table style="width:100%;border-collapse:collapse;background-color:${accent};color:#ffffff;">
     <tr>
       <td style="padding:14px 16px;">
-        <p style="margin:0;font-size:9.5pt;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;">RobOS Household · Shopping Lists</p>
-        <h1 style="margin:4px 0 4px 0;font-size:20pt;color:#ffffff;">${escHtml(list.icon || '🛒')} ${escHtml(list.name)} Shopping List</h1>
-        <p style="margin:0;font-size:10.5pt;color:#ffffff;">
-          <b>${stats.toBuyCount}</b> to buy &nbsp;·&nbsp; <b>${stats.checkedCount}</b> in cart &nbsp;·&nbsp; Est. remaining: <b>${formatMoney(stats.estRemaining) || '$0.00'}</b> (Total ${formatMoney(stats.estTotal) || '$0.00'})
+        <h1 style="margin:0 0 4px 0;font-size:19pt;color:#ffffff;">${escHtml(list.icon || '🛒')} ${escHtml(list.name)} Shopping List</h1>
+        <p style="margin:0;font-size:10pt;color:#ffffff;">
+          <b>${stats.toBuyCount}</b> to buy &nbsp;·&nbsp; <b>${stats.checkedCount}</b> checked off &nbsp;·&nbsp; Est. remaining: <b>${formatMoney(stats.estRemaining) || '$0.00'}</b> &nbsp;·&nbsp; Last synced: <b>${escHtml(syncedAt)}</b>
         </p>
       </td>
     </tr>
   </table>
 
-  ${navLinks.length ? `<p style="margin:8px 0;font-size:10pt;">Switch list: ${navLinks.join(' &nbsp;|&nbsp; ')}</p>` : ''}
-  ${formBannerHtml}
+  ${navLinks.length ? `<p style="margin:8px 0 12px 0;font-size:10pt;color:#475569;">${navLinks.join(' &nbsp;·&nbsp; ')}</p>` : ''}
 
-  ${aisleHtml}
-  ${checkedHtml}
-
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:22px 0 8px 0;"/>
-  <p style="font-size:8.5pt;color:#64748b;margin:0;">
-    Synced by <b>RobOS Household Shopping Lists</b> · Updated ${escHtml(syncedAt)} · Tip: Add a new line starting with <code>☐ Item Name — 2 pack</code> in Google Docs mobile to sync new items back automatically.
-  </p>
+  ${toBuySectionHtml}
+  ${checkedSectionHtml}
 </body>
 </html>`;
 }
 
 /**
  * Parses plain text exported from a Google Doc (`text/plain`) back into shopping list items,
- * preserving existing item IDs, prices, and metadata when names match, while capturing:
- * - items checked/unchecked in Google Docs mobile (`☑`, `[x]`, `✓` vs `☐`, `[ ]`)
- * - brand-new items typed directly in Google Docs mobile
- * - items deleted from the Google Doc when `honorDeletions` is true
+ * preserving existing item IDs, prices, aisles, and timestamps when names match, while capturing:
+ * - items checked/unchecked in Google Docs (`☑`, `[x]`, `✓` vs `☐`, `[ ]`)
+ * - brand-new items typed directly in Google Docs
  */
 function parseGoogleDocText(plainText, existingList) {
   const lines = String(plainText || '').split(/\r?\n/);
@@ -196,8 +222,7 @@ function parseGoogleDocText(plainText, existingList) {
     const line = rawLine.replace(/\u00a0/g, ' ').trim();
     if (!line) continue;
 
-    // Skip boilerplate headers / footers / notes
-    if (/^(RobOS Household|Switch list:|📱 Easy Mobile Form|👉 Open |🏠 Open |💡 Tip:|Synced by RobOS|🎉 Every item)/i.test(line)) continue;
+    if (/^(RobOS Household|Switch list:|📱|👉|🏠|💡|Synced by|🎉 Every item|ITEM & QTY|AISLE|EST\.|ADDED|CHECKED OFF)/i.test(line)) continue;
     if (/^\d+\s+to buy\b/i.test(line)) continue;
     if (/^↳/.test(line)) {
       if (parsedItems.length > 0) {
@@ -206,13 +231,16 @@ function parseGoogleDocText(plainText, existingList) {
       continue;
     }
 
-    // Section heading detection
-    if (/^✅\s*In Cart/i.test(line)) {
+    if (/^✅\s*(?:In Cart|Checked Off)/i.test(line)) {
       inCheckedSection = true;
       continue;
     }
+    if (/^🛒\s*Items To Buy/i.test(line)) {
+      inCheckedSection = false;
+      continue;
+    }
     const aisleHeadingMatch = line.match(/^([A-Za-z][A-Za-z0-9 &/'-]+?)\s*\(\d+\)$/);
-    if (aisleHeadingMatch) {
+    if (aisleHeadingMatch && !/^Items To Buy|^Checked Off/i.test(aisleHeadingMatch[1])) {
       const candidate = aisleHeadingMatch[1].trim();
       currentAisle = candidate;
       inCheckedSection = false;
@@ -271,12 +299,14 @@ function parseGoogleDocText(plainText, existingList) {
       name: prev?.name || itemName,
       qty,
       unit: unit || prev?.unit || 'ea',
-      aisle: prev && inCheckedSection ? prev.aisle : (currentAisle || detectAisle(existingList, itemName)),
+      aisle: prev ? prev.aisle : (detectAisle(existingList, itemName) || currentAisle),
       estPrice,
       badge: badge || prev?.badge || '',
       note: prev?.note || '',
       checked,
       addedAt: prev?.addedAt,
+      updatedAt: prev?.updatedAt,
+      checkedAt: prev?.checkedAt,
     });
   }
 
@@ -288,4 +318,5 @@ module.exports = {
   parseGoogleDocText,
   formatMoney,
   formatQty,
+  formatTimestamp,
 };
