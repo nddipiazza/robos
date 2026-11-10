@@ -83,6 +83,8 @@ function buildSeedState(nowIso = new Date().toISOString()) {
       manifestFileId: '',
       appsScriptFolderId: '',
       appsScriptWebAppUrl: '',
+      publicTunnelUrl: '',
+      mobileAuthToken: crypto.randomBytes(32).toString('hex'),
       docIds: {},
       docUrls: {},
       autoSync: false,
@@ -182,9 +184,18 @@ function createStore(options = {}) {
             activeListId: lists.some((l) => l.id === raw.activeListId) ? raw.activeListId : lists[0].id,
             lists,
             undoStack: Array.isArray(raw.undoStack) ? raw.undoStack.slice(0, 10) : [],
-            sync: { ...seed.sync, ...(raw.sync || {}), docIds: { ...(raw.sync?.docIds || {}) }, docUrls: { ...(raw.sync?.docUrls || {}) } },
+            sync: {
+              ...seed.sync,
+              ...(raw.sync || {}),
+              mobileAuthToken: raw.sync?.mobileAuthToken || seed.sync.mobileAuthToken,
+              docIds: { ...(raw.sync?.docIds || {}) },
+              docUrls: { ...(raw.sync?.docUrls || {}) },
+            },
             updatedAt: raw.updatedAt || new Date().toISOString(),
           };
+          if (!raw.sync?.mobileAuthToken) {
+            try { persist({ silent: true }); } catch {}
+          }
           lastMtimeMs = getFileMtimeMs();
           return state;
         }
