@@ -55,35 +55,41 @@
       </form>
     </section>
 
-    <!-- Voice Dictation & Smart Quick-Add Bar -->
+    <!-- Voice Dictation, Smart Quick-Add & Paste Any Invite / Flight Itinerary Bar -->
     <section class="card quick-add-card">
       <div class="quick-add-header">
         <div>
-          <h2>🎙️ Voice Dictation &amp; Smart Natural-Language Quick Add</h2>
-          <p class="muted">Speak or type naturally — e.g. <em>"Dentist appointment on Friday at 3pm for 1 hour on Family calendar"</em></p>
+          <h2>📋 Paste Any Invite / Flight Itinerary · 🎙️ Voice Dictate · ✨ Smart Quick Add</h2>
+          <p class="muted">Paste any airline flight confirmation (Delta, United, AA, etc.), hotel booking, email invite, or type naturally — e.g. <em>"Vacation to Florida Keys Feb 1 to Feb 8 on Family calendar"</em></p>
         </div>
-        <button id="btn-dictate" class="btn btn-dictate" type="button">🎙️ Dictate Event</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="btn-paste-clipboard" class="btn btn-secondary" type="button">📋 Paste Invite / Itinerary</button>
+          <button id="btn-dictate" class="btn btn-dictate" type="button">🎙️ Dictate Event</button>
+        </div>
       </div>
-      <div class="quick-add-row">
-        <input id="quick-add-input" type="text" placeholder="Type or dictate: 'Family dinner on Friday at 6pm on Family calendar with whole family'..." />
-        <button id="btn-parse-fill" class="btn btn-secondary" type="button">✨ Fill Form</button>
-        <button id="btn-quick-create" class="btn btn-primary" type="button">⚡ Quick Add</button>
+      <div class="quick-add-row" style="align-items:stretch;">
+        <textarea id="quick-add-input" rows="3" placeholder="Paste any flight itinerary, hotel reservation, or invite here — or type: 'Vacation to Florida Keys Feb 1 to Feb 8 on Family calendar'..."></textarea>
+        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
+          <button id="btn-parse-fill" class="btn btn-secondary" type="button">✨ Parse into Form</button>
+          <button id="btn-quick-create" class="btn btn-primary" type="button">⚡ Auto-Create Event(s)</button>
+        </div>
       </div>
       <div id="dictate-status" class="dictate-status hidden"></div>
+      <div id="detected-itinerary-box" class="detected-itinerary-box hidden" style="margin-top:12px;"></div>
     </section>
 
     <div class="main-grid">
       <!-- Left Column: Full Google Calendar Event Form -->
       <section class="card event-form-card">
         <div class="section-header">
-          <h2>➕ Create Google Calendar Event</h2>
+          <h2 id="form-section-title">➕ Create Google Calendar Event</h2>
           <span id="target-cal-pill" class="cal-pill">📅 Family</span>
         </div>
 
         <form id="add-event-form">
           <div class="form-group">
             <label for="evt-summary">Event Title / Summary *</label>
-            <input id="evt-summary" name="summary" type="text" required placeholder="Add title (e.g. Leo's Dentist Appointment, Family Dinner, BG3 Co-op Night)" />
+            <input id="evt-summary" name="summary" type="text" required placeholder="Add title (e.g. Vacation to Florida Keys, Leo's Dentist Appointment, Family Dinner)" />
           </div>
 
           <div class="form-row two-col">
@@ -107,7 +113,7 @@
           <div class="toggles-bar">
             <label class="toggle-chip">
               <input id="evt-all-day" type="checkbox" />
-              <span>☀️ All-day event</span>
+              <span>☀️ All-Day / Multi-Day Event (Trip, Vacation, Holiday)</span>
             </label>
             <div class="duration-pills" id="duration-pills">
               <span class="muted-label">Duration:</span>
@@ -117,11 +123,18 @@
               <button type="button" class="pill-btn" data-mins="120">2h</button>
               <button type="button" class="pill-btn" data-mins="180">3h</button>
             </div>
+            <div class="duration-pills hidden" id="multiday-pills">
+              <span class="muted-label">Multi-Day Span:</span>
+              <button type="button" class="multiday-btn" data-days="1">1 Day</button>
+              <button type="button" class="multiday-btn" data-days="3">3 Days</button>
+              <button type="button" class="multiday-btn" data-days="5">5 Days</button>
+              <button type="button" class="multiday-btn" data-days="8">8 Days (1 Wk)</button>
+            </div>
           </div>
 
           <div class="form-row two-col">
             <div class="form-group">
-              <label for="evt-start-date">Start Date</label>
+              <label for="evt-start-date">Start Date (First Day)</label>
               <input id="evt-start-date" type="date" required />
             </div>
             <div class="form-group" id="start-time-group">
@@ -132,7 +145,7 @@
 
           <div class="form-row two-col">
             <div class="form-group">
-              <label for="evt-end-date">End Date</label>
+              <label for="evt-end-date">End Date (Last Day — Inclusive)</label>
               <input id="evt-end-date" type="date" required />
             </div>
             <div class="form-group" id="end-time-group">
@@ -140,6 +153,8 @@
               <input id="evt-end-time" type="time" value="18:00" />
             </div>
           </div>
+
+          <div id="date-span-badge" class="dictate-status" style="margin-bottom:12px;font-size:12.5px;"></div>
 
           <div class="form-row two-col">
             <div class="form-group">
@@ -225,9 +240,12 @@
             <textarea id="evt-description" rows="3" placeholder="Add description, agenda, or household notes..."></textarea>
           </div>
 
-          <div class="form-submit-row">
-            <button type="submit" id="btn-submit-event" class="btn btn-primary btn-lg">
+          <div class="form-submit-row" style="display:flex;gap:10px;">
+            <button type="submit" id="btn-submit-event" class="btn btn-primary btn-lg" style="flex:1;">
               📅 Save Event to Google Calendar &amp; Thunderbird
+            </button>
+            <button type="button" id="btn-cancel-edit" class="btn btn-secondary hidden">
+              ✖ Cancel Edit
             </button>
           </div>
         </form>

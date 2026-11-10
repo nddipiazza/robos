@@ -771,13 +771,17 @@ function buildIcsCalendarEvent(ev) {
 
   if (ev.allDay) {
     const startYmd = formatIcsDateOnly(ev.startDate || ev.start);
-    let endYmd = formatIcsDateOnly(ev.endDate || ev.end || ev.startDate || ev.start);
-    if (endYmd <= startYmd) {
-      // RFC 5545 DTEND for all-day events is exclusive (+1 day)
-      const sy = Number(startYmd.slice(0, 4));
-      const sm = Number(startYmd.slice(4, 6)) - 1;
-      const sd = Number(startYmd.slice(6, 8));
-      endYmd = formatIcsDateOnly(new Date(sy, sm, sd + 1));
+    let inclusiveEndYmd = formatIcsDateOnly(ev.endDate || ev.end || ev.startDate || ev.start);
+    if (inclusiveEndYmd < startYmd) {
+      inclusiveEndYmd = startYmd;
+    }
+    let endYmd = inclusiveEndYmd;
+    if (!ev.endDateIsExclusive) {
+      // RFC 5545 DTEND for all-day events is exclusive (+1 day after the human inclusive endDate)
+      const ey = Number(inclusiveEndYmd.slice(0, 4));
+      const em = Number(inclusiveEndYmd.slice(4, 6)) - 1;
+      const ed = Number(inclusiveEndYmd.slice(6, 8));
+      endYmd = formatIcsDateOnly(new Date(ey, em, ed + 1));
     }
     lines.push(`DTSTART;VALUE=DATE:${startYmd}`);
     lines.push(`DTEND;VALUE=DATE:${endYmd}`);
@@ -924,6 +928,15 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   const rrule = buildRruleLine(eventInput.recurrence || eventInput.rrule);
   const uid = eventInput.uid || `robos-evt-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
+  if (eventInput.replaceEventId) {
+    try {
+      await deleteNamedCalendarEvent(eventInput.replaceEventId, {
+        ...options,
+        calendarId: eventInput.replaceCalendarId || targetCal?.id,
+      });
+    } catch {}
+  }
+
   let meetingUrl = String(eventInput.meetingUrl || '').trim();
   if (!meetingUrl && eventInput.addVideoCall) {
     const slug = summary.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'family';
@@ -933,6 +946,18 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   const organizerPerson = (discovered.familyMembers || []).find(
     (fm) => fm.email && fm.email.toLowerCase() === String(discovered.email || '').toLowerCase()
   );
+
+  // On a shared Family calendar, family members already share the calendar with write access.
+  // Emitting ORGANIZER + ATTENDEE lines in CalDAV locks the event as read-only ("guestsCanModify: false")
+  // for other family members in Google Calendar. Only emit ATTENDEE lines for external (non-family) guests
+  // or on non-Family calendars.
+  const familyEmailSet = new Set(
+    (discovered.familyMembers || []).map((fm) => String(fm.email || '').toLowerCase()).filter(Boolean)
+  );
+  const icsAttendees =
+    targetCal?.isFamilyCalendar && !eventInput.forceAttendeeInvites
+      ? attendees.filter((a) => !familyEmailSet.has(String(a.email || '').toLowerCase()))
+      : attendees;
 
   const icsPayload = buildIcsCalendarEvent({
     uid,
@@ -946,9 +971,9 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
     startDate,
     endDate,
     rrule,
-    organizerEmail: discovered.email,
+    organizerEmail: targetCal?.isFamilyCalendar && icsAttendees.length === 0 ? '' : discovered.email,
     organizerName: organizerPerson?.name || discovered.email,
-    attendees,
+    attendees: icsAttendees,
     reminderMinutes: eventInput.reminderMinutes ?? 30,
     visibility: eventInput.visibility || 'default',
     availability: eventInput.availability || 'OPAQUE',
@@ -1250,11 +1275,12 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
     if (caldavToken) {
       const now = new Date();
       const startRange = formatIcsUtcDateTime(new Date(now.getTime() - 2 * 86400 * 1000));
-      const endRange = formatIcsUtcDateTime(new Date(now.getTime() + 45 * 86400 * 1000));
+      const endRange = formatIcsUtcDateTime(new Date(now.getTime() + 400 * 86400 * 1000));
       const reportXml = `<?xml version="1.0" encoding="utf-8" ?>
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
   <D:prop>
     <D:getetag/>
+    <D:calendar-data xmlns:D="urn:ietf:params:xml:ns:caldav"/>
     <C:calendar-data/>
   </D:prop>
   <C:filter>
@@ -1295,6 +1321,7 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
               if (!dtM) continue;
 
               const rawStart = dtM[2].trim();
+              const rawEnd = deM ? deM[2].trim() : '';
               const isAllDay = /^\d{8}$/.test(rawStart) || /VALUE=DATE/i.test(dtM[1] || '');
               const parseIcsTime = (val) => {
                 const s = String(val || '').trim();
@@ -1308,8 +1335,28 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 return new Date().toISOString();
               };
 
-              const rawStartIso = parseIcsTime(rawStart);
-              const rawEndIso = deM ? parseIcsTime(deM[2].trim()) : new Date(new Date(rawStartIso).getTime() + 3600000).toISOString();
+              let startDateStr;
+              let endDateStr;
+              let rawStartIso = parseIcsTime(rawStart);
+              let rawEndIso = rawEnd ? parseIcsTime(rawEnd) : new Date(new Date(rawStartIso).getTime() + 3600000).toISOString();
+
+              if (isAllDay && /^\d{8}$/.test(rawStart)) {
+                startDateStr = `${rawStart.slice(0, 4)}-${rawStart.slice(4, 6)}-${rawStart.slice(6, 8)}`;
+                if (/^\d{8}$/.test(rawEnd)) {
+                  // RFC 5545 DTEND;VALUE=DATE is exclusive; subtract 1 day for human inclusive endDate
+                  const ey = Number(rawEnd.slice(0, 4));
+                  const em = Number(rawEnd.slice(4, 6)) - 1;
+                  const ed = Number(rawEnd.slice(6, 8));
+                  const incObj = new Date(ey, em, ed - 1);
+                  const incYmd = `${incObj.getFullYear()}-${String(incObj.getMonth() + 1).padStart(2, '0')}-${String(incObj.getDate()).padStart(2, '0')}`;
+                  endDateStr = incYmd < startDateStr ? startDateStr : incYmd;
+                } else {
+                  endDateStr = startDateStr;
+                }
+                rawStartIso = new Date(`${startDateStr}T00:00:00`).toISOString();
+                rawEndIso = new Date(`${endDateStr}T23:59:59`).toISOString();
+              }
+
               const rruleVal = rrM ? rrM[1].trim() : '';
               const { start: startIso, end: endIso } = advanceRecurringStartEnd(rawStartIso, rawEndIso, rruleVal, now.getTime() - 3600000);
               const uidVal = uidM ? uidM[1].trim() : `caldav-${caldavEvents.length}`;
@@ -1332,6 +1379,8 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 description: descVal,
                 start: startIso,
                 end: endIso,
+                startDate: startDateStr,
+                endDate: endDateStr,
                 allDay: isAllDay,
                 recurring: Boolean(rruleVal),
                 rrule: rruleVal,
@@ -1376,14 +1425,324 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
 }
 
 /**
- * Parses a natural-language or voice-dictated calendar event description into structured form fields.
+ * Resolves a month/day (with optional year) into `YYYY-MM-DD`, rolling into next year if the date
+ * in the current year is already more than 7 days in the past.
+ */
+function resolveSmartYmd(monthIdx, dayNum, explicitYear, now = new Date()) {
+  let year = explicitYear ? Number(explicitYear) : now.getFullYear();
+  if (year < 100) year += 2000;
+  const candidate = new Date(year, monthIdx, dayNum);
+  if (!explicitYear && candidate.getTime() < now.getTime() - 7 * 86400 * 1000) {
+    year += 1;
+  }
+  const d = new Date(year, monthIdx, dayNum);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function toTitleCaseCity(str) {
+  return String(str || '')
+    .trim()
+    .split(/([\s-]+ )/)
+    .map((part) =>
+      part.replace(/\b([A-Za-z])([A-Za-z]{2,})\b/g, (_, a, b) => a.toUpperCase() + b.toLowerCase())
+    )
+    .join('');
+}
+
+function parseClockTo24h(timeStr) {
+  const m = String(timeStr || '').trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?$/);
+  if (!m) return null;
+  let hh = Number(m[1]);
+  const mm = Number(m[2]);
+  const ap = (m[3] || '').toUpperCase();
+  if (ap === 'PM' && hh < 12) hh += 12;
+  if (ap === 'AM' && hh === 12) hh = 0;
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+/**
+ * Parses pasted multi-line flight itineraries (Delta, United, American, Southwest, etc.),
+ * hotel check-in/check-out confirmations, `.ics` snippets, or email/calendar invitations
+ * into a primary event + an array of `detectedEvents` (e.g. Multi-Day Trip + Outbound & Return Flights).
+ */
+function parseItineraryOrInviteText(rawText, options = {}) {
+  const text = String(rawText || '').replace(/\r\n/g, '\n').trim();
+  if (!text) return null;
+
+  const now = options.now ? new Date(options.now) : new Date();
+  const family = options.familyMembers || listFamilyMembers(options);
+  const calendars = options.calendars || [];
+  const familyCal = calendars.find((c) => c.isFamilyCalendar) || calendars.find((c) => /family/i.test(c.name || ''));
+
+  const months = {
+    jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+    may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+    sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+  };
+
+  // Match any family members mentioned in the text (e.g. "Name: DIANA ARRINGTON")
+  const matchedAttendees = [];
+  const lowerText = text.toLowerCase();
+  for (const fm of family) {
+    const tokens = [fm.name, fm.firstName, fm.nickname].filter(Boolean);
+    for (const tok of tokens) {
+      if (tok.length < 3) continue;
+      const re = new RegExp(`\\b${tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (re.test(lowerText) && fm.email && !matchedAttendees.some((a) => a.email === fm.email)) {
+        matchedAttendees.push({ name: fm.name, email: fm.email, uid: fm.uid, avatar: fm.avatar });
+        break;
+      }
+    }
+  }
+
+  // Extract passenger name if present
+  const passengerM = text.match(/(?:Passenger\s+Info[\s\n]+)?Name:\s*([A-Z][A-Za-z ,.'-]+)$/im);
+  const passengerName = passengerM
+    ? passengerM[1]
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+    : matchedAttendees[0]?.name || '';
+
+  // 1. Check for airline flight itinerary (e.g. Delta, United, American, Southwest, Alaska, JetBlue)
+  const rawLines = text
+    .split('\n')
+    .map((l) => l.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim())
+    .filter(Boolean);
+
+  const dateHeaderRe = /^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day|nesday|rsday|urday)?,?\s*)?(?:(\d{1,2})\s*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*(?:\s*(\d{2,4}))?|(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(\d{4}))?|(\d{4})-(\d{2})-(\d{2}))$/i;
+  const flightHeaderRe = /^(DELTA|UNITED|AMERICAN|SOUTHWEST|ALASKA|JETBLUE|SPIRIT|FRONTIER|LUFTHANSA|AIR\s+CANADA|BRITISH\s+AIRWAYS|DL|UA|AA|WN|AS|B6|NK|F9)\s*(\d{1,4})\*?$/i;
+  const timeLineRe = /^(\d{1,2}:\d{2}\s*(?:AM|PM))$/i;
+  const skipLineRe = /^(?:DEPART|ARRIVE|FLIGHT|SEAT|Seat assigned.*|.*Main Basic.*|.*Main Cabin.*|.*Comfort\+.*|.*First Class.*|.*Economy.*|.*Business.*|Visit .*)$/i;
+
+  let currentYmd = '';
+  const flightSegments = [];
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const dm = line.match(dateHeaderRe);
+    if (dm) {
+      if (dm[1] && dm[2]) {
+        currentYmd = resolveSmartYmd(months[dm[2].slice(0, 3).toLowerCase()], Number(dm[1]), dm[3], now);
+      } else if (dm[4] && dm[5]) {
+        currentYmd = resolveSmartYmd(months[dm[4].slice(0, 3).toLowerCase()], Number(dm[5]), dm[6], now);
+      } else if (dm[7]) {
+        currentYmd = `${dm[7]}-${dm[8]}-${dm[9]}`;
+      }
+      continue;
+    }
+
+    const fm = line.match(flightHeaderRe);
+    if (fm && currentYmd) {
+      const carrier = fm[1].toUpperCase();
+      const flightNum = fm[2];
+      const flightCode = `${carrier} ${flightNum}`;
+
+      // Look ahead up to 8 lines for: DepartCity, DepartTime, ArriveCity, ArriveTime
+      const lookahead = [];
+      let j = i + 1;
+      while (j < rawLines.length && lookahead.length < 4 && j <= i + 8) {
+        const cand = rawLines[j];
+        if (dateHeaderRe.test(cand) || flightHeaderRe.test(cand)) break;
+        if (!skipLineRe.test(cand)) {
+          lookahead.push(cand);
+        }
+        j++;
+      }
+
+      if (lookahead.length >= 4 && timeLineRe.test(lookahead[1]) && timeLineRe.test(lookahead[3])) {
+        flightSegments.push({
+          date: currentYmd,
+          flight: flightCode,
+          departCity: lookahead[0],
+          departTimeRaw: lookahead[1].toUpperCase(),
+          departTime24: parseClockTo24h(lookahead[1]) || '08:00',
+          arriveCity: lookahead[2],
+          arriveTimeRaw: lookahead[3].toUpperCase(),
+          arriveTime24: parseClockTo24h(lookahead[3]) || '11:00',
+        });
+        i = j - 1;
+      }
+    }
+  }
+
+  if (flightSegments.length > 0) {
+    // Group segments by date
+    const byDate = new Map();
+    for (const seg of flightSegments) {
+      if (!byDate.has(seg.date)) byDate.set(seg.date, []);
+      byDate.get(seg.date).push(seg);
+    }
+
+    const travelDates = Array.from(byDate.keys()).sort();
+    const firstDate = travelDates[0];
+    const lastDate = travelDates[travelDates.length - 1];
+    const firstDaySegs = byDate.get(firstDate);
+    const destCityRaw = firstDaySegs[firstDaySegs.length - 1].arriveCity;
+    const destCityClean = toTitleCaseCity(destCityRaw);
+
+    const itineraryLines = [];
+    if (passengerName) itineraryLines.push(`Passenger: ${passengerName}`);
+    for (const d of travelDates) {
+      const segs = byDate.get(d);
+      const dLabel = new Date(`${d}T12:00:00`).toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      itineraryLines.push(`\n📅 ${dLabel}:`);
+      for (const s of segs) {
+        itineraryLines.push(`• ${s.flight}: Depart ${s.departCity} ${s.departTimeRaw} → Arrive ${s.arriveCity} ${s.arriveTimeRaw}`);
+      }
+    }
+    const fullDescription = itineraryLines.join('\n').trim();
+    const defaultCalId = familyCal?.id || calendars[0]?.id || '';
+    const defaultCalName = familyCal?.name || calendars[0]?.name || 'Family';
+
+    const detectedEvents = [];
+
+    // If multi-day trip (or round-trip), build the overarching Multi-Day All-Day Event first
+    if (travelDates.length >= 2 && lastDate > firstDate) {
+      detectedEvents.push({
+        summary: `🌴 Trip to ${destCityClean}${passengerName ? ` (${passengerName})` : ''}`,
+        calendarId: defaultCalId,
+        calendarName: defaultCalName,
+        category: 'family',
+        allDay: true,
+        startDate: firstDate,
+        startTime: '09:00',
+        endDate: lastDate,
+        endTime: '17:00',
+        durationMinutes: 60,
+        recurrence: 'NONE',
+        location: destCityClean,
+        description: fullDescription,
+        attendees: matchedAttendees,
+      });
+    }
+
+    // Also build timed Flight Events for each travel day
+    for (let idx = 0; idx < travelDates.length; idx++) {
+      const d = travelDates[idx];
+      const segs = byDate.get(d);
+      const firstSeg = segs[0];
+      const lastSeg = segs[segs.length - 1];
+      const flightCodes = segs.map((s) => s.flight).join(' / ');
+      const routeChain = [firstSeg.departCity, ...segs.map((s) => s.arriveCity)].join(' → ');
+      const dayDest = toTitleCaseCity(lastSeg.arriveCity);
+      const labelPrefix = travelDates.length > 1 ? (idx === 0 ? '✈️ Outbound Flight' : idx === travelDates.length - 1 ? '✈️ Return Flight' : '✈️ Flight') : '✈️ Flight';
+      const legLines = [
+        ...(passengerName ? [`Passenger: ${passengerName}`] : []),
+        ...segs.map((s) => `• ${s.flight}: Depart ${s.departCity} ${s.departTimeRaw} → Arrive ${s.arriveCity} ${s.arriveTimeRaw}`),
+      ];
+
+      detectedEvents.push({
+        summary: `${labelPrefix} to ${dayDest} (${flightCodes})`,
+        calendarId: defaultCalId,
+        calendarName: defaultCalName,
+        category: 'family',
+        allDay: false,
+        startDate: d,
+        startTime: firstSeg.departTime24,
+        endDate: d,
+        endTime: lastSeg.arriveTime24,
+        durationMinutes: 180,
+        recurrence: 'NONE',
+        location: routeChain,
+        description: legLines.join('\n'),
+        attendees: matchedAttendees,
+      });
+    }
+
+    const primary = { ...detectedEvents[0], detectedEvents };
+    return primary;
+  }
+
+  // 2. Check for raw .ics VEVENT snippet
+  if (/BEGIN:VEVENT/i.test(text)) {
+    const unfolded = text.replace(/\r\n /g, '').replace(/\n /g, '');
+    const sumM = unfolded.match(/^SUMMARY:(.*)$/im);
+    const dtM = unfolded.match(/^DTSTART([^:]*):(.*)$/im);
+    const deM = unfolded.match(/^DTEND([^:]*):(.*)$/im);
+    const locM = unfolded.match(/^LOCATION:(.*)$/im);
+    const descM = unfolded.match(/^DESCRIPTION:(.*)$/im);
+    if (sumM && dtM) {
+      const rawStart = dtM[2].trim();
+      const rawEnd = deM ? deM[2].trim() : rawStart;
+      const isAllDay = /^\d{8}$/.test(rawStart) || /VALUE=DATE/i.test(dtM[1] || '');
+      const sYmd = `${rawStart.slice(0, 4)}-${rawStart.slice(4, 6)}-${rawStart.slice(6, 8)}`;
+      let eYmd = `${rawEnd.slice(0, 4)}-${rawEnd.slice(4, 6)}-${rawEnd.slice(6, 8)}`;
+      if (isAllDay && /^\d{8}$/.test(rawEnd)) {
+        const inc = new Date(Number(rawEnd.slice(0, 4)), Number(rawEnd.slice(4, 6)) - 1, Number(rawEnd.slice(6, 8)) - 1);
+        const incStr = `${inc.getFullYear()}-${String(inc.getMonth() + 1).padStart(2, '0')}-${String(inc.getDate()).padStart(2, '0')}`;
+        eYmd = incStr < sYmd ? sYmd : incStr;
+      }
+      const ev = {
+        summary: sumM[1].trim().replace(/\\,/g, ','),
+        calendarId: familyCal?.id || '',
+        calendarName: familyCal?.name || '',
+        allDay: isAllDay,
+        startDate: sYmd,
+        startTime: '09:00',
+        endDate: eYmd,
+        endTime: '17:00',
+        durationMinutes: 60,
+        recurrence: 'NONE',
+        location: locM ? locM[1].trim().replace(/\\,/g, ',') : '',
+        description: descM ? descM[1].trim().replace(/\\n/g, '\n').replace(/\\,/g, ',') : '',
+        attendees: matchedAttendees,
+      };
+      return { ...ev, detectedEvents: [ev] };
+    }
+  }
+
+  // 3. Check for Structured Invite / Hotel Confirmation ("Subject:/Event:", "Check-in:/Check-out:", "When:", "Where:")
+  const subjM = text.match(/^(?:Subject|Event|Title|Topic|Reservation|Hotel):\s*(.+)$/im);
+  const checkInM = text.match(/Check[- ]?in:\s*(?:[A-Za-z]+,?\s*)?([A-Za-z]+\s+\d{1,2}(?:,?\s*\d{4})?|\d{4}-\d{2}-\d{2})/i);
+  const checkOutM = text.match(/Check[- ]?out:\s*(?:[A-Za-z]+,?\s*)?([A-Za-z]+\s+\d{1,2}(?:,?\s*\d{4})?|\d{4}-\d{2}-\d{2})/i);
+  if (checkInM && checkOutM) {
+    const pStart = parseNaturalLanguageEvent(checkInM[1], options);
+    const pEnd = parseNaturalLanguageEvent(checkOutM[1], options);
+    const locM = text.match(/^(?:Where|Location|Address|Property):\s*(.+)$/im);
+    const ev = {
+      summary: subjM ? subjM[1].trim() : '🏨 Hotel / Lodging Reservation',
+      calendarId: familyCal?.id || '',
+      calendarName: familyCal?.name || '',
+      allDay: true,
+      startDate: pStart.startDate,
+      startTime: '15:00',
+      endDate: pEnd.startDate >= pStart.startDate ? pEnd.startDate : pStart.startDate,
+      endTime: '11:00',
+      durationMinutes: 60,
+      recurrence: 'NONE',
+      location: locM ? locM[1].trim() : '',
+      description: text,
+      attendees: matchedAttendees,
+    };
+    return { ...ev, detectedEvents: [ev] };
+  }
+
+  return null;
+}
+
+/**
+ * Parses a natural-language, voice-dictated, or pasted itinerary/invite calendar event description
+ * into structured form fields.
  * Example:
  *   "Add Dentist appointment on Friday at 3pm for 1 hour on the Family calendar at Downtown Dental"
+ *   "Vacation to Florida Keys Feb 1 to Feb 8 on the Family calendar"
  */
 function parseNaturalLanguageEvent(inputText, options = {}) {
   let raw = String(inputText || '').trim();
   if (!raw) {
     return { summary: '', attendees: [], allDay: false };
+  }
+
+  // First check if this is a pasted flight itinerary, hotel reservation, or .ics block
+  if (!options._skipItineraryCheck && (raw.includes('\n') || /\b(?:DELTA|UNITED|AMERICAN|SOUTHWEST|BEGIN:VEVENT|Check-in:)\b/i.test(raw))) {
+    const itin = parseItineraryOrInviteText(raw, { ...options, _skipItineraryCheck: true });
+    if (itin) return itin;
   }
 
   const now = options.now ? new Date(options.now) : new Date();
@@ -1467,8 +1826,9 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     raw = raw.replace(/\ball[- ]day\b/i, ' ').trim();
   }
 
-  // 5. Detect date ("today", "tomorrow", "on Friday", "October 8", "2026-11-15")
+  // 5. Detect single date OR multi-day date range ("Feb 1 to Feb 8", "Feb 1 - 8", "2027-02-01 to 2027-02-08")
   const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let explicitEndYmd = '';
   const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const months = {
     jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
@@ -1476,11 +1836,39 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
   };
 
+  const monthNamesPat = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?';
+  const isoRangeM = raw.match(/\b(?:from\s+|on\s+)?(\d{4}-\d{2}-\d{2})\s*(?:to|through|thru|until|-|–)\s*(\d{4}-\d{2}-\d{2})\b/i);
+  const monthDayRangeM = raw.match(
+    new RegExp(
+      `\\b(?:from\\s+|on\\s+)?(${monthNamesPat})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\s*(?:to|through|thru|until|-|–)\\s*(?:(${monthNamesPat})\\s+)?(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\b`,
+      'i'
+    )
+  );
   const isoDateM = raw.match(/\b(?:on\s+)?(\d{4}-\d{2}-\d{2})\b/i);
-  const monthDayM = raw.match(/\b(?:on\s+)?(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(\d{4}))?\b/i);
+  const monthDayM = raw.match(new RegExp(`\\b(?:on\\s+)?(${monthNamesPat})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\b`, 'i'));
   const weekdayM = raw.match(/\b(?:on\s+)?(?:(this|next)\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
 
-  if (/\btomorrow\b/i.test(raw)) {
+  if (isoRangeM) {
+    const [sy, sm, sd] = isoRangeM[1].split('-').map(Number);
+    targetDate.setFullYear(sy, sm - 1, sd);
+    explicitEndYmd = isoRangeM[2];
+    allDay = true;
+    raw = raw.replace(isoRangeM[0], ' ').trim();
+  } else if (monthDayRangeM) {
+    const mIdx1 = months[monthDayRangeM[1].slice(0, 3).toLowerCase()];
+    const day1 = Number(monthDayRangeM[2]);
+    const mIdx2 = monthDayRangeM[4] ? months[monthDayRangeM[4].slice(0, 3).toLowerCase()] : mIdx1;
+    const day2 = Number(monthDayRangeM[5]);
+    const explicitYr = monthDayRangeM[3] || monthDayRangeM[6] || null;
+    const startResolved = resolveSmartYmd(mIdx1, day1, explicitYr, now);
+    const [sy, sm, sd] = startResolved.split('-').map(Number);
+    targetDate.setFullYear(sy, sm - 1, sd);
+    const endYr = monthDayRangeM[6] ? Number(monthDayRangeM[6]) : mIdx2 < mIdx1 ? sy + 1 : sy;
+    const endObjRange = new Date(endYr, mIdx2, day2);
+    explicitEndYmd = `${endObjRange.getFullYear()}-${String(endObjRange.getMonth() + 1).padStart(2, '0')}-${String(endObjRange.getDate()).padStart(2, '0')}`;
+    allDay = true;
+    raw = raw.replace(monthDayRangeM[0], ' ').trim();
+  } else if (/\btomorrow\b/i.test(raw)) {
     targetDate.setDate(targetDate.getDate() + 1);
     raw = raw.replace(/\b(?:on\s+)?tomorrow\b/i, ' ').trim();
   } else if (/\btoday\b/i.test(raw)) {
@@ -1490,10 +1878,11 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     targetDate.setFullYear(y, m - 1, d);
     raw = raw.replace(isoDateM[0], ' ').trim();
   } else if (monthDayM) {
-    const mIdx = months[monthDayM[1].toLowerCase()];
+    const mIdx = months[monthDayM[1].slice(0, 3).toLowerCase()];
     const dayNum = Number(monthDayM[2]);
-    const yearNum = monthDayM[3] ? Number(monthDayM[3]) : now.getFullYear();
-    targetDate.setFullYear(yearNum, mIdx, dayNum);
+    const startResolved = resolveSmartYmd(mIdx, dayNum, monthDayM[3], now);
+    const [sy, sm, sd] = startResolved.split('-').map(Number);
+    targetDate.setFullYear(sy, sm - 1, sd);
     raw = raw.replace(monthDayM[0], ' ').trim();
   } else if (weekdayM) {
     const targetDow = weekdays.indexOf(weekdayM[2].toLowerCase());
@@ -1521,12 +1910,18 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
 
   const rangeTimeM = raw.match(/\b(?:from|at)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:to|until|-)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
   const singleTimeM = raw.match(/\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
-  const durM = raw.match(/\bfor\s+(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min)\b/i);
+  const durM = raw.match(/\bfor\s+(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min|days?)\b/i);
 
   if (durM) {
     const val = Number(durM[1]);
     const unit = durM[2].toLowerCase();
-    durationMinutes = unit.startsWith('h') ? Math.round(val * 60) : Math.round(val);
+    if (unit.startsWith('d') && val >= 1) {
+      allDay = true;
+      const dEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + Math.max(0, Math.round(val) - 1));
+      explicitEndYmd = `${dEnd.getFullYear()}-${String(dEnd.getMonth() + 1).padStart(2, '0')}-${String(dEnd.getDate()).padStart(2, '0')}`;
+    } else {
+      durationMinutes = unit.startsWith('h') ? Math.round(val * 60) : Math.round(val);
+    }
     raw = raw.replace(durM[0], ' ').trim();
   }
 
@@ -1537,11 +1932,13 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     startMin = s.m;
     const diff = (e.h * 60 + e.m) - (s.h * 60 + s.m);
     if (diff > 0) durationMinutes = diff;
+    allDay = false;
     raw = raw.replace(rangeTimeM[0], ' ').trim();
   } else if (singleTimeM) {
     const s = parseHourMin(singleTimeM[1], singleTimeM[2], singleTimeM[3] || (Number(singleTimeM[1]) < 8 ? 'pm' : 'am'));
     startHour = s.h;
     startMin = s.m;
+    allDay = false;
     raw = raw.replace(singleTimeM[0], ' ').trim();
   }
 
@@ -1557,7 +1954,8 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
   const ymd = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
   const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
   const endObj = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), startHour, startMin + durationMinutes);
-  const endDate = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}-${String(endObj.getDate()).padStart(2, '0')}`;
+  const computedEndDate = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}-${String(endObj.getDate()).padStart(2, '0')}`;
+  const finalEndDate = explicitEndYmd || (allDay ? ymd : computedEndDate);
   const endTime = `${String(endObj.getHours()).padStart(2, '0')}:${String(endObj.getMinutes()).padStart(2, '0')}`;
 
   return {
@@ -1567,7 +1965,7 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     allDay,
     startDate: ymd,
     startTime,
-    endDate: allDay ? ymd : endDate,
+    endDate: finalEndDate,
     endTime,
     durationMinutes,
     recurrence,
@@ -1595,5 +1993,6 @@ module.exports = {
   moveNamedCalendarEvent,
   advanceRecurringStartEnd,
   listEventsAcrossNamedCalendars,
+  parseItineraryOrInviteText,
   parseNaturalLanguageEvent,
 };

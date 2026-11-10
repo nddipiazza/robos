@@ -14,6 +14,9 @@ const state = {
   recording: false,
   mediaRecorder: null,
   audioChunks: [],
+  editingEventId: '',
+  editingCalendarId: '',
+  detectedItineraryEvents: [],
 };
 
 function esc(val) {
@@ -33,6 +36,34 @@ function showToast(msg, durationMs = 4200) {
   showToast._timer = setTimeout(() => el.classList.add('hidden'), durationMs);
 }
 
+function updateDateSpanBadge() {
+  const badge = document.getElementById('date-span-badge');
+  if (!badge) return;
+  const startDate = document.getElementById('evt-start-date')?.value || '';
+  const endDate = document.getElementById('evt-end-date')?.value || startDate;
+  const isAllDay = Boolean(document.getElementById('evt-all-day')?.checked);
+  if (!startDate) {
+    badge.classList.add('hidden');
+    return;
+  }
+  const sObj = new Date(`${startDate}T12:00:00`);
+  const eObj = new Date(`${(endDate >= startDate ? endDate : startDate)}T12:00:00`);
+  const diffDays = Math.round((eObj.getTime() - sObj.getTime()) / (86400 * 1000)) + 1;
+  const sFmt = sObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const eFmt = eObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
+  badge.classList.remove('hidden');
+  if (diffDays > 1) {
+    badge.textContent = `🗓️ Multi-Day Event (${diffDays} days inclusive): ${sFmt} → ${eFmt}`;
+  } else if (isAllDay) {
+    badge.textContent = `☀️ All-Day Event: ${sFmt} (Set End Date to a later day for a multi-day trip/vacation)`;
+  } else {
+    const st = document.getElementById('evt-start-time')?.value || '';
+    const et = document.getElementById('evt-end-time')?.value || '';
+    badge.textContent = `🕒 Timed Event: ${sFmt} · ${st} – ${et}`;
+  }
+}
+
 function initDefaultDates() {
   const now = new Date();
   const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0);
@@ -46,19 +77,36 @@ function initDefaultDates() {
   document.getElementById('evt-start-time').value = startHm;
   document.getElementById('evt-end-date').value = endYmd;
   document.getElementById('evt-end-time').value = endHm;
+  updateDateSpanBadge();
 }
 
-function recomputeEndFromDuration() {
+function recomputeEndFromDuration(opts = {}) {
   const startDate = document.getElementById('evt-start-date').value;
-  const startTime = document.getElementById('evt-start-time').value || '17:00';
+  const endDateEl = document.getElementById('evt-end-date');
+  const currentEndDate = endDateEl.value;
+  const isAllDay = document.getElementById('evt-all-day').checked;
   if (!startDate) return;
+
+  // Never clobber a multi-day endDate when All-Day is checked or when the user already picked a multi-day endDate
+  if (isAllDay) {
+    if (!currentEndDate || currentEndDate < startDate) {
+      endDateEl.value = startDate;
+    }
+    updateDateSpanBadge();
+    return;
+  }
+
+  const startTime = document.getElementById('evt-start-time').value || '17:00';
   const startObj = new Date(`${startDate}T${startTime}`);
   if (Number.isNaN(startObj.getTime())) return;
   const endObj = new Date(startObj.getTime() + state.durationMinutes * 60000);
   const endYmd = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}-${String(endObj.getDate()).padStart(2, '0')}`;
   const endHm = `${String(endObj.getHours()).padStart(2, '0')}:${String(endObj.getMinutes()).padStart(2, '0')}`;
-  document.getElementById('evt-end-date').value = endYmd;
+  if (opts.forceDate || !currentEndDate || currentEndDate <= startDate) {
+    endDateEl.value = endYmd;
+  }
   document.getElementById('evt-end-time').value = endHm;
+  updateDateSpanBadge();
 }
 
 function syncDefaultGuestsForSelectedCalendar(calendarId) {
@@ -269,12 +317,25 @@ function renderEvents() {
   }
 
   listEl.innerHTML = filtered
-    .slice(0, 25)
+    .slice(0, 35)
     .map((ev) => {
       const d = new Date(ev.start);
-      const whenStr = ev.allDay
-        ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' · All Day'
-        : d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      let whenStr = '';
+      if (ev.allDay) {
+        const sYmd = ev.startDate || String(ev.start).slice(0, 10);
+        const eYmd = ev.endDate || sYmd;
+        const sObj = new Date(`${sYmd}T12:00:00`);
+        const eObj = new Date(`${eYmd}T12:00:00`);
+        const sLabel = sObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        if (eYmd > sYmd) {
+          const eLabel = eObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          whenStr = `${sLabel} – ${eLabel} · Multi-Day`;
+        } else {
+          whenStr = `${sLabel} · All Day`;
+        }
+      } else {
+        whenStr = d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      }
       const guests = Array.isArray(ev.attendees) && ev.attendees.length ? `👥 ${ev.attendees.length} guest(s)` : '';
       return `
         <div class="event-item" style="border-left-color:${esc(ev.color || '#00bcd4')}">
@@ -287,13 +348,24 @@ function renderEvents() {
               ${guests ? `<span>${esc(guests)}</span>` : ''}
             </div>
           </div>
-          <button type="button" class="btn-delete-ev" data-id="${esc(ev.id)}" data-cal-id="${esc(ev.calendarId || '')}">Delete</button>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button type="button" class="btn-delete-ev btn-edit-ev" data-id="${esc(ev.id)}" style="border-color:rgba(56,189,248,0.4);color:#38bdf8;">✏️ Edit</button>
+            <button type="button" class="btn-delete-ev btn-remove-ev" data-id="${esc(ev.id)}" data-cal-id="${esc(ev.calendarId || '')}">Delete</button>
+          </div>
         </div>
       `;
     })
     .join('');
 
-  listEl.querySelectorAll('.btn-delete-ev').forEach((btn) => {
+  listEl.querySelectorAll('.btn-edit-ev').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const ev = state.events.find((e) => e.id === id);
+      if (ev) editExistingEvent(ev);
+    });
+  });
+
+  listEl.querySelectorAll('.btn-remove-ev').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const calId = btn.dataset.calId || '';
@@ -302,6 +374,160 @@ function renderEvents() {
       await loadState();
     });
   });
+}
+
+function editExistingEvent(ev) {
+  state.editingEventId = ev.id;
+  state.editingCalendarId = ev.calendarId || '';
+
+  const sDateObj = new Date(ev.start);
+  const eDateObj = new Date(ev.end || ev.start);
+  const toYmd = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  const toHm = (dt) => `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+
+  applyParsedEventToForm({
+    summary: ev.summary || '',
+    calendarId: ev.calendarId || state.selectedCalendarId,
+    allDay: Boolean(ev.allDay),
+    startDate: ev.startDate || toYmd(sDateObj),
+    startTime: toHm(sDateObj),
+    endDate: ev.endDate || toYmd(eDateObj),
+    endTime: toHm(eDateObj),
+    location: ev.location || '',
+    description: ev.description || '',
+    meetingUrl: ev.meetingUrl || '',
+  });
+
+  const titleEl = document.getElementById('form-section-title');
+  if (titleEl) titleEl.textContent = `✏️ Edit Event: ${ev.summary}`;
+  const submitBtn = document.getElementById('btn-submit-event');
+  if (submitBtn) submitBtn.textContent = '💾 Update Event on Google Calendar';
+  const cancelBtn = document.getElementById('btn-cancel-edit');
+  if (cancelBtn) cancelBtn.classList.remove('hidden');
+
+  document.getElementById('add-event-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('evt-summary')?.focus();
+  showToast(`✏️ Editing "${ev.summary}" — adjust dates or details & tap Update Event!`);
+}
+
+function clearEditMode() {
+  state.editingEventId = '';
+  state.editingCalendarId = '';
+  const titleEl = document.getElementById('form-section-title');
+  if (titleEl) titleEl.textContent = '➕ Create Google Calendar Event';
+  const submitBtn = document.getElementById('btn-submit-event');
+  if (submitBtn) submitBtn.textContent = '📅 Save Event to Google Calendar & Thunderbird';
+  const cancelBtn = document.getElementById('btn-cancel-edit');
+  if (cancelBtn) cancelBtn.classList.add('hidden');
+}
+
+function renderDetectedItinerary(detectedEvents = []) {
+  state.detectedItineraryEvents = Array.isArray(detectedEvents) ? detectedEvents : [];
+  const box = document.getElementById('detected-itinerary-box');
+  if (!box) return;
+  if (state.detectedItineraryEvents.length <= 1) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.35);border-radius:10px;padding:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+        <strong style="color:#38bdf8;font-size:13.5px;">✈️ Detected ${state.detectedItineraryEvents.length} Events from Pasted Itinerary (Trip + Flights)</strong>
+        <button type="button" id="btn-create-all-detected" class="btn btn-primary btn-sm">
+          📅 Add All ${state.detectedItineraryEvents.length} Events to Calendar
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${state.detectedItineraryEvents
+          .map((ev, idx) => {
+            const rangeStr = ev.allDay
+              ? `${ev.startDate} → ${ev.endDate} (All-Day / Multi-Day)`
+              : `${ev.startDate} · ${ev.startTime} – ${ev.endTime}`;
+            return `
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;font-size:12.5px;">
+                <div>
+                  <div style="font-weight:600;color:#e6edf3;">${esc(ev.summary)}</div>
+                  <div style="color:#8b949e;">🗓️ ${esc(rangeStr)} ${ev.location ? `· 📍 ${esc(ev.location)}` : ''}</div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                  <button type="button" class="btn btn-secondary btn-sm btn-load-itin-ev" data-idx="${idx}">Load in Form</button>
+                  <button type="button" class="btn btn-primary btn-sm btn-add-itin-ev" data-idx="${idx}">+ Add</button>
+                </div>
+              </div>
+            `;
+          })
+          .join('')}
+      </div>
+    </div>
+  `;
+
+  box.querySelectorAll('.btn-load-itin-ev').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const ev = state.detectedItineraryEvents[Number(btn.dataset.idx)];
+      if (ev) {
+        applyParsedEventToForm(ev);
+        showToast(`Loaded "${ev.summary}" into form`);
+      }
+    });
+  });
+
+  box.querySelectorAll('.btn-add-itin-ev').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ev = state.detectedItineraryEvents[Number(btn.dataset.idx)];
+      if (!ev) return;
+      btn.disabled = true;
+      btn.textContent = '⏳...';
+      try {
+        const res = await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...ev,
+            calendarId: document.getElementById('evt-calendar').value || ev.calendarId || state.selectedCalendarId,
+            attendees: [...state.selectedFamilyEmails],
+          }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          btn.textContent = '✅ Added';
+          showToast(`✅ Added "${data.event.summary}" to ${data.event.calendarName}!`);
+          await loadState();
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  const addAllBtn = document.getElementById('btn-create-all-detected');
+  if (addAllBtn) {
+    addAllBtn.addEventListener('click', async () => {
+      addAllBtn.disabled = true;
+      addAllBtn.textContent = '⏳ Adding All to Google Calendar...';
+      try {
+        const calId = document.getElementById('evt-calendar').value || state.selectedCalendarId;
+        for (const ev of state.detectedItineraryEvents) {
+          await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...ev,
+              calendarId: calId || ev.calendarId,
+              attendees: [...state.selectedFamilyEmails],
+            }),
+          });
+        }
+        showToast(`✅ Added all ${state.detectedItineraryEvents.length} itinerary events to Google Calendar!`);
+        box.classList.add('hidden');
+        await loadState();
+      } finally {
+        addAllBtn.disabled = false;
+      }
+    });
+  }
 }
 
 function applyParsedEventToForm(parsed) {
@@ -322,19 +548,24 @@ function applyParsedEventToForm(parsed) {
   if (parsed.endDate) document.getElementById('evt-end-date').value = parsed.endDate;
   if (parsed.endTime) document.getElementById('evt-end-time').value = parsed.endTime;
   if (parsed.recurrence) document.getElementById('evt-recurrence').value = parsed.recurrence;
-  if (parsed.location) document.getElementById('evt-location').value = parsed.location;
+  if (parsed.location !== undefined) document.getElementById('evt-location').value = parsed.location;
+  if (parsed.description !== undefined) document.getElementById('evt-description').value = parsed.description;
+  if (parsed.meetingUrl !== undefined) document.getElementById('evt-meeting-url').value = parsed.meetingUrl;
   if (Array.isArray(parsed.attendees) && parsed.attendees.length) {
     for (const att of parsed.attendees) {
       if (att.email) state.selectedFamilyEmails.add(att.email);
     }
     renderFamilyChips();
   }
+  updateDateSpanBadge();
 }
 
 function toggleAllDayFields(isAllDay) {
   document.getElementById('start-time-group').classList.toggle('hidden', isAllDay);
   document.getElementById('end-time-group').classList.toggle('hidden', isAllDay);
   document.getElementById('duration-pills').classList.toggle('hidden', isAllDay);
+  document.getElementById('multiday-pills')?.classList.toggle('hidden', !isAllDay);
+  updateDateSpanBadge();
 }
 
 async function loadState() {
@@ -364,6 +595,47 @@ async function loadState() {
   renderEvents();
 }
 
+async function parseQuickInputText(text, autoCreate = false) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) return;
+  const res = await fetch('/api/parse', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: trimmed,
+      calendarId: state.selectedCalendarId,
+      autoCreate,
+      createAllDetected: autoCreate,
+    }),
+  });
+  const data = await res.json();
+  if (!data.ok) return;
+
+  if (autoCreate && data.created) {
+    document.getElementById('quick-add-input').value = '';
+    renderDetectedItinerary([]);
+    const count = Array.isArray(data.createdEvents) ? data.createdEvents.length : 1;
+    showToast(
+      count > 1
+        ? `📅 Added all ${count} itinerary events to ${data.created.calendarName}!`
+        : `📅 Added "${data.created.summary}" to ${data.created.calendarName}!`
+    );
+    await loadState();
+    return;
+  }
+
+  if (data.parsed) {
+    applyParsedEventToForm(data.parsed);
+    renderDetectedItinerary(data.detectedEvents || data.parsed.detectedEvents || []);
+    const detCount = (data.detectedEvents || []).length;
+    showToast(
+      detCount > 1
+        ? `✈️ Parsed ${detCount} itinerary events! Multi-day trip loaded in form — or tap "Add All ${detCount} Events" above!`
+        : '✨ Filled form from pasted invite / natural-language description!'
+    );
+  }
+}
+
 function setupEventListeners() {
   document.getElementById('evt-calendar').addEventListener('change', (e) => {
     state.selectedCalendarId = e.target.value;
@@ -385,8 +657,41 @@ function setupEventListeners() {
     });
   });
 
-  document.getElementById('evt-start-date').addEventListener('change', recomputeEndFromDuration);
-  document.getElementById('evt-start-time').addEventListener('change', recomputeEndFromDuration);
+  document.querySelectorAll('.multiday-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const days = Math.max(1, Number(btn.dataset.days) || 1);
+      const startDate = document.getElementById('evt-start-date').value;
+      if (!startDate) return;
+      const [sy, sm, sd] = startDate.split('-').map(Number);
+      const endObj = new Date(sy, sm - 1, sd + days - 1);
+      const endYmd = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}-${String(endObj.getDate()).padStart(2, '0')}`;
+      document.getElementById('evt-all-day').checked = true;
+      toggleAllDayFields(true);
+      document.getElementById('evt-end-date').value = endYmd;
+      updateDateSpanBadge();
+    });
+  });
+
+  document.getElementById('evt-start-date').addEventListener('change', () => recomputeEndFromDuration());
+  document.getElementById('evt-start-time').addEventListener('change', () => recomputeEndFromDuration());
+  document.getElementById('evt-end-date').addEventListener('change', () => {
+    const s = document.getElementById('evt-start-date').value;
+    const e = document.getElementById('evt-end-date').value;
+    if (s && e && e > s) {
+      // Automatically enable All-Day / Multi-Day if user selects a multi-day end date
+      document.getElementById('evt-all-day').checked = true;
+      toggleAllDayFields(true);
+    }
+    updateDateSpanBadge();
+  });
+  document.getElementById('evt-end-time').addEventListener('change', updateDateSpanBadge);
+
+  document.getElementById('btn-cancel-edit')?.addEventListener('click', () => {
+    clearEditMode();
+    document.getElementById('evt-summary').value = '';
+    document.getElementById('evt-location').value = '';
+    document.getElementById('evt-description').value = '';
+  });
 
   document.getElementById('btn-invite-all-family').addEventListener('click', () => {
     for (const fm of state.familyMembers) {
@@ -432,36 +737,39 @@ function setupEventListeners() {
     }
   });
 
+  // Paste from Clipboard button & automatic paste listener
+  document.getElementById('btn-paste-clipboard')?.addEventListener('click', async () => {
+    try {
+      const clipText = await navigator.clipboard.readText();
+      if (!clipText || !clipText.trim()) {
+        showToast('Clipboard is empty — paste directly into the box below.');
+        document.getElementById('quick-add-input').focus();
+        return;
+      }
+      document.getElementById('quick-add-input').value = clipText;
+      await parseQuickInputText(clipText, false);
+    } catch {
+      document.getElementById('quick-add-input').focus();
+      showToast('Press Ctrl+V (or long-press Paste) inside the box to paste your itinerary!');
+    }
+  });
+
+  document.getElementById('quick-add-input').addEventListener('paste', () => {
+    setTimeout(() => {
+      const text = document.getElementById('quick-add-input').value.trim();
+      if (text) parseQuickInputText(text, false);
+    }, 60);
+  });
+
   // Smart Quick-Add Parse / Create
   document.getElementById('btn-parse-fill').addEventListener('click', async () => {
     const text = document.getElementById('quick-add-input').value.trim();
-    if (!text) return;
-    const res = await fetch('/api/parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, autoCreate: false }),
-    });
-    const data = await res.json();
-    if (data.ok && data.parsed) {
-      applyParsedEventToForm(data.parsed);
-      showToast('✨ Filled form from natural-language description!');
-    }
+    await parseQuickInputText(text, false);
   });
 
   document.getElementById('btn-quick-create').addEventListener('click', async () => {
     const text = document.getElementById('quick-add-input').value.trim();
-    if (!text) return;
-    const res = await fetch('/api/parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, autoCreate: true }),
-    });
-    const data = await res.json();
-    if (data.ok && data.created) {
-      document.getElementById('quick-add-input').value = '';
-      showToast(`📅 Added "${data.created.summary}" to ${data.created.calendarName}!`);
-      await loadState();
-    }
+    await parseQuickInputText(text, true);
   });
 
   // Voice Dictation Button
@@ -576,8 +884,11 @@ function setupEventListeners() {
         visibility: document.getElementById('evt-visibility').value,
         description: document.getElementById('evt-description').value.trim(),
         attendees,
+        replaceEventId: state.editingEventId || undefined,
+        replaceCalendarId: state.editingCalendarId || undefined,
       };
 
+      const wasEditing = Boolean(state.editingEventId);
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -585,13 +896,16 @@ function setupEventListeners() {
       });
       const data = await res.json();
       if (data.ok) {
+        clearEditMode();
         document.getElementById('evt-summary').value = '';
         document.getElementById('evt-location').value = '';
         document.getElementById('evt-meeting-url').value = '';
         document.getElementById('evt-description').value = '';
         document.getElementById('evt-custom-guests').value = '';
         showToast(
-          `✅ Added "${data.event.summary}" to ${data.event.calendarName}${data.syncedToGoogle ? ' (Synced to Google Calendar!)' : ''}`
+          `${wasEditing ? '💾 Updated' : '✅ Added'} "${data.event.summary}" on ${data.event.calendarName}${
+            data.syncedToGoogle ? ' (Synced to Google Calendar!)' : ''
+          }`
         );
         await loadState();
       } else {
@@ -599,7 +913,9 @@ function setupEventListeners() {
       }
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = '📅 Save Event to Google Calendar & Thunderbird';
+      if (!state.editingEventId) {
+        submitBtn.textContent = '📅 Save Event to Google Calendar & Thunderbird';
+      }
     }
   });
 

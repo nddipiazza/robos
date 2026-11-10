@@ -259,7 +259,7 @@ function createCalendarWebServer(options = {}) {
         return sendJson(res, 200, deleted, extraHeaders);
       }
 
-      // ── POST /api/parse — Smart Natural Language Event Parser ───────────────
+      // ── POST /api/parse — Smart Natural Language / Itinerary / Invite Parser ─
       if (req.method === 'POST' && pathname === '/api/parse') {
         const body = await readJsonBody(req);
         const state = await listEventsAcrossNamedCalendars(null, { ...options, skipNetwork: true });
@@ -268,12 +268,42 @@ function createCalendarWebServer(options = {}) {
           familyMembers: state.familyMembers,
           calendars: state.calendars,
         });
-        if (body.autoCreate && parsed.summary) {
-          const created = await createNamedCalendarEvent(parsed, options);
-          broadcastUpdate('event-created', { event: created.event });
-          return sendJson(res, 200, { ok: true, parsed, created: created.event, syncedToGoogle: created.syncedToGoogle }, extraHeaders);
+        if (body.calendarId && !parsed.calendarId) {
+          parsed.calendarId = body.calendarId;
         }
-        return sendJson(res, 200, { ok: true, parsed }, extraHeaders);
+        if (body.autoCreate && parsed.summary) {
+          const eventsToCreate =
+            body.createAllDetected && Array.isArray(parsed.detectedEvents) && parsed.detectedEvents.length > 1
+              ? parsed.detectedEvents
+              : [parsed];
+          const createdEvents = [];
+          let anySynced = false;
+          for (const evInput of eventsToCreate) {
+            const cRes = await createNamedCalendarEvent(
+              {
+                ...evInput,
+                calendarId: body.calendarId || evInput.calendarId || parsed.calendarId,
+              },
+              options
+            );
+            if (cRes.event) createdEvents.push(cRes.event);
+            if (cRes.syncedToGoogle) anySynced = true;
+          }
+          broadcastUpdate('event-created', { event: createdEvents[0], count: createdEvents.length });
+          return sendJson(
+            res,
+            200,
+            {
+              ok: true,
+              parsed,
+              created: createdEvents[0],
+              createdEvents,
+              syncedToGoogle: anySynced,
+            },
+            extraHeaders
+          );
+        }
+        return sendJson(res, 200, { ok: true, parsed, detectedEvents: parsed.detectedEvents || [parsed] }, extraHeaders);
       }
 
       // ── POST /api/dictate — Whisper STT Audio Dictation -> Event Parser/Creator ─

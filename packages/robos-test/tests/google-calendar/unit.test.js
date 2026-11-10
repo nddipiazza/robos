@@ -230,5 +230,66 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.ok(html.includes('https://calendar.google.com/calendar/u/0/r?cid=family123%40group.calendar.google.com'));
     assert.ok(html.includes('https://calendar.google.com/calendar/embed?src=family123%40group.calendar.google.com'));
     assert.ok(!html.includes('Upcoming Events (Read-Only Snapshot)'));
+
+    // Multi-day all-day event RFC 5545 exclusive DTEND;VALUE=DATE (+1 day after inclusive endDate)
+    const multiDayIcs = namedCals.buildIcsCalendarEvent({
+      uid: 'test-multiday-1',
+      summary: 'Family Trip',
+      allDay: true,
+      startDate: '2027-02-01',
+      endDate: '2027-02-08',
+    });
+    assert.ok(multiDayIcs.includes('DTSTART;VALUE=DATE:20270201'));
+    assert.ok(multiDayIcs.includes('DTEND;VALUE=DATE:20270209'), 'Inclusive Feb 8 becomes exclusive DTEND 20270209');
+
+    // Pasted multi-line airline itinerary parsing into multi-day trip + flight legs
+    const sampleItinerary = [
+      'Passenger Info',
+      'Name: ALEX TRAVELER',
+      'Mon, 01FEB',
+      'DEPART',
+      'ARRIVE',
+      'DELTA 4992*',
+      'Delta Main Basic (E)',
+      'MADISON',
+      '07:00AM',
+      'NYC-LAGUARDIA',
+      '10:17AM',
+      'DELTA 1538',
+      'Delta Main Basic (E)',
+      'NYC-LAGUARDIA',
+      '11:15AM',
+      'MIAMI',
+      '02:34PM',
+      'Mon, 08FEB',
+      'DEPART',
+      'ARRIVE',
+      'DELTA 1468',
+      'Delta Main Basic (E)',
+      'MIAMI',
+      '12:01PM',
+      'DETROIT',
+      '03:11PM',
+      'DELTA 5245*',
+      'Delta Main Basic (E)',
+      'DETROIT',
+      '04:15PM',
+      'MADISON',
+      '04:37PM',
+    ].join('\n');
+
+    const itinParsed = namedCals.parseNaturalLanguageEvent(sampleItinerary, {
+      now: '2026-11-10T12:00:00Z',
+      calendars: [{ id: 'family123@group.calendar.google.com', name: 'Family', isFamilyCalendar: true, writable: true }],
+      familyMembers: [{ uid: 'alex', name: 'Alex Traveler', firstName: 'Alex', nickname: 'Alex', email: 'alex@example.com', avatar: '✈️' }],
+    });
+    assert.strictEqual(itinParsed.allDay, true);
+    assert.strictEqual(itinParsed.startDate, '2027-02-01');
+    assert.strictEqual(itinParsed.endDate, '2027-02-08');
+    assert.strictEqual(itinParsed.detectedEvents.length, 3);
+    assert.strictEqual(itinParsed.detectedEvents[1].startTime, '07:00');
+    assert.strictEqual(itinParsed.detectedEvents[1].endTime, '14:34');
+    assert.strictEqual(itinParsed.detectedEvents[2].startTime, '12:01');
+    assert.strictEqual(itinParsed.detectedEvents[2].endTime, '16:37');
   });
 });
