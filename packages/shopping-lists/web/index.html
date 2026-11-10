@@ -52,8 +52,16 @@
     <form class="m-form-card" id="m-add-form" autocomplete="off">
       <div class="m-form-head">
         <span class="m-form-title">✨ Add Item</span>
-        <button type="button" class="m-link-btn" id="m-toggle-batch">Multi-item / Recipe paste</button>
+        <div class="m-form-head-actions">
+          <button type="button" class="m-dictate-btn" id="m-dictate-btn" aria-label="Dictate shopping items with voice">
+            <span id="m-dictate-icon">🎙️</span>
+            <span id="m-dictate-label">Dictate</span>
+          </button>
+          <button type="button" class="m-link-btn" id="m-toggle-batch">Multi-item / Recipe paste</button>
+        </div>
       </div>
+
+      <div id="m-dictate-banner" class="m-dictate-banner" hidden role="status" aria-live="polite"></div>
 
       <div id="m-single-fields">
         <div class="m-field-row">

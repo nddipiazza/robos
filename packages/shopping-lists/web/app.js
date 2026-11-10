@@ -361,6 +361,139 @@
     }
   });
 
+  // ── Voice Dictation -> Whisper STT -> RobOS Agent (`/shopping-lists` skill) ──
+  let mediaRecorder = null;
+  let mediaStream = null;
+  let audioChunks = [];
+  let speechRec = null;
+  let browserTranscript = '';
+  let recordTimer = null;
+  let recordSeconds = 0;
+
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result || ''));
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function setDictateBanner(html, show = true) {
+    const el = document.getElementById('m-dictate-banner');
+    if (!el) return;
+    el.innerHTML = html;
+    el.hidden = !show;
+  }
+
+  async function toggleDictation() {
+    const btn = document.getElementById('m-dictate-btn');
+    const icon = document.getElementById('m-dictate-icon');
+    const label = document.getElementById('m-dictate-label');
+
+    // If currently recording, stop and send audio to RobOS Agent
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      clearInterval(recordTimer);
+      try { if (speechRec) speechRec.stop(); } catch {}
+      mediaRecorder.stop();
+      return;
+    }
+
+    // Start recording microphone audio
+    try {
+      browserTranscript = '';
+      audioChunks = [];
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+        .find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+      mediaRecorder = preferredMime ? new MediaRecorder(mediaStream, { mimeType: preferredMime }) : new MediaRecorder(mediaStream);
+
+      mediaRecorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
+      };
+
+      // Optional browser SpeechRecognition hint alongside raw audio
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SR) {
+        try {
+          speechRec = new SR();
+          speechRec.lang = 'en-US';
+          speechRec.continuous = true;
+          speechRec.interimResults = true;
+          speechRec.onresult = (event) => {
+            let text = '';
+            for (let i = 0; i < event.results.length; i++) {
+              text += event.results[i][0].transcript + ' ';
+            }
+            browserTranscript = text.trim();
+            if (browserTranscript) {
+              setDictateBanner(`🔴 <strong>Listening (${recordSeconds}s):</strong> "${esc(browserTranscript)}" — tap <strong>Stop &amp; Send</strong> when done.`);
+            }
+          };
+          speechRec.start();
+        } catch {}
+      }
+
+      mediaRecorder.onstop = async () => {
+        try {
+          if (mediaStream) mediaStream.getTracks().forEach((t) => t.stop());
+        } catch {}
+        btn.classList.remove('recording');
+        btn.classList.add('busy');
+        btn.disabled = true;
+        icon.textContent = '⏳';
+        label.textContent = 'Agent…';
+        setDictateBanner('⏳ <strong>Transcribing audio &amp; running RobOS Agent (<code>/shopping-lists</code> skill)…</strong>');
+
+        try {
+          const mimeType = mediaRecorder.mimeType || 'audio/webm';
+          const blob = new Blob(audioChunks, { type: mimeType });
+          const audioBase64 = await blobToBase64(blob);
+          const list = getActiveList();
+          const res = await apiPost('/api/dictate', {
+            audioBase64,
+            mimeType,
+            transcriptHint: browserTranscript,
+            listId: list?.id,
+          });
+          const cmdsHtml = (res.skillCommands || []).map((c) => `<code>${esc(c)}</code>`).join(' · ');
+          setDictateBanner(
+            `<div>🎙️ <strong>Heard:</strong> "${esc(res.transcript)}"</div>`
+            + `<div style="margin-top:4px;color:#34d399;">🤖 <strong>RobOS Agent (<code>/shopping-lists</code>):</strong> ${esc(res.summary)}</div>`
+            + (cmdsHtml ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8;">Skill commands: ${cmdsHtml}</div>` : ''),
+            true,
+          );
+          showToast(res.summary || 'Dictation applied to shopping list!');
+        } catch (err) {
+          setDictateBanner(`⚠️ <strong>Dictation failed:</strong> ${esc(err.message)}`, true);
+          showToast(err.message);
+        } finally {
+          btn.classList.remove('busy');
+          btn.disabled = false;
+          icon.textContent = '🎙️';
+          label.textContent = 'Dictate';
+          mediaRecorder = null;
+          mediaStream = null;
+        }
+      };
+
+      mediaRecorder.start(250);
+      recordSeconds = 0;
+      btn.classList.add('recording');
+      icon.textContent = '🔴';
+      label.textContent = 'Stop & Send (0s)';
+      setDictateBanner('🔴 <strong>Listening…</strong> Speak your items or recipe (e.g. <em>"Add 2 gallons of whole milk and avocados to grocery, and laundry pods to Target"</em>), then tap <strong>Stop &amp; Send</strong>.');
+      recordTimer = setInterval(() => {
+        recordSeconds += 1;
+        label.textContent = `Stop & Send (${recordSeconds}s)`;
+      }, 1000);
+    } catch (err) {
+      showToast(`Microphone error: ${err.message || 'Check browser mic permission'}`);
+    }
+  }
+
+  document.getElementById('m-dictate-btn')?.addEventListener('click', toggleDictation);
+
   // Initial load + SSE live updates
   async function boot() {
     const res = await fetch('/api/state');

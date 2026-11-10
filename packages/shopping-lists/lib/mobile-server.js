@@ -9,6 +9,7 @@ const { renderGoogleDocHtml } = require('./google-docs-format');
 const { renderQrSvg } = require('./qr');
 const { executeTextCommand, renderPrintableChecklist, renderPrintableGuideHtml } = require('./text-commands');
 const { syncWithGoogleDrive, listGoogleAccounts } = require('./google-drive-sync');
+const { processDictationAudio } = require('./dictate-agent');
 
 const SESSION_COOKIE_NAME = 'robos_shop_session';
 
@@ -168,7 +169,7 @@ function detectTailscaleIp() {
   return '';
 }
 
-function readJsonBody(req, maxBytes = 256 * 1024) {
+function readJsonBody(req, maxBytes = 12 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let total = 0;
@@ -559,6 +560,17 @@ self.addEventListener('fetch', (e) => {
           shouldSyncDrive = false; // executeTextCommand already syncs Drive
           const cmdRes = await executeTextCommand(store, body.command || body.text || '', { listId: body.listId });
           out = { ...cmdRes, state: store.getSnapshot() };
+        }
+        else if (p === '/api/dictate') {
+          shouldSyncDrive = false; // processDictationAudio already syncs Drive via executeTextCommand
+          out = await processDictationAudio({
+            store,
+            audioBase64: body.audioBase64,
+            mimeType: body.mimeType || 'audio/webm',
+            transcriptHint: body.transcriptHint || body.transcript || '',
+            listId: body.listId,
+            autoSync: autoSyncDrive,
+          });
         }
         else if (p === '/api/sync') {
           shouldSyncDrive = false;

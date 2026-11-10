@@ -234,6 +234,58 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.m-form-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.m-dictate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.m-dictate-btn.recording {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.22);
+  color: #fecaca;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.28);
+  animation: dictate-pulse 1.2s infinite ease-in-out;
+}
+
+.m-dictate-btn.busy {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+@keyframes dictate-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.m-dictate-banner {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
 }
 
 .m-form-title {
