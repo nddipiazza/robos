@@ -87,7 +87,13 @@ Each squad trades fire with nearby Brood until friendly ground troops reach its 
 
 Keep Riflemen in both starting bunkers, leave idle Pioneers nearby for Auto-Repair, and build extra Sentry Turrets to cover the river and landing pad. Use **P**, then click the terrain to patrol, and send two Riflemen per bridge to scout the crossings. Take Triage Specialists with the rescue expeditions. The later rescue sites have heavier escorts on Hard and Brutal. Waves get closer together in the final minutes, and on Brutal a destructible tunnel opens with 3:45 remaining. Hold for Dawn runs at 1× on Casual and Normal, 1.2× on Hard, and 1.4× on Brutal. Those speeds affect wall-clock time while the evacuation clock and distress milestones use game time.
 
-See the [recorded playthrough]({{ '/blog/starfall-command-hold-for-dawn/' | relative_url }}) for the opening build, all three rescues, and the Rampart touchdown.
+#### Full mission playthrough
+
+Watch the opening build, the bridge patrols, all three rescues, and the Rampart touchdown.
+
+{% include starfall-hold-for-dawn-video.html %}
+
+The [mission write-up]({{ '/blog/starfall-command-hold-for-dawn/#watch-hold-for-dawn' | relative_url }}) covers the design of the rescue objectives and the final defense.
 
 ## Skirmish maps
 

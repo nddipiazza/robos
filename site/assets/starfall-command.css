@@ -114,8 +114,25 @@
 .starfall .game-downloads .h2 { font-family: inherit; }
 .starfall .code { min-width: 0; align-self: center; margin: 0; }
 
+.starfall-doc-playthrough {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+  gap: clamp(16px, 4vw, 40px);
+  margin: 30px 0 36px;
+  padding: clamp(16px, 3vw, 28px);
+  background: var(--starfall-panel);
+  border: 1px solid var(--starfall-edge);
+  scroll-margin-top: 76px;
+}
+.starfall-doc-playthrough .eyebrow { color: var(--accent); }
+.starfall-doc-playthrough h2 { margin-top: 6px; }
+.starfall-doc-playthrough p:not(.eyebrow) { color: var(--starfall-muted); margin: 10px 0 14px; }
+.starfall-doc-playthrough figcaption { color: var(--starfall-muted); font-size: .84rem; margin-top: 8px; }
+.starfall-doc-playthrough figcaption a { color: var(--accent); }
+
 @media (max-width: 810px) {
-  .starfall-hero, .starfall-section-head, .starfall-split, .starfall-history > div { grid-template-columns: minmax(0, 1fr); }
+  .starfall-hero, .starfall-section-head, .starfall-split, .starfall-history > div, .starfall-doc-playthrough { grid-template-columns: minmax(0, 1fr); }
   .starfall-hero { gap: 26px; }
 }
 @media (max-width: 600px) {

@@ -16,6 +16,15 @@ keywords: "Starfall Command docs, RobOS RTS documentation, Frontier Hunters map 
   <p class="eyebrow" style="color:var(--accent)">Starfall Command</p>
   <h1 class="g-title" style="font-size:clamp(2rem,5vw,3.4rem)">Documentation</h1>
   <p class="lead" style="margin-top:14px;color:#c9c2b2;max-width:60ch">Play the Ashfall Signal campaign, learn your faction’s tech path, and find the controls for the battlefield and map editor.</p>
+  <section class="starfall-doc-playthrough" id="hold-for-dawn" aria-labelledby="hold-for-dawn-title">
+    <div>
+      <p class="eyebrow">Ashfall Signal · Mission 03</p>
+      <h2 id="hold-for-dawn-title">Hold for Dawn playthrough</h2>
+      <p>See how to scout both bridges, rescue all three militia squads, and defend the outpost until the Rampart lands.</p>
+      <a class="starfall-link" href="{{ '/projects/robos-rts/#hold-for-dawn-rescue-guide' | relative_url }}">Read the rescue guide</a>
+    </div>
+    {% include starfall-hold-for-dawn-video.html %}
+  </section>
   <div class="grid3">
     <a class="card" href="{{ '/projects/robos-rts/#run-it' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/book.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Start playing</h3><p>Launch from source, choose a mode, and resume a paused match from the title screen.</p><span class="go">Open →</span></a>
     <a class="card" href="{{ '/projects/robos-rts/#ashfall-signal-campaign' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/compass.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Ashfall Signal campaign</h3><p>Follow three missions, unlock units and structures, and plan the three rescues during Hold for Dawn.</p><span class="go">Open →</span></a>
@@ -30,7 +39,7 @@ keywords: "Starfall Command docs, RobOS RTS documentation, Frontier Hunters map 
   <div class="doc-list" style="margin-top:44px">
     <div>
       <h3>Reference</h3>
-      <a href="{{ '/blog/starfall-command-hold-for-dawn/' | relative_url }}"><b>Recorded Hold for Dawn campaign playthrough</b><span>→</span></a>
+      <a href="{{ '/blog/starfall-command-hold-for-dawn/#watch-hold-for-dawn' | relative_url }}"><b>Hold for Dawn mission write-up</b><span>→</span></a>
       <a href="{{ '/blog/starfall-command-100-point-roadmap/' | relative_url }}"><b>100-point roadmap engineering post</b><span>→</span></a>
       <a href="{{ '/projects/robos-rts/#verified-run-october-23-2026' | relative_url }}"><b>Recorded Frontier Hunters match</b><span>→</span></a>
       <a href="{{ '/projects/robos-rts/#controls' | relative_url }}"><b>Controls</b><span>→</span></a>
