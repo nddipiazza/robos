@@ -503,18 +503,23 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       assert.ok(grocery.items.some((i) => /salsa/i.test(i.name)));
       assert.ok(target.items.some((i) => /laundry pods/i.test(i.name)));
 
-      // 2. Offline fallback when no external AI agent is configured
+      // 2. Offline fallback when no external AI agent is configured (including multi-parameter data:audio/webm;codecs=opus;base64,... prefix)
+      const dataUrlWebm = `data:audio/webm;codecs=opus;base64,${dummyAudio.toString('base64')}`;
       const rOffline = await processDictationAudio({
         store,
-        audioBuffer: dummyAudio,
-        mimeType: 'audio/webm',
+        audioBase64: dataUrlWebm,
+        mimeType: 'audio/webm;codecs=opus',
         autoSync: false,
-        sttTranscribeFn: async () => 'I need 3 bags of coffee beans at Costco, and also check off salsa on my grocery list',
+        sttTranscribeFn: async (decodedBuf) => {
+          assert.equal(decodedBuf.toString('utf8'), 'fake-webm-audio-payload');
+          return 'I need 3 bags of coffee beans at Costco, and also check off salsa on my grocery list';
+        },
         aiAskFn: async () => { throw new Error('offline'); },
       });
 
       assert.equal(rOffline.ok, true);
       assert.equal(rOffline.usedAgent, false);
+      assert.match(rOffline.summary, /Added 3 bag Coffee beans to Costco/i);
       const costco = rOffline.state.lists.find((l) => l.id === 'costco');
       const groceryAfter = rOffline.state.lists.find((l) => l.id === 'grocery');
       assert.ok(costco.items.some((i) => /coffee beans/i.test(i.name) && i.qty === 3));

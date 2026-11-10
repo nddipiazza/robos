@@ -557,19 +557,17 @@ self.addEventListener('fetch', (e) => {
         else if (p === '/api/list/undo') out = store.undo();
         else if (p === '/api/smart-add') out = store.smartBatchAdd(body.text, body.listId);
         else if (p === '/api/command') {
-          shouldSyncDrive = false; // executeTextCommand already syncs Drive
-          const cmdRes = await executeTextCommand(store, body.command || body.text || '', { listId: body.listId });
+          const cmdRes = await executeTextCommand(store, body.command || body.text || '', { listId: body.listId, autoSync: false });
           out = { ...cmdRes, state: store.getSnapshot() };
         }
         else if (p === '/api/dictate') {
-          shouldSyncDrive = false; // processDictationAudio already syncs Drive via executeTextCommand
           out = await processDictationAudio({
             store,
             audioBase64: body.audioBase64,
             mimeType: body.mimeType || 'audio/webm',
             transcriptHint: body.transcriptHint || body.transcript || '',
             listId: body.listId,
-            autoSync: autoSyncDrive,
+            autoSync: false,
           });
         }
         else if (p === '/api/sync') {

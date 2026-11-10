@@ -13,7 +13,8 @@ const { SkillIntentResolver, defaultIntentResolver } = require('./skill-intent-r
 function cleanTranscript(text) {
   if (!text) return '';
   let cleaned = text
-    .replace(/\[(?:BLANK_AUDIO|silence|music|applause|laughter|noise|sigh|groan|cough|sound)\]/gi, '')
+    .replace(/\[(?:BLANK_AUDIO|silence|music|applause|laughter|noise|sigh|groan|cough|sound|whistle|whistling|inaudible| static )\]/gi, '')
+    .replace(/\((?:blank[\s_]*audio|silence|music|applause|laughter|noise|sigh|groan|cough|sound|whistle|whistling|inaudible|static|clicking|breathing|clearing throat|bell|beep|tone)\)/gi, '')
     .replace(/\[.*?\]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -257,7 +258,7 @@ class STTEngine extends EventEmitter {
         const timeout = setTimeout(() => {
           this.pendingRequests.delete(id);
           resolve({ text: '' });
-        }, 8000);
+        }, 20000);
         this.pendingRequests.set(id, {
           resolve: (res) => { clearTimeout(timeout); resolve(res); },
           reject: () => { clearTimeout(timeout); resolve({ text: '' }); },

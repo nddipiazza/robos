@@ -208,8 +208,8 @@ async function executeTextCommand(store, rawInput, options = {}) {
   }
 
   const snap0 = store.getSnapshot();
-  const explicitListId = options.listId || resolveStoreIdFromText(input, snap0.lists, null);
-  const defaultListId = explicitListId || snap0.activeListId || 'grocery';
+  const explicitListId = resolveStoreIdFromText(input, snap0.lists, null);
+  const defaultListId = explicitListId || options.listId || snap0.activeListId || 'grocery';
 
   // Strip optional leading slash command "/shopping-lists" or "Ok Nabu" / "Hello RobOS" prefix
   const cleanedInput = input
@@ -426,11 +426,11 @@ async function executeTextCommand(store, rawInput, options = {}) {
     .trim();
 
   const isMultiChunk = /[,;\n]/.test(addPayload);
-  const addDefaultListId = options.listId || (isMultiChunk ? (snap0.activeListId || 'grocery') : defaultListId);
+  const addDefaultListId = isMultiChunk ? (options.listId || snap0.activeListId || 'grocery') : defaultListId;
   const batchRes = store.smartBatchAdd(addPayload, addDefaultListId);
   if (!batchRes.added.length) {
     const msg = `No items recognized in "${rawInput}".`;
-    return { ok: false, skill: 'shopping-lists:add', spoken: msg, text: msg };
+    return { ok: false, skill: 'shopping-lists:add', summary: msg, spoken: msg, text: msg };
   }
 
   await maybeAutoSyncDrive(store, options);
@@ -449,6 +449,7 @@ async function executeTextCommand(store, rawInput, options = {}) {
   return {
     ok: true,
     skill: 'shopping-lists:add',
+    summary: spoken,
     spoken,
     text: `Added ${batchRes.added.length} item${batchRes.added.length === 1 ? '' : 's'}:\n  • ${summaryParts.join('\n  • ')}`,
     data: batchRes,
