@@ -3,7 +3,7 @@ layout: game
 game_id: robos-rts
 title: "Starfall Command (RobOS RTS)"
 permalink: /games/robos-rts/
-description: "Starfall Command is a three-faction RTS with three 1 vs. AI skirmish maps, a Godot 4 map editor and deterministic gameplay tests."
+description: "Starfall Command is a three-faction RTS with a three-mission campaign, 1 vs. AI skirmishes and a Godot 4 map editor."
 bg_video: /assets/games/rts-bg.mp4
 bg_poster: /assets/games/rts-bg-poster.jpg
 accent: "#58b4ff"
@@ -14,7 +14,7 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
 <section class="g-hero wrap">
   <p class="kicker">RobOS RTS</p>
   <h1 class="g-title">Starfall Command</h1>
-  <p class="lead">Choose Meridian Guard, Gnarl Brood or Aurelian Concord and build an army from twelve workers. Play one versus AI on three battlefields, practice in scenarios, or create a map in the editor.</p>
+  <p class="lead">Lead the Meridian Guard through the Ashfall Signal campaign. Play one versus AI as any of three factions, practice in scenarios, or create a battlefield in the map editor.</p>
   <div class="cta">{% include game-download-button.html %}<a class="btn btn-ghost" href="#download">All platforms</a><a class="btn btn-ghost" href="#frontier">Watch the live match</a><a class="btn btn-ghost" href="{{ '/games/robos-rts/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
 </section>
@@ -40,6 +40,16 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
   </div>
 </section>
 
+<section class="g-sec" id="campaign">
+  <div class="wrap">
+    <p class="eyebrow">Ashfall Signal</p>
+    <h2 class="h2">Three campaign missions</h2>
+    <p class="sec-p">Lead Captain Vale’s squad through Vesper Gate, build a force to seize the White Ridge artifact, then hold two bridges until a rescue transport arrives. Hold for Dawn runs on a 20-minute evacuation clock with three optional militia rescues.</p>
+    <a class="btn btn-ghost" href="{{ '/projects/robos-rts/#ashfall-signal-campaign' | relative_url }}">Campaign guide →</a>
+    <a class="btn btn-ghost" href="{{ '/blog/starfall-command-hold-for-dawn/' | relative_url }}">Watch the playthrough →</a>
+  </div>
+</section>
+
 <section class="g-sec" id="frontier">
   <div class="wrap">
     <p class="eyebrow">Frontier Hunters</p>
@@ -56,7 +66,7 @@ keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontie
       <figure><img loading="lazy" src="{{ '/assets/games/rts/frontier-hunters-map.png' | relative_url }}" alt="Frontier Hunters: the full 256×256 map with eight starts and interior expansions"><figcaption>The full battlefield and its crossing routes.</figcaption></figure>
       <figure><img loading="lazy" src="{{ '/assets/games/rts/frontier-map-editor.png' | relative_url }}" alt="The Frontier Hunters document open in the Godot map editor"><figcaption>Terrain, starts and resources in the reusable map editor.</figcaption></figure>
     </div>
-    <p class="sec-p">The editor preserves campaign and future multiplayer metadata. Campaign scripting and network multiplayer still need engine work. The current playable focus is one player against one AI.</p>
+    <p class="sec-p">The editor preserves campaign and multiplayer metadata when you save a map. The skirmish mode plays one commander against one AI.</p>
     <a class="btn btn-ghost" href="{{ '/projects/robos-rts/#map-editor' | relative_url }}">Map editor tools &amp; controls →</a>
   </div>
 </section>

@@ -4,13 +4,13 @@ layout: default
 parent: Projects
 permalink: /projects/robos-rts/
 nav_order: 4
-description: "Play Starfall Command across three skirmish maps and three factions. Learn the economy, controls, tech paths, map editor and deterministic test tools."
+description: "Play the Ashfall Signal campaign or skirmish across three maps and three factions. Learn Starfall Command's controls, tech paths, map editor and test tools."
 ---
 
 # RobOS RTS: Starfall Command
 {: .no_toc }
 
-Starfall Command is a Godot 4.3 real-time strategy game. Play **one player versus AI** on Frontier Hunters, Iron Narrows, or Glassline Basin. Pick Meridian Guard, Gnarl Brood, or Aurelian Concord independently for either side. The deterministic simulation runs at 64 ticks per second and supports interactive play, scripted bots, and headless tests.
+Starfall Command is a Godot 4.3 real-time strategy game. Play the **Ashfall Signal** single-player campaign or skirmish against the AI on Frontier Hunters, Iron Narrows, or Glassline Basin. Pick Meridian Guard, Gnarl Brood, or Aurelian Concord independently for either side in skirmish. The deterministic simulation runs at 64 ticks per second and supports interactive play, scripted bots, and headless tests.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -24,9 +24,11 @@ Starfall Command is a Godot 4.3 real-time strategy game. Play **one player versu
 
 ## Run it
 
-Starfall Command opens on a title screen. Choose **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains sound, overhead health bars, mouse edge scrolling and a choice of Standard or Grid command hotkeys. Grid uses **QWERT**, **ASDFG**, **ZXCVB**, and **UHJKL** when the card needs a fourth row. Hotkeys named below use the Standard layout. Navigate with the mouse or the arrow keys and **Enter**. **Esc** returns from a setup page.
+Starfall Command opens on a title screen. Choose **Campaign** for Ashfall Signal, **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains sound, overhead health bars, mouse edge scrolling and a choice of Standard or Grid command hotkeys. Grid uses **QWERT**, **ASDFG**, **ZXCVB**, and **UHJKL** when the card needs a fourth row. Hotkeys named below use the Standard layout. Navigate with the mouse or the arrow keys and **Enter**. **Esc** returns from a setup page.
 
 During a battle, **F8 → Main menu** pauses the match. **Resume Match** restores the battlefield, camera, and control groups. The editor also has a **Main Menu** button and keeps its current draft while the game is open.
+
+Press **Alt+Enter** or **Shift+F11** to switch between fullscreen and your previous window mode. The title screen’s **Settings** menu and the **F8** pause menu both have a **Toggle fullscreen** button.
 
 Use `-- --skip-title` to open the default battlefield directly or `-- --scenario=<slug>` to launch a scenario.
 
@@ -43,6 +45,49 @@ On Windows, open `games/robos-rts/project.godot` in Godot and press **F5** to la
 ```
 
 In **Skirmish**, pick a map, both factions, and a difficulty. AI profiles include Rush, Balanced, Economy and Siege. Playback runs from 1× to 8×. **F8** opens match options during play, and **F1** opens the controls overlay. If you want the current roadmap mechanics in a packaged build, compare its source revision with [the roadmap build](https://github.com/nddipiazza/robos/commit/801e889558100575837d4288052720e08d508bf7).
+
+## Ashfall Signal campaign
+
+1. **Cut the Signal.** Start on the southeast road and follow it through the lower junction, town square and detention convoy to the relay headquarters at the top of the map. Keep Captain Vale alive and destroy the headquarters. Two groups of survivors join you along the route. Target all six propaganda statues to complete the optional objective.
+2. **The White Ridge Job.** Gather resources, train an army and attack the Directorate excavation. A Muster Hall with a completed Research Module can train Triage Specialists. Resource caches and the besieged militia outpost offer help along the way. Destroy the dig site's Hub, Hall and Workshop to expose the artifact, then send a soldier to collect it.
+3. **Hold for Dawn.** Defend two bridges and cover the river against airborne Gnarl Brood. The rescue transport enters when the 20:00 evacuation clock reaches zero and must reach the landing pad. As optional objectives, rescue three militia squads and bring both field artifacts back to the Colony Hub.
+
+The three battlefields measure 132×153, 140×152 and 168×161 Starfall world units. The first two maps use walkable terrain outlines to keep squads on the roads, plazas and paths between them. The defense map puts the outpost on the southeast plateau with two diagonal river crossings.
+
+| Mission | Player roster |
+| --- | --- |
+| Cut the Signal | Captain Vale and Riflemen. Reinforcements join as you clear the road. |
+| The White Ridge Job | Pioneers, Riflemen and Triage Specialists. Build Colony Hubs, Provision Silos, Aether Taps and Muster Halls. Attach a Research Module to train Triage Specialists. |
+| Hold for Dawn | Adds Field Bunkers, Sentry Turrets and the Field Armory. Bunkers shelter up to four infantry. The Field Armory researches level-one infantry weapons and armor. |
+
+Choose a difficulty in **Campaign** before launching. **Restart Mission**, **Retry Mission**, and **Replay Mission** open a difficulty picker with the current setting selected. **Next Mission** carries that setting forward.
+
+Starting in **The White Ridge Job**, select a completed Muster Hall and press **L** to lift off. Right-click to fly, then press **L** again and click a clear landing site. Production pauses during flight and resumes after landing.
+
+| Difficulty | What changes |
+| --- | --- |
+| Casual | Enemies have half health. Raids are smaller, and Hold for Dawn uses ground waves with no Field Armory or Sentry Turret. |
+| Normal | Standard defenders, raids and evacuation waves. |
+| Hard | Extra road and cache guards, earlier attacks, and upgraded Brood incursions inside the perimeter. |
+| Brutal | Heavier garrisons and raids, enemy focus fire on medics, and earlier air attacks. Hold for Dawn also spawns a destructible reinforcement tunnel. |
+
+Cyan markers show the current objective and gold markers show bonus objectives within current vision. The mission panel lists objectives even while their locations are hidden. **Space** or **Esc** skips a cutscene. The campaign saves completed missions locally and unlocks the next mission on victory. **F8** opens pause settings, restart and the main menu. **Resume Mission** returns to the active attempt during the same game session.
+
+### Hold for Dawn rescue guide
+
+The militia calls come at the same point on the evacuation clock on every difficulty.
+
+| Time remaining | Distress call |
+| --- | --- |
+| 17:30 | Northeast road, beyond the right bridge |
+| 14:00 | Lowland ruins north of the river |
+| 9:00 | Western road beyond the west crossing |
+
+Each squad trades fire with nearby Brood until friendly ground troops reach its position. The stranded militia survive the staged fight and join your army on contact. A soldier already at a beacon can recruit them as soon as they appear. The new recruits move toward your nearest rescuer and get six game seconds of cover to withdraw. Give them a route back to the bunkers before that cover expires.
+
+Keep Riflemen in both starting bunkers, leave idle Pioneers nearby for Auto-Repair, and build extra Sentry Turrets to cover the river and landing pad. Take Triage Specialists with the rescue expeditions. The later rescue sites have heavier escorts on Hard and Brutal. Waves get closer together in the final minutes, and on Brutal a destructible tunnel opens with 3:45 remaining. Hold for Dawn runs at 1× on Casual and Normal, 1.2× on Hard, and 1.4× on Brutal. Those speeds affect wall-clock time while the evacuation clock and distress milestones use game time.
+
+See the [recorded playthrough]({{ '/blog/starfall-command-hold-for-dawn/' | relative_url }}) for the opening build, all three rescues, and the Rampart touchdown.
 
 ## Skirmish maps
 
@@ -80,7 +125,7 @@ Pick **Your faction** and **AI faction** independently on the skirmish setup scr
 
 **Gnarl Brood.** Foragers grow into structures, freeing their supply slot as construction begins. Cancel unfinished Forager construction to recover the worker and 75% of the paid cost. In skirmish, each completed Brood Nest begins with three brood slots. A paid unit consumes one slot and hatches alongside other active jobs. One natural slot regenerates every 12 seconds, up to three. A Brood Keeper can add bonus slots, up to five total. **Y** sets the army rally. **G** or right-clicking a usable deposit sets the Forager rally.
 
-**Aurelian Concord.** Motes can leave after starting a summon. Press **W** with a Mote selected to place a Waystone in a friendly power field. A completed Resonator provides an 18-unit field, and an anchored Lumen Carrier provides a temporary 12-unit field. Select a power source or a Waystone to inspect coverage. A Waystone pauses its paid queue when it loses all coverage and resumes when power returns.
+**Aurelian Concord.** Motes can leave after starting a summon. With a Mote selected, press **B**, then **G** to place a Waystone in a friendly power field. A completed Resonator provides an 18-unit field, and an anchored Lumen Carrier provides a temporary 12-unit field. Select a power source or a Waystone to inspect coverage. A Waystone pauses its paid queue when it loses all coverage and resumes when power returns.
 
 ### Scouting and fog of war
 
@@ -98,7 +143,7 @@ The two open Iron Narrows crossings each have a watch station. Keep a ground uni
 
 Right-click a Shale Barrier with combat units selected to break it. Its minimap marker disappears and ground units can cross. Scenario authors can place barriers with the map's `route_blockers` list.
 
-Train a **Triage Specialist** from a Muster Hall with **E**. An idle Specialist heals nearby biological allies. Right-click a wounded ally to follow and treat them. A Mote can use **C** to summon an **Aegis Relay** in a Resonator field. The Relay restores nearby allied shields, including during combat, and stops when unpowered. Both spend one energy per point restored and show their remaining energy when selected.
+Train a **Triage Specialist** from a Muster Hall with **E**. Auto-Heal starts enabled. Right-click **Treat Wounds** to toggle it. The button glows when enabled, and the Specialist spends energy on the highest-cost wounded biological ally in range while idle, holding position or attack-moving. Right-click a wounded ally to follow and treat them directly. Once a Waystone is complete, a Mote can press **B** twice to summon an **Aegis Relay** in a power field. The Relay restores nearby allied shields, including during combat, and stops when unpowered. Both spend one energy per point restored and show their remaining energy when selected.
 
 Train a **Kestrel Interceptor** at an Airframe Hangar with **A**. It flies over cliffs, water and ground units and fires at aircraft. **E** switches between air-only Interceptor Mode and ground-only Assault Mode after a 1.5-second transition. Landing requires clear ground. Riflemen, Sentry Turrets, Bile Crawlers and Skirmishers can hit both domains. The selected weapon panel lists valid targets, and aircraft appear as diamonds on the minimap.
 
@@ -242,7 +287,7 @@ Each button on the command card shows its hotkey in the corner. Hover one for th
 
 Producers have a five-slot queue. Active jobs show progress in the queue and above the building. Most producers work through one job at a time. A Fabrication Module opens a second line for eligible light infantry, and skirmish Brood Nests hatch multiple paid jobs using brood slots.
 
-Hold **Shift** when clicking a training button or pressing its hotkey to order up to five units. Orders fill the shortest queues across eligible selected buildings and stop when the next order cannot be paid for or placed.
+Tap a training hotkey to queue one unit. Hold it to keep queuing one at a time after a short delay. Hold **Shift** when clicking a training button or pressing its hotkey to order up to five units at once. Orders fill the shortest queues across eligible selected buildings as resources, supply and queue space allow.
 
 Right-click a queued unit in the selected building's production panel to cancel that slot. Its crystal and aether costs are refunded, its reserved supply is released, and the rest of the queue keeps its order.
 
@@ -260,15 +305,45 @@ When you cannot afford something, or you are at your supply cap, the game says s
 
 ### Building
 
-Select a Pioneer, press the build hotkey and place the structure. The footprint turns green where you can build and red where you cannot, and a click on an invalid spot tells you why. Aether Taps snap to a free aether vent.
+Select a worker and press **B** for Basic or **V** for Advanced when available (**Z** and **X** in Grid). Choose a structure and left-click a valid footprint. The preview turns green where you can build and red where you cannot. Extractors snap to a free aether vent. Press **Esc** or right-click to cancel placement. Press **Esc** again or click Back to return to worker orders.
 
-Hold **Shift** while placing to queue another copy without reopening the placement tool. Press **Esc** when finished. If a builder leaves a foundation unfinished, right-click it with another worker from the same faction to continue at no additional charge. Select the foundation and press **X** to recover 75% of its paid cost.
+Hold **Shift** while placing to queue more copies, then release it to exit placement. With a group selected, each unqueued placement assigns the nearest available worker. **Shift + right-click** a deposit to queue harvesting after construction.
 
-Pioneers can repair damaged friendly mechanical units and buildings. Right-click the target or press **E** and select it. The job spends crystal in proportion to the health restored.
+| Worker | How construction works |
+| --- | --- |
+| Pioneer | Stays with the foundation. Press **T** to halt, then right-click the foundation with another Pioneer to resume. Select the foundation and press **X** to recover 75% of the cost. |
+| Forager | Each placement consumes one Forager once the morph begins. Select an unfinished morph and press **Esc** to recover the Forager and 75% of the cost. |
+| Mote | A single Mote can start several summons in sequence. Each structure progresses independently after the Mote moves on. |
 
-Press **Q** on a Pioneer to toggle Auto-Repair. Idle Pioneers repair nearby friendly machinery using the same crystal costs. Explicit orders take priority.
+| Worker | Structure | Standard | Grid |
+| --- | --- | --- | --- |
+| Pioneer | Colony Hub | B → C | Z → Q |
+| Pioneer | Aether Tap | B → R | Z → W |
+| Pioneer | Provision Silo | B → S | Z → E |
+| Pioneer | Muster Hall | B → B | Z → A |
+| Pioneer | Field Armory (campaign) | B → E | Z → S |
+| Pioneer | Field Bunker (campaign) | B → U | Z → Z |
+| Pioneer | Sentry Turret | B → T | Z → X |
+| Pioneer | Workshop | V → F | X → A |
+| Pioneer | Airframe Hangar | V → S | X → Z |
+| Forager | Brood Nest | B → H | Z → Q |
+| Forager | Spore Tap | B → E | Z → W |
+| Forager | Brood Pod | B → P | Z → R |
+| Forager | Growth Node | B → C | Z → T |
+| Forager | Spore Watch | B → A | Z → X |
+| Forager | Blight Spire | V → S | X → E |
+| Forager | Tunnel Mouth | V → N | X → A |
+| Mote | Heartstone | B → N | Z → Q |
+| Mote | Aether Prism | B → A | Z → W |
+| Mote | Resonator | B → E | Z → E |
+| Mote | Waystone | B → G | Z → A |
+| Mote | Aegis Relay | B → B | Z → C |
 
-With a Muster Hall finished, select a Pioneer and press **T** to build a Sentry Turret. It costs 125 crystal, fires automatically on visible targets, and can be repaired like other mechanical structures.
+A completed Muster Hall unlocks the Pioneer's Advanced page. A completed Brood Nest unlocks the Forager's Advanced page. The Aegis Relay requires a completed Waystone.
+
+Pioneers start with **Auto-Repair** enabled and repair nearby friendly mechanical units and buildings while idle. Right-click the **Repair** button to toggle it. To issue a repair order directly, right-click the target or press **R** and select it. Both methods spend crystal in proportion to the health restored.
+
+With a Muster Hall finished, select a Pioneer and press **B**, then **T** to build a Sentry Turret. It costs 125 crystal, fires automatically on visible targets, and can be repaired like other mechanical structures.
 
 ![Placement footprint shown in green for a Provision Silo]({{ '/assets/images/robos-rts/09-build-placement.jpg' | relative_url }}){: .robos-zoomable-img }
 
@@ -292,7 +367,7 @@ Workers gather **crystal** from fields and **aether** through their faction’s 
 
 During an active crystal harvest order, workers pass through mobile units on the outbound and delivery legs. Buildings, deposits and terrain still constrain their routes, and workers remain targetable. Each patch serves one miner at a time, so automatic assignments and group gather orders fill open local patches first. A teal load marks returning crystal carriers. Stop or move a worker to restore normal body blocking.
 
-The numbers over each friendly base and Aether Tap show assigned workers against a target of two per nearby crystal patch or three per tap. The count turns gold when oversaturated. Press **D** to deliver a carried load to the nearest completed base, or right-click a friendly base to choose the drop-off. A worker already gathering resumes that assignment after delivery.
+The numbers over each friendly base and Aether Tap show assigned workers against a target of two per nearby crystal patch or three per tap. The count turns gold when oversaturated. Press **C** to deliver a carried load to the nearest completed base, or right-click a friendly base to choose the drop-off. A worker already gathering resumes that assignment after delivery.
 
 With a Colony Hub selected, press **D** and click a completed friendly Provision Silo to spend 50 Hub energy on eight additional supply. Each Silo can receive one reinforcement. Select a completed Silo and press **V** to salvage it after five seconds for 75% of its cost. Damage or a second press cancels salvage.
 
@@ -306,7 +381,7 @@ Ground units route around structures, crystal fields, geysers, cliffs and other 
 
 ![A squad walking down the ramp from the plateau to the low ground]({{ '/assets/images/robos-rts/04-ramp-descent.jpg' | relative_url }}){: .robos-zoomable-img }
 
-A Provision Silo can be retracted into the ground so units can walk over it, or extended to block the path again:
+Select a completed Provision Silo and press **R** to lower it. Ground units can walk across it, and it still provides supply. Press **R** again once the footprint is clear to raise it and block the path.
 
 ![An extended Provision Silo blocking a gap between two cliffs]({{ '/assets/images/robos-rts/31-silo-gate-extended.jpg' | relative_url }}){: .robos-zoomable-img }
 ![The same silo retracted, with a Howitzer driving over it]({{ '/assets/images/robos-rts/32-silo-gate-retracted.jpg' | relative_url }}){: .robos-zoomable-img }
@@ -319,10 +394,11 @@ Click **TECH** on the faction badge to see live prerequisites, production option
 
 Meridian builds around infantry, artillery and separate air production. The opening chain is **Provision Silo → Muster Hall → Workshop → Airframe Hangar**.
 
-- At a Muster Hall, **X** builds a Fabrication Module for two simultaneous eligible light infantry jobs. **C** builds a Research Module instead on the same pad. Research **Efficient Surge** with **T** for 100 crystal and 100 aether. It reduces the Rifleman and Breacher’s health cost from 10 to 5 while keeping the 11-second effect. Losing the required attachment pauses an active dependent research job until a compatible module returns.
+- At a Muster Hall, **C** builds a Fabrication Module for two simultaneous eligible light infantry jobs. **X** builds a Research Module on the same pad. Research **Efficient Surge** with **T** for 100 crystal and 100 aether. It reduces the Rifleman and Breacher’s health cost from 10 to 5 while keeping the 11-second effect. Losing the required attachment pauses an active dependent research job until a compatible module returns.
 - **L** lifts a completed Muster Hall or Workshop. While airborne, production pauses and the attachment stays behind. Use **L** again and target a clear landing site. A Hall can reconnect to a compatible detached module.
-- **U** queues the per-Hub Operations upgrade once a Muster Hall is complete. It costs 150 crystal and 50 aether. On the upgraded Hub, **M** spends 50 energy to send a Prospector to a visible crystal patch. It brings back double crystal for 45 seconds and uses zero supply.
+- **B** queues the per-Hub Operations upgrade once a Muster Hall is complete. It costs 150 crystal and 50 aether. On the upgraded Hub, **M** spends 50 energy to send a Prospector to a visible crystal patch. It brings back double crystal for 45 seconds and uses zero supply.
 - A Rampart boards up to six nearby eligible ground troops with **L**. **U** sends it to unload at a clear site. Passengers retain their supply and control groups. A shot-down transport loses its passengers.
+- Select Riflemen, Breachers or Triage Specialists and right-click a friendly Field Bunker to send them inside. A badge above the bunker shows how many slots are occupied. Select the bunker to see the garrison portraits, press **L** to load nearby infantry or **U** to unload. Riflemen and Breachers fire their own weapons from cover.
 - A Howitzer can emplace for range 31 and splash damage. Mobilize it to move again.
 
 ![Rampart Transport with two passengers aboard](/assets/blog/starfall-command-100-point-roadmap/rampart-transport.webp){: .robos-zoomable-img }
@@ -516,7 +592,7 @@ The game runs an HTTP/JSON server (port 18095, or `RTS_WEB_SERVICE_PORT`). The C
 | `POST /action` | Issue a command to unit tags, or to every unit of a type and owner |
 | `POST /step`, `POST /pause` | Advance ticks; pause real-time play (`/step` still works) |
 | `POST /playback`, `GET /performance` | Control live speed/pause without stepping; inspect frame timings |
-| `POST /scenario` | Load a scenario by slug (`default` for the main map) or an inline definition |
+| `POST /scenario` | Load a scenario by slug or inline definition. For a campaign slug, set `difficulty` to `casual`, `normal`, `hard`, or `brutal`. |
 | `POST /match` | Start or surrender a skirmish, or send `{"action":"rematch"}` after it ends to replay the opening. New games accept `map_id`, `unlimited_resources`, `player_faction`, and `ai_faction`. Faction values are `humans`, `monsters`, `aliens`, or `random`. The finished match contains both sides' scorecard totals. |
 | `POST /directive` | Turn a built-in AI mode on or off for a player |
 | `POST /select`, `POST /camera`, `POST /ui` | Selection, camera and HUD state |
