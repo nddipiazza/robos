@@ -16,8 +16,8 @@ og_image_alt: "Meridian Guard infantry and Sentry Turrets defend the Hold for Da
   <p>Starfall Command’s Ashfall Signal campaign opens with an infantry push through Vesper Gate, moves to a build-and-attack mission at White Ridge, and ends with <strong>Hold for Dawn</strong>. The last mission takes its shape from StarCraft II’s <em>Zero Hour</em>. The player starts with a garrisoned outpost and two river crossings. The transport comes when the 20-minute evacuation clock reaches zero, and the defense has to hold until it reaches the pad. <a href="https://www.furiouspaul.com/pc/starcraft2/">Zero Hour Brutal gameplay reference</a>.</p>
 
   <figure class="blog-fig video-embed">
-    <iframe src="https://www.youtube-nocookie.com/embed/HIQVYpns3Nc" title="Starfall Command: Hold for Dawn full mission victory" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="max-width:none;aspect-ratio:16/9"></iframe>
-    <figcaption>The complete Normal run takes 7:25 on video and finishes at 20:04 in game. The camera follows the expeditions, returns to the outpost for the fights, and follows the Rampart to the pad. <a href="https://www.youtube.com/watch?v=HIQVYpns3Nc">Watch on YouTube</a> · <a href="{{ '/assets/blog/starfall-command-hold-for-dawn/playthrough.vtt' | relative_url }}">Walkthrough captions</a></figcaption>
+    <iframe src="https://www.youtube-nocookie.com/embed/Mp0OXmVNEqU" title="Starfall Command: Hold for Dawn full mission victory" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="max-width:none;aspect-ratio:16/9"></iframe>
+    <figcaption>The complete Normal run takes 10:07 on video and finishes at 20:04 in game. The camera follows the bridge patrols and rescue expeditions, then returns for the final defense and the Rampart’s landing. The footage runs at 30 FPS with the live game at 2× speed. <a href="https://www.youtube.com/watch?v=Mp0OXmVNEqU">Watch on YouTube</a> · <a href="{{ '/assets/blog/starfall-command-hold-for-dawn/playthrough.vtt' | relative_url }}">Walkthrough captions</a></figcaption>
   </figure>
 
   <h2>A distress call you can come back to</h2>
@@ -35,16 +35,24 @@ og_image_alt: "Meridian Guard infantry and Sentry Turrets defend the Hold for Da
     </figure>
   </div>
 
+  <h2>Scout the crossings</h2>
+  <p>The objectives sit directly over the map, and the evacuation clock tells you when the transport is due. To see what is coming across the river, send a pair of Riflemen to patrol each bridge. The garrisons and the rest of the defense can stay in position.</p>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/starfall-command-hold-for-dawn/bridge-patrols.webp' | relative_url }}" alt="Two Riflemen patrol each bridge with both river crossings visible through the fog" loading="lazy" width="1280" height="720">
+    <figcaption>Patrols reveal the crossing with their own sight. The west bridge becomes actively visible as its pair approaches.</figcaption>
+  </figure>
+
   <h2>What the playthrough exercises</h2>
   <p>The commander runs the shipped campaign through the normal player-command API. Pioneers mine and pay for structures, idle repair crews keep the defenses working, and Muster Halls train Riflemen and Triage Specialists. Expeditions leave the defenders in place and return to the outpost after each rescue. The engine owns every enemy wave, the evacuation clock, and the victory check. The test records player orders and checks for zero manual simulation steps.</p>
-  <p>An early Normal attempt rescued all three squads and lost the Colony Hub with 40 seconds left. Long-range Brood artillery from several waves had accumulated at the same approach. The final schedule keeps the waves close together with fewer artillery units in each. The winning run held through all 17 waves, rescued all 12 militia, built 32 structures, and defeated 560 Brood units.</p>
-  <div class="blog-log"># From games/robos-rts, with Godot 4.3, Behave and ffmpeg available
-python run_cucumber_tests.py --realtime --speed=8 --record --tags=@hold_for_dawn</div>
+  <p>An early Normal attempt rescued all three squads and lost the Colony Hub with 40 seconds left. Long-range Brood artillery from several waves had accumulated at the same approach. The final schedule keeps the waves close together with fewer artillery units in each. The recorded victory held through all 17 waves, rescued all 12 militia, built 35 structures, and defeated 547 Brood units.</p>
+  <div class="blog-log"># From games/robos-rts on Windows, with Godot, Behave and FFmpeg with gfxcapture
+python run_cucumber_tests.py --realtime --speed=2 --record-window --tags=@hold_for_dawn</div>
 
   <div class="blog-links">
     <a href="{{ '/projects/robos-rts/#hold-for-dawn-rescue-guide' | relative_url }}">Hold for Dawn rescue guide</a>
     <a href="{{ '/games/robos-rts/docs/' | relative_url }}">Starfall Command docs</a>
     <a href="{{ '/blog/starfall-command-100-point-roadmap/' | relative_url }}">The 100-point roadmap</a>
     <a href="https://github.com/nddipiazza/robos/commit/1ee7dee34a239d49670f2a1839a8841e5086680f">Campaign and playthrough source</a>
+    <a href="https://github.com/nddipiazza/robos/commit/78ca831b00a00cc0451650c6aa47cac590eb88c9">HUD, patrol and recording changes</a>
   </div>
 </div>
