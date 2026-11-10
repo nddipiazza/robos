@@ -225,10 +225,26 @@ const TOOLS = [
     name: 'Mozilla Thunderbird',
     description: 'Open-source Calendar (CalDAV), Contacts (CardDAV), and Email client integrated with RobOS Google Calendar',
     category: 'Browser',
-    source: 'apt / snap (thunderbird)',
-    checkCmd: 'which thunderbird || test -x /usr/bin/thunderbird || test -x /snap/bin/thunderbird',
-    installCmd: 'sudo apt-get update -y && sudo apt-get install -y thunderbird || sudo snap install thunderbird',
-    uninstallCmd: 'sudo apt-get remove -y thunderbird || sudo snap remove thunderbird',
+    source: 'mozilla.org / apt (thunderbird + RobOS Google Calendar CalDAV)',
+    noSudo: true,
+    checkCmd: '(test -x "$HOME/.local/bin/thunderbird" || test -x "$HOME/.local/opt/thunderbird/thunderbird" || which thunderbird || test -x /usr/bin/thunderbird || test -x /snap/bin/thunderbird) && (test -f "$HOME/.local/share/applications/thunderbird.desktop" || test -f /usr/share/applications/thunderbird.desktop || test -f /var/lib/snapd/desktop/applications/thunderbird_thunderbird.desktop)',
+    installCmd: `node -e '
+const path = require("node:path");
+const tb = require(${JSON.stringify(path.resolve(__dirname, '..', 'robos-lib', 'thunderbird-google'))});
+const nc = require(${JSON.stringify(path.resolve(__dirname, '..', 'google-calendar', 'lib', 'named-calendars'))});
+(async () => {
+  const res = await tb.installThunderbird({ onLog: (s) => process.stdout.write(s) });
+  if (!res.ok) { console.error(res.error || "Install failed"); process.exit(1); }
+  console.log("✓ Installed:", res.version, "at", res.binaryPath);
+  const syncRes = await nc.syncNamedCalendarsToThunderbird();
+  if (syncRes.ok) {
+    console.log("✓ Synced Named Google Calendars to Thunderbird:", syncRes.calendarsSynced.map(c => c.name).join(", "));
+  }
+  tb.configureAllGoogleAccountsInThunderbird();
+  console.log("✓ Configured Thunderbird profile for RobOS Google Calendar (CalDAV) & Contacts (CardDAV)");
+})();
+'`,
+    uninstallCmd: 'rm -rf "$HOME/.local/opt/thunderbird" "$HOME/.local/bin/thunderbird" "$HOME/.local/share/applications/thunderbird.desktop" "$HOME/Desktop/thunderbird.desktop"; update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true',
   },
 
   // ── Dev Tools ──  (Software Center)
@@ -454,7 +470,7 @@ function runInstall(tool, action) {
     });
   }
 
-  const fullCmd = makeSudoCmd(cmd);
+  const fullCmd = tool.noSudo ? cmd : makeSudoCmd(cmd);
   const proc = spawn('bash', ['-c', fullCmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' } });
   proc.on('error', error => {
     installLogs[tool.id].log += `\n${error.message}\n`;
