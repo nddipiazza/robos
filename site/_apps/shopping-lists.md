@@ -15,53 +15,44 @@ related:
   - /smart-home/
 ---
 
-> **Full Interactive Walkthrough & Printable Command Guide:** See the flagship landing page at [`/shopping-lists/`]({{ '/shopping-lists/' | relative_url }}) and the engineering blog post [RobOS Shopping Lists: Grocery, Target & Costco with Two-Way Google Docs and Mobile Form Controls]({{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}).
+> **Full Interactive Walkthrough & Engineering Blog Posts:** See the flagship landing page at [`/shopping-lists/`]({{ '/shopping-lists/' | relative_url }}) and the engineering blog posts [RobOS Shopping Lists: Grocery, Target & Costco with Two-Way Google Docs and Mobile Form Controls]({{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}) and [Exposing RobOS Shopping Lists to Android Without a Custom App or VPN: Google-Gated PWA, Outbound HTTPS Tunnel & "Ok Nabu" Voice Sync]({{ '/blog/robos-shopping-lists-android-pwa-google-gated-voice-sync/' | relative_url }}).
 
 **RobOS Shopping Lists** (`packages/shopping-lists`) is part of the **RobOS Household & Personal Finance** suite alongside [RobOS Household]({{ '/household/' | relative_url }}) and [`robos.tax`]({{ '/robos-tax/' | relative_url }}). It comes pre-loaded with three store-tailored lists—**1) 🥬 Grocery**, **2) 🎯 Target**, and **3) 📦 Costco**—and lets you create additional lists whenever your household needs them.
 
-![RobOS Shopping Lists — Two-Way Google Docs & Mobile Form Architecture](/assets/blog/shopping-lists/shopping-lists-architecture.jpg)
+![RobOS Shopping Lists — Google-Gated Android PWA, Outbound Tunnel & 'Ok Nabu' Voice Architecture](/assets/blog/shopping-lists/shopping-lists-google-gated-pwa-architecture.jpg)
 
 ```mermaid
 flowchart LR
-    subgraph Inputs["1. Input Surfaces & Skills"]
-        Desktop["Desktop Electron App\n(packages/shopping-lists :19224)"]
-        MobileWeb["Mobile Web Companion\n(:19225 LAN QR + SSE)"]
-        SkillCLI["/shopping-lists Skill & CLI\n(@grocery, @target, @costco)"]
-        Voice["RobOS Voice / 'Hey Nabu'\n(Natural-Language Commands)"]
+    subgraph Phone["1. Android Phone (5G / Wi-Fi, Zero APK, Zero VPN)"]
+        PWA["Chrome Android PWA\n(manifest.webmanifest + sw.js)"]
+        GDocApp["Google Docs Mobile App\n(4-Col Table: ITEM & QTY | AISLE | EST. | ADDED)"]
+        LaunchLink["1-Tap Launch Link in Google Doc\n(?auth=256-bit-key -> 1-Yr HttpOnly Cookie)"]
+        GDocApp --> LaunchLink --> PWA
     end
 
-    subgraph Core["2. Household Store & Smart Parser"]
-        Parser["Smart Multi-Store Parser\n(lib/defaults.js: Qty, Units, Aisles, Badges)"]
-        Store[("Persistent Store\n~/.config/robos/household/shopping-lists.json")]
-        Lists["Pre-Seeded Store Lists:\n1) Grocery  2) Target  3) Costco"]
-        CSV["Household Finance CSV Exporter\n(packages/household format)"]
-        Parser --> Store
-        Store <--> Lists
-        Store --> CSV
+    subgraph Edge["2. Security & Outbound Edge Layer"]
+        GoogleGate["Google Account Login Gate\n(Protects Private Google Docs in Drive)"]
+        Tunnel["Outbound-Only Cloudflare Tunnel\n(cloudflared TLS/QUIC -> 127.0.0.1:19225)"]
+        AuthGate["lib/mobile-server.js Auth Gate\n(401 Unauthorized without robos_shop_session)"]
+        GoogleGate --> GDocApp
+        PWA <--> Tunnel <--> AuthGate
     end
 
-    subgraph Sync["3. Two-Way Google Drive Sync Engine"]
-        DriveSync["Google Drive v3 Sync\n(lib/google-drive-sync.js)"]
-        DocsFmt["Google Docs HTML & Text Parser\n(lib/google-docs-format.js)"]
-        CheckSync["Checkbox State Pull\n(☑ / ☐ and [x] / [ ] edits)"]
-        DriveSync <--> DocsFmt
-        DocsFmt <--> CheckSync
+    subgraph Core["3. RobOS Household Core (packages/shopping-lists)"]
+        Store[("Persistent Store\nshopping-lists.json + fs.watchFile")]
+        SSE["SSE Live Push Stream\n(/api/events to Android PWA)"]
+        DriveSync["Two-Way Google Docs Sync\n(lib/google-docs-format.js & google-drive-sync.js)"]
+        AuthGate <--> Store
+        Store --> SSE --> PWA
+        Store <--> DriveSync <--> GDocApp
     end
 
-    subgraph Cloud["4. Google Drive & Mobile Access"]
-        Folder["Drive Folder:\nRobOS Household Shopping Lists"]
-        GDocs["3 Native Google Docs\n(Grocery, Target, Costco)"]
-        AppsScript["Apps Script Mobile Form\n(Code.gs + Index.html for 5G)"]
-        Folder --> GDocs
-        Folder --> AppsScript
+    subgraph Voice["4. 'Ok Nabu' All-Day Voice Pipeline"]
+        Satellite["ESPHome Voice Satellite\n+ WakeWordDetector ('Ok Nabu')"]
+        Phonetic["normalizeShoppingVoiceTranscript\n(Fixes Whisper phonetic store mishearings)"]
+        Router["NabuCommandRouter -> SkillsExecutor\n-> executeTextCommand -> Auto Drive Sync"]
+        Satellite --> Phonetic --> Router --> Store
     end
-
-    Desktop <--> Parser
-    MobileWeb <--> Store
-    SkillCLI <--> Parser
-    Voice <--> Parser
-    Store <--> DriveSync
-    DriveSync <--> Folder
 ```
 
 ## Three ready-made household lists
