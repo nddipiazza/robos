@@ -191,7 +191,8 @@ body {
   flex-wrap: wrap;
 }
 
-.quick-add-row input {
+.quick-add-row input,
+.quick-add-row textarea {
   flex: 1;
   min-width: 240px;
 }
@@ -326,7 +327,8 @@ textarea:focus {
   color: var(--muted);
 }
 
-.pill-btn {
+.pill-btn,
+.multiday-btn {
   background: #0d1117;
   color: var(--muted);
   border: 1px solid var(--border);
@@ -337,7 +339,8 @@ textarea:focus {
 }
 
 .pill-btn.active,
-.pill-btn:hover {
+.pill-btn:hover,
+.multiday-btn:hover {
   border-color: var(--accent);
   color: var(--accent-hover);
   background: rgba(0, 188, 212, 0.12);
