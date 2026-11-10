@@ -370,6 +370,7 @@ function normalizeAccountRecord(raw = {}) {
     dataSourceCredentials: Boolean(raw.dataSourceCredentials),
     calendarColor: raw.calendarColor || null,
     calendarRefreshMinutes: calendarRefreshMinutes > 0 ? calendarRefreshMinutes : null,
+    additionalCalendars: Array.isArray(raw.additionalCalendars) ? raw.additionalCalendars : [],
     thunderbirdConfigured: Boolean(raw.thunderbirdConfigured),
     thunderbirdLastSyncedAt: raw.thunderbirdLastSyncedAt || null,
     thunderbirdProfilePath: raw.thunderbirdProfilePath || null,

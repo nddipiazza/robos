@@ -58,6 +58,22 @@ function requireShared(modName) {
 let _debugServer = null;
 try { _debugServer = requireShared('dom-snapshot'); } catch {}
 
+const namedCalendars = require('./lib/named-calendars');
+const accessDocSync = require('./lib/access-doc-sync');
+const { createCalendarWebServer } = require('./lib/calendar-web-server');
+
+let _webServerInstance = null;
+async function ensureWebAppServerRunning() {
+  if (_webServerInstance || process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') return;
+  try {
+    const srv = createCalendarWebServer();
+    await srv.listen(Number(process.env.GOOGLE_CALENDAR_WEB_PORT || 19226), '0.0.0.0');
+    _webServerInstance = srv;
+  } catch {
+    // Port 19226 is already served by standalone serve.js daemon
+  }
+}
+
 const userDataDir = path.join(CONFIG_DIR, 'electron', 'google-calendar');
 app.setName('robos-google-calendar');
 app.setPath?.('userData', userDataDir);
@@ -127,6 +143,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  ensureWebAppServerRunning();
   createWindow();
 });
 
@@ -269,7 +286,114 @@ ipcMain.handle('gcal:install-and-configure', async (_, payload) => {
 ipcMain.handle('gcal:fetch-overview', async (_, accountId) => {
   try {
     const tb = requireShared('thunderbird-google');
-    return await tb.fetchGoogleCalendarOverview(accountId);
+    const ov = await tb.fetchGoogleCalendarOverview(accountId);
+    const disc = await namedCalendars.discoverNamedCalendars(accountId);
+    if (disc.ok && Array.isArray(disc.calendars) && disc.calendars.length > 0) {
+      ov.calendars = disc.calendars.map((c) => ({
+        id: c.id,
+        summary: c.name,
+        primary: c.primary,
+        backgroundColor: c.color,
+        accessRole: c.accessRole,
+        shared: c.shared,
+        writable: c.writable,
+      }));
+    }
+    return ov;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:get-named-calendars', async (_, accountId) => {
+  try {
+    const state = await namedCalendars.listEventsAcrossNamedCalendars(accountId || null);
+    const settings = namedCalendars.loadCalendarSettings();
+    const port = Number(process.env.GOOGLE_CALENDAR_WEB_PORT || 19226);
+    const webAppUrl =
+      settings.accessDoc?.authedWebAppUrl ||
+      settings.publicTunnelUrl ||
+      settings.lanWebAppUrl ||
+      `http://127.0.0.1:${port}/?auth=${settings.webAuthToken}`;
+    return {
+      ok: true,
+      ...state,
+      accessDoc: settings.accessDoc || {},
+      webAppUrl,
+      localWebAppUrl: `http://127.0.0.1:${port}/?auth=${settings.webAuthToken}`,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:save-named-calendar', async (_, payload) => {
+  try {
+    const saved = namedCalendars.saveNamedCalendarConfig(payload || {});
+    const tbSync = await namedCalendars.syncNamedCalendarsToThunderbird(payload?.accountId || null);
+    return { ok: true, saved, thunderbird: tbSync };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:sync-named-calendars', async (_, accountId) => {
+  try {
+    return await namedCalendars.syncNamedCalendarsToThunderbird(accountId || null);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:sync-access-doc', async (_, payload) => {
+  try {
+    return await accessDocSync.syncCalendarAccessDocWithGoogleDrive(payload || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:create-event', async (_, payload) => {
+  try {
+    const created = await namedCalendars.createNamedCalendarEvent(payload || {});
+    const settings = namedCalendars.loadCalendarSettings();
+    if (settings.accessDoc?.docId) {
+      accessDocSync.syncCalendarAccessDocWithGoogleDrive().catch(() => {});
+    }
+    return created;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:delete-event', async (_, payload) => {
+  try {
+    const { eventId, calendarId } = typeof payload === 'string' ? { eventId: payload } : (payload || {});
+    return await namedCalendars.deleteNamedCalendarEvent(eventId, { calendarId });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:parse-natural-event', async (_, payload) => {
+  try {
+    const text = typeof payload === 'string' ? payload : (payload?.text || '');
+    const state = await namedCalendars.listEventsAcrossNamedCalendars(null, { skipNetwork: true });
+    const parsed = namedCalendars.parseNaturalLanguageEvent(text, {
+      familyMembers: state.familyMembers,
+      calendars: state.calendars,
+    });
+    return { ok: true, parsed };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gcal:open-url', async (_, url) => {
+  try {
+    if (!url) throw new Error('URL is required');
+    await shell?.openExternal?.(String(url));
+    return { ok: true, url };
   } catch (err) {
     return { ok: false, error: err.message };
   }

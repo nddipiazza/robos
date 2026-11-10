@@ -1,0 +1,48 @@
+---
+name: google-calendar
+description: Manage RobOS Google Calendar, Named/Shared Family Google Calendars, Mozilla Thunderbird CalDAV sync, the 1-button "RobOS Calendar — Add Event Access Form" Google Doc, and the "RobOS Add Calendar Event" WebApp (:19226) via CLI, natural-language text, or voice commands.
+---
+
+# RobOS Google Calendar & Family Calendars Skill (`/google-calendar`)
+
+Use this skill whenever the user asks to:
+- View their **Google Calendars by name** (`Primary`, `Family`, `Holidays in United States`, or custom shared calendars)
+- Schedule, create, or delete a **Google Calendar event** (on the `Family` calendar or `Primary` calendar) with family attendees
+- Create or update the **1-button Calendar Request Google Doc** (`RobOS Calendar — Add Event Access Form`) on Google Drive that links to the **RobOS Add Calendar Event** web app (`:19226`)
+- Sync all Named Google Calendars into **Mozilla Thunderbird** (`user.js` CalDAV registry)
+
+## CLI Commands
+
+```bash
+# 1. List all Named & Shared Google Calendars by name
+node packages/google-calendar/bin/google-calendar.js calendars
+
+# 2. List RobOS Family profiles & email addresses
+node packages/google-calendar/bin/google-calendar.js family
+
+# 3. List upcoming events across all Named Google Calendars (or filter by calendar name)
+node packages/google-calendar/bin/google-calendar.js events
+node packages/google-calendar/bin/google-calendar.js events --calendar Family
+
+# 4. Create a Google Calendar event via natural language (auto-resolves Family members & Named Calendar)
+node packages/google-calendar/bin/google-calendar.js add "Dentist appointment on Friday at 3pm for 1 hour on the Family calendar"
+
+# 5. Create a Google Calendar event with explicit flags
+node packages/google-calendar/bin/google-calendar.js add \
+  --title "Family Dinner" \
+  --calendar "Family" \
+  --date "2026-11-14" \
+  --start "18:00" \
+  --end "19:30" \
+  --location "Downtown" \
+  --attendees "Alex,Sam"
+
+# 6. Create / update the 1-button "RobOS Calendar — Add Event Access Form" Google Doc on Google Drive
+node packages/google-calendar/bin/google-calendar.js sync-doc --share-family
+
+# 7. Sync all Named Google Calendars into Mozilla Thunderbird CalDAV
+node packages/google-calendar/bin/google-calendar.js sync-thunderbird
+
+# 8. Launch the RobOS Add Calendar Event WebApp (:19226) + Outbound HTTPS Tunnel
+node packages/google-calendar/serve.js
+```

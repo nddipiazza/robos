@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Add Calendar Event — Google Calendar &amp; Family Calendars</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-icon">📅</span>
+      <div>
+        <h1>RobOS Add Calendar Event</h1>
+        <p class="subtitle" id="account-subtitle">Google Calendar &amp; Mozilla Thunderbird CalDAV · Named Family &amp; Personal Calendars</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a id="btn-open-gdoc" class="btn btn-secondary hidden" href="#" target="_blank" rel="noopener">📄 Access Google Doc</a>
+      <button id="btn-sync-gdoc" class="btn btn-secondary" type="button">🔄 Update Access Doc</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Named Calendars Bar -->
+    <section class="card named-calendars-section">
+      <div class="section-header">
+        <div>
+          <h2>🗂️ Named &amp; Shared Google Calendars</h2>
+          <p class="muted">Tap a named Google Calendar to target it when creating an event or filter upcoming events below.</p>
+        </div>
+        <button id="btn-Customize-cal" class="btn btn-sm" type="button">✏️ Rename / Add Shared Calendar</button>
+      </div>
+      <div id="named-calendars-grid" class="named-calendars-grid"></div>
+
+      <!-- Inline Rename / Add Named Calendar Drawer -->
+      <form id="custom-cal-form" class="custom-cal-form hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfg-cal-id">Calendar ID (or choose above)</label>
+            <input id="cfg-cal-id" type="text" placeholder="e.g. family...@group.calendar.google.com" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-cal-name">Friendly Calendar Name</label>
+            <input id="cfg-cal-name" type="text" placeholder="e.g. Household Family Calendar" required />
+          </div>
+          <div class="form-group" style="max-width:110px;">
+            <label for="cfg-cal-color">Color</label>
+            <input id="cfg-cal-color" type="color" value="#ffad46" />
+          </div>
+          <div class="form-group" style="justify-content:flex-end;">
+            <button type="submit" class="btn btn-primary">Save Name</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Voice Dictation & Smart Quick-Add Bar -->
+    <section class="card quick-add-card">
+      <div class="quick-add-header">
+        <div>
+          <h2>🎙️ Voice Dictation &amp; Smart Natural-Language Quick Add</h2>
+          <p class="muted">Speak or type naturally — e.g. <em>"Dentist appointment on Friday at 3pm for 1 hour on Family calendar"</em></p>
+        </div>
+        <button id="btn-dictate" class="btn btn-dictate" type="button">🎙️ Dictate Event</button>
+      </div>
+      <div class="quick-add-row">
+        <input id="quick-add-input" type="text" placeholder="Type or dictate: 'Family dinner on Friday at 6pm on Family calendar with whole family'..." />
+        <button id="btn-parse-fill" class="btn btn-secondary" type="button">✨ Fill Form</button>
+        <button id="btn-quick-create" class="btn btn-primary" type="button">⚡ Quick Add</button>
+      </div>
+      <div id="dictate-status" class="dictate-status hidden"></div>
+    </section>
+
+    <div class="main-grid">
+      <!-- Left Column: Full Google Calendar Event Form -->
+      <section class="card event-form-card">
+        <div class="section-header">
+          <h2>➕ Create Google Calendar Event</h2>
+          <span id="target-cal-pill" class="cal-pill">📅 Family</span>
+        </div>
+
+        <form id="add-event-form">
+          <div class="form-group">
+            <label for="evt-summary">Event Title / Summary *</label>
+            <input id="evt-summary" name="summary" type="text" required placeholder="Add title (e.g. Leo's Dentist Appointment, Family Dinner, BG3 Co-op Night)" />
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="evt-calendar">Named Google Calendar</label>
+              <select id="evt-calendar" name="calendarId"></select>
+            </div>
+            <div class="form-group">
+              <label for="evt-category">Event Category</label>
+              <select id="evt-category" name="category">
+                <option value="family">👨‍👩‍👧‍👦 Family &amp; Household</option>
+                <option value="appointment">🩺 Medical / Appointment</option>
+                <option value="outing">🦞 Family Outing / Dinner</option>
+                <option value="birthday">🎂 Birthday / Milestone</option>
+                <option value="meeting">📅 Meeting / Call</option>
+                <option value="focus">🎧 Focus / Game Night</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toggles-bar">
+            <label class="toggle-chip">
+              <input id="evt-all-day" type="checkbox" />
+              <span>☀️ All-day event</span>
+            </label>
+            <div class="duration-pills" id="duration-pills">
+              <span class="muted-label">Duration:</span>
+              <button type="button" class="pill-btn" data-mins="30">30m</button>
+              <button type="button" class="pill-btn active" data-mins="60">1h</button>
+              <button type="button" class="pill-btn" data-mins="90">1.5h</button>
+              <button type="button" class="pill-btn" data-mins="120">2h</button>
+              <button type="button" class="pill-btn" data-mins="180">3h</button>
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="evt-start-date">Start Date</label>
+              <input id="evt-start-date" type="date" required />
+            </div>
+            <div class="form-group" id="start-time-group">
+              <label for="evt-start-time">Start Time</label>
+              <input id="evt-start-time" type="time" value="17:00" />
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="evt-end-date">End Date</label>
+              <input id="evt-end-date" type="date" required />
+            </div>
+            <div class="form-group" id="end-time-group">
+              <label for="evt-end-time">End Time</label>
+              <input id="evt-end-time" type="time" value="18:00" />
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="evt-recurrence">Repeat / Recurrence</label>
+              <select id="evt-recurrence" name="recurrence">
+                <option value="NONE">Does not repeat</option>
+                <option value="DAILY">Every day</option>
+                <option value="WEEKLY">Every week</option>
+                <option value="WEEKDAYS">Every weekday (Mon–Fri)</option>
+                <option value="MONTHLY">Every month</option>
+                <option value="YEARLY">Every year (Birthday / Anniversary)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evt-timezone">Timezone</label>
+              <select id="evt-timezone" name="timeZone">
+                <option value="America/Chicago">America/Chicago (Central Time)</option>
+                <option value="America/New_York">America/New_York (Eastern Time)</option>
+                <option value="America/Denver">America/Denver (Mountain Time)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (Pacific Time)</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Family & Guests Section -->
+          <div class="form-group">
+            <div class="label-row">
+              <label>👨‍👩‍👧‍👦 Invite Family &amp; Guests (1-Tap Chips)</label>
+              <div class="chip-actions">
+                <button type="button" id="btn-invite-all-family" class="btn-link">+ Whole Family</button>
+                <button type="button" id="btn-clear-family" class="btn-link">Clear</button>
+              </div>
+            </div>
+            <div id="family-chips" class="family-chips"></div>
+            <input id="evt-custom-guests" type="text" placeholder="Additional guest emails (comma-separated, e.g. grandma@example.com)" style="margin-top:8px;" />
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="evt-location">📍 Location</label>
+              <input id="evt-location" type="text" placeholder="Add location (e.g. Red Lobster, Madison, WI)" />
+            </div>
+            <div class="form-group">
+              <div class="label-row">
+                <label for="evt-meeting-url">🎥 Video Call / Meeting Link</label>
+                <button type="button" id="btn-gen-meet" class="btn-link">+ Generate Link</button>
+              </div>
+              <input id="evt-meeting-url" type="text" placeholder="https://meet.google.com/... or Jitsi link" />
+            </div>
+          </div>
+
+          <div class="form-row three-col">
+            <div class="form-group">
+              <label for="evt-reminder">🔔 Notification</label>
+              <select id="evt-reminder">
+                <option value="10">10 minutes before</option>
+                <option value="30" selected>30 minutes before</option>
+                <option value="60">1 hour before</option>
+                <option value="1440">1 day before</option>
+                <option value="-1">No reminder</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evt-availability">Availability</label>
+              <select id="evt-availability">
+                <option value="OPAQUE">Busy</option>
+                <option value="TRANSPARENT">Free</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evt-visibility">Visibility</label>
+              <select id="evt-visibility">
+                <option value="default">Default visibility</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="evt-description">📝 Description / Notes</label>
+            <textarea id="evt-description" rows="3" placeholder="Add description, agenda, or household notes..."></textarea>
+          </div>
+
+          <div class="form-submit-row">
+            <button type="submit" id="btn-submit-event" class="btn btn-primary btn-lg">
+              📅 Save Event to Google Calendar &amp; Thunderbird
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Column: Upcoming Events by Named Calendar & Family Profiles -->
+      <div class="right-col">
+        <section class="card events-card">
+          <div class="section-header">
+            <h2>📆 Upcoming Events</h2>
+            <span id="events-count-badge" class="badge">0</span>
+          </div>
+          <div id="calendar-filter-tabs" class="filter-tabs"></div>
+          <div id="events-list" class="events-list"></div>
+        </section>
+
+        <section class="card family-directory-card">
+          <div class="section-header">
+            <h2>👨‍👩‍👧‍👦 RobOS Family Profiles</h2>
+            <span class="badge">5 Members</span>
+          </div>
+          <div id="family-profiles-list" class="family-profiles-list"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -11,11 +11,13 @@
       <div class="brand-icon">📅</div>
       <div>
         <h1>RobOS Google Calendar &amp; Thunderbird Integration</h1>
-        <p class="subtitle">Re-use your logged-in RobOS Google Cloud Account to automatically install &amp; configure Mozilla Thunderbird with Google Calendar (CalDAV), Contacts (CardDAV), and optional Gmail</p>
+        <p class="subtitle">Named &amp; Shared Family Google Calendars · 1-Button Google Doc Access Form · Add Calendar Event WebApp &amp; Thunderbird CalDAV</p>
       </div>
     </div>
     <div class="topbar-actions">
-      <button id="btn-open-cloud-accounts" class="btn">☁️ Manage Cloud Accounts</button>
+      <button id="btn-create-access-doc" class="btn btn-primary">📄 Create / Update Calendar Google Doc</button>
+      <button id="btn-open-webapp" class="btn">🌐 Open Add Event WebApp</button>
+      <button id="btn-open-cloud-accounts" class="btn">☁️ Cloud Accounts</button>
       <button id="btn-launch-tb-calendar" class="btn">🚀 Launch Thunderbird Calendar</button>
       <button id="btn-refresh" class="btn">↻ Refresh</button>
     </div>
@@ -24,6 +26,53 @@
   <main class="main-grid">
     <section class="left-col">
       <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite"></div>
+
+      <!-- Google Doc Access Form & Add Calendar Event WebApp Card -->
+      <div class="card highlight-card" id="access-doc-card">
+        <div class="card-header">
+          <div>
+            <div class="step-pill">Google Docs Launcher · 1-Button Access Form</div>
+            <h2 class="card-title">📄 Calendar Request Google Doc &amp; "RobOS Add Calendar Event" WebApp</h2>
+            <p class="card-subtitle">Creates a read-only Google Doc on Google Drive with 1 prominent button that launches the full RobOS Add Calendar Event web app.</p>
+          </div>
+        </div>
+        <div id="access-doc-status" class="info-box">Checking Google Doc Access Form status…</div>
+        <div class="action-bar">
+          <button id="btn-sync-doc-card" class="btn btn-primary">📄 Create / Update Calendar Request Google Doc</button>
+          <button id="btn-open-doc-link" class="btn hidden">🔗 Open Access Google Doc</button>
+          <button id="btn-open-webapp-card" class="btn">➕ Open RobOS Add Calendar Event WebApp</button>
+          <label class="inline-check">
+            <input type="checkbox" id="chk-share-family" checked />
+            <span>Share Doc with Family</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Shared / Named Google Calendars Card -->
+      <div class="card" id="named-calendars-card">
+        <div class="card-header">
+          <div>
+            <div class="step-pill">Named &amp; Shared Calendars</div>
+            <h2 class="card-title">🗂️ Your Google Calendars by Name</h2>
+            <p class="card-subtitle">Discovered live via Google CalDAV (Primary, Family, Holidays, and shared calendars) and synced into Mozilla Thunderbird.</p>
+          </div>
+          <button id="btn-sync-named-cals" class="btn">🔄 Sync All Named Calendars to Thunderbird</button>
+        </div>
+        <div id="named-calendars-list" class="named-cals-list">Loading named Google Calendars…</div>
+        <div class="form-grid" style="margin-top:10px;">
+          <div>
+            <label for="rename-cal-select">Calendar to Rename / Alias</label>
+            <select id="rename-cal-select" class="select-input"></select>
+          </div>
+          <div>
+            <label for="rename-cal-input">Friendly Display Name</label>
+            <div style="display:flex;gap:6px;margin-top:4px;">
+              <input type="text" id="rename-cal-input" class="text-input" style="margin-top:0;" placeholder="e.g. Household Family Calendar" />
+              <button id="btn-save-cal-name" class="btn">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Step 1: Select Google Account from RobOS Cloud Accounts -->
       <div class="card">
@@ -105,6 +154,85 @@
     </section>
 
     <section class="right-col">
+      <!-- Quick Add Event to Named Google Calendar -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="step-pill">Quick Create · Live Google CalDAV</div>
+            <h2 class="card-title">➕ Add Event to Named Google Calendar</h2>
+            <p class="card-subtitle">Create an event directly on your Family or Primary Google Calendar with 1-tap family member invites</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="quick-nl-input">✨ Smart Natural-Language Fill</label>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="quick-nl-input" class="text-input" style="margin-top:0;" placeholder="e.g. Dentist appointment on Friday at 3pm on Family calendar" />
+            <button id="btn-nl-fill" class="btn">Fill</button>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label for="ev-title">Event Title *</label>
+            <input type="text" id="ev-title" class="text-input" placeholder="e.g. Red Lobster Family Dinner" />
+          </div>
+          <div>
+            <label for="ev-calendar-select">Named Google Calendar</label>
+            <select id="ev-calendar-select" class="select-input"></select>
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:8px;">
+          <div>
+            <label for="ev-start-date">Date</label>
+            <input type="date" id="ev-start-date" class="text-input" />
+          </div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;">
+              <label for="ev-start-time">Start</label>
+              <input type="time" id="ev-start-time" class="text-input" value="17:00" />
+            </div>
+            <div style="flex:1;">
+              <label for="ev-end-time">End</label>
+              <input type="time" id="ev-end-time" class="text-input" value="18:00" />
+            </div>
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:8px;">
+          <div>
+            <label for="ev-location">Location</label>
+            <input type="text" id="ev-location" class="text-input" placeholder="e.g. Madison, WI" />
+          </div>
+          <div>
+            <label for="ev-recurrence">Recurrence</label>
+            <select id="ev-recurrence" class="select-input">
+              <option value="NONE">Does not repeat</option>
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="MONTHLY">Monthly</option>
+              <option value="YEARLY">Yearly</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <label>👨‍👩‍👧‍👦 Family Guests (Tap to Invite)</label>
+          <div id="desktop-family-chips" class="family-chips-row"></div>
+        </div>
+        <div class="action-bar">
+          <button id="btn-desktop-create-ev" class="btn btn-primary">📅 Add Event to Google Calendar</button>
+          <button id="btn-desktop-open-full-form" class="btn">🌐 Open Full Add Event WebApp</button>
+        </div>
+      </div>
+
+      <!-- Upcoming Events Across Named Calendars -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📆 Upcoming Events Across Named Calendars</h2>
+            <p class="card-subtitle">Live events from Primary, Family, and Holidays Google Calendars</p>
+          </div>
+        </div>
+        <div id="desktop-events-list" class="info-box" style="max-height:240px;overflow-y:auto;">Loading upcoming events…</div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <div>

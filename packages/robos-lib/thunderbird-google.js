@@ -518,20 +518,27 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
     );
 
     // Also include any additional secondary calendars passed in configOptions.additionalCalendars
-    if (Array.isArray(configOptions.additionalCalendars)) {
-      for (const secCal of configOptions.additionalCalendars) {
+    const additionalCalendars = Array.isArray(configOptions.additionalCalendars)
+      ? configOptions.additionalCalendars
+      : Array.isArray(account.additionalCalendars)
+        ? account.additionalCalendars
+        : [];
+    if (additionalCalendars.length > 0) {
+      for (const secCal of additionalCalendars) {
         if (!secCal || !secCal.id || secCal.primary) continue;
         const secUuid = deterministicUuid(`robos-google-caldav:${email.toLowerCase()}:${secCal.id}`);
         const secUri = `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(secCal.id)}/events`;
         lines.push(
-          `user_pref("calendar.registry.${secUuid}.name", ${JSON.stringify(secCal.summary || secCal.id)});`,
+          `user_pref("calendar.registry.${secUuid}.name", ${JSON.stringify(secCal.summary || secCal.name || secCal.id)});`,
           `user_pref("calendar.registry.${secUuid}.type", "caldav");`,
           `user_pref("calendar.registry.${secUuid}.uri", ${JSON.stringify(secUri)});`,
           `user_pref("calendar.registry.${secUuid}.username", ${JSON.stringify(email)});`,
           `user_pref("calendar.registry.${secUuid}.calendar-main-in-composite", true);`,
-          `user_pref("calendar.registry.${secUuid}.color", ${JSON.stringify(secCal.backgroundColor || '#3b82f6')});`,
+          `user_pref("calendar.registry.${secUuid}.color", ${JSON.stringify(secCal.backgroundColor || secCal.color || '#3b82f6')});`,
           `user_pref("calendar.registry.${secUuid}.refreshInterval", ${refreshMinutes});`,
-          `user_pref("calendar.registry.${secUuid}.cache.enabled", true);`
+          `user_pref("calendar.registry.${secUuid}.cache.enabled", true);`,
+          `user_pref("calendar.registry.${secUuid}.readOnly", ${secCal.writable === false ? 'true' : 'false'});`,
+          `user_pref("calendar.registry.${secUuid}.imip.identity.key", "id_${keySlug}");`
         );
       }
     }
@@ -735,6 +742,7 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
     ...account,
     calendarColor: generated.calendarColor,
     calendarRefreshMinutes: generated.refreshMinutes,
+    ...(Array.isArray(configOptions.additionalCalendars) ? { additionalCalendars: configOptions.additionalCalendars } : {}),
     suites: {
       ...(account.suites || {}),
       calendar: { ...(account.suites?.calendar || {}), enabled: generated.enableCalendar },

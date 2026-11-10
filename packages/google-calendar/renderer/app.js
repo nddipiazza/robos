@@ -1,7 +1,9 @@
 'use strict';
 
 let _state = { accounts: [], defaultAccountId: null, thunderbird: null };
+let _namedState = { calendars: [], familyMembers: [], events: [], accessDoc: {}, webAppUrl: '', localWebAppUrl: '' };
 let _selectedAccountId = null;
+let _selectedFamilyEmails = new Set();
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -44,7 +46,15 @@ function currentOptions() {
   };
 }
 
+function initDefaultEventDate() {
+  const el = document.getElementById('ev-start-date');
+  if (!el || el.value) return;
+  const now = new Date();
+  el.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 async function loadState() {
+  initDefaultEventDate();
   const res = await window.robos.getState();
   if (!res.ok) {
     showStatus(`Error loading Google Calendar state: ${res.error}`);
@@ -57,7 +67,140 @@ async function loadState() {
 
   renderAccountSelector();
   renderThunderbirdStatus();
+  await loadNamedCalendarsAndDoc();
   await updatePreviewAndOverview();
+}
+
+async function loadNamedCalendarsAndDoc() {
+  if (!window.robos.getNamedCalendars) return;
+  const res = await window.robos.getNamedCalendars(_selectedAccountId);
+  if (!res.ok) return;
+  _namedState = res;
+  renderAccessDocCard();
+  renderNamedCalendarsCard();
+  renderQuickEventForm();
+  renderUpcomingEventsList();
+}
+
+function renderAccessDocCard() {
+  const box = document.getElementById('access-doc-status');
+  const openDocBtn = document.getElementById('btn-open-doc-link');
+  const doc = _namedState.accessDoc || {};
+  const webUrl = _namedState.webAppUrl || _namedState.localWebAppUrl || 'http://127.0.0.1:19226';
+
+  if (doc.docUrl) {
+    box.innerHTML = `
+      <div><span class="badge badge-ok">✓ Google Doc Active</span> <strong>${esc(doc.docTitle || 'RobOS Calendar — Add Event Access Form')}</strong></div>
+      <div style="margin-top:4px;"><strong>Google Doc URL:</strong> <code>${esc(doc.docUrl)}</code></div>
+      <div style="margin-top:2px;"><strong>1-Button WebApp Target:</strong> <code>${esc(webUrl)}</code></div>
+    `;
+    if (openDocBtn) {
+      openDocBtn.classList.remove('hidden');
+      openDocBtn.onclick = () => window.robos.openUrl(doc.docUrl);
+    }
+  } else {
+    box.innerHTML = `
+      <div><span class="badge badge-warn">Ready to Create</span> Click <strong>📄 Create / Update Calendar Request Google Doc</strong> below to generate your 1-button Google Doc launcher on Google Drive.</div>
+      <div style="margin-top:4px;"><strong>Add Event WebApp URL:</strong> <code>${esc(webUrl)}</code></div>
+    `;
+    if (openDocBtn) openDocBtn.classList.add('hidden');
+  }
+}
+
+function renderNamedCalendarsCard() {
+  const listEl = document.getElementById('named-calendars-list');
+  const renameSel = document.getElementById('rename-cal-select');
+  const evCalSel = document.getElementById('ev-calendar-select');
+  const cals = _namedState.calendars || [];
+
+  if (!cals.length) {
+    if (listEl) listEl.textContent = 'No named Google Calendars discovered yet.';
+    return;
+  }
+
+  if (listEl) {
+    listEl.innerHTML = cals.map(c => {
+      const role = c.primary ? 'Primary · Owner' : c.isFamilyCalendar ? 'Shared Family Calendar' : c.writable ? 'Shared · Writable' : 'Read-Only Feed';
+      const sharedInfo = Array.isArray(c.sharedWith) && c.sharedWith.length
+        ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">Shared with Family: ${c.sharedWith.map(m => `${esc(m.avatar)} ${esc(m.nickname || m.firstName)}`).join(', ')}</div>`
+        : '';
+      return `
+        <div class="named-cal-row">
+          <div>
+            <div><span class="named-cal-dot" style="background:${esc(c.color)}"></span><strong>${esc(c.name)}</strong> <span class="badge ${c.writable ? 'badge-ok' : 'badge-warn'}">${esc(role)}</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">ID: <code>${esc(c.id)}</code></div>
+            ${sharedInfo}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (renameSel) {
+    renameSel.innerHTML = cals.map(c => `<option value="${esc(c.id)}">${esc(c.name)} (${esc(c.id)})</option>`).join('');
+  }
+
+  if (evCalSel) {
+    const writable = cals.filter(c => c.writable !== false);
+    evCalSel.innerHTML = writable.map(c =>
+      `<option value="${esc(c.id)}"${c.id === _namedState.defaultCalendarId ? ' selected' : ''}>${c.isFamilyCalendar ? '👨‍👩‍👧‍👦 ' : '📅 '}${esc(c.name)}</option>`
+    ).join('');
+  }
+}
+
+function renderQuickEventForm() {
+  const chipsEl = document.getElementById('desktop-family-chips');
+  if (!chipsEl) return;
+  const fmList = _namedState.familyMembers || [];
+  chipsEl.innerHTML = fmList.map(fm => {
+    const sel = _selectedFamilyEmails.has(fm.email);
+    return `
+      <span class="family-chip-pill ${sel ? 'selected' : ''}" data-email="${esc(fm.email)}" title="${esc(fm.name)} <${esc(fm.email)}>">
+        ${esc(fm.avatar)} ${esc(fm.nickname || fm.firstName || fm.name)}
+      </span>
+    `;
+  }).join('');
+
+  chipsEl.querySelectorAll('.family-chip-pill').forEach(pill => {
+    pill.onclick = () => {
+      const email = pill.dataset.email;
+      if (!email) return;
+      if (_selectedFamilyEmails.has(email)) _selectedFamilyEmails.delete(email);
+      else _selectedFamilyEmails.add(email);
+      renderQuickEventForm();
+    };
+  });
+}
+
+function renderUpcomingEventsList() {
+  const el = document.getElementById('desktop-events-list');
+  if (!el) return;
+  const nowMs = Date.now() - 3600 * 1000;
+  const upcoming = (_namedState.events || []).filter(e => new Date(e.end || e.start).getTime() >= nowMs).slice(0, 12);
+  if (!upcoming.length) {
+    el.innerHTML = `No upcoming events found. Use the form above or click <strong>Open Add Event WebApp</strong> to schedule an event.`;
+    return;
+  }
+  el.innerHTML = upcoming.map(ev => {
+    const dt = new Date(ev.start).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #21262d;">
+        <div>
+          <div><span class="named-cal-dot" style="background:${esc(ev.color || '#00bcd4')}"></span><strong>${esc(ev.summary)}</strong></div>
+          <div style="font-size:11.5px;color:var(--muted);">${esc(ev.calendarName || 'Primary')} · ${esc(dt)}${ev.location ? ` · 📍 ${esc(ev.location)}` : ''}</div>
+        </div>
+        <button class="btn btn-del-ev" data-id="${esc(ev.id)}" data-cal="${esc(ev.calendarId || '')}" style="padding:3px 8px;font-size:11px;">Delete</button>
+      </div>
+    `;
+  }).join('');
+
+  el.querySelectorAll('.btn-del-ev').forEach(btn => {
+    btn.onclick = async () => {
+      await window.robos.deleteEvent({ eventId: btn.dataset.id, calendarId: btn.dataset.cal });
+      showStatus('✓ Deleted event from Google Calendar');
+      await loadNamedCalendarsAndDoc();
+    };
+  });
 }
 
 function renderAccountSelector() {
@@ -85,7 +228,7 @@ function renderAccountSelector() {
     renderRefreshLabel();
 
     summary.innerHTML = `
-      <div><strong>Re-used Google Account:</strong> <code>${esc(active.email)}</code> <span class="badge ${active.loggedIn ? 'badge-ok' : 'badge-warn'}">${active.loggedIn ? 'Authenticated via RobOS Cloud Accounts' : 'Login Required'}</span></div>
+      <div><strong>Re-used Google Account:</strong> <code>${esc(active.email)}</code> <span class="badge ${active.loggedIn ? 'badge-ok' : 'badge-warn'}">${active.loggedIn ? 'Authenticated via RobOS Cloud Accounts' : 'CalDAV OAuth Active'}</span></div>
       <div style="margin-top:4px;"><strong>CalDAV Endpoint:</strong> <code>${esc(active.endpoints?.caldavUrl || '')}</code></div>
       <div style="margin-top:2px;"><strong>CardDAV Endpoint:</strong> <code>${esc(active.endpoints?.carddavUrl || '')}</code></div>
       ${active.thunderbirdConfigured ? `<div style="margin-top:4px;"><span class="badge badge-ok">✓ Already Configured in Thunderbird</span> Profile: <code>${esc(active.thunderbirdProfilePath || 'default-release')}</code></div>` : ''}
@@ -135,9 +278,112 @@ async function updatePreviewAndOverview() {
   }
 }
 
+async function handleCreateAccessDoc() {
+  const shareWithFamily = document.getElementById('chk-share-family')?.checked !== false;
+  showStatus('Creating / updating "RobOS Calendar — Add Event Access Form" on Google Docs…');
+  const res = await window.robos.syncAccessDoc({ accountId: _selectedAccountId, shareWithFamily });
+  if (res.ok) {
+    showStatus(`✓ Created / updated Google Doc "${res.docTitle}": ${res.docUrl}`);
+    await loadNamedCalendarsAndDoc();
+  } else {
+    showStatus(`Error creating Google Doc: ${res.error}`);
+  }
+}
+
+function handleOpenWebApp() {
+  const url = _namedState.localWebAppUrl || _namedState.webAppUrl || 'http://127.0.0.1:19226';
+  window.robos.openUrl(url);
+}
+
+document.getElementById('btn-create-access-doc')?.addEventListener('click', handleCreateAccessDoc);
+document.getElementById('btn-sync-doc-card')?.addEventListener('click', handleCreateAccessDoc);
+document.getElementById('btn-open-webapp')?.addEventListener('click', handleOpenWebApp);
+document.getElementById('btn-open-webapp-card')?.addEventListener('click', handleOpenWebApp);
+document.getElementById('btn-desktop-open-full-form')?.addEventListener('click', handleOpenWebApp);
+
+document.getElementById('btn-sync-named-cals')?.addEventListener('click', async () => {
+  showStatus('Syncing all Named Google Calendars to Mozilla Thunderbird…');
+  const res = await window.robos.syncNamedCalendars(_selectedAccountId);
+  if (res.ok) {
+    showStatus(`✓ Synced ${res.calendarsSynced.length} Named Google Calendars (${res.calendarsSynced.map(c => c.name).join(', ')}) to Thunderbird!`);
+    await loadState();
+  } else {
+    showStatus(`Error: ${res.error}`);
+  }
+});
+
+document.getElementById('btn-save-cal-name')?.addEventListener('click', async () => {
+  const id = document.getElementById('rename-cal-select').value;
+  const name = document.getElementById('rename-cal-input').value.trim();
+  if (!id || !name) return;
+  const res = await window.robos.saveNamedCalendar({ id, name, accountId: _selectedAccountId });
+  if (res.ok) {
+    document.getElementById('rename-cal-input').value = '';
+    showStatus(`✓ Renamed calendar to "${name}" & updated Thunderbird!`);
+    await loadState();
+  }
+});
+
+document.getElementById('btn-nl-fill')?.addEventListener('click', async () => {
+  const text = document.getElementById('quick-nl-input').value.trim();
+  if (!text) return;
+  const res = await window.robos.parseNaturalEvent({ text });
+  if (res.ok && res.parsed) {
+    const p = res.parsed;
+    if (p.summary) document.getElementById('ev-title').value = p.summary;
+    if (p.calendarId) document.getElementById('ev-calendar-select').value = p.calendarId;
+    if (p.startDate) document.getElementById('ev-start-date').value = p.startDate;
+    if (p.startTime) document.getElementById('ev-start-time').value = p.startTime;
+    if (p.endTime) document.getElementById('ev-end-time').value = p.endTime;
+    if (p.location) document.getElementById('ev-location').value = p.location;
+    if (p.recurrence) document.getElementById('ev-recurrence').value = p.recurrence;
+    if (Array.isArray(p.attendees)) {
+      p.attendees.forEach(a => a.email && _selectedFamilyEmails.add(a.email));
+      renderQuickEventForm();
+    }
+    showStatus('✨ Parsed natural-language event into form!');
+  }
+});
+
+document.getElementById('btn-desktop-create-ev')?.addEventListener('click', async () => {
+  const summary = document.getElementById('ev-title').value.trim();
+  if (!summary) {
+    showStatus('Please enter an event title.');
+    return;
+  }
+  const calendarId = document.getElementById('ev-calendar-select').value;
+  const startDate = document.getElementById('ev-start-date').value;
+  const startTime = document.getElementById('ev-start-time').value || '17:00';
+  const endTime = document.getElementById('ev-end-time').value || '18:00';
+  const location = document.getElementById('ev-location').value.trim();
+  const recurrence = document.getElementById('ev-recurrence').value;
+  const attendees = [..._selectedFamilyEmails];
+
+  const res = await window.robos.createEvent({
+    summary,
+    calendarId,
+    startDate,
+    startTime,
+    endDate: startDate,
+    endTime,
+    location,
+    recurrence,
+    attendees,
+  });
+  if (res.ok) {
+    document.getElementById('ev-title').value = '';
+    document.getElementById('ev-location').value = '';
+    showStatus(`✓ Added "${res.event.summary}" to ${res.event.calendarName}${res.syncedToGoogle ? ' (Synced live to Google Calendar!)' : ''}`);
+    await loadNamedCalendarsAndDoc();
+  } else {
+    showStatus(`Error: ${res.error}`);
+  }
+});
+
 document.getElementById('account-select').onchange = async (e) => {
   _selectedAccountId = e.target.value;
   renderAccountSelector();
+  await loadNamedCalendarsAndDoc();
   await updatePreviewAndOverview();
 };
 
