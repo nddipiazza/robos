@@ -1070,6 +1070,171 @@ async function deleteNamedCalendarEvent(eventId, options = {}) {
 }
 
 /**
+ * Advances a recurring event's initial DTSTART/DTEND to the next upcoming occurrence >= nowMs.
+ */
+function advanceRecurringStartEnd(startIso, endIso, rruleStr, nowMs = Date.now()) {
+  if (!rruleStr) return { start: startIso, end: endIso };
+  const sDate = new Date(startIso);
+  const eDate = new Date(endIso);
+  if (Number.isNaN(sDate.getTime()) || Number.isNaN(eDate.getTime())) {
+    return { start: startIso, end: endIso };
+  }
+  const durationMs = Math.max(3600000, eDate.getTime() - sDate.getTime());
+  const freqM = rruleStr.match(/FREQ=([A-Z]+)/i);
+  if (!freqM) return { start: startIso, end: endIso };
+  const freq = freqM[1].toUpperCase();
+  const intM = rruleStr.match(/INTERVAL=(\d+)/i);
+  const interval = Math.max(1, Number(intM ? intM[1] : 1) || 1);
+
+  let curStart = new Date(sDate.getTime());
+  let guard = 0;
+  while (curStart.getTime() + durationMs < nowMs && guard < 2000) {
+    guard++;
+    if (freq === 'DAILY') {
+      curStart.setDate(curStart.getDate() + interval);
+    } else if (freq === 'WEEKLY') {
+      curStart.setDate(curStart.getDate() + interval * 7);
+    } else if (freq === 'MONTHLY') {
+      curStart.setMonth(curStart.getMonth() + interval);
+    } else if (freq === 'YEARLY') {
+      curStart.setFullYear(curStart.getFullYear() + interval);
+    } else {
+      break;
+    }
+  }
+  const curEnd = new Date(curStart.getTime() + durationMs);
+  return { start: curStart.toISOString(), end: curEnd.toISOString() };
+}
+
+/**
+ * Moves one or more events (matching `eventId` or `query` title substring) from `fromCalendar`
+ * to `toCalendar` on Google CalDAV (`PUT` to destination with all recurrence rules & attendees preserved,
+ * followed by `DELETE` from source calendar).
+ */
+async function moveNamedCalendarEvent({ eventId = '', query = '', fromCalendar = 'Primary', toCalendar = 'Family', accountId = null } = {}, options = {}) {
+  const discovered = await discoverNamedCalendars(accountId, options);
+  const calendars = discovered.calendars || [];
+  const resolveCal = (nameOrId, fallbackPrimary = false) => {
+    const q = String(nameOrId || '').trim().toLowerCase();
+    return (
+      calendars.find((c) => c.id.toLowerCase() === q) ||
+      calendars.find((c) => c.name.toLowerCase() === q || c.originalSummary?.toLowerCase() === q) ||
+      calendars.find((c) => c.name.toLowerCase().includes(q)) ||
+      (fallbackPrimary ? calendars.find((c) => c.primary) : calendars.find((c) => c.isFamilyCalendar)) ||
+      calendars[0]
+    );
+  };
+
+  const srcCal = resolveCal(fromCalendar, true);
+  const dstCal = resolveCal(toCalendar, false);
+  if (!srcCal || !dstCal) {
+    throw new Error('Could not resolve source or destination calendar.');
+  }
+  if (dstCal.writable === false) {
+    throw new Error(`Destination calendar "${dstCal.name}" is read-only.`);
+  }
+
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const caldavToken = getCaldavAccessToken(discovered.email, options);
+  if (!caldavToken || typeof fetchImpl !== 'function') {
+    throw new Error('Active Google CalDAV token is required to move calendar events.');
+  }
+
+  const reportXml = `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:prop>
+    <D:getetag/>
+    <C:calendar-data/>
+  </D:prop>
+  <C:filter>
+    <C:comp-filter name="VCALENDAR">
+      <C:comp-filter name="VEVENT"/>
+    </C:comp-filter>
+  </C:filter>
+</C:calendar-query>`;
+
+  const res = await fetchImpl(srcCal.caldavUrl, {
+    method: 'REPORT',
+    headers: {
+      Authorization: `Bearer ${caldavToken}`,
+      Depth: '1',
+      'Content-Type': 'application/xml; charset=utf-8',
+    },
+    body: reportXml,
+    signal: AbortSignal.timeout(12000),
+  });
+  const xml = await res.text();
+  const responses = xml.split(/<(?:\w+:)?response\b[^>]*>/i).slice(1);
+  const moved = [];
+  const qLower = String(query || '').trim().toLowerCase();
+  const idLower = String(eventId || '').replace(/^tb-/, '').trim().toLowerCase();
+
+  for (const block of responses) {
+    const calData = (block.match(/<(?:\w+:)?calendar-data[^>]*>([\s\S]*?)<\/(?:\w+:)?calendar-data>/i) || [])[1] || '';
+    if (!calData) continue;
+    const unfolded = calData.replace(/\r\n /g, '').replace(/\n /g, '');
+    const uid = (unfolded.match(/^UID:(.*)$/m) || [])[1]?.trim() || '';
+    const summary = (unfolded.match(/^SUMMARY:(.*)$/m) || [])[1]?.trim() || '';
+    const matchId = idLower && uid.toLowerCase() === idLower;
+    const matchQuery = qLower && summary.toLowerCase().includes(qLower);
+    if (!matchId && !matchQuery) continue;
+
+    const newUid = `robos-moved-${Date.now().toString(36)}-${crypto.randomBytes(3).toString('hex')}@google.com`;
+    // Keep only the master VEVENT (first VEVENT) and rewrite UID + ORGANIZER for destination calendar
+    const firstVeventMatch = calData.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/i);
+    if (!firstVeventMatch) continue;
+    let veventBlock = firstVeventMatch[0]
+      .replace(/\r\n /g, '')
+      .replace(/\n /g, '')
+      .replace(/^UID:.*$/gm, `UID:${newUid}`)
+      .replace(/^ORGANIZER[^:]*:.*$/gm, `ORGANIZER;CN=${dstCal.name}:mailto:${dstCal.id}`);
+
+    const newIcs = [
+      'BEGIN:VCALENDAR',
+      'PRODID:-//RobOS//Google Calendar//EN',
+      'VERSION:2.0',
+      'CALSCALE:GREGORIAN',
+      veventBlock,
+      'END:VCALENDAR',
+      '',
+    ].join('\r\n');
+
+    const putUrl = `${dstCal.caldavUrl}${encodeURIComponent(newUid)}.ics`;
+    const putRes = await fetchImpl(putUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${caldavToken}`,
+        'Content-Type': 'text/calendar; charset=utf-8',
+      },
+      body: newIcs,
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (putRes.ok || putRes.status === 201 || putRes.status === 204) {
+      const delUrl = `${srcCal.caldavUrl}${encodeURIComponent(uid)}.ics`;
+      await fetchImpl(delUrl, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${caldavToken}` },
+        signal: AbortSignal.timeout(10000),
+      });
+      moved.push({
+        summary,
+        oldUid: uid,
+        newUid,
+        fromCalendar: srcCal.name,
+        toCalendar: dstCal.name,
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    movedCount: moved.length,
+    moved,
+  };
+}
+
+/**
  * Queries live events across all discovered Named Google Calendars via CalDAV REPORT
  * and merges with `~/.config/robos/calendar-events.json`.
  */
@@ -1098,7 +1263,7 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
         <C:time-range start="${startRange}" end="${endRange}"/>
       </C:comp-filter>
     </C:comp-filter>
-  </D:filter>
+  </C:filter>
 </C:calendar-query>`;
 
       await Promise.all(
@@ -1143,8 +1308,10 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 return new Date().toISOString();
               };
 
-              const startIso = parseIcsTime(rawStart);
-              const endIso = deM ? parseIcsTime(deM[2].trim()) : new Date(new Date(startIso).getTime() + 3600000).toISOString();
+              const rawStartIso = parseIcsTime(rawStart);
+              const rawEndIso = deM ? parseIcsTime(deM[2].trim()) : new Date(new Date(rawStartIso).getTime() + 3600000).toISOString();
+              const rruleVal = rrM ? rrM[1].trim() : '';
+              const { start: startIso, end: endIso } = advanceRecurringStartEnd(rawStartIso, rawEndIso, rruleVal, now.getTime() - 3600000);
               const uidVal = uidM ? uidM[1].trim() : `caldav-${caldavEvents.length}`;
               const summaryVal = (sumM ? sumM[1].trim() : '(Untitled Event)').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, ' ');
               const locVal = (locM ? locM[1].trim() : '').replace(/\\,/g, ',').replace(/\\n/g, ' ');
@@ -1166,8 +1333,8 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 start: startIso,
                 end: endIso,
                 allDay: isAllDay,
-                recurring: Boolean(rrM),
-                rrule: rrM ? rrM[1].trim() : '',
+                recurring: Boolean(rruleVal),
+                rrule: rruleVal,
                 category: cal.isFamilyCalendar ? 'family' : 'meeting',
                 source: 'google-caldav-live',
                 calendarId: cal.id,
@@ -1425,6 +1592,8 @@ module.exports = {
   buildIcsCalendarEvent,
   createNamedCalendarEvent,
   deleteNamedCalendarEvent,
+  moveNamedCalendarEvent,
+  advanceRecurringStartEnd,
   listEventsAcrossNamedCalendars,
   parseNaturalLanguageEvent,
 };

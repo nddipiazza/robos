@@ -25,6 +25,7 @@ const {
   listEventsAcrossNamedCalendars,
   createNamedCalendarEvent,
   deleteNamedCalendarEvent,
+  moveNamedCalendarEvent,
   parseNaturalLanguageEvent,
   syncNamedCalendarsToThunderbird,
 } = require('../lib/named-calendars');
@@ -132,6 +133,23 @@ async function main() {
     const res = await deleteNamedCalendarEvent(eventId, { calendarId: flags.calendar });
     if (asJson) return console.log(JSON.stringify(res, null, 2));
     console.log(`✓ Deleted event ${eventId} (deletedOnGoogle=${res.deletedOnGoogle})`);
+    return;
+  }
+
+  if (cmd === 'move') {
+    const qOrId = rest.join(' ') || flags.query || flags.id || '';
+    if (!qOrId) throw new Error('Provide an event title query or UID to move.');
+    const res = await moveNamedCalendarEvent({
+      eventId: flags.id || '',
+      query: flags.id ? '' : qOrId,
+      fromCalendar: flags.from || 'Primary',
+      toCalendar: flags.to || 'Family',
+    });
+    if (asJson) return console.log(JSON.stringify(res, null, 2));
+    console.log(`✓ Moved ${res.movedCount} event(s):`);
+    for (const m of res.moved) {
+      console.log(`  • "${m.summary}" [${m.fromCalendar} → ${m.toCalendar}] (${m.newUid})`);
+    }
     return;
   }
 
