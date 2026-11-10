@@ -368,4 +368,93 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       cleanup();
     }
   });
+
+  it('wires shopping-lists into RobOS Voice Commands Registry, Live Bubble Intent Resolver, and SkillsExecutor', () => {
+    const { defaultRegistry } = require('../../../voice-prompt/lib/voice-commands-registry');
+    const { defaultIntentResolver } = require('../../../voice-prompt/lib/skill-intent-resolver');
+    const { SkillsExecutor } = require('../../../voice-prompt/lib/skills-executor');
+
+    // 1. VoiceCommandsRegistry matches skill commands & app launch
+    const matchAdd = defaultRegistry.matchCommand('Hey RobOS, add 2 gallons of milk to grocery list');
+    assert.equal(matchAdd.matched, true);
+    assert.equal(matchAdd.command.targetId, 'shopping-lists');
+
+    const matchTarget = defaultRegistry.matchCommand('what is on my target list?');
+    assert.equal(matchTarget.matched, true);
+    assert.equal(matchTarget.command.targetId, 'shopping-lists');
+
+    const matchOpen = defaultRegistry.matchCommand('open shopping lists');
+    assert.equal(matchOpen.matched, true);
+    assert.equal(matchOpen.command.targetType, 'app');
+    assert.equal(matchOpen.command.targetId, 'shopping-lists');
+
+    // 2. SkillIntentResolver tags live speech bubbles with Household · Shopping Lists
+    const bubbleIntent = defaultIntentResolver.resolveLikelySkills('add rotisserie chicken to costco list');
+    assert.equal(bubbleIntent.isAmbient, false);
+    assert.equal(bubbleIntent.likelySkills.length, 1);
+    assert.equal(bubbleIntent.likelySkills[0].id, 'shopping-lists');
+    assert.equal(bubbleIntent.likelySkills[0].category, 'Household');
+
+    // 3. SkillsExecutor advertises shopping-lists in getSupportedSkills()
+    const executor = new SkillsExecutor();
+    assert.ok(executor.getSupportedSkills().some((s) => s.id === 'shopping-lists'));
+  });
+
+  it('executes "Ok Nabu" spoken commands end-to-end via executeNabuCommand and WakeWordDetector', async () => {
+    const { executeNabuCommand } = require('../../../home-speaker/lib/nabu-command-router');
+    const { WakeWordDetector } = require('../../../voice-prompt/lib/wake-word');
+    const { SkillsExecutor } = require('../../../voice-prompt/lib/skills-executor');
+    const { dir, cleanup } = makeTempStore();
+
+    try {
+      const detector = new WakeWordDetector();
+      const wakeMatch = detector.processText('Ok Nabu, add 2 gallons of whole milk and honeycrisp apples to my grocery list');
+      assert.equal(wakeMatch.matched, true);
+      assert.match(wakeMatch.query, /add 2 gallons of whole milk/i);
+
+      const executor = new SkillsExecutor();
+      executor.homeDir = dir;
+      executor.configDir = dir;
+
+      // 1. Add multiple items via spoken "and" to Grocery list
+      const r1 = await executeNabuCommand(
+        'Ok Nabu, add 2 gallons of whole milk and honeycrisp apples to my grocery list',
+        { configDir: executor.configDir, skillsExecutor: executor, autoLaunchPlayers: false },
+      );
+      assert.equal(r1.ok, true);
+      assert.equal(r1.skill, 'shopping-lists:add');
+      assert.equal(r1.data.added.length, 2);
+      assert.equal(r1.data.added[0].listId, 'grocery');
+      assert.equal(r1.data.added[1].listId, 'grocery');
+
+      // 2. Add item to Target list via "Ok Nabu"
+      const r2 = await executeNabuCommand(
+        'Ok Nabu, put paper towels on my target list',
+        { configDir: executor.configDir, skillsExecutor: executor, autoLaunchPlayers: false },
+      );
+      assert.equal(r2.ok, true);
+      assert.equal(r2.skill, 'shopping-lists:add');
+      assert.equal(r2.data.added[0].listId, 'target');
+
+      // 3. Add item to Costco list via "Ok Nabu"
+      const r3 = await executeNabuCommand(
+        'Ok Nabu, add rotisserie chicken to my costco list',
+        { configDir: executor.configDir, skillsExecutor: executor, autoLaunchPlayers: false },
+      );
+      assert.equal(r3.ok, true);
+      assert.equal(r3.skill, 'shopping-lists:add');
+      assert.equal(r3.data.added[0].listId, 'costco');
+
+      // 4. Ask "Ok Nabu, what is on my target list?"
+      const r4 = await executeNabuCommand(
+        'Ok Nabu, what is on my target list?',
+        { configDir: executor.configDir, skillsExecutor: executor, autoLaunchPlayers: false },
+      );
+      assert.equal(r4.ok, true);
+      assert.equal(r4.skill, 'shopping-lists:list');
+      assert.match(r4.response, /Target list has/i);
+    } finally {
+      cleanup();
+    }
+  });
 });

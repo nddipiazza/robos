@@ -357,6 +357,31 @@ function matchPlatformSkills(text) {
     return skills;
   }
 
+  // Household Shopping Lists (Grocery, Target, Costco)
+  const isOpenShoppingApp = /^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?(?:household\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(raw);
+  if (
+    !isOpenShoppingApp &&
+    (/\b(?:grocery|target|costco|shopping)\s+lists?\b/i.test(raw) ||
+      /\b(?:add|put|buy|need|get|remove|delete|drop|check|uncheck|done|bought|got|clear|show|list|read|sync)\b.+\b(?:to|on|in|from|at|for)\s+(?:my\s+|the\s+)?(?:grocery|target|costco)\b/i.test(raw) ||
+      /(?:^|\s)@(?:grocery|target|costco)\b/i.test(raw) ||
+      /^(?:check\s+off|uncheck|mark\s+done|bought|got|clear\s+checked)\s+.+/i.test(raw))
+  ) {
+    const storeMatch = raw.match(/\b(grocery|target|costco)\b/i);
+    const storeLabel = storeMatch
+      ? storeMatch[1].charAt(0).toUpperCase() + storeMatch[1].slice(1).toLowerCase()
+      : 'Shopping Lists';
+    skills.push({
+      id: 'shopping-lists',
+      name: 'Household Shopping Lists',
+      title: `Shopping Lists (${storeLabel}): ${raw}`,
+      category: 'Household',
+      confidence: 0.96,
+      action: 'shopping-lists',
+      params: { query: raw, list: storeMatch ? storeMatch[1].toLowerCase() : null }
+    });
+    return skills;
+  }
+
   // Open / Launch Application
   const openAppMatch = raw.match(/^(?:open|launch|start|switch\s+to|show)\s+(?:the\s+)?(?:robos\s+)?([a-z0-9\s\-]+?)(?:\s+app|\s+window)?$/i);
   if (openAppMatch) {

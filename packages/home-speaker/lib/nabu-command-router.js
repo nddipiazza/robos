@@ -1190,6 +1190,14 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
     return { type: 'robos-skill', query: cleanedText };
   }
 
+  // 2.1 If it's a Household Shopping Lists command ("add milk to grocery", "put eggs on target list", "remove milk from costco", "check off avocados"), route to robos-skill
+  if (
+    /\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target\s+lists?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(q) ||
+    /^(?:add|put|buy|get|need|remove|delete|check\s+off|uncheck|clear\s+checked)\b.+\b(?:to|on|in|from|at|for)\s+(?:my\s+|the\s+|our\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(q)
+  ) {
+    return { type: 'robos-skill', query: cleanedText };
+  }
+
   // 3. Explicit Movie / TV playback ("play/place the movie Dune", "watch Scary Movie 2", "play rick and morty season 8 episode 1 on the roku")
   const isPlayLikeVerb = PLAY_VERB_VARIANTS.has(firstWord) || jaroWinkler(firstWord, 'play') >= 0.80;
   const hasTvSeasonEpisode = /\b(?:season\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)|episode\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)|s\d+\s*e\d+|\d+x\d+)\b/i.test(q);

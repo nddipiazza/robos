@@ -202,9 +202,9 @@ function detectAisle(list, itemName) {
 
 function detectTargetStoreId(chunk, defaultListId, availableListIds) {
   const s = String(chunk || '');
-  if (/(?:^|\s)@target\b|\b(?:at|from|to|on|in|for)\s+(?:the\s+)?target(?:\s+list)?\b|\btarget:/i.test(s) && availableListIds.includes('target')) return 'target';
-  if (/(?:^|\s)@costco\b|\b(?:at|from|to|on|in|for)\s+(?:the\s+)?costco(?:\s+list)?\b|\b(?:costco:|kirkland|bulk|case of)\b/i.test(s) && availableListIds.includes('costco')) return 'costco';
-  if (/(?:^|\s)@grocery\b|\b(?:at|from|to|on|in|for)\s+(?:the\s+)?grocery(?:\s+list)?\b|\bgrocery:/i.test(s) && availableListIds.includes('grocery')) return 'grocery';
+  if (/(?:^|\s)@target\b|\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?target(?:\s+shopping)?(?:\s+lists?)?\b|\btarget:/i.test(s) && availableListIds.includes('target')) return 'target';
+  if (/(?:^|\s)@costco\b|\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?costco(?:\s+shopping)?(?:\s+lists?)?\b|\b(?:costco:|kirkland|bulk|case of)\b/i.test(s) && availableListIds.includes('costco')) return 'costco';
+  if (/(?:^|\s)@grocery\b|\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?grocery(?:\s+shopping)?(?:\s+lists?)?\b|\bgrocery:/i.test(s) && availableListIds.includes('grocery')) return 'grocery';
   return defaultListId;
 }
 
@@ -214,6 +214,40 @@ const WORD_QTY = {
   eleven: 11, twelve: 12, dozen: 12,
 };
 
+const COMPOUND_AND_ITEMS = [
+  'mac and cheese',
+  'macaroni and cheese',
+  'half and half',
+  'peanut butter and jelly',
+  'chips and salsa',
+  'salt and pepper',
+  'bread and butter',
+  'fish and chips',
+  'oil and vinegar',
+  'beans and rice',
+  'rice and beans',
+  'surf and turf',
+  'pork and beans',
+  'franks and beans',
+];
+
+function splitSpokenAndItems(str) {
+  let s = String(str || '');
+  const placeholders = [];
+  for (const phrase of COMPOUND_AND_ITEMS) {
+    const re = new RegExp(`\\b${phrase}\\b`, 'gi');
+    s = s.replace(re, (m) => {
+      const token = `__COMPOUND_${placeholders.length}__`;
+      placeholders.push(m);
+      return token;
+    });
+  }
+  const chunks = s.split(/\s+\band\b\s+/i);
+  return chunks.map((chunk) =>
+    chunk.replace(/__COMPOUND_(\d+)__/g, (_m, idx) => placeholders[Number(idx)] || _m).trim()
+  ).filter(Boolean);
+}
+
 /**
  * Local deterministic parser for natural-language multi-item / recipe input.
  * Works completely offline with zero AI agent required!
@@ -222,18 +256,43 @@ const WORD_QTY = {
 function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
   const listIds = lists.map((l) => l.id);
   const listMap = new Map(lists.map((l) => [l.id, l]));
-  const parts = String(rawText || '')
+  const rawString = String(rawText || '');
+  const sentenceStoreId = detectTargetStoreId(rawString, defaultListId, listIds);
+  const hasExplicitCommas = /[\r\n,;]/.test(rawString);
+
+  // Strip trailing sentence-level "to my grocery list" / "on my shopping list" before splitting on spoken "and"
+  const preCleaned = hasExplicitCommas
+    ? rawString
+    : rawString
+        .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?(?:target|costco|grocery|shopping)(?:\s+shopping)?(?:\s+lists?)?[.!?]*\s*$/i, '')
+        .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?lists?[.!?]*\s*$/i, '')
+        .trim();
+
+  const initialParts = preCleaned
     .split(/\r?\n|,|;/)
     .map((p) => p.replace(/^[\s•\-*☐☑✓+]+/, '').trim())
     .filter(Boolean);
 
+  const parts = [];
+  for (const p of initialParts) {
+    if (!hasExplicitCommas && /\s+\band\b\s+/i.test(p)) {
+      parts.push(...splitSpokenAndItems(p));
+    } else {
+      parts.push(p);
+    }
+  }
+
+  const effectiveDefaultListId = hasExplicitCommas ? defaultListId : sentenceStoreId;
+
   const parsed = [];
   for (const part of parts) {
-    const listId = detectTargetStoreId(part, defaultListId, listIds);
+    const listId = detectTargetStoreId(part, effectiveDefaultListId, listIds);
     let cleaned = part
       .replace(/(?:^|\s)@(?:target|costco|grocery)\b/gi, ' ')
-      .replace(/\b(?:at|from|to|on|in|for)\s+(?:the\s+)?(?:target|costco|grocery)(?:\s+list)?\b/gi, ' ')
+      .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?(?:target|costco|grocery|shopping)(?:\s+shopping)?(?:\s+lists?)?\b/gi, ' ')
+      .replace(/\b(?:at|from|to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?lists?\b/gi, ' ')
       .replace(/^(?:target|costco|grocery):\s*/i, '')
+      .replace(/[.!?]+$/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     if (!cleaned) continue;

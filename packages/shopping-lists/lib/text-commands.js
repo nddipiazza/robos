@@ -194,10 +194,11 @@ async function executeTextCommand(store, rawInput, options = {}) {
   const explicitListId = options.listId || resolveStoreIdFromText(input, snap0.lists, null);
   const defaultListId = explicitListId || snap0.activeListId || 'grocery';
 
-  // Strip optional leading slash command "/shopping-lists" or "shopping list" prefix
+  // Strip optional leading slash command "/shopping-lists" or "Ok Nabu" / "Hello RobOS" prefix
   const cleanedInput = input
     .replace(/^\/shopping-lists?\b\s*/i, '')
-    .replace(/^(?:hey\s+nabu|hello\s+nabu|okay\s+nabu|hey\s+robos|robos)\b[,.:;!\s]*/i, '')
+    .replace(/^(?:(?:hey|hello|hi|ok|okay|yo)\s+)?(?:nabu|na\s+bu|naboo|robos|rob\s+os|row\s+bose)\b[,.:;!\-\s]*/i, '')
+    .replace(/^(?:can\s+you\s+|could\s+you\s+|would\s+you\s+)?(?:please\s+)?/i, '')
     .trim();
 
   // 1. HELP / GUIDE

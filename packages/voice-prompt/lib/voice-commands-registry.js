@@ -472,6 +472,41 @@ const SKILL_VOICE_DEFINITIONS = [
     matchers: ['robos voice', 'voice settings', 'voice assistant', 'voice configuration'],
     action: 'robos-voice',
   },
+  {
+    id: 'shopping-lists',
+    title: 'Household Shopping Lists (Grocery, Target, Costco)',
+    category: 'Household',
+    description: 'Add, check off, remove, clear, sync, or read items on Grocery, Target, and Costco shopping lists',
+    matchers: [
+      'grocery list',
+      'target list',
+      'costco list',
+      'add to grocery',
+      'add to target',
+      'add to costco',
+      'to grocery',
+      'to target',
+      'to costco',
+      'on grocery',
+      'on target',
+      'on costco',
+      'from grocery',
+      'from target',
+      'from costco',
+      'check off',
+      'uncheck',
+      'clear checked',
+      'what is on my grocery',
+      'what is on my target',
+      'what is on my costco',
+      'what is on my shopping',
+      'show shopping lists',
+      'list shopping lists',
+      'sync shopping lists',
+    ],
+    action: 'shopping-lists',
+    hasWildcard: true,
+  },
 ];
 
 /**
@@ -579,6 +614,11 @@ function generateAppMatchers(appId, label) {
     phrases.add('open pass manager');
     phrases.add('password store');
     phrases.add('gpg passwords');
+  } else if (appId === 'shopping-lists') {
+    phrases.add('open shopping lists');
+    phrases.add('open shopping list');
+    phrases.add('launch shopping lists');
+    phrases.add('household shopping lists');
   }
 
   return Array.from(phrases);
@@ -713,9 +753,9 @@ class VoiceCommandsRegistry {
     const raw = (transcript || '').trim();
     if (!raw) return { matched: false, rawTranscript: raw };
 
-    // Strip common conversational filler words at start
+    // Strip common conversational filler words at start ("ok nabu", "hey robos", "please", etc.)
     let cleaned = raw
-      .replace(/^(?:hey|hello|hi|ok|okay)?\s*(?:robos|rob\s+os|row\s+bose)?\s*[,;:]?\s*/i, '')
+      .replace(/^(?:hey|hello|hi|ok|okay)?\s*(?:nabu|na\s+bu|naboo|robos|rob\s+os|row\s+bose)?\s*[,;:]?\s*/i, '')
       .replace(/^(?:please|can\s+you|could\s+you|would\s+you)?\s*/i, '')
       .trim();
 
