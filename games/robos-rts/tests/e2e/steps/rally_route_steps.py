@@ -5,6 +5,23 @@ from behave import then, when
 from tactical_controls_steps import find_unit
 
 
+@when("the commander right-clicks a crystal shard at ({x:f}, {y:f}, {height:f})")
+def rally_to_shard(context, x, y, height):
+    sx, sy = context.client.project((x, y, height))[0]
+    context.client.mouse(sx, sy, button=2)
+    context.client.mouse(sx, sy, button=2, pressed=False)
+
+
+@then('"{producer}" has a harvest rally centered on "{name}"')
+def check_crystal_rally(context, producer, name):
+    resource = next(r for r in context.client.get_observation()["resources"] if r["id"] == name)
+    waypoint = find_unit(context, producer)["rally_route"][-1]
+    assert waypoint == {
+        "kind": "harvest", "target_tag": resource["tag"],
+        "x": resource["pos"]["x"], "y": resource["pos"]["y"],
+    }, waypoint
+
+
 @when("the commander Shift-right-clicks terrain at ({x:d}, {y:d})")
 def append_rally(context, x, y):
     sx, sy = context.client.project((x, y))[0]

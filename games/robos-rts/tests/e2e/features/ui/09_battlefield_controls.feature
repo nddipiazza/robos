@@ -39,16 +39,15 @@ Feature: Battlefield powers, production and camera controls
     Then the two halls have a balanced batch of five units in production
     And player 1 has 150 crystal, 150 aether and 5 supply used
 
-  Scenario: The Auto-Repair hotkey gives an idle Pioneer a paid repair job
+  Scenario: An idle Pioneer automatically repairs nearby machinery
     Given an RTS test scenario
       """
       {"name":"Automatic repair","paused":true,"decor":false,"map":{"width":96,"height":64},
        "units":[{"id":"tech","type":"pioneer","owner":1,"x":30,"y":27},
                 {"id":"tank","type":"howitzer","owner":1,"x":35,"y":27,"hp":50}]}
       """
-    When the commander clicks unit "tech"
-    And the commander presses "Q"
-    And the simulation advances 1024 ticks
+    Then "tech" has Auto-Repair on
+    When the simulation advances 1024 ticks
     Then "tank" is fully repaired at a crystal cost
 
   Scenario: A camera tracks a moving scout until the commander moves the view

@@ -1,0 +1,131 @@
+{
+  "name": "The White Ridge Job",
+  "seed": 718,
+  "decor": false,
+  "fog_of_war": true,
+  "map": {
+    "width": 140,
+    "height": 152,
+    "ground_regions": [
+      [
+        [74, 108],
+        [85, 98],
+        [105, 99],
+        [121, 105],
+        [128, 120],
+        [122, 142],
+        [96, 150],
+        [73, 140],
+        [71, 121]
+      ],
+      [
+        [85, 104],
+        [92, 83],
+        [87, 68],
+        [88, 48],
+        [98, 43],
+        [112, 51],
+        [117, 75],
+        [113, 87],
+        [128, 93],
+        [133, 106],
+        [110, 105],
+        [94, 104]
+      ],
+      [
+        [107, 81],
+        [105, 94],
+        [87, 92],
+        [72, 85],
+        [62, 87],
+        [54, 97],
+        [45, 119],
+        [30, 109],
+        [34, 93],
+        [44, 84],
+        [53, 78],
+        [68, 74],
+        [87, 83]
+      ],
+      [
+        [12, 109],
+        [24, 102],
+        [43, 106],
+        [53, 117],
+        [52, 139],
+        [42, 150],
+        [18, 150],
+        [10, 134]
+      ],
+      [
+        [21, 111],
+        [28, 85],
+        [18, 75],
+        [17, 60],
+        [20, 47],
+        [33, 44],
+        [50, 53],
+        [51, 67],
+        [57, 79],
+        [43, 91],
+        [35, 111]
+      ],
+      [
+        [13, 48],
+        [15, 26],
+        [28, 12],
+        [47, 11],
+        [60, 21],
+        [62, 38],
+        [51, 57],
+        [28, 63]
+      ]
+    ],
+    "obstacles": [
+      {"x": 100, "y": 110, "w": 9, "h": 4},
+      {"x": 40, "y": 61, "w": 8, "h": 12},
+      {"x": 23, "y": 80, "w": 6, "h": 6},
+      {"x": 99, "y": 67, "w": 9, "h": 8},
+      {"x": 18, "y": 124, "w": 4, "h": 9},
+      {"x": 52, "y": 23, "w": 6, "h": 10}
+    ]
+  },
+  "players": {
+    "1": {"faction": "humans", "crystal": 370, "aether": 0},
+    "2": {"faction": "humans", "crystal": 0, "aether": 0}
+  },
+  "resources": [
+    {"type": "crystal_field", "x": 84, "y": 117},
+    {"type": "crystal_field", "x": 82, "y": 123},
+    {"type": "crystal_field", "x": 83, "y": 130},
+    {"type": "crystal_field", "x": 88, "y": 136},
+    {"type": "crystal_field", "x": 94, "y": 139},
+    {"type": "aether_vent", "x": 93, "y": 111, "amount": 2250}
+  ],
+  "units": [
+    {"type": "colony_hub", "owner": 1, "x": 96, "y": 126, "id": "recovery_hub"},
+    {"type": "muster_hall", "owner": 1, "x": 107, "y": 123, "id": "recovery_hall"},
+    {"type": "silo", "owner": 1, "x": 112, "y": 135},
+    {"type": "silo", "owner": 1, "x": 103, "y": 139},
+    {"type": "pioneer", "owner": 1, "x": 88, "y": 123, "count": 8, "spread": 2.1, "auto_harvest": true},
+    {"type": "rifleman", "owner": 1, "x": 91, "y": 102, "count": 10, "spread": 2.1},
+    {"type": "muster_hall", "owner": 1, "x": 27, "y": 132, "id": "camp_hall"},
+    {"type": "silo", "owner": 1, "x": 22, "y": 137, "id": "camp_silo"},
+    {"type": "rifleman", "owner": 1, "x": 29, "y": 117, "id": "camp_rifle_1"},
+    {"type": "rifleman", "owner": 1, "x": 31, "y": 120, "id": "camp_rifle_2"},
+    {"type": "rifleman", "owner": 1, "x": 34, "y": 121, "id": "camp_rifle_3"},
+    {"type": "rifleman", "owner": 1, "x": 32, "y": 124, "id": "camp_rifle_4"},
+    {"type": "rifleman", "owner": 1, "x": 35, "y": 124, "id": "camp_rifle_5"},
+    {"type": "triage_specialist", "owner": 1, "x": 27, "y": 121, "id": "camp_medic"},
+    {"type": "rifleman", "owner": 2, "x": 91, "y": 59, "count": 3, "spread": 2.1},
+    {"type": "rifleman", "owner": 2, "x": 30, "y": 75, "count": 4, "spread": 2.1},
+    {"type": "breacher", "owner": 2, "x": 32, "y": 65, "count": 2, "spread": 2.1},
+    {"type": "sentry_turret", "owner": 2, "x": 29, "y": 56},
+    {"type": "colony_hub", "owner": 2, "x": 37, "y": 22, "id": "dig_hub"},
+    {"type": "muster_hall", "owner": 2, "x": 22, "y": 34, "id": "dig_hall"},
+    {"type": "workshop", "owner": 2, "x": 46, "y": 40, "id": "dig_workshop"},
+    {"type": "rifleman", "owner": 2, "x": 33, "y": 43, "count": 5, "spread": 2.1},
+    {"type": "triage_specialist", "owner": 2, "x": 37, "y": 41},
+    {"type": "breacher", "owner": 2, "x": 33, "y": 51}
+  ]
+}

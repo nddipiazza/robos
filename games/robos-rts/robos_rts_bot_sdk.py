@@ -46,8 +46,8 @@ class RTSClient:
     def load_scenario(self, scenario: Dict[str, Any]) -> Dict[str, Any]:
         return self._request("POST", "/scenario", scenario)
 
-    def load_scenario_slug(self, slug: str) -> Dict[str, Any]:
-        return self._request("POST", "/scenario", {"slug": slug})
+    def load_scenario_slug(self, slug: str, difficulty: str = "normal") -> Dict[str, Any]:
+        return self._request("POST", "/scenario", {"slug": slug, "difficulty": difficulty})
 
     def new_match(
         self,

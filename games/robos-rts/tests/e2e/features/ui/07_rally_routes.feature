@@ -34,3 +34,16 @@ Feature: Units can follow a squad and reinforcements can take a route
     When player 1 issues "move" to unit "leader" toward (57.0, 29.0)
     And the simulation advances 1040 ticks
     Then the new Rifleman is within 5 units of "leader"
+
+  Scenario: A crystal rally targets the clicked patch in a tight mineral line
+    Given an RTS test scenario
+      """
+      {"name":"Crystal rally target","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"hub","type":"colony_hub","owner":1,"x":27,"y":28}],
+       "resources":[{"id":"patch","type":"crystal_field","x":43,"y":29,"amount":1500},
+                    {"id":"neighbor","type":"crystal_field","x":43,"y":25,"amount":1500}]}
+      """
+    When the commander clicks unit "hub"
+    And the commander frames (36, 28) at zoom height 30
+    And the commander right-clicks a crystal shard at (43.0, 28.1, 1.8)
+    Then "hub" has a harvest rally centered on "patch"

@@ -269,7 +269,7 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 						RTSCommanderAI.configure_from_scenario([])
 					_send_json(client, 200, {"ok": true, "scenario": SimEngine.scenario_name, "unit_count": SimEngine.units.size()})
 					return
-				var res = SimEngine.load_scenario_file(slug)
+				var res = SimEngine.load_scenario_file(slug, str(body_dict.get("difficulty", "normal")))
 				_send_json(client, 200 if bool(res.get("ok", false)) else 404, res)
 			else:
 				var res = SimEngine.load_scenario_dict(body_dict)

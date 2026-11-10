@@ -259,7 +259,7 @@ func _test_support_cues() -> void:
 			assert(lines.size() >= minimums[category], "Missing %s %s variants" % [entry[0], category])
 			for line in lines:
 				assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
-	sim.spawn_unit("triage_specialist", 1, Vector2(20, 20))
+	var medic: Dictionary = sim.spawn_unit("triage_specialist", 1, Vector2(20, 20))
 	var soldier: Dictionary = sim.spawn_unit("breacher", 1, Vector2(23, 20))
 	soldier.hp = 40
 	sim.spawn_unit("resonator", 1, Vector2(40, 20))

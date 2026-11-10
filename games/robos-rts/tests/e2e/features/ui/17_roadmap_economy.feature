@@ -28,6 +28,7 @@ Feature: Gas assignment and construction feedback
                 {"id":"builder","type":"pioneer","owner":1,"x":30,"y":27}]}
       """
     When the commander clicks unit "builder"
+    And the commander presses "B"
     And the commander presses "R"
     And the snapped build grid is captured near (42, 28)
     And the commander clicks a targeted point at (42, 28)

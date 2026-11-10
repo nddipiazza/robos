@@ -278,8 +278,17 @@ func _draw() -> void:
 
 	for i in range(d["high_ground"].size()):
 		_draw_zone(d["high_ground"][i], COLOR_HIGH, "HIGH GROUND", font, {"layer": "high_ground", "index": i})
-	for i in range(d["ramps"].size()):
-		_draw_ramp(d["ramps"][i], font, {"layer": "ramps", "index": i})
+	if not d.ramps.is_empty():
+		var plateaus: Array[Rect2] = []
+		for area in d.high_ground:
+			plateaus.append(MapDocumentScript.item_rect(area))
+		for key in d.terrain_tiles:
+			if d.terrain_tiles[key] == "plateau":
+				var coords: PackedStringArray = key.split(",")
+				var tile_size: float = MapDocumentScript.TERRAIN_CELL_SIZE
+				plateaus.append(Rect2(Vector2(float(coords[0]), float(coords[1])) * tile_size, Vector2.ONE * tile_size))
+		for i in range(d.ramps.size()):
+			_draw_ramp(d.ramps[i], font, {"layer": "ramps", "index": i}, plateaus)
 	for i in range(d["obstacles"].size()):
 		_draw_cliff(d["obstacles"][i], {"layer": "obstacles", "index": i})
 
@@ -351,22 +360,24 @@ func _draw_zone(item: Dictionary, col: Color, label: String, font: Font, ref: Di
 	if _is_selected(ref):
 		_draw_selection_outline(sr, true)
 
-func _draw_ramp(item: Dictionary, font: Font, ref: Dictionary) -> void:
+func _draw_ramp(item: Dictionary, font: Font, ref: Dictionary, plateaus: Array[Rect2]) -> void:
 	var sr = _screen_rect(item)
-	# Engine ramps descend west -> east (elevation lerps 2.2 -> 0 along +x), so shade high to low.
+	var rises_east := SimEngine.ramp_rises_east(MapDocumentScript.item_rect(item), plateaus)
 	var bands = 8
 	for b in range(bands):
 		var t = float(b) / float(bands)
 		var band = Rect2(sr.position + Vector2(sr.size.x * t, 0), Vector2(sr.size.x / bands + 0.5, sr.size.y))
-		draw_rect(band, COLOR_HIGH.lerp(COLOR_LOW, t).lerp(COLOR_RAMP, 0.45))
+		draw_rect(band, COLOR_HIGH.lerp(COLOR_LOW, 1.0 - t if rises_east else t).lerp(COLOR_RAMP, 0.45))
 	draw_rect(sr, COLOR_RAMP.lightened(0.3), false, 1.5)
 	var mid_y = sr.get_center().y
 	if sr.size.x > 24:
 		var a = Vector2(sr.position.x + 6, mid_y)
 		var b2 = Vector2(sr.end.x - 6, mid_y)
+		var tip: Vector2 = a if rises_east else b2
+		var back := 7.0 if rises_east else -7.0
 		draw_line(a, b2, Color(1, 1, 1, 0.55), 1.5)
-		draw_line(b2, b2 + Vector2(-7, -5), Color(1, 1, 1, 0.55), 1.5)
-		draw_line(b2, b2 + Vector2(-7, 5), Color(1, 1, 1, 0.55), 1.5)
+		draw_line(tip, tip + Vector2(back, -5), Color(1, 1, 1, 0.55), 1.5)
+		draw_line(tip, tip + Vector2(back, 5), Color(1, 1, 1, 0.55), 1.5)
 	if sr.size.x > 60 and sr.size.y > 30:
 		draw_string(font, sr.position + Vector2(6, 16), "RAMP ↓", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.6))
 	if _is_selected(ref):

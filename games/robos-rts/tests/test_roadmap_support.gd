@@ -27,6 +27,13 @@ func _test_triage() -> void:
 	var machine: Dictionary = sim.spawn_unit("howitzer", 1, Vector2(29, 28))
 	patient.hp = 15.0
 	machine.hp = 20.0
+	sim.step_ticks(24)
+	_check(medic.auto_heal and patient.hp > 15.0 and medic.support_target_tag == patient.tag, "Player triage heals nearby allies by default")
+	_check(sim.issue_command([medic.tag], "auto_heal").ok and not medic.auto_heal, "Auto-Heal can be turned off")
+	var health: float = patient.hp
+	sim.step_ticks(24)
+	_check(patient.hp == health and medic.support_target_tag == 0, "Disabling Auto-Heal stops automatic treatment")
+	_check(sim.issue_command([medic.tag], "auto_heal").ok and medic.auto_heal, "Auto-Heal can be turned back on")
 	sim.step_ticks(330)
 	_check(patient.hp > 55.0 and patient.hp < patient.max_hp and medic.energy < 1.0, "Idle triage spends finite energy on a nearby ally")
 	_check(machine.hp == 20.0, "Triage does not repair mechanical units")

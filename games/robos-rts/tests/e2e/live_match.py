@@ -61,6 +61,7 @@ class LiveMatch:
         self.wall_seconds = 0
         self.error = None
         self.speed = 1
+        self.walkthrough_intro = "The editor saved and reloaded scenario.jsonld. Player 1 used paid commands; the built-in opponent ran independently."
 
     def capture_editor(self):
         if self.rendered:
@@ -194,6 +195,8 @@ class LiveMatch:
                   "error": self.error, "match": self.final.get("match"), "events": self.events,
                   "performance": self.performance, "actual_game_seconds_per_wall_second": self.final["sim_time"]/max(.001, self.wall_seconds),
                   "samples": self.samples, "player_commands": self.actions.commands, "final_observation": self.final}
+        if self.final.get("campaign"):
+            report["campaign"] = self.final["campaign"]
         (self.output / "proof.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
         captions = ["WEBVTT\n"]
         rows = []
@@ -205,7 +208,7 @@ class LiveMatch:
         (self.output / "walkthrough.vtt").write_text("\n".join(captions), encoding="utf-8")
         (self.output / "walkthrough.md").write_text(
             f"# Live RTS: {self.slug}\n\nResult: {status}. Speed: {self.speed}x. Manual step requests: {health.get('manual_step_requests')}.\n\n"
-            "The editor saved and reloaded scenario.jsonld. Player 1 used paid commands; the built-in opponent ran independently.\n\n"
+            f"{self.walkthrough_intro}\n\n"
             "| Wall time | Game time | Visible step |\n|---|---|---|\n"+"\n".join(rows)+"\n", encoding="utf-8")
         if self.record and self.frames:
             self.encode_video()

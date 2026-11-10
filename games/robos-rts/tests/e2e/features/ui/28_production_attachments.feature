@@ -8,7 +8,7 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
        "units":[{"id":"hall","type":"muster_hall","owner":1,"x":30.5,"y":30}]}
       """
     When the commander clicks unit "hall"
-    And the commander presses "X"
+    And the commander presses "C"
     Then player 1 has 150 crystal, 75 aether and 0 supply used
     When the commander selects the building at (36, 30)
     Then the active subgroup is "fabrication_module"
@@ -16,8 +16,8 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     Then no building stands at (36, 30)
     And player 1 has 187 crystal, 93 aether and 0 supply used
     When the commander clicks unit "hall"
-    And the commander presses "X"
-    And the commander presses "X"
+    And the commander presses "C"
+    And the commander presses "C"
     And the simulation advances 300 ticks
     Then a finished "fabrication_module" stands at (36, 30)
     And player 1 has 137 crystal, 68 aether and 0 supply used
@@ -32,7 +32,7 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
                 {"type":"silo","owner":1,"x":36,"y":30}]}
       """
     When the commander clicks unit "hall"
-    And the commander presses "X"
+    And the commander presses "C"
     Then no "fabrication_module" exists
     And player 1 has 200 crystal, 100 aether and 0 supply used
 
@@ -45,7 +45,7 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
                 {"id":"hall","type":"muster_hall","owner":1,"x":30.5,"y":30}]}
       """
     When the commander clicks unit "hall"
-    And the commander presses "X"
+    And the commander presses "C"
     And the simulation advances 300 ticks
     And the commander presses "A"
     And the commander presses "A"
@@ -72,8 +72,8 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     When the commander clicks unit "hall"
     And the commander presses "T"
     Then player 1 has 400 crystal, 250 aether and 1 supply used
-    When the commander presses "C"
-    And the commander presses "X"
+    When the commander presses "X"
+    And the commander presses "C"
     And the simulation advances 300 ticks
     Then a finished "research_module" stands at (36, 30)
     And no "fabrication_module" exists
@@ -98,7 +98,7 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
       """
     When the commander frames (46, 32) at zoom height 58
     And the commander clicks unit "hall"
-    And the commander presses "X"
+    And the commander presses "C"
     And the simulation advances 300 ticks
     And the commander presses "A"
     And the simulation advances 64 ticks

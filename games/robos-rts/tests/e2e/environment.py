@@ -66,6 +66,7 @@ def before_all(context) -> None:
     env["RTS_WEB_SERVICE_PORT"] = str(context.port)
     context.display_prefs = tempfile.TemporaryDirectory(prefix="starfall-test-")
     env["RTS_DISPLAY_PREFS"] = str(Path(context.display_prefs.name) / "display.cfg")
+    env["RTS_CAMPAIGN_PROGRESS_PATH"] = str(Path(context.display_prefs.name) / "campaign.cfg")
 
     cmd = [godot_bin, "--path", str(PROJECT_DIR)]
     if context.rts_mode == "backend" or context.live_headless:

@@ -58,7 +58,7 @@ func _run() -> void:
 	var vehicle: Dictionary = sim.spawn_unit("howitzer", 1, Vector2(42, 24))
 	vehicle.hp -= 12.0
 	sim.issue_command([worker.tag], "hold_position")
-	check(sim.issue_command([worker.tag], "auto_repair").ok, "A Pioneer can enable auto-repair")
+	check(worker.auto_repair, "Pioneers start with Auto-Repair enabled")
 	sim.step_ticks(80)
 	check(vehicle.hp < vehicle.max_hp, "Auto-repair respects an explicit hold order")
 	sim.issue_command([worker.tag], "stop")

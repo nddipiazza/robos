@@ -1,7 +1,7 @@
 extends Node
 
 # RTSIcons.gd — renders a portrait for every unit/structure type from its own 3D model.
-# One offscreen SubViewport is reused; each type takes one frame. Skipped in headless mode.
+# One offscreen SubViewport is reused. Skipped in headless mode.
 
 const Models = preload("res://scripts/RTSModels.gd")
 const ICON_SIZE := 192
@@ -61,11 +61,15 @@ func _generate() -> void:
 		var model: Node3D = Models.build(str(type_id), _owner_for_faction(str(def.get("faction", "humans"))))
 		_vp.add_child(model)
 		_frame_camera(model)
-		_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
-		await RenderingServer.frame_post_draw
-		var img: Image = _vp.get_texture().get_image()
-		if img:
-			icons[type_id] = ImageTexture.create_from_image(img)
+		# A transparent readback is not a portrait. Give the viewport one
+		# more draw before leaving the HUD to use its fallback glyph.
+		for _attempt in range(2):
+			_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+			await RenderingServer.frame_post_draw
+			var img: Image = _vp.get_texture().get_image()
+			if img and img.get_used_rect().has_area():
+				icons[type_id] = ImageTexture.create_from_image(img)
+				break
 		model.queue_free()
 
 	_vp.queue_free()

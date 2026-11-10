@@ -42,3 +42,40 @@ Feature: Control production and send workers directly to resources
     When the simulation advances 640 ticks
     Then player 1 has 2 surviving "rifleman" units
     And player 1 has 0 surviving "breacher" units
+
+  Scenario: Holding the Pioneer hotkey repeats after a delay and refills a free slot
+    Given an RTS test scenario
+      """
+      {"name":"Held training hotkey","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "players":{"1":{"crystal":500,"aether":0}},
+       "units":[{"id":"home","type":"colony_hub","owner":1,"x":30,"y":28}]}
+      """
+    When the commander clicks unit "home"
+    And the commander holds "S" to train
+    Then "home" keeps 1 queued unit during the initial repeat delay
+    And "home" eventually has at least 2 units in production
+    When the commander releases "S"
+    Then production at "home" receives no further orders
+    When the commander holds "S" to train
+    Then "home" eventually has at least 5 units in production
+    And player 1 has 250 crystal, 0 aether and 5 supply used
+    When the simulation advances 200 ticks
+    Then player 1 has 1 surviving "pioneer" units
+    And "home" eventually has at least 5 units in production
+    When the commander releases "S"
+    Then player 1 has 200 crystal, 0 aether and 6 supply used
+
+  Scenario: Changing selection stops an active training repeat
+    Given an RTS test scenario
+      """
+      {"name":"Held training selection change","paused":true,"decor":false,"map":{"width":96,"height":64},
+       "units":[{"id":"home","type":"colony_hub","owner":1,"x":27,"y":28},
+                {"id":"other","type":"colony_hub","owner":1,"x":43,"y":28}]}
+      """
+    When the commander clicks unit "home"
+    And the commander holds "S" to train
+    Then "home" eventually has at least 2 units in production
+    When the commander clicks unit "other"
+    Then production at "home" receives no further orders
+    And "other" has 0 units in production
+    When the commander releases "S"
