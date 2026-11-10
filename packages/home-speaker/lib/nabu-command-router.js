@@ -1197,8 +1197,8 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
     normShopQ = normalizeShoppingVoiceTranscript(cleanedText).toLowerCase();
   } catch {}
   if (
-    /\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target\s+lists?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normShopQ) ||
-    /^(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?)\b.+\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(normShopQ)
+    /\b(?:shopping\s+lists?|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?\s+lists?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normShopQ) ||
+    /\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(normShopQ)
   ) {
     return { type: 'robos-skill', query: cleanedText };
   }

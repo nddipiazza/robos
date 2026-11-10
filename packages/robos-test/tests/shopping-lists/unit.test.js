@@ -465,6 +465,17 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       assert.equal(r5.data.added.length, 2);
       assert.equal(r5.data.added[0].listId, 'grocery');
       assert.equal(r5.data.added[1].listId, 'grocery');
+
+      // 6. Tolerates hyphenated "cost-co-shopping list" even without a leading "add" verb
+      const r6 = await executeNabuCommand(
+        'Rotisserie chicken to the cost-co-shopping list',
+        { configDir: executor.configDir, skillsExecutor: executor, autoLaunchPlayers: false },
+      );
+      assert.equal(r6.ok, true);
+      assert.equal(r6.skill, 'shopping-lists:add');
+      assert.equal(r6.data.added.length, 1);
+      assert.equal(r6.data.added[0].listId, 'costco');
+      assert.match(r6.data.added[0].item.name, /Rotisserie chicken/i);
     } finally {
       cleanup();
     }

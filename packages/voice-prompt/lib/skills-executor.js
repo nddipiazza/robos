@@ -116,10 +116,10 @@ class SkillsExecutor {
       normalizedShoppingQuery = normalizeShoppingVoiceTranscript(query);
     } catch {}
     const isShoppingCommand = /^\/shopping-lists?\b/i.test(normalizedShoppingQuery)
-      || (/\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target(?:\s+lists?)?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normalizedShoppingQuery)
+      || (/\b(?:shopping\s+lists?|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?(?:\s+lists?)?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normalizedShoppingQuery)
           && !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(normalizedShoppingQuery))
-      || (/\b(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?)\b.+\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?lists?\b/i.test(normalizedShoppingQuery)
-          && !/\b(?:task|tasks|todo|issue|issues|ticket|tickets)\b/i.test(normalizedShoppingQuery));
+      || (/\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?lists?\b/i.test(normalizedShoppingQuery)
+          && !/\b(?:task|tasks|todo|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(normalizedShoppingQuery));
     if (isShoppingCommand) {
       try {
         const { createStore } = require('../../shopping-lists/lib/store');
