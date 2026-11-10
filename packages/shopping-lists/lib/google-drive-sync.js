@@ -233,7 +233,12 @@ async function syncWithGoogleDrive({
   fetchImpl,
 }) {
   const snapBefore = store.getSnapshot();
-  const effectiveAccountId = accountId || snapBefore.sync.accountId;
+  let effectiveAccountId = accountId || snapBefore.sync.accountId;
+  if (!effectiveAccountId && !tokens) {
+    const accounts = listGoogleAccounts({ homeDir });
+    const chosen = accounts.find((a) => a.signedIn && a.isDefault) || accounts.find((a) => a.signedIn) || accounts[0];
+    if (chosen) effectiveAccountId = chosen.id;
+  }
   if (!effectiveAccountId && !tokens) {
     throw new Error('Select a signed-in Google account first (or click Sign in with Google).');
   }
